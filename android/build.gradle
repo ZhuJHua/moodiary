@@ -1,0 +1,27 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://maven.aliyun.com/repository/google" }
+        maven { url "https://maven.aliyun.com/repository/jcenter" }
+        maven { url "https://maven.aliyun.com/nexus/content/groups/public" }
+        maven { url "https://tencent-tds-maven.pkg.coding.net/repository/shiply/repo" }
+        maven { url "https://storage.googleapis.com/download.flutter.io" }
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://developer.hihonor.com/repo' }
+        maven { url 'https://developer.huawei.com/repo' }
+
+    }
+}
+
+rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
