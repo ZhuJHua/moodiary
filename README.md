@@ -2,7 +2,9 @@
 
 简体中文丨[English](README.en.md)
 
-「心绪日记」 是一个由 Flutter 构建的跨平台日记应用，采用 Material Design 设计。它支持富文本编辑，让你可以轻松地在 Android 和 iOS 设备上创建和管理个人日记。
+「心绪日记」 是采用 Flutter 编写的，无广告、无社交的开源跨平台私密日记本。采用 Material Design 设计，简洁且易用。
+
+![GitHub repo size](https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070)![GitHub Repo stars](https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a)![GitHub Release](https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f)![GitHub License](https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7)
 
 ## ✨ 功能特性
 
@@ -10,14 +12,16 @@
 - **Material Design**：🎨 界面直观且用户友好，遵循 Material Design 设计规范。
 - **富文本编辑**：📝 支持加粗、斜体、下划线等多种格式的文本编辑。
 - **多媒体附件**：📷 可以为你的日记添加图片、音频。
-- **搜索和标签**：🔍 轻松通过全文搜索及标签分类你的日记。
-- **可自定义主题**：🌈 支持选择浅色和深色模式，或自定义主题。
+- **搜索和分类**：🔍 轻松通过全文搜索及分类管理你的日记。
+- **自定义主题**：🌈 支持选择浅色和深色模式，或自定义主题。
 - **数据安全**：🔒 通过密码来保障你的日记安全。
-- **云同步（即将支持）**：☁ 支持在多个设备间同步日记。
+- **导出和分享**：🧾 支持所有数据的导入/导出，以及单篇日记的分享。
+- **云同步**：☁ 支持在多个设备间同步日记（即将支持）。
+- **AI 助手**：🤖 支持接入大模型提供 AI 能力（目前支持：[腾讯混元](https://hunyuan.tencent.com/)）。
 
 ## 📸 应用截图
 
-### Andriod
+### Android
 
 | ![](res/screenshot/phone1.png) | ![](res/screenshot/phone2.png) |
 | ------------------------------ | ------------------------------ |
@@ -26,13 +30,21 @@
 
 ## 🚀 安装指南
 
-### 环境要求
+### 直接安装
+
+通过下载 Release 中已编译好的安装包来使用，如果没有你所需要的平台，请使用手动编译。
+
+### 手动编译
+
+#### 环境要求
 
 - Flutter SDK (>= 3.24.0)
 - Dart (>= 3.5.0)
 - 兼容的 IDE（如 Android Studio、Visual Studio Code）
 
-### 安装步骤
+#### 安装步骤
+
+> 注意：当打包时，需要自己修改对应平台的配置文件，例如安卓平台的 build.gradle
 
 1. **克隆仓库**：
 
