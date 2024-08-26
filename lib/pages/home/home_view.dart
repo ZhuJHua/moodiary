@@ -54,10 +54,19 @@ class HomePage extends StatelessWidget {
         );
       });
       return TabBarView(
-        controller: logic.tabController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: allView,
-      );
+          controller: logic.tabController, physics: const NeverScrollableScrollPhysics(), children: allView);
+    }
+
+    Widget buildModal() {
+      return AnimatedBuilder(
+          animation: logic.fabAnimation,
+          builder: (context, child) {
+            return state.isFabExpanded.value
+                ? ModalBarrier(
+                    color: Color.lerp(Colors.transparent, Colors.black54, logic.fabAnimation.value),
+                  )
+                : const SizedBox.shrink();
+          });
     }
 
     return GetBuilder<HomeLogic>(
@@ -67,109 +76,102 @@ class HomePage extends StatelessWidget {
         return Scaffold(
           drawer: const SideBarComponent(),
           drawerEnableOpenDragGesture: false,
-          body: Obx(() {
-            return Stack(
-              children: [
-                NestedScrollView(
-                  key: state.nestedScrollKey,
-                  headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-                    return [
-                      SliverAppBar(
-                        title: Tooltip(
-                          message: '侧边栏',
-                          child: InkWell(
-                            onTap: () {
-                              Scaffold.of(context).openDrawer();
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    state.customTitleName.isNotEmpty ? state.customTitleName : i18n.appName,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+          body: Stack(
+            children: [
+              NestedScrollView(
+                key: state.nestedScrollKey,
+                headerSliverBuilder: (context, _) {
+                  return [
+                    SliverAppBar(
+                      title: Tooltip(
+                        message: '侧边栏',
+                        child: InkWell(
+                          onTap: () {
+                            Scaffold.of(context).openDrawer();
+                          },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  state.customTitleName.isNotEmpty ? state.customTitleName : i18n.appName,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                const Icon(Icons.chevron_right)
-                              ],
-                            ),
-                          ),
-                        ),
-                        automaticallyImplyLeading: false,
-                        actions: [
-                          IconButton(
-                            onPressed: () {
-                              showModalBottomSheet(
-                                  context: context,
-                                  showDragHandle: true,
-                                  useSafeArea: true,
-                                  builder: (context) {
-                                    return const SearchSheetComponent();
-                                  });
-                            },
-                            icon: const Icon(Icons.search),
-                            tooltip: '搜索',
-                          ),
-                          PopupMenuButton(
-                            offset: const Offset(0, 46),
-                            tooltip: '更多',
-                            itemBuilder: (context) {
-                              return <PopupMenuEntry<String>>[
-                                CheckedPopupMenuItem(
-                                  checked: state.viewMode.value == ViewMode.list.name,
-                                  onTap: () async {
-                                    await logic.changeViewMode(ViewMode.list);
-                                  },
-                                  child: Text(i18n.homeViewModeList),
-                                ),
-                                CheckedPopupMenuItem(
-                                  checked: state.viewMode.value == ViewMode.calendar.name,
-                                  onTap: () async {
-                                    await logic.changeViewMode(ViewMode.calendar);
-                                  },
-                                  child: Text(i18n.homeViewModeCalendar),
-                                ),
-                              ];
-                            },
-                          ),
-                        ],
-                        bottom: PreferredSize(
-                          preferredSize: const Size.fromHeight(46.0),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: TabBar(
-                              controller: logic.tabController,
-                              isScrollable: true,
-                              dividerHeight: .0,
-                              tabAlignment: TabAlignment.start,
-                              indicatorSize: TabBarIndicatorSize.tab,
-                              splashFactory: NoSplash.splashFactory,
-                              indicator:
-                                  ShapeDecoration(shape: const StadiumBorder(), color: colorScheme.secondaryContainer),
-                              indicatorWeight: .0,
-                              indicatorPadding: const EdgeInsets.all(8.0),
-                              tabs: buildTabBar(),
-                            ),
+                              ),
+                              const Icon(Icons.chevron_right)
+                            ],
                           ),
                         ),
                       ),
-                    ];
-                  },
-                  body: state.viewMode.value == ViewMode.list.name ? buildListView() : buildDatePicker(),
-                ),
-                //如果fab打开了，显示一个蒙层
-                if (state.isFabExpanded.value) ...[
-                  AnimatedBuilder(
-                      animation: logic.fabAnimation,
-                      builder: (context, child) {
-                        return ModalBarrier(
-                          color: Color.lerp(Colors.transparent, Colors.black54, logic.fabAnimation.value),
-                        );
-                      })
-                ]
-              ],
-            );
-          }),
+                      automaticallyImplyLeading: false,
+                      actions: [
+                        IconButton(
+                          onPressed: () {
+                            showModalBottomSheet(
+                                context: context,
+                                showDragHandle: true,
+                                useSafeArea: true,
+                                builder: (context) {
+                                  return const SearchSheetComponent();
+                                });
+                          },
+                          icon: const Icon(Icons.search),
+                          tooltip: '搜索',
+                        ),
+                        PopupMenuButton(
+                          offset: const Offset(0, 46),
+                          tooltip: '更多',
+                          itemBuilder: (context) {
+                            return <PopupMenuEntry<String>>[
+                              CheckedPopupMenuItem(
+                                checked: state.viewModeType.value == ViewModeType.list,
+                                onTap: () async {
+                                  await logic.changeViewMode(ViewModeType.list);
+                                },
+                                child: Text(i18n.homeViewModeList),
+                              ),
+                              CheckedPopupMenuItem(
+                                checked: state.viewModeType.value == ViewModeType.calendar,
+                                onTap: () async {
+                                  await logic.changeViewMode(ViewModeType.calendar);
+                                },
+                                child: Text(i18n.homeViewModeCalendar),
+                              ),
+                            ];
+                          },
+                        ),
+                      ],
+                      bottom: PreferredSize(
+                        preferredSize: const Size.fromHeight(46.0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: TabBar(
+                            controller: logic.tabController,
+                            isScrollable: true,
+                            dividerHeight: .0,
+                            tabAlignment: TabAlignment.start,
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            splashFactory: NoSplash.splashFactory,
+                            indicator:
+                                ShapeDecoration(shape: const StadiumBorder(), color: colorScheme.secondaryContainer),
+                            indicatorWeight: .0,
+                            indicatorPadding: const EdgeInsets.all(8.0),
+                            tabs: buildTabBar(),
+                          ),
+                        ),
+                      ),
+                    )
+                  ];
+                },
+                body: switch (state.viewModeType.value) {
+                  ViewModeType.list => buildListView(),
+                  ViewModeType.calendar => buildDatePicker()
+                },
+              ),
+              //如果fab打开了，显示一个蒙层
+              buildModal(),
+            ],
+          ),
           floatingActionButton: AnimatedBuilder(
               animation: logic.fabAnimation,
               builder: (context, child) {

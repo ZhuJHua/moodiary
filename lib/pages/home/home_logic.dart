@@ -35,12 +35,10 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   void onReady() {
     // TODO: implement onReady
 
-    var innerController = state.nestedScrollKey.currentState!.innerController;
-
-    innerController.addListener(() async {
+    state.innerController.addListener(() async {
       if (!tabController.indexIsChanging) {
-        double offset = innerController.offset;
-        double maxScrollExtent = innerController.position.maxScrollExtent;
+        double offset = state.innerController.offset;
+        double maxScrollExtent = state.innerController.position.maxScrollExtent;
         // 显示或隐藏“回到顶部”按钮
         state.isToTopShow.value = offset > 0;
         // 分页加载
@@ -51,8 +49,6 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
         }
       }
     });
-
-    initTabListener();
     super.onReady();
   }
 
@@ -64,23 +60,9 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     super.onClose();
   }
 
-  void initTabListener() {
-    //监听tab滚动，切换时回到顶部
-
-    tabController.addListener(() async {
-      if (!tabController.indexIsChanging) {
-        var outerController = state.nestedScrollKey.currentState!.outerController;
-        if (outerController.offset != .0) {
-          await outerController.animateTo(0.0, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
-          //标记为变化结束
-        }
-      }
-    });
-  }
-
   Future<void> toTop() async {
-    var outerController = state.nestedScrollKey.currentState!.outerController;
-    await outerController.animateTo(0.0, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+    await state.innerController.animateTo(0.0, duration: const Duration(milliseconds: 100), curve: Curves.easeInOut);
+    await state.outerController.animateTo(0.0, duration: const Duration(milliseconds: 100), curve: Curves.easeInOut);
   }
 
   //初始化分类tab
@@ -101,11 +83,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     if (state.categoryList.length < currentIndex) {
       currentIndex = state.categoryList.length;
     }
-    //移出原有监听器
-    tabController.removeListener(initTabListener);
     tabController = TabController(length: state.categoryList.length + 1, vsync: this, initialIndex: currentIndex);
-    //重新开始监听
-    initTabListener();
     maxScrollExtentSet = {};
     //添加帧回调保证对应logic已经被创建
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -147,9 +125,9 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   }
 
   //切换视图模式
-  Future<void> changeViewMode(ViewMode viewMode) async {
-    state.viewMode.value = viewMode.name;
-    await Utils().prefUtil.setValue<String>('homeViewMode', viewMode.name);
+  Future<void> changeViewMode(ViewModeType viewModeType) async {
+    state.viewModeType.value = viewModeType;
+    await Utils().prefUtil.setValue<int>('homeViewMode', viewModeType.number);
   }
 
   //新增一篇日记
@@ -161,6 +139,5 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     fabAnimationController.reset();
     state.isFabExpanded.value = false;
     await updateDiary();
-    //点击添加按钮后新增一篇日记
   }
 }

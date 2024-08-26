@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
+import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 class HomeState {
@@ -13,8 +14,12 @@ class HomeState {
   //主滚动列表key
   late GlobalKey<NestedScrollViewState> nestedScrollKey;
 
+  ScrollController get innerController => nestedScrollKey.currentState!.innerController;
+
+  ScrollController get outerController => nestedScrollKey.currentState!.outerController;
+
   //视图模式状态
-  late RxString viewMode;
+  late Rx<ViewModeType> viewModeType;
 
   //fab展开状态
   late RxBool isFabExpanded;
@@ -28,7 +33,7 @@ class HomeState {
   HomeState() {
     isFabExpanded = false.obs;
     isToTopShow = false.obs;
-    viewMode = Utils().prefUtil.getValue<String>('homeViewMode')!.obs;
+    viewModeType = ViewModeType.getType(Utils().prefUtil.getValue<int>('homeViewMode')!).obs;
     selectDateTime = <DateTime>[].obs;
     categoryList = Utils().isarUtil.getAllCategory().obs;
     customTitleName = Utils().prefUtil.getValue<String>('customTitleName')!;

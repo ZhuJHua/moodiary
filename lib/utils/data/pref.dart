@@ -1,3 +1,4 @@
+import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,7 +66,6 @@ class PrefUtil {
   Future<void> initPref() async {
     _prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(allowList: allowList));
-
     // 首次启动
     var firstStart = _prefs.getBool('firstStart') ?? true;
     await _prefs.setBool('firstStart', firstStart);
@@ -103,7 +103,7 @@ class PrefUtil {
     await _prefs.setBool('getWeather', _prefs.getBool('getWeather') ?? false);
     await _prefs.setInt('startTime', _prefs.getInt('startTime') ?? DateTime.now().millisecondsSinceEpoch);
     await _prefs.setString('customTitleName', _prefs.getString('customTitleName') ?? '');
-    await _prefs.setString('homeViewMode', _prefs.getString('homeViewMode') ?? 'list');
+    await _prefs.setInt('homeViewMode', _prefs.getInt('homeViewMode') ?? ViewModeType.list.number);
   }
 
   Future<void> setValue<T>(String key, T value) async {

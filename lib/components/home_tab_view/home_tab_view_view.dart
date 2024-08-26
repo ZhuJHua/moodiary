@@ -21,7 +21,6 @@ class HomeTabViewComponent extends StatelessWidget {
       return MasonryGridView.builder(
         gridDelegate: const SliverSimpleGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 440),
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        shrinkWrap: true,
         itemBuilder: (context, index) {
           final aspect = state.diaryList.value[index].aspect;
           //如果是横图，显示大卡片，竖图或者没有图显示小卡片
