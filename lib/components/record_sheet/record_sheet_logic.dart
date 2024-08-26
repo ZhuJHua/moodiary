@@ -16,7 +16,6 @@ class RecordSheetLogic extends GetxController with GetSingleTickerProviderStateM
   final AudioRecorder audioRecorder = AudioRecorder();
   late AnimationController animationController =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 100), lowerBound: 0, upperBound: 1.0);
-  final size = MediaQuery.sizeOf(Get.context!);
 
   late final editLogic = Bind.find<EditLogic>();
 
@@ -40,6 +39,10 @@ class RecordSheetLogic extends GetxController with GetSingleTickerProviderStateM
     super.onClose();
   }
 
+  void initMaxWidth(value) {
+    state.maxWidth = value;
+  }
+
   Future<void> startRecorder() async {
     if (await Utils().permissionUtil.checkPermission(Permission.microphone)) {
       await animationController.forward();
@@ -56,7 +59,6 @@ class RecordSheetLogic extends GetxController with GetSingleTickerProviderStateM
   void listenAmplitude() {
     final amplitudeStream = audioRecorder.onAmplitudeChanged(const Duration(milliseconds: 100));
     amplitudeStream.listen((amplitude) {
-      Utils().logUtil.printInfo(amplitude.current);
       if (amplitude.current.isInfinite) {
         maxLengthAdd(.0);
       } else if (amplitude.current != amplitude.max) {
@@ -72,7 +74,7 @@ class RecordSheetLogic extends GetxController with GetSingleTickerProviderStateM
   }
 
   void maxLengthAdd(value) {
-    if (state.amplitudes.length > size.width ~/ 6.0) {
+    if (state.amplitudes.length > state.maxWidth ~/ 6.0) {
       state.amplitudes.removeAt(0);
     }
     state.amplitudes.add(value);

@@ -8,6 +8,7 @@ class RecordSheetState {
   late String fileName;
   late RxDouble height;
 
+  late double maxWidth;
   late bool isStop;
 
   RecordSheetState() {

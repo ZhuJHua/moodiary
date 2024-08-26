@@ -63,6 +63,7 @@ class EditPage extends StatelessWidget {
                   context: context,
                   showDragHandle: true,
                   useSafeArea: true,
+                  isScrollControlled: true,
                   builder: (context) {
                     return const RecordSheetComponent();
                   });

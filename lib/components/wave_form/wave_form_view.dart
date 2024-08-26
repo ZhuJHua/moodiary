@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:mood_diary/components/record_sheet/record_sheet_logic.dart';
 
 class WaveFormPainter extends CustomPainter {
   final double barWidth;
   final double spaceWidth;
   final Color color;
   final List<double> amplitudes;
-
-  final recordLogic = Bind.find<RecordSheetLogic>();
 
   WaveFormPainter(
     this.amplitudes, {
