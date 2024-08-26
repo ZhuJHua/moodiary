@@ -33,6 +33,7 @@ class NoticeUtil {
 
   void showBug(message, {required Object error, StackTrace? stackTrace}) {
     final colorScheme = Theme.of(Get.context!).colorScheme;
+    ScaffoldMessenger.of(Get.context!).clearSnackBars();
     ScaffoldMessenger.of(Get.context!).showSnackBar(
       SnackBar(
         content: Column(
