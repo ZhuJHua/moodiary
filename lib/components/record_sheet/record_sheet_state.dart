@@ -11,6 +11,9 @@ class RecordSheetState {
   late double maxWidth;
   late bool isStop;
 
+  late double barWidth;
+  late double spaceWidth;
+
   RecordSheetState() {
     amplitudes = <double>[].obs;
     isRecording = false.obs;
@@ -19,6 +22,8 @@ class RecordSheetState {
     height = .0.obs;
     isStop = false;
     durationTime = const Duration().obs;
+    barWidth = 2.0;
+    spaceWidth = 2.0;
 
     ///Initialize variables
   }

@@ -11,9 +11,12 @@ import 'package:uuid/uuid.dart';
 
 import 'record_sheet_state.dart';
 
-class RecordSheetLogic extends GetxController with GetSingleTickerProviderStateMixin {
+class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
   final RecordSheetState state = RecordSheetState();
-  final AudioRecorder audioRecorder = AudioRecorder();
+
+  late final AudioRecorder audioRecorder = AudioRecorder();
+
+  //按钮动画控制器
   late AnimationController animationController =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 100), lowerBound: 0, upperBound: 1.0);
 
@@ -24,7 +27,7 @@ class RecordSheetLogic extends GetxController with GetSingleTickerProviderStateM
   @override
   void onReady() {
     // TODO: implement onReady
-    listenAmplitude();
+
     super.onReady();
   }
 
@@ -34,7 +37,7 @@ class RecordSheetLogic extends GetxController with GetSingleTickerProviderStateM
     if (state.isStop == false) {
       await audioRecorder.cancel();
     }
-    audioRecorder.dispose();
+    await audioRecorder.dispose();
     animationController.dispose();
     super.onClose();
   }
@@ -44,27 +47,33 @@ class RecordSheetLogic extends GetxController with GetSingleTickerProviderStateM
   }
 
   Future<void> startRecorder() async {
-    if (await Utils().permissionUtil.checkPermission(Permission.microphone)) {
+    if (await Utils().permissionUtil.checkPermission(Permission.microphone) &&
+        await Utils().permissionUtil.checkPermission(Permission.bluetoothConnect)) {
       await animationController.forward();
       state.isRecording.value = true;
       state.isStarted.value = true;
       state.height.value = 140.0;
       state.fileName = 'audio-${const Uuid().v7()}.m4a';
-      //暂时保存在缓存目录中
-      await audioRecorder.start(const RecordConfig(encoder: AudioEncoder.aacLc),
+
+      ///开始录制
+      ///暂时保存在缓存目录中
+      await audioRecorder.start(
+          const RecordConfig(androidConfig: AndroidRecordConfig(muteAudio: true, useLegacy: true)),
           path: Utils().fileUtil.getCachePath(state.fileName));
+      //启动监听
+      listenAmplitude();
     }
   }
 
   void listenAmplitude() {
-    final amplitudeStream = audioRecorder.onAmplitudeChanged(const Duration(milliseconds: 100));
+    final amplitudeStream = audioRecorder.onAmplitudeChanged(const Duration(milliseconds: 40));
     amplitudeStream.listen((amplitude) {
+      state.durationTime.value += const Duration(milliseconds: 40);
       if (amplitude.current.isInfinite) {
         maxLengthAdd(.0);
       } else if (amplitude.current != amplitude.max) {
         maxLengthAdd(normalizeAmplitude(amplitude.current));
       }
-      timeIncrease();
     });
   }
 
@@ -74,14 +83,10 @@ class RecordSheetLogic extends GetxController with GetSingleTickerProviderStateM
   }
 
   void maxLengthAdd(value) {
-    if (state.amplitudes.length > state.maxWidth ~/ 6.0) {
+    if (state.amplitudes.length > state.maxWidth ~/ (state.barWidth + state.spaceWidth)) {
       state.amplitudes.removeAt(0);
     }
     state.amplitudes.add(value);
-  }
-
-  void timeIncrease() {
-    state.durationTime.value += const Duration(milliseconds: 100);
   }
 
   Future<void> stopRecorder() async {

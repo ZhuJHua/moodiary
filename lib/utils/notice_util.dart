@@ -32,29 +32,29 @@ class NoticeUtil {
   }
 
   void showBug(message, {required Object error, StackTrace? stackTrace}) {
-    final colorScheme = Theme.of(Get.context!).colorScheme;
-    ScaffoldMessenger.of(Get.context!).clearSnackBars();
-    ScaffoldMessenger.of(Get.context!).showSnackBar(
-      SnackBar(
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '出错了！请截图联系开发者。$message',
-              style: TextStyle(color: colorScheme.onErrorContainer),
-            ),
-            Text(
-              error.toString(),
-              style: TextStyle(color: colorScheme.onErrorContainer),
-            ),
-            Text(stackTrace?.toString() ?? '', style: TextStyle(color: colorScheme.onErrorContainer)),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 20),
-        backgroundColor: colorScheme.errorContainer,
-        showCloseIcon: true,
-      ),
-    );
+    // final colorScheme = Theme.of(Get.context!).colorScheme;
+    // ScaffoldMessenger.of(Get.context!).clearSnackBars();
+    // ScaffoldMessenger.of(Get.context!).showSnackBar(
+    //   SnackBar(
+    //     content: Column(
+    //       crossAxisAlignment: CrossAxisAlignment.start,
+    //       children: [
+    //         Text(
+    //           '出错了！请截图联系开发者。$message',
+    //           style: TextStyle(color: colorScheme.onErrorContainer),
+    //         ),
+    //         Text(
+    //           error.toString(),
+    //           style: TextStyle(color: colorScheme.onErrorContainer),
+    //         ),
+    //         Text(stackTrace?.toString() ?? '', style: TextStyle(color: colorScheme.onErrorContainer)),
+    //       ],
+    //     ),
+    //     behavior: SnackBarBehavior.floating,
+    //     duration: const Duration(seconds: 20),
+    //     backgroundColor: colorScheme.errorContainer,
+    //     showCloseIcon: true,
+    //   ),
+    // );
   }
 }

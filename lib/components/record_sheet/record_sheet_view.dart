@@ -12,6 +12,7 @@ class RecordSheetComponent extends StatelessWidget {
     final logic = Get.put(RecordSheetLogic());
     final state = Bind.find<RecordSheetLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
+
     return LayoutBuilder(builder: (context, constrains) {
       return GetBuilder<RecordSheetLogic>(
         init: logic,
@@ -24,25 +25,21 @@ class RecordSheetComponent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Obx(() {
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 100),
-                  child: state.isStarted.value
-                      ? SizedBox(
-                          height: 100,
-                          key: const ValueKey('wave'),
-                          child: Obx(() {
-                            return WaveFormComponent(
-                              amplitudes: state.amplitudes.value,
-                              height: 100,
+              SizedBox(
+                height: 100,
+                child: Obx(() {
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 100),
+                    child: state.isStarted.value
+                        ? Obx(() {
+                            return CustomPaint(
+                              painter: WaveFormPainter(state.amplitudes.value,
+                                  color: colorScheme.primary, barWidth: state.barWidth, spaceWidth: state.spaceWidth),
+                              size: Size(state.amplitudes.value.length * (state.barWidth + state.spaceWidth), 100),
                             );
-                          }),
-                        )
-                      : SizedBox(
-                          height: 100,
-                          key: const ValueKey('start'),
-                          child: Center(
-                              child: Container(
+                          })
+                        : Center(
+                            child: Container(
                             decoration: BoxDecoration(
                                 border: Border.all(color: colorScheme.outline, width: 4.0), shape: BoxShape.circle),
                             child: IconButton(
@@ -56,9 +53,9 @@ class RecordSheetComponent extends StatelessWidget {
                                   color: Colors.redAccent,
                                 )),
                           )),
-                        ),
-                );
-              }),
+                  );
+                }),
+              ),
               Obx(() {
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 100),

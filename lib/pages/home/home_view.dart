@@ -17,8 +17,12 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Bind.find<HomeLogic>();
-    final state = Bind.find<HomeLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
+    final state = Bind
+        .find<HomeLogic>()
+        .state;
+    final colorScheme = Theme
+        .of(context)
+        .colorScheme;
     final i18n = AppLocalizations.of(context)!;
     //生成日历选择器
     Widget buildDatePicker() {
@@ -63,9 +67,95 @@ class HomePage extends StatelessWidget {
           builder: (context, child) {
             return state.isFabExpanded.value
                 ? ModalBarrier(
-                    color: Color.lerp(Colors.transparent, Colors.black54, logic.fabAnimation.value),
-                  )
+              color: Color.lerp(Colors.transparent, Colors.black54, logic.fabAnimation.value),
+            )
                 : const SizedBox.shrink();
+          });
+    }
+
+    Widget buildToTopButton() {
+      return state.isToTopShow.value && state.isFabExpanded.value == false
+          ? Transform(
+        transform: Matrix4.identity()
+          ..translate(.0, -(56.0 + 8.0)),
+        alignment: FractionalOffset.center,
+        child: InkWell(
+          onTap: () async {
+            await logic.toTop();
+          },
+          child: Container(
+            decoration: ShapeDecoration(
+                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
+                color: colorScheme.tertiaryContainer),
+            width: 56.0,
+            height: 56.0,
+            child: const Icon(Icons.arrow_upward),
+          ),
+        ),
+      )
+          : const SizedBox.shrink();
+    }
+
+    Widget buildAddDiaryButton() {
+      return AnimatedBuilder(
+        animation: logic.fabAnimation,
+        child: InkWell(
+          onTap: () async {
+            await logic.toEditPage();
+          },
+          child: Container(
+            decoration: ShapeDecoration(
+                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
+                color: colorScheme.primaryContainer),
+            width: 140.0,
+            height: 56.0,
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.edit,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+                const SizedBox(
+                  width: 8.0,
+                ),
+                Text(
+                  '新建日记',
+                  style: TextStyle(color: colorScheme.onPrimaryContainer),
+                ),
+              ],
+            ),
+          ),
+        ),
+        builder: (context, child) {
+          return Transform(
+            transform: Matrix4.identity()
+              ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
+              ..translate(.0, -((56.0 + 8.0)) * logic.fabAnimation.value),
+            alignment: FractionalOffset.centerRight,
+            child: child,
+          );
+        },
+      );
+    }
+
+    Widget buildFabButton() {
+      return AnimatedBuilder(
+          animation: logic.fabAnimation,
+          child: const Icon(Icons.add),
+          builder: (context, child) {
+            return FloatingActionButton(
+              onPressed: () async {
+                state.isFabExpanded.value ? await logic.closeFab() : await logic.openFab();
+              },
+              backgroundColor:
+              Color.lerp(colorScheme.primaryContainer, colorScheme.tertiaryContainer, logic.fabAnimation.value),
+              child: Transform.rotate(
+                angle: 3 * pi / 4 * logic.fabAnimation.value,
+                child: child,
+              ),
+            );
           });
     }
 
@@ -153,7 +243,7 @@ class HomePage extends StatelessWidget {
                             indicatorSize: TabBarIndicatorSize.tab,
                             splashFactory: NoSplash.splashFactory,
                             indicator:
-                                ShapeDecoration(shape: const StadiumBorder(), color: colorScheme.secondaryContainer),
+                            ShapeDecoration(shape: const StadiumBorder(), color: colorScheme.secondaryContainer),
                             indicatorWeight: .0,
                             indicatorPadding: const EdgeInsets.all(8.0),
                             tabs: buildTabBar(),
@@ -172,87 +262,19 @@ class HomePage extends StatelessWidget {
               buildModal(),
             ],
           ),
-          floatingActionButton: AnimatedBuilder(
-              animation: logic.fabAnimation,
-              builder: (context, child) {
-                return SizedBox(
-                  height: 56 + (56 + 8),
-                  child: Obx(() {
-                    return Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        if (state.isToTopShow.value && state.isFabExpanded.value == false) ...[
-                          Transform(
-                            transform: Matrix4.identity()..translate(.0, -(56.0 + 8.0)),
-                            alignment: FractionalOffset.center,
-                            child: InkWell(
-                              onTap: () async {
-                                await logic.toTop();
-                              },
-                              child: Container(
-                                decoration: ShapeDecoration(
-                                    shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(Radius.circular(16.0))),
-                                    color: colorScheme.tertiaryContainer),
-                                width: 56.0,
-                                height: 56.0,
-                                child: const Icon(Icons.arrow_upward),
-                              ),
-                            ),
-                          )
-                        ],
-                        Transform(
-                          transform: Matrix4.identity()
-                            ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
-                            ..translate(.0, -((56.0 + 8.0)) * logic.fabAnimation.value),
-                          alignment: FractionalOffset.centerRight,
-                          child: InkWell(
-                            onTap: () async {
-                              await logic.toEditPage();
-                            },
-                            child: Container(
-                              decoration: ShapeDecoration(
-                                  shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(16.0))),
-                                  color: colorScheme.primaryContainer),
-                              width: 140.0,
-                              height: 56.0,
-                              alignment: Alignment.center,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.edit,
-                                    color: colorScheme.onPrimaryContainer,
-                                  ),
-                                  const SizedBox(
-                                    width: 8.0,
-                                  ),
-                                  Text(
-                                    '新建日记',
-                                    style: TextStyle(color: colorScheme.onPrimaryContainer),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        FloatingActionButton(
-                          onPressed: () async {
-                            state.isFabExpanded.value ? await logic.closeFab() : await logic.openFab();
-                          },
-                          backgroundColor: Color.lerp(
-                              colorScheme.primaryContainer, colorScheme.tertiaryContainer, logic.fabAnimation.value),
-                          child: Transform.rotate(
-                            angle: 3 * pi / 4 * logic.fabAnimation.value,
-                            child: const Icon(Icons.add),
-                          ),
-                        )
-                      ],
-                    );
-                  }),
-                );
-              }),
+          floatingActionButton: SizedBox(
+            height: 56 + (56 + 8),
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                Obx(() {
+                  return buildToTopButton();
+                }),
+                buildAddDiaryButton(),
+                buildFabButton(),
+              ],
+            ),
+          ),
         );
       },
     );
