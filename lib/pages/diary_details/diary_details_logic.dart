@@ -5,14 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
 
-import 'diary_state.dart';
+import 'diary_details_state.dart';
 
-class DiaryLogic extends GetxController {
-  final DiaryState state = DiaryState();
+class DiaryDetailsLogic extends GetxController {
+  final DiaryDetailsState state = DiaryDetailsState();
 
   //编辑器控制器
   late QuillController quillController = QuillController(
@@ -20,8 +19,6 @@ class DiaryLogic extends GetxController {
     readOnly: true,
     selection: const TextSelection.collapsed(offset: 0),
   );
-
-  late HomeLogic homeLogic = Bind.find<HomeLogic>();
 
   @override
   void onInit() {
@@ -88,15 +85,13 @@ class DiaryLogic extends GetxController {
         readOnly: true,
         selection: const TextSelection.collapsed(offset: 0),
       );
-      await homeLogic.updateDiary();
       update();
     }
   }
 
   //放入回收站
   Future<void> delete(Diary diary) async {
-    Get.backLegacy(result: 'delete');
-    await homeLogic.updateDiary();
     await Utils().isarUtil.updateADiary(diary..show = false);
+    Get.backLegacy(result: 'delete');
   }
 }

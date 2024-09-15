@@ -1,6 +1,6 @@
 enum ViewModeType {
   list(0, 'ListView'),
-  calendar(1, 'CalendarView');
+  grid(1, 'GridView');
 
   const ViewModeType(this.number, this.value);
 

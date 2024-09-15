@@ -54,6 +54,7 @@ class Api {
       };
       var res = await Utils().httpUtil.get('https://devapi.qweather.com/v7/weather/now', parameters: parameters);
       var weather = await compute(WeatherResponse.fromJson, res.data as Map<String, dynamic>);
+      Utils().logUtil.printInfo(weather.toJson());
       return [
         weather.now!.icon!,
         weather.now!.temp!,

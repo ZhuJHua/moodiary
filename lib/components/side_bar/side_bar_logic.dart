@@ -73,14 +73,6 @@ class SideBarLogic extends GetxController {
     await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
 
-  Future<void> toSettingPage() async {
-    Get.backLegacy();
-    //进入设置页
-    await Get.toNamed(AppRoutes.settingPage);
-    //返回后刷新
-    await homeLogic.updateDiary();
-  }
-
   void toPrivacy() {
     Get.toNamed(AppRoutes.privacyPage);
   }

@@ -1,13 +1,15 @@
+import 'dart:io';
 import 'dart:math';
 
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/common/values/view_mode.dart';
-import 'package:mood_diary/components/home_tab_view/home_tab_view_view.dart';
-import 'package:mood_diary/components/search_sheet/search_sheet_view.dart';
-import 'package:mood_diary/components/side_bar/side_bar_view.dart';
+import 'package:mood_diary/components/keepalive/keepalive.dart';
+import 'package:mood_diary/pages/home/calendar/calendar_view.dart';
+import 'package:mood_diary/pages/home/diary/diary_view.dart';
+import 'package:mood_diary/pages/home/media/media_view.dart';
+import 'package:mood_diary/pages/home/setting/setting_view.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'home_logic.dart';
 
@@ -17,49 +19,10 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Bind.find<HomeLogic>();
-    final state = Bind
-        .find<HomeLogic>()
-        .state;
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final state = Bind.find<HomeLogic>().state;
+    final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
-    //生成日历选择器
-    Widget buildDatePicker() {
-      return CalendarDatePicker2(
-        config: CalendarDatePicker2Config(
-          calendarViewMode: CalendarDatePicker2Mode.day,
-          calendarType: CalendarDatePicker2Type.range,
-        ),
-        value: state.selectDateTime.value,
-      );
-    }
-
-    //生成tab
-    List<Widget> buildTabBar() {
-      //默认的全部tab
-      var allTab = [const Tab(text: '全部')];
-      //根据分类生成分类Tab
-      return allTab +
-          List.generate(state.categoryList.length, (index) {
-            return Tab(text: state.categoryList[index].categoryName);
-          });
-    }
-
-    //列表布局
-    Widget buildListView() {
-      //全部日记页面
-      var allView = [const HomeTabViewComponent(tag: '0')];
-      //分类日记页面
-      allView += List.generate(state.categoryList.length, (index) {
-        return HomeTabViewComponent(
-          categoryId: state.categoryList[index].id,
-          tag: (index + 1).toString(),
-        );
-      });
-      return TabBarView(
-          controller: logic.tabController, physics: const NeverScrollableScrollPhysics(), children: allView);
-    }
+    final size = MediaQuery.sizeOf(context);
 
     Widget buildModal() {
       return AnimatedBuilder(
@@ -67,32 +30,35 @@ class HomePage extends StatelessWidget {
           builder: (context, child) {
             return state.isFabExpanded.value
                 ? ModalBarrier(
-              color: Color.lerp(Colors.transparent, Colors.black54, logic.fabAnimation.value),
-            )
+                    color: colorScheme.surface.withAlpha((255 * 0.6 * logic.fabAnimation.value).toInt()),
+                    onDismiss: () async {
+                      await logic.closeFab();
+                    },
+                  )
                 : const SizedBox.shrink();
           });
     }
 
     Widget buildToTopButton() {
-      return state.isToTopShow.value && state.isFabExpanded.value == false
+      return logic.diaryLogic.state.isToTopShow.value && state.isFabExpanded.value == false
           ? Transform(
-        transform: Matrix4.identity()
-          ..translate(.0, -(56.0 + 8.0)),
-        alignment: FractionalOffset.center,
-        child: InkWell(
-          onTap: () async {
-            await logic.toTop();
-          },
-          child: Container(
-            decoration: ShapeDecoration(
-                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
-                color: colorScheme.tertiaryContainer),
-            width: 56.0,
-            height: 56.0,
-            child: const Icon(Icons.arrow_upward),
-          ),
-        ),
-      )
+              transform: Matrix4.identity()..translate(.0, -(56.0 + 8.0)),
+              alignment: FractionalOffset.center,
+              child: InkWell(
+                onTap: () async {
+                  await logic.diaryLogic.toTop();
+                },
+                child: Container(
+                  decoration: ShapeDecoration(
+                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
+                    color: colorScheme.tertiaryContainer,
+                  ),
+                  width: 56.0,
+                  height: 56.0,
+                  child: const Icon(Icons.arrow_upward),
+                ),
+              ),
+            )
           : const SizedBox.shrink();
     }
 
@@ -105,23 +71,21 @@ class HomePage extends StatelessWidget {
           },
           child: Container(
             decoration: ShapeDecoration(
-                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
-                color: colorScheme.primaryContainer),
-            width: 140.0,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
+              color: colorScheme.primaryContainer,
+            ),
             height: 56.0,
             alignment: Alignment.center,
             child: Row(
               mainAxisSize: MainAxisSize.min,
+              spacing: 16.0,
               children: [
                 Icon(
                   Icons.edit,
                   color: colorScheme.onPrimaryContainer,
                 ),
-                const SizedBox(
-                  width: 8.0,
-                ),
                 Text(
-                  '新建日记',
+                  i18n.homePageAddDiaryButton,
                   style: TextStyle(color: colorScheme.onPrimaryContainer),
                 ),
               ],
@@ -133,7 +97,7 @@ class HomePage extends StatelessWidget {
             transform: Matrix4.identity()
               ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
               ..translate(.0, -((56.0 + 8.0)) * logic.fabAnimation.value),
-            alignment: FractionalOffset.centerRight,
+            alignment: size.aspectRatio >= 1.0 ? FractionalOffset.centerLeft : FractionalOffset.centerRight,
             child: child,
           );
         },
@@ -150,7 +114,7 @@ class HomePage extends StatelessWidget {
                 state.isFabExpanded.value ? await logic.closeFab() : await logic.openFab();
               },
               backgroundColor:
-              Color.lerp(colorScheme.primaryContainer, colorScheme.tertiaryContainer, logic.fabAnimation.value),
+                  Color.lerp(colorScheme.primaryContainer, colorScheme.tertiaryContainer, logic.fabAnimation.value),
               child: Transform.rotate(
                 angle: 3 * pi / 4 * logic.fabAnimation.value,
                 child: child,
@@ -159,113 +123,14 @@ class HomePage extends StatelessWidget {
           });
     }
 
-    return GetBuilder<HomeLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
-        return Scaffold(
-          drawer: const SideBarComponent(),
-          drawerEnableOpenDragGesture: false,
-          body: Stack(
-            children: [
-              NestedScrollView(
-                key: state.nestedScrollKey,
-                headerSliverBuilder: (context, _) {
-                  return [
-                    SliverAppBar(
-                      title: Tooltip(
-                        message: '侧边栏',
-                        child: InkWell(
-                          onTap: () {
-                            Scaffold.of(context).openDrawer();
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  state.customTitleName.isNotEmpty ? state.customTitleName : i18n.appName,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const Icon(Icons.chevron_right)
-                            ],
-                          ),
-                        ),
-                      ),
-                      automaticallyImplyLeading: false,
-                      actions: [
-                        IconButton(
-                          onPressed: () {
-                            showModalBottomSheet(
-                                context: context,
-                                showDragHandle: true,
-                                useSafeArea: true,
-                                builder: (context) {
-                                  return const SearchSheetComponent();
-                                });
-                          },
-                          icon: const Icon(Icons.search),
-                          tooltip: '搜索',
-                        ),
-                        PopupMenuButton(
-                          offset: const Offset(0, 46),
-                          tooltip: '更多',
-                          itemBuilder: (context) {
-                            return <PopupMenuEntry<String>>[
-                              CheckedPopupMenuItem(
-                                checked: state.viewModeType.value == ViewModeType.list,
-                                onTap: () async {
-                                  await logic.changeViewMode(ViewModeType.list);
-                                },
-                                child: Text(i18n.homeViewModeList),
-                              ),
-                              CheckedPopupMenuItem(
-                                checked: state.viewModeType.value == ViewModeType.calendar,
-                                onTap: () async {
-                                  await logic.changeViewMode(ViewModeType.calendar);
-                                },
-                                child: Text(i18n.homeViewModeCalendar),
-                              ),
-                            ];
-                          },
-                        ),
-                      ],
-                      bottom: PreferredSize(
-                        preferredSize: const Size.fromHeight(46.0),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: TabBar(
-                            controller: logic.tabController,
-                            isScrollable: true,
-                            dividerHeight: .0,
-                            tabAlignment: TabAlignment.start,
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            splashFactory: NoSplash.splashFactory,
-                            indicator:
-                            ShapeDecoration(shape: const StadiumBorder(), color: colorScheme.secondaryContainer),
-                            indicatorWeight: .0,
-                            indicatorPadding: const EdgeInsets.all(8.0),
-                            tabs: buildTabBar(),
-                          ),
-                        ),
-                      ),
-                    )
-                  ];
-                },
-                body: switch (state.viewModeType.value) {
-                  ViewModeType.list => buildListView(),
-                  ViewModeType.calendar => buildDatePicker()
-                },
-              ),
-              //如果fab打开了，显示一个蒙层
-              buildModal(),
-            ],
-          ),
-          floatingActionButton: SizedBox(
-            height: 56 + (56 + 8),
+    Widget? buildFab() {
+      if (state.navigatorIndex.value == 0) {
+        return Obx(() {
+          return SizedBox(
+            height: state.isFabExpanded.value || logic.diaryLogic.state.isToTopShow.value ? 56 + (56 + 8) : 56,
+            width: state.isFabExpanded.value ? 156 : 56,
             child: Stack(
-              alignment: Alignment.bottomRight,
+              alignment: size.aspectRatio >= 1.0 ? Alignment.bottomLeft : Alignment.bottomRight,
               children: [
                 Obx(() {
                   return buildToTopButton();
@@ -274,7 +139,146 @@ class HomePage extends StatelessWidget {
                 buildFabButton(),
               ],
             ),
+          );
+        });
+      } else {
+        return null;
+      }
+    }
+
+    Widget buildNavigatorBar() {
+      return size.aspectRatio < 1.0
+          ? Obx(() {
+              return NavigationBar(
+                destinations: [
+                  NavigationDestination(
+                    icon: const Icon(Icons.article_outlined),
+                    label: i18n.homeNavigatorDiary,
+                    selectedIcon: const Icon(Icons.article),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.calendar_today_outlined),
+                    label: i18n.homeNavigatorCalendar,
+                    selectedIcon: const Icon(Icons.calendar_today),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.perm_media_outlined),
+                    label: i18n.homeNavigatorMedia,
+                    selectedIcon: const Icon(Icons.perm_media),
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.settings_outlined),
+                    label: i18n.homeNavigatorSetting,
+                    selectedIcon: const Icon(Icons.settings),
+                  )
+                ],
+                selectedIndex: state.navigatorIndex.value,
+                height: state.navigatorBarHeight,
+                backgroundColor: colorScheme.surface,
+                onDestinationSelected: (index) {
+                  logic.changeNavigator(index);
+                },
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+              );
+            })
+          : const SizedBox.shrink();
+    }
+
+    Widget buildNavigatorRail() {
+      return size.aspectRatio >= 1.0
+          ? Obx(() {
+              return NavigationRail(
+                destinations: [
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.article_outlined),
+                    label: Text(i18n.homeNavigatorDiary),
+                    selectedIcon: const Icon(Icons.article),
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.calendar_today_outlined),
+                    label: Text(i18n.homeNavigatorCalendar),
+                    selectedIcon: const Icon(Icons.calendar_today),
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.perm_media_outlined),
+                    label: Text(i18n.homeNavigatorMedia),
+                    selectedIcon: const Icon(Icons.perm_media),
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.settings_outlined),
+                    label: Text(i18n.homeNavigatorSetting),
+                    selectedIcon: const Icon(Icons.settings),
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  )
+                ],
+                labelType: NavigationRailLabelType.selected,
+                selectedIndex: state.navigatorIndex.value,
+                onDestinationSelected: (index) {
+                  logic.changeNavigator(index);
+                },
+              );
+            })
+          : const SizedBox.shrink();
+    }
+
+    return GetBuilder<HomeLogic>(
+      init: logic,
+      assignId: true,
+      builder: (logic) {
+        return Scaffold(
+          appBar: Platform.isWindows
+              ? PreferredSize(
+                  preferredSize: const Size.fromHeight(kWindowCaptionHeight),
+                  child: WindowCaption(
+                    brightness: colorScheme.brightness,
+                    backgroundColor: colorScheme.surface,
+                  ))
+              : null,
+          body: Stack(
+            children: [
+              //主布局
+              Row(
+                children: [
+                  //侧边导航栏
+                  buildNavigatorRail(),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: PageView(
+                            controller: logic.pageController,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: const [
+                              KeepAliveWrapper(child: DiaryPage()),
+                              KeepAliveWrapper(child: CalendarPage()),
+                              KeepAliveWrapper(child: MediaPage()),
+                              KeepAliveWrapper(child: SettingPage()),
+                            ],
+                          ),
+                        ),
+                        //底部导航栏
+                      ],
+                    ),
+                  )
+                ],
+              ),
+              //遮罩
+              buildModal()
+            ],
           ),
+          floatingActionButton: buildFab(),
+          bottomNavigationBar: SizedBox(
+            height: state.navigatorBarHeight,
+            child: Stack(
+              children: [buildNavigatorBar(), buildModal()],
+            ),
+          ),
+          floatingActionButtonLocation: size.aspectRatio >= 1.0
+              ? FloatingActionButtonLocation.miniStartFloat
+              : FloatingActionButtonLocation.endFloat,
         );
       },
     );

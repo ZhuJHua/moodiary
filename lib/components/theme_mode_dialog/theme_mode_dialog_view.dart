@@ -22,15 +22,13 @@ class ThemeModeDialogComponent extends StatelessWidget {
           children: [
             SimpleDialogOption(
               child: Row(
+                spacing: 8.0,
                 children: [
                   if (state.themeMode == 0) ...[
                     const Icon(Icons.check),
                   ] else ...[
                     const Icon(Icons.brightness_auto_outlined),
                   ],
-                  const SizedBox(
-                    width: 10,
-                  ),
                   Text(i18n.themeModeSystem),
                 ],
               ),
@@ -40,15 +38,13 @@ class ThemeModeDialogComponent extends StatelessWidget {
             ),
             SimpleDialogOption(
               child: Row(
+                spacing: 8.0,
                 children: [
                   if (state.themeMode == 1) ...[
                     const Icon(Icons.check),
                   ] else ...[
                     const Icon(Icons.light_mode_outlined),
                   ],
-                  const SizedBox(
-                    width: 10,
-                  ),
                   Text(i18n.themeModeLight),
                 ],
               ),
@@ -58,15 +54,13 @@ class ThemeModeDialogComponent extends StatelessWidget {
             ),
             SimpleDialogOption(
               child: Row(
+                spacing: 8.0,
                 children: [
                   if (state.themeMode == 2) ...[
                     const Icon(Icons.check),
                   ] else ...[
                     const Icon(Icons.dark_mode_outlined),
                   ],
-                  const SizedBox(
-                    width: 10,
-                  ),
                   Text(i18n.themeModeDark),
                 ],
               ),

@@ -39,9 +39,6 @@ class DashboardComponent extends StatelessWidget {
                     )
                   ],
                 ),
-                const SizedBox(
-                  width: 8.0,
-                ),
                 Expanded(child: Center(child: content))
               ],
             ),
@@ -69,15 +66,13 @@ class DashboardComponent extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4.0,
                 children: [
                   RichText(
                     text: TextSpan(children: [
                       TextSpan(text: '$content1 ', style: textStyle.titleLarge!.copyWith(color: colorScheme.tertiary)),
                       TextSpan(text: unit1, style: textStyle.labelLarge)
                     ]),
-                  ),
-                  const SizedBox(
-                    height: 8.0,
                   ),
                   RichText(
                     text: TextSpan(children: [
@@ -96,6 +91,7 @@ class DashboardComponent extends StatelessWidget {
           : Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 4.0,
               children: [
                 if (weather != 'none') ...[
                   Row(
@@ -111,11 +107,6 @@ class DashboardComponent extends StatelessWidget {
                       ),
                     ],
                   ),
-                ],
-                if (weather != 'none' && mood != 'none') ...[
-                  const SizedBox(
-                    height: 8.0,
-                  )
                 ],
                 if (mood != 'none') ...[
                   Row(
@@ -151,6 +142,7 @@ class DashboardComponent extends StatelessWidget {
           ),
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
+          padding: EdgeInsets.zero,
           children: [
             buildManagerButton(Icons.calendar_month, '使用', Obx(() {
               return buildDetail(state.useTime.value, '天');

@@ -1,7 +1,7 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/pages/setting/setting_logic.dart';
+import 'package:mood_diary/pages/home/setting/setting_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'set_password_state.dart';

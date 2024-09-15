@@ -46,7 +46,7 @@ class AnalysePage extends StatelessWidget {
                           show: true,
                           border: Border.symmetric(
                             horizontal: BorderSide(
-                              color: colorScheme.onSurface.withOpacity(0.6),
+                              color: colorScheme.onSurface.withAlpha((255 * 0.6).toInt()),
                             ),
                           ),
                         ),
@@ -77,7 +77,7 @@ class AnalysePage extends StatelessWidget {
                           },
                           getDrawingHorizontalLine: (value) {
                             return FlLine(
-                              color: colorScheme.onSurface.withOpacity(0.2),
+                              color: colorScheme.onSurface.withAlpha((255 * 0.2).toInt()),
                               strokeWidth: 1,
                             );
                           },

@@ -1,10 +1,10 @@
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 
-class DiaryState {
+class DiaryDetailsState {
   late Diary diary;
 
-  DiaryState() {
+  DiaryDetailsState() {
     diary = Get.arguments;
 
     ///Initialize variables

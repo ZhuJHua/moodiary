@@ -48,7 +48,7 @@ class SharePage extends StatelessWidget {
                     color: colorScheme.surfaceContainerLow,
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.shadow.withOpacity(0.5),
+                        color: colorScheme.shadow.withAlpha((255 * 0.5).toInt()),
                         blurRadius: 5.0,
                         offset: const Offset(5.0, 10.0),
                       )

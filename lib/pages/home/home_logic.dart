@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/common/values/view_mode.dart';
-import 'package:mood_diary/components/home_tab_view/home_tab_view_logic.dart';
+import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'home_state.dart';
 
-class HomeLogic extends GetxController with GetTickerProviderStateMixin {
+class HomeLogic extends GetxController with GetSingleTickerProviderStateMixin {
   final HomeState state = HomeState();
 
   //fab动画控制器
@@ -19,10 +18,9 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   late Animation<double> fabAnimation =
       Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: fabAnimationController, curve: Curves.easeInOut));
 
-  //tab控制器，默认全部分类，长度加一
-  late TabController tabController = TabController(length: state.categoryList.length + 1, vsync: this);
+  late PageController pageController = PageController();
 
-  Set<double> maxScrollExtentSet = {};
+  late final DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
 
   @override
   void onInit() {
@@ -34,21 +32,6 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   @override
   void onReady() {
     // TODO: implement onReady
-
-    state.innerController.addListener(() async {
-      if (!tabController.indexIsChanging) {
-        double offset = state.innerController.offset;
-        double maxScrollExtent = state.innerController.position.maxScrollExtent;
-        // 显示或隐藏“回到顶部”按钮
-        state.isToTopShow.value = offset > 0;
-        // 分页加载
-        if (offset == maxScrollExtent && !maxScrollExtentSet.contains(offset)) {
-          maxScrollExtentSet.add(offset);
-          HomeTabViewLogic homeTabViewLogic = Bind.find<HomeTabViewLogic>(tag: tabController.index.toString());
-          await homeTabViewLogic.paginationDiary(homeTabViewLogic.state.diaryList.length, 10);
-        }
-      }
-    });
     super.onReady();
   }
 
@@ -56,47 +39,14 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   void onClose() {
     // TODO: implement onClose
     fabAnimationController.dispose();
-    tabController.dispose();
+    pageController.dispose();
     super.onClose();
-  }
-
-  Future<void> toTop() async {
-    await state.innerController.animateTo(0.0, duration: const Duration(milliseconds: 100), curve: Curves.easeInOut);
-    await state.outerController.animateTo(0.0, duration: const Duration(milliseconds: 100), curve: Curves.easeInOut);
-  }
-
-  //初始化分类tab
-  Future<void> initCategoryTab() async {
-    //从数据库获取分类
-    state.categoryList.value = await Utils().isarUtil.getAllCategoryAsync();
-    //初始化tab控制器，长度加一由于有一个默认分类
-    tabController = TabController(length: state.categoryList.length + 1, vsync: this);
-  }
-
-  //重新获取当前页日历
-  Future<void> updateDiary() async {
-    //重新获取分类
-    state.categoryList.value = await Utils().isarUtil.getAllCategoryAsync();
-    //重新初始化Tab控制器
-    var currentIndex = tabController.index;
-    //如果删除了最后一个，就往左移
-    if (state.categoryList.length < currentIndex) {
-      currentIndex = state.categoryList.length;
-    }
-    tabController = TabController(length: state.categoryList.length + 1, vsync: this, initialIndex: currentIndex);
-    maxScrollExtentSet = {};
-    //添加帧回调保证对应logic已经被创建
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      HomeTabViewLogic homeTabViewLogic = Bind.find<HomeTabViewLogic>(tag: currentIndex.toString());
-      await homeTabViewLogic.getDiary();
-    });
   }
 
   //打开fab
   Future<void> openFab() async {
-    await HapticFeedback.selectionClick();
+    await HapticFeedback.vibrate();
     state.isFabExpanded.value = true;
-    //开始动画
     await fabAnimationController.forward();
   }
 
@@ -124,20 +74,21 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     }
   }
 
-  //切换视图模式
-  Future<void> changeViewMode(ViewModeType viewModeType) async {
-    state.viewModeType.value = viewModeType;
-    await Utils().prefUtil.setValue<int>('homeViewMode', viewModeType.number);
-  }
-
   //新增一篇日记
   Future<void> toEditPage() async {
     //同时关闭fab
     await HapticFeedback.selectionClick();
     //等待跳转，返回后刷新
     await Get.toNamed(AppRoutes.editPage, arguments: 'new');
+    await diaryLogic.updateDiary();
     fabAnimationController.reset();
     state.isFabExpanded.value = false;
-    await updateDiary();
+  }
+
+  // 切换导航栏
+  void changeNavigator(int index) {
+    state.navigatorIndex.value = index;
+    pageController.jumpToPage(index);
+    update();
   }
 }

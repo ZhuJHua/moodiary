@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/pages/setting/setting_logic.dart';
+import 'package:mood_diary/pages/home/setting/setting_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'theme_mode_dialog_state.dart';

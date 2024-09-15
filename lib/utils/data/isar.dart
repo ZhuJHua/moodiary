@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:faker/faker.dart';
 import 'package:isar/isar.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
@@ -36,6 +39,35 @@ class IsarUtil {
     });
   }
 
+  void mockData() async {
+    var uuid = const Uuid();
+    var faker = Faker();
+    var random = Random();
+
+    _isar.write((isar) {
+      for (int i = 0; i < 100; i++) {
+        isar.diarys.put(Diary(
+          id: uuid.v4(),
+          categoryId: null,
+          title: faker.lorem.word(),
+          content: faker.lorem.sentence(),
+          contentText: faker.lorem.sentence(),
+          time: DateTime.now().subtract(Duration(days: random.nextInt(365))),
+          show: true,
+          mood: random.nextDouble(),
+          // Mood range from 0.0 to 10.0
+          weather: [],
+          imageName: ['$i.png'],
+          audioName: [],
+          videoName: [],
+          tags: [],
+          imageColor: random.nextBool() ? faker.randomGenerator.integer(0xFFFFFF) : null,
+          aspect: random.nextBool() ? (random.nextDouble() * 2) + 0.5 : null,
+        ));
+      }
+    });
+  }
+
   Map<String, dynamic> getSize() {
     return Utils().fileUtil.bytesToUnits(_isar.diarys.getSize(includeIndexes: true));
   }
@@ -56,11 +88,6 @@ class IsarUtil {
       diary.id = const Uuid().v7();
       isar.diarys.put(diary);
     });
-  }
-
-  //获取全部日历
-  Future<List<Diary>> getAllDiary(int offset, int limit) async {
-    return await _isar.diarys.where().showEqualTo(true).sortByTimeDesc().findAllAsync(offset: offset, limit: limit);
   }
 
   //根据月份获取日记
@@ -191,13 +218,24 @@ class IsarUtil {
   }
 
   //获取对应分类的日记
-  Future<List<Diary>> getDiaryByCategory(String categoryId, int offset, int limit) async {
+  Future<List<Diary>> getDiaryByCategory(String? categoryId, int offset, int limit) async {
     return await _isar.diarys
         .where()
         .showEqualTo(true)
         .categoryIdEqualTo(categoryId)
         .sortByTimeDesc()
         .findAllAsync(offset: offset, limit: limit);
+  }
+
+  //获取某一天对应分类的日记
+  Future<List<Diary>> getDiaryByCategoryAndDate(String? categoryId, DateTime time) async {
+    return await _isar.diarys
+        .where()
+        .showEqualTo(true)
+        .categoryIdEqualTo(categoryId)
+        .yMdEqualTo('${time.year.toString()}/${time.month.toString()}/${time.day.toString()}')
+        .sortByTimeDesc()
+        .findAllAsync();
   }
 
   //构建搜索

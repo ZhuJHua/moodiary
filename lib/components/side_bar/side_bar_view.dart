@@ -112,20 +112,6 @@ class SideBarComponent extends StatelessWidget {
       );
     }
 
-    Widget buildAction() {
-      return OverflowBar(
-        children: [
-          TextButton.icon(
-            onPressed: () async {
-              await logic.toSettingPage();
-            },
-            label: const Text('设置'),
-            icon: const Icon(Icons.settings),
-          )
-        ],
-      );
-    }
-
     return GetBuilder<SideBarLogic>(
       init: logic,
       assignId: true,
@@ -219,7 +205,6 @@ class SideBarComponent extends StatelessWidget {
                   ],
                 ),
               ),
-              buildAction()
             ],
           ),
         );

@@ -15,7 +15,7 @@ import 'package:uuid/uuid.dart';
 
 import 'edit_state.dart';
 
-class EditLogic extends GetxController with GetSingleTickerProviderStateMixin, WidgetsBindingObserver {
+class EditLogic extends GetxController with WidgetsBindingObserver {
   final EditState state = EditState();
 
   //分类控制器
@@ -24,7 +24,7 @@ class EditLogic extends GetxController with GetSingleTickerProviderStateMixin, W
   //标题
   late TextEditingController titleTextEditingController = TextEditingController();
 
-  late TabController tabController = TabController(length: 2, vsync: this);
+  late PageController pageController = PageController();
 
   //编辑器控制器
   late QuillController quillController = QuillController.basic();
@@ -115,7 +115,7 @@ class EditLogic extends GetxController with GetSingleTickerProviderStateMixin, W
     WidgetsBinding.instance.removeObserver(this);
     tagTextEditingController.dispose();
     titleTextEditingController.dispose();
-    tabController.dispose();
+    pageController.dispose();
     quillController.dispose();
     super.onClose();
   }
@@ -238,7 +238,7 @@ class EditLogic extends GetxController with GetSingleTickerProviderStateMixin, W
   //获取封面颜色
   Future<int?> getCoverColor() async {
     if (state.imageList.isNotEmpty) {
-      return (await Utils().mediaUtil.getColorScheme(MemoryImage(state.imageList.first))).value;
+      return await Utils().mediaUtil.getColorScheme(MemoryImage(state.imageList.first));
     } else {
       return null;
     }
@@ -412,14 +412,17 @@ class EditLogic extends GetxController with GetSingleTickerProviderStateMixin, W
 
   //获取天气
   Future<void> getWeather() async {
-    state.isProcessing = true;
-    update();
-    var res = await Api().updateWeather();
-    if (res != null) {
-      state.currentWeather = res;
-      state.isProcessing = false;
-      Utils().noticeUtil.showToast('获取成功');
+    var key = Utils().prefUtil.getValue<String>('qweatherKey');
+    if (key != null) {
+      state.isProcessing = true;
       update();
+      var res = await Api().updateWeather();
+      if (res != null) {
+        state.currentWeather = res;
+        state.isProcessing = false;
+        Utils().noticeUtil.showToast('获取成功');
+        update();
+      }
     }
   }
 
@@ -469,6 +472,7 @@ class EditLogic extends GetxController with GetSingleTickerProviderStateMixin, W
 
   void selectTabView(index) {
     state.tabIndex.value = index;
-    tabController.animateTo(index, duration: const Duration(milliseconds: 100), curve: Curves.easeInOut);
+    pageController.jumpToPage(index);
+    //tabController.animateTo(index, curve: Curves.ease);
   }
 }

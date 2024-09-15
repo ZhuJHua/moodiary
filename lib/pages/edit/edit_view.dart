@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/category_add/category_add_view.dart';
+import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
 import 'package:mood_diary/components/record_sheet/record_sheet_view.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -91,7 +92,7 @@ class EditPage extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(vertical: 4.0),
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.all(Radius.circular(8.0)),
-                  border: Border.all(color: colorScheme.outline.withOpacity(0.5)),
+                  border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.5).toInt())),
                   image: DecorationImage(
                     image: MemoryImage(state.imageList[index]),
                     fit: BoxFit.cover,
@@ -104,7 +105,7 @@ class EditPage extends StatelessWidget {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        color: colorScheme.surface.withOpacity(0.5),
+                        color: colorScheme.surface.withAlpha((255 * 0.5).toInt()),
                         borderRadius: const BorderRadius.all(Radius.circular(8.0)),
                       ),
                       child: Column(
@@ -172,11 +173,9 @@ class EditPage extends StatelessWidget {
                         children: [
                           SimpleDialogOption(
                             child: const Row(
+                              spacing: 8.0,
                               children: [
                                 Icon(Icons.photo_library_outlined),
-                                SizedBox(
-                                  width: 10,
-                                ),
                                 Text('相册'),
                               ],
                             ),
@@ -186,11 +185,9 @@ class EditPage extends StatelessWidget {
                           ),
                           SimpleDialogOption(
                             child: const Row(
+                              spacing: 8.0,
                               children: [
                                 Icon(Icons.camera_alt_outlined),
-                                SizedBox(
-                                  width: 10,
-                                ),
                                 Text('相机'),
                               ],
                             ),
@@ -200,11 +197,9 @@ class EditPage extends StatelessWidget {
                           ),
                           SimpleDialogOption(
                             child: const Row(
+                              spacing: 8.0,
                               children: [
                                 Icon(Icons.image_search_outlined),
-                                SizedBox(
-                                  width: 10,
-                                ),
                                 Text('网络'),
                               ],
                             ),
@@ -214,11 +209,9 @@ class EditPage extends StatelessWidget {
                           ),
                           SimpleDialogOption(
                             child: const Row(
+                              spacing: 8.0,
                               children: [
                                 Icon(Icons.draw_outlined),
-                                SizedBox(
-                                  width: 10,
-                                ),
                                 Text('画画'),
                               ],
                             ),
@@ -448,28 +441,18 @@ class EditPage extends StatelessWidget {
               ),
             ],
           ),
-          body: PopScope(
-            canPop: false,
-            onPopInvokedWithResult: (didPop, value) {
-              if (didPop == true) {
-                return;
-              } else {
-                logic.handleBack();
-              }
-            },
-            child: TabBarView(
-              controller: logic.tabController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [buildWriting(), buildDetail()],
-            ),
+          body: PageView(
+            controller: logic.pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [KeepAliveWrapper(child: buildWriting()), KeepAliveWrapper(child: buildDetail())],
           ),
           bottomNavigationBar: Obx(() {
             return NavigationBar(
               destinations: const [
                 NavigationDestination(
-                  icon: Icon(Icons.article_outlined),
+                  icon: Icon(Icons.edit_outlined),
                   label: '撰写',
-                  selectedIcon: Icon(Icons.article),
+                  selectedIcon: Icon(Icons.edit),
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.more_outlined),
@@ -481,7 +464,6 @@ class EditPage extends StatelessWidget {
               onDestinationSelected: (index) {
                 logic.selectTabView(index);
               },
-              labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
             );
           }),
         );

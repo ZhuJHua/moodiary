@@ -414,6 +414,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.5"
+  extended_nested_scroll_view:
+    dependency: "direct main"
+    description:
+      name: extended_nested_scroll_view
+      sha256: "835580d40c2c62b448bd14adecd316acba469ba61f1510ef559d17668a85e777"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "6.2.1"
   fake_async:
     dependency: transitive
     description:

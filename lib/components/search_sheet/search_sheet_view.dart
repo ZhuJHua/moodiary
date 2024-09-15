@@ -17,6 +17,7 @@ class SearchSheetComponent extends StatelessWidget {
       assignId: true,
       builder: (logic) {
         return Column(
+          spacing: 4.0,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -40,9 +41,6 @@ class SearchSheetComponent extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
-            const SizedBox(
-              height: 2.0,
             ),
             Obx(() {
               return Expanded(

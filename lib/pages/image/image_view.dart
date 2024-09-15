@@ -23,7 +23,7 @@ class ImagePage extends StatelessWidget {
         return Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBar(
-            backgroundColor: colorScheme.scrim.withOpacity(0.6),
+            backgroundColor: colorScheme.scrim.withAlpha((255 * 0.6).toInt()),
             title: Text(
               '${state.imageIndex + 1}/${state.imageNameList.length}',
               style: const TextStyle(color: Colors.white),

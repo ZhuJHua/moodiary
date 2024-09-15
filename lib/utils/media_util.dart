@@ -71,8 +71,12 @@ class MediaUtil {
   }
 
   //异步获取图片颜色
-  Future<Color> getColorScheme(ImageProvider imageProvider) async {
-    return (await ColorScheme.fromImageProvider(provider: imageProvider)).primary;
+  Future<int> getColorScheme(ImageProvider imageProvider) async {
+    var color = (await ColorScheme.fromImageProvider(provider: imageProvider)).primary;
+    return ((color.a * 255).toInt() << 24) |
+        ((color.r * 255).toInt() << 16) |
+        ((color.g * 255).toInt() << 8) |
+        (color.b * 255).toInt();
   }
 
   //获取多个图片

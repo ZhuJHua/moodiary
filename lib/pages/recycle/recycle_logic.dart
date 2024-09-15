@@ -1,13 +1,14 @@
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/pages/home/home_logic.dart';
+import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'recycle_state.dart';
 
 class RecycleLogic extends GetxController {
   final RecycleState state = RecycleState();
-  late final homeLogic = Bind.find<HomeLogic>();
+
+  late final DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
 
   @override
   void onReady() {
@@ -49,6 +50,7 @@ class RecycleLogic extends GetxController {
     //重新获取
     getDiaryList();
     update();
+    await diaryLogic.updateDiary();
     Utils().noticeUtil.showToast('已恢复');
   }
 

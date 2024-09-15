@@ -89,18 +89,13 @@ class LockPage extends StatelessWidget {
           ),
           body: Center(
             child: Column(
+              spacing: 16.0,
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.lock),
-                const SizedBox(
-                  height: 16.0,
-                ),
                 Text(
                   '请输入密码',
                   style: textStyle.titleMedium,
-                ),
-                const SizedBox(
-                  height: 16.0,
                 ),
                 AnimatedBuilder(
                   animation: logic.animation,
@@ -113,9 +108,6 @@ class LockPage extends StatelessWidget {
                       ),
                     );
                   },
-                ),
-                const SizedBox(
-                  height: 32.0,
                 ),
                 SizedBox(
                   width: buttonSize * 3 + 20,

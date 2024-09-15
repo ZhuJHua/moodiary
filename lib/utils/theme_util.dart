@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:mood_diary/common/values/colors.dart';
@@ -30,6 +32,7 @@ class ThemeUtil {
         brightness: brightness,
         dynamicSchemeVariant: color == 0 ? DynamicSchemeVariant.fidelity : DynamicSchemeVariant.tonalSpot,
       ),
+      fontFamily: Platform.isWindows ? '微软雅黑' : null,
     );
 
     return themeData;

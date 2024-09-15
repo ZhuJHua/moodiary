@@ -7,16 +7,20 @@ import 'package:mood_diary/pages/assistant/assistant_logic.dart';
 import 'package:mood_diary/pages/assistant/assistant_view.dart';
 import 'package:mood_diary/pages/category_manager/category_manager_logic.dart';
 import 'package:mood_diary/pages/category_manager/category_manager_view.dart';
-import 'package:mood_diary/pages/diary/diary_logic.dart';
-import 'package:mood_diary/pages/diary/diary_view.dart';
+import 'package:mood_diary/pages/diary_details/diary_details_logic.dart';
+import 'package:mood_diary/pages/diary_details/diary_details_view.dart';
 import 'package:mood_diary/pages/draw/draw_logic.dart';
 import 'package:mood_diary/pages/draw/draw_view.dart';
 import 'package:mood_diary/pages/edit/edit_logic.dart';
 import 'package:mood_diary/pages/edit/edit_view.dart';
 import 'package:mood_diary/pages/font/font_logic.dart';
 import 'package:mood_diary/pages/font/font_view.dart';
+import 'package:mood_diary/pages/home/calendar/calendar_logic.dart';
+import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/pages/home/home_view.dart';
+import 'package:mood_diary/pages/home/media/media_logic.dart';
+import 'package:mood_diary/pages/home/setting/setting_logic.dart';
 import 'package:mood_diary/pages/image/image_logic.dart';
 import 'package:mood_diary/pages/image/image_view.dart';
 import 'package:mood_diary/pages/laboratory/laboratory_logic.dart';
@@ -29,8 +33,6 @@ import 'package:mood_diary/pages/privacy/privacy_logic.dart';
 import 'package:mood_diary/pages/privacy/privacy_view.dart';
 import 'package:mood_diary/pages/recycle/recycle_logic.dart';
 import 'package:mood_diary/pages/recycle/recycle_view.dart';
-import 'package:mood_diary/pages/setting/setting_logic.dart';
-import 'package:mood_diary/pages/setting/setting_view.dart';
 import 'package:mood_diary/pages/share/share_logic.dart';
 import 'package:mood_diary/pages/share/share_view.dart';
 import 'package:mood_diary/pages/start/start_logic.dart';
@@ -52,7 +54,13 @@ class AppPages {
     GetPage(
       name: AppRoutes.homePage,
       page: () => const HomePage(),
-      binds: [Bind.lazyPut(() => HomeLogic())],
+      binds: [
+        Bind.lazyPut(() => HomeLogic()),
+        Bind.lazyPut(() => DiaryLogic()),
+        Bind.lazyPut(() => CalendarLogic()),
+        Bind.lazyPut(() => MediaLogic()),
+        Bind.lazyPut(() => SettingLogic()),
+      ],
     ),
     //分析
     GetPage(
@@ -60,17 +68,11 @@ class AppPages {
       page: () => const AnalysePage(),
       binds: [Bind.lazyPut(() => AnalyseLogic())],
     ),
-    //设置
-    GetPage(
-      name: AppRoutes.settingPage,
-      page: () => const SettingPage(),
-      binds: [Bind.lazyPut(() => SettingLogic())],
-    ),
     //日记页路由
     GetPage(
       name: AppRoutes.diaryPage,
-      page: () => const DiaryPage(),
-      binds: [Bind.lazyPut(() => DiaryLogic())],
+      page: () => const DiaryDetailsPage(),
+      binds: [Bind.lazyPut(() => DiaryDetailsLogic())],
     ),
     //图片路由
     GetPage(
