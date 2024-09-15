@@ -338,10 +338,10 @@ packages:
     dependency: transitive
     description:
       name: dart_quill_delta
-      sha256: a6a835f156f7ab71c55404c53ee1ad3d496e1c306768654b018483aba1acbe68
+      sha256: "6c2635e87e8998a4dd2e33f90d8255274b165311ad7bc4d5210f3fd916e1df62"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "10.5.14"
+    version: "10.5.17"
   dart_style:
     dependency: transitive
     description:
@@ -422,6 +422,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.3.1"
+  faker:
+    dependency: "direct main"
+    description:
+      name: faker
+      sha256: "544c34e9e1d322824156d5a8d451bc1bb778263b892aded24ec7ba77b0706624"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.2.0"
   ffi:
     dependency: transitive
     description:
@@ -660,10 +668,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_quill
-      sha256: e31a975372251154ea1007abab73a30a72ca68a28913155e18bd304645f173bc
+      sha256: "2349c8d32e01f2cb6e33e3b36022eebc66f010b7b830ae9cbe8f47e697a6e67d"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "10.5.14"
+    version: "10.5.17"
   flutter_quill_delta_from_html:
     dependency: transitive
     description:
@@ -982,18 +990,18 @@ packages:
     dependency: transitive
     description:
       name: leak_tracker
-      sha256: "3f87a60e8c63aecc975dda1ceedbc8f24de75f09e4856ea27daf8958f2f0ce05"
+      sha256: "7bb2830ebd849694d1ec25bf1f44582d6ac531a57a365a803a6034ff751d2d06"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "10.0.5"
+    version: "10.0.7"
   leak_tracker_flutter_testing:
     dependency: transitive
     description:
       name: leak_tracker_flutter_testing
-      sha256: "932549fb305594d82d7183ecd9fa93463e9914e1b67cacc34bc40906594a1806"
+      sha256: "9491a714cca3667b60b5c420da8217e6de0d1ba7a5ec322fab01758f6998f379"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "3.0.5"
+    version: "3.0.8"
   leak_tracker_testing:
     dependency: transitive
     description:
@@ -1330,6 +1338,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.3.0"
+  quill_native_bridge:
+    dependency: transitive
+    description:
+      name: quill_native_bridge
+      sha256: "40055dea646c0a3b8d1bc943fc69bbfb5909ac1cb3937fd721ae50d909be60cc"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "10.5.17"
   quiver:
     dependency: transitive
     description:
@@ -1418,6 +1434,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.28.0"
+  screen_retriever:
+    dependency: transitive
+    description:
+      name: screen_retriever
+      sha256: "6ee02c8a1158e6dae7ca430da79436e3b1c9563c8cf02f524af997c201ac2b90"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.9"
   scroll_to_index:
     dependency: transitive
     description:
@@ -1518,7 +1542,7 @@ packages:
     dependency: transitive
     description: flutter
     source: sdk
-    version: "0.0.99"
+    version: "0.0.0"
   source_gen:
     dependency: transitive
     description:
@@ -1747,10 +1771,10 @@ packages:
     dependency: transitive
     description:
       name: vm_service
-      sha256: f652077d0bdf60abe4c1f6377448e8655008eef28f128bc023f7b5e8dfeb48fc
+      sha256: "5c5f338a667b4c644744b661f309fb8080bb94b18a7e91ef1dbd343bed00ed6d"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "14.2.4"
+    version: "14.2.5"
   watcher:
     dependency: transitive
     description:
@@ -1795,10 +1819,18 @@ packages:
     dependency: transitive
     description:
       name: win32_registry
-      sha256: "723b7f851e5724c55409bb3d5a32b203b3afe8587eaf5dafb93a5fed8ecda0d6"
+      sha256: "21ec76dfc731550fd3e2ce7a33a9ea90b828fdf19a5c3bcf556fa992cfa99852"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.1.4"
+    version: "1.1.5"
+  window_manager:
+    dependency: "direct main"
+    description:
+      name: window_manager
+      sha256: ab8b2a7f97543d3db2b506c9d875e637149d48ee0c6a5cb5f5fd6e0dac463792
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.4.2"
   xdg_directories:
     dependency: transitive
     description:
@@ -1832,5 +1864,5 @@ packages:
     source: hosted
     version: "2.0.2"
 sdks:
-  dart: ">=3.5.0 <4.0.0"
+  dart: ">=3.5.1 <4.0.0"
   flutter: ">=3.24.0"

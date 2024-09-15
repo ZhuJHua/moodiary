@@ -66,6 +66,9 @@ android {
             signingConfig = signingConfigs.config
         }
     }
+    packagingOptions {
+        pickFirst 'lib/**/libc++_shared.so'
+    }
 }
 
 flutter {
@@ -74,10 +77,6 @@ flutter {
 dependencies {
     implementation 'com.tencent.shiply:upgrade:2.2.0'
     implementation 'com.tencent.shiply:upgrade-diff-pkg-patch:2.2.0'
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.19.1'
-    implementation 'com.google.android.exoplayer:exoplayer-dash:2.19.1'
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.19.1'
-    implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.19.1'
     implementation 'com.github.gzu-liyujiang:Android_CN_OAID:4.2.9'
 }
 
