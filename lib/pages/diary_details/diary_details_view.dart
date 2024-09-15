@@ -128,6 +128,7 @@ class DiaryDetailsPage extends StatelessWidget {
                 brightness: Theme.of(context).brightness,
               )
             : Theme.of(context).colorScheme;
+        var aspect = state.diary.aspect;
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: colorScheme,
@@ -136,8 +137,9 @@ class DiaryDetailsPage extends StatelessWidget {
             body: CustomScrollView(
               slivers: [
                 SliverAppBar(
-                  expandedHeight:
-                      state.diary.aspect != null ? min(size.width / state.diary.aspect!, size.height * 0.618) : null,
+                  expandedHeight: aspect != null
+                      ? (aspect > 1.0 ? min(size.width / aspect, size.height * 0.618) : size.width / aspect)
+                      : null,
                   flexibleSpace: FlexibleSpaceBar(
                     collapseMode: CollapseMode.pin,
                     background: state.diary.imageName.isNotEmpty
