@@ -3,8 +3,6 @@ import 'package:mood_diary/pages/agreement/agreement_logic.dart';
 import 'package:mood_diary/pages/agreement/agreement_view.dart';
 import 'package:mood_diary/pages/analyse/analyse_logic.dart';
 import 'package:mood_diary/pages/analyse/analyse_view.dart';
-import 'package:mood_diary/pages/assistant/assistant_logic.dart';
-import 'package:mood_diary/pages/assistant/assistant_view.dart';
 import 'package:mood_diary/pages/category_manager/category_manager_logic.dart';
 import 'package:mood_diary/pages/category_manager/category_manager_view.dart';
 import 'package:mood_diary/pages/diary_details/diary_details_logic.dart';
@@ -15,6 +13,7 @@ import 'package:mood_diary/pages/edit/edit_logic.dart';
 import 'package:mood_diary/pages/edit/edit_view.dart';
 import 'package:mood_diary/pages/font/font_logic.dart';
 import 'package:mood_diary/pages/font/font_view.dart';
+import 'package:mood_diary/pages/home/assistant/assistant_logic.dart';
 import 'package:mood_diary/pages/home/calendar/calendar_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
@@ -59,6 +58,7 @@ class AppPages {
         Bind.lazyPut(() => DiaryLogic()),
         Bind.lazyPut(() => CalendarLogic()),
         Bind.lazyPut(() => MediaLogic()),
+        Bind.lazyPut(() => AssistantLogic()),
         Bind.lazyPut(() => SettingLogic()),
       ],
     ),
@@ -121,12 +121,6 @@ class AppPages {
       name: AppRoutes.drawPage,
       page: () => const DrawPage(),
       binds: [Bind.lazyPut(() => DrawLogic())],
-    ),
-    //助手路由
-    GetPage(
-      name: AppRoutes.assistantPage,
-      page: () => const AssistantPage(),
-      binds: [Bind.lazyPut(() => AssistantLogic())],
     ),
     //隐私政策
     GetPage(

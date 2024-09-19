@@ -22,6 +22,7 @@ class Api {
       0 => 'hunyuan-lite',
       1 => 'hunyuan-standard',
       2 => 'hunyuan-pro',
+      3 => 'hunyuan-turbo',
       _ => 'hunyuan-lite',
     };
     //请求正文
@@ -52,9 +53,10 @@ class Api {
         'key': Utils().prefUtil.getValue<String>('qweatherKey'),
         'lang': local
       };
+
       var res = await Utils().httpUtil.get('https://devapi.qweather.com/v7/weather/now', parameters: parameters);
       var weather = await compute(WeatherResponse.fromJson, res.data as Map<String, dynamic>);
-      Utils().logUtil.printInfo(weather.toJson());
+
       return [
         weather.now!.icon!,
         weather.now!.temp!,
