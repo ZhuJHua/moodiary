@@ -49,7 +49,7 @@ dependencies:
   photo_view: 0.15.0
   package_info_plus: 8.0.2
   uuid: 4.5.0
-  flutter_quill: 10.5.17
+  flutter_quill: 10.6.4
   share_plus: 10.0.2
   url_launcher: 6.3.0
   archive: 3.6.1
@@ -68,10 +68,12 @@ dependencies:
   dynamic_color: 1.7.0
   supabase_flutter: 2.6.0
   flutter_staggered_grid_view: 0.7.0
-  extended_nested_scroll_view: 6.2.1
-  window_manager: 0.4.2
-  faker: 2.2.0
+  flutter_acrylic: 1.1.4
+  bitsdojo_window: 0.1.6
   intl: 0.19.0
+  cupertino_icons: 1.0.8
+  font_awesome_flutter: 10.7.0
+  extended_nested_scroll_view: 6.2.1
   flutter_localizations:
     sdk: flutter
 
@@ -79,6 +81,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner: 2.4.12
+  msix: 3.16.8
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -86,7 +89,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: 4.0.0
-  msix: 3.16.8
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -100,3 +103,7 @@ flutter:
         - asset: fonts/qweather-icons.ttf
 
   uses-material-design: true
+
+msix_config:
+  display_name: 心绪日记
+  publisher_display_name: Yooss
