@@ -28,13 +28,13 @@ class PermissionUtil {
 
   Future<Position?> getLocation() async {
     if (await checkPermission(Permission.location)) {
-      var position = await Geolocator.getLastKnownPosition(forceAndroidLocationManager: true);
-      if (position != null) {
-        return position;
-      } else {
-        return await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
+      var position = await Geolocator.getLastKnownPosition();
+      if (position == null) {
+        return await Geolocator.getCurrentPosition();
       }
+      return position;
+    } else {
+      return null;
     }
-    return null;
   }
 }
