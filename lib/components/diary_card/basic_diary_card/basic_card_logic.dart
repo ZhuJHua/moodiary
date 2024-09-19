@@ -30,10 +30,10 @@ mixin BasicCardLogic {
               .replaceRange(oldIndex, oldIndex + 1, [newDiary]);
         } else {
           //如果修改了分类
-          //先去新的分类
+          //先改旧分类
+          Bind.find<DiaryTabViewLogic>(tag: tabViewTag).state.diaryList.removeWhere((e) => e.id == diary.id);
+          //再去新的分类
           await Bind.find<DiaryLogic>().updateDiary(newCategoryId);
-          //在改旧分类
-          await Bind.find<DiaryLogic>().updateDiary(oldCategoryId);
         }
       }
     }
