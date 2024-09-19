@@ -44,8 +44,8 @@ class StartLogic extends GetxController {
     await Utils().prefUtil.setValue<bool>('firstStart', false);
     if (Platform.isAndroid) {
       await setUuid();
-      await Utils().supabaseUtil.initSupabase();
-      await Utils().updateUtil.initShiply();
+      //await Utils().supabaseUtil.initSupabase();
+      //await Utils().updateUtil.initShiply();
     }
     Get.offAllNamed(AppRoutes.homePage);
   }

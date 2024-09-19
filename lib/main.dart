@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
@@ -11,7 +13,6 @@ import 'package:mood_diary/router/app_pages.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/channel.dart';
 import 'package:mood_diary/utils/utils.dart';
-import 'package:window_manager/window_manager.dart';
 
 Future<void> initSystem() async {
   //获取系统语言
@@ -26,9 +27,12 @@ Future<void> initSystem() async {
   await Utils().isarUtil.initIsar();
   //supabase初始化
   //await Utils().supabaseUtil.initSupabase();
+}
+
+Future<void> platFormOption() async {
   if (Platform.isAndroid) {
     //shiply初始化
-    await Utils().updateUtil.initShiply();
+    //await Utils().updateUtil.initShiply();
     //设置高刷
     await FlutterDisplayMode.setHighRefreshRate();
     //设置状态栏沉浸
@@ -36,19 +40,12 @@ Future<void> initSystem() async {
   }
 
   if (Platform.isWindows) {
-    await windowManager.ensureInitialized();
-    WindowOptions windowOptions = const WindowOptions(
-      size: Size(1024, 768),
-      minimumSize: Size(512, 768),
-      center: true,
-      windowButtonVisibility: true,
-      backgroundColor: Colors.transparent,
-      titleBarStyle: TitleBarStyle.hidden,
-    );
+    Window.initialize();
 
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
+    doWhenWindowReady(() {
+      appWindow.minSize = const Size(512, 768);
+      appWindow.size = const Size(1024, 768);
+      appWindow.show();
     });
   }
 }
@@ -73,14 +70,21 @@ void main() {
     };
     //初始化系统
     await initSystem();
+    //平台内容
+    await platFormOption();
     runApp(GetMaterialApp(
       initialRoute: getInitialRoute(),
-      builder: (context, widget) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.linear(Utils().prefUtil.getValue<double>('fontScale')!),
-        ),
-        child: Platform.isWindows ? DragToMoveArea(child: widget!) : widget!,
-      ),
+      builder: (context, widget) {
+        if (Platform.isWindows) {
+          Window.setEffect(effect: WindowEffect.acrylic, dark: Theme.of(context).brightness == Brightness.dark);
+        }
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(Utils().prefUtil.getValue<double>('fontScale')!),
+          ),
+          child: Platform.isWindows ? MoveWindow(child: widget!) : widget!,
+        );
+      },
       theme: await Utils().themeUtil.buildTheme(Brightness.light),
       darkTheme: await Utils().themeUtil.buildTheme(Brightness.dark),
       themeMode: ThemeMode.values[Utils().prefUtil.getValue<int>('themeMode')!],
