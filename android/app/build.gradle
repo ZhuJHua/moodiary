@@ -25,11 +25,15 @@ if (flutterVersionName == null) {
 android {
     namespace = "cn.yooss.mood_diary"
     compileSdk = 35
-    ndkVersion = "26.3.11579264"
+    ndkVersion = "27.1.12297006"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
     signingConfigs {
         config {
@@ -37,6 +41,7 @@ android {
             storePassword localProperties.getProperty('storePassword')
             keyPassword localProperties.getProperty('keyPassword')
             keyAlias 'key0'
+
 
             enableV3Signing true
         }
@@ -58,6 +63,10 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.config
+
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
             signingConfig = signingConfigs.config
@@ -65,9 +74,6 @@ android {
         profile {
             signingConfig = signingConfigs.config
         }
-    }
-    packagingOptions {
-        pickFirst 'lib/**/libc++_shared.so'
     }
 }
 
