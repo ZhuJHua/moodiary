@@ -383,15 +383,13 @@ class EditPage extends StatelessWidget {
           TextField(
             maxLines: 1,
             controller: logic.titleTextEditingController,
+            focusNode: logic.titleFocusNode,
             decoration: const InputDecoration(
-              border: UnderlineInputBorder(),
-              contentPadding: EdgeInsets.all(12.0),
-              labelText: '标题',
-            ),
+                border: UnderlineInputBorder(), contentPadding: EdgeInsets.all(12.0), hintText: '标题'),
           ),
           Expanded(
             child: QuillEditor.basic(
-              focusNode: logic.focusNode,
+              focusNode: logic.contentFocusNode,
               controller: logic.quillController,
               configurations: const QuillEditorConfigurations(
                 padding: EdgeInsets.all(12.0),
@@ -399,6 +397,16 @@ class EditPage extends StatelessWidget {
                 sharedConfigurations: QuillSharedConfigurations(),
                 expands: true,
               ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
+              children: [
+                Obx(() {
+                  return Text('字数：${state.totalCount.value.toString()}');
+                })
+              ],
             ),
           ),
           SingleChildScrollView(

@@ -56,7 +56,10 @@ class EditState {
   late String categoryName;
   late KeyboardState keyboardState;
 
+  late RxInt totalCount;
+
   EditState() {
+    totalCount = 0.obs;
     oldTime = null;
     coverImage = null;
     categoryId = null;

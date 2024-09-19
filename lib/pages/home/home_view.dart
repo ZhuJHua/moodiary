@@ -1,15 +1,15 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/components/keepalive/keepalive.dart';
+import 'package:mood_diary/pages/home/assistant/assistant_view.dart';
 import 'package:mood_diary/pages/home/calendar/calendar_view.dart';
 import 'package:mood_diary/pages/home/diary/diary_view.dart';
 import 'package:mood_diary/pages/home/media/media_view.dart';
 import 'package:mood_diary/pages/home/setting/setting_view.dart';
-import 'package:window_manager/window_manager.dart';
 
 import 'home_logic.dart';
 
@@ -97,7 +97,7 @@ class HomePage extends StatelessWidget {
             transform: Matrix4.identity()
               ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
               ..translate(.0, -((56.0 + 8.0)) * logic.fabAnimation.value),
-            alignment: size.aspectRatio >= 1.0 ? FractionalOffset.centerLeft : FractionalOffset.centerRight,
+            alignment: FractionalOffset.centerRight,
             child: child,
           );
         },
@@ -130,7 +130,7 @@ class HomePage extends StatelessWidget {
             height: state.isFabExpanded.value || logic.diaryLogic.state.isToTopShow.value ? 56 + (56 + 8) : 56,
             width: state.isFabExpanded.value ? 156 : 56,
             child: Stack(
-              alignment: size.aspectRatio >= 1.0 ? Alignment.bottomLeft : Alignment.bottomRight,
+              alignment: Alignment.bottomRight,
               children: [
                 Obx(() {
                   return buildToTopButton();
@@ -148,79 +148,106 @@ class HomePage extends StatelessWidget {
 
     Widget buildNavigatorBar() {
       return size.aspectRatio < 1.0
-          ? Obx(() {
-              return NavigationBar(
-                destinations: [
-                  NavigationDestination(
-                    icon: const Icon(Icons.article_outlined),
-                    label: i18n.homeNavigatorDiary,
-                    selectedIcon: const Icon(Icons.article),
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.calendar_today_outlined),
-                    label: i18n.homeNavigatorCalendar,
-                    selectedIcon: const Icon(Icons.calendar_today),
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.perm_media_outlined),
-                    label: i18n.homeNavigatorMedia,
-                    selectedIcon: const Icon(Icons.perm_media),
-                  ),
-                  NavigationDestination(
-                    icon: const Icon(Icons.settings_outlined),
-                    label: i18n.homeNavigatorSetting,
-                    selectedIcon: const Icon(Icons.settings),
-                  )
+          ? SizedBox(
+              height: state.navigatorBarHeight,
+              child: Stack(
+                children: [
+                  Obx(() {
+                    return NavigationBar(
+                      destinations: [
+                        NavigationDestination(
+                          icon: const Icon(Icons.article_outlined),
+                          label: i18n.homeNavigatorDiary,
+                          selectedIcon: const Icon(Icons.article),
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.calendar_today_outlined),
+                          label: i18n.homeNavigatorCalendar,
+                          selectedIcon: const Icon(Icons.calendar_today),
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.perm_media_outlined),
+                          label: i18n.homeNavigatorMedia,
+                          selectedIcon: const Icon(Icons.perm_media),
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.chat_outlined),
+                          label: i18n.homeNavigatorAssistant,
+                          selectedIcon: const Icon(Icons.chat),
+                        ),
+                        NavigationDestination(
+                          icon: const Icon(Icons.settings_outlined),
+                          label: i18n.homeNavigatorSetting,
+                          selectedIcon: const Icon(Icons.settings),
+                        ),
+                      ],
+                      selectedIndex: state.navigatorIndex.value,
+                      height: state.navigatorBarHeight,
+                      backgroundColor: colorScheme.surface,
+                      onDestinationSelected: (index) {
+                        logic.changeNavigator(index);
+                      },
+                      labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                    );
+                  }),
+                  buildModal()
                 ],
-                selectedIndex: state.navigatorIndex.value,
-                height: state.navigatorBarHeight,
-                backgroundColor: colorScheme.surface,
-                onDestinationSelected: (index) {
-                  logic.changeNavigator(index);
-                },
-                labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-              );
-            })
+              ),
+            )
           : const SizedBox.shrink();
     }
 
     Widget buildNavigatorRail() {
       return size.aspectRatio >= 1.0
-          ? Obx(() {
-              return NavigationRail(
-                destinations: [
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.article_outlined),
-                    label: Text(i18n.homeNavigatorDiary),
-                    selectedIcon: const Icon(Icons.article),
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  ),
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.calendar_today_outlined),
-                    label: Text(i18n.homeNavigatorCalendar),
-                    selectedIcon: const Icon(Icons.calendar_today),
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  ),
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.perm_media_outlined),
-                    label: Text(i18n.homeNavigatorMedia),
-                    selectedIcon: const Icon(Icons.perm_media),
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  ),
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.settings_outlined),
-                    label: Text(i18n.homeNavigatorSetting),
-                    selectedIcon: const Icon(Icons.settings),
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  )
+          ? SizedBox(
+              width: 80.0,
+              child: Stack(
+                children: [
+                  Obx(() {
+                    return NavigationRail(
+                      backgroundColor: Colors.transparent,
+                      destinations: [
+                        NavigationRailDestination(
+                          icon: const Icon(Icons.article_outlined),
+                          label: Text(i18n.homeNavigatorDiary),
+                          selectedIcon: const Icon(Icons.article),
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        ),
+                        NavigationRailDestination(
+                          icon: const Icon(Icons.calendar_today_outlined),
+                          label: Text(i18n.homeNavigatorCalendar),
+                          selectedIcon: const Icon(Icons.calendar_today),
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        ),
+                        NavigationRailDestination(
+                          icon: const Icon(Icons.perm_media_outlined),
+                          label: Text(i18n.homeNavigatorMedia),
+                          selectedIcon: const Icon(Icons.perm_media),
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        ),
+                        NavigationRailDestination(
+                          icon: const Icon(Icons.chat_outlined),
+                          label: Text(i18n.homeNavigatorAssistant),
+                          selectedIcon: const Icon(Icons.chat),
+                        ),
+                        NavigationRailDestination(
+                          icon: const Icon(Icons.settings_outlined),
+                          label: Text(i18n.homeNavigatorSetting),
+                          selectedIcon: const Icon(Icons.settings),
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        )
+                      ],
+                      labelType: NavigationRailLabelType.selected,
+                      selectedIndex: state.navigatorIndex.value,
+                      onDestinationSelected: (index) {
+                        logic.changeNavigator(index);
+                      },
+                    );
+                  }),
+                  buildModal()
                 ],
-                labelType: NavigationRailLabelType.selected,
-                selectedIndex: state.navigatorIndex.value,
-                onDestinationSelected: (index) {
-                  logic.changeNavigator(index);
-                },
-              );
-            })
+              ),
+            )
           : const SizedBox.shrink();
     }
 
@@ -228,57 +255,74 @@ class HomePage extends StatelessWidget {
       init: logic,
       assignId: true,
       builder: (logic) {
-        return Scaffold(
-          appBar: Platform.isWindows
-              ? PreferredSize(
-                  preferredSize: const Size.fromHeight(kWindowCaptionHeight),
-                  child: WindowCaption(
-                    brightness: colorScheme.brightness,
-                    backgroundColor: colorScheme.surface,
-                  ))
-              : null,
-          body: Stack(
-            children: [
-              //主布局
-              Row(
-                children: [
-                  //侧边导航栏
-                  buildNavigatorRail(),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: PageView(
-                            controller: logic.pageController,
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: const [
-                              KeepAliveWrapper(child: DiaryPage()),
-                              KeepAliveWrapper(child: CalendarPage()),
-                              KeepAliveWrapper(child: MediaPage()),
-                              KeepAliveWrapper(child: SettingPage()),
-                            ],
-                          ),
-                        ),
-                        //底部导航栏
+        return Row(
+          children: [
+            //侧边导航栏
+            buildNavigatorRail(),
+            Expanded(
+              child: Scaffold(
+                appBar: Platform.isWindows
+                    ? PreferredSize(
+                        preferredSize: Size.fromHeight(appWindow.titleBarHeight),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            MinimizeWindowButton(
+                              colors: WindowButtonColors(
+                                iconNormal: colorScheme.secondary,
+                                mouseDown: colorScheme.secondaryContainer,
+                                normal: colorScheme.surface,
+                                iconMouseDown: colorScheme.secondary,
+                                mouseOver: colorScheme.secondaryContainer,
+                                iconMouseOver: colorScheme.onSecondaryContainer,
+                              ),
+                            ),
+                            MaximizeWindowButton(
+                              colors: WindowButtonColors(
+                                iconNormal: colorScheme.secondary,
+                                mouseDown: colorScheme.secondaryContainer,
+                                normal: colorScheme.surface,
+                                iconMouseDown: colorScheme.secondary,
+                                mouseOver: colorScheme.secondaryContainer,
+                                iconMouseOver: colorScheme.onSecondaryContainer,
+                              ),
+                            ),
+                            CloseWindowButton(
+                              colors: WindowButtonColors(
+                                iconNormal: colorScheme.secondary,
+                                mouseDown: colorScheme.secondaryContainer,
+                                normal: colorScheme.surface,
+                                iconMouseDown: colorScheme.secondary,
+                                mouseOver: colorScheme.errorContainer,
+                                iconMouseOver: colorScheme.onErrorContainer,
+                              ),
+                            ),
+                          ],
+                        ))
+                    : null,
+                body: Stack(
+                  children: [
+                    //主布局
+                    PageView(
+                      controller: logic.pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: const [
+                        DiaryPage(),
+                        CalendarPage(),
+                        MediaPage(),
+                        AssistantPage(),
+                        SettingPage(),
                       ],
                     ),
-                  )
-                ],
+                    //遮罩
+                    buildModal()
+                  ],
+                ),
+                floatingActionButton: buildFab(),
+                bottomNavigationBar: buildNavigatorBar(),
               ),
-              //遮罩
-              buildModal()
-            ],
-          ),
-          floatingActionButton: buildFab(),
-          bottomNavigationBar: SizedBox(
-            height: state.navigatorBarHeight,
-            child: Stack(
-              children: [buildNavigatorBar(), buildModal()],
             ),
-          ),
-          floatingActionButtonLocation: size.aspectRatio >= 1.0
-              ? FloatingActionButtonLocation.miniStartFloat
-              : FloatingActionButtonLocation.endFloat,
+          ],
         );
       },
     );

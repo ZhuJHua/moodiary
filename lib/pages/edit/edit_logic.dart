@@ -30,7 +30,8 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   late QuillController quillController = QuillController.basic();
 
   //聚焦对象
-  late FocusNode focusNode = FocusNode();
+  late FocusNode contentFocusNode = FocusNode();
+  late FocusNode titleFocusNode = FocusNode();
   List<double> heightList = [];
 
   @override
@@ -104,8 +105,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   @override
   void onReady() {
-    // TODO: implement onReady
-
+    listenCount();
     super.onReady();
   }
 
@@ -115,9 +115,17 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     tagTextEditingController.dispose();
     titleTextEditingController.dispose();
+    titleFocusNode.dispose();
+    contentFocusNode.dispose();
     pageController.dispose();
     quillController.dispose();
     super.onClose();
+  }
+
+  void listenCount() {
+    quillController.addListener(() {
+      state.totalCount.value = quillController.document.toPlainText().trim().length;
+    });
   }
 
   Future<void> addNewImage(Uint8List data) async {
@@ -268,7 +276,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
         time: state.currentDateTime,
         show: true,
         mood: state.currentMoodRate.value,
-        weather: [],
+        weather: state.currentWeather,
         imageName: state.imageNameList,
         audioName: state.audioNameList,
         videoName: state.videoNameList,
@@ -282,7 +290,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       await Utils().mediaUtil.saveImages(Map.fromIterables(state.imageNameList, state.imageList));
       //保存录音
       await Utils().mediaUtil.savaAudio(state.audioNameList);
-      Get.backLegacy();
+      Get.backLegacy(result: state.categoryId ?? '');
       Utils().noticeUtil.showToast('保存成功');
     } else {
       Utils().noticeUtil.showToast('还有东西没有填写');
@@ -303,7 +311,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
         time: state.currentDateTime,
         show: true,
         mood: state.currentMoodRate.value,
-        weather: [],
+        weather: state.currentWeather,
         imageName: state.imageNameList,
         audioName: state.audioNameList,
         videoName: state.videoNameList,
@@ -393,9 +401,9 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     }
   }
 
-  //点击其他地方失去焦点
   void unFocus() {
-    focusNode.unfocus();
+    titleFocusNode.unfocus();
+    contentFocusNode.unfocus();
   }
 
   //去画画

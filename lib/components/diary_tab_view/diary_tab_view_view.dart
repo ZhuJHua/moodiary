@@ -19,33 +19,53 @@ class DiaryTabViewComponent extends StatelessWidget {
     final logic = Get.put(DiaryTabViewLogic(), tag: tag);
     final state = Bind.find<DiaryTabViewLogic>(tag: tag).state;
     final i18n = AppLocalizations.of(context)!;
+
     Widget buildGrid() {
-      return MasonryGridView.builder(
+      return SliverMasonryGrid(
         gridDelegate: const SliverSimpleGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 250),
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        physics: const NeverScrollableScrollPhysics(),
-        itemBuilder: (context, index) {
+        delegate: SliverChildBuilderDelegate((context, index) {
           return LargeDiaryCardComponent(
-            diary: state.diaryList.value[index],
-            tabViewTag: tag,
+            diary: state.diaryList[index],
+            tabViewTag: tag.toString(),
           );
-        },
-        itemCount: state.diaryList.value.length,
+        }, childCount: state.diaryList.length),
       );
     }
 
     Widget buildList() {
-      return ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-        physics: const NeverScrollableScrollPhysics(),
+      return SliverList.builder(
         itemBuilder: (context, index) {
           return SmallDiaryCardComponent(
             tag: index.toString(),
-            diary: state.diaryList.value[index],
-            tabViewTag: tag,
+            diary: state.diaryList[index],
+            tabViewTag: tag.toString(),
           );
         },
-        itemCount: state.diaryList.value.length,
+        itemCount: state.diaryList.length,
+      );
+    }
+
+    Widget buildPlaceHolder() {
+      return Center(
+        child: Obx(() {
+          if (state.isFetching.value) {
+            return const CircularProgressIndicator();
+          } else if (state.diaryList.isEmpty) {
+            return Text(i18n.diaryTabViewEmpty);
+          } else {
+            return const SizedBox.shrink();
+          }
+        }),
+      );
+    }
+
+    Widget buildCustomScrollView({required Widget sliver}) {
+      return CustomScrollView(
+        key: UniqueKey(),
+        slivers: [
+          SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
+          sliver,
+        ],
       );
     }
 
@@ -57,23 +77,24 @@ class DiaryTabViewComponent extends StatelessWidget {
           logic.initDiary(categoryId);
         },
         builder: (logic) {
-          return Obx(() {
-            if (state.isFetching.value) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (state.diaryList.value.isEmpty) {
-              return Center(child: Text(i18n.diaryTabViewEmpty));
-            }
-            return Obx(() {
-              return AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
-                child: switch (logic.diaryLogic.state.viewModeType.value) {
-                  ViewModeType.list => buildList(),
-                  ViewModeType.grid => buildGrid(),
-                },
-              );
-            });
-          });
+          return Stack(
+            children: [
+              buildPlaceHolder(),
+              Obx(() {
+                return AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  child: switch (logic.diaryLogic.state.viewModeType.value) {
+                    ViewModeType.list => buildCustomScrollView(sliver: Obx(() {
+                        return buildList();
+                      })),
+                    ViewModeType.grid => buildCustomScrollView(sliver: Obx(() {
+                        return buildGrid();
+                      })),
+                  },
+                );
+              }),
+            ],
+          );
         });
   }
 }

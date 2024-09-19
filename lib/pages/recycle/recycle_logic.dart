@@ -50,7 +50,7 @@ class RecycleLogic extends GetxController {
     //重新获取
     getDiaryList();
     update();
-    await diaryLogic.updateDiary();
+    await diaryLogic.updateDiary(diary.categoryId);
     Utils().noticeUtil.showToast('已恢复');
   }
 

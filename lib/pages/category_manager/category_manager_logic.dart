@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
+import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'category_manager_state.dart';
@@ -9,6 +10,8 @@ class CategoryManagerLogic extends GetxController {
   final CategoryManagerState state = CategoryManagerState();
 
   late TextEditingController textEditingController = TextEditingController();
+
+  late final DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
 
   @override
   void onInit() {
@@ -27,6 +30,8 @@ class CategoryManagerLogic extends GetxController {
   void onClose() {
     // TODO: implement onClose
     textEditingController.dispose();
+    diaryLogic.updateCategory();
+
     super.onClose();
   }
 

@@ -14,7 +14,7 @@ class HomeState {
 
     navigatorIndex = 0.obs;
 
-    navigatorBarHeight = 56.0;
+    navigatorBarHeight = 48.0;
 
     ///Initialize variables
   }

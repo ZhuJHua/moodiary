@@ -11,8 +11,6 @@ class DiaryTabViewState {
   //首次加载的个数
   late int initLen;
 
-
-
   //分页的个数
   late int pageLen;
 
@@ -21,7 +19,6 @@ class DiaryTabViewState {
     isFetching = false.obs;
     initLen = 30;
     pageLen = 20;
-
 
     ///Initialize variables
   }

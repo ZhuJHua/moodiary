@@ -78,17 +78,37 @@ class HomeLogic extends GetxController with GetSingleTickerProviderStateMixin {
   Future<void> toEditPage() async {
     //同时关闭fab
     await HapticFeedback.selectionClick();
-    //等待跳转，返回后刷新
-    await Get.toNamed(AppRoutes.editPage, arguments: 'new');
-    await diaryLogic.updateDiary();
     fabAnimationController.reset();
     state.isFabExpanded.value = false;
+
+    /// 需要注意，返回值为 '' 时才是没有选择分类，而返回值为 null 时，是没有进行操作直接返回
+    var res = await Get.toNamed(AppRoutes.editPage, arguments: 'new');
+
+    if (res != null) {
+      if (res == '') {
+        await diaryLogic.updateDiary(null);
+      } else {
+        await diaryLogic.updateDiary(res);
+      }
+    }
+  }
+
+  void hideNavigatorBar() {
+    state.navigatorBarHeight = .0;
+    update();
+  }
+
+  void showNavigatorBar() {
+    state.navigatorBarHeight = 48.0;
+    update();
   }
 
   // 切换导航栏
   void changeNavigator(int index) {
     state.navigatorIndex.value = index;
     pageController.jumpToPage(index);
+    // 如果切换到助手页，把导航栏隐藏
+    if (index == 3) hideNavigatorBar();
     update();
   }
 }

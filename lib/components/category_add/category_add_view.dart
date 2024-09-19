@@ -18,66 +18,73 @@ class CategoryAddComponent extends StatelessWidget {
       init: logic,
       assignId: true,
       builder: (logic) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(8.0, .0, 8.0, 8.0),
-              child: Obx(() {
-                return Wrap(
-                  spacing: 8.0,
-                  children: [
-                    FilledButton.icon(
-                      icon: const Icon(Icons.add),
-                      label: const Text('添加'),
-                      onPressed: () {
-                        showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                content: TextField(
-                                  maxLines: 1,
-                                  controller: logic.textEditingController,
-                                  decoration: InputDecoration(
-                                    fillColor: colorScheme.secondaryContainer,
-                                    border: const UnderlineInputBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    filled: true,
-                                    labelText: '标签',
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                      onPressed: () {
-                                        logic.cancelAdd();
-                                      },
-                                      child: Text(i18n.cancel)),
-                                  TextButton(
-                                      onPressed: () async {
-                                        await logic.addCategory();
-                                      },
-                                      child: Text(i18n.ok))
-                                ],
-                              );
-                            });
-                      },
-                    ),
-                    ...List.generate(state.categoryList.value.length, (index) {
-                      return ActionChip(
-                        label: Text(state.categoryList.value[index].categoryName),
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Obx(() {
+              return Wrap(
+                spacing: 4.0,
+                runSpacing: 4.0,
+                alignment: WrapAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      FilledButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: const Text('添加'),
                         onPressed: () {
-                          logic.selectCategory(index);
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  content: TextField(
+                                    maxLines: 1,
+                                    controller: logic.textEditingController,
+                                    decoration: InputDecoration(
+                                      fillColor: colorScheme.secondaryContainer,
+                                      border: const UnderlineInputBorder(
+                                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      filled: true,
+                                      labelText: '标签',
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () {
+                                          logic.cancelAdd();
+                                        },
+                                        child: Text(i18n.cancel)),
+                                    TextButton(
+                                        onPressed: () async {
+                                          await logic.addCategory();
+                                        },
+                                        child: Text(i18n.ok))
+                                  ],
+                                );
+                              });
                         },
-                        backgroundColor: colorScheme.secondaryContainer,
-                      );
-                    }),
-                  ],
-                );
-              }),
-            ),
-          ],
+                      ),
+                      Text(state.categoryList.length.toString())
+                    ],
+                  ),
+                  ...List.generate(state.categoryList.value.length, (index) {
+                    return ActionChip(
+                      label: Text(state.categoryList.value[index].categoryName),
+                      onPressed: () {
+                        logic.selectCategory(index);
+                      },
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      padding: EdgeInsets.zero,
+                      backgroundColor: colorScheme.secondaryContainer,
+                    );
+                  }),
+                ],
+              );
+            }),
+          ),
         );
       },
     );

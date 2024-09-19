@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/pages/edit/edit_logic.dart';
+import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'category_add_state.dart';
@@ -9,7 +10,8 @@ import 'category_add_state.dart';
 class CategoryAddLogic extends GetxController {
   final CategoryAddState state = CategoryAddState();
   late TextEditingController textEditingController = TextEditingController();
-  late EditLogic editLogic = Bind.find<EditLogic>();
+  late final EditLogic editLogic = Bind.find<EditLogic>();
+  late final DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
 
   @override
   void onReady() {
@@ -25,7 +27,7 @@ class CategoryAddLogic extends GetxController {
     super.onClose();
   }
 
-  Future<void> getCategory() async {
+  void getCategory() {
     state.categoryList.value = Utils().isarUtil.getAllCategory();
   }
 
@@ -33,7 +35,9 @@ class CategoryAddLogic extends GetxController {
     if (textEditingController.text.isNotEmpty) {
       if (await Utils().isarUtil.insertACategory(Category()..categoryName = textEditingController.text)) {
         Get.backLegacy();
-        await getCategory();
+        textEditingController.clear();
+        getCategory();
+        await diaryLogic.updateCategory();
       } else {
         textEditingController.clear();
         Utils().noticeUtil.showToast('分类已存在');
