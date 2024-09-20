@@ -173,11 +173,11 @@ class SettingPage extends StatelessWidget {
                           trailing: Obx(() {
                             return Text(
                               switch (state.color.value) {
-                                0 => i18n.colorNameBaiCaoShuang,
-                                1 => i18n.colorNameZhuYue,
-                                2 => i18n.colorNameLvLiuLi,
-                                3 => i18n.colorNameJin,
-                                4 => i18n.colorNameShiYangJin,
+                                0 => i18n.colorNameQunQin,
+                                1 => i18n.colorNameJiHe,
+                                2 => i18n.colorNameQinDai,
+                                3 => i18n.colorNameXianYe,
+                                4 => i18n.colorNameJinYu,
                                 _ => i18n.colorNameSystem
                               },
                               style: textStyle.bodySmall!.copyWith(

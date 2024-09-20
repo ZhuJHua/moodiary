@@ -17,11 +17,11 @@ class ThemeUtil {
   Future<ThemeData> buildTheme(Brightness brightness) async {
     final color = Utils().prefUtil.getValue<int>('color');
     var seedColor = switch (color) {
-      0 => AppColor.colorList[0],
-      1 => AppColor.colorList[1],
-      2 => AppColor.colorList[2],
-      3 => AppColor.colorList[3],
-      4 => AppColor.colorList[4],
+      0 => AppColor.themeColorList[0],
+      1 => AppColor.themeColorList[1],
+      2 => AppColor.themeColorList[2],
+      3 => AppColor.themeColorList[3],
+      4 => AppColor.themeColorList[4],
       //-1为系统配色，如果选了-1，肯定有
       _ => await getDynamicColor()
     };
@@ -30,7 +30,7 @@ class ThemeUtil {
       colorScheme: ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: brightness,
-        dynamicSchemeVariant: color == 0 ? DynamicSchemeVariant.fidelity : DynamicSchemeVariant.tonalSpot,
+        dynamicSchemeVariant: color == 4 ? DynamicSchemeVariant.fidelity : DynamicSchemeVariant.tonalSpot,
       ),
       fontFamily: Platform.isWindows ? '微软雅黑' : null,
     );

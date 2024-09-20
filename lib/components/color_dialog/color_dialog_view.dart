@@ -15,17 +15,17 @@ class ColorDialogComponent extends StatelessWidget {
     final i18n = AppLocalizations.of(context)!;
     String colorName(index) {
       return switch (index) {
-        0 => i18n.colorNameBaiCaoShuang,
-        1 => i18n.colorNameZhuYue,
-        2 => i18n.colorNameLvLiuLi,
-        3 => i18n.colorNameJin,
-        4 => i18n.colorNameShiYangJin,
+        0 => i18n.colorNameQunQin,
+        1 => i18n.colorNameJiHe,
+        2 => i18n.colorNameQinDai,
+        3 => i18n.colorNameXianYe,
+        4 => i18n.colorNameJinYu,
         _ => i18n.colorNameSystem
       };
     }
 
     List<Widget> buildColorList() {
-      return List.generate(AppColor.colorList.length, (index) {
+      return List.generate(AppColor.themeColorList.length, (index) {
         return SimpleDialogOption(
           child: Wrap(
             crossAxisAlignment: WrapCrossAlignment.center,
@@ -33,7 +33,7 @@ class ColorDialogComponent extends StatelessWidget {
             children: [
               Icon(
                 Icons.circle,
-                color: AppColor.colorList[index],
+                color: AppColor.themeColorList[index],
               ),
               Text(colorName(index)),
               if (state.currentColor.value == index) ...[const Icon(Icons.check)]
