@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/pages/home/assistant/assistant_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'home_state.dart';
 
-class HomeLogic extends GetxController with GetSingleTickerProviderStateMixin {
+class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   final HomeState state = HomeState();
 
   //fab动画控制器
@@ -18,9 +19,18 @@ class HomeLogic extends GetxController with GetSingleTickerProviderStateMixin {
   late Animation<double> fabAnimation =
       Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: fabAnimationController, curve: Curves.easeInOut));
 
+  //bar动画控制器
+  late AnimationController barAnimationController =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+
+  //动画插值器
+  late Animation<double> barAnimation =
+      Tween(begin: 1.0, end: 0.0).animate(CurvedAnimation(parent: barAnimationController, curve: Curves.easeInOut));
+
   late PageController pageController = PageController();
 
   late final DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
+  late final AssistantLogic assistantLogic = Bind.find<AssistantLogic>();
 
   @override
   void onInit() {
@@ -39,6 +49,7 @@ class HomeLogic extends GetxController with GetSingleTickerProviderStateMixin {
   void onClose() {
     // TODO: implement onClose
     fabAnimationController.dispose();
+    barAnimationController.dispose();
     pageController.dispose();
     super.onClose();
   }
@@ -94,21 +105,19 @@ class HomeLogic extends GetxController with GetSingleTickerProviderStateMixin {
   }
 
   void hideNavigatorBar() {
-    state.navigatorBarHeight = .0;
-    update();
+    barAnimationController.forward();
+    state.isBarHidden.value = true;
   }
 
   void showNavigatorBar() {
-    state.navigatorBarHeight = 48.0;
-    update();
+    state.isBarHidden.value = false;
+    barAnimationController.reverse();
   }
 
   // 切换导航栏
   void changeNavigator(int index) {
     state.navigatorIndex.value = index;
     pageController.jumpToPage(index);
-    // 如果切换到助手页，把导航栏隐藏
-    if (index == 3) hideNavigatorBar();
     update();
   }
 }

@@ -34,14 +34,16 @@ class AssistantPage extends StatelessWidget {
           children: [
             IconButton(
                 onPressed: () {
-                  logic.homeLogic.state.navigatorBarHeight == .0 ? logic.openBar() : logic.closeBar();
+                  logic.homeLogic.state.isBarHidden.value
+                      ? logic.homeLogic.showNavigatorBar()
+                      : logic.homeLogic.hideNavigatorBar();
                 },
                 icon: AnimatedBuilder(
-                    animation: logic.barAnimation,
+                    animation: logic.homeLogic.barAnimation,
                     child: const Icon(Icons.keyboard_arrow_up_outlined),
                     builder: (context, widget) {
                       return Transform.rotate(
-                        angle: pi * logic.barAnimation.value,
+                        angle: pi * logic.homeLogic.barAnimation.value,
                         child: widget,
                       );
                     })),

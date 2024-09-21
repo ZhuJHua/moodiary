@@ -4,6 +4,10 @@ class HomeState {
   //fab展开状态
   late RxBool isFabExpanded;
 
+  //bar隐藏状态
+
+  late RxBool isBarHidden;
+
   //导航栏index
   late RxInt navigatorIndex;
 
@@ -12,9 +16,11 @@ class HomeState {
   HomeState() {
     isFabExpanded = false.obs;
 
+    isBarHidden = false.obs;
+
     navigatorIndex = 0.obs;
 
-    navigatorBarHeight = 48.0;
+    navigatorBarHeight = 56.0;
 
     ///Initialize variables
   }

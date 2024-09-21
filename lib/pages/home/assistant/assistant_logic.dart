@@ -11,22 +11,14 @@ import 'package:mood_diary/utils/utils.dart';
 
 import 'assistant_state.dart';
 
-class AssistantLogic extends GetxController with WidgetsBindingObserver, GetSingleTickerProviderStateMixin {
+class AssistantLogic extends GetxController with WidgetsBindingObserver {
   final AssistantState state = AssistantState();
 
   //输入框控制器
   late TextEditingController textEditingController = TextEditingController();
 
-  //ListView控制器
+  //控制器
   late ScrollController scrollController = ScrollController();
-
-  //bar动画控制器
-  late AnimationController barAnimationController =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 100));
-
-  //动画插值器
-  late Animation<double> barAnimation =
-      Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: barAnimationController, curve: Curves.easeInOut));
 
   //聚焦对象
   late FocusNode focusNode = FocusNode();
@@ -39,7 +31,6 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver, GetSing
   void didChangeMetrics() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       var height = MediaQuery.viewInsetsOf(Get.context!).bottom;
-
       if (heightList.isNotEmpty && height != heightList.last) {
         if (height > heightList.last && state.keyboardState != KeyboardState.opening) {
           state.keyboardState = KeyboardState.opening;
@@ -74,16 +65,13 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver, GetSing
 
   @override
   void onReady() {
-    // TODO: implement onReady
-
+    homeLogic.hideNavigatorBar();
     super.onReady();
   }
 
   @override
   void onClose() {
-    // TODO: implement onClose
     WidgetsBinding.instance.removeObserver(this);
-    barAnimationController.dispose();
     textEditingController.dispose();
     scrollController.dispose();
     focusNode.dispose();
@@ -167,17 +155,5 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver, GetSing
   void changeModel(version) {
     state.modelVersion.value = version;
     state.messages = {};
-  }
-
-  //关闭底栏
-  void closeBar() {
-    homeLogic.hideNavigatorBar();
-    barAnimationController.reverse();
-  }
-
-  //打开底栏
-  void openBar() {
-    homeLogic.showNavigatorBar();
-    barAnimationController.forward();
   }
 }

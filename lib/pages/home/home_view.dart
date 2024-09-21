@@ -5,10 +5,10 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/pages/home/assistant/assistant_view.dart';
 import 'package:mood_diary/pages/home/calendar/calendar_view.dart';
 import 'package:mood_diary/pages/home/diary/diary_view.dart';
-import 'package:mood_diary/pages/home/media/media_view.dart';
 import 'package:mood_diary/pages/home/setting/setting_view.dart';
 
 import 'home_logic.dart';
@@ -148,8 +148,14 @@ class HomePage extends StatelessWidget {
 
     Widget buildNavigatorBar() {
       return size.aspectRatio < 1.0
-          ? SizedBox(
-              height: state.navigatorBarHeight,
+          ? AnimatedBuilder(
+              animation: logic.barAnimation,
+              builder: (context, child) {
+                return SizedBox(
+                  height: state.navigatorBarHeight * logic.barAnimation.value,
+                  child: child,
+                );
+              },
               child: Stack(
                 children: [
                   Obx(() {
@@ -166,11 +172,6 @@ class HomePage extends StatelessWidget {
                           selectedIcon: const Icon(Icons.calendar_today),
                         ),
                         NavigationDestination(
-                          icon: const Icon(Icons.perm_media_outlined),
-                          label: i18n.homeNavigatorMedia,
-                          selectedIcon: const Icon(Icons.perm_media),
-                        ),
-                        NavigationDestination(
                           icon: const Icon(Icons.chat_outlined),
                           label: i18n.homeNavigatorAssistant,
                           selectedIcon: const Icon(Icons.chat),
@@ -183,7 +184,6 @@ class HomePage extends StatelessWidget {
                       ],
                       selectedIndex: state.navigatorIndex.value,
                       height: state.navigatorBarHeight,
-                      backgroundColor: colorScheme.surface,
                       onDestinationSelected: (index) {
                         logic.changeNavigator(index);
                       },
@@ -217,12 +217,6 @@ class HomePage extends StatelessWidget {
                           icon: const Icon(Icons.calendar_today_outlined),
                           label: Text(i18n.homeNavigatorCalendar),
                           selectedIcon: const Icon(Icons.calendar_today),
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        ),
-                        NavigationRailDestination(
-                          icon: const Icon(Icons.perm_media_outlined),
-                          label: Text(i18n.homeNavigatorMedia),
-                          selectedIcon: const Icon(Icons.perm_media),
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                         ),
                         NavigationRailDestination(
@@ -307,9 +301,8 @@ class HomePage extends StatelessWidget {
                       controller: logic.pageController,
                       physics: const NeverScrollableScrollPhysics(),
                       children: const [
-                        DiaryPage(),
+                        KeepAliveWrapper(child: DiaryPage()),
                         CalendarPage(),
-                        MediaPage(),
                         AssistantPage(),
                         SettingPage(),
                       ],
