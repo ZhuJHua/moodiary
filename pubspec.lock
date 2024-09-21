@@ -386,10 +386,10 @@ packages:
     dependency: transitive
     description:
       name: dart_quill_delta
-      sha256: "3046b617add2f66bf3124e2144d06f64d0527cb66bffbb6ba1bb4461ef2c43aa"
+      sha256: "2ebed51fcc726f10842ddc3ce7b127010197368f518e869b6a4981d73145e8fd"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "10.6.4"
+    version: "10.7.4"
   dart_style:
     dependency: transitive
     description:
@@ -462,14 +462,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.5"
-  extended_nested_scroll_view:
-    dependency: "direct main"
-    description:
-      name: extended_nested_scroll_view
-      sha256: "835580d40c2c62b448bd14adecd316acba469ba61f1510ef559d17668a85e777"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "6.2.1"
   fake_async:
     dependency: transitive
     description:
@@ -724,10 +716,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_quill
-      sha256: "37e3dbdde75ceb4a3ae2fd8efdf4517e341009a0477c3f33e4e8b306b5343fb7"
+      sha256: b4b0dc65a6f3bb180d8d7f49113c78e89727495cec5e7d55f6e1c72aadbdd39b
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "10.6.4"
+    version: "10.7.4"
   flutter_quill_delta_from_html:
     dependency: transitive
     description:
@@ -1414,10 +1406,10 @@ packages:
     dependency: transitive
     description:
       name: quill_native_bridge
-      sha256: b6f6bd226d58d5e21a5a1c05bae4f867534d54965cb9409743333cd006c98555
+      sha256: "16b1ee5fba1a66331efc9b175e57e2fa79ea029297355e38ef8d67b6bd34449b"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "10.6.4"
+    version: "10.7.4"
   quiver:
     dependency: transitive
     description:
