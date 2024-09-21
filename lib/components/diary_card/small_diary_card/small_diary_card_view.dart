@@ -7,12 +7,11 @@ import 'package:mood_diary/components/diary_card/basic_diary_card/basic_card_log
 import 'package:mood_diary/utils/utils.dart';
 
 class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
-  const SmallDiaryCardComponent({super.key, required this.diary, required this.tabViewTag, required this.tag});
+  const SmallDiaryCardComponent({super.key, required this.diary, required this.tag});
 
   final Diary diary;
 
   final String tag;
-  final String tabViewTag;
 
   @override
   Widget build(BuildContext context) {
@@ -36,12 +35,12 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
     return InkWell(
       borderRadius: const BorderRadius.all(Radius.circular(12.0)),
       onTap: () async {
-        await toDiary(diary, tabViewTag);
+        await toDiary(diary);
       },
       child: Card.filled(
         color: colorScheme.surfaceContainer,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 122),
+        child: SizedBox(
+          height: 122.0,
           child: Row(
             children: [
               if (diary.imageName.isNotEmpty && int.parse(tag) & 1 == 0) ...[buildImage()],
@@ -66,14 +65,9 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                         maxLines: 2,
                         style: textStyle.bodyMedium,
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            DateFormat.yMMMd().add_Hms().format(diary.time),
-                            style: textStyle.labelSmall,
-                          ),
-                        ],
+                      Text(
+                        DateFormat.yMMMd().add_Hms().format(diary.time),
+                        style: textStyle.labelSmall,
                       )
                     ],
                   ),

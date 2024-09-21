@@ -7,11 +7,10 @@ import 'package:mood_diary/components/diary_card/basic_diary_card/basic_card_log
 import 'package:mood_diary/utils/utils.dart';
 
 class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
-  const LargeDiaryCardComponent({super.key, required this.diary, required this.tabViewTag});
+  const LargeDiaryCardComponent({super.key, required this.diary});
 
   final Diary diary;
 
-  final String tabViewTag;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +33,7 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
     return InkWell(
       borderRadius: const BorderRadius.all(Radius.circular(12.0)),
       onTap: () async {
-        await toDiary(diary, tabViewTag);
+        await toDiary(diary);
       },
       child: Card.filled(
         color: colorScheme.surfaceContainer,

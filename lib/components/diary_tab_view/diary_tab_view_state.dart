@@ -6,13 +6,14 @@ class DiaryTabViewState {
 
   late RxBool isFetching;
 
-  late String? categoryId;
 
   //首次加载的个数
   late int initLen;
 
   //分页的个数
   late int pageLen;
+
+
 
   DiaryTabViewState() {
     diaryList = <Diary>[].obs;

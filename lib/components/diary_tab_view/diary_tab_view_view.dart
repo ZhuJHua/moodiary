@@ -9,15 +9,15 @@ import 'package:mood_diary/components/diary_card/small_diary_card/small_diary_ca
 import 'diary_tab_view_logic.dart';
 
 class DiaryTabViewComponent extends StatelessWidget {
-  const DiaryTabViewComponent({super.key, this.categoryId, required this.tag});
+  const DiaryTabViewComponent({super.key, required this.categoryId});
 
   final String? categoryId;
-  final String tag;
 
   @override
   Widget build(BuildContext context) {
-    final logic = Get.put(DiaryTabViewLogic(), tag: tag);
-    final state = Bind.find<DiaryTabViewLogic>(tag: tag).state;
+    final logicTag = categoryId ?? 'default';
+    final logic = Get.put(DiaryTabViewLogic(categoryId: categoryId), tag: logicTag);
+    final state = Bind.find<DiaryTabViewLogic>(tag: logicTag).state;
     final i18n = AppLocalizations.of(context)!;
 
     Widget buildGrid() {
@@ -26,7 +26,6 @@ class DiaryTabViewComponent extends StatelessWidget {
         delegate: SliverChildBuilderDelegate((context, index) {
           return LargeDiaryCardComponent(
             diary: state.diaryList[index],
-            tabViewTag: tag.toString(),
           );
         }, childCount: state.diaryList.length),
       );
@@ -38,7 +37,6 @@ class DiaryTabViewComponent extends StatelessWidget {
           return SmallDiaryCardComponent(
             tag: index.toString(),
             diary: state.diaryList[index],
-            tabViewTag: tag.toString(),
           );
         },
         itemCount: state.diaryList.length,
@@ -64,7 +62,7 @@ class DiaryTabViewComponent extends StatelessWidget {
         key: UniqueKey(),
         slivers: [
           SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
-          sliver,
+          SliverPadding(padding: const EdgeInsets.all(4.0), sliver: sliver),
         ],
       );
     }
@@ -72,10 +70,8 @@ class DiaryTabViewComponent extends StatelessWidget {
     return GetBuilder<DiaryTabViewLogic>(
         assignId: true,
         init: logic,
-        tag: tag,
-        initState: (_) {
-          logic.initDiary(categoryId);
-        },
+        tag: logicTag,
+        autoRemove: false,
         builder: (logic) {
           return Stack(
             children: [
