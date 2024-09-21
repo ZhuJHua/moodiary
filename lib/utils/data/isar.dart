@@ -21,10 +21,12 @@ class IsarUtil {
   Future<void> dataMigration(String path) async {
     var oldIsar = await Isar.openAsync(schemas: [DiarySchema, CategorySchema], directory: path, name: 'old');
     List<Diary> oldDiaryList = await oldIsar.diarys.where().findAllAsync();
+    List<Category> oldCategoryList = await oldIsar.categorys.where().findAllAsync();
 
     await _isar.writeAsync((isar) {
-      isar.diarys.clear();
+      isar.clear();
       isar.diarys.putAll(oldDiaryList);
+      isar.categorys.putAll(oldCategoryList);
     });
     oldIsar.close(deleteFromDisk: true);
   }
@@ -35,35 +37,6 @@ class IsarUtil {
       isar.clear();
     });
   }
-
-  // void mockData() async {
-  //   var uuid = const Uuid();
-  //   var faker = Faker();
-  //   var random = Random();
-  //
-  //   _isar.write((isar) {
-  //     for (int i = 0; i < 100; i++) {
-  //       isar.diarys.put(Diary(
-  //         id: uuid.v4(),
-  //         categoryId: null,
-  //         title: faker.lorem.word(),
-  //         content: faker.lorem.sentence(),
-  //         contentText: faker.lorem.sentence(),
-  //         time: DateTime.now().subtract(Duration(days: random.nextInt(365))),
-  //         show: true,
-  //         mood: random.nextDouble(),
-  //         // Mood range from 0.0 to 10.0
-  //         weather: [],
-  //         imageName: ['$i.png'],
-  //         audioName: [],
-  //         videoName: [],
-  //         tags: [],
-  //         imageColor: random.nextBool() ? faker.randomGenerator.integer(0xFFFFFF) : null,
-  //         aspect: random.nextBool() ? (random.nextDouble() * 2) + 0.5 : null,
-  //       ));
-  //     }
-  //   });
-  // }
 
   Map<String, dynamic> getSize() {
     return Utils().fileUtil.bytesToUnits(_isar.diarys.getSize(includeIndexes: true));
@@ -87,13 +60,13 @@ class IsarUtil {
     });
   }
 
-  //根据月份获取日记
-  Future<List<Diary>> getDiariesByMonth(int year, int month) async {
+  //根据月份获取包含日记的日期
+  Future<List<DateTime>> getDiariesByMonth(int year, int month) async {
     return await _isar.diarys
         .where()
         .yMEqualTo('${year.toString()}/${month.toString()}')
         .showEqualTo(true)
-        .sortByTimeDesc()
+        .timeProperty()
         .findAllAsync();
   }
 
@@ -228,12 +201,11 @@ class IsarUtil {
     }
   }
 
-  //获取某一天对应分类的日记
-  Future<List<Diary>> getDiaryByCategoryAndDate(String? categoryId, DateTime time) async {
+  //获取某一天的日记
+  Future<List<Diary>> getDiaryByDay(DateTime time) async {
     return await _isar.diarys
         .where()
         .showEqualTo(true)
-        .categoryIdEqualTo(categoryId)
         .yMdEqualTo('${time.year.toString()}/${time.month.toString()}/${time.day.toString()}')
         .sortByTimeDesc()
         .findAllAsync();
