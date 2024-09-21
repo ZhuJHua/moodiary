@@ -31,13 +31,7 @@ class RecordSheetComponent extends StatelessWidget {
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 100),
                     child: state.isStarted.value
-                        ? Obx(() {
-                            return CustomPaint(
-                              painter: WaveFormPainter(state.amplitudes.value,
-                                  color: colorScheme.primary, barWidth: state.barWidth, spaceWidth: state.spaceWidth),
-                              size: Size(state.amplitudes.value.length * (state.barWidth + state.spaceWidth), 100),
-                            );
-                          })
+                        ? const WaveFormComponent()
                         : Center(
                             child: Container(
                             decoration: BoxDecoration(

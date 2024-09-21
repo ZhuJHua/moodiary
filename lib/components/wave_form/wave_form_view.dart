@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import 'wave_form_logic.dart';
 
 class WaveFormPainter extends CustomPainter {
   final double barWidth;
@@ -31,6 +34,30 @@ class WaveFormPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant WaveFormPainter oldDelegate) {
-    return true;
+    return oldDelegate._paint != _paint;
+  }
+}
+
+class WaveFormComponent extends StatelessWidget {
+  const WaveFormComponent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final logic = Get.put(WaveFormLogic());
+    final state = Bind.find<WaveFormLogic>().state;
+    final colorScheme = Theme.of(context).colorScheme;
+    return GetBuilder<WaveFormLogic>(
+      assignId: true,
+      init: logic,
+      builder: (logic) {
+        return Obx(() {
+          return CustomPaint(
+            painter: WaveFormPainter(state.amplitudes.value,
+                color: colorScheme.primary, barWidth: state.barWidth, spaceWidth: state.spaceWidth),
+            size: Size(state.amplitudes.value.length * (state.barWidth + state.spaceWidth), 100),
+          );
+        });
+      },
+    );
   }
 }

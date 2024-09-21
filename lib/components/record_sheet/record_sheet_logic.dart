@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/components/wave_form/wave_form_logic.dart';
 import 'package:mood_diary/pages/edit/edit_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -20,8 +21,9 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
   late AnimationController animationController =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 100), lowerBound: 0, upperBound: 1.0);
 
-  late final editLogic = Bind.find<EditLogic>();
+  late final EditLogic editLogic = Bind.find<EditLogic>();
 
+  late final WaveFormLogic waveFormLogic = Bind.find<WaveFormLogic>();
   late double baseline = .0;
 
   @override
@@ -70,9 +72,9 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
     amplitudeStream.listen((amplitude) {
       state.durationTime.value += const Duration(milliseconds: 40);
       if (amplitude.current.isInfinite) {
-        maxLengthAdd(.0);
+        waveFormLogic.maxLengthAdd(.0, state.maxWidth);
       } else if (amplitude.current != amplitude.max) {
-        maxLengthAdd(normalizeAmplitude(amplitude.current));
+        waveFormLogic.maxLengthAdd(normalizeAmplitude(amplitude.current), state.maxWidth);
       }
     });
   }
@@ -80,13 +82,6 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
   double normalizeAmplitude(double amplitude) {
     baseline = min(baseline, amplitude);
     return (amplitude + baseline.abs()) / baseline.abs();
-  }
-
-  void maxLengthAdd(value) {
-    if (state.amplitudes.length > state.maxWidth ~/ (state.barWidth + state.spaceWidth)) {
-      state.amplitudes.removeAt(0);
-    }
-    state.amplitudes.add(value);
   }
 
   Future<void> stopRecorder() async {
@@ -110,7 +105,7 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
   }
 
   Future<void> cancelRecorder() async {
-    state.amplitudes.value = <double>[];
+    waveFormLogic.state.amplitudes.value = <double>[];
     state.durationTime.value = const Duration();
     animationController.reset();
     state.isStarted.value = false;
