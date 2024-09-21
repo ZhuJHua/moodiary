@@ -12,6 +12,9 @@ class DiaryState {
   //分类列表，用于tab显示
   late List<Category> categoryList;
 
+  //分类列表对应的key map，key是列表id
+  late Map<String, GlobalKey<PrimaryScrollWrapperState>> keyMap;
+
   //主滚动列表key
   late GlobalKey<NestedScrollViewState> nestedScrollKey;
 
@@ -28,8 +31,6 @@ class DiaryState {
   //当前tab bar位置
   late int currentTabBarIndex;
 
-  late List<GlobalKey<PrimaryScrollWrapperState>> keyList;
-
   DiaryState() {
     customTitleName = Utils().prefUtil.getValue<String>('customTitleName')!;
 
@@ -42,9 +43,12 @@ class DiaryState {
     //第一次获取分类，这里是同步方法，因为分类数量是可控的，所以应该不会有性能问题，但愿如此
     categoryList = Utils().isarUtil.getAllCategory();
 
-    keyList = List.generate(categoryList.length + 1, (index) {
-      return GlobalKey();
-    });
+    //默认分类
+    keyMap = {'default': GlobalKey<PrimaryScrollWrapperState>()};
+    //其他分类
+    for (var category in categoryList) {
+      keyMap[category.id] = GlobalKey<PrimaryScrollWrapperState>();
+    }
 
     isToTopShow = false.obs;
 

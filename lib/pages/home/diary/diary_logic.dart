@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/diary_tab_view/diary_tab_view_logic.dart';
+import 'package:mood_diary/components/scroll/fix_scroll.dart';
+import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'diary_state.dart';
@@ -11,6 +13,9 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
 
   //初始化tab控制器，长度加一由于有一个默认分类
   late TabController tabController = TabController(length: state.categoryList.length + 1, vsync: this);
+
+  late HomeLogic homeLogic = Bind.find<HomeLogic>();
+  double lastScrollOffset = .0;
 
   @override
   void onInit() {
@@ -33,15 +38,13 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   }
 
   /// tab 监听函数
-  /// 在动态更新分类后要重新监听？
+  /// 在动态更新分类后要重新监听
   void _tabBarListener() {
-    if (!tabController.indexIsChanging) {
-      state.currentTabBarIndex = tabController.index;
-      for (var key in state.keyList) {
-        key.currentState?.onPageChange(state.currentTabBarIndex == state.keyList.indexOf(key));
-      }
-      _checkShowTop();
-    }
+    if (tabController.indexIsChanging) return;
+    _checkPageChange();
+    // 检查是否显示顶部内容
+    _checkShowTop();
+    homeLogic.showNavigatorBar();
   }
 
   /// inner controller 监听函数
@@ -50,8 +53,20 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     double offset = state.innerController.offset;
     double maxScrollExtent = state.innerController.position.maxScrollExtent;
     _checkShowTop();
+    if (offset - lastScrollOffset > 100) {
+      lastScrollOffset = offset;
+      homeLogic.hideNavigatorBar();
+    }
+    if (lastScrollOffset - offset > 100) {
+      lastScrollOffset = offset;
+      homeLogic.showNavigatorBar();
+    }
     if (offset == maxScrollExtent) {
-      await Bind.find<DiaryTabViewLogic>(tag: tabController.index.toString()).paginationDiary();
+      if (tabController.index == 0) {
+        await Bind.find<DiaryTabViewLogic>(tag: 'default').paginationDiary();
+      } else {
+        await Bind.find<DiaryTabViewLogic>(tag: state.categoryList[tabController.index].id).paginationDiary();
+      }
     }
   }
 
@@ -67,28 +82,48 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     state.isToTopShow.value = state.innerController.offset > 100;
   }
 
+  /// 自定义 PrimaryController 的修改
+  /// 需要在以下情况调用
+  /// 1. tab bar 修改
+  /// 2. update ho
+  void _checkPageChange() {
+    state.currentTabBarIndex = tabController.index;
+
+    // 获取当前分类ID，若为默认分类，设为 'default'
+    String categoryId = state.currentTabBarIndex == 0 ? 'default' : state.categoryList[state.currentTabBarIndex - 1].id;
+
+    // 遍历 keyMap，更新每个分类的状态
+    state.keyMap.forEach((k, v) {
+      v.currentState?.onPageChange(k == categoryId);
+    });
+  }
+
   /// 日记刷新函数
   /// 需要在以下情况调用
   ///
   /// 1. 新增日记之后
   /// 2. 回收站恢复日记之后
   /// 3. 编辑时修改了分类
-  Future<void> updateDiary(String? categoryId) async {
+  Future<void> updateDiary(String? categoryId, {bool jump = true}) async {
     //如果分类为空，说明没有分类，跳转到全部分类
     int tabViewIndex;
     if (categoryId == null) {
       tabViewIndex = 0;
-      tabController.animateTo(0);
+      if (jump) {
+        tabController.animateTo(0);
+      }
     } else {
       //查找分类对应的位置，加一是因为默认分类占了一个
       tabViewIndex = state.categoryList.indexWhere((e) => e.id == categoryId) + 1;
-      tabController.animateTo(tabViewIndex);
+      if (jump && tabController.index != 0) {
+        tabController.animateTo(tabViewIndex);
+      }
     }
     //如果控制器已经存在，重新获取，如果不存在，不需要任何操作
-    if (tabViewIndex != 0 && Bind.isRegistered<DiaryTabViewLogic>(tag: tabViewIndex.toString())) {
-      await Bind.find<DiaryTabViewLogic>(tag: tabViewIndex.toString()).getDiary();
+    if (tabViewIndex != 0 && Bind.isRegistered<DiaryTabViewLogic>(tag: categoryId)) {
+      await Bind.find<DiaryTabViewLogic>(tag: categoryId).getDiary();
     }
-    await Bind.find<DiaryTabViewLogic>(tag: '0').getDiary();
+    await Bind.find<DiaryTabViewLogic>(tag: 'default').getDiary();
   }
 
   /// 分类刷新函数
@@ -101,33 +136,29 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     //重新获取分类
     state.categoryList = await Utils().isarUtil.getAllCategoryAsync();
 
-    //重新获取key
-    state.keyList = List.generate(state.categoryList.length + 1, (index) {
-      return GlobalKey();
-    });
+    // 移除 Map 中不再存在的 Category id
+    state.keyMap
+        .removeWhere((k, v) => !state.categoryList.map((category) => category.id).contains(k) && k != 'default');
+
+    // 为新的 Category 添加新的 GlobalKey
+    for (var category in state.categoryList) {
+      if (!state.keyMap.containsKey(category.id)) {
+        state.keyMap[category.id] = GlobalKey<PrimaryScrollWrapperState>();
+      }
+    }
     //重新初始化Tab控制器
-    var currentIndex = tabController.index;
+    state.currentTabBarIndex = tabController.index;
     //如果删除了最后一个，就往左移
-    if (state.categoryList.length < currentIndex) {
-      currentIndex = state.categoryList.length;
+    if (state.categoryList.length < state.currentTabBarIndex) {
+      state.currentTabBarIndex = state.categoryList.length;
     }
 
     //重新创建控制器
-    tabController = TabController(length: state.categoryList.length + 1, vsync: this, initialIndex: currentIndex);
-
-    tabController.addListener(() {
-      if (!tabController.indexIsChanging) {
-        state.currentTabBarIndex = tabController.index;
-        for (var key in state.keyList) {
-          key.currentState?.onPageChange(state.currentTabBarIndex == state.keyList.indexOf(key));
-        }
-        double offset = state.innerController.offset;
-
-        state.isToTopShow.value = offset > 100;
-      }
-    });
-    //刷新
+    tabController.removeListener(_tabBarListener);
+    tabController = TabController(length: state.categoryList.length + 1, vsync: this);
+    tabController.addListener(_tabBarListener);
     update();
+    _checkPageChange();
   }
 
   //切换视图模式

@@ -21,12 +21,13 @@ class DiaryPage extends StatelessWidget {
 
     //生成TabBar
     Widget buildTabBar() {
+      List<Widget> allTabs = [];
       //默认的全部tab
-      var allTab = [const Tab(text: '全部')];
+      allTabs.add(const Tab(text: '全部'));
       //根据分类生成分类Tab
-      allTab += List.generate(state.categoryList.length, (index) {
+      allTabs.addAll(List.generate(state.categoryList.length, (index) {
         return Tab(text: state.categoryList[index].categoryName);
-      });
+      }));
       return Align(
         alignment: Alignment.centerLeft,
         child: TabBar(
@@ -45,30 +46,29 @@ class DiaryPage extends StatelessWidget {
           ),
           indicatorWeight: .0,
           indicatorPadding: const EdgeInsets.symmetric(vertical: 4.0),
-          tabs: allTab,
+          tabs: allTabs,
         ),
       );
     }
 
     // 单个页面
-    Widget buildDiaryView(int index, String? categoryId) {
-      return KeepAliveWrapper(
-        child: PrimaryScrollWrapper(
-          key: state.keyList[index],
-          child: DiaryTabViewComponent(tag: index.toString(), categoryId: categoryId),
-        ),
-      );
+    Widget buildDiaryView(int index, key, String? categoryId) {
+      return PrimaryScrollWrapper(
+          key: key,
+          child: KeepAliveWrapper(
+            child: DiaryTabViewComponent(categoryId: categoryId),
+          ));
     }
 
     Widget buildTabBarView() {
       List<Widget> allViews = [];
 
       // 添加全部日记页面
-      allViews.add(buildDiaryView(0, null));
+      allViews.add(buildDiaryView(0, state.keyMap['default'], null));
 
       // 添加分类日记页面
       allViews.addAll(List.generate(state.categoryList.length, (index) {
-        return buildDiaryView(index + 1, state.categoryList[index].id);
+        return buildDiaryView(index + 1, state.keyMap[state.categoryList[index].id], state.categoryList[index].id);
       }));
 
       return TabBarView(

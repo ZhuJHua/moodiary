@@ -12,12 +12,6 @@ class PrimaryScrollWrapper extends StatefulWidget {
 class PrimaryScrollWrapperState extends State<PrimaryScrollWrapper> {
   late ScrollControllerWrapper _scrollController;
 
-  ScrollControllerWrapper get scrollController {
-    _scrollController.realController =
-        context.dependOnInheritedWidgetOfExactType<PrimaryScrollController>()!.controller!;
-    return _scrollController;
-  }
-
   @override
   void initState() {
     _scrollController = ScrollControllerWrapper();
@@ -27,7 +21,7 @@ class PrimaryScrollWrapperState extends State<PrimaryScrollWrapper> {
   @override
   Widget build(BuildContext context) {
     return CustomPrimaryScrollController(
-      scrollController: scrollController,
+      scrollController: _scrollController..realController = PrimaryScrollController.of(context),
       child: widget.child,
     );
   }
@@ -54,10 +48,10 @@ class CustomPrimaryScrollController extends InheritedWidget implements PrimarySc
   bool updateShouldNotify(CustomPrimaryScrollController oldWidget) => controller != oldWidget.controller;
 
   @override
-  Set<TargetPlatform> get automaticallyInheritForPlatforms => _kMobilePlatforms;
+  Set<TargetPlatform> get automaticallyInheritForPlatforms => TargetPlatform.values.toSet();
 
   @override
-  Axis? get scrollDirection => Axis.vertical;
+  Axis get scrollDirection => Axis.vertical;
 }
 
 class ScrollControllerWrapper implements ScrollController {
@@ -105,9 +99,13 @@ class ScrollControllerWrapper implements ScrollController {
   void onAttachChange(value) {
     showing = value;
     if (showing) {
-      if (interceptedAttachPosition != null) attach(interceptedAttachPosition!);
+      if (interceptedAttachPosition != null) {
+        attach(interceptedAttachPosition!);
+      }
     } else {
-      if (lastPosition != null) detach(lastPosition!, fake: true);
+      if (lastPosition != null) {
+        detach(lastPosition!, fake: true);
+      }
     }
   }
 
@@ -167,9 +165,3 @@ class ScrollControllerWrapper implements ScrollController {
   @override
   ScrollControllerCallback? get onDetach => null;
 }
-
-const Set<TargetPlatform> _kMobilePlatforms = <TargetPlatform>{
-  TargetPlatform.android,
-  TargetPlatform.iOS,
-  TargetPlatform.fuchsia,
-};
