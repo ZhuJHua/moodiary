@@ -4,11 +4,11 @@
 
 「Moodiary」 is an open source, ad-free, social-free cross-platform private journal written with Flutter. Designed with Material Design, simple and easy to use.
 
-![Flutter Version](https://img.shields.io/badge/Flutter-3.25.0--0.1.pre-blue?style=for-the-badge) ![GitHub repo size](https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070) ![GitHub Repo stars](https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a) ![GitHub Release](https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f) ![GitHub License](https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7)
+![Flutter Version](https://img.shields.io/badge/Flutter-3.26.0--0.1.pre-blue?style=for-the-badge) ![GitHub repo size](https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070) ![GitHub Repo stars](https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a) ![GitHub Release](https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f) ![GitHub License](https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7)
 
 ## ✨ Feature
 
-- **Cross-platform support**：🌍 Compatible with Android, iOS, Windows (coming soon).
+- **Cross-platform support**：🌍 Compatible with Android, iOS\*, Windows, MacOS\*, Linux\*.
 - **Material Design**：🎨 The interface is intuitive and user-friendly, and follows the Material Design specifications.
 - **Rich text editing**：📝 Supports text editing in bold, italic, underline and other formats.
 - **Multimedia accessories**：📷 You can add pictures and audio to your diary.
@@ -19,16 +19,37 @@
 - **Cloud synchronization**：☁ Support for synchronizing diaries across multiple devices (coming soon).
 - **AI assistant**：🤖 Support ability to access large model provides AI (currently support: [Tencent Hunyuan](https://hunyuan.tencent.com/)).
 
+(Note: Cross-platform capabilities are provided by Flutter, platforms with * may require more testing)
+
+## 🔧 Technology stack
+
+- [Flutter](https://github.com/flutter/flutter)
+- [Isar](https://github.com/isar/isar)
+- [GetX](https://github.com/jonataslaw/getx)
+
 ## 📸 Application screenshot
 
-### Android
+### Mobile
 
-| ![](res/screenshot/phone1.png) | ![](res/screenshot/phone2.png) |
-| ------------------------------ | ------------------------------ |
+![Mobile](res/screenshot/mobile.webp)
 
+### Desktop
 
+![Desktop](res/screenshot/desktop.webp)
 
 ## 🚀 Installation guide
+
+### Third party SDK
+
+Some capabilities need to apply for third-party SDKS, and the following service providers provide free versions, and the obtained keys are configured in the lab.
+
+#### Weather service
+
+- [QWeather](https://dev.qweather.com/docs/api/)
+
+#### AI large model
+
+- [Tencent Hunyuan](https://cloud.tencent.com/product/hunyuan)
 
 ### Direct mounting
 
@@ -38,7 +59,7 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 #### Environmental requirement
 
-- Flutter SDK (>= 3.25.0-0.1.pre)
+- Flutter SDK (>= 3.26.0-0.1.pre)
 - Dart (>= 3.6.0)
 - Compatible ides (e.g. Android Studio, Visual Studio Code)
 
@@ -69,6 +90,7 @@ Use it by downloading the compiled installation package in Release, or manually 
 
    - Android: `flutter build apk`
    - iOS: `flutter build ios`
+   - Windows: `flutter build windows`
 
 ## 📝 Instructions for use
 
