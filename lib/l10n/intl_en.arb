@@ -84,5 +84,10 @@
   "diaryViewModeGrid": "Grid view",
   "diaryTabViewEmpty": "Nothing here yet",
   "diaryPageSearchButton": "Search",
-  "diaryPageViewModeButton": "View mode"
+  "diaryPageViewModeButton": "View mode",
+  "aboutTitle": "About",
+  "aboutSource": "View Source",
+  "aboutUserAgreement": "User Agreement",
+  "aboutPrivacyPolicy": "Privacy Policy",
+  "aboutBugReport": "BUG Report"
 }
