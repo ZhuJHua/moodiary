@@ -20,7 +20,6 @@ class DashboardComponent extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12.0),
         child: Card.outlined(
-          color: colorScheme.surfaceContainerLow,
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Row(
@@ -131,13 +130,10 @@ class DashboardComponent extends StatelessWidget {
     return GetBuilder<DashboardLogic>(
       init: logic,
       assignId: true,
-      autoRemove: false,
       builder: (logic) {
         return GridView(
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 200,
-            mainAxisSpacing: 8.0,
-            crossAxisSpacing: 8.0,
             childAspectRatio: 1.618,
           ),
           physics: const NeverScrollableScrollPhysics(),

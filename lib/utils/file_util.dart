@@ -131,10 +131,9 @@ class FileUtil {
   }
 
   String getCachePath(String fileName) {
-    // if (Platform.isWindows) {
-    //   return 'C:/temp/$fileName';
-    // }
-    Utils().logUtil.printInfo(_filePath);
+    if (Platform.isWindows) {
+      return 'C:/temp/$fileName';
+    }
     return join(_cachePath, fileName);
   }
 }

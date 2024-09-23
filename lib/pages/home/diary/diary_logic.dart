@@ -109,7 +109,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     int tabViewIndex;
     if (categoryId == null) {
       tabViewIndex = 0;
-      if (jump) {
+      if (jump && tabController.index != 0) {
         tabController.animateTo(0);
       }
     } else {

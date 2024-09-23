@@ -40,8 +40,8 @@ class AnalyseLogic extends GetxController {
     state.finished = false;
     update();
     state.moodList = await Utils().isarUtil.getMoodByDateRange(start, end.subtract(const Duration(days: -1)));
+
     var weatherList = await Utils().isarUtil.getWeatherByDateRange(start, end.subtract(const Duration(days: -1)));
-    Utils().logUtil.printInfo(weatherList);
     for (var weather in weatherList) {
       if (weather.isNotEmpty) {
         state.weatherList.add(weather.first);

@@ -77,17 +77,19 @@ class DiaryTabViewComponent extends StatelessWidget {
             children: [
               buildPlaceHolder(),
               Obx(() {
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  child: switch (logic.diaryLogic.state.viewModeType.value) {
-                    ViewModeType.list => buildCustomScrollView(sliver: Obx(() {
-                        return buildList();
-                      })),
-                    ViewModeType.grid => buildCustomScrollView(sliver: Obx(() {
-                        return buildGrid();
-                      })),
-                  },
-                );
+                return !state.isFetching.value
+                    ? AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        child: switch (logic.diaryLogic.state.viewModeType.value) {
+                          ViewModeType.list => buildCustomScrollView(sliver: Obx(() {
+                              return buildList();
+                            })),
+                          ViewModeType.grid => buildCustomScrollView(sliver: Obx(() {
+                              return buildGrid();
+                            })),
+                        },
+                      )
+                    : const SizedBox.shrink();
               }),
             ],
           );

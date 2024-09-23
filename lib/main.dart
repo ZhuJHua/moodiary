@@ -43,8 +43,8 @@ Future<void> platFormOption() async {
     Window.initialize();
 
     doWhenWindowReady(() {
-      appWindow.minSize = const Size(512, 768);
-      appWindow.size = const Size(1024, 768);
+      appWindow.minSize = const Size(512, 640);
+      appWindow.size = const Size(1024, 640);
       appWindow.show();
     });
   }

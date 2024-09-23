@@ -11,18 +11,18 @@ class CategoryManagerLogic extends GetxController {
 
   late TextEditingController textEditingController = TextEditingController();
 
-  late final DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
+  late DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
 
   @override
   void onInit() {
     // TODO: implement onInit
-    getCategory();
+
     super.onInit();
   }
 
   @override
-  void onReady() {
-    // TODO: implement onReady
+  void onReady() async {
+    await getCategory();
     super.onReady();
   }
 
@@ -30,13 +30,11 @@ class CategoryManagerLogic extends GetxController {
   void onClose() {
     // TODO: implement onClose
     textEditingController.dispose();
-    diaryLogic.updateCategory();
-
     super.onClose();
   }
 
   Future<void> getCategory() async {
-    state.categoryList.value = Utils().isarUtil.getAllCategory();
+    state.categoryList.value = await Utils().isarUtil.getAllCategoryAsync();
   }
 
   Future<void> addCategory() async {
@@ -44,6 +42,7 @@ class CategoryManagerLogic extends GetxController {
       if (await Utils().isarUtil.insertACategory(Category()..categoryName = textEditingController.text)) {
         Get.backLegacy();
         await getCategory();
+        await diaryLogic.updateCategory();
       } else {
         textEditingController.clear();
         Utils().noticeUtil.showToast('分类已存在');
@@ -58,6 +57,7 @@ class CategoryManagerLogic extends GetxController {
         ..categoryName = textEditingController.text);
       Get.backLegacy();
       await getCategory();
+      await diaryLogic.updateCategory();
     }
   }
 
@@ -65,6 +65,7 @@ class CategoryManagerLogic extends GetxController {
     if (await Utils().isarUtil.deleteACategory(id)) {
       Utils().noticeUtil.showToast('删除成功');
       await getCategory();
+      await diaryLogic.updateCategory();
     } else {
       Utils().noticeUtil.showToast('删除失败，当前分类下还有日记');
     }
