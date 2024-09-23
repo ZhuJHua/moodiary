@@ -8,6 +8,7 @@ class CalendarLogic extends GetxController {
 
   @override
   void onReady() async {
+    await getDateHasDiary(state.currentMonth.value);
     await getDiary();
     super.onReady();
   }
@@ -18,15 +19,26 @@ class CalendarLogic extends GetxController {
     super.onClose();
   }
 
+  Future<void> getDateHasDiary(DateTime value) async {
+    state.currentMonth.value = value;
+    state.dateHasDiary.value = await Utils().isarUtil.getDiaryDateByMonth(value.year, value.month);
+    update();
+  }
+
   Future<void> getDiary() async {
-    state.isFetching.value = true;
-    state.diaryList.value = await Utils().isarUtil.getDiaryByDay(state.selectedDate.first);
-    state.isFetching.value = false;
+    state.diaryList.value = await Utils().isarUtil.getDiaryByDay(state.selectedDate.value);
   }
 
   // 选中日期后重新获取日记
-  Future<void> updateDate(value) async {
-    state.selectedDate = value;
+  Future<void> updateDate(DateTime value) async {
+    state.selectedDate.value = value;
     await getDiary();
+  }
+
+  //回到今天
+  Future<void> backToToday() async {
+    var now = DateTime.now();
+    await updateDate(now);
+    await getDateHasDiary(now);
   }
 }

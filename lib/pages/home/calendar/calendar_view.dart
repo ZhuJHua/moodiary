@@ -18,34 +18,33 @@ class CalendarPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
 
-    Widget buildPlaceHolder() {
-      return Center(
-        child: Obx(() {
-          if (state.isFetching.value) {
-            return const CircularProgressIndicator();
-          } else if (state.diaryList.isEmpty) {
-            return const Icon(Icons.inbox);
-          } else {
-            return const SizedBox.shrink();
-          }
-        }),
-      );
-    }
-
     //生成日历选择器
     Widget buildDatePicker() {
       return Card.filled(
         color: colorScheme.surfaceContainer,
-        child: CalendarDatePicker2(
-          config: CalendarDatePicker2Config(
-            calendarViewMode: CalendarDatePicker2Mode.day,
-            calendarType: CalendarDatePicker2Type.single,
-          ),
-          onValueChanged: (value) async {
-            await logic.updateDate(value);
-          },
-          value: state.selectedDate,
-        ),
+        child: Obx(() {
+          return CalendarDatePicker2(
+            displayedMonthDate: state.currentMonth.value,
+            config: CalendarDatePicker2Config(
+                calendarViewMode: CalendarDatePicker2Mode.day,
+                calendarType: CalendarDatePicker2Type.single,
+                dayTextStylePredicate: ({required date}) {
+                  return state.dateHasDiary.any((dateTime) =>
+                          dateTime.year == date.year && dateTime.month == date.month && dateTime.day == date.day)
+                      ? TextStyle(
+                          color: colorScheme.primary,
+                        )
+                      : null;
+                }),
+            onValueChanged: (value) async {
+              await logic.updateDate(value.first);
+            },
+            onDisplayedMonthChanged: (value) async {
+              await logic.getDateHasDiary(value);
+            },
+            value: [state.selectedDate.value],
+          );
+        }),
       );
     }
 
@@ -70,6 +69,13 @@ class CalendarPage extends StatelessWidget {
           slivers: [
             SliverAppBar(
               title: Text(i18n.homeNavigatorCalendar),
+              actions: [
+                IconButton(
+                    onPressed: () async {
+                      await logic.backToToday();
+                    },
+                    icon: const Icon(Icons.today))
+              ],
             ),
             SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
