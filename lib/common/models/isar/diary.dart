@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:isar/isar.dart';
 
 part 'diary.g.dart';
@@ -77,4 +78,49 @@ class Diary {
     required this.imageColor,
     required this.aspect,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Diary &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          categoryId == other.categoryId &&
+          title == other.title &&
+          content == other.content &&
+          contentText == other.contentText &&
+          time == other.time &&
+          show == other.show &&
+          mood == other.mood &&
+          const ListEquality().equals(weather, other.weather) &&
+          const ListEquality().equals(imageName, other.imageName) &&
+          const ListEquality().equals(audioName, other.audioName) &&
+          const ListEquality().equals(videoName, other.videoName) &&
+          const ListEquality().equals(tags, other.tags) &&
+          imageColor == other.imageColor &&
+          aspect == other.aspect;
+
+  @override
+  int get hashCode {
+    return id.hashCode ^
+        categoryId.hashCode ^
+        title.hashCode ^
+        content.hashCode ^
+        contentText.hashCode ^
+        time.hashCode ^
+        show.hashCode ^
+        mood.hashCode ^
+        const ListEquality().hash(weather) ^
+        const ListEquality().hash(imageName) ^
+        const ListEquality().hash(audioName) ^
+        const ListEquality().hash(videoName) ^
+        const ListEquality().hash(tags) ^
+        imageColor.hashCode ^
+        aspect.hashCode;
+  }
+
+  @override
+  String toString() {
+    return 'Diary{id: $id, categoryId: $categoryId, title: $title, content: $content, contentText: $contentText, time: $time, show: $show, mood: $mood, weather: $weather, imageName: $imageName, audioName: $audioName, videoName: $videoName, tags: $tags, imageColor: $imageColor, aspect: $aspect}';
+  }
 }
