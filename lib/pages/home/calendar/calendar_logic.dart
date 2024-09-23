@@ -41,4 +41,8 @@ class CalendarLogic extends GetxController {
     await updateDate(now);
     await getDateHasDiary(now);
   }
+
+  void open(value) {
+    state.isExpanded.value = value;
+  }
 }

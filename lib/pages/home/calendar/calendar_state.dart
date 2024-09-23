@@ -13,13 +13,16 @@ class CalendarState {
   //当前选中日期内的日记列表
   late RxList<Diary> diaryList;
 
+  late RxBool isExpanded;
+
   CalendarState() {
     //默认是今天
-    var now=DateTime.now();
+    var now = DateTime.now();
     selectedDate = now.obs;
     currentMonth = now.obs;
     dateHasDiary = <DateTime>[].obs;
     diaryList = <Diary>[].obs;
+    isExpanded = true.obs;
 
     ///Initialize variables
   }
