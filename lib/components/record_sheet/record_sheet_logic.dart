@@ -23,13 +23,13 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
 
   late final EditLogic editLogic = Bind.find<EditLogic>();
 
-  late final WaveFormLogic waveFormLogic = Bind.find<WaveFormLogic>();
   late double baseline = .0;
 
   @override
   void onReady() {
     // TODO: implement onReady
-
+    //启动监听
+    listenAmplitude();
     super.onReady();
   }
 
@@ -62,8 +62,6 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
       await audioRecorder.start(
           const RecordConfig(androidConfig: AndroidRecordConfig(muteAudio: true, useLegacy: true)),
           path: Utils().fileUtil.getCachePath(state.fileName));
-      //启动监听
-      listenAmplitude();
     }
   }
 
@@ -72,9 +70,9 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
     amplitudeStream.listen((amplitude) {
       state.durationTime.value += const Duration(milliseconds: 40);
       if (amplitude.current.isInfinite) {
-        waveFormLogic.maxLengthAdd(.0, state.maxWidth);
+        Bind.find<WaveFormLogic>().maxLengthAdd(.0, state.maxWidth);
       } else if (amplitude.current != amplitude.max) {
-        waveFormLogic.maxLengthAdd(normalizeAmplitude(amplitude.current), state.maxWidth);
+        Bind.find<WaveFormLogic>().maxLengthAdd(normalizeAmplitude(amplitude.current), state.maxWidth);
       }
     });
   }
@@ -105,7 +103,6 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
   }
 
   Future<void> cancelRecorder() async {
-    waveFormLogic.state.amplitudes.value = <double>[];
     state.durationTime.value = const Duration();
     animationController.reset();
     state.isStarted.value = false;
