@@ -88,7 +88,7 @@ class PrefUtil {
         'supportBiometrics', _prefs.getBool('supportBiometrics') ?? await Utils().authUtil.canCheckBiometrics());
     await _prefs.setBool(
         'supportDynamicColor', _prefs.getBool('supportDynamicColor') ?? await Utils().themeUtil.supportDynamicColor());
-    await _prefs.setInt('color', _prefs.getInt('color') ?? (await Utils().themeUtil.supportDynamicColor() ? -1 : 1));
+    await _prefs.setInt('color', _prefs.getInt('color') ?? (await Utils().themeUtil.supportDynamicColor() ? -1 : 0));
     await _prefs.setInt('themeMode', _prefs.getInt('themeMode') ?? 0);
     await _prefs.setBool('dynamicColor', _prefs.getBool('dynamicColor') ?? true);
     await _prefs.setInt('quality', _prefs.getInt('quality') ?? 2);
