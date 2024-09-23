@@ -346,16 +346,16 @@ class SettingPage extends StatelessWidget {
                         //         });
                         //   },
                         // ),
-                        Obx(() {
-                          return SwitchListTile(
-                            value: state.getWeather.value,
-                            onChanged: (value) {
-                              logic.weather(value);
-                            },
-                            title: Text(i18n.settingWeather),
-                            secondary: const Icon(Icons.sunny),
-                          );
-                        }),
+                        // Obx(() {
+                        //   return SwitchListTile(
+                        //     value: state.getWeather.value,
+                        //     onChanged: (value) {
+                        //       logic.weather(value);
+                        //     },
+                        //     title: Text(i18n.settingWeather),
+                        //     secondary: const Icon(Icons.sunny),
+                        //   );
+                        // }),
                         ListTile(
                           title: const Text('自定义首页名称'),
                           leading: const Icon(Icons.drive_file_rename_outline),

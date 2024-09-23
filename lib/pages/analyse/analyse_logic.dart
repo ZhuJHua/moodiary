@@ -90,8 +90,8 @@ class AnalyseLogic extends GetxController {
           check['key']!,
           [
             Message('system',
-                '我会给你一组来自一款日记APP的数据，其中包含了在某一段时间内，日记所记录的心情和天气情况，根据这些数据，给出我一条建议用户如何改善心情，回答稍微带一点文艺感，总字数不要超过200字，不需要任何其他反馈。'),
-            Message('user', '心情：${state.moodMap.toString()}，天气：${state.weatherMap.toString()}')
+                '我会给你一组来自一款日记APP的数据，其中包含了在某一段时间内，日记所记录的心情情况，根据这些数据，分析用户最近的心情状况，并给出合理的建议，心情的值是一个从0.0到1.0的浮点数，从小到大表示心情从坏到好，给你的值是一个Map，其中的Key是心情指数，Value是对应心情指数出现的次数。给出的输出应当是结论，不需要给出分析过程，不需要其他反馈。'),
+            Message('user', '心情：${state.moodMap.toString()}')
           ],
           0);
       stream?.listen((content) {
