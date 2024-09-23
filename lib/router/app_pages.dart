@@ -1,4 +1,6 @@
 import 'package:get/get.dart';
+import 'package:mood_diary/pages/about/about_logic.dart';
+import 'package:mood_diary/pages/about/about_view.dart';
 import 'package:mood_diary/pages/agreement/agreement_logic.dart';
 import 'package:mood_diary/pages/agreement/agreement_view.dart';
 import 'package:mood_diary/pages/analyse/analyse_logic.dart';
@@ -150,6 +152,12 @@ class AppPages {
       name: AppRoutes.categoryManagerPage,
       page: () => const CategoryManagerPage(),
       binds: [Bind.lazyPut(() => CategoryManagerLogic())],
+    ),
+
+    GetPage(
+      name: AppRoutes.aboutPage,
+      page: () => const AboutPage(),
+      binds: [Bind.lazyPut(() => AboutLogic())],
     ),
   ];
 }

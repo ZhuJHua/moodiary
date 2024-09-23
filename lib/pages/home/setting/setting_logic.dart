@@ -101,6 +101,10 @@ class SettingLogic extends GetxController {
     Get.toNamed(AppRoutes.laboratoryPage);
   }
 
+  void toAboutPage() {
+    Get.toNamed(AppRoutes.aboutPage);
+  }
+
   void cancelCustomTitle() {
     textEditingController.clear();
     Get.backLegacy();

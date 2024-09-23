@@ -497,7 +497,7 @@ class SettingPage extends StatelessWidget {
                           leading: const Icon(Icons.info_outline),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: () {
-                            logic.toLaboratoryPage();
+                            logic.toAboutPage();
                           },
                         ),
                         ListTile(
