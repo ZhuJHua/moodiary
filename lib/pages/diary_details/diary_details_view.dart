@@ -140,7 +140,7 @@ class DiaryDetailsPage extends StatelessWidget {
               slivers: [
                 SliverAppBar(
                   expandedHeight: aspect != null
-                      ? (aspect<= 1.0 ? min(size.width / aspect, size.height * 0.618) : size.width / aspect)
+                      ? (aspect <= 1.0 ? min(size.width / aspect, size.height * 0.618) : size.width / aspect)
                       : null,
                   title: Text(
                     state.diary.title ?? '',
@@ -162,16 +162,18 @@ class DiaryDetailsPage extends StatelessWidget {
                   ),
                   pinned: true,
                   actions: [
-                    IconButton(
-                        onPressed: () {
-                          logic.delete(state.diary);
-                        },
-                        icon: const Icon(Icons.delete)),
-                    IconButton(
-                        onPressed: () {
-                          logic.toEditPage(state.diary);
-                        },
-                        icon: const Icon(Icons.edit)),
+                    if (state.showAction) ...[
+                      IconButton(
+                          onPressed: () {
+                            logic.delete(state.diary);
+                          },
+                          icon: const Icon(Icons.delete)),
+                      IconButton(
+                          onPressed: () {
+                            logic.toEditPage(state.diary);
+                          },
+                          icon: const Icon(Icons.edit)),
+                    ],
                     IconButton(
                       onPressed: () {
                         logic.toSharePage();
@@ -191,8 +193,7 @@ class DiaryDetailsPage extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(8.0),
                           decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainer,
-                              borderRadius: AppBorderRadius.smallBorderRadius),
+                              color: colorScheme.surfaceContainer, borderRadius: AppBorderRadius.smallBorderRadius),
                           child: QuillEditor.basic(
                             controller: logic.quillController,
                             configurations: const QuillEditorConfigurations(

@@ -146,7 +146,7 @@ class DashboardComponent extends StatelessWidget {
             buildManagerButton(Icons.article, '日记', Obx(() {
               return buildDiaryDetail(state.diaryCount.value, '篇', state.contentCount.value, '字');
             }), () {
-              logic.toDiaryManager();
+              //logic.toDiaryManager();
             }),
             buildManagerButton(Icons.category, '分类', Obx(() {
               return buildDetail(state.categoryCount.value, '个');

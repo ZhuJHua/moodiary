@@ -15,6 +15,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   late TabController tabController = TabController(length: state.categoryList.length + 1, vsync: this);
 
   late HomeLogic homeLogic = Bind.find<HomeLogic>();
+
   double lastScrollOffset = .0;
 
   @override
@@ -44,6 +45,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     _checkPageChange();
     // 检查是否显示顶部内容
     _checkShowTop();
+
     homeLogic.showNavigatorBar();
   }
 
@@ -65,7 +67,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
       if (tabController.index == 0) {
         await Bind.find<DiaryTabViewLogic>(tag: 'default').paginationDiary();
       } else {
-        await Bind.find<DiaryTabViewLogic>(tag: state.categoryList[tabController.index].id).paginationDiary();
+        await Bind.find<DiaryTabViewLogic>(tag: state.categoryList[tabController.index - 1].id).paginationDiary();
       }
     }
   }
@@ -79,7 +81,11 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   /// 2. tab切换时
   /// 3. view mode刷新时（实际上肯定在顶部，干脆直接改state）
   void _checkShowTop() {
-    state.isToTopShow.value = state.innerController.offset > 100;
+    if (state.innerController.hasClients) {
+      state.isToTopShow.value = state.innerController.offset > 100;
+    } else {
+      state.isToTopShow.value = false;
+    }
   }
 
   /// 自定义 PrimaryController 的修改

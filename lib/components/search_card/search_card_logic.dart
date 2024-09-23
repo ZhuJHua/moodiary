@@ -21,6 +21,6 @@ class SearchCardLogic extends GetxController {
 
   //选中卡片后跳转到详情页，直接携带Diary作为参数
   Future<void> toDiaryPage(Diary diary) async {
-    await Get.toNamed(AppRoutes.diaryPage, arguments: diary);
+    await Get.toNamed(AppRoutes.diaryPage, arguments: [diary, false]);
   }
 }
