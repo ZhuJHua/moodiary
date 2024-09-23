@@ -3,6 +3,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mood_diary/common/values/border.dart';
+import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/category_add/category_add_view.dart';
 import 'package:mood_diary/components/keepalive/keepalive.dart';
@@ -80,7 +82,7 @@ class EditPage extends StatelessWidget {
         children: [
           ...List.generate(state.imageList.length, (index) {
             return InkWell(
-              borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+              borderRadius: AppBorderRadius.smallBorderRadius,
               onLongPress: () {
                 logic.setCover(index);
               },
@@ -91,7 +93,7 @@ class EditPage extends StatelessWidget {
                 padding: const EdgeInsets.all(2.0),
                 margin: const EdgeInsets.symmetric(vertical: 4.0),
                 decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+                  borderRadius: AppBorderRadius.smallBorderRadius,
                   border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.5).toInt())),
                   image: DecorationImage(
                     image: MemoryImage(state.imageList[index]),
@@ -106,7 +108,7 @@ class EditPage extends StatelessWidget {
                     Container(
                       decoration: BoxDecoration(
                         color: colorScheme.surface.withAlpha((255 * 0.5).toInt()),
-                        borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+                        borderRadius: AppBorderRadius.smallBorderRadius,
                       ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -163,7 +165,7 @@ class EditPage extends StatelessWidget {
           }),
           if (state.imageList.length < 10) ...[
             InkWell(
-              borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+              borderRadius: AppBorderRadius.smallBorderRadius,
               onTap: () {
                 showDialog(
                     context: context,
@@ -225,7 +227,7 @@ class EditPage extends StatelessWidget {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+                  borderRadius: AppBorderRadius.smallBorderRadius,
                   color: colorScheme.surfaceContainerHighest,
                 ),
                 margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -316,7 +318,7 @@ class EditPage extends StatelessWidget {
                           decoration: InputDecoration(
                             fillColor: colorScheme.secondaryContainer,
                             border: const UnderlineInputBorder(
-                              borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                              borderRadius: AppBorderRadius.smallBorderRadius,
                               borderSide: BorderSide.none,
                             ),
                             filled: true,
@@ -354,8 +356,8 @@ class EditPage extends StatelessWidget {
                           value: state.currentMoodRate.value,
                           divisions: 10,
                           label: '${(state.currentMoodRate.value * 100).toStringAsFixed(0)}%',
-                          activeColor:
-                              Color.lerp(const Color(0xFFFA4659), const Color(0xFF2EB872), state.currentMoodRate.value),
+                          activeColor: Color.lerp(
+                              AppColor.emoColorList.first, AppColor.emoColorList.last, state.currentMoodRate.value),
                           onChanged: (value) {
                             logic.changeRate(value);
                           }),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/search_card/search_card_view.dart';
 
 import 'search_sheet_logic.dart';
@@ -28,7 +29,7 @@ class SearchSheetComponent extends StatelessWidget {
                 decoration: InputDecoration(
                   fillColor: colorScheme.secondaryContainer,
                   border: const UnderlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                    borderRadius: AppBorderRadius.smallBorderRadius,
                     borderSide: BorderSide.none,
                   ),
                   filled: true,

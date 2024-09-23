@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/diary_card/basic_diary_card/basic_card_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
 
@@ -53,7 +54,7 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     fit: BoxFit.cover,
                   ),
                   border: Border.all(color: colorScheme.outline),
-                  borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+                  borderRadius: AppBorderRadius.mediumBorderRadius,
                 ),
               ),
             );
@@ -70,7 +71,7 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
     }
 
     return InkWell(
-      borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+      borderRadius: AppBorderRadius.mediumBorderRadius,
       onTap: () async {
         await toDiaryInCalendar(diary);
       },

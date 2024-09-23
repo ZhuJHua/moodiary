@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mood_diary/common/values/border.dart';
 
 class EmotionCurvePainter extends CustomPainter {
   final double value;
@@ -50,7 +51,7 @@ class MoodIconComponent extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
           color: Color.lerp(const Color(0xFFFA4659), const Color(0xFF2EB872), value),
-          borderRadius: const BorderRadius.all(Radius.circular(8.0))),
+          borderRadius: AppBorderRadius.smallBorderRadius),
       padding: const EdgeInsets.all(4.0),
       child: CustomPaint(
         size: Size(width - 8.0, width - 8.0),

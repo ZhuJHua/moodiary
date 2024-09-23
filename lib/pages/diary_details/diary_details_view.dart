@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
@@ -20,6 +21,7 @@ class DiaryDetailsPage extends StatelessWidget {
     final logic = Bind.find<DiaryDetailsLogic>();
     final state = Bind.find<DiaryDetailsLogic>().state;
     final size = MediaQuery.sizeOf(context);
+    final textStyle = Theme.of(context).textTheme;
 
     Widget buildAChip(Widget label, Widget? avatar, ColorScheme colorScheme) {
       return Chip(
@@ -92,7 +94,7 @@ class DiaryDetailsPage extends StatelessWidget {
             height: ((size.width - 32) / 3).truncateToDouble(),
             constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(8.0)),
+              borderRadius: AppBorderRadius.smallBorderRadius,
               border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.8).toInt())),
               image: DecorationImage(
                 image: imageProvider,
@@ -138,8 +140,12 @@ class DiaryDetailsPage extends StatelessWidget {
               slivers: [
                 SliverAppBar(
                   expandedHeight: aspect != null
-                      ? (aspect > 1.0 ? min(size.width / aspect, size.height * 0.618) : size.width / aspect)
+                      ? (aspect<= 1.0 ? min(size.width / aspect, size.height * 0.618) : size.width / aspect)
                       : null,
+                  title: Text(
+                    state.diary.title ?? '',
+                    style: textStyle.titleMedium,
+                  ),
                   flexibleSpace: FlexibleSpaceBar(
                     collapseMode: CollapseMode.pin,
                     background: state.diary.imageName.isNotEmpty
@@ -186,7 +192,7 @@ class DiaryDetailsPage extends StatelessWidget {
                           padding: const EdgeInsets.all(8.0),
                           decoration: BoxDecoration(
                               color: colorScheme.surfaceContainer,
-                              borderRadius: const BorderRadius.all(Radius.circular(8.0))),
+                              borderRadius: AppBorderRadius.smallBorderRadius),
                           child: QuillEditor.basic(
                             controller: logic.quillController,
                             configurations: const QuillEditorConfigurations(

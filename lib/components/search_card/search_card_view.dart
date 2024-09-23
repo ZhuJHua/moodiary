@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:mood_diary/common/values/border.dart';
 
 import 'search_card_logic.dart';
 
@@ -27,7 +28,7 @@ class SearchCardComponent extends StatelessWidget {
           },
           child: Container(
             decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest, borderRadius: const BorderRadius.all(Radius.circular(8.0))),
+                color: colorScheme.surfaceContainerHighest, borderRadius: AppBorderRadius.smallBorderRadius),
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [

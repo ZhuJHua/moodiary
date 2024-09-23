@@ -5,6 +5,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/pages/home/assistant/assistant_view.dart';
 import 'package:mood_diary/pages/home/calendar/calendar_view.dart';
@@ -50,7 +51,7 @@ class HomePage extends StatelessWidget {
                 },
                 child: Container(
                   decoration: ShapeDecoration(
-                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
+                    shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
                     color: colorScheme.tertiaryContainer,
                   ),
                   width: 56.0,
@@ -71,7 +72,7 @@ class HomePage extends StatelessWidget {
           },
           child: Container(
             decoration: ShapeDecoration(
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16.0))),
+              shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
               color: colorScheme.primaryContainer,
             ),
             height: 56.0,
@@ -184,6 +185,7 @@ class HomePage extends StatelessWidget {
                       ],
                       selectedIndex: state.navigatorIndex.value,
                       height: state.navigatorBarHeight,
+                      backgroundColor: colorScheme.surface,
                       onDestinationSelected: (index) {
                         logic.changeNavigator(index);
                       },

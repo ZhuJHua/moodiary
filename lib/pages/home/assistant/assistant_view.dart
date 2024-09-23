@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:markdown_widget/markdown_widget.dart';
+import 'package:mood_diary/common/values/border.dart';
 
 import 'assistant_logic.dart';
 
@@ -59,7 +60,7 @@ class AssistantPage extends StatelessWidget {
                   isDense: true,
                   hintText: '消息',
                   border: const OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(24.0)),
+                    borderRadius: AppBorderRadius.largeBorderRadius,
                     borderSide: BorderSide.none,
                   )),
             )),

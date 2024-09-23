@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/color_dialog/color_dialog_view.dart';
 import 'package:mood_diary/components/dashboard/dashboard_view.dart';
 import 'package:mood_diary/components/remove_password/remove_password_view.dart';
@@ -377,7 +378,7 @@ class SettingPage extends StatelessWidget {
                                       decoration: InputDecoration(
                                         fillColor: colorScheme.secondaryContainer,
                                         border: const UnderlineInputBorder(
-                                          borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                                          borderRadius: AppBorderRadius.smallBorderRadius,
                                           borderSide: BorderSide.none,
                                         ),
                                         filled: true,

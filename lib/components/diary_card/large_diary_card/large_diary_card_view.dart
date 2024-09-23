@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/diary_card/basic_diary_card/basic_card_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
 
@@ -25,13 +26,13 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
             image: FileImage(File(Utils().fileUtil.getRealPath('image', diary.imageName.first))),
             fit: BoxFit.cover,
           ),
-          borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+          borderRadius: AppBorderRadius.mediumBorderRadius,
         ),
       );
     }
 
     return InkWell(
-      borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+      borderRadius: AppBorderRadius.mediumBorderRadius,
       onTap: () async {
         await toDiary(diary);
       },
