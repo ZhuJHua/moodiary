@@ -61,7 +61,7 @@ class IsarUtil {
   }
 
   //根据月份获取包含日记的日期
-  Future<List<DateTime>> getDiariesByMonth(int year, int month) async {
+  Future<List<DateTime>> getDiaryDateByMonth(int year, int month) async {
     return await _isar.diarys
         .where()
         .yMEqualTo('${year.toString()}/${month.toString()}')
