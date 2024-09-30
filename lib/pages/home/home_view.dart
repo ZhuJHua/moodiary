@@ -7,9 +7,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/keepalive/keepalive.dart';
-import 'package:mood_diary/pages/home/assistant/assistant_view.dart';
 import 'package:mood_diary/pages/home/calendar/calendar_view.dart';
 import 'package:mood_diary/pages/home/diary/diary_view.dart';
+import 'package:mood_diary/pages/home/media/media_view.dart';
 import 'package:mood_diary/pages/home/setting/setting_view.dart';
 
 import 'home_logic.dart';
@@ -173,9 +173,9 @@ class HomePage extends StatelessWidget {
                           selectedIcon: const Icon(Icons.calendar_today),
                         ),
                         NavigationDestination(
-                          icon: const Icon(Icons.chat_outlined),
-                          label: i18n.homeNavigatorAssistant,
-                          selectedIcon: const Icon(Icons.chat),
+                          icon: const Icon(Icons.perm_media_outlined),
+                          label: i18n.homeNavigatorMedia,
+                          selectedIcon: const Icon(Icons.perm_media),
                         ),
                         NavigationDestination(
                           icon: const Icon(Icons.settings_outlined),
@@ -222,9 +222,10 @@ class HomePage extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                         ),
                         NavigationRailDestination(
-                          icon: const Icon(Icons.chat_outlined),
-                          label: Text(i18n.homeNavigatorAssistant),
-                          selectedIcon: const Icon(Icons.chat),
+                          icon: const Icon(Icons.perm_media_outlined),
+                          label: Text(i18n.homeNavigatorMedia),
+                          selectedIcon: const Icon(Icons.perm_media),
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
                         ),
                         NavigationRailDestination(
                           icon: const Icon(Icons.settings_outlined),
@@ -305,7 +306,7 @@ class HomePage extends StatelessWidget {
                       children: const [
                         KeepAliveWrapper(child: DiaryPage()),
                         CalendarPage(),
-                        AssistantPage(),
+                        MediaPage(),
                         SettingPage(),
                       ],
                     ),
