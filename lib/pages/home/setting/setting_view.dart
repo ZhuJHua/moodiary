@@ -26,6 +26,7 @@ class SettingPage extends StatelessWidget {
       assignId: true,
       builder: (logic) {
         return CustomScrollView(
+          cacheExtent: 1000.0,
           slivers: [
             SliverAppBar(
               title: Text(i18n.homeNavigatorSetting),
