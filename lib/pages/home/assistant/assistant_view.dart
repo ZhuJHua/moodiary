@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -33,21 +31,6 @@ class AssistantPage extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            IconButton(
-                onPressed: () {
-                  logic.homeLogic.state.isBarHidden.value
-                      ? logic.homeLogic.showNavigatorBar()
-                      : logic.homeLogic.hideNavigatorBar();
-                },
-                icon: AnimatedBuilder(
-                    animation: logic.homeLogic.barAnimation,
-                    child: const Icon(Icons.keyboard_arrow_up_outlined),
-                    builder: (context, widget) {
-                      return Transform.rotate(
-                        angle: pi * logic.homeLogic.barAnimation.value,
-                        child: widget,
-                      );
-                    })),
             Expanded(
                 child: TextField(
               focusNode: logic.focusNode,

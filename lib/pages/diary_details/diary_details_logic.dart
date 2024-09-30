@@ -35,7 +35,6 @@ class DiaryDetailsLogic extends GetxController {
 
   @override
   void onClose() {
-    // TODO: implement onClose
     quillController.dispose();
     super.onClose();
   }
