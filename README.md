@@ -17,11 +17,11 @@
 - **数据安全**：🔒 通过密码来保障你的日记安全。
 - **导出和分享**：🧾 支持所有数据的导入/导出，以及单篇日记的分享。
 - **云同步**：☁ 支持在多个设备间同步日记（即将支持）。
-- **AI 助手**：🤖 支持接入大模型提供 AI 能力（目前支持：[腾讯混元](https://hunyuan.tencent.com/)）。
+- **自然语言处理（NLP）**：🤖 让你的日记更懂你。
 
 （注：跨平台能力由 Flutter 提供，带 * 号的平台可能需要更多测试）
 
-## 🔧 技术栈
+## 🔧 主要技术栈
 
 - [Flutter](https://github.com/flutter/flutter)
 - [Isar](https://github.com/isar/isar)
@@ -47,10 +47,6 @@
 
 - [和风天气](https://dev.qweather.com/docs/api/)
 
-#### AI 大模型
-
-- [腾讯混元大模型](https://cloud.tencent.com/product/hunyuan)
-
 ### 直接安装
 
 通过下载 Release 中已编译好的安装包来使用，如果没有你所需要的平台，请使用手动编译。
@@ -59,7 +55,7 @@
 
 #### 环境要求
 
-- Flutter SDK (>= 3.26.0-0.1.pre)
+- Flutter SDK (>= 3.26.0-0.1.pre，因为使用了尚未合并到稳定版的功能，我只能使用测试版，等稳定版更新后会尽快迁移)
 - Dart (>= 3.6.0)
 - 兼容的 IDE（如 Android Studio、Visual Studio Code）
 
@@ -92,9 +88,23 @@
     - iOS: `flutter build ios`
     - Windows: `flutter build windows`
 
-## 📝 使用说明
+## 📝 更多说明
 
-安装完成后，你可以通过点击“新建日记”按钮开始创建日记条目。使用富文本编辑器来格式化你的内容，添加多媒体附件，并通过标签进行组织。
+### 自然语言处理（NLP）
+
+如今，越来越多的行业产品开始融入 AI 技术，这无疑极大地提升了我们的使用体验。然而，对于日记应用来说，将数据交给大型模型处理并不可接受，因为无法确定这些数据是否会被用于训练。因此，更好的方法是采用本地模型。虽然由于体积限制，本地模型的能力可能不如大型模型强大，但在一定程度上仍能为我们提供必要的帮助。
+
+目前，我已经集成了以下任务：
+
+#### 基于 Bert 预训练模型的 SQuAD 任务
+
+我采用了 MobileBert 来处理 SQuAD 任务，这是一个简单的机器阅读理解任务。你可以向它提出问题，它会返回你需要的答案。模型文件采用 TensorFlow Lite 所需的 `.tflite` 格式，经过量化后模型大小约为 50MB。
+
+感谢以下开源项目：
+
+- [Chinese MobileBERT](https://github.com/ymcui/Chinese-MobileBERT)
+- [Mobilebert](https://github.com/google-research/google-research/tree/master/mobilebert)
+- [ChineseSquad](https://github.com/junzeng-pluto/ChineseSquad)
 
 ## 🤝 贡献指南
 
