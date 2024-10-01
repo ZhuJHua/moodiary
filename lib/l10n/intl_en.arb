@@ -89,5 +89,9 @@
   "aboutSource": "View Source",
   "aboutUserAgreement": "User Agreement",
   "aboutPrivacyPolicy": "Privacy Policy",
-  "aboutBugReport": "BUG Report"
+  "aboutBugReport": "BUG Report",
+  "mediaTypeImage": "Image",
+  "mediaTypeAudio": "Audio",
+  "mediaTypeVideo": "Video",
+  "mediaDeleteUseLessFile": "Delete useless file"
 }

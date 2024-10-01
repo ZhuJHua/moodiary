@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.4.3+43
+version: 2.4.4+44
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -75,6 +75,8 @@ dependencies:
   cupertino_icons: 1.0.8
   font_awesome_flutter: 10.7.0
   tflite_flutter: 0.11.0
+  sliver_tools: 0.2.12
+  lottie: 3.1.2
 
   flutter_localizations:
     sdk: flutter
@@ -83,7 +85,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: 2.4.12
+  build_runner: ^2.4.13
   msix: 3.16.8
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -110,6 +112,7 @@ flutter:
     - icon/icon.png
     - tflite/vocab.txt
     - tflite/model_quant.tflite
+    - lottie/file_ok.json
 
   uses-material-design: true
 

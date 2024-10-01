@@ -130,9 +130,13 @@ class IsarUtil {
     return await _isar.diarys.where().showEqualTo(true).tagsElementContains(value).findAllAsync();
   }
 
-  //获取日记总数
-  Future<int> countDiaries() async {
+  //获取不在回收站的日记总数
+  Future<int> countShowDiary() async {
     return await _isar.diarys.where().showEqualTo(true).countAsync();
+  }
+
+  int countAllDiary() {
+    return _isar.diarys.count();
   }
 
   //获取分类总数
@@ -209,6 +213,10 @@ class IsarUtil {
         .yMdEqualTo('${time.year.toString()}/${time.month.toString()}/${time.day.toString()}')
         .sortByTimeDesc()
         .findAllAsync();
+  }
+
+  Future<List<Diary>> getDiary(int offset, int limit) async {
+    return await _isar.diarys.where().findAllAsync(offset: offset, limit: limit);
   }
 
   //构建搜索

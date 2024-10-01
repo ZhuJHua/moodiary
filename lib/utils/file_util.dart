@@ -22,7 +22,7 @@ class FileUtil {
     }
   }
 
-  //删除指定文件夹下的文件
+  //删除指定文件夹
   Future<void> deleteDir(String path) async {
     Directory directory = Directory(path);
     if (await directory.exists()) {
@@ -128,6 +128,45 @@ class FileUtil {
 
   String getRealPath(String fileType, String fileName) {
     return join(_filePath, fileType, fileName);
+  }
+
+  // 媒体库
+  Future<List<String>> getDirFilePath(String fileType) async {
+    var path = join(_filePath, fileType);
+    List<String> filePaths = [];
+    Directory directory = Directory(path);
+    if (await directory.exists()) {
+      await for (var entity in directory.list()) {
+        if (entity is File) {
+          filePaths.add(entity.path);
+        }
+      }
+    }
+    return filePaths;
+  }
+
+  Future<List<String>> getDirFileName(String fileType) async {
+    var path = join(_filePath, fileType);
+    List<String> fileNames = [];
+    Directory directory = Directory(path);
+    if (await directory.exists()) {
+      await for (var entity in directory.list()) {
+        if (entity is File) {
+          fileNames.add(basename(entity.path));
+        }
+      }
+    }
+    return fileNames;
+  }
+
+  Future<void> deleteMediaFiles(Set<String> files, String mediaType) async {
+    for (var name in files) {
+      final filePath = getRealPath(mediaType, name);
+      final file = File(filePath);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    }
   }
 
   String getCachePath(String fileName) {
