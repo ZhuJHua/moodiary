@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/diary_card/large_diary_card/large_diary_card_view.dart';
 import 'package:mood_diary/components/diary_card/small_diary_card/small_diary_card_view.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 
 import 'diary_tab_view_logic.dart';
 
@@ -57,16 +58,6 @@ class DiaryTabViewComponent extends StatelessWidget {
       );
     }
 
-    Widget buildCustomScrollView({required Widget sliver}) {
-      return CustomScrollView(
-        key: UniqueKey(),
-        slivers: [
-          SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
-          SliverPadding(padding: const EdgeInsets.all(4.0), sliver: sliver),
-        ],
-      );
-    }
-
     return GetBuilder<DiaryTabViewLogic>(
         assignId: true,
         init: logic,
@@ -76,21 +67,22 @@ class DiaryTabViewComponent extends StatelessWidget {
           return Stack(
             children: [
               buildPlaceHolder(),
-              Obx(() {
-                return !state.isFetching.value
-                    ? AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 500),
-                        child: switch (logic.diaryLogic.state.viewModeType.value) {
-                          ViewModeType.list => buildCustomScrollView(sliver: Obx(() {
-                              return buildList();
-                            })),
-                          ViewModeType.grid => buildCustomScrollView(sliver: Obx(() {
-                              return buildGrid();
-                            })),
-                        },
-                      )
-                    : const SizedBox.shrink();
-              }),
+              CustomScrollView(
+                slivers: [
+                  SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
+                  SliverPadding(
+                      padding: const EdgeInsets.all(4.0),
+                      sliver: Obx(() {
+                        return SliverAnimatedSwitcher(
+                          duration: const Duration(milliseconds: 400),
+                          child: switch (logic.diaryLogic.state.viewModeType.value) {
+                            ViewModeType.list => buildList(),
+                            ViewModeType.grid => buildGrid(),
+                          },
+                        );
+                      })),
+                ],
+              ),
             ],
           );
         });

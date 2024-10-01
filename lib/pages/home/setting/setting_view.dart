@@ -50,7 +50,7 @@ class SettingPage extends StatelessWidget {
                     ),
                   ),
                   Card.filled(
-                    color: colorScheme.surfaceContainer,
+                    color: colorScheme.surfaceContainerLow,
                     child: Column(
                       children: [
                         ListTile(
@@ -141,7 +141,7 @@ class SettingPage extends StatelessWidget {
                     ),
                   ),
                   Card.filled(
-                    color: colorScheme.surfaceContainer,
+                    color: colorScheme.surfaceContainerLow,
                     child: Column(
                       children: [
                         ListTile(
@@ -412,7 +412,7 @@ class SettingPage extends StatelessWidget {
                     ),
                   ),
                   Card.filled(
-                    color: colorScheme.surfaceContainer,
+                    color: colorScheme.surfaceContainerLow,
                     child: Column(
                       children: [
                         Obx(() {
@@ -490,7 +490,7 @@ class SettingPage extends StatelessWidget {
                     ),
                   ),
                   Card.filled(
-                    color: colorScheme.surfaceContainer,
+                    color: colorScheme.surfaceContainerLow,
                     child: Column(
                       children: [
                         ListTile(

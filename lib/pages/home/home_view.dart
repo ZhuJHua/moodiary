@@ -152,8 +152,9 @@ class HomePage extends StatelessWidget {
           ? AnimatedBuilder(
               animation: logic.barAnimation,
               builder: (context, child) {
-                return SizedBox(
+                return Container(
                   height: state.navigatorBarHeight * logic.barAnimation.value,
+                  decoration: BoxDecoration(border: Border(top: BorderSide(color: colorScheme.outline, width: 0.2))),
                   child: child,
                 );
               },
@@ -185,7 +186,6 @@ class HomePage extends StatelessWidget {
                       ],
                       selectedIndex: state.navigatorIndex.value,
                       height: state.navigatorBarHeight,
-                      backgroundColor: colorScheme.surface,
                       onDestinationSelected: (index) {
                         logic.changeNavigator(index);
                       },

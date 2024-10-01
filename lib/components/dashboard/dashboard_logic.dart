@@ -32,7 +32,7 @@ class DashboardLogic extends GetxController {
   }
 
   Future<void> getDiaryCount() async {
-    int count = await Utils().isarUtil.countDiaries();
+    int count = await Utils().isarUtil.countShowDiary();
     state.diaryCount.value = count.toString();
   }
 

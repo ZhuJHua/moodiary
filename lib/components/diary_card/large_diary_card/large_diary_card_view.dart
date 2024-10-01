@@ -12,7 +12,6 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
 
   final Diary diary;
 
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -37,7 +36,7 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
         await toDiary(diary);
       },
       child: Card.filled(
-        color: colorScheme.surfaceContainer,
+        color: colorScheme.surfaceContainerLow,
         child: Column(
           children: [
             if (diary.imageName.isNotEmpty) ...[buildImage()],
