@@ -27,3 +27,5 @@
 -keep interface com.hihonor.ads.** {*; }
 -keep class repeackage.com.qiku.id.** { *; }
 -keep interface repeackage.com.qiku.id.** { *; }
+-keep class org.tensorflow.lite.** { *; }
+-dontwarn org.tensorflow.lite.**

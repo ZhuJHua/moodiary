@@ -26,6 +26,7 @@ class SettingPage extends StatelessWidget {
       assignId: true,
       builder: (logic) {
         return CustomScrollView(
+          cacheExtent: 1000.0,
           slivers: [
             SliverAppBar(
               title: Text(i18n.homeNavigatorSetting),
@@ -49,7 +50,7 @@ class SettingPage extends StatelessWidget {
                     ),
                   ),
                   Card.filled(
-                    color: colorScheme.surfaceContainer,
+                    color: colorScheme.surfaceContainerLow,
                     child: Column(
                       children: [
                         ListTile(
@@ -140,7 +141,7 @@ class SettingPage extends StatelessWidget {
                     ),
                   ),
                   Card.filled(
-                    color: colorScheme.surfaceContainer,
+                    color: colorScheme.surfaceContainerLow,
                     child: Column(
                       children: [
                         ListTile(
@@ -411,7 +412,7 @@ class SettingPage extends StatelessWidget {
                     ),
                   ),
                   Card.filled(
-                    color: colorScheme.surfaceContainer,
+                    color: colorScheme.surfaceContainerLow,
                     child: Column(
                       children: [
                         Obx(() {
@@ -489,7 +490,7 @@ class SettingPage extends StatelessWidget {
                     ),
                   ),
                   Card.filled(
-                    color: colorScheme.surfaceContainer,
+                    color: colorScheme.surfaceContainerLow,
                     child: Column(
                       children: [
                         ListTile(

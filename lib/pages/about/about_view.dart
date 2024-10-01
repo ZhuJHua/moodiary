@@ -56,7 +56,7 @@ class AboutPage extends StatelessWidget {
         children: [
           buildLogoTitle(),
           Card.filled(
-            color: colorScheme.surfaceContainer,
+            color: colorScheme.surfaceContainerLow,
             child: Column(
               children: ListTile.divideTiles(tiles: [
                 ListTile(

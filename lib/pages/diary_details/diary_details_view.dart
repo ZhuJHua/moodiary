@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/icons.dart';
+import 'package:mood_diary/components/ask_question/ask_question_view.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -162,23 +163,62 @@ class DiaryDetailsPage extends StatelessWidget {
                   ),
                   pinned: true,
                   actions: [
-                    if (state.showAction) ...[
-                      IconButton(
-                          onPressed: () {
-                            logic.delete(state.diary);
-                          },
-                          icon: const Icon(Icons.delete)),
-                      IconButton(
-                          onPressed: () {
-                            logic.toEditPage(state.diary);
-                          },
-                          icon: const Icon(Icons.edit)),
-                    ],
                     IconButton(
-                      onPressed: () {
-                        logic.toSharePage();
+                        onPressed: () {
+                          showModalBottomSheet(
+                              context: context,
+                              useSafeArea: true,
+                              showDragHandle: true,
+                              builder: (context) {
+                                return Padding(
+                                  padding: MediaQuery.viewInsetsOf(context),
+                                  child: AskQuestionComponent(
+                                    content: state.diary.contentText,
+                                  ),
+                                );
+                              });
+                        },
+                        icon: const Icon(Icons.chat)),
+                    PopupMenuButton(
+                      offset: const Offset(0, 46),
+                      itemBuilder: (context) {
+                        return <PopupMenuEntry<String>>[
+                          if (state.showAction) ...[
+                            PopupMenuItem(
+                              onTap: () async {
+                                logic.delete(state.diary);
+                              },
+                              child: const Row(
+                                spacing: 16.0,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [Icon(Icons.delete), Text('删除')],
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              onTap: () async {
+                                logic.toEditPage(state.diary);
+                              },
+                              child: const Row(
+                                spacing: 16.0,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [Icon(Icons.edit), Text('编辑')],
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                          ],
+                          PopupMenuItem(
+                            onTap: () async {
+                              logic.toSharePage();
+                            },
+                            child: const Row(
+                              spacing: 16.0,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [Icon(Icons.share), Text('分享')],
+                            ),
+                          ),
+                        ];
                       },
-                      icon: const Icon(Icons.share),
                     ),
                   ],
                 ),

@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/hunyuan.dart';
 import 'package:mood_diary/common/values/keyboard_state.dart';
-import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'assistant_state.dart';
@@ -22,8 +21,6 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
 
   //聚焦对象
   late FocusNode focusNode = FocusNode();
-
-  late final HomeLogic homeLogic = Bind.find<HomeLogic>();
 
   List<double> heightList = [];
 
@@ -59,13 +56,12 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
 
   @override
   void onInit() {
-    WidgetsBinding.instance.addObserver(this);
     super.onInit();
   }
 
   @override
   void onReady() {
-    homeLogic.hideNavigatorBar();
+    WidgetsBinding.instance.addObserver(this);
     super.onReady();
   }
 

@@ -144,8 +144,7 @@ class _CategoryQueryUpdateImpl implements _CategoryQueryUpdate {
 }
 
 extension CategoryQueryUpdate on IsarQuery<Category> {
-  _CategoryQueryUpdate get updateFirst =>
-      _CategoryQueryUpdateImpl(this, limit: 1);
+  _CategoryQueryUpdate get updateFirst => _CategoryQueryUpdateImpl(this, limit: 1);
 
   _CategoryQueryUpdate get updateAll => _CategoryQueryUpdateImpl(this);
 }
@@ -171,16 +170,13 @@ class _CategoryQueryBuilderUpdateImpl implements _CategoryQueryUpdate {
   }
 }
 
-extension CategoryQueryBuilderUpdate
-    on QueryBuilder<Category, Category, QOperations> {
-  _CategoryQueryUpdate get updateFirst =>
-      _CategoryQueryBuilderUpdateImpl(this, limit: 1);
+extension CategoryQueryBuilderUpdate on QueryBuilder<Category, Category, QOperations> {
+  _CategoryQueryUpdate get updateFirst => _CategoryQueryBuilderUpdateImpl(this, limit: 1);
 
   _CategoryQueryUpdate get updateAll => _CategoryQueryBuilderUpdateImpl(this);
 }
 
-extension CategoryQueryFilter
-    on QueryBuilder<Category, Category, QFilterCondition> {
+extension CategoryQueryFilter on QueryBuilder<Category, Category, QFilterCondition> {
   QueryBuilder<Category, Category, QAfterFilterCondition> idEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -211,8 +207,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition>
-      idGreaterThanOrEqualTo(
+  QueryBuilder<Category, Category, QAfterFilterCondition> idGreaterThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -304,9 +299,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition> idContains(
-      String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterFilterCondition> idContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -318,9 +311,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition> idMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterFilterCondition> idMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -369,8 +360,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameGreaterThan(
+  QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameGreaterThan(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -385,8 +375,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameGreaterThanOrEqualTo(
+  QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameGreaterThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -416,8 +405,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameLessThanOrEqualTo(
+  QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameLessThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -449,8 +437,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameStartsWith(
+  QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -480,8 +467,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameContains(
-      String value,
+  QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameContains(String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -494,8 +480,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameMatches(
-      String pattern,
+  QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameMatches(String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -508,8 +493,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameIsEmpty() {
+  QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         const EqualCondition(
@@ -520,8 +504,7 @@ extension CategoryQueryFilter
     });
   }
 
-  QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameIsNotEmpty() {
+  QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         const GreaterCondition(
@@ -533,12 +516,10 @@ extension CategoryQueryFilter
   }
 }
 
-extension CategoryQueryObject
-    on QueryBuilder<Category, Category, QFilterCondition> {}
+extension CategoryQueryObject on QueryBuilder<Category, Category, QFilterCondition> {}
 
 extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
-  QueryBuilder<Category, Category, QAfterSortBy> sortById(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortById({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         1,
@@ -547,8 +528,7 @@ extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> sortByIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByIdDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         1,
@@ -558,8 +538,7 @@ extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> sortByCategoryName(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByCategoryName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         2,
@@ -568,8 +547,7 @@ extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> sortByCategoryNameDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByCategoryNameDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         2,
@@ -580,49 +558,41 @@ extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
   }
 }
 
-extension CategoryQuerySortThenBy
-    on QueryBuilder<Category, Category, QSortThenBy> {
-  QueryBuilder<Category, Category, QAfterSortBy> thenById(
-      {bool caseSensitive = true}) {
+extension CategoryQuerySortThenBy on QueryBuilder<Category, Category, QSortThenBy> {
+  QueryBuilder<Category, Category, QAfterSortBy> thenById({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(1, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> thenByIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByIdDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> thenByCategoryName(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByCategoryName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(2, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> thenByCategoryNameDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByCategoryNameDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 }
 
-extension CategoryQueryWhereDistinct
-    on QueryBuilder<Category, Category, QDistinct> {
-  QueryBuilder<Category, Category, QAfterDistinct> distinctByCategoryName(
-      {bool caseSensitive = true}) {
+extension CategoryQueryWhereDistinct on QueryBuilder<Category, Category, QDistinct> {
+  QueryBuilder<Category, Category, QAfterDistinct> distinctByCategoryName({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(2, caseSensitive: caseSensitive);
     });
   }
 }
 
-extension CategoryQueryProperty1
-    on QueryBuilder<Category, Category, QProperty> {
+extension CategoryQueryProperty1 on QueryBuilder<Category, Category, QProperty> {
   QueryBuilder<Category, String, QAfterProperty> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(1);
@@ -636,8 +606,7 @@ extension CategoryQueryProperty1
   }
 }
 
-extension CategoryQueryProperty2<R>
-    on QueryBuilder<Category, R, QAfterProperty> {
+extension CategoryQueryProperty2<R> on QueryBuilder<Category, R, QAfterProperty> {
   QueryBuilder<Category, (R, String), QAfterProperty> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(1);
@@ -651,8 +620,7 @@ extension CategoryQueryProperty2<R>
   }
 }
 
-extension CategoryQueryProperty3<R1, R2>
-    on QueryBuilder<Category, (R1, R2), QAfterProperty> {
+extension CategoryQueryProperty3<R1, R2> on QueryBuilder<Category, (R1, R2), QAfterProperty> {
   QueryBuilder<Category, (R1, R2, String), QOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(1);

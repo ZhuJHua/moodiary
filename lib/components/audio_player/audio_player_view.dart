@@ -43,6 +43,7 @@ class AudioPlayerComponent extends StatelessWidget {
                   )),
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Obx(() {
                       return Slider(

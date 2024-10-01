@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.4.3+43
+version: 2.4.4+44
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -30,13 +30,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  get: 5.0.0-release-candidate-9.2
+  get: 5.0.0-release-candidate-9.2.1
   dio: 5.7.0
   path: 1.9.0
   path_provider: 2.1.4
   calendar_date_picker2: 1.1.7
   logger: 2.4.0
-  flutter_drawing_board: 0.9.3
+  flutter_drawing_board: 0.9.4
   flutter_displaymode: 0.6.0
   fl_chart: 0.69.0
   file_picker: 8.1.2
@@ -48,8 +48,8 @@ dependencies:
   flutter_image_compress: 2.3.0
   photo_view: 0.15.0
   package_info_plus: 8.0.2
-  uuid: 4.5.0
-  flutter_quill: 10.7.5
+  uuid: 4.5.1
+  flutter_quill: 10.8.1
   share_plus: 10.0.2
   url_launcher: 6.3.0
   archive: 3.6.1
@@ -66,7 +66,7 @@ dependencies:
   record: 5.1.2
   duration: 4.0.3
   dynamic_color: 1.7.0
-  supabase_flutter: 2.6.0
+  supabase_flutter: 2.7.0
   flutter_staggered_grid_view: 0.7.0
   flutter_acrylic: 1.1.4
   bitsdojo_window: 0.1.6
@@ -74,15 +74,18 @@ dependencies:
   collection: 1.19.0
   cupertino_icons: 1.0.8
   font_awesome_flutter: 10.7.0
-  animated_text_kit: 4.2.2
+  tflite_flutter: 0.11.0
+  sliver_tools: 0.2.12
+  lottie: 3.1.2
 
   flutter_localizations:
     sdk: flutter
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: 2.4.12
+  build_runner: ^2.4.13
   msix: 3.16.8
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -90,7 +93,9 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: 4.0.0
+  flutter_lints: 5.0.0
+  integration_test:
+    sdk: flutter
 
 
 # For information on the generic Dart part of this file, see the
@@ -105,6 +110,9 @@ flutter:
         - asset: fonts/qweather-icons.ttf
   assets:
     - icon/icon.png
+    - tflite/vocab.txt
+    - tflite/model_quant.tflite
+    - lottie/file_ok.json
 
   uses-material-design: true
 

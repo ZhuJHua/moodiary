@@ -76,7 +76,7 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
         await toDiaryInCalendar(diary);
       },
       child: Card.filled(
-          color: colorScheme.surfaceContainer,
+          color: colorScheme.surfaceContainerLow,
           child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(

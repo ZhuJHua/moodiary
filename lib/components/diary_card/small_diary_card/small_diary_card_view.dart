@@ -39,7 +39,7 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
         await toDiary(diary);
       },
       child: Card.filled(
-        color: colorScheme.surfaceContainer,
+        color: colorScheme.surfaceContainerLow,
         child: SizedBox(
           height: 122.0,
           child: Row(

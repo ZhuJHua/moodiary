@@ -17,11 +17,11 @@
 - **Data security**：🔒 Keep your diary safe with a password.
 - **Export and share**：🧾 Support all data import/export, as well as single diary sharing.
 - **Cloud synchronization**：☁ Support for synchronizing diaries across multiple devices (coming soon).
-- **AI assistant**：🤖 Support ability to access large model provides AI (currently support: [Tencent Hunyuan](https://hunyuan.tencent.com/)).
+- **Natural Language Processing (NLP)**：🤖 Let your diary more understand you.
 
 (Note: Cross-platform capabilities are provided by Flutter, platforms with * may require more testing)
 
-## 🔧 Technology stack
+## 🔧 Main Technology stack
 
 - [Flutter](https://github.com/flutter/flutter)
 - [Isar](https://github.com/isar/isar)
@@ -47,10 +47,6 @@ Some capabilities need to apply for third-party SDKS, and the following service 
 
 - [QWeather](https://dev.qweather.com/docs/api/)
 
-#### AI large model
-
-- [Tencent Hunyuan](https://cloud.tencent.com/product/hunyuan)
-
 ### Direct mounting
 
 Use it by downloading the compiled installation package in Release, or manually compiling it if you don't have the platform you need.
@@ -59,7 +55,7 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 #### Environmental requirement
 
-- Flutter SDK (>= 3.26.0-0.1.pre)
+- Flutter SDK (>= 3.26.0-0.1.pre, Because I use features that have not been incorporated into the stable version, I can only use the beta version and will migrate as soon as the stable version is updated)
 - Dart (>= 3.6.0)
 - Compatible ides (e.g. Android Studio, Visual Studio Code)
 
@@ -92,9 +88,23 @@ Use it by downloading the compiled installation package in Release, or manually 
    - iOS: `flutter build ios`
    - Windows: `flutter build windows`
 
-## 📝 Instructions for use
+## 📝 More description
 
-Once the installation is complete, you can start creating diary entries by clicking the "New Diary" button. Use a rich text editor to format your content, add multimedia attachments, and organize through tags.
+### Natural Language Processing (NLP)
+
+Today, more and more industry products are beginning to incorporate AI technology, which undoubtedly greatly improves our experience. However, for diary applications, it is not acceptable to hand over the data to a large model because it is not certain that the data will be used for training. Therefore, a better approach is to adopt a local model. Although local models may not be as powerful as large models due to size limitations, they can still provide necessary help to a certain extent.
+
+So far, I have integrated the following tasks:
+
+#### SQuAD task based on Bert pre-trained model
+
+I used MobileBert for the SQuAD task, which is a simple machine reading comprehension task. You can ask it questions and it will return the answers you need. The model file is in the '.tflite 'format required by TensorFlow Lite, and the size of the model is about 50MB after quantization.
+
+Thanks to the following open source projects:
+
+- [Chinese MobileBERT](https://github.com/ymcui/Chinese-MobileBERT)
+- [Mobilebert](https://github.com/google-research/google-research/tree/master/mobilebert)
+- [ChineseSquad](https://github.com/junzeng-pluto/ChineseSquad)
 
 ## 🤝 Contribution guide
 
