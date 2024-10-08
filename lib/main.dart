@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -17,8 +16,6 @@ import 'package:mood_diary/utils/utils.dart';
 Future<void> initSystem() async {
   //获取系统语言
   await findSystemLocale();
-  //锁定屏幕方向
-  await SystemChrome.setPreferredOrientations(Utils().layoutUtil.getOrientation());
   //初始化pref
   await Utils().prefUtil.initPref();
   //初始化所需目录
