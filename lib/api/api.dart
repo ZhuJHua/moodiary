@@ -1,12 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/hitokoto.dart';
 import 'package:mood_diary/common/models/hunyuan.dart';
 import 'package:mood_diary/common/models/image.dart';
 import 'package:mood_diary/common/models/weather.dart';
 import 'package:mood_diary/utils/utils.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class Api {
   Api._();
@@ -45,23 +47,31 @@ class Api {
   }
 
   Future<List<String>?> updateWeather() async {
-    var position = await Utils().permissionUtil.getLocation();
+    Position? position;
+
+    if (await Utils().permissionUtil.checkPermission(Permission.location)) {
+      position = await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
+    }
+
     if (position != null) {
       var local = Localizations.localeOf(Get.context!);
       var parameters = {
-        'location': '${position.longitude},${position.altitude}',
+        'location':
+            '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.altitude.toStringAsFixed(2))}',
         'key': Utils().prefUtil.getValue<String>('qweatherKey'),
         'lang': local
       };
-
       var res = await Utils().httpUtil.get('https://devapi.qweather.com/v7/weather/now', parameters: parameters);
       var weather = await compute(WeatherResponse.fromJson, res.data as Map<String, dynamic>);
-
-      return [
-        weather.now!.icon!,
-        weather.now!.temp!,
-        weather.now!.text!,
-      ];
+      if (weather.now != null) {
+        return [
+          weather.now!.icon!,
+          weather.now!.temp!,
+          weather.now!.text!,
+        ];
+      } else {
+        return null;
+      }
     }
     return null;
   }
