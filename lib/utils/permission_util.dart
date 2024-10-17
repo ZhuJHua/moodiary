@@ -1,4 +1,3 @@
-import 'package:geolocator/geolocator.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -23,18 +22,6 @@ class PermissionUtil {
       return false;
     } else {
       return true;
-    }
-  }
-
-  Future<Position?> getLocation() async {
-    if (await checkPermission(Permission.location)) {
-      var position = await Geolocator.getLastKnownPosition();
-      if (position == null) {
-        return await Geolocator.getCurrentPosition();
-      }
-      return position;
-    } else {
-      return null;
     }
   }
 }

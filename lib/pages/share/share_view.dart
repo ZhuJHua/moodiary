@@ -34,6 +34,7 @@ class SharePage extends StatelessWidget {
                       ColorScheme.fromSeed(seedColor: Color(imageColor), brightness: Theme.of(context).brightness))
               : Theme.of(context),
           child: Scaffold(
+            backgroundColor: colorScheme.surface,
             appBar: AppBar(
               title: Text(
                 i18n.shareTitle,

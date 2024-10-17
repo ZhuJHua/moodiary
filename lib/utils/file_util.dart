@@ -31,12 +31,12 @@ class FileUtil {
   }
 
   Future<void> initCreateDir() async {
-    if (Utils().prefUtil.getValue<bool>('firstStart') == true) {
-      //创建数据库文件目录
+
       await createDir(join(_filePath, 'database'));
       await createDir(join(_filePath, 'image'));
       await createDir(join(_filePath, 'audio'));
-    }
+      await createDir(join(_filePath, 'video'));
+
   }
 
   Future<void> createDir(String path) async {

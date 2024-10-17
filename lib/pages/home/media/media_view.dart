@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/media_type.dart';
+import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 import 'media_logic.dart';
@@ -21,9 +22,9 @@ class MediaPage extends StatelessWidget {
     final i18n = AppLocalizations.of(context)!;
 
     final iconMap = {
-      MediaType.image: FontAwesomeIcons.images,
+      MediaType.image: FontAwesomeIcons.image,
       MediaType.audio: FontAwesomeIcons.compactDisc,
-      MediaType.video: FontAwesomeIcons.film
+      MediaType.video: FontAwesomeIcons.video
     };
 
     final textMap = {
@@ -36,7 +37,9 @@ class MediaPage extends StatelessWidget {
       return SliverGrid.builder(
           key: UniqueKey(),
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 120, childAspectRatio: 1.0, crossAxisSpacing: 4.0, mainAxisSpacing: 4.0),
+            maxCrossAxisExtent: 120,
+            childAspectRatio: 1.0,
+          ),
           itemBuilder: (context, index) {
             return InkWell(
               borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -45,7 +48,6 @@ class MediaPage extends StatelessWidget {
               },
               child: Card(
                 clipBehavior: Clip.hardEdge,
-                margin: EdgeInsets.zero,
                 child: Image.file(
                   File(state.filePath[index]),
                   fit: BoxFit.cover,
@@ -57,11 +59,46 @@ class MediaPage extends StatelessWidget {
     }
 
     Widget buildAudioView() {
-      return const SliverToBoxAdapter();
+      return SliverList.builder(
+          key: UniqueKey(),
+          itemBuilder: (context, index) {
+            return AudioPlayerComponent(
+              path: state.filePath[index],
+              isEdit: false,
+            );
+          },
+          itemCount: state.filePath.length);
     }
 
+    //使用map
     Widget buildVideoView() {
-      return const SliverToBoxAdapter();
+      // 使用 SliverGrid.builder 构建视频缩略图的网格视图
+      var thumbnailList = state.videoThumbnailMap.keys.toList();
+      var videoList = state.videoThumbnailMap.values.toList();
+      return SliverGrid.builder(
+        key: UniqueKey(),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 120, // 网格的每一列的最大宽度
+          childAspectRatio: 1.0, // 子元素的宽高比
+        ),
+        itemBuilder: (context, index) {
+          return InkWell(
+            borderRadius: AppBorderRadius.mediumBorderRadius,
+            onTap: () {
+              // 点击事件，传递视频路径到 toVideoView 方法
+              logic.toVideoView(videoList, index);
+            },
+            child: Card(
+              clipBehavior: Clip.hardEdge, // 修剪行为
+              child: Image.file(
+                File(thumbnailList[index]), // 使用缩略图文件路径显示图像
+                fit: BoxFit.cover, // 让图像完全覆盖卡片
+              ),
+            ),
+          );
+        },
+        itemCount: state.videoThumbnailMap.length, // 网格项的数量
+      );
     }
 
     return GetBuilder<MediaLogic>(
@@ -101,9 +138,13 @@ class MediaPage extends StatelessWidget {
                             showDialog(
                                 context: context,
                                 builder: (context) {
-                                  return SimpleDialog(
-                                    children: [Lottie.asset('lottie/file_ok.json')],
-                                  );
+                                  return SimpleDialog(children: [
+                                    Lottie.asset(
+                                      'assets/lottie/file_ok.json',
+                                      addRepaintBoundary: true,
+                                      frameRate: FrameRate.max,
+                                    )
+                                  ]);
                                 });
                           }
                         },
@@ -119,7 +160,7 @@ class MediaPage extends StatelessWidget {
               ],
             ),
             SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
               sliver: Obx(() {
                 return SliverAnimatedSwitcher(
                   duration: const Duration(milliseconds: 400),

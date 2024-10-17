@@ -60,4 +60,7 @@ abstract class AppRoutes {
 
   //关于
   static const aboutPage = '/about';
+
+  //视频预览路由
+  static const videoPage = '/video';
 }

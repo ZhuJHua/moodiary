@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
@@ -25,7 +24,7 @@ class ImagePage extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: colorScheme.scrim.withAlpha((255 * 0.6).toInt()),
             title: Text(
-              '${state.imageIndex + 1}/${state.imageNameList.length}',
+              '${state.imageIndex + 1}/${state.imagePathList.length}',
               style: const TextStyle(color: Colors.white),
             ),
             iconTheme: const IconThemeData(color: Colors.white),
@@ -35,11 +34,11 @@ class ImagePage extends StatelessWidget {
             pageController: state.pageController,
             builder: (BuildContext context, int index) {
               return PhotoViewGalleryPageOptions(
-                imageProvider: FileImage(File(Utils().fileUtil.getRealPath('image', state.imageNameList[index]))),
+                imageProvider: FileImage(File(state.imagePathList[index])),
                 heroAttributes: PhotoViewHeroAttributes(tag: index),
               );
             },
-            itemCount: state.imageNameList.length,
+            itemCount: state.imagePathList.length,
             onPageChanged: (index) {
               logic.changePage(index);
             },

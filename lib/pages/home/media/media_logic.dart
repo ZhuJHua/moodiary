@@ -1,12 +1,15 @@
+import 'package:flutter/animation.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/media_type.dart';
+import 'package:mood_diary/components/audio_player/audio_player_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'media_state.dart';
 
-class MediaLogic extends GetxController {
+class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
   final MediaState state = MediaState();
+  late final AnimationController animationController = AnimationController(vsync: this);
 
   @override
   void onReady() async {
@@ -16,7 +19,7 @@ class MediaLogic extends GetxController {
 
   @override
   void onClose() {
-    // TODO: implement onClose
+    animationController.dispose();
     super.onClose();
   }
 
@@ -30,12 +33,49 @@ class MediaLogic extends GetxController {
   }
 
   Future<void> changeMediaType(MediaType mediaType) async {
+    await getFilePath(mediaType);
+    //如果是视频，维护一个缩略图的map
+    if (mediaType == MediaType.video) {
+      getVideoThumbnailMap(state.filePath.value);
+    }
     state.mediaType.value = mediaType;
   }
 
   //点击图片跳转到图片预览页面
   void toPhotoView(int index) {
-    Get.toNamed(AppRoutes.photoPage, arguments: [state.filePath.value, index]);
+    Get.toNamed(AppRoutes.photoPage, arguments: [state.filePath, index]);
+  }
+
+  //点击视频跳转到视频预览
+  void toVideoView(List<String> videoPathList, int index) {
+    Get.toNamed(AppRoutes.videoPage, arguments: [videoPathList, index]);
+  }
+
+  void getVideoThumbnailMap(List<String> files) {
+    // 定义两个列表来存储视频和缩略图文件
+    List<String> videos = [];
+    List<String> thumbnails = [];
+    // 遍历文件列表，将视频和缩略图分别添加到对应的列表中
+    for (var file in files) {
+      if (file.endsWith(".mp4")) {
+        videos.add(file);
+      } else if (file.endsWith(".jpeg")) {
+        thumbnails.add(file);
+      }
+    }
+    // 创建一个map来存储缩略图和视频的映射
+    Map<String, String> videoThumbnailMap = {};
+    // 遍历缩略图列表，并找到对应的视频
+    for (var thumbnail in thumbnails) {
+      // 提取唯一标识
+      var id = thumbnail.split('thumbnail-')[1].split('.jpeg')[0];
+      // 查找对应的视频
+      var video = videos.firstWhere((v) => v.contains(id));
+      // 如果找到对应的视频，则将其添加到map中
+      videoThumbnailMap[thumbnail] = video;
+    }
+
+    state.videoThumbnailMap.value = videoThumbnailMap;
   }
 
   // 清理文件
@@ -65,6 +105,10 @@ class MediaLogic extends GetxController {
         usedImages.addAll(diary.imageName);
         usedAudios.addAll(diary.audioName);
         usedVideos.addAll(diary.videoName);
+        for (var name in diary.videoName) {
+          var thumbnailName = 'thumbnail-${name.substring(6, 42)}.jpeg';
+          usedVideos.add(thumbnailName);
+        }
       }
     }
 
@@ -72,6 +116,11 @@ class MediaLogic extends GetxController {
     final imagesToDelete = imageFiles.difference(usedImages);
     final audiosToDelete = audioFiles.difference(usedAudios);
     final videosToDelete = videoFiles.difference(usedVideos);
+
+    // delete controller when need
+    for (var path in audiosToDelete) {
+      Bind.delete<AudioPlayerLogic>(tag: path);
+    }
 
     // 并行删除文件
     await Future.wait([

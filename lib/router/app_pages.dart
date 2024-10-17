@@ -40,6 +40,8 @@ import 'package:mood_diary/pages/start/start_logic.dart';
 import 'package:mood_diary/pages/start/start_view.dart';
 import 'package:mood_diary/pages/user/user_logic.dart';
 import 'package:mood_diary/pages/user/user_view.dart';
+import 'package:mood_diary/pages/video/video_logic.dart';
+import 'package:mood_diary/pages/video/video_view.dart';
 
 import 'app_routes.dart';
 
@@ -158,6 +160,15 @@ class AppPages {
       name: AppRoutes.aboutPage,
       page: () => const AboutPage(),
       binds: [Bind.lazyPut(() => AboutLogic())],
+    ),
+    GetPage(
+      name: AppRoutes.videoPage,
+      page: () => const VideoPage(),
+      binds: [
+        Bind.lazyPut(
+          () => VideoLogic(),
+        )
+      ],
     ),
   ];
 }

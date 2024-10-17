@@ -10,7 +10,7 @@ class FullTokenizer {
 
   Future<void> init() async {
     // 加载词表
-    _vocab = await _loadVocab('tflite/vocab.txt');
+    _vocab = await _loadVocab('assets/tflite/vocab.txt');
     _invVocab = {};
     // 创建反向词表
     _vocab.forEach((key, value) {

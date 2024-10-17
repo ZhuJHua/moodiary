@@ -6,6 +6,10 @@ class DiaryDetailsState {
 
   late bool showAction;
 
+  double? get aspect => diary.aspect;
+
+  int? get imageColor => diary.imageColor;
+
   DiaryDetailsState() {
     diary = Get.arguments[0];
     showAction = Get.arguments[1];

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
@@ -124,7 +125,7 @@ class HomePage extends StatelessWidget {
           });
     }
 
-    Widget? buildFab() {
+    Widget buildFab() {
       if (state.navigatorIndex.value == 0) {
         return Obx(() {
           return SizedBox(
@@ -143,12 +144,78 @@ class HomePage extends StatelessWidget {
           );
         });
       } else {
-        return null;
+        return const SizedBox.shrink();
       }
     }
 
+    PreferredSizeWidget? buildWindowsBar() {
+      return Platform.isWindows
+          ? PreferredSize(
+              preferredSize: Size.fromHeight(appWindow.titleBarHeight),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  MinimizeWindowButton(
+                    colors: WindowButtonColors(
+                      iconNormal: colorScheme.secondary,
+                      mouseDown: colorScheme.secondaryContainer,
+                      normal: colorScheme.surface,
+                      iconMouseDown: colorScheme.secondary,
+                      mouseOver: colorScheme.secondaryContainer,
+                      iconMouseOver: colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                  MaximizeWindowButton(
+                    colors: WindowButtonColors(
+                      iconNormal: colorScheme.secondary,
+                      mouseDown: colorScheme.secondaryContainer,
+                      normal: colorScheme.surface,
+                      iconMouseDown: colorScheme.secondary,
+                      mouseOver: colorScheme.secondaryContainer,
+                      iconMouseOver: colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                  CloseWindowButton(
+                    colors: WindowButtonColors(
+                      iconNormal: colorScheme.secondary,
+                      mouseDown: colorScheme.secondaryContainer,
+                      normal: colorScheme.surface,
+                      iconMouseDown: colorScheme.secondary,
+                      mouseOver: colorScheme.errorContainer,
+                      iconMouseOver: colorScheme.onErrorContainer,
+                    ),
+                  ),
+                ],
+              ))
+          : null;
+    }
+
+    // 导航栏
+    final List<NavigationDestination> destinations = [
+      NavigationDestination(
+        icon: const Icon(Icons.article_outlined),
+        label: i18n.homeNavigatorDiary,
+        selectedIcon: const Icon(Icons.article),
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.calendar_today_outlined),
+        label: i18n.homeNavigatorCalendar,
+        selectedIcon: const Icon(Icons.calendar_today),
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.perm_media_outlined),
+        label: i18n.homeNavigatorMedia,
+        selectedIcon: const Icon(Icons.perm_media),
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.settings_outlined),
+        label: i18n.homeNavigatorSetting,
+        selectedIcon: const Icon(Icons.settings),
+      ),
+    ];
+
     Widget buildNavigatorBar() {
-      return size.aspectRatio < 1.0
+      return size.width < 600
           ? AnimatedBuilder(
               animation: logic.barAnimation,
               builder: (context, child) {
@@ -162,28 +229,7 @@ class HomePage extends StatelessWidget {
                 children: [
                   Obx(() {
                     return NavigationBar(
-                      destinations: [
-                        NavigationDestination(
-                          icon: const Icon(Icons.article_outlined),
-                          label: i18n.homeNavigatorDiary,
-                          selectedIcon: const Icon(Icons.article),
-                        ),
-                        NavigationDestination(
-                          icon: const Icon(Icons.calendar_today_outlined),
-                          label: i18n.homeNavigatorCalendar,
-                          selectedIcon: const Icon(Icons.calendar_today),
-                        ),
-                        NavigationDestination(
-                          icon: const Icon(Icons.perm_media_outlined),
-                          label: i18n.homeNavigatorMedia,
-                          selectedIcon: const Icon(Icons.perm_media),
-                        ),
-                        NavigationDestination(
-                          icon: const Icon(Icons.settings_outlined),
-                          label: i18n.homeNavigatorSetting,
-                          selectedIcon: const Icon(Icons.settings),
-                        ),
-                      ],
+                      destinations: destinations,
                       selectedIndex: state.navigatorIndex.value,
                       height: state.navigatorBarHeight,
                       onDestinationSelected: (index) {
@@ -199,126 +245,62 @@ class HomePage extends StatelessWidget {
           : const SizedBox.shrink();
     }
 
-    Widget buildNavigatorRail() {
-      return size.aspectRatio >= 1.0
-          ? SizedBox(
-              width: 80.0,
-              child: Stack(
-                children: [
-                  Obx(() {
-                    return NavigationRail(
-                      backgroundColor: Colors.transparent,
-                      destinations: [
-                        NavigationRailDestination(
-                          icon: const Icon(Icons.article_outlined),
-                          label: Text(i18n.homeNavigatorDiary),
-                          selectedIcon: const Icon(Icons.article),
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        ),
-                        NavigationRailDestination(
-                          icon: const Icon(Icons.calendar_today_outlined),
-                          label: Text(i18n.homeNavigatorCalendar),
-                          selectedIcon: const Icon(Icons.calendar_today),
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        ),
-                        NavigationRailDestination(
-                          icon: const Icon(Icons.perm_media_outlined),
-                          label: Text(i18n.homeNavigatorMedia),
-                          selectedIcon: const Icon(Icons.perm_media),
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        ),
-                        NavigationRailDestination(
-                          icon: const Icon(Icons.settings_outlined),
-                          label: Text(i18n.homeNavigatorSetting),
-                          selectedIcon: const Icon(Icons.settings),
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        )
-                      ],
-                      labelType: NavigationRailLabelType.selected,
-                      selectedIndex: state.navigatorIndex.value,
-                      onDestinationSelected: (index) {
-                        logic.changeNavigator(index);
-                      },
-                    );
-                  }),
-                  buildModal()
-                ],
-              ),
-            )
-          : const SizedBox.shrink();
+    Widget buildLayout() {
+      return AdaptiveLayout(
+        transitionDuration: const Duration(milliseconds: 200),
+        primaryNavigation: SlotLayout(config: {
+          Breakpoints.medium: SlotLayout.from(
+            key: const ValueKey('primary navigation medium'),
+            builder: (_) => AdaptiveScaffold.standardNavigationRail(
+              destinations:
+                  destinations.map((destination) => AdaptiveScaffold.toRailDestination(destination)).toList(),
+              selectedIndex: state.navigatorIndex.value,
+              onDestinationSelected: (index) {
+                logic.changeNavigator(index);
+              },
+            ),
+          ),
+          Breakpoints.mediumLargeAndUp: SlotLayout.from(
+            key: const ValueKey('primary navigation medium large'),
+            builder: (_) => AdaptiveScaffold.standardNavigationRail(
+              destinations:
+                  destinations.map((destination) => AdaptiveScaffold.toRailDestination(destination)).toList(),
+              extended: true,
+              selectedIndex: state.navigatorIndex.value,
+              onDestinationSelected: (index) {
+                logic.changeNavigator(index);
+              },
+            ),
+          ),
+        }),
+        body: SlotLayout(config: {
+          Breakpoints.standard: SlotLayout.from(
+              key: const ValueKey('body'),
+              builder: (_) => PageView(
+                    controller: logic.pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: const [
+                      KeepAliveWrapper(child: DiaryPage()),
+                      CalendarPage(),
+                      MediaPage(),
+                      SettingPage(),
+                    ],
+                  ))
+        }),
+      );
     }
 
     return GetBuilder<HomeLogic>(
       init: logic,
       assignId: true,
       builder: (logic) {
-        return Row(
-          children: [
-            //侧边导航栏
-            buildNavigatorRail(),
-            Expanded(
-              child: Scaffold(
-                appBar: Platform.isWindows
-                    ? PreferredSize(
-                        preferredSize: Size.fromHeight(appWindow.titleBarHeight),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            MinimizeWindowButton(
-                              colors: WindowButtonColors(
-                                iconNormal: colorScheme.secondary,
-                                mouseDown: colorScheme.secondaryContainer,
-                                normal: colorScheme.surface,
-                                iconMouseDown: colorScheme.secondary,
-                                mouseOver: colorScheme.secondaryContainer,
-                                iconMouseOver: colorScheme.onSecondaryContainer,
-                              ),
-                            ),
-                            MaximizeWindowButton(
-                              colors: WindowButtonColors(
-                                iconNormal: colorScheme.secondary,
-                                mouseDown: colorScheme.secondaryContainer,
-                                normal: colorScheme.surface,
-                                iconMouseDown: colorScheme.secondary,
-                                mouseOver: colorScheme.secondaryContainer,
-                                iconMouseOver: colorScheme.onSecondaryContainer,
-                              ),
-                            ),
-                            CloseWindowButton(
-                              colors: WindowButtonColors(
-                                iconNormal: colorScheme.secondary,
-                                mouseDown: colorScheme.secondaryContainer,
-                                normal: colorScheme.surface,
-                                iconMouseDown: colorScheme.secondary,
-                                mouseOver: colorScheme.errorContainer,
-                                iconMouseOver: colorScheme.onErrorContainer,
-                              ),
-                            ),
-                          ],
-                        ))
-                    : null,
-                body: Stack(
-                  children: [
-                    //主布局
-                    PageView(
-                      controller: logic.pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: const [
-                        KeepAliveWrapper(child: DiaryPage()),
-                        CalendarPage(),
-                        MediaPage(),
-                        SettingPage(),
-                      ],
-                    ),
-                    //遮罩
-                    buildModal()
-                  ],
-                ),
-                floatingActionButton: buildFab(),
-                bottomNavigationBar: buildNavigatorBar(),
-              ),
-            ),
-          ],
+        return Scaffold(
+          appBar: buildWindowsBar(),
+          body: Stack(
+            children: [buildLayout(), buildModal()],
+          ),
+          bottomNavigationBar: buildNavigatorBar(),
+          floatingActionButton: buildFab(),
         );
       },
     );

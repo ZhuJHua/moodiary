@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,20 +10,32 @@ import 'package:mood_diary/utils/utils.dart';
 class MediaUtil {
   late final _picker = ImagePicker();
 
-  //保存图片
-  Future<void> saveImages(Map<String, Uint8List> imageMap) async {
-    await Future.forEach(imageMap.entries, (entry) async {
-      final file = File(Utils().fileUtil.getRealPath('image', entry.key));
-      await file.writeAsBytes(entry.value, flush: true);
-    });
+  late final _thumbnail = FcNativeVideoThumbnail();
+
+  // 保存图片
+  Future<void> saveImages(Map<String, XFile> imageMap) async {
+    for (var entry in imageMap.entries) {
+      await _compressAndSaveImage(entry.value, Utils().fileUtil.getRealPath('image', entry.key), CompressFormat.webp);
+    }
   }
 
-  //保存录音
-  Future<void> savaAudio(List<String> audioName) async {
-    await Future.forEach(audioName, (name) async {
+  // 保存录音
+  Future<void> saveAudio(List<String> audioName) async {
+    for (var name in audioName) {
       final file = File(Utils().fileUtil.getCachePath(name));
       await file.copy(Utils().fileUtil.getRealPath('audio', name));
-    });
+    }
+  }
+
+  // 保存视频
+  Future<void> saveVideo(Map<String, XFile> videoMap, Map<String, XFile> thumbnailMap) async {
+    for (var entry in videoMap.entries) {
+      await entry.value.saveTo(Utils().fileUtil.getRealPath('video', entry.key));
+    }
+
+    for (var entry in thumbnailMap.entries) {
+      await _compressAndSaveImage(entry.value, Utils().fileUtil.getRealPath('video', entry.key), CompressFormat.jpeg);
+    }
   }
 
   //获取图片宽高
@@ -59,7 +71,6 @@ class MediaUtil {
 
   //获取单个图片，拍照或者相册
   Future<XFile?> pickPhoto(ImageSource imageSource) async {
-    //await callPhotoPicker();
     return await _picker.pickImage(
       source: imageSource,
     );
@@ -81,26 +92,45 @@ class MediaUtil {
 
   //获取多个图片
   Future<List<XFile>> pickMultiPhoto(int limit) async {
-    //await callPhotoPicker();
     return await _picker.pickMultiImage(limit: limit);
   }
 
   //图片压缩
-  Future<Uint8List> compressImage(oldImage) async {
+  Future<XFile?> _compressAndSaveImage(XFile oldImage, String targetPath, CompressFormat format) async {
+    // 如果是已经压缩过的
+    if (oldImage.path == targetPath) {
+      return oldImage;
+    }
     if (Platform.isWindows) {
       return oldImage;
     }
-    var height = switch (Utils().prefUtil.getValue<int>('quality')) {
+    var quality = Utils().prefUtil.getValue<int>('quality');
+    var height = switch (quality) {
       0 => 720,
       1 => 1080,
       2 => 1440,
       _ => 1080,
     };
-    return await FlutterImageCompress.compressWithList(
-      oldImage,
+
+    return await FlutterImageCompress.compressAndGetFile(
+      oldImage.path,
+      targetPath,
       minHeight: height,
       minWidth: height,
-      format: CompressFormat.webp,
+      format: format,
     );
+  }
+
+  //获取视频缩略图
+  Future<bool> getVideoThumbnail(XFile xFile, destPath) async {
+    var quality = Utils().prefUtil.getValue<int>('quality');
+    var height = switch (quality) {
+      0 => 720,
+      1 => 1080,
+      2 => 1440,
+      _ => 1080,
+    };
+    return await _thumbnail.getVideoThumbnail(
+        srcFile: xFile.path, destFile: destPath, width: height, height: height, format: 'jpeg', quality: 90);
   }
 }

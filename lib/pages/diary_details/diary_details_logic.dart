@@ -68,6 +68,11 @@ class DiaryDetailsLogic extends GetxController {
     Get.toNamed(AppRoutes.photoPage, arguments: [imagePathList, index]);
   }
 
+  //点击视频跳转到视频预览页面
+  void toVideoView(List<String> videoPathList, int index) {
+    Get.toNamed(AppRoutes.videoPage, arguments: [videoPathList, index]);
+  }
+
   //点击分享跳转到分享页面
   Future<void> toSharePage() async {
     Get.toNamed(AppRoutes.sharePage, arguments: state.diary);
@@ -79,6 +84,7 @@ class DiaryDetailsLogic extends GetxController {
     if ((await Get.toNamed(AppRoutes.editPage, arguments: diary)) == 'changed') {
       //重新获取日记
       state.diary = (await Utils().isarUtil.getDiaryByID(state.diary.id))!;
+
       quillController = QuillController(
         document: Document.fromJson(jsonDecode(state.diary.content)),
         readOnly: true,
