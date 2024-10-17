@@ -6,11 +6,14 @@ class MediaState {
 
   late RxList<String> filePath;
 
+  late RxMap<String, String> videoThumbnailMap;
+
   late RxBool isCleaning;
 
   MediaState() {
     mediaType = MediaType.image.obs;
     filePath = <String>[].obs;
+    videoThumbnailMap = <String, String>{}.obs;
     isCleaning = false.obs;
 
     ///Initialize variables

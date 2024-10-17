@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mood_diary/common/values/border.dart';
@@ -25,6 +28,19 @@ class EditPage extends StatelessWidget {
     final size = MediaQuery.sizeOf(context);
     final i18n = AppLocalizations.of(context)!;
 
+    Widget buildAddContainer(Widget icon) {
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: AppBorderRadius.smallBorderRadius,
+          color: colorScheme.surfaceContainerHighest,
+        ),
+        constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
+        width: ((size.width - 56.0) / 3).truncateToDouble(),
+        height: ((size.width - 56.0) / 3).truncateToDouble(),
+        child: Center(child: icon),
+      );
+    }
+
     //标签列表
     Widget? buildTagList() {
       return state.tagList.isNotEmpty
@@ -48,13 +64,10 @@ class EditPage extends StatelessWidget {
 
     Widget buildAudioPlayer() {
       return Wrap(
-        spacing: 8.0,
-        runSpacing: 8.0,
         children: [
           ...List.generate(state.audioNameList.length, (index) {
             return AudioPlayerComponent(
               path: Utils().fileUtil.getCachePath(state.audioNameList[index]),
-              index: index.toString(),
               isEdit: true,
             );
           }),
@@ -77,174 +90,304 @@ class EditPage extends StatelessWidget {
     }
 
     Widget buildImage() {
-      return Wrap(
-        spacing: 8.0,
-        children: [
-          ...List.generate(state.imageList.length, (index) {
-            return InkWell(
-              borderRadius: AppBorderRadius.smallBorderRadius,
-              onLongPress: () {
-                logic.setCover(index);
-              },
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
-                width: ((size.width - 56.0) / 3).truncateToDouble(),
-                height: ((size.width - 56.0) / 3).truncateToDouble(),
-                padding: const EdgeInsets.all(2.0),
-                margin: const EdgeInsets.symmetric(vertical: 4.0),
-                decoration: BoxDecoration(
-                  borderRadius: AppBorderRadius.smallBorderRadius,
-                  border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.5).toInt())),
-                  image: DecorationImage(
-                    image: MemoryImage(state.imageList[index]),
-                    fit: BoxFit.cover,
+      return Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Wrap(
+          spacing: 8.0,
+          runSpacing: 8.0,
+          children: [
+            ...List.generate(state.imageFileList.length, (index) {
+              return InkWell(
+                borderRadius: AppBorderRadius.smallBorderRadius,
+                onLongPress: () {
+                  logic.setCover(index);
+                },
+                onTap: () {
+                  logic.toPhotoView(
+                      List.generate(state.imageFileList.length, (index) {
+                        return state.imageFileList[index].path;
+                      }),
+                      index);
+                },
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
+                  width: ((size.width - 56.0) / 3).truncateToDouble(),
+                  height: ((size.width - 56.0) / 3).truncateToDouble(),
+                  padding: const EdgeInsets.all(2.0),
+                  decoration: BoxDecoration(
+                    borderRadius: AppBorderRadius.smallBorderRadius,
+                    border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.5).toInt())),
+                    image: DecorationImage(
+                      image: FileImage(File(state.imageFileList[index].path)),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface.withAlpha((255 * 0.5).toInt()),
+                          borderRadius: AppBorderRadius.smallBorderRadius,
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text('提示'),
+                                    content: const Text('确认删除这张照片吗'),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: () {
+                                            Get.backLegacy();
+                                          },
+                                          child: const Text('取消')),
+                                      TextButton(
+                                          onPressed: () {
+                                            logic.deleteImage(index);
+                                          },
+                                          child: const Text('确认'))
+                                    ],
+                                  );
+                                });
+                          },
+                          constraints: const BoxConstraints(),
+                          icon: Icon(
+                            Icons.remove_circle_outlined,
+                            color: colorScheme.tertiary,
+                          ),
+                          style: IconButton.styleFrom(
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            padding: const EdgeInsets.all(4.0),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface.withAlpha((255 * 0.5).toInt()),
-                        borderRadius: AppBorderRadius.smallBorderRadius,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            onPressed: () {
-                              showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: const Text('提示'),
-                                      content: const Text('确认删除这张照片吗'),
-                                      actions: [
-                                        TextButton(
-                                            onPressed: () {
-                                              Get.backLegacy();
-                                            },
-                                            child: const Text('取消')),
-                                        TextButton(
-                                            onPressed: () {
-                                              logic.deleteImage(index);
-                                            },
-                                            child: const Text('确认'))
-                                      ],
-                                    );
-                                  });
-                            },
-                            constraints: const BoxConstraints(),
-                            icon: Icon(
-                              Icons.remove_circle_outlined,
-                              color: colorScheme.tertiary,
-                            ),
-                            style: IconButton.styleFrom(
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              padding: const EdgeInsets.all(4.0),
-                            ),
-                          ),
-                          if (state.coverImageName == state.imageNameList[index]) ...[
-                            Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: Icon(
-                                Icons.stars,
-                                color: colorScheme.primary,
+              );
+            }),
+            if (state.imageFileList.length < 10) ...[
+              InkWell(
+                borderRadius: AppBorderRadius.smallBorderRadius,
+                onTap: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return SimpleDialog(
+                          title: const Text('选择来源'),
+                          children: [
+                            SimpleDialogOption(
+                              child: const Row(
+                                spacing: 8.0,
+                                children: [
+                                  Icon(Icons.photo_library_outlined),
+                                  Text('相册'),
+                                ],
                               ),
-                            )
-                          ]
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }),
-          if (state.imageList.length < 10) ...[
-            InkWell(
-              borderRadius: AppBorderRadius.smallBorderRadius,
-              onTap: () {
-                showDialog(
-                    context: context,
-                    builder: (context) {
-                      return SimpleDialog(
-                        title: const Text('选择来源'),
-                        children: [
-                          SimpleDialogOption(
-                            child: const Row(
-                              spacing: 8.0,
-                              children: [
-                                Icon(Icons.photo_library_outlined),
-                                Text('相册'),
-                              ],
+                              onPressed: () {
+                                logic.pickMultiPhoto();
+                              },
                             ),
-                            onPressed: () {
-                              logic.pickMultiPhoto();
-                            },
-                          ),
-                          SimpleDialogOption(
-                            child: const Row(
-                              spacing: 8.0,
-                              children: [
-                                Icon(Icons.camera_alt_outlined),
-                                Text('相机'),
-                              ],
+                            SimpleDialogOption(
+                              child: const Row(
+                                spacing: 8.0,
+                                children: [
+                                  Icon(Icons.camera_alt_outlined),
+                                  Text('相机'),
+                                ],
+                              ),
+                              onPressed: () {
+                                logic.pickPhoto(ImageSource.camera);
+                              },
                             ),
-                            onPressed: () {
-                              logic.pickPhoto(ImageSource.camera);
-                            },
-                          ),
-                          SimpleDialogOption(
-                            child: const Row(
-                              spacing: 8.0,
-                              children: [
-                                Icon(Icons.image_search_outlined),
-                                Text('网络'),
-                              ],
+                            SimpleDialogOption(
+                              child: const Row(
+                                spacing: 8.0,
+                                children: [
+                                  Icon(Icons.image_search_outlined),
+                                  Text('网络'),
+                                ],
+                              ),
+                              onPressed: () {
+                                logic.networkImage();
+                              },
                             ),
-                            onPressed: () {
-                              logic.networkImage();
-                            },
-                          ),
-                          SimpleDialogOption(
-                            child: const Row(
-                              spacing: 8.0,
-                              children: [
-                                Icon(Icons.draw_outlined),
-                                Text('画画'),
-                              ],
+                            SimpleDialogOption(
+                              child: const Row(
+                                spacing: 8.0,
+                                children: [
+                                  Icon(Icons.draw_outlined),
+                                  Text('画画'),
+                                ],
+                              ),
+                              onPressed: () {
+                                logic.toDrawPage();
+                              },
                             ),
-                            onPressed: () {
-                              logic.toDrawPage();
-                            },
-                          ),
-                        ],
-                      );
-                    });
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: AppBorderRadius.smallBorderRadius,
-                  color: colorScheme.surfaceContainerHighest,
-                ),
-                margin: const EdgeInsets.symmetric(vertical: 4.0),
-                constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
-                width: ((size.width - 56.0) / 3).truncateToDouble(),
-                height: ((size.width - 56.0) / 3).truncateToDouble(),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add),
-                  ],
-                ),
-              ),
-            )
+                          ],
+                        );
+                      });
+                },
+                child: buildAddContainer(const FaIcon(FontAwesomeIcons.image)),
+              )
+            ],
           ],
-        ],
+        ),
       );
+    }
+
+    Widget buildVideo() {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Wrap(
+          spacing: 8.0,
+          runSpacing: 8.0,
+          children: [
+            ...List.generate(state.videoNameList.length, (index) {
+              return InkWell(
+                onTap: () {
+                  logic.toPhotoView(
+                      List.generate(state.videoFileList.length, (index) {
+                        return state.videoFileList[index].path;
+                      }),
+                      index);
+                },
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
+                  width: ((size.width - 56.0) / 3).truncateToDouble(),
+                  height: ((size.width - 56.0) / 3).truncateToDouble(),
+                  padding: const EdgeInsets.all(2.0),
+                  decoration: BoxDecoration(
+                      borderRadius: AppBorderRadius.smallBorderRadius,
+                      border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.5).toInt())),
+                      image: DecorationImage(
+                        image: FileImage(File(state.videoThumbnailFileList[index].path)),
+                        fit: BoxFit.cover,
+                      )),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface.withAlpha((255 * 0.5).toInt()),
+                          borderRadius: AppBorderRadius.smallBorderRadius,
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text('提示'),
+                                    content: const Text('确认删除这个视频吗'),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: () {
+                                            Get.backLegacy();
+                                          },
+                                          child: const Text('取消')),
+                                      TextButton(
+                                          onPressed: () {
+                                            logic.deleteVideo(index);
+                                          },
+                                          child: const Text('确认'))
+                                    ],
+                                  );
+                                });
+                          },
+                          constraints: const BoxConstraints(),
+                          icon: Icon(
+                            Icons.remove_circle_outlined,
+                            color: colorScheme.tertiary,
+                          ),
+                          style: IconButton.styleFrom(
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            padding: const EdgeInsets.all(4.0),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+            if (state.imageFileList.length < 10) ...[
+              InkWell(
+                borderRadius: AppBorderRadius.smallBorderRadius,
+                onTap: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return SimpleDialog(
+                          title: const Text('选择来源'),
+                          children: [
+                            SimpleDialogOption(
+                              child: const Row(
+                                spacing: 8.0,
+                                children: [
+                                  Icon(Icons.photo_library_outlined),
+                                  Text('相册'),
+                                ],
+                              ),
+                              onPressed: () {
+                                logic.pickVideo(ImageSource.gallery);
+                              },
+                            ),
+                            SimpleDialogOption(
+                              child: const Row(
+                                spacing: 8.0,
+                                children: [
+                                  Icon(Icons.camera_alt_outlined),
+                                  Text('拍摄'),
+                                ],
+                              ),
+                              onPressed: () {
+                                logic.pickVideo(ImageSource.camera);
+                              },
+                            ),
+                          ],
+                        );
+                      });
+                },
+                child: buildAddContainer(const FaIcon(FontAwesomeIcons.video)),
+              )
+            ],
+          ],
+        ),
+      );
+    }
+
+    Widget buildMoodSlider() {
+      return Obx(() {
+        return Container(
+          constraints: const BoxConstraints(maxWidth: 400),
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              MoodIconComponent(value: state.currentMoodRate.value),
+              Expanded(
+                child: Slider(
+                    value: state.currentMoodRate.value,
+                    divisions: 10,
+                    label: '${(state.currentMoodRate.value * 100).toStringAsFixed(0)}%',
+                    activeColor: Color.lerp(
+                        AppColor.emoColorList.first, AppColor.emoColorList.last, state.currentMoodRate.value),
+                    onChanged: (value) {
+                      logic.changeRate(value);
+                    }),
+              ),
+            ],
+          ),
+        );
+      });
     }
 
     Widget buildDetail() {
@@ -344,32 +487,15 @@ class EditPage extends StatelessWidget {
           ),
           ListTile(
             title: const Text('心情指数'),
-            subtitle: Obx(() {
-              return Container(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    MoodIconComponent(value: state.currentMoodRate.value),
-                    Expanded(
-                      child: Slider(
-                          value: state.currentMoodRate.value,
-                          divisions: 10,
-                          label: '${(state.currentMoodRate.value * 100).toStringAsFixed(0)}%',
-                          activeColor: Color.lerp(
-                              AppColor.emoColorList.first, AppColor.emoColorList.last, state.currentMoodRate.value),
-                          onChanged: (value) {
-                            logic.changeRate(value);
-                          }),
-                    ),
-                  ],
-                ),
-              );
-            }),
+            subtitle: buildMoodSlider(),
           ),
           ListTile(
             title: const Text('图片'),
             subtitle: buildImage(),
+          ),
+          ListTile(
+            title: const Text('视频'),
+            subtitle: buildVideo(),
           ),
           ListTile(
             title: const Text('音频'),
@@ -451,31 +577,40 @@ class EditPage extends StatelessWidget {
               ),
             ],
           ),
-          body: PageView(
-            controller: logic.pageController,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [KeepAliveWrapper(child: buildWriting()), KeepAliveWrapper(child: buildDetail())],
-          ),
-          bottomNavigationBar: Obx(() {
-            return NavigationBar(
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.edit_outlined),
-                  label: '撰写',
-                  selectedIcon: Icon(Icons.edit),
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.more_outlined),
-                  label: '更多',
-                  selectedIcon: Icon(Icons.more),
+          body: size.aspectRatio < 1.0
+              ? PageView(
+                  controller: logic.pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [KeepAliveWrapper(child: buildWriting()), KeepAliveWrapper(child: buildDetail())],
                 )
-              ],
-              selectedIndex: state.tabIndex.value,
-              onDestinationSelected: (index) {
-                logic.selectTabView(index);
-              },
-            );
-          }),
+              : Row(
+                  children: [
+                    Flexible(flex: 4, child: SafeArea(child: buildWriting())),
+                    Flexible(flex: 3, child: buildDetail())
+                  ],
+                ),
+          bottomNavigationBar: size.aspectRatio < 1.0
+              ? Obx(() {
+                  return NavigationBar(
+                    destinations: const [
+                      NavigationDestination(
+                        icon: Icon(Icons.edit_outlined),
+                        label: '撰写',
+                        selectedIcon: Icon(Icons.edit),
+                      ),
+                      NavigationDestination(
+                        icon: Icon(Icons.more_outlined),
+                        label: '更多',
+                        selectedIcon: Icon(Icons.more),
+                      )
+                    ],
+                    selectedIndex: state.tabIndex.value,
+                    onDestinationSelected: (index) {
+                      logic.selectTabView(index);
+                    },
+                  );
+                })
+              : null,
         );
       },
     );

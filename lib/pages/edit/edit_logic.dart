@@ -66,8 +66,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   }
 
   @override
-  void onInit() async {
-    // TODO: implement onInit
+  void onInit() {
     //如果是新增
     WidgetsBinding.instance.addObserver(this);
     if (Get.arguments == 'new') {
@@ -88,16 +87,24 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       state.categoryId = state.oldDiary!.categoryId;
       titleTextEditingController = TextEditingController(text: state.oldDiary!.title);
       if (state.categoryId != null) {
-        state.categoryName = (await Utils().isarUtil.getCategoryName(state.categoryId!))!.categoryName;
+        state.categoryName = (Utils().isarUtil.getCategoryName(state.categoryId!))!.categoryName;
       }
       //拷贝图片数据
       for (var name in state.imageNameList) {
-        state.imageList.add(File(Utils().fileUtil.getRealPath('image', name)).readAsBytesSync());
+        state.imageFileList.add(XFile(Utils().fileUtil.getRealPath('image', name)));
       }
       //拷贝音频数据
       for (var name in state.audioNameList) {
         File(Utils().fileUtil.getRealPath('audio', name)).copy(Utils().fileUtil.getCachePath(name));
       }
+      //拷贝视频数据
+      for (var name in state.videoNameList) {
+        state.videoFileList.add(XFile(Utils().fileUtil.getRealPath('video', name)));
+        var thumbnailName = 'thumbnail-${name.substring(6, 42)}.jpeg';
+        state.videoThumbnailNameList.add(thumbnailName);
+        state.videoThumbnailFileList.add(XFile(Utils().fileUtil.getRealPath('video', thumbnailName)));
+      }
+      //拷贝缩略图数据
     }
     update();
     super.onInit();
@@ -128,16 +135,14 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     });
   }
 
-  Future<void> addNewImage(Uint8List data) async {
-    Utils().noticeUtil.showToast('图片处理中');
-    //压缩图片
-    var newImage = await Utils().mediaUtil.compressImage(data);
+  Future<void> addNewImage(XFile xFile) async {
+    //生成新的文件名
+    var name = 'image-${const Uuid().v7()}.webp';
     //图片列表中新增一个
-    state.imageList.add(newImage);
+    state.imageFileList.add(xFile);
     //名称列表中新增一个，使用 uuid 作为名称
-    state.imageNameList.add('image-${const Uuid().v7()}.webp');
+    state.imageNameList.add(name);
     update();
-    Utils().noticeUtil.showToast('处理完成');
   }
 
   //单张照片
@@ -147,7 +152,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     if (photo != null) {
       //关闭dialog
       Get.backLegacy();
-      await addNewImage(await photo.readAsBytes());
+      await addNewImage(photo);
     } else {
       //关闭dialog
       Get.backLegacy();
@@ -157,8 +162,9 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   }
 
   //画图照片
-  Future<void> pickDraw(dataList) async {
-    await addNewImage(dataList);
+  Future<void> pickDraw(Uint8List dataList) async {
+    var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.jpg');
+    await addNewImage(XFile.fromData(dataList, path: path)..saveTo(path));
   }
 
   //网络图片
@@ -169,7 +175,10 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     var imageUrl = await Api().updateImageUrl();
     if (imageUrl != null) {
       var imageData = await Api().getImageData(imageUrl.first);
-      addNewImage(imageData!);
+      if (imageData != null) {
+        var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.jpg');
+        addNewImage(XFile.fromData(imageData, path: path)..saveTo(path));
+      }
     }
   }
 
@@ -180,11 +189,11 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     if (photoList.isNotEmpty) {
       //关闭dialog
       Get.backLegacy();
-      if (photoList.length > 10 - state.imageList.length) {
-        photoList = photoList.sublist(0, 10 - state.imageList.length);
+      if (photoList.length > 10 - state.imageFileList.length) {
+        photoList = photoList.sublist(0, 10 - state.imageFileList.length);
       }
       for (var photo in photoList) {
-        addNewImage(await photo.readAsBytes());
+        addNewImage(photo);
       }
     } else {
       //关闭dialog
@@ -195,19 +204,67 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     }
   }
 
+  Future<void> addNewVideo(XFile xFile) async {
+    // 生成文件名
+    final uuid = const Uuid().v7();
+    var name = 'video-$uuid.mp4';
+
+    //生成缩略图名
+    var thumbnailName = 'thumbnail-$uuid.jpeg';
+    //获取缩略图
+    if (await Utils().mediaUtil.getVideoThumbnail(xFile, Utils().fileUtil.getCachePath(thumbnailName))) {
+      state.videoThumbnailFileList.add(XFile(Utils().fileUtil.getCachePath(thumbnailName)));
+      state.videoThumbnailNameList.add(thumbnailName);
+    }
+    //视频list中新增一个
+    state.videoFileList.add(xFile);
+    state.videoNameList.add(name);
+    update();
+  }
+
+  //选择视频
+  Future<void> pickVideo(ImageSource imageSource) async {
+    XFile? video = await Utils().mediaUtil.pickVideo(imageSource);
+    if (video != null) {
+      //关闭dialog
+      Get.backLegacy();
+      await addNewVideo(video);
+    } else {
+      //关闭dialog
+      Get.backLegacy();
+      //弹出一个提示
+      Utils().noticeUtil.showToast('取消视频选择');
+    }
+  }
+
+  //预览图片
+  void toPhotoView(List<String> imagePath, int index) {
+    Get.toNamed(AppRoutes.photoPage, arguments: [imagePath, index]);
+  }
+
+  //预览视频
+  void toVideoView(List<String> videoPath, int index) {
+    Get.toNamed(AppRoutes.videoPage, arguments: [videoPath, index]);
+  }
+
   //删除图片
   void deleteImage(index) {
-    //如果是封面，还要删掉封面
-    if (state.coverImageName == state.imageNameList[index]) {
-      state.coverImage = null;
-      state.coverImageName = null;
-    }
-    state.imageList.removeAt(index);
-    var fileName = state.imageNameList.removeAt(index);
-    //如果不是新增，还要删除源文件
-    if (state.isNew == false) {
-      Utils().fileUtil.deleteFile(Utils().fileUtil.getRealPath('image', fileName));
-    }
+    var imageFile = state.imageFileList.removeAt(index);
+    state.imageNameList.removeAt(index);
+    Utils().fileUtil.deleteFile(imageFile.path);
+    Get.backLegacy();
+    Utils().noticeUtil.showToast('删除成功');
+    update();
+  }
+
+  //删除视频
+  void deleteVideo(index) {
+    var videoFile = state.videoFileList.removeAt(index);
+    var thumbnailFile = state.videoThumbnailFileList.removeAt(index);
+    state.videoNameList.removeAt(index);
+    state.videoThumbnailNameList.removeAt(index);
+    Utils().fileUtil.deleteFile(videoFile.path);
+    Utils().fileUtil.deleteFile(thumbnailFile.path);
     Get.backLegacy();
     Utils().noticeUtil.showToast('删除成功');
     update();
@@ -215,38 +272,22 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   //长按设置封面
   void setCover(int index) {
-    state.coverImage = state.imageList[index];
-    state.coverImageName = state.imageNameList[index];
+    var coverFile = state.imageFileList[index];
+    var coverName = state.imageNameList[index];
+    state.imageFileList
+      ..removeAt(index)
+      ..insert(0, coverFile);
+    state.imageNameList
+      ..removeAt(index)
+      ..insert(0, coverName);
     Utils().noticeUtil.showToast('设置第${index + 1}张图片为封面');
     update();
   }
 
-  void checkCover() {
-    //如果没有手动指定封面,默认第一张
-
-    if (state.coverImage == null) {
-      //如果图片都没有，从默认封面获取颜色
-      if (state.imageList.isEmpty) {
-        return;
-      } else {
-        state.coverImage = state.imageList.first;
-        state.coverImageName = state.imageNameList.first;
-      }
-    } else {
-      //如果不为空，说明手动指定了，那么替换位置到首部
-      state.imageList
-        ..remove(state.coverImage)
-        ..insert(0, state.coverImage!);
-      state.imageNameList
-        ..remove(state.coverImageName)
-        ..insert(0, state.coverImageName!);
-    }
-  }
-
   //获取封面颜色
   Future<int?> getCoverColor() async {
-    if (state.imageList.isNotEmpty) {
-      return await Utils().mediaUtil.getColorScheme(MemoryImage(state.imageList.first));
+    if (state.imageFileList.isNotEmpty) {
+      return await Utils().mediaUtil.getColorScheme(FileImage(File(state.imageFileList.first.path)));
     } else {
       return null;
     }
@@ -255,8 +296,8 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   //获取封面比例
   Future<double?> getCoverAspect() async {
     //如果有封面就获取
-    if (state.imageList.isNotEmpty) {
-      return await Utils().mediaUtil.getImageAspectRatio(MemoryImage(state.imageList.first));
+    if (state.imageFileList.isNotEmpty) {
+      return await Utils().mediaUtil.getImageAspectRatio(FileImage(File(state.imageFileList.first.path)));
     } else {
       return null;
     }
@@ -265,8 +306,6 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   //保存日记
   Future<void> saveDiary() async {
     if (checkIsNotEmpty()) {
-      //检查封面
-      checkCover();
       var diary = Diary(
         id: '',
         categoryId: state.categoryId,
@@ -287,9 +326,12 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       //先把日记插入到数据库中
       await Utils().isarUtil.insertADiary(diary);
       //保存图片
-      await Utils().mediaUtil.saveImages(Map.fromIterables(state.imageNameList, state.imageList));
+      await Utils().mediaUtil.saveImages(Map.fromIterables(state.imageNameList, state.imageFileList));
+      //保存视频
+      await Utils().mediaUtil.saveVideo(Map.fromIterables(state.videoNameList, state.videoFileList),
+          Map.fromIterables(state.videoThumbnailNameList, state.videoThumbnailFileList));
       //保存录音
-      await Utils().mediaUtil.savaAudio(state.audioNameList);
+      await Utils().mediaUtil.saveAudio(state.audioNameList);
       Get.backLegacy(result: state.categoryId ?? '');
       Utils().noticeUtil.showToast('保存成功');
     } else {
@@ -300,8 +342,6 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   //更新日记
   Future<void> updateDiary() async {
     if (checkIsNotEmpty()) {
-      //检查封面
-      checkCover();
       var diary = Diary(
         id: state.oldDiary!.id,
         categoryId: state.categoryId,
@@ -322,9 +362,12 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       //更新数据库中的日记
       await Utils().isarUtil.updateADiary(diary);
       //保存图片
-      await Utils().mediaUtil.saveImages(Map.fromIterables(state.imageNameList, state.imageList));
+      await Utils().mediaUtil.saveImages(Map.fromIterables(state.imageNameList, state.imageFileList));
+      //保存视频
+      await Utils().mediaUtil.saveVideo(Map.fromIterables(state.videoNameList, state.videoFileList),
+          Map.fromIterables(state.videoThumbnailNameList, state.videoThumbnailFileList));
       //保存录音
-      await Utils().mediaUtil.savaAudio(state.audioNameList);
+      await Utils().mediaUtil.saveAudio(state.audioNameList);
       Get.backLegacy(result: 'changed');
       Utils().noticeUtil.showToast('修改成功');
     }
@@ -416,8 +459,6 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     state.currentMoodRate.value = value;
   }
 
-  void changeColor(value) {}
-
   //获取天气
   Future<void> getWeather() async {
     var key = Utils().prefUtil.getValue<String>('qweatherKey');
@@ -441,9 +482,11 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   }
 
   //删除音频
-  Future<void> deleteAudio(int index) async {
-    await Utils().fileUtil.deleteFile(Utils().fileUtil.getRealPath('audio', state.audioNameList[index]));
-    state.audioNameList.removeAt(index);
+  Future<void> deleteAudio(String path) async {
+    // 删除文件
+    await Utils().fileUtil.deleteFile(path);
+    // 删除对应的组件
+    state.audioNameList.removeWhere((name) => path.endsWith(name));
     update();
     Utils().noticeUtil.showToast('删除成功');
   }
@@ -469,9 +512,9 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     update();
   }
 
-  void selectCategory(String id) async {
+  void selectCategory(String id) {
     state.categoryId = id;
-    var category = await Utils().isarUtil.getCategoryName(id);
+    var category = Utils().isarUtil.getCategoryName(id);
     if (category != null) {
       state.categoryName = category.categoryName;
     }
@@ -481,6 +524,5 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   void selectTabView(index) {
     state.tabIndex.value = index;
     pageController.jumpToPage(index);
-    //tabController.animateTo(index, curve: Curves.ease);
   }
 }

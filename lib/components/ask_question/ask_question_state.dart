@@ -10,7 +10,7 @@ class AskQuestionState {
   late KeyboardState keyboardState;
 
   AskQuestionState() {
-    modelPath = 'tflite/model_quant.tflite';
+    modelPath = 'assets/tflite/model_quant.tflite';
     qaList = <String>[].obs;
     keyboardState = KeyboardState.closed;
 

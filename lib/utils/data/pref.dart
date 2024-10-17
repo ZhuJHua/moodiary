@@ -71,13 +71,16 @@ class PrefUtil {
     await _prefs.setBool('firstStart', firstStart);
 
     // 获取当前应用版本
-    var currentVersion = (await Utils().packageUtil.getPackageInfo()).version;
+    var packageInfo = await Utils().packageUtil.getPackageInfo();
+    var currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
     var appVersion = _prefs.getString('appVersion');
 
     // 如果是首次启动或版本不一致
     if (firstStart || appVersion == null || appVersion != currentVersion) {
       await _prefs.setString('appVersion', currentVersion);
       await setDefaultValues();
+      //初始化所需目录
+      await Utils().fileUtil.initCreateDir();
     }
   }
 

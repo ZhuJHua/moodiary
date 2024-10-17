@@ -1,7 +1,5 @@
-import 'dart:typed_data';
-
+import 'package:cross_file/cross_file.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/keyboard_state.dart';
 
@@ -9,23 +7,27 @@ class EditState {
   //当前天气
   late List<String> currentWeather;
 
-  //封面图片
-  late Uint8List? coverImage;
-
-  //封面图片名称
-  late String? coverImageName;
-
-  //其他图片
-  late List<Uint8List> imageList;
-
-  //其他图片名称
-  late List<String> imageNameList;
-
   //标题
   String? title;
 
   //内容
   late String content;
+
+  //媒体文件名称
+  late List<String> imageNameList = [];
+  late List<String> videoNameList = [];
+  late List<String> videoThumbnailNameList = [];
+  late List<String> audioNameList = [];
+
+  //媒体文件内容，音频不需要
+  late List<XFile> imageFileList = [];
+  late List<XFile> videoFileList = [];
+  late List<XFile> videoThumbnailFileList = [];
+
+  // 标签
+  late List<String> tagList;
+
+  String? categoryId;
 
   //日记的日期
   late DateTime currentDateTime;
@@ -45,14 +47,6 @@ class EditState {
   late RxDouble currentMoodRate;
   late bool isProcessing;
 
-  late List<Category> availableCategoryList;
-
-  late List<String> audioNameList;
-  late List<String> videoNameList;
-  late List<String> tagList;
-
-  String? categoryId;
-
   late String categoryName;
   late KeyboardState keyboardState;
 
@@ -61,7 +55,6 @@ class EditState {
   EditState() {
     totalCount = 0.obs;
     oldTime = null;
-    coverImage = null;
     categoryId = null;
     tabIndex = 0.obs;
     categoryName = '';
@@ -69,15 +62,9 @@ class EditState {
     currentMoodRate = 0.5.obs;
     content = '';
     isProcessing = false;
-    coverImageName = null;
-    imageList = [];
-    imageNameList = [];
-    audioNameList = [];
-    videoNameList = [];
     tagList = [];
     currentWeather = [];
     oldDiary = null;
-
     isNew = false;
     //默认值为当天
     currentDateTime = DateTime.now();

@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl_standalone.dart';
+import 'package:media_kit/media_kit.dart';
 import 'package:mood_diary/router/app_pages.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/channel.dart';
@@ -18,10 +18,12 @@ Future<void> initSystem() async {
   await findSystemLocale();
   //初始化pref
   await Utils().prefUtil.initPref();
-  //初始化所需目录
-  await Utils().fileUtil.initCreateDir();
+
   //初始化Isar
   await Utils().isarUtil.initIsar();
+
+  //初始化视频播放
+  MediaKit.ensureInitialized();
   //supabase初始化
   //await Utils().supabaseUtil.initSupabase();
 }
@@ -37,8 +39,6 @@ Future<void> platFormOption() async {
   }
 
   if (Platform.isWindows) {
-    Window.initialize();
-
     doWhenWindowReady(() {
       appWindow.minSize = const Size(512, 640);
       appWindow.size = const Size(1024, 640);
@@ -72,9 +72,6 @@ void main() {
     runApp(GetMaterialApp(
       initialRoute: getInitialRoute(),
       builder: (context, widget) {
-        if (Platform.isWindows) {
-          Window.setEffect(effect: WindowEffect.acrylic, dark: Theme.of(context).brightness == Brightness.dark);
-        }
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
             textScaler: TextScaler.linear(Utils().prefUtil.getValue<double>('fontScale')!),

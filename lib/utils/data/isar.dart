@@ -145,8 +145,8 @@ class IsarUtil {
   }
 
   //获取分类名称
-  Future<Category?> getCategoryName(String id) async {
-    return await _isar.categorys.getAsync(id);
+  Category? getCategoryName(String id) {
+    return _isar.categorys.get(id);
   }
 
   Future<bool> insertACategory(Category category) async {

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/values/border.dart';
@@ -23,28 +24,41 @@ class DiaryDetailsPage extends StatelessWidget {
     final state = Bind.find<DiaryDetailsLogic>().state;
     final size = MediaQuery.sizeOf(context);
     final textStyle = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     Widget buildAChip(Widget label, Widget? avatar, ColorScheme colorScheme) {
       return Chip(
         label: label,
         avatar: avatar,
         side: BorderSide.none,
-        backgroundColor: colorScheme.secondaryContainer,
+        backgroundColor: colorScheme.surface,
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         padding: EdgeInsets.zero,
-        labelPadding: avatar == null ? EdgeInsets.zero : const EdgeInsets.only(right: 8),
+        labelPadding: EdgeInsets.zero,
       );
     }
 
     Widget buildChipList(ColorScheme colorScheme) {
+      var dateTime = DateFormat.yMMMd().add_Hms().format(state.diary.time).split(' ');
+      var date = dateTime.first;
+      var time = dateTime.last;
       return Wrap(
         spacing: 8.0,
         children: [
           buildAChip(MoodIconComponent(value: state.diary.mood), null, colorScheme),
           buildAChip(
-              Text(
-                DateFormat.yMMMd().add_Hms().format(state.diary.time),
-                style: TextStyle(color: colorScheme.onSecondaryContainer),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    date,
+                    style: textStyle.labelSmall!.copyWith(color: colorScheme.onSurface),
+                  ),
+                  Text(
+                    time,
+                    style: textStyle.labelSmall!.copyWith(color: colorScheme.onSurface),
+                  )
+                ],
               ),
               const Icon(Icons.access_time_outlined),
               colorScheme),
@@ -52,6 +66,7 @@ class DiaryDetailsPage extends StatelessWidget {
             buildAChip(
                 Text(
                   '${state.diary.weather[2]} ${state.diary.weather[1]}°C',
+                  style: textStyle.labelLarge!.copyWith(color: colorScheme.onSurface),
                 ),
                 Icon(
                   WeatherIcon.map[state.diary.weather[0]],
@@ -61,7 +76,7 @@ class DiaryDetailsPage extends StatelessWidget {
           buildAChip(
               Text(
                 '${state.diary.contentText.length} 字',
-                style: TextStyle(color: colorScheme.onSecondaryContainer),
+                style: textStyle.labelLarge!.copyWith(color: colorScheme.onSurface),
               ),
               const Icon(
                 Icons.text_fields_outlined,
@@ -71,7 +86,7 @@ class DiaryDetailsPage extends StatelessWidget {
             return buildAChip(
                 Text(
                   state.diary.tags[index],
-                  style: TextStyle(color: colorScheme.onSecondaryContainer),
+                  style: textStyle.labelLarge!.copyWith(color: colorScheme.onSurface),
                 ),
                 const Icon(
                   Icons.tag_outlined,
@@ -86,20 +101,64 @@ class DiaryDetailsPage extends StatelessWidget {
       return List.generate(state.diary.imageName.length - 1, (index) {
         var actualIndex = index + 1; // 从第二个元素开始
         var imageProvider = FileImage(File(Utils().fileUtil.getRealPath('image', state.diary.imageName[actualIndex])));
-        return InkWell(
-          onTap: () {
-            logic.toPhotoView(state.diary.imageName, actualIndex);
-          },
-          child: Container(
-            width: ((size.width - 32) / 3).truncateToDouble(),
-            height: ((size.width - 32) / 3).truncateToDouble(),
-            constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
-            decoration: BoxDecoration(
-              borderRadius: AppBorderRadius.smallBorderRadius,
-              border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.8).toInt())),
-              image: DecorationImage(
-                image: imageProvider,
-                fit: BoxFit.cover,
+        return Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: InkWell(
+            onTap: () {
+              logic.toPhotoView(
+                  List.generate(state.diary.imageName.length, (index) {
+                    return Utils().fileUtil.getRealPath('image', state.diary.imageName[index]);
+                  }),
+                  actualIndex);
+            },
+            borderRadius: AppBorderRadius.mediumBorderRadius,
+            child: Container(
+              width: ((size.width - 32) / 3).truncateToDouble(),
+              height: ((size.width - 32) / 3).truncateToDouble(),
+              constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
+              decoration: BoxDecoration(
+                borderRadius: AppBorderRadius.mediumBorderRadius,
+                border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.8).toInt())),
+                image: DecorationImage(
+                  image: imageProvider,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        );
+      });
+    }
+
+    List<Widget> buildMultiVideo(colorScheme) {
+      return List.generate(state.diary.videoName.length, (index) {
+        var imageProvider = FileImage(File(
+            Utils().fileUtil.getRealPath('video', 'thumbnail-${state.diary.videoName[index].substring(6, 42)}.jpeg')));
+        return Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: InkWell(
+            onTap: () {
+              logic.toVideoView(
+                  List.generate(state.diary.videoName.length, (index) {
+                    return Utils().fileUtil.getRealPath('video', state.diary.videoName[index]);
+                  }),
+                  index);
+            },
+            borderRadius: AppBorderRadius.mediumBorderRadius,
+            child: Container(
+              width: ((size.width - 32) / 3).truncateToDouble(),
+              height: ((size.width - 32) / 3).truncateToDouble(),
+              constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
+              decoration: BoxDecoration(
+                borderRadius: AppBorderRadius.mediumBorderRadius,
+                border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.8).toInt())),
+                image: DecorationImage(
+                  image: imageProvider,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: const Center(
+                child: FaIcon(FontAwesomeIcons.video),
               ),
             ),
           ),
@@ -109,12 +168,9 @@ class DiaryDetailsPage extends StatelessWidget {
 
     Widget buildAudioList() {
       return Wrap(
-        spacing: 8.0,
-        runSpacing: 8.0,
         children: [
           ...List.generate(state.diary.audioName.length, (index) {
-            return AudioPlayerComponent(
-                path: Utils().fileUtil.getRealPath('audio', state.diary.audioName[index]), index: index.toString());
+            return AudioPlayerComponent(path: Utils().fileUtil.getRealPath('audio', state.diary.audioName[index]));
           })
         ],
       );
@@ -123,26 +179,24 @@ class DiaryDetailsPage extends StatelessWidget {
     return GetBuilder<DiaryDetailsLogic>(
       assignId: true,
       init: logic,
+      tag: state.diary.id,
       builder: (logic) {
-        var imageColor = state.diary.imageColor;
-        final colorScheme = imageColor != null
+        final customColorScheme = state.imageColor != null
             ? ColorScheme.fromSeed(
-                seedColor: Color(imageColor),
-                brightness: Theme.of(context).brightness,
+                seedColor: Color(state.imageColor!),
+                brightness: colorScheme.brightness,
               )
-            : Theme.of(context).colorScheme;
-        var aspect = state.diary.aspect;
+            : colorScheme;
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: colorScheme,
+            colorScheme: customColorScheme,
           ),
           child: Scaffold(
+            backgroundColor: customColorScheme.surface,
             body: CustomScrollView(
               slivers: [
                 SliverAppBar(
-                  expandedHeight: aspect != null
-                      ? (aspect <= 1.0 ? min(size.width / aspect, size.height * 0.618) : size.width / aspect)
-                      : null,
+                  expandedHeight: state.aspect != null ? min(size.width / state.aspect!, size.height * 0.618) : null,
                   title: Text(
                     state.diary.title ?? '',
                     style: textStyle.titleMedium,
@@ -152,7 +206,11 @@ class DiaryDetailsPage extends StatelessWidget {
                     background: state.diary.imageName.isNotEmpty
                         ? InkWell(
                             onTap: () {
-                              logic.toPhotoView(state.diary.imageName, 0);
+                              logic.toPhotoView(
+                                  List.generate(state.diary.imageName.length, (index) {
+                                    return Utils().fileUtil.getRealPath('image', state.diary.imageName[index]);
+                                  }),
+                                  0);
                             },
                             child: Image.file(
                               File(Utils().fileUtil.getRealPath('image', state.diary.imageName.first)),
@@ -222,18 +280,19 @@ class DiaryDetailsPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      spacing: 8.0,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SingleChildScrollView(scrollDirection: Axis.horizontal, child: buildChipList(colorScheme)),
-                        Container(
+                SliverPadding(
+                  padding: const EdgeInsets.all(4.0),
+                  sliver: SliverList.list(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal, child: buildChipList(customColorScheme)),
+                      ),
+                      Card.filled(
+                        color: customColorScheme.surfaceContainer,
+                        child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainer, borderRadius: AppBorderRadius.smallBorderRadius),
                           child: QuillEditor.basic(
                             controller: logic.quillController,
                             configurations: const QuillEditorConfigurations(
@@ -242,19 +301,15 @@ class DiaryDetailsPage extends StatelessWidget {
                             ),
                           ),
                         ),
-                        //绘制图片
-                        if (state.diary.imageName.length > 1) ...[
-                          Wrap(
-                            spacing: 8.0,
-                            runSpacing: 8.0,
-                            children: buildMultiImages(colorScheme),
-                          ),
+                      ),
+                      Wrap(
+                        children: [
+                          if (state.diary.imageName.length > 1) ...buildMultiImages(customColorScheme),
+                          if (state.diary.videoName.isNotEmpty) ...buildMultiVideo(customColorScheme)
                         ],
-                        if (state.diary.audioName.isNotEmpty) ...[
-                          buildAudioList(),
-                        ]
-                      ],
-                    ),
+                      ),
+                      buildAudioList()
+                    ],
                   ),
                 ),
               ],
