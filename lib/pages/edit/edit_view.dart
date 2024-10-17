@@ -251,7 +251,7 @@ class EditPage extends StatelessWidget {
             ...List.generate(state.videoNameList.length, (index) {
               return InkWell(
                 onTap: () {
-                  logic.toPhotoView(
+                  logic.toVideoView(
                       List.generate(state.videoFileList.length, (index) {
                         return state.videoFileList[index].path;
                       }),
@@ -318,7 +318,7 @@ class EditPage extends StatelessWidget {
                 ),
               );
             }),
-            if (state.imageFileList.length < 10) ...[
+            if (state.videoFileList.length < 9) ...[
               InkWell(
                 borderRadius: AppBorderRadius.smallBorderRadius,
                 onTap: () {

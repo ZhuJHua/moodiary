@@ -179,7 +179,6 @@ class DiaryDetailsPage extends StatelessWidget {
     return GetBuilder<DiaryDetailsLogic>(
       assignId: true,
       init: logic,
-      tag: state.diary.id,
       builder: (logic) {
         final customColorScheme = state.imageColor != null
             ? ColorScheme.fromSeed(

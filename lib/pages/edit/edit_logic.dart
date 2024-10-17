@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:lottie/lottie.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/keyboard_state.dart';
@@ -306,6 +307,21 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   //保存日记
   Future<void> saveDiary() async {
     if (checkIsNotEmpty()) {
+      Get.dialog(SimpleDialog(
+        children: [
+          Lottie.asset(
+            'assets/lottie/file_process.json',
+            addRepaintBoundary: true,
+            width: 200,
+            height: 200,
+            frameRate: FrameRate.max,
+          ),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [Text('处理中')],
+          )
+        ],
+      ));
       var diary = Diary(
         id: '',
         categoryId: state.categoryId,
@@ -332,6 +348,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
           Map.fromIterables(state.videoThumbnailNameList, state.videoThumbnailFileList));
       //保存录音
       await Utils().mediaUtil.saveAudio(state.audioNameList);
+      Get.close();
       Get.backLegacy(result: state.categoryId ?? '');
       Utils().noticeUtil.showToast('保存成功');
     } else {
@@ -342,6 +359,21 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   //更新日记
   Future<void> updateDiary() async {
     if (checkIsNotEmpty()) {
+      Get.dialog(SimpleDialog(
+        children: [
+          Lottie.asset(
+            'assets/lottie/file_process.json',
+            addRepaintBoundary: true,
+            width: 200,
+            height: 200,
+            frameRate: FrameRate.max,
+          ),
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [Text('处理中')],
+          )
+        ],
+      ));
       var diary = Diary(
         id: state.oldDiary!.id,
         categoryId: state.categoryId,
@@ -368,6 +400,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
           Map.fromIterables(state.videoThumbnailNameList, state.videoThumbnailFileList));
       //保存录音
       await Utils().mediaUtil.saveAudio(state.audioNameList);
+      Get.close();
       Get.backLegacy(result: 'changed');
       Utils().noticeUtil.showToast('修改成功');
     }

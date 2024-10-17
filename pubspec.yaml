@@ -122,4 +122,9 @@ flutter:
 
 msix_config:
   display_name: 心绪日记
-  publisher_display_name: Yooss
+  app_installer:
+    publish_folder_path: \win
+  publisher_display_name: ZhuJHua
+  logo_path: assets/icon/icon.png
+  trim_logo: false
+  identity_name: cn.yooss.moodiary
