@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.4.4+44
+version: 2.4.5+45
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -41,19 +41,19 @@ dependencies:
   fl_chart: 0.69.0
   file_picker: 8.1.2
   local_auth: 2.3.0
-  local_auth_android: 1.0.44
+  local_auth_android: 1.0.46
   permission_handler: 11.3.1
   image_picker: 1.1.2
-  device_info_plus: 10.1.2
+  device_info_plus: ^11.1.0
   flutter_image_compress: 2.3.0
   photo_view: 0.15.0
-  package_info_plus: 8.0.2
+  package_info_plus: ^8.1.0
   uuid: 4.5.1
-  flutter_quill: 10.8.1
-  share_plus: 10.0.2
-  url_launcher: 6.3.0
+  flutter_quill: 10.8.4
+  share_plus: ^10.1.0
+  url_launcher: 6.3.1
   archive: 3.6.1
-  crypto: 3.0.5
+  crypto: 3.0.6
   markdown_widget: 2.3.2+6
   flutter_colorpicker: 1.1.0
   geolocator: 13.0.1
@@ -66,9 +66,8 @@ dependencies:
   record: 5.1.2
   duration: 4.0.3
   dynamic_color: 1.7.0
-  supabase_flutter: 2.7.0
+  supabase_flutter: 2.8.0
   flutter_staggered_grid_view: 0.7.0
-  flutter_acrylic: 1.1.4
   bitsdojo_window: 0.1.6
   intl: 0.19.0
   collection: 1.19.0
@@ -76,7 +75,13 @@ dependencies:
   font_awesome_flutter: 10.7.0
   tflite_flutter: 0.11.0
   sliver_tools: 0.2.12
-  lottie: 3.1.2
+  lottie: 3.1.3
+  media_kit: 1.1.11
+  media_kit_video: 1.2.5
+  media_kit_libs_video: 1.0.5
+  flutter_adaptive_scaffold: 0.3.1
+  cross_file: 0.3.4+2
+  fc_native_video_thumbnail: 0.16.1
 
   flutter_localizations:
     sdk: flutter
@@ -85,7 +90,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: ^2.4.13
+  build_runner: 2.4.13
   msix: 3.16.8
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -107,12 +112,11 @@ flutter:
   fonts:
     - family: qweather
       fonts:
-        - asset: fonts/qweather-icons.ttf
+        - asset: assets/fonts/qweather-icons.ttf
+
   assets:
-    - icon/icon.png
-    - tflite/vocab.txt
-    - tflite/model_quant.tflite
-    - lottie/file_ok.json
+    - assets/icon/
+    - assets/lottie/
 
   uses-material-design: true
 
