@@ -11,9 +11,9 @@
 - **Cross-platform support**：🌍 Compatible with Android, iOS\*, Windows, MacOS\*, Linux\*.
 - **Material Design**：🎨 The interface is intuitive and user-friendly, and follows the Material Design specifications.
 - **Rich text editing**：📝 Supports text editing in bold, italic, underline and other formats.
-- **Multimedia accessories**：📷 You can add pictures and audio to your diary.
+- **Multimedia accessories**：📷 You can add pictures, audio, video or even draw a picture to your diary.
 - **Search and classification**：🔍 Easily manage your diary by full-text search and categorization.
-- **Custom theme**：🌈 Supports choice of light and dark modes, or custom themes.
+- **Custom theme**：🌈 Supports light and dark modes, as well as a variety of color schemes.
 - **Data security**：🔒 Keep your diary safe with a password.
 - **Export and share**：🧾 Support all data import/export, as well as single diary sharing.
 - **Cloud synchronization**：☁ Support for synchronizing diaries across multiple devices (coming soon).
@@ -92,13 +92,15 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 ### Natural Language Processing (NLP)
 
+> In the experimental stage
+
 Today, more and more industry products are beginning to incorporate AI technology, which undoubtedly greatly improves our experience. However, for diary applications, it is not acceptable to hand over the data to a large model because it is not certain that the data will be used for training. Therefore, a better approach is to adopt a local model. Although local models may not be as powerful as large models due to size limitations, they can still provide necessary help to a certain extent.
 
-So far, I have integrated the following tasks:
+Currently, I have the following tasks integrated into the source code:
 
 #### SQuAD task based on Bert pre-trained model
 
-I used MobileBert for the SQuAD task, which is a simple machine reading comprehension task. You can ask it questions and it will return the answers you need. The model file is in the '.tflite 'format required by TensorFlow Lite, and the size of the model is about 50MB after quantization.
+I used MobileBert for the SQuAD task, which is a simple machine reading comprehension task. You can ask it questions and it will return the answers you need. The model files are in the `.tflite` format required by TensorFlow Lite, so you can add your own model files to the `assets/tflite` directory.
 
 Thanks to the following open source projects:
 
