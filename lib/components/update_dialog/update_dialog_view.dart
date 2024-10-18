@@ -1,52 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/common/models/shiply.dart';
-import 'package:mood_diary/utils/channel.dart';
+import 'package:mood_diary/common/models/github.dart';
+import 'package:mood_diary/components/update_dialog/update_dialog_logic.dart';
 
 class UpdateDialogComponent extends StatelessWidget {
-  const UpdateDialogComponent({super.key, required this.shiplyResponse});
+  const UpdateDialogComponent({super.key, required this.githubRelease});
 
-  final ShiplyResponse shiplyResponse;
+  final GithubRelease githubRelease;
 
   @override
   Widget build(BuildContext context) {
-    // final logic = Get.put(UpdateDialogLogic());
+    final logic = Get.put(UpdateDialogLogic());
     // final state = Bind.find<UpdateDialogLogic>().state;
     final i18n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    return AlertDialog(
-      title: Wrap(
-        spacing: 8.0,
-        children: [
-          Text(shiplyResponse.clientInfo!.title!),
-          Chip(
-            label: Text(
-              'V${shiplyResponse.apkBasicInfo!.version!}',
-              style: TextStyle(color: colorScheme.onTertiaryContainer),
-            ),
-            padding: EdgeInsets.zero,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            side: BorderSide.none,
-            backgroundColor: colorScheme.tertiaryContainer,
+    return GetBuilder<UpdateDialogLogic>(
+      init: logic,
+      assignId: true,
+      builder: (logic) {
+        return AlertDialog(
+          title: Wrap(
+            spacing: 8.0,
+            children: [
+              const Text('发现新版本'),
+              Chip(
+                label: Text(
+                  githubRelease.tagName!,
+                  style: TextStyle(color: colorScheme.onTertiaryContainer),
+                ),
+                padding: EdgeInsets.zero,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                side: BorderSide.none,
+                backgroundColor: colorScheme.tertiaryContainer,
+              ),
+            ],
           ),
-        ],
-      ),
-      content: Text(shiplyResponse.clientInfo!.description!),
-      actions: [
-        TextButton(
-            onPressed: () {
-              Get.backLegacy();
-            },
-            child: Text(i18n.cancel)),
-        FilledButton(
-          onPressed: () async {
-            Get.backLegacy();
-            await ShiplyChannel.startDownload();
-          },
-          child: const Text('立即更新'),
-        ),
-      ],
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Get.backLegacy();
+                },
+                child: Text(i18n.cancel)),
+            FilledButton(
+              onPressed: () async {
+                Get.backLegacy();
+                await logic.toDownload(githubRelease);
+              },
+              child: const Text('前往更新'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

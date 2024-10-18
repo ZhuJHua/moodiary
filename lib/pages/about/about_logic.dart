@@ -22,8 +22,9 @@ class AboutLogic extends GetxController {
 
   Future<void> getInfo() async {
     var packageInfo = await Utils().packageUtil.getPackageInfo();
-    state.appName.value = packageInfo.appName;
-    state.appVersion.value = packageInfo.version;
+    state.appName = packageInfo.appName;
+    state.appVersion = packageInfo.version;
+    update();
   }
 
   //跳转到反馈页
@@ -45,6 +46,8 @@ class AboutLogic extends GetxController {
     );
     await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
+
+
 
   void toPrivacy() {
     Get.toNamed(AppRoutes.privacyPage);

@@ -1,12 +1,12 @@
-import 'package:get/get.dart';
+
 
 class AboutState {
-  late RxString appName;
+  late String appName;
 
-  late RxString appVersion;
+  late String appVersion;
 
   AboutState() {
-    appName = ''.obs;
-    appVersion = ''.obs;
+    appName = '';
+    appVersion = '';
   }
 }

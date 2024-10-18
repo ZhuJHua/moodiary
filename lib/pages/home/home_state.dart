@@ -13,6 +13,9 @@ class HomeState {
 
   late double navigatorBarHeight;
 
+  //一言
+  late RxString hitokoto;
+
   HomeState() {
     isFabExpanded = false.obs;
 
@@ -21,6 +24,7 @@ class HomeState {
     navigatorIndex = 0.obs;
 
     navigatorBarHeight = 56.0;
+    hitokoto = ''.obs;
 
     ///Initialize variables
   }

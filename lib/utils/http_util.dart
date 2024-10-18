@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:mood_diary/utils/utils.dart';
 
 class HttpUtil {
   late final Dio _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3)));
@@ -16,6 +17,7 @@ class HttpUtil {
         return handler.next(response);
       },
       onError: (DioException error, ErrorInterceptorHandler handler) {
+        Utils().noticeUtil.showToast('网络异常！');
         return handler.next(error);
       },
     ));

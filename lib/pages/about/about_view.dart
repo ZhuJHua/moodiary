@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/utils/utils.dart';
 
 import 'about_logic.dart';
 
@@ -33,70 +34,77 @@ class AboutPage extends StatelessWidget {
             Column(
               spacing: 4.0,
               mainAxisSize: MainAxisSize.min,
-              children: [
-                Obx(() {
-                  return Text(state.appName.value);
-                }),
-                Obx(() {
-                  return Text('Version: ${state.appVersion.value}');
-                })
-              ],
+              children: [Text(state.appName), Text('Version: ${state.appVersion}')],
             )
           ],
         ),
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(i18n.aboutTitle),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(4.0),
-        children: [
-          buildLogoTitle(),
-          Card.filled(
-            color: colorScheme.surfaceContainerLow,
-            child: Column(
-              children: ListTile.divideTiles(tiles: [
-                ListTile(
-                  leading: const Icon(Icons.source_outlined),
-                  title: Text(i18n.aboutSource),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    await logic.toSource();
-                  },
+    return GetBuilder<AboutLogic>(
+      assignId: true,
+      init: logic,
+      builder: (logic) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(i18n.aboutTitle),
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(4.0),
+            children: [
+              buildLogoTitle(),
+              Card.filled(
+                color: colorScheme.surfaceContainerLow,
+                child: Column(
+                  children: ListTile.divideTiles(tiles: [
+                    ListTile(
+                      leading: const Icon(Icons.update),
+                      title: Text(i18n.aboutUpdate),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        await Utils().updateUtil.checkShouldUpdate(state.appVersion, handle: true);
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.source_outlined),
+                      title: Text(i18n.aboutSource),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        await logic.toSource();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.file_copy_outlined),
+                      title: Text(i18n.aboutUserAgreement),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        logic.toAgreement();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.security_outlined),
+                      title: Text(i18n.aboutPrivacyPolicy),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        logic.toPrivacy();
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.bug_report_outlined),
+                      title: Text(i18n.aboutBugReport),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        await logic.toReportPage();
+                      },
+                    ),
+                  ], context: context)
+                      .toList(),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.file_copy_outlined),
-                  title: Text(i18n.aboutUserAgreement),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    logic.toAgreement();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.security_outlined),
-                  title: Text(i18n.aboutPrivacyPolicy),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    logic.toPrivacy();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.bug_report_outlined),
-                  title: Text(i18n.aboutBugReport),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    await logic.toReportPage();
-                  },
-                ),
-              ], context: context)
-                  .toList(),
-            ),
-          )
-        ],
-      ),
+              )
+            ],
+          ),
+        );
+      },
     );
   }
 }

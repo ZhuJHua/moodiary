@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/pages/home/assistant/assistant_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
@@ -33,25 +37,28 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   late final AssistantLogic assistantLogic = Bind.find<AssistantLogic>();
 
   @override
-  void onInit() {
-    // TODO: implement onInit
-
-    super.onInit();
-  }
-
-  @override
   void onReady() {
-    // TODO: implement onReady
+    unawaited(Utils().updateUtil.checkShouldUpdate(Utils().prefUtil.getValue<String>('appVersion')!.split('+')[0]));
+    unawaited(getHitokoto());
     super.onReady();
   }
 
   @override
   void onClose() {
-    // TODO: implement onClose
     fabAnimationController.dispose();
     barAnimationController.dispose();
     pageController.dispose();
     super.onClose();
+  }
+
+  //获取一言
+  Future<void> getHitokoto() async {
+    if (Platform.isWindows) {
+      var res = await Utils().cacheUtil.getCacheList('hitokoto', Api().updateHitokoto, maxAgeMillis: 15 * 60000);
+      if (res != null) {
+        state.hitokoto.value = res.first;
+      }
+    }
   }
 
   //打开fab

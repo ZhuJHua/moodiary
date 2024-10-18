@@ -6,7 +6,6 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/values/icons.dart';
-import 'package:mood_diary/components/update_dialog/update_dialog_view.dart';
 import 'package:mood_diary/utils/function_extensions.dart';
 import 'package:mood_diary/utils/utils.dart';
 
@@ -190,11 +189,6 @@ class SideBarComponent extends StatelessWidget {
                         if (Platform.isAndroid) {
                           var res = await Utils().updateUtil.checkUpdate();
                           if (res != null && context.mounted) {
-                            showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return UpdateDialogComponent(shiplyResponse: res);
-                                });
                           } else {
                             Utils().noticeUtil.showToast('已是最新版本');
                           }
