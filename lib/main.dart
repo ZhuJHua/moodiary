@@ -71,6 +71,7 @@ void main() {
     await platFormOption();
     runApp(GetMaterialApp(
       initialRoute: getInitialRoute(),
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
       builder: (context, widget) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
