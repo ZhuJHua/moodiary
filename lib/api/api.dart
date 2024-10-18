@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -50,14 +52,15 @@ class Api {
     Position? position;
 
     if (await Utils().permissionUtil.checkPermission(Permission.location)) {
-      position = await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
+      position = await Geolocator.getLastKnownPosition(forceAndroidLocationManager: true);
+      position ??= await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
     }
 
     if (position != null) {
       var local = Localizations.localeOf(Get.context!);
       var parameters = {
         'location':
-            '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.altitude.toStringAsFixed(2))}',
+            '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.latitude.toStringAsFixed(2))}',
         'key': Utils().prefUtil.getValue<String>('qweatherKey'),
         'lang': local
       };
@@ -72,6 +75,8 @@ class Api {
       } else {
         return null;
       }
+    } else {
+      Utils().noticeUtil.showToast('定位失败');
     }
     return null;
   }
