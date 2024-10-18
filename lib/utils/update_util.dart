@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/shiply.dart';
+import 'package:mood_diary/components/update_dialog/update_dialog_view.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'channel.dart';
@@ -22,6 +24,19 @@ class UpdateUtil {
       return ShiplyResponse.fromJson(jsonDecode(res));
     } else {
       return null;
+    }
+  }
+
+  //通过github检查更新
+  Future<void> checkShouldUpdate(String currentVersion, {bool handle = false}) async {
+    var githubRelease = await Api().getGithubRelease();
+    if (githubRelease != null) {
+      //当需要更新版本时
+      if (githubRelease.tagName!.split('v')[1].compareTo(currentVersion) > 0) {
+        Get.dialog(UpdateDialogComponent(githubRelease: githubRelease));
+      } else if (handle) {
+        Utils().noticeUtil.showToast('已经是最新版本');
+      }
     }
   }
 

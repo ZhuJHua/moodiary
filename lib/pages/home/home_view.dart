@@ -152,40 +152,66 @@ class HomePage extends StatelessWidget {
       return Platform.isWindows
           ? PreferredSize(
               preferredSize: Size.fromHeight(appWindow.titleBarHeight),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  MinimizeWindowButton(
-                    colors: WindowButtonColors(
-                      iconNormal: colorScheme.secondary,
-                      mouseDown: colorScheme.secondaryContainer,
-                      normal: colorScheme.surface,
-                      iconMouseDown: colorScheme.secondary,
-                      mouseOver: colorScheme.secondaryContainer,
-                      iconMouseOver: colorScheme.onSecondaryContainer,
+              child: Container(
+                color: colorScheme.surfaceContainer,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Row(
+                        spacing: 8.0,
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.all(Radius.circular(4.0)),
+                            child: Image.asset(
+                              'assets/icon/icon.png',
+                              height: 16.0,
+                              width: 16.0,
+                            ),
+                          ),
+                          Obx(() {
+                            return Text(state.hitokoto.value);
+                          }),
+                        ],
+                      ),
                     ),
-                  ),
-                  MaximizeWindowButton(
-                    colors: WindowButtonColors(
-                      iconNormal: colorScheme.secondary,
-                      mouseDown: colorScheme.secondaryContainer,
-                      normal: colorScheme.surface,
-                      iconMouseDown: colorScheme.secondary,
-                      mouseOver: colorScheme.secondaryContainer,
-                      iconMouseOver: colorScheme.onSecondaryContainer,
-                    ),
-                  ),
-                  CloseWindowButton(
-                    colors: WindowButtonColors(
-                      iconNormal: colorScheme.secondary,
-                      mouseDown: colorScheme.secondaryContainer,
-                      normal: colorScheme.surface,
-                      iconMouseDown: colorScheme.secondary,
-                      mouseOver: colorScheme.errorContainer,
-                      iconMouseOver: colorScheme.onErrorContainer,
-                    ),
-                  ),
-                ],
+                    Row(
+                      children: [
+                        MinimizeWindowButton(
+                          colors: WindowButtonColors(
+                            iconNormal: colorScheme.secondary,
+                            mouseDown: colorScheme.secondaryContainer,
+                            normal: colorScheme.surfaceContainer,
+                            iconMouseDown: colorScheme.secondary,
+                            mouseOver: colorScheme.secondaryContainer,
+                            iconMouseOver: colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                        MaximizeWindowButton(
+                          colors: WindowButtonColors(
+                            iconNormal: colorScheme.secondary,
+                            mouseDown: colorScheme.secondaryContainer,
+                            normal: colorScheme.surfaceContainer,
+                            iconMouseDown: colorScheme.secondary,
+                            mouseOver: colorScheme.secondaryContainer,
+                            iconMouseOver: colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                        CloseWindowButton(
+                          colors: WindowButtonColors(
+                            iconNormal: colorScheme.secondary,
+                            mouseDown: colorScheme.secondaryContainer,
+                            normal: colorScheme.surfaceContainer,
+                            iconMouseDown: colorScheme.secondary,
+                            mouseOver: colorScheme.errorContainer,
+                            iconMouseOver: colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
               ))
           : null;
     }
@@ -252,8 +278,7 @@ class HomePage extends StatelessWidget {
           Breakpoints.medium: SlotLayout.from(
             key: const ValueKey('primary navigation medium'),
             builder: (_) => AdaptiveScaffold.standardNavigationRail(
-              destinations:
-                  destinations.map((destination) => AdaptiveScaffold.toRailDestination(destination)).toList(),
+              destinations: destinations.map((destination) => AdaptiveScaffold.toRailDestination(destination)).toList(),
               selectedIndex: state.navigatorIndex.value,
               onDestinationSelected: (index) {
                 logic.changeNavigator(index);
@@ -263,8 +288,7 @@ class HomePage extends StatelessWidget {
           Breakpoints.mediumLargeAndUp: SlotLayout.from(
             key: const ValueKey('primary navigation medium large'),
             builder: (_) => AdaptiveScaffold.standardNavigationRail(
-              destinations:
-                  destinations.map((destination) => AdaptiveScaffold.toRailDestination(destination)).toList(),
+              destinations: destinations.map((destination) => AdaptiveScaffold.toRailDestination(destination)).toList(),
               extended: true,
               selectedIndex: state.navigatorIndex.value,
               onDestinationSelected: (index) {

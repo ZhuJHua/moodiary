@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/common/models/github.dart';
 import 'package:mood_diary/common/models/hitokoto.dart';
 import 'package:mood_diary/common/models/hunyuan.dart';
 import 'package:mood_diary/common/models/image.dart';
@@ -77,6 +78,15 @@ class Api {
       }
     } else {
       Utils().noticeUtil.showToast('定位失败');
+    }
+    return null;
+  }
+
+  Future<GithubRelease?> getGithubRelease() async {
+    var res = await Utils().httpUtil.get('https://api.github.com/repos/ZhuJHua/moodiary/releases/latest');
+    if (res.data != null) {
+      var githubRelease = await compute(GithubRelease.fromJson, res.data as Map<String, dynamic>);
+      return githubRelease;
     }
     return null;
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/utils/utils.dart';
 
 import 'laboratory_logic.dart';
 
@@ -10,7 +11,7 @@ class LaboratoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Bind.find<LaboratoryLogic>();
-    final state = Bind.find<LaboratoryLogic>().state;
+    // final state = Bind.find<LaboratoryLogic>().state;
     final i18n = AppLocalizations.of(context)!;
     return GetBuilder<LaboratoryLogic>(
       assignId: true,
@@ -22,11 +23,6 @@ class LaboratoryPage extends StatelessWidget {
           ),
           body: ListView(
             children: [
-              ListTile(
-                title: const Text('系统版本号'),
-                onTap: null,
-                trailing: Text(state.version),
-              ),
               ListTile(
                 title: const Text('腾讯云密钥'),
                 onTap: () {
@@ -76,6 +72,7 @@ class LaboratoryPage extends StatelessWidget {
               ),
               ListTile(
                 title: const Text('和风天气密钥'),
+                subtitle: SelectionArea(child: Text(Utils().prefUtil.getValue<String>('qweatherKey')!)),
                 onTap: () {
                   showDialog(
                       context: context,
