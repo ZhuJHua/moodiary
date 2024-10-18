@@ -31,12 +31,10 @@ class FileUtil {
   }
 
   Future<void> initCreateDir() async {
-
-      await createDir(join(_filePath, 'database'));
-      await createDir(join(_filePath, 'image'));
-      await createDir(join(_filePath, 'audio'));
-      await createDir(join(_filePath, 'video'));
-
+    await createDir(join(_filePath, 'database'));
+    await createDir(join(_filePath, 'image'));
+    await createDir(join(_filePath, 'audio'));
+    await createDir(join(_filePath, 'video'));
   }
 
   Future<void> createDir(String path) async {
@@ -92,6 +90,8 @@ class FileUtil {
     await zipEncoder.addDirectory(Directory(join(dataPath, 'image')));
     //备份音频
     await zipEncoder.addDirectory(Directory(join(dataPath, 'audio')));
+    //备份视频
+    await zipEncoder.addDirectory(Directory(join(dataPath, 'video')));
     //备份数据库
     await Utils().isarUtil.exportIsar(dataPath, zipPath, '${datetime.millisecondsSinceEpoch}.isar');
     await zipEncoder.addFile(File(join(zipPath, '${datetime.millisecondsSinceEpoch}.isar')));
@@ -106,10 +106,14 @@ class FileUtil {
     await deleteDir(join(_filePath, 'image'));
     //删除音频文件夹
     await deleteDir(join(_filePath, 'audio'));
+    //删除视频文件夹
+    await deleteDir(join(_filePath, 'video'));
     //重新创建图片文件夹
     await createDir(join(_filePath, 'image'));
     //重新创建音频文件夹
     await createDir(join(_filePath, 'audio'));
+    //重新创建视频文件夹
+    await createDir(join(_filePath, 'video'));
     var archive = ZipDecoder().decodeBuffer(inputStream);
     for (var file in archive.files) {
       //如果是数据库
