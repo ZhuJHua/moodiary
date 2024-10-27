@@ -1,8 +1,7 @@
-enum MediaType{
-
+enum MediaType {
   image(0, 'image'),
   audio(1, 'audio'),
-  video(2,'video');
+  video(2, 'video');
 
   const MediaType(this.number, this.value);
 

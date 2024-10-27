@@ -12,7 +12,6 @@ class RecycleLogic extends GetxController {
 
   @override
   void onReady() {
-    // TODO: implement onReady
     getDiaryList();
     super.onReady();
   }
@@ -52,13 +51,5 @@ class RecycleLogic extends GetxController {
     update();
     await diaryLogic.updateDiary(diary.categoryId);
     Utils().noticeUtil.showToast('已恢复');
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    //退出后调用主页刷新
-
-    super.onClose();
   }
 }

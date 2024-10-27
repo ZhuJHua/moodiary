@@ -11,7 +11,6 @@ class SettingState {
 
   late RxBool dynamicColor;
 
-
   late RxInt fontTheme;
 
   late RxBool getWeather;

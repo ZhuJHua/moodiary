@@ -13,12 +13,6 @@ class CalendarLogic extends GetxController {
     super.onReady();
   }
 
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
-  }
-
   Future<void> getDateHasDiary(DateTime value) async {
     state.currentMonth.value = value;
     state.dateHasDiary.value = await Utils().isarUtil.getDiaryDateByMonth(value.year, value.month);

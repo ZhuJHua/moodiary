@@ -15,14 +15,12 @@ class CategoryAddLogic extends GetxController {
 
   @override
   void onReady() {
-    // TODO: implement onReady
     getCategory();
     super.onReady();
   }
 
   @override
   void onClose() {
-    // TODO: implement onClose
     textEditingController.dispose();
     super.onClose();
   }

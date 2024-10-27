@@ -221,7 +221,6 @@ class SettingPage extends StatelessWidget {
                 //       switch (state.fontTheme.value) {
                 //         0 => '思源黑体',
                 //         1 => '思源宋体',
-                //         // TODO: Handle this case.
                 //         int() => throw UnimplementedError(),
                 //       },
                 //       style: textStyle.bodySmall!.copyWith(

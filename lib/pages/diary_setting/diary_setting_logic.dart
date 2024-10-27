@@ -6,18 +6,6 @@ import 'diary_setting_state.dart';
 class DiarySettingLogic extends GetxController {
   final DiarySettingState state = DiarySettingState();
 
-  @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
-  }
-
   //图片质量
   Future<void> quality(int value) async {
     Get.backLegacy();

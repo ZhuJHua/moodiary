@@ -13,14 +13,11 @@ class AssistantState {
 
   late int totalToken;
 
-
-
   AssistantState() {
     messages = {};
 
     modelVersion = 0.obs;
     keyboardState = KeyboardState.closed;
-
 
     ///Initialize variables
   }

@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 
 class RecordSheetState {
-
   late Rx<Duration> durationTime;
   late RxBool isRecording;
   late RxBool isStarted;
@@ -11,10 +10,7 @@ class RecordSheetState {
   late double maxWidth;
   late bool isStop;
 
-
-
   RecordSheetState() {
-
     isRecording = false.obs;
     isStarted = false.obs;
     fileName = '';

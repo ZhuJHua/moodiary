@@ -10,12 +10,12 @@ class MapPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Bind.find<MapLogic>();
-    final state = Bind.find<MapLogic>().state;
+    //final state = Bind.find<MapLogic>().state;
 
     return FlutterMap(
-      children: [TileLayer()],
       mapController: logic.mapController,
       options: const MapOptions(),
+      children: [TileLayer()],
     );
   }
 }

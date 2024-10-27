@@ -9,12 +9,6 @@ class MapLogic extends GetxController {
   late final MapController mapController = MapController();
 
   @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
   void onClose() {
     mapController.dispose();
     super.onClose();

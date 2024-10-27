@@ -123,7 +123,6 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   @override
   void onClose() {
-    // TODO: implement onClose
     WidgetsBinding.instance.removeObserver(this);
     tagTextEditingController.dispose();
     titleTextEditingController.dispose();

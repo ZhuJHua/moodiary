@@ -14,8 +14,7 @@ class AudioPlayerLogic extends GetxController with GetSingleTickerProviderStateM
   late final EditLogic editLogic = Bind.find<EditLogic>();
 
   @override
-  void onInit() {
-    // TODO: implement onInit
+  void onReady() {
     audioPlayer.eventStream.listen((event) {
       //读取时间完成
       if (event.eventType == AudioEventType.duration) {
@@ -34,20 +33,11 @@ class AudioPlayerLogic extends GetxController with GetSingleTickerProviderStateM
         state.currentDuration.value = duration;
       }
     });
-
-    super.onInit();
-  }
-
-  @override
-  void onReady() {
-    // TODO: implement onReady
-
     super.onReady();
   }
 
   @override
   void onClose() {
-    // TODO: implement onClose
     animationController.dispose();
     audioPlayer.dispose();
     super.onClose();

@@ -13,25 +13,6 @@ import 'start_state.dart';
 class StartLogic extends GetxController {
   final StartState state = StartState();
 
-  @override
-  void onInit() {
-    // TODO: implement onInit
-    //如果不是首次启动，直接进入
-    super.onInit();
-  }
-
-  @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
-  }
-
   void toPrivacy() {
     Get.toNamed(AppRoutes.privacyPage);
   }

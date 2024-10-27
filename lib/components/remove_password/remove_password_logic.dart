@@ -16,14 +16,7 @@ class RemovePasswordLogic extends GetxController with GetSingleTickerProviderSta
   late final settingLogic = Bind.find<SettingLogic>();
 
   @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
   void onClose() {
-    // TODO: implement onClose
     animationController.dispose();
     super.onClose();
   }

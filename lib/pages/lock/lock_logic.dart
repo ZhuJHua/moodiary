@@ -13,14 +13,7 @@ class LockLogic extends GetxController with GetSingleTickerProviderStateMixin {
       Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: animationController, curve: Curves.easeInOut));
 
   @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
   void onClose() {
-    // TODO: implement onClose
     animationController.dispose();
     super.onClose();
   }

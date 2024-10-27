@@ -55,8 +55,6 @@ class SettingLogic extends GetxController {
     state.dynamicColor.value = value;
   }
 
-
-
   //本地化
   Future<void> local(bool value) async {
     await Utils().prefUtil.setValue<bool>('local', value);
