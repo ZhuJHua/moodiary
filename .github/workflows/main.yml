@@ -3,12 +3,8 @@ name: "Build"
 on:
   pull_request:
     branches:
-      - dev
-      - test
-  push:
-    branches:
-      - dev
-      - test
+      - master
+  workflow_dispatch: # 添加手动触发
 
 jobs:  
   build:      
