@@ -545,11 +545,15 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     update();
   }
 
-  void selectCategory(String id) {
+  void selectCategory(String? id) {
     state.categoryId = id;
-    var category = Utils().isarUtil.getCategoryName(id);
-    if (category != null) {
-      state.categoryName = category.categoryName;
+    if (id == null) {
+      state.categoryName = '';
+    } else {
+      var category = Utils().isarUtil.getCategoryName(id);
+      if (category != null) {
+        state.categoryName = category.categoryName;
+      }
     }
     update();
   }

@@ -71,6 +71,15 @@ class CategoryAddComponent extends StatelessWidget {
                       Text(state.categoryList.length.toString())
                     ],
                   ),
+                  ActionChip(
+                    label: const Text('无分类'),
+                    onPressed: () {
+                      logic.cancelCategory();
+                    },
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    padding: EdgeInsets.zero,
+                    backgroundColor: colorScheme.tertiaryContainer,
+                  ),
                   ...List.generate(state.categoryList.value.length, (index) {
                     return ActionChip(
                       label: Text(state.categoryList.value[index].categoryName),
