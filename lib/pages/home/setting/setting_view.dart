@@ -147,6 +147,14 @@ class SettingPage extends StatelessWidget {
             child: Column(
               children: [
                 ListTile(
+                  title: Text(i18n.settingDiary),
+                  leading: const Icon(Icons.article),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    logic.toDiarySettingPage();
+                  },
+                ),
+                ListTile(
                   title: Text(i18n.settingThemeMode),
                   leading: const Icon(Icons.invert_colors),
                   trailing: Obx(() {
@@ -155,8 +163,7 @@ class SettingPage extends StatelessWidget {
                         0 => i18n.themeModeSystem,
                         1 => i18n.themeModeLight,
                         2 => i18n.themeModeDark,
-                        // TODO: Handle this case.
-                        int() => throw UnimplementedError()
+                        int() => throw UnimplementedError(),
                       },
                       style: textStyle.bodySmall!.copyWith(
                         color: colorScheme.primary,
@@ -197,80 +204,7 @@ class SettingPage extends StatelessWidget {
                         });
                   },
                 ),
-                ListTile(
-                  title: Text(i18n.settingImageQuality),
-                  subtitle: Text(i18n.settingImageQualityDes),
-                  leading: const Icon(Icons.gradient_outlined),
-                  trailing: Obx(() {
-                    return Text(
-                      switch (state.quality.value) {
-                        0 => i18n.qualityLow,
-                        1 => i18n.qualityMedium,
-                        2 => i18n.qualityHigh,
-                        // TODO: Handle this case.
-                        int() => throw UnimplementedError(),
-                      },
-                      style: textStyle.bodySmall!.copyWith(
-                        color: colorScheme.primary,
-                      ),
-                    );
-                  }),
-                  onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return Obx(() {
-                            return SimpleDialog(
-                              title: Text(i18n.settingImageQuality),
-                              children: [
-                                SimpleDialogOption(
-                                  child: Row(
-                                    spacing: 8.0,
-                                    children: [
-                                      Text(i18n.qualityLow),
-                                      if (state.quality.value == 0) ...[
-                                        const Icon(Icons.check),
-                                      ],
-                                    ],
-                                  ),
-                                  onPressed: () {
-                                    logic.quality(0);
-                                  },
-                                ),
-                                SimpleDialogOption(
-                                  child: Row(
-                                    spacing: 8.0,
-                                    children: [
-                                      Text(i18n.qualityMedium),
-                                      if (state.quality.value == 1) ...[
-                                        const Icon(Icons.check),
-                                      ],
-                                    ],
-                                  ),
-                                  onPressed: () {
-                                    logic.quality(1);
-                                  },
-                                ),
-                                SimpleDialogOption(
-                                  child: Row(
-                                    spacing: 8.0,
-                                    children: [
-                                      Text(i18n.qualityHigh),
-                                      if (state.quality.value == 2) ...[
-                                        const Icon(Icons.check),
-                                      ],
-                                    ],
-                                  ),
-                                  onPressed: () {
-                                    logic.quality(2);
-                                  },
-                                ),
-                              ],
-                            );
-                          });
-                        });
-                  },
-                ),
+
                 ListTile(
                   title: Text(i18n.settingFontSize),
                   leading: const Icon(Icons.format_size_outlined),

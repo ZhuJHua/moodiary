@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -72,6 +73,9 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     if (Get.arguments == 'new') {
       state.isNew = true;
+      if (Utils().prefUtil.getValue<bool>('autoWeather') == true) {
+        unawaited(getWeather());
+      }
     } else {
       //如果是编辑
       state.oldDiary = Get.arguments;

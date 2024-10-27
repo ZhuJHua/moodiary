@@ -10,7 +10,7 @@ class SettingState {
   late RxInt color;
 
   late RxBool dynamicColor;
-  late RxInt quality;
+
 
   late RxInt fontTheme;
 
@@ -28,7 +28,7 @@ class SettingState {
     themeMode = Utils().prefUtil.getValue<int>('themeMode')!.obs;
     color = Utils().prefUtil.getValue<int>('color')!.obs;
     dynamicColor = Utils().prefUtil.getValue<bool>('dynamicColor')!.obs;
-    quality = Utils().prefUtil.getValue<int>('quality')!.obs;
+
     fontTheme = Utils().prefUtil.getValue<int>('fontTheme')!.obs;
     getWeather = Utils().prefUtil.getValue<bool>('getWeather')!.obs;
     lock = Utils().prefUtil.getValue<bool>('lock')!.obs;

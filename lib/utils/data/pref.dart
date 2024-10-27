@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:path_provider/path_provider.dart';
@@ -60,7 +61,9 @@ class PrefUtil {
     //自定义首页名称
     'customTitleName',
     //首页视图模式
-    'homeViewMode'
+    'homeViewMode',
+    //自动获取天气
+    'autoWeather'
   };
 
   Future<void> initPref() async {
@@ -76,7 +79,7 @@ class PrefUtil {
     var appVersion = _prefs.getString('appVersion');
 
     // 如果是首次启动或版本不一致
-    if (firstStart || appVersion == null || appVersion != currentVersion) {
+    if (kDebugMode || firstStart || appVersion == null || appVersion != currentVersion) {
       await _prefs.setString('appVersion', currentVersion);
       await setDefaultValues();
       //初始化所需目录
@@ -107,6 +110,7 @@ class PrefUtil {
     await _prefs.setInt('startTime', _prefs.getInt('startTime') ?? DateTime.now().millisecondsSinceEpoch);
     await _prefs.setString('customTitleName', _prefs.getString('customTitleName') ?? '');
     await _prefs.setInt('homeViewMode', _prefs.getInt('homeViewMode') ?? ViewModeType.list.number);
+    await _prefs.setBool('autoWeather', _prefs.getBool('autoWeather') ?? false);
   }
 
   Future<void> setValue<T>(String key, T value) async {
