@@ -14,12 +14,6 @@ class AboutLogic extends GetxController {
     super.onReady();
   }
 
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
-  }
-
   Future<void> getInfo() async {
     var packageInfo = await Utils().packageUtil.getPackageInfo();
     state.appName = packageInfo.appName;
@@ -46,8 +40,6 @@ class AboutLogic extends GetxController {
     );
     await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
-
-
 
   void toPrivacy() {
     Get.toNamed(AppRoutes.privacyPage);

@@ -14,14 +14,12 @@ class LaboratoryLogic extends GetxController {
 
   @override
   void onReady() {
-    // TODO: implement onReady
     initInfo();
     super.onReady();
   }
 
   @override
   void onClose() {
-    // TODO: implement onClose
     idTextEditingController.dispose();
     qweatherTextEditingController.dispose();
     keyTextEditingController.dispose();

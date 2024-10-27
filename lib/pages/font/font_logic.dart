@@ -7,26 +7,6 @@ import 'font_state.dart';
 class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
   final FontState state = FontState();
 
-  @override
-  void onInit() {
-    // TODO: implement onInit
-
-    super.onInit();
-  }
-
-  @override
-  void onReady() {
-    // TODO: implement onReady
-
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
-  }
-
   void changeFontScale(value) {
     state.fontScale = value;
     update();

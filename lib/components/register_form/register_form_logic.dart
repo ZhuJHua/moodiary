@@ -14,15 +14,7 @@ class RegisterFormLogic extends GetxController {
   late final loginLogic = Bind.find<LoginLogic>();
 
   @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
   void onClose() {
-    // TODO: implement onClose
-
     emailFocusNode.dispose();
     passwordFocusNode.dispose();
     rePasswordFocusNode.dispose();

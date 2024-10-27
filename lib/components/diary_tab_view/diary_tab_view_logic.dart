@@ -13,23 +13,9 @@ class DiaryTabViewLogic extends GetxController {
   DiaryTabViewLogic({required this.categoryId});
 
   @override
-  void onInit() {
-    // TODO: implement onInit
-
-    super.onInit();
-  }
-
-  @override
   void onReady() async {
     await getDiary();
     super.onReady();
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-
-    super.onClose();
   }
 
   Future<void> getDiary() async {

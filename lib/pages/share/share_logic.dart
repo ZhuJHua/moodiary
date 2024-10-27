@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/utils/utils.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uuid/uuid.dart';
 
 import 'share_state.dart';
 
@@ -13,21 +16,8 @@ class ShareLogic extends GetxController {
 
   @override
   void onInit() {
-    // TODO: implement onInit
     state.diary = Get.arguments;
     super.onInit();
-  }
-
-  @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
   }
 
   Future<Uint8List> captureWidget() async {
@@ -39,6 +29,8 @@ class ShareLogic extends GetxController {
   }
 
   Future<void> share() async {
-    await Share.shareXFiles([XFile.fromData(await captureWidget(), mimeType: 'image/png')]);
+    var name = 'screenshot-${const Uuid().v7()}.png';
+    File(Utils().fileUtil.getCachePath(name)).writeAsBytes(await captureWidget());
+    await Share.shareXFiles([XFile(Utils().fileUtil.getCachePath(name))]);
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -72,6 +73,9 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     if (Get.arguments == 'new') {
       state.isNew = true;
+      if (Utils().prefUtil.getValue<bool>('autoWeather') == true) {
+        unawaited(getWeather());
+      }
     } else {
       //如果是编辑
       state.oldDiary = Get.arguments;
@@ -119,7 +123,6 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   @override
   void onClose() {
-    // TODO: implement onClose
     WidgetsBinding.instance.removeObserver(this);
     tagTextEditingController.dispose();
     titleTextEditingController.dispose();
@@ -545,11 +548,15 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     update();
   }
 
-  void selectCategory(String id) {
+  void selectCategory(String? id) {
     state.categoryId = id;
-    var category = Utils().isarUtil.getCategoryName(id);
-    if (category != null) {
-      state.categoryName = category.categoryName;
+    if (id == null) {
+      state.categoryName = '';
+    } else {
+      var category = Utils().isarUtil.getCategoryName(id);
+      if (category != null) {
+        state.categoryName = category.categoryName;
+      }
     }
     update();
   }

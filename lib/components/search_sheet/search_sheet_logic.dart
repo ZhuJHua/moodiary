@@ -10,14 +10,7 @@ class SearchSheetLogic extends GetxController {
   late FocusNode focusNode = FocusNode();
 
   @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
   void onClose() {
-    // TODO: implement onClose
     textEditingController.dispose();
     focusNode.dispose();
     super.onClose();

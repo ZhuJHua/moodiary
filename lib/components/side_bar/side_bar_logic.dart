@@ -15,19 +15,11 @@ class SideBarLogic extends GetxController {
   late HomeLogic homeLogic = Bind.find<HomeLogic>();
 
   @override
-  void onInit() {
-    // TODO: implement onInit
+  void onReady() {
     getHitokoto();
     getImage();
     getInfo();
     getWeather();
-    super.onInit();
-  }
-
-  @override
-  void onReady() {
-    // TODO: implement onReady
-
     super.onReady();
   }
 
@@ -44,12 +36,6 @@ class SideBarLogic extends GetxController {
     if (res != null) {
       state.hitokoto.value = res.first;
     }
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
   }
 
   Future<void> getImage() async {

@@ -27,7 +27,6 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
 
   @override
   void onReady() {
-    // TODO: implement onReady
     //启动监听
     listenAmplitude();
     super.onReady();
@@ -35,7 +34,6 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
 
   @override
   void onClose() async {
-    // TODO: implement onClose
     if (state.isStop == false) {
       await audioRecorder.cancel();
     }

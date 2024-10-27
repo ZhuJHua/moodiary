@@ -63,4 +63,10 @@ abstract class AppRoutes {
 
   //视频预览路由
   static const videoPage = '/video';
+
+  //地图
+  static const mapPage = '/map';
+
+  //日记个性化
+  static const diarySettingPage = '/diarySetting';
 }

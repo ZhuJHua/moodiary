@@ -539,19 +539,22 @@ class EditPage extends StatelessWidget {
           ),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: QuillSimpleToolbar(
-              controller: logic.quillController,
-              configurations: const QuillSimpleToolbarConfigurations(
-                showFontFamily: false,
-                showFontSize: false,
-                showColorButton: false,
-                showBackgroundColorButton: false,
-                showAlignmentButtons: true,
-                showClipboardPaste: false,
-                showClipboardCut: false,
-                showClipboardCopy: false,
-                headerStyleType: HeaderStyleType.buttons,
-                sharedConfigurations: QuillSharedConfigurations(),
+            child: TooltipTheme(
+              data: const TooltipThemeData(preferBelow: false),
+              child: QuillSimpleToolbar(
+                controller: logic.quillController,
+                configurations: const QuillSimpleToolbarConfigurations(
+                  showFontFamily: false,
+                  showFontSize: false,
+                  showColorButton: false,
+                  showBackgroundColorButton: false,
+                  showAlignmentButtons: true,
+                  showClipboardPaste: false,
+                  showClipboardCut: false,
+                  showClipboardCopy: false,
+                  headerStyleType: HeaderStyleType.buttons,
+                  sharedConfigurations: QuillSharedConfigurations(),
+                ),
               ),
             ),
           ),

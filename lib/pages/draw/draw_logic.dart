@@ -12,14 +12,7 @@ class DrawLogic extends GetxController {
   late final editLogic = Bind.find<EditLogic>();
 
   @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
   void onClose() {
-    // TODO: implement onClose
     drawingController.dispose();
     super.onClose();
   }

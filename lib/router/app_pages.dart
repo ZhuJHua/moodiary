@@ -9,6 +9,8 @@ import 'package:mood_diary/pages/category_manager/category_manager_logic.dart';
 import 'package:mood_diary/pages/category_manager/category_manager_view.dart';
 import 'package:mood_diary/pages/diary_details/diary_details_logic.dart';
 import 'package:mood_diary/pages/diary_details/diary_details_view.dart';
+import 'package:mood_diary/pages/diary_setting/diary_setting_logic.dart';
+import 'package:mood_diary/pages/diary_setting/diary_setting_view.dart';
 import 'package:mood_diary/pages/draw/draw_logic.dart';
 import 'package:mood_diary/pages/draw/draw_view.dart';
 import 'package:mood_diary/pages/edit/edit_logic.dart';
@@ -30,6 +32,8 @@ import 'package:mood_diary/pages/lock/lock_logic.dart';
 import 'package:mood_diary/pages/lock/lock_view.dart';
 import 'package:mood_diary/pages/login/login_logic.dart';
 import 'package:mood_diary/pages/login/login_view.dart';
+import 'package:mood_diary/pages/map/map_logic.dart';
+import 'package:mood_diary/pages/map/map_view.dart';
 import 'package:mood_diary/pages/privacy/privacy_logic.dart';
 import 'package:mood_diary/pages/privacy/privacy_view.dart';
 import 'package:mood_diary/pages/recycle/recycle_logic.dart';
@@ -164,11 +168,17 @@ class AppPages {
     GetPage(
       name: AppRoutes.videoPage,
       page: () => const VideoPage(),
-      binds: [
-        Bind.lazyPut(
-          () => VideoLogic(),
-        )
-      ],
+      binds: [Bind.lazyPut(() => VideoLogic())],
+    ),
+    GetPage(
+      name: AppRoutes.mapPage,
+      page: () => const MapPage(),
+      binds: [Bind.lazyPut(() => MapLogic())],
+    ),
+    GetPage(
+      name: AppRoutes.diarySettingPage,
+      page: () => const DiarySettingPage(),
+      binds: [Bind.lazyPut(() => DiarySettingLogic())],
     ),
   ];
 }

@@ -15,14 +15,12 @@ class CategoryAddLogic extends GetxController {
 
   @override
   void onReady() {
-    // TODO: implement onReady
     getCategory();
     super.onReady();
   }
 
   @override
   void onClose() {
-    // TODO: implement onClose
     textEditingController.dispose();
     super.onClose();
   }
@@ -53,5 +51,10 @@ class CategoryAddLogic extends GetxController {
   void selectCategory(int index) {
     Get.backLegacy();
     editLogic.selectCategory(state.categoryList.value[index].id);
+  }
+
+  void cancelCategory() {
+    Get.backLegacy();
+    editLogic.selectCategory(null);
   }
 }

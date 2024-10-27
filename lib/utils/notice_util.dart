@@ -17,6 +17,7 @@ class NoticeUtil {
         ),
         backgroundColor: colorScheme.secondaryContainer,
         behavior: SnackBarBehavior.floating,
+        showCloseIcon: true,
       ));
     } else {
       Fluttertoast.cancel();

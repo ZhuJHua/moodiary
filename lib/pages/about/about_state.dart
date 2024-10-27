@@ -1,5 +1,3 @@
-
-
 class AboutState {
   late String appName;
 

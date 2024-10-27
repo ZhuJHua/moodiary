@@ -18,23 +18,18 @@ class SettingLogic extends GetxController {
 
   @override
   void onInit() {
-    // TODO: implement onInit
-    getDataUsage();
     super.onInit();
   }
 
   @override
-  void onReady() {
-    // TODO: implement onReady
-
+  void onReady() async {
+    await getDataUsage();
     super.onReady();
   }
 
   @override
   void onClose() {
-    // TODO: implement onClose
     textEditingController.dispose();
-
     super.onClose();
   }
 
@@ -58,13 +53,6 @@ class SettingLogic extends GetxController {
   Future<void> dynamicColor(bool value) async {
     await Utils().prefUtil.setValue<bool>('dynamicColor', value);
     state.dynamicColor.value = value;
-  }
-
-  //图片质量
-  Future<void> quality(int value) async {
-    Get.backLegacy();
-    await Utils().prefUtil.setValue<int>('quality', value);
-    state.quality.value = value;
   }
 
   //本地化
@@ -105,6 +93,10 @@ class SettingLogic extends GetxController {
     Get.toNamed(AppRoutes.aboutPage);
   }
 
+  void toDiarySettingPage() {
+    Get.toNamed(AppRoutes.diarySettingPage);
+  }
+
   void cancelCustomTitle() {
     textEditingController.clear();
     Get.backLegacy();
@@ -136,6 +128,7 @@ class SettingLogic extends GetxController {
     final zipPath = Utils().fileUtil.getCachePath('');
     final isolateParams = {'zipPath': zipPath, 'dataPath': dataPath};
     var path = await compute(Utils().fileUtil.zipFile, isolateParams);
+    Utils().logUtil.printInfo(path);
     await Share.shareXFiles([XFile(path)]);
   }
 

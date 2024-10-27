@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'audio_player_logic.dart';
 
 class AudioPlayerComponent extends StatelessWidget {
-  const AudioPlayerComponent({super.key, required this.path,  this.isEdit = false});
+  const AudioPlayerComponent({super.key, required this.path, this.isEdit = false});
 
   final String path;
 

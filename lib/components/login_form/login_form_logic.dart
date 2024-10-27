@@ -15,14 +15,7 @@ class LoginFormLogic extends GetxController {
   final FocusNode passwordFocusNode = FocusNode();
 
   @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
   void onClose() {
-    // TODO: implement onClose
     emailFocusNode.dispose();
     passwordFocusNode.dispose();
 

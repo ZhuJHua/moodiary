@@ -14,22 +14,9 @@ class AnalyseLogic extends GetxController {
 
   @override
   void onReady() {
-    // TODO: implement onReady
+    getMoodAndWeatherByRange(state.dateRange[0], state.dateRange[1]);
 
     super.onReady();
-  }
-
-  @override
-  void onInit() {
-    // TODO: implement onInit
-    getMoodAndWeatherByRange(state.dateRange[0], state.dateRange[1]);
-    super.onInit();
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
   }
 
   //选中两个日期后，查询指定范围内的日记

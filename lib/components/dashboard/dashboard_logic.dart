@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/router/app_routes.dart';
@@ -9,19 +11,12 @@ class DashboardLogic extends GetxController {
   final DashboardState state = DashboardState();
 
   @override
-  void onInit() {
-    // TODO: implement onInit
-    getUseTime();
-    getDiaryCount();
-    getMoodAndWeatherByRange(state.dateRange[0], state.dateRange[1]);
-    getCountContent();
-    getCategoryCount();
-    super.onInit();
-  }
-
-  @override
-  void onReady() {
-    // TODO: implement onReady
+  void onReady() async {
+    unawaited(getUseTime());
+    unawaited(getDiaryCount());
+    unawaited(getMoodAndWeatherByRange(state.dateRange[0], state.dateRange[1]));
+    unawaited(getCountContent());
+    unawaited(getCategoryCount());
     super.onReady();
   }
 
@@ -80,11 +75,5 @@ class DashboardLogic extends GetxController {
   Future<void> toCategoryManager() async {
     await Get.toNamed(AppRoutes.categoryManagerPage);
     await getCategoryCount();
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
   }
 }

@@ -14,13 +14,6 @@ class CategoryManagerLogic extends GetxController {
   late DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
 
   @override
-  void onInit() {
-    // TODO: implement onInit
-
-    super.onInit();
-  }
-
-  @override
   void onReady() async {
     await getCategory();
     super.onReady();
@@ -28,7 +21,6 @@ class CategoryManagerLogic extends GetxController {
 
   @override
   void onClose() {
-    // TODO: implement onClose
     textEditingController.dispose();
     super.onClose();
   }
