@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,8 +24,8 @@ class SettingLogic extends GetxController {
   }
 
   @override
-  void onReady() async {
-    await getDataUsage();
+  void onReady() {
+    unawaited(getDataUsage());
     super.onReady();
   }
 

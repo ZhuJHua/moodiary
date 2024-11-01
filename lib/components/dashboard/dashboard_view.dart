@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
+import 'package:mood_diary/router/app_routes.dart';
 
 import 'dashboard_logic.dart';
 
@@ -146,7 +147,7 @@ class DashboardComponent extends StatelessWidget {
             buildManagerButton(Icons.article, '日记', Obx(() {
               return buildDiaryDetail(state.diaryCount.value, '篇', state.contentCount.value, '字');
             }), () {
-              //logic.toDiaryManager();
+              Get.toNamed(AppRoutes.mapPage);
             }),
             buildManagerButton(Icons.category, '分类', Obx(() {
               return buildDetail(state.categoryCount.value, '个');

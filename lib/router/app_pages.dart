@@ -17,7 +17,6 @@ import 'package:mood_diary/pages/edit/edit_logic.dart';
 import 'package:mood_diary/pages/edit/edit_view.dart';
 import 'package:mood_diary/pages/font/font_logic.dart';
 import 'package:mood_diary/pages/font/font_view.dart';
-import 'package:mood_diary/pages/home/assistant/assistant_logic.dart';
 import 'package:mood_diary/pages/home/calendar/calendar_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
@@ -66,7 +65,7 @@ class AppPages {
         Bind.lazyPut(() => DiaryLogic()),
         Bind.lazyPut(() => CalendarLogic()),
         Bind.lazyPut(() => MediaLogic()),
-        Bind.lazyPut(() => AssistantLogic()),
+        //Bind.lazyPut(() => AssistantLogic()),
         Bind.lazyPut(() => SettingLogic()),
       ],
     ),

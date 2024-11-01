@@ -7,7 +7,6 @@ import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
-import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/pages/home/calendar/calendar_view.dart';
 import 'package:mood_diary/pages/home/diary/diary_view.dart';
 import 'package:mood_diary/pages/home/media/media_view.dart';
@@ -20,7 +19,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<HomeLogic>();
+    final logic = Get.put(HomeLogic());
     final state = Bind.find<HomeLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
@@ -126,26 +125,24 @@ class HomePage extends StatelessWidget {
     }
 
     Widget buildFab() {
-      if (state.navigatorIndex.value == 0) {
-        return Obx(() {
-          return SizedBox(
-            height: state.isFabExpanded.value || logic.diaryLogic.state.isToTopShow.value ? 56 + (56 + 8) : 56,
-            width: state.isFabExpanded.value ? 156 : 56,
-            child: Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                Obx(() {
-                  return buildToTopButton();
-                }),
-                buildAddDiaryButton(),
-                buildFabButton(),
-              ],
-            ),
-          );
-        });
-      } else {
-        return const SizedBox.shrink();
-      }
+      return Obx(() {
+        return state.navigatorIndex.value == 0
+            ? SizedBox(
+                height: state.isFabExpanded.value || logic.diaryLogic.state.isToTopShow.value ? 56 + (56 + 8) : 56,
+                width: state.isFabExpanded.value ? 156 : 56,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    Obx(() {
+                      return buildToTopButton();
+                    }),
+                    buildAddDiaryButton(),
+                    buildFabButton(),
+                  ],
+                ),
+              )
+            : const SizedBox.shrink();
+      });
     }
 
     PreferredSizeWidget? buildWindowsBar() {
@@ -304,7 +301,7 @@ class HomePage extends StatelessWidget {
                     controller: logic.pageController,
                     physics: const NeverScrollableScrollPhysics(),
                     children: const [
-                      KeepAliveWrapper(child: DiaryPage()),
+                      DiaryPage(),
                       CalendarPage(),
                       MediaPage(),
                       SettingPage(),

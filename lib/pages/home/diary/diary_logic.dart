@@ -46,7 +46,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     // 检查是否显示顶部内容
     _checkShowTop();
 
-    homeLogic.showNavigatorBar();
+    homeLogic.resetNavigatorBar();
   }
 
   /// inner controller 监听函数
@@ -57,11 +57,11 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     _checkShowTop();
     if (offset - lastScrollOffset > 100) {
       lastScrollOffset = offset;
-      homeLogic.hideNavigatorBar();
+      await homeLogic.hideNavigatorBar();
     }
     if (lastScrollOffset - offset > 100) {
       lastScrollOffset = offset;
-      homeLogic.showNavigatorBar();
+      await homeLogic.showNavigatorBar();
     }
     if (offset == maxScrollExtent) {
       if (tabController.index == 0) {

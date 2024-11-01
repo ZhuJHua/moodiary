@@ -22,7 +22,7 @@ class SettingPage extends StatelessWidget {
     final i18n = AppLocalizations.of(context)!;
 
     Widget buildManager() {
-      return Column(
+      return SliverList.list(
         children: [
           ListTile(
             title: Text(
@@ -36,7 +36,7 @@ class SettingPage extends StatelessWidget {
     }
 
     Widget buildData() {
-      return Column(
+      return SliverList.list(
         children: [
           ListTile(
             title: Text(
@@ -134,7 +134,7 @@ class SettingPage extends StatelessWidget {
     }
 
     Widget buildDisplay() {
-      return Column(
+      return SliverList.list(
         children: [
           ListTile(
             title: Text(
@@ -345,7 +345,7 @@ class SettingPage extends StatelessWidget {
     }
 
     Widget buildPrivacy() {
-      return Column(
+      return SliverList.list(
         children: [
           ListTile(
             title: Text(
@@ -429,7 +429,7 @@ class SettingPage extends StatelessWidget {
     }
 
     Widget buildMore() {
-      return Column(
+      return SliverList.list(
         children: [
           ListTile(
             title: Text(
@@ -476,33 +476,23 @@ class SettingPage extends StatelessWidget {
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(
-                child: buildManager(),
-              ),
+              sliver: buildManager(),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(
-                child: buildData(),
-              ),
+              sliver: buildData(),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(
-                child: buildDisplay(),
-              ),
+              sliver: buildDisplay(),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(
-                child: buildPrivacy(),
-              ),
+              sliver: buildPrivacy(),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(
-                child: buildMore(),
-              ),
+              sliver: buildMore(),
             ),
           ],
         );

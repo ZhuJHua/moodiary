@@ -101,7 +101,13 @@ class LaboratoryPage extends StatelessWidget {
                         );
                       });
                 },
-              )
+              ),
+              ListTile(
+                onTap: () {
+                  logic.exportErrorLog();
+                },
+                title: const Text('导出日志文件'),
+              ),
             ],
           ),
         );

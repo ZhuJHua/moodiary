@@ -1,61 +1,49 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 
 class NoticeUtil {
-  void showToast(String message) async {
-    final colorScheme = Theme.of(Get.context!).colorScheme;
+  final _fToast = FToast();
 
-    if (Platform.isWindows) {
-      ScaffoldMessenger.of(Get.context!).clearSnackBars();
-      ScaffoldMessenger.of(Get.context!).showSnackBar(SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(color: colorScheme.onSecondaryContainer),
-        ),
-        backgroundColor: colorScheme.secondaryContainer,
-        behavior: SnackBarBehavior.floating,
-        showCloseIcon: true,
-      ));
-    } else {
-      Fluttertoast.cancel();
-      Fluttertoast.showToast(
-          msg: message,
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: colorScheme.secondaryContainer,
-          textColor: colorScheme.onSecondaryContainer,
-          fontSize: 16.0);
-    }
+  NoticeUtil() {
+    _fToast.init(Get.overlayContext!);
   }
 
-  void showBug(message, {required Object error, StackTrace? stackTrace}) {
-    // final colorScheme = Theme.of(Get.context!).colorScheme;
-    // ScaffoldMessenger.of(Get.context!).clearSnackBars();
-    // ScaffoldMessenger.of(Get.context!).showSnackBar(
-    //   SnackBar(
-    //     content: Column(
-    //       crossAxisAlignment: CrossAxisAlignment.start,
-    //       children: [
-    //         Text(
-    //           '出错了！请截图联系开发者。$message',
-    //           style: TextStyle(color: colorScheme.onErrorContainer),
-    //         ),
-    //         Text(
-    //           error.toString(),
-    //           style: TextStyle(color: colorScheme.onErrorContainer),
-    //         ),
-    //         Text(stackTrace?.toString() ?? '', style: TextStyle(color: colorScheme.onErrorContainer)),
-    //       ],
-    //     ),
-    //     behavior: SnackBarBehavior.floating,
-    //     duration: const Duration(seconds: 20),
-    //     backgroundColor: colorScheme.errorContainer,
-    //     showCloseIcon: true,
-    //   ),
-    // );
+  void showToast(String message) async {
+    final colorScheme = Theme.of(Get.context!).colorScheme;
+    _fToast.showToast(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.0),
+            color: colorScheme.secondaryContainer.withAlpha((255 * 0.95).toInt()),
+          ),
+          child: Text(
+            message,
+            style: TextStyle(fontSize: 16.0, color: colorScheme.onSecondaryContainer),
+          ),
+        ),
+        gravity: ToastGravity.BOTTOM,
+        isDismissable: true);
+  }
+
+  void showBug() async {
+    final colorScheme = Theme.of(Get.context!).colorScheme;
+    _fToast.showToast(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.0),
+          color: colorScheme.errorContainer.withAlpha((255 * 0.95).toInt()),
+        ),
+        child: Text(
+          '出错了，请联系开发者！',
+          style: TextStyle(fontSize: 16.0, color: colorScheme.onErrorContainer),
+        ),
+      ),
+      gravity: ToastGravity.CENTER,
+      isDismissable: false,
+      toastDuration: const Duration(seconds: 4),
+    );
   }
 }

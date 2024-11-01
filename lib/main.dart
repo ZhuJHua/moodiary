@@ -5,6 +5,8 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl_standalone.dart';
 import 'package:media_kit/media_kit.dart';
@@ -15,27 +17,27 @@ import 'package:mood_diary/utils/utils.dart';
 
 Future<void> initSystem() async {
   //获取系统语言
-  await findSystemLocale();
+  unawaited(findSystemLocale());
   //初始化pref
   await Utils().prefUtil.initPref();
-
   //初始化Isar
   await Utils().isarUtil.initIsar();
-
   //初始化视频播放
   MediaKit.ensureInitialized();
+  //地图缓存
+  await FMTCObjectBoxBackend().initialise();
+  unawaited(const FMTCStore('mapStore').manage.create());
+  platFormOption();
   //supabase初始化
   //await Utils().supabaseUtil.initSupabase();
 }
 
-Future<void> platFormOption() async {
+void platFormOption() {
   if (Platform.isAndroid) {
-    //shiply初始化
-    //await Utils().updateUtil.initShiply();
     //设置高刷
-    await FlutterDisplayMode.setHighRefreshRate();
+    unawaited(FlutterDisplayMode.setHighRefreshRate());
     //设置状态栏沉浸
-    await ViewChannel.setSystemUIVisibility();
+    unawaited(ViewChannel.setSystemUIVisibility());
   }
 
   if (Platform.isWindows) {
@@ -63,27 +65,27 @@ void main() {
     WidgetsFlutterBinding.ensureInitialized();
     FlutterError.onError = (details) {
       Utils().logUtil.printError('Flutter error', error: details.exception, stackTrace: details.stack);
-      Utils().noticeUtil.showBug('Flutter error', error: details.exception, stackTrace: details.stack);
+      Utils().noticeUtil.showBug();
     };
     //初始化系统
     await initSystem();
-    //平台内容
-    await platFormOption();
     runApp(GetMaterialApp(
       initialRoute: getInitialRoute(),
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
-      builder: (context, widget) {
-        return MediaQuery(
+      builder: (context, child) {
+        final mediaQuery = MediaQuery(
           data: MediaQuery.of(context).copyWith(
             textScaler: TextScaler.linear(Utils().prefUtil.getValue<double>('fontScale')!),
           ),
-          child: Platform.isWindows ? MoveWindow(child: widget!) : widget!,
+          child: child!,
         );
+        final windowChild = Platform.isWindows ? MoveWindow(child: mediaQuery) : mediaQuery;
+
+        return FToastBuilder()(context, windowChild);
       },
       theme: await Utils().themeUtil.buildTheme(Brightness.light),
       darkTheme: await Utils().themeUtil.buildTheme(Brightness.dark),
       themeMode: ThemeMode.values[Utils().prefUtil.getValue<int>('themeMode')!],
-      debugShowCheckedModeBanner: false,
       defaultTransition: Transition.cupertino,
       getPages: AppPages.routes,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -91,6 +93,6 @@ void main() {
     ));
   }, (error, stack) {
     Utils().logUtil.printWTF('Error', error: error, stackTrace: stack);
-    Utils().noticeUtil.showBug('Error', error: error, stackTrace: stack);
+    Utils().noticeUtil.showBug();
   });
 }

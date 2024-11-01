@@ -23,7 +23,7 @@ class HomeState {
 
     navigatorIndex = 0.obs;
 
-    navigatorBarHeight = 56.0;
+    navigatorBarHeight = 80.0;
     hitokoto = ''.obs;
 
     ///Initialize variables

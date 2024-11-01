@@ -111,20 +111,24 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     }
   }
 
-  void hideNavigatorBar() {
-    barAnimationController.forward();
+  Future<void> hideNavigatorBar() async {
+    await barAnimationController.forward();
     state.isBarHidden.value = true;
   }
 
-  void showNavigatorBar() {
+  Future<void> showNavigatorBar() async {
     state.isBarHidden.value = false;
-    barAnimationController.reverse();
+    await barAnimationController.reverse();
+  }
+
+  void resetNavigatorBar() {
+    barAnimationController.reset();
+    state.isBarHidden.value = true;
   }
 
   // 切换导航栏
   void changeNavigator(int index) {
     state.navigatorIndex.value = index;
     pageController.jumpToPage(index);
-    update();
   }
 }

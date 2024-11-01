@@ -53,11 +53,12 @@ class DiaryPage extends StatelessWidget {
 
     // 单个页面
     Widget buildDiaryView(int index, key, String? categoryId) {
-      return PrimaryScrollWrapper(
+      return KeepAliveWrapper(
+        child: PrimaryScrollWrapper(
           key: key,
-          child: KeepAliveWrapper(
-            child: DiaryTabViewComponent(categoryId: categoryId),
-          ));
+          child: DiaryTabViewComponent(categoryId: categoryId),
+        ),
+      );
     }
 
     Widget buildTabBarView() {
@@ -73,6 +74,7 @@ class DiaryPage extends StatelessWidget {
 
       return TabBarView(
         controller: logic.tabController,
+        physics: const NeverScrollableScrollPhysics(),
         children: allViews,
       );
     }
