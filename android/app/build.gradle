@@ -47,7 +47,6 @@ android {
         }
     }
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "cn.yooss.moodiary"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
@@ -63,7 +62,6 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.config
-
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -81,8 +79,6 @@ flutter {
     source = "../.."
 }
 dependencies {
-    implementation 'com.tencent.shiply:upgrade:2.2.0'
-    implementation 'com.tencent.shiply:upgrade-diff-pkg-patch:2.2.0'
     implementation 'com.github.gzu-liyujiang:Android_CN_OAID:4.2.9'
 }
 

@@ -1,32 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/api/api.dart';
-import 'package:mood_diary/common/models/shiply.dart';
 import 'package:mood_diary/components/update_dialog/update_dialog_view.dart';
 import 'package:mood_diary/utils/utils.dart';
 
-import 'channel.dart';
-
 class UpdateUtil {
-  Future<void> initShiply() async {
-    //如果不是首次启动，就初始化
-    if (Utils().prefUtil.getValue<bool>('firstStart') == false) {
-      //初始化shiply
-      await ShiplyChannel.initShiply();
-    }
-  }
-
-  Future<ShiplyResponse?> checkUpdate() async {
-    var res = await ShiplyChannel.checkUpdate();
-    if (res != null) {
-      return ShiplyResponse.fromJson(jsonDecode(res));
-    } else {
-      return null;
-    }
-  }
-
   //通过github检查更新
   Future<void> checkShouldUpdate(String currentVersion, {bool handle = false}) async {
     var githubRelease = await Api().getGithubRelease();
