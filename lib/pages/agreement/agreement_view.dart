@@ -6,8 +6,6 @@ class AgreementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final logic = Bind.find<AgreementLogic>();
-    // final state = Bind.find<AgreementLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('用户协议')),
@@ -35,7 +33,9 @@ class AgreementPage extends StatelessWidget {
 4.2 本协议条款无论因何种原因部分无效或不可执行，其余条款仍有效，对双方具有约束力。''',
         selectable: true,
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
-        config: colorScheme.brightness == Brightness.dark ? MarkdownConfig.darkConfig : MarkdownConfig.defaultConfig,
+        config: colorScheme.brightness == Brightness.dark
+            ? MarkdownConfig.darkConfig
+            : MarkdownConfig.defaultConfig,
       ),
     );
   }

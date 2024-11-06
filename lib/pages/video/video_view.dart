@@ -14,9 +14,9 @@ class VideoPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return GetBuilder<VideoLogic>(
-      assignId: true,
-      init: logic,
-      builder: (logic) {
+      
+      
+      builder: (_) {
         return MaterialVideoControlsTheme(
           normal: MaterialVideoControlsThemeData(
             seekBarPositionColor: colorScheme.primary,

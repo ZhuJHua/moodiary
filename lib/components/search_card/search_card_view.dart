@@ -18,10 +18,10 @@ class SearchCardComponent extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return GetBuilder<SearchCardLogic>(
-      init: logic,
+      
       tag: index,
-      assignId: true,
-      builder: (logic) {
+      
+      builder: (_) {
         return InkWell(
           onTap: () {
             logic.toDiaryPage(diary);

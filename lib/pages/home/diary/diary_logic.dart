@@ -12,7 +12,8 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   final DiaryState state = DiaryState();
 
   //初始化tab控制器，长度加一由于有一个默认分类
-  late TabController tabController = TabController(length: state.categoryList.length + 1, vsync: this);
+  late TabController tabController =
+      TabController(length: state.categoryList.length + 1, vsync: this);
 
   late HomeLogic homeLogic = Bind.find<HomeLogic>();
 
@@ -67,7 +68,9 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
       if (tabController.index == 0) {
         await Bind.find<DiaryTabViewLogic>(tag: 'default').paginationDiary();
       } else {
-        await Bind.find<DiaryTabViewLogic>(tag: state.categoryList[tabController.index - 1].id).paginationDiary();
+        await Bind.find<DiaryTabViewLogic>(
+                tag: state.categoryList[tabController.index - 1].id)
+            .paginationDiary();
       }
     }
   }
@@ -82,9 +85,13 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   /// 3. view mode刷新时（实际上肯定在顶部，干脆直接改state）
   void _checkShowTop() {
     if (state.innerController.hasClients) {
-      state.isToTopShow.value = state.innerController.offset > 100;
+      if (homeLogic.state.isToTopShow != state.innerController.offset > 100) {
+        homeLogic.state.isToTopShow = state.innerController.offset > 100;
+        homeLogic.update(['Fab']);
+      }
     } else {
-      state.isToTopShow.value = false;
+      homeLogic.state.isToTopShow = false;
+      homeLogic.update(['Fab']);
     }
   }
 
@@ -96,7 +103,9 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     state.currentTabBarIndex = tabController.index;
 
     // 获取当前分类ID，若为默认分类，设为 'default'
-    String categoryId = state.currentTabBarIndex == 0 ? 'default' : state.categoryList[state.currentTabBarIndex - 1].id;
+    String categoryId = state.currentTabBarIndex == 0
+        ? 'default'
+        : state.categoryList[state.currentTabBarIndex - 1].id;
 
     // 遍历 keyMap，更新每个分类的状态
     state.keyMap.forEach((k, v) {
@@ -120,13 +129,15 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
       }
     } else {
       //查找分类对应的位置，加一是因为默认分类占了一个
-      tabViewIndex = state.categoryList.indexWhere((e) => e.id == categoryId) + 1;
+      tabViewIndex =
+          state.categoryList.indexWhere((e) => e.id == categoryId) + 1;
       if (jump && tabController.index != 0) {
         tabController.animateTo(tabViewIndex);
       }
     }
     //如果控制器已经存在，重新获取，如果不存在，不需要任何操作
-    if (tabViewIndex != 0 && Bind.isRegistered<DiaryTabViewLogic>(tag: categoryId)) {
+    if (tabViewIndex != 0 &&
+        Bind.isRegistered<DiaryTabViewLogic>(tag: categoryId)) {
       await Bind.find<DiaryTabViewLogic>(tag: categoryId).getDiary();
     }
     await Bind.find<DiaryTabViewLogic>(tag: 'default').getDiary();
@@ -143,8 +154,9 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     state.categoryList = await Utils().isarUtil.getAllCategoryAsync();
 
     // 移除 Map 中不再存在的 Category id
-    state.keyMap
-        .removeWhere((k, v) => !state.categoryList.map((category) => category.id).contains(k) && k != 'default');
+    state.keyMap.removeWhere((k, v) =>
+        !state.categoryList.map((category) => category.id).contains(k) &&
+        k != 'default');
 
     // 为新的 Category 添加新的 GlobalKey
     for (var category in state.categoryList) {
@@ -161,7 +173,8 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
 
     //重新创建控制器
     tabController.removeListener(_tabBarListener);
-    tabController = TabController(length: state.categoryList.length + 1, vsync: this);
+    tabController =
+        TabController(length: state.categoryList.length + 1, vsync: this);
     tabController.addListener(_tabBarListener);
     update();
     _checkPageChange();
@@ -169,13 +182,22 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
 
   //切换视图模式
   Future<void> changeViewMode(ViewModeType viewModeType) async {
-    state.viewModeType.value = viewModeType;
-    state.isToTopShow.value = false;
+    state.viewModeType = viewModeType;
+    if (state.currentTabBarIndex == 0) {
+      Bind.find<DiaryTabViewLogic>(tag: 'default').update(['TabView']);
+    } else {
+      Bind.find<DiaryTabViewLogic>(
+              tag: state.categoryList[state.currentTabBarIndex - 1].id)
+          .update(['TabView']);
+    }
+    homeLogic.state.isToTopShow = false;
+    homeLogic.update(['Fab']);
     await Utils().prefUtil.setValue<int>('homeViewMode', viewModeType.number);
   }
 
   // 回到顶部函数
   Future<void> toTop() async {
-    await state.innerController.animateTo(0.0, duration: const Duration(milliseconds: 200), curve: Curves.linear);
+    await state.innerController.animateTo(0.0,
+        duration: const Duration(milliseconds: 200), curve: Curves.linear);
   }
 }

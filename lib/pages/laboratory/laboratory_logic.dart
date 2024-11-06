@@ -12,39 +12,49 @@ class LaboratoryLogic extends GetxController {
   final LaboratoryState state = LaboratoryState();
   late TextEditingController idTextEditingController = TextEditingController();
   late TextEditingController keyTextEditingController = TextEditingController();
-  late TextEditingController qweatherTextEditingController = TextEditingController();
+  late TextEditingController qweatherTextEditingController =
+      TextEditingController();
 
-  @override
-  void onReady() {
-    initInfo();
-    super.onReady();
-  }
+  late TextEditingController tiandituTextEditingController =
+      TextEditingController();
 
   @override
   void onClose() {
     idTextEditingController.dispose();
     qweatherTextEditingController.dispose();
     keyTextEditingController.dispose();
+    tiandituTextEditingController.dispose();
 
     super.onClose();
   }
 
-  Future<void> initInfo() async {
-    state.deviceInfo = await Utils().packageUtil.getInfo();
-    update();
-  }
-
   Future<void> setTencentID() async {
-    if (idTextEditingController.text.isNotEmpty && keyTextEditingController.text.isNotEmpty) {
-      await Utils().prefUtil.setValue<String>('tencentId', idTextEditingController.text);
-      await Utils().prefUtil.setValue<String>('tencentKey', keyTextEditingController.text);
+    if (idTextEditingController.text.isNotEmpty &&
+        keyTextEditingController.text.isNotEmpty) {
+      await Utils()
+          .prefUtil
+          .setValue<String>('tencentId', idTextEditingController.text);
+      await Utils()
+          .prefUtil
+          .setValue<String>('tencentKey', keyTextEditingController.text);
       Get.backLegacy();
     }
   }
 
   Future<void> setQweatherKey() async {
     if (qweatherTextEditingController.text.isNotEmpty) {
-      await Utils().prefUtil.setValue<String>('qweatherKey', qweatherTextEditingController.text);
+      await Utils()
+          .prefUtil
+          .setValue<String>('qweatherKey', qweatherTextEditingController.text);
+      Get.backLegacy();
+    }
+  }
+
+  Future<void> setTiandituKey() async {
+    if (tiandituTextEditingController.text.isNotEmpty) {
+      await Utils()
+          .prefUtil
+          .setValue<String>('tiandituKey', tiandituTextEditingController.text);
       Get.backLegacy();
     }
   }

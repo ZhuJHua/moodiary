@@ -55,24 +55,24 @@ class IsarUtil {
   //插入一条日记
   Future<void> insertADiary(Diary diary) async {
     await _isar.writeAsync((isar) {
-      diary.id = const Uuid().v7();
       isar.diarys.put(diary);
     });
   }
 
   //根据月份获取包含日记的日期
   Future<List<DateTime>> getDiaryDateByMonth(int year, int month) async {
-    return await _isar.diarys
-        .where()
-        .yMEqualTo('${year.toString()}/${month.toString()}')
-        .showEqualTo(true)
-        .timeProperty()
-        .findAllAsync();
+    return (await _isar.diarys
+            .where()
+            .yMEqualTo('${year.toString()}/${month.toString()}')
+            .showEqualTo(true)
+            .timeProperty()
+            .findAllAsync())
+        .cast<DateTime>();
   }
 
   //根据id获取日记
-  Future<Diary?> getDiaryByID(String id) async {
-    return await _isar.diarys.getAsync(id);
+  Future<Diary?> getDiaryByID(int isarId) async {
+    return await _isar.diarys.getAsync(isarId);
   }
 
   //根据日期范围获取日记
@@ -82,30 +82,32 @@ class IsarUtil {
 
   //获取指定范围内的天气
   Future<List<List<String>>> getWeatherByDateRange(DateTime start, DateTime end) async {
-    return await _isar.diarys
-        .where()
-        .showEqualTo(true)
-        .timeBetween(start, end)
-        .distinctByYMd()
-        .weatherProperty()
-        .findAllAsync();
+    return (await _isar.diarys
+            .where()
+            .showEqualTo(true)
+            .timeBetween(start, end)
+            .distinctByYMd()
+            .weatherProperty()
+            .findAllAsync())
+        .cast<List<String>>();
   }
 
   //获取指定范围的心情指数
   Future<List<double>> getMoodByDateRange(DateTime start, DateTime end) async {
-    return await _isar.diarys
-        .where()
-        .showEqualTo(true)
-        .timeBetween(start, end)
-        .distinctByYMd()
-        .moodProperty()
-        .findAllAsync();
+    return (await _isar.diarys
+            .where()
+            .showEqualTo(true)
+            .timeBetween(start, end)
+            .distinctByYMd()
+            .moodProperty()
+            .findAllAsync())
+        .cast<double>();
   }
 
   //删除某篇日记
-  Future<bool> deleteADiary(String id) async {
+  Future<bool> deleteADiary(int isarId) async {
     return await _isar.writeAsync((isar) {
-      return isar.diarys.delete(id);
+      return isar.diarys.delete(isarId);
     });
   }
 
@@ -179,7 +181,7 @@ class IsarUtil {
 
   // 获取所有日记内容
   Future<List<String>> getContentList() async {
-    return await _isar.diarys.where().showEqualTo(true).contentTextProperty().findAllAsync();
+    return (await _isar.diarys.where().showEqualTo(true).contentTextProperty().findAllAsync()).cast<String>();
   }
 
   //获取所有分类，这是个同步方法，用于第一次初始化，要怪就怪 TabBar
@@ -217,6 +219,22 @@ class IsarUtil {
 
   Future<List<Diary>> getDiary(int offset, int limit) async {
     return await _isar.diarys.where().findAllAsync(offset: offset, limit: limit);
+  }
+
+  void mergeToV2_4_8(String dir) {
+    var isar = Isar.open(
+      schemas: [DiarySchema, CategorySchema],
+      directory: dir,
+    );
+    // 如果当前数据库版本小雨
+    final countDiary = isar.diarys.where().count();
+    for (var i = 0; i < countDiary; i += 50) {
+      var diaries = isar.diarys.where().findAll(offset: i, limit: 50);
+      isar.write((isar) {
+        isar.diarys.putAll(diaries);
+      });
+    }
+    isar.close();
   }
 
   //构建搜索

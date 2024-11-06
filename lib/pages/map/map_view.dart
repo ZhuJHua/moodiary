@@ -13,29 +13,31 @@ class MapPage extends StatelessWidget {
     final logic = Bind.find<MapLogic>();
     final state = Bind.find<MapLogic>().state;
 
-    return GetBuilder<MapLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
-        return state.currentLatLng != null
-            ? FlutterMap(
-                mapController: logic.mapController,
-                options: MapOptions(initialCenter: state.currentLatLng!),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                        'http://t6.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=img&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=',
-                    tileProvider: const FMTCStore('mapStore').getTileProvider(),
-                  ),
-                  TileLayer(
-                    urlTemplate:
-                        'http://t6.tianditu.gov.cn/cva_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=',
-                    tileProvider: const FMTCStore('mapStore').getTileProvider(),
-                  ),
-                ],
-              )
-            : const CircularProgressIndicator();
-      },
+    return Scaffold(
+      body: GetBuilder<MapLogic>(
+        builder: (_) {
+          return state.currentLatLng != null && state.tiandituKey != null
+              ? FlutterMap(
+                  mapController: logic.mapController,
+                  options: MapOptions(initialCenter: state.currentLatLng!),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'http://t6.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=img&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${state.tiandituKey}',
+                      tileProvider:
+                          const FMTCStore('mapStore').getTileProvider(),
+                    ),
+                    TileLayer(
+                      urlTemplate:
+                          'http://t6.tianditu.gov.cn/cva_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${state.tiandituKey}',
+                      tileProvider:
+                          const FMTCStore('mapStore').getTileProvider(),
+                    ),
+                  ],
+                )
+              : const Center(child: CircularProgressIndicator());
+        },
+      ),
     );
   }
 }

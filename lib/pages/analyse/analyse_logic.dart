@@ -13,9 +13,8 @@ class AnalyseLogic extends GetxController {
   final AnalyseState state = AnalyseState();
 
   @override
-  void onReady() {
-    getMoodAndWeatherByRange(state.dateRange[0], state.dateRange[1]);
-
+  void onReady() async {
+    await getMoodAndWeatherByRange(state.dateRange[0], state.dateRange[1]);
     super.onReady();
   }
 
@@ -26,9 +25,13 @@ class AnalyseLogic extends GetxController {
     //获取数据开始
     state.finished = false;
     update();
-    state.moodList = await Utils().isarUtil.getMoodByDateRange(start, end.subtract(const Duration(days: -1)));
+    state.moodList = await Utils()
+        .isarUtil
+        .getMoodByDateRange(start, end.subtract(const Duration(days: -1)));
 
-    var weatherList = await Utils().isarUtil.getWeatherByDateRange(start, end.subtract(const Duration(days: -1)));
+    var weatherList = await Utils()
+        .isarUtil
+        .getWeatherByDateRange(start, end.subtract(const Duration(days: -1)));
     for (var weather in weatherList) {
       if (weather.isNotEmpty) {
         state.weatherList.add(weather.first);
@@ -83,7 +86,8 @@ class AnalyseLogic extends GetxController {
           0);
       stream?.listen((content) {
         if (content != '' && content.contains('data')) {
-          HunyuanResponse result = HunyuanResponse.fromJson(jsonDecode(content.split('data: ')[1]));
+          HunyuanResponse result =
+              HunyuanResponse.fromJson(jsonDecode(content.split('data: ')[1]));
           state.reply += result.choices!.first.delta!.content!;
           update();
         }

@@ -10,35 +10,34 @@ class NoticeUtil {
   }
 
   void showToast(String message) async {
-    final colorScheme = Theme.of(Get.context!).colorScheme;
+    late final colorScheme = Theme.of(Get.context!).colorScheme;
     _fToast.showToast(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16.0),
-            color: colorScheme.secondaryContainer.withAlpha((255 * 0.95).toInt()),
+            color: colorScheme.primaryContainer.withAlpha(240),
           ),
           child: Text(
             message,
-            style: TextStyle(fontSize: 16.0, color: colorScheme.onSecondaryContainer),
+            style: TextStyle(fontSize: 16.0, color: colorScheme.onPrimaryContainer),
           ),
         ),
-        gravity: ToastGravity.BOTTOM,
+        gravity: ToastGravity.CENTER,
         isDismissable: true);
   }
 
   void showBug() async {
-    final colorScheme = Theme.of(Get.context!).colorScheme;
     _fToast.showToast(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.0),
-          color: colorScheme.errorContainer.withAlpha((255 * 0.95).toInt()),
+          color: Colors.redAccent.withAlpha((240)),
         ),
-        child: Text(
+        child: const Text(
           '出错了，请联系开发者！',
-          style: TextStyle(fontSize: 16.0, color: colorScheme.onErrorContainer),
+          style: TextStyle(fontSize: 16.0, color: Colors.white),
         ),
       ),
       gravity: ToastGravity.CENTER,

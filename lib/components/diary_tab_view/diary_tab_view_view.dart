@@ -17,17 +17,18 @@ class DiaryTabViewComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logicTag = categoryId ?? 'default';
-    final logic = Get.put(DiaryTabViewLogic(categoryId: categoryId), tag: logicTag);
+    final logic =
+        Get.put(DiaryTabViewLogic(categoryId: categoryId), tag: logicTag);
     final state = Bind.find<DiaryTabViewLogic>(tag: logicTag).state;
     final i18n = AppLocalizations.of(context)!;
 
     Widget buildGrid() {
       return SliverWaterfallFlow(
-        gridDelegate: const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 250),
+        gridDelegate: const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 250),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             return LargeDiaryCardComponent(
-              key: ValueKey(state.diaryList[index].id),
               diary: state.diaryList[index],
             );
           },
@@ -49,36 +50,45 @@ class DiaryTabViewComponent extends StatelessWidget {
     }
 
     Widget buildPlaceHolder() {
-      return Center(
-        child: Obx(() {
-          if (state.isFetching.value) {
-            return const CircularProgressIndicator();
-          } else if (state.diaryList.isEmpty) {
-            return Text(i18n.diaryTabViewEmpty);
-          } else {
-            return const SizedBox.shrink();
-          }
-        }),
-      );
+      if (state.isFetching) {
+        return const CircularProgressIndicator();
+      } else if (state.diaryList.isEmpty) {
+        return Text(i18n.diaryTabViewEmpty);
+      } else {
+        return const SizedBox.shrink();
+      }
     }
 
     return Stack(
+      alignment: Alignment.center,
       children: [
-        buildPlaceHolder(),
+        GetBuilder<DiaryTabViewLogic>(
+            tag: logicTag,
+            id: 'PlaceHolder',
+            builder: (_) {
+              return buildPlaceHolder();
+            }),
         CustomScrollView(
+          cacheExtent: 2000,
           slivers: [
-            SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
+            SliverOverlapInjector(
+                handle:
+                    NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
             SliverPadding(
-                padding: const EdgeInsets.all(4.0),
-                sliver: Obx(() {
-                  return SliverAnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    child: switch (logic.diaryLogic.state.viewModeType.value) {
-                      ViewModeType.list => buildList(),
-                      ViewModeType.grid => buildGrid(),
-                    },
-                  );
-                })),
+              padding: const EdgeInsets.all(4.0),
+              sliver: GetBuilder<DiaryTabViewLogic>(
+                  id: 'TabView',
+                  tag: logicTag,
+                  builder: (_) {
+                    return SliverAnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: switch (logic.diaryLogic.state.viewModeType) {
+                        ViewModeType.list => buildList(),
+                        ViewModeType.grid => buildGrid(),
+                      },
+                    );
+                  }),
+            ),
           ],
         ),
       ],

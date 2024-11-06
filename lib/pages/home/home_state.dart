@@ -1,31 +1,17 @@
-import 'package:get/get.dart';
-
 class HomeState {
   //fab展开状态
-  late RxBool isFabExpanded;
+  bool isFabExpanded = false;
 
-  //bar隐藏状态
-
-  late RxBool isBarHidden;
+  // 回到顶部
+  bool isToTopShow = false;
 
   //导航栏index
-  late RxInt navigatorIndex;
+  int navigatorIndex = 0;
 
-  late double navigatorBarHeight;
+  double navigatorBarHeight = 80.0;
 
   //一言
-  late RxString hitokoto;
+  String hitokoto = '';
 
-  HomeState() {
-    isFabExpanded = false.obs;
-
-    isBarHidden = false.obs;
-
-    navigatorIndex = 0.obs;
-
-    navigatorBarHeight = 80.0;
-    hitokoto = ''.obs;
-
-    ///Initialize variables
-  }
+  HomeState();
 }

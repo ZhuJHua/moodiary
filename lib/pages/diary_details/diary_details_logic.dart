@@ -13,7 +13,7 @@ import 'diary_details_state.dart';
 class DiaryDetailsLogic extends GetxController {
   final DiaryDetailsState state = DiaryDetailsState();
 
-  //编辑器控制器
+  // 编辑器控制器
   late QuillController quillController = QuillController(
     document: Document.fromJson(jsonDecode(state.diary.content)),
     readOnly: true,
@@ -24,30 +24,6 @@ class DiaryDetailsLogic extends GetxController {
   void onClose() {
     quillController.dispose();
     super.onClose();
-  }
-
-  void toLeft() {}
-
-  //减小字号
-  TextStyle lowText(TextStyle currentStyle, TextTheme textTheme) {
-    if (currentStyle == textTheme.bodyLarge) {
-      return textTheme.bodyMedium!;
-    }
-    if (currentStyle == textTheme.bodyMedium) {
-      return textTheme.bodySmall!;
-    }
-    return currentStyle;
-  }
-
-  //增大字号
-  TextStyle upText(TextStyle currentStyle, TextTheme textTheme) {
-    if (currentStyle == textTheme.bodySmall) {
-      return textTheme.bodyMedium!;
-    }
-    if (currentStyle == textTheme.bodyMedium) {
-      return textTheme.bodyLarge!;
-    }
-    return currentStyle;
   }
 
   //点击图片跳转到图片预览页面
@@ -70,8 +46,7 @@ class DiaryDetailsLogic extends GetxController {
     //这里参数为diary，表示编辑日记，等待跳转结果为changed，重新获取日记
     if ((await Get.toNamed(AppRoutes.editPage, arguments: diary)) == 'changed') {
       //重新获取日记
-      state.diary = (await Utils().isarUtil.getDiaryByID(state.diary.id))!;
-
+      state.diary = (await Utils().isarUtil.getDiaryByID(state.diary.isarId))!;
       quillController = QuillController(
         document: Document.fromJson(jsonDecode(state.diary.content)),
         readOnly: true,

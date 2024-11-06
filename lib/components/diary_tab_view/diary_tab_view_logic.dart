@@ -5,12 +5,13 @@ import 'package:mood_diary/utils/utils.dart';
 import 'diary_tab_view_state.dart';
 
 class DiaryTabViewLogic extends GetxController {
-  final String? categoryId;
   final DiaryTabViewState state = DiaryTabViewState();
 
   late final DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
 
-  DiaryTabViewLogic({required this.categoryId});
+  DiaryTabViewLogic({required String? categoryId}) {
+    state.categoryId = categoryId;
+  }
 
   @override
   void onReady() async {
@@ -19,13 +20,19 @@ class DiaryTabViewLogic extends GetxController {
   }
 
   Future<void> getDiary() async {
-    state.isFetching.value = true;
-    state.diaryList.value = await Utils().isarUtil.getDiaryByCategory(categoryId, 0, state.initLen);
-    state.isFetching.value = false;
+    state.isFetching = true;
+    update(['PlaceHolder']);
+    state.diaryList = await Utils()
+        .isarUtil
+        .getDiaryByCategory(state.categoryId, 0, state.initLen);
+    state.isFetching = false;
+    update(['PlaceHolder']);
+    update(['TabView']);
   }
 
   Future<void> paginationDiary() async {
-    state.diaryList += await Utils().isarUtil.getDiaryByCategory(categoryId, state.diaryList.length, state.pageLen);
+    state.diaryList += await Utils().isarUtil.getDiaryByCategory(
+        state.categoryId, state.diaryList.length, state.pageLen);
   }
 
   Future<void> getDiaryByDay(DateTime dateTime) async {}

@@ -142,9 +142,9 @@ class AssistantPage extends StatelessWidget {
     }
 
     return GetBuilder<AssistantLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      
+      
+      builder: (_) {
         return Stack(
           children: [
             Column(

@@ -1,13 +1,11 @@
 import 'package:get/get.dart';
 import 'package:mood_diary/pages/about/about_logic.dart';
 import 'package:mood_diary/pages/about/about_view.dart';
-import 'package:mood_diary/pages/agreement/agreement_logic.dart';
 import 'package:mood_diary/pages/agreement/agreement_view.dart';
 import 'package:mood_diary/pages/analyse/analyse_logic.dart';
 import 'package:mood_diary/pages/analyse/analyse_view.dart';
 import 'package:mood_diary/pages/category_manager/category_manager_logic.dart';
 import 'package:mood_diary/pages/category_manager/category_manager_view.dart';
-import 'package:mood_diary/pages/diary_details/diary_details_logic.dart';
 import 'package:mood_diary/pages/diary_details/diary_details_view.dart';
 import 'package:mood_diary/pages/diary_setting/diary_setting_logic.dart';
 import 'package:mood_diary/pages/diary_setting/diary_setting_view.dart';
@@ -79,7 +77,6 @@ class AppPages {
     GetPage(
       name: AppRoutes.diaryPage,
       page: () => const DiaryDetailsPage(),
-      binds: [Bind.lazyPut(() => DiaryDetailsLogic())],
     ),
     //图片路由
     GetPage(
@@ -139,7 +136,6 @@ class AppPages {
     GetPage(
       name: AppRoutes.agreementPage,
       page: () => const AgreementPage(),
-      binds: [Bind.lazyPut(() => AgreementLogic())],
     ),
     //锁
     GetPage(

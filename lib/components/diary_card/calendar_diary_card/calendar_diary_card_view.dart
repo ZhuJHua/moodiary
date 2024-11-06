@@ -22,12 +22,12 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
         spacing: 4.0,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (diary.title != null) ...[
-            Text(
-              diary.title!,
-              style: textStyle.titleMedium!.copyWith(),
-            )
-          ],
+          ...[
+          Text(
+            diary.title,
+            style: textStyle.titleMedium!.copyWith(),
+          )
+        ],
           Text(
             diary.contentText.trim(),
             overflow: TextOverflow.ellipsis,

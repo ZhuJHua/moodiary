@@ -14,7 +14,7 @@ class ThemeUtil {
     return Color((await DynamicColorPlugin.getCorePalette())!.primary.get(40));
   }
 
-  Future<ThemeData> buildTheme(Brightness brightness) async {
+  ThemeData buildTheme(Brightness brightness) {
     final color = Utils().prefUtil.getValue<int>('color');
     var seedColor = switch (color) {
       0 => AppColor.themeColorList[0],
@@ -23,14 +23,16 @@ class ThemeUtil {
       3 => AppColor.themeColorList[3],
       4 => AppColor.themeColorList[4],
       //-1为系统配色，如果选了-1，肯定有
-      _ => await getDynamicColor()
+      _ => Color(Utils().prefUtil.getValue<int>('systemColor')!)
     };
 
     var themeData = ThemeData(
       colorScheme: ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: brightness,
-        dynamicSchemeVariant: color == 4 ? DynamicSchemeVariant.fidelity : DynamicSchemeVariant.tonalSpot,
+        dynamicSchemeVariant: color == 4
+            ? DynamicSchemeVariant.fidelity
+            : DynamicSchemeVariant.tonalSpot,
       ),
       fontFamily: Platform.isWindows ? '微软雅黑' : null,
     );

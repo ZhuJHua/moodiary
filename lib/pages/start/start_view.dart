@@ -18,9 +18,9 @@ class StartPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
     return GetBuilder<StartLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      
+      
+      builder: (_) {
         return Scaffold(
           appBar: AppBar(),
           extendBodyBehindAppBar: true,

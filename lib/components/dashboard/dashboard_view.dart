@@ -129,9 +129,8 @@ class DashboardComponent extends StatelessWidget {
     }
 
     return GetBuilder<DashboardLogic>(
-      init: logic,
       assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return GridView(
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 200,

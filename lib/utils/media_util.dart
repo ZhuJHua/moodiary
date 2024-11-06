@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mood_diary/utils/utils.dart';
+import 'package:uuid/uuid.dart';
 
 class MediaUtil {
   late final _picker = ImagePicker();
@@ -13,10 +14,15 @@ class MediaUtil {
   late final _thumbnail = FcNativeVideoThumbnail();
 
   // 保存图片
-  Future<void> saveImages(Map<String, XFile> imageMap) async {
-    for (var entry in imageMap.entries) {
-      await _compressAndSaveImage(entry.value, Utils().fileUtil.getRealPath('image', entry.key), CompressFormat.webp);
+  Future<List<String>> saveImages({required List<XFile> imageFileList}) async {
+    List<String> nameList = [];
+    for (var imageFile in imageFileList) {
+      //生成新的名字
+      var imageName = 'image-${const Uuid().v7()}.webp';
+      nameList.add(imageName);
+      await _compressAndSaveImage(imageFile, Utils().fileUtil.getRealPath('image', imageName), CompressFormat.webp);
     }
+    return nameList;
   }
 
   // 保存录音
@@ -28,14 +34,19 @@ class MediaUtil {
   }
 
   // 保存视频
-  Future<void> saveVideo(Map<String, XFile> videoMap, Map<String, XFile> thumbnailMap) async {
-    for (var entry in videoMap.entries) {
-      await entry.value.saveTo(Utils().fileUtil.getRealPath('video', entry.key));
+  Future<List<String>> saveVideo(
+      {required List<XFile> videoFileList, required List<XFile> videoThumbnailFileList}) async {
+    List<String> nameList = [];
+    for (var i = 0; i < videoFileList.length; ++i) {
+      // 生成文件名
+      final uuid = const Uuid().v7();
+      var videoName = 'video-$uuid.mp4';
+      nameList.add(videoName);
+      await videoFileList[i].saveTo(Utils().fileUtil.getRealPath('video', videoName));
+      await _compressAndSaveImage(
+          videoThumbnailFileList[i], Utils().fileUtil.getRealPath('thumbnail', videoName), CompressFormat.jpeg);
     }
-
-    for (var entry in thumbnailMap.entries) {
-      await _compressAndSaveImage(entry.value, Utils().fileUtil.getRealPath('video', entry.key), CompressFormat.jpeg);
-    }
+    return nameList;
   }
 
   //获取图片宽高

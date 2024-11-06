@@ -13,9 +13,9 @@ class RecyclePage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return GetBuilder<RecycleLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      
+      
+      builder: (_) {
         return Scaffold(
           appBar: AppBar(
             title: const Text(

@@ -80,9 +80,9 @@ class LockPage extends StatelessWidget {
     }
 
     return GetBuilder<LockLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      
+      
+      builder: (_) {
         return Scaffold(
           appBar: AppBar(
             automaticallyImplyLeading: false,

@@ -12,9 +12,9 @@ class FontPage extends StatelessWidget {
     final state = Bind.find<FontLogic>().state;
     final textStyle = Theme.of(context).textTheme;
     return GetBuilder<FontLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      
+      
+      builder: (_) {
         return Scaffold(
           appBar: AppBar(
             title: const Text('字体大小'),

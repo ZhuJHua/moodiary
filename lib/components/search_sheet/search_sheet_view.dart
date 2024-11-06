@@ -14,9 +14,9 @@ class SearchSheetComponent extends StatelessWidget {
     final state = Bind.find<SearchSheetLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     return GetBuilder<SearchSheetLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      
+      
+      builder: (_) {
         return Column(
           spacing: 4.0,
           children: [

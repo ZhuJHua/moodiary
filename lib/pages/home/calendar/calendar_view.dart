@@ -88,9 +88,8 @@ class CalendarPage extends StatelessWidget {
     }
 
     return GetBuilder<CalendarLogic>(
-      init: logic,
       assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return CustomScrollView(
           slivers: [
             SliverAppBar(

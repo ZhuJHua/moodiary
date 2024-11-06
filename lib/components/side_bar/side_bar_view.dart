@@ -109,9 +109,9 @@ class SideBarComponent extends StatelessWidget {
     }
 
     return GetBuilder<SideBarLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      
+      
+      builder: (_) {
         return Drawer(
           child: Column(
             children: [

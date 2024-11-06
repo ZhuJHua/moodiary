@@ -27,7 +27,5 @@ class AnalyseState {
     weatherList = [];
     moodMap = {};
     weatherMap = {};
-
-    ///Initialize variables
   }
 }

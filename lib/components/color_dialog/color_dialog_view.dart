@@ -36,7 +36,7 @@ class ColorDialogComponent extends StatelessWidget {
                 color: AppColor.themeColorList[index],
               ),
               Text(colorName(index)),
-              if (state.currentColor.value == index) ...[const Icon(Icons.check)]
+              if (state.currentColor == index) ...[const Icon(Icons.check)]
             ],
           ),
           onPressed: () {
@@ -52,14 +52,12 @@ class ColorDialogComponent extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 10.0,
           children: [
-            Obx(() {
-              return Icon(
-                Icons.circle,
-                color: state.systemColor.value,
-              );
-            }),
+            Icon(
+              Icons.circle,
+              color: state.systemColor,
+            ),
             Text(i18n.colorNameSystem),
-            if (state.currentColor.value == -1) ...[const Icon(Icons.check)]
+            if (state.currentColor == -1) ...[const Icon(Icons.check)]
           ],
         ),
         onPressed: () {
@@ -69,18 +67,16 @@ class ColorDialogComponent extends StatelessWidget {
     }
 
     return GetBuilder<ColorDialogLogic>(
-      assignId: true,
-      init: logic,
-      builder: (logic) {
-        return Obx(() {
-          return SimpleDialog(
-            title: Text(i18n.settingColor),
-            children: [
-              if (state.supportDynamic.value) ...[buildSystemColor()],
-              ...buildColorList()
-            ],
-          );
-        });
+      
+      
+      builder: (_) {
+        return SimpleDialog(
+          title: Text(i18n.settingColor),
+          children: [
+            if (state.supportDynamic) ...[buildSystemColor()],
+            ...buildColorList()
+          ],
+        );
       },
     );
   }

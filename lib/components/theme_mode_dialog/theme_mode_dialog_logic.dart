@@ -13,8 +13,9 @@ class ThemeModeDialogLogic extends GetxController {
   Future<void> changeThemeMode(int value) async {
     await Utils().prefUtil.setValue<int>('themeMode', value);
     state.themeMode = value;
-    settingLogic.state.themeMode.value = value;
+    settingLogic.state.themeMode = value;
+    update();
     Get.changeThemeMode(ThemeMode.values[value]);
-    Get.forceAppUpdate();
+    //Get.forceAppUpdate();
   }
 }

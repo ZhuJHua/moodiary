@@ -1,15 +1,9 @@
-import 'package:get/get.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 class RemovePasswordState {
-  late RxString password;
+  String password = '';
 
-  late RxString realPassword;
+  String realPassword = Utils().prefUtil.getValue<String>('password')!;
 
-  RemovePasswordState() {
-    password = ''.obs;
-    realPassword = Utils().prefUtil.getValue<String>('password')!.obs;
-
-    ///Initialize variables
-  }
+  RemovePasswordState();
 }

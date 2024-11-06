@@ -52,9 +52,9 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (diary.title != null) ...[
+                      if (diary.title.isNotEmpty) ...[
                         Text(
-                          diary.title!,
+                          diary.title,
                           overflow: TextOverflow.ellipsis,
                           style: textStyle.titleMedium,
                           maxLines: 1,

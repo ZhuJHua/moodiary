@@ -43,13 +43,13 @@ class EditPage extends StatelessWidget {
 
     //标签列表
     Widget? buildTagList() {
-      return state.tagList.isNotEmpty
+      return state.currentDiary.tags.isNotEmpty
           ? Wrap(
               spacing: 8.0,
-              children: List.generate(state.tagList.length, (index) {
+              children: List.generate(state.currentDiary.tags.length, (index) {
                 return Chip(
                   label: Text(
-                    state.tagList[index],
+                    state.currentDiary.tags[index],
                     style: TextStyle(color: colorScheme.onSecondaryContainer),
                   ),
                   backgroundColor: colorScheme.secondaryContainer,
@@ -248,7 +248,7 @@ class EditPage extends StatelessWidget {
           spacing: 8.0,
           runSpacing: 8.0,
           children: [
-            ...List.generate(state.videoNameList.length, (index) {
+            ...List.generate(state.videoFileList.length, (index) {
               return InkWell(
                 onTap: () {
                   logic.toVideoView(
@@ -365,29 +365,27 @@ class EditPage extends StatelessWidget {
     }
 
     Widget buildMoodSlider() {
-      return Obx(() {
-        return Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              MoodIconComponent(value: state.currentMoodRate.value),
-              Expanded(
-                child: Slider(
-                    value: state.currentMoodRate.value,
-                    divisions: 10,
-                    label: '${(state.currentMoodRate.value * 100).toStringAsFixed(0)}%',
-                    activeColor: Color.lerp(
-                        AppColor.emoColorList.first, AppColor.emoColorList.last, state.currentMoodRate.value),
-                    onChanged: (value) {
-                      logic.changeRate(value);
-                    }),
-              ),
-            ],
-          ),
-        );
-      });
+      return Container(
+        constraints: const BoxConstraints(maxWidth: 400),
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            MoodIconComponent(value: state.currentDiary.mood),
+            Expanded(
+              child: Slider(
+                  value: state.currentDiary.mood,
+                  divisions: 10,
+                  label: '${(state.currentDiary.mood * 100).toStringAsFixed(0)}%',
+                  activeColor:
+                      Color.lerp(AppColor.emoColorList.first, AppColor.emoColorList.last, state.currentDiary.mood),
+                  onChanged: (value) {
+                    logic.changeRate(value);
+                  }),
+            ),
+          ],
+        ),
+      );
     }
 
     Widget buildDetail() {
@@ -396,7 +394,11 @@ class EditPage extends StatelessWidget {
           ListTile(
             onTap: null,
             title: const Text('日期与时间'),
-            subtitle: Text(state.currentDateTime.toString().split('.')[0]),
+            subtitle: GetBuilder<EditLogic>(
+                id: 'Date',
+                builder: (_) {
+                  return Text(state.currentDiary.time.toString().split('.')[0]);
+                }),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -415,91 +417,120 @@ class EditPage extends StatelessWidget {
               ],
             ),
           ),
-          ListTile(
-            title: const Text('天气'),
-            subtitle: state.currentWeather.isNotEmpty
-                ? Text('${state.currentWeather[2]} ${state.currentWeather[1]}°C')
-                : null,
-            trailing: state.isProcessing
-                ? const CircularProgressIndicator()
-                : IconButton.filledTonal(
-                    onPressed: () {
-                      logic.getWeather();
-                    },
-                    icon: const Icon(Icons.location_on),
-                  ),
-          ),
-          ListTile(
-            title: const Text('分类'),
-            subtitle: state.categoryName.isNotEmpty ? Text(state.categoryName) : null,
-            trailing: IconButton.filledTonal(
-              onPressed: () {
-                showModalBottomSheet(
-                    showDragHandle: true,
-                    useSafeArea: true,
-                    context: context,
-                    builder: (context) {
-                      return const CategoryAddComponent();
-                    });
-              },
-              icon: const Icon(Icons.category),
-            ),
-          ),
-          ListTile(
-            title: const Text('标签'),
-            subtitle: buildTagList(),
-            trailing: IconButton.filledTonal(
-              icon: const Icon(Icons.tag),
-              onPressed: () {
-                showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        content: TextField(
-                          maxLines: 1,
-                          controller: logic.tagTextEditingController,
-                          decoration: InputDecoration(
-                            fillColor: colorScheme.secondaryContainer,
-                            border: const UnderlineInputBorder(
-                              borderRadius: AppBorderRadius.smallBorderRadius,
-                              borderSide: BorderSide.none,
-                            ),
-                            filled: true,
-                            labelText: '标签',
-                          ),
+          GetBuilder<EditLogic>(
+              id: 'Weather',
+              builder: (_) {
+                return ListTile(
+                  title: const Text('天气'),
+                  subtitle: state.currentDiary.weather.isNotEmpty
+                      ? Text('${state.currentDiary.weather[2]} ${state.currentDiary.weather[1]}°C')
+                      : null,
+                  trailing: state.isProcessing
+                      ? const CircularProgressIndicator()
+                      : IconButton.filledTonal(
+                          onPressed: () {
+                            logic.getWeather();
+                          },
+                          icon: const Icon(Icons.location_on),
                         ),
-                        actions: [
-                          TextButton(
-                              onPressed: () {
-                                logic.cancelAddTag();
-                              },
-                              child: Text(i18n.cancel)),
-                          TextButton(
-                              onPressed: () {
-                                logic.addTag();
-                              },
-                              child: Text(i18n.ok))
-                        ],
-                      );
-                    });
-              },
-            ),
-          ),
+                );
+              }),
+          GetBuilder<EditLogic>(
+              id: 'Category',
+              builder: (_) {
+                Utils().logUtil.printInfo('1');
+                return ListTile(
+                  title: const Text('分类'),
+                  subtitle: state.categoryName.isNotEmpty ? Text(state.categoryName) : null,
+                  trailing: IconButton.filledTonal(
+                    onPressed: () {
+                      showModalBottomSheet(
+                          showDragHandle: true,
+                          useSafeArea: true,
+                          context: context,
+                          builder: (context) {
+                            return const CategoryAddComponent();
+                          });
+                    },
+                    icon: const Icon(Icons.category),
+                  ),
+                );
+              }),
+          GetBuilder<EditLogic>(
+              id: 'Tag',
+              builder: (_) {
+                return ListTile(
+                  title: const Text('标签'),
+                  subtitle: buildTagList(),
+                  trailing: IconButton.filledTonal(
+                    icon: const Icon(Icons.tag),
+                    onPressed: () {
+                      showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              content: TextField(
+                                maxLines: 1,
+                                controller: logic.tagTextEditingController,
+                                decoration: InputDecoration(
+                                  fillColor: colorScheme.secondaryContainer,
+                                  border: const UnderlineInputBorder(
+                                    borderRadius: AppBorderRadius.smallBorderRadius,
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  filled: true,
+                                  labelText: '标签',
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                    onPressed: () {
+                                      logic.cancelAddTag();
+                                    },
+                                    child: Text(i18n.cancel)),
+                                TextButton(
+                                    onPressed: () {
+                                      logic.addTag();
+                                    },
+                                    child: Text(i18n.ok))
+                              ],
+                            );
+                          });
+                    },
+                  ),
+                );
+              }),
           ListTile(
             title: const Text('心情指数'),
-            subtitle: buildMoodSlider(),
+            subtitle: GetBuilder<EditLogic>(
+                id: 'Mood',
+                builder: (_) {
+                  return buildMoodSlider();
+                }),
           ),
           ListTile(
             title: const Text('图片'),
-            subtitle: buildImage(),
+            subtitle: GetBuilder<EditLogic>(
+                id: 'Image',
+                builder: (_) {
+                  return buildImage();
+                }),
           ),
           ListTile(
             title: const Text('视频'),
-            subtitle: buildVideo(),
+            subtitle: GetBuilder<EditLogic>(
+                id: 'Video',
+                builder: (_) {
+                  return buildVideo();
+                }),
           ),
           ListTile(
             title: const Text('音频'),
-            subtitle: buildAudioPlayer(),
+            subtitle: GetBuilder<EditLogic>(
+                id: 'Audio',
+                builder: (_) {
+                  return buildAudioPlayer();
+                }),
           ),
         ],
       );
@@ -531,9 +562,11 @@ class EditPage extends StatelessWidget {
             padding: const EdgeInsets.all(12.0),
             child: Row(
               children: [
-                Obx(() {
-                  return Text('字数：${state.totalCount.value.toString()}');
-                })
+                GetBuilder<EditLogic>(
+                    id: 'Count',
+                    builder: (_) {
+                      return Text('字数：${state.totalCount.toString()}');
+                    })
               ],
             ),
           ),
@@ -563,18 +596,17 @@ class EditPage extends StatelessWidget {
     }
 
     return GetBuilder<EditLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      id: 'All',
+      builder: (_) {
         return Scaffold(
           appBar: AppBar(
-            title: state.isNew == true ? const Text('新增日记') : const Text('编辑日记'),
+            title: state.isNew ? const Text('新增日记') : const Text('编辑日记'),
             actions: [
               IconButton(
                 icon: const Icon(Icons.check),
                 onPressed: () {
                   logic.unFocus();
-                  state.isNew ? logic.saveDiary() : logic.updateDiary();
+                  logic.saveDiary();
                 },
                 tooltip: '保存',
               ),
@@ -593,26 +625,28 @@ class EditPage extends StatelessWidget {
                   ],
                 ),
           bottomNavigationBar: size.aspectRatio < 1.0
-              ? Obx(() {
-                  return NavigationBar(
-                    destinations: const [
-                      NavigationDestination(
-                        icon: Icon(Icons.edit_outlined),
-                        label: '撰写',
-                        selectedIcon: Icon(Icons.edit),
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.more_outlined),
-                        label: '更多',
-                        selectedIcon: Icon(Icons.more),
-                      )
-                    ],
-                    selectedIndex: state.tabIndex.value,
-                    onDestinationSelected: (index) {
-                      logic.selectTabView(index);
-                    },
-                  );
-                })
+              ? GetBuilder<EditLogic>(
+                  id: 'NavigationBar',
+                  builder: (_) {
+                    return NavigationBar(
+                      destinations: const [
+                        NavigationDestination(
+                          icon: Icon(Icons.edit_outlined),
+                          label: '撰写',
+                          selectedIcon: Icon(Icons.edit),
+                        ),
+                        NavigationDestination(
+                          icon: Icon(Icons.more_outlined),
+                          label: '更多',
+                          selectedIcon: Icon(Icons.more),
+                        )
+                      ],
+                      selectedIndex: state.tabIndex,
+                      onDestinationSelected: (index) {
+                        logic.selectTabView(index);
+                      },
+                    );
+                  })
               : null,
         );
       },

@@ -69,78 +69,77 @@ class DiaryPage extends StatelessWidget {
 
       // 添加分类日记页面
       allViews.addAll(List.generate(state.categoryList.length, (index) {
-        return buildDiaryView(index + 1, state.keyMap[state.categoryList[index].id], state.categoryList[index].id);
+        return buildDiaryView(
+            index + 1,
+            state.keyMap[state.categoryList[index].id],
+            state.categoryList[index].id);
       }));
 
       return TabBarView(
         controller: logic.tabController,
-        physics: const NeverScrollableScrollPhysics(),
         children: allViews,
       );
     }
 
-    return GetBuilder<DiaryLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
-        return NestedScrollView(
-          key: state.nestedScrollKey,
-          headerSliverBuilder: (context, _) {
-            return [
-              SliverOverlapAbsorber(
-                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                sliver: SliverAppBar(
-                  title: Text(
-                    state.customTitleName.isNotEmpty ? state.customTitleName : i18n.appName,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  pinned: true,
-                  actions: [
-                    IconButton(
-                      onPressed: () {
-                        showModalBottomSheet(
-                            context: context,
-                            showDragHandle: true,
-                            useSafeArea: true,
-                            builder: (context) {
-                              return const SearchSheetComponent();
-                            });
-                      },
-                      icon: const Icon(Icons.search),
-                      tooltip: i18n.diaryPageSearchButton,
-                    ),
-                    PopupMenuButton(
-                      offset: const Offset(0, 46),
-                      tooltip: i18n.diaryPageViewModeButton,
-                      itemBuilder: (context) {
-                        return <PopupMenuEntry<String>>[
-                          CheckedPopupMenuItem(
-                            checked: state.viewModeType.value == ViewModeType.list,
-                            onTap: () async {
-                              await logic.changeViewMode(ViewModeType.list);
-                            },
-                            child: Text(i18n.diaryViewModeList),
-                          ),
-                          const PopupMenuDivider(),
-                          CheckedPopupMenuItem(
-                            checked: state.viewModeType.value == ViewModeType.grid,
-                            onTap: () async {
-                              await logic.changeViewMode(ViewModeType.grid);
-                            },
-                            child: Text(i18n.diaryViewModeGrid),
-                          ),
-                        ];
-                      },
-                    ),
-                  ],
-                  bottom: PreferredSize(preferredSize: const Size.fromHeight(46.0), child: buildTabBar()),
-                ),
+    return NestedScrollView(
+      key: state.nestedScrollKey,
+      headerSliverBuilder: (context, _) {
+        return [
+          SliverOverlapAbsorber(
+            handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+            sliver: SliverAppBar(
+              title: Text(
+                state.customTitleName.isNotEmpty
+                    ? state.customTitleName
+                    : i18n.appName,
+                overflow: TextOverflow.ellipsis,
               ),
-            ];
-          },
-          body: buildTabBarView(),
-        );
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                        context: context,
+                        showDragHandle: true,
+                        useSafeArea: true,
+                        builder: (context) {
+                          return const SearchSheetComponent();
+                        });
+                  },
+                  icon: const Icon(Icons.search),
+                  tooltip: i18n.diaryPageSearchButton,
+                ),
+                PopupMenuButton(
+                  offset: const Offset(0, 46),
+                  tooltip: i18n.diaryPageViewModeButton,
+                  itemBuilder: (context) {
+                    return <PopupMenuEntry<String>>[
+                      CheckedPopupMenuItem(
+                        checked: state.viewModeType == ViewModeType.list,
+                        onTap: () async {
+                          await logic.changeViewMode(ViewModeType.list);
+                        },
+                        child: Text(i18n.diaryViewModeList),
+                      ),
+                      const PopupMenuDivider(),
+                      CheckedPopupMenuItem(
+                        checked: state.viewModeType == ViewModeType.grid,
+                        onTap: () async {
+                          await logic.changeViewMode(ViewModeType.grid);
+                        },
+                        child: Text(i18n.diaryViewModeGrid),
+                      ),
+                    ];
+                  },
+                ),
+              ],
+              bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(46.0),
+                  child: buildTabBar()),
+            ),
+          ),
+        ];
       },
+      body: buildTabBarView(),
     );
   }
 }

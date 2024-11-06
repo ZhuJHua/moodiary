@@ -137,6 +137,10 @@ class FileUtil {
   }
 
   String getRealPath(String fileType, String fileName) {
+    if (fileType == 'thumbnail') {
+      var thumbnailName = 'thumbnail-${fileName.substring(6, 42)}.jpeg';
+      return join(_filePath, 'video', thumbnailName);
+    }
     return join(_filePath, fileType, fileName);
   }
 

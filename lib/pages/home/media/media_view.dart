@@ -102,9 +102,8 @@ class MediaPage extends StatelessWidget {
     }
 
     return GetBuilder<MediaLogic>(
-      init: logic,
       assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return CustomScrollView(
           slivers: [
             SliverAppBar(

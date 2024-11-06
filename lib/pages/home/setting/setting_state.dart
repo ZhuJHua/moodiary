@@ -1,40 +1,24 @@
-import 'package:get/get.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 class SettingState {
   //当前占用空间
-  late RxString dataUsage;
+  String dataUsage = '';
 
-  late RxInt themeMode;
+  int themeMode = Utils().prefUtil.getValue<int>('themeMode')!;
 
-  late RxInt color;
+  int color = Utils().prefUtil.getValue<int>('color')!;
 
-  late RxBool dynamicColor;
+  // late RxInt fontTheme;
 
-  late RxInt fontTheme;
+  bool lock = Utils().prefUtil.getValue<bool>('lock')!;
 
-  late RxBool getWeather;
-  late RxBool lock;
+  bool lockNow = Utils().prefUtil.getValue<bool>('lockNow')!;
 
-  late RxBool lockNow;
+  bool local = Utils().prefUtil.getValue<bool>('local')!;
 
-  late RxBool local;
-
-  late RxString customTitle;
+  String customTitle = Utils().prefUtil.getValue<String>('customTitleName')!;
 
   SettingState() {
-    dataUsage = ''.obs;
-    themeMode = Utils().prefUtil.getValue<int>('themeMode')!.obs;
-    color = Utils().prefUtil.getValue<int>('color')!.obs;
-    dynamicColor = Utils().prefUtil.getValue<bool>('dynamicColor')!.obs;
-
-    fontTheme = Utils().prefUtil.getValue<int>('fontTheme')!.obs;
-    getWeather = Utils().prefUtil.getValue<bool>('getWeather')!.obs;
-    lock = Utils().prefUtil.getValue<bool>('lock')!.obs;
-    lockNow = Utils().prefUtil.getValue<bool>('lockNow')!.obs;
-    local = Utils().prefUtil.getValue<bool>('local')!.obs;
-    customTitle = Utils().prefUtil.getValue<String>('customTitleName')!.obs;
-
-    ///Initialize variables
+    // fontTheme = Utils().prefUtil.getValue<int>('fontTheme')!.obs;
   }
 }

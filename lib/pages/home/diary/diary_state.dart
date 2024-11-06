@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
@@ -18,15 +17,15 @@ class DiaryState {
   //主滚动列表key
   late GlobalKey<NestedScrollViewState> nestedScrollKey;
 
-  ScrollController get innerController => nestedScrollKey.currentState!.innerController;
+  ScrollController get innerController =>
+      nestedScrollKey.currentState!.innerController;
 
-  ScrollController get outerController => nestedScrollKey.currentState!.outerController;
+  ScrollController get outerController =>
+      nestedScrollKey.currentState!.outerController;
 
   //视图模式状态
-  late Rx<ViewModeType> viewModeType;
-
-  //回到顶部状态
-  late RxBool isToTopShow;
+  late ViewModeType viewModeType =
+      ViewModeType.getType(Utils().prefUtil.getValue<int>('homeViewMode')!);
 
   //当前tab bar位置
   late int currentTabBarIndex;
@@ -35,8 +34,6 @@ class DiaryState {
     customTitleName = Utils().prefUtil.getValue<String>('customTitleName')!;
 
     nestedScrollKey = GlobalKey<NestedScrollViewState>();
-
-    viewModeType = ViewModeType.getType(Utils().prefUtil.getValue<int>('homeViewMode')!).obs;
 
     currentTabBarIndex = 0;
 
@@ -49,9 +46,5 @@ class DiaryState {
     for (var category in categoryList) {
       keyMap[category.id] = GlobalKey<PrimaryScrollWrapperState>();
     }
-
-    isToTopShow = false.obs;
-
-    ///Initialize variables
   }
 }
