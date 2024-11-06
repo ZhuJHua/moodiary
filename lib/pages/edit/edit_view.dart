@@ -428,8 +428,8 @@ class EditPage extends StatelessWidget {
                   trailing: state.isProcessing
                       ? const CircularProgressIndicator()
                       : IconButton.filledTonal(
-                          onPressed: () {
-                            logic.getWeather();
+                          onPressed: () async {
+                            await logic.getPositionAndWeather();
                           },
                           icon: const Icon(Icons.location_on),
                         ),

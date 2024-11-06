@@ -5,6 +5,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/find_locale.dart';
@@ -25,8 +26,8 @@ Future<void> initSystem() async {
   //初始化视频播放
   MediaKit.ensureInitialized();
   //地图缓存
-  //await FMTCObjectBoxBackend().initialise();
-  //await const FMTCStore('mapStore').manage.create();
+  await FMTCObjectBoxBackend().initialise();
+  await const FMTCStore('mapStore').manage.create();
   platFormOption();
 }
 

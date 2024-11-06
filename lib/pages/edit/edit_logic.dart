@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:lottie/lottie.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
@@ -71,7 +72,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     if (Get.arguments == 'new') {
       state.currentDiary = Diary();
       if (Utils().prefUtil.getValue<bool>('autoWeather') == true) {
-        unawaited(getWeather());
+        unawaited(getPositionAndWeather());
       }
     } else {
       //如果是编辑，将日记对象赋值
@@ -372,20 +373,43 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     update(['Mood']);
   }
 
-  //获取天气
-  Future<void> getWeather() async {
+  //获取天气，同时获取定位
+  Future<void> getPositionAndWeather() async {
     var key = Utils().prefUtil.getValue<String>('qweatherKey');
-    if (key != null) {
-      state.isProcessing = true;
-      update();
-      var res = await Api().updateWeather();
-      if (res != null) {
-        state.currentDiary.weather = res;
-        state.isProcessing = false;
-        Utils().noticeUtil.showToast('获取成功');
-        update(['Weather']);
-      }
+    if (key == null) return;
+
+    state.isProcessing = true;
+    update(['Weather']);
+
+    // 获取定位
+    var position = await Api().updatePosition();
+    if (position == null) {
+      _handleError('定位失败');
+      return;
     }
+
+    state.currentDiary.position = position;
+
+    // 获取天气
+    var weather = await Api().updateWeather(
+      position: LatLng(double.parse(position[0]), double.parse(position[1])),
+    );
+
+    if (weather == null) {
+      _handleError('天气获取失败');
+      return;
+    }
+
+    state.currentDiary.weather = weather;
+    state.isProcessing = false;
+    Utils().noticeUtil.showToast('获取成功');
+    update(['Weather']);
+  }
+
+  void _handleError(String message) {
+    state.isProcessing = false;
+    Utils().noticeUtil.showToast(message);
+    update(['Weather']);
   }
 
   //获取音频名称

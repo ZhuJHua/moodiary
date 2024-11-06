@@ -19,17 +19,17 @@ class SideBarLogic extends GetxController {
     getHitokoto();
     getImage();
     getInfo();
-    getWeather();
+    // getWeather();
     super.onReady();
   }
 
-  Future<void> getWeather() async {
-    var key = Utils().prefUtil.getValue<String>('qweatherKey');
-    if (state.getWeather && key != null) {
-      state.weatherResponse.value =
-          await Utils().cacheUtil.getCacheList('weather', Api().updateWeather, maxAgeMillis: 15 * 60000) ?? [];
-    }
-  }
+  // Future<void> getWeather() async {
+  //   var key = Utils().prefUtil.getValue<String>('qweatherKey');
+  //   if (state.getWeather && key != null) {
+  //     state.weatherResponse.value =
+  //         await Utils().cacheUtil.getCacheList('weather', Api().updateWeather, maxAgeMillis: 15 * 60000) ?? [];
+  //   }
+  // }
 
   Future<void> getHitokoto() async {
     var res = await Utils().cacheUtil.getCacheList('hitokoto', Api().updateHitokoto, maxAgeMillis: 15 * 60000);
