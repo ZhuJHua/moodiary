@@ -74,6 +74,43 @@ class LocalSendComponent extends StatelessWidget {
       );
     }
 
+    Widget buildOption() {
+      return Column(
+        spacing: 8.0,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(
+              alignment: Alignment.center,
+              child: Text(
+                '此设备作为',
+                style: textStyle.titleSmall,
+              )),
+          GetBuilder<LocalSendLogic>(
+              id: 'SegmentButton',
+              builder: (_) {
+                return SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(
+                      value: 'send',
+                      icon: Icon(Icons.send),
+                      label: Text('发送'),
+                    ),
+                    ButtonSegment(
+                      value: 'receive',
+                      icon: Icon(Icons.move_to_inbox_rounded),
+                      label: Text('接收'),
+                    ),
+                  ],
+                  selected: {state.type},
+                  onSelectionChanged: (newSelection) {
+                    logic.changeType(newSelection.first);
+                  },
+                );
+              }),
+        ],
+      );
+    }
+
     return GetBuilder<LocalSendLogic>(
       assignId: true,
       builder: (_) {
@@ -90,28 +127,7 @@ class LocalSendComponent extends StatelessWidget {
                 alignment: WrapAlignment.spaceEvenly,
                 children: [buildWifiInfo(), buildPortInfo()],
               ),
-              GetBuilder<LocalSendLogic>(
-                  id: 'SegmentButton',
-                  builder: (_) {
-                    return SegmentedButton<String>(
-                      segments: const [
-                        ButtonSegment(
-                          value: 'send',
-                          icon: Icon(Icons.send),
-                          label: Text('发送'),
-                        ),
-                        ButtonSegment(
-                          value: 'receive',
-                          icon: Icon(Icons.move_to_inbox_rounded),
-                          label: Text('接收'),
-                        ),
-                      ],
-                      selected: {state.type},
-                      onSelectionChanged: (newSelection) {
-                        logic.changeType(newSelection.first);
-                      },
-                    );
-                  }),
+              buildOption(),
               GetBuilder<LocalSendLogic>(
                   id: 'Panel',
                   builder: (_) {

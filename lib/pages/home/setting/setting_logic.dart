@@ -40,7 +40,8 @@ class SettingLogic extends GetxController {
     state.dataUsage = '${sizeMap['size']} ${sizeMap['unit']}';
     update(['DataUsage']);
     if (sizeMap['bytes'] > (1024 * 1024 * 100)) {
-      await deleteCache();
+      await Utils().fileUtil.clearCache();
+      await getDataUsage();
       Utils().noticeUtil.showToast('缓存已自动清理');
     }
   }
@@ -134,7 +135,7 @@ class SettingLogic extends GetxController {
     if (result != null) {
       Utils().noticeUtil.showToast('数据导入中，请不要离开页面');
       await Utils().fileUtil.extractFile(result.files.single.path!);
-      Utils().noticeUtil.showToast('导入成功');
+      Utils().noticeUtil.showToast('导入成功，请重启应用');
     } else {
       Utils().noticeUtil.showToast('取消文件选择');
     }

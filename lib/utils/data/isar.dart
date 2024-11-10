@@ -79,7 +79,12 @@ class IsarUtil {
 
   //根据日期范围获取日记
   Future<List<Diary>> getDiariesByDateRange(DateTime start, DateTime end) async {
-    return await _isar.diarys.where().timeBetween(start, end).showEqualTo(true).findAllAsync();
+    return await _isar.diarys.where().timeBetween(start, end).findAllAsync();
+  }
+
+  //获取全部日记
+  Future<List<Diary>> getAllDiaries() async {
+    return await _isar.diarys.where().findAllAsync();
   }
 
   //获取指定范围内的天气

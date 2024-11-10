@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart' as dio;
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -44,7 +45,6 @@ class LocalSendClientLogic extends GetxController {
     final found = await _findServer(timeout: const Duration(seconds: 30));
 
     if (found) {
-      Utils().noticeUtil.showToast('找到服务器');
     } else {
       state.isFindingServer = false;
       update();
@@ -92,6 +92,7 @@ class LocalSendClientLogic extends GetxController {
           final serverInfo = serverResponse.split(':');
           state.serverIp = serverInfo[0];
           state.serverPort = int.parse(serverInfo[1]);
+          state.serverName = serverInfo[2];
           state.isFindingServer = false;
           update();
 
@@ -113,12 +114,16 @@ class LocalSendClientLogic extends GetxController {
 
   // 向服务器发送数据并监听进度
   Future<void> sendData(Diary diary) async {
+    state.isSending.value = true;
     // 创建 FormData 并同步添加 JSON 和文件
     dio.FormData formData = dio.FormData();
-
     // 添加 JSON 数据
     formData.fields.add(MapEntry('diary', jsonEncode(diary.toJson())));
-
+    // 如果有分类，把分类名字带过去
+    if (diary.categoryId != null) {
+      var categoryName = Utils().isarUtil.getCategoryName(diary.categoryId!)!.categoryName;
+      formData.fields.add(MapEntry('categoryName', categoryName));
+    }
     // 同步添加图片文件
     for (var imageName in diary.imageName) {
       final filePath = Utils().fileUtil.getRealPath('image', imageName);
@@ -127,7 +132,6 @@ class LocalSendClientLogic extends GetxController {
         await dio.MultipartFile.fromFile(filePath, filename: imageName),
       ));
     }
-
     // 同步添加视频文件
     for (var videoName in diary.videoName) {
       final filePath = Utils().fileUtil.getRealPath('video', videoName);
@@ -136,7 +140,6 @@ class LocalSendClientLogic extends GetxController {
         await dio.MultipartFile.fromFile(filePath, filename: videoName),
       ));
     }
-
     // 同步添加缩略图文件
     for (var videoName in diary.videoName) {
       final filePath = Utils().fileUtil.getRealPath('thumbnail', videoName);
@@ -145,7 +148,6 @@ class LocalSendClientLogic extends GetxController {
         await dio.MultipartFile.fromFile(filePath, filename: 'thumbnail-${videoName.substring(6, 42)}.jpeg'),
       ));
     }
-
     // 同步添加音频文件
     for (var audioName in diary.audioName) {
       final filePath = Utils().fileUtil.getRealPath('audio', audioName);
@@ -154,11 +156,9 @@ class LocalSendClientLogic extends GetxController {
         await dio.MultipartFile.fromFile(filePath, filename: audioName),
       ));
     }
-
     final startTime = DateTime.now();
-
     // 发送请求并监听进度
-    await Utils().httpUtil.dio.post(
+    var response = await Utils().httpUtil.dio.post(
       'http://${state.serverIp}:${state.serverPort}',
       data: formData,
       onSendProgress: (int sent, int total) {
@@ -168,5 +168,75 @@ class LocalSendClientLogic extends GetxController {
         state.progress.value = sent / total;
       },
     );
+    if (response.statusCode == 200 && response.data != null) {
+    } else {
+      Utils().noticeUtil.showToast('发送失败');
+    }
+    state.sendCount.value += 1;
+    if (state.sendCount.value == state.diaryToSend.length) {
+      state.isSending.value = false;
+      state.sendCount.value = 0;
+      state.diaryToSend.clear();
+    }
+  }
+
+  Future<void> sendDiaryList() async {
+    if (state.diaryToSend.isNotEmpty) {
+      for (var diary in state.diaryToSend) {
+        await sendData(diary);
+        state.progress.value = .0;
+      }
+      state.isSending.value = false;
+      Utils().noticeUtil.showToast('发送完成');
+    } else {
+      Utils().noticeUtil.showToast('还没选择日记');
+    }
+  }
+
+  // 向服务器发送数据并监听进度
+  Future<void> sendAllData() async {
+    state.isSending.value = true;
+    final dataPath = Utils().fileUtil.getRealPath('', '');
+    final zipPath = Utils().fileUtil.getCachePath('');
+    final isolateParams = {'zipPath': zipPath, 'dataPath': dataPath};
+    // 获取压缩文件路径
+    var filePath = await compute(Utils().fileUtil.zipFile, isolateParams);
+
+    // 创建 FormData 并同步添加 JSON 和文件
+    dio.FormData formData = dio.FormData();
+    // 添加 JSON 数据
+    formData.files.add(MapEntry('file', await dio.MultipartFile.fromFile(filePath)));
+
+    final startTime = DateTime.now();
+    // 发送请求并监听进度
+    var response = await Utils().httpUtil.dio.post(
+      'http://${state.serverIp}:${state.serverPort}',
+      data: formData,
+      onSendProgress: (int sent, int total) {
+        final currentTime = DateTime.now();
+        final timeElapsed = currentTime.difference(startTime).inMilliseconds / 1000;
+        state.speed.value = sent / timeElapsed;
+        state.progress.value = sent / total;
+      },
+    );
+    state.isSending.value = false;
+    if (response.statusCode == 200 && response.data != null) {
+      if (response.data as String == 'Data and files received successfully') {
+        Utils().noticeUtil.showToast('发送成功');
+      }
+    } else {
+      Utils().noticeUtil.showToast('发送失败');
+    }
+  }
+
+  Future<void> setDiary(Duration duration) async {
+    Get.backLegacy();
+    var now = DateTime.now();
+    state.diaryToSend.value = await Utils().isarUtil.getDiariesByDateRange(now.subtract(duration), now);
+  }
+
+  Future<void> setAllDiary() async {
+    Get.backLegacy();
+    state.diaryToSend.value = await Utils().isarUtil.getAllDiaries();
   }
 }

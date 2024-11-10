@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/utils/utils.dart';
 
 import 'local_send_client_logic.dart';
 import 'local_send_client_state.dart';
@@ -15,41 +13,119 @@ class LocalSendClientComponent extends StatelessWidget {
     final LocalSendClientLogic logic = Get.put(LocalSendClientLogic());
     final LocalSendClientState state = Bind.find<LocalSendClientLogic>().state;
 
+    Widget buildSend() {
+      if (state.isFindingServer) {
+        return ListTile(
+          title: const Text('查找服务器'),
+          subtitle: LinearProgressIndicator(
+            borderRadius: BorderRadius.circular(2.0),
+          ),
+        );
+      } else if (state.serverIp == null) {
+        return ListTile(
+          title: const Text('未找到服务器'),
+          leading: const FaIcon(FontAwesomeIcons.triangleExclamation),
+          trailing: FilledButton(
+              onPressed: () {
+                logic.restartFindServer();
+              },
+              child: const FaIcon(FontAwesomeIcons.repeat)),
+        );
+      } else {
+        return ListTile(
+          title: Text(state.serverName!),
+          subtitle: Text(state.serverIp!),
+          trailing: FilledButton(
+            onPressed: () async {
+              await logic.sendDiaryList();
+            },
+            child: const FaIcon(FontAwesomeIcons.solidPaperPlane),
+          ),
+        );
+      }
+    }
+
+    Widget buildProgress() {
+      return Obx(() {
+        return state.isSending.value
+            ? ListTile(
+                title: Obx(() {
+                  return LinearProgressIndicator(
+                    value: state.progress.value,
+                    borderRadius: BorderRadius.circular(2.0),
+                  );
+                }),
+                subtitle: Obx(() {
+                  return Text('${state.sendCount.value} / ${state.diaryToSend.length}');
+                }),
+              )
+            : const SizedBox.shrink();
+      });
+    }
+
+    Widget buildSelect() {
+      return Obx(() {
+        return ListTile(
+          title: const Text('选择你要传输的日记'),
+          subtitle: Text('已选择 ${state.diaryToSend.length}'),
+          trailing: FilledButton(
+              onPressed: () {
+                showModalBottomSheet(
+                    context: context,
+                    showDragHandle: true,
+                    useSafeArea: true,
+                    builder: (context) {
+                      return Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Wrap(
+                          spacing: 8.0,
+                          children: [
+                            ActionChip(
+                              label: const Text('一天内'),
+                              onPressed: () async {
+                                await logic.setDiary(const Duration(days: 1));
+                              },
+                            ),
+                            ActionChip(
+                              label: const Text('一周内'),
+                              onPressed: () async {
+                                await logic.setDiary(const Duration(days: 7));
+                              },
+                            ),
+                            ActionChip(
+                              label: const Text('一个月内'),
+                              onPressed: () async {
+                                await logic.setDiary(const Duration(days: 31));
+                              },
+                            ),
+                            ActionChip(
+                              label: const Text('三个月'),
+                              onPressed: () async {
+                                await logic.setDiary(const Duration(days: 31));
+                              },
+                            ),
+                            ActionChip(
+                              label: const Text('全部'),
+                              onPressed: () async {
+                                await logic.setAllDiary();
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    });
+              },
+              child: const FaIcon(FontAwesomeIcons.fileCirclePlus)),
+        );
+      });
+    }
+
     return GetBuilder<LocalSendClientLogic>(
       assignId: true,
       builder: (_) {
-        if (state.isFindingServer) {
-          return const ListTile(
-            title: Text('查找服务器'),
-            subtitle: LinearProgressIndicator(),
-          );
-        } else if (state.serverIp == null) {
-          return ListTile(
-            title: const Text('未找到服务器'),
-            leading: const FaIcon(FontAwesomeIcons.triangleExclamation),
-            trailing: FilledButton(
-                onPressed: () {
-                  logic.restartFindServer();
-                },
-                child: const FaIcon(FontAwesomeIcons.repeat)),
-          );
-        } else {
-          return ListTile(
-            title: Text(state.serverIp!),
-            subtitle: Obx(() {
-              return Text(
-                  '${Utils().fileUtil.bytesToUnits(state.speed.value.toInt())['size']}${Utils().fileUtil.bytesToUnits(state.speed.value.toInt())['unit']}/s ${state.progress.value * 100}%');
-            }),
-            leading: const FaIcon(FontAwesomeIcons.server),
-            trailing: FilledButton(
-              onPressed: () async {
-                await logic
-                    .sendData((await Utils().isarUtil.getDiaryByID(fastHash('01931742-bd6c-738a-a482-cc8a398b5c0c')))!);
-              },
-              child: const FaIcon(FontAwesomeIcons.solidPaperPlane),
-            ),
-          );
-        }
+        return Column(
+          children: [buildSelect(), buildSend(), buildProgress()],
+        );
       },
     );
   }
