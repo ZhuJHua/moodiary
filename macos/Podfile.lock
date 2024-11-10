@@ -30,6 +30,8 @@ PODS:
     - FlutterMacOS
   - media_kit_video (0.0.1):
     - FlutterMacOS
+  - network_info_plus (0.0.1):
+    - FlutterMacOS
   - ObjectBox (4.0.1)
   - objectbox_flutter_libs (0.0.1):
     - FlutterMacOS
@@ -76,6 +78,7 @@ DEPENDENCIES:
   - media_kit_libs_macos_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_libs_macos_video/macos`)
   - media_kit_native_event_loop (from `Flutter/ephemeral/.symlinks/plugins/media_kit_native_event_loop/macos`)
   - media_kit_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos`)
+  - network_info_plus (from `Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos`)
   - objectbox_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/objectbox_flutter_libs/macos`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
@@ -124,6 +127,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/media_kit_native_event_loop/macos
   media_kit_video:
     :path: Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos
+  network_info_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos
   objectbox_flutter_libs:
     :path: Flutter/ephemeral/.symlinks/plugins/objectbox_flutter_libs/macos
   package_info_plus:
@@ -153,7 +158,7 @@ SPEC CHECKSUMS:
   app_links: 10e0a0ab602ffaf34d142cd4862f29d34b303b2a
   audioplayers_darwin: dcad41de4fbd0099cb3749f7ab3b0cb8f70b810c
   bitsdojo_window_macos: 44e3b8fe3dd463820e0321f6256c5b1c16bb6a00
-  device_info_plus: 74e614483d05c89290d30a4c8feae15d555f7427
+  device_info_plus: 1b14eed9bf95428983aed283a8d51cce3d8c4215
   dynamic_color: 2eaa27267de1ca20d879fbd6e01259773fb1670f
   fc_native_video_thumbnail: 927d4dcfd4c7e9f2cc1a20bb52dfee83de3792c2
   file_selector_macos: cc3858c981fe6889f364731200d6232dac1d812d
@@ -165,14 +170,15 @@ SPEC CHECKSUMS:
   media_kit_libs_macos_video: b3e2bbec2eef97c285f2b1baa7963c67c753fb82
   media_kit_native_event_loop: 81fd5b45192b72f8b5b69eaf5b540f45777eb8d5
   media_kit_video: c75b07f14d59706c775778e4dd47dd027de8d1e5
+  network_info_plus: 2cb02d8435635eae13b3b79279681985121cf30c
   ObjectBox: 0bc4bb75eea85f6af06b369148b334c2056bbc29
   objectbox_flutter_libs: 769e6f44f7381c8a8e46a2ed5c71c6068bb476f7
-  package_info_plus: f5790acc797bf17c3e959e9d6cf162cc68ff7523
+  package_info_plus: 12f1c5c2cfe8727ca46cbd0b26677728972d9a5b
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   quill_native_bridge_macos: f90985c5269ac7ba84d933605b463d96e5f544fe
   record_darwin: a0d515a0ef78c440c123ea3ac76184c9927a94d6
   screen_brightness_macos: 2d6d3af2165592d9a55ffcd95b7550970e41ebda
-  share_plus: fd717ef89a2801d3491e737630112b80c310640e
+  share_plus: 1fa619de8392a4398bfaf176d441853922614e89
   shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
   sqflite_darwin: a553b1fd6fe66f53bbb0fe5b4f5bab93f08d7a13
   tflite_flutter: b186ea3c62c076a90652f47c01005fe36c75171e

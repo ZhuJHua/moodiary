@@ -15,24 +15,14 @@ class SettingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<SettingLogic>();
+    final logic = Get.put(SettingLogic());
     final state = Bind.find<SettingLogic>().state;
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
 
     Widget buildManager() {
-      return Column(
-        children: [
-          ListTile(
-            title: Text(
-              '管理',
-              style: textStyle.titleLarge!.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const DashboardComponent(),
-        ],
-      );
+      return const DashboardComponent();
     }
 
     Widget buildData() {
@@ -55,6 +45,14 @@ class SettingPage extends StatelessWidget {
                     logic.toRecyclePage();
                   },
                   leading: const Icon(Icons.delete_outline),
+                ),
+                ListTile(
+                  title: const Text('备份与同步'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    logic.toBackupAndSyncPage();
+                  },
+                  leading: const Icon(Icons.sync),
                 ),
                 ListTile(
                   title: Text(i18n.settingExport),

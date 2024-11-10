@@ -18,9 +18,9 @@ class MediaUtil {
     List<String> nameList = [];
     for (var imageFile in imageFileList) {
       //生成新的名字
-      var imageName = 'image-${const Uuid().v7()}.webp';
+      var imageName = 'image-${const Uuid().v7()}.png';
       nameList.add(imageName);
-      await _compressAndSaveImage(imageFile, Utils().fileUtil.getRealPath('image', imageName), CompressFormat.webp);
+      await _compressAndSaveImage(imageFile, Utils().fileUtil.getRealPath('image', imageName), CompressFormat.png);
     }
     return nameList;
   }

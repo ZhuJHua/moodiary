@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
@@ -14,7 +15,7 @@ class DiaryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<DiaryLogic>();
+    final logic = Get.put(DiaryLogic());
     final state = Bind.find<DiaryLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
@@ -37,6 +38,7 @@ class DiaryPage extends StatelessWidget {
           tabAlignment: TabAlignment.start,
           indicatorSize: TabBarIndicatorSize.label,
           splashFactory: NoSplash.splashFactory,
+          dragStartBehavior: DragStartBehavior.start,
           indicator: UnderlineTabIndicator(
             borderSide: BorderSide(
               color: colorScheme.primary,
@@ -63,83 +65,96 @@ class DiaryPage extends StatelessWidget {
 
     Widget buildTabBarView() {
       List<Widget> allViews = [];
-
       // 添加全部日记页面
       allViews.add(buildDiaryView(0, state.keyMap['default'], null));
-
       // 添加分类日记页面
       allViews.addAll(List.generate(state.categoryList.length, (index) {
-        return buildDiaryView(
-            index + 1,
-            state.keyMap[state.categoryList[index].id],
-            state.categoryList[index].id);
+        return buildDiaryView(index + 1, state.keyMap[state.categoryList[index].id], state.categoryList[index].id);
       }));
 
-      return TabBarView(
-        controller: logic.tabController,
-        children: allViews,
+      return NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification notification) {
+          if (notification.metrics.axis == Axis.horizontal) {
+            logic.checkPageChange();
+          }
+          return true;
+        },
+        child: TabBarView(
+          controller: logic.tabController,
+          dragStartBehavior: DragStartBehavior.start,
+          children: allViews,
+        ),
       );
     }
 
-    return NestedScrollView(
-      key: state.nestedScrollKey,
-      headerSliverBuilder: (context, _) {
-        return [
-          SliverOverlapAbsorber(
-            handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-            sliver: SliverAppBar(
-              title: Text(
-                state.customTitleName.isNotEmpty
-                    ? state.customTitleName
-                    : i18n.appName,
-                overflow: TextOverflow.ellipsis,
-              ),
-              actions: [
-                IconButton(
-                  onPressed: () {
-                    showModalBottomSheet(
-                        context: context,
-                        showDragHandle: true,
-                        useSafeArea: true,
-                        builder: (context) {
-                          return const SearchSheetComponent();
-                        });
-                  },
-                  icon: const Icon(Icons.search),
-                  tooltip: i18n.diaryPageSearchButton,
-                ),
-                PopupMenuButton(
-                  offset: const Offset(0, 46),
-                  tooltip: i18n.diaryPageViewModeButton,
-                  itemBuilder: (context) {
-                    return <PopupMenuEntry<String>>[
-                      CheckedPopupMenuItem(
-                        checked: state.viewModeType == ViewModeType.list,
-                        onTap: () async {
-                          await logic.changeViewMode(ViewModeType.list);
+    return GetBuilder<DiaryLogic>(
+        assignId: true,
+        builder: (_) {
+          return NestedScrollView(
+            key: state.nestedScrollKey,
+            headerSliverBuilder: (context, _) {
+              return [
+                SliverOverlapAbsorber(
+                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                  sliver: SliverAppBar(
+                    title: GetBuilder<DiaryLogic>(
+                        id: 'Title',
+                        builder: (_) {
+                          return Text(
+                            state.customTitleName.isNotEmpty ? state.customTitleName : i18n.appName,
+                            overflow: TextOverflow.ellipsis,
+                          );
+                        }),
+                    pinned: true,
+                    actions: [
+                      IconButton(
+                        onPressed: () {
+                          showModalBottomSheet(
+                              context: context,
+                              showDragHandle: true,
+                              useSafeArea: true,
+                              builder: (context) {
+                                return const SearchSheetComponent();
+                              });
                         },
-                        child: Text(i18n.diaryViewModeList),
+                        icon: const Icon(Icons.search),
+                        tooltip: i18n.diaryPageSearchButton,
                       ),
-                      const PopupMenuDivider(),
-                      CheckedPopupMenuItem(
-                        checked: state.viewModeType == ViewModeType.grid,
-                        onTap: () async {
-                          await logic.changeViewMode(ViewModeType.grid);
+                      PopupMenuButton(
+                        offset: const Offset(0, 46),
+                        tooltip: i18n.diaryPageViewModeButton,
+                        itemBuilder: (context) {
+                          return <PopupMenuEntry<String>>[
+                            CheckedPopupMenuItem(
+                              checked: state.viewModeType == ViewModeType.list,
+                              onTap: () async {
+                                await logic.changeViewMode(ViewModeType.list);
+                              },
+                              child: Text(i18n.diaryViewModeList),
+                            ),
+                            const PopupMenuDivider(),
+                            CheckedPopupMenuItem(
+                              checked: state.viewModeType == ViewModeType.grid,
+                              onTap: () async {
+                                await logic.changeViewMode(ViewModeType.grid);
+                              },
+                              child: Text(i18n.diaryViewModeGrid),
+                            ),
+                          ];
                         },
-                        child: Text(i18n.diaryViewModeGrid),
                       ),
-                    ];
-                  },
+                    ],
+                    bottom: PreferredSize(preferredSize: const Size.fromHeight(46.0), child: buildTabBar()),
+                  ),
                 ),
-              ],
-              bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(46.0),
-                  child: buildTabBar()),
-            ),
-          ),
-        ];
-      },
-      body: buildTabBarView(),
-    );
+              ];
+            },
+            body: GetBuilder<DiaryLogic>(
+                id: 'TabBarView',
+                builder: (_) {
+                  return buildTabBarView();
+                }),
+          );
+        });
   }
 }

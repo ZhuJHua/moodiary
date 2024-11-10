@@ -1,6 +1,8 @@
 import 'package:isar/isar.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:mood_diary/common/models/map.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
@@ -235,6 +237,24 @@ class IsarUtil {
       });
     }
     isar.close();
+  }
+
+  // 获取用于地图显示的对象
+  Future<List<DiaryMapItem>> getAllMapItem() async {
+    List<DiaryMapItem> res = [];
+
+    /// 所有的日记
+    /// 要满足以下条件
+    /// 1. 有定位坐标
+    /// 2. 有照片
+    /// 3. show
+    var diaries =
+        await _isar.diarys.where().showEqualTo(true).positionIsNotEmpty().imageNameIsNotEmpty().findAllAsync();
+    for (var diary in diaries) {
+      res.add(DiaryMapItem(LatLng(double.parse(diary.position[0]), double.parse(diary.position[1])), diary.isarId,
+          diary.imageName.first));
+    }
+    return res;
   }
 
   //构建搜索

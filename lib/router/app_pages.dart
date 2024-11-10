@@ -4,6 +4,8 @@ import 'package:mood_diary/pages/about/about_view.dart';
 import 'package:mood_diary/pages/agreement/agreement_view.dart';
 import 'package:mood_diary/pages/analyse/analyse_logic.dart';
 import 'package:mood_diary/pages/analyse/analyse_view.dart';
+import 'package:mood_diary/pages/backup_sync/backup_sync_logic.dart';
+import 'package:mood_diary/pages/backup_sync/backup_sync_view.dart';
 import 'package:mood_diary/pages/category_manager/category_manager_logic.dart';
 import 'package:mood_diary/pages/category_manager/category_manager_view.dart';
 import 'package:mood_diary/pages/diary_details/diary_details_view.dart';
@@ -15,12 +17,8 @@ import 'package:mood_diary/pages/edit/edit_logic.dart';
 import 'package:mood_diary/pages/edit/edit_view.dart';
 import 'package:mood_diary/pages/font/font_logic.dart';
 import 'package:mood_diary/pages/font/font_view.dart';
-import 'package:mood_diary/pages/home/calendar/calendar_logic.dart';
-import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/pages/home/home_view.dart';
-import 'package:mood_diary/pages/home/media/media_logic.dart';
-import 'package:mood_diary/pages/home/setting/setting_logic.dart';
 import 'package:mood_diary/pages/image/image_logic.dart';
 import 'package:mood_diary/pages/image/image_view.dart';
 import 'package:mood_diary/pages/laboratory/laboratory_logic.dart';
@@ -60,11 +58,6 @@ class AppPages {
       page: () => const HomePage(),
       binds: [
         Bind.lazyPut(() => HomeLogic()),
-        Bind.lazyPut(() => DiaryLogic()),
-        Bind.lazyPut(() => CalendarLogic()),
-        Bind.lazyPut(() => MediaLogic()),
-        //Bind.lazyPut(() => AssistantLogic()),
-        Bind.lazyPut(() => SettingLogic()),
       ],
     ),
     //分析
@@ -174,6 +167,11 @@ class AppPages {
       name: AppRoutes.diarySettingPage,
       page: () => const DiarySettingPage(),
       binds: [Bind.lazyPut(() => DiarySettingLogic())],
+    ),
+    GetPage(
+      name: AppRoutes.backupSyncPage,
+      page: () => const BackupSyncPage(),
+      binds: [Bind.lazyPut(() => BackupSyncLogic())],
     ),
   ];
 }

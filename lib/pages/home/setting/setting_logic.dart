@@ -15,8 +15,7 @@ class SettingLogic extends GetxController {
   final SettingState state = SettingState();
   late final homeLogic = Bind.find<HomeLogic>();
 
-  late TextEditingController textEditingController =
-      TextEditingController(text: state.customTitle);
+  late TextEditingController textEditingController = TextEditingController(text: state.customTitle);
 
   @override
   void onInit() {
@@ -88,6 +87,10 @@ class SettingLogic extends GetxController {
     Get.toNamed(AppRoutes.diarySettingPage);
   }
 
+  void toBackupAndSyncPage() {
+    Get.toNamed(AppRoutes.backupSyncPage);
+  }
+
   void cancelCustomTitle() {
     textEditingController.clear();
     Get.backLegacy();
@@ -97,9 +100,7 @@ class SettingLogic extends GetxController {
     if (textEditingController.text.isNotEmpty) {
       state.customTitle = textEditingController.text;
       update(['CustomTitle']);
-      await Utils()
-          .prefUtil
-          .setValue<String>('customTitleName', textEditingController.text);
+      await Utils().prefUtil.setValue<String>('customTitleName', textEditingController.text);
       Get.backLegacy();
       textEditingController.clear();
       Utils().noticeUtil.showToast('重启应用后生效');
@@ -129,8 +130,7 @@ class SettingLogic extends GetxController {
   //导入
   Future<void> import() async {
     Get.backLegacy();
-    FilePickerResult? result = await FilePicker.platform
-        .pickFiles(allowedExtensions: ['zip'], type: FileType.custom);
+    FilePickerResult? result = await FilePicker.platform.pickFiles(allowedExtensions: ['zip'], type: FileType.custom);
     if (result != null) {
       Utils().noticeUtil.showToast('数据导入中，请不要离开页面');
       await Utils().fileUtil.extractFile(result.files.single.path!);

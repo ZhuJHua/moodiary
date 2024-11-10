@@ -15,7 +15,7 @@ class CalendarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<CalendarLogic>();
+    final logic = Get.put(CalendarLogic());
     final state = Bind.find<CalendarLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
@@ -28,7 +29,7 @@ class DashboardComponent extends StatelessWidget {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Icon(
+                    FaIcon(
                       icon,
                       color: colorScheme.secondary,
                       size: 32,

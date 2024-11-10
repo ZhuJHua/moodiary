@@ -47,8 +47,7 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
   }
 
   Future<void> startRecorder() async {
-    if (await Utils().permissionUtil.checkPermission(Permission.microphone) &&
-        await Utils().permissionUtil.checkPermission(Permission.bluetoothConnect)) {
+    if (await Utils().permissionUtil.checkPermission(Permission.microphone)) {
       await animationController.forward();
       state.isRecording.value = true;
       state.isStarted.value = true;

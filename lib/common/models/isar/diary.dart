@@ -113,6 +113,48 @@ class Diary {
   }
 
   Diary();
+
+  // 将 Diary 对象转换为 JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'categoryId': categoryId,
+      'title': title,
+      'content': content,
+      'contentText': contentText,
+      'time': time.toIso8601String(),
+      'show': show,
+      'mood': mood,
+      'weather': weather,
+      'imageName': imageName,
+      'audioName': audioName,
+      'videoName': videoName,
+      'tags': tags,
+      'position': position,
+      'imageColor': imageColor,
+      'aspect': aspect,
+    };
+  }
+
+  factory Diary.fromJson(Map<String, dynamic> json) {
+    return Diary()
+      ..id = json['id'] as String
+      ..categoryId = json['categoryId'] as String?
+      ..title = json['title'] as String
+      ..content = json['content'] as String
+      ..contentText = json['contentText'] as String
+      ..time = DateTime.parse(json['time'] as String)
+      ..show = json['show'] as bool
+      ..mood = (json['mood'] as num).toDouble()
+      ..weather = List<String>.from(json['weather'] as List)
+      ..imageName = List<String>.from(json['imageName'] as List)
+      ..audioName = List<String>.from(json['audioName'] as List)
+      ..videoName = List<String>.from(json['videoName'] as List)
+      ..tags = List<String>.from(json['tags'] as List)
+      ..position = List<String>.from(json['position'] as List)
+      ..imageColor = json['imageColor'] as int?
+      ..aspect = (json['aspect'] as num?)?.toDouble();
+  }
 }
 
 int fastHash(String string) {

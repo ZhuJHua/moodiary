@@ -6,8 +6,6 @@ import 'package:mood_diary/utils/data/supabase.dart';
 import 'package:mood_diary/utils/file_util.dart';
 import 'package:mood_diary/utils/http_util.dart';
 import 'package:mood_diary/utils/layout_util.dart';
-import 'package:mood_diary/utils/localsend/client.dart';
-import 'package:mood_diary/utils/localsend/server.dart';
 import 'package:mood_diary/utils/log_util.dart';
 import 'package:mood_diary/utils/media_util.dart';
 import 'package:mood_diary/utils/notice_util.dart';
@@ -59,8 +57,4 @@ class Utils {
   late final PrefUtil prefUtil = PrefUtil();
 
   late final SupabaseUtil supabaseUtil = SupabaseUtil();
-
-  late final LocalLanClient localLanClient = LocalLanClient();
-
-  late final LocalLanServer localLanServer = LocalLanServer();
 }

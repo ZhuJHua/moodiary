@@ -53,7 +53,8 @@ class Api {
 
   Future<List<String>?> updatePosition() async {
     Position? position;
-    if (await Utils().permissionUtil.checkPermission(Permission.location)) {
+    if (await Utils().permissionUtil.checkPermission(Permission.location) &&
+        await Geolocator.isLocationServiceEnabled()) {
       position = await Geolocator.getLastKnownPosition(forceAndroidLocationManager: true);
       position ??= await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
     }

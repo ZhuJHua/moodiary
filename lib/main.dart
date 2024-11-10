@@ -12,7 +12,6 @@ import 'package:intl/find_locale.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:mood_diary/router/app_pages.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/channel.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 Future<void> initSystem() async {
@@ -35,8 +34,6 @@ void platFormOption() {
   if (Platform.isAndroid) {
     //设置高刷
     unawaited(FlutterDisplayMode.setHighRefreshRate());
-    //设置状态栏沉浸
-    unawaited(ViewChannel.setSystemUIVisibility());
   }
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
     doWhenWindowReady(() {

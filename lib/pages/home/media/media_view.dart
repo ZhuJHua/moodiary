@@ -17,7 +17,7 @@ class MediaPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<MediaLogic>();
+    final logic = Get.put(MediaLogic());
     final state = Bind.find<MediaLogic>().state;
     final i18n = AppLocalizations.of(context)!;
 

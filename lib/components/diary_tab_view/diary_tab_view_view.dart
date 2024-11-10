@@ -17,15 +17,13 @@ class DiaryTabViewComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logicTag = categoryId ?? 'default';
-    final logic =
-        Get.put(DiaryTabViewLogic(categoryId: categoryId), tag: logicTag);
+    final logic = Get.put(DiaryTabViewLogic(categoryId: categoryId), tag: logicTag);
     final state = Bind.find<DiaryTabViewLogic>(tag: logicTag).state;
     final i18n = AppLocalizations.of(context)!;
 
     Widget buildGrid() {
       return SliverWaterfallFlow(
-        gridDelegate: const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 250),
+        gridDelegate: const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 250),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
             return LargeDiaryCardComponent(
@@ -68,29 +66,28 @@ class DiaryTabViewComponent extends StatelessWidget {
             builder: (_) {
               return buildPlaceHolder();
             }),
-        CustomScrollView(
-          cacheExtent: 2000,
-          slivers: [
-            SliverOverlapInjector(
-                handle:
-                    NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: GetBuilder<DiaryTabViewLogic>(
-                  id: 'TabView',
-                  tag: logicTag,
-                  builder: (_) {
-                    return SliverAnimatedSwitcher(
+        GetBuilder<DiaryTabViewLogic>(
+            id: 'TabView',
+            tag: logicTag,
+            builder: (_) {
+              return CustomScrollView(
+                primary: true,
+                cacheExtent: 2000,
+                slivers: [
+                  SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
+                  SliverPadding(
+                    padding: const EdgeInsets.all(4.0),
+                    sliver: SliverAnimatedSwitcher(
                       duration: const Duration(milliseconds: 400),
                       child: switch (logic.diaryLogic.state.viewModeType) {
                         ViewModeType.list => buildList(),
                         ViewModeType.grid => buildGrid(),
                       },
-                    );
-                  }),
-            ),
-          ],
-        ),
+                    ),
+                  ),
+                ],
+              );
+            }),
       ],
     );
   }

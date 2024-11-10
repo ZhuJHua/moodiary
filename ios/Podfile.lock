@@ -85,6 +85,8 @@ PODS:
     - Flutter
   - media_kit_video (0.0.1):
     - Flutter
+  - network_info_plus (0.0.1):
+    - Flutter
   - ObjectBox (4.0.1)
   - objectbox_flutter_libs (0.0.1):
     - Flutter
@@ -100,7 +102,6 @@ PODS:
     - Flutter
   - record_darwin (1.0.0):
     - Flutter
-    - FlutterMacOS
   - screen_brightness_ios (0.1.0):
     - Flutter
   - SDWebImage (5.19.7):
@@ -166,6 +167,7 @@ DEPENDENCIES:
   - media_kit_libs_ios_video (from `.symlinks/plugins/media_kit_libs_ios_video/ios`)
   - media_kit_native_event_loop (from `.symlinks/plugins/media_kit_native_event_loop/ios`)
   - media_kit_video (from `.symlinks/plugins/media_kit_video/ios`)
+  - network_info_plus (from `.symlinks/plugins/network_info_plus/ios`)
   - objectbox_flutter_libs (from `.symlinks/plugins/objectbox_flutter_libs/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
@@ -230,6 +232,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/media_kit_native_event_loop/ios"
   media_kit_video:
     :path: ".symlinks/plugins/media_kit_video/ios"
+  network_info_plus:
+    :path: ".symlinks/plugins/network_info_plus/ios"
   objectbox_flutter_libs:
     :path: ".symlinks/plugins/objectbox_flutter_libs/ios"
   package_info_plus:
@@ -281,13 +285,14 @@ SPEC CHECKSUMS:
   media_kit_libs_ios_video: a5fe24bc7875ccd6378a0978c13185e1344651c1
   media_kit_native_event_loop: e6b2ab20cf0746eb1c33be961fcf79667304fa2a
   media_kit_video: 5da63f157170e5bf303bf85453b7ef6971218a2e
+  network_info_plus: 6613d9d7cdeb0e6f366ed4dbe4b3c51c52d567a9
   ObjectBox: 0bc4bb75eea85f6af06b369148b334c2056bbc29
   objectbox_flutter_libs: 2ce0da386c780878687c736b528ceaf371573efb
   package_info_plus: c0502532a26c7662a62a356cebe2692ec5fe4ec4
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
   quill_native_bridge_ios: 277bdf5bf0fa5d7a12999556b415a5c63dd76ec4
-  record_darwin: df0a677188e5fed18472550298e675f19ddaffbe
+  record_darwin: 3b1a8e7d5c0cbf45ad6165b4d83a6ca643d929c3
   screen_brightness_ios: 715ca807df953bf676d339f11464e438143ee625
   SDWebImage: 8a6b7b160b4d710e2a22b6900e25301075c34cb3
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
@@ -303,6 +308,6 @@ SPEC CHECKSUMS:
   volume_controller: 531ddf792994285c9b17f9d8a7e4dcdd29b3eae9
   wakelock_plus: 78ec7c5b202cab7761af8e2b2b3d0671be6c4ae1
 
-PODFILE CHECKSUM: 83893f9a2d98085e99381d8f1dc69dcf7bd5b437
+PODFILE CHECKSUM: 9752b5340b4d3f9618318fcd530d907790e2a9f5
 
 COCOAPODS: 1.15.2
