@@ -95,7 +95,6 @@ dependencies:
   encrypt: 5.0.3
   objectbox: 4.0.3
   faker: 2.2.0
-  flutter_inappwebview: 6.1.5
 
 
   flutter_localizations:

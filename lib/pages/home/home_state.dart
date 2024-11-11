@@ -10,8 +10,5 @@ class HomeState {
 
   double navigatorBarHeight = 80.0;
 
-  //一言
-  String hitokoto = '';
-
   HomeState();
 }

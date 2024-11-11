@@ -88,6 +88,7 @@ class DiaryPage extends StatelessWidget {
     }
 
     return GetBuilder<DiaryLogic>(
+        id: 'All',
         assignId: true,
         builder: (_) {
           return NestedScrollView(

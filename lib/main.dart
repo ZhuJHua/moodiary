@@ -14,6 +14,8 @@ import 'package:mood_diary/router/app_pages.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
 
+import 'components/window_buttons/window_buttons.dart';
+
 Future<void> initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
   //获取系统语言
@@ -64,6 +66,7 @@ void main() {
         onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
         builder: (context, child) {
           final fontScale = Utils().prefUtil.getValue<double>('fontScale')!;
+          final colorScheme = Theme.of(context).colorScheme;
           final mediaQuery = MediaQuery(
             data: MediaQuery.of(context).copyWith(
               textScaler: TextScaler.linear(fontScale),
@@ -72,7 +75,15 @@ void main() {
           );
           // 根据平台决定是否需要 MoveWindow
           final windowChild = (Platform.isWindows || Platform.isMacOS || Platform.isWindows)
-              ? MoveWindow(child: mediaQuery)
+              ? MoveWindow(
+                  child: Column(
+                  children: [
+                    WindowButtons(
+                      colorScheme: colorScheme,
+                    ),
+                    Expanded(child: mediaQuery),
+                  ],
+                ))
               : mediaQuery;
           return windowChild;
         },

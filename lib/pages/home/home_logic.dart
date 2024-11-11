@@ -37,7 +37,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   @override
   void onReady() {
     unawaited(Utils().updateUtil.checkShouldUpdate(Utils().prefUtil.getValue<String>('appVersion')!.split('+')[0]));
-    unawaited(getHitokoto());
+    // unawaited(getHitokoto());
     super.onReady();
   }
 
@@ -49,16 +49,16 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     super.onClose();
   }
 
-  //获取一言
-  Future<void> getHitokoto() async {
-    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      var res = await Utils().cacheUtil.getCacheList('hitokoto', Api().updateHitokoto, maxAgeMillis: 15 * 60000);
-      if (res != null) {
-        state.hitokoto = res.first;
-      }
-      update(['DesktopBar']);
-    }
-  }
+  // //获取一言
+  // Future<void> getHitokoto() async {
+  //   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+  //     var res = await Utils().cacheUtil.getCacheList('hitokoto', Api().updateHitokoto, maxAgeMillis: 15 * 60000);
+  //     if (res != null) {
+  //       state.hitokoto = res.first;
+  //     }
+  //     update(['DesktopBar']);
+  //   }
+  // }
 
   //打开fab
   Future<void> openFab() async {

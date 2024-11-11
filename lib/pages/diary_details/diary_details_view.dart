@@ -63,6 +63,9 @@ class DiaryDetailsPage extends StatelessWidget {
               ),
               const Icon(Icons.access_time_outlined),
               colorScheme),
+          if (state.diary.position.isNotEmpty) ...[
+            buildAChip(Text(state.diary.position[2]), const Icon(Icons.location_city_rounded), colorScheme)
+          ],
           if (state.diary.weather.isNotEmpty) ...[
             buildAChip(
                 Text(

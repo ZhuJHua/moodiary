@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'dart:math';
 
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -12,7 +10,6 @@ import 'package:mood_diary/pages/home/calendar/calendar_view.dart';
 import 'package:mood_diary/pages/home/diary/diary_view.dart';
 import 'package:mood_diary/pages/home/media/media_view.dart';
 import 'package:mood_diary/pages/home/setting/setting_view.dart';
-import 'package:mood_diary/utils/utils.dart';
 import 'package:unicons/unicons.dart';
 
 import 'home_logic.dart';
@@ -273,68 +270,6 @@ class HomePage extends StatelessWidget {
           : const SizedBox.shrink();
     }
 
-    Widget buildWindowsBar() {
-      return Container(
-        color: colorScheme.surfaceContainer,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Row(
-                spacing: 8.0,
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(4.0)),
-                    child: Image.asset(
-                      'assets/icon/icon.png',
-                      height: 16.0,
-                      width: 16.0,
-                    ),
-                  ),
-                  Text(state.hitokoto),
-                ],
-              ),
-            ),
-            Row(
-              children: [
-                MinimizeWindowButton(
-                  colors: WindowButtonColors(
-                    iconNormal: colorScheme.secondary,
-                    mouseDown: colorScheme.secondaryContainer,
-                    normal: colorScheme.surfaceContainer,
-                    iconMouseDown: colorScheme.secondary,
-                    mouseOver: colorScheme.secondaryContainer,
-                    iconMouseOver: colorScheme.onSecondaryContainer,
-                  ),
-                ),
-                MaximizeWindowButton(
-                  colors: WindowButtonColors(
-                    iconNormal: colorScheme.secondary,
-                    mouseDown: colorScheme.secondaryContainer,
-                    normal: colorScheme.surfaceContainer,
-                    iconMouseDown: colorScheme.secondary,
-                    mouseOver: colorScheme.secondaryContainer,
-                    iconMouseOver: colorScheme.onSecondaryContainer,
-                  ),
-                ),
-                CloseWindowButton(
-                  colors: WindowButtonColors(
-                    iconNormal: colorScheme.secondary,
-                    mouseDown: colorScheme.secondaryContainer,
-                    normal: colorScheme.surfaceContainer,
-                    iconMouseDown: colorScheme.secondary,
-                    mouseOver: colorScheme.errorContainer,
-                    iconMouseOver: colorScheme.onErrorContainer,
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
-      );
-    }
-
     // 导航栏
     final List<NavigationDestination> destinations = [
       NavigationDestination(
@@ -358,6 +293,71 @@ class HomePage extends StatelessWidget {
         selectedIcon: const Icon(UniconsSolid.layer_group),
       ),
     ];
+    // Widget buildWindowsBar() {
+    //   return Container(
+    //     color: Platform.isMacOS ? colorScheme.surface : colorScheme.surfaceContainer,
+    //     child: Row(
+    //       mainAxisAlignment: Platform.isMacOS ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
+    //       children: [
+    //         Padding(
+    //           padding: const EdgeInsets.only(left: 8.0),
+    //           child: Row(
+    //             spacing: 8.0,
+    //             children: [
+    //               if (!Platform.isMacOS) ...[
+    //                 ClipRRect(
+    //                   borderRadius: const BorderRadius.all(Radius.circular(4.0)),
+    //                   child: Image.asset(
+    //                     'assets/icon/icon.png',
+    //                     height: 16.0,
+    //                     width: 16.0,
+    //                   ),
+    //                 )
+    //               ],
+    //               Text(state.hitokoto),
+    //             ],
+    //           ),
+    //         ),
+    //         if (!Platform.isMacOS) ...[
+    //           Row(
+    //             children: [
+    //               MinimizeWindowButton(
+    //                 colors: WindowButtonColors(
+    //                   iconNormal: colorScheme.secondary,
+    //                   mouseDown: colorScheme.secondaryContainer,
+    //                   normal: colorScheme.surfaceContainer,
+    //                   iconMouseDown: colorScheme.secondary,
+    //                   mouseOver: colorScheme.secondaryContainer,
+    //                   iconMouseOver: colorScheme.onSecondaryContainer,
+    //                 ),
+    //               ),
+    //               MaximizeWindowButton(
+    //                 colors: WindowButtonColors(
+    //                   iconNormal: colorScheme.secondary,
+    //                   mouseDown: colorScheme.secondaryContainer,
+    //                   normal: colorScheme.surfaceContainer,
+    //                   iconMouseDown: colorScheme.secondary,
+    //                   mouseOver: colorScheme.secondaryContainer,
+    //                   iconMouseOver: colorScheme.onSecondaryContainer,
+    //                 ),
+    //               ),
+    //               CloseWindowButton(
+    //                 colors: WindowButtonColors(
+    //                   iconNormal: colorScheme.secondary,
+    //                   mouseDown: colorScheme.secondaryContainer,
+    //                   normal: colorScheme.surfaceContainer,
+    //                   iconMouseDown: colorScheme.secondary,
+    //                   mouseOver: colorScheme.errorContainer,
+    //                   iconMouseOver: colorScheme.onErrorContainer,
+    //                 ),
+    //               ),
+    //             ],
+    //           )
+    //         ]
+    //       ],
+    //     ),
+    //   );
+    // }
 
     Widget buildNavigatorBar() {
       return size.width < 600
@@ -398,7 +398,6 @@ class HomePage extends StatelessWidget {
           Breakpoints.medium: SlotLayout.from(
             key: const ValueKey('primary navigation medium'),
             builder: (_) {
-              Utils().logUtil.printInfo('1');
               return AdaptiveScaffold.standardNavigationRail(
                 destinations:
                     destinations.map((destination) => AdaptiveScaffold.toRailDestination(destination)).toList(),
@@ -439,17 +438,6 @@ class HomePage extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: Platform.isWindows || Platform.isMacOS || Platform.isLinux
-          ? PreferredSize(
-              preferredSize: Size.fromHeight(appWindow.titleBarHeight),
-              child: GetBuilder<HomeLogic>(
-                id: 'DesktopBar',
-                builder: (_) {
-                  return buildWindowsBar();
-                },
-              ),
-            )
-          : null,
       body: Stack(
         children: [
           GetBuilder<HomeLogic>(

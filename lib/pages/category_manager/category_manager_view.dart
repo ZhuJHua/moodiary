@@ -58,20 +58,17 @@ class CategoryManagerPage extends StatelessWidget {
                     children: [
                       IconButton(
                         onPressed: () {
-                          logic.editInput(
-                              state.categoryList[index].categoryName);
+                          logic.editInput(state.categoryList[index].categoryName);
                           showDialog(
                               context: context,
                               builder: (context) {
                                 return inputDialog(() {
-                                  logic.editCategory(
-                                      state.categoryList[index].id);
+                                  logic.editCategory(state.categoryList[index].id);
                                 });
                               });
                         },
                         icon: const Icon(Icons.edit),
-                        style: const ButtonStyle(
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                       ),
                       const Text('编辑'),
                     ],
@@ -83,8 +80,7 @@ class CategoryManagerPage extends StatelessWidget {
                           logic.deleteCategory(state.categoryList[index].id);
                         },
                         icon: const Icon(Icons.delete_forever),
-                        style: const ButtonStyle(
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                         color: colorScheme.error,
                       ),
                       Text(
