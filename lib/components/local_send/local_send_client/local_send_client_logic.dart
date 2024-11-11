@@ -173,11 +173,6 @@ class LocalSendClientLogic extends GetxController {
       Utils().noticeUtil.showToast('发送失败');
     }
     state.sendCount.value += 1;
-    if (state.sendCount.value == state.diaryToSend.length) {
-      state.isSending.value = false;
-      state.sendCount.value = 0;
-      state.diaryToSend.clear();
-    }
   }
 
   Future<void> sendDiaryList() async {
@@ -186,6 +181,8 @@ class LocalSendClientLogic extends GetxController {
         await sendData(diary);
         state.progress.value = .0;
       }
+      state.sendCount.value = 0;
+      state.diaryToSend.clear();
       state.isSending.value = false;
       Utils().noticeUtil.showToast('发送完成');
     } else {
