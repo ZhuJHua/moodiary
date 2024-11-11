@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
+import 'package:mood_diary/components/search_card/search_card_logic.dart';
 import 'package:mood_diary/components/search_card/search_card_view.dart';
 
 import 'search_sheet_logic.dart';
@@ -14,8 +15,7 @@ class SearchSheetComponent extends StatelessWidget {
     final state = Bind.find<SearchSheetLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     return GetBuilder<SearchSheetLogic>(
-      
-      
+      assignId: true,
       builder: (_) {
         return Column(
           spacing: 4.0,
@@ -52,6 +52,7 @@ class SearchSheetComponent extends StatelessWidget {
                     : ListView.builder(
                         itemCount: state.searchList.length,
                         itemBuilder: (context, index) {
+                          Bind.lazyPut(() => SearchCardLogic(), tag: index.toString());
                           return Padding(
                             padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0, bottom: 0.0),
                             child: SearchCardComponent(

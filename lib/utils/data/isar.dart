@@ -132,7 +132,13 @@ class IsarUtil {
 
   //查询日记
   Future<List<Diary>> searchDiaries(String value) async {
-    return await _isar.diarys.where().showEqualTo(true).contentTextContains(value).findAllAsync();
+    var contentResults = await _isar.diarys.where().showEqualTo(true).contentTextContains(value).findAllAsync();
+    var titleResults = await _isar.diarys.where().showEqualTo(true).titleContains(value).findAllAsync();
+
+    // 合并并去重
+    var combinedResults = {...contentResults, ...titleResults}.toList();
+
+    return combinedResults;
   }
 
   Future<List<Diary>> searchDiariesByTag(String value) async {
