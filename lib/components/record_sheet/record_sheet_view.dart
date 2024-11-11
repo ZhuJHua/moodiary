@@ -15,8 +15,6 @@ class RecordSheetComponent extends StatelessWidget {
 
     return LayoutBuilder(builder: (context, constrains) {
       return GetBuilder<RecordSheetLogic>(
-        
-        
         initState: (_) {
           logic.initMaxWidth(constrains.maxWidth);
         },

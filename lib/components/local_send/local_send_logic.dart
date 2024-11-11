@@ -13,11 +13,6 @@ class LocalSendLogic extends GetxController {
     super.onReady();
   }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
   Future<void> getWifiInfo() async {
     state.deviceIpAddress = (await networkInfo.getWifiIP()) ?? '无法获取';
     state.wifiSSID = (await networkInfo.getWifiName()) ?? '无法获取';

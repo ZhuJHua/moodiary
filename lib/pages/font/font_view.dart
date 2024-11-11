@@ -12,8 +12,6 @@ class FontPage extends StatelessWidget {
     final state = Bind.find<FontLogic>().state;
     final textStyle = Theme.of(context).textTheme;
     return GetBuilder<FontLogic>(
-      
-      
       builder: (_) {
         return Scaffold(
           appBar: AppBar(

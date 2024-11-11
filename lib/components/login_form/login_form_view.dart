@@ -15,8 +15,6 @@ class LoginFormComponent extends StatelessWidget {
     final state = Bind.find<LoginFormLogic>().state;
     final size = MediaQuery.sizeOf(context);
     return GetBuilder<LoginFormLogic>(
-      
-      
       builder: (_) {
         return GestureDetector(
           onTap: () {

@@ -47,8 +47,6 @@ class WaveFormComponent extends StatelessWidget {
     final state = Bind.find<WaveFormLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     return GetBuilder<WaveFormLogic>(
-      
-      
       builder: (_) {
         return Obx(() {
           return CustomPaint(

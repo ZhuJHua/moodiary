@@ -227,11 +227,9 @@ Diary deserializeDiary(IsarReader reader) {
   {
     final value = IsarCore.readLong(reader, 6);
     if (value == -9223372036854775808) {
-      object.time =
-          DateTime.fromMillisecondsSinceEpoch(0, isUtc: true).toLocal();
+      object.time = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true).toLocal();
     } else {
-      object.time =
-          DateTime.fromMicrosecondsSinceEpoch(value, isUtc: true).toLocal();
+      object.time = DateTime.fromMicrosecondsSinceEpoch(value, isUtc: true).toLocal();
     }
   }
   object.show = IsarCore.readBool(reader, 7);
@@ -370,8 +368,7 @@ dynamic deserializeDiaryProp(IsarReader reader, int property) {
         if (value == -9223372036854775808) {
           return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true).toLocal();
         } else {
-          return DateTime.fromMicrosecondsSinceEpoch(value, isUtc: true)
-              .toLocal();
+          return DateTime.fromMicrosecondsSinceEpoch(value, isUtc: true).toLocal();
         }
       }
     case 7:
@@ -735,8 +732,7 @@ class _DiaryQueryBuilderUpdateImpl implements _DiaryQueryUpdate {
 }
 
 extension DiaryQueryBuilderUpdate on QueryBuilder<Diary, Diary, QOperations> {
-  _DiaryQueryUpdate get updateFirst =>
-      _DiaryQueryBuilderUpdateImpl(this, limit: 1);
+  _DiaryQueryUpdate get updateFirst => _DiaryQueryBuilderUpdateImpl(this, limit: 1);
 
   _DiaryQueryUpdate get updateAll => _DiaryQueryBuilderUpdateImpl(this);
 }
@@ -864,8 +860,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> idContains(String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> idContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -877,8 +872,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> idMatches(String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> idMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -954,8 +948,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      categoryIdGreaterThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> categoryIdGreaterThanOrEqualTo(
     String? value, {
     bool caseSensitive = true,
   }) {
@@ -1047,9 +1040,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> categoryIdContains(
-      String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> categoryIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -1061,9 +1052,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> categoryIdMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> categoryIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -1219,8 +1208,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> titleContains(String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> titleContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -1232,8 +1220,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> titleMatches(String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> titleMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -1389,9 +1376,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> contentContains(
-      String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> contentContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -1403,9 +1388,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> contentMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> contentMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -1469,8 +1452,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      contentTextGreaterThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> contentTextGreaterThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -1500,8 +1482,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      contentTextLessThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> contentTextLessThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -1563,9 +1544,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> contentTextContains(
-      String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> contentTextContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -1577,9 +1556,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> contentTextMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> contentTextMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -1828,8 +1805,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      weatherElementGreaterThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> weatherElementGreaterThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -1859,8 +1835,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      weatherElementLessThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> weatherElementLessThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -1922,9 +1897,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> weatherElementContains(
-      String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> weatherElementContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -1936,9 +1909,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> weatherElementMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> weatherElementMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -2014,8 +1985,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      imageNameElementGreaterThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageNameElementGreaterThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -2045,8 +2015,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      imageNameElementLessThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageNameElementLessThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -2108,8 +2077,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageNameElementContains(
-      String value,
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageNameElementContains(String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2122,8 +2090,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageNameElementMatches(
-      String pattern,
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageNameElementMatches(String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2147,8 +2114,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      imageNameElementIsNotEmpty() {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageNameElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         const GreaterCondition(
@@ -2201,8 +2167,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      audioNameElementGreaterThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> audioNameElementGreaterThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -2232,8 +2197,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      audioNameElementLessThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> audioNameElementLessThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -2295,8 +2259,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> audioNameElementContains(
-      String value,
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> audioNameElementContains(String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2309,8 +2272,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> audioNameElementMatches(
-      String pattern,
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> audioNameElementMatches(String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2334,8 +2296,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      audioNameElementIsNotEmpty() {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> audioNameElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         const GreaterCondition(
@@ -2388,8 +2349,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      videoNameElementGreaterThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> videoNameElementGreaterThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -2419,8 +2379,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      videoNameElementLessThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> videoNameElementLessThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -2482,8 +2441,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> videoNameElementContains(
-      String value,
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> videoNameElementContains(String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2496,8 +2454,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> videoNameElementMatches(
-      String pattern,
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> videoNameElementMatches(String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2521,8 +2478,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      videoNameElementIsNotEmpty() {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> videoNameElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         const GreaterCondition(
@@ -2575,8 +2531,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      tagsElementGreaterThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> tagsElementGreaterThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -2606,8 +2561,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      tagsElementLessThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> tagsElementLessThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -2669,9 +2623,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> tagsElementContains(
-      String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> tagsElementContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -2683,9 +2635,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> tagsElementMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> tagsElementMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -2761,8 +2711,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      positionElementGreaterThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> positionElementGreaterThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -2792,8 +2741,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      positionElementLessThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> positionElementLessThanOrEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
@@ -2855,9 +2803,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> positionElementContains(
-      String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> positionElementContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -2869,8 +2815,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> positionElementMatches(
-      String pattern,
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> positionElementMatches(String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
@@ -2894,8 +2839,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      positionElementIsNotEmpty() {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> positionElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         const GreaterCondition(
@@ -2956,8 +2900,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-      imageColorGreaterThanOrEqualTo(
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageColorGreaterThanOrEqualTo(
     int? value,
   ) {
     return QueryBuilder.apply(this, (query) {
@@ -3317,8 +3260,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> yMContains(String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> yMContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -3330,8 +3272,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> yMMatches(String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> yMMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -3487,8 +3428,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> yMdContains(String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> yMdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -3500,8 +3440,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> yMdMatches(String pattern,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> yMdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -3539,8 +3478,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
 extension DiaryQueryObject on QueryBuilder<Diary, Diary, QFilterCondition> {}
 
 extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortById(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortById({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         1,
@@ -3549,8 +3487,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByIdDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         1,
@@ -3560,8 +3497,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByCategoryId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByCategoryId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         2,
@@ -3570,8 +3506,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByCategoryIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByCategoryIdDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         2,
@@ -3581,8 +3516,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByTitle(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByTitle({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         3,
@@ -3591,8 +3525,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByTitleDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByTitleDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         3,
@@ -3602,8 +3535,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByContent(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByContent({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         4,
@@ -3612,8 +3544,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByContentDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByContentDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         4,
@@ -3623,8 +3554,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByContentText(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByContentText({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         5,
@@ -3633,8 +3563,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByContentTextDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByContentTextDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         5,
@@ -3716,8 +3645,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByYM(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByYM({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         17,
@@ -3726,8 +3654,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByYMDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByYMDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         17,
@@ -3737,8 +3664,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByYMd(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByYMd({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         18,
@@ -3747,8 +3673,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByYMdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByYMdDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(
         18,
@@ -3760,71 +3685,61 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
 }
 
 extension DiaryQuerySortThenBy on QueryBuilder<Diary, Diary, QSortThenBy> {
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenById(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenById({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(1, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByIdDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByCategoryId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByCategoryId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(2, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByCategoryIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByCategoryIdDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByTitle(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByTitle({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(3, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByTitleDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByTitleDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByContent(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByContent({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(4, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByContentDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByContentDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(4, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByContentText(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByContentText({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(5, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByContentTextDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByContentTextDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(5, sort: Sort.desc, caseSensitive: caseSensitive);
     });
@@ -3902,29 +3817,25 @@ extension DiaryQuerySortThenBy on QueryBuilder<Diary, Diary, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByYM(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByYM({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(17, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByYMDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByYMDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(17, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByYMd(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByYMd({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(18, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByYMdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByYMdDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(18, sort: Sort.desc, caseSensitive: caseSensitive);
     });
@@ -3932,36 +3843,31 @@ extension DiaryQuerySortThenBy on QueryBuilder<Diary, Diary, QSortThenBy> {
 }
 
 extension DiaryQueryWhereDistinct on QueryBuilder<Diary, Diary, QDistinct> {
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctById(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctById({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(1, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByCategoryId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByCategoryId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(2, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByTitle(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByTitle({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(3, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByContent(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByContent({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(4, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByContentText(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByContentText({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(5, caseSensitive: caseSensitive);
     });
@@ -4033,15 +3939,13 @@ extension DiaryQueryWhereDistinct on QueryBuilder<Diary, Diary, QDistinct> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByYM(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByYM({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(17, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByYMd(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByYMd({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(18, caseSensitive: caseSensitive);
     });
@@ -4280,8 +4184,7 @@ extension DiaryQueryProperty2<R> on QueryBuilder<Diary, R, QAfterProperty> {
   }
 }
 
-extension DiaryQueryProperty3<R1, R2>
-    on QueryBuilder<Diary, (R1, R2), QAfterProperty> {
+extension DiaryQueryProperty3<R1, R2> on QueryBuilder<Diary, (R1, R2), QAfterProperty> {
   QueryBuilder<Diary, (R1, R2, String), QOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(1);

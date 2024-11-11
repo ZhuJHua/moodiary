@@ -32,8 +32,7 @@ class CategoryManagerLogic extends GetxController {
 
   Future<void> addCategory() async {
     if (textEditingController.text.isNotEmpty) {
-      if (await Utils().isarUtil.insertACategory(
-          Category()..categoryName = textEditingController.text)) {
+      if (await Utils().isarUtil.insertACategory(Category()..categoryName = textEditingController.text)) {
         Get.backLegacy();
         await getCategory();
         await diaryLogic.updateCategory();

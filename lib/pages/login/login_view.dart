@@ -14,8 +14,6 @@ class LoginPage extends StatelessWidget {
     final state = Bind.find<LoginLogic>().state;
 
     return GetBuilder<LoginLogic>(
-      
-      
       builder: (_) {
         return Scaffold(
             appBar: AppBar(

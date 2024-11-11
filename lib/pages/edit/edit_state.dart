@@ -11,7 +11,8 @@ class EditState {
   List<XFile> audioFileList = [];
   List<XFile> videoThumbnailFileList = [];
 
-  List<String> audioNameList=[];
+  List<String> audioNameList = [];
+
   // 分类名称
   String categoryName = '';
 

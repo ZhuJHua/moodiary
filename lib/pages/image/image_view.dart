@@ -16,8 +16,6 @@ class ImagePage extends StatelessWidget {
     final state = Bind.find<ImageLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     return GetBuilder<ImageLogic>(
-      
-      
       builder: (_) {
         return Scaffold(
           extendBodyBehindAppBar: true,

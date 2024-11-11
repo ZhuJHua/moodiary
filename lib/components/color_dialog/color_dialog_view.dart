@@ -67,8 +67,6 @@ class ColorDialogComponent extends StatelessWidget {
     }
 
     return GetBuilder<ColorDialogLogic>(
-      
-      
       builder: (_) {
         return SimpleDialog(
           title: Text(i18n.settingColor),

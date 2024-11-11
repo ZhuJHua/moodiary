@@ -18,22 +18,20 @@ class AnalysePage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     //柱状图
-    Widget buildBarChart(String title, Map<String, IconData> iconMap,
-        Map<String, int> countMap, List<String> itemList) {
+    Widget buildBarChart(
+        String title, Map<String, IconData> iconMap, Map<String, int> countMap, List<String> itemList) {
       //去重
       itemList = Utils().arrayUtil.toSetList(itemList);
       return Container(
         padding: const EdgeInsets.all(20.0),
         margin: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(10.0)),
+        decoration:
+            BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(10.0)),
         child: Column(
           children: [
             Text(
               title,
-              style:
-                  textStyle.titleMedium!.copyWith(color: colorScheme.onSurface),
+              style: textStyle.titleMedium!.copyWith(color: colorScheme.onSurface),
             ),
             const SizedBox(
               height: 10,
@@ -48,8 +46,7 @@ class AnalysePage extends StatelessWidget {
                           show: true,
                           border: Border.symmetric(
                             horizontal: BorderSide(
-                              color: colorScheme.onSurface
-                                  .withAlpha((255 * 0.6).toInt()),
+                              color: colorScheme.onSurface.withAlpha((255 * 0.6).toInt()),
                             ),
                           ),
                         ),
@@ -66,9 +63,7 @@ class AnalysePage extends StatelessWidget {
                                 showTitles: true,
                                 getTitlesWidget: (value, meta) {
                                   return SideTitleWidget(
-                                      axisSide: meta.axisSide,
-                                      child: Icon(
-                                          iconMap[itemList[value.toInt()]]));
+                                      axisSide: meta.axisSide, child: Icon(iconMap[itemList[value.toInt()]]));
                                 }),
                           ),
                           topTitles: const AxisTitles(),
@@ -82,8 +77,7 @@ class AnalysePage extends StatelessWidget {
                           },
                           getDrawingHorizontalLine: (value) {
                             return FlLine(
-                              color: colorScheme.onSurface
-                                  .withAlpha((255 * 0.2).toInt()),
+                              color: colorScheme.onSurface.withAlpha((255 * 0.2).toInt()),
                               strokeWidth: 1,
                             );
                           },
@@ -92,9 +86,7 @@ class AnalysePage extends StatelessWidget {
                           itemList.length,
                           (index) => BarChartGroupData(x: index, barRods: [
                             BarChartRodData(
-                                fromY: 0,
-                                toY: countMap[itemList[index]]!.toDouble(),
-                                color: colorScheme.primary)
+                                fromY: 0, toY: countMap[itemList[index]]!.toDouble(), color: colorScheme.primary)
                           ]),
                         ),
                       ),
@@ -105,8 +97,7 @@ class AnalysePage extends StatelessWidget {
                         if (state.finished) ...[
                           Text(
                             '暂无数据',
-                            style: textStyle.titleLarge!
-                                .copyWith(color: colorScheme.onSurface),
+                            style: textStyle.titleLarge!.copyWith(color: colorScheme.onSurface),
                           ),
                         ] else ...[
                           const CircularProgressIndicator(),
@@ -123,15 +114,13 @@ class AnalysePage extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(20.0),
         margin: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(10.0)),
+        decoration:
+            BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(10.0)),
         child: Column(
           children: [
             Text(
               title,
-              style:
-                  textStyle.titleMedium!.copyWith(color: colorScheme.onSurface),
+              style: textStyle.titleMedium!.copyWith(color: colorScheme.onSurface),
             ),
             const SizedBox(
               height: 10,
@@ -144,8 +133,7 @@ class AnalysePage extends StatelessWidget {
                         spacing: 10.0,
                         runSpacing: 10.0,
                         children: List.generate(state.moodList.length, (index) {
-                          return MoodIconComponent(
-                              value: state.moodList[index]);
+                          return MoodIconComponent(value: state.moodList[index]);
                         }),
                       ),
                     )
@@ -155,8 +143,7 @@ class AnalysePage extends StatelessWidget {
                         if (state.finished) ...[
                           Text(
                             '暂无数据',
-                            style: textStyle.titleLarge!
-                                .copyWith(color: colorScheme.onSurface),
+                            style: textStyle.titleLarge!.copyWith(color: colorScheme.onSurface),
                           ),
                         ] else ...[
                           const CircularProgressIndicator(),
@@ -181,9 +168,8 @@ class AnalysePage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10.0),
               margin: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-              decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10.0)),
+              decoration:
+                  BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(10.0)),
               child: Row(
                 children: [
                   IconButton.filled(
@@ -205,9 +191,8 @@ class AnalysePage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10.0),
               margin: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-              decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10.0)),
+              decoration:
+                  BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(10.0)),
               child: Column(
                 children: [
                   TextButton(
@@ -219,8 +204,7 @@ class AnalysePage extends StatelessWidget {
                 ],
               ),
             ),
-            buildBarChart(
-                '天气', WeatherIcon.map, state.weatherMap, state.weatherList),
+            buildBarChart('天气', WeatherIcon.map, state.weatherMap, state.weatherList),
             buildMoodWrap('心情', state.moodList),
           ],
         );

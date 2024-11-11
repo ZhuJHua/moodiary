@@ -16,8 +16,6 @@ class UpdateDialogComponent extends StatelessWidget {
     final i18n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     return GetBuilder<UpdateDialogLogic>(
-      
-      
       builder: (_) {
         return AlertDialog(
           title: Wrap(

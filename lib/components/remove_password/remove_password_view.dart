@@ -14,12 +14,10 @@ class RemovePasswordComponent extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
 
-    final buttonSize =
-        (textStyle.displayLarge!.fontSize! * textStyle.displayLarge!.height!);
+    final buttonSize = (textStyle.displayLarge!.fontSize! * textStyle.displayLarge!.height!);
     Widget buildNumButton(String num) {
       return Ink(
-        decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest, shape: BoxShape.circle),
+        decoration: BoxDecoration(color: colorScheme.surfaceContainerHighest, shape: BoxShape.circle),
         child: InkWell(
           borderRadius: BorderRadius.all(Radius.circular(buttonSize / 2)),
           onTap: () async {
@@ -73,9 +71,7 @@ class RemovePasswordComponent extends StatelessWidget {
             Icons.circle,
             size: 16,
             color: Color.lerp(
-                state.password.length > index
-                    ? colorScheme.onSurface
-                    : colorScheme.surfaceContainerHighest,
+                state.password.length > index ? colorScheme.onSurface : colorScheme.surfaceContainerHighest,
                 Colors.red,
                 logic.animation.value),
           );

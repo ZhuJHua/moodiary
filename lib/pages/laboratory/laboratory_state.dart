@@ -1,5 +1,3 @@
-
-
 class LaboratoryState {
   //分辨率
   late String display;

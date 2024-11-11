@@ -18,9 +18,7 @@ class AudioPlayerComponent extends StatelessWidget {
 
     final colorScheme = Theme.of(context).colorScheme;
     return GetBuilder<AudioPlayerLogic>(
-      
       tag: path,
-      
       initState: (_) async {
         await logic.initAudioPlayer(path);
       },

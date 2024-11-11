@@ -1,5 +1,3 @@
-
-
 class SetPasswordState {
   String password = '';
 

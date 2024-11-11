@@ -22,17 +22,15 @@ class DiaryTabViewLogic extends GetxController {
   Future<void> getDiary() async {
     state.isFetching = true;
     update(['PlaceHolder']);
-    state.diaryList = await Utils()
-        .isarUtil
-        .getDiaryByCategory(state.categoryId, 0, state.initLen);
+    state.diaryList = await Utils().isarUtil.getDiaryByCategory(state.categoryId, 0, state.initLen);
     state.isFetching = false;
     update(['PlaceHolder']);
     update(['TabView']);
   }
 
   Future<void> paginationDiary() async {
-    state.diaryList += await Utils().isarUtil.getDiaryByCategory(
-        state.categoryId, state.diaryList.length, state.pageLen);
+    state.diaryList +=
+        await Utils().isarUtil.getDiaryByCategory(state.categoryId, state.diaryList.length, state.pageLen);
   }
 
   Future<void> getDiaryByDay(DateTime dateTime) async {}

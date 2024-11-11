@@ -6,13 +6,12 @@ import 'package:mood_diary/utils/utils.dart';
 
 import 'remove_password_state.dart';
 
-class RemovePasswordLogic extends GetxController
-    with GetSingleTickerProviderStateMixin {
+class RemovePasswordLogic extends GetxController with GetSingleTickerProviderStateMixin {
   final RemovePasswordState state = RemovePasswordState();
-  late AnimationController animationController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 200));
-  late Animation<double> animation = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: animationController, curve: Curves.easeInOut));
+  late AnimationController animationController =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+  late Animation<double> animation =
+      Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: animationController, curve: Curves.easeInOut));
 
   late final settingLogic = Bind.find<SettingLogic>();
 

@@ -6,7 +6,7 @@ import 'backup_sync_logic.dart';
 import 'backup_sync_state.dart';
 
 class BackupSyncPage extends StatelessWidget {
-  const BackupSyncPage({Key? key}) : super(key: key);
+  const BackupSyncPage({super.key});
 
   @override
   Widget build(BuildContext context) {

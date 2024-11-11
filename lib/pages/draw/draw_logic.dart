@@ -7,8 +7,7 @@ import 'draw_state.dart';
 
 class DrawLogic extends GetxController {
   final DrawState state = DrawState();
-  late DrawingController drawingController = DrawingController()
-    ..setStyle(color: state.pickerColor);
+  late DrawingController drawingController = DrawingController()..setStyle(color: state.pickerColor);
   late final editLogic = Bind.find<EditLogic>();
 
   @override

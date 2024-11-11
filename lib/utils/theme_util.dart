@@ -30,9 +30,7 @@ class ThemeUtil {
       colorScheme: ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: brightness,
-        dynamicSchemeVariant: color == 4
-            ? DynamicSchemeVariant.fidelity
-            : DynamicSchemeVariant.tonalSpot,
+        dynamicSchemeVariant: color == 4 ? DynamicSchemeVariant.fidelity : DynamicSchemeVariant.tonalSpot,
       ),
       fontFamily: Platform.isWindows ? '微软雅黑' : null,
     );
