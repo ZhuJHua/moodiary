@@ -102,8 +102,7 @@ class AskQuestionComponent extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraint) {
         return GetBuilder<AskQuestionLogic>(
-          
-          
+          assignId: true,
           builder: (_) {
             return Column(
               children: [

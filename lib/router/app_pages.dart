@@ -17,6 +17,8 @@ import 'package:mood_diary/pages/edit/edit_logic.dart';
 import 'package:mood_diary/pages/edit/edit_view.dart';
 import 'package:mood_diary/pages/font/font_logic.dart';
 import 'package:mood_diary/pages/font/font_view.dart';
+import 'package:mood_diary/pages/home/assistant/assistant_logic.dart';
+import 'package:mood_diary/pages/home/assistant/assistant_view.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/pages/home/home_view.dart';
 import 'package:mood_diary/pages/image/image_logic.dart';
@@ -172,6 +174,11 @@ class AppPages {
       name: AppRoutes.backupSyncPage,
       page: () => const BackupSyncPage(),
       binds: [Bind.lazyPut(() => BackupSyncLogic())],
+    ),
+    GetPage(
+      name: AppRoutes.assistantPage,
+      page: () => const AssistantPage(),
+      binds: [Bind.lazyPut(() => AssistantLogic())],
     ),
   ];
 }

@@ -3,7 +3,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
-import 'package:mood_diary/router/app_routes.dart';
 
 import 'dashboard_logic.dart';
 
@@ -146,9 +145,7 @@ class DashboardComponent extends StatelessWidget {
             }), null),
             buildManagerButton(Icons.article, '日记', Obx(() {
               return buildDiaryDetail(state.diaryCount.value, '篇', state.contentCount.value, '字');
-            }), () {
-              Get.toNamed(AppRoutes.mapPage);
-            }),
+            }), null),
             buildManagerButton(Icons.category, '分类', Obx(() {
               return buildDetail(state.categoryCount.value, '个');
             }), () {

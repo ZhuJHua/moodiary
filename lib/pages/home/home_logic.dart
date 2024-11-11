@@ -15,20 +15,20 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   final HomeState state = HomeState();
 
   //fab动画控制器
-  late AnimationController fabAnimationController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 200));
+  late AnimationController fabAnimationController =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
 
   //fab动画插值器
-  late Animation<double> fabAnimation = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: fabAnimationController, curve: Curves.easeInOut));
+  late Animation<double> fabAnimation =
+      Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: fabAnimationController, curve: Curves.easeInOut));
 
   //bar动画控制器
-  late AnimationController barAnimationController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 200));
+  late AnimationController barAnimationController =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
 
   //动画插值器
-  late Animation<double> barAnimation = Tween(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: barAnimationController, curve: Curves.easeInOut));
+  late Animation<double> barAnimation =
+      Tween(begin: 1.0, end: 0.0).animate(CurvedAnimation(parent: barAnimationController, curve: Curves.easeInOut));
 
   late PageController pageController = PageController();
 
@@ -36,8 +36,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
 
   @override
   void onReady() {
-    unawaited(Utils().updateUtil.checkShouldUpdate(
-        Utils().prefUtil.getValue<String>('appVersion')!.split('+')[0]));
+    unawaited(Utils().updateUtil.checkShouldUpdate(Utils().prefUtil.getValue<String>('appVersion')!.split('+')[0]));
     unawaited(getHitokoto());
     super.onReady();
   }
@@ -53,9 +52,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   //获取一言
   Future<void> getHitokoto() async {
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      var res = await Utils().cacheUtil.getCacheList(
-          'hitokoto', Api().updateHitokoto,
-          maxAgeMillis: 15 * 60000);
+      var res = await Utils().cacheUtil.getCacheList('hitokoto', Api().updateHitokoto, maxAgeMillis: 15 * 60000);
       if (res != null) {
         state.hitokoto = res.first;
       }
@@ -82,16 +79,14 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   //锁定屏幕
   void lockPage() {
     //如果开启密码的同时开启了立即锁定，就直接跳转到锁屏页面
-    if (Utils().prefUtil.getValue<bool>('lock') == true &&
-        Utils().prefUtil.getValue<bool>('lockNow') == true) {
+    if (Utils().prefUtil.getValue<bool>('lock') == true && Utils().prefUtil.getValue<bool>('lockNow') == true) {
       Get.toNamed(AppRoutes.lockPage, arguments: 'pause');
     }
   }
 
   void toUserPage() {
     //如果已经登录
-    if (Utils().supabaseUtil.user != null ||
-        Utils().supabaseUtil.session != null) {
+    if (Utils().supabaseUtil.user != null || Utils().supabaseUtil.session != null) {
       Get.toNamed(AppRoutes.userPage);
     } else {
       Get.toNamed(AppRoutes.loginPage);
@@ -115,6 +110,33 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
       } else {
         await diaryLogic.updateDiary(res);
       }
+    }
+  }
+
+  Future<void> toMap() async {
+    if (Utils().prefUtil.getValue<String>('tiandituKey') != null) {
+      //同时关闭fab
+      await HapticFeedback.selectionClick();
+      fabAnimationController.reset();
+      state.isFabExpanded = false;
+      update(['Fab']);
+      Get.toNamed(AppRoutes.mapPage);
+    } else {
+      Utils().noticeUtil.showToast('请先配置Key');
+    }
+  }
+
+  Future<void> toAi() async {
+    if (Utils().prefUtil.getValue<String>('tencentId') != null &&
+        Utils().prefUtil.getValue<String>('tencentKey') != null) {
+      //同时关闭fab
+      await HapticFeedback.selectionClick();
+      fabAnimationController.reset();
+      state.isFabExpanded = false;
+      update(['Fab']);
+      Get.toNamed(AppRoutes.assistantPage);
+    } else {
+      Utils().noticeUtil.showToast('请先配置Key');
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/utils/utils.dart';
 
@@ -21,118 +22,124 @@ class LaboratoryPage extends StatelessWidget {
         children: [
           ListTile(
             title: const Text('腾讯云密钥'),
-            onTap: () {
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      content: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextField(
-                            maxLines: 1,
-                            controller: logic.idTextEditingController,
-                            decoration: const InputDecoration(
-                              labelText: 'ID',
-                              border: OutlineInputBorder(),
-                            ),
+            isThreeLine: true,
+            subtitle: SelectionArea(
+                child: Text(
+                    'ID:${Utils().prefUtil.getValue<String>('tencentId') ?? ''}\nKey:${Utils().prefUtil.getValue<String>('tencentKey') ?? ''}')),
+            trailing: IconButton(
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              TextField(
+                                maxLines: 1,
+                                controller: logic.idTextEditingController,
+                                decoration: const InputDecoration(
+                                  labelText: 'ID',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 8.0,
+                              ),
+                              TextField(
+                                maxLines: 1,
+                                controller: logic.keyTextEditingController,
+                                decoration: const InputDecoration(
+                                  labelText: 'KEY',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(
-                            height: 8.0,
-                          ),
-                          TextField(
-                            maxLines: 1,
-                            controller: logic.keyTextEditingController,
-                            decoration: const InputDecoration(
-                              labelText: 'KEY',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ],
-                      ),
-                      actions: [
-                        TextButton(
-                            onPressed: () {
-                              Get.backLegacy();
-                            },
-                            child: Text(i18n.cancel)),
-                        TextButton(
-                            onPressed: () {
-                              logic.setTencentID();
-                            },
-                            child: Text(i18n.ok))
-                      ],
-                    );
-                  });
-            },
+                          actions: [
+                            TextButton(
+                                onPressed: () {
+                                  Get.backLegacy();
+                                },
+                                child: Text(i18n.cancel)),
+                            TextButton(
+                                onPressed: () {
+                                  logic.setTencentID();
+                                },
+                                child: Text(i18n.ok))
+                          ],
+                        );
+                      });
+                },
+                icon: const FaIcon(FontAwesomeIcons.wrench)),
           ),
           ListTile(
             title: const Text('和风天气密钥'),
-            subtitle: SelectionArea(
-                child: Text(
-                    Utils().prefUtil.getValue<String>('qweatherKey') ?? '')),
-            onTap: () {
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      content: TextField(
-                        maxLines: 1,
-                        controller: logic.qweatherTextEditingController,
-                        decoration: const InputDecoration(
-                          labelText: 'Key',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                            onPressed: () {
-                              Get.backLegacy();
-                            },
-                            child: Text(i18n.cancel)),
-                        TextButton(
-                            onPressed: () {
-                              logic.setQweatherKey();
-                            },
-                            child: Text(i18n.ok))
-                      ],
-                    );
-                  });
-            },
+            subtitle: SelectionArea(child: Text(Utils().prefUtil.getValue<String>('qweatherKey') ?? '')),
+            trailing: IconButton(
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          content: TextField(
+                            maxLines: 1,
+                            controller: logic.qweatherTextEditingController,
+                            decoration: const InputDecoration(
+                              labelText: 'Key',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                                onPressed: () {
+                                  Get.backLegacy();
+                                },
+                                child: Text(i18n.cancel)),
+                            TextButton(
+                                onPressed: () {
+                                  logic.setQweatherKey();
+                                },
+                                child: Text(i18n.ok))
+                          ],
+                        );
+                      });
+                },
+                icon: const FaIcon(FontAwesomeIcons.wrench)),
           ),
           ListTile(
             title: const Text('天地图密钥'),
-            subtitle: SelectionArea(
-                child: Text(
-                    Utils().prefUtil.getValue<String>('tiandituKey') ?? '')),
-            onTap: () {
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      content: TextField(
-                        maxLines: 1,
-                        controller: logic.tiandituTextEditingController,
-                        decoration: const InputDecoration(
-                          labelText: 'Key',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      actions: [
-                        TextButton(
-                            onPressed: () {
-                              Get.backLegacy();
-                            },
-                            child: Text(i18n.cancel)),
-                        TextButton(
-                            onPressed: () {
-                              logic.setTiandituKey();
-                            },
-                            child: Text(i18n.ok))
-                      ],
-                    );
-                  });
-            },
+            subtitle: SelectionArea(child: Text(Utils().prefUtil.getValue<String>('tiandituKey') ?? '')),
+            trailing: IconButton(
+                onPressed: () {
+                  showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          content: TextField(
+                            maxLines: 1,
+                            controller: logic.tiandituTextEditingController,
+                            decoration: const InputDecoration(
+                              labelText: 'Key',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                                onPressed: () {
+                                  Get.backLegacy();
+                                },
+                                child: Text(i18n.cancel)),
+                            TextButton(
+                                onPressed: () {
+                                  logic.setTiandituKey();
+                                },
+                                child: Text(i18n.ok))
+                          ],
+                        );
+                      });
+                },
+                icon: const FaIcon(FontAwesomeIcons.wrench)),
           ),
           ListTile(
             onTap: () {
