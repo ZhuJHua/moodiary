@@ -114,6 +114,27 @@ class Diary {
 
   Diary();
 
+  // 深拷贝方法
+  Diary clone() {
+    return Diary()
+      ..id = id
+      ..categoryId = categoryId
+      ..title = title
+      ..content = content
+      ..contentText = contentText
+      ..time = DateTime.fromMillisecondsSinceEpoch(time.millisecondsSinceEpoch)
+      ..show = show
+      ..mood = mood
+      ..weather = List<String>.from(weather)
+      ..imageName = List<String>.from(imageName)
+      ..audioName = List<String>.from(audioName)
+      ..videoName = List<String>.from(videoName)
+      ..tags = List<String>.from(tags)
+      ..position = List<String>.from(position)
+      ..imageColor = imageColor
+      ..aspect = aspect;
+  }
+
   // 将 Diary 对象转换为 JSON
   Map<String, dynamic> toJson() {
     return {

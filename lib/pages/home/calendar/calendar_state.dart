@@ -22,7 +22,7 @@ class CalendarState {
     currentMonth = now.obs;
     dateHasDiary = <DateTime>[].obs;
     diaryList = <Diary>[].obs;
-    isExpanded = true.obs;
+    isExpanded = false.obs;
 
     ///Initialize variables
   }

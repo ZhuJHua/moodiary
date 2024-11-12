@@ -32,8 +32,8 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
 
     return InkWell(
       borderRadius: AppBorderRadius.mediumBorderRadius,
-      onTap: () async {
-        await toDiary(diary);
+      onTap: () {
+        toDiary(diary);
       },
       child: Card.filled(
         color: colorScheme.surfaceContainerLow,

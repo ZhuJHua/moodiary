@@ -436,9 +436,8 @@ class EditPage extends StatelessWidget {
                 );
               }),
           GetBuilder<EditLogic>(
-              id: 'Category',
+              id: 'CategoryName',
               builder: (_) {
-                Utils().logUtil.printInfo('1');
                 return ListTile(
                   title: const Text('分类'),
                   subtitle: state.categoryName.isNotEmpty ? Text(state.categoryName) : null,

@@ -57,7 +57,7 @@ class MapLogic extends GetxController {
     Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary!.id);
     await Get.toNamed(
       AppRoutes.diaryPage,
-      arguments: [diary, false],
+      arguments: [diary.clone(), false],
     );
   }
 }

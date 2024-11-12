@@ -79,62 +79,67 @@ class RemovePasswordComponent extends StatelessWidget {
       });
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        spacing: 16.0,
-        children: [
-          Text(
-            '请输入密码',
-            style: textStyle.titleMedium,
-          ),
-          GetBuilder<RemovePasswordLogic>(builder: (_) {
-            return AnimatedBuilder(
-              animation: logic.animation,
-              builder: (context, child) {
-                return Transform.translate(
-                  offset: Offset(logic.interpolate(logic.animation.value), 0),
-                  child: Wrap(
-                    spacing: 16.0,
-                    children: buildPasswordIndicator(),
-                  ),
-                );
-              },
-            );
-          }),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return GetBuilder<RemovePasswordLogic>(
+      assignId: true,
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 16.0,
             children: [
-              SizedBox(
-                width: buttonSize * 3 + 20,
-                height: buttonSize * 4 + 30,
-                child: GridView.count(
-                  crossAxisCount: 3,
-                  childAspectRatio: 1.0,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    buildNumButton('1'),
-                    buildNumButton('2'),
-                    buildNumButton('3'),
-                    buildNumButton('4'),
-                    buildNumButton('5'),
-                    buildNumButton('6'),
-                    buildNumButton('7'),
-                    buildNumButton('8'),
-                    buildNumButton('9'),
-                    buildBiometricsButton(),
-                    buildNumButton('0'),
-                    buildDeleteButton()
-                  ],
-                ),
+              Text(
+                '请输入密码',
+                style: textStyle.titleMedium,
+              ),
+              GetBuilder<RemovePasswordLogic>(builder: (_) {
+                return AnimatedBuilder(
+                  animation: logic.animation,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(logic.interpolate(logic.animation.value), 0),
+                      child: Wrap(
+                        spacing: 16.0,
+                        children: buildPasswordIndicator(),
+                      ),
+                    );
+                  },
+                );
+              }),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: buttonSize * 3 + 20,
+                    height: buttonSize * 4 + 30,
+                    child: GridView.count(
+                      crossAxisCount: 3,
+                      childAspectRatio: 1.0,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        buildNumButton('1'),
+                        buildNumButton('2'),
+                        buildNumButton('3'),
+                        buildNumButton('4'),
+                        buildNumButton('5'),
+                        buildNumButton('6'),
+                        buildNumButton('7'),
+                        buildNumButton('8'),
+                        buildNumButton('9'),
+                        buildBiometricsButton(),
+                        buildNumButton('0'),
+                        buildDeleteButton()
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

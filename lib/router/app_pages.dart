@@ -71,7 +71,7 @@ class AppPages {
     //日记页路由
     GetPage(
       name: AppRoutes.diaryPage,
-      page: () => const DiaryDetailsPage(),
+      page: () => DiaryDetailsPage(),
     ),
     //图片路由
     GetPage(

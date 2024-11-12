@@ -47,17 +47,6 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     super.onClose();
   }
 
-  // //获取一言
-  // Future<void> getHitokoto() async {
-  //   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-  //     var res = await Utils().cacheUtil.getCacheList('hitokoto', Api().updateHitokoto, maxAgeMillis: 15 * 60000);
-  //     if (res != null) {
-  //       state.hitokoto = res.first;
-  //     }
-  //     update(['DesktopBar']);
-  //   }
-  // }
-
   //打开fab
   Future<void> openFab() async {
     await HapticFeedback.vibrate();

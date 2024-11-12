@@ -22,6 +22,7 @@ class AudioPlayerComponent extends StatelessWidget {
       initState: (_) async {
         await logic.initAudioPlayer(path);
       },
+      assignId: true,
       builder: (_) {
         return ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),

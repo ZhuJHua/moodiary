@@ -51,10 +51,12 @@ class CategoryAddLogic extends GetxController {
   void selectCategory(int index) {
     Get.backLegacy();
     editLogic.selectCategory(state.categoryList.value[index].id);
+    editLogic.update(['CategoryName']);
   }
 
   void cancelCategory() {
     Get.backLegacy();
     editLogic.selectCategory(null);
+    editLogic.update(['CategoryName']);
   }
 }

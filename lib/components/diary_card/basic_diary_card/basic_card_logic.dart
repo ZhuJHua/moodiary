@@ -11,48 +11,48 @@ mixin BasicCardLogic {
   Future<void> toDiary(Diary diary) async {
     HapticFeedback.mediumImpact();
     Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary.id);
-    var res = await Get.toNamed(AppRoutes.diaryPage, arguments: [diary, true]);
-    var oldCategoryId = diary.categoryId;
+    var res = await Get.toNamed(AppRoutes.diaryPage, arguments: [diary.clone(), true]);
     if (res == 'delete') {
       //如果分类为空，删除主页即可，如果分类不为空，双删除
       if (diary.categoryId != null && Bind.isRegistered<DiaryTabViewLogic>(tag: diary.categoryId)) {
         Bind.find<DiaryTabViewLogic>(tag: diary.categoryId).state.diaryList.removeWhere((e) => e.id == diary.id);
+        Bind.find<DiaryTabViewLogic>(tag: diary.categoryId).update(['TabView']);
       }
       Bind.find<DiaryTabViewLogic>(tag: 'default').state.diaryList.removeWhere((e) => e.id == diary.id);
+      Bind.find<DiaryTabViewLogic>(tag: 'default').update(['TabView']);
     } else {
-      //重新获取日记
       var newDiary = await Utils().isarUtil.getDiaryByID(diary.isarId);
-      if (newDiary != null) {
-        var newCategoryId = newDiary.categoryId;
-        //如果没修改
-        if (diary == newDiary) {
-          return;
+      if (diary == newDiary) {
+        return;
+      }
+      var newCategoryId = newDiary!.categoryId;
+      var oldCategoryId = diary.categoryId;
+      //如果修改了但是没有修改分类，就替换掉原来的
+      if (oldCategoryId == newCategoryId) {
+        //替换掉全部分类中的
+        var oldIndex =
+            Bind.find<DiaryTabViewLogic>(tag: 'default').state.diaryList.indexWhere((e) => e.id == newDiary.id);
+        Bind.find<DiaryTabViewLogic>(tag: 'default').state.diaryList.replaceRange(oldIndex, oldIndex + 1, [newDiary]);
+        Bind.find<DiaryTabViewLogic>(tag: 'default').update(['TabView']);
+        //如果注册了控制器
+        if (newDiary.categoryId != null && Bind.isRegistered<DiaryTabViewLogic>(tag: newDiary.categoryId)) {
+          var oldIndex = Bind.find<DiaryTabViewLogic>(tag: newDiary.categoryId)
+              .state
+              .diaryList
+              .indexWhere((e) => e.id == newDiary.id);
+          Bind.find<DiaryTabViewLogic>(tag: newDiary.categoryId)
+              .state
+              .diaryList
+              .replaceRange(oldIndex, oldIndex + 1, [newDiary]);
+          Bind.find<DiaryTabViewLogic>(tag: newDiary.categoryId).update(['TabView']);
         }
-        //如果修改了但是没有修改分类，就替换掉原来的
-        if (oldCategoryId == newCategoryId) {
-          //替换掉全部分类中的
-          var oldIndex =
-              Bind.find<DiaryTabViewLogic>(tag: 'default').state.diaryList.indexWhere((e) => e.id == diary.id);
-          Bind.find<DiaryTabViewLogic>(tag: 'default').state.diaryList.replaceRange(oldIndex, oldIndex + 1, [newDiary]);
-
-          //如果注册了控制器
-          if (diary.categoryId != null && Bind.isRegistered<DiaryTabViewLogic>(tag: diary.categoryId)) {
-            var oldIndex =
-                Bind.find<DiaryTabViewLogic>(tag: diary.categoryId).state.diaryList.indexWhere((e) => e.id == diary.id);
-            Bind.find<DiaryTabViewLogic>(tag: diary.categoryId)
-                .state
-                .diaryList
-                .replaceRange(oldIndex, oldIndex + 1, [newDiary]);
-          }
-
-          //await Bind.find<DiaryLogic>().updateDiary(oldCategoryId);
-        } else {
-          //如果修改了分类
-          //再去新的分类
-          await Bind.find<DiaryLogic>().updateDiary(newCategoryId);
-          //先改旧分类
-          await Bind.find<DiaryLogic>().updateDiary(oldCategoryId, jump: false);
-        }
+        //await Bind.find<DiaryLogic>().updateDiary(oldCategoryId);
+      } else {
+        //如果修改了分类
+        //再去新的分类
+        await Bind.find<DiaryLogic>().updateDiary(newCategoryId);
+        //先改旧分类
+        await Bind.find<DiaryLogic>().updateDiary(oldCategoryId, jump: false);
       }
     }
   }
@@ -62,7 +62,7 @@ mixin BasicCardLogic {
     Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary.id);
     await Get.toNamed(
       AppRoutes.diaryPage,
-      arguments: [diary, false],
+      arguments: [diary.clone(), false],
     );
   }
 
