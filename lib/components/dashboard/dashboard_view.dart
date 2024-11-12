@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
@@ -27,7 +28,7 @@ class DashboardComponent extends StatelessWidget {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Icon(
+                    FaIcon(
                       icon,
                       color: colorScheme.secondary,
                       size: 32,
@@ -128,9 +129,8 @@ class DashboardComponent extends StatelessWidget {
     }
 
     return GetBuilder<DashboardLogic>(
-      init: logic,
       assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return GridView(
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 200,
@@ -145,9 +145,7 @@ class DashboardComponent extends StatelessWidget {
             }), null),
             buildManagerButton(Icons.article, '日记', Obx(() {
               return buildDiaryDetail(state.diaryCount.value, '篇', state.contentCount.value, '字');
-            }), () {
-              //logic.toDiaryManager();
-            }),
+            }), null),
             buildManagerButton(Icons.category, '分类', Obx(() {
               return buildDetail(state.categoryCount.value, '个');
             }), () {

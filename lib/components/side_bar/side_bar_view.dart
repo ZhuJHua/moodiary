@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -7,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/utils/function_extensions.dart';
-import 'package:mood_diary/utils/utils.dart';
 
 import 'side_bar_logic.dart';
 
@@ -112,9 +109,7 @@ class SideBarComponent extends StatelessWidget {
     }
 
     return GetBuilder<SideBarLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return Drawer(
           child: Column(
             children: [
@@ -185,15 +180,7 @@ class SideBarComponent extends StatelessWidget {
                     ),
                     ListTile(
                       leading: const Icon(Icons.update),
-                      onTap: () async {
-                        if (Platform.isAndroid) {
-                          var res = await Utils().updateUtil.checkUpdate();
-                          if (res != null && context.mounted) {
-                          } else {
-                            Utils().noticeUtil.showToast('已是最新版本');
-                          }
-                        }
-                      }.throttleWithTimeout(timeout: 3000),
+                      onTap: () async {}.throttleWithTimeout(timeout: 3000),
                       title: Text(i18n.sidebarCheckUpdate),
                     ),
                   ],

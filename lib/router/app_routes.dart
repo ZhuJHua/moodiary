@@ -69,4 +69,7 @@ abstract class AppRoutes {
 
   //日记个性化
   static const diarySettingPage = '/diarySetting';
+
+  //备份与同步页
+  static const backupSyncPage = '/backupSync';
 }

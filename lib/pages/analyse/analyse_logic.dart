@@ -13,9 +13,8 @@ class AnalyseLogic extends GetxController {
   final AnalyseState state = AnalyseState();
 
   @override
-  void onReady() {
-    getMoodAndWeatherByRange(state.dateRange[0], state.dateRange[1]);
-
+  void onReady() async {
+    await getMoodAndWeatherByRange(state.dateRange[0], state.dateRange[1]);
     super.onReady();
   }
 

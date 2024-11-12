@@ -15,9 +15,7 @@ class RegisterFormComponent extends StatelessWidget {
     final state = Bind.find<RegisterFormLogic>().state;
     final size = MediaQuery.sizeOf(context);
     return GetBuilder<RegisterFormLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return GestureDetector(
           onTap: () {
             logic.unFocus();

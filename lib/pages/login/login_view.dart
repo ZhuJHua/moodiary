@@ -14,9 +14,7 @@ class LoginPage extends StatelessWidget {
     final state = Bind.find<LoginLogic>().state;
 
     return GetBuilder<LoginLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return Scaffold(
             appBar: AppBar(
               title: state.isLogin ? const Text('登录') : const Text('注册'),

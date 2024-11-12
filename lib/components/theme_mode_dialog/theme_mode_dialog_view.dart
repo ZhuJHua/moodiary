@@ -14,9 +14,7 @@ class ThemeModeDialogComponent extends StatelessWidget {
     final i18n = AppLocalizations.of(context)!;
 
     return GetBuilder<ThemeModeDialogLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return SimpleDialog(
           title: Text(i18n.settingThemeMode),
           children: [

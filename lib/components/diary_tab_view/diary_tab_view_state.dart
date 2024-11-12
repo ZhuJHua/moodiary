@@ -1,10 +1,9 @@
-import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 
 class DiaryTabViewState {
-  late RxList<Diary> diaryList;
+  late List<Diary> diaryList = <Diary>[];
 
-  late RxBool isFetching;
+  late bool isFetching = false;
 
   //首次加载的个数
   late int initLen;
@@ -12,9 +11,9 @@ class DiaryTabViewState {
   //分页的个数
   late int pageLen;
 
+  late String? categoryId;
+
   DiaryTabViewState() {
-    diaryList = <Diary>[].obs;
-    isFetching = false.obs;
     initLen = 30;
     pageLen = 20;
 

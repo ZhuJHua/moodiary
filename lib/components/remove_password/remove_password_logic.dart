@@ -36,28 +36,31 @@ class RemovePasswordLogic extends GetxController with GetSingleTickerProviderSta
   }
 
   void deletePassword() {
-    if (state.password.value.isNotEmpty) {
-      state.password.value = state.password.value.substring(0, state.password.value.length - 1);
+    if (state.password.isNotEmpty) {
+      state.password = state.password.substring(0, state.password.length - 1);
+      update();
       HapticFeedback.selectionClick();
     }
   }
 
   Future<void> updatePassword(String value) async {
-    if (state.password.value.length < 4) {
-      state.password.value += value;
+    if (state.password.length < 4) {
+      state.password += value;
+      update();
       HapticFeedback.selectionClick();
     }
     Future.delayed(const Duration(milliseconds: 100), () async {
-      if (state.password.value.length == 4) {
+      if (state.password.length == 4) {
         //密码正确
-        if (state.password.value == state.realPassword.value) {
+        if (state.password == state.realPassword) {
           await removePassword();
         } else {
           animationController.forward();
           await HapticFeedback.mediumImpact();
           Future.delayed(const Duration(milliseconds: 200), () {
             animationController.reverse();
-            state.password.value = '';
+            state.password = '';
+            update();
           });
         }
       }
@@ -69,7 +72,8 @@ class RemovePasswordLogic extends GetxController with GetSingleTickerProviderSta
     await Utils().prefUtil.setValue<bool>('lock', false);
     //移除密码字段
     await Utils().prefUtil.removeValue('password');
-    settingLogic.state.lock.value = false;
+    settingLogic.state.lock = false;
+    settingLogic.update(['Lock']);
     Utils().noticeUtil.showToast('关闭成功');
     Get.backLegacy();
   }

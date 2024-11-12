@@ -6,6 +6,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/components/ask_question/ask_question_view.dart';
@@ -20,8 +21,8 @@ class DiaryDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<DiaryDetailsLogic>();
-    final state = Bind.find<DiaryDetailsLogic>().state;
+    final logic = Bind.find<DiaryDetailsLogic>(tag: (Get.arguments[0] as Diary).id);
+    final state = Bind.find<DiaryDetailsLogic>(tag: (Get.arguments[0] as Diary).id).state;
     final size = MediaQuery.sizeOf(context);
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
@@ -62,6 +63,9 @@ class DiaryDetailsPage extends StatelessWidget {
               ),
               const Icon(Icons.access_time_outlined),
               colorScheme),
+          if (state.diary.position.isNotEmpty) ...[
+            buildAChip(Text(state.diary.position[2]), const Icon(Icons.location_city_rounded), colorScheme)
+          ],
           if (state.diary.weather.isNotEmpty) ...[
             buildAChip(
                 Text(
@@ -177,145 +181,143 @@ class DiaryDetailsPage extends StatelessWidget {
     }
 
     return GetBuilder<DiaryDetailsLogic>(
-      assignId: true,
-      init: logic,
-      builder: (logic) {
-        final customColorScheme = state.imageColor != null
-            ? ColorScheme.fromSeed(
-                seedColor: Color(state.imageColor!),
-                brightness: colorScheme.brightness,
-              )
-            : colorScheme;
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: customColorScheme,
-          ),
-          child: Scaffold(
-            backgroundColor: customColorScheme.surface,
-            body: CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  expandedHeight: state.aspect != null ? min(size.width / state.aspect!, size.height * 0.618) : null,
-                  title: Text(
-                    state.diary.title ?? '',
-                    style: textStyle.titleMedium,
-                  ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    collapseMode: CollapseMode.pin,
-                    background: state.diary.imageName.isNotEmpty
-                        ? InkWell(
-                            onTap: () {
-                              logic.toPhotoView(
-                                  List.generate(state.diary.imageName.length, (index) {
-                                    return Utils().fileUtil.getRealPath('image', state.diary.imageName[index]);
-                                  }),
-                                  0);
-                            },
-                            child: Image.file(
-                              File(Utils().fileUtil.getRealPath('image', state.diary.imageName.first)),
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : null,
-                  ),
-                  pinned: true,
-                  actions: [
-                    IconButton(
-                        onPressed: () {
-                          showModalBottomSheet(
-                              context: context,
-                              useSafeArea: true,
-                              showDragHandle: true,
-                              builder: (context) {
-                                return Padding(
-                                  padding: MediaQuery.viewInsetsOf(context),
-                                  child: AskQuestionComponent(
-                                    content: state.diary.contentText,
-                                  ),
-                                );
-                              });
-                        },
-                        icon: const Icon(Icons.chat)),
-                    PopupMenuButton(
-                      offset: const Offset(0, 46),
-                      itemBuilder: (context) {
-                        return <PopupMenuEntry<String>>[
-                          if (state.showAction) ...[
-                            PopupMenuItem(
-                              onTap: () async {
-                                logic.delete(state.diary);
-                              },
-                              child: const Row(
-                                spacing: 16.0,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [Icon(Icons.delete), Text('删除')],
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                            PopupMenuItem(
-                              onTap: () async {
-                                logic.toEditPage(state.diary);
-                              },
-                              child: const Row(
-                                spacing: 16.0,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [Icon(Icons.edit), Text('编辑')],
-                              ),
-                            ),
-                            const PopupMenuDivider(),
-                          ],
-                          PopupMenuItem(
-                            onTap: () async {
-                              logic.toSharePage();
-                            },
-                            child: const Row(
-                              spacing: 16.0,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [Icon(Icons.share), Text('分享')],
-                            ),
-                          ),
-                        ];
-                      },
+        tag: state.diary.id,
+        builder: (_) {
+          final customColorScheme = state.imageColor != null
+              ? ColorScheme.fromSeed(
+                  seedColor: Color(state.imageColor!),
+                  brightness: colorScheme.brightness,
+                )
+              : colorScheme;
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: customColorScheme,
+            ),
+            child: Scaffold(
+              backgroundColor: customColorScheme.surface,
+              body: CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    expandedHeight: state.aspect != null ? min(size.width / state.aspect!, size.height * 0.618) : null,
+                    title: Text(
+                      state.diary.title,
+                      style: textStyle.titleMedium,
                     ),
-                  ],
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.all(4.0),
-                  sliver: SliverList.list(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(4.0),
-                        child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal, child: buildChipList(customColorScheme)),
+                    flexibleSpace: FlexibleSpaceBar(
+                      collapseMode: CollapseMode.pin,
+                      background: state.diary.imageName.isNotEmpty
+                          ? InkWell(
+                              onTap: () {
+                                logic.toPhotoView(
+                                    List.generate(state.diary.imageName.length, (index) {
+                                      return Utils().fileUtil.getRealPath('image', state.diary.imageName[index]);
+                                    }),
+                                    0);
+                              },
+                              child: Image.file(
+                                File(Utils().fileUtil.getRealPath('image', state.diary.imageName.first)),
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : null,
+                    ),
+                    pinned: true,
+                    actions: [
+                      IconButton(
+                          onPressed: () {
+                            showModalBottomSheet(
+                                context: context,
+                                useSafeArea: true,
+                                showDragHandle: true,
+                                builder: (context) {
+                                  return Padding(
+                                    padding: MediaQuery.viewInsetsOf(context),
+                                    child: AskQuestionComponent(
+                                      content: state.diary.contentText,
+                                    ),
+                                  );
+                                });
+                          },
+                          icon: const Icon(Icons.chat)),
+                      PopupMenuButton(
+                        offset: const Offset(0, 46),
+                        itemBuilder: (context) {
+                          return <PopupMenuEntry<String>>[
+                            if (state.showAction) ...[
+                              PopupMenuItem(
+                                onTap: () async {
+                                  logic.delete(state.diary);
+                                },
+                                child: const Row(
+                                  spacing: 16.0,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [Icon(Icons.delete), Text('删除')],
+                                ),
+                              ),
+                              const PopupMenuDivider(),
+                              PopupMenuItem(
+                                onTap: () async {
+                                  logic.toEditPage(state.diary);
+                                },
+                                child: const Row(
+                                  spacing: 16.0,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [Icon(Icons.edit), Text('编辑')],
+                                ),
+                              ),
+                              const PopupMenuDivider(),
+                            ],
+                            PopupMenuItem(
+                              onTap: () async {
+                                logic.toSharePage();
+                              },
+                              child: const Row(
+                                spacing: 16.0,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [Icon(Icons.share), Text('分享')],
+                              ),
+                            ),
+                          ];
+                        },
                       ),
-                      Card.filled(
-                        color: customColorScheme.surfaceContainer,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: QuillEditor.basic(
-                            controller: logic.quillController,
-                            configurations: const QuillEditorConfigurations(
-                              showCursor: false,
-                              sharedConfigurations: QuillSharedConfigurations(),
+                    ],
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.all(4.0),
+                    sliver: SliverList.list(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(4.0),
+                          child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal, child: buildChipList(customColorScheme)),
+                        ),
+                        Card.filled(
+                          color: customColorScheme.surfaceContainer,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: QuillEditor.basic(
+                              controller: logic.quillController,
+                              configurations: const QuillEditorConfigurations(
+                                showCursor: false,
+                                sharedConfigurations: QuillSharedConfigurations(),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Wrap(
-                        children: [
-                          if (state.diary.imageName.length > 1) ...buildMultiImages(customColorScheme),
-                          if (state.diary.videoName.isNotEmpty) ...buildMultiVideo(customColorScheme)
-                        ],
-                      ),
-                      buildAudioList()
-                    ],
+                        Wrap(
+                          children: [
+                            if (state.diary.imageName.length > 1) ...buildMultiImages(customColorScheme),
+                            if (state.diary.videoName.isNotEmpty) ...buildMultiVideo(customColorScheme)
+                          ],
+                        ),
+                        buildAudioList()
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        });
   }
 }

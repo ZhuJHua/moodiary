@@ -1,11 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/api/api.dart';
-import 'package:mood_diary/pages/home/assistant/assistant_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -34,12 +31,11 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   late PageController pageController = PageController();
 
   late final DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
-  late final AssistantLogic assistantLogic = Bind.find<AssistantLogic>();
 
   @override
   void onReady() {
     unawaited(Utils().updateUtil.checkShouldUpdate(Utils().prefUtil.getValue<String>('appVersion')!.split('+')[0]));
-    unawaited(getHitokoto());
+    // unawaited(getHitokoto());
     super.onReady();
   }
 
@@ -51,20 +47,22 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     super.onClose();
   }
 
-  //获取一言
-  Future<void> getHitokoto() async {
-    if (Platform.isWindows) {
-      var res = await Utils().cacheUtil.getCacheList('hitokoto', Api().updateHitokoto, maxAgeMillis: 15 * 60000);
-      if (res != null) {
-        state.hitokoto.value = res.first;
-      }
-    }
-  }
+  // //获取一言
+  // Future<void> getHitokoto() async {
+  //   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+  //     var res = await Utils().cacheUtil.getCacheList('hitokoto', Api().updateHitokoto, maxAgeMillis: 15 * 60000);
+  //     if (res != null) {
+  //       state.hitokoto = res.first;
+  //     }
+  //     update(['DesktopBar']);
+  //   }
+  // }
 
   //打开fab
   Future<void> openFab() async {
     await HapticFeedback.vibrate();
-    state.isFabExpanded.value = true;
+    state.isFabExpanded = true;
+    update(['Fab']);
     await fabAnimationController.forward();
   }
 
@@ -72,7 +70,8 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   Future<void> closeFab() async {
     await HapticFeedback.selectionClick();
     await fabAnimationController.reverse();
-    state.isFabExpanded.value = false;
+    state.isFabExpanded = false;
+    update(['Fab']);
   }
 
   //锁定屏幕
@@ -97,7 +96,8 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     //同时关闭fab
     await HapticFeedback.selectionClick();
     fabAnimationController.reset();
-    state.isFabExpanded.value = false;
+    state.isFabExpanded = false;
+    update(['Fab']);
 
     /// 需要注意，返回值为 '' 时才是没有选择分类，而返回值为 null 时，是没有进行操作直接返回
     var res = await Get.toNamed(AppRoutes.editPage, arguments: 'new');
@@ -111,20 +111,49 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     }
   }
 
-  void hideNavigatorBar() {
-    barAnimationController.forward();
-    state.isBarHidden.value = true;
+  Future<void> toMap() async {
+    if (Utils().prefUtil.getValue<String>('tiandituKey') != null) {
+      //同时关闭fab
+      await HapticFeedback.selectionClick();
+      fabAnimationController.reset();
+      state.isFabExpanded = false;
+      update(['Fab']);
+      Get.toNamed(AppRoutes.mapPage);
+    } else {
+      Utils().noticeUtil.showToast('请先配置Key');
+    }
   }
 
-  void showNavigatorBar() {
-    state.isBarHidden.value = false;
-    barAnimationController.reverse();
+  Future<void> toAi() async {
+    if (Utils().prefUtil.getValue<String>('tencentId') != null &&
+        Utils().prefUtil.getValue<String>('tencentKey') != null) {
+      //同时关闭fab
+      await HapticFeedback.selectionClick();
+      fabAnimationController.reset();
+      state.isFabExpanded = false;
+      update(['Fab']);
+      Get.toNamed(AppRoutes.assistantPage);
+    } else {
+      Utils().noticeUtil.showToast('请先配置Key');
+    }
+  }
+
+  Future<void> hideNavigatorBar() async {
+    await barAnimationController.forward();
+  }
+
+  Future<void> showNavigatorBar() async {
+    await barAnimationController.reverse();
+  }
+
+  void resetNavigatorBar() {
+    barAnimationController.reset();
   }
 
   // 切换导航栏
   void changeNavigator(int index) {
-    state.navigatorIndex.value = index;
+    state.navigatorIndex = index;
+    update(['NavigatorBar', 'Fab', 'Layout']);
     pageController.jumpToPage(index);
-    update();
   }
 }

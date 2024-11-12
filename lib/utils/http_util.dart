@@ -6,7 +6,9 @@ import 'package:dio/dio.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 class HttpUtil {
-  late final Dio _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 3)));
+  late final Dio _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 5)));
+
+  Dio get dio => _dio;
 
   HttpUtil() {
     _dio.interceptors.add(InterceptorsWrapper(

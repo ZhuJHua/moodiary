@@ -1,14 +1,7 @@
-import 'package:get/get.dart';
-
 class SetPasswordState {
-  late RxString password;
+  String password = '';
 
-  late RxString checkPassword;
+  String checkPassword = '';
 
-  SetPasswordState() {
-    password = ''.obs;
-    checkPassword = ''.obs;
-
-    ///Initialize variables
-  }
+  SetPasswordState();
 }

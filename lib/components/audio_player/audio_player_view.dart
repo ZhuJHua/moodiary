@@ -18,13 +18,11 @@ class AudioPlayerComponent extends StatelessWidget {
 
     final colorScheme = Theme.of(context).colorScheme;
     return GetBuilder<AudioPlayerLogic>(
-      init: logic,
       tag: path,
-      assignId: true,
       initState: (_) async {
         await logic.initAudioPlayer(path);
       },
-      builder: (logic) {
+      builder: (_) {
         return ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
           child: Card.filled(

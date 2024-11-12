@@ -41,81 +41,75 @@ class CategoryManagerPage extends StatelessWidget {
       );
     }
 
-    return GetBuilder<CategoryManagerLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('分类管理'),
-          ),
-          body: Obx(() {
-            return ListView.builder(
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(state.categoryList.value[index].categoryName),
-                  onTap: null,
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('分类管理'),
+      ),
+      body: GetBuilder<CategoryManagerLogic>(builder: (_) {
+        return ListView.builder(
+          itemBuilder: (context, index) {
+            return ListTile(
+              title: Text(state.categoryList[index].categoryName),
+              onTap: null,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Column(
                     children: [
-                      Column(
-                        children: [
-                          IconButton(
-                            onPressed: () {
-                              logic.editInput(state.categoryList.value[index].categoryName);
-                              showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return inputDialog(() {
-                                      logic.editCategory(state.categoryList.value[index].id);
-                                    });
-                                  });
-                            },
-                            icon: const Icon(Icons.edit),
-                            style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          ),
-                          const Text('编辑'),
-                        ],
+                      IconButton(
+                        onPressed: () {
+                          logic.editInput(state.categoryList[index].categoryName);
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return inputDialog(() {
+                                  logic.editCategory(state.categoryList[index].id);
+                                });
+                              });
+                        },
+                        icon: const Icon(Icons.edit),
+                        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                       ),
-                      Column(
-                        children: [
-                          IconButton(
-                            onPressed: () {
-                              logic.deleteCategory(state.categoryList.value[index].id);
-                            },
-                            icon: const Icon(Icons.delete_forever),
-                            style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                            color: colorScheme.error,
-                          ),
-                          Text(
-                            '删除',
-                            style: TextStyle(color: colorScheme.error),
-                          ),
-                        ],
-                      )
+                      const Text('编辑'),
                     ],
                   ),
-                );
-              },
-              itemCount: state.categoryList.value.length,
+                  Column(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          logic.deleteCategory(state.categoryList[index].id);
+                        },
+                        icon: const Icon(Icons.delete_forever),
+                        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        color: colorScheme.error,
+                      ),
+                      Text(
+                        '删除',
+                        style: TextStyle(color: colorScheme.error),
+                      ),
+                    ],
+                  )
+                ],
+              ),
             );
-          }),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () async {
-              logic.clearInput();
-              showDialog(
-                  context: context,
-                  builder: (context) {
-                    return inputDialog(() {
-                      logic.addCategory();
-                    });
-                  });
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('添加分类'),
-          ),
+          },
+          itemCount: state.categoryList.length,
         );
-      },
+      }),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          logic.clearInput();
+          showDialog(
+              context: context,
+              builder: (context) {
+                return inputDialog(() {
+                  logic.addCategory();
+                });
+              });
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('添加分类'),
+      ),
     );
   }
 }

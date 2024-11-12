@@ -103,8 +103,7 @@ class AskQuestionComponent extends StatelessWidget {
       builder: (context, constraint) {
         return GetBuilder<AskQuestionLogic>(
           assignId: true,
-          init: logic,
-          builder: (logic) {
+          builder: (_) {
             return Column(
               children: [
                 Expanded(child: Obx(() {

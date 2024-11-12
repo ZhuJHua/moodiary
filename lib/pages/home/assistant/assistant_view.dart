@@ -142,67 +142,67 @@ class AssistantPage extends StatelessWidget {
     }
 
     return GetBuilder<AssistantLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
-        return Stack(
-          children: [
-            Column(
-              children: [
-                Expanded(
-                  child: CustomScrollView(
-                    controller: logic.scrollController,
-                    slivers: [
-                      SliverAppBar(
-                        title: Text(i18n.homeNavigatorAssistant),
-                        pinned: true,
-                        actions: [
-                          Obx(() {
-                            return Text(modelMap[state.modelVersion.value]!);
-                          }),
-                          IconButton(
-                              onPressed: () {
-                                showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return SimpleDialog(
-                                        title: const Text('选择模型'),
-                                        children: List.generate(modelMap.length, (index) {
-                                          return Obx(() {
-                                            return SimpleDialogOption(
-                                              child: Row(
-                                                spacing: 4.0,
-                                                children: [
-                                                  Text(modelMap[index]!),
-                                                  if (state.modelVersion.value == index) ...[const Icon(Icons.check)]
-                                                ],
-                                              ),
-                                              onPressed: () {
-                                                logic.changeModel(index);
-                                              },
-                                            );
-                                          });
-                                        }),
-                                      );
-                                    });
-                              },
-                              icon: const Icon(Icons.change_circle_outlined)),
-                          IconButton(
-                              onPressed: () {
-                                logic.newChat();
-                              },
-                              icon: const Icon(Icons.refresh)),
-                        ],
-                      ),
-                      buildChat(),
-                    ],
+      builder: (_) {
+        return Scaffold(
+          body: Stack(
+            children: [
+              Column(
+                children: [
+                  Expanded(
+                    child: CustomScrollView(
+                      controller: logic.scrollController,
+                      slivers: [
+                        SliverAppBar(
+                          title: Text(i18n.homeNavigatorAssistant),
+                          pinned: true,
+                          actions: [
+                            Obx(() {
+                              return Text(modelMap[state.modelVersion.value]!);
+                            }),
+                            IconButton(
+                                onPressed: () {
+                                  showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return SimpleDialog(
+                                          title: const Text('选择模型'),
+                                          children: List.generate(modelMap.length, (index) {
+                                            return Obx(() {
+                                              return SimpleDialogOption(
+                                                child: Row(
+                                                  spacing: 4.0,
+                                                  children: [
+                                                    Text(modelMap[index]!),
+                                                    if (state.modelVersion.value == index) ...[const Icon(Icons.check)]
+                                                  ],
+                                                ),
+                                                onPressed: () {
+                                                  logic.changeModel(index);
+                                                },
+                                              );
+                                            });
+                                          }),
+                                        );
+                                      });
+                                },
+                                icon: const Icon(Icons.change_circle_outlined)),
+                            IconButton(
+                                onPressed: () {
+                                  logic.newChat();
+                                },
+                                icon: const Icon(Icons.refresh)),
+                          ],
+                        ),
+                        buildChat(),
+                      ],
+                    ),
                   ),
-                ),
-                buildInput()
-              ],
-            ),
-            if (state.messages.isEmpty) ...[buildEmpty()]
-          ],
+                  buildInput()
+                ],
+              ),
+              if (state.messages.isEmpty) ...[buildEmpty()]
+            ],
+          ),
         );
       },
     );

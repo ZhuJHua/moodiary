@@ -57,8 +57,8 @@ class AskQuestionLogic extends GetxController with WidgetsBindingObserver {
   @override
   void onReady() async {
     WidgetsBinding.instance.addObserver(this);
-    await fullTokenizer.init();
-    await liteRunner.initializeInterpreter(state.modelPath, fullTokenizer);
+    //await fullTokenizer.init();
+    //await liteRunner.initializeInterpreter(state.modelPath, fullTokenizer);
     super.onReady();
   }
 
@@ -103,7 +103,7 @@ class AskQuestionLogic extends GetxController with WidgetsBindingObserver {
   Future<void> ask(String content) async {
     var text = textEditingController.text;
     if (text.isNotEmpty) {
-      await getAnswer(content, text);
+      //await getAnswer(content, text);
     }
   }
 }

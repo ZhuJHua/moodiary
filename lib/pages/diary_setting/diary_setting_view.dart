@@ -15,23 +15,21 @@ class DiarySettingPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
 
-    return GetBuilder<DiarySettingLogic>(
-      assignId: true,
-      init: logic,
-      builder: (logic) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('日记个性化'),
-          ),
-          body: ListView(
-            children: [
-              ListTile(
-                title: Text(i18n.settingImageQuality),
-                subtitle: Text(i18n.settingImageQualityDes),
-                leading: const Icon(Icons.gradient_outlined),
-                trailing: Obx(() {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('日记个性化'),
+      ),
+      body: ListView(
+        children: [
+          ListTile(
+            title: Text(i18n.settingImageQuality),
+            subtitle: Text(i18n.settingImageQualityDes),
+            leading: const Icon(Icons.gradient_outlined),
+            trailing: GetBuilder<DiarySettingLogic>(
+                id: 'Quality',
+                builder: (_) {
                   return Text(
-                    switch (state.quality.value) {
+                    switch (state.quality) {
                       0 => i18n.qualityLow,
                       1 => i18n.qualityMedium,
                       2 => i18n.qualityHigh,
@@ -42,11 +40,13 @@ class DiarySettingPage extends StatelessWidget {
                     ),
                   );
                 }),
-                onTap: () {
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        return Obx(() {
+            onTap: () {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return GetBuilder<DiarySettingLogic>(
+                        id: 'Quality',
+                        builder: (_) {
                           return SimpleDialog(
                             title: Text(i18n.settingImageQuality),
                             children: [
@@ -55,7 +55,7 @@ class DiarySettingPage extends StatelessWidget {
                                   spacing: 8.0,
                                   children: [
                                     Text(i18n.qualityLow),
-                                    if (state.quality.value == 0) ...[
+                                    if (state.quality == 0) ...[
                                       const Icon(Icons.check),
                                     ],
                                   ],
@@ -69,7 +69,7 @@ class DiarySettingPage extends StatelessWidget {
                                   spacing: 8.0,
                                   children: [
                                     Text(i18n.qualityMedium),
-                                    if (state.quality.value == 1) ...[
+                                    if (state.quality == 1) ...[
                                       const Icon(Icons.check),
                                     ],
                                   ],
@@ -83,7 +83,7 @@ class DiarySettingPage extends StatelessWidget {
                                   spacing: 8.0,
                                   children: [
                                     Text(i18n.qualityHigh),
-                                    if (state.quality.value == 2) ...[
+                                    if (state.quality == 2) ...[
                                       const Icon(Icons.check),
                                     ],
                                   ],
@@ -95,12 +95,14 @@ class DiarySettingPage extends StatelessWidget {
                             ],
                           );
                         });
-                      });
-                },
-              ),
-              Obx(() {
+                  });
+            },
+          ),
+          GetBuilder<DiarySettingLogic>(
+              id: 'AutoWeather',
+              builder: (_) {
                 return SwitchListTile(
-                  value: state.autoWeather.value,
+                  value: state.autoWeather,
                   onChanged: (value) {
                     logic.autoWeather(value);
                   },
@@ -108,10 +110,8 @@ class DiarySettingPage extends StatelessWidget {
                   secondary: const Icon(Icons.sunny),
                 );
               })
-            ],
-          ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

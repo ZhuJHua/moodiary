@@ -24,7 +24,7 @@ class RecycleLogic extends GetxController {
   //长按卡片删除
   Future<void> deleteDiary(index) async {
     //删除日记
-    if (await Utils().isarUtil.deleteADiary(state.diaryList[index].id)) {
+    if (await Utils().isarUtil.deleteADiary(state.diaryList[index].isarId)) {
       for (var name in state.diaryList[index].imageName) {
         Utils().fileUtil.deleteFile(Utils().fileUtil.getRealPath('image', name));
       }

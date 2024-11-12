@@ -42,11 +42,10 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   /// 在动态更新分类后要重新监听
   void _tabBarListener() {
     if (tabController.indexIsChanging) return;
-    _checkPageChange();
+    checkPageChange();
     // 检查是否显示顶部内容
     _checkShowTop();
-
-    homeLogic.showNavigatorBar();
+    homeLogic.resetNavigatorBar();
   }
 
   /// inner controller 监听函数
@@ -57,11 +56,11 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     _checkShowTop();
     if (offset - lastScrollOffset > 100) {
       lastScrollOffset = offset;
-      homeLogic.hideNavigatorBar();
+      await homeLogic.hideNavigatorBar();
     }
     if (lastScrollOffset - offset > 100) {
       lastScrollOffset = offset;
-      homeLogic.showNavigatorBar();
+      await homeLogic.showNavigatorBar();
     }
     if (offset == maxScrollExtent) {
       if (tabController.index == 0) {
@@ -82,9 +81,13 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   /// 3. view mode刷新时（实际上肯定在顶部，干脆直接改state）
   void _checkShowTop() {
     if (state.innerController.hasClients) {
-      state.isToTopShow.value = state.innerController.offset > 100;
+      if (homeLogic.state.isToTopShow != state.innerController.offset > 100) {
+        homeLogic.state.isToTopShow = state.innerController.offset > 100;
+        homeLogic.update(['Fab']);
+      }
     } else {
-      state.isToTopShow.value = false;
+      homeLogic.state.isToTopShow = false;
+      homeLogic.update(['Fab']);
     }
   }
 
@@ -92,12 +95,10 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   /// 需要在以下情况调用
   /// 1. tab bar 修改
   /// 2. update ho
-  void _checkPageChange() {
+  void checkPageChange() {
     state.currentTabBarIndex = tabController.index;
-
     // 获取当前分类ID，若为默认分类，设为 'default'
     String categoryId = state.currentTabBarIndex == 0 ? 'default' : state.categoryList[state.currentTabBarIndex - 1].id;
-
     // 遍历 keyMap，更新每个分类的状态
     state.keyMap.forEach((k, v) {
       v.currentState?.onPageChange(k == categoryId);
@@ -163,19 +164,20 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     tabController.removeListener(_tabBarListener);
     tabController = TabController(length: state.categoryList.length + 1, vsync: this);
     tabController.addListener(_tabBarListener);
-    update();
-    _checkPageChange();
+    update(['All']);
+    checkPageChange();
   }
 
   //切换视图模式
   Future<void> changeViewMode(ViewModeType viewModeType) async {
-    state.viewModeType.value = viewModeType;
-    state.isToTopShow.value = false;
+    state.viewModeType = viewModeType;
+    update(['TabBarView']);
+    _checkShowTop();
     await Utils().prefUtil.setValue<int>('homeViewMode', viewModeType.number);
   }
 
   // 回到顶部函数
   Future<void> toTop() async {
-    await state.innerController.animateTo(0.0, duration: const Duration(milliseconds: 200), curve: Curves.linear);
+    await state.innerController.animateTo(0.0, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
   }
 }

@@ -45,5 +45,15 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+    <string>Used to apply locks</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Used to apply locks</string>
+    <key>NSCameraUsageDescription</key>
+    <string>Used to apply locks</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Used to apply locks</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app needs access to location when open.</string>
 </dict>
 </plist>

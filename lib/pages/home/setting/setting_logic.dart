@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +7,6 @@ import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'setting_state.dart';
@@ -14,7 +15,7 @@ class SettingLogic extends GetxController {
   final SettingState state = SettingState();
   late final homeLogic = Bind.find<HomeLogic>();
 
-  late TextEditingController textEditingController = TextEditingController(text: state.customTitle.value);
+  late TextEditingController textEditingController = TextEditingController(text: state.customTitle);
 
   @override
   void onInit() {
@@ -22,8 +23,8 @@ class SettingLogic extends GetxController {
   }
 
   @override
-  void onReady() async {
-    await getDataUsage();
+  void onReady() {
+    unawaited(getDataUsage());
     super.onReady();
   }
 
@@ -36,9 +37,11 @@ class SettingLogic extends GetxController {
   //获取当前占用储存空间
   Future<void> getDataUsage() async {
     var sizeMap = await Utils().fileUtil.countSize();
-    state.dataUsage.value = '${sizeMap['size']} ${sizeMap['unit']}';
+    state.dataUsage = '${sizeMap['size']} ${sizeMap['unit']}';
+    update(['DataUsage']);
     if (sizeMap['bytes'] > (1024 * 1024 * 100)) {
-      await deleteCache();
+      await Utils().fileUtil.clearCache();
+      await getDataUsage();
       Utils().noticeUtil.showToast('缓存已自动清理');
     }
   }
@@ -49,30 +52,18 @@ class SettingLogic extends GetxController {
     Utils().noticeUtil.showToast('清理成功');
   }
 
-  //动态配色
-  Future<void> dynamicColor(bool value) async {
-    await Utils().prefUtil.setValue<bool>('dynamicColor', value);
-    state.dynamicColor.value = value;
-  }
-
   //本地化
   Future<void> local(bool value) async {
     await Utils().prefUtil.setValue<bool>('local', value);
-    state.local.value = value;
-  }
-
-  //获取天气
-  Future<void> weather(bool value) async {
-    if (await Utils().permissionUtil.checkPermission(Permission.location)) {
-      await Utils().prefUtil.setValue<bool>('getWeather', value);
-      state.getWeather.value = value;
-    }
+    state.local = value;
+    update(['Local']);
   }
 
   //立即锁定
   Future<void> lockNow(bool value) async {
     await Utils().prefUtil.setValue<bool>('lockNow', value);
-    state.lockNow.value = value;
+    state.lockNow = value;
+    update(['Lock']);
   }
 
   //进入回收站
@@ -97,6 +88,10 @@ class SettingLogic extends GetxController {
     Get.toNamed(AppRoutes.diarySettingPage);
   }
 
+  void toBackupAndSyncPage() {
+    Get.toNamed(AppRoutes.backupSyncPage);
+  }
+
   void cancelCustomTitle() {
     textEditingController.clear();
     Get.backLegacy();
@@ -104,7 +99,8 @@ class SettingLogic extends GetxController {
 
   Future<void> setCustomTitle() async {
     if (textEditingController.text.isNotEmpty) {
-      state.customTitle.value = textEditingController.text;
+      state.customTitle = textEditingController.text;
+      update(['CustomTitle']);
       await Utils().prefUtil.setValue<String>('customTitleName', textEditingController.text);
       Get.backLegacy();
       textEditingController.clear();
@@ -112,14 +108,14 @@ class SettingLogic extends GetxController {
     }
   }
 
-  //更改字体
-  Future<void> changeFontTheme(int value) async {
-    Get.backLegacy();
-    await Utils().prefUtil.setValue<int>('fontTheme', value);
-    state.fontTheme.value = value;
-    Get.changeTheme(await Utils().themeUtil.buildTheme(Brightness.light));
-    Get.changeTheme(await Utils().themeUtil.buildTheme(Brightness.dark));
-  }
+  // //更改字体
+  // Future<void> changeFontTheme(int value) async {
+  //   Get.backLegacy();
+  //   await Utils().prefUtil.setValue<int>('fontTheme', value);
+  //   state.fontTheme.value = value;
+  //   Get.changeTheme(await Utils().themeUtil.buildTheme(Brightness.light));
+  //   Get.changeTheme(await Utils().themeUtil.buildTheme(Brightness.dark));
+  // }
 
   Future<void> exportFile() async {
     Get.backLegacy();
@@ -139,7 +135,7 @@ class SettingLogic extends GetxController {
     if (result != null) {
       Utils().noticeUtil.showToast('数据导入中，请不要离开页面');
       await Utils().fileUtil.extractFile(result.files.single.path!);
-      Utils().noticeUtil.showToast('导入成功');
+      Utils().noticeUtil.showToast('导入成功，请重启应用');
     } else {
       Utils().noticeUtil.showToast('取消文件选择');
     }

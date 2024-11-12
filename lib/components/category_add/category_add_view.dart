@@ -16,9 +16,7 @@ class CategoryAddComponent extends StatelessWidget {
     final i18n = AppLocalizations.of(context)!;
 
     return GetBuilder<CategoryAddLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: SingleChildScrollView(

@@ -2,13 +2,15 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/components/diary_tab_view/diary_tab_view_logic.dart';
+import 'package:mood_diary/pages/diary_details/diary_details_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 mixin BasicCardLogic {
   Future<void> toDiary(Diary diary) async {
-    await HapticFeedback.mediumImpact();
+    HapticFeedback.mediumImpact();
+    Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary.id);
     var res = await Get.toNamed(AppRoutes.diaryPage, arguments: [diary, true]);
     var oldCategoryId = diary.categoryId;
     if (res == 'delete') {
@@ -19,7 +21,7 @@ mixin BasicCardLogic {
       Bind.find<DiaryTabViewLogic>(tag: 'default').state.diaryList.removeWhere((e) => e.id == diary.id);
     } else {
       //重新获取日记
-      var newDiary = await Utils().isarUtil.getDiaryByID(diary.id);
+      var newDiary = await Utils().isarUtil.getDiaryByID(diary.isarId);
       if (newDiary != null) {
         var newCategoryId = newDiary.categoryId;
         //如果没修改
@@ -57,6 +59,7 @@ mixin BasicCardLogic {
 
   Future<void> toDiaryInCalendar(Diary diary) async {
     await HapticFeedback.mediumImpact();
+    Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary.id);
     await Get.toNamed(
       AppRoutes.diaryPage,
       arguments: [diary, false],

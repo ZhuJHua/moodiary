@@ -47,9 +47,9 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 spacing: 4.0,
                 children: [
-                  if (diary.title != null) ...[
+                  if (diary.title.isNotEmpty) ...[
                     Text(
-                      diary.title!,
+                      diary.title,
                       style: textStyle.titleMedium!.copyWith(),
                     )
                   ],

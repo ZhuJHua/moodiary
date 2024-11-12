@@ -24,9 +24,7 @@ class SharePage extends StatelessWidget {
         : Theme.of(context).colorScheme;
     const cardSize = 300.0;
     return GetBuilder<ShareLogic>(
-      init: logic,
-      assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return Theme(
           data: imageColor != null
               ? Theme.of(context).copyWith(

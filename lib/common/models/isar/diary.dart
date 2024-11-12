@@ -1,25 +1,30 @@
 import 'package:collection/collection.dart';
 import 'package:isar/isar.dart';
+import 'package:uuid/uuid.dart';
 
 part 'diary.g.dart';
 
 @collection
 class Diary {
+  // 业务主键，使用 uuid
+  String id = const Uuid().v7();
+
+  // 数据库主键，使用 hash 业务主键
   @Id()
-  late String id;
+  int get isarId => fastHash(id);
 
   //分类id
   @Index()
   String? categoryId;
 
   //标题
-  String? title;
+  String title = '';
 
   //原始Delta格式内容
-  late String content;
+  String content = '';
 
   //纯文本的内容，用于搜索以及字数统计
-  late String contentText;
+  String contentText = '';
 
   //年月索引
   @Index()
@@ -31,29 +36,32 @@ class Diary {
 
   //日期
   @Index()
-  late DateTime time;
+  DateTime time = DateTime.now();
 
   //是否显示，用于回收站
   @Index()
-  late bool show;
+  bool show = true;
 
   //心情指数
-  late double mood;
+  double mood = 0.5;
 
   //天气
-  late List<String> weather;
+  List<String> weather = [];
 
   //图片名称
-  late List<String> imageName;
+  List<String> imageName = [];
 
   //音频名称
-  late List<String> audioName;
+  List<String> audioName = [];
 
   //视频名称
-  late List<String> videoName;
+  List<String> videoName = [];
 
   //标签列表
-  late List<String> tags;
+  List<String> tags = [];
+
+  // 位置信息
+  List<String> position = [];
 
   //封面颜色，如果有的话
   int? imageColor;
@@ -61,30 +69,13 @@ class Diary {
   //封面比例，如果有的话
   double? aspect;
 
-  Diary({
-    required this.id,
-    required this.categoryId,
-    required this.title,
-    required this.content,
-    required this.contentText,
-    required this.time,
-    required this.show,
-    required this.mood,
-    required this.weather,
-    required this.imageName,
-    required this.audioName,
-    required this.videoName,
-    required this.tags,
-    required this.imageColor,
-    required this.aspect,
-  });
-
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Diary &&
           runtimeType == other.runtimeType &&
           id == other.id &&
+          isarId == other.isarId &&
           categoryId == other.categoryId &&
           title == other.title &&
           content == other.content &&
@@ -97,6 +88,7 @@ class Diary {
           const ListEquality().equals(audioName, other.audioName) &&
           const ListEquality().equals(videoName, other.videoName) &&
           const ListEquality().equals(tags, other.tags) &&
+          const ListEquality().equals(position, other.position) &&
           imageColor == other.imageColor &&
           aspect == other.aspect;
 
@@ -115,12 +107,66 @@ class Diary {
         const ListEquality().hash(audioName) ^
         const ListEquality().hash(videoName) ^
         const ListEquality().hash(tags) ^
+        const ListEquality().hash(position) ^
         imageColor.hashCode ^
         aspect.hashCode;
   }
 
-  @override
-  String toString() {
-    return 'Diary{id: $id, categoryId: $categoryId, title: $title, content: $content, contentText: $contentText, time: $time, show: $show, mood: $mood, weather: $weather, imageName: $imageName, audioName: $audioName, videoName: $videoName, tags: $tags, imageColor: $imageColor, aspect: $aspect}';
+  Diary();
+
+  // 将 Diary 对象转换为 JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'categoryId': categoryId,
+      'title': title,
+      'content': content,
+      'contentText': contentText,
+      'time': time.toIso8601String(),
+      'show': show,
+      'mood': mood,
+      'weather': weather,
+      'imageName': imageName,
+      'audioName': audioName,
+      'videoName': videoName,
+      'tags': tags,
+      'position': position,
+      'imageColor': imageColor,
+      'aspect': aspect,
+    };
   }
+
+  factory Diary.fromJson(Map<String, dynamic> json) {
+    return Diary()
+      ..id = json['id'] as String
+      ..categoryId = json['categoryId'] as String?
+      ..title = json['title'] as String
+      ..content = json['content'] as String
+      ..contentText = json['contentText'] as String
+      ..time = DateTime.parse(json['time'] as String)
+      ..show = json['show'] as bool
+      ..mood = (json['mood'] as num).toDouble()
+      ..weather = List<String>.from(json['weather'] as List)
+      ..imageName = List<String>.from(json['imageName'] as List)
+      ..audioName = List<String>.from(json['audioName'] as List)
+      ..videoName = List<String>.from(json['videoName'] as List)
+      ..tags = List<String>.from(json['tags'] as List)
+      ..position = List<String>.from(json['position'] as List)
+      ..imageColor = json['imageColor'] as int?
+      ..aspect = (json['aspect'] as num?)?.toDouble();
+  }
+}
+
+int fastHash(String string) {
+  var hash = 0xcbf29ce484222325;
+
+  var i = 0;
+  while (i < string.length) {
+    final codeUnit = string.codeUnitAt(i++);
+    hash ^= codeUnit >> 8;
+    hash *= 0x100000001b3;
+    hash ^= codeUnit & 0xFF;
+    hash *= 0x100000001b3;
+  }
+  return hash;
 }

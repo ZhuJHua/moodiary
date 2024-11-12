@@ -22,6 +22,12 @@ class FileUtil {
     }
   }
 
+  void errorLog(String message) {
+    //打开文件
+    final logFile = File(join(_filePath, 'error.log'));
+    logFile.writeAsStringSync(message, mode: FileMode.append);
+  }
+
   //删除指定文件夹
   Future<void> deleteDir(String path) async {
     Directory directory = Directory(path);
@@ -131,6 +137,10 @@ class FileUtil {
   }
 
   String getRealPath(String fileType, String fileName) {
+    if (fileType == 'thumbnail') {
+      var thumbnailName = 'thumbnail-${fileName.substring(6, 42)}.jpeg';
+      return join(_filePath, 'video', thumbnailName);
+    }
     return join(_filePath, fileType, fileName);
   }
 
@@ -176,5 +186,9 @@ class FileUtil {
   String getCachePath(String fileName) {
     Utils().logUtil.printInfo(join(_cachePath, fileName));
     return join(_cachePath, fileName);
+  }
+
+  String getErrorLogPath() {
+    return join(_filePath, 'error.log');
   }
 }

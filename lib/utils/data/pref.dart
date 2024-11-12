@@ -16,6 +16,8 @@ class PrefUtil {
     'autoSync',
     //动态配色支持
     'supportDynamicColor',
+    //当前系统颜色
+    'systemColor',
     //主题颜色
     'color',
     //主题模式
@@ -40,6 +42,7 @@ class PrefUtil {
     'qweatherKey',
     'tencentId',
     'tencentKey',
+    'tiandituKey',
     //侧边栏天气
     'getWeather',
     //天气缓存
@@ -78,6 +81,11 @@ class PrefUtil {
     var currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
     var appVersion = _prefs.getString('appVersion');
 
+    /// 数据库版本变更
+    /// v2.4.8
+    if (appVersion != null && appVersion.split('+')[0].compareTo('2.4.8') < 0) {
+      await compute(Utils().isarUtil.mergeToV2_4_8, Utils().fileUtil.getRealPath('database', ''));
+    }
     // 如果是首次启动或版本不一致
     if (kDebugMode || firstStart || appVersion == null || appVersion != currentVersion) {
       await _prefs.setString('appVersion', currentVersion);
@@ -90,10 +98,23 @@ class PrefUtil {
   // 设置默认值的方法
   Future<void> setDefaultValues() async {
     await _prefs.setBool('autoSync', _prefs.getBool('autoSync') ?? false);
-    await _prefs.setBool(
-        'supportBiometrics', _prefs.getBool('supportBiometrics') ?? await Utils().authUtil.canCheckBiometrics());
-    await _prefs.setBool(
-        'supportDynamicColor', _prefs.getBool('supportDynamicColor') ?? await Utils().themeUtil.supportDynamicColor());
+
+    /// 支持相关，每次都重新获取
+    await _prefs.setBool('supportBiometrics', await Utils().authUtil.canCheckBiometrics());
+
+    var supportDynamicColor = await Utils().themeUtil.supportDynamicColor();
+    await _prefs.setBool('supportDynamicColor', supportDynamicColor);
+
+    if (supportDynamicColor) {
+      var color = await Utils().themeUtil.getDynamicColor();
+      await _prefs.setInt(
+          'systemColor',
+          ((color.a * 255).toInt() << 24) |
+              ((color.r * 255).toInt() << 16) |
+              ((color.g * 255).toInt() << 8) |
+              (color.b * 255).toInt());
+    }
+
     await _prefs.setInt('color', _prefs.getInt('color') ?? (await Utils().themeUtil.supportDynamicColor() ? -1 : 0));
     await _prefs.setInt('themeMode', _prefs.getInt('themeMode') ?? 0);
     await _prefs.setBool('dynamicColor', _prefs.getBool('dynamicColor') ?? true);
@@ -103,9 +124,11 @@ class PrefUtil {
     await _prefs.setDouble('fontScale', _prefs.getDouble('fontScale') ?? 1.0);
     await _prefs.setBool('lockNow', _prefs.getBool('lockNow') ?? false);
     await _prefs.setInt('fontTheme', _prefs.getInt('fontTheme') ?? 0);
-    await _prefs.setString(
-        'supportPath', _prefs.getString('supportPath') ?? (await getApplicationSupportDirectory()).path);
-    await _prefs.setString('cachePath', _prefs.getString('cachePath') ?? (await getApplicationCacheDirectory()).path);
+
+    /// 支持相关，重新获取
+    await _prefs.setString('supportPath', (await getApplicationSupportDirectory()).path);
+    await _prefs.setString('cachePath', (await getApplicationCacheDirectory()).path);
+
     await _prefs.setBool('getWeather', _prefs.getBool('getWeather') ?? false);
     await _prefs.setInt('startTime', _prefs.getInt('startTime') ?? DateTime.now().millisecondsSinceEpoch);
     await _prefs.setString('customTitleName', _prefs.getString('customTitleName') ?? '');

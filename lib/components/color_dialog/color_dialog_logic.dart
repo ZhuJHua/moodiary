@@ -12,20 +12,22 @@ class ColorDialogLogic extends GetxController {
   late SettingLogic settingLogic = Bind.find<SettingLogic>();
 
   @override
-  void onReady() async {
+  void onReady() {
     //如果支持系统颜色，获取系统颜色
-    if (state.supportDynamic.value) {
-      state.systemColor.value = await Utils().themeUtil.getDynamicColor();
+    if (state.supportDynamic) {
+      state.systemColor = Color(Utils().prefUtil.getValue<int>('systemColor')!);
+      update();
     }
     super.onReady();
   }
-  
+
   //更改主题色
   Future<void> changeSeedColor(index) async {
     await Utils().prefUtil.setValue<int>('color', index);
-    state.currentColor.value = index;
-    settingLogic.state.color.value = index;
-    Get.changeTheme(await Utils().themeUtil.buildTheme(Brightness.light));
-    Get.changeTheme(await Utils().themeUtil.buildTheme(Brightness.dark));
+    state.currentColor = index;
+    settingLogic.state.color = index;
+    update();
+    Get.changeTheme(Utils().themeUtil.buildTheme(Brightness.light));
+    Get.changeTheme(Utils().themeUtil.buildTheme(Brightness.dark));
   }
 }

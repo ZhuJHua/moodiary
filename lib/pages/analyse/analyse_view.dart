@@ -156,63 +156,59 @@ class AnalysePage extends StatelessWidget {
       );
     }
 
-    return GetBuilder<AnalyseLogic>(
-      assignId: true,
-      init: logic,
-      builder: (logic) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text(
-              '分析',
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          '分析',
+        ),
+      ),
+      body: GetBuilder<AnalyseLogic>(builder: (_) {
+        return ListView(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10.0),
+              margin: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+              decoration:
+                  BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(10.0)),
+              child: Row(
+                children: [
+                  IconButton.filled(
+                      onPressed: () {
+                        logic.openDatePicker(context);
+                      },
+                      icon: const Icon(Icons.date_range)),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Expanded(
+                    child: Text(
+                      '${state.dateRange[0].year}年${state.dateRange[0].month}月${state.dateRange[0].day}日 至 ${state.dateRange[1].year}年${state.dateRange[1].month}月${state.dateRange[1].day}日',
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          body: ListView(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10.0),
-                margin: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(10.0)),
-                child: Row(
-                  children: [
-                    IconButton.filled(
-                        onPressed: () {
-                          logic.openDatePicker(context);
-                        },
-                        icon: const Icon(Icons.date_range)),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    Expanded(
-                      child: Text(
-                        '${state.dateRange[0].year}年${state.dateRange[0].month}月${state.dateRange[0].day}日 至 ${state.dateRange[1].year}年${state.dateRange[1].month}月${state.dateRange[1].day}日',
-                      ),
-                    ),
-                  ],
-                ),
+            Container(
+              padding: const EdgeInsets.all(10.0),
+              margin: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+              decoration:
+                  BoxDecoration(color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(10.0)),
+              child: Column(
+                children: [
+                  TextButton(
+                      onPressed: () {
+                        logic.getAi();
+                      },
+                      child: const Text('AI 分析')),
+                  if (state.reply != '') ...[Text(state.reply)]
+                ],
               ),
-              Container(
-                padding: const EdgeInsets.all(10.0),
-                margin: const EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-                decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest, borderRadius: BorderRadius.circular(10.0)),
-                child: Column(
-                  children: [
-                    TextButton(
-                        onPressed: () {
-                          logic.getAi();
-                        },
-                        child: const Text('AI 分析')),
-                    if (state.reply != '') ...[Text(state.reply)]
-                  ],
-                ),
-              ),
-              buildBarChart('天气', WeatherIcon.map, state.weatherMap, state.weatherList),
-              buildMoodWrap('心情', state.moodList),
-            ],
-          ),
+            ),
+            buildBarChart('天气', WeatherIcon.map, state.weatherMap, state.weatherList),
+            buildMoodWrap('心情', state.moodList),
+          ],
         );
-      },
+      }),
     );
   }
 }

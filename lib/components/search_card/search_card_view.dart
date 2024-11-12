@@ -13,15 +13,13 @@ class SearchCardComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Get.put(SearchCardLogic());
-
+    final logic = Bind.find<SearchCardLogic>(tag: index);
     final colorScheme = Theme.of(context).colorScheme;
 
     return GetBuilder<SearchCardLogic>(
-      init: logic,
       tag: index,
       assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return InkWell(
           onTap: () {
             logic.toDiaryPage(diary);

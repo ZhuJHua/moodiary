@@ -37,35 +37,39 @@ class SetPasswordLogic extends GetxController with GetSingleTickerProviderStateM
   }
 
   void deletePassword() {
-    if (state.password.value.isNotEmpty) {
-      state.password.value = state.password.value.substring(0, state.password.value.length - 1);
+    if (state.password.isNotEmpty) {
+      state.password = state.password.substring(0, state.password.length - 1);
+      update();
       HapticFeedback.selectionClick();
     }
   }
 
   Future<void> updatePassword(String value) async {
-    if (state.password.value.length < 4) {
-      state.password.value += value;
+    if (state.password.length < 4) {
+      state.password += value;
+      update();
       HapticFeedback.selectionClick();
     }
     Future.delayed(const Duration(milliseconds: 100), () async {
       //如果第一遍输入完成，保存记录后重新输入第二遍
-      if (state.password.value.length == 4 && state.checkPassword.value.isEmpty) {
-        state.checkPassword.value = state.password.value;
-        state.password.value = '';
+      if (state.password.length == 4 && state.checkPassword.isEmpty) {
+        state.checkPassword = state.password;
+        state.password = '';
+        update();
       }
       //第二次输入，进行校验
-      if (state.password.value.length == 4 && state.checkPassword.value.isNotEmpty) {
+      if (state.password.length == 4 && state.checkPassword.isNotEmpty) {
         //两次输入一致
-        if (state.password.value == state.checkPassword.value) {
+        if (state.password == state.checkPassword) {
           await setPassword();
         } else {
           animationController.forward();
           await HapticFeedback.mediumImpact();
           Future.delayed(const Duration(milliseconds: 200), () {
             animationController.reverse();
-            state.password.value = '';
-            state.checkPassword.value = '';
+            state.password = '';
+            state.checkPassword = '';
+            update();
           });
         }
       }
@@ -76,8 +80,9 @@ class SetPasswordLogic extends GetxController with GetSingleTickerProviderStateM
     //lock标记为true说明开启了密码
     await Utils().prefUtil.setValue<bool>('lock', true);
     //设置密码字段
-    await Utils().prefUtil.setValue<String>('password', state.password.value);
-    settingLogic.state.lock.value = true;
+    await Utils().prefUtil.setValue<String>('password', state.password);
+    settingLogic.state.lock = true;
+    settingLogic.update(['Lock']);
     Utils().noticeUtil.showToast('设置成功');
     Get.backLegacy();
   }

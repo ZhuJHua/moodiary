@@ -15,12 +15,10 @@ class RecordSheetComponent extends StatelessWidget {
 
     return LayoutBuilder(builder: (context, constrains) {
       return GetBuilder<RecordSheetLogic>(
-        init: logic,
-        assignId: true,
         initState: (_) {
           logic.initMaxWidth(constrains.maxWidth);
         },
-        builder: (logic) {
+        builder: (_) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

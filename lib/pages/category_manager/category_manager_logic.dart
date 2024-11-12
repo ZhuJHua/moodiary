@@ -26,7 +26,8 @@ class CategoryManagerLogic extends GetxController {
   }
 
   Future<void> getCategory() async {
-    state.categoryList.value = await Utils().isarUtil.getAllCategoryAsync();
+    state.categoryList = await Utils().isarUtil.getAllCategoryAsync();
+    update();
   }
 
   Future<void> addCategory() async {

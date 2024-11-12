@@ -15,24 +15,14 @@ class SettingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<SettingLogic>();
+    final logic = Get.put(SettingLogic());
     final state = Bind.find<SettingLogic>().state;
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
 
     Widget buildManager() {
-      return Column(
-        children: [
-          ListTile(
-            title: Text(
-              '管理',
-              style: textStyle.titleLarge!.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const DashboardComponent(),
-        ],
-      );
+      return const DashboardComponent();
     }
 
     Widget buildData() {
@@ -55,6 +45,14 @@ class SettingPage extends StatelessWidget {
                     logic.toRecyclePage();
                   },
                   leading: const Icon(Icons.delete_outline),
+                ),
+                ListTile(
+                  title: const Text('备份与同步'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    logic.toBackupAndSyncPage();
+                  },
+                  leading: const Icon(Icons.sync),
                 ),
                 ListTile(
                   title: Text(i18n.settingExport),
@@ -114,14 +112,16 @@ class SettingPage extends StatelessWidget {
                 ListTile(
                   title: Text(i18n.settingClean),
                   leading: const Icon(Icons.cleaning_services_outlined),
-                  trailing: Obx(() {
-                    return Text(
-                      state.dataUsage.value,
-                      style: textStyle.bodySmall!.copyWith(
-                        color: colorScheme.primary,
-                      ),
-                    );
-                  }),
+                  trailing: GetBuilder<SettingLogic>(
+                      id: 'DataUsage',
+                      builder: (_) {
+                        return Text(
+                          state.dataUsage,
+                          style: textStyle.bodySmall!.copyWith(
+                            color: colorScheme.primary,
+                          ),
+                        );
+                      }),
                   onTap: () {
                     logic.deleteCache();
                   },
@@ -157,19 +157,17 @@ class SettingPage extends StatelessWidget {
                 ListTile(
                   title: Text(i18n.settingThemeMode),
                   leading: const Icon(Icons.invert_colors),
-                  trailing: Obx(() {
-                    return Text(
-                      switch (state.themeMode.value) {
-                        0 => i18n.themeModeSystem,
-                        1 => i18n.themeModeLight,
-                        2 => i18n.themeModeDark,
-                        int() => throw UnimplementedError(),
-                      },
-                      style: textStyle.bodySmall!.copyWith(
-                        color: colorScheme.primary,
-                      ),
-                    );
-                  }),
+                  trailing: Text(
+                    switch (state.themeMode) {
+                      0 => i18n.themeModeSystem,
+                      1 => i18n.themeModeLight,
+                      2 => i18n.themeModeDark,
+                      int() => throw UnimplementedError(),
+                    },
+                    style: textStyle.bodySmall!.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                  ),
                   onTap: () {
                     showDialog(
                         context: context,
@@ -181,21 +179,19 @@ class SettingPage extends StatelessWidget {
                 ListTile(
                   title: Text(i18n.settingColor),
                   leading: const Icon(Icons.color_lens_outlined),
-                  trailing: Obx(() {
-                    return Text(
-                      switch (state.color.value) {
-                        0 => i18n.colorNameQunQin,
-                        1 => i18n.colorNameJiHe,
-                        2 => i18n.colorNameQinDai,
-                        3 => i18n.colorNameXianYe,
-                        4 => i18n.colorNameJinYu,
-                        _ => i18n.colorNameSystem
-                      },
-                      style: textStyle.bodySmall!.copyWith(
-                        color: colorScheme.primary,
-                      ),
-                    );
-                  }),
+                  trailing: Text(
+                    switch (state.color) {
+                      0 => i18n.colorNameQunQin,
+                      1 => i18n.colorNameJiHe,
+                      2 => i18n.colorNameQinDai,
+                      3 => i18n.colorNameXianYe,
+                      4 => i18n.colorNameJinYu,
+                      _ => i18n.colorNameSystem
+                    },
+                    style: textStyle.bodySmall!.copyWith(
+                      color: colorScheme.primary,
+                    ),
+                  ),
                   onTap: () {
                     showDialog(
                         context: context,
@@ -295,14 +291,16 @@ class SettingPage extends StatelessWidget {
                 ListTile(
                   title: const Text('自定义首页名称'),
                   leading: const Icon(Icons.drive_file_rename_outline),
-                  trailing: Obx(() {
-                    return Text(
-                      state.customTitle.value,
-                      style: textStyle.bodySmall!.copyWith(
-                        color: colorScheme.primary,
-                      ),
-                    );
-                  }),
+                  trailing: GetBuilder<SettingLogic>(
+                      id: 'CustomTitle',
+                      builder: (_) {
+                        return Text(
+                          state.customTitle,
+                          style: textStyle.bodySmall!.copyWith(
+                            color: colorScheme.primary,
+                          ),
+                        );
+                      }),
                   onTap: () {
                     showDialog(
                         context: context,
@@ -357,70 +355,76 @@ class SettingPage extends StatelessWidget {
             color: colorScheme.surfaceContainerLow,
             child: Column(
               children: [
-                Obx(() {
-                  return SwitchListTile(
-                    value: state.local.value,
-                    onChanged: (value) {
-                      logic.local(value);
-                    },
-                    title: Text(i18n.settingLocal),
-                    subtitle: Text(i18n.settingLocalDes),
-                    secondary: const Icon(Icons.cloud_off_outlined),
-                  );
-                }),
-                Obx(() {
-                  return ListTile(
-                    trailing: Text(
-                      state.lock.value ? i18n.settingLockOpen : i18n.settingLockNotOpen,
-                      style: textStyle.bodySmall!.copyWith(
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                    onTap: () {
-                      showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: Text(i18n.settingLock),
-                              content:
-                                  Text(state.lock.value ? i18n.settingLockResetLock : i18n.settingLockChooseLockType),
-                              actions: [
-                                TextButton(
-                                    onPressed: () {
-                                      Get.backLegacy();
-                                      showModalBottomSheet(
-                                          context: context,
-                                          isScrollControlled: true,
-                                          showDragHandle: true,
-                                          useSafeArea: true,
-                                          builder: (context) {
-                                            return state.lock.value
-                                                ? const RemovePasswordComponent()
-                                                : const SetPasswordComponent();
-                                          });
-                                    },
-                                    child: Text(state.lock.value ? '关闭' : '数字')),
-                              ],
-                            );
-                          });
-                    },
-                    title: Text(i18n.settingLock),
-                    leading: const Icon(Icons.lock_outline),
-                  );
-                }),
-                Obx(() {
-                  return SwitchListTile(
-                    value: state.lockNow.value,
-                    onChanged: state.lock.value
-                        ? (value) {
-                            logic.lockNow(value);
-                          }
-                        : null,
-                    title: Text(i18n.settingLockNow),
-                    subtitle: Text(i18n.settingLockNowDes),
-                    secondary: const Icon(Icons.lock_clock_outlined),
-                  );
-                }),
+                GetBuilder<SettingLogic>(
+                    id: 'Local',
+                    builder: (_) {
+                      return SwitchListTile(
+                        value: state.local,
+                        onChanged: (value) {
+                          logic.local(value);
+                        },
+                        title: Text(i18n.settingLocal),
+                        subtitle: Text(i18n.settingLocalDes),
+                        secondary: const Icon(Icons.cloud_off_outlined),
+                      );
+                    }),
+                GetBuilder<SettingLogic>(
+                    id: 'Lock',
+                    builder: (_) {
+                      return ListTile(
+                        trailing: Text(
+                          state.lock ? i18n.settingLockOpen : i18n.settingLockNotOpen,
+                          style: textStyle.bodySmall!.copyWith(
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        onTap: () {
+                          showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text(i18n.settingLock),
+                                  content:
+                                      Text(state.lock ? i18n.settingLockResetLock : i18n.settingLockChooseLockType),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () {
+                                          Get.backLegacy();
+                                          showModalBottomSheet(
+                                              context: context,
+                                              isScrollControlled: true,
+                                              showDragHandle: true,
+                                              useSafeArea: true,
+                                              builder: (context) {
+                                                return state.lock
+                                                    ? const RemovePasswordComponent()
+                                                    : const SetPasswordComponent();
+                                              });
+                                        },
+                                        child: Text(state.lock ? '关闭' : '数字')),
+                                  ],
+                                );
+                              });
+                        },
+                        title: Text(i18n.settingLock),
+                        leading: const Icon(Icons.lock_outline),
+                      );
+                    }),
+                GetBuilder<SettingLogic>(
+                    id: 'Lock',
+                    builder: (_) {
+                      return SwitchListTile(
+                        value: state.lockNow,
+                        onChanged: state.lock
+                            ? (value) {
+                                logic.lockNow(value);
+                              }
+                            : null,
+                        title: Text(i18n.settingLockNow),
+                        subtitle: Text(i18n.settingLockNowDes),
+                        secondary: const Icon(Icons.lock_clock_outlined),
+                      );
+                    }),
               ],
             ),
           )
@@ -465,9 +469,8 @@ class SettingPage extends StatelessWidget {
     }
 
     return GetBuilder<SettingLogic>(
-      init: logic,
       assignId: true,
-      builder: (logic) {
+      builder: (_) {
         return CustomScrollView(
           slivers: [
             SliverAppBar(
@@ -476,33 +479,23 @@ class SettingPage extends StatelessWidget {
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(
-                child: buildManager(),
-              ),
+              sliver: SliverToBoxAdapter(child: buildManager()),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(
-                child: buildData(),
-              ),
+              sliver: SliverToBoxAdapter(child: buildData()),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(
-                child: buildDisplay(),
-              ),
+              sliver: SliverToBoxAdapter(child: buildDisplay()),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(
-                child: buildPrivacy(),
-              ),
+              sliver: SliverToBoxAdapter(child: buildPrivacy()),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(
-                child: buildMore(),
-              ),
+              sliver: SliverToBoxAdapter(child: buildMore()),
             ),
           ],
         );

@@ -6,8 +6,6 @@ class AgreementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final logic = Bind.find<AgreementLogic>();
-    // final state = Bind.find<AgreementLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('用户协议')),
