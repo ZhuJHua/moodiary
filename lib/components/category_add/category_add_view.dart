@@ -16,6 +16,7 @@ class CategoryAddComponent extends StatelessWidget {
     final i18n = AppLocalizations.of(context)!;
 
     return GetBuilder<CategoryAddLogic>(
+      assignId: true,
       builder: (_) {
         return Padding(
           padding: const EdgeInsets.all(16.0),

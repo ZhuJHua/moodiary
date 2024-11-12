@@ -317,7 +317,8 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       ..imageColor = await getCoverColor()
       ..aspect = await getCoverAspect();
     await Utils().isarUtil.updateADiary(state.currentDiary);
-    Get.close();
+    Utils().logUtil.printInfo(state.currentDiary.toJson());
+    Get.backLegacy();
     state.isNew ? Get.backLegacy(result: state.currentDiary.categoryId ?? '') : Get.backLegacy(result: 'changed');
     Utils().noticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');
   }
@@ -451,19 +452,15 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   void selectCategory(String? id) {
     state.currentDiary.categoryId = id;
-    Utils().logUtil.printInfo(id);
     if (id == null) {
       state.categoryName = '';
     } else {
       var category = Utils().isarUtil.getCategoryName(id);
       if (category != null) {
         state.categoryName = category.categoryName;
-        update(['Category']);
       }
-
-      Utils().logUtil.printInfo(state.categoryName);
     }
-    update(['Category']);
+    update(['CategoryName']);
   }
 
   void selectTabView(index) {

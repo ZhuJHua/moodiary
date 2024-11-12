@@ -17,12 +17,14 @@ import 'package:mood_diary/utils/utils.dart';
 import 'diary_details_logic.dart';
 
 class DiaryDetailsPage extends StatelessWidget {
-  const DiaryDetailsPage({super.key});
+  DiaryDetailsPage({super.key});
+
+  final tag = (Get.arguments[0] as Diary).id;
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<DiaryDetailsLogic>(tag: (Get.arguments[0] as Diary).id);
-    final state = Bind.find<DiaryDetailsLogic>(tag: (Get.arguments[0] as Diary).id).state;
+    final logic = Bind.find<DiaryDetailsLogic>(tag: tag);
+    final state = Bind.find<DiaryDetailsLogic>(tag: tag).state;
     final size = MediaQuery.sizeOf(context);
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;

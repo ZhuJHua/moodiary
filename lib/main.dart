@@ -75,15 +75,14 @@ void main() {
           );
           // 根据平台决定是否需要 MoveWindow
           final windowChild = (Platform.isWindows || Platform.isMacOS || Platform.isWindows)
-              ? MoveWindow(
-                  child: Column(
+              ? Column(
                   children: [
                     WindowButtons(
                       colorScheme: colorScheme,
                     ),
                     Expanded(child: mediaQuery),
                   ],
-                ))
+                )
               : mediaQuery;
           return windowChild;
         },
