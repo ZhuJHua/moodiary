@@ -14,20 +14,26 @@
 - **Multimedia accessories**：📷 You can add pictures, audio, video or even draw a picture to your diary.
 - **Search and classification**：🔍 Easily manage your diary by full-text search and categorization.
 - **Custom theme**：🌈 Supports light and dark modes, as well as a variety of color schemes.
-- **Data security**：🔒 Keep your diary safe with a password.
+- **Data security**：🔒 Keep your diary safe with a password, supports biometric unlocking.
 - **Export and share**：🧾 Support all data import/export, as well as single diary sharing.
-- **Cloud synchronization**：☁ Support for synchronizing diaries across multiple devices (coming soon).
-- **Natural Language Processing (NLP)**：🤖 Let your diary more understand you.
+- **Backup and synchronization**：☁ Support for LAN synchronization and WebDav backup (coming soon).
+- **Footprint Map** : 🗺️ See your footprints on a map. Every step of your life is worth documenting.
+- **Intelligent assistant**：💬 Supports access to third-party large models, provides Q&A, sentiment
+  analysis and other functions.
+- **Local Natural Language Processing (NLP)**：🤖 A more secure intelligent assistant that lets your
+  diary know you better.
 
 (Note: Cross-platform capabilities are provided by Flutter, platforms with * may require more testing)
 
 ## 🔧 Main Technology stack
 
-- [Flutter](https://github.com/flutter/flutter)
-- [Isar](https://github.com/isar/isar)
-- [GetX](https://github.com/jonataslaw/getx)
+- [Flutter](https://github.com/flutter/flutter) ( Cross-platform UI framework )
+- [Isar](https://github.com/isar/isar) ( High performance local database )
+- [GetX](https://github.com/jonataslaw/getx) ( State management framework )
 
 ## 📸 Application screenshot
+
+> The application is constantly updated, and the interface may change slightly in the new version
 
 ### Mobile
 
@@ -46,6 +52,14 @@ Some capabilities need to apply for third-party SDKS, and the following service 
 #### Weather service
 
 - [QWeather](https://dev.qweather.com/docs/api/)
+
+#### Map service
+
+- [Tianditu](http://lbs.tianditu.gov.cn/server/MapService.html)
+
+#### Intelligent assistant
+
+- [Tencent Hunyuan](https://cloud.tencent.com/document/product/1729/97731)
 
 ### Direct mounting
 
