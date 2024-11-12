@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/common/models/map.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -8,6 +10,8 @@ class MapState {
   List<DiaryMapItem> diaryMapItemList = [];
 
   String? tiandituKey = Utils().prefUtil.getValue<String>('tiandituKey');
+
+  int random = Random().nextInt(8);
 
   MapState();
 }

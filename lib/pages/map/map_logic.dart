@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/pages/diary_details/diary_details_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'map_state.dart';
 
@@ -28,11 +29,14 @@ class MapLogic extends GetxController {
     super.onClose();
   }
 
-  Future<LatLng> getLocation() async {
-    Position? position;
-    position = await Geolocator.getLastKnownPosition(forceAndroidLocationManager: true);
-    position ??= await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
-    return LatLng(position.latitude, position.longitude);
+  Future<LatLng?> getLocation() async {
+    if (await Utils().permissionUtil.checkPermission(Permission.location)) {
+      Position? position;
+      position = await Geolocator.getLastKnownPosition(forceAndroidLocationManager: true);
+      position ??= await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
+      return LatLng(position.latitude, position.longitude);
+    }
+    return null;
   }
 
   Future<void> getAllItem() async {
@@ -44,7 +48,7 @@ class MapLogic extends GetxController {
     var currentPosition = await getLocation();
     Utils().logUtil.printInfo(currentPosition.toString());
     Utils().noticeUtil.showToast('定位成功');
-    mapController.move(currentPosition, mapController.camera.maxZoom!);
+    mapController.move(currentPosition!, mapController.camera.maxZoom!);
   }
 
   Future<void> toDiaryPage({required int isarId}) async {
