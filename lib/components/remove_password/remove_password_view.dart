@@ -66,16 +66,12 @@ class RemovePasswordComponent extends StatelessWidget {
 
     List<Widget> buildPasswordIndicator() {
       return List.generate(4, (index) {
-        return Obx(() {
-          return Icon(
-            Icons.circle,
-            size: 16,
-            color: Color.lerp(
-                state.password.length > index ? colorScheme.onSurface : colorScheme.surfaceContainerHighest,
-                Colors.red,
-                logic.animation.value),
-          );
-        });
+        return Icon(
+          Icons.circle,
+          size: 16,
+          color: Color.lerp(state.password.length > index ? colorScheme.onSurface : colorScheme.surfaceContainerHighest,
+              Colors.red, logic.animation.value),
+        );
       });
     }
 
