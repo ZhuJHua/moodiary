@@ -113,6 +113,7 @@ class MediaUtil {
       return oldImage;
     }
     if (Platform.isWindows) {
+      oldImage.saveTo(targetPath);
       return oldImage;
     }
     var quality = Utils().prefUtil.getValue<int>('quality');
