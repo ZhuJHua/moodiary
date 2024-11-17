@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 
@@ -19,12 +21,11 @@ class AuthUtil {
         )
       ],
       localizedReason: '安全验证',
-      options: const AuthenticationOptions(
-        useErrorDialogs: true,
-        stickyAuth: true,
-        sensitiveTransaction: true,
-        biometricOnly: true,
-      ),
+      options: AuthenticationOptions(
+          useErrorDialogs: true,
+          stickyAuth: true,
+          sensitiveTransaction: true,
+          biometricOnly: Platform.isWindows ? false : true),
     );
   }
 
