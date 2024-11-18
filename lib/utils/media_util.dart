@@ -5,8 +5,11 @@ import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mood_diary/src/rust/api/compress.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:uuid/uuid.dart';
+
+import '../src/rust/api/constants.dart' as r_type;
 
 class MediaUtil {
   late final _picker = ImagePicker();
@@ -20,7 +23,8 @@ class MediaUtil {
       //生成新的名字
       var imageName = 'image-${const Uuid().v7()}.png';
       nameList.add(imageName);
-      await _compressAndSaveImage(imageFile, Utils().fileUtil.getRealPath('image', imageName), CompressFormat.png);
+      await _compressRust(imageFile, Utils().fileUtil.getRealPath('image', imageName), r_type.CompressFormat.png);
+      //await _compressAndSaveImage(imageFile, Utils().fileUtil.getRealPath('image', imageName), CompressFormat.png);
     }
     return nameList;
   }
@@ -43,8 +47,10 @@ class MediaUtil {
       var videoName = 'video-$uuid.mp4';
       nameList.add(videoName);
       await videoFileList[i].saveTo(Utils().fileUtil.getRealPath('video', videoName));
-      await _compressAndSaveImage(
-          videoThumbnailFileList[i], Utils().fileUtil.getRealPath('thumbnail', videoName), CompressFormat.jpeg);
+      await _compressRust(
+          videoThumbnailFileList[i], Utils().fileUtil.getRealPath('thumbnail', videoName), r_type.CompressFormat.jpeg);
+      // await _compressAndSaveImage(
+      //     videoThumbnailFileList[i], Utils().fileUtil.getRealPath('thumbnail', videoName), CompressFormat.jpeg);
     }
     return nameList;
   }
@@ -102,8 +108,20 @@ class MediaUtil {
   }
 
   //获取多个图片
-  Future<List<XFile>> pickMultiPhoto(int limit) async {
+  Future<List<XFile>> pickMultiPhoto(int? limit) async {
     return await _picker.pickMultiImage(limit: limit);
+  }
+
+  Future<void> _compressRust(XFile oldImage, String targetPath, r_type.CompressFormat format) async {
+    var quality = switch (Utils().prefUtil.getValue<int>('quality')) {
+      0 => 720,
+      1 => 1080,
+      2 => 1440,
+      _ => 1080,
+    };
+    var newImage = await ImageCompress.contain(
+        filePath: oldImage.path, maxWidth: quality, maxHeight: quality, compressFormat: format);
+    await File(targetPath).writeAsBytes(newImage);
   }
 
   //图片压缩

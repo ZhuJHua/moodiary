@@ -22,7 +22,7 @@ class VideoLogic extends GetxController {
 
   @override
   void onReady() async {
-    await player.open(state.playable, play: false);
+    await player.open(state.playable, play: true);
     player.stream.playlist.listen((data) {
       state.videoIndex.value = data.index;
     });

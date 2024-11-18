@@ -12,6 +12,7 @@ import 'package:intl/find_locale.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:mood_diary/router/app_pages.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:mood_diary/src/rust/frb_generated.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 import 'components/window_buttons/window_buttons.dart';
@@ -29,6 +30,7 @@ Future<void> initSystem() async {
   //地图缓存
   await FMTCObjectBoxBackend().initialise();
   await const FMTCStore('mapStore').manage.create();
+  await RustLib.init();
   platFormOption();
 }
 

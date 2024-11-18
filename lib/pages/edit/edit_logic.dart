@@ -178,14 +178,14 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   //相册选择多张照片
   Future<void> pickMultiPhoto() async {
-    //获取一堆照片,最多10张
-    List<XFile> photoList = await Utils().mediaUtil.pickMultiPhoto(10);
+    //获取一堆照片
+    List<XFile> photoList = await Utils().mediaUtil.pickMultiPhoto(null);
     if (photoList.isNotEmpty) {
       //关闭dialog
       Get.backLegacy();
-      if (photoList.length > 10 - state.imageFileList.length) {
-        photoList = photoList.sublist(0, 10 - state.imageFileList.length);
-      }
+      // if (photoList.length > 10 - state.imageFileList.length) {
+      //   photoList = photoList.sublist(0, 10 - state.imageFileList.length);
+      // }
       for (var photo in photoList) {
         addNewImage(photo);
       }
@@ -317,7 +317,6 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       ..imageColor = await getCoverColor()
       ..aspect = await getCoverAspect();
     await Utils().isarUtil.updateADiary(state.currentDiary);
-    Utils().logUtil.printInfo(state.currentDiary.toJson());
     Get.backLegacy();
     state.isNew ? Get.backLegacy(result: state.currentDiary.categoryId ?? '') : Get.backLegacy(result: 'changed');
     Utils().noticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');

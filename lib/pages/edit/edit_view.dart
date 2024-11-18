@@ -171,7 +171,7 @@ class EditPage extends StatelessWidget {
                 ),
               );
             }),
-            if (state.imageFileList.length < 10) ...[
+            ...[
               InkWell(
                 borderRadius: AppBorderRadius.smallBorderRadius,
                 onTap: () {
