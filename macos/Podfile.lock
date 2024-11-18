@@ -16,6 +16,9 @@ PODS:
     - FlutterMacOS
   - flutter_image_compress_macos (1.0.0):
     - FlutterMacOS
+  - flutter_inappwebview_macos (0.0.1):
+    - FlutterMacOS
+    - OrderedSet (~> 6.0.3)
   - FlutterMacOS (1.0.0)
   - geolocator_apple (1.2.0):
     - FlutterMacOS
@@ -36,6 +39,7 @@ PODS:
   - objectbox_flutter_libs (0.0.1):
     - FlutterMacOS
     - ObjectBox (= 4.0.1)
+  - OrderedSet (6.0.3)
   - package_info_plus (0.0.1):
     - FlutterMacOS
   - path_provider_foundation (0.0.1):
@@ -71,6 +75,7 @@ DEPENDENCIES:
   - fc_native_video_thumbnail (from `Flutter/ephemeral/.symlinks/plugins/fc_native_video_thumbnail/darwin`)
   - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - flutter_image_compress_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_image_compress_macos/macos`)
+  - flutter_inappwebview_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - geolocator_apple (from `Flutter/ephemeral/.symlinks/plugins/geolocator_apple/macos`)
   - isar_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/isar_flutter_libs/macos`)
@@ -95,6 +100,7 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - ObjectBox
+    - OrderedSet
 
 EXTERNAL SOURCES:
   app_links:
@@ -113,6 +119,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
   flutter_image_compress_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_image_compress_macos/macos
+  flutter_inappwebview_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos
   FlutterMacOS:
     :path: Flutter/ephemeral
   geolocator_apple:
@@ -163,6 +171,7 @@ SPEC CHECKSUMS:
   fc_native_video_thumbnail: 927d4dcfd4c7e9f2cc1a20bb52dfee83de3792c2
   file_selector_macos: cc3858c981fe6889f364731200d6232dac1d812d
   flutter_image_compress_macos: c26c3c13ea0f28ae6dea4e139b3292e7729f99f1
+  flutter_inappwebview_macos: bdf207b8f4ebd58e86ae06cd96b147de99a67c9b
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   geolocator_apple: 72a78ae3f3e4ec0db62117bd93e34523f5011d58
   isar_flutter_libs: 43385c99864c168fadba7c9adeddc5d38838ca6a
@@ -173,6 +182,7 @@ SPEC CHECKSUMS:
   network_info_plus: 2cb02d8435635eae13b3b79279681985121cf30c
   ObjectBox: 0bc4bb75eea85f6af06b369148b334c2056bbc29
   objectbox_flutter_libs: 769e6f44f7381c8a8e46a2ed5c71c6068bb476f7
+  OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
   package_info_plus: 12f1c5c2cfe8727ca46cbd0b26677728972d9a5b
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   quill_native_bridge_macos: f90985c5269ac7ba84d933605b463d96e5f544fe

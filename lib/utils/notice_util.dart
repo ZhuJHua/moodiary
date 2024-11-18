@@ -11,6 +11,7 @@ class NoticeUtil {
 
   void showToast(String message) async {
     late final colorScheme = Theme.of(Get.context!).colorScheme;
+    _fToast.removeCustomToast();
     _fToast.showToast(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
@@ -27,7 +28,8 @@ class NoticeUtil {
         isDismissable: true);
   }
 
-  void showBug() async {
+  void showBug() {
+    _fToast.removeCustomToast();
     _fToast.showToast(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
@@ -42,7 +44,7 @@ class NoticeUtil {
       ),
       gravity: ToastGravity.CENTER,
       isDismissable: false,
-      toastDuration: const Duration(seconds: 4),
+      toastDuration: const Duration(seconds: 2),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
@@ -20,14 +21,19 @@ class DiaryDetailsLogic extends GetxController {
     selection: const TextSelection.collapsed(offset: 0),
   );
 
+  // 图片预览
+  late final PageController pageController = PageController();
+
   @override
   void onClose() {
     quillController.dispose();
+    pageController.dispose();
     super.onClose();
   }
 
   //点击图片跳转到图片预览页面
   void toPhotoView(List<String> imagePathList, int index) {
+    HapticFeedback.selectionClick();
     Get.toNamed(AppRoutes.photoPage, arguments: [imagePathList, index]);
   }
 
@@ -60,5 +66,9 @@ class DiaryDetailsLogic extends GetxController {
   Future<void> delete(Diary diary) async {
     await Utils().isarUtil.updateADiary(diary..show = false);
     Get.backLegacy(result: 'delete');
+  }
+
+  Future<void> jumpToPage(int index) async {
+    await pageController.animateToPage(index, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
   }
 }

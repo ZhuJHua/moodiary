@@ -13,6 +13,7 @@ import 'package:mood_diary/components/ask_question/ask_question_view.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
 import 'package:mood_diary/utils/utils.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import 'diary_details_logic.dart';
 
@@ -182,6 +183,80 @@ class DiaryDetailsPage extends StatelessWidget {
       );
     }
 
+    Widget buildCoverImage() {
+      return InkWell(
+        onTap: () {
+          logic.toPhotoView(
+              List.generate(state.diary.imageName.length, (index) {
+                return Utils().fileUtil.getRealPath('image', state.diary.imageName[index]);
+              }),
+              0);
+        },
+        child: Image.file(
+          File(Utils().fileUtil.getRealPath('image', state.diary.imageName.first)),
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    Widget buildImageView(ColorScheme colorScheme) {
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          PageView.builder(
+            controller: logic.pageController,
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () {
+                  logic.toPhotoView(
+                    List.generate(state.diary.imageName.length, (i) {
+                      return Utils().fileUtil.getRealPath('image', state.diary.imageName[i]);
+                    }),
+                    index,
+                  );
+                },
+                child: Image.file(
+                  File(Utils().fileUtil.getRealPath('image', state.diary.imageName[index])),
+                  fit: BoxFit.cover,
+                ),
+              );
+            },
+            itemCount: state.diary.imageName.length,
+          ),
+          Positioned(
+            bottom: 0,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                decoration: ShapeDecoration(
+                    shape: const StadiumBorder(side: BorderSide.none),
+                    color: colorScheme.surfaceContainer.withAlpha(100)),
+                padding: const EdgeInsets.all(2.0),
+                child: SmoothPageIndicator(
+                  controller: logic.pageController,
+                  count: state.diary.imageName.length,
+                  effect: state.diary.imageName.length > 9
+                      ? ScrollingDotsEffect(
+                          activeDotColor: colorScheme.tertiary,
+                          dotColor: colorScheme.surfaceContainerLow.withAlpha(200),
+                          dotWidth: 8,
+                          dotHeight: 8,
+                          maxVisibleDots: 9)
+                      : WormEffect(
+                          activeDotColor: colorScheme.tertiary,
+                          dotColor: colorScheme.surfaceContainerLow.withAlpha(200),
+                          dotWidth: 8,
+                          dotHeight: 8,
+                        ),
+                  onDotClicked: logic.jumpToPage,
+                ),
+              ),
+            ),
+          )
+        ],
+      );
+    }
+
     return GetBuilder<DiaryDetailsLogic>(
         tag: state.diary.id,
         builder: (_) {
@@ -207,21 +282,7 @@ class DiaryDetailsPage extends StatelessWidget {
                     ),
                     flexibleSpace: FlexibleSpaceBar(
                       collapseMode: CollapseMode.pin,
-                      background: state.diary.imageName.isNotEmpty
-                          ? InkWell(
-                              onTap: () {
-                                logic.toPhotoView(
-                                    List.generate(state.diary.imageName.length, (index) {
-                                      return Utils().fileUtil.getRealPath('image', state.diary.imageName[index]);
-                                    }),
-                                    0);
-                              },
-                              child: Image.file(
-                                File(Utils().fileUtil.getRealPath('image', state.diary.imageName.first)),
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : null,
+                      background: state.diary.imageName.isNotEmpty ? buildImageView(customColorScheme) : null,
                     ),
                     pinned: true,
                     actions: [
@@ -306,13 +367,10 @@ class DiaryDetailsPage extends StatelessWidget {
                             ),
                           ),
                         ),
+                        buildAudioList(),
                         Wrap(
-                          children: [
-                            if (state.diary.imageName.length > 1) ...buildMultiImages(customColorScheme),
-                            if (state.diary.videoName.isNotEmpty) ...buildMultiVideo(customColorScheme)
-                          ],
+                          children: [if (state.diary.videoName.isNotEmpty) ...buildMultiVideo(customColorScheme)],
                         ),
-                        buildAudioList()
                       ],
                     ),
                   ),
