@@ -121,101 +121,101 @@ class HomePage extends StatelessWidget {
       );
     }
 
-    Widget buildToAiButton() {
-      return AnimatedBuilder(
-        animation: logic.fabAnimation,
-        child: GestureDetector(
-          onTap: () async {
-            await logic.toAi();
-          },
-          child: Container(
-            decoration: ShapeDecoration(
-                shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
-                color: colorScheme.primaryContainer,
-                shadows: [
-                  BoxShadow(
-                      color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
-                      offset: const Offset(0, 2),
-                      blurRadius: 2,
-                      spreadRadius: 2)
-                ]),
-            height: 56.0,
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 16.0,
-              children: [
-                FaIcon(
-                  FontAwesomeIcons.solidCommentDots,
-                  color: colorScheme.onPrimaryContainer,
-                ),
-                Text(
-                  '智能助手',
-                  style: TextStyle(color: colorScheme.onPrimaryContainer),
-                ),
-              ],
-            ),
-          ),
-        ),
-        builder: (context, child) {
-          return Transform(
-            transform: Matrix4.identity()
-              ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
-              ..translate(.0, -((56.0 + 8.0) * 3) * logic.fabAnimation.value),
-            alignment: FractionalOffset.centerRight,
-            child: child,
-          );
-        },
-      );
-    }
+    // Widget buildToAiButton() {
+    //   return AnimatedBuilder(
+    //     animation: logic.fabAnimation,
+    //     child: GestureDetector(
+    //       onTap: () async {
+    //         await logic.toAi();
+    //       },
+    //       child: Container(
+    //         decoration: ShapeDecoration(
+    //             shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
+    //             color: colorScheme.primaryContainer,
+    //             shadows: [
+    //               BoxShadow(
+    //                   color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+    //                   offset: const Offset(0, 2),
+    //                   blurRadius: 2,
+    //                   spreadRadius: 2)
+    //             ]),
+    //         height: 56.0,
+    //         alignment: Alignment.center,
+    //         child: Row(
+    //           mainAxisSize: MainAxisSize.min,
+    //           spacing: 16.0,
+    //           children: [
+    //             FaIcon(
+    //               FontAwesomeIcons.solidCommentDots,
+    //               color: colorScheme.onPrimaryContainer,
+    //             ),
+    //             Text(
+    //               '智能助手',
+    //               style: TextStyle(color: colorScheme.onPrimaryContainer),
+    //             ),
+    //           ],
+    //         ),
+    //       ),
+    //     ),
+    //     builder: (context, child) {
+    //       return Transform(
+    //         transform: Matrix4.identity()
+    //           ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
+    //           ..translate(.0, -((56.0 + 8.0) * 3) * logic.fabAnimation.value),
+    //         alignment: FractionalOffset.centerRight,
+    //         child: child,
+    //       );
+    //     },
+    //   );
+    // }
 
-    Widget buildToMapButton() {
-      return AnimatedBuilder(
-        animation: logic.fabAnimation,
-        child: GestureDetector(
-          onTap: () async {
-            await logic.toMap();
-          },
-          child: Container(
-            decoration: ShapeDecoration(
-                shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
-                color: colorScheme.primaryContainer,
-                shadows: [
-                  BoxShadow(
-                      color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
-                      offset: const Offset(0, 2),
-                      blurRadius: 2,
-                      spreadRadius: 2)
-                ]),
-            height: 56.0,
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 16.0,
-              children: [
-                FaIcon(
-                  FontAwesomeIcons.solidMap,
-                  color: colorScheme.onPrimaryContainer,
-                ),
-                Text(
-                  '查看足迹',
-                  style: TextStyle(color: colorScheme.onPrimaryContainer),
-                ),
-              ],
-            ),
-          ),
-        ),
-        builder: (context, child) {
-          return Transform(
-            transform: Matrix4.identity()
-              ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
-              ..translate(.0, -((56.0 + 8.0) * 2) * logic.fabAnimation.value),
-            alignment: FractionalOffset.centerRight,
-            child: child,
-          );
-        },
-      );
-    }
+    // Widget buildToMapButton() {
+    //   return AnimatedBuilder(
+    //     animation: logic.fabAnimation,
+    //     child: GestureDetector(
+    //       onTap: () async {
+    //         await logic.toMap();
+    //       },
+    //       child: Container(
+    //         decoration: ShapeDecoration(
+    //             shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
+    //             color: colorScheme.primaryContainer,
+    //             shadows: [
+    //               BoxShadow(
+    //                   color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+    //                   offset: const Offset(0, 2),
+    //                   blurRadius: 2,
+    //                   spreadRadius: 2)
+    //             ]),
+    //         height: 56.0,
+    //         alignment: Alignment.center,
+    //         child: Row(
+    //           mainAxisSize: MainAxisSize.min,
+    //           spacing: 16.0,
+    //           children: [
+    //             FaIcon(
+    //               FontAwesomeIcons.solidMap,
+    //               color: colorScheme.onPrimaryContainer,
+    //             ),
+    //             Text(
+    //               '查看足迹',
+    //               style: TextStyle(color: colorScheme.onPrimaryContainer),
+    //             ),
+    //           ],
+    //         ),
+    //       ),
+    //     ),
+    //     builder: (context, child) {
+    //       return Transform(
+    //         transform: Matrix4.identity()
+    //           ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
+    //           ..translate(.0, -((56.0 + 8.0) * 2) * logic.fabAnimation.value),
+    //         alignment: FractionalOffset.centerRight,
+    //         child: child,
+    //       );
+    //     },
+    //   );
+    // }
 
     Widget buildFabButton() {
       return AnimatedBuilder(
@@ -254,14 +254,14 @@ class HomePage extends StatelessWidget {
     Widget buildFab() {
       return state.navigatorIndex == 0
           ? SizedBox(
-              height: state.isFabExpanded || state.isToTopShow ? 56 + (56 + 8) * 3 : 56,
+              height: state.isFabExpanded || state.isToTopShow ? 56 + (56 + 8) * 1 : 56,
               width: state.isFabExpanded ? 156 : 56,
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
                   buildToTopButton(),
-                  buildToAiButton(),
-                  buildToMapButton(),
+                  // buildToAiButton(),
+                  // buildToMapButton(),
                   buildAddDiaryButton(),
                   buildFabButton(),
                 ],

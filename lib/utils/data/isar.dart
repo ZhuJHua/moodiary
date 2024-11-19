@@ -155,8 +155,8 @@ class IsarUtil {
   }
 
   //获取分类总数
-  Future<int> countCategories() async {
-    return await _isar.categorys.where().countAsync();
+  int countCategories() {
+    return _isar.categorys.count();
   }
 
   //获取分类名称
@@ -257,13 +257,11 @@ class IsarUtil {
     /// 所有的日记
     /// 要满足以下条件
     /// 1. 有定位坐标
-    /// 2. 有照片
-    /// 3. show
-    var diaries =
-        await _isar.diarys.where().showEqualTo(true).positionIsNotEmpty().imageNameIsNotEmpty().findAllAsync();
+    /// 2. show
+    var diaries = await _isar.diarys.where().showEqualTo(true).positionIsNotEmpty().findAllAsync();
     for (var diary in diaries) {
       res.add(DiaryMapItem(LatLng(double.parse(diary.position[0]), double.parse(diary.position[1])), diary.isarId,
-          diary.imageName.first));
+          diary.imageName.isEmpty ? '' : diary.imageName.first));
     }
     return res;
   }

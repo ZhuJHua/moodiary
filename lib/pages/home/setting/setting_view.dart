@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/color_dialog/color_dialog_view.dart';
@@ -21,8 +22,75 @@ class SettingPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
 
-    Widget buildManager() {
+    Widget buildDashboard() {
       return const DashboardComponent();
+    }
+
+    Widget buildAFeatureButton({required Widget icon, required String text, required Function() onTap}) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: AppBorderRadius.mediumBorderRadius,
+        child: Card(
+          color: colorScheme.surfaceContainerLow,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              icon,
+              Text(
+                text,
+                style: textStyle.labelLarge,
+              )
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget buildFeature() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListTile(
+            title: Text(
+              '功能',
+              style: textStyle.titleLarge!.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
+            ),
+          ),
+          GridView(
+            gridDelegate:
+                const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 120, childAspectRatio: 1.0),
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              buildAFeatureButton(
+                  icon: FaIcon(
+                    FontAwesomeIcons.squarePollVertical,
+                    size: 24,
+                    color: colorScheme.secondary,
+                  ),
+                  text: '分析统计',
+                  onTap: logic.toAnalysePage),
+              buildAFeatureButton(
+                  icon: FaIcon(
+                    FontAwesomeIcons.solidMap,
+                    size: 24,
+                    color: colorScheme.secondary,
+                  ),
+                  text: '足迹地图',
+                  onTap: logic.toMap),
+              buildAFeatureButton(
+                  icon: FaIcon(
+                    FontAwesomeIcons.solidCommentDots,
+                    size: 24,
+                    color: colorScheme.secondary,
+                  ),
+                  text: '智能助手',
+                  onTap: logic.toAi),
+            ],
+          ),
+        ],
+      );
     }
 
     Widget buildData() {
@@ -360,9 +428,7 @@ class SettingPage extends StatelessWidget {
                     builder: (_) {
                       return SwitchListTile(
                         value: state.local,
-                        onChanged: (value) {
-                          logic.local(value);
-                        },
+                        onChanged: null,
                         title: Text(i18n.settingLocal),
                         subtitle: Text(i18n.settingLocalDes),
                         secondary: const Icon(Icons.cloud_off_outlined),
@@ -479,7 +545,11 @@ class SettingPage extends StatelessWidget {
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildManager()),
+              sliver: SliverToBoxAdapter(child: buildDashboard()),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.all(4.0),
+              sliver: SliverToBoxAdapter(child: buildFeature()),
             ),
             SliverPadding(
               padding: const EdgeInsets.all(4.0),

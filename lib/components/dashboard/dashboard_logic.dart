@@ -12,11 +12,11 @@ class DashboardLogic extends GetxController {
 
   @override
   void onReady() async {
-    unawaited(getUseTime());
-    unawaited(getDiaryCount());
-    unawaited(getMoodAndWeatherByRange(state.dateRange[0], state.dateRange[1]));
+    getUseTime();
+    getDiaryCount();
+    //unawaited(getMoodAndWeatherByRange(state.dateRange[0], state.dateRange[1]));
     unawaited(getCountContent());
-    unawaited(getCategoryCount());
+    getCategoryCount();
     super.onReady();
   }
 
@@ -26,13 +26,13 @@ class DashboardLogic extends GetxController {
     state.contentCount.value = count.toString();
   }
 
-  Future<void> getDiaryCount() async {
-    int count = await Utils().isarUtil.countShowDiary();
+  void getDiaryCount() {
+    int count = Utils().isarUtil.countAllDiary();
     state.diaryCount.value = count.toString();
   }
 
-  Future<void> getCategoryCount() async {
-    int count = await Utils().isarUtil.countCategories();
+  void getCategoryCount() {
+    int count = Utils().isarUtil.countCategories();
     state.categoryCount.value = count.toString();
   }
 
@@ -58,14 +58,10 @@ class DashboardLogic extends GetxController {
     }
   }
 
-  Future<void> getUseTime() async {
+  void getUseTime() {
     DateTime firstStart = DateTime.fromMillisecondsSinceEpoch(Utils().prefUtil.getValue<int>('startTime')!);
     Duration duration = DateTime.now().difference(firstStart);
     state.useTime.value = (duration.inDays + 1).toString();
-  }
-
-  Future<void> toAnalysePage() async {
-    Get.toNamed(AppRoutes.analysePage);
   }
 
   Future<void> toDiaryManager() async {
@@ -74,6 +70,6 @@ class DashboardLogic extends GetxController {
 
   Future<void> toCategoryManager() async {
     await Get.toNamed(AppRoutes.categoryManagerPage);
-    await getCategoryCount();
+    getCategoryCount();
   }
 }

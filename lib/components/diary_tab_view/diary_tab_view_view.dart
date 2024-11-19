@@ -20,6 +20,7 @@ class DiaryTabViewComponent extends StatelessWidget {
     final logic = Get.put(DiaryTabViewLogic(categoryId: categoryId), tag: logicTag);
     final state = Bind.find<DiaryTabViewLogic>(tag: logicTag).state;
     final i18n = AppLocalizations.of(context)!;
+    final size = MediaQuery.sizeOf(context);
 
     Widget buildGrid() {
       return SliverWaterfallFlow(
@@ -72,7 +73,7 @@ class DiaryTabViewComponent extends StatelessWidget {
             builder: (_) {
               return CustomScrollView(
                 primary: true,
-                cacheExtent: 2000,
+                cacheExtent: size.height * 2,
                 slivers: [
                   SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
                   SliverPadding(
