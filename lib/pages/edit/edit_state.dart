@@ -27,5 +27,8 @@ class EditState {
 
   int totalCount = 0;
 
+  // 是否展示保存动画
+  bool isSaving = false;
+
   EditState();
 }

@@ -80,7 +80,8 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
   // 清理文件
   Future<void> cleanFile() async {
-    state.isCleaning.value = true;
+    state.isCleaning = true;
+    update(['modal']);
     final fileUtil = Utils().fileUtil;
     final isarUtil = Utils().isarUtil;
 
@@ -129,6 +130,8 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
       fileUtil.deleteMediaFiles(videosToDelete, MediaType.video.value),
     ]);
     await getFilePath(state.mediaType.value);
-    state.isCleaning.value = false;
+    state.isCleaning = false;
+    update(['modal']);
+    Utils().noticeUtil.showToast('清理成功');
   }
 }

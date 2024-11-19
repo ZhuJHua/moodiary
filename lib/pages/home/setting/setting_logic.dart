@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/components/dashboard/dashboard_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -64,6 +66,35 @@ class SettingLogic extends GetxController {
     await Utils().prefUtil.setValue<bool>('lockNow', value);
     state.lockNow = value;
     update(['Lock']);
+  }
+
+  void toAnalysePage() {
+    HapticFeedback.selectionClick();
+    Get.toNamed(AppRoutes.analysePage);
+  }
+
+  Future<void> toMap() async {
+    if (Utils().prefUtil.getValue<String>('tiandituKey') != null) {
+      HapticFeedback.selectionClick();
+      Get.toNamed(AppRoutes.mapPage);
+    } else {
+      Utils().noticeUtil.showToast('请先配置Key');
+    }
+  }
+
+  Future<void> toAi() async {
+    if (Utils().prefUtil.getValue<String>('tencentId') != null &&
+        Utils().prefUtil.getValue<String>('tencentKey') != null) {
+      HapticFeedback.selectionClick();
+      Get.toNamed(AppRoutes.assistantPage);
+    } else {
+      Utils().noticeUtil.showToast('请先配置Key');
+    }
+  }
+
+  Future<void> toCategoryManager() async {
+    await Get.toNamed(AppRoutes.categoryManagerPage);
+    Bind.find<DashboardLogic>().getCategoryCount();
   }
 
   //进入回收站

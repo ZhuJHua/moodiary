@@ -28,33 +28,18 @@ class RecyclePage extends StatelessWidget {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Column(
-                      children: [
-                        IconButton(
-                          onPressed: () {
-                            logic.showDiary(state.diaryList[index]);
-                          },
-                          icon: const Icon(Icons.settings_backup_restore),
-                          style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                        ),
-                        const Text('恢复'),
-                      ],
+                    IconButton(
+                      onPressed: () {
+                        logic.showDiary(state.diaryList[index]);
+                      },
+                      icon: const Icon(Icons.settings_backup_restore),
                     ),
-                    Column(
-                      children: [
-                        IconButton(
-                          onPressed: () {
-                            logic.deleteDiary(index);
-                          },
-                          icon: const Icon(Icons.delete_forever),
-                          style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                          color: colorScheme.error,
-                        ),
-                        Text(
-                          '删除',
-                          style: TextStyle(color: colorScheme.error),
-                        ),
-                      ],
+                    IconButton(
+                      onPressed: () {
+                        logic.deleteDiary(index);
+                      },
+                      icon: const Icon(Icons.delete_forever),
+                      color: colorScheme.error,
                     )
                   ],
                 ),

@@ -110,7 +110,14 @@ class CalendarPage extends StatelessWidget {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
               sliver: Obx(() {
-                return buildCardList();
+                return state.isFetching.value
+                    ? const SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                      )
+                    : buildCardList();
               }),
             )
           ],

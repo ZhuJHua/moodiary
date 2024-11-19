@@ -100,32 +100,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     }
   }
 
-  Future<void> toMap() async {
-    if (Utils().prefUtil.getValue<String>('tiandituKey') != null) {
-      //同时关闭fab
-      await HapticFeedback.selectionClick();
-      fabAnimationController.reset();
-      state.isFabExpanded = false;
-      update(['Fab']);
-      Get.toNamed(AppRoutes.mapPage);
-    } else {
-      Utils().noticeUtil.showToast('请先配置Key');
-    }
-  }
 
-  Future<void> toAi() async {
-    if (Utils().prefUtil.getValue<String>('tencentId') != null &&
-        Utils().prefUtil.getValue<String>('tencentKey') != null) {
-      //同时关闭fab
-      await HapticFeedback.selectionClick();
-      fabAnimationController.reset();
-      state.isFabExpanded = false;
-      update(['Fab']);
-      Get.toNamed(AppRoutes.assistantPage);
-    } else {
-      Utils().noticeUtil.showToast('请先配置Key');
-    }
-  }
 
   Future<void> hideNavigatorBar() async {
     await barAnimationController.forward();

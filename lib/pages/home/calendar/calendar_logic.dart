@@ -20,7 +20,9 @@ class CalendarLogic extends GetxController {
   }
 
   Future<void> getDiary() async {
+    state.isFetching.value = true;
     state.diaryList.value = await Utils().isarUtil.getDiaryByDay(state.selectedDate.value);
+    state.isFetching.value = false;
   }
 
   // 选中日期后重新获取日记

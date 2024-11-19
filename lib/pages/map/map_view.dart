@@ -51,23 +51,28 @@ class MapPage extends StatelessWidget {
                                     onTap: () async {
                                       await logic.toDiaryPage(isarId: state.diaryMapItemList[index].id);
                                     },
-                                    child: Bubble(
-                                        backgroundColor: colorScheme.tertiary,
-                                        borderRadius: 8,
-                                        child: Container(
-                                          width: 48,
-                                          height: 48,
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(4),
-                                            image: DecorationImage(
-                                                image: FileImage(File(Utils().fileUtil.getRealPath(
-                                                    'image', state.diaryMapItemList[index].coverImageName))),
-                                                fit: BoxFit.cover),
+                                    child: state.diaryMapItemList[index].coverImageName.isNotEmpty
+                                        ? Bubble(
+                                            backgroundColor: colorScheme.tertiary,
+                                            borderRadius: 8,
+                                            child: Container(
+                                              width: 48,
+                                              height: 48,
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(4),
+                                                image: DecorationImage(
+                                                    image: FileImage(File(Utils().fileUtil.getRealPath(
+                                                        'image', state.diaryMapItemList[index].coverImageName))),
+                                                    fit: BoxFit.cover),
+                                              ),
+                                            ))
+                                        : FaIcon(
+                                            FontAwesomeIcons.locationDot,
+                                            color: colorScheme.tertiary,
                                           ),
-                                        )),
                                   ),
-                                  width: 56,
-                                  height: 64);
+                                  width: state.diaryMapItemList[index].coverImageName.isNotEmpty ? 56 : 30,
+                                  height: state.diaryMapItemList[index].coverImageName.isNotEmpty ? 64 : 30);
                             }),
                             rotate: true,
                             maxZoom: 18.0,

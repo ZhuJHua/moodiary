@@ -11,6 +11,7 @@ import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/category_add/category_add_view.dart';
 import 'package:mood_diary/components/keepalive/keepalive.dart';
+import 'package:mood_diary/components/lottie_modal/lottie_modal.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
 import 'package:mood_diary/components/record_sheet/record_sheet_view.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -597,56 +598,66 @@ class EditPage extends StatelessWidget {
     return GetBuilder<EditLogic>(
       id: 'All',
       builder: (_) {
-        return Scaffold(
-          appBar: AppBar(
-            title: state.isNew ? const Text('新增日记') : const Text('编辑日记'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.check),
-                onPressed: () {
-                  logic.unFocus();
-                  logic.saveDiary();
-                },
-                tooltip: '保存',
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Scaffold(
+              appBar: AppBar(
+                title: state.isNew ? const Text('新增日记') : const Text('编辑日记'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.check),
+                    onPressed: () {
+                      logic.unFocus();
+                      logic.saveDiary();
+                    },
+                    tooltip: '保存',
+                  ),
+                ],
               ),
-            ],
-          ),
-          body: size.aspectRatio < 1.0
-              ? PageView(
-                  controller: logic.pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [KeepAliveWrapper(child: buildWriting()), KeepAliveWrapper(child: buildDetail())],
-                )
-              : Row(
-                  children: [
-                    Flexible(flex: 4, child: SafeArea(child: buildWriting())),
-                    Flexible(flex: 3, child: buildDetail())
-                  ],
-                ),
-          bottomNavigationBar: size.aspectRatio < 1.0
-              ? GetBuilder<EditLogic>(
-                  id: 'NavigationBar',
-                  builder: (_) {
-                    return NavigationBar(
-                      destinations: const [
-                        NavigationDestination(
-                          icon: Icon(Icons.edit_outlined),
-                          label: '撰写',
-                          selectedIcon: Icon(Icons.edit),
-                        ),
-                        NavigationDestination(
-                          icon: Icon(Icons.more_outlined),
-                          label: '更多',
-                          selectedIcon: Icon(Icons.more),
-                        )
+              body: size.aspectRatio < 1.0
+                  ? PageView(
+                      controller: logic.pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [KeepAliveWrapper(child: buildWriting()), KeepAliveWrapper(child: buildDetail())],
+                    )
+                  : Row(
+                      children: [
+                        Flexible(flex: 4, child: SafeArea(child: buildWriting())),
+                        Flexible(flex: 3, child: buildDetail())
                       ],
-                      selectedIndex: state.tabIndex,
-                      onDestinationSelected: (index) {
-                        logic.selectTabView(index);
-                      },
-                    );
-                  })
-              : null,
+                    ),
+              bottomNavigationBar: size.aspectRatio < 1.0
+                  ? GetBuilder<EditLogic>(
+                      id: 'NavigationBar',
+                      builder: (_) {
+                        return NavigationBar(
+                          destinations: const [
+                            NavigationDestination(
+                              icon: Icon(Icons.edit_outlined),
+                              label: '撰写',
+                              selectedIcon: Icon(Icons.edit),
+                            ),
+                            NavigationDestination(
+                              icon: Icon(Icons.more_outlined),
+                              label: '更多',
+                              selectedIcon: Icon(Icons.more),
+                            )
+                          ],
+                          selectedIndex: state.tabIndex,
+                          onDestinationSelected: (index) {
+                            logic.selectTabView(index);
+                          },
+                        );
+                      })
+                  : null,
+            ),
+            GetBuilder<EditLogic>(
+                id: 'modal',
+                builder: (_) {
+                  return state.isSaving ? const LottieModal(type: LoadingType.cat) : const SizedBox.shrink();
+                }),
+          ],
         );
       },
     );

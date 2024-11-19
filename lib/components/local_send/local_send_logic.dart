@@ -30,6 +30,11 @@ class LocalSendLogic extends GetxController {
   //   }
   // }
 
+  void showInfo() {
+    state.showInfo = !state.showInfo;
+    update(['Info']);
+  }
+
   void changeType(String value) {
     state.type = value;
     update(['SegmentButton', 'Panel']);

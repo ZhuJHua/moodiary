@@ -8,7 +8,6 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:lottie/lottie.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/keyboard_state.dart';
@@ -95,7 +94,8 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       }
       //临时拷贝一份拷贝音频数据到缓存目录
       for (var name in oldDiary.audioName) {
-        File(Utils().fileUtil.getRealPath('audio', name)).copy(Utils().fileUtil.getCachePath(name));
+        state.audioNameList.add(name);
+        File(Utils().fileUtil.getRealPath('audio', name)).copySync(Utils().fileUtil.getCachePath(name));
       }
       //临时拷贝一份视频数据，别忘记了缩略图
       for (var name in oldDiary.videoName) {
@@ -284,21 +284,23 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   //保存日记
   Future<void> saveDiary() async {
-    Get.dialog(SimpleDialog(
-      children: [
-        Lottie.asset(
-          'assets/lottie/file_process.json',
-          addRepaintBoundary: true,
-          width: 200,
-          height: 200,
-          frameRate: FrameRate.max,
-        ),
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [Text('处理中')],
-        )
-      ],
-    ));
+    // Get.dialog(SimpleDialog(
+    //   children: [
+    //     Lottie.asset(
+    //       'assets/lottie/file_process.json',
+    //       addRepaintBoundary: true,
+    //       width: 200,
+    //       height: 200,
+    //       frameRate: FrameRate.max,
+    //     ),
+    //     const Row(
+    //       mainAxisAlignment: MainAxisAlignment.center,
+    //       children: [Text('处理中')],
+    //     )
+    //   ],
+    // ));
+    state.isSaving = true;
+    update(['modal']);
     //保存图片
     var imageNameList = await Utils().mediaUtil.saveImages(imageFileList: state.imageFileList);
     //保存视频
@@ -317,7 +319,6 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       ..imageColor = await getCoverColor()
       ..aspect = await getCoverAspect();
     await Utils().isarUtil.updateADiary(state.currentDiary);
-    Get.backLegacy();
     state.isNew ? Get.backLegacy(result: state.currentDiary.categoryId ?? '') : Get.backLegacy(result: 'changed');
     Utils().noticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');
   }

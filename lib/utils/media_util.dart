@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mood_diary/src/rust/api/compress.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -124,32 +123,32 @@ class MediaUtil {
     await File(targetPath).writeAsBytes(newImage);
   }
 
-  //图片压缩
-  Future<XFile?> _compressAndSaveImage(XFile oldImage, String targetPath, CompressFormat format) async {
-    // 如果是已经压缩过的
-    if (oldImage.path == targetPath) {
-      return oldImage;
-    }
-    if (Platform.isWindows) {
-      oldImage.saveTo(targetPath);
-      return oldImage;
-    }
-    var quality = Utils().prefUtil.getValue<int>('quality');
-    var height = switch (quality) {
-      0 => 720,
-      1 => 1080,
-      2 => 1440,
-      _ => 1080,
-    };
-
-    return await FlutterImageCompress.compressAndGetFile(
-      oldImage.path,
-      targetPath,
-      minHeight: height,
-      minWidth: height,
-      format: format,
-    );
-  }
+  // //图片压缩
+  // Future<XFile?> _compressAndSaveImage(XFile oldImage, String targetPath, CompressFormat format) async {
+  //   // 如果是已经压缩过的
+  //   if (oldImage.path == targetPath) {
+  //     return oldImage;
+  //   }
+  //   if (Platform.isWindows) {
+  //     oldImage.saveTo(targetPath);
+  //     return oldImage;
+  //   }
+  //   var quality = Utils().prefUtil.getValue<int>('quality');
+  //   var height = switch (quality) {
+  //     0 => 720,
+  //     1 => 1080,
+  //     2 => 1440,
+  //     _ => 1080,
+  //   };
+  //
+  //   return await FlutterImageCompress.compressAndGetFile(
+  //     oldImage.path,
+  //     targetPath,
+  //     minHeight: height,
+  //     minWidth: height,
+  //     format: format,
+  //   );
+  // }
 
   //获取视频缩略图
   Future<bool> getVideoThumbnail(XFile xFile, destPath) async {
