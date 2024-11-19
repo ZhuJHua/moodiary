@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:lottie/lottie.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/media_type.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
+import 'package:mood_diary/components/lottie_modal/lottie_modal.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 import 'media_logic.dart';
@@ -167,21 +167,7 @@ class MediaPage extends StatelessWidget {
             GetBuilder<MediaLogic>(
                 id: 'modal',
                 builder: (_) {
-                  return state.isCleaning
-                      ? ModalBarrier(
-                          barrierSemanticsDismissible: false,
-                          dismissible: false,
-                          color: colorScheme.surface.withAlpha(200),
-                        )
-                      : const SizedBox.shrink();
-                }),
-            GetBuilder<MediaLogic>(
-                id: 'modal',
-                builder: (_) {
-                  return state.isCleaning
-                      ? Lottie.asset('assets/lottie/loading_2.json',
-                          width: 200, height: 200, frameRate: FrameRate.composition)
-                      : const SizedBox.shrink();
+                  return state.isCleaning ? const LottieModal(type: LoadingType.fileProcess) : const SizedBox.shrink();
                 }),
           ],
         );

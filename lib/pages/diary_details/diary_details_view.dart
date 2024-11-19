@@ -231,7 +231,9 @@ class DiaryDetailsPage extends StatelessWidget {
                 decoration: ShapeDecoration(
                     shape: const StadiumBorder(side: BorderSide.none),
                     color: colorScheme.surfaceContainer.withAlpha(100)),
-                padding: const EdgeInsets.all(2.0),
+                padding: state.diary.imageName.length > 9
+                    ? const EdgeInsets.fromLTRB(6.0, 2.0, 6.0, 2.0)
+                    : const EdgeInsets.all(2.0),
                 child: SmoothPageIndicator(
                   controller: logic.pageController,
                   count: state.diary.imageName.length,

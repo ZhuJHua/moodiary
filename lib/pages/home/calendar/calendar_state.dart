@@ -15,6 +15,8 @@ class CalendarState {
 
   late RxBool isExpanded;
 
+  late RxBool isFetching = true.obs;
+
   CalendarState() {
     //默认是今天
     var now = DateTime.now();

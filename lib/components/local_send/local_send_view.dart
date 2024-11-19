@@ -75,38 +75,38 @@ class LocalSendComponent extends StatelessWidget {
     }
 
     Widget buildOption() {
-      return Column(
+      return Row(
         spacing: 8.0,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Align(
-              alignment: Alignment.center,
-              child: Text(
-                '此设备作为',
-                style: textStyle.titleSmall,
-              )),
-          GetBuilder<LocalSendLogic>(
-              id: 'SegmentButton',
-              builder: (_) {
-                return SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(
-                      value: 'send',
-                      icon: Icon(Icons.send),
-                      label: Text('发送'),
-                    ),
-                    ButtonSegment(
-                      value: 'receive',
-                      icon: Icon(Icons.move_to_inbox_rounded),
-                      label: Text('接收'),
-                    ),
-                  ],
-                  selected: {state.type},
-                  onSelectionChanged: (newSelection) {
-                    logic.changeType(newSelection.first);
-                  },
-                );
-              }),
+          Expanded(
+            child: GetBuilder<LocalSendLogic>(
+                id: 'SegmentButton',
+                builder: (_) {
+                  return SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(
+                        value: 'send',
+                        icon: Icon(Icons.send),
+                        label: Text('发送'),
+                      ),
+                      ButtonSegment(
+                        value: 'receive',
+                        icon: Icon(Icons.move_to_inbox_rounded),
+                        label: Text('接收'),
+                      ),
+                    ],
+                    selected: {state.type},
+                    onSelectionChanged: (newSelection) {
+                      logic.changeType(newSelection.first);
+                    },
+                  );
+                }),
+          ),
+          TextButton.icon(
+            onPressed: logic.showInfo,
+            icon: const Icon(Icons.info),
+            label: const Text('更多'),
+          ),
         ],
       );
     }
@@ -121,13 +121,20 @@ class LocalSendComponent extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: 8.0,
             children: [
-              Wrap(
-                spacing: 8.0,
-                runSpacing: 8.0,
-                alignment: WrapAlignment.spaceEvenly,
-                children: [buildWifiInfo(), buildPortInfo()],
-              ),
               buildOption(),
+              GetBuilder<LocalSendLogic>(
+                  id: 'Info',
+                  builder: (_) {
+                    return Visibility(
+                      visible: state.showInfo,
+                      child: Wrap(
+                        spacing: 8.0,
+                        runSpacing: 8.0,
+                        alignment: WrapAlignment.spaceEvenly,
+                        children: [buildWifiInfo(), buildPortInfo()],
+                      ),
+                    );
+                  }),
               GetBuilder<LocalSendLogic>(
                   id: 'Panel',
                   builder: (_) {

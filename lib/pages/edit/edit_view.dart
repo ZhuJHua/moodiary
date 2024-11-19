@@ -6,12 +6,12 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:lottie/lottie.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/category_add/category_add_view.dart';
 import 'package:mood_diary/components/keepalive/keepalive.dart';
+import 'package:mood_diary/components/lottie_modal/lottie_modal.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
 import 'package:mood_diary/components/record_sheet/record_sheet_view.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -655,20 +655,7 @@ class EditPage extends StatelessWidget {
             GetBuilder<EditLogic>(
                 id: 'modal',
                 builder: (_) {
-                  return state.isSaving
-                      ? ModalBarrier(
-                          barrierSemanticsDismissible: false,
-                          dismissible: false,
-                          color: colorScheme.surface.withAlpha(200),
-                        )
-                      : const SizedBox.shrink();
-                }),
-            GetBuilder<EditLogic>(
-                id: 'modal',
-                builder: (_) {
-                  return state.isSaving
-                      ? Lottie.asset('assets/lottie/loading.json', width: 200, height: 200)
-                      : const SizedBox.shrink();
+                  return state.isSaving ? const LottieModal(type: LoadingType.cat) : const SizedBox.shrink();
                 }),
           ],
         );

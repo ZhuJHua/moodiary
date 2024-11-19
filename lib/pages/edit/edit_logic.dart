@@ -94,7 +94,8 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       }
       //临时拷贝一份拷贝音频数据到缓存目录
       for (var name in oldDiary.audioName) {
-        File(Utils().fileUtil.getRealPath('audio', name)).copy(Utils().fileUtil.getCachePath(name));
+        state.audioNameList.add(name);
+        File(Utils().fileUtil.getRealPath('audio', name)).copySync(Utils().fileUtil.getCachePath(name));
       }
       //临时拷贝一份视频数据，别忘记了缩略图
       for (var name in oldDiary.videoName) {

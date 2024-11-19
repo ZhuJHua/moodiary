@@ -15,5 +15,7 @@ class LocalSendState {
 
   String type = 'send';
 
+  bool showInfo = false;
+
   LocalSendState();
 }
