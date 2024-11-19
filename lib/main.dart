@@ -60,7 +60,11 @@ void main() {
   runZonedGuarded(() {
     FlutterError.onError = (details) {
       Utils().logUtil.printError('Flutter error', error: details.exception, stackTrace: details.stack);
-      Utils().noticeUtil.showBug();
+      if (details.exceptionAsString().contains('Render')) {
+        Utils().noticeUtil.showBug(message: '布局异常！');
+      } else {
+        Utils().noticeUtil.showBug(message: '出错了，请联系开发者！');
+      }
     };
     initSystem().then((_) {
       return runApp(GetMaterialApp(
@@ -99,6 +103,6 @@ void main() {
     });
   }, (error, stack) {
     Utils().logUtil.printWTF('Error', error: error, stackTrace: stack);
-    Utils().noticeUtil.showBug();
+    Utils().noticeUtil.showBug(message: '出错了，请联系开发者！');
   });
 }

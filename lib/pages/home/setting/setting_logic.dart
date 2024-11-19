@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/components/dashboard/dashboard_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -89,6 +90,11 @@ class SettingLogic extends GetxController {
     } else {
       Utils().noticeUtil.showToast('请先配置Key');
     }
+  }
+
+  Future<void> toCategoryManager() async {
+    await Get.toNamed(AppRoutes.categoryManagerPage);
+    Bind.find<DashboardLogic>().getCategoryCount();
   }
 
   //进入回收站

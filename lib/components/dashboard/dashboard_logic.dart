@@ -67,9 +67,4 @@ class DashboardLogic extends GetxController {
   Future<void> toDiaryManager() async {
     Get.toNamed(AppRoutes.diaryManagerPage);
   }
-
-  Future<void> toCategoryManager() async {
-    await Get.toNamed(AppRoutes.categoryManagerPage);
-    getCategoryCount();
-  }
 }

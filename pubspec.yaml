@@ -35,7 +35,7 @@ dependencies:
   path: 1.9.0
   path_provider: 2.1.5
   calendar_date_picker2: 1.1.7
-  logger: ^2.5.0
+  logger: 2.5.0
   flutter_drawing_board: 0.9.5
   flutter_displaymode: 0.6.0
   fl_chart: 0.69.0
@@ -116,8 +116,6 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: 5.0.0
-  integration_test:
-    sdk: flutter
 
 
 # For information on the generic Dart part of this file, see the

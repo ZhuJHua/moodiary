@@ -30,7 +30,7 @@ class SettingPage extends StatelessWidget {
       return InkWell(
         onTap: onTap,
         borderRadius: AppBorderRadius.mediumBorderRadius,
-        child: Card(
+        child: Card.outlined(
           color: colorScheme.surfaceContainerLow,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -38,7 +38,7 @@ class SettingPage extends StatelessWidget {
               icon,
               Text(
                 text,
-                style: textStyle.labelLarge,
+                style: textStyle.labelSmall,
               )
             ],
           ),
@@ -58,15 +58,21 @@ class SettingPage extends StatelessWidget {
           ),
           GridView(
             gridDelegate:
-                const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 120, childAspectRatio: 1.0),
+                const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 100, childAspectRatio: 1.0),
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: [
               buildAFeatureButton(
+                  icon: Icon(
+                    Icons.category_rounded,
+                    color: colorScheme.secondary,
+                  ),
+                  text: '分类管理',
+                  onTap: logic.toCategoryManager),
+              buildAFeatureButton(
                   icon: FaIcon(
                     FontAwesomeIcons.squarePollVertical,
-                    size: 24,
                     color: colorScheme.secondary,
                   ),
                   text: '分析统计',
@@ -74,7 +80,6 @@ class SettingPage extends StatelessWidget {
               buildAFeatureButton(
                   icon: FaIcon(
                     FontAwesomeIcons.solidMap,
-                    size: 24,
                     color: colorScheme.secondary,
                   ),
                   text: '足迹地图',
@@ -82,7 +87,6 @@ class SettingPage extends StatelessWidget {
               buildAFeatureButton(
                   icon: FaIcon(
                     FontAwesomeIcons.solidCommentDots,
-                    size: 24,
                     color: colorScheme.secondary,
                   ),
                   text: '智能助手',
