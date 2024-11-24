@@ -38,7 +38,7 @@ dependencies:
   logger: 2.5.0
   flutter_drawing_board: 0.9.5
   flutter_displaymode: 0.6.0
-  fl_chart: 0.69.0
+  fl_chart: 0.69.2
   file_picker: 8.1.4
   local_auth: 2.3.0
   local_auth_android: 1.0.46
@@ -96,14 +96,17 @@ dependencies:
   faker: 2.2.0
   flutter_inappwebview: 6.1.5
   flutter_rust_bridge: 2.6.0
-  syncfusion_flutter_sliders: 27.2.2
+  syncfusion_flutter_sliders: 27.2.3
+  flutter_quill_extensions: 10.8.5
+  connectivity_plus: 6.1.0
 
 
   flutter_localizations:
     sdk: flutter
   rust_lib_mood_diary:
     path: rust_builder
-
+dependency_overrides:
+  device_info_plus: 11.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
