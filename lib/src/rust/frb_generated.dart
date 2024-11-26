@@ -3,15 +3,14 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'dart:async';
-import 'dart:convert';
-
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-
 import 'api/compress.dart';
 import 'api/constants.dart';
+import 'api/kmp.dart';
+import 'dart:async';
+import 'dart:convert';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart' if (dart.library.js_interop) 'frb_generated.web.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -65,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.6.0';
 
   @override
-  int get rustContentHash => 1782633232;
+  int get rustContentHash => -914742464;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'rust_lib_mood_diary',
@@ -75,8 +74,15 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<Uint8List> crateApiCompressImageCompressContain(
-      {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality});
+  Future<Uint8List> crateApiCompressImageCompressContain({required String filePath,
+    CompressFormat? compressFormat,
+    int? maxWidth,
+    int? maxHeight,
+    int? quality});
+
+  Future<String> crateApiKmpKmpReplaceWithKmp({required String text, required Map<String, String> replacements});
+
+  Future<Uint64List> crateApiKmpBuildPrefixTable({required String pattern});
 
   Future<Uint8List> crateApiCompressCompress(
       {required DynamicImage img,
@@ -84,6 +90,8 @@ abstract class RustLibApi extends BaseApi {
       required int dstWidth,
       required CompressFormat compressFormat,
       required int quality});
+
+  Future<Uint64List> crateApiKmpKmpSearch({required String text, required String pattern});
 
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_DynamicImage;
 
@@ -96,6 +104,12 @@ abstract class RustLibApi extends BaseApi {
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_ImageCompress;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ImageCompressPtr;
+
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Kmp;
+
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Kmp;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_KmpPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -107,8 +121,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<Uint8List> crateApiCompressImageCompressContain(
-      {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality}) {
+  Future<Uint8List> crateApiCompressImageCompressContain({required String filePath,
+    CompressFormat? compressFormat,
+    int? maxWidth,
+    int? maxHeight,
+    int? quality}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -135,6 +152,53 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<String> crateApiKmpKmpReplaceWithKmp({required String text, required Map<String, String> replacements}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(text, serializer);
+        sse_encode_Map_String_String(replacements, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiKmpKmpReplaceWithKmpConstMeta,
+      argValues: [text, replacements],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiKmpKmpReplaceWithKmpConstMeta => const TaskConstMeta(
+        debugName: "Kmp_replace_with_kmp",
+        argNames: ["text", "replacements"],
+      );
+
+  @override
+  Future<Uint64List> crateApiKmpBuildPrefixTable({required String pattern}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(pattern, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_prim_usize_strict,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiKmpBuildPrefixTableConstMeta,
+      argValues: [pattern],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiKmpBuildPrefixTableConstMeta => const TaskConstMeta(
+        debugName: "build_prefix_table",
+        argNames: ["pattern"],
+      );
+
+  @override
   Future<Uint8List> crateApiCompressCompress(
       {required DynamicImage img,
       required int dstHeight,
@@ -149,7 +213,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_32(dstWidth, serializer);
         sse_encode_compress_format(compressFormat, serializer);
         sse_encode_u_8(quality, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
@@ -166,6 +230,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argNames: ["img", "dstHeight", "dstWidth", "compressFormat", "quality"],
       );
 
+  @override
+  Future<Uint64List> crateApiKmpKmpSearch({required String text, required String pattern}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(text, serializer);
+        sse_encode_String(pattern, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_prim_usize_strict,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiKmpKmpSearchConstMeta,
+      argValues: [text, pattern],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiKmpKmpSearchConstMeta => const TaskConstMeta(
+        debugName: "kmp_search",
+        argNames: ["text", "pattern"],
+      );
+
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_DynamicImage =>
       wire.rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDynamicImage;
 
@@ -177,6 +265,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_ImageCompress =>
       wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompress;
+
+  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Kmp =>
+      wire.rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp;
+
+  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Kmp =>
+      wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -192,10 +286,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Kmp dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return KmpImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   DynamicImage dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDynamicImage(
       dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return DynamicImageImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  Map<String, String> dco_decode_Map_String_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return Map.fromEntries(dco_decode_list_record_string_string(raw).map((e) => MapEntry(e.$1, e.$2)));
   }
 
   @protected
@@ -208,6 +314,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ImageCompress dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompress(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ImageCompressImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  Kmp dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return KmpImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -253,6 +365,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Uint64List dco_decode_list_prim_usize_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as Uint64List;
+  }
+
+  @protected
+  List<(String, String)> dco_decode_list_record_string_string(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_record_string_string).toList();
+  }
+
+  @protected
   CompressFormat? dco_decode_opt_box_autoadd_compress_format(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_compress_format(raw);
@@ -271,6 +395,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  (String, String) dco_decode_record_string_string(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2) {
+      throw Exception('Expected 2 elements, got ${arr.length}');
+    }
+    return (
+      dco_decode_String(arr[0]),
+      dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
   int dco_decode_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -280,6 +417,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int dco_decode_u_8(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
+  }
+
+  @protected
+  void dco_decode_unit(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return;
   }
 
   @protected
@@ -303,10 +446,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Kmp sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
+      SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return KmpImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
   DynamicImage sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDynamicImage(
       SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return DynamicImageImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  Map<String, String> sse_decode_Map_String_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_list_record_string_string(deserializer);
+    return Map.fromEntries(inner.map((e) => MapEntry(e.$1, e.$2)));
   }
 
   @protected
@@ -321,6 +478,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ImageCompressImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+  }
+
+  @protected
+  Kmp sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return KmpImpl.frbInternalSseDecode(sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
   }
 
   @protected
@@ -369,6 +532,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Uint64List sse_decode_list_prim_usize_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint64List(len_);
+  }
+
+  @protected
+  List<(String, String)> sse_decode_list_record_string_string(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <(String, String)>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_record_string_string(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   CompressFormat? sse_decode_opt_box_autoadd_compress_format(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -402,6 +584,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  (String, String) sse_decode_record_string_string(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_field0 = sse_decode_String(deserializer);
+    var var_field1 = sse_decode_String(deserializer);
+    return (var_field0, var_field1);
+  }
+
+  @protected
   int sse_decode_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint32();
@@ -411,6 +601,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int sse_decode_u_8(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8();
+  }
+
+  @protected
+  void sse_decode_unit(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected
@@ -439,10 +634,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
+      Kmp self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as KmpImpl).frbInternalSseEncode(move: true), serializer);
+  }
+
+  @protected
   void sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDynamicImage(
       DynamicImage self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize((self as DynamicImageImpl).frbInternalSseEncode(move: false), serializer);
+  }
+
+  @protected
+  void sse_encode_Map_String_String(Map<String, String> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_record_string_string(self.entries.map((e) => (e.key, e.value)).toList(), serializer);
   }
 
   @protected
@@ -457,6 +665,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ImageCompress self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize((self as ImageCompressImpl).frbInternalSseEncode(move: null), serializer);
+  }
+
+  @protected
+  void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
+      Kmp self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize((self as KmpImpl).frbInternalSseEncode(move: null), serializer);
   }
 
   @protected
@@ -503,6 +718,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_prim_usize_strict(Uint64List self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint64List(self);
+  }
+
+  @protected
+  void sse_encode_list_record_string_string(List<(String, String)> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_record_string_string(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_compress_format(CompressFormat? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -533,6 +764,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_record_string_string((String, String) self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.$1, serializer);
+    sse_encode_String(self.$2, serializer);
+  }
+
+  @protected
   void sse_encode_u_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint32(self);
@@ -542,6 +780,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_u_8(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self);
+  }
+
+  @protected
+  void sse_encode_unit(void self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
   }
 
   @protected
@@ -586,5 +829,21 @@ class ImageCompressImpl extends RustOpaque implements ImageCompress {
     rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_ImageCompress,
     rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_ImageCompress,
     rustArcDecrementStrongCountPtr: RustLib.instance.api.rust_arc_decrement_strong_count_ImageCompressPtr,
+  );
+}
+
+@sealed
+class KmpImpl extends RustOpaque implements Kmp {
+  // Not to be used by end users
+  KmpImpl.frbInternalDcoDecode(List<dynamic> wire) : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  KmpImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib.instance.api.rust_arc_increment_strong_count_Kmp,
+    rustArcDecrementStrongCount: RustLib.instance.api.rust_arc_decrement_strong_count_Kmp,
+    rustArcDecrementStrongCountPtr: RustLib.instance.api.rust_arc_decrement_strong_count_KmpPtr,
   );
 }
