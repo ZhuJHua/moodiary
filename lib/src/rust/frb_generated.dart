@@ -74,11 +74,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<Uint8List> crateApiCompressImageCompressContain({required String filePath,
-    CompressFormat? compressFormat,
-    int? maxWidth,
-    int? maxHeight,
-    int? quality});
+  Future<Uint8List> crateApiCompressImageCompressContain(
+      {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality});
 
   Future<String> crateApiKmpKmpReplaceWithKmp({required String text, required Map<String, String> replacements});
 
@@ -121,11 +118,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<Uint8List> crateApiCompressImageCompressContain({required String filePath,
-    CompressFormat? compressFormat,
-    int? maxWidth,
-    int? maxHeight,
-    int? quality}) {
+  Future<Uint8List> crateApiCompressImageCompressContain(
+      {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);

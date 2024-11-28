@@ -23,11 +23,8 @@ abstract class DynamicImage implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompress>>
 abstract class ImageCompress implements RustOpaqueInterface {
-  static Future<Uint8List> contain({required String filePath,
-    CompressFormat? compressFormat,
-    int? maxWidth,
-    int? maxHeight,
-    int? quality}) =>
+  static Future<Uint8List> contain(
+          {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality}) =>
       RustLib.instance.api.crateApiCompressImageCompressContain(
           filePath: filePath,
           compressFormat: compressFormat,
