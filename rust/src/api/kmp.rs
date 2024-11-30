@@ -33,7 +33,7 @@ pub fn kmp_search(text: &str, pattern: &str) -> Vec<usize> {
             j += 1;
         }
         if j == m {
-            matches.push(i + 1 - m); // 添加匹配的起始索引
+            matches.push(i + 1 - m);
             j = prefix_table[j - 1];
         }
     }
@@ -80,5 +80,17 @@ impl Kmp {
 
         result.push_str(&text[last_index..]);
         result
+    }
+
+    pub fn find_matches(text: &str, patterns: Vec<String>) -> Vec<String> {
+        let mut matched_patterns = Vec::new();
+
+        for pattern in &patterns {
+            if !kmp_search(text, pattern).is_empty() {
+                matched_patterns.push(pattern.clone());
+            }
+        }
+
+        matched_patterns
     }
 }

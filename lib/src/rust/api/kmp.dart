@@ -14,6 +14,9 @@ Future<Uint64List> kmpSearch({required String text, required String pattern}) =>
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>>
 abstract class Kmp implements RustOpaqueInterface {
+  static Future<List<String>> findMatches({required String text, required List<String> patterns}) =>
+      RustLib.instance.api.crateApiKmpKmpFindMatches(text: text, patterns: patterns);
+
   static Future<String> replaceWithKmp({required String text, required Map<String, String> replacements}) =>
       RustLib.instance.api.crateApiKmpKmpReplaceWithKmp(text: text, replacements: replacements);
 }

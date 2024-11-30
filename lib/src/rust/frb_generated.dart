@@ -64,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.6.0';
 
   @override
-  int get rustContentHash => -914742464;
+  int get rustContentHash => 444186734;
 
   static const kDefaultExternalLibraryLoaderConfig = ExternalLibraryLoaderConfig(
     stem: 'rust_lib_mood_diary',
@@ -74,8 +74,13 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<Uint8List> crateApiCompressImageCompressContain(
-      {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality});
+  Future<Uint8List> crateApiCompressImageCompressContain({required String filePath,
+    CompressFormat? compressFormat,
+    int? maxWidth,
+    int? maxHeight,
+    int? quality});
+
+  Future<List<String>> crateApiKmpKmpFindMatches({required String text, required List<String> patterns});
 
   Future<String> crateApiKmpKmpReplaceWithKmp({required String text, required Map<String, String> replacements});
 
@@ -118,8 +123,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<Uint8List> crateApiCompressImageCompressContain(
-      {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality}) {
+  Future<Uint8List> crateApiCompressImageCompressContain({required String filePath,
+    CompressFormat? compressFormat,
+    int? maxWidth,
+    int? maxHeight,
+    int? quality}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
@@ -146,13 +154,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<List<String>> crateApiKmpKmpFindMatches({required String text, required List<String> patterns}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(text, serializer);
+        sse_encode_list_String(patterns, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_list_String,
+        decodeErrorData: null,
+      ),
+      constMeta: kCrateApiKmpKmpFindMatchesConstMeta,
+      argValues: [text, patterns],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateApiKmpKmpFindMatchesConstMeta => const TaskConstMeta(
+        debugName: "Kmp_find_matches",
+        argNames: ["text", "patterns"],
+      );
+
+  @override
   Future<String> crateApiKmpKmpReplaceWithKmp({required String text, required Map<String, String> replacements}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(text, serializer);
         sse_encode_Map_String_String(replacements, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 2, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -175,7 +207,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(pattern, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_usize_strict,
@@ -207,7 +239,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_u_32(dstWidth, serializer);
         sse_encode_compress_format(compressFormat, serializer);
         sse_encode_u_8(quality, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_u_8_strict,
@@ -231,7 +263,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(text, serializer);
         sse_encode_String(pattern, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5, port: port_);
+        pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_list_prim_usize_strict,
@@ -350,6 +382,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int dco_decode_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
+  }
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_String).toList();
   }
 
   @protected
@@ -516,6 +554,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int sse_decode_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getInt32();
+  }
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <String>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -702,6 +752,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_String(item, serializer);
+    }
   }
 
   @protected
