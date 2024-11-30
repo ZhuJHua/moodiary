@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-Future<Uint64List> buildPrefixTable({required String pattern}) =>
+Future<Uint64List> buildPrefixTable({required List<String> pattern}) =>
     RustLib.instance.api.crateApiKmpBuildPrefixTable(pattern: pattern);
 
 Future<Uint64List> kmpSearch({required String text, required String pattern}) =>

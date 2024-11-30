@@ -46,6 +46,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       dynamic raw);
 
   @protected
+  String dco_decode_Char(dynamic raw);
+
+  @protected
   Map<String, String> dco_decode_Map_String_String(dynamic raw);
 
   @protected
@@ -74,6 +77,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int dco_decode_i_32(dynamic raw);
+
+  @protected
+  List<String> dco_decode_list_Char(dynamic raw);
 
   @protected
   List<String> dco_decode_list_String(dynamic raw);
@@ -127,6 +133,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       SseDeserializer deserializer);
 
   @protected
+  String sse_decode_Char(SseDeserializer deserializer);
+
+  @protected
   Map<String, String> sse_decode_Map_String_String(SseDeserializer deserializer);
 
   @protected
@@ -157,6 +166,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  List<String> sse_decode_list_Char(SseDeserializer deserializer);
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
@@ -213,6 +225,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       DynamicImage self, SseSerializer serializer);
 
   @protected
+  void sse_encode_Char(String self, SseSerializer serializer);
+
+  @protected
   void sse_encode_Map_String_String(Map<String, String> self, SseSerializer serializer);
 
   @protected
@@ -243,6 +258,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_Char(List<String> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
