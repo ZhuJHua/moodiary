@@ -24,6 +24,7 @@ class HomePage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
     final size = MediaQuery.sizeOf(context);
+    final padding = MediaQuery.paddingOf(context);
 
     Widget buildModal() {
       return AnimatedBuilder(
@@ -360,31 +361,35 @@ class HomePage extends StatelessWidget {
     // }
 
     Widget buildNavigatorBar() {
+      var navigatorBarHeight = state.navigatorBarHeight + padding.bottom;
       return size.width < 600
           ? AnimatedBuilder(
               animation: logic.barAnimation,
               builder: (context, child) {
                 return SizedBox(
-                  height: state.navigatorBarHeight * logic.barAnimation.value,
+                  height: (navigatorBarHeight) * logic.barAnimation.value,
                   child: child,
                 );
               },
-              child: Container(
-                height: state.navigatorBarHeight * logic.barAnimation.value,
-                decoration: BoxDecoration(border: Border(top: BorderSide(color: colorScheme.outline, width: 0.2))),
-                child: Stack(
-                  children: [
-                    NavigationBar(
-                      destinations: destinations,
-                      selectedIndex: state.navigatorIndex,
-                      height: state.navigatorBarHeight,
-                      onDestinationSelected: (index) {
-                        logic.changeNavigator(index);
-                      },
-                      labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-                    ),
-                    buildModal()
-                  ],
+              child: OverflowBox(
+                maxHeight: navigatorBarHeight,
+                alignment: Alignment.topCenter,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border(top: BorderSide(color: colorScheme.outline.withAlpha(150), width: 0.5)),
+                  ),
+                  child: Stack(
+                    children: [
+                      NavigationBar(
+                        destinations: destinations,
+                        selectedIndex: state.navigatorIndex,
+                        height: navigatorBarHeight,
+                        onDestinationSelected: logic.changeNavigator,
+                        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                      ),
+                      buildModal()
+                    ],
+                  ),
                 ),
               ),
             )

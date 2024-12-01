@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
@@ -28,11 +29,13 @@ Future<void> initSystem() async {
   await Utils().isarUtil.initIsar();
   //初始化视频播放
   VideoPlayerMediaKit.ensureInitialized(android: true, iOS: true, macOS: true, windows: true, linux: true);
-  //MediaKit.ensureInitialized();
   //地图缓存
   await FMTCObjectBoxBackend().initialise();
   await const FMTCStore('mapStore').manage.create();
   await RustLib.init();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent, systemNavigationBarContrastEnforced: false));
   platFormOption();
 }
 
@@ -82,7 +85,12 @@ void main() {
             child: FToastBuilder()(context, child!),
           );
           // 根据平台决定是否需要 MoveWindow
-          final windowChild = (Platform.isWindows || Platform.isMacOS || Platform.isWindows)
+          var autoFit = AnnotatedRegion<SystemUiOverlayStyle>(
+              value: SystemUiOverlayStyle(
+                systemNavigationBarColor: colorScheme.surface,
+              ),
+              child: mediaQuery);
+          final windowChild = (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
               ? Column(
                   children: [
                     WindowButtons(

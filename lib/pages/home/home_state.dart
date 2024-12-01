@@ -8,7 +8,7 @@ class HomeState {
   //导航栏index
   int navigatorIndex = 0;
 
-  double navigatorBarHeight = 80.0;
+  double navigatorBarHeight = 56.0;
 
   HomeState();
 }
