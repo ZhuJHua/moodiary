@@ -3,9 +3,11 @@ import 'dart:io';
 
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_picker_android/image_picker_android.dart';
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
+import 'package:mime/mime.dart';
 import 'package:mood_diary/src/rust/api/compress.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:uuid/uuid.dart';
@@ -24,29 +26,35 @@ class MediaUtil {
     }
   }
 
+  // 定义 MIME 类型到扩展名和压缩格式的映射
+  final _compressConfig = {
+    'image/jpeg': ['.jpg', r_type.CompressFormat.jpeg],
+    'image/png': ['.png', r_type.CompressFormat.png],
+    'image/heic': ['.heic', CompressFormat.heic],
+    'image/webp': ['.webp', r_type.CompressFormat.webP],
+  };
+
   /// 保存图片
   /// 返回值：
   /// key：XFile 文件的临时目录
   /// value：实际的文件名
   Future<Map<String, String>> saveImages({required List<XFile> imageFileList}) async {
     final imageNameMap = <String, String>{};
-    // 并发处理图片列表
     await Future.wait(imageFileList.map((imageFile) async {
-      // 生成新的名字
-      final imageName = 'image-${const Uuid().v7()}.png';
+      final mimeType = lookupMimeType(imageFile.path) ?? 'image/png'; // 默认使用 PNG
+      final config = _compressConfig[mimeType] ?? ['.png', r_type.CompressFormat.png];
+      final extension = config[0] as String;
+      final format = config[1];
+      final imageName = 'image-${const Uuid().v7()}$extension';
+      final outputPath = Utils().fileUtil.getRealPath('image', imageName);
+      await _compressImage(imageFile, outputPath, format);
       imageNameMap[imageFile.path] = imageName;
-      final targetPath = Utils().fileUtil.getRealPath('image', imageName);
-      if (imageFile.path.endsWith('.heic') || imageFile.path.endsWith('.heif')) {
-        await imageFile.saveTo(targetPath);
-      } else {
-        await _compressRust(imageFile, targetPath, r_type.CompressFormat.png);
-      }
     }));
 
     return imageNameMap;
   }
 
-  /// 保存图片
+  /// 保存音频
   /// 返回值：
   /// key：缓存目录的路径
   /// value：实际的文件名
@@ -149,6 +157,19 @@ class MediaUtil {
     return await _picker.pickMultiImage(limit: limit);
   }
 
+  // 通用压缩逻辑
+  Future<void> _compressImage(
+    XFile imageFile,
+    String outputPath,
+    dynamic format,
+  ) async {
+    if (format == CompressFormat.heic) {
+      await _compressNative(imageFile, outputPath, format);
+    } else {
+      await _compressRust(imageFile, outputPath, format);
+    }
+  }
+
   Future<void> _compressRust(XFile oldImage, String targetPath, r_type.CompressFormat format) async {
     var quality = switch (Utils().prefUtil.getValue<int>('quality')) {
       0 => 720,
@@ -162,32 +183,31 @@ class MediaUtil {
     await File(targetPath).writeAsBytes(newImage);
   }
 
-  // //图片压缩
-  // Future<XFile?> _compressAndSaveImage(XFile oldImage, String targetPath, CompressFormat format) async {
-  //   // 如果是已经压缩过的
-  //   if (oldImage.path == targetPath) {
-  //     return oldImage;
-  //   }
-  //   if (Platform.isWindows) {
-  //     oldImage.saveTo(targetPath);
-  //     return oldImage;
-  //   }
-  //   var quality = Utils().prefUtil.getValue<int>('quality');
-  //   var height = switch (quality) {
-  //     0 => 720,
-  //     1 => 1080,
-  //     2 => 1440,
-  //     _ => 1080,
-  //   };
-  //
-  //   return await FlutterImageCompress.compressAndGetFile(
-  //     oldImage.path,
-  //     targetPath,
-  //     minHeight: height,
-  //     minWidth: height,
-  //     format: format,
-  //   );
-  // }
+  //图片压缩
+  Future<void> _compressNative(XFile oldImage, String targetPath, CompressFormat format) async {
+    if (Platform.isWindows) {
+      oldImage.saveTo(targetPath);
+      return;
+    }
+    var quality = Utils().prefUtil.getValue<int>('quality');
+    var height = switch (quality) {
+      0 => 720,
+      1 => 1080,
+      2 => 1440,
+      _ => 1080,
+    };
+    var newImage = await FlutterImageCompress.compressWithFile(
+      oldImage.path,
+      minHeight: height,
+      minWidth: height,
+      format: format,
+    );
+    if (newImage == null) {
+      oldImage.saveTo(targetPath);
+      return;
+    }
+    await File(targetPath).writeAsBytes(newImage);
+  }
 
   //获取视频缩略图
   Future<bool> getVideoThumbnail(XFile xFile, destPath) async {
