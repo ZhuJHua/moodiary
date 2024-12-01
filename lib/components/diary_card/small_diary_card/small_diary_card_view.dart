@@ -18,13 +18,17 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     Widget buildImage() {
       return AspectRatio(
         aspectRatio: 1.0,
         child: Container(
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: FileImage(File(Utils().fileUtil.getRealPath('image', diary.imageName.first))),
+              image: ResizeImage(
+                FileImage(File(Utils().fileUtil.getRealPath('image', diary.imageName.first))),
+                width: (122 * pixelRatio).toInt(),
+              ),
               fit: BoxFit.cover,
             ),
             borderRadius: AppBorderRadius.mediumBorderRadius,
