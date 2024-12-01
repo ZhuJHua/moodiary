@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:mood_diary/src/rust/api/compress.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:uuid/uuid.dart';
@@ -15,43 +17,79 @@ class MediaUtil {
 
   late final _thumbnail = FcNativeVideoThumbnail();
 
-  // 保存图片
-  Future<List<String>> saveImages({required List<XFile> imageFileList}) async {
-    List<String> nameList = [];
-    for (var imageFile in imageFileList) {
-      //生成新的名字
-      var imageName = 'image-${const Uuid().v7()}.png';
-      nameList.add(imageName);
-      await _compressRust(imageFile, Utils().fileUtil.getRealPath('image', imageName), r_type.CompressFormat.png);
-      //await _compressAndSaveImage(imageFile, Utils().fileUtil.getRealPath('image', imageName), CompressFormat.png);
+  MediaUtil() {
+    final ImagePickerPlatform imagePickerImplementation = ImagePickerPlatform.instance;
+    if (imagePickerImplementation is ImagePickerAndroid) {
+      imagePickerImplementation.useAndroidPhotoPicker = true;
     }
-    return nameList;
   }
 
-  // 保存录音
-  Future<void> saveAudio(List<String> audioName) async {
-    for (var name in audioName) {
+  /// 保存图片
+  /// 返回值：
+  /// key：XFile 文件的临时目录
+  /// value：实际的文件名
+  Future<Map<String, String>> saveImages({required List<XFile> imageFileList}) async {
+    final imageNameMap = <String, String>{};
+    // 并发处理图片列表
+    await Future.wait(imageFileList.map((imageFile) async {
+      // 生成新的名字
+      final imageName = 'image-${const Uuid().v7()}.png';
+      imageNameMap[imageFile.path] = imageName;
+      final targetPath = Utils().fileUtil.getRealPath('image', imageName);
+      if (imageFile.path.endsWith('.heic') || imageFile.path.endsWith('.heif')) {
+        await imageFile.saveTo(targetPath);
+      } else {
+        await _compressRust(imageFile, targetPath, r_type.CompressFormat.png);
+      }
+    }));
+
+    return imageNameMap;
+  }
+
+  /// 保存图片
+  /// 返回值：
+  /// key：缓存目录的路径
+  /// value：实际的文件名
+  Future<Map<String, String>> saveAudio(List<String> audioNames) async {
+    final audioNameMap = <String, String>{};
+    await Future.wait(audioNames.map((name) async {
       final file = File(Utils().fileUtil.getCachePath(name));
-      await file.copy(Utils().fileUtil.getRealPath('audio', name));
-    }
+      final targetPath = Utils().fileUtil.getRealPath('audio', name);
+      audioNameMap[file.path] = name;
+      await file.copy(targetPath);
+    }));
+    return audioNameMap;
   }
 
-  // 保存视频
-  Future<List<String>> saveVideo(
-      {required List<XFile> videoFileList, required List<XFile> videoThumbnailFileList}) async {
-    List<String> nameList = [];
-    for (var i = 0; i < videoFileList.length; ++i) {
+  /// 保存视频
+  /// 返回值：
+  /// key：XFile 文件的临时目录
+  /// value：实际的文件名
+  Future<Map<String, String>> saveVideo({required List<XFile> videoFileList}) async {
+    Map<String, String> videoNameMap = {};
+
+    await Future.wait(videoFileList.map((videoFile) async {
       // 生成文件名
       final uuid = const Uuid().v7();
       var videoName = 'video-$uuid.mp4';
-      nameList.add(videoName);
-      await videoFileList[i].saveTo(Utils().fileUtil.getRealPath('video', videoName));
+      videoNameMap[videoFile.path] = videoName;
+      // 保存视频文件
+      await videoFile.saveTo(Utils().fileUtil.getRealPath('video', videoName));
+      // 获取缩略图
+      var tempThumbnailPath = Utils().fileUtil.getCachePath('${const Uuid().v7()}.jpeg');
+      await Utils().mediaUtil.getVideoThumbnail(videoFile, tempThumbnailPath);
+      // 压缩缩略图并保存
+      var compressedPath = Utils().fileUtil.getRealPath('thumbnail', videoName);
       await _compressRust(
-          videoThumbnailFileList[i], Utils().fileUtil.getRealPath('thumbnail', videoName), r_type.CompressFormat.jpeg);
-      // await _compressAndSaveImage(
-      //     videoThumbnailFileList[i], Utils().fileUtil.getRealPath('thumbnail', videoName), CompressFormat.jpeg);
-    }
-    return nameList;
+        XFile(tempThumbnailPath),
+        compressedPath,
+        r_type.CompressFormat.jpeg,
+      );
+      // 清理临时文件
+      await File(tempThumbnailPath).delete();
+    }));
+
+    return videoNameMap;
   }
 
   //获取图片宽高
@@ -118,8 +156,9 @@ class MediaUtil {
       2 => 1440,
       _ => 1080,
     };
-    var newImage = await ImageCompress.contain(
-        filePath: oldImage.path, maxWidth: quality, maxHeight: quality, compressFormat: format);
+    var oldPath = oldImage.path;
+    var newImage =
+        await ImageCompress.contain(filePath: oldPath, maxWidth: quality, maxHeight: quality, compressFormat: format);
     await File(targetPath).writeAsBytes(newImage);
   }
 

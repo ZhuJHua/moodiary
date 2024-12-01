@@ -48,7 +48,7 @@ dependencies:
   photo_view: 0.15.0
   package_info_plus: 8.1.1
   uuid: 4.5.1
-  flutter_quill: 10.8.5
+  flutter_quill: 11.0.0-dev.14
   share_plus: 10.1.2
   url_launcher: 6.3.1
   archive: 3.6.1
@@ -96,17 +96,25 @@ dependencies:
   faker: 2.2.0
   flutter_inappwebview: 6.1.5
   flutter_rust_bridge: 2.6.0
-  syncfusion_flutter_sliders: 27.2.3
-  flutter_quill_extensions: 10.8.5
+  syncfusion_flutter_sliders: 27.2.4
+  flutter_quill_extensions: 11.0.0-dev.4
+  img_picker_platform_interface: 3.0.0
   connectivity_plus: 6.1.0
+  image_picker_android: 0.8.12+18
+  video_player_media_kit: 1.0.5
+  video_player: 2.9.2
+  chewie: 1.8.5
+  http_status_code: 0.0.2
+  pinput: 5.0.0
+  flutter_markdown: 0.7.4+3
+  google_fonts: 6.2.1
+  auto_size_text_field: 2.2.4
 
 
   flutter_localizations:
     sdk: flutter
   rust_lib_mood_diary:
     path: rust_builder
-dependency_overrides:
-  device_info_plus: 11.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

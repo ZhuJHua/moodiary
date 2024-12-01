@@ -184,7 +184,6 @@ class FileUtil {
   }
 
   String getCachePath(String fileName) {
-    Utils().logUtil.printInfo(join(_cachePath, fileName));
     return join(_cachePath, fileName);
   }
 

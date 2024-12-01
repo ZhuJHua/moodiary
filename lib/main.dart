@@ -6,14 +6,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/find_locale.dart';
-import 'package:media_kit/media_kit.dart';
 import 'package:mood_diary/router/app_pages.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/src/rust/frb_generated.dart';
 import 'package:mood_diary/utils/utils.dart';
+import 'package:video_player_media_kit/video_player_media_kit.dart';
 
 import 'components/window_buttons/window_buttons.dart';
 
@@ -26,7 +27,8 @@ Future<void> initSystem() async {
   //初始化Isar
   await Utils().isarUtil.initIsar();
   //初始化视频播放
-  MediaKit.ensureInitialized();
+  VideoPlayerMediaKit.ensureInitialized(android: true, iOS: true, macOS: true, windows: true, linux: true);
+  //MediaKit.ensureInitialized();
   //地图缓存
   await FMTCObjectBoxBackend().initialise();
   await const FMTCStore('mapStore').manage.create();
@@ -97,7 +99,7 @@ void main() {
         themeMode: ThemeMode.values[Utils().prefUtil.getValue<int>('themeMode')!],
         defaultTransition: Transition.cupertino,
         getPages: AppPages.routes,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: const [...AppLocalizations.localizationsDelegates, FlutterQuillLocalizations.delegate],
         supportedLocales: AppLocalizations.supportedLocales,
       ));
     });

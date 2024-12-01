@@ -52,11 +52,10 @@ class NoOverlayShape extends SfOverlayShape {
 }
 
 class AudioPlayerComponent extends StatelessWidget {
-  const AudioPlayerComponent({super.key, required this.path, this.isEdit = false});
+  const AudioPlayerComponent({super.key, required this.path});
 
   final String path;
 
-  final bool isEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -132,15 +131,6 @@ class AudioPlayerComponent extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (isEdit)
-                  IconButton(
-                    onPressed: () {
-                      logic.editLogic.deleteAudio(path);
-                    },
-                    icon: const Icon(
-                      Icons.cancel,
-                    ),
-                  )
               ],
             ),
           ),

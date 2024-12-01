@@ -77,6 +77,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.photoPage,
       page: () => const ImagePage(),
+      popGesture: false,
       binds: [Bind.lazyPut(() => ImageLogic())],
     ),
     //回收站
@@ -95,6 +96,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.editPage,
       page: () => const EditPage(),
+      popGesture: false,
       binds: [Bind.lazyPut(() => EditLogic())],
     ),
     //分享页路由

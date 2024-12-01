@@ -10,5 +10,7 @@ class DiaryDetailsState {
 
   int? get imageColor => diary.imageColor;
 
+  RxBool isScrolling = false.obs;
+
   DiaryDetailsState();
 }

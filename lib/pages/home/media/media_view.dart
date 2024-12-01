@@ -63,10 +63,7 @@ class MediaPage extends StatelessWidget {
       return SliverList.builder(
           key: UniqueKey(),
           itemBuilder: (context, index) {
-            return AudioPlayerComponent(
-              path: state.filePath[index],
-              isEdit: false,
-            );
+            return AudioPlayerComponent(path: state.filePath[index]);
           },
           itemCount: state.filePath.length);
     }
