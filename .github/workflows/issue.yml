@@ -1,0 +1,22 @@
+name: Issue Labeled
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  issue-labeled:
+    if: github.actor != github.event.issue.user.login
+    runs-on: ubuntu-latest
+    steps:
+      - name: Need more info
+        if: github.event.label.name == 'question'
+        uses: actions-cool/issues-helper@main
+        with:
+          actions: 'create-comment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            你好 @${{ github.event.issue.user.login }}，你所提供的信息不足于我们排查问题，请按照 issue 模板填写相关信息，感谢配合，谢谢！15 天内未回复issue自动关闭。
+            
+            Hello, @${{ github.event.issue.user.login }}, the information you provided is not enough for us to troubleshoot the problem. Please complete the issue description. Thanks so much for your cooperation! The issue will be closed without any replay within 15 days.
