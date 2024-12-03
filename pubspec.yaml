@@ -58,10 +58,7 @@ dependencies:
   geolocator: 13.0.2
   shared_preferences: 2.3.3
   isar: 4.0.0-dev.14
-  isar_flutter_libs:
-    git:
-      url: https://github.com/ZhuJHua/isar
-      path: packages/isar_flutter_libs
+  isar_flutter_libs: 4.0.0-dev.14
   fluttertoast: 8.2.8
   cached_network_image: 3.4.1
   audioplayers: 6.1.0
@@ -145,9 +142,6 @@ flutter:
     - family: qweather
       fonts:
         - asset: assets/fonts/qweather-icons.ttf
-    - family: noto serif
-      fonts:
-        - asset: assets/fonts/NotoSerifSC-VariableFont_wght.ttf
 
   assets:
     - assets/icon/

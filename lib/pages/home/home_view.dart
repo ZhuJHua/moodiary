@@ -6,6 +6,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
+import 'package:mood_diary/common/values/diary_type.dart';
 import 'package:mood_diary/pages/home/calendar/calendar_view.dart';
 import 'package:mood_diary/pages/home/diary/diary_view.dart';
 import 'package:mood_diary/pages/home/media/media_view.dart';
@@ -25,6 +26,7 @@ class HomePage extends StatelessWidget {
     final i18n = AppLocalizations.of(context)!;
     final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
+    final textStyle = Theme.of(context).textTheme;
 
     Widget buildModal() {
       return AnimatedBuilder(
@@ -32,7 +34,7 @@ class HomePage extends StatelessWidget {
           builder: (context, child) {
             return state.isFabExpanded
                 ? ModalBarrier(
-                    color: colorScheme.surface.withAlpha((255 * 0.6 * logic.fabAnimation.value).toInt()),
+                    color: colorScheme.surfaceContainer.withAlpha((255 * 0.6 * logic.fabAnimation.value).toInt()),
                     onDismiss: () async {
                       await logic.closeFab();
                     },
@@ -74,149 +76,90 @@ class HomePage extends StatelessWidget {
           : const SizedBox.shrink();
     }
 
-    Widget buildAddDiaryButton() {
-      return AnimatedBuilder(
-        animation: logic.fabAnimation,
-        child: GestureDetector(
-          onTap: () async {
-            await logic.toEditPage();
+    Widget buildAnimatedActionButton({
+      required String label,
+      required Function() onTap,
+      required IconData iconData,
+      required int index,
+    }) {
+      const double mainButtonHeight = 56.0;
+      const double mainButtonSpacing = 8.0;
+      const double secondaryButtonHeight = 46.0;
+
+      double calculateVerticalTranslation(int index, double animationValue) {
+        const double baseOffset = mainButtonHeight + mainButtonSpacing;
+        return index == 1
+            ? baseOffset * index * animationValue
+            : (baseOffset + (secondaryButtonHeight + mainButtonSpacing) * (index - 1)) * animationValue;
+      }
+
+      return Visibility(
+        visible: state.isFabExpanded,
+        child: AnimatedBuilder(
+          animation: logic.fabAnimation,
+          builder: (context, child) {
+            final verticalTranslation = calculateVerticalTranslation(index, logic.fabAnimation.value);
+            return Positioned(
+              left: 0,
+              right: 0,
+              bottom: verticalTranslation,
+              child: Opacity(
+                opacity: logic.fabAnimation.value,
+                child: child!,
+              ),
+            );
           },
-          child: Container(
-            decoration: ShapeDecoration(
-                shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
-                color: colorScheme.primaryContainer,
-                shadows: [
-                  BoxShadow(
-                      color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
-                      offset: const Offset(0, 2),
-                      blurRadius: 2,
-                      spreadRadius: 2)
-                ]),
-            height: 56.0,
-            alignment: Alignment.center,
+          child: GestureDetector(
+            onTap: onTap,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: 16.0,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                FaIcon(
-                  FontAwesomeIcons.feather,
-                  color: colorScheme.onPrimaryContainer,
+                Container(
+                  decoration: ShapeDecoration(
+                    shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.smallBorderRadius),
+                    color: colorScheme.secondaryContainer,
+                    shadows: [
+                      BoxShadow(
+                        color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                        offset: const Offset(0, 2),
+                        blurRadius: 2,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
+                  child: Text(
+                    label,
+                    style: textStyle.labelMedium!.copyWith(color: colorScheme.onSecondaryContainer),
+                  ),
                 ),
-                Text(
-                  i18n.homePageAddDiaryButton,
-                  style: TextStyle(color: colorScheme.onPrimaryContainer),
+                Container(
+                  decoration: ShapeDecoration(
+                    shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
+                    color: colorScheme.primaryContainer,
+                    shadows: [
+                      BoxShadow(
+                        color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                        offset: const Offset(0, 2),
+                        blurRadius: 2,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  width: 56.0,
+                  height: 46.0,
+                  alignment: Alignment.center,
+                  child: FaIcon(
+                    iconData,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
                 ),
               ],
             ),
           ),
         ),
-        builder: (context, child) {
-          return Transform(
-            transform: Matrix4.identity()
-              ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
-              ..translate(.0, -((56.0 + 8.0)) * logic.fabAnimation.value),
-            alignment: FractionalOffset.centerRight,
-            child: child,
-          );
-        },
       );
     }
-
-    // Widget buildToAiButton() {
-    //   return AnimatedBuilder(
-    //     animation: logic.fabAnimation,
-    //     child: GestureDetector(
-    //       onTap: () async {
-    //         await logic.toAi();
-    //       },
-    //       child: Container(
-    //         decoration: ShapeDecoration(
-    //             shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
-    //             color: colorScheme.primaryContainer,
-    //             shadows: [
-    //               BoxShadow(
-    //                   color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
-    //                   offset: const Offset(0, 2),
-    //                   blurRadius: 2,
-    //                   spreadRadius: 2)
-    //             ]),
-    //         height: 56.0,
-    //         alignment: Alignment.center,
-    //         child: Row(
-    //           mainAxisSize: MainAxisSize.min,
-    //           spacing: 16.0,
-    //           children: [
-    //             FaIcon(
-    //               FontAwesomeIcons.solidCommentDots,
-    //               color: colorScheme.onPrimaryContainer,
-    //             ),
-    //             Text(
-    //               '智能助手',
-    //               style: TextStyle(color: colorScheme.onPrimaryContainer),
-    //             ),
-    //           ],
-    //         ),
-    //       ),
-    //     ),
-    //     builder: (context, child) {
-    //       return Transform(
-    //         transform: Matrix4.identity()
-    //           ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
-    //           ..translate(.0, -((56.0 + 8.0) * 3) * logic.fabAnimation.value),
-    //         alignment: FractionalOffset.centerRight,
-    //         child: child,
-    //       );
-    //     },
-    //   );
-    // }
-
-    // Widget buildToMapButton() {
-    //   return AnimatedBuilder(
-    //     animation: logic.fabAnimation,
-    //     child: GestureDetector(
-    //       onTap: () async {
-    //         await logic.toMap();
-    //       },
-    //       child: Container(
-    //         decoration: ShapeDecoration(
-    //             shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
-    //             color: colorScheme.primaryContainer,
-    //             shadows: [
-    //               BoxShadow(
-    //                   color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
-    //                   offset: const Offset(0, 2),
-    //                   blurRadius: 2,
-    //                   spreadRadius: 2)
-    //             ]),
-    //         height: 56.0,
-    //         alignment: Alignment.center,
-    //         child: Row(
-    //           mainAxisSize: MainAxisSize.min,
-    //           spacing: 16.0,
-    //           children: [
-    //             FaIcon(
-    //               FontAwesomeIcons.solidMap,
-    //               color: colorScheme.onPrimaryContainer,
-    //             ),
-    //             Text(
-    //               '查看足迹',
-    //               style: TextStyle(color: colorScheme.onPrimaryContainer),
-    //             ),
-    //           ],
-    //         ),
-    //       ),
-    //     ),
-    //     builder: (context, child) {
-    //       return Transform(
-    //         transform: Matrix4.identity()
-    //           ..scale(pow(logic.fabAnimation.value, 2).toDouble(), logic.fabAnimation.value)
-    //           ..translate(.0, -((56.0 + 8.0) * 2) * logic.fabAnimation.value),
-    //         alignment: FractionalOffset.centerRight,
-    //         child: child,
-    //       );
-    //     },
-    //   );
-    // }
 
     Widget buildFabButton() {
       return AnimatedBuilder(
@@ -232,20 +175,21 @@ class HomePage extends StatelessWidget {
                 decoration: ShapeDecoration(
                     shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
                     color: Color.lerp(
-                        colorScheme.primaryContainer, colorScheme.tertiaryContainer, logic.fabAnimation.value),
+                        colorScheme.primaryContainer, colorScheme.surfaceContainerHighest, logic.fabAnimation.value),
                     shadows: [
                       BoxShadow(
-                          color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
-                          offset: const Offset(0, 2),
-                          blurRadius: 2,
-                          spreadRadius: 2)
+                        color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                        offset: const Offset(0, 2),
+                        blurRadius: 2,
+                        spreadRadius: 2,
+                      ),
                     ]),
                 child: Transform.rotate(
                     angle: 3 * pi / 4 * logic.fabAnimation.value,
                     child: Icon(
                       FontAwesomeIcons.plus,
-                      color: Color.lerp(
-                          colorScheme.onPrimaryContainer, colorScheme.onTertiaryContainer, logic.fabAnimation.value),
+                      color:
+                          Color.lerp(colorScheme.onPrimaryContainer, colorScheme.onSurface, logic.fabAnimation.value),
                     )),
               ),
             );
@@ -255,15 +199,26 @@ class HomePage extends StatelessWidget {
     Widget buildFab() {
       return state.navigatorIndex == 0
           ? SizedBox(
-              height: state.isFabExpanded || state.isToTopShow ? 56 + (56 + 8) * 1 : 56,
-              width: state.isFabExpanded ? 156 : 56,
+              height: 56 + 46 + 46 + 16,
+              width: 56 + 32 + textStyle.labelMedium!.fontSize! * 3,
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
                   buildToTopButton(),
-                  // buildToAiButton(),
-                  // buildToMapButton(),
-                  buildAddDiaryButton(),
+                  buildAnimatedActionButton(
+                      label: '纯文字',
+                      onTap: () async {
+                        await logic.toEditPage(type: DiaryType.text);
+                      },
+                      iconData: FontAwesomeIcons.font,
+                      index: 2),
+                  buildAnimatedActionButton(
+                      label: '富文本',
+                      onTap: () async {
+                        await logic.toEditPage(type: DiaryType.richText);
+                      },
+                      iconData: FontAwesomeIcons.feather,
+                      index: 1),
                   buildFabButton(),
                 ],
               ),

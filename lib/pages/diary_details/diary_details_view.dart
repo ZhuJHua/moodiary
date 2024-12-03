@@ -273,22 +273,24 @@ class DiaryDetailsPage extends StatelessWidget {
                 )
               : colorScheme;
           return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: customColorScheme,
-            ),
+            data: Theme.of(context).copyWith(colorScheme: customColorScheme),
             child: Scaffold(
               backgroundColor: customColorScheme.surface,
               body: CustomScrollView(
                 slivers: [
                   SliverAppBar(
-                    expandedHeight: state.aspect != null ? min(size.width / state.aspect!, size.height * 0.382) : null,
+                    expandedHeight: state.diaryHeader
+                        ? (state.aspect != null ? min(size.width / state.aspect!, size.height * 0.382) : null)
+                        : null,
                     title: Text(
                       state.diary.title,
                       style: textStyle.titleMedium,
                     ),
                     flexibleSpace: FlexibleSpaceBar(
                       collapseMode: CollapseMode.pin,
-                      background: state.diary.imageName.isNotEmpty ? buildImageView(customColorScheme) : null,
+                      background: state.diaryHeader
+                          ? (state.diary.imageName.isNotEmpty ? buildImageView(customColorScheme) : null)
+                          : null,
                     ),
                     pinned: true,
                     actions: [
@@ -368,6 +370,7 @@ class DiaryDetailsPage extends StatelessWidget {
                               controller: logic.quillController,
                               config: QuillEditorConfig(
                                 showCursor: false,
+                                customStyles: Utils().themeUtil.getInstance(context),
                                 embedBuilders: [
                                   ImageEmbedBuilder(isEdit: false),
                                   VideoEmbedBuilder(isEdit: false),

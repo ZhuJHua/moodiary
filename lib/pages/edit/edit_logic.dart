@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:mood_diary/common/values/diary_type.dart';
 import 'package:mood_diary/components/quill_embed/text_indent.dart';
 import 'package:mood_diary/components/quill_embed/video_embed.dart';
 import 'package:mood_diary/router/app_routes.dart';
@@ -71,8 +72,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   @override
   void onInit() {
-    _calculateDuration();
-
+    if (state.showWriteTime) _calculateDuration();
     WidgetsBinding.instance.addObserver(this);
     super.onInit();
   }
@@ -81,13 +81,15 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   void onReady() async {
     await _initEdit();
     quillController.addListener(_listenCount);
-    quillController.document.changes.listen((change) {
-      var operations = change.change.operations;
-      var lastOperation = operations.last;
-      if (lastOperation.key == 'insert' && lastOperation.value == '\n') {
-        insertNewLine();
-      }
-    });
+    if (state.firstLineIndent) {
+      quillController.document.changes.listen((change) {
+        var operations = change.change.operations;
+        var lastOperation = operations.last;
+        if (lastOperation.key == 'insert' && lastOperation.value == '\n') {
+          insertNewLine();
+        }
+      });
+    }
     super.onReady();
   }
 
@@ -106,18 +108,22 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> _initEdit() async {
-    //如果是新增
-    if (Get.arguments == 'new') {
+    //如果是新增，更具不同的分类展示不同的操作
+    if (Get.arguments.runtimeType == DiaryType) {
+      // 配置日记类型
+      state.type = Get.arguments as DiaryType;
+      Utils().logUtil.printInfo(state.type);
       quillController = QuillController.basic();
       state.currentDiary = Diary();
-      insertNewLine();
-      if (Utils().prefUtil.getValue<bool>('autoWeather') == true) {
+      if (state.firstLineIndent) insertNewLine();
+      if (state.autoWeather) {
         unawaited(getPositionAndWeather());
       }
     } else {
       //如果是编辑，将日记对象赋值
       state.isNew = false;
       var oldDiary = Get.arguments as Diary;
+      state.type = DiaryType.values.firstWhere((type) => type.value == oldDiary.type);
       state.currentDiary = oldDiary;
       // 获取分类名称
       if (oldDiary.categoryId != null) {
@@ -359,6 +365,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     state.currentDiary
       ..title = titleTextEditingController.text
       ..content = content
+      ..type = state.type.value
       ..contentText = _toPlainText()
       ..audioName = state.audioNameList
       ..imageName = imageNameMap.values.toList()

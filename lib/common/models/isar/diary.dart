@@ -63,6 +63,9 @@ class Diary {
   // 位置信息
   List<String> position = [];
 
+  // 类型，富文本还是纯文本
+  String? type;
+
   //封面颜色，如果有的话
   int? imageColor;
 
@@ -89,6 +92,7 @@ class Diary {
           const ListEquality().equals(videoName, other.videoName) &&
           const ListEquality().equals(tags, other.tags) &&
           const ListEquality().equals(position, other.position) &&
+          type == other.type &&
           imageColor == other.imageColor &&
           aspect == other.aspect;
 
@@ -108,6 +112,7 @@ class Diary {
         const ListEquality().hash(videoName) ^
         const ListEquality().hash(tags) ^
         const ListEquality().hash(position) ^
+        type.hashCode ^
         imageColor.hashCode ^
         aspect.hashCode;
   }
@@ -131,6 +136,7 @@ class Diary {
       ..videoName = List<String>.from(videoName)
       ..tags = List<String>.from(tags)
       ..position = List<String>.from(position)
+      ..type = type
       ..imageColor = imageColor
       ..aspect = aspect;
   }
@@ -152,6 +158,7 @@ class Diary {
       'videoName': videoName,
       'tags': tags,
       'position': position,
+      'type': type,
       'imageColor': imageColor,
       'aspect': aspect,
     };
@@ -173,6 +180,7 @@ class Diary {
       ..videoName = List<String>.from(json['videoName'] as List)
       ..tags = List<String>.from(json['tags'] as List)
       ..position = List<String>.from(json['position'] as List)
+      ..type = json['type'] as String
       ..imageColor = json['imageColor'] as int?
       ..aspect = (json['aspect'] as num?)?.toDouble();
   }

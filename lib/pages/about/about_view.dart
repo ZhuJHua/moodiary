@@ -54,10 +54,10 @@ class AboutPage extends StatelessWidget {
           GetBuilder<AboutLogic>(builder: (_) {
             return buildLogoTitle();
           }),
-          Card.filled(
+          Card.outlined(
             color: colorScheme.surfaceContainerLow,
             child: Column(
-              children: ListTile.divideTiles(tiles: [
+              children: [
                 GetBuilder<AboutLogic>(builder: (_) {
                   return ListTile(
                     leading: const Icon(Icons.update),
@@ -100,8 +100,7 @@ class AboutPage extends StatelessWidget {
                     await logic.toReportPage();
                   },
                 ),
-              ], context: context)
-                  .toList(),
+              ],
             ),
           ),
         ],

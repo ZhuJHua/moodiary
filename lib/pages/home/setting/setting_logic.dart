@@ -139,14 +139,14 @@ class SettingLogic extends GetxController {
     }
   }
 
-  // //更改字体
-  // Future<void> changeFontTheme(int value) async {
-  //   Get.backLegacy();
-  //   await Utils().prefUtil.setValue<int>('fontTheme', value);
-  //   state.fontTheme.value = value;
-  //   Get.changeTheme(await Utils().themeUtil.buildTheme(Brightness.light));
-  //   Get.changeTheme(await Utils().themeUtil.buildTheme(Brightness.dark));
-  // }
+  //更改字体
+  Future<void> changeFontTheme(int value) async {
+    Get.backLegacy();
+    await Utils().prefUtil.setValue<int>('fontTheme', value);
+    state.fontTheme.value = value;
+    Get.changeTheme(Utils().themeUtil.buildTheme(Brightness.light));
+    Get.changeTheme(Utils().themeUtil.buildTheme(Brightness.dark));
+  }
 
   Future<void> exportFile() async {
     Get.backLegacy();

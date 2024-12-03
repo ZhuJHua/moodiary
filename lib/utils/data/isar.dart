@@ -3,6 +3,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/models/map.dart';
+import 'package:mood_diary/common/values/diary_type.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
@@ -234,17 +235,43 @@ class IsarUtil {
     return await _isar.diarys.where().findAllAsync(offset: offset, limit: limit);
   }
 
+  /// 2.4.8 版本变更
+  /// 新增字段
+  /// 1.position 用于记录位置
   void mergeToV2_4_8(String dir) {
     var isar = Isar.open(
       schemas: [DiarySchema, CategorySchema],
       directory: dir,
     );
-    // 如果当前数据库版本小雨
     final countDiary = isar.diarys.where().count();
     for (var i = 0; i < countDiary; i += 50) {
       var diaries = isar.diarys.where().findAll(offset: i, limit: 50);
       isar.write((isar) {
         isar.diarys.putAll(diaries);
+      });
+    }
+    isar.close();
+  }
+
+  /// 2.6.0 版本变更
+  /// 新增字段
+  /// 1.type 类型字段，用于表示是纯文本还是富文本
+  /// 变更
+  void mergeToV2_6_0(String dir) {
+    var isar = Isar.open(
+      schemas: [DiarySchema, CategorySchema],
+      directory: dir,
+    );
+    final countDiary = isar.diarys.where().count();
+    for (var i = 0; i < countDiary; i += 50) {
+      var diaries = isar.diarys.where().findAll(offset: i, limit: 50);
+      isar.write((isar) {
+        for (var diary in diaries) {
+          if (diary.type == null) {
+            diary.type = DiaryType.richText.value;
+            isar.diarys.put(diary);
+          }
+        }
       });
     }
     isar.close();

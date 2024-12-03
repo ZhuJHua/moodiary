@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:mood_diary/utils/utils.dart';
 
 class DiaryDetailsState {
   Diary diary = Get.arguments[0];
@@ -11,6 +12,8 @@ class DiaryDetailsState {
   int? get imageColor => diary.imageColor;
 
   RxBool isScrolling = false.obs;
+
+  bool get diaryHeader => Utils().prefUtil.getValue<bool>('diaryHeader')!;
 
   DiaryDetailsState();
 }

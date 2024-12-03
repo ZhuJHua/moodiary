@@ -10,7 +10,6 @@ import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/category_add/category_add_view.dart';
-import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/components/lottie_modal/lottie_modal.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
 import 'package:mood_diary/components/quill_embed/image_embed.dart';
@@ -19,6 +18,7 @@ import 'package:mood_diary/components/quill_embed/video_embed.dart';
 import 'package:mood_diary/components/record_sheet/record_sheet_view.dart';
 import 'package:mood_diary/utils/utils.dart';
 
+import '../../common/values/diary_type.dart';
 import '../../components/quill_embed/audio_embed.dart';
 import 'edit_logic.dart';
 
@@ -629,7 +629,7 @@ class EditPage extends StatelessWidget {
     Widget buildTimer() {
       return Container(
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow.withAlpha(220),
+          color: colorScheme.surfaceContainer.withAlpha(240),
           borderRadius: AppBorderRadius.smallBorderRadius,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -654,7 +654,7 @@ class EditPage extends StatelessWidget {
     Widget buildCount() {
       return Container(
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow.withAlpha(220),
+          color: colorScheme.surfaceContainer.withAlpha(240),
           borderRadius: AppBorderRadius.smallBorderRadius,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -677,53 +677,42 @@ class EditPage extends StatelessWidget {
     }
 
     Widget buildTitle() {
-      return Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerLow,
-          borderRadius: AppBorderRadius.smallBorderRadius,
-        ),
-        child: AutoSizeTextField(
-          controller: logic.titleTextEditingController,
-          focusNode: logic.titleFocusNode,
-          textAlign: TextAlign.center,
-          maxLines: 1,
-          style: textStyle.titleMedium!.copyWith(fontWeight: FontWeight.bold),
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            border: UnderlineInputBorder(borderSide: BorderSide.none),
-            hintText: '标题',
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
-          ),
+      return AutoSizeTextField(
+        controller: logic.titleTextEditingController,
+        focusNode: logic.titleFocusNode,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        style: textStyle.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+        textInputAction: TextInputAction.done,
+        decoration: const InputDecoration(
+          border: UnderlineInputBorder(borderSide: BorderSide.none),
+          hintText: '标题',
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
         ),
       );
     }
 
     Widget buildToolBar() {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: TooltipTheme(
-          data: const TooltipThemeData(preferBelow: false),
-          child: QuillSimpleToolbar(
-            controller: logic.quillController,
-            config: QuillSimpleToolbarConfig(
-              showFontFamily: false,
-              showFontSize: false,
-              showColorButton: false,
-              showBackgroundColorButton: false,
-              showAlignmentButtons: true,
-              showClipboardPaste: false,
-              showClipboardCut: false,
-              showClipboardCopy: false,
-              showIndent: false,
-              showDividers: false,
-              headerStyleType: HeaderStyleType.buttons,
-              multiRowsDisplay: false,
-              showLink: false,
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerLow,
-                borderRadius: AppBorderRadius.smallBorderRadius,
-              ),
-              embedButtons: [
+      return TooltipTheme(
+        data: const TooltipThemeData(preferBelow: false),
+        child: QuillSimpleToolbar(
+          controller: logic.quillController,
+          config: QuillSimpleToolbarConfig(
+            showFontFamily: false,
+            showFontSize: false,
+            showColorButton: false,
+            showBackgroundColorButton: false,
+            showAlignmentButtons: true,
+            showClipboardPaste: false,
+            showClipboardCut: false,
+            showClipboardCopy: false,
+            showIndent: false,
+            showDividers: false,
+            headerStyleType: HeaderStyleType.buttons,
+            multiRowsDisplay: false,
+            showLink: false,
+            embedButtons: [
+              if (state.type == DiaryType.richText)
                 ...FlutterQuillEmbeds.toolbarButtons(
                   imageButtonOptions: QuillToolbarImageButtonOptions(
                     imageButtonConfig: QuillToolbarImageConfig(
@@ -742,6 +731,7 @@ class EditPage extends StatelessWidget {
                     ),
                   ),
                 ),
+              if (state.type == DiaryType.richText)
                 (
                   BuildContext context,
                   EmbedButtonContext embedContext,
@@ -764,25 +754,41 @@ class EditPage extends StatelessWidget {
                     },
                   );
                 },
-                (
-                  BuildContext context,
-                  EmbedButtonContext embedContext,
-                ) {
-                  return IconButton(
-                    icon: const Icon(
-                      Icons.format_indent_increase,
-                      size: 24,
-                    ),
-                    tooltip: 'Insert Newline',
-                    onPressed: () async {
-                      logic.insertNewLine();
-                    },
-                  );
-                },
-              ],
-            ),
+              (
+                BuildContext context,
+                EmbedButtonContext embedContext,
+              ) {
+                return IconButton(
+                  icon: const Icon(
+                    Icons.format_indent_increase,
+                    size: 24,
+                  ),
+                  tooltip: 'Insert Newline',
+                  onPressed: () async {
+                    logic.insertNewLine();
+                  },
+                );
+              },
+            ],
           ),
         ),
+      );
+    }
+
+    Widget buildMoreButton() {
+      return IconButton.filled(
+        icon: const Icon(Icons.keyboard_command_key),
+        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (context) {
+              return buildDetail();
+            },
+            showDragHandle: true,
+            useSafeArea: true,
+          );
+        },
       );
     }
 
@@ -802,10 +808,13 @@ class EditPage extends StatelessWidget {
                     expands: true,
                     paintCursorAboveText: true,
                     keyboardAppearance: CupertinoTheme.maybeBrightnessOf(context) ?? Theme.of(context).brightness,
+                    customStyles: Utils().themeUtil.getInstance(context),
                     embedBuilders: [
-                      ImageEmbedBuilder(isEdit: true),
-                      VideoEmbedBuilder(isEdit: true),
-                      AudioEmbedBuilder(isEdit: true),
+                      if (state.type == DiaryType.richText) ...[
+                        ImageEmbedBuilder(isEdit: true),
+                        VideoEmbedBuilder(isEdit: true),
+                        AudioEmbedBuilder(isEdit: true),
+                      ],
                       TextIndentEmbedBuilder(isEdit: true),
                     ],
                   ),
@@ -818,14 +827,23 @@ class EditPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       spacing: 8.0,
                       children: [
-                        buildTimer(),
-                        buildCount(),
+                        if (state.showWriteTime) buildTimer(),
+                        if (state.showWordCount) buildCount(),
                       ],
                     )),
               ],
             ),
           ),
-          buildToolBar()
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              spacing: 8.0,
+              children: [
+                buildMoreButton(),
+                Expanded(child: buildToolBar()),
+              ],
+            ),
+          )
         ],
       );
     }
@@ -856,49 +874,8 @@ class EditPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  body: state.isInit
-                      ? (size.aspectRatio < 1.0
-                          ? PageView(
-                              controller: logic.pageController,
-                              physics: const NeverScrollableScrollPhysics(),
-                              children: [
-                                KeepAliveWrapper(child: buildWriting()),
-                                KeepAliveWrapper(child: buildDetail())
-                              ],
-                            )
-                          : Row(
-                              children: [
-                                Flexible(flex: 4, child: SafeArea(child: buildWriting())),
-                                Flexible(flex: 3, child: buildDetail())
-                              ],
-                            ))
-                      : const Center(child: CircularProgressIndicator()),
-                  bottomNavigationBar: size.aspectRatio < 1.0
-                      ? GetBuilder<EditLogic>(
-                          id: 'NavigationBar',
-                          builder: (_) {
-                            return NavigationBar(
-                              destinations: const [
-                                NavigationDestination(
-                                  icon: Icon(Icons.edit_outlined),
-                                  label: '撰写',
-                                  selectedIcon: Icon(Icons.edit),
-                                ),
-                                NavigationDestination(
-                                  icon: Icon(Icons.more_outlined),
-                                  label: '更多',
-                                  selectedIcon: Icon(Icons.more),
-                                )
-                              ],
-                              labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-                              height: 56.0,
-                              selectedIndex: state.tabIndex,
-                              onDestinationSelected: (index) {
-                                logic.selectTabView(index);
-                              },
-                            );
-                          })
-                      : null,
+                  body:
+                      SafeArea(child: state.isInit ? buildWriting() : const Center(child: CircularProgressIndicator())),
                 );
               }),
           GetBuilder<EditLogic>(
