@@ -15,18 +15,18 @@ class NoticeUtil {
       late final colorScheme = Theme.of(Get.context!).colorScheme;
       _fToast.removeCustomToast();
       _fToast.showToast(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16.0),
-              color: colorScheme.primaryContainer.withAlpha(240),
-            ),
-            child: Text(
-              message,
-              style: TextStyle(fontSize: 16.0, color: colorScheme.onPrimaryContainer),
-            ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.0),
+            color: colorScheme.primaryContainer.withAlpha(240),
           ),
-          gravity: ToastGravity.CENTER,
+          child: Text(
+            message,
+            style: TextStyle(fontSize: 16.0, color: colorScheme.onPrimaryContainer),
+          ),
+        ),
+        gravity: ToastGravity.CENTER,
       );
     });
   }

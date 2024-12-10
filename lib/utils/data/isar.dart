@@ -271,6 +271,8 @@ class IsarUtil {
             diary.type = DiaryType.richText.value;
             isar.diarys.put(diary);
           }
+          diary.lastModified = diary.time;
+          isar.diarys.put(diary);
         }
       });
     }

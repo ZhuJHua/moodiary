@@ -2,7 +2,7 @@ import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:flutter_quill/flutter_quill_internal.dart';
+import 'package:flutter_quill/internal.dart';
 import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/utils/utils.dart';
 
@@ -83,8 +83,9 @@ class ThemeUtil {
       colorScheme: ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: brightness,
-        dynamicSchemeVariant: color == 4 ? DynamicSchemeVariant.fidelity : DynamicSchemeVariant.tonalSpot,
+        dynamicSchemeVariant: color == 4 ? DynamicSchemeVariant.monochrome : DynamicSchemeVariant.tonalSpot,
       ),
+      brightness: brightness,
     );
 
     // 使用系统中文字体的扩展

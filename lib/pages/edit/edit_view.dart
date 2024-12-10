@@ -863,6 +863,8 @@ class EditPage extends StatelessWidget {
                 return Scaffold(
                   appBar: AppBar(
                     title: buildTitle(),
+                    titleSpacing: .0,
+                    centerTitle: true,
                     actions: [
                       IconButton(
                         icon: const Icon(Icons.check),

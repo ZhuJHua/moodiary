@@ -22,6 +22,7 @@ class SettingPage extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
+    final size = MediaQuery.sizeOf(context);
 
     Widget buildDashboard() {
       return const DashboardComponent();
@@ -507,34 +508,28 @@ class SettingPage extends StatelessWidget {
       assignId: true,
       builder: (_) {
         return CustomScrollView(
+          cacheExtent: size.height * 2,
           slivers: [
             SliverAppBar(
               title: Text(i18n.homeNavigatorSetting),
               pinned: true,
             ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildDashboard()),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildFeature()),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildData()),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildDisplay()),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildPrivacy()),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildMore()),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 4.0,
+                  children: [
+                    buildDashboard(),
+                    buildFeature(),
+                    buildData(),
+                    buildDisplay(),
+                    buildPrivacy(),
+                    buildMore(),
+                  ],
+                ),
+              ),
             ),
           ],
         );

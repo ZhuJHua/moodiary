@@ -84,14 +84,13 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   //新增一篇日记
   Future<void> toEditPage({required DiaryType type}) async {
     //同时关闭fab
-    await HapticFeedback.selectionClick();
-    fabAnimationController.reset();
-    state.isFabExpanded = false;
-    update(['Fab']);
+    HapticFeedback.selectionClick();
 
     /// 需要注意，返回值为 '' 时才是没有选择分类，而返回值为 null 时，是没有进行操作直接返回
     var res = await Get.toNamed(AppRoutes.editPage, arguments: type);
-    Utils().logUtil.printInfo(res);
+    fabAnimationController.reset();
+    state.isFabExpanded = false;
+    update(['Fab']);
     if (res != null) {
       if (res == '') {
         await diaryLogic.updateDiary(null);

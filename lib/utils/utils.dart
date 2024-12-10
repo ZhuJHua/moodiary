@@ -14,6 +14,7 @@ import 'package:mood_diary/utils/permission_util.dart';
 import 'package:mood_diary/utils/signature_util.dart';
 import 'package:mood_diary/utils/theme_util.dart';
 import 'package:mood_diary/utils/update_util.dart';
+import 'package:mood_diary/utils/webdav_util.dart';
 
 import 'array_util.dart';
 
@@ -57,4 +58,6 @@ class Utils {
   late final PrefUtil prefUtil = PrefUtil();
 
   late final SupabaseUtil supabaseUtil = SupabaseUtil();
+
+  late final WebDavUtil webDavUtil = WebDavUtil();
 }

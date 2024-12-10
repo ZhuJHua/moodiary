@@ -38,6 +38,9 @@ class Diary {
   @Index()
   DateTime time = DateTime.now();
 
+  //上次更新的时间，用于增量同步
+  DateTime lastModified = DateTime.now();
+
   //是否显示，用于回收站
   @Index()
   bool show = true;
@@ -84,6 +87,7 @@ class Diary {
           content == other.content &&
           contentText == other.contentText &&
           time == other.time &&
+          lastModified == other.lastModified &&
           show == other.show &&
           mood == other.mood &&
           const ListEquality().equals(weather, other.weather) &&
@@ -104,6 +108,7 @@ class Diary {
         content.hashCode ^
         contentText.hashCode ^
         time.hashCode ^
+        lastModified.hashCode ^
         show.hashCode ^
         mood.hashCode ^
         const ListEquality().hash(weather) ^
@@ -128,6 +133,7 @@ class Diary {
       ..content = content
       ..contentText = contentText
       ..time = DateTime.fromMillisecondsSinceEpoch(time.millisecondsSinceEpoch)
+      ..lastModified = DateTime.fromMillisecondsSinceEpoch(lastModified.millisecondsSinceEpoch)
       ..show = show
       ..mood = mood
       ..weather = List<String>.from(weather)
@@ -150,6 +156,7 @@ class Diary {
       'content': content,
       'contentText': contentText,
       'time': time.toIso8601String(),
+      'lastModified': lastModified.toIso8601String(),
       'show': show,
       'mood': mood,
       'weather': weather,
@@ -172,6 +179,7 @@ class Diary {
       ..content = json['content'] as String
       ..contentText = json['contentText'] as String
       ..time = DateTime.parse(json['time'] as String)
+      ..lastModified = DateTime.parse(json['lastModified'] as String)
       ..show = json['show'] as bool
       ..mood = (json['mood'] as num).toDouble()
       ..weather = List<String>.from(json['weather'] as List)

@@ -22,6 +22,7 @@ import 'components/window_buttons/window_buttons.dart';
 
 Future<void> initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // GestureBinding.instance.resamplingEnabled = true;
   //获取系统语言
   await findSystemLocale();
   //初始化pref
@@ -33,6 +34,7 @@ Future<void> initSystem() async {
   //地图缓存
   await FMTCObjectBoxBackend().initialise();
   await const FMTCStore('mapStore').manage.create();
+  unawaited(Utils().webDavUtil.initWebDav());
   unawaited(RustLib.init());
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
@@ -64,7 +66,7 @@ String getInitialRoute() {
 
 void main() async {
   await initSystem();
-  FlutterError.onError = (details) {
+  FlutterError.onError = (details) async {
     Utils().logUtil.printError('Flutter error', error: details.exception, stackTrace: details.stack);
     if (details.exceptionAsString().contains('Render')) {
       Utils().noticeUtil.showBug(message: '布局异常！');

@@ -111,10 +111,11 @@ class LocalSendComponent extends StatelessWidget {
       );
     }
 
-    return GetBuilder<LocalSendLogic>(
-      assignId: true,
-      builder: (_) {
-        return Padding(
+    return ExpansionTile(
+      leading: const Icon(Icons.wifi_tethering_rounded),
+      title: const Text('局域网传输'),
+      children: [
+        Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -142,8 +143,8 @@ class LocalSendComponent extends StatelessWidget {
                   }),
             ],
           ),
-        );
-      },
+        )
+      ],
     );
   }
 }
