@@ -11,5 +11,7 @@ class WebDavState {
 
   Rx<WebDavConnectivityStatus> connectivityStatus = WebDavConnectivityStatus.connecting.obs;
 
+  RxBool autoSync = Utils().prefUtil.getValue<bool>('autoSync')!.obs;
+
   WebDavState();
 }

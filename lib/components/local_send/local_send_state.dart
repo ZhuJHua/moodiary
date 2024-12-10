@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 
 class LocalSendState {
-  String wifiSSID = '';
 
   String deviceIpAddress = '';
 

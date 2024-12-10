@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/utils/utils.dart';
 
 import '../../common/values/webdav.dart';
 import 'web_dav_dashboard_logic.dart';
@@ -31,6 +32,9 @@ class WebDavDashboardComponent extends StatelessWidget {
       title: const Text('当前任务队列'),
       subtitle: Obx(() {
         String status;
+        if (Utils().webDavUtil.syncingDiaries.isNotEmpty) {
+          return const Text('自动同步中');
+        }
         if (isUploading.value && isDownloading.value) {
           status = '上传、下载中';
         } else if (isUploading.value) {
@@ -109,7 +113,11 @@ class WebDavDashboardComponent extends StatelessWidget {
           }),
         ],
       ),
-      trailing: FilledButton(onPressed: onTap, child: const FaIcon(FontAwesomeIcons.arrowRightArrowLeft)),
+      trailing: Obx(() {
+        return FilledButton(
+            onPressed: Utils().webDavUtil.syncingDiaries.isNotEmpty ? null : onTap,
+            child: const FaIcon(FontAwesomeIcons.arrowRightArrowLeft));
+      }),
     );
   }
 

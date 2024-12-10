@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' as flutter;
+import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/values/webdav.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -10,7 +11,7 @@ import 'package:webdav_client/webdav_client.dart' as webdav;
 import '../common/models/isar/diary.dart';
 
 class WebDavUtil {
-  Set<String> syncingDiaries = {};
+  RxSet<String> syncingDiaries = <String>{}.obs;
 
   webdav.Client? _client;
 
@@ -33,7 +34,6 @@ class WebDavUtil {
       'accept-charset': 'utf-8',
       'Content-Type': 'application/json',
     });
-    await initDir();
   }
 
   Future<bool> checkConnectivity() async {
@@ -115,8 +115,8 @@ class WebDavUtil {
       if (localLastModified == null || serverLastModified.compareTo(localLastModified) > 0) {
         // 本地不存在该日记，下载
         syncingDiaries.add(diaryId);
-        final updatedDiary = await downloadDiary(diaryId); // 下载日记的实现
-        await saveLocalDiary(updatedDiary); // 保存到本地的实现
+        final updatedDiary = await _downloadDiary(diaryId); // 下载日记的实现
+        await _saveLocalDiary(updatedDiary); // 保存到本地的实现
         onDownload?.call();
         syncingDiaries.remove(diaryId);
       }
@@ -133,7 +133,7 @@ class WebDavUtil {
       if (serverLastModified == null || serverLastModified.compareTo(localLastModified) < 0) {
         // 服务器不存在该日记，或服务器版本较旧
         syncingDiaries.add(diary.id);
-        await uploadDiary(diary); // 上传日记的实现
+        await _uploadDiary(diary); // 上传日记的实现
         onUpload?.call();
         updatedSyncData[diary.id] = localLastModified;
         syncingDiaries.remove(diary.id);
@@ -145,12 +145,40 @@ class WebDavUtil {
     onComplete?.call();
   }
 
-  Future<void> uploadDiary(Diary diary) async {
+  Future<void> uploadSingleDiary(
+    Diary diary, {
+    flutter.VoidCallback? onUpload,
+    flutter.VoidCallback? onComplete,
+  }) async {
+    if (syncingDiaries.contains(diary.id)) {
+      return; // 避免重复上传
+    }
+
+    syncingDiaries.add(diary.id);
+    try {
+      // 上传日记到服务器
+      await _uploadDiary(diary); // 上传日记的实现
+
+      // 更新服务器同步数据
+      final serverSyncData = await fetchServerSyncData();
+      serverSyncData[diary.id] = diary.lastModified.toIso8601String();
+      await updateServerSyncData(serverSyncData);
+
+      onUpload?.call();
+    } catch (e) {
+      Utils().logUtil.printInfo('Failed to upload diary: $e');
+    } finally {
+      syncingDiaries.remove(diary.id);
+      onComplete?.call(); // 调用完成回调
+    }
+  }
+
+  Future<void> _uploadDiary(Diary diary) async {
     // 检查并上传分类
     if (diary.categoryId != null) {
       final categoryName = Utils().isarUtil.getCategoryName(diary.categoryId!)?.categoryName;
       if (categoryName != null) {
-        await uploadCategory(diary.categoryId!, categoryName);
+        await _uploadCategory(diary.categoryId!, categoryName);
       }
     }
 
@@ -177,9 +205,15 @@ class WebDavUtil {
   }
 
   Future<void> _uploadFiles(List<String> fileNames, String resourcePath, String type) async {
+    // 检查服务器是否已经存在该文件
+    final existingFiles = await _client!.readDir(resourcePath);
+
     for (final fileName in fileNames) {
       final filePath = Utils().fileUtil.getRealPath(type, fileName);
-
+      if (existingFiles.any((file) => file.name == fileName)) {
+        Utils().logUtil.printInfo('$type file already exists: $fileName');
+        continue;
+      }
       try {
         final fileBytes = await File(filePath).readAsBytes();
         _client!.setHeaders({
@@ -195,7 +229,7 @@ class WebDavUtil {
     }
   }
 
-  Future<Diary> downloadDiary(String diaryId) async {
+  Future<Diary> _downloadDiary(String diaryId) async {
     // 下载日记 JSON 数据
     final diaryPath = '${WebDavOptions.diaryPath}/$diaryId.json';
     late Diary diary;
@@ -212,7 +246,7 @@ class WebDavUtil {
     // 同步分类
     if (diary.categoryId != null) {
       try {
-        final category = await downloadCategory(diary.categoryId!);
+        final category = await _downloadCategory(diary.categoryId!);
         Utils().isarUtil.insertACategory(Category()
           ..id = category['id']!
           ..categoryName = category['name']!);
@@ -250,12 +284,12 @@ class WebDavUtil {
     return localFileNames;
   }
 
-  Future<void> saveLocalDiary(Diary diary) async {
+  Future<void> _saveLocalDiary(Diary diary) async {
     // 使用 Isar 或文件存储
     await Utils().isarUtil.insertADiary(diary);
   }
 
-  Future<void> uploadCategory(String categoryId, String categoryName) async {
+  Future<void> _uploadCategory(String categoryId, String categoryName) async {
     final categoryPath = '${WebDavOptions.categoryPath}/$categoryId.json';
     final categoryData = jsonEncode({'id': categoryId, 'name': categoryName});
 
@@ -272,7 +306,7 @@ class WebDavUtil {
     }
   }
 
-  Future<Map<String, String>> downloadCategory(String categoryId) async {
+  Future<Map<String, String>> _downloadCategory(String categoryId) async {
     final categoryPath = '${WebDavOptions.categoryPath}/$categoryId.json';
 
     try {

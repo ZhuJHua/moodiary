@@ -35,7 +35,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
 
   @override
   void onReady() {
-    unawaited(Utils().updateUtil.checkShouldUpdate(Utils().prefUtil.getValue<String>('appVersion')!.split('+')[0]));
+    //unawaited(Utils().updateUtil.checkShouldUpdate(Utils().prefUtil.getValue<String>('appVersion')!.split('+')[0]));
     // unawaited(getHitokoto());
     super.onReady();
   }
@@ -85,9 +85,16 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   Future<void> toEditPage({required DiaryType type}) async {
     //同时关闭fab
     HapticFeedback.selectionClick();
+    // 获取当前的分类id
+    String? categoryId;
+    if (diaryLogic.tabController.index == 0) {
+      categoryId = null;
+    } else {
+      categoryId = diaryLogic.state.categoryList[diaryLogic.tabController.index - 1].id;
+    }
 
     /// 需要注意，返回值为 '' 时才是没有选择分类，而返回值为 null 时，是没有进行操作直接返回
-    var res = await Get.toNamed(AppRoutes.editPage, arguments: type);
+    var res = await Get.toNamed(AppRoutes.editPage, arguments: [type, categoryId]);
     fabAnimationController.reset();
     state.isFabExpanded = false;
     update(['Fab']);

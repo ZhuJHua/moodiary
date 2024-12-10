@@ -10,7 +10,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   dynamic_color
   fc_native_video_thumbnail
   file_selector_windows
-  flutter_inappwebview_windows
         gal
   geolocator_windows
   isar_flutter_libs
@@ -20,6 +19,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   objectbox_flutter_libs
   permission_handler_windows
   record_windows
+        rive_common
   screen_brightness_windows
   share_plus
   url_launcher_windows

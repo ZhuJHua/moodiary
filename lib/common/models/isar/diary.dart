@@ -66,8 +66,8 @@ class Diary {
   // 位置信息
   List<String> position = [];
 
-  // 类型，富文本还是纯文本
-  String? type;
+  // 类型，富文本还是纯文本，不会为空，延迟加载
+  late String type;
 
   //封面颜色，如果有的话
   int? imageColor;

@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mood_diary/common/values/border.dart';
@@ -24,6 +23,21 @@ import 'edit_logic.dart';
 
 class EditPage extends StatelessWidget {
   const EditPage({super.key});
+
+  _buildToolBarButton({
+    required IconData iconData,
+    required String tooltip,
+    required Function() onPressed,
+  }) {
+    return IconButton(
+      icon: Icon(
+        iconData,
+        size: 24,
+      ),
+      tooltip: tooltip,
+      onPressed: onPressed,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -369,7 +383,6 @@ class EditPage extends StatelessWidget {
 
     Widget buildMoodSlider() {
       return Container(
-        constraints: const BoxConstraints(maxWidth: 400),
         padding: const EdgeInsets.only(top: 8.0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -712,61 +725,58 @@ class EditPage extends StatelessWidget {
             multiRowsDisplay: false,
             showLink: false,
             embedButtons: [
-              if (state.type == DiaryType.richText)
-                ...FlutterQuillEmbeds.toolbarButtons(
-                  imageButtonOptions: QuillToolbarImageButtonOptions(
-                    imageButtonConfig: QuillToolbarImageConfig(
-                      onRequestPickImage: (_) async {
-                        var imagePath = await Get.dialog(buildPickImage());
-                        return imagePath as String?;
-                      },
-                    ),
-                  ),
-                  videoButtonOptions: QuillToolbarVideoButtonOptions(
-                    videoConfig: QuillToolbarVideoConfig(
-                      onRequestPickVideo: (_) async {
-                        var videoPath = await Get.dialog(buildPickVideo());
-                        return videoPath as String?;
-                      },
-                    ),
-                  ),
-                ),
-              if (state.type == DiaryType.richText)
-                (
-                  BuildContext context,
-                  EmbedButtonContext embedContext,
-                ) {
-                  return IconButton(
-                    icon: const Icon(
-                      Icons.audiotrack,
-                      size: 24,
-                    ),
-                    tooltip: 'Insert Audio',
+              if (state.type == DiaryType.richText) ...[
+                (context, embedContext) {
+                  return _buildToolBarButton(
+                    iconData: Icons.image,
+                    tooltip: 'Insert Image',
                     onPressed: () async {
-                      await showModalBottomSheet(
-                          context: context,
-                          showDragHandle: true,
-                          useSafeArea: true,
-                          isScrollControlled: true,
-                          builder: (context) {
-                            return const RecordSheetComponent();
-                          });
+                      await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return buildPickImage();
+                        },
+                      );
                     },
                   );
                 },
-              (
-                BuildContext context,
-                EmbedButtonContext embedContext,
-              ) {
-                return IconButton(
-                  icon: const Icon(
-                    Icons.format_indent_increase,
-                    size: 24,
-                  ),
-                  tooltip: 'Insert Newline',
-                  onPressed: () async {
-                    logic.insertNewLine();
-                  },
+                (context, embedContext) {
+                  return _buildToolBarButton(
+                    iconData: Icons.movie,
+                    tooltip: 'Insert Video',
+                    onPressed: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (context) {
+                          return buildPickVideo();
+                        },
+                      );
+                    },
+                  );
+                },
+                (context, embedContext) {
+                  return _buildToolBarButton(
+                    iconData: Icons.audiotrack,
+                    tooltip: 'Insert Audio',
+                    onPressed: () async {
+                      await showModalBottomSheet(
+                        context: context,
+                        showDragHandle: true,
+                        useSafeArea: true,
+                        isScrollControlled: true,
+                        builder: (context) {
+                          return const RecordSheetComponent();
+                        },
+                      );
+                    },
+                  );
+                },
+              ],
+              (context, embedContext) {
+                return _buildToolBarButton(
+                  iconData: Icons.format_indent_increase,
+                  tooltip: 'Text Indent',
+                  onPressed: logic.insertNewLine,
                 );
               },
             ],

@@ -11,6 +11,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/diary_type.dart';
+import 'package:mood_diary/components/keyboard_listener/keyboard_listener.dart';
 import 'package:mood_diary/components/quill_embed/text_indent.dart';
 import 'package:mood_diary/components/quill_embed/video_embed.dart';
 import 'package:mood_diary/router/app_routes.dart';
@@ -23,7 +24,7 @@ import '../../components/quill_embed/audio_embed.dart';
 import '../../components/quill_embed/image_embed.dart';
 import 'edit_state.dart';
 
-class EditLogic extends GetxController with WidgetsBindingObserver {
+class EditLogic extends GetxController {
   final EditState state = EditState();
 
   //标签控制器
@@ -31,7 +32,6 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   //标题
   late TextEditingController titleTextEditingController = TextEditingController();
-  late PageController pageController = PageController();
 
   //编辑器控制器
   late QuillController quillController;
@@ -39,41 +39,29 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   //聚焦对象
   late FocusNode contentFocusNode = FocusNode();
   late FocusNode titleFocusNode = FocusNode();
-  List<double> heightList = [];
   Timer? _timer;
 
-  @override
-  void didChangeMetrics() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      var height = MediaQuery.viewInsetsOf(Get.context!).bottom;
-      if (heightList.isNotEmpty && height != heightList.last) {
-        if (height > heightList.last && state.keyboardState != KeyboardState.opening) {
-          state.keyboardState = KeyboardState.opening;
-          //正在打开
-        } else if (height < heightList.last && state.keyboardState != KeyboardState.closing) {
-          state.keyboardState = KeyboardState.closing;
-          //正在关闭
-          unFocus();
-        }
-      }
-      // 只在高度变化时记录高度
-      if (heightList.isEmpty || height != heightList.last) {
-        heightList.add(height);
-      }
-      // 当高度为0且键盘经历了开启关闭过程时，认为键盘已完全关闭
-      if (height == 0 && state.keyboardState != KeyboardState.closed) {
-        state.keyboardState = KeyboardState.closed;
-        heightList.clear();
-        //已经关闭
-      }
-    });
-    super.didChangeMetrics();
-  }
+  late final KeyboardObserver keyboardObserver;
 
   @override
   void onInit() {
     if (state.showWriteTime) _calculateDuration();
-    WidgetsBinding.instance.addObserver(this);
+    keyboardObserver = KeyboardObserver(
+        onHeightChanged: (_) {},
+        onStateChanged: (state) {
+          switch (state) {
+            case KeyboardState.opening:
+              break;
+            case KeyboardState.closing:
+              unFocus();
+              break;
+            case KeyboardState.closed:
+              break;
+            case KeyboardState.unknown:
+              break;
+          }
+        });
+    keyboardObserver.start();
     super.onInit();
   }
 
@@ -95,12 +83,11 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   @override
   void onClose() {
-    WidgetsBinding.instance.removeObserver(this);
+    keyboardObserver.stop();
     tagTextEditingController.dispose();
     titleTextEditingController.dispose();
     titleFocusNode.dispose();
     contentFocusNode.dispose();
-    pageController.dispose();
     quillController.dispose();
     _timer?.cancel();
     _timer = null;
@@ -109,16 +96,16 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   Future<void> _initEdit() async {
     //如果是新增，更具不同的分类展示不同的操作
-    if (Get.arguments.runtimeType == DiaryType) {
+    if (Get.arguments.runtimeType == List<Object?>) {
       // 配置日记类型
-      state.type = Get.arguments as DiaryType;
-      Utils().logUtil.printInfo(state.type);
+      state.type = Get.arguments[0] as DiaryType;
       quillController = QuillController.basic();
       state.currentDiary = Diary();
       if (state.firstLineIndent) insertNewLine();
       if (state.autoWeather) {
         unawaited(getPositionAndWeather());
       }
+      if (state.autoCategory) selectCategory(Get.arguments[1] as String?);
     } else {
       //如果是编辑，将日记对象赋值
       state.isNew = false;
@@ -191,9 +178,23 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     quillController.replaceText(index, length, const TextIndentEmbed('2'), TextSelection.collapsed(offset: index + 1));
   }
 
+  void insertNewImage({required String imagePath}) {
+    final imageBlock = ImageBlockEmbed.fromName(imagePath);
+    final index = quillController.selection.baseOffset;
+    final length = quillController.selection.extentOffset - index;
+    quillController.replaceText(index, length, imageBlock, TextSelection.collapsed(offset: index + 1));
+  }
+
+  void insertNewVideo({required String videoPath}) {
+    final videoBlock = VideoBlockEmbed.fromName(videoPath);
+    final index = quillController.selection.baseOffset;
+    final length = quillController.selection.extentOffset - index;
+    quillController.replaceText(index, length, videoBlock, TextSelection.collapsed(offset: index + 1));
+  }
+
   Future<void> addNewImage(XFile xFile) async {
-    //图片列表中新增一个
     state.imageFileList.add(xFile);
+    insertNewImage(imagePath: xFile.path);
     update(['Image']);
   }
 
@@ -204,39 +205,34 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     if (photo != null) {
       Get.backLegacy();
       await addNewImage(photo);
-      final imageBlock = ImageBlockEmbed.fromName(photo.path);
-      final index = quillController.selection.baseOffset;
-      final length = quillController.selection.extentOffset - index;
-      quillController.replaceText(index, length, imageBlock, TextSelection.collapsed(offset: index + 1));
     } else {
-      //弹出一个提示
-      Get.backLegacy();
       Utils().noticeUtil.showToast('取消图片选择');
     }
   }
 
   //画图照片
   Future<void> pickDraw(Uint8List dataList) async {
+    Get.backLegacy();
     var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.png');
-    await addNewImage(XFile.fromData(dataList, path: path));
-    Get.backLegacy(result: path);
+    addNewImage(XFile.fromData(dataList, path: path)..saveTo(path));
   }
 
   //网络图片
   Future<void> networkImage() async {
+    Get.backLegacy();
     Utils().noticeUtil.showToast('图片获取中');
     var imageUrl = await Api().updateImageUrl();
-    String? result;
-    if (imageUrl != null) {
-      var imageData = await Api().getImageData(imageUrl.first);
-      if (imageData != null) {
-        var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.png');
-        addNewImage(XFile.fromData(imageData, path: path)..saveTo(path));
-        result = path;
-      }
+    if (imageUrl == null) {
+      Utils().noticeUtil.showToast('图片获取失败');
+      return;
     }
-    //关闭dialog
-    Get.backLegacy(result: result);
+    var imageData = await Api().getImageData(imageUrl.first);
+    if (imageData == null) {
+      Utils().noticeUtil.showToast('图片获取失败');
+      return;
+    }
+    var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.png');
+    addNewImage(XFile.fromData(imageData, path: path)..saveTo(path));
   }
 
   //相册选择多张照片
@@ -263,6 +259,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   Future<void> addNewVideo(XFile xFile) async {
     //视频list中新增一个
     state.videoFileList.add(xFile);
+    insertNewVideo(videoPath: xFile.path);
     update(['Video']);
   }
 
@@ -273,13 +270,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     if (video != null) {
       Get.backLegacy();
       await addNewVideo(video);
-      final videoBlock = VideoBlockEmbed.fromName(video.path);
-      final index = quillController.selection.baseOffset;
-      final length = quillController.selection.extentOffset - index;
-      quillController.replaceText(index, length, videoBlock, TextSelection.collapsed(offset: index + 1));
     } else {
-      Get.backLegacy();
-      //弹出一个提示
       Utils().noticeUtil.showToast('取消视频选择');
     }
   }
@@ -366,6 +357,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       ..title = titleTextEditingController.text
       ..content = content
       ..type = state.type.value
+      ..lastModified = DateTime.now()
       ..contentText = _toPlainText()
       ..audioName = state.audioNameList
       ..imageName = imageNameMap.values.toList()
@@ -375,6 +367,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
     await Utils().isarUtil.updateADiary(state.currentDiary);
     state.isNew ? Get.backLegacy(result: state.currentDiary.categoryId ?? '') : Get.backLegacy(result: 'changed');
+    unawaited(Utils().webDavUtil.uploadSingleDiary(state.currentDiary));
     Utils().noticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');
   }
 
@@ -522,11 +515,5 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
       }
     }
     update(['CategoryName']);
-  }
-
-  void selectTabView(index) {
-    state.tabIndex = index;
-    update(['NavigationBar']);
-    pageController.jumpToPage(index);
   }
 }

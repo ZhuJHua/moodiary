@@ -69,12 +69,10 @@ dependencies:
   smooth_page_indicator: 1.2.0+3
   table_calendar: 3.1.2
   unicons: 3.0.0
-  network_info_plus: 6.1.1
   encrypt: 5.0.3
   objectbox: 4.0.3
   faker: 2.2.0
-  flutter_inappwebview: 6.1.5
-  flutter_rust_bridge: 2.6.0
+  flutter_rust_bridge: 2.7.0
   syncfusion_flutter_sliders: 27.2.5
   flutter_quill_extensions: 11.0.0-dev.4
   connectivity_plus: 6.1.0
@@ -94,6 +92,7 @@ dependencies:
   webdav_client: 1.2.2
   confetti: 0.8.0
   flutter_native_splash: 2.4.3
+  rive_animated_icon: 2.0.2
   flutter_localizations:
     sdk: flutter
   rust_lib_mood_diary:

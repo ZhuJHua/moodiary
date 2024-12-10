@@ -100,9 +100,10 @@ class PrefUtil {
     }
 
     /// v2.6.0
-    if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.0') < 0) {
+    if (appVersion != null && appVersion.split('+')[0].compareTo('2.7.0') < 0) {
       await compute(Utils().isarUtil.mergeToV2_6_0, Utils().fileUtil.getRealPath('database', ''));
     }
+
     // 如果是首次启动或版本不一致
     if (kDebugMode || firstStart || appVersion == null || appVersion != currentVersion) {
       await _prefs.setString('appVersion', currentVersion);

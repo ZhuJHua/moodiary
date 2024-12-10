@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:isar/isar.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
@@ -7,6 +11,10 @@ import 'package:mood_diary/common/values/diary_type.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
+
+import '../../components/quill_embed/audio_embed.dart';
+import '../../components/quill_embed/image_embed.dart';
+import '../../components/quill_embed/video_embed.dart';
 
 class IsarUtil {
   late final Isar _isar;
@@ -256,27 +264,75 @@ class IsarUtil {
   /// 2.6.0 版本变更
   /// 新增字段
   /// 1.type 类型字段，用于表示是纯文本还是富文本
+  /// 2.lastModified 最后修改时间
   /// 变更
+  /// 1.将时间字段修改为最后修改时间
+  /// 2.将类型字段修改为富文本
   void mergeToV2_6_0(String dir) {
     var isar = Isar.open(
       schemas: [DiarySchema, CategorySchema],
       directory: dir,
     );
     final countDiary = isar.diarys.where().count();
+
     for (var i = 0; i < countDiary; i += 50) {
       var diaries = isar.diarys.where().findAll(offset: i, limit: 50);
+
       isar.write((isar) {
+        // 公共quillController
+        final quillController = QuillController.basic();
+
         for (var diary in diaries) {
-          if (diary.type == null) {
-            diary.type = DiaryType.richText.value;
-            isar.diarys.put(diary);
+          // 更新字段类型和修改时间
+          diary.type = DiaryType.richText.value;
+          diary.lastModified = diary.time; // 设置最后修改时间
+          // 遍历资源文件，将资源文件插入到富文本中
+          quillController.document = Document.fromJson(jsonDecode(diary.content));
+
+          for (var image in diary.imageName) {
+            insertNewImage(imageName: image, quillController: quillController);
           }
-          diary.lastModified = diary.time;
+          for (var video in diary.videoName) {
+            insertNewVideo(videoName: video, quillController: quillController);
+          }
+          for (var audio in diary.audioName) {
+            insertAudio(audioName: audio, quillController: quillController);
+          }
+
+          // 更新富文本内容
+          diary.content = jsonEncode(quillController.document.toDelta().toJson());
+
+          // 保存更新后的日记
           isar.diarys.put(diary);
+
+          // 清理quillController
+          quillController.clear();
         }
       });
     }
+
     isar.close();
+  }
+
+  void insertNewImage({required String imageName, required QuillController quillController}) {
+    final imageBlock = ImageBlockEmbed.fromName(imageName);
+    final index = quillController.selection.baseOffset;
+    final length = quillController.selection.extentOffset - index;
+    quillController.replaceText(index, length, imageBlock, TextSelection.collapsed(offset: index + 1));
+  }
+
+  void insertNewVideo({required String videoName, required QuillController quillController}) {
+    final videoBlock = VideoBlockEmbed.fromName(videoName);
+    final index = quillController.selection.baseOffset;
+    final length = quillController.selection.extentOffset - index;
+    quillController.replaceText(index, length, videoBlock, TextSelection.collapsed(offset: index + 1));
+  }
+
+  void insertAudio({required String audioName, required QuillController quillController}) {
+    final audioBlock = AudioBlockEmbed.fromName(audioName);
+    final index = quillController.selection.baseOffset;
+    final length = quillController.selection.extentOffset - index;
+    quillController.replaceText(index, length, audioBlock, TextSelection.collapsed(offset: index + 1));
   }
 
   // 获取用于地图显示的对象

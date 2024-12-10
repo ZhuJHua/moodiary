@@ -20,6 +20,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
 
   @override
   void onInit() {
+    autoSync();
     super.onInit();
   }
 
@@ -36,6 +37,16 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   void onClose() {
     tabController.dispose();
     super.onClose();
+  }
+
+  Future<void> autoSync() async {
+    if (Utils().prefUtil.getValue<bool>('autoSync') == true) {
+      var diary = await Utils().isarUtil.getAllDiaries();
+      await Utils().webDavUtil.syncDiary(diary, onDownload: () async {
+        await updateCategory();
+        await updateDiary(null);
+      });
+    }
   }
 
   /// tab 监听函数

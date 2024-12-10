@@ -4,12 +4,13 @@ import 'dart:io';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:mood_diary/components/local_send/local_send_logic.dart';
 import 'package:mood_diary/utils/utils.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_multipart/shelf_multipart.dart';
 
+import '../../../pages/home/diary/diary_logic.dart';
 import 'local_send_server_state.dart';
 
 class LocalSendServerLogic extends GetxController {
@@ -17,12 +18,10 @@ class LocalSendServerLogic extends GetxController {
   late RawDatagramSocket socket;
   HttpServer? httpServer;
 
-  late final networkInfo = NetworkInfo();
-
   @override
   void onReady() async {
     socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, state.scanPort);
-    state.serverIp = await networkInfo.getWifiIP();
+    state.serverIp = await getDeviceIP();
     update();
     if (state.serverIp != null) {
       await startBroadcastListener();
@@ -99,6 +98,8 @@ class LocalSendServerLogic extends GetxController {
     }
     // 插入日记
     await Utils().isarUtil.insertADiary(diary);
+    await Bind.find<DiaryLogic>().updateCategory();
+    await Bind.find<DiaryLogic>().updateDiary(null);
     state.receiveCount.value += 1;
     return shelf.Response.ok('Data and files received successfully');
   }

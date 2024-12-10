@@ -11,11 +11,14 @@ class WebDavLogic extends GetxController {
 
   WebDavUtil get webDav => Utils().webDavUtil;
 
-  late TextEditingController webDavUrlController = TextEditingController(text: state.currentOptions[0]);
+  late TextEditingController webDavUrlController =
+      TextEditingController(text: state.hasOption.value ? state.currentOptions[0] : null);
   late FocusNode webDavUrlFocusNode = FocusNode();
-  late TextEditingController usernameController = TextEditingController(text: state.currentOptions[1]);
+  late TextEditingController usernameController =
+      TextEditingController(text: state.hasOption.value ? state.currentOptions[1] : null);
   late FocusNode usernameFocusNode = FocusNode();
-  late TextEditingController passwordController = TextEditingController(text: state.currentOptions[2]);
+  late TextEditingController passwordController =
+      TextEditingController(text: state.hasOption.value ? state.currentOptions[2] : null);
   late FocusNode passwordFocusNode = FocusNode();
 
   @override
@@ -35,11 +38,6 @@ class WebDavLogic extends GetxController {
     usernameController.dispose();
     passwordController.dispose();
     super.onClose();
-  }
-
-  Future<void> test() async {
-    var diary = await Utils().isarUtil.getAllDiaries();
-    await webDav.syncDiary(diary);
   }
 
   Future<void> checkConnectivity() async {
@@ -63,6 +61,7 @@ class WebDavLogic extends GetxController {
           baseUrl: webDavUrlController.text, username: usernameController.text, password: passwordController.text);
       state.hasOption.value = true;
       await checkConnectivity();
+      await webDav.initDir();
       Utils().noticeUtil.showToast('保存成功');
     }
   }
@@ -90,5 +89,10 @@ class WebDavLogic extends GetxController {
       _firstClickTime = currentTime;
       Utils().noticeUtil.showToast('请再次点击确认删除');
     }
+  }
+
+  void setAutoSync(bool value) async {
+    await Utils().prefUtil.setValue<bool>('autoSync', value);
+    state.autoSync.value = value;
   }
 }

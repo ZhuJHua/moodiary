@@ -8,11 +8,34 @@ import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
 import 'package:mood_diary/components/search_sheet/search_sheet_view.dart';
 import 'package:mood_diary/components/web_dav_dashboard/web_dav_dashboard_view.dart';
+import 'package:rive_animated_icon/rive_animated_icon.dart';
 
+import '../../../utils/utils.dart';
 import 'diary_logic.dart';
 
 class DiaryPage extends StatelessWidget {
   const DiaryPage({super.key});
+
+  Widget _buildSyncingButton({required ColorScheme colorScheme, required Function() onTap}) {
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: Container(
+        padding: const EdgeInsets.all(4.0),
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer,
+          shape: BoxShape.circle,
+        ),
+        child: RiveAnimatedIcon(
+          riveIcon: RiveIcon.reload,
+          color: colorScheme.onSecondaryContainer,
+          width: 24,
+          height: 24,
+          loopAnimation: true,
+          onTap: onTap,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +132,32 @@ class DiaryPage extends StatelessWidget {
                         }),
                     pinned: true,
                     actions: [
+                      Obx(() {
+                        return Utils().webDavUtil.syncingDiaries.isNotEmpty
+                            ? _buildSyncingButton(
+                                colorScheme: colorScheme,
+                                onTap: () {
+                                  showModalBottomSheet(
+                                      context: context,
+                                      builder: (context) {
+                                        return const WebDavDashboardComponent();
+                                      },
+                                      showDragHandle: true,
+                                      useSafeArea: true);
+                                })
+                            : IconButton(
+                                onPressed: () {
+                                  showModalBottomSheet(
+                                      context: context,
+                                      builder: (context) {
+                                        return const WebDavDashboardComponent();
+                                      },
+                                      showDragHandle: true,
+                                      useSafeArea: true);
+                                },
+                                icon: const Icon(Icons.cloud_sync_outlined),
+                              );
+                      }),
                       IconButton(
                         onPressed: () {
                           showModalBottomSheet(
@@ -121,18 +170,6 @@ class DiaryPage extends StatelessWidget {
                         },
                         icon: const Icon(Icons.search),
                         tooltip: i18n.diaryPageSearchButton,
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          showModalBottomSheet(
-                              context: context,
-                              builder: (context) {
-                                return const WebDavDashboardComponent();
-                              },
-                              showDragHandle: true,
-                              useSafeArea: true);
-                        },
-                        icon: const Icon(Icons.cloud_sync_outlined),
                       ),
                       PopupMenuButton(
                         offset: const Offset(0, 46),

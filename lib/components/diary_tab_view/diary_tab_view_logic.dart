@@ -30,6 +30,7 @@ class DiaryTabViewLogic extends GetxController {
 
   Future<void> updateDiary() async {
     state.diaryList = await Utils().isarUtil.getDiaryByCategory(state.categoryId, 0, state.initLen);
+    update(['PlaceHolder']);
     update(['TabView']);
   }
 

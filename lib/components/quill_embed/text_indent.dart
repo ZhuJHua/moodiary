@@ -30,7 +30,7 @@ class TextIndentEmbedBuilder extends EmbedBuilder {
     var indent = embedContext.node.value.data as String;
     return SizedBox(
       width: (embedContext.textStyle.fontSize ?? 16.0) * int.parse(indent),
-      child: isEdit ? Text('\u21E5' * int.parse(indent)) : null,
+      // child: isEdit ? Text('\u21E5' * int.parse(indent)) : null,
     );
   }
 }
