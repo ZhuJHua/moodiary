@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -9,7 +7,6 @@ import 'package:mood_diary/components/dashboard/dashboard_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
-import 'package:share_plus/share_plus.dart';
 
 import 'setting_state.dart';
 
@@ -147,6 +144,4 @@ class SettingLogic extends GetxController {
     Get.changeTheme(Utils().themeUtil.buildTheme(Brightness.light));
     Get.changeTheme(Utils().themeUtil.buildTheme(Brightness.dark));
   }
-
-
 }

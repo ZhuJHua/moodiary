@@ -218,14 +218,7 @@ int serializeDiary(IsarWriter writer, Diary object) {
     }
     IsarCore.endList(writer, listWriter);
   }
-  {
-    final value = object.type;
-    if (value == null) {
-      IsarCore.writeNull(writer, 16);
-    } else {
-      IsarCore.writeString(writer, 16, value);
-    }
-  }
+  IsarCore.writeString(writer, 16, object.type);
   IsarCore.writeLong(writer, 17, object.imageColor ?? -9223372036854775808);
   IsarCore.writeDouble(writer, 18, object.aspect ?? double.nan);
   IsarCore.writeString(writer, 19, object.yM);
@@ -355,7 +348,7 @@ Diary deserializeDiary(IsarReader reader) {
       }
     }
   }
-  object.type = IsarCore.readString(reader, 16);
+  object.type = IsarCore.readString(reader, 16) ?? '';
   {
     final value = IsarCore.readLong(reader, 17);
     if (value == -9223372036854775808) {
@@ -513,7 +506,7 @@ dynamic deserializeDiaryProp(IsarReader reader, int property) {
         }
       }
     case 16:
-      return IsarCore.readString(reader, 16);
+      return IsarCore.readString(reader, 16) ?? '';
     case 17:
       {
         final value = IsarCore.readLong(reader, 17);
@@ -3001,20 +2994,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const IsNullCondition(property: 16));
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeIsNotNull() {
-    return QueryBuilder.apply(not(), (query) {
-      return query.addFilterCondition(const IsNullCondition(property: 16));
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeEqualTo(
-    String? value, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeEqualTo(String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3028,8 +3008,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeGreaterThan(
-    String? value, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeGreaterThan(String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3043,8 +3022,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeGreaterThanOrEqualTo(
-    String? value, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeGreaterThanOrEqualTo(String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3058,8 +3036,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeLessThan(
-    String? value, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeLessThan(String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3073,8 +3050,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeLessThanOrEqualTo(
-    String? value, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeLessThanOrEqualTo(String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3088,9 +3064,8 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeBetween(
-    String? lower,
-    String? upper, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeBetween(String lower,
+      String upper, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -4429,7 +4404,7 @@ extension DiaryQueryProperty1 on QueryBuilder<Diary, Diary, QProperty> {
     });
   }
 
-  QueryBuilder<Diary, String?, QAfterProperty> typeProperty() {
+  QueryBuilder<Diary, String, QAfterProperty> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(16);
     });
@@ -4557,7 +4532,7 @@ extension DiaryQueryProperty2<R> on QueryBuilder<Diary, R, QAfterProperty> {
     });
   }
 
-  QueryBuilder<Diary, (R, String?), QAfterProperty> typeProperty() {
+  QueryBuilder<Diary, (R, String), QAfterProperty> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(16);
     });
@@ -4685,7 +4660,7 @@ extension DiaryQueryProperty3<R1, R2> on QueryBuilder<Diary, (R1, R2), QAfterPro
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, String?), QOperations> typeProperty() {
+  QueryBuilder<Diary, (R1, R2, String), QOperations> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(16);
     });

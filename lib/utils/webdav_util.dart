@@ -9,7 +9,6 @@ import 'package:mood_diary/utils/utils.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
 import '../common/models/isar/diary.dart';
-import '../pages/home/diary/diary_logic.dart';
 
 class WebDavUtil {
   RxSet<String> syncingDiaries = <String>{}.obs;
@@ -35,7 +34,6 @@ class WebDavUtil {
       'accept-charset': 'utf-8',
       'Content-Type': 'application/json',
     });
-    await initDir();
   }
 
   Future<bool> checkConnectivity() async {

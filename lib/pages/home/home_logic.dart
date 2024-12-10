@@ -35,7 +35,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
 
   @override
   void onReady() {
-    unawaited(Utils().updateUtil.checkShouldUpdate(Utils().prefUtil.getValue<String>('appVersion')!.split('+')[0]));
+    //unawaited(Utils().updateUtil.checkShouldUpdate(Utils().prefUtil.getValue<String>('appVersion')!.split('+')[0]));
     // unawaited(getHitokoto());
     super.onReady();
   }
