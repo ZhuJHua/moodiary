@@ -37,6 +37,9 @@ class WebDavUtil {
   }
 
   Future<bool> checkConnectivity() async {
+    if (_client == null) {
+      return false;
+    }
     try {
       await _client?.ping();
       return true;
