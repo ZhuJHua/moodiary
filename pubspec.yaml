@@ -1,32 +1,11 @@
 name: mood_diary
 description: "A new Flutter project."
-# The following line prevents the package from being accidentally published to
-# pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-
-# The following defines the version and build number for your application.
-# A version number is three numbers separated by dots, like 1.2.43
-# followed by an optional build number separated by a +.
-# Both the version and the builder number may be overridden in flutter
-# build by specifying --build-name and --build-number, respectively.
-# In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
-# Read more about iOS versioning at
-# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-# In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
+publish_to: 'none'
 version: 2.6.0+60
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
 
-# Dependencies specify other packages that your package needs in order to work.
-# To automatically upgrade your package dependencies to the latest versions
-# consider running `flutter pub upgrade --major-versions`. Alternatively,
-# dependencies can be manually updated by changing the version numbers below to
-# the latest version available on pub.dev. To see which dependencies have newer
-# versions available, run `flutter pub outdated`.
 dependencies:
   flutter:
     sdk: flutter
@@ -73,7 +52,7 @@ dependencies:
   font_awesome_flutter: 10.8.0
   tflite_flutter: 0.11.0
   sliver_tools: 0.2.12
-  lottie: 3.1.3
+  lottie: 3.2.0
   media_kit: 1.1.11
   media_kit_video: 1.2.5
   media_kit_libs_video: 1.0.5
@@ -81,7 +60,7 @@ dependencies:
   cross_file: 0.3.4+2
   fc_native_video_thumbnail: 0.16.1
   flutter_map: 7.0.2
-  flutter_map_tile_caching: 9.1.3
+  flutter_map_tile_caching: 9.1.4
   flutter_map_marker_cluster: 1.4.0
   latlong2: 0.9.1
   shelf: 1.4.2
@@ -96,7 +75,7 @@ dependencies:
   faker: 2.2.0
   flutter_inappwebview: 6.1.5
   flutter_rust_bridge: 2.6.0
-  syncfusion_flutter_sliders: 27.2.4
+  syncfusion_flutter_sliders: 27.2.5
   flutter_quill_extensions: 11.0.0-dev.4
   connectivity_plus: 6.1.0
   image_picker_android: 0.8.12+18
@@ -112,30 +91,123 @@ dependencies:
   flutter_image_compress: 2.3.0
   mime: 1.0.6
   auto_size_text_field: 2.2.4
-
-
+  webdav_client: 1.2.2
+  confetti: 0.8.0
+  flutter_native_splash: 2.4.3
   flutter_localizations:
     sdk: flutter
   rust_lib_mood_diary:
     path: rust_builder
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner: 2.4.13
+  flutter_launcher_icons: 0.14.2
   msix: 3.16.8
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: 5.0.0
 
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/icon/light/light_foreground.png"
+  adaptive_icon_monochrome: "assets/icon/light/light_foreground.png"
+  image_path_ios_dark_transparent: "assets/icon/dark/dark_foreground.png"
+  image_path_ios_tinted_grayscale: "assets/icon/light/light_foreground.png"
+  desaturate_tinted_to_grayscale_ios: true
+  image_path: "assets/icon/light/light_icon.png"
+  remove_alpha_ios: true
+  min_sdk_android: 26
+  windows:
+    generate: true
+    image_path: "assets/icon/light/light_icon.png"
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: "assets/icon/light/light_icon.png"
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/icon/light/light_splash_icon.png
+  color_dark: "#000000"
+  image_dark: assets/icon/dark/dark_splash_icon.png
 
-# The following section is specific to Flutter packages.
+  android_12:
+    image: assets/icon/light/light_splash_icon.png
+    color: "#ffffff"
+    image_dark: assets/icon/dark/dark_splash_icon.png
+    color_dark: "#000000"
+
+  web: false
+
+  # Platform specific images can be specified with the following parameters, which will override
+  # the respective parameter.  You may specify all, selected, or none of these parameters:
+  #color_android: "#42a5f5"
+  #color_dark_android: "#042a49"
+  #color_ios: "#42a5f5"
+  #color_dark_ios: "#042a49"
+  #color_web: "#42a5f5"
+  #color_dark_web: "#042a49"
+  #image_android: assets/splash-android.png
+  #image_dark_android: assets/splash-invert-android.png
+  #image_ios: assets/splash-ios.png
+  #image_dark_ios: assets/splash-invert-ios.png
+  #image_web: assets/splash-web.gif
+  #image_dark_web: assets/splash-invert-web.gif
+  #background_image_android: "assets/background-android.png"
+  #background_image_dark_android: "assets/dark-background-android.png"
+  #background_image_ios: "assets/background-ios.png"
+  #background_image_dark_ios: "assets/dark-background-ios.png"
+  #background_image_web: "assets/background-web.png"
+  #background_image_dark_web: "assets/dark-background-web.png"
+  #branding_android: assets/brand-android.png
+  #branding_bottom_padding_android: 24
+  #branding_dark_android: assets/dart_dark-android.png
+  #branding_ios: assets/brand-ios.png
+  #branding_bottom_padding_ios: 24
+  #branding_dark_ios: assets/dart_dark-ios.png
+  #branding_web: assets/brand-web.gif
+  #branding_dark_web: assets/dart_dark-web.gif
+
+  # The position of the splash image can be set with android_gravity, ios_content_mode, and
+  # web_image_mode parameters.  All default to center.
+  #
+  # android_gravity can be one of the following Android Gravity (see
+  # https://developer.android.com/reference/android/view/Gravity): bottom, center,
+  # center_horizontal, center_vertical, clip_horizontal, clip_vertical, end, fill, fill_horizontal,
+  # fill_vertical, left, right, start, or top.
+  #android_gravity: center
+  #
+  # ios_content_mode can be one of the following iOS UIView.ContentMode (see
+  # https://developer.apple.com/documentation/uikit/uiview/contentmode): scaleToFill,
+  # scaleAspectFit, scaleAspectFill, center, top, bottom, left, right, topLeft, topRight,
+  # bottomLeft, or bottomRight.
+  #ios_content_mode: center
+  #
+  # web_image_mode can be one of the following modes: center, contain, stretch, and cover.
+  #web_image_mode: center
+
+  # The screen orientation can be set in Android with the android_screen_orientation parameter.
+  # Valid parameters can be found here:
+  # https://developer.android.com/guide/topics/manifest/activity-element#screen
+  #android_screen_orientation: sensorLandscape
+
+  # To hide the notification bar, use the fullscreen parameter.  Has no effect in web since web
+  # has no notification bar.  Defaults to false.
+  # NOTE: Unlike Android, iOS will not automatically show the notification bar when the app loads.
+  #       To show the notification bar, add the following code to your Flutter app:
+  #       WidgetsFlutterBinding.ensureInitialized();
+  #       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [SystemUiOverlay.bottom, SystemUiOverlay.top], );
+  #fullscreen: true
+
+  # If you have changed the name(s) of your info.plist file(s), you can specify the filename(s)
+  # with the info_plist_files parameter.  Remove only the # characters in the three lines below,
+  # do not remove any spaces:
+  #info_plist_files:
+  #  - 'ios/Runner/Info-Debug.plist'
+  #  - 'ios/Runner/Info-Release.plist'
+
 flutter:
   generate: true
   fonts:
@@ -144,7 +216,8 @@ flutter:
         - asset: assets/fonts/qweather-icons.ttf
 
   assets:
-    - assets/icon/
+    - assets/icon/dark/
+    - assets/icon/light/
     - assets/lottie/
 
   uses-material-design: true
