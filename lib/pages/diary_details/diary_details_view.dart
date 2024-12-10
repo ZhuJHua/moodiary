@@ -15,6 +15,10 @@ import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
+import '../../components/quill_embed/audio_embed.dart';
+import '../../components/quill_embed/image_embed.dart';
+import '../../components/quill_embed/text_indent.dart';
+import '../../components/quill_embed/video_embed.dart';
 import 'diary_details_logic.dart';
 
 class DiaryDetailsPage extends StatelessWidget {
@@ -269,22 +273,24 @@ class DiaryDetailsPage extends StatelessWidget {
                 )
               : colorScheme;
           return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: customColorScheme,
-            ),
+            data: Theme.of(context).copyWith(colorScheme: customColorScheme),
             child: Scaffold(
               backgroundColor: customColorScheme.surface,
               body: CustomScrollView(
                 slivers: [
                   SliverAppBar(
-                    expandedHeight: state.aspect != null ? min(size.width / state.aspect!, size.height * 0.618) : null,
+                    expandedHeight: state.diaryHeader
+                        ? (state.aspect != null ? min(size.width / state.aspect!, size.height * 0.382) : null)
+                        : null,
                     title: Text(
                       state.diary.title,
                       style: textStyle.titleMedium,
                     ),
                     flexibleSpace: FlexibleSpaceBar(
                       collapseMode: CollapseMode.pin,
-                      background: state.diary.imageName.isNotEmpty ? buildImageView(customColorScheme) : null,
+                      background: state.diaryHeader
+                          ? (state.diary.imageName.isNotEmpty ? buildImageView(customColorScheme) : null)
+                          : null,
                     ),
                     pinned: true,
                     actions: [
@@ -357,21 +363,23 @@ class DiaryDetailsPage extends StatelessWidget {
                               scrollDirection: Axis.horizontal, child: buildChipList(customColorScheme)),
                         ),
                         Card.filled(
-                          color: customColorScheme.surfaceContainer,
+                          color: customColorScheme.surfaceContainerLow,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: QuillEditor.basic(
                               controller: logic.quillController,
-                              configurations: const QuillEditorConfigurations(
+                              config: QuillEditorConfig(
                                 showCursor: false,
-                                sharedConfigurations: QuillSharedConfigurations(),
+                                customStyles: Utils().themeUtil.getInstance(context),
+                                embedBuilders: [
+                                  ImageEmbedBuilder(isEdit: false),
+                                  VideoEmbedBuilder(isEdit: false),
+                                  AudioEmbedBuilder(isEdit: false),
+                                  TextIndentEmbedBuilder(isEdit: false),
+                                ],
                               ),
                             ),
                           ),
-                        ),
-                        buildAudioList(),
-                        Wrap(
-                          children: [if (state.diary.videoName.isNotEmpty) ...buildMultiVideo(customColorScheme)],
                         ),
                       ],
                     ),

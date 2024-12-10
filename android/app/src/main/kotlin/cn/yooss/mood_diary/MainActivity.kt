@@ -1,7 +1,6 @@
 package cn.yooss.mood_diary
 
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import com.github.gzuliyujiang.oaid.DeviceID
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -10,7 +9,6 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
     }
 

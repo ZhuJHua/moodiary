@@ -3,6 +3,7 @@ use std::io::BufWriter;
 use anyhow::Result;
 use fast_image_resize::images::Image;
 use fast_image_resize::{IntoImageView, Resizer};
+
 use flutter_rust_bridge::frb;
 use image::{
     codecs::{

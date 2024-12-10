@@ -50,7 +50,7 @@ class DiaryDetailsLogic extends GetxController {
   //编辑日记
   Future<void> toEditPage(Diary diary) async {
     //这里参数为diary，表示编辑日记，等待跳转结果为changed，重新获取日记
-    if ((await Get.toNamed(AppRoutes.editPage, arguments: diary)) == 'changed') {
+    if ((await Get.toNamed(AppRoutes.editPage, arguments: diary.clone())) == 'changed') {
       //重新获取日记
       state.diary = (await Utils().isarUtil.getDiaryByID(state.diary.isarId))!;
       quillController = QuillController(

@@ -8,7 +8,7 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.6.0"
-image = "0.25.2"
+image = "0.25.5"
 fast_image_resize = { version = "5.0.0", features = ["image"] }
 anyhow = "1.0.93"
 bytemuck = "1.16.3"

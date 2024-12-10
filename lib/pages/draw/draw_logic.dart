@@ -19,8 +19,8 @@ class DrawLogic extends GetxController {
   Future<void> getImageData() async {
     var data = await drawingController.getImageData();
     var image = data!.buffer.asUint8List();
-    editLogic.pickDraw(image);
     Get.backLegacy();
+    editLogic.pickDraw(image);
   }
 
   void pickColor(Color color) {

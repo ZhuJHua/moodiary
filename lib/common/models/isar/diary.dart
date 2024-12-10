@@ -38,6 +38,9 @@ class Diary {
   @Index()
   DateTime time = DateTime.now();
 
+  //上次更新的时间，用于增量同步
+  DateTime lastModified = DateTime.now();
+
   //是否显示，用于回收站
   @Index()
   bool show = true;
@@ -63,6 +66,9 @@ class Diary {
   // 位置信息
   List<String> position = [];
 
+  // 类型，富文本还是纯文本
+  String? type;
+
   //封面颜色，如果有的话
   int? imageColor;
 
@@ -81,6 +87,7 @@ class Diary {
           content == other.content &&
           contentText == other.contentText &&
           time == other.time &&
+          lastModified == other.lastModified &&
           show == other.show &&
           mood == other.mood &&
           const ListEquality().equals(weather, other.weather) &&
@@ -89,6 +96,7 @@ class Diary {
           const ListEquality().equals(videoName, other.videoName) &&
           const ListEquality().equals(tags, other.tags) &&
           const ListEquality().equals(position, other.position) &&
+          type == other.type &&
           imageColor == other.imageColor &&
           aspect == other.aspect;
 
@@ -100,6 +108,7 @@ class Diary {
         content.hashCode ^
         contentText.hashCode ^
         time.hashCode ^
+        lastModified.hashCode ^
         show.hashCode ^
         mood.hashCode ^
         const ListEquality().hash(weather) ^
@@ -108,6 +117,7 @@ class Diary {
         const ListEquality().hash(videoName) ^
         const ListEquality().hash(tags) ^
         const ListEquality().hash(position) ^
+        type.hashCode ^
         imageColor.hashCode ^
         aspect.hashCode;
   }
@@ -123,6 +133,7 @@ class Diary {
       ..content = content
       ..contentText = contentText
       ..time = DateTime.fromMillisecondsSinceEpoch(time.millisecondsSinceEpoch)
+      ..lastModified = DateTime.fromMillisecondsSinceEpoch(lastModified.millisecondsSinceEpoch)
       ..show = show
       ..mood = mood
       ..weather = List<String>.from(weather)
@@ -131,6 +142,7 @@ class Diary {
       ..videoName = List<String>.from(videoName)
       ..tags = List<String>.from(tags)
       ..position = List<String>.from(position)
+      ..type = type
       ..imageColor = imageColor
       ..aspect = aspect;
   }
@@ -144,6 +156,7 @@ class Diary {
       'content': content,
       'contentText': contentText,
       'time': time.toIso8601String(),
+      'lastModified': lastModified.toIso8601String(),
       'show': show,
       'mood': mood,
       'weather': weather,
@@ -152,6 +165,7 @@ class Diary {
       'videoName': videoName,
       'tags': tags,
       'position': position,
+      'type': type,
       'imageColor': imageColor,
       'aspect': aspect,
     };
@@ -165,6 +179,7 @@ class Diary {
       ..content = json['content'] as String
       ..contentText = json['contentText'] as String
       ..time = DateTime.parse(json['time'] as String)
+      ..lastModified = DateTime.parse(json['lastModified'] as String)
       ..show = json['show'] as bool
       ..mood = (json['mood'] as num).toDouble()
       ..weather = List<String>.from(json['weather'] as List)
@@ -173,6 +188,7 @@ class Diary {
       ..videoName = List<String>.from(json['videoName'] as List)
       ..tags = List<String>.from(json['tags'] as List)
       ..position = List<String>.from(json['position'] as List)
+      ..type = json['type'] as String
       ..imageColor = json['imageColor'] as int?
       ..aspect = (json['aspect'] as num?)?.toDouble();
   }

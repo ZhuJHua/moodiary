@@ -128,9 +128,9 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     }
     //如果控制器已经存在，重新获取，如果不存在，不需要任何操作
     if (tabViewIndex != 0 && Bind.isRegistered<DiaryTabViewLogic>(tag: categoryId)) {
-      await Bind.find<DiaryTabViewLogic>(tag: categoryId).getDiary();
+      await Bind.find<DiaryTabViewLogic>(tag: categoryId).updateDiary();
     }
-    await Bind.find<DiaryTabViewLogic>(tag: 'default').getDiary();
+    await Bind.find<DiaryTabViewLogic>(tag: 'default').updateDiary();
   }
 
   /// 分类刷新函数

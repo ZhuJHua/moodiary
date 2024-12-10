@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/components/local_send/local_send_view.dart';
+import 'package:mood_diary/components/web_dav/web_dav_view.dart';
 
 import 'backup_sync_logic.dart';
 import 'backup_sync_state.dart';
@@ -18,20 +19,7 @@ class BackupSyncPage extends StatelessWidget {
         title: const Text('备份与同步'),
       ),
       body: ListView(
-        children: const [
-          ExpansionTile(
-            leading: Icon(Icons.wifi_tethering_rounded),
-            title: Text('局域网传输'),
-            children: [LocalSendComponent()],
-          ),
-          ExpansionTile(
-            leading: Icon(Icons.backup_rounded),
-            title: Text('WebDav'),
-            subtitle: Text('即将支持'),
-            enabled: false,
-            children: [],
-          )
-        ],
+        children: const [LocalSendComponent(), WebDavComponent()],
       ),
     );
   }

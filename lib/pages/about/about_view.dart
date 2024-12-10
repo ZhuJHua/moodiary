@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/utils/utils.dart';
 
@@ -24,15 +23,13 @@ class AboutPage extends StatelessWidget {
         padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          spacing: 16.0,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(40.0)),
-              child: Image.asset(
-                'assets/icon/icon.png',
-                height: 80.0,
-                width: 80.0,
-              ),
+            Image.asset(
+              colorScheme.brightness == Brightness.light
+                  ? 'assets/icon/light/light_foreground.png'
+                  : 'assets/icon/dark/dark_foreground.png',
+              height: 160.0,
+              width: 160.0,
             ),
             Column(
               spacing: 4.0,
@@ -54,10 +51,10 @@ class AboutPage extends StatelessWidget {
           GetBuilder<AboutLogic>(builder: (_) {
             return buildLogoTitle();
           }),
-          Card.filled(
+          Card.outlined(
             color: colorScheme.surfaceContainerLow,
             child: Column(
-              children: ListTile.divideTiles(tiles: [
+              children: [
                 GetBuilder<AboutLogic>(builder: (_) {
                   return ListTile(
                     leading: const Icon(Icons.update),
@@ -100,36 +97,10 @@ class AboutPage extends StatelessWidget {
                     await logic.toReportPage();
                   },
                 ),
-              ], context: context)
-                  .toList(),
+              ],
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 4.0,
-          children: [
-            Text(
-              'Powered by',
-              style: textStyle.titleMedium,
-            ),
-            const FaIcon(
-              FontAwesomeIcons.flutter,
-              color: Colors.lightBlue,
-            ),
-            Text(
-              'with',
-              style: textStyle.titleMedium,
-            ),
-            const FaIcon(
-              FontAwesomeIcons.solidHeart,
-              color: Colors.pinkAccent,
-            )
-          ],
-        ),
       ),
     );
   }

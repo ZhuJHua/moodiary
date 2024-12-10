@@ -10,31 +10,37 @@ import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/common/values/keyboard_state.dart';
+import 'package:mood_diary/common/values/diary_type.dart';
+import 'package:mood_diary/components/quill_embed/text_indent.dart';
+import 'package:mood_diary/components/quill_embed/video_embed.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:mood_diary/src/rust/api/kmp.dart';
 import 'package:mood_diary/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../common/values/keyboard_state.dart';
+import '../../components/quill_embed/audio_embed.dart';
+import '../../components/quill_embed/image_embed.dart';
 import 'edit_state.dart';
 
 class EditLogic extends GetxController with WidgetsBindingObserver {
   final EditState state = EditState();
 
-  //分类控制器
+  //标签控制器
   late TextEditingController tagTextEditingController = TextEditingController();
 
   //标题
   late TextEditingController titleTextEditingController = TextEditingController();
-
   late PageController pageController = PageController();
 
   //编辑器控制器
-  late QuillController quillController = QuillController.basic();
+  late QuillController quillController;
 
   //聚焦对象
   late FocusNode contentFocusNode = FocusNode();
   late FocusNode titleFocusNode = FocusNode();
   List<double> heightList = [];
+  Timer? _timer;
 
   @override
   void didChangeMetrics() {
@@ -66,51 +72,24 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   @override
   void onInit() {
-    //如果是新增
+    if (state.showWriteTime) _calculateDuration();
     WidgetsBinding.instance.addObserver(this);
-    if (Get.arguments == 'new') {
-      state.currentDiary = Diary();
-      if (Utils().prefUtil.getValue<bool>('autoWeather') == true) {
-        unawaited(getPositionAndWeather());
-      }
-    } else {
-      //如果是编辑，将日记对象赋值
-      state.isNew = false;
-      var oldDiary = Get.arguments as Diary;
-      state.currentDiary = oldDiary;
-      // 初始化quill控制器
-      quillController = QuillController(
-          document: Document.fromJson(jsonDecode(oldDiary.content)),
-          selection: const TextSelection.collapsed(offset: 0));
-      // 获取分类名称
-      if (oldDiary.categoryId != null) {
-        state.categoryName = Utils().isarUtil.getCategoryName(oldDiary.categoryId!)!.categoryName;
-      }
-      // 初始化标题控制器
-      titleTextEditingController = TextEditingController(text: oldDiary.title);
-      //临时拷贝一份图片数据
-      for (var name in oldDiary.imageName) {
-        state.imageFileList.add(XFile(Utils().fileUtil.getRealPath('image', name)));
-      }
-      //临时拷贝一份拷贝音频数据到缓存目录
-      for (var name in oldDiary.audioName) {
-        state.audioNameList.add(name);
-        File(Utils().fileUtil.getRealPath('audio', name)).copySync(Utils().fileUtil.getCachePath(name));
-      }
-      //临时拷贝一份视频数据，别忘记了缩略图
-      for (var name in oldDiary.videoName) {
-        state.videoFileList.add(XFile(Utils().fileUtil.getRealPath('video', name)));
-        state.videoThumbnailFileList.add(XFile(Utils().fileUtil.getRealPath('thumbnail', name)));
-      }
-      state.totalCount = quillController.document.toPlainText().trim().length;
-    }
-    update(['All']);
     super.onInit();
   }
 
   @override
-  void onReady() {
-    listenCount();
+  void onReady() async {
+    await _initEdit();
+    quillController.addListener(_listenCount);
+    if (state.firstLineIndent) {
+      quillController.document.changes.listen((change) {
+        var operations = change.change.operations;
+        var lastOperation = operations.last;
+        if (lastOperation.key == 'insert' && lastOperation.value == '\n') {
+          insertNewLine();
+        }
+      });
+    }
     super.onReady();
   }
 
@@ -123,14 +102,93 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     contentFocusNode.dispose();
     pageController.dispose();
     quillController.dispose();
+    _timer?.cancel();
+    _timer = null;
     super.onClose();
   }
 
-  void listenCount() {
-    quillController.addListener(() {
-      state.totalCount = quillController.document.toPlainText().trim().length;
-      update(['Count']);
+  Future<void> _initEdit() async {
+    //如果是新增，更具不同的分类展示不同的操作
+    if (Get.arguments.runtimeType == DiaryType) {
+      // 配置日记类型
+      state.type = Get.arguments as DiaryType;
+      Utils().logUtil.printInfo(state.type);
+      quillController = QuillController.basic();
+      state.currentDiary = Diary();
+      if (state.firstLineIndent) insertNewLine();
+      if (state.autoWeather) {
+        unawaited(getPositionAndWeather());
+      }
+    } else {
+      //如果是编辑，将日记对象赋值
+      state.isNew = false;
+      var oldDiary = Get.arguments as Diary;
+      state.type = DiaryType.values.firstWhere((type) => type.value == oldDiary.type);
+      state.currentDiary = oldDiary;
+      // 获取分类名称
+      if (oldDiary.categoryId != null) {
+        state.categoryName = Utils().isarUtil.getCategoryName(oldDiary.categoryId!)!.categoryName;
+      }
+      // 初始化标题控制器
+      titleTextEditingController.text = oldDiary.title;
+      // 待替换的字符串map
+      Map<String, String> replaceMap = {};
+      //临时拷贝一份图片数据
+      for (var name in oldDiary.imageName) {
+        // 生成一个临时文件
+        var xFile = XFile(Utils().fileUtil.getRealPath('image', name));
+        replaceMap[name] = xFile.path;
+        state.imageFileList.add(xFile);
+      }
+      //临时拷贝一份拷贝音频数据到缓存目录
+      for (var name in oldDiary.audioName) {
+        state.audioNameList.add(name);
+        await File(Utils().fileUtil.getRealPath('audio', name)).copy(Utils().fileUtil.getCachePath(name));
+      }
+      //临时拷贝一份视频数据，别忘记了缩略图
+      for (var name in oldDiary.videoName) {
+        // 生成一个临时文件
+        var videoXFile = XFile(Utils().fileUtil.getRealPath('video', name));
+        replaceMap[name] = videoXFile.path;
+        state.videoFileList.add(videoXFile);
+      }
+      quillController = QuillController(
+          document:
+              Document.fromJson(jsonDecode(await Kmp.replaceWithKmp(text: oldDiary.content, replacements: replaceMap))),
+          selection: const TextSelection.collapsed(offset: 0));
+      state.totalCount.value = _toPlainText().length;
+    }
+    state.isInit = true;
+    update(['body']);
+  }
+
+  //计算写作时长
+  void _calculateDuration() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      state.duration += const Duration(seconds: 1);
+      state.durationString.value = state.duration.toString().split('.')[0].padLeft(8, '0');
     });
+  }
+
+  String _toPlainText() {
+    return quillController.document.toPlainText([
+      ImageEmbedBuilder(isEdit: true),
+      VideoEmbedBuilder(isEdit: true),
+      AudioEmbedBuilder(isEdit: true),
+      TextIndentEmbedBuilder(isEdit: true),
+    ]).trim();
+  }
+
+  void _listenCount() {
+    state.totalCount.value = _toPlainText().length;
+  }
+
+  // 插入换行时自动首行缩进
+  void insertNewLine() {
+    final index = quillController.selection.baseOffset;
+    final length = quillController.selection.extentOffset - index;
+    quillController.replaceText(index, length, const TextIndentEmbed('2'), TextSelection.collapsed(offset: index + 1));
   }
 
   Future<void> addNewImage(XFile xFile) async {
@@ -144,36 +202,41 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
     //获取一张图片
     final XFile? photo = await Utils().mediaUtil.pickPhoto(imageSource);
     if (photo != null) {
-      //关闭dialog
       Get.backLegacy();
       await addNewImage(photo);
+      final imageBlock = ImageBlockEmbed.fromName(photo.path);
+      final index = quillController.selection.baseOffset;
+      final length = quillController.selection.extentOffset - index;
+      quillController.replaceText(index, length, imageBlock, TextSelection.collapsed(offset: index + 1));
     } else {
-      //关闭dialog
-      Get.backLegacy();
       //弹出一个提示
+      Get.backLegacy();
       Utils().noticeUtil.showToast('取消图片选择');
     }
   }
 
   //画图照片
   Future<void> pickDraw(Uint8List dataList) async {
-    var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.jpg');
-    await addNewImage(XFile.fromData(dataList, path: path)..saveTo(path));
+    var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.png');
+    await addNewImage(XFile.fromData(dataList, path: path));
+    Get.backLegacy(result: path);
   }
 
   //网络图片
   Future<void> networkImage() async {
-    //关闭dialog
-    Get.backLegacy();
     Utils().noticeUtil.showToast('图片获取中');
     var imageUrl = await Api().updateImageUrl();
+    String? result;
     if (imageUrl != null) {
       var imageData = await Api().getImageData(imageUrl.first);
       if (imageData != null) {
-        var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.jpg');
+        var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.png');
         addNewImage(XFile.fromData(imageData, path: path)..saveTo(path));
+        result = path;
       }
     }
+    //关闭dialog
+    Get.backLegacy(result: result);
   }
 
   //相册选择多张照片
@@ -198,11 +261,6 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> addNewVideo(XFile xFile) async {
-    //获取缩略图
-    String fileName = '${const Uuid().v7()}.jpeg';
-    if (await Utils().mediaUtil.getVideoThumbnail(xFile, Utils().fileUtil.getCachePath(fileName))) {
-      state.videoThumbnailFileList.add(XFile(Utils().fileUtil.getCachePath(fileName)));
-    }
     //视频list中新增一个
     state.videoFileList.add(xFile);
     update(['Video']);
@@ -210,13 +268,16 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   //选择视频
   Future<void> pickVideo(ImageSource imageSource) async {
+    // 获取一个视频
     XFile? video = await Utils().mediaUtil.pickVideo(imageSource);
     if (video != null) {
-      //关闭dialog
       Get.backLegacy();
       await addNewVideo(video);
+      final videoBlock = VideoBlockEmbed.fromName(video.path);
+      final index = quillController.selection.baseOffset;
+      final length = quillController.selection.extentOffset - index;
+      quillController.replaceText(index, length, videoBlock, TextSelection.collapsed(offset: index + 1));
     } else {
-      //关闭dialog
       Get.backLegacy();
       //弹出一个提示
       Utils().noticeUtil.showToast('取消视频选择');
@@ -234,10 +295,11 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   }
 
   //删除图片
-  void deleteImage(index) async {
-    var imageFile = state.imageFileList.removeAt(index);
-    await Utils().fileUtil.deleteFile(imageFile.path);
-    Get.backLegacy();
+  void deleteImage({required String path}) async {
+    // 移除这个图片
+    state.imageFileList.removeWhere((file) => file.path == path);
+    await Utils().fileUtil.deleteFile(path);
+    //Get.backLegacy();
     Utils().noticeUtil.showToast('删除成功');
     update(['Image']);
   }
@@ -245,9 +307,7 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   //删除视频
   void deleteVideo(index) async {
     var videoFile = state.videoFileList.removeAt(index);
-    var thumbnailFile = state.videoThumbnailFileList.removeAt(index);
     await Utils().fileUtil.deleteFile(videoFile.path);
-    await Utils().fileUtil.deleteFile(thumbnailFile.path);
     Get.backLegacy();
     Utils().noticeUtil.showToast('删除成功');
     update(['Video']);
@@ -284,54 +344,51 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   //保存日记
   Future<void> saveDiary() async {
-    // Get.dialog(SimpleDialog(
-    //   children: [
-    //     Lottie.asset(
-    //       'assets/lottie/file_process.json',
-    //       addRepaintBoundary: true,
-    //       width: 200,
-    //       height: 200,
-    //       frameRate: FrameRate.max,
-    //     ),
-    //     const Row(
-    //       mainAxisAlignment: MainAxisAlignment.center,
-    //       children: [Text('处理中')],
-    //     )
-    //   ],
-    // ));
     state.isSaving = true;
     update(['modal']);
-    //保存图片
-    var imageNameList = await Utils().mediaUtil.saveImages(imageFileList: state.imageFileList);
-    //保存视频
-    var videoNameList = await Utils()
-        .mediaUtil
-        .saveVideo(videoFileList: state.videoFileList, videoThumbnailFileList: state.videoThumbnailFileList);
+    // 根据文本中的实际内容移除不需要的资源
+    var originContent = jsonEncode(quillController.document.toDelta().toJson());
+    var needImage = await Kmp.findMatches(text: originContent, patterns: state.imagePathList);
+    var needVideo = await Kmp.findMatches(text: originContent, patterns: state.videoPathList);
+    var needAudio = await Kmp.findMatches(text: originContent, patterns: state.audioNameList);
+    state.imageFileList.removeWhere((file) => !needImage.contains(file.path));
+    state.videoFileList.removeWhere((file) => !needVideo.contains(file.path));
+    state.audioNameList.removeWhere((name) => !needAudio.contains(name));
+    // 保存图片
+    var imageNameMap = await Utils().mediaUtil.saveImages(imageFileList: state.imageFileList);
+    // 保存视频
+    var videoNameMap = await Utils().mediaUtil.saveVideo(videoFileList: state.videoFileList);
     //保存录音
-    await Utils().mediaUtil.saveAudio(state.audioNameList);
+    var audioNameMap = await Utils().mediaUtil.saveAudio(state.audioNameList);
+    var content = await Kmp.replaceWithKmp(
+        text: originContent, replacements: {...imageNameMap, ...videoNameMap, ...audioNameMap});
     state.currentDiary
       ..title = titleTextEditingController.text
-      ..content = jsonEncode(quillController.document.toDelta().toJson())
-      ..contentText = quillController.document.toPlainText().trim()
+      ..content = content
+      ..type = state.type.value
+      ..contentText = _toPlainText()
       ..audioName = state.audioNameList
-      ..imageName = imageNameList
-      ..videoName = videoNameList
+      ..imageName = imageNameMap.values.toList()
+      ..videoName = videoNameMap.values.toList()
       ..imageColor = await getCoverColor()
       ..aspect = await getCoverAspect();
+
     await Utils().isarUtil.updateADiary(state.currentDiary);
     state.isNew ? Get.backLegacy(result: state.currentDiary.categoryId ?? '') : Get.backLegacy(result: 'changed');
     Utils().noticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');
   }
 
-  // void handleBack() {
-  //   DateTime currentTime = DateTime.now();
-  //   if (state.oldTime != null && currentTime.difference(state.oldTime!) < const Duration(seconds: 3)) {
-  //     Get.backLegacy();
-  //   } else {
-  //     state.oldTime = currentTime;
-  //     Utils().noticeUtil.showToast('再滑一次退出');
-  //   }
-  // }
+  DateTime? oldTime;
+
+  void handleBack() {
+    DateTime currentTime = DateTime.now();
+    if (oldTime != null && currentTime.difference(oldTime!) < const Duration(seconds: 3)) {
+      Get.backLegacy();
+    } else {
+      oldTime = currentTime;
+      Utils().noticeUtil.showToast('再滑一次退出');
+    }
+  }
 
   Future<void> changeDate() async {
     var nowDateTime = await showDatePicker(
@@ -365,7 +422,6 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
 
   //去画画
   void toDrawPage() {
-    Get.backLegacy();
     Get.toNamed(AppRoutes.drawPage);
   }
 
@@ -416,6 +472,11 @@ class EditLogic extends GetxController with WidgetsBindingObserver {
   //获取音频名称
   void setAudioName(String name) {
     state.audioNameList.add(name);
+    final audioBlock = AudioBlockEmbed.fromName(name);
+    final index = quillController.selection.baseOffset;
+    final length = quillController.selection.extentOffset - index;
+    // 插入音频 Embed
+    quillController.replaceText(index, length, audioBlock, TextSelection.collapsed(offset: index + 1));
     update(['Audio']);
   }
 

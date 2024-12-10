@@ -1,3 +1,4 @@
+import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:mood_diary/utils/utils.dart';
 
 class SettingState {
@@ -8,7 +9,7 @@ class SettingState {
 
   int color = Utils().prefUtil.getValue<int>('color')!;
 
-  // late RxInt fontTheme;
+  late RxInt fontTheme;
 
   bool lock = Utils().prefUtil.getValue<bool>('lock')!;
 
@@ -19,6 +20,6 @@ class SettingState {
   String customTitle = Utils().prefUtil.getValue<String>('customTitleName')!;
 
   SettingState() {
-    // fontTheme = Utils().prefUtil.getValue<int>('fontTheme')!.obs;
+    fontTheme = Utils().prefUtil.getValue<int>('fontTheme')!.obs;
   }
 }

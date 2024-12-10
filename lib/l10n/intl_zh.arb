@@ -95,5 +95,10 @@
   "mediaTypeImage": "图片",
   "mediaTypeAudio": "音频",
   "mediaTypeVideo": "视频",
-  "mediaDeleteUseLessFile": "清理无用文件"
+  "mediaDeleteUseLessFile": "清理无用文件",
+  "backupSyncTitle": "备份与同步",
+  "backupSyncLocal": "局域网传输",
+  "backupSyncWebdav": "WebDAV",
+  "backupSyncWebdavNoOption": "未配置",
+  "backupSyncWebdavOption": "已配置"
 }

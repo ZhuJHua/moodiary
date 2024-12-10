@@ -51,6 +51,7 @@ class AppPages {
     //启动页
     GetPage(
       name: AppRoutes.startPage,
+      transition: Transition.fadeIn,
       page: () => const StartPage(),
       binds: [Bind.lazyPut(() => StartLogic())],
     ),
@@ -58,6 +59,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.homePage,
       page: () => const HomePage(),
+      transition: Transition.fadeIn,
       binds: [
         Bind.lazyPut(() => HomeLogic()),
       ],
@@ -71,12 +73,14 @@ class AppPages {
     //日记页路由
     GetPage(
       name: AppRoutes.diaryPage,
+      transition: Transition.fadeIn,
       page: () => DiaryDetailsPage(),
     ),
     //图片路由
     GetPage(
       name: AppRoutes.photoPage,
       page: () => const ImagePage(),
+      popGesture: false,
       binds: [Bind.lazyPut(() => ImageLogic())],
     ),
     //回收站
@@ -95,6 +99,8 @@ class AppPages {
     GetPage(
       name: AppRoutes.editPage,
       page: () => const EditPage(),
+      popGesture: false,
+      transition: Transition.fadeIn,
       binds: [Bind.lazyPut(() => EditLogic())],
     ),
     //分享页路由
@@ -135,6 +141,7 @@ class AppPages {
     //锁
     GetPage(
       name: AppRoutes.lockPage,
+      transition: Transition.fadeIn,
       page: () => const LockPage(),
       binds: [Bind.lazyPut(() => LockLogic())],
     ),

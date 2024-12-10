@@ -66,7 +66,19 @@ class PrefUtil {
     //首页视图模式
     'homeViewMode',
     //自动获取天气
-    'autoWeather'
+    'autoWeather',
+    //webdav配置
+    'webDavOption',
+    // 日记展示头图
+    'diaryHeader',
+    // 首行缩进
+    'firstLineIndent',
+    // 自动设置分类
+    'autoCategory',
+    // 展示写作时长
+    'showWritingTime',
+    // 展示字数统计
+    'showWordCount',
   };
 
   Future<void> initPref() async {
@@ -85,6 +97,11 @@ class PrefUtil {
     /// v2.4.8
     if (appVersion != null && appVersion.split('+')[0].compareTo('2.4.8') < 0) {
       await compute(Utils().isarUtil.mergeToV2_4_8, Utils().fileUtil.getRealPath('database', ''));
+    }
+
+    /// v2.6.0
+    if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.0') < 0) {
+      await compute(Utils().isarUtil.mergeToV2_6_0, Utils().fileUtil.getRealPath('database', ''));
     }
     // 如果是首次启动或版本不一致
     if (kDebugMode || firstStart || appVersion == null || appVersion != currentVersion) {
@@ -134,6 +151,12 @@ class PrefUtil {
     await _prefs.setString('customTitleName', _prefs.getString('customTitleName') ?? '');
     await _prefs.setInt('homeViewMode', _prefs.getInt('homeViewMode') ?? ViewModeType.list.number);
     await _prefs.setBool('autoWeather', _prefs.getBool('autoWeather') ?? false);
+    await _prefs.setStringList('webDavOption', _prefs.getStringList('webDavOption') ?? []);
+    await _prefs.setBool('diaryHeader', _prefs.getBool('diaryHeader') ?? true);
+    await _prefs.setBool('firstLineIndent', _prefs.getBool('firstLineIndent') ?? false);
+    await _prefs.setBool('autoCategory', _prefs.getBool('autoCategory') ?? false);
+    await _prefs.setBool('showWritingTime', _prefs.getBool('showWritingTime') ?? true);
+    await _prefs.setBool('showWordCount', _prefs.getBool('showWordCount') ?? true);
   }
 
   Future<void> setValue<T>(String key, T value) async {

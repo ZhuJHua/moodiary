@@ -7,6 +7,7 @@ import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/utils.dart';
 
+import '../../common/values/diary_type.dart';
 import 'home_state.dart';
 
 class HomeLogic extends GetxController with GetTickerProviderStateMixin {
@@ -81,16 +82,15 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   }
 
   //新增一篇日记
-  Future<void> toEditPage() async {
+  Future<void> toEditPage({required DiaryType type}) async {
     //同时关闭fab
-    await HapticFeedback.selectionClick();
+    HapticFeedback.selectionClick();
+
+    /// 需要注意，返回值为 '' 时才是没有选择分类，而返回值为 null 时，是没有进行操作直接返回
+    var res = await Get.toNamed(AppRoutes.editPage, arguments: type);
     fabAnimationController.reset();
     state.isFabExpanded = false;
     update(['Fab']);
-
-    /// 需要注意，返回值为 '' 时才是没有选择分类，而返回值为 null 时，是没有进行操作直接返回
-    var res = await Get.toNamed(AppRoutes.editPage, arguments: 'new');
-
     if (res != null) {
       if (res == '') {
         await diaryLogic.updateDiary(null);
@@ -99,8 +99,6 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
       }
     }
   }
-
-
 
   Future<void> hideNavigatorBar() async {
     await barAnimationController.forward();

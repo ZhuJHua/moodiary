@@ -1,21 +1,25 @@
-import 'dart:io';
-
+import 'package:auto_size_text_field/auto_size_text_field.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_quill_extensions/flutter_quill_extensions.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/category_add/category_add_view.dart';
-import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/components/lottie_modal/lottie_modal.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
+import 'package:mood_diary/components/quill_embed/image_embed.dart';
+import 'package:mood_diary/components/quill_embed/text_indent.dart';
+import 'package:mood_diary/components/quill_embed/video_embed.dart';
 import 'package:mood_diary/components/record_sheet/record_sheet_view.dart';
 import 'package:mood_diary/utils/utils.dart';
 
+import '../../common/values/diary_type.dart';
+import '../../components/quill_embed/audio_embed.dart';
 import 'edit_logic.dart';
 
 class EditPage extends StatelessWidget {
@@ -28,6 +32,7 @@ class EditPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.sizeOf(context);
     final i18n = AppLocalizations.of(context)!;
+    final textStyle = Theme.of(context).textTheme;
 
     Widget buildAddContainer(Widget icon) {
       return Container(
@@ -67,10 +72,7 @@ class EditPage extends StatelessWidget {
       return Wrap(
         children: [
           ...List.generate(state.audioNameList.length, (index) {
-            return AudioPlayerComponent(
-              path: Utils().fileUtil.getCachePath(state.audioNameList[index]),
-              isEdit: true,
-            );
+            return AudioPlayerComponent(path: Utils().fileUtil.getCachePath(state.audioNameList[index]));
           }),
           ActionChip(
             label: const Text('添加'),
@@ -90,280 +92,280 @@ class EditPage extends StatelessWidget {
       );
     }
 
-    Widget buildImage() {
-      return Padding(
-        padding: const EdgeInsets.only(top: 8.0),
-        child: Wrap(
-          spacing: 8.0,
-          runSpacing: 8.0,
-          children: [
-            ...List.generate(state.imageFileList.length, (index) {
-              return InkWell(
-                borderRadius: AppBorderRadius.smallBorderRadius,
-                onLongPress: () {
-                  logic.setCover(index);
-                },
-                onTap: () {
-                  logic.toPhotoView(
-                      List.generate(state.imageFileList.length, (index) {
-                        return state.imageFileList[index].path;
-                      }),
-                      index);
-                },
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
-                  width: ((size.width - 56.0) / 3).truncateToDouble(),
-                  height: ((size.width - 56.0) / 3).truncateToDouble(),
-                  padding: const EdgeInsets.all(2.0),
-                  decoration: BoxDecoration(
-                    borderRadius: AppBorderRadius.smallBorderRadius,
-                    border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.5).toInt())),
-                    image: DecorationImage(
-                      image: FileImage(File(state.imageFileList[index].path)),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface.withAlpha((255 * 0.5).toInt()),
-                          borderRadius: AppBorderRadius.smallBorderRadius,
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: const Text('提示'),
-                                    content: const Text('确认删除这张照片吗'),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: () {
-                                            Get.backLegacy();
-                                          },
-                                          child: const Text('取消')),
-                                      TextButton(
-                                          onPressed: () {
-                                            logic.deleteImage(index);
-                                          },
-                                          child: const Text('确认'))
-                                    ],
-                                  );
-                                });
-                          },
-                          constraints: const BoxConstraints(),
-                          icon: Icon(
-                            Icons.remove_circle_outlined,
-                            color: colorScheme.tertiary,
-                          ),
-                          style: IconButton.styleFrom(
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            padding: const EdgeInsets.all(4.0),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-            ...[
-              InkWell(
-                borderRadius: AppBorderRadius.smallBorderRadius,
-                onTap: () {
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        return SimpleDialog(
-                          title: const Text('选择来源'),
-                          children: [
-                            SimpleDialogOption(
-                              child: const Row(
-                                spacing: 8.0,
-                                children: [
-                                  Icon(Icons.photo_library_outlined),
-                                  Text('相册'),
-                                ],
-                              ),
-                              onPressed: () {
-                                logic.pickMultiPhoto();
-                              },
-                            ),
-                            SimpleDialogOption(
-                              child: const Row(
-                                spacing: 8.0,
-                                children: [
-                                  Icon(Icons.camera_alt_outlined),
-                                  Text('相机'),
-                                ],
-                              ),
-                              onPressed: () {
-                                logic.pickPhoto(ImageSource.camera);
-                              },
-                            ),
-                            SimpleDialogOption(
-                              child: const Row(
-                                spacing: 8.0,
-                                children: [
-                                  Icon(Icons.image_search_outlined),
-                                  Text('网络'),
-                                ],
-                              ),
-                              onPressed: () {
-                                logic.networkImage();
-                              },
-                            ),
-                            SimpleDialogOption(
-                              child: const Row(
-                                spacing: 8.0,
-                                children: [
-                                  Icon(Icons.draw_outlined),
-                                  Text('画画'),
-                                ],
-                              ),
-                              onPressed: () {
-                                logic.toDrawPage();
-                              },
-                            ),
-                          ],
-                        );
-                      });
-                },
-                child: buildAddContainer(const FaIcon(FontAwesomeIcons.image)),
-              )
-            ],
-          ],
-        ),
-      );
-    }
+    // Widget buildImage() {
+    //   return Padding(
+    //     padding: const EdgeInsets.only(top: 8.0),
+    //     child: Wrap(
+    //       spacing: 8.0,
+    //       runSpacing: 8.0,
+    //       children: [
+    //         ...List.generate(state.imageFileList.length, (index) {
+    //           return InkWell(
+    //             borderRadius: AppBorderRadius.smallBorderRadius,
+    //             onLongPress: () {
+    //               logic.setCover(index);
+    //             },
+    //             onTap: () {
+    //               logic.toPhotoView(
+    //                   List.generate(state.imageFileList.length, (index) {
+    //                     return state.imageFileList[index].path;
+    //                   }),
+    //                   index);
+    //             },
+    //             child: Container(
+    //               constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
+    //               width: ((size.width - 56.0) / 3).truncateToDouble(),
+    //               height: ((size.width - 56.0) / 3).truncateToDouble(),
+    //               padding: const EdgeInsets.all(2.0),
+    //               decoration: BoxDecoration(
+    //                 borderRadius: AppBorderRadius.smallBorderRadius,
+    //                 border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.5).toInt())),
+    //                 image: DecorationImage(
+    //                   image: FileImage(File(state.imageFileList[index].path)),
+    //                   fit: BoxFit.cover,
+    //                 ),
+    //               ),
+    //               child: Row(
+    //                 mainAxisSize: MainAxisSize.min,
+    //                 mainAxisAlignment: MainAxisAlignment.end,
+    //                 crossAxisAlignment: CrossAxisAlignment.start,
+    //                 children: [
+    //                   Container(
+    //                     decoration: BoxDecoration(
+    //                       color: colorScheme.surface.withAlpha((255 * 0.5).toInt()),
+    //                       borderRadius: AppBorderRadius.smallBorderRadius,
+    //                     ),
+    //                     child: IconButton(
+    //                       onPressed: () {
+    //                         showDialog(
+    //                             context: context,
+    //                             builder: (context) {
+    //                               return AlertDialog(
+    //                                 title: const Text('提示'),
+    //                                 content: const Text('确认删除这张照片吗'),
+    //                                 actions: [
+    //                                   TextButton(
+    //                                       onPressed: () {
+    //                                         Get.backLegacy();
+    //                                       },
+    //                                       child: const Text('取消')),
+    //                                   TextButton(
+    //                                       onPressed: () {
+    //                                         logic.deleteImage(index);
+    //                                       },
+    //                                       child: const Text('确认'))
+    //                                 ],
+    //                               );
+    //                             });
+    //                       },
+    //                       constraints: const BoxConstraints(),
+    //                       icon: Icon(
+    //                         Icons.remove_circle_outlined,
+    //                         color: colorScheme.tertiary,
+    //                       ),
+    //                       style: IconButton.styleFrom(
+    //                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    //                         padding: const EdgeInsets.all(4.0),
+    //                       ),
+    //                     ),
+    //                   ),
+    //                 ],
+    //               ),
+    //             ),
+    //           );
+    //         }),
+    //         ...[
+    //           InkWell(
+    //             borderRadius: AppBorderRadius.smallBorderRadius,
+    //             onTap: () {
+    //               showDialog(
+    //                   context: context,
+    //                   builder: (context) {
+    //                     return SimpleDialog(
+    //                       title: const Text('选择来源'),
+    //                       children: [
+    //                         SimpleDialogOption(
+    //                           child: const Row(
+    //                             spacing: 8.0,
+    //                             children: [
+    //                               Icon(Icons.photo_library_outlined),
+    //                               Text('相册'),
+    //                             ],
+    //                           ),
+    //                           onPressed: () {
+    //                             logic.pickMultiPhoto();
+    //                           },
+    //                         ),
+    //                         SimpleDialogOption(
+    //                           child: const Row(
+    //                             spacing: 8.0,
+    //                             children: [
+    //                               Icon(Icons.camera_alt_outlined),
+    //                               Text('相机'),
+    //                             ],
+    //                           ),
+    //                           onPressed: () {
+    //                             logic.pickPhoto(ImageSource.camera);
+    //                           },
+    //                         ),
+    //                         SimpleDialogOption(
+    //                           child: const Row(
+    //                             spacing: 8.0,
+    //                             children: [
+    //                               Icon(Icons.image_search_outlined),
+    //                               Text('网络'),
+    //                             ],
+    //                           ),
+    //                           onPressed: () {
+    //                             logic.networkImage();
+    //                           },
+    //                         ),
+    //                         SimpleDialogOption(
+    //                           child: const Row(
+    //                             spacing: 8.0,
+    //                             children: [
+    //                               Icon(Icons.draw_outlined),
+    //                               Text('画画'),
+    //                             ],
+    //                           ),
+    //                           onPressed: () {
+    //                             logic.toDrawPage();
+    //                           },
+    //                         ),
+    //                       ],
+    //                     );
+    //                   });
+    //             },
+    //             child: buildAddContainer(const FaIcon(FontAwesomeIcons.image)),
+    //           )
+    //         ],
+    //       ],
+    //     ),
+    //   );
+    // }
 
-    Widget buildVideo() {
-      return Padding(
-        padding: const EdgeInsets.only(top: 8.0),
-        child: Wrap(
-          spacing: 8.0,
-          runSpacing: 8.0,
-          children: [
-            ...List.generate(state.videoFileList.length, (index) {
-              return InkWell(
-                onTap: () {
-                  logic.toVideoView(
-                      List.generate(state.videoFileList.length, (index) {
-                        return state.videoFileList[index].path;
-                      }),
-                      index);
-                },
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
-                  width: ((size.width - 56.0) / 3).truncateToDouble(),
-                  height: ((size.width - 56.0) / 3).truncateToDouble(),
-                  padding: const EdgeInsets.all(2.0),
-                  decoration: BoxDecoration(
-                      borderRadius: AppBorderRadius.smallBorderRadius,
-                      border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.5).toInt())),
-                      image: DecorationImage(
-                        image: FileImage(File(state.videoThumbnailFileList[index].path)),
-                        fit: BoxFit.cover,
-                      )),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface.withAlpha((255 * 0.5).toInt()),
-                          borderRadius: AppBorderRadius.smallBorderRadius,
-                        ),
-                        child: IconButton(
-                          onPressed: () {
-                            showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: const Text('提示'),
-                                    content: const Text('确认删除这个视频吗'),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: () {
-                                            Get.backLegacy();
-                                          },
-                                          child: const Text('取消')),
-                                      TextButton(
-                                          onPressed: () {
-                                            logic.deleteVideo(index);
-                                          },
-                                          child: const Text('确认'))
-                                    ],
-                                  );
-                                });
-                          },
-                          constraints: const BoxConstraints(),
-                          icon: Icon(
-                            Icons.remove_circle_outlined,
-                            color: colorScheme.tertiary,
-                          ),
-                          style: IconButton.styleFrom(
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            padding: const EdgeInsets.all(4.0),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-            if (state.videoFileList.length < 9) ...[
-              InkWell(
-                borderRadius: AppBorderRadius.smallBorderRadius,
-                onTap: () {
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        return SimpleDialog(
-                          title: const Text('选择来源'),
-                          children: [
-                            SimpleDialogOption(
-                              child: const Row(
-                                spacing: 8.0,
-                                children: [
-                                  Icon(Icons.photo_library_outlined),
-                                  Text('相册'),
-                                ],
-                              ),
-                              onPressed: () {
-                                logic.pickVideo(ImageSource.gallery);
-                              },
-                            ),
-                            SimpleDialogOption(
-                              child: const Row(
-                                spacing: 8.0,
-                                children: [
-                                  Icon(Icons.camera_alt_outlined),
-                                  Text('拍摄'),
-                                ],
-                              ),
-                              onPressed: () {
-                                logic.pickVideo(ImageSource.camera);
-                              },
-                            ),
-                          ],
-                        );
-                      });
-                },
-                child: buildAddContainer(const FaIcon(FontAwesomeIcons.video)),
-              )
-            ],
-          ],
-        ),
-      );
-    }
+    // Widget buildVideo() {
+    //   return Padding(
+    //     padding: const EdgeInsets.only(top: 8.0),
+    //     child: Wrap(
+    //       spacing: 8.0,
+    //       runSpacing: 8.0,
+    //       children: [
+    //         ...List.generate(state.videoFileList.length, (index) {
+    //           return InkWell(
+    //             onTap: () {
+    //               logic.toVideoView(
+    //                   List.generate(state.videoFileList.length, (index) {
+    //                     return state.videoFileList[index].path;
+    //                   }),
+    //                   index);
+    //             },
+    //             child: Container(
+    //               constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
+    //               width: ((size.width - 56.0) / 3).truncateToDouble(),
+    //               height: ((size.width - 56.0) / 3).truncateToDouble(),
+    //               padding: const EdgeInsets.all(2.0),
+    //               decoration: BoxDecoration(
+    //                   borderRadius: AppBorderRadius.smallBorderRadius,
+    //                   border: Border.all(color: colorScheme.outline.withAlpha((255 * 0.5).toInt())),
+    //                   image: DecorationImage(
+    //                     image: FileImage(File(state.videoThumbnailFileList[index].path)),
+    //                     fit: BoxFit.cover,
+    //                   )),
+    //               child: Row(
+    //                 mainAxisSize: MainAxisSize.min,
+    //                 mainAxisAlignment: MainAxisAlignment.end,
+    //                 crossAxisAlignment: CrossAxisAlignment.start,
+    //                 children: [
+    //                   Container(
+    //                     decoration: BoxDecoration(
+    //                       color: colorScheme.surface.withAlpha((255 * 0.5).toInt()),
+    //                       borderRadius: AppBorderRadius.smallBorderRadius,
+    //                     ),
+    //                     child: IconButton(
+    //                       onPressed: () {
+    //                         showDialog(
+    //                             context: context,
+    //                             builder: (context) {
+    //                               return AlertDialog(
+    //                                 title: const Text('提示'),
+    //                                 content: const Text('确认删除这个视频吗'),
+    //                                 actions: [
+    //                                   TextButton(
+    //                                       onPressed: () {
+    //                                         Get.backLegacy();
+    //                                       },
+    //                                       child: const Text('取消')),
+    //                                   TextButton(
+    //                                       onPressed: () {
+    //                                         logic.deleteVideo(index);
+    //                                       },
+    //                                       child: const Text('确认'))
+    //                                 ],
+    //                               );
+    //                             });
+    //                       },
+    //                       constraints: const BoxConstraints(),
+    //                       icon: Icon(
+    //                         Icons.remove_circle_outlined,
+    //                         color: colorScheme.tertiary,
+    //                       ),
+    //                       style: IconButton.styleFrom(
+    //                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    //                         padding: const EdgeInsets.all(4.0),
+    //                       ),
+    //                     ),
+    //                   ),
+    //                 ],
+    //               ),
+    //             ),
+    //           );
+    //         }),
+    //         if (state.videoFileList.length < 9) ...[
+    //           InkWell(
+    //             borderRadius: AppBorderRadius.smallBorderRadius,
+    //             onTap: () {
+    //               showDialog(
+    //                   context: context,
+    //                   builder: (context) {
+    //                     return SimpleDialog(
+    //                       title: const Text('选择来源'),
+    //                       children: [
+    //                         SimpleDialogOption(
+    //                           child: const Row(
+    //                             spacing: 8.0,
+    //                             children: [
+    //                               Icon(Icons.photo_library_outlined),
+    //                               Text('相册'),
+    //                             ],
+    //                           ),
+    //                           onPressed: () {
+    //                             logic.pickVideo(ImageSource.gallery);
+    //                           },
+    //                         ),
+    //                         SimpleDialogOption(
+    //                           child: const Row(
+    //                             spacing: 8.0,
+    //                             children: [
+    //                               Icon(Icons.camera_alt_outlined),
+    //                               Text('拍摄'),
+    //                             ],
+    //                           ),
+    //                           onPressed: () {
+    //                             logic.pickVideo(ImageSource.camera);
+    //                           },
+    //                         ),
+    //                       ],
+    //                     );
+    //                   });
+    //             },
+    //             child: buildAddContainer(const FaIcon(FontAwesomeIcons.video)),
+    //           )
+    //         ],
+    //       ],
+    //     ),
+    //   );
+    // }
 
     Widget buildMoodSlider() {
       return Container(
@@ -386,6 +388,94 @@ class EditPage extends StatelessWidget {
             ),
           ],
         ),
+      );
+    }
+
+    Widget buildPickImage() {
+      return SimpleDialog(
+        title: const Text('选择来源'),
+        children: [
+          SimpleDialogOption(
+            child: const Row(
+              spacing: 8.0,
+              children: [
+                Icon(Icons.photo_library_outlined),
+                Text('相册'),
+              ],
+            ),
+            onPressed: () async {
+              await logic.pickPhoto(ImageSource.gallery);
+            },
+          ),
+          SimpleDialogOption(
+            child: const Row(
+              spacing: 8.0,
+              children: [
+                Icon(Icons.camera_alt_outlined),
+                Text('相机'),
+              ],
+            ),
+            onPressed: () async {
+              await logic.pickPhoto(ImageSource.camera);
+            },
+          ),
+          SimpleDialogOption(
+            child: const Row(
+              spacing: 8.0,
+              children: [
+                Icon(Icons.image_search_outlined),
+                Text('网络'),
+              ],
+            ),
+            onPressed: () async {
+              await logic.networkImage();
+            },
+          ),
+          SimpleDialogOption(
+            child: const Row(
+              spacing: 8.0,
+              children: [
+                Icon(Icons.draw_outlined),
+                Text('画画'),
+              ],
+            ),
+            onPressed: () {
+              logic.toDrawPage();
+            },
+          ),
+        ],
+      );
+    }
+
+    Widget buildPickVideo() {
+      return SimpleDialog(
+        title: const Text('选择来源'),
+        children: [
+          SimpleDialogOption(
+            child: const Row(
+              spacing: 8.0,
+              children: [
+                Icon(Icons.photo_library_outlined),
+                Text('相册'),
+              ],
+            ),
+            onPressed: () async {
+              await logic.pickVideo(ImageSource.gallery);
+            },
+          ),
+          SimpleDialogOption(
+            child: const Row(
+              spacing: 8.0,
+              children: [
+                Icon(Icons.camera_alt_outlined),
+                Text('拍摄'),
+              ],
+            ),
+            onPressed: () async {
+              await logic.pickVideo(ImageSource.camera);
+            },
+          ),
+        ],
       );
     }
 
@@ -508,158 +598,295 @@ class EditPage extends StatelessWidget {
                   return buildMoodSlider();
                 }),
           ),
-          ListTile(
-            title: const Text('图片'),
-            subtitle: GetBuilder<EditLogic>(
-                id: 'Image',
-                builder: (_) {
-                  return buildImage();
-                }),
-          ),
-          ListTile(
-            title: const Text('视频'),
-            subtitle: GetBuilder<EditLogic>(
-                id: 'Video',
-                builder: (_) {
-                  return buildVideo();
-                }),
-          ),
-          ListTile(
-            title: const Text('音频'),
-            subtitle: GetBuilder<EditLogic>(
-                id: 'Audio',
-                builder: (_) {
-                  return buildAudioPlayer();
-                }),
-          ),
+          // ListTile(
+          //   title: const Text('图片'),
+          //   subtitle: GetBuilder<EditLogic>(
+          //       id: 'Image',
+          //       builder: (_) {
+          //         return buildImage();
+          //       }),
+          // ),
+          // ListTile(
+          //   title: const Text('视频'),
+          //   subtitle: GetBuilder<EditLogic>(
+          //       id: 'Video',
+          //       builder: (_) {
+          //         return buildVideo();
+          //       }),
+          // ),
+          // ListTile(
+          //   title: const Text('音频'),
+          //   subtitle: GetBuilder<EditLogic>(
+          //       id: 'Audio',
+          //       builder: (_) {
+          //         return buildAudioPlayer();
+          //       }),
+          // ),
         ],
+      );
+    }
+
+    Widget buildTimer() {
+      return Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainer.withAlpha(240),
+          borderRadius: AppBorderRadius.smallBorderRadius,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Obx(() {
+          return RichText(
+            text: TextSpan(
+              text: '时间 ',
+              style: textStyle.labelSmall,
+              children: [
+                TextSpan(
+                  text: state.durationString.value.toString(),
+                  style: textStyle.labelSmall
+                      ?.copyWith(color: colorScheme.primary, fontFeatures: [const FontFeature.tabularFigures()]),
+                ),
+              ],
+            ),
+          );
+        }),
+      );
+    }
+
+    Widget buildCount() {
+      return Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainer.withAlpha(240),
+          borderRadius: AppBorderRadius.smallBorderRadius,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Obx(() {
+          return RichText(
+            text: TextSpan(
+              text: '字数 ',
+              style: textStyle.labelSmall,
+              children: [
+                TextSpan(
+                  text: state.totalCount.value.toString(),
+                  style: textStyle.labelSmall
+                      ?.copyWith(color: colorScheme.primary, fontFeatures: [const FontFeature.tabularFigures()]),
+                ),
+              ],
+            ),
+          );
+        }),
+      );
+    }
+
+    Widget buildTitle() {
+      return AutoSizeTextField(
+        controller: logic.titleTextEditingController,
+        focusNode: logic.titleFocusNode,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        style: textStyle.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+        textInputAction: TextInputAction.done,
+        decoration: const InputDecoration(
+          border: UnderlineInputBorder(borderSide: BorderSide.none),
+          hintText: '标题',
+          contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
+        ),
+      );
+    }
+
+    Widget buildToolBar() {
+      return TooltipTheme(
+        data: const TooltipThemeData(preferBelow: false),
+        child: QuillSimpleToolbar(
+          controller: logic.quillController,
+          config: QuillSimpleToolbarConfig(
+            showFontFamily: false,
+            showFontSize: false,
+            showColorButton: false,
+            showBackgroundColorButton: false,
+            showAlignmentButtons: true,
+            showClipboardPaste: false,
+            showClipboardCut: false,
+            showClipboardCopy: false,
+            showIndent: false,
+            showDividers: false,
+            headerStyleType: HeaderStyleType.buttons,
+            multiRowsDisplay: false,
+            showLink: false,
+            embedButtons: [
+              if (state.type == DiaryType.richText)
+                ...FlutterQuillEmbeds.toolbarButtons(
+                  imageButtonOptions: QuillToolbarImageButtonOptions(
+                    imageButtonConfig: QuillToolbarImageConfig(
+                      onRequestPickImage: (_) async {
+                        var imagePath = await Get.dialog(buildPickImage());
+                        return imagePath as String?;
+                      },
+                    ),
+                  ),
+                  videoButtonOptions: QuillToolbarVideoButtonOptions(
+                    videoConfig: QuillToolbarVideoConfig(
+                      onRequestPickVideo: (_) async {
+                        var videoPath = await Get.dialog(buildPickVideo());
+                        return videoPath as String?;
+                      },
+                    ),
+                  ),
+                ),
+              if (state.type == DiaryType.richText)
+                (
+                  BuildContext context,
+                  EmbedButtonContext embedContext,
+                ) {
+                  return IconButton(
+                    icon: const Icon(
+                      Icons.audiotrack,
+                      size: 24,
+                    ),
+                    tooltip: 'Insert Audio',
+                    onPressed: () async {
+                      await showModalBottomSheet(
+                          context: context,
+                          showDragHandle: true,
+                          useSafeArea: true,
+                          isScrollControlled: true,
+                          builder: (context) {
+                            return const RecordSheetComponent();
+                          });
+                    },
+                  );
+                },
+              (
+                BuildContext context,
+                EmbedButtonContext embedContext,
+              ) {
+                return IconButton(
+                  icon: const Icon(
+                    Icons.format_indent_increase,
+                    size: 24,
+                  ),
+                  tooltip: 'Insert Newline',
+                  onPressed: () async {
+                    logic.insertNewLine();
+                  },
+                );
+              },
+            ],
+          ),
+        ),
+      );
+    }
+
+    Widget buildMoreButton() {
+      return IconButton.filled(
+        icon: const Icon(Icons.keyboard_command_key),
+        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (context) {
+              return buildDetail();
+            },
+            showDragHandle: true,
+            useSafeArea: true,
+          );
+        },
       );
     }
 
     Widget buildWriting() {
       return Column(
         children: [
-          TextField(
-            maxLines: 1,
-            controller: logic.titleTextEditingController,
-            focusNode: logic.titleFocusNode,
-            decoration: const InputDecoration(
-                border: UnderlineInputBorder(), contentPadding: EdgeInsets.all(12.0), hintText: '标题'),
-          ),
-          Expanded(
-            child: QuillEditor.basic(
-              focusNode: logic.contentFocusNode,
-              controller: logic.quillController,
-              configurations: const QuillEditorConfigurations(
-                padding: EdgeInsets.all(12.0),
-                placeholder: '正文',
-                sharedConfigurations: QuillSharedConfigurations(),
-                expands: true,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Row(
+          Flexible(
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                GetBuilder<EditLogic>(
-                    id: 'Count',
-                    builder: (_) {
-                      return Text('字数：${state.totalCount.toString()}');
-                    })
+                QuillEditor.basic(
+                  focusNode: logic.contentFocusNode,
+                  controller: logic.quillController,
+                  config: QuillEditorConfig(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                    placeholder: '正文',
+                    expands: true,
+                    paintCursorAboveText: true,
+                    keyboardAppearance: CupertinoTheme.maybeBrightnessOf(context) ?? Theme.of(context).brightness,
+                    customStyles: Utils().themeUtil.getInstance(context),
+                    embedBuilders: [
+                      if (state.type == DiaryType.richText) ...[
+                        ImageEmbedBuilder(isEdit: true),
+                        VideoEmbedBuilder(isEdit: true),
+                        AudioEmbedBuilder(isEdit: true),
+                      ],
+                      TextIndentEmbedBuilder(isEdit: true),
+                    ],
+                  ),
+                ),
+                Positioned(
+                    top: 2,
+                    left: 16,
+                    right: 16,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 8.0,
+                      children: [
+                        if (state.showWriteTime) buildTimer(),
+                        if (state.showWordCount) buildCount(),
+                      ],
+                    )),
               ],
             ),
           ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: TooltipTheme(
-              data: const TooltipThemeData(preferBelow: false),
-              child: QuillSimpleToolbar(
-                controller: logic.quillController,
-                configurations: const QuillSimpleToolbarConfigurations(
-                  showFontFamily: false,
-                  showFontSize: false,
-                  showColorButton: false,
-                  showBackgroundColorButton: false,
-                  showAlignmentButtons: true,
-                  showClipboardPaste: false,
-                  showClipboardCut: false,
-                  showClipboardCopy: false,
-                  headerStyleType: HeaderStyleType.buttons,
-                  sharedConfigurations: QuillSharedConfigurations(),
-                ),
-              ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              spacing: 8.0,
+              children: [
+                buildMoreButton(),
+                Expanded(child: buildToolBar()),
+              ],
             ),
-          ),
+          )
         ],
       );
     }
 
-    return GetBuilder<EditLogic>(
-      id: 'All',
-      builder: (_) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            Scaffold(
-              appBar: AppBar(
-                title: state.isNew ? const Text('新增日记') : const Text('编辑日记'),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.check),
-                    onPressed: () {
-                      logic.unFocus();
-                      logic.saveDiary();
-                    },
-                    tooltip: '保存',
-                  ),
-                ],
-              ),
-              body: size.aspectRatio < 1.0
-                  ? PageView(
-                      controller: logic.pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [KeepAliveWrapper(child: buildWriting()), KeepAliveWrapper(child: buildDetail())],
-                    )
-                  : Row(
-                      children: [
-                        Flexible(flex: 4, child: SafeArea(child: buildWriting())),
-                        Flexible(flex: 3, child: buildDetail())
-                      ],
-                    ),
-              bottomNavigationBar: size.aspectRatio < 1.0
-                  ? GetBuilder<EditLogic>(
-                      id: 'NavigationBar',
-                      builder: (_) {
-                        return NavigationBar(
-                          destinations: const [
-                            NavigationDestination(
-                              icon: Icon(Icons.edit_outlined),
-                              label: '撰写',
-                              selectedIcon: Icon(Icons.edit),
-                            ),
-                            NavigationDestination(
-                              icon: Icon(Icons.more_outlined),
-                              label: '更多',
-                              selectedIcon: Icon(Icons.more),
-                            )
-                          ],
-                          selectedIndex: state.tabIndex,
-                          onDestinationSelected: (index) {
-                            logic.selectTabView(index);
-                          },
-                        );
-                      })
-                  : null,
-            ),
-            GetBuilder<EditLogic>(
-                id: 'modal',
-                builder: (_) {
-                  return state.isSaving ? const LottieModal(type: LoadingType.cat) : const SizedBox.shrink();
-                }),
-          ],
-        );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (canPop, _) {
+        if (canPop) return;
+        logic.handleBack();
       },
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          GetBuilder<EditLogic>(
+              id: 'body',
+              builder: (_) {
+                return Scaffold(
+                  appBar: AppBar(
+                    title: buildTitle(),
+                    titleSpacing: .0,
+                    centerTitle: true,
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.check),
+                        onPressed: () {
+                          logic.unFocus();
+                          logic.saveDiary();
+                        },
+                        tooltip: '保存',
+                      ),
+                    ],
+                  ),
+                  body:
+                      SafeArea(child: state.isInit ? buildWriting() : const Center(child: CircularProgressIndicator())),
+                );
+              }),
+          GetBuilder<EditLogic>(
+              id: 'modal',
+              builder: (_) {
+                return state.isSaving ? const LottieModal(type: LoadingType.cat) : const SizedBox.shrink();
+              }),
+        ],
+      ),
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:mood_diary/components/dashboard/dashboard_view.dart';
 import 'package:mood_diary/components/remove_password/remove_password_view.dart';
 import 'package:mood_diary/components/set_password/set_password_view.dart';
 import 'package:mood_diary/components/theme_mode_dialog/theme_mode_dialog_view.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
 
 import 'setting_logic.dart';
 
@@ -21,6 +22,7 @@ class SettingPage extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final i18n = AppLocalizations.of(context)!;
+    final size = MediaQuery.sizeOf(context);
 
     Widget buildDashboard() {
       return const DashboardComponent();
@@ -50,12 +52,7 @@ class SettingPage extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ListTile(
-            title: Text(
-              '功能',
-              style: textStyle.titleLarge!.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
-            ),
-          ),
+          const SettingTitleTile(title: '功能'),
           GridView(
             gridDelegate:
                 const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 100, childAspectRatio: 1.0),
@@ -100,12 +97,7 @@ class SettingPage extends StatelessWidget {
     Widget buildData() {
       return Column(
         children: [
-          ListTile(
-            title: Text(
-              i18n.settingData,
-              style: textStyle.titleLarge!.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
-            ),
-          ),
+          SettingTitleTile(title: i18n.settingData),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
@@ -208,19 +200,14 @@ class SettingPage extends StatelessWidget {
     Widget buildDisplay() {
       return Column(
         children: [
-          ListTile(
-            title: Text(
-              i18n.settingDisplay,
-              style: textStyle.titleLarge!.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
-            ),
-          ),
+          SettingTitleTile(title: i18n.settingDisplay),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
               children: [
                 ListTile(
                   title: Text(i18n.settingDiary),
-                  leading: const Icon(Icons.article),
+                  leading: const Icon(Icons.article_outlined),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     logic.toDiarySettingPage();
@@ -272,7 +259,6 @@ class SettingPage extends StatelessWidget {
                         });
                   },
                 ),
-
                 ListTile(
                   title: Text(i18n.settingFontSize),
                   leading: const Icon(Icons.format_size_outlined),
@@ -281,85 +267,75 @@ class SettingPage extends StatelessWidget {
                     logic.toFontSizePage();
                   },
                 ),
-                // ListTile(
-                //   title: Text(i18n.settingFontStyle),
-                //   leading: const Icon(Icons.text_format_outlined),
-                //   trailing: Obx(() {
-                //     return Text(
-                //       switch (state.fontTheme.value) {
-                //         0 => '思源黑体',
-                //         1 => '思源宋体',
-                //         int() => throw UnimplementedError(),
-                //       },
-                //       style: textStyle.bodySmall!.copyWith(
-                //         color: colorScheme.primary,
-                //       ),
-                //     );
-                //   }),
-                //   onTap: () {
-                //     showDialog(
-                //         context: context,
-                //         builder: (context) {
-                //           return Obx(() {
-                //             return SimpleDialog(
-                //               title: Text(i18n.settingFontStyle),
-                //               children: [
-                //                 SimpleDialogOption(
-                //                   child: Row(
-                //                     children: [
-                //                       const Text(
-                //                         '思源黑体',
-                //                         style: TextStyle(
-                //                             fontFamily: 'NotoSans SC', fontFamilyFallback: ['NotoSans SC']),
-                //                       ),
-                //                       const SizedBox(
-                //                         width: 10,
-                //                       ),
-                //                       if (state.fontTheme.value == 0) ...[
-                //                         const Icon(Icons.check),
-                //                       ]
-                //                     ],
-                //                   ),
-                //                   onPressed: () {
-                //                     logic.changeFontTheme(0);
-                //                   },
-                //                 ),
-                //                 SimpleDialogOption(
-                //                   child: Row(
-                //                     children: [
-                //                       const Text(
-                //                         '思源宋体',
-                //                         style: TextStyle(
-                //                             fontFamily: 'NotoSerif SC', fontFamilyFallback: ['NotoSerif SC']),
-                //                       ),
-                //                       const SizedBox(
-                //                         width: 10,
-                //                       ),
-                //                       if (state.fontTheme.value == 1) ...[
-                //                         const Icon(Icons.check),
-                //                       ]
-                //                     ],
-                //                   ),
-                //                   onPressed: () {
-                //                     logic.changeFontTheme(1);
-                //                   },
-                //                 ),
-                //               ],
-                //             );
-                //           });
-                //         });
-                //   },
-                // ),
-                // Obx(() {
-                //   return SwitchListTile(
-                //     value: state.getWeather.value,
-                //     onChanged: (value) {
-                //       logic.weather(value);
-                //     },
-                //     title: Text(i18n.settingWeather),
-                //     secondary: const Icon(Icons.sunny),
-                //   );
-                // }),
+                ListTile(
+                  title: Text(i18n.settingFontStyle),
+                  leading: const Icon(Icons.text_format_outlined),
+                  trailing: Obx(() {
+                    return Text(
+                      switch (state.fontTheme.value) {
+                        0 => '思源黑体',
+                        1 => '思源宋体',
+                        int() => throw UnimplementedError(),
+                      },
+                      style: textStyle.bodySmall!.copyWith(
+                        color: colorScheme.primary,
+                      ),
+                    );
+                  }),
+                  onTap: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return Obx(() {
+                            return SimpleDialog(
+                              title: Text(i18n.settingFontStyle),
+                              children: [
+                                SimpleDialogOption(
+                                  child: Row(
+                                    children: [
+                                      const Text(
+                                        '思源黑体',
+                                        style:
+                                            TextStyle(fontFamily: 'NotoSans SC', fontFamilyFallback: ['NotoSans SC']),
+                                      ),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      if (state.fontTheme.value == 0) ...[
+                                        const Icon(Icons.check),
+                                      ]
+                                    ],
+                                  ),
+                                  onPressed: () {
+                                    logic.changeFontTheme(0);
+                                  },
+                                ),
+                                SimpleDialogOption(
+                                  child: Row(
+                                    children: [
+                                      const Text(
+                                        '思源宋体',
+                                        style:
+                                            TextStyle(fontFamily: 'NotoSerif SC', fontFamilyFallback: ['NotoSerif SC']),
+                                      ),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      if (state.fontTheme.value == 1) ...[
+                                        const Icon(Icons.check),
+                                      ]
+                                    ],
+                                  ),
+                                  onPressed: () {
+                                    logic.changeFontTheme(1);
+                                  },
+                                ),
+                              ],
+                            );
+                          });
+                        });
+                  },
+                ),
                 ListTile(
                   title: const Text('自定义首页名称'),
                   leading: const Icon(Icons.drive_file_rename_outline),
@@ -417,12 +393,7 @@ class SettingPage extends StatelessWidget {
     Widget buildPrivacy() {
       return Column(
         children: [
-          ListTile(
-            title: Text(
-              i18n.settingPrivacy,
-              style: textStyle.titleLarge!.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
-            ),
-          ),
+          SettingTitleTile(title: i18n.settingPrivacy),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
@@ -505,12 +476,7 @@ class SettingPage extends StatelessWidget {
     Widget buildMore() {
       return Column(
         children: [
-          ListTile(
-            title: Text(
-              i18n.settingMore,
-              style: textStyle.titleLarge!.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
-            ),
-          ),
+          SettingTitleTile(title: i18n.settingMore),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
@@ -542,34 +508,28 @@ class SettingPage extends StatelessWidget {
       assignId: true,
       builder: (_) {
         return CustomScrollView(
+          cacheExtent: size.height * 2,
           slivers: [
             SliverAppBar(
               title: Text(i18n.homeNavigatorSetting),
               pinned: true,
             ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildDashboard()),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildFeature()),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildData()),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildDisplay()),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildPrivacy()),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(4.0),
-              sliver: SliverToBoxAdapter(child: buildMore()),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 4.0,
+                  children: [
+                    buildDashboard(),
+                    buildFeature(),
+                    buildData(),
+                    buildDisplay(),
+                    buildPrivacy(),
+                    buildMore(),
+                  ],
+                ),
+              ),
             ),
           ],
         );

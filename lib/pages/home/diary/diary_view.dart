@@ -7,6 +7,7 @@ import 'package:mood_diary/components/diary_tab_view/diary_tab_view_view.dart';
 import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
 import 'package:mood_diary/components/search_sheet/search_sheet_view.dart';
+import 'package:mood_diary/components/web_dav_dashboard/web_dav_dashboard_view.dart';
 
 import 'diary_logic.dart';
 
@@ -120,6 +121,18 @@ class DiaryPage extends StatelessWidget {
                         },
                         icon: const Icon(Icons.search),
                         tooltip: i18n.diaryPageSearchButton,
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          showModalBottomSheet(
+                              context: context,
+                              builder: (context) {
+                                return const WebDavDashboardComponent();
+                              },
+                              showDragHandle: true,
+                              useSafeArea: true);
+                        },
+                        icon: const Icon(Icons.cloud_sync_outlined),
                       ),
                       PopupMenuButton(
                         offset: const Offset(0, 46),

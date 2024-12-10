@@ -21,6 +21,8 @@ class MediaPage extends StatelessWidget {
     final state = Bind.find<MediaLogic>().state;
     final i18n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final size = MediaQuery.sizeOf(context);
 
     final iconMap = {
       MediaType.image: FontAwesomeIcons.image,
@@ -52,6 +54,7 @@ class MediaPage extends StatelessWidget {
                 child: Image.file(
                   File(state.filePath[index]),
                   fit: BoxFit.cover,
+                  cacheWidth: 120 * pixelRatio.toInt(),
                 ),
               ),
             );
@@ -63,10 +66,7 @@ class MediaPage extends StatelessWidget {
       return SliverList.builder(
           key: UniqueKey(),
           itemBuilder: (context, index) {
-            return AudioPlayerComponent(
-              path: state.filePath[index],
-              isEdit: false,
-            );
+            return AudioPlayerComponent(path: state.filePath[index]);
           },
           itemCount: state.filePath.length);
     }
@@ -94,6 +94,7 @@ class MediaPage extends StatelessWidget {
               child: Image.file(
                 File(thumbnailList[index]), // 使用缩略图文件路径显示图像
                 fit: BoxFit.cover, // 让图像完全覆盖卡片
+                cacheWidth: 120 * pixelRatio.toInt(), // 缓存宽度
               ),
             ),
           );
@@ -109,6 +110,7 @@ class MediaPage extends StatelessWidget {
           alignment: Alignment.center,
           children: [
             CustomScrollView(
+              cacheExtent: size.height * 2,
               slivers: [
                 SliverAppBar(
                   title: Text(i18n.homeNavigatorMedia),

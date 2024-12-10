@@ -95,5 +95,10 @@
   "mediaTypeImage": "Image",
   "mediaTypeAudio": "Audio",
   "mediaTypeVideo": "Video",
-  "mediaDeleteUseLessFile": "Delete useless file"
+  "mediaDeleteUseLessFile": "Delete useless file",
+  "backupSyncTitle": "Backup and Sync",
+  "backupSyncLocal": "Local Network Transfer",
+  "backupSyncWebdav": "WebDAV",
+  "backupSyncWebdavNoOption": "Not Configured",
+  "backupSyncWebdavOption": "Configured"
 }
