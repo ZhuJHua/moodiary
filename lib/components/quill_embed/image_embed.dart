@@ -34,8 +34,9 @@ class ImageEmbedBuilder extends EmbedBuilder {
     // 从数据构造 ImageBlockEmbed
     final imagePath = isEdit ? imageEmbed.name : Utils().fileUtil.getRealPath('image', imageEmbed.name);
 
-    return Card.filled(
+    return Card.outlined(
       clipBehavior: Clip.hardEdge,
+      color: Colors.transparent,
       child: Image.file(File(imagePath)),
     );
   }

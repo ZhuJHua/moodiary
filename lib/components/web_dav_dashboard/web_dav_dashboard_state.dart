@@ -18,7 +18,7 @@ class WebDavDashboardState {
 
   RxString toUploadDiariesCount = '...'.obs;
 
-  // 待下载的日记id，只有服务器有，本地没有的情况
+  // 待下载的日记id，只有服务器有，本地没有的情况，或者本地有，但是服务器的更新时间比本地的新
   List<String> toDownloadIds = <String>[];
 
   RxString toDownloadIdsCount = '...'.obs;

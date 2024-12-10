@@ -49,13 +49,11 @@ class VideoPlayerComponent extends StatelessWidget {
 
     return AspectRatio(
       aspectRatio: 16 / 9,
-      child: GetBuilder<VideoPlayerLogic>(
-        assignId: true,
-        tag: videoPath,
-        builder: (_) {
-          return Chewie(controller: logic.chewieController);
-        },
-      ),
+      child: Obx(() {
+        return state.isInitialized.value
+            ? Chewie(controller: logic.chewieController)
+            : const Center(child: CircularProgressIndicator());
+      }),
     );
   }
 }

@@ -94,6 +94,7 @@ dependencies:
   webdav_client: 1.2.2
   confetti: 0.8.0
   flutter_native_splash: 2.4.3
+  rive_animated_icon: 2.0.2
   flutter_localizations:
     sdk: flutter
   rust_lib_mood_diary:

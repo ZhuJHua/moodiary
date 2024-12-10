@@ -34,7 +34,6 @@ class EditState {
 
   bool isProcessing = false;
 
-  KeyboardState keyboardState = KeyboardState.closed;
 
   // 总字数
   RxInt totalCount = 0.obs;

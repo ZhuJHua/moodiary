@@ -20,6 +20,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   objectbox_flutter_libs
   permission_handler_windows
   record_windows
+        rive_common
   screen_brightness_windows
   share_plus
   url_launcher_windows

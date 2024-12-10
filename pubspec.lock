@@ -2018,6 +2018,30 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.1.2"
+  rive:
+    dependency: transitive
+    description:
+      name: rive
+      sha256: "2551a44fa766a7ed3f52aa2b94feda6d18d00edc25dee5f66e72e9b365bb6d6c"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.13.20"
+  rive_animated_icon:
+    dependency: "direct main"
+    description:
+      name: rive_animated_icon
+      sha256: f789e9f026c3e5a3bcb369db9baef0637ddd15d9a7c4fe4749505202cdc11942
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.0.2"
+  rive_common:
+    dependency: transitive
+    description:
+      name: rive_common
+      sha256: "2ba42f80d37a4efd0696fb715787c4785f8a13361e8aea9227c50f1e78cf763a"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.4.15"
   rust_lib_mood_diary:
     dependency: "direct main"
     description:

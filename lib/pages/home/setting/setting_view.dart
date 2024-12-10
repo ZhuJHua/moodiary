@@ -119,61 +119,6 @@ class SettingPage extends StatelessWidget {
                   leading: const Icon(Icons.sync),
                 ),
                 ListTile(
-                  title: Text(i18n.settingExport),
-                  onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text(i18n.settingExportDialogTitle),
-                            content: Text(i18n.settingExportDialogContent),
-                            actions: [
-                              TextButton(
-                                  onPressed: () {
-                                    Get.backLegacy();
-                                  },
-                                  child: Text(i18n.cancel)),
-                              TextButton(
-                                  onPressed: () async {
-                                    await logic.exportFile();
-                                  },
-                                  child: Text(i18n.ok))
-                            ],
-                          );
-                        });
-                  },
-                  trailing: const Icon(Icons.chevron_right),
-                  leading: const Icon(Icons.file_upload_outlined),
-                ),
-                ListTile(
-                  title: Text(i18n.settingImport),
-                  subtitle: Text(i18n.settingImportDes),
-                  onTap: () async {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text(i18n.settingImportDialogTitle),
-                            content: Text(i18n.settingImportDialogContent),
-                            actions: [
-                              TextButton(
-                                  onPressed: () {
-                                    Get.backLegacy();
-                                  },
-                                  child: Text(i18n.cancel)),
-                              TextButton(
-                                  onPressed: () async {
-                                    logic.import();
-                                  },
-                                  child: Text(i18n.settingImportSelectFile))
-                            ],
-                          );
-                        });
-                  },
-                  trailing: const Icon(Icons.chevron_right),
-                  leading: const Icon(Icons.file_download_outlined),
-                ),
-                ListTile(
                   title: Text(i18n.settingClean),
                   leading: const Icon(Icons.cleaning_services_outlined),
                   trailing: GetBuilder<SettingLogic>(

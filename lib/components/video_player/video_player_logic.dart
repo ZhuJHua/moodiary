@@ -14,6 +14,7 @@ class VideoPlayerLogic extends GetxController {
     videoPlayerController: videoPlayerController,
     aspectRatio: 16 / 9,
     useRootNavigator: false,
+    autoInitialize: true,
   );
 
   VideoPlayerLogic({required String videoPath}) {
@@ -22,14 +23,10 @@ class VideoPlayerLogic extends GetxController {
 
   @override
   void onInit() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      state.isInitialized.value = true;
+    });
     super.onInit();
-  }
-
-  @override
-  void onReady() async {
-    await videoPlayerController.initialize();
-    update();
-    super.onReady();
   }
 
   @override

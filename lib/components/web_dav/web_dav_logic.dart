@@ -37,11 +37,6 @@ class WebDavLogic extends GetxController {
     super.onClose();
   }
 
-  Future<void> test() async {
-    var diary = await Utils().isarUtil.getAllDiaries();
-    await webDav.syncDiary(diary);
-  }
-
   Future<void> checkConnectivity() async {
     state.connectivityStatus.value = WebDavConnectivityStatus.connecting;
     var res = await webDav.checkConnectivity();
@@ -90,5 +85,10 @@ class WebDavLogic extends GetxController {
       _firstClickTime = currentTime;
       Utils().noticeUtil.showToast('请再次点击确认删除');
     }
+  }
+
+  void setAutoSync(bool value) async {
+    await Utils().prefUtil.setValue<bool>('autoSync', value);
+    state.autoSync.value = value;
   }
 }

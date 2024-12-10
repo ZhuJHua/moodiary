@@ -10,6 +10,7 @@ import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_multipart/shelf_multipart.dart';
 
+import '../../../pages/home/diary/diary_logic.dart';
 import 'local_send_server_state.dart';
 
 class LocalSendServerLogic extends GetxController {
@@ -99,6 +100,8 @@ class LocalSendServerLogic extends GetxController {
     }
     // 插入日记
     await Utils().isarUtil.insertADiary(diary);
+    await Bind.find<DiaryLogic>().updateCategory();
+    await Bind.find<DiaryLogic>().updateDiary(null);
     state.receiveCount.value += 1;
     return shelf.Response.ok('Data and files received successfully');
   }

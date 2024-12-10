@@ -57,11 +57,16 @@ class WebDavDashboardLogic extends GetxController {
   }
 
   void _findToDownloadIds(Map<String, DateTime> localDiaryMap) {
-    for (var id in state.webdavSyncMap.keys) {
-      if (!localDiaryMap.containsKey(id)) {
+    for (var entry in state.webdavSyncMap.entries) {
+      final id = entry.key;
+      final remoteModifiedTime = DateTime.parse(entry.value);
+
+      // 本地没有该日记，或者本地修改时间早于服务器
+      if (!localDiaryMap.containsKey(id) || remoteModifiedTime.isAfter(localDiaryMap[id]!)) {
         state.toDownloadIds.add(id);
       }
     }
+
     state.toDownloadIdsCount.value = state.toDownloadIds.length.toString();
   }
 

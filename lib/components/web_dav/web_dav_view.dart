@@ -17,7 +17,7 @@ class WebDavComponent extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return ExpansionTile(
       leading: const Icon(Icons.backup_rounded),
-      title: const Text('WebDav'),
+      title: const Text('WebDav-测试版'),
       subtitle: Obx(() {
         return state.hasOption.value
             ? Row(
@@ -37,6 +37,14 @@ class WebDavComponent extends StatelessWidget {
             : const Text('未配置');
       }),
       children: [
+        Obx(() {
+          return SwitchListTile(
+            value: state.autoSync.value,
+            onChanged: logic.setAutoSync,
+            title: const Text('启动时同步'),
+            subtitle: const Text('打开应用时自动同步日记'),
+          );
+        }),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Form(
