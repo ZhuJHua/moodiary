@@ -212,75 +212,75 @@ class SettingPage extends StatelessWidget {
                     logic.toFontSizePage();
                   },
                 ),
-                ListTile(
-                  title: Text(i18n.settingFontStyle),
-                  leading: const Icon(Icons.text_format_outlined),
-                  trailing: Obx(() {
-                    return Text(
-                      switch (state.fontTheme.value) {
-                        0 => '思源黑体',
-                        1 => '思源宋体',
-                        int() => throw UnimplementedError(),
-                      },
-                      style: textStyle.bodySmall!.copyWith(
-                        color: colorScheme.primary,
-                      ),
-                    );
-                  }),
-                  onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return Obx(() {
-                            return SimpleDialog(
-                              title: Text(i18n.settingFontStyle),
-                              children: [
-                                SimpleDialogOption(
-                                  child: Row(
-                                    children: [
-                                      const Text(
-                                        '思源黑体',
-                                        style:
-                                            TextStyle(fontFamily: 'NotoSans SC', fontFamilyFallback: ['NotoSans SC']),
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      if (state.fontTheme.value == 0) ...[
-                                        const Icon(Icons.check),
-                                      ]
-                                    ],
-                                  ),
-                                  onPressed: () {
-                                    logic.changeFontTheme(0);
-                                  },
-                                ),
-                                SimpleDialogOption(
-                                  child: Row(
-                                    children: [
-                                      const Text(
-                                        '思源宋体',
-                                        style:
-                                            TextStyle(fontFamily: 'NotoSerif SC', fontFamilyFallback: ['NotoSerif SC']),
-                                      ),
-                                      const SizedBox(
-                                        width: 10,
-                                      ),
-                                      if (state.fontTheme.value == 1) ...[
-                                        const Icon(Icons.check),
-                                      ]
-                                    ],
-                                  ),
-                                  onPressed: () {
-                                    logic.changeFontTheme(1);
-                                  },
-                                ),
-                              ],
-                            );
-                          });
-                        });
-                  },
-                ),
+                // ListTile(
+                //   title: Text(i18n.settingFontStyle),
+                //   leading: const Icon(Icons.text_format_outlined),
+                //   trailing: Obx(() {
+                //     return Text(
+                //       switch (state.fontTheme.value) {
+                //         0 => '思源黑体',
+                //         1 => '思源宋体',
+                //         int() => throw UnimplementedError(),
+                //       },
+                //       style: textStyle.bodySmall!.copyWith(
+                //         color: colorScheme.primary,
+                //       ),
+                //     );
+                //   }),
+                //   onTap: () {
+                //     showDialog(
+                //         context: context,
+                //         builder: (context) {
+                //           return Obx(() {
+                //             return SimpleDialog(
+                //               title: Text(i18n.settingFontStyle),
+                //               children: [
+                //                 SimpleDialogOption(
+                //                   child: Row(
+                //                     children: [
+                //                       const Text(
+                //                         '思源黑体',
+                //                         style:
+                //                             TextStyle(fontFamily: 'NotoSans SC', fontFamilyFallback: ['NotoSans SC']),
+                //                       ),
+                //                       const SizedBox(
+                //                         width: 10,
+                //                       ),
+                //                       if (state.fontTheme.value == 0) ...[
+                //                         const Icon(Icons.check),
+                //                       ]
+                //                     ],
+                //                   ),
+                //                   onPressed: () {
+                //                     logic.changeFontTheme(0);
+                //                   },
+                //                 ),
+                //                 SimpleDialogOption(
+                //                   child: Row(
+                //                     children: [
+                //                       const Text(
+                //                         '思源宋体',
+                //                         style:
+                //                             TextStyle(fontFamily: 'NotoSerif SC', fontFamilyFallback: ['NotoSerif SC']),
+                //                       ),
+                //                       const SizedBox(
+                //                         width: 10,
+                //                       ),
+                //                       if (state.fontTheme.value == 1) ...[
+                //                         const Icon(Icons.check),
+                //                       ]
+                //                     ],
+                //                   ),
+                //                   onPressed: () {
+                //                     logic.changeFontTheme(1);
+                //                   },
+                //                 ),
+                //               ],
+                //             );
+                //           });
+                //         });
+                //   },
+                // ),
                 ListTile(
                   title: const Text('自定义首页名称'),
                   leading: const Icon(Icons.drive_file_rename_outline),
