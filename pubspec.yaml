@@ -72,8 +72,7 @@ dependencies:
   encrypt: 5.0.3
   objectbox: 4.0.3
   faker: 2.2.0
-  flutter_inappwebview: 6.1.5
-  flutter_rust_bridge: 2.6.0
+  flutter_rust_bridge: 2.7.0
   syncfusion_flutter_sliders: 27.2.5
   flutter_quill_extensions: 11.0.0-dev.4
   connectivity_plus: 6.1.0

@@ -10,7 +10,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   dynamic_color
   fc_native_video_thumbnail
   file_selector_windows
-  flutter_inappwebview_windows
         gal
   geolocator_windows
   isar_flutter_libs
