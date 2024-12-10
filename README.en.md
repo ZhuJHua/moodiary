@@ -1,12 +1,20 @@
-# 📔 Moodiary
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="res/banner/dark_en.svg">
+  <source media="(prefers-color-scheme: light)" srcset="res/banner/light_en.svg">
+  <img alt="The preview for moodiary." src="res/banner/light_zh.svg">
+</picture>
 
-[简体中文](README.md)丨English
+<p align="center"><a href="README.md">简体中文</a> | English</p>
 
-「Moodiary」 is an open source, ad-free, social-free cross-platform private journal written with Flutter. Designed with Material Design, simple and easy to use.
+<p align="center">QQ Group: 760014526</p>
 
-QQ Group: 760014526
-
-![Flutter Version](https://img.shields.io/badge/Flutter-3.26.0--0.1.pre-blue?style=for-the-badge) ![GitHub repo size](https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070) ![GitHub Repo stars](https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a) ![GitHub Release](https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f) ![GitHub License](https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7)
+<div align="center">
+  <img src="https://img.shields.io/badge/Flutter-3.26.0--0.1.pre-blue?style=for-the-badge">
+  <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
+  <img src="https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a">
+  <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
+  <img src="https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7">
+</div>
 
 ## ✨ Feature
 
@@ -18,7 +26,7 @@ QQ Group: 760014526
 - **Custom theme**：🌈 Supports light and dark modes, as well as a variety of color schemes.
 - **Data security**：🔒 Keep your diary safe with a password, supports biometric unlocking.
 - **Export and share**：🧾 Support all data import/export, as well as single diary sharing.
-- **Backup and synchronization**：☁ Support for LAN synchronization and WebDav backup (coming soon).
+- **Backup and synchronization**：☁ Support for LAN synchronization and WebDav backup.
 - **Footprint Map** : 🗺️ See your footprints on a map. Every step of your life is worth documenting.
 - **Intelligent assistant**：💬 Supports access to third-party large models, provides Q&A, sentiment
   analysis and other functions.
