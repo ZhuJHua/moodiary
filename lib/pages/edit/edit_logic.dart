@@ -96,15 +96,16 @@ class EditLogic extends GetxController {
 
   Future<void> _initEdit() async {
     //如果是新增，更具不同的分类展示不同的操作
-    if (Get.arguments.runtimeType == DiaryType) {
+    if (Get.arguments.runtimeType == List<Object?>) {
       // 配置日记类型
-      state.type = Get.arguments as DiaryType;
+      state.type = Get.arguments[0] as DiaryType;
       quillController = QuillController.basic();
       state.currentDiary = Diary();
       if (state.firstLineIndent) insertNewLine();
       if (state.autoWeather) {
         unawaited(getPositionAndWeather());
       }
+      if (state.autoCategory) selectCategory(Get.arguments[1] as String?);
     } else {
       //如果是编辑，将日记对象赋值
       state.isNew = false;
