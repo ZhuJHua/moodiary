@@ -1,13 +1,21 @@
-# 📔 心绪日记
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="res/banner/dark_zh.svg">
+  <source media="(prefers-color-scheme: light)" srcset="res/banner/light_zh.svg">
+  <img alt="The preview for moodiary." src="res/banner/light_zh.svg">
+</picture>
 
-简体中文丨[English](README.en.md)
+<p align="center">简体中文 | <a href="README.en.md">English</a></p>
 
-「心绪日记」 是采用 Flutter 编写的，无广告、无社交的开源跨平台私密日记本。采用 Material Design 设计，简洁且易用。
+<p align="center">QQ 交流群：760014526</p>
 
-QQ 交流群：760014526
-
-![Flutter Version](https://img.shields.io/badge/Flutter-3.26.0--0.1.pre-blue?style=for-the-badge) ![GitHub repo size](https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070) ![GitHub Repo stars](https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a) ![GitHub Release](https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f) ![GitHub License](https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7)
-
+<div align="center">
+  <img src="https://img.shields.io/badge/Flutter-3.26.0--0.1.pre-blue?style=for-the-badge">
+  <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
+  <img src="https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a">
+  <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
+  <img src="https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7">
+</div>
+   
 ## ✨ 功能特性
 
 - **跨平台支持**：🌍 兼容 Android、iOS\*、Windows、MacOS\*、Linux\*。
@@ -18,7 +26,7 @@ QQ 交流群：760014526
 - **自定义主题**：🌈 支持浅色和深色模式，以及多种配色的主题。
 - **数据安全**：🔒 通过密码来保障你的日记安全，支持通过生物识别解锁。
 - **导出和分享**：🧾 支持所有数据的导入/导出，以及单篇日记的分享。
-- **备份与同步**：☁ 支持局域网同步，快速在设备间同步数据，以及 WebDav 备份（即将支持）。
+- **备份与同步**：☁ 支持局域网同步，快速在设备间同步数据，以及 WebDav 备份。
 - **足迹地图**：🗺️ 在地图上查看你足迹，生活中的每一步都值得被记录。
 - **智能助手**：💬 支持接入第三方大模型，提供问答、情绪分析等功能。
 - **本地自然语言处理（NLP）**：🤖 更安全的智能助手，让你的日记更懂你。
