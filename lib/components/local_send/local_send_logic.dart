@@ -1,11 +1,35 @@
+import 'dart:io';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 
 import 'local_send_state.dart';
 
+Future<String?> getDeviceIP() async {
+  // 获取当前的连接状态
+  var connectivityResult = await Connectivity().checkConnectivity();
+
+  if (connectivityResult.isNotEmpty) {
+    try {
+      // 获取所有网络接口
+      for (var interface in await NetworkInterface.list()) {
+        // 检查接口是否有 IPv4 地址
+        for (var address in interface.addresses) {
+          if (address.type == InternetAddressType.IPv4) {
+            return address.address; // 返回第一个有效的 IPv4 地址
+          }
+        }
+      }
+    } catch (e) {
+      print('Failed to get IP address: $e');
+    }
+  }
+
+  return null; // 未连接网络或无法获取 IP 地址
+}
+
 class LocalSendLogic extends GetxController {
   final LocalSendState state = LocalSendState();
-  final networkInfo = NetworkInfo();
 
   @override
   void onReady() async {
@@ -14,8 +38,7 @@ class LocalSendLogic extends GetxController {
   }
 
   Future<void> getWifiInfo() async {
-    state.deviceIpAddress = (await networkInfo.getWifiIP()) ?? '无法获取';
-    state.wifiSSID = (await networkInfo.getWifiName()) ?? '无法获取';
+    state.deviceIpAddress = (await getDeviceIP()) ?? '无法获取';
     update(['WifiInfo']);
   }
 

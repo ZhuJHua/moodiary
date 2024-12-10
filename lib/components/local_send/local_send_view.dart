@@ -34,13 +34,15 @@ class LocalSendComponent extends StatelessWidget {
                       onPressed: () {
                         logic.getWifiInfo();
                       },
-                      label: Text('SSID : ${state.wifiSSID}'),
+                      label: Text('IP : ${state.deviceIpAddress}'),
                     ),
                     ActionChip(
-                      onPressed: () {
-                        logic.getWifiInfo();
-                      },
-                      label: Text('IP : ${state.deviceIpAddress}'),
+                      onPressed: () {},
+                      label: Text('扫描端口: ${state.scanPort}'),
+                    ),
+                    ActionChip(
+                      onPressed: () {},
+                      label: Text('传输端口: ${state.transferPort}'),
                     ),
                   ],
                 );
@@ -128,12 +130,7 @@ class LocalSendComponent extends StatelessWidget {
                   builder: (_) {
                     return Visibility(
                       visible: state.showInfo,
-                      child: Wrap(
-                        spacing: 8.0,
-                        runSpacing: 8.0,
-                        alignment: WrapAlignment.spaceEvenly,
-                        children: [buildWifiInfo(), buildPortInfo()],
-                      ),
+                      child: buildWifiInfo(),
                     );
                   }),
               GetBuilder<LocalSendLogic>(
