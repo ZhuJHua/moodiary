@@ -42,6 +42,7 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
       child: Card.filled(
         color: colorScheme.surfaceContainerLow,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (diary.imageName.isNotEmpty) ...[buildImage()],
             Padding(
