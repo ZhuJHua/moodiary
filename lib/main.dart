@@ -71,12 +71,14 @@ void main() async {
     if (details.exceptionAsString().contains('Render')) {
       Utils().noticeUtil.showBug(message: '布局异常！');
     } else {
-      Utils().noticeUtil.showBug(message: '出错了，请联系开发者！');
+      //Utils().noticeUtil.showBug(message: 'error:${details.exception.toString()}\nstack:${details.stack?.toString()}');
+      Utils().noticeUtil.showBug(message: '出错了，请联系开发者处理！');
     }
   };
   PlatformDispatcher.instance.onError = (error, stack) {
     Utils().logUtil.printWTF('Error', error: error, stackTrace: stack);
-    Utils().noticeUtil.showBug(message: '出错了，请联系开发者！');
+    Utils().noticeUtil.showBug(message: '出错了，请联系开发者处理！');
+    //Utils().noticeUtil.showBug(message: 'error:${error.toString()}\nstack:${stack.toString()}');
     return true;
   };
   runApp(GetMaterialApp(
