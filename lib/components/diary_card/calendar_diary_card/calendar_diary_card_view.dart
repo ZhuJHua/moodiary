@@ -16,6 +16,7 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
 
     Widget buildContent() {
       return Column(
@@ -50,7 +51,12 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: FileImage(File(Utils().fileUtil.getRealPath('image', diary.imageName[index]))),
+                    image: ResizeImage(
+                      FileImage(
+                        File(Utils().fileUtil.getRealPath('image', diary.imageName[index])),
+                      ),
+                      width: (100 * pixelRatio).toInt(),
+                    ),
                     fit: BoxFit.cover,
                   ),
                   border: Border.all(color: colorScheme.outline),

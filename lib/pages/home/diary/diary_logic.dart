@@ -173,7 +173,8 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
 
     //重新创建控制器
     tabController.removeListener(_tabBarListener);
-    tabController = TabController(length: state.categoryList.length + 1, vsync: this);
+    tabController =
+        TabController(length: state.categoryList.length + 1, vsync: this, initialIndex: state.currentTabBarIndex);
     tabController.addListener(_tabBarListener);
     update(['All']);
     checkPageChange();

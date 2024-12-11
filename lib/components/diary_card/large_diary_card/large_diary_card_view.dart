@@ -25,7 +25,7 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
           image: DecorationImage(
             image: ResizeImage(
               FileImage(File(Utils().fileUtil.getRealPath('image', diary.imageName.first))),
-              height: (154 * pixelRatio).toInt(),
+              width: (250 * pixelRatio).toInt(),
             ),
             fit: BoxFit.cover,
           ),
@@ -42,6 +42,7 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
       child: Card.filled(
         color: colorScheme.surfaceContainerLow,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (diary.imageName.isNotEmpty) ...[buildImage()],
             Padding(
@@ -63,14 +64,10 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     maxLines: getMaxLines(diary.contentText),
                     style: textStyle.bodyMedium,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        DateFormat.yMMMd().add_Hms().format(diary.time),
-                        style: textStyle.labelSmall,
-                      ),
-                    ],
+                  Text(
+                    DateFormat.yMMMd().add_Hms().format(diary.time),
+                    style: textStyle.labelSmall,
+                    overflow: TextOverflow.ellipsis,
                   )
                 ],
               ),

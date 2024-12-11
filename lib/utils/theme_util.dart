@@ -85,6 +85,7 @@ class ThemeUtil {
         brightness: brightness,
         dynamicSchemeVariant: color == 4 ? DynamicSchemeVariant.monochrome : DynamicSchemeVariant.tonalSpot,
       ),
+      materialTapTargetSize: MaterialTapTargetSize.padded,
       brightness: brightness,
     );
 

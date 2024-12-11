@@ -367,7 +367,7 @@ class EditLogic extends GetxController {
 
     await Utils().isarUtil.updateADiary(state.currentDiary);
     state.isNew ? Get.backLegacy(result: state.currentDiary.categoryId ?? '') : Get.backLegacy(result: 'changed');
-    unawaited(Utils().webDavUtil.uploadSingleDiary(state.currentDiary));
+    if (Utils().webDavUtil.hasOption) unawaited(Utils().webDavUtil.uploadSingleDiary(state.currentDiary));
     Utils().noticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');
   }
 

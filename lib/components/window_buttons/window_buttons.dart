@@ -25,7 +25,7 @@ class WindowButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    getHitokoto();
+    //getHitokoto();
     final buttonColors = WindowButtonColors(
       iconNormal: colorScheme.secondary,
       mouseDown: colorScheme.secondaryContainer,

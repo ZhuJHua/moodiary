@@ -120,11 +120,11 @@ flutter_launcher_icons:
   min_sdk_android: 26
   windows:
     generate: true
-    image_path: "assets/icon/light/light_icon.png"
-    icon_size: 48
+    image_path: "assets/icon/light/light_icon_desktop.png"
+    icon_size: 256
   macos:
     generate: true
-    image_path: "assets/icon/light/light_icon.png"
+    image_path: "assets/icon/light/light_icon_desktop.png"
 
 flutter_native_splash:
   color: "#ffffff"
