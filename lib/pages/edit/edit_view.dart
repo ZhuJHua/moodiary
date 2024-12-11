@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -420,18 +422,19 @@ class EditPage extends StatelessWidget {
               await logic.pickPhoto(ImageSource.gallery);
             },
           ),
-          SimpleDialogOption(
-            child: const Row(
-              spacing: 8.0,
-              children: [
-                Icon(Icons.camera_alt_outlined),
-                Text('相机'),
-              ],
+          if (Platform.isAndroid || Platform.isIOS)
+            SimpleDialogOption(
+              child: const Row(
+                spacing: 8.0,
+                children: [
+                  Icon(Icons.camera_alt_outlined),
+                  Text('相机'),
+                ],
+              ),
+              onPressed: () async {
+                await logic.pickPhoto(ImageSource.camera);
+              },
             ),
-            onPressed: () async {
-              await logic.pickPhoto(ImageSource.camera);
-            },
-          ),
           SimpleDialogOption(
             child: const Row(
               spacing: 8.0,
@@ -476,18 +479,19 @@ class EditPage extends StatelessWidget {
               await logic.pickVideo(ImageSource.gallery);
             },
           ),
-          SimpleDialogOption(
-            child: const Row(
-              spacing: 8.0,
-              children: [
-                Icon(Icons.camera_alt_outlined),
-                Text('拍摄'),
-              ],
+          if (Platform.isAndroid || Platform.isIOS)
+            SimpleDialogOption(
+              child: const Row(
+                spacing: 8.0,
+                children: [
+                  Icon(Icons.camera_alt_outlined),
+                  Text('拍摄'),
+                ],
+              ),
+              onPressed: () async {
+                await logic.pickVideo(ImageSource.camera);
+              },
             ),
-            onPressed: () async {
-              await logic.pickVideo(ImageSource.camera);
-            },
-          ),
         ],
       );
     }
