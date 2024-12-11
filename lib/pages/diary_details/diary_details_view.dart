@@ -294,22 +294,22 @@ class DiaryDetailsPage extends StatelessWidget {
                     ),
                     pinned: true,
                     actions: [
-                      IconButton(
-                          onPressed: () {
-                            showModalBottomSheet(
-                                context: context,
-                                useSafeArea: true,
-                                showDragHandle: true,
-                                builder: (context) {
-                                  return Padding(
-                                    padding: MediaQuery.viewInsetsOf(context),
-                                    child: AskQuestionComponent(
-                                      content: state.diary.contentText,
-                                    ),
-                                  );
-                                });
-                          },
-                          icon: const Icon(Icons.chat)),
+                      // IconButton(
+                      //     onPressed: () {
+                      //       showModalBottomSheet(
+                      //           context: context,
+                      //           useSafeArea: true,
+                      //           showDragHandle: true,
+                      //           builder: (context) {
+                      //             return Padding(
+                      //               padding: MediaQuery.viewInsetsOf(context),
+                      //               child: AskQuestionComponent(
+                      //                 content: state.diary.contentText,
+                      //               ),
+                      //             );
+                      //           });
+                      //     },
+                      //     icon: const Icon(Icons.chat)),
                       PopupMenuButton(
                         offset: const Offset(0, 46),
                         itemBuilder: (context) {
