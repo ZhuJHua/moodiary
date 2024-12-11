@@ -25,7 +25,7 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
           image: DecorationImage(
             image: ResizeImage(
               FileImage(File(Utils().fileUtil.getRealPath('image', diary.imageName.first))),
-              height: (154 * pixelRatio).toInt(),
+              width: (250 * pixelRatio).toInt(),
             ),
             fit: BoxFit.cover,
           ),
