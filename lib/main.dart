@@ -34,8 +34,8 @@ Future<void> initSystem() async {
   //地图缓存
   await FMTCObjectBoxBackend().initialise();
   await const FMTCStore('mapStore').manage.create();
-  unawaited(Utils().webDavUtil.initWebDav());
-  unawaited(RustLib.init());
+  await Utils().webDavUtil.initWebDav();
+  RustLib.init();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.transparent, systemNavigationBarContrastEnforced: false));
