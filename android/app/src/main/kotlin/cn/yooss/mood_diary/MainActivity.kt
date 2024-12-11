@@ -33,6 +33,8 @@ class MainActivity : FlutterFragmentActivity() {
     private fun getOAID(resultCallback: MethodChannel.Result) {
         if (DeviceID.supportedOAID(application)) {
             DeviceID.getOAID(application, HandleGetOAID(resultCallback));
+        } else {
+            resultCallback.success(null)
         }
     }
 
