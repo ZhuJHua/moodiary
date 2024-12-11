@@ -63,14 +63,10 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     maxLines: getMaxLines(diary.contentText),
                     style: textStyle.bodyMedium,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        DateFormat.yMMMd().add_Hms().format(diary.time),
-                        style: textStyle.labelSmall,
-                      ),
-                    ],
+                  Text(
+                    DateFormat.yMMMd().add_Hms().format(diary.time),
+                    style: textStyle.labelSmall,
+                    overflow: TextOverflow.ellipsis,
                   )
                 ],
               ),
