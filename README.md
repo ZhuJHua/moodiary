@@ -9,7 +9,7 @@
 <p align="center">QQ 交流群：760014526</p>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.26.0--0.1.pre-blue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Flutter-3.27.0-blue?style=for-the-badge">
   <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
   <img src="https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a">
   <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
@@ -18,7 +18,7 @@
    
 ## ✨ 功能特性
 
-- **跨平台支持**：🌍 兼容 Android、iOS\*、Windows、MacOS\*、Linux\*。
+- **跨平台支持**：🌍 兼容 Android、iOS\*、Windows\*、MacOS\*、Linux。
 - **Material Design**：🎨 界面直观且用户友好，遵循 Material Design 设计规范。
 - **富文本编辑**：📝 支持加粗、斜体、下划线等多种格式的文本编辑。
 - **多媒体附件**：📷 可以为你的日记添加图片、音频、视频甚至画一张画。
@@ -31,7 +31,7 @@
 - **智能助手**：💬 支持接入第三方大模型，提供问答、情绪分析等功能。
 - **本地自然语言处理（NLP）**：🤖 更安全的智能助手，让你的日记更懂你。
 
-（注：跨平台能力由 Flutter 提供，带 * 号的平台可能需要更多测试）
+（注：跨平台能力由 Flutter 提供，带 * 号的平台可能需要自行配置签名）
 
 ## 🔧 主要技术栈
 
@@ -77,8 +77,10 @@
 
 #### 环境要求
 
-- Flutter SDK (>= 3.26.0-0.1.pre，因为使用了尚未合并到稳定版的功能，我只能使用测试版，等稳定版更新后会尽快迁移)
+- Flutter SDK (>= 3.27.0)
 - Dart (>= 3.6.0)
+- Rust 工具链 (Latest)
+- Clang/LLVM (Latest)
 - 兼容的 IDE（如 Android Studio、Visual Studio Code）
 
 #### 安装步骤
@@ -107,8 +109,9 @@
 4. **打包发布**：
 
     - Android: `flutter build apk`
-    - iOS: `flutter build ios`
+   - iOS: `flutter build ipa`
     - Windows: `flutter build windows`
+   - MacOS: `flutter build macos`
 
 ## 📝 更多说明
 
