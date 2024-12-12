@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:isar/isar.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:mood_diary/common/models/isar/sync_record.dart';
 import 'package:mood_diary/common/models/map.dart';
 import 'package:mood_diary/common/values/diary_type.dart';
 import 'package:mood_diary/utils/utils.dart';
@@ -133,10 +135,22 @@ class IsarUtil {
   }
 
   //更新日记
-  Future<void> updateADiary(Diary diary) async {
+  Future<void> updateADiary({Diary? oldDiary, required Diary newDiary}) async {
+    // 如果没有旧日记，说明是新增日记
+    newDiary.lastModified = DateTime.now();
     await _isar.writeAsync((isar) {
-      isar.diarys.put(diary);
+      isar.diarys.put(newDiary);
     });
+    // 更新日记, 旧日记不为空，说明是更新日记, 需要清理旧日记的媒体文件
+    if (oldDiary != null) {
+      // 清理本地媒体文件
+      await Utils().fileUtil.cleanUpOldMediaFiles(oldDiary, newDiary);
+      if (Utils().webDavUtil.hasOption) {
+        unawaited(Utils().webDavUtil.updateSingleDiary(oldDiary: oldDiary, newDiary: newDiary));
+      }
+    } else {
+      if (Utils().webDavUtil.hasOption) unawaited(Utils().webDavUtil.uploadSingleDiary(newDiary));
+    }
   }
 
   //查询日记
@@ -377,5 +391,24 @@ class IsarUtil {
         isar.diarys.putAll(result);
       });
     }
+  }
+
+  // 添加sync任务
+  Future<void> addSyncRecord(SyncRecord record) async {
+    await _isar.writeAsync((isar) {
+      isar.syncRecords.put(record);
+    });
+  }
+
+  // 获取sync任务
+  Future<List<SyncRecord>> getSyncRecords() async {
+    return await _isar.syncRecords.where().findAllAsync();
+  }
+
+  // 删除sync任务
+  Future<void> deleteSyncRecord(int id) async {
+    await _isar.writeAsync((isar) {
+      isar.syncRecords.delete(id);
+    });
   }
 }

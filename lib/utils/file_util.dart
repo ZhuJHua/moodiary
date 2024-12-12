@@ -5,6 +5,8 @@ import 'package:mood_diary/utils/utils.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../common/models/isar/diary.dart';
+
 class FileUtil {
   late final _filePath = Utils().prefUtil.getValue<String>('supportPath')!;
 
@@ -189,5 +191,22 @@ class FileUtil {
 
   String getErrorLogPath() {
     return join(_filePath, 'error.log');
+  }
+
+  Future<void> cleanUpOldMediaFiles(Diary oldDiary, Diary newDiary) async {
+    // 通用删除方法
+    Future<void> deleteMediaFiles(List<String> oldFiles, List<String> newFiles, String type) async {
+      final tasks = oldFiles
+          .where((file) => !newFiles.contains(file))
+          .map((file) => Utils().fileUtil.deleteFile(Utils().fileUtil.getRealPath(type, file)))
+          .toList();
+      await Future.wait(tasks);
+    }
+
+    // 删除旧的图片、视频和音频文件
+    await deleteMediaFiles(oldDiary.imageName, newDiary.imageName, 'image');
+    await deleteMediaFiles(oldDiary.videoName, newDiary.videoName, 'video');
+    await deleteMediaFiles(oldDiary.audioName, newDiary.audioName, 'audio');
+    await deleteMediaFiles(oldDiary.videoName, newDiary.videoName, 'thumbnail');
   }
 }

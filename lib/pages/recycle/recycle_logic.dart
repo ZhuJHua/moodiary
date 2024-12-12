@@ -33,8 +33,11 @@ class RecycleLogic extends GetxController {
       }
       for (var name in state.diaryList[index].videoName) {
         Utils().fileUtil.deleteFile(Utils().fileUtil.getRealPath('video', name));
+        // 删除缩略图
+        Utils().fileUtil.deleteFile(Utils().fileUtil.getRealPath('thumbnail', name));
       }
       Utils().noticeUtil.showToast('删除成功');
+      await Utils().webDavUtil.deleteSingleDiary(state.diaryList[index]);
       //重新获取
       getDiaryList();
     }
@@ -43,9 +46,9 @@ class RecycleLogic extends GetxController {
   //重新显示
   Future<void> showDiary(Diary diary) async {
     //将show置为true
-    diary.show = true;
+    final newDiary = diary.clone()..show = true;
     //写入数据库
-    await Utils().isarUtil.updateADiary(diary);
+    await Utils().isarUtil.updateADiary(oldDiary: diary, newDiary: newDiary);
     //重新获取
     getDiaryList();
     update();

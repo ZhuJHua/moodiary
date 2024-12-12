@@ -121,6 +121,7 @@ class LocalSendClientLogic extends GetxController {
     formData.fields.add(MapEntry('diary', jsonEncode(diary.toJson())));
     // 如果有分类，把分类名字带过去
     if (diary.categoryId != null) {
+      Utils().logUtil.printInfo(diary.categoryId);
       var categoryName = Utils().isarUtil.getCategoryName(diary.categoryId!)!.categoryName;
       formData.fields.add(MapEntry('categoryName', categoryName));
     }

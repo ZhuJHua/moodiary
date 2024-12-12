@@ -27,7 +27,7 @@ class DiaryPage extends StatelessWidget {
         ),
         child: RiveAnimatedIcon(
           riveIcon: RiveIcon.reload,
-          color: colorScheme.onSecondaryContainer,
+          color: colorScheme.onPrimaryContainer,
           width: 24,
           height: 24,
           loopAnimation: true,

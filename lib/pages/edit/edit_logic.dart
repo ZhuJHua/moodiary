@@ -109,39 +109,39 @@ class EditLogic extends GetxController {
     } else {
       //如果是编辑，将日记对象赋值
       state.isNew = false;
-      var oldDiary = Get.arguments as Diary;
-      state.type = DiaryType.values.firstWhere((type) => type.value == oldDiary.type);
-      state.currentDiary = oldDiary;
+      state.originalDiary = Get.arguments as Diary;
+      state.type = DiaryType.values.firstWhere((type) => type.value == state.originalDiary!.type);
+      state.currentDiary = state.originalDiary!.clone();
       // 获取分类名称
-      if (oldDiary.categoryId != null) {
-        state.categoryName = Utils().isarUtil.getCategoryName(oldDiary.categoryId!)!.categoryName;
+      if (state.originalDiary!.categoryId != null) {
+        state.categoryName = Utils().isarUtil.getCategoryName(state.originalDiary!.categoryId!)!.categoryName;
       }
       // 初始化标题控制器
-      titleTextEditingController.text = oldDiary.title;
+      titleTextEditingController.text = state.originalDiary!.title;
       // 待替换的字符串map
       Map<String, String> replaceMap = {};
       //临时拷贝一份图片数据
-      for (var name in oldDiary.imageName) {
+      for (var name in state.originalDiary!.imageName) {
         // 生成一个临时文件
         var xFile = XFile(Utils().fileUtil.getRealPath('image', name));
         replaceMap[name] = xFile.path;
         state.imageFileList.add(xFile);
       }
       //临时拷贝一份拷贝音频数据到缓存目录
-      for (var name in oldDiary.audioName) {
+      for (var name in state.originalDiary!.audioName) {
         state.audioNameList.add(name);
         await File(Utils().fileUtil.getRealPath('audio', name)).copy(Utils().fileUtil.getCachePath(name));
       }
       //临时拷贝一份视频数据，别忘记了缩略图
-      for (var name in oldDiary.videoName) {
+      for (var name in state.originalDiary!.videoName) {
         // 生成一个临时文件
         var videoXFile = XFile(Utils().fileUtil.getRealPath('video', name));
         replaceMap[name] = videoXFile.path;
         state.videoFileList.add(videoXFile);
       }
       quillController = QuillController(
-          document:
-              Document.fromJson(jsonDecode(await Kmp.replaceWithKmp(text: oldDiary.content, replacements: replaceMap))),
+          document: Document.fromJson(
+              jsonDecode(await Kmp.replaceWithKmp(text: state.originalDiary!.content, replacements: replaceMap))),
           selection: const TextSelection.collapsed(offset: 0));
       state.totalCount.value = _toPlainText().length;
     }
@@ -357,7 +357,6 @@ class EditLogic extends GetxController {
       ..title = titleTextEditingController.text
       ..content = content
       ..type = state.type.value
-      ..lastModified = DateTime.now()
       ..contentText = _toPlainText()
       ..audioName = state.audioNameList
       ..imageName = imageNameMap.values.toList()
@@ -365,9 +364,8 @@ class EditLogic extends GetxController {
       ..imageColor = await getCoverColor()
       ..aspect = await getCoverAspect();
 
-    await Utils().isarUtil.updateADiary(state.currentDiary);
+    await Utils().isarUtil.updateADiary(oldDiary: state.originalDiary, newDiary: state.currentDiary);
     state.isNew ? Get.backLegacy(result: state.currentDiary.categoryId ?? '') : Get.backLegacy(result: 'changed');
-    if (Utils().webDavUtil.hasOption) unawaited(Utils().webDavUtil.uploadSingleDiary(state.currentDiary));
     Utils().noticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');
   }
 

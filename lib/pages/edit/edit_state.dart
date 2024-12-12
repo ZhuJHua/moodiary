@@ -2,13 +2,15 @@ import 'package:cross_file/cross_file.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/diary_type.dart';
-import 'package:mood_diary/common/values/keyboard_state.dart';
 
 import '../../utils/utils.dart';
 
 class EditState {
   // 当前编辑的日记对象
   late Diary currentDiary;
+
+  // 编辑时的原始日记对象
+  Diary? originalDiary;
 
   List<XFile> imageFileList = [];
 
@@ -33,7 +35,6 @@ class EditState {
   int tabIndex = 0;
 
   bool isProcessing = false;
-
 
   // 总字数
   RxInt totalCount = 0.obs;

@@ -43,8 +43,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     if (Utils().prefUtil.getValue<bool>('autoSync') == true) {
       var diary = await Utils().isarUtil.getAllDiaries();
       await Utils().webDavUtil.syncDiary(diary, onDownload: () async {
-        await updateCategory();
-        await updateDiary(null);
+        await refreshAll();
       });
     }
   }
@@ -142,6 +141,16 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
       await Bind.find<DiaryTabViewLogic>(tag: categoryId).updateDiary();
     }
     await Bind.find<DiaryTabViewLogic>(tag: 'default').updateDiary();
+  }
+
+  Future<void> refreshAll() async {
+    await updateCategory();
+    await updateDiary(null, jump: true);
+    await Future.wait(
+      state.categoryList.map(
+        (category) => updateDiary(category.id, jump: false),
+      ),
+    );
   }
 
   /// 分类刷新函数

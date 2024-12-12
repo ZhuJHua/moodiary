@@ -98,8 +98,7 @@ class LocalSendServerLogic extends GetxController {
     }
     // 插入日记
     await Utils().isarUtil.insertADiary(diary);
-    await Bind.find<DiaryLogic>().updateCategory();
-    await Bind.find<DiaryLogic>().updateDiary(null);
+    await Bind.find<DiaryLogic>().refreshAll();
     state.receiveCount.value += 1;
     return shelf.Response.ok('Data and files received successfully');
   }

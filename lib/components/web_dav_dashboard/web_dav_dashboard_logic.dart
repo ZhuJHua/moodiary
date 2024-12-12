@@ -49,6 +49,7 @@ class WebDavDashboardLogic extends GetxController {
   void _findToUploadDiaries(Map<String, DateTime> localDiaryMap) {
     for (var diary in state.diaryList) {
       final remoteModifiedTime = state.webdavSyncMap[diary.id];
+      if (remoteModifiedTime == 'delete') continue;
       if (remoteModifiedTime == null || DateTime.parse(remoteModifiedTime).isBefore(diary.lastModified)) {
         state.toUploadDiaries.add(diary);
       }
@@ -58,6 +59,7 @@ class WebDavDashboardLogic extends GetxController {
 
   void _findToDownloadIds(Map<String, DateTime> localDiaryMap) {
     for (var entry in state.webdavSyncMap.entries) {
+      if (entry.value == 'delete') continue;
       final id = entry.key;
       final remoteModifiedTime = DateTime.parse(entry.value);
 
@@ -78,7 +80,7 @@ class WebDavDashboardLogic extends GetxController {
 
   Future<void> fetchingWebDavSyncFlag() async {
     state.webdavSyncMap = await Utils().webDavUtil.fetchServerSyncData();
-    state.webDavDiaryCount.value = state.webdavSyncMap.length.toString();
+    state.webDavDiaryCount.value = state.webdavSyncMap.values.where((element) => element != 'delete').length.toString();
   }
 
   void toWebDavPage() async {
@@ -97,8 +99,7 @@ class WebDavDashboardLogic extends GetxController {
     }, onDownload: () async {
       state.toDownloadIdsCount.value = (int.parse(state.toDownloadIdsCount.value) - 1).toString();
       checkIsDownloading();
-      await Bind.find<DiaryLogic>().updateCategory();
-      await Bind.find<DiaryLogic>().updateDiary(null);
+      await Bind.find<DiaryLogic>().refreshAll();
     }, onComplete: () {
       Get.backLegacy();
       Utils().noticeUtil.showToast('同步完成');

@@ -104,6 +104,12 @@ class PrefUtil {
       await compute(Utils().isarUtil.mergeToV2_6_0, Utils().fileUtil.getRealPath('database', ''));
     }
 
+    /// 修复bug
+    /// v2.6.2
+    if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.2') < 0) {
+      await Utils().mediaUtil.regenerateMissingThumbnails();
+    }
+
     // 如果是首次启动或版本不一致
     if (kDebugMode || firstStart || appVersion == null || appVersion != currentVersion) {
       await _prefs.setString('appVersion', currentVersion);

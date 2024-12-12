@@ -10,6 +10,7 @@ import 'package:image_picker_platform_interface/image_picker_platform_interface.
 import 'package:mime/mime.dart';
 import 'package:mood_diary/src/rust/api/compress.dart';
 import 'package:mood_diary/utils/utils.dart';
+import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 import '../src/rust/api/constants.dart' as r_type;
@@ -98,6 +99,51 @@ class MediaUtil {
     }));
 
     return videoNameMap;
+  }
+
+  Future<void> regenerateMissingThumbnails() async {
+    // 获取视频和缩略图路径的工具方法
+    String getThumbnailPath(String videoName) => Utils().fileUtil.getRealPath('thumbnail', videoName);
+
+    // 获取视频文件夹中的所有文件
+    final videoDir = Directory(Utils().fileUtil.getRealPath('video', ''));
+    if (!videoDir.existsSync()) return;
+
+    // 遍历视频文件
+    final videoFiles = videoDir.listSync().whereType<File>();
+    for (final videoFile in videoFiles) {
+      final videoName = basename(videoFile.path);
+      final thumbnailPath = getThumbnailPath(videoName);
+
+      // 检查是否存在缩略图
+      if (!File(thumbnailPath).existsSync()) {
+        print("Thumbnail missing for $videoName. Regenerating...");
+
+        try {
+          // 生成临时缩略图路径
+          final tempThumbnailPath = Utils().fileUtil.getCachePath('${const Uuid().v7()}.jpeg');
+
+          // 获取视频缩略图
+          await Utils().mediaUtil.getVideoThumbnail(XFile(videoFile.path), tempThumbnailPath);
+
+          // 压缩并保存缩略图
+          await _compressRust(
+            XFile(tempThumbnailPath),
+            thumbnailPath,
+            r_type.CompressFormat.jpeg,
+          );
+
+          // 删除临时文件
+          await File(tempThumbnailPath).delete();
+
+          print("Thumbnail regenerated for $videoName.");
+        } catch (e) {
+          print("Failed to regenerate thumbnail for $videoName: $e");
+        }
+      } else {
+        print("Thumbnail exists for $videoName.");
+      }
+    }
   }
 
   //获取图片宽高
