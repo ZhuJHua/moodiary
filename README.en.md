@@ -9,7 +9,7 @@
 <p align="center">QQ Group: 760014526</p>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.26.0--0.1.pre-blue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Flutter-3.27.0-blue?style=for-the-badge">
   <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
   <img src="https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a">
   <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
@@ -18,7 +18,7 @@
 
 ## ✨ Feature
 
-- **Cross-platform support**：🌍 Compatible with Android, iOS\*, Windows, MacOS\*, Linux\*.
+- **Cross-platform support**：🌍 Compatible with Android, iOS\*, Windows\*, MacOS\*, Linux.
 - **Material Design**：🎨 The interface is intuitive and user-friendly, and follows the Material Design specifications.
 - **Rich text editing**：📝 Supports text editing in bold, italic, underline and other formats.
 - **Multimedia accessories**：📷 You can add pictures, audio, video or even draw a picture to your diary.
@@ -33,7 +33,8 @@
 - **Local Natural Language Processing (NLP)**：🤖 A more secure intelligent assistant that lets your
   diary know you better.
 
-(Note: Cross-platform capabilities are provided by Flutter, platforms with * may require more testing)
+(Note: Cross-platform capabilities are provided by Flutter, platforms with * may need to configure
+your own signatures)
 
 ## 🔧 Main Technology stack
 
@@ -79,8 +80,10 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 #### Environmental requirement
 
-- Flutter SDK (>= 3.26.0-0.1.pre, Because I use features that have not been incorporated into the stable version, I can only use the beta version and will migrate as soon as the stable version is updated)
+- Flutter SDK (>= 3.27.0)
 - Dart (>= 3.6.0)
+- Rust Toolchain (Latest)
+- Clang/LLVM (Latest)
 - Compatible ides (e.g. Android Studio, Visual Studio Code)
 
 #### Installation procedure
@@ -109,8 +112,9 @@ Use it by downloading the compiled installation package in Release, or manually 
 4. **Package release**：
 
    - Android: `flutter build apk`
-   - iOS: `flutter build ios`
+   - iOS: `flutter build ipa`
    - Windows: `flutter build windows`
+   - MacOS: `flutter build macos`
 
 ## 📝 More description
 
