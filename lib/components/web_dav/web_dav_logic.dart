@@ -3,13 +3,14 @@ import 'package:get/get.dart';
 import 'package:mood_diary/utils/webdav_util.dart';
 
 import '../../common/values/webdav.dart';
-import '../../utils/utils.dart';
+import '../../utils/data/pref.dart';
+import '../../utils/notice_util.dart';
 import 'web_dav_state.dart';
 
 class WebDavLogic extends GetxController {
   final WebDavState state = WebDavState();
 
-  WebDavUtil get webDav => Utils().webDavUtil;
+  WebDavUtil get webDav => WebDavUtil();
 
   late TextEditingController webDavUrlController =
       TextEditingController(text: state.hasOption.value ? state.currentOptions[0] : null);
@@ -62,7 +63,7 @@ class WebDavLogic extends GetxController {
       state.hasOption.value = true;
       await checkConnectivity();
       await webDav.initDir();
-      Utils().noticeUtil.showToast('保存成功');
+      NoticeUtil.showToast('保存成功');
     }
   }
 
@@ -73,7 +74,7 @@ class WebDavLogic extends GetxController {
 
     if (_firstClickTime == null) {
       _firstClickTime = currentTime;
-      Utils().noticeUtil.showToast('请再次点击确认删除');
+      NoticeUtil.showToast('请再次点击确认删除');
       return;
     }
     if (currentTime.difference(_firstClickTime!).inSeconds <= 2) {
@@ -83,16 +84,16 @@ class WebDavLogic extends GetxController {
       passwordController.text = '';
       state.hasOption.value = false;
       webDav.removeWebDavOption();
-      Utils().noticeUtil.showToast('删除成功');
+      NoticeUtil.showToast('删除成功');
     } else {
       // 超过3秒，重置点击时间并提示
       _firstClickTime = currentTime;
-      Utils().noticeUtil.showToast('请再次点击确认删除');
+      NoticeUtil.showToast('请再次点击确认删除');
     }
   }
 
   void setAutoSync(bool value) async {
-    await Utils().prefUtil.setValue<bool>('autoSync', value);
+    await PrefUtil.setValue<bool>('autoSync', value);
     state.autoSync.value = value;
   }
 }

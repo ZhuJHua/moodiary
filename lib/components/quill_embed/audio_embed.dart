@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/file_util.dart';
 import '../audio_player/audio_player_view.dart';
 
 class AudioBlockEmbed extends BlockEmbed {
@@ -31,9 +31,7 @@ class AudioEmbedBuilder extends EmbedBuilder {
     EmbedContext embedContext,
   ) {
     final audioEmbed = AudioBlockEmbed(embedContext.node.value.data); // 从数据构造 AudioBlockEmbed
-    final path = isEdit
-        ? Utils().fileUtil.getCachePath(audioEmbed.name)
-        : Utils().fileUtil.getRealPath('audio', audioEmbed.name);
+    final path = isEdit ? FileUtil.getCachePath(audioEmbed.name) : FileUtil.getRealPath('audio', audioEmbed.name);
 
     return AudioPlayerComponent(path: path); // 使用音频播放器组件渲染
   }

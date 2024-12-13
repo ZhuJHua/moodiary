@@ -5,9 +5,9 @@ import 'package:crypto/crypto.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/channel.dart';
-import 'package:mood_diary/utils/utils.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../utils/data/pref.dart';
 import 'start_state.dart';
 
 class StartLogic extends GetxController {
@@ -22,10 +22,10 @@ class StartLogic extends GetxController {
   }
 
   Future<void> toHome() async {
-    await Utils().prefUtil.setValue<bool>('firstStart', false);
+    await PrefUtil.setValue<bool>('firstStart', false);
     if (Platform.isAndroid) {
       await setUuid();
-      //await Utils().supabaseUtil.initSupabase();
+      //await SupabaseUtil().initSupabase();
       //await Utils().updateUtil.initShiply();
     }
     Get.offAllNamed(AppRoutes.homePage);
@@ -34,9 +34,9 @@ class StartLogic extends GetxController {
   Future<void> setUuid() async {
     var oaid = await OAIDChannel.getOAID();
     if (oaid != null) {
-      await Utils().prefUtil.setValue<String>('uuid', md5.convert(utf8.encode(oaid)).toString());
+      await PrefUtil.setValue<String>('uuid', md5.convert(utf8.encode(oaid)).toString());
     } else {
-      await Utils().prefUtil.setValue<String>('uuid', md5.convert(utf8.encode(const Uuid().v7())).toString());
+      await PrefUtil.setValue<String>('uuid', md5.convert(utf8.encode(const Uuid().v7())).toString());
     }
   }
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 import 'local_send_state.dart';
 
@@ -10,7 +11,11 @@ Future<String?> getDeviceIP() async {
   var connectivityResult = await Connectivity().checkConnectivity();
 
   if (connectivityResult.isNotEmpty) {
-    try {
+    // 如果当前连接到wifi
+    if (connectivityResult.contains(ConnectivityResult.wifi)) {
+      final info = NetworkInfo();
+      return info.getWifiIP();
+    } else {
       // 获取所有网络接口
       for (var interface in await NetworkInterface.list()) {
         // 检查接口是否有 IPv4 地址
@@ -20,8 +25,6 @@ Future<String?> getDeviceIP() async {
           }
         }
       }
-    } catch (e) {
-      print('Failed to get IP address: $e');
     }
   }
 

@@ -3,14 +3,16 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+
 import 'api/compress.dart';
 import 'api/constants.dart';
 import 'api/kmp.dart';
-import 'dart:async';
-import 'dart:convert';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart' if (dart.library.js_interop) 'frb_generated.web.dart';
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -74,11 +76,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<Uint8List> crateApiCompressImageCompressContain({required String filePath,
-    CompressFormat? compressFormat,
-    int? maxWidth,
-    int? maxHeight,
-    int? quality});
+  Future<Uint8List> crateApiCompressImageCompressContain(
+      {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality});
 
   Future<List<String>> crateApiKmpKmpFindMatches({required String text, required List<String> patterns});
 
@@ -123,11 +122,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<Uint8List> crateApiCompressImageCompressContain({required String filePath,
-    CompressFormat? compressFormat,
-    int? maxWidth,
-    int? maxHeight,
-    int? quality}) {
+  Future<Uint8List> crateApiCompressImageCompressContain(
+      {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);

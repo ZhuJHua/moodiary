@@ -5,11 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/components/wave_form/wave_form_logic.dart';
 import 'package:mood_diary/pages/edit/edit_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/permission_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../utils/file_util.dart';
 import 'record_sheet_state.dart';
 
 class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
@@ -47,7 +48,7 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
   }
 
   Future<void> startRecorder() async {
-    if (await Utils().permissionUtil.checkPermission(Permission.microphone)) {
+    if (await PermissionUtil.checkPermission(Permission.microphone)) {
       await animationController.forward();
       state.isRecording.value = true;
       state.isStarted.value = true;
@@ -58,7 +59,7 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
       ///暂时保存在缓存目录中
       await audioRecorder.start(
           const RecordConfig(androidConfig: AndroidRecordConfig(muteAudio: true, useLegacy: true)),
-          path: Utils().fileUtil.getCachePath(state.fileName));
+          path: FileUtil.getCachePath(state.fileName));
     }
   }
 

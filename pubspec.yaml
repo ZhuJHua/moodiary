@@ -1,7 +1,7 @@
 name: mood_diary
 description: "A new Flutter project."
 publish_to: 'none'
-version: 2.6.1+61
+version: 2.6.2+62
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -13,7 +13,7 @@ dependencies:
   dio: 5.7.0
   path: 1.9.0
   path_provider: 2.1.5
-  calendar_date_picker2: 1.1.7
+  calendar_date_picker2: 1.1.8
   logger: 2.5.0
   flutter_drawing_board: 0.9.5
   flutter_displaymode: 0.6.0
@@ -23,12 +23,12 @@ dependencies:
   local_auth_android: 1.0.46
   permission_handler: 11.3.1
   image_picker: 1.1.2
-  device_info_plus: 11.1.1
+  device_info_plus: 11.2.0
   photo_view: 0.15.0
-  package_info_plus: 8.1.1
+  package_info_plus: 8.1.2
   uuid: 4.5.1
   flutter_quill: 11.0.0-dev.14
-  share_plus: 10.1.2
+  share_plus: 10.1.3
   url_launcher: 6.3.1
   archive: 3.6.1
   crypto: 3.0.6
@@ -52,7 +52,7 @@ dependencies:
   font_awesome_flutter: 10.8.0
   tflite_flutter: 0.11.0
   sliver_tools: 0.2.12
-  lottie: 3.2.0
+  lottie: 3.3.0
   media_kit: 1.1.11
   media_kit_video: 1.2.5
   media_kit_libs_video: 1.0.5
@@ -67,15 +67,15 @@ dependencies:
   shelf_multipart: 2.0.0
   waterfall_flow: 3.1.0
   smooth_page_indicator: 1.2.0+3
-  table_calendar: 3.1.2
+  table_calendar: 3.1.3
   unicons: 3.0.0
   encrypt: 5.0.3
   objectbox: 4.0.3
   faker: 2.2.0
   flutter_rust_bridge: 2.7.0
-  syncfusion_flutter_sliders: 27.2.5
+  syncfusion_flutter_sliders: 28.1.33
   flutter_quill_extensions: 11.0.0-dev.4
-  connectivity_plus: 6.1.0
+  connectivity_plus: 6.1.1
   image_picker_android: 0.8.12+18
   video_player_media_kit: 1.0.5
   video_player: 2.9.2
@@ -93,6 +93,7 @@ dependencies:
   confetti: 0.8.0
   flutter_native_splash: 2.4.3
   rive_animated_icon: 2.0.2
+  network_info_plus: 6.1.2
   flutter_localizations:
     sdk: flutter
   rust_lib_mood_diary:

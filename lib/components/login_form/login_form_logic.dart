@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/pages/login/login_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/data/supabase.dart';
 import 'login_form_state.dart';
 
 class LoginFormLogic extends GetxController {
@@ -25,7 +25,7 @@ class LoginFormLogic extends GetxController {
   Future<void> submit() async {
     if (state.formKey.currentState!.validate()) {
       state.formKey.currentState!.save();
-      await Utils().supabaseUtil.signIn(state.email, state.password);
+      await SupabaseUtil().signIn(state.email, state.password);
       Get.offAndToNamed(AppRoutes.userPage);
     }
   }

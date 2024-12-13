@@ -9,16 +9,16 @@ import 'package:intl/intl.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/icons.dart';
-import 'package:mood_diary/components/ask_question/ask_question_view.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/theme_util.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../components/quill_embed/audio_embed.dart';
 import '../../components/quill_embed/image_embed.dart';
 import '../../components/quill_embed/text_indent.dart';
 import '../../components/quill_embed/video_embed.dart';
+import '../../utils/file_util.dart';
 import 'diary_details_logic.dart';
 
 class DiaryDetailsPage extends StatelessWidget {
@@ -111,14 +111,14 @@ class DiaryDetailsPage extends StatelessWidget {
     List<Widget> buildMultiImages(colorScheme) {
       return List.generate(state.diary.imageName.length - 1, (index) {
         var actualIndex = index + 1; // 从第二个元素开始
-        var imageProvider = FileImage(File(Utils().fileUtil.getRealPath('image', state.diary.imageName[actualIndex])));
+        var imageProvider = FileImage(File(FileUtil.getRealPath('image', state.diary.imageName[actualIndex])));
         return Padding(
           padding: const EdgeInsets.all(4.0),
           child: InkWell(
             onTap: () {
               logic.toPhotoView(
                   List.generate(state.diary.imageName.length, (index) {
-                    return Utils().fileUtil.getRealPath('image', state.diary.imageName[index]);
+                    return FileUtil.getRealPath('image', state.diary.imageName[index]);
                   }),
                   actualIndex);
             },
@@ -143,15 +143,15 @@ class DiaryDetailsPage extends StatelessWidget {
 
     List<Widget> buildMultiVideo(colorScheme) {
       return List.generate(state.diary.videoName.length, (index) {
-        var imageProvider = FileImage(File(
-            Utils().fileUtil.getRealPath('video', 'thumbnail-${state.diary.videoName[index].substring(6, 42)}.jpeg')));
+        var imageProvider = FileImage(
+            File(FileUtil.getRealPath('video', 'thumbnail-${state.diary.videoName[index].substring(6, 42)}.jpeg')));
         return Padding(
           padding: const EdgeInsets.all(4.0),
           child: InkWell(
             onTap: () {
               logic.toVideoView(
                   List.generate(state.diary.videoName.length, (index) {
-                    return Utils().fileUtil.getRealPath('video', state.diary.videoName[index]);
+                    return FileUtil.getRealPath('video', state.diary.videoName[index]);
                   }),
                   index);
             },
@@ -181,7 +181,7 @@ class DiaryDetailsPage extends StatelessWidget {
       return Wrap(
         children: [
           ...List.generate(state.diary.audioName.length, (index) {
-            return AudioPlayerComponent(path: Utils().fileUtil.getRealPath('audio', state.diary.audioName[index]));
+            return AudioPlayerComponent(path: FileUtil.getRealPath('audio', state.diary.audioName[index]));
           })
         ],
       );
@@ -192,12 +192,12 @@ class DiaryDetailsPage extends StatelessWidget {
         onTap: () {
           logic.toPhotoView(
               List.generate(state.diary.imageName.length, (index) {
-                return Utils().fileUtil.getRealPath('image', state.diary.imageName[index]);
+                return FileUtil.getRealPath('image', state.diary.imageName[index]);
               }),
               0);
         },
         child: Image.file(
-          File(Utils().fileUtil.getRealPath('image', state.diary.imageName.first)),
+          File(FileUtil.getRealPath('image', state.diary.imageName.first)),
           fit: BoxFit.cover,
         ),
       );
@@ -214,13 +214,13 @@ class DiaryDetailsPage extends StatelessWidget {
                 onTap: () {
                   logic.toPhotoView(
                     List.generate(state.diary.imageName.length, (i) {
-                      return Utils().fileUtil.getRealPath('image', state.diary.imageName[i]);
+                      return FileUtil.getRealPath('image', state.diary.imageName[i]);
                     }),
                     index,
                   );
                 },
                 child: Image.file(
-                  File(Utils().fileUtil.getRealPath('image', state.diary.imageName[index])),
+                  File(FileUtil.getRealPath('image', state.diary.imageName[index])),
                   fit: BoxFit.cover,
                 ),
               );
@@ -370,7 +370,7 @@ class DiaryDetailsPage extends StatelessWidget {
                               controller: logic.quillController,
                               config: QuillEditorConfig(
                                 showCursor: false,
-                                customStyles: Utils().themeUtil.getInstance(context),
+                                customStyles: ThemeUtil.getInstance(context),
                                 embedBuilders: [
                                   ImageEmbedBuilder(isEdit: false),
                                   VideoEmbedBuilder(isEdit: false),

@@ -1,8 +1,11 @@
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/data/isar.dart';
+import '../../utils/file_util.dart';
+import '../../utils/notice_util.dart';
+import '../../utils/webdav_util.dart';
 import 'recycle_state.dart';
 
 class RecycleLogic extends GetxController {
@@ -17,24 +20,27 @@ class RecycleLogic extends GetxController {
   }
 
   Future<void> getDiaryList() async {
-    state.diaryList = await Utils().isarUtil.getRecycleBinDiaries();
+    state.diaryList = await IsarUtil.getRecycleBinDiaries();
     update();
   }
 
   //长按卡片删除
   Future<void> deleteDiary(index) async {
     //删除日记
-    if (await Utils().isarUtil.deleteADiary(state.diaryList[index].isarId)) {
+    if (await IsarUtil.deleteADiary(state.diaryList[index].isarId)) {
       for (var name in state.diaryList[index].imageName) {
-        Utils().fileUtil.deleteFile(Utils().fileUtil.getRealPath('image', name));
+        FileUtil.deleteFile(FileUtil.getRealPath('image', name));
       }
       for (var name in state.diaryList[index].audioName) {
-        Utils().fileUtil.deleteFile(Utils().fileUtil.getRealPath('audio', name));
+        FileUtil.deleteFile(FileUtil.getRealPath('audio', name));
       }
       for (var name in state.diaryList[index].videoName) {
-        Utils().fileUtil.deleteFile(Utils().fileUtil.getRealPath('video', name));
+        FileUtil.deleteFile(FileUtil.getRealPath('video', name));
+        // 删除缩略图
+        FileUtil.deleteFile(FileUtil.getRealPath('thumbnail', name));
       }
-      Utils().noticeUtil.showToast('删除成功');
+      NoticeUtil.showToast('删除成功');
+      await WebDavUtil().deleteSingleDiary(state.diaryList[index]);
       //重新获取
       getDiaryList();
     }
@@ -43,13 +49,13 @@ class RecycleLogic extends GetxController {
   //重新显示
   Future<void> showDiary(Diary diary) async {
     //将show置为true
-    diary.show = true;
+    final newDiary = diary.clone()..show = true;
     //写入数据库
-    await Utils().isarUtil.updateADiary(diary);
+    await IsarUtil.updateADiary(oldDiary: diary, newDiary: newDiary);
     //重新获取
     getDiaryList();
     update();
     await diaryLogic.updateDiary(diary.categoryId);
-    Utils().noticeUtil.showToast('已恢复');
+    NoticeUtil.showToast('已恢复');
   }
 }

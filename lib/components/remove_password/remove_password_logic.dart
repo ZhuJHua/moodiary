@@ -2,8 +2,9 @@ import 'package:flutter/animation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/setting/setting_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/data/pref.dart';
+import '../../utils/notice_util.dart';
 import 'remove_password_state.dart';
 
 class RemovePasswordLogic extends GetxController with GetSingleTickerProviderStateMixin {
@@ -69,12 +70,12 @@ class RemovePasswordLogic extends GetxController with GetSingleTickerProviderSta
 
   Future<void> removePassword() async {
     //lock标记为false说明关闭密码
-    await Utils().prefUtil.setValue<bool>('lock', false);
+    await PrefUtil.setValue<bool>('lock', false);
     //移除密码字段
-    await Utils().prefUtil.removeValue('password');
+    await PrefUtil.removeValue('password');
     settingLogic.state.lock = false;
     settingLogic.update(['Lock']);
-    Utils().noticeUtil.showToast('关闭成功');
+    NoticeUtil.showToast('关闭成功');
     Get.backLegacy();
   }
 }

@@ -17,10 +17,11 @@ import 'package:mood_diary/components/quill_embed/image_embed.dart';
 import 'package:mood_diary/components/quill_embed/text_indent.dart';
 import 'package:mood_diary/components/quill_embed/video_embed.dart';
 import 'package:mood_diary/components/record_sheet/record_sheet_view.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/theme_util.dart';
 
 import '../../common/values/diary_type.dart';
 import '../../components/quill_embed/audio_embed.dart';
+import '../../utils/file_util.dart';
 import 'edit_logic.dart';
 
 class EditPage extends StatelessWidget {
@@ -88,7 +89,7 @@ class EditPage extends StatelessWidget {
       return Wrap(
         children: [
           ...List.generate(state.audioNameList.length, (index) {
-            return AudioPlayerComponent(path: Utils().fileUtil.getCachePath(state.audioNameList[index]));
+            return AudioPlayerComponent(path: FileUtil.getCachePath(state.audioNameList[index]));
           }),
           ActionChip(
             label: const Text('添加'),
@@ -822,7 +823,7 @@ class EditPage extends StatelessWidget {
                     expands: true,
                     paintCursorAboveText: true,
                     keyboardAppearance: CupertinoTheme.maybeBrightnessOf(context) ?? Theme.of(context).brightness,
-                    customStyles: Utils().themeUtil.getInstance(context),
+                    customStyles: ThemeUtil.getInstance(context),
                     embedBuilders: [
                       if (state.type == DiaryType.richText) ...[
                         ImageEmbedBuilder(isEdit: true),

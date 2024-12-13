@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../utils/data/pref.dart';
 
 class ColorDialogState {
-  bool supportDynamic = Utils().prefUtil.getValue<bool>('supportDynamicColor')!;
-  int currentColor = Utils().prefUtil.getValue<int>('color')!;
+  bool supportDynamic = PrefUtil.getValue<bool>('supportDynamicColor')!;
+  int currentColor = PrefUtil.getValue<int>('color')!;
 
   Color? systemColor;
 

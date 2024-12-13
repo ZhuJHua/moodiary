@@ -4,13 +4,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 
 class NoticeUtil {
-  final _fToast = FToast();
+  static final _fToast = FToast()..init(Get.overlayContext!);
 
-  NoticeUtil() {
-    _fToast.init(Get.overlayContext!);
-  }
-
-  void showToast(String message) {
+  static void showToast(String message) {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       late final colorScheme = Theme.of(Get.context!).colorScheme;
       _fToast.removeCustomToast();
@@ -31,7 +27,7 @@ class NoticeUtil {
     });
   }
 
-  void showBug({required String message}) {
+  static void showBug({required String message}) {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       _fToast.removeCustomToast();
       _fToast.showToast(

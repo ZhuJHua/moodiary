@@ -2994,7 +2994,8 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeEqualTo(String value, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeEqualTo(
+    String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3008,7 +3009,8 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeGreaterThan(String value, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeGreaterThan(
+    String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3022,7 +3024,8 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeGreaterThanOrEqualTo(String value, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeGreaterThanOrEqualTo(
+    String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3036,7 +3039,8 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeLessThan(String value, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeLessThan(
+    String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3050,7 +3054,8 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeLessThanOrEqualTo(String value, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeLessThanOrEqualTo(
+    String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -3064,8 +3069,9 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeBetween(String lower,
-      String upper, {
+  QueryBuilder<Diary, Diary, QAfterFilterCondition> typeBetween(
+    String lower,
+    String upper, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {

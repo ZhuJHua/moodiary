@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../utils/file_util.dart';
 
 class ImageBlockEmbed extends BlockEmbed {
   const ImageBlockEmbed(String value) : super(embedType, value);
@@ -32,7 +33,7 @@ class ImageEmbedBuilder extends EmbedBuilder {
   ) {
     final imageEmbed = ImageBlockEmbed(embedContext.node.value.data);
     // 从数据构造 ImageBlockEmbed
-    final imagePath = isEdit ? imageEmbed.name : Utils().fileUtil.getRealPath('image', imageEmbed.name);
+    final imagePath = isEdit ? imageEmbed.name : FileUtil.getRealPath('image', imageEmbed.name);
 
     return Card.outlined(
       clipBehavior: Clip.hardEdge,

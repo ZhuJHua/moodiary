@@ -1,17 +1,20 @@
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
-import 'package:mood_diary/utils/utils.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
-class FileUtil {
-  late final _filePath = Utils().prefUtil.getValue<String>('supportPath')!;
+import '../common/models/isar/diary.dart';
+import 'data/isar.dart';
+import 'data/pref.dart';
 
-  late final _cachePath = Utils().prefUtil.getValue<String>('cachePath')!;
+class FileUtil {
+  static final String _filePath = PrefUtil.getValue<String>('supportPath')!;
+
+  static final String _cachePath = PrefUtil.getValue<String>('cachePath')!;
 
   // 删除文件
-  Future<bool> deleteFile(String path) async {
+  static Future<bool> deleteFile(String path) async {
     File file = File(path);
     if (await file.exists()) {
       await file.delete();
@@ -22,34 +25,33 @@ class FileUtil {
     }
   }
 
-  void errorLog(String message) {
+  static File getErrorLogFile() {
     //打开文件
-    final logFile = File(join(_filePath, 'error.log'));
-    logFile.writeAsStringSync(message, mode: FileMode.append);
+    return File(join(_filePath, 'error.log'));
   }
 
   //删除指定文件夹
-  Future<void> deleteDir(String path) async {
+  static Future<void> deleteDir(String path) async {
     Directory directory = Directory(path);
     if (await directory.exists()) {
       await directory.delete(recursive: true);
     }
   }
 
-  Future<void> initCreateDir() async {
+  static Future<void> initCreateDir() async {
     await createDir(join(_filePath, 'database'));
     await createDir(join(_filePath, 'image'));
     await createDir(join(_filePath, 'audio'));
     await createDir(join(_filePath, 'video'));
   }
 
-  Future<void> createDir(String path) async {
+  static Future<void> createDir(String path) async {
     Directory directory = Directory(path);
     await directory.create(recursive: true);
   }
 
   //计算指定路径下文件的大小
-  Future<Map<String, dynamic>> countSize() async {
+  static Future<Map<String, dynamic>> countSize() async {
     var cacheDir = await getApplicationCacheDirectory();
     var bytes = 0;
     var fileList = cacheDir.listSync(recursive: true);
@@ -63,7 +65,7 @@ class FileUtil {
     return bytesToUnits(bytes);
   }
 
-  Map<String, dynamic> bytesToUnits(int bytes) {
+  static Map<String, dynamic> bytesToUnits(int bytes) {
     // 根据文件总大小选择合适的单位
     if (bytes < 1024) {
       return {'size': bytes.toString(), 'unit': 'B', 'bytes': bytes};
@@ -76,7 +78,7 @@ class FileUtil {
     }
   }
 
-  Future<void> clearCache() async {
+  static Future<void> clearCache() async {
     var cacheDir = await getApplicationCacheDirectory();
     if (await cacheDir.exists()) {
       await cacheDir.delete(recursive: true);
@@ -84,7 +86,7 @@ class FileUtil {
   }
 
   //文件导出
-  Future<String> zipFile(Map<String, dynamic> params) async {
+  static Future<String> zipFile(Map<String, dynamic> params) async {
     var zipPath = params['zipPath'] as String;
     var dataPath = params['dataPath'] as String;
     var zipEncoder = ZipFileEncoder();
@@ -99,14 +101,14 @@ class FileUtil {
     //备份视频
     await zipEncoder.addDirectory(Directory(join(dataPath, 'video')));
     //备份数据库
-    await Utils().isarUtil.exportIsar(dataPath, zipPath, '${datetime.millisecondsSinceEpoch}.isar');
+    await IsarUtil.exportIsar(dataPath, zipPath, '${datetime.millisecondsSinceEpoch}.isar');
     await zipEncoder.addFile(File(join(zipPath, '${datetime.millisecondsSinceEpoch}.isar')));
     await zipEncoder.close();
     return fileName;
   }
 
   //导入文件
-  Future<void> extractFile(String path) async {
+  static Future<void> extractFile(String path) async {
     final inputStream = InputFileStream(path);
     //删除图片文件夹
     await deleteDir(join(_filePath, 'image'));
@@ -133,10 +135,10 @@ class FileUtil {
       }
     }
     //复制数据库
-    await Utils().isarUtil.dataMigration(_cachePath);
+    await IsarUtil.dataMigration(_cachePath);
   }
 
-  String getRealPath(String fileType, String fileName) {
+  static String getRealPath(String fileType, String fileName) {
     if (fileType == 'thumbnail') {
       var thumbnailName = 'thumbnail-${fileName.substring(6, 42)}.jpeg';
       return join(_filePath, 'video', thumbnailName);
@@ -145,7 +147,7 @@ class FileUtil {
   }
 
   // 媒体库
-  Future<List<String>> getDirFilePath(String fileType) async {
+  static Future<List<String>> getDirFilePath(String fileType) async {
     var path = join(_filePath, fileType);
     List<String> filePaths = [];
     Directory directory = Directory(path);
@@ -159,7 +161,7 @@ class FileUtil {
     return filePaths;
   }
 
-  Future<List<String>> getDirFileName(String fileType) async {
+  static Future<List<String>> getDirFileName(String fileType) async {
     var path = join(_filePath, fileType);
     List<String> fileNames = [];
     Directory directory = Directory(path);
@@ -173,7 +175,7 @@ class FileUtil {
     return fileNames;
   }
 
-  Future<void> deleteMediaFiles(Set<String> files, String mediaType) async {
+  static Future<void> deleteMediaFiles(Set<String> files, String mediaType) async {
     for (var name in files) {
       final filePath = getRealPath(mediaType, name);
       final file = File(filePath);
@@ -183,11 +185,28 @@ class FileUtil {
     }
   }
 
-  String getCachePath(String fileName) {
+  static String getCachePath(String fileName) {
     return join(_cachePath, fileName);
   }
 
-  String getErrorLogPath() {
+  static String getErrorLogPath() {
     return join(_filePath, 'error.log');
+  }
+
+  static Future<void> cleanUpOldMediaFiles(Diary oldDiary, Diary newDiary) async {
+    // 通用删除方法
+    Future<void> deleteMediaFiles(List<String> oldFiles, List<String> newFiles, String type) async {
+      final tasks = oldFiles
+          .where((file) => !newFiles.contains(file))
+          .map((file) => deleteFile(getRealPath(type, file)))
+          .toList();
+      await Future.wait(tasks);
+    }
+
+    // 删除旧的图片、视频和音频文件
+    await deleteMediaFiles(oldDiary.imageName, newDiary.imageName, 'image');
+    await deleteMediaFiles(oldDiary.videoName, newDiary.videoName, 'video');
+    await deleteMediaFiles(oldDiary.audioName, newDiary.audioName, 'audio');
+    await deleteMediaFiles(oldDiary.videoName, newDiary.videoName, 'thumbnail');
   }
 }

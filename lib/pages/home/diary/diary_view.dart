@@ -10,7 +10,7 @@ import 'package:mood_diary/components/search_sheet/search_sheet_view.dart';
 import 'package:mood_diary/components/web_dav_dashboard/web_dav_dashboard_view.dart';
 import 'package:rive_animated_icon/rive_animated_icon.dart';
 
-import '../../../utils/utils.dart';
+import '../../../utils/webdav_util.dart';
 import 'diary_logic.dart';
 
 class DiaryPage extends StatelessWidget {
@@ -27,7 +27,7 @@ class DiaryPage extends StatelessWidget {
         ),
         child: RiveAnimatedIcon(
           riveIcon: RiveIcon.reload,
-          color: colorScheme.onSecondaryContainer,
+          color: colorScheme.onPrimaryContainer,
           width: 24,
           height: 24,
           loopAnimation: true,
@@ -133,7 +133,7 @@ class DiaryPage extends StatelessWidget {
                     pinned: true,
                     actions: [
                       Obx(() {
-                        return Utils().webDavUtil.syncingDiaries.isNotEmpty
+                        return WebDavUtil().syncingDiaries.isNotEmpty
                             ? _buildSyncingButton(
                                 colorScheme: colorScheme,
                                 onTap: () {

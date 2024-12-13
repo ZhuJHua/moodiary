@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/utils.dart';
 
 import '../../common/values/webdav.dart';
+import '../../utils/data/isar.dart';
+import '../../utils/notice_util.dart';
+import '../../utils/webdav_util.dart';
 import 'web_dav_dashboard_state.dart';
 
 class WebDavDashboardLogic extends GetxController {
@@ -35,7 +37,7 @@ class WebDavDashboardLogic extends GetxController {
 
   Future<void> fetchDiaryList() async {
     // 获取所有日记
-    state.diaryList = await Utils().isarUtil.getAllDiaries();
+    state.diaryList = await IsarUtil.getAllDiaries();
     state.toUploadDiaries.clear();
     state.toDownloadIds.clear();
     // 本地日记 Map，id 对应最后修改时间
@@ -49,6 +51,7 @@ class WebDavDashboardLogic extends GetxController {
   void _findToUploadDiaries(Map<String, DateTime> localDiaryMap) {
     for (var diary in state.diaryList) {
       final remoteModifiedTime = state.webdavSyncMap[diary.id];
+      if (remoteModifiedTime == 'delete') continue;
       if (remoteModifiedTime == null || DateTime.parse(remoteModifiedTime).isBefore(diary.lastModified)) {
         state.toUploadDiaries.add(diary);
       }
@@ -58,6 +61,7 @@ class WebDavDashboardLogic extends GetxController {
 
   void _findToDownloadIds(Map<String, DateTime> localDiaryMap) {
     for (var entry in state.webdavSyncMap.entries) {
+      if (entry.value == 'delete') continue;
       final id = entry.key;
       final remoteModifiedTime = DateTime.parse(entry.value);
 
@@ -72,13 +76,13 @@ class WebDavDashboardLogic extends GetxController {
 
   Future<void> checkConnectivity() async {
     state.connectivityStatus.value = WebDavConnectivityStatus.connecting;
-    var res = await Utils().webDavUtil.checkConnectivity();
+    var res = await WebDavUtil().checkConnectivity();
     state.connectivityStatus.value = res ? WebDavConnectivityStatus.connected : WebDavConnectivityStatus.unconnected;
   }
 
   Future<void> fetchingWebDavSyncFlag() async {
-    state.webdavSyncMap = await Utils().webDavUtil.fetchServerSyncData();
-    state.webDavDiaryCount.value = state.webdavSyncMap.length.toString();
+    state.webdavSyncMap = await WebDavUtil().fetchServerSyncData();
+    state.webDavDiaryCount.value = state.webdavSyncMap.values.where((element) => element != 'delete').length.toString();
   }
 
   void toWebDavPage() async {
@@ -91,17 +95,16 @@ class WebDavDashboardLogic extends GetxController {
   Future<void> syncDiary() async {
     checkIsUploading();
     checkIsDownloading();
-    await Utils().webDavUtil.syncDiary(state.diaryList, onUpload: () {
+    await WebDavUtil().syncDiary(state.diaryList, onUpload: () {
       state.toUploadDiariesCount.value = (int.parse(state.toUploadDiariesCount.value) - 1).toString();
       checkIsUploading();
     }, onDownload: () async {
       state.toDownloadIdsCount.value = (int.parse(state.toDownloadIdsCount.value) - 1).toString();
       checkIsDownloading();
-      await Bind.find<DiaryLogic>().updateCategory();
-      await Bind.find<DiaryLogic>().updateDiary(null);
+      await Bind.find<DiaryLogic>().refreshAll();
     }, onComplete: () {
       Get.backLegacy();
-      Utils().noticeUtil.showToast('同步完成');
+      NoticeUtil.showToast('同步完成');
     });
   }
 
@@ -115,7 +118,7 @@ class WebDavDashboardLogic extends GetxController {
 
 // Future<void> uploadDiary() async {
 //   state.isUploading.value = true;
-//   await Utils().webDavUtil.syncDiary(state.toUploadDiaries);
+//   await WebDavUtil().syncDiary(state.toUploadDiaries);
 //   state.isUploading.value = false;
 //   await fetchingWebDavSyncFlag();
 //   await fetchDiaryList();
@@ -124,7 +127,7 @@ class WebDavDashboardLogic extends GetxController {
 // // 下载日记
 // Future<void> downloadDiary() async {
 //   state.isDownloading.value = true;
-//   await Utils().webDavUtil.syncDiary();
+//   await WebDavUtil().syncDiary();
 //   state.isDownloading.value = false;
 //   await fetchingWebDavSyncFlag();
 //   await fetchDiaryList();

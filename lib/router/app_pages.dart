@@ -99,7 +99,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.editPage,
       page: () => const EditPage(),
-      popGesture: false,
+      canPop: false,
       transition: Transition.fadeIn,
       binds: [Bind.lazyPut(() => EditLogic())],
     ),

@@ -1,6 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../../utils/data/isar.dart';
 import 'calendar_state.dart';
 
 class CalendarLogic extends GetxController {
@@ -8,35 +9,45 @@ class CalendarLogic extends GetxController {
 
   @override
   void onReady() async {
-    await getDateHasDiary(state.currentMonth.value);
-    await getDiary();
+    await getMonthDiary(state.currentMonth.value);
     super.onReady();
   }
 
-  Future<void> getDateHasDiary(DateTime value) async {
-    state.currentMonth.value = value;
-    state.dateHasDiary.value = await Utils().isarUtil.getDiaryDateByMonth(value.year, value.month);
-    update();
-  }
-
-  Future<void> getDiary() async {
+  // 获取当前月份的日记
+  Future<void> getMonthDiary(DateTime value) async {
     state.isFetching.value = true;
-    state.diaryList.value = await Utils().isarUtil.getDiaryByDay(state.selectedDate.value);
+    final diaryList = await IsarUtil.getDiaryByMonth(value.year, value.month);
+    var dateWithDiaryList = <DateTime>[];
+    // 获取有日记的日期，只需要年月日
+    for (var diary in diaryList) {
+      // 如果不存在当前日期，则添加
+      var time = diary.time;
+      if (!dateWithDiaryList.contains(DateTime(time.year, time.month, time.day))) {
+        dateWithDiaryList.add(DateTime(time.year, time.month, time.day));
+      }
+    }
+    state.selectedDate.value = DateTime.now();
+    state.currentMonthDiaryMap = {for (var e in diaryList) e: GlobalKey()};
+    update();
     state.isFetching.value = false;
   }
 
-  // 选中日期后重新获取日记
-  Future<void> updateDate(DateTime value) async {
+  // 选中日期后滚动到该日期
+  Future<void> animateToSelectedDate(DateTime value) async {
     state.selectedDate.value = value;
-    await getDiary();
+    // 根据日期找到当前列表中第一篇日记对应的 GlobalKey，然后滚动到该日记
+    var key = state.currentMonthDiaryMap.entries
+        .firstWhere((element) =>
+            element.key.yMd == '${value.year.toString()}/${value.month.toString()}/${value.day.toString()}')
+        .value;
+    Scrollable.ensureVisible(key.currentContext!, duration: Duration(milliseconds: 300));
   }
 
-  //回到今天
-  Future<void> backToToday() async {
-    var now = DateTime.now();
-    await updateDate(now);
-    await getDateHasDiary(now);
-  }
+  // // 选中日期后重新获取日记
+  // Future<void> updateDate(DateTime value) async {
+  //   state.selectedDate.value = value;
+  //   await getDiary();
+  // }
 
   void open(value) {
     state.isExpanded.value = value;

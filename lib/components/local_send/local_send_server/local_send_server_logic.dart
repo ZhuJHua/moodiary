@@ -5,12 +5,14 @@ import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/components/local_send/local_send_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_multipart/shelf_multipart.dart';
 
 import '../../../pages/home/diary/diary_logic.dart';
+import '../../../utils/data/isar.dart';
+import '../../../utils/file_util.dart';
+import '../../../utils/log_util.dart';
 import 'local_send_server_state.dart';
 
 class LocalSendServerLogic extends GetxController {
@@ -39,13 +41,13 @@ class LocalSendServerLogic extends GetxController {
 
   // 启动UDP广播监听
   Future<void> startBroadcastListener() async {
-    Utils().logUtil.printInfo('Listening for broadcast on port ${state.scanPort}');
+    LogUtil.printInfo('Listening for broadcast on port ${state.scanPort}');
     socket.listen((RawSocketEvent event) {
       if (event == RawSocketEvent.read) {
         final datagram = socket.receive();
         if (datagram != null) {
           final message = String.fromCharCodes(datagram.data);
-          Utils().logUtil.printInfo('Received broadcast: $message from ${datagram.address.address}');
+          LogUtil.printInfo('Received broadcast: $message from ${datagram.address.address}');
           final response = '${state.serverIp}:${state.transferPort}:${state.serverName}';
           socket.send(response.codeUnits, datagram.address, datagram.port);
         }
@@ -57,7 +59,7 @@ class LocalSendServerLogic extends GetxController {
   Future<void> startServer() async {
     final handler = const shelf.Pipeline().addMiddleware(shelf.logRequests()).addHandler(_handleRequest);
     httpServer = await serve(handler, state.serverIp!, state.transferPort);
-    Utils().logUtil.printInfo('Server started on http://${state.serverIp}:${state.transferPort}');
+    LogUtil.printInfo('Server started on http://${state.serverIp}:${state.transferPort}');
   }
 
   Future<shelf.Response> _handleRequest(shelf.Request request) async {
@@ -75,9 +77,9 @@ class LocalSendServerLogic extends GetxController {
             // 写入文件到目录
             File file;
             if (name == 'thumbnail') {
-              file = File(Utils().fileUtil.getRealPath('video', formData.filename!));
+              file = File(FileUtil.getRealPath('video', formData.filename!));
             } else {
-              file = File(Utils().fileUtil.getRealPath(name, formData.filename!));
+              file = File(FileUtil.getRealPath(name, formData.filename!));
             }
 
             final sink = file.openWrite();
@@ -92,14 +94,13 @@ class LocalSendServerLogic extends GetxController {
     }
     // 如果分类不为空，插入一个分类
     if (categoryName != null) {
-      await Utils().isarUtil.insertACategory(Category()
+      await IsarUtil.insertACategory(Category()
         ..id = diary.categoryId!
         ..categoryName = categoryName);
     }
     // 插入日记
-    await Utils().isarUtil.insertADiary(diary);
-    await Bind.find<DiaryLogic>().updateCategory();
-    await Bind.find<DiaryLogic>().updateDiary(null);
+    await IsarUtil.insertADiary(diary);
+    await Bind.find<DiaryLogic>().refreshAll();
     state.receiveCount.value += 1;
     return shelf.Response.ok('Data and files received successfully');
   }
@@ -110,11 +111,11 @@ class LocalSendServerLogic extends GetxController {
       await for (final formData in form.formData) {
         final name = formData.name;
         if (formData.filename != null) {
-          final tempFile = File(Utils().fileUtil.getCachePath(formData.filename!));
+          final tempFile = File(FileUtil.getCachePath(formData.filename!));
           final sink = tempFile.openWrite();
           await formData.part.pipe(sink);
           await sink.close();
-          await Utils().fileUtil.extractFile(tempFile.path);
+          await FileUtil.extractFile(tempFile.path);
         }
       }
     }

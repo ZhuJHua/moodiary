@@ -1,10 +1,10 @@
-import 'package:mood_diary/utils/utils.dart';
+import '../../utils/data/pref.dart';
 
 class FontState {
   late double fontScale;
 
   FontState() {
-    fontScale = (Utils().prefUtil.getValue<double>('fontScale'))!;
+    fontScale = (PrefUtil.getValue<double>('fontScale'))!;
 
     ///Initialize variables
   }

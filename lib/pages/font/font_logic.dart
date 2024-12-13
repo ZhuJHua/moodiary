@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/data/pref.dart';
 import 'font_state.dart';
 
 class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
@@ -32,7 +32,7 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
               TextButton(
                   onPressed: () async {
                     Get.backLegacy();
-                    await Utils().prefUtil.setValue<double>('fontScale', state.fontScale);
+                    await PrefUtil.setValue<double>('fontScale', state.fontScale);
                     Get.forceAppUpdate();
                   },
                   child: const Text('确认'))

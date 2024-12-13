@@ -3,8 +3,9 @@ import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/pages/edit/edit_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/data/isar.dart';
+import '../../utils/notice_util.dart';
 import 'category_add_state.dart';
 
 class CategoryAddLogic extends GetxController {
@@ -26,19 +27,19 @@ class CategoryAddLogic extends GetxController {
   }
 
   void getCategory() {
-    state.categoryList.value = Utils().isarUtil.getAllCategory();
+    state.categoryList.value = IsarUtil.getAllCategory();
   }
 
   Future<void> addCategory() async {
     if (textEditingController.text.isNotEmpty) {
-      if (await Utils().isarUtil.insertACategory(Category()..categoryName = textEditingController.text)) {
+      if (await IsarUtil.insertACategory(Category()..categoryName = textEditingController.text)) {
         Get.backLegacy();
         textEditingController.clear();
         getCategory();
         await diaryLogic.updateCategory();
       } else {
         textEditingController.clear();
-        Utils().noticeUtil.showToast('分类已存在');
+        NoticeUtil.showToast('分类已存在');
       }
     }
   }

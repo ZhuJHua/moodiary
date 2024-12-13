@@ -3,9 +3,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../utils/data/pref.dart';
+import '../../utils/file_util.dart';
+import '../../utils/notice_util.dart';
 import 'laboratory_state.dart';
 
 class LaboratoryLogic extends GetxController {
@@ -28,8 +30,8 @@ class LaboratoryLogic extends GetxController {
 
   Future<void> setTencentID() async {
     if (idTextEditingController.text.isNotEmpty && keyTextEditingController.text.isNotEmpty) {
-      await Utils().prefUtil.setValue<String>('tencentId', idTextEditingController.text);
-      await Utils().prefUtil.setValue<String>('tencentKey', keyTextEditingController.text);
+      await PrefUtil.setValue<String>('tencentId', idTextEditingController.text);
+      await PrefUtil.setValue<String>('tencentKey', keyTextEditingController.text);
       Get.backLegacy();
     }
     update();
@@ -37,7 +39,7 @@ class LaboratoryLogic extends GetxController {
 
   Future<void> setQweatherKey() async {
     if (qweatherTextEditingController.text.isNotEmpty) {
-      await Utils().prefUtil.setValue<String>('qweatherKey', qweatherTextEditingController.text);
+      await PrefUtil.setValue<String>('qweatherKey', qweatherTextEditingController.text);
       Get.backLegacy();
     }
     update();
@@ -45,17 +47,17 @@ class LaboratoryLogic extends GetxController {
 
   Future<void> setTiandituKey() async {
     if (tiandituTextEditingController.text.isNotEmpty) {
-      await Utils().prefUtil.setValue<String>('tiandituKey', tiandituTextEditingController.text);
+      await PrefUtil.setValue<String>('tiandituKey', tiandituTextEditingController.text);
       Get.backLegacy();
     }
     update();
   }
 
   Future<void> exportErrorLog() async {
-    if (File(Utils().fileUtil.getErrorLogPath()).existsSync()) {
-      Share.shareXFiles([XFile(Utils().fileUtil.getErrorLogPath())]);
+    if (File(FileUtil.getErrorLogPath()).existsSync()) {
+      Share.shareXFiles([XFile(FileUtil.getErrorLogPath())]);
     } else {
-      Utils().noticeUtil.showToast('暂无日志');
+      NoticeUtil.showToast('暂无日志');
     }
   }
 }

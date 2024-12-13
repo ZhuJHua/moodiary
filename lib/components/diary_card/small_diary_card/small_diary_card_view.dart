@@ -5,7 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/diary_card/basic_diary_card/basic_card_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../../utils/file_util.dart';
 
 class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
   const SmallDiaryCardComponent({super.key, required this.diary, required this.tag});
@@ -26,7 +27,7 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
           decoration: BoxDecoration(
             image: DecorationImage(
               image: ResizeImage(
-                FileImage(File(Utils().fileUtil.getRealPath('image', diary.imageName.first))),
+                FileImage(File(FileUtil.getRealPath('image', diary.imageName.first))),
                 width: (122 * pixelRatio).toInt(),
               ),
               fit: BoxFit.cover,

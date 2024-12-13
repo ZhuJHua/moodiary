@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -6,30 +7,32 @@ import 'package:isar/isar.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:mood_diary/common/models/isar/sync_record.dart';
 import 'package:mood_diary/common/models/map.dart';
 import 'package:mood_diary/common/values/diary_type.dart';
-import 'package:mood_diary/utils/utils.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../components/quill_embed/audio_embed.dart';
 import '../../components/quill_embed/image_embed.dart';
 import '../../components/quill_embed/video_embed.dart';
+import '../file_util.dart';
+import '../webdav_util.dart';
 
 class IsarUtil {
-  late final Isar _isar;
+  static late final Isar _isar;
 
-  Future<void> initIsar() async {
+  static Future<void> initIsar() async {
     _isar = await Isar.openAsync(
       schemas: [
         DiarySchema,
         CategorySchema,
       ],
-      directory: Utils().fileUtil.getRealPath('database', ''),
+      directory: FileUtil.getRealPath('database', ''),
     );
   }
 
-  Future<void> dataMigration(String path) async {
+  static Future<void> dataMigration(String path) async {
     var oldIsar = await Isar.openAsync(schemas: [DiarySchema, CategorySchema], directory: path, name: 'old');
     List<Diary> oldDiaryList = await oldIsar.diarys.where().findAllAsync();
     List<Category> oldCategoryList = await oldIsar.categorys.where().findAllAsync();
@@ -43,18 +46,18 @@ class IsarUtil {
   }
 
   //清空数据
-  Future<void> clearIsar() async {
+  static Future<void> clearIsar() async {
     await _isar.writeAsync((isar) {
       isar.clear();
     });
   }
 
-  Map<String, dynamic> getSize() {
-    return Utils().fileUtil.bytesToUnits(_isar.diarys.getSize(includeIndexes: true));
+  static Map<String, dynamic> getSize() {
+    return FileUtil.bytesToUnits(_isar.diarys.getSize(includeIndexes: true));
   }
 
   //导出数据
-  Future<void> exportIsar(String dir, String path, String fileName) async {
+  static Future<void> exportIsar(String dir, String path, String fileName) async {
     var isar = Isar.open(
       schemas: [DiarySchema, CategorySchema],
       directory: join(dir, 'database'),
@@ -64,40 +67,39 @@ class IsarUtil {
   }
 
   //插入一条日记
-  Future<void> insertADiary(Diary diary) async {
+  static Future<void> insertADiary(Diary diary) async {
     await _isar.writeAsync((isar) {
       isar.diarys.put(diary);
     });
   }
 
-  //根据月份获取包含日记的日期
-  Future<List<DateTime>> getDiaryDateByMonth(int year, int month) async {
-    return (await _isar.diarys
-            .where()
-            .yMEqualTo('${year.toString()}/${month.toString()}')
-            .showEqualTo(true)
-            .timeProperty()
-            .findAllAsync())
-        .cast<DateTime>();
+  //根据月份获取日记
+  static Future<List<Diary>> getDiaryByMonth(int year, int month) async {
+    return await _isar.diarys
+        .where()
+        .showEqualTo(true)
+        .yMEqualTo('${year.toString()}/${month.toString()}')
+        .sortByTimeDesc()
+        .findAllAsync();
   }
 
   //根据id获取日记
-  Future<Diary?> getDiaryByID(int isarId) async {
+  static Future<Diary?> getDiaryByID(int isarId) async {
     return await _isar.diarys.getAsync(isarId);
   }
 
   //根据日期范围获取日记
-  Future<List<Diary>> getDiariesByDateRange(DateTime start, DateTime end) async {
-    return await _isar.diarys.where().timeBetween(start, end).findAllAsync();
+  static Future<List<Diary>> getDiariesByDateRange(DateTime start, DateTime end, {bool all = true}) async {
+    return await _isar.diarys.where().timeBetween(start, end).showEqualTo(all).findAllAsync();
   }
 
   //获取全部日记
-  Future<List<Diary>> getAllDiaries() async {
+  static Future<List<Diary>> getAllDiaries() async {
     return await _isar.diarys.where().findAllAsync();
   }
 
   //获取指定范围内的天气
-  Future<List<List<String>>> getWeatherByDateRange(DateTime start, DateTime end) async {
+  static Future<List<List<String>>> getWeatherByDateRange(DateTime start, DateTime end) async {
     return (await _isar.diarys
             .where()
             .showEqualTo(true)
@@ -109,7 +111,7 @@ class IsarUtil {
   }
 
   //获取指定范围的心情指数
-  Future<List<double>> getMoodByDateRange(DateTime start, DateTime end) async {
+  static Future<List<double>> getMoodByDateRange(DateTime start, DateTime end) async {
     return (await _isar.diarys
             .where()
             .showEqualTo(true)
@@ -121,26 +123,38 @@ class IsarUtil {
   }
 
   //删除某篇日记
-  Future<bool> deleteADiary(int isarId) async {
+  static Future<bool> deleteADiary(int isarId) async {
     return await _isar.writeAsync((isar) {
       return isar.diarys.delete(isarId);
     });
   }
 
   //回收站日记
-  Future<List<Diary>> getRecycleBinDiaries() async {
+  static Future<List<Diary>> getRecycleBinDiaries() async {
     return await _isar.diarys.where().showEqualTo(false).sortByTimeDesc().findAllAsync();
   }
 
   //更新日记
-  Future<void> updateADiary(Diary diary) async {
+  static Future<void> updateADiary({Diary? oldDiary, required Diary newDiary}) async {
+    // 如果没有旧日记，说明是新增日记
+    newDiary.lastModified = DateTime.now();
     await _isar.writeAsync((isar) {
-      isar.diarys.put(diary);
+      isar.diarys.put(newDiary);
     });
+    // 更新日记, 旧日记不为空，说明是更新日记, 需要清理旧日记的媒体文件
+    if (oldDiary != null) {
+      // 清理本地媒体文件
+      await FileUtil.cleanUpOldMediaFiles(oldDiary, newDiary);
+      if (WebDavUtil().hasOption) {
+        unawaited(WebDavUtil().updateSingleDiary(oldDiary: oldDiary, newDiary: newDiary));
+      }
+    } else {
+      if (WebDavUtil().hasOption) unawaited(WebDavUtil().uploadSingleDiary(newDiary));
+    }
   }
 
   //查询日记
-  Future<List<Diary>> searchDiaries(String value) async {
+  static Future<List<Diary>> searchDiaries(String value) async {
     var contentResults = await _isar.diarys.where().showEqualTo(true).contentTextContains(value).findAllAsync();
     var titleResults = await _isar.diarys.where().showEqualTo(true).titleContains(value).findAllAsync();
 
@@ -150,30 +164,30 @@ class IsarUtil {
     return combinedResults;
   }
 
-  Future<List<Diary>> searchDiariesByTag(String value) async {
+  static Future<List<Diary>> searchDiariesByTag(String value) async {
     return await _isar.diarys.where().showEqualTo(true).tagsElementContains(value).findAllAsync();
   }
 
   //获取不在回收站的日记总数
-  Future<int> countShowDiary() async {
+  static Future<int> countShowDiary() async {
     return await _isar.diarys.where().showEqualTo(true).countAsync();
   }
 
-  int countAllDiary() {
+  static int countAllDiary() {
     return _isar.diarys.count();
   }
 
   //获取分类总数
-  int countCategories() {
+  static int countCategories() {
     return _isar.categorys.count();
   }
 
   //获取分类名称
-  Category? getCategoryName(String id) {
+  static Category? getCategoryName(String id) {
     return _isar.categorys.get(id);
   }
 
-  Future<bool> insertACategory(Category category) async {
+  static Future<bool> insertACategory(Category category) async {
     return await _isar.writeAsync((isar) {
       if (isar.categorys.where().categoryNameEqualTo(category.categoryName).isEmpty()) {
         category.id = const Uuid().v7();
@@ -185,13 +199,13 @@ class IsarUtil {
     });
   }
 
-  Future<void> updateACategory(Category category) async {
+  static Future<void> updateACategory(Category category) async {
     await _isar.writeAsync((isar) {
       isar.categorys.put(category);
     });
   }
 
-  Future<bool> deleteACategory(String id) async {
+  static Future<bool> deleteACategory(String id) async {
     return await _isar.writeAsync((isar) {
       if (isar.diarys.where().categoryIdEqualTo(id).isEmpty()) {
         return isar.categorys.delete(id);
@@ -202,21 +216,21 @@ class IsarUtil {
   }
 
   // 获取所有日记内容
-  Future<List<String>> getContentList() async {
+  static Future<List<String>> getContentList() async {
     return (await _isar.diarys.where().showEqualTo(true).contentTextProperty().findAllAsync()).cast<String>();
   }
 
   //获取所有分类，这是个同步方法，用于第一次初始化，要怪就怪 TabBar
-  List<Category> getAllCategory() {
+  static List<Category> getAllCategory() {
     return _isar.categorys.where().sortById().findAll();
   }
 
-  Future<List<Category>> getAllCategoryAsync() async {
+  static Future<List<Category>> getAllCategoryAsync() async {
     return _isar.categorys.where().sortById().findAllAsync();
   }
 
   //获取对应分类的日记,如果为空，返回全部日记
-  Future<List<Diary>> getDiaryByCategory(String? categoryId, int offset, int limit) async {
+  static Future<List<Diary>> getDiaryByCategory(String? categoryId, int offset, int limit) async {
     if (categoryId == null) {
       return await _isar.diarys.where().showEqualTo(true).sortByTimeDesc().findAllAsync(offset: offset, limit: limit);
     } else {
@@ -230,7 +244,7 @@ class IsarUtil {
   }
 
   //获取某一天的日记
-  Future<List<Diary>> getDiaryByDay(DateTime time) async {
+  static Future<List<Diary>> getDiaryByDay(DateTime time) async {
     return await _isar.diarys
         .where()
         .showEqualTo(true)
@@ -239,14 +253,14 @@ class IsarUtil {
         .findAllAsync();
   }
 
-  Future<List<Diary>> getDiary(int offset, int limit) async {
+  static Future<List<Diary>> getDiary(int offset, int limit) async {
     return await _isar.diarys.where().findAllAsync(offset: offset, limit: limit);
   }
 
   /// 2.4.8 版本变更
   /// 新增字段
   /// 1.position 用于记录位置
-  void mergeToV2_4_8(String dir) {
+  static void mergeToV2_4_8(String dir) {
     var isar = Isar.open(
       schemas: [DiarySchema, CategorySchema],
       directory: dir,
@@ -268,7 +282,7 @@ class IsarUtil {
   /// 变更
   /// 1.将时间字段修改为最后修改时间
   /// 2.将类型字段修改为富文本
-  void mergeToV2_6_0(String dir) {
+  static void mergeToV2_6_0(String dir) {
     var isar = Isar.open(
       schemas: [DiarySchema, CategorySchema],
       directory: dir,
@@ -314,21 +328,21 @@ class IsarUtil {
     isar.close();
   }
 
-  void insertNewImage({required String imageName, required QuillController quillController}) {
+  static void insertNewImage({required String imageName, required QuillController quillController}) {
     final imageBlock = ImageBlockEmbed.fromName(imageName);
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
     quillController.replaceText(index, length, imageBlock, TextSelection.collapsed(offset: index + 1));
   }
 
-  void insertNewVideo({required String videoName, required QuillController quillController}) {
+  static void insertNewVideo({required String videoName, required QuillController quillController}) {
     final videoBlock = VideoBlockEmbed.fromName(videoName);
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
     quillController.replaceText(index, length, videoBlock, TextSelection.collapsed(offset: index + 1));
   }
 
-  void insertAudio({required String audioName, required QuillController quillController}) {
+  static void insertAudio({required String audioName, required QuillController quillController}) {
     final audioBlock = AudioBlockEmbed.fromName(audioName);
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
@@ -336,7 +350,7 @@ class IsarUtil {
   }
 
   // 获取用于地图显示的对象
-  Future<List<DiaryMapItem>> getAllMapItem() async {
+  static Future<List<DiaryMapItem>> getAllMapItem() async {
     List<DiaryMapItem> res = [];
 
     /// 所有的日记
@@ -352,7 +366,7 @@ class IsarUtil {
   }
 
   //构建搜索
-  void buildSearch(String dir) async {
+  static void buildSearch(String dir) async {
     var isar = Isar.open(
       schemas: [DiarySchema, CategorySchema],
       directory: dir,
@@ -366,7 +380,7 @@ class IsarUtil {
         // if (diary.imageName.isNotEmpty) {
         //   diary.aspect = await Utils()
         //       .mediaUtil
-        //       .getImageAspectRatio(FileImage(File(Utils().fileUtil.getRealPath('image', diary.imageName.first))));
+        //       .getImageAspectRatio(FileImage(File(FileUtil.getRealPath('image', diary.imageName.first))));
         //   result.add(diary);
         // }
         diary.contentText = diary.contentText.trim();
@@ -377,5 +391,24 @@ class IsarUtil {
         isar.diarys.putAll(result);
       });
     }
+  }
+
+  // 添加sync任务
+  static Future<void> addSyncRecord(SyncRecord record) async {
+    await _isar.writeAsync((isar) {
+      isar.syncRecords.put(record);
+    });
+  }
+
+  // 获取sync任务
+  static Future<List<SyncRecord>> getSyncRecords() async {
+    return await _isar.syncRecords.where().findAllAsync();
+  }
+
+  // 删除sync任务
+  static Future<void> deleteSyncRecord(int id) async {
+    await _isar.writeAsync((isar) {
+      isar.syncRecords.delete(id);
+    });
   }
 }

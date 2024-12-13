@@ -2,8 +2,9 @@ import 'package:flutter/animation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/setting/setting_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/data/pref.dart';
+import '../../utils/notice_util.dart';
 import 'set_password_state.dart';
 
 class SetPasswordLogic extends GetxController with GetSingleTickerProviderStateMixin {
@@ -78,12 +79,12 @@ class SetPasswordLogic extends GetxController with GetSingleTickerProviderStateM
 
   Future<void> setPassword() async {
     //lock标记为true说明开启了密码
-    await Utils().prefUtil.setValue<bool>('lock', true);
+    await PrefUtil.setValue<bool>('lock', true);
     //设置密码字段
-    await Utils().prefUtil.setValue<String>('password', state.password);
+    await PrefUtil.setValue<String>('password', state.password);
     settingLogic.state.lock = true;
     settingLogic.update(['Lock']);
-    Utils().noticeUtil.showToast('设置成功');
+    NoticeUtil.showToast('设置成功');
     Get.backLegacy();
   }
 }

@@ -16,12 +16,16 @@ import 'package:mood_diary/components/quill_embed/text_indent.dart';
 import 'package:mood_diary/components/quill_embed/video_embed.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/src/rust/api/kmp.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/media_util.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../common/values/keyboard_state.dart';
 import '../../components/quill_embed/audio_embed.dart';
 import '../../components/quill_embed/image_embed.dart';
+import '../../utils/data/isar.dart';
+import '../../utils/data/pref.dart';
+import '../../utils/file_util.dart';
+import '../../utils/notice_util.dart';
 import 'edit_state.dart';
 
 class EditLogic extends GetxController {
@@ -109,39 +113,39 @@ class EditLogic extends GetxController {
     } else {
       //如果是编辑，将日记对象赋值
       state.isNew = false;
-      var oldDiary = Get.arguments as Diary;
-      state.type = DiaryType.values.firstWhere((type) => type.value == oldDiary.type);
-      state.currentDiary = oldDiary;
+      state.originalDiary = Get.arguments as Diary;
+      state.type = DiaryType.values.firstWhere((type) => type.value == state.originalDiary!.type);
+      state.currentDiary = state.originalDiary!.clone();
       // 获取分类名称
-      if (oldDiary.categoryId != null) {
-        state.categoryName = Utils().isarUtil.getCategoryName(oldDiary.categoryId!)!.categoryName;
+      if (state.originalDiary!.categoryId != null) {
+        state.categoryName = IsarUtil.getCategoryName(state.originalDiary!.categoryId!)!.categoryName;
       }
       // 初始化标题控制器
-      titleTextEditingController.text = oldDiary.title;
+      titleTextEditingController.text = state.originalDiary!.title;
       // 待替换的字符串map
       Map<String, String> replaceMap = {};
       //临时拷贝一份图片数据
-      for (var name in oldDiary.imageName) {
+      for (var name in state.originalDiary!.imageName) {
         // 生成一个临时文件
-        var xFile = XFile(Utils().fileUtil.getRealPath('image', name));
+        var xFile = XFile(FileUtil.getRealPath('image', name));
         replaceMap[name] = xFile.path;
         state.imageFileList.add(xFile);
       }
       //临时拷贝一份拷贝音频数据到缓存目录
-      for (var name in oldDiary.audioName) {
+      for (var name in state.originalDiary!.audioName) {
         state.audioNameList.add(name);
-        await File(Utils().fileUtil.getRealPath('audio', name)).copy(Utils().fileUtil.getCachePath(name));
+        await File(FileUtil.getRealPath('audio', name)).copy(FileUtil.getCachePath(name));
       }
       //临时拷贝一份视频数据，别忘记了缩略图
-      for (var name in oldDiary.videoName) {
+      for (var name in state.originalDiary!.videoName) {
         // 生成一个临时文件
-        var videoXFile = XFile(Utils().fileUtil.getRealPath('video', name));
+        var videoXFile = XFile(FileUtil.getRealPath('video', name));
         replaceMap[name] = videoXFile.path;
         state.videoFileList.add(videoXFile);
       }
       quillController = QuillController(
-          document:
-              Document.fromJson(jsonDecode(await Kmp.replaceWithKmp(text: oldDiary.content, replacements: replaceMap))),
+          document: Document.fromJson(
+              jsonDecode(await Kmp.replaceWithKmp(text: state.originalDiary!.content, replacements: replaceMap))),
           selection: const TextSelection.collapsed(offset: 0));
       state.totalCount.value = _toPlainText().length;
     }
@@ -201,44 +205,44 @@ class EditLogic extends GetxController {
   //单张照片
   Future<void> pickPhoto(ImageSource imageSource) async {
     //获取一张图片
-    final XFile? photo = await Utils().mediaUtil.pickPhoto(imageSource);
+    final XFile? photo = await MediaUtil.pickPhoto(imageSource);
     if (photo != null) {
       Get.backLegacy();
       await addNewImage(photo);
     } else {
-      Utils().noticeUtil.showToast('取消图片选择');
+      NoticeUtil.showToast('取消图片选择');
     }
   }
 
   //画图照片
   Future<void> pickDraw(Uint8List dataList) async {
     Get.backLegacy();
-    var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.png');
+    var path = FileUtil.getCachePath('${const Uuid().v7()}.png');
     addNewImage(XFile.fromData(dataList, path: path)..saveTo(path));
   }
 
   //网络图片
   Future<void> networkImage() async {
     Get.backLegacy();
-    Utils().noticeUtil.showToast('图片获取中');
-    var imageUrl = await Api().updateImageUrl();
+    NoticeUtil.showToast('图片获取中');
+    var imageUrl = await Api.updateImageUrl();
     if (imageUrl == null) {
-      Utils().noticeUtil.showToast('图片获取失败');
+      NoticeUtil.showToast('图片获取失败');
       return;
     }
-    var imageData = await Api().getImageData(imageUrl.first);
+    var imageData = await Api.getImageData(imageUrl.first);
     if (imageData == null) {
-      Utils().noticeUtil.showToast('图片获取失败');
+      NoticeUtil.showToast('图片获取失败');
       return;
     }
-    var path = Utils().fileUtil.getCachePath('${const Uuid().v7()}.png');
+    var path = FileUtil.getCachePath('${const Uuid().v7()}.png');
     addNewImage(XFile.fromData(imageData, path: path)..saveTo(path));
   }
 
   //相册选择多张照片
   Future<void> pickMultiPhoto() async {
     //获取一堆照片
-    List<XFile> photoList = await Utils().mediaUtil.pickMultiPhoto(null);
+    List<XFile> photoList = await MediaUtil.pickMultiPhoto(null);
     if (photoList.isNotEmpty) {
       //关闭dialog
       Get.backLegacy();
@@ -252,7 +256,7 @@ class EditLogic extends GetxController {
       //关闭dialog
       Get.backLegacy();
       //弹出一个提示
-      Utils().noticeUtil.showToast('取消图片选择');
+      NoticeUtil.showToast('取消图片选择');
     }
   }
 
@@ -266,12 +270,12 @@ class EditLogic extends GetxController {
   //选择视频
   Future<void> pickVideo(ImageSource imageSource) async {
     // 获取一个视频
-    XFile? video = await Utils().mediaUtil.pickVideo(imageSource);
+    XFile? video = await MediaUtil.pickVideo(imageSource);
     if (video != null) {
       Get.backLegacy();
       await addNewVideo(video);
     } else {
-      Utils().noticeUtil.showToast('取消视频选择');
+      NoticeUtil.showToast('取消视频选择');
     }
   }
 
@@ -289,18 +293,18 @@ class EditLogic extends GetxController {
   void deleteImage({required String path}) async {
     // 移除这个图片
     state.imageFileList.removeWhere((file) => file.path == path);
-    await Utils().fileUtil.deleteFile(path);
+    await FileUtil.deleteFile(path);
     //Get.backLegacy();
-    Utils().noticeUtil.showToast('删除成功');
+    NoticeUtil.showToast('删除成功');
     update(['Image']);
   }
 
   //删除视频
   void deleteVideo(index) async {
     var videoFile = state.videoFileList.removeAt(index);
-    await Utils().fileUtil.deleteFile(videoFile.path);
+    await FileUtil.deleteFile(videoFile.path);
     Get.backLegacy();
-    Utils().noticeUtil.showToast('删除成功');
+    NoticeUtil.showToast('删除成功');
     update(['Video']);
   }
 
@@ -310,14 +314,14 @@ class EditLogic extends GetxController {
     state.imageFileList
       ..removeAt(index)
       ..insert(0, coverFile);
-    Utils().noticeUtil.showToast('设置第${index + 1}张图片为封面');
+    NoticeUtil.showToast('设置第${index + 1}张图片为封面');
     update(['Image']);
   }
 
   //获取封面颜色
   Future<int?> getCoverColor() async {
     if (state.imageFileList.isNotEmpty) {
-      return await Utils().mediaUtil.getColorScheme(FileImage(File(state.imageFileList.first.path)));
+      return await MediaUtil.getColorScheme(FileImage(File(state.imageFileList.first.path)));
     } else {
       return null;
     }
@@ -327,7 +331,7 @@ class EditLogic extends GetxController {
   Future<double?> getCoverAspect() async {
     //如果有封面就获取
     if (state.imageFileList.isNotEmpty) {
-      return await Utils().mediaUtil.getImageAspectRatio(FileImage(File(state.imageFileList.first.path)));
+      return await MediaUtil.getImageAspectRatio(FileImage(File(state.imageFileList.first.path)));
     } else {
       return null;
     }
@@ -346,18 +350,17 @@ class EditLogic extends GetxController {
     state.videoFileList.removeWhere((file) => !needVideo.contains(file.path));
     state.audioNameList.removeWhere((name) => !needAudio.contains(name));
     // 保存图片
-    var imageNameMap = await Utils().mediaUtil.saveImages(imageFileList: state.imageFileList);
+    var imageNameMap = await MediaUtil.saveImages(imageFileList: state.imageFileList);
     // 保存视频
-    var videoNameMap = await Utils().mediaUtil.saveVideo(videoFileList: state.videoFileList);
+    var videoNameMap = await MediaUtil.saveVideo(videoFileList: state.videoFileList);
     //保存录音
-    var audioNameMap = await Utils().mediaUtil.saveAudio(state.audioNameList);
+    var audioNameMap = await MediaUtil.saveAudio(state.audioNameList);
     var content = await Kmp.replaceWithKmp(
         text: originContent, replacements: {...imageNameMap, ...videoNameMap, ...audioNameMap});
     state.currentDiary
       ..title = titleTextEditingController.text
       ..content = content
       ..type = state.type.value
-      ..lastModified = DateTime.now()
       ..contentText = _toPlainText()
       ..audioName = state.audioNameList
       ..imageName = imageNameMap.values.toList()
@@ -365,10 +368,9 @@ class EditLogic extends GetxController {
       ..imageColor = await getCoverColor()
       ..aspect = await getCoverAspect();
 
-    await Utils().isarUtil.updateADiary(state.currentDiary);
+    await IsarUtil.updateADiary(oldDiary: state.originalDiary, newDiary: state.currentDiary);
     state.isNew ? Get.backLegacy(result: state.currentDiary.categoryId ?? '') : Get.backLegacy(result: 'changed');
-    if (Utils().webDavUtil.hasOption) unawaited(Utils().webDavUtil.uploadSingleDiary(state.currentDiary));
-    Utils().noticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');
+    NoticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');
   }
 
   DateTime? oldTime;
@@ -379,7 +381,7 @@ class EditLogic extends GetxController {
       Get.backLegacy();
     } else {
       oldTime = currentTime;
-      Utils().noticeUtil.showToast('再滑一次退出');
+      NoticeUtil.showToast('再滑一次退出');
     }
   }
 
@@ -425,14 +427,14 @@ class EditLogic extends GetxController {
 
   //获取天气，同时获取定位
   Future<void> getPositionAndWeather() async {
-    var key = Utils().prefUtil.getValue<String>('qweatherKey');
+    var key = PrefUtil.getValue<String>('qweatherKey');
     if (key == null) return;
 
     state.isProcessing = true;
     update(['Weather']);
 
     // 获取定位
-    var position = await Api().updatePosition();
+    var position = await Api.updatePosition();
     if (position == null) {
       _handleError('定位失败');
       return;
@@ -441,7 +443,7 @@ class EditLogic extends GetxController {
     state.currentDiary.position = position;
 
     // 获取天气
-    var weather = await Api().updateWeather(
+    var weather = await Api.updateWeather(
       position: LatLng(double.parse(position[0]), double.parse(position[1])),
     );
 
@@ -452,13 +454,13 @@ class EditLogic extends GetxController {
 
     state.currentDiary.weather = weather;
     state.isProcessing = false;
-    Utils().noticeUtil.showToast('获取成功');
+    NoticeUtil.showToast('获取成功');
     update(['Weather']);
   }
 
   void _handleError(String message) {
     state.isProcessing = false;
-    Utils().noticeUtil.showToast(message);
+    NoticeUtil.showToast(message);
     update(['Weather']);
   }
 
@@ -476,11 +478,11 @@ class EditLogic extends GetxController {
   //删除音频
   Future<void> deleteAudio(String path) async {
     // 删除文件
-    await Utils().fileUtil.deleteFile(path);
+    await FileUtil.deleteFile(path);
     // 删除对应的组件
     state.audioNameList.removeWhere((name) => path.endsWith(name));
     update(['Audio']);
-    Utils().noticeUtil.showToast('删除成功');
+    NoticeUtil.showToast('删除成功');
   }
 
   void cancelAddTag() {
@@ -509,7 +511,7 @@ class EditLogic extends GetxController {
     if (id == null) {
       state.categoryName = '';
     } else {
-      var category = Utils().isarUtil.getCategoryName(id);
+      var category = IsarUtil.getCategoryName(id);
       if (category != null) {
         state.categoryName = category.categoryName;
       }

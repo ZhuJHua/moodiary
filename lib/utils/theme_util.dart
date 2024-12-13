@@ -4,19 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/internal.dart';
 import 'package:mood_diary/common/values/colors.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import 'data/pref.dart';
 
 class ThemeUtil {
-  Future<bool> supportDynamicColor() async {
+  static Future<bool> supportDynamicColor() async {
     return (await DynamicColorPlugin.getCorePalette()) != null;
   }
 
-  Future<Color> getDynamicColor() async {
+  static Future<Color> getDynamicColor() async {
     return Color((await DynamicColorPlugin.getCorePalette())!.primary.get(40));
   }
 
-  ThemeData buildTheme(Brightness brightness) {
-    final color = Utils().prefUtil.getValue<int>('color');
+  static ThemeData buildTheme(Brightness brightness) {
+    final color = PrefUtil.getValue<int>('color');
     var seedColor = switch (color) {
       0 => AppColor.themeColorList[0],
       1 => AppColor.themeColorList[1],
@@ -24,7 +25,7 @@ class ThemeUtil {
       3 => AppColor.themeColorList[3],
       4 => AppColor.themeColorList[4],
       // -1为系统配色，如果选了-1，肯定有
-      _ => Color(Utils().prefUtil.getValue<int>('systemColor')!)
+      _ => Color(PrefUtil.getValue<int>('systemColor')!)
     };
 
     // 添加 fontVariations 的函数
@@ -93,7 +94,7 @@ class ThemeUtil {
     return themeData.useSystemChineseFont(brightness);
   }
 
-  DefaultStyles getInstance(BuildContext context) {
+  static DefaultStyles getInstance(BuildContext context) {
     final themeData = Theme.of(context);
     final textStyle = Theme.of(context).textTheme;
     final baseStyle = textStyle.bodyMedium!.copyWith(

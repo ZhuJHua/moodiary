@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/data/pref.dart';
 import 'laboratory_logic.dart';
 
 class LaboratoryPage extends StatelessWidget {
@@ -25,7 +25,7 @@ class LaboratoryPage extends StatelessWidget {
             isThreeLine: true,
             subtitle: SelectionArea(
                 child: Text(
-                    'ID:${Utils().prefUtil.getValue<String>('tencentId') ?? ''}\nKey:${Utils().prefUtil.getValue<String>('tencentKey') ?? ''}')),
+                    'ID:${PrefUtil.getValue<String>('tencentId') ?? ''}\nKey:${PrefUtil.getValue<String>('tencentKey') ?? ''}')),
             trailing: IconButton(
                 onPressed: () {
                   showDialog(
@@ -75,7 +75,7 @@ class LaboratoryPage extends StatelessWidget {
           ),
           ListTile(
             title: const Text('和风天气密钥'),
-            subtitle: SelectionArea(child: Text(Utils().prefUtil.getValue<String>('qweatherKey') ?? '')),
+            subtitle: SelectionArea(child: Text(PrefUtil.getValue<String>('qweatherKey') ?? '')),
             trailing: IconButton(
                 onPressed: () {
                   showDialog(
@@ -109,7 +109,7 @@ class LaboratoryPage extends StatelessWidget {
           ),
           ListTile(
             title: const Text('天地图密钥'),
-            subtitle: SelectionArea(child: Text(Utils().prefUtil.getValue<String>('tiandituKey') ?? '')),
+            subtitle: SelectionArea(child: Text(PrefUtil.getValue<String>('tiandituKey') ?? '')),
             trailing: IconButton(
                 onPressed: () {
                   showDialog(

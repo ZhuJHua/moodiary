@@ -1,5 +1,5 @@
 import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/data/pref.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseUtil {
@@ -9,8 +9,14 @@ class SupabaseUtil {
 
   User? get user => _supabase.auth.currentUser;
 
+  SupabaseUtil._();
+
+  static final SupabaseUtil _instance = SupabaseUtil._();
+
+  factory SupabaseUtil() => _instance;
+
   Future<void> initSupabase() async {
-    if (Utils().prefUtil.getValue<bool>('firstStart') == false) {
+    if (PrefUtil.getValue<bool>('firstStart') == false) {
       await Supabase.initialize(
         url: '',
         anonKey: '',

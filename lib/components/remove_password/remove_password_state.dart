@@ -1,9 +1,9 @@
-import 'package:mood_diary/utils/utils.dart';
+import '../../utils/data/pref.dart';
 
 class RemovePasswordState {
   String password = '';
 
-  String realPassword = Utils().prefUtil.getValue<String>('password')!;
+  String realPassword = PrefUtil.getValue<String>('password')!;
 
   RemovePasswordState();
 }

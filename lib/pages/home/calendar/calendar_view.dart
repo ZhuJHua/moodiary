@@ -22,6 +22,17 @@ class CalendarPage extends StatelessWidget {
 
     //生成日历选择器
     Widget buildDatePicker() {
+      final diaryList = state.currentMonthDiaryMap.keys.toList();
+      var dateWithDiaryList = <DateTime>[];
+      // 获取有日记的日期，只需要年月日
+      for (var diary in diaryList) {
+        // 如果不存在当前日期，则添加
+        var time = diary.time;
+        if (!dateWithDiaryList.contains(DateTime(time.year, time.month, time.day))) {
+          dateWithDiaryList.add(DateTime(time.year, time.month, time.day));
+        }
+      }
+
       return Obx(() {
         return Padding(
           padding: const EdgeInsets.all(4.0),
@@ -45,8 +56,9 @@ class CalendarPage extends StatelessWidget {
                         config: CalendarDatePicker2Config(
                             calendarViewMode: CalendarDatePicker2Mode.day,
                             calendarType: CalendarDatePicker2Type.single,
+                            allowSameValueSelection: true,
                             dayTextStylePredicate: ({required date}) {
-                              return state.dateHasDiary.any((dateTime) =>
+                              return dateWithDiaryList.any((dateTime) =>
                                       dateTime.year == date.year &&
                                       dateTime.month == date.month &&
                                       dateTime.day == date.day)
@@ -56,11 +68,9 @@ class CalendarPage extends StatelessWidget {
                                   : null;
                             }),
                         onValueChanged: (value) async {
-                          await logic.updateDate(value.first);
+                          await logic.animateToSelectedDate(value.first);
                         },
-                        onDisplayedMonthChanged: (value) async {
-                          await logic.getDateHasDiary(value);
-                        },
+                        onDisplayedMonthChanged: logic.getMonthDiary,
                         value: [state.selectedDate.value],
                       );
                     }),
@@ -75,15 +85,19 @@ class CalendarPage extends StatelessWidget {
     }
 
     Widget buildCardList() {
+      // 日记列表
+      final diaryList = state.currentMonthDiaryMap.keys.toList();
+      // globalKey列表
+      final keyList = state.currentMonthDiaryMap.values.toList();
       return SliverList.builder(
         itemBuilder: (context, index) {
           return TimeLineComponent(
-            actionColor:
-                Color.lerp(AppColor.emoColorList.first, AppColor.emoColorList.last, state.diaryList[index].mood)!,
-            child: CalendarDiaryCardComponent(diary: state.diaryList[index]),
+            key: keyList[index],
+            actionColor: Color.lerp(AppColor.emoColorList.first, AppColor.emoColorList.last, diaryList[index].mood)!,
+            child: CalendarDiaryCardComponent(diary: diaryList[index]),
           );
         },
-        itemCount: state.diaryList.length,
+        itemCount: diaryList.length,
       );
     }
 
@@ -94,13 +108,7 @@ class CalendarPage extends StatelessWidget {
           slivers: [
             SliverAppBar(
               title: Text(i18n.homeNavigatorCalendar),
-              actions: [
-                IconButton(
-                    onPressed: () async {
-                      await logic.backToToday();
-                    },
-                    icon: const Icon(Icons.today))
-              ],
+              actions: [IconButton(onPressed: () async {}, icon: const Icon(Icons.today))],
             ),
             SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),

@@ -5,9 +5,12 @@ import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/pages/diary_details/diary_details_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/permission_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../utils/data/isar.dart';
+import '../../utils/log_util.dart';
+import '../../utils/notice_util.dart';
 import 'map_state.dart';
 
 class MapLogic extends GetxController {
@@ -30,7 +33,7 @@ class MapLogic extends GetxController {
   }
 
   Future<LatLng?> getLocation() async {
-    if (await Utils().permissionUtil.checkPermission(Permission.location)) {
+    if (await PermissionUtil.checkPermission(Permission.location)) {
       Position? position;
       position = await Geolocator.getLastKnownPosition(forceAndroidLocationManager: true);
       position ??= await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
@@ -40,20 +43,20 @@ class MapLogic extends GetxController {
   }
 
   Future<void> getAllItem() async {
-    state.diaryMapItemList = await Utils().isarUtil.getAllMapItem();
+    state.diaryMapItemList = await IsarUtil.getAllMapItem();
   }
 
   Future<void> toCurrentPosition() async {
-    Utils().noticeUtil.showToast('定位中');
+    NoticeUtil.showToast('定位中');
     var currentPosition = await getLocation();
-    Utils().logUtil.printInfo(currentPosition.toString());
-    Utils().noticeUtil.showToast('定位成功');
+    LogUtil.printInfo(currentPosition.toString());
+    NoticeUtil.showToast('定位成功');
     mapController.move(currentPosition!, mapController.camera.maxZoom!);
   }
 
   Future<void> toDiaryPage({required int isarId}) async {
     await HapticFeedback.mediumImpact();
-    var diary = await Utils().isarUtil.getDiaryByID(isarId);
+    var diary = await IsarUtil.getDiaryByID(isarId);
     Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary!.id);
     await Get.toNamed(
       AppRoutes.diaryPage,

@@ -453,7 +453,6 @@ class SettingPage extends StatelessWidget {
       assignId: true,
       builder: (_) {
         return CustomScrollView(
-          cacheExtent: size.height * 2,
           slivers: [
             SliverAppBar(
               title: Text(i18n.homeNavigatorSetting),
@@ -464,6 +463,7 @@ class SettingPage extends StatelessWidget {
                 padding: const EdgeInsets.all(4.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
                   spacing: 4.0,
                   children: [
                     buildDashboard(),

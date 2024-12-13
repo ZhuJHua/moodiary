@@ -4,8 +4,10 @@ import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/diary_tab_view/diary_tab_view_logic.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../../utils/data/isar.dart';
+import '../../../utils/data/pref.dart';
+import '../../../utils/webdav_util.dart';
 import 'diary_state.dart';
 
 class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
@@ -40,11 +42,10 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   }
 
   Future<void> autoSync() async {
-    if (Utils().prefUtil.getValue<bool>('autoSync') == true) {
-      var diary = await Utils().isarUtil.getAllDiaries();
-      await Utils().webDavUtil.syncDiary(diary, onDownload: () async {
-        await updateCategory();
-        await updateDiary(null);
+    if (PrefUtil.getValue<bool>('autoSync') == true) {
+      var diary = await IsarUtil.getAllDiaries();
+      await WebDavUtil().syncDiary(diary, onDownload: () async {
+        await refreshAll();
       });
     }
   }
@@ -144,6 +145,16 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     await Bind.find<DiaryTabViewLogic>(tag: 'default').updateDiary();
   }
 
+  Future<void> refreshAll() async {
+    await updateCategory();
+    await updateDiary(null, jump: true);
+    await Future.wait(
+      state.categoryList.map(
+        (category) => updateDiary(category.id, jump: false),
+      ),
+    );
+  }
+
   /// 分类刷新函数
   /// 需要在以下情况调用
   ///
@@ -152,7 +163,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   /// 3. 删除分类之后
   Future<void> updateCategory() async {
     //重新获取分类
-    state.categoryList = await Utils().isarUtil.getAllCategoryAsync();
+    state.categoryList = await IsarUtil.getAllCategoryAsync();
 
     // 移除 Map 中不再存在的 Category id
     state.keyMap
@@ -185,7 +196,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     state.viewModeType = viewModeType;
     update(['TabBarView']);
     _checkShowTop();
-    await Utils().prefUtil.setValue<int>('homeViewMode', viewModeType.number);
+    await PrefUtil.setValue<int>('homeViewMode', viewModeType.number);
   }
 
   // 回到顶部函数

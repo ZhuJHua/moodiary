@@ -2,14 +2,15 @@ import 'dart:math';
 
 import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/common/models/map.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../utils/data/pref.dart';
 
 class MapState {
   LatLng? currentLatLng;
 
   List<DiaryMapItem> diaryMapItemList = [];
 
-  String? tiandituKey = Utils().prefUtil.getValue<String>('tiandituKey');
+  String? tiandituKey = PrefUtil.getValue<String>('tiandituKey');
 
   int random = Random().nextInt(8);
 
