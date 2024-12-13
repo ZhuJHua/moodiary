@@ -10,6 +10,12 @@ class NetworkUtil {
     return connectivityResult.contains(ConnectivityResult.wifi);
   }
 
+  // 检查是否有网络
+  static Future<bool> isNetworkConnected() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    return !connectivityResult.contains(ConnectivityResult.none);
+  }
+
   // 获取设备ip地址
   static Future<String?> getDeviceIP() async {
     var connectivityResult = await Connectivity().checkConnectivity();
