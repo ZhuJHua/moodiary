@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/pages/login/login_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/data/supabase.dart';
+import '../../utils/notice_util.dart';
 import 'register_form_state.dart';
 
 class RegisterFormLogic extends GetxController {
@@ -32,8 +33,8 @@ class RegisterFormLogic extends GetxController {
     unFocus();
     if (state.formKey.currentState!.validate()) {
       state.formKey.currentState!.save();
-      await Utils().supabaseUtil.signUp(state.email, state.password).then((value) {}, onError: (_) {
-        Utils().noticeUtil.showToast('该账号已经注册');
+      await SupabaseUtil().signUp(state.email, state.password).then((value) {}, onError: (_) {
+        NoticeUtil.showToast('该账号已经注册');
       });
     }
   }

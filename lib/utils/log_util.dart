@@ -1,43 +1,31 @@
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import 'file_util.dart';
 
 class LogUtil {
-  late Logger logger;
+  static final Logger _logger =
+      kDebugMode ? Logger() : Logger(printer: null, output: FileOutput(file: FileUtil.getErrorLogFile()));
 
-  LogUtil() {
-    if (kDebugMode) {
-      logger = Logger();
-    }
+  static void printError(message, {required Object error, StackTrace? stackTrace}) {
+    _logger.e(message, error: error, stackTrace: stackTrace);
   }
 
-  void printError(message, {required Object error, StackTrace? stackTrace}) {
-    if (kDebugMode) {
-      logger.e(message, error: error, stackTrace: stackTrace);
-    }
-    appendLogFile(message, error: error, stackTrace: stackTrace);
+  static void printWTF(message, {required Object error, StackTrace? stackTrace}) {
+    _logger.f(message, error: error, stackTrace: stackTrace);
   }
 
-  void printWTF(message, {required Object error, StackTrace? stackTrace}) {
-    if (kDebugMode) {
-      logger.f(message, error: error, stackTrace: stackTrace);
-    }
-    appendLogFile(message, error: error, stackTrace: stackTrace);
+  static void printInfo(message) {
+    if (kDebugMode) _logger.i(message);
   }
 
-  void printInfo(message) {
-    if (kDebugMode) {
-      logger.i(message);
-    }
-  }
-
-  void appendLogFile(String errorType, {required Object error, StackTrace? stackTrace}) {
-    // 生成错误日志
-    final logMessage = '''$errorType
-    ${DateTime.now().toIso8601String()}
-    Error: ${error.toString()}
-    StackTrace: ${stackTrace?.toString()}
-    ''';
-    Utils().fileUtil.errorLog(logMessage);
-  }
+// static void appendLogFile(String errorType, {required Object error, StackTrace? stackTrace}) {
+//   // 生成错误日志
+//   final logMessage = '''$errorType
+//   ${DateTime.now().toIso8601String()}
+//   Error: ${error.toString()}
+//   StackTrace: ${stackTrace?.toString()}
+//   ''';
+//   FileUtil.errorLog(logMessage);
+// }
 }

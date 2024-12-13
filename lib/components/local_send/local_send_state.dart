@@ -1,7 +1,6 @@
 import 'package:get/get.dart';
 
 class LocalSendState {
-
   String deviceIpAddress = '';
 
   int transferPort = 54321;

@@ -4,10 +4,10 @@ import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 
 class AuthUtil {
-  late final LocalAuthentication _authentication = LocalAuthentication();
+  static final LocalAuthentication _authentication = LocalAuthentication();
 
   //生物识别
-  Future<bool> check() async {
+  static Future<bool> check() async {
     return await _authentication.authenticate(
       authMessages: [
         const AndroidAuthMessages(
@@ -30,7 +30,7 @@ class AuthUtil {
   }
 
   //判断是否有硬件
-  Future<bool> canCheckBiometrics() async {
+  static Future<bool> canCheckBiometrics() async {
     return await _authentication.canCheckBiometrics;
   }
 }

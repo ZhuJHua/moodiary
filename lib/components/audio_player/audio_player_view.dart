@@ -56,7 +56,6 @@ class AudioPlayerComponent extends StatelessWidget {
 
   final String path;
 
-
   @override
   Widget build(BuildContext context) {
     final logic = Get.put(AudioPlayerLogic(), tag: path);

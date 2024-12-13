@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/data/isar.dart';
 import 'diary_tab_view_state.dart';
 
 class DiaryTabViewLogic extends GetxController {
@@ -22,21 +22,20 @@ class DiaryTabViewLogic extends GetxController {
   Future<void> _getDiary() async {
     state.isFetching = true;
     update(['PlaceHolder']);
-    state.diaryList = await Utils().isarUtil.getDiaryByCategory(state.categoryId, 0, state.initLen);
+    state.diaryList = await IsarUtil.getDiaryByCategory(state.categoryId, 0, state.initLen);
     state.isFetching = false;
     update(['PlaceHolder']);
     update(['TabView']);
   }
 
   Future<void> updateDiary() async {
-    state.diaryList = await Utils().isarUtil.getDiaryByCategory(state.categoryId, 0, state.initLen);
+    state.diaryList = await IsarUtil.getDiaryByCategory(state.categoryId, 0, state.initLen);
     update(['PlaceHolder']);
     update(['TabView']);
   }
 
   Future<void> paginationDiary() async {
-    state.diaryList +=
-        await Utils().isarUtil.getDiaryByCategory(state.categoryId, state.diaryList.length, state.pageLen);
+    state.diaryList += await IsarUtil.getDiaryByCategory(state.categoryId, state.diaryList.length, state.pageLen);
     update(['TabView']);
   }
 

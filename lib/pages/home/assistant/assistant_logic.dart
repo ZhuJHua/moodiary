@@ -6,8 +6,9 @@ import 'package:get/get.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/hunyuan.dart';
 import 'package:mood_diary/common/values/keyboard_state.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/signature_util.dart';
 
+import '../../../utils/notice_util.dart';
 import 'assistant_state.dart';
 
 class AssistantLogic extends GetxController with WidgetsBindingObserver {
@@ -100,7 +101,7 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
 
   //对话
   Future<void> getAi(String ask) async {
-    var check = Utils().signatureUtil.checkTencent();
+    var check = SignatureUtil.checkTencent();
     if (check != null) {
       //清空输入框
       clearText();
@@ -113,7 +114,7 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
       toBottom();
       //带着上下文请求
       var stream =
-          await Api().getHunYuan(check['id']!, check['key']!, state.messages.values.toList(), state.modelVersion.value);
+          await Api.getHunYuan(check['id']!, check['key']!, state.messages.values.toList(), state.modelVersion.value);
       //如果收到了请求，添加一个回答上下文
       var replyTime = DateTime.now();
       state.messages[replyTime] = Message('assistant', '');
@@ -144,7 +145,7 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
     if (text != '') {
       await getAi(text);
     } else {
-      Utils().noticeUtil.showToast('还没有输入问题');
+      NoticeUtil.showToast('还没有输入问题');
     }
   }
 

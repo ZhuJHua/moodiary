@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../utils/data/pref.dart';
 
 class DiaryDetailsState {
   Diary diary = Get.arguments[0];
@@ -13,7 +14,7 @@ class DiaryDetailsState {
 
   RxBool isScrolling = false.obs;
 
-  bool get diaryHeader => Utils().prefUtil.getValue<bool>('diaryHeader')!;
+  bool get diaryHeader => PrefUtil.getValue<bool>('diaryHeader')!;
 
   DiaryDetailsState();
 }

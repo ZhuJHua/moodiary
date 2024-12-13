@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/webdav.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../utils/data/pref.dart';
+import '../../utils/webdav_util.dart';
 
 class WebDavState {
   final formKey = GlobalKey<FormState>();
 
-  RxBool hasOption = Utils().webDavUtil.hasOption.obs;
-  List<String> currentOptions = Utils().webDavUtil.options;
+  RxBool hasOption = WebDavUtil().hasOption.obs;
+  List<String> currentOptions = WebDavUtil().options;
 
   Rx<WebDavConnectivityStatus> connectivityStatus = WebDavConnectivityStatus.connecting.obs;
 
-  RxBool autoSync = Utils().prefUtil.getValue<bool>('autoSync')!.obs;
+  RxBool autoSync = PrefUtil.getValue<bool>('autoSync')!.obs;
 
   WebDavState();
 }

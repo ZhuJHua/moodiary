@@ -6,8 +6,12 @@ import 'package:dio/dio.dart' as dio;
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../../utils/data/isar.dart';
+import '../../../utils/file_util.dart';
+import '../../../utils/http_util.dart';
+import '../../../utils/log_util.dart';
+import '../../../utils/notice_util.dart';
 import 'local_send_client_state.dart';
 
 class LocalSendClientLogic extends GetxController {
@@ -34,7 +38,7 @@ class LocalSendClientLogic extends GetxController {
   void _sendBroadcast() {
     const message = 'Looking for server';
     socket.send(message.codeUnits, InternetAddress('255.255.255.255'), state.scanPort);
-    Utils().logUtil.printInfo('Broadcast sent');
+    LogUtil.printInfo('Broadcast sent');
   }
 
   // 尝试在 30 秒内找到服务器
@@ -87,7 +91,7 @@ class LocalSendClientLogic extends GetxController {
         final datagram = socket.receive();
         if (datagram != null) {
           final serverResponse = String.fromCharCodes(datagram.data);
-          Utils().logUtil.printInfo('Found server: $serverResponse');
+          LogUtil.printInfo('Found server: $serverResponse');
 
           final serverInfo = serverResponse.split(':');
           state.serverIp = serverInfo[0];
@@ -121,13 +125,13 @@ class LocalSendClientLogic extends GetxController {
     formData.fields.add(MapEntry('diary', jsonEncode(diary.toJson())));
     // 如果有分类，把分类名字带过去
     if (diary.categoryId != null) {
-      Utils().logUtil.printInfo(diary.categoryId);
-      var categoryName = Utils().isarUtil.getCategoryName(diary.categoryId!)!.categoryName;
+      LogUtil.printInfo(diary.categoryId);
+      var categoryName = IsarUtil.getCategoryName(diary.categoryId!)!.categoryName;
       formData.fields.add(MapEntry('categoryName', categoryName));
     }
     // 同步添加图片文件
     for (var imageName in diary.imageName) {
-      final filePath = Utils().fileUtil.getRealPath('image', imageName);
+      final filePath = FileUtil.getRealPath('image', imageName);
       formData.files.add(MapEntry(
         'image',
         await dio.MultipartFile.fromFile(filePath, filename: imageName),
@@ -135,7 +139,7 @@ class LocalSendClientLogic extends GetxController {
     }
     // 同步添加视频文件
     for (var videoName in diary.videoName) {
-      final filePath = Utils().fileUtil.getRealPath('video', videoName);
+      final filePath = FileUtil.getRealPath('video', videoName);
       formData.files.add(MapEntry(
         'video',
         await dio.MultipartFile.fromFile(filePath, filename: videoName),
@@ -143,7 +147,7 @@ class LocalSendClientLogic extends GetxController {
     }
     // 同步添加缩略图文件
     for (var videoName in diary.videoName) {
-      final filePath = Utils().fileUtil.getRealPath('thumbnail', videoName);
+      final filePath = FileUtil.getRealPath('thumbnail', videoName);
       formData.files.add(MapEntry(
         'thumbnail',
         await dio.MultipartFile.fromFile(filePath, filename: 'thumbnail-${videoName.substring(6, 42)}.jpeg'),
@@ -151,7 +155,7 @@ class LocalSendClientLogic extends GetxController {
     }
     // 同步添加音频文件
     for (var audioName in diary.audioName) {
-      final filePath = Utils().fileUtil.getRealPath('audio', audioName);
+      final filePath = FileUtil.getRealPath('audio', audioName);
       formData.files.add(MapEntry(
         'audio',
         await dio.MultipartFile.fromFile(filePath, filename: audioName),
@@ -159,7 +163,7 @@ class LocalSendClientLogic extends GetxController {
     }
     final startTime = DateTime.now();
     // 发送请求并监听进度
-    var response = await Utils().httpUtil.dio.post(
+    var response = await HttpUtil().upload(
       'http://${state.serverIp}:${state.serverPort}',
       data: formData,
       onSendProgress: (int sent, int total) {
@@ -171,7 +175,7 @@ class LocalSendClientLogic extends GetxController {
     );
     if (response.statusCode == 200 && response.data != null) {
     } else {
-      Utils().noticeUtil.showToast('发送失败');
+      NoticeUtil.showToast('发送失败');
     }
     state.sendCount.value += 1;
   }
@@ -185,20 +189,20 @@ class LocalSendClientLogic extends GetxController {
       state.sendCount.value = 0;
       state.diaryToSend.clear();
       state.isSending.value = false;
-      Utils().noticeUtil.showToast('发送完成');
+      NoticeUtil.showToast('发送完成');
     } else {
-      Utils().noticeUtil.showToast('还没选择日记');
+      NoticeUtil.showToast('还没选择日记');
     }
   }
 
   // 向服务器发送数据并监听进度
   Future<void> sendAllData() async {
     state.isSending.value = true;
-    final dataPath = Utils().fileUtil.getRealPath('', '');
-    final zipPath = Utils().fileUtil.getCachePath('');
+    final dataPath = FileUtil.getRealPath('', '');
+    final zipPath = FileUtil.getCachePath('');
     final isolateParams = {'zipPath': zipPath, 'dataPath': dataPath};
     // 获取压缩文件路径
-    var filePath = await compute(Utils().fileUtil.zipFile, isolateParams);
+    var filePath = await compute(FileUtil.zipFile, isolateParams);
 
     // 创建 FormData 并同步添加 JSON 和文件
     dio.FormData formData = dio.FormData();
@@ -207,7 +211,7 @@ class LocalSendClientLogic extends GetxController {
 
     final startTime = DateTime.now();
     // 发送请求并监听进度
-    var response = await Utils().httpUtil.dio.post(
+    var response = await HttpUtil().upload(
       'http://${state.serverIp}:${state.serverPort}',
       data: formData,
       onSendProgress: (int sent, int total) {
@@ -220,21 +224,21 @@ class LocalSendClientLogic extends GetxController {
     state.isSending.value = false;
     if (response.statusCode == 200 && response.data != null) {
       if (response.data as String == 'Data and files received successfully') {
-        Utils().noticeUtil.showToast('发送成功');
+        NoticeUtil.showToast('发送成功');
       }
     } else {
-      Utils().noticeUtil.showToast('发送失败');
+      NoticeUtil.showToast('发送失败');
     }
   }
 
   Future<void> setDiary(Duration duration) async {
     Get.backLegacy();
     var now = DateTime.now();
-    state.diaryToSend.value = await Utils().isarUtil.getDiariesByDateRange(now.subtract(duration), now);
+    state.diaryToSend.value = await IsarUtil.getDiariesByDateRange(now.subtract(duration), now);
   }
 
   Future<void> setAllDiary() async {
     Get.backLegacy();
-    state.diaryToSend.value = await Utils().isarUtil.getAllDiaries();
+    state.diaryToSend.value = await IsarUtil.getAllDiaries();
   }
 }

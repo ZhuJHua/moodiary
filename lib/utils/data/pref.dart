@@ -1,11 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/auth_util.dart';
+import 'package:mood_diary/utils/media_util.dart';
+import 'package:mood_diary/utils/package_util.dart';
+import 'package:mood_diary/utils/theme_util.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../file_util.dart';
+import 'isar.dart';
+
 class PrefUtil {
-  late final SharedPreferencesWithCache _prefs;
+  static late final SharedPreferencesWithCache _prefs;
 
   static const allowList = {
     //应用版本
@@ -81,7 +87,7 @@ class PrefUtil {
     'showWordCount',
   };
 
-  Future<void> initPref() async {
+  static Future<void> initPref() async {
     _prefs = await SharedPreferencesWithCache.create(
         cacheOptions: const SharedPreferencesWithCacheOptions(allowList: allowList));
     // 首次启动
@@ -89,25 +95,25 @@ class PrefUtil {
     await _prefs.setBool('firstStart', firstStart);
 
     // 获取当前应用版本
-    var packageInfo = await Utils().packageUtil.getPackageInfo();
+    var packageInfo = await PackageUtil.getPackageInfo();
     var currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
     var appVersion = _prefs.getString('appVersion');
 
     /// 数据库版本变更
     /// v2.4.8
     if (appVersion != null && appVersion.split('+')[0].compareTo('2.4.8') < 0) {
-      await compute(Utils().isarUtil.mergeToV2_4_8, Utils().fileUtil.getRealPath('database', ''));
+      await compute(IsarUtil.mergeToV2_4_8, FileUtil.getRealPath('database', ''));
     }
 
     /// v2.6.0
     if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.0') < 0) {
-      await compute(Utils().isarUtil.mergeToV2_6_0, Utils().fileUtil.getRealPath('database', ''));
+      await compute(IsarUtil.mergeToV2_6_0, FileUtil.getRealPath('database', ''));
     }
 
     /// 修复bug
     /// v2.6.2
     if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.2') < 0) {
-      await Utils().mediaUtil.regenerateMissingThumbnails();
+      await MediaUtil.regenerateMissingThumbnails();
     }
 
     // 如果是首次启动或版本不一致
@@ -115,22 +121,22 @@ class PrefUtil {
       await _prefs.setString('appVersion', currentVersion);
       await setDefaultValues();
       //初始化所需目录
-      await Utils().fileUtil.initCreateDir();
+      await FileUtil.initCreateDir();
     }
   }
 
   // 设置默认值的方法
-  Future<void> setDefaultValues() async {
+  static Future<void> setDefaultValues() async {
     await _prefs.setBool('autoSync', _prefs.getBool('autoSync') ?? false);
 
     /// 支持相关，每次都重新获取
-    await _prefs.setBool('supportBiometrics', await Utils().authUtil.canCheckBiometrics());
+    await _prefs.setBool('supportBiometrics', await AuthUtil.canCheckBiometrics());
 
-    var supportDynamicColor = await Utils().themeUtil.supportDynamicColor();
+    var supportDynamicColor = await ThemeUtil.supportDynamicColor();
     await _prefs.setBool('supportDynamicColor', supportDynamicColor);
 
     if (supportDynamicColor) {
-      var color = await Utils().themeUtil.getDynamicColor();
+      var color = await ThemeUtil.getDynamicColor();
       await _prefs.setInt(
           'systemColor',
           ((color.a * 255).toInt() << 24) |
@@ -139,7 +145,7 @@ class PrefUtil {
               (color.b * 255).toInt());
     }
 
-    await _prefs.setInt('color', _prefs.getInt('color') ?? (await Utils().themeUtil.supportDynamicColor() ? -1 : 0));
+    await _prefs.setInt('color', _prefs.getInt('color') ?? (await ThemeUtil.supportDynamicColor() ? -1 : 0));
     await _prefs.setInt('themeMode', _prefs.getInt('themeMode') ?? 0);
     await _prefs.setBool('dynamicColor', _prefs.getBool('dynamicColor') ?? true);
     await _prefs.setInt('quality', _prefs.getInt('quality') ?? 2);
@@ -166,7 +172,7 @@ class PrefUtil {
     await _prefs.setBool('showWordCount', _prefs.getBool('showWordCount') ?? true);
   }
 
-  Future<void> setValue<T>(String key, T value) async {
+  static Future<void> setValue<T>(String key, T value) async {
     if (T == int) {
       await _prefs.setInt(key, value as int);
     } else if (T == bool) {
@@ -182,7 +188,7 @@ class PrefUtil {
     }
   }
 
-  T? getValue<T>(String key) {
+  static T? getValue<T>(String key) {
     if (T == int) {
       return _prefs.getInt(key) as T?;
     } else if (T == bool) {
@@ -198,7 +204,7 @@ class PrefUtil {
     }
   }
 
-  Future<void> removeValue(String key) async {
+  static Future<void> removeValue(String key) async {
     await _prefs.remove(key);
   }
 }

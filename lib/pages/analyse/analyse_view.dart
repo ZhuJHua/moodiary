@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/array_util.dart';
 import 'analyse_logic.dart';
 
 class AnalysePage extends StatelessWidget {
@@ -21,7 +21,7 @@ class AnalysePage extends StatelessWidget {
     //柱状图
     Widget buildBarChart(Map<String, IconData> iconMap, Map<String, int> countMap, List<String> itemList) {
       //去重
-      itemList = Utils().arrayUtil.toSetList(itemList);
+      itemList = ArrayUtil.toSetList(itemList);
       return Card.filled(
         color: colorScheme.surfaceContainer,
         child: Padding(

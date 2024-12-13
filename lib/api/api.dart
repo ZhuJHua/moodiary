@@ -12,17 +12,15 @@ import 'package:mood_diary/common/models/hitokoto.dart';
 import 'package:mood_diary/common/models/hunyuan.dart';
 import 'package:mood_diary/common/models/image.dart';
 import 'package:mood_diary/common/models/weather.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/http_util.dart';
+import 'package:mood_diary/utils/permission_util.dart';
+import 'package:mood_diary/utils/signature_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../utils/data/pref.dart';
+
 class Api {
-  Api._();
-
-  static final Api _instance = Api._();
-
-  factory Api() => _instance;
-
-  Future<Stream<String>?> getHunYuan(String id, String key, List<Message> messages, int model) async {
+  static Future<Stream<String>?> getHunYuan(String id, String key, List<Message> messages, int model) async {
     //获取时间戳
     var timestamp = DateTime.now().millisecondsSinceEpoch;
     var hunyuanModel = switch (model) {
@@ -40,21 +38,20 @@ class Api {
     };
 
     //获取签名
-    var authorization = Utils().signatureUtil.generateSignature(id, key, timestamp, body);
+    var authorization = SignatureUtil.generateSignature(id, key, timestamp, body);
     //构造请求头
     var header = PublicHeader('ChatCompletions', timestamp ~/ 1000, '2023-09-01', authorization);
     //发起请求
-    return await Utils().httpUtil.postStream('https://hunyuan.tencentcloudapi.com', header: header.toMap(), data: body);
+    return await HttpUtil().postStream('https://hunyuan.tencentcloudapi.com', header: header.toMap(), data: body);
   }
 
-  Future<Uint8List?> getImageData(String url) async {
-    return (await Utils().httpUtil.get(url, type: ResponseType.bytes)).data;
+  static Future<Uint8List?> getImageData(String url) async {
+    return (await HttpUtil().get(url, type: ResponseType.bytes)).data;
   }
 
-  Future<List<String>?> updatePosition() async {
+  static Future<List<String>?> updatePosition() async {
     Position? position;
-    if (await Utils().permissionUtil.checkPermission(Permission.location) &&
-        await Geolocator.isLocationServiceEnabled()) {
+    if (await PermissionUtil.checkPermission(Permission.location) && await Geolocator.isLocationServiceEnabled()) {
       position = await Geolocator.getLastKnownPosition(forceAndroidLocationManager: true);
       position ??= await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
     }
@@ -63,10 +60,10 @@ class Api {
       var parameters = {
         'location':
             '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.latitude.toStringAsFixed(2))}',
-        'key': Utils().prefUtil.getValue<String>('qweatherKey'),
+        'key': PrefUtil.getValue<String>('qweatherKey'),
         'lang': local
       };
-      var res = await Utils().httpUtil.get('https://geoapi.qweather.com/v2/city/lookup', parameters: parameters);
+      var res = await HttpUtil().get('https://geoapi.qweather.com/v2/city/lookup', parameters: parameters);
       var geo = await compute(GeoResponse.fromJson, res.data as Map<String, dynamic>);
       if (geo.location != null && geo.location!.isNotEmpty) {
         var city = geo.location!.first;
@@ -79,15 +76,15 @@ class Api {
     }
   }
 
-  Future<List<String>?> updateWeather({required LatLng position}) async {
+  static Future<List<String>?> updateWeather({required LatLng position}) async {
     var local = Localizations.localeOf(Get.context!);
     var parameters = {
       'location':
           '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.latitude.toStringAsFixed(2))}',
-      'key': Utils().prefUtil.getValue<String>('qweatherKey'),
+      'key': PrefUtil.getValue<String>('qweatherKey'),
       'lang': local
     };
-    var res = await Utils().httpUtil.get('https://devapi.qweather.com/v7/weather/now', parameters: parameters);
+    var res = await HttpUtil().get('https://devapi.qweather.com/v7/weather/now', parameters: parameters);
     var weather = await compute(WeatherResponse.fromJson, res.data as Map<String, dynamic>);
     if (weather.now != null) {
       return [
@@ -100,8 +97,8 @@ class Api {
     }
   }
 
-  Future<GithubRelease?> getGithubRelease() async {
-    var res = await Utils().httpUtil.get('https://api.github.com/repos/ZhuJHua/moodiary/releases/latest');
+  static Future<GithubRelease?> getGithubRelease() async {
+    var res = await HttpUtil().get('https://api.github.com/repos/ZhuJHua/moodiary/releases/latest');
     if (res.data != null) {
       var githubRelease = await compute(GithubRelease.fromJson, res.data as Map<String, dynamic>);
       return githubRelease;
@@ -109,14 +106,14 @@ class Api {
     return null;
   }
 
-  Future<List<String>?> updateHitokoto() async {
-    var res = await Utils().httpUtil.get('https://v1.hitokoto.cn');
+  static Future<List<String>?> updateHitokoto() async {
+    var res = await HttpUtil().get('https://v1.hitokoto.cn');
     var hitokoto = await compute(HitokotoResponse.fromJson, res.data as Map<String, dynamic>);
     return [hitokoto.hitokoto!];
   }
 
-  Future<List<String>?> updateImageUrl() async {
-    var res = await Utils().httpUtil.get('https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1');
+  static Future<List<String>?> updateImageUrl() async {
+    var res = await HttpUtil().get('https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1');
     BingImage bingImage = await compute(BingImage.fromJson, res.data as Map<String, dynamic>);
     return ['https://cn.bing.com${bingImage.images?[0].url}'];
   }

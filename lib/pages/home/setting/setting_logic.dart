@@ -6,8 +6,11 @@ import 'package:get/get.dart';
 import 'package:mood_diary/components/dashboard/dashboard_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/theme_util.dart';
 
+import '../../../utils/data/pref.dart';
+import '../../../utils/file_util.dart';
+import '../../../utils/notice_util.dart';
 import 'setting_state.dart';
 
 class SettingLogic extends GetxController {
@@ -35,32 +38,32 @@ class SettingLogic extends GetxController {
 
   //获取当前占用储存空间
   Future<void> getDataUsage() async {
-    var sizeMap = await Utils().fileUtil.countSize();
+    var sizeMap = await FileUtil.countSize();
     state.dataUsage = '${sizeMap['size']} ${sizeMap['unit']}';
     update(['DataUsage']);
     if (sizeMap['bytes'] > (1024 * 1024 * 100)) {
-      await Utils().fileUtil.clearCache();
+      await FileUtil.clearCache();
       await getDataUsage();
-      Utils().noticeUtil.showToast('缓存已自动清理');
+      NoticeUtil.showToast('缓存已自动清理');
     }
   }
 
   Future<void> deleteCache() async {
-    await Utils().fileUtil.clearCache();
+    await FileUtil.clearCache();
     await getDataUsage();
-    Utils().noticeUtil.showToast('清理成功');
+    NoticeUtil.showToast('清理成功');
   }
 
   //本地化
   Future<void> local(bool value) async {
-    await Utils().prefUtil.setValue<bool>('local', value);
+    await PrefUtil.setValue<bool>('local', value);
     state.local = value;
     update(['Local']);
   }
 
   //立即锁定
   Future<void> lockNow(bool value) async {
-    await Utils().prefUtil.setValue<bool>('lockNow', value);
+    await PrefUtil.setValue<bool>('lockNow', value);
     state.lockNow = value;
     update(['Lock']);
   }
@@ -71,21 +74,20 @@ class SettingLogic extends GetxController {
   }
 
   Future<void> toMap() async {
-    if (Utils().prefUtil.getValue<String>('tiandituKey') != null) {
+    if (PrefUtil.getValue<String>('tiandituKey') != null) {
       HapticFeedback.selectionClick();
       Get.toNamed(AppRoutes.mapPage);
     } else {
-      Utils().noticeUtil.showToast('请先配置Key');
+      NoticeUtil.showToast('请先配置Key');
     }
   }
 
   Future<void> toAi() async {
-    if (Utils().prefUtil.getValue<String>('tencentId') != null &&
-        Utils().prefUtil.getValue<String>('tencentKey') != null) {
+    if (PrefUtil.getValue<String>('tencentId') != null && PrefUtil.getValue<String>('tencentKey') != null) {
       HapticFeedback.selectionClick();
       Get.toNamed(AppRoutes.assistantPage);
     } else {
-      Utils().noticeUtil.showToast('请先配置Key');
+      NoticeUtil.showToast('请先配置Key');
     }
   }
 
@@ -129,19 +131,19 @@ class SettingLogic extends GetxController {
     if (textEditingController.text.isNotEmpty) {
       state.customTitle = textEditingController.text;
       update(['CustomTitle']);
-      await Utils().prefUtil.setValue<String>('customTitleName', textEditingController.text);
+      await PrefUtil.setValue<String>('customTitleName', textEditingController.text);
       Get.backLegacy();
       textEditingController.clear();
-      Utils().noticeUtil.showToast('重启应用后生效');
+      NoticeUtil.showToast('重启应用后生效');
     }
   }
 
   //更改字体
   Future<void> changeFontTheme(int value) async {
     Get.backLegacy();
-    await Utils().prefUtil.setValue<int>('fontTheme', value);
+    await PrefUtil.setValue<int>('fontTheme', value);
     state.fontTheme.value = value;
-    Get.changeTheme(Utils().themeUtil.buildTheme(Brightness.light));
-    Get.changeTheme(Utils().themeUtil.buildTheme(Brightness.dark));
+    Get.changeTheme(ThemeUtil.buildTheme(Brightness.light));
+    Get.changeTheme(ThemeUtil.buildTheme(Brightness.dark));
   }
 }

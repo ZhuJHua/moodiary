@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/data/isar.dart';
+import '../../utils/notice_util.dart';
 import 'category_manager_state.dart';
 
 class CategoryManagerLogic extends GetxController {
@@ -26,26 +27,26 @@ class CategoryManagerLogic extends GetxController {
   }
 
   Future<void> getCategory() async {
-    state.categoryList = await Utils().isarUtil.getAllCategoryAsync();
+    state.categoryList = await IsarUtil.getAllCategoryAsync();
     update();
   }
 
   Future<void> addCategory() async {
     if (textEditingController.text.isNotEmpty) {
-      if (await Utils().isarUtil.insertACategory(Category()..categoryName = textEditingController.text)) {
+      if (await IsarUtil.insertACategory(Category()..categoryName = textEditingController.text)) {
         Get.backLegacy();
         await getCategory();
         await diaryLogic.updateCategory();
       } else {
         textEditingController.clear();
-        Utils().noticeUtil.showToast('分类已存在');
+        NoticeUtil.showToast('分类已存在');
       }
     }
   }
 
   Future<void> editCategory(String categoryId) async {
     if (textEditingController.text.isNotEmpty) {
-      await Utils().isarUtil.updateACategory(Category()
+      await IsarUtil.updateACategory(Category()
         ..id = categoryId
         ..categoryName = textEditingController.text);
       Get.backLegacy();
@@ -55,12 +56,12 @@ class CategoryManagerLogic extends GetxController {
   }
 
   Future<void> deleteCategory(String id) async {
-    if (await Utils().isarUtil.deleteACategory(id)) {
-      Utils().noticeUtil.showToast('删除成功');
+    if (await IsarUtil.deleteACategory(id)) {
+      NoticeUtil.showToast('删除成功');
       await getCategory();
       await diaryLogic.updateCategory();
     } else {
-      Utils().noticeUtil.showToast('删除失败，当前分类下还有日记');
+      NoticeUtil.showToast('删除失败，当前分类下还有日记');
     }
   }
 

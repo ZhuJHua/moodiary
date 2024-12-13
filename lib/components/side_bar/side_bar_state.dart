@@ -1,7 +1,8 @@
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/utils/utils.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
+import '../../utils/data/pref.dart';
 
 class SideBarState {
   var packageInfo = Rx<PackageInfo?>(null);
@@ -23,7 +24,7 @@ class SideBarState {
     nowTime = DateTime.now();
     imageUrl = ''.obs;
     weatherResponse = <String>[].obs;
-    getWeather = Utils().prefUtil.getValue<bool>('getWeather')!;
+    getWeather = PrefUtil.getValue<bool>('getWeather')!;
 
     ///Initialize variables
   }

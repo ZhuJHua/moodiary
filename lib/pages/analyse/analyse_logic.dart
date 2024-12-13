@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/hunyuan.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/array_util.dart';
+import 'package:mood_diary/utils/signature_util.dart';
 
+import '../../utils/data/isar.dart';
 import 'analyse_state.dart';
 
 class AnalyseLogic extends GetxController {
@@ -25,16 +27,16 @@ class AnalyseLogic extends GetxController {
     //获取数据开始
     state.finished = false;
     update();
-    state.moodList = await Utils().isarUtil.getMoodByDateRange(start, end.subtract(const Duration(days: -1)));
+    state.moodList = await IsarUtil.getMoodByDateRange(start, end.subtract(const Duration(days: -1)));
 
-    var weatherList = await Utils().isarUtil.getWeatherByDateRange(start, end.subtract(const Duration(days: -1)));
+    var weatherList = await IsarUtil.getWeatherByDateRange(start, end.subtract(const Duration(days: -1)));
     for (var weather in weatherList) {
       if (weather.isNotEmpty) {
         state.weatherList.add(weather.first);
       }
     }
-    state.moodMap = Utils().arrayUtil.countList(state.moodList);
-    state.weatherMap = Utils().arrayUtil.countList(state.weatherList);
+    state.moodMap = ArrayUtil.countList(state.moodList);
+    state.weatherMap = ArrayUtil.countList(state.weatherList);
     state.finished = true;
     update();
   }
@@ -67,11 +69,11 @@ class AnalyseLogic extends GetxController {
   }
 
   Future<void> getAi() async {
-    var check = Utils().signatureUtil.checkTencent();
+    var check = SignatureUtil.checkTencent();
     if (check != null) {
       state.reply = '';
       update();
-      var stream = await Api().getHunYuan(
+      var stream = await Api.getHunYuan(
           check['id']!,
           check['key']!,
           [

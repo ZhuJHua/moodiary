@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/package_util.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../utils/data/pref.dart';
 import 'about_state.dart';
 
 class AboutLogic extends GetxController {
@@ -15,7 +16,7 @@ class AboutLogic extends GetxController {
   }
 
   Future<void> getInfo() async {
-    var packageInfo = await Utils().packageUtil.getPackageInfo();
+    var packageInfo = await PackageUtil.getPackageInfo();
     state.appName = packageInfo.appName;
     state.appVersion = packageInfo.version;
     update();
@@ -24,9 +25,9 @@ class AboutLogic extends GetxController {
   //跳转到反馈页
   Future<void> toReportPage() async {
     var uri = Uri(scheme: 'https', host: 'support.qq.com', path: 'products/650147', queryParameters: {
-      'nickname': Utils().prefUtil.getValue<String>('uuid'),
+      'nickname': PrefUtil.getValue<String>('uuid'),
       'avatar': 'https://txc.qq.com/static/desktop/img/products/def-product-logo.png',
-      'openid': Utils().prefUtil.getValue<String>('uuid')
+      'openid': PrefUtil.getValue<String>('uuid')
     });
     await launchUrl(uri, mode: LaunchMode.platformDefault);
   }

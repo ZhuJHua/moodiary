@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/log_util.dart';
 import 'user_logic.dart';
 
 class UserPage extends StatelessWidget {
@@ -11,7 +11,7 @@ class UserPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<UserLogic>();
     final state = Bind.find<UserLogic>().state;
-    Utils().logUtil.printInfo(state.session);
+    LogUtil.printInfo(state.session);
     return Scaffold(
       appBar: AppBar(),
       body: ListView(

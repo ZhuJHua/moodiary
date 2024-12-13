@@ -1,10 +1,11 @@
-import 'package:mood_diary/utils/utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class UserState {
-  late User? user = Utils().supabaseUtil.user;
+import '../../utils/data/supabase.dart';
 
-  late Session? session = Utils().supabaseUtil.session;
+class UserState {
+  late User? user = SupabaseUtil().user;
+
+  late Session? session = SupabaseUtil().session;
 
   UserState() {
     ///Initialize variables

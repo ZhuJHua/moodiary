@@ -1,44 +1,100 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:flutter/foundation.dart';
+import 'package:mood_diary/utils/log_util.dart';
+
+import 'notice_util.dart';
 
 class HttpUtil {
-  late final Dio _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 5)));
+  Dio? _dio;
 
-  Dio get dio => _dio;
+  final bool _enableLogging = kDebugMode;
 
-  HttpUtil() {
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
-        return handler.next(options);
-      },
-      onResponse: (Response response, ResponseInterceptorHandler handler) {
-        return handler.next(response);
-      },
-      onError: (DioException error, ErrorInterceptorHandler handler) {
-        Utils().noticeUtil.showToast('网络异常！');
-        return handler.next(error);
-      },
-    ));
+  Dio get dio {
+    if (_dio == null) {
+      _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 5)));
+      _dio!.interceptors.add(InterceptorsWrapper(
+        onError: (error, handler) {
+          NoticeUtil.showToast('网络异常！');
+          handler.next(error);
+        },
+        onRequest: (options, handler) {
+          if (_enableLogging) {
+            LogUtil.printInfo('Request: ${options.method} ${options.path}');
+          }
+          handler.next(options);
+        },
+        onResponse: (response, handler) {
+          if (_enableLogging) {
+            LogUtil.printInfo('Response [${response.statusCode}]: ${response.data}');
+          }
+          handler.next(response);
+        },
+      ));
+    }
+    return _dio!;
   }
 
-  Future<Response<T>> get<T>(String path, {Map<String, dynamic>? parameters, ResponseType? type}) async {
-    return await _dio.get<T>(path, queryParameters: parameters, options: Options(responseType: type));
+  HttpUtil._();
+
+  static final HttpUtil _instance = HttpUtil._();
+
+  factory HttpUtil() => _instance;
+
+  Future<Response<T>> _request<T>(
+    String path, {
+    required String method,
+    Map<String, dynamic>? parameters,
+    dynamic data,
+    ResponseType? type,
+    Map<String, dynamic>? header,
+    Options? option,
+  }) async {
+    final options = (option ?? Options()).copyWith(
+      method: method,
+      headers: header,
+      responseType: type,
+    );
+
+    return await dio.request<T>(
+      path,
+      queryParameters: parameters,
+      data: data,
+      options: options,
+    );
   }
 
-  Future<Response<T>> post<T>(String path, {Map<String, dynamic>? header, data, Options? option}) async {
-    return await _dio.post<T>(path, options: Options(headers: header), data: data);
+  Future<Response<T>> get<T>(String path, {Map<String, dynamic>? parameters, ResponseType? type}) {
+    return _request(path, method: 'GET', parameters: parameters, type: type);
+  }
+
+  Future<Response<T>> post<T>(String path, {Map<String, dynamic>? header, data, Options? option}) {
+    return _request(path, method: 'POST', header: header, data: data, option: option);
   }
 
   Future<Stream<String>?> postStream(String path, {Map<String, dynamic>? header, Object? data}) async {
     Response<ResponseBody> response =
-        await _dio.post(path, options: Options(responseType: ResponseType.stream, headers: header), data: data);
+        await dio.post(path, options: Options(responseType: ResponseType.stream, headers: header), data: data);
+
     StreamTransformer<Uint8List, List<int>> transformer = StreamTransformer.fromHandlers(handleData: (data, sink) {
       sink.add(List<int>.from(data));
     });
     return response.data?.stream.transform(transformer).transform(const Utf8Decoder()).transform(const LineSplitter());
+  }
+
+  Future<Response<T>> upload<T>(
+    String path, {
+    required FormData data,
+    Map<String, dynamic>? headers,
+    void Function(int sent, int total)? onSendProgress,
+  }) async {
+    return await dio.post<T>(
+      path,
+      data: data,
+      options: Options(headers: headers),
+      onSendProgress: onSendProgress,
+    );
   }
 }

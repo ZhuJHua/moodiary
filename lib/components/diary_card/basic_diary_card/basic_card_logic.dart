@@ -5,7 +5,8 @@ import 'package:mood_diary/components/diary_tab_view/diary_tab_view_logic.dart';
 import 'package:mood_diary/pages/diary_details/diary_details_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../../utils/data/isar.dart';
 
 mixin BasicCardLogic {
   Future<void> toDiary(Diary diary) async {
@@ -21,7 +22,7 @@ mixin BasicCardLogic {
       Bind.find<DiaryTabViewLogic>(tag: 'default').state.diaryList.removeWhere((e) => e.id == diary.id);
       Bind.find<DiaryTabViewLogic>(tag: 'default').update(['TabView']);
     } else {
-      var newDiary = await Utils().isarUtil.getDiaryByID(diary.isarId);
+      var newDiary = await IsarUtil.getDiaryByID(diary.isarId);
       if (diary == newDiary) {
         return;
       }

@@ -7,8 +7,8 @@ import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/components/bubble/bubble_view.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/file_util.dart';
 import 'map_logic.dart';
 
 class MapPage extends StatelessWidget {
@@ -61,7 +61,7 @@ class MapPage extends StatelessWidget {
                                               decoration: BoxDecoration(
                                                 borderRadius: BorderRadius.circular(4),
                                                 image: DecorationImage(
-                                                    image: FileImage(File(Utils().fileUtil.getRealPath(
+                                                    image: FileImage(File(FileUtil.getRealPath(
                                                         'image', state.diaryMapItemList[index].coverImageName))),
                                                     fit: BoxFit.cover),
                                               ),

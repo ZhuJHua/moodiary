@@ -1,25 +1,26 @@
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../../utils/data/pref.dart';
 
 class SettingState {
   //当前占用空间
   String dataUsage = '';
 
-  int themeMode = Utils().prefUtil.getValue<int>('themeMode')!;
+  int themeMode = PrefUtil.getValue<int>('themeMode')!;
 
-  int color = Utils().prefUtil.getValue<int>('color')!;
+  int color = PrefUtil.getValue<int>('color')!;
 
   late RxInt fontTheme;
 
-  bool lock = Utils().prefUtil.getValue<bool>('lock')!;
+  bool lock = PrefUtil.getValue<bool>('lock')!;
 
-  bool lockNow = Utils().prefUtil.getValue<bool>('lockNow')!;
+  bool lockNow = PrefUtil.getValue<bool>('lockNow')!;
 
-  bool local = Utils().prefUtil.getValue<bool>('local')!;
+  bool local = PrefUtil.getValue<bool>('local')!;
 
-  String customTitle = Utils().prefUtil.getValue<String>('customTitleName')!;
+  String customTitle = PrefUtil.getValue<String>('customTitleName')!;
 
   SettingState() {
-    fontTheme = Utils().prefUtil.getValue<int>('fontTheme')!.obs;
+    fontTheme = PrefUtil.getValue<int>('fontTheme')!.obs;
   }
 }

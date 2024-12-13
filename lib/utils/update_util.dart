@@ -2,23 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/components/update_dialog/update_dialog_view.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import 'notice_util.dart';
 
 class UpdateUtil {
   //通过github检查更新
-  Future<void> checkShouldUpdate(String currentVersion, {bool handle = false}) async {
-    var githubRelease = await Api().getGithubRelease();
+  static Future<void> checkShouldUpdate(String currentVersion, {bool handle = false}) async {
+    var githubRelease = await Api.getGithubRelease();
     if (githubRelease != null) {
       //当需要更新版本时
       if (githubRelease.tagName!.split('v')[1].compareTo(currentVersion) > 0) {
         Get.dialog(UpdateDialogComponent(githubRelease: githubRelease));
       } else if (handle) {
-        Utils().noticeUtil.showToast('已经是最新版本');
+        NoticeUtil.showToast('已经是最新版本');
       }
     }
   }
 
-  TextSpan buildReleaseNote(String version, List<String> fix, List<String> add) {
+  static TextSpan buildReleaseNote(String version, List<String> fix, List<String> add) {
     // 创建一个文本段落列表，用于存放每个部分的文本段
     List<TextSpan> children = [];
     final textStyle = Theme.of(Get.context!).textTheme;

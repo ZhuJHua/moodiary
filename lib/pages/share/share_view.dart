@@ -5,8 +5,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../utils/file_util.dart';
 import 'share_logic.dart';
 
 class SharePage extends StatelessWidget {
@@ -63,8 +63,7 @@ class SharePage extends StatelessWidget {
                           height: cardSize * 1.618 * 0.618,
                           decoration: BoxDecoration(
                             image: DecorationImage(
-                                image:
-                                    FileImage(File(Utils().fileUtil.getRealPath('image', state.diary.imageName.first))),
+                                image: FileImage(File(FileUtil.getRealPath('image', state.diary.imageName.first))),
                                 fit: BoxFit.cover),
                           ),
                         )

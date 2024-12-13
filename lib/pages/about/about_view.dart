@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/update_util.dart';
 
 import 'about_logic.dart';
 
@@ -61,7 +61,7 @@ class AboutPage extends StatelessWidget {
                     title: Text(i18n.aboutUpdate),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () async {
-                      await Utils().updateUtil.checkShouldUpdate(state.appVersion, handle: true);
+                      await UpdateUtil.checkShouldUpdate(state.appVersion, handle: true);
                     },
                   );
                 }),

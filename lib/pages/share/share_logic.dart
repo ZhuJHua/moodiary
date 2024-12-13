@@ -5,10 +5,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../utils/file_util.dart';
 import 'share_state.dart';
 
 class ShareLogic extends GetxController {
@@ -30,7 +30,7 @@ class ShareLogic extends GetxController {
 
   Future<void> share() async {
     var name = 'screenshot-${const Uuid().v7()}.png';
-    File(Utils().fileUtil.getCachePath(name)).writeAsBytes(await captureWidget());
-    await Share.shareXFiles([XFile(Utils().fileUtil.getCachePath(name))]);
+    File(FileUtil.getCachePath(name)).writeAsBytes(await captureWidget());
+    await Share.shareXFiles([XFile(FileUtil.getCachePath(name))]);
   }
 }

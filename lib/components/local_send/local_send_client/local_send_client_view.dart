@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../../utils/file_util.dart';
 import 'local_send_client_logic.dart';
 import 'local_send_client_state.dart';
 
@@ -63,7 +63,7 @@ class LocalSendClientComponent extends StatelessWidget {
                       return Text('${state.sendCount.value} / ${state.diaryToSend.length}');
                     }),
                     Obx(() {
-                      var speed = Utils().fileUtil.bytesToUnits(state.speed.value.toInt());
+                      var speed = FileUtil.bytesToUnits(state.speed.value.toInt());
                       return Text('${speed['size']}${speed['unit']}/s');
                     }),
                   ],

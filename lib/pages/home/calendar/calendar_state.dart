@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 
@@ -7,11 +8,8 @@ class CalendarState {
 
   late Rx<DateTime> currentMonth;
 
-  //包含日记的日期
-  late RxList<DateTime> dateHasDiary;
-
-  //当前选中日期内的日记列表
-  late RxList<Diary> diaryList;
+  //当前月份的日记
+  late Map<Diary, GlobalKey> currentMonthDiaryMap = {};
 
   late RxBool isExpanded;
 
@@ -22,8 +20,6 @@ class CalendarState {
     var now = DateTime.now();
     selectedDate = now.obs;
     currentMonth = now.obs;
-    dateHasDiary = <DateTime>[].obs;
-    diaryList = <Diary>[].obs;
     isExpanded = false.obs;
 
     ///Initialize variables

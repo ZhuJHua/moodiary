@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 import 'package:mood_diary/common/values/media_type.dart';
 import 'package:mood_diary/components/audio_player/audio_player_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/utils.dart';
 
+import '../../../utils/data/isar.dart';
+import '../../../utils/file_util.dart';
+import '../../../utils/notice_util.dart';
 import 'media_state.dart';
 
 class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
@@ -29,7 +31,7 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
   /// 2.音频 audio
   /// 3.视频 video
   Future<void> getFilePath(MediaType mediaType) async {
-    state.filePath.value = await Utils().fileUtil.getDirFilePath(mediaType.value);
+    state.filePath.value = await FileUtil.getDirFilePath(mediaType.value);
   }
 
   Future<void> changeMediaType(MediaType mediaType) async {
@@ -82,13 +84,11 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
   Future<void> cleanFile() async {
     state.isCleaning = true;
     update(['modal']);
-    final fileUtil = Utils().fileUtil;
-    final isarUtil = Utils().isarUtil;
 
     // 获取各类型的所有文件路径并转换为Set以提高查找效率
-    final imageFiles = (await fileUtil.getDirFileName(MediaType.image.value)).toSet();
-    final audioFiles = (await fileUtil.getDirFileName(MediaType.audio.value)).toSet();
-    final videoFiles = (await fileUtil.getDirFileName(MediaType.video.value)).toSet();
+    final imageFiles = (await FileUtil.getDirFileName(MediaType.image.value)).toSet();
+    final audioFiles = (await FileUtil.getDirFileName(MediaType.audio.value)).toSet();
+    final videoFiles = (await FileUtil.getDirFileName(MediaType.video.value)).toSet();
 
     // 用于存储日记中引用的文件名的Set
     final usedImages = <String>{};
@@ -96,12 +96,12 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
     final usedVideos = <String>{};
 
     // 获取日记总数
-    final count = isarUtil.countAllDiary();
+    final count = IsarUtil.countAllDiary();
 
     // 分批获取日记并收集引用的文件名
     const batchSize = 50;
     for (int i = 0; i < count; i += batchSize) {
-      final diaryList = await isarUtil.getDiary(i, batchSize);
+      final diaryList = await IsarUtil.getDiary(i, batchSize);
       for (var diary in diaryList) {
         usedImages.addAll(diary.imageName);
         usedAudios.addAll(diary.audioName);
@@ -125,13 +125,13 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
     // 并行删除文件
     await Future.wait([
-      fileUtil.deleteMediaFiles(imagesToDelete, MediaType.image.value),
-      fileUtil.deleteMediaFiles(audiosToDelete, MediaType.audio.value),
-      fileUtil.deleteMediaFiles(videosToDelete, MediaType.video.value),
+      FileUtil.deleteMediaFiles(imagesToDelete, MediaType.image.value),
+      FileUtil.deleteMediaFiles(audiosToDelete, MediaType.audio.value),
+      FileUtil.deleteMediaFiles(videosToDelete, MediaType.video.value),
     ]);
     await getFilePath(state.mediaType.value);
     state.isCleaning = false;
     update(['modal']);
-    Utils().noticeUtil.showToast('清理成功');
+    NoticeUtil.showToast('清理成功');
   }
 }

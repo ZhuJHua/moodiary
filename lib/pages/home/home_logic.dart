@@ -5,9 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/utils.dart';
 
 import '../../common/values/diary_type.dart';
+import '../../utils/data/pref.dart';
+import '../../utils/data/supabase.dart';
 import 'home_state.dart';
 
 class HomeLogic extends GetxController with GetTickerProviderStateMixin {
@@ -35,7 +36,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
 
   @override
   void onReady() {
-    //unawaited(Utils().updateUtil.checkShouldUpdate(Utils().prefUtil.getValue<String>('appVersion')!.split('+')[0]));
+    //unawaited(Utils().updateUtil.checkShouldUpdate(PrefUtil.getValue<String>('appVersion')!.split('+')[0]));
     // unawaited(getHitokoto());
     super.onReady();
   }
@@ -67,14 +68,14 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   //锁定屏幕
   void lockPage() {
     //如果开启密码的同时开启了立即锁定，就直接跳转到锁屏页面
-    if (Utils().prefUtil.getValue<bool>('lock') == true && Utils().prefUtil.getValue<bool>('lockNow') == true) {
+    if (PrefUtil.getValue<bool>('lock') == true && PrefUtil.getValue<bool>('lockNow') == true) {
       Get.toNamed(AppRoutes.lockPage, arguments: 'pause');
     }
   }
 
   void toUserPage() {
     //如果已经登录
-    if (Utils().supabaseUtil.user != null || Utils().supabaseUtil.session != null) {
+    if (SupabaseUtil().user != null || SupabaseUtil().session != null) {
       Get.toNamed(AppRoutes.userPage);
     } else {
       Get.toNamed(AppRoutes.loginPage);

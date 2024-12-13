@@ -4,7 +4,7 @@ import 'package:mood_diary/common/values/size.dart';
 
 class LayoutUtil {
   //获取设备类型
-  ScreenSize getSize() {
+  static ScreenSize getSize() {
     var deviceWidth = Get.size.shortestSide;
     if (deviceWidth > 900) return ScreenSize.desktop;
     if (deviceWidth > 600) return ScreenSize.tablet;
@@ -13,11 +13,11 @@ class LayoutUtil {
   }
 
   //获取方向
-  bool isLandSpace() {
+  static bool isLandSpace() {
     return Get.size.aspectRatio >= 1.0;
   }
 
-  List<DeviceOrientation> getOrientation() {
+  static List<DeviceOrientation> getOrientation() {
     return switch (getSize()) {
       //手机只能竖屏
       ScreenSize.handset => [DeviceOrientation.portraitUp],

@@ -3,7 +3,7 @@ import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/diary_type.dart';
 
-import '../../utils/utils.dart';
+import '../../utils/data/pref.dart';
 
 class EditState {
   // 当前编辑的日记对象
@@ -54,19 +54,19 @@ class EditState {
   late DiaryType type;
 
   // 自动获取天气
-  bool get autoWeather => Utils().prefUtil.getValue<bool>('autoWeather')!;
+  bool get autoWeather => PrefUtil.getValue<bool>('autoWeather')!;
 
   // 首行缩进
-  bool get firstLineIndent => (Utils().prefUtil.getValue<bool>('firstLineIndent')!) && type == DiaryType.text;
+  bool get firstLineIndent => (PrefUtil.getValue<bool>('firstLineIndent')!) && type == DiaryType.text;
 
   // 自动分类
-  bool get autoCategory => Utils().prefUtil.getValue<bool>('autoCategory')!;
+  bool get autoCategory => PrefUtil.getValue<bool>('autoCategory')!;
 
   // 展示写作时长
-  bool get showWriteTime => Utils().prefUtil.getValue<bool>('showWritingTime')!;
+  bool get showWriteTime => PrefUtil.getValue<bool>('showWritingTime')!;
 
   // 展示字数统计
-  bool get showWordCount => Utils().prefUtil.getValue<bool>('showWordCount')!;
+  bool get showWordCount => PrefUtil.getValue<bool>('showWordCount')!;
 
   EditState();
 }

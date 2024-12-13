@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
+import 'package:mood_diary/utils/auth_util.dart';
 
 import 'remove_password_logic.dart';
 
@@ -53,7 +53,7 @@ class RemovePasswordComponent extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.all(Radius.circular(buttonSize / 2)),
           onTap: () async {
-            if (await Utils().authUtil.check()) {
+            if (await AuthUtil.check()) {
               logic.removePassword();
             }
           },

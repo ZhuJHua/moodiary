@@ -1,7 +1,7 @@
-import 'package:mood_diary/utils/utils.dart';
+import '../../utils/data/pref.dart';
 
 class ThemeModeDialogState {
-  int themeMode = Utils().prefUtil.getValue<int>('themeMode')!;
+  int themeMode = PrefUtil.getValue<int>('themeMode')!;
 
   ThemeModeDialogState();
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:mood_diary/components/video_player/video_player_view.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../utils/file_util.dart';
 
 class VideoBlockEmbed extends BlockEmbed {
   const VideoBlockEmbed(String value) : super(embedType, value);
@@ -30,7 +31,7 @@ class VideoEmbedBuilder extends EmbedBuilder {
     EmbedContext embedContext,
   ) {
     final videoEmbed = VideoBlockEmbed(embedContext.node.value.data);
-    final videoPath = isEdit ? videoEmbed.name : Utils().fileUtil.getRealPath('video', videoEmbed.name);
+    final videoPath = isEdit ? videoEmbed.name : FileUtil.getRealPath('video', videoEmbed.name);
 
     return Card.outlined(
       clipBehavior: Clip.hardEdge,

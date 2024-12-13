@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../utils/data/pref.dart';
 
 class LockState {
   late RxString password;
@@ -11,7 +12,7 @@ class LockState {
 
   LockState() {
     password = ''.obs;
-    realPassword = Utils().prefUtil.getValue<String>('password')!.obs;
+    realPassword = PrefUtil.getValue<String>('password')!.obs;
     lockType = Get.arguments;
 
     ///Initialize variables

@@ -5,7 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/diary_card/basic_diary_card/basic_card_logic.dart';
-import 'package:mood_diary/utils/utils.dart';
+
+import '../../../utils/file_util.dart';
 
 class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
   const CalendarDiaryCardComponent({super.key, required this.diary});
@@ -53,7 +54,7 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                   image: DecorationImage(
                     image: ResizeImage(
                       FileImage(
-                        File(Utils().fileUtil.getRealPath('image', diary.imageName[index])),
+                        File(FileUtil.getRealPath('image', diary.imageName[index])),
                       ),
                       width: (100 * pixelRatio).toInt(),
                     ),
@@ -71,7 +72,7 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
 
     Widget buildTime() {
       return Text(
-        DateFormat.jms().format(diary.time),
+        DateFormat.yMd().add_jms().format(diary.time),
         style: textStyle.labelSmall,
       );
     }
