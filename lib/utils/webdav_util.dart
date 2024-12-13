@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' as flutter;
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/values/webdav.dart';
+import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
 import '../common/models/isar/diary.dart';
@@ -118,11 +119,11 @@ class WebDavUtil {
     // 删除日记json
     await _client!.remove('${WebDavOptions.diaryPath}/${diary.id}.json');
     // 遍历删除日记资源文件
-    await _deleteFiles(diary.imageName, WebDavOptions.imagePath, 'image');
-    await _deleteFiles(diary.audioName, WebDavOptions.audioPath, 'audio');
-    await _deleteFiles(diary.videoName, WebDavOptions.videoPath, 'video');
+    await _deleteFiles(diary.imageName, '${WebDavOptions.imagePath}/${diary.id}', 'image');
+    await _deleteFiles(diary.audioName, '${WebDavOptions.audioPath}/${diary.id}', 'audio');
+    await _deleteFiles(diary.videoName, '${WebDavOptions.videoPath}/${diary.id}', 'video');
     await _deleteFiles(diary.videoName.map((videoName) => 'thumbnail-${videoName.substring(6, 42)}.jpeg').toList(),
-        WebDavOptions.videoPath, 'thumbnail');
+        '${WebDavOptions.videoPath}/${diary.id}', 'thumbnail');
     // 删除对应目录
     await _client!.remove('${WebDavOptions.imagePath}/${diary.id}');
     await _client!.remove('${WebDavOptions.audioPath}/${diary.id}');
@@ -176,6 +177,7 @@ class WebDavUtil {
         if (localLastModified != null) {
           syncingDiaries.add(diaryId);
           await _deleteDiary(localDiaries.firstWhere((element) => element.id == diaryId));
+          Bind.find<DiaryLogic>().refreshAll();
           syncingDiaries.remove(diaryId);
         }
         continue;
@@ -268,10 +270,10 @@ class WebDavUtil {
       final needToDeleteVideo = oldDiary.videoName.where((element) => !newDiary.videoName.contains(element)).toList();
       final needToDeleteThumbnail =
           needToDeleteVideo.map((videoName) => 'thumbnail-${videoName.substring(6, 42)}.jpeg').toList();
-      await _deleteFiles(needToDeleteImage, WebDavOptions.imagePath, 'image');
-      await _deleteFiles(needToDeleteAudio, WebDavOptions.audioPath, 'audio');
-      await _deleteFiles(needToDeleteVideo, WebDavOptions.videoPath, 'video');
-      await _deleteFiles(needToDeleteThumbnail, WebDavOptions.videoPath, 'thumbnail');
+      await _deleteFiles(needToDeleteImage, '${WebDavOptions.imagePath}/${newDiary.id}', 'image');
+      await _deleteFiles(needToDeleteAudio, '${WebDavOptions.audioPath}/${newDiary.id}', 'audio');
+      await _deleteFiles(needToDeleteVideo, '${WebDavOptions.videoPath}/${newDiary.id}', 'video');
+      await _deleteFiles(needToDeleteThumbnail, '${WebDavOptions.videoPath}/${newDiary.id}', 'thumbnail');
       // 上传日记到服务器
       await _uploadDiary(newDiary); // 上传日记的实现
       // 更新服务器同步数据

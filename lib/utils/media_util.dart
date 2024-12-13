@@ -35,6 +35,10 @@ class MediaUtil {
   static Future<Map<String, String>> saveImages({required List<XFile> imageFileList}) async {
     final imageNameMap = <String, String>{};
     await Future.wait(imageFileList.map((imageFile) async {
+      if (basename(imageFile.path).startsWith('image-')) {
+        imageNameMap[imageFile.path] = basename(imageFile.path);
+        return;
+      }
       final mimeType = lookupMimeType(imageFile.path) ?? 'image/png'; // 默认使用 PNG
       final config = _compressConfig[mimeType] ?? ['.png', r_type.CompressFormat.png];
       final extension = config[0] as String;
@@ -71,6 +75,10 @@ class MediaUtil {
     Map<String, String> videoNameMap = {};
 
     await Future.wait(videoFileList.map((videoFile) async {
+      if (basename(videoFile.path).startsWith('video-')) {
+        videoNameMap[videoFile.path] = basename(videoFile.path);
+        return;
+      }
       // 生成文件名
       final uuid = const Uuid().v7();
       var videoName = 'video-$uuid.mp4';
