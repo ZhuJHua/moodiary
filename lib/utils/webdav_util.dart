@@ -37,8 +37,15 @@ class WebDavUtil {
     if (_client != null) {
       _client = null;
     }
-    _client =
-        webdav.newClient(webDavOption[0], user: webDavOption[1], password: webDavOption[2], debug: flutter.kDebugMode);
+    // 尝试连接，如果失败，
+
+    try {
+      _client = webdav.newClient(webDavOption[0],
+          user: webDavOption[1], password: webDavOption[2], debug: flutter.kDebugMode);
+    } catch (e) {
+      _client = null;
+      return;
+    }
     _client?.setHeaders({
       'accept-charset': 'utf-8',
       'Content-Type': 'application/json',
@@ -357,7 +364,7 @@ class WebDavUtil {
 
     try {
       final diaryData = await _client!.read(diaryPath);
-      diary = Diary.fromJson(jsonDecode(utf8.decode(diaryData)));
+      diary = await flutter.compute(Diary.fromJson, jsonDecode(utf8.decode(diaryData)) as Map<String, dynamic>);
       LogUtil.printInfo('Diary JSON downloaded: $diaryPath');
     } catch (e) {
       LogUtil.printInfo('Failed to download diary JSON: $e');
