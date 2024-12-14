@@ -100,5 +100,7 @@
   "backupSyncLocal": "Local Network Transfer",
   "backupSyncWebdav": "WebDAV",
   "backupSyncWebdavNoOption": "Not Configured",
-  "backupSyncWebdavOption": "Configured"
+  "backupSyncWebdavOption": "Configured",
+  "layoutErrorToast": "Layout exception",
+  "errorToast": "Something went wrong, please contact the developer"
 }

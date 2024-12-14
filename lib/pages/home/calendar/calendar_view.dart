@@ -1,6 +1,6 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
@@ -10,6 +10,7 @@ import 'package:mood_diary/components/time_line/time_line_view.dart';
 import 'package:mood_diary/utils/array_util.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
+import '../../../main.dart';
 import 'calendar_logic.dart';
 
 class CalendarPage extends StatelessWidget {
@@ -65,7 +66,6 @@ class CalendarPage extends StatelessWidget {
     final state = Bind.find<CalendarLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
-    final i18n = AppLocalizations.of(context)!;
 
     //生成日历选择器
     Widget buildDatePicker() {
@@ -87,7 +87,7 @@ class CalendarPage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0),
           child: ExpansionTile(
-            title: Text(i18n.homeNavigatorCalendar),
+            title: Text(l10n.homeNavigatorCalendar),
             initiallyExpanded: true,
             collapsedShape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.mediumBorderRadius),
             shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.mediumBorderRadius),
@@ -230,7 +230,17 @@ class CalendarPage extends StatelessWidget {
                 Expanded(child: Obx(() {
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
-                    child: state.isFetching.value ? const Center(child: Processing()) : buildCardList(),
+                    child: state.isFetching.value
+                        ? const Center(key: ValueKey('processing'), child: Processing())
+                        : (state.currentMonthDiaryList.isNotEmpty
+                            ? buildCardList()
+                            : const Center(
+                                key: ValueKey('empty'),
+                                child: FaIcon(
+                                  FontAwesomeIcons.boxOpen,
+                                  size: 56,
+                                ),
+                              )),
                   );
                 })),
               ],

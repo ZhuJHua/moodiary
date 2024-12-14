@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
@@ -10,6 +9,7 @@ import 'package:mood_diary/components/set_password/set_password_view.dart';
 import 'package:mood_diary/components/theme_mode_dialog/theme_mode_dialog_view.dart';
 import 'package:mood_diary/components/tile/setting_tile.dart';
 
+import '../../../main.dart';
 import 'setting_logic.dart';
 
 class SettingPage extends StatelessWidget {
@@ -21,7 +21,7 @@ class SettingPage extends StatelessWidget {
     final state = Bind.find<SettingLogic>().state;
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    final i18n = AppLocalizations.of(context)!;
+
     final size = MediaQuery.sizeOf(context);
 
     Widget buildDashboard() {
@@ -97,13 +97,13 @@ class SettingPage extends StatelessWidget {
     Widget buildData() {
       return Column(
         children: [
-          SettingTitleTile(title: i18n.settingData),
+          SettingTitleTile(title: l10n.settingData),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
               children: [
                 ListTile(
-                  title: Text(i18n.settingRecycle),
+                  title: Text(l10n.settingRecycle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     logic.toRecyclePage();
@@ -119,7 +119,7 @@ class SettingPage extends StatelessWidget {
                   leading: const Icon(Icons.sync),
                 ),
                 ListTile(
-                  title: Text(i18n.settingClean),
+                  title: Text(l10n.settingClean),
                   leading: const Icon(Icons.cleaning_services_outlined),
                   trailing: GetBuilder<SettingLogic>(
                       id: 'DataUsage',
@@ -145,13 +145,13 @@ class SettingPage extends StatelessWidget {
     Widget buildDisplay() {
       return Column(
         children: [
-          SettingTitleTile(title: i18n.settingDisplay),
+          SettingTitleTile(title: l10n.settingDisplay),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
               children: [
                 ListTile(
-                  title: Text(i18n.settingDiary),
+                  title: Text(l10n.settingDiary),
                   leading: const Icon(Icons.article_outlined),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
@@ -159,13 +159,13 @@ class SettingPage extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  title: Text(i18n.settingThemeMode),
+                  title: Text(l10n.settingThemeMode),
                   leading: const Icon(Icons.invert_colors),
                   trailing: Text(
                     switch (state.themeMode) {
-                      0 => i18n.themeModeSystem,
-                      1 => i18n.themeModeLight,
-                      2 => i18n.themeModeDark,
+                      0 => l10n.themeModeSystem,
+                      1 => l10n.themeModeLight,
+                      2 => l10n.themeModeDark,
                       int() => throw UnimplementedError(),
                     },
                     style: textStyle.bodySmall!.copyWith(
@@ -181,16 +181,16 @@ class SettingPage extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  title: Text(i18n.settingColor),
+                  title: Text(l10n.settingColor),
                   leading: const Icon(Icons.color_lens_outlined),
                   trailing: Text(
                     switch (state.color) {
-                      0 => i18n.colorNameQunQin,
-                      1 => i18n.colorNameJiHe,
-                      2 => i18n.colorNameQinDai,
-                      3 => i18n.colorNameXianYe,
-                      4 => i18n.colorNameJinYu,
-                      _ => i18n.colorNameSystem
+                      0 => l10n.colorNameQunQin,
+                      1 => l10n.colorNameJiHe,
+                      2 => l10n.colorNameQinDai,
+                      3 => l10n.colorNameXianYe,
+                      4 => l10n.colorNameJinYu,
+                      _ => l10n.colorNameSystem
                     },
                     style: textStyle.bodySmall!.copyWith(
                       color: colorScheme.primary,
@@ -205,7 +205,7 @@ class SettingPage extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  title: Text(i18n.settingFontSize),
+                  title: Text(l10n.settingFontSize),
                   leading: const Icon(Icons.format_size_outlined),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
@@ -213,7 +213,7 @@ class SettingPage extends StatelessWidget {
                   },
                 ),
                 // ListTile(
-                //   title: Text(i18n.settingFontStyle),
+                //   title: Text(l10n.settingFontStyle),
                 //   leading: const Icon(Icons.text_format_outlined),
                 //   trailing: Obx(() {
                 //     return Text(
@@ -233,7 +233,7 @@ class SettingPage extends StatelessWidget {
                 //         builder: (context) {
                 //           return Obx(() {
                 //             return SimpleDialog(
-                //               title: Text(i18n.settingFontStyle),
+                //               title: Text(l10n.settingFontStyle),
                 //               children: [
                 //                 SimpleDialogOption(
                 //                   child: Row(
@@ -317,12 +317,12 @@ class SettingPage extends StatelessWidget {
                                   onPressed: () {
                                     logic.cancelCustomTitle();
                                   },
-                                  child: Text(i18n.cancel)),
+                                  child: Text(l10n.cancel)),
                               TextButton(
                                   onPressed: () async {
                                     await logic.setCustomTitle();
                                   },
-                                  child: Text(i18n.ok))
+                                  child: Text(l10n.ok))
                             ],
                           );
                         });
@@ -338,7 +338,7 @@ class SettingPage extends StatelessWidget {
     Widget buildPrivacy() {
       return Column(
         children: [
-          SettingTitleTile(title: i18n.settingPrivacy),
+          SettingTitleTile(title: l10n.settingPrivacy),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
@@ -349,8 +349,8 @@ class SettingPage extends StatelessWidget {
                       return SwitchListTile(
                         value: state.local,
                         onChanged: null,
-                        title: Text(i18n.settingLocal),
-                        subtitle: Text(i18n.settingLocalDes),
+                        title: Text(l10n.settingLocal),
+                        subtitle: Text(l10n.settingLocalDes),
                         secondary: const Icon(Icons.cloud_off_outlined),
                       );
                     }),
@@ -359,7 +359,7 @@ class SettingPage extends StatelessWidget {
                     builder: (_) {
                       return ListTile(
                         trailing: Text(
-                          state.lock ? i18n.settingLockOpen : i18n.settingLockNotOpen,
+                          state.lock ? l10n.settingLockOpen : l10n.settingLockNotOpen,
                           style: textStyle.bodySmall!.copyWith(
                             color: colorScheme.primary,
                           ),
@@ -369,9 +369,9 @@ class SettingPage extends StatelessWidget {
                               context: context,
                               builder: (context) {
                                 return AlertDialog(
-                                  title: Text(i18n.settingLock),
+                                  title: Text(l10n.settingLock),
                                   content:
-                                      Text(state.lock ? i18n.settingLockResetLock : i18n.settingLockChooseLockType),
+                                      Text(state.lock ? l10n.settingLockResetLock : l10n.settingLockChooseLockType),
                                   actions: [
                                     TextButton(
                                         onPressed: () {
@@ -392,7 +392,7 @@ class SettingPage extends StatelessWidget {
                                 );
                               });
                         },
-                        title: Text(i18n.settingLock),
+                        title: Text(l10n.settingLock),
                         leading: const Icon(Icons.lock_outline),
                       );
                     }),
@@ -406,8 +406,8 @@ class SettingPage extends StatelessWidget {
                                 logic.lockNow(value);
                               }
                             : null,
-                        title: Text(i18n.settingLockNow),
-                        subtitle: Text(i18n.settingLockNowDes),
+                        title: Text(l10n.settingLockNow),
+                        subtitle: Text(l10n.settingLockNowDes),
                         secondary: const Icon(Icons.lock_clock_outlined),
                       );
                     }),
@@ -421,13 +421,13 @@ class SettingPage extends StatelessWidget {
     Widget buildMore() {
       return Column(
         children: [
-          SettingTitleTile(title: i18n.settingMore),
+          SettingTitleTile(title: l10n.settingMore),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
               children: [
                 ListTile(
-                  title: Text(i18n.settingAbout),
+                  title: Text(l10n.settingAbout),
                   leading: const Icon(Icons.info_outline),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
@@ -435,7 +435,7 @@ class SettingPage extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  title: Text(i18n.settingLab),
+                  title: Text(l10n.settingLab),
                   leading: const Icon(Icons.science_outlined),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
@@ -455,7 +455,7 @@ class SettingPage extends StatelessWidget {
         return CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: Text(i18n.homeNavigatorSetting),
+              title: Text(l10n.homeNavigatorSetting),
               pinned: true,
             ),
             SliverToBoxAdapter(

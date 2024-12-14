@@ -81,6 +81,7 @@ class AppPages {
       name: AppRoutes.photoPage,
       page: () => const ImagePage(),
       popGesture: false,
+      transition: Transition.fadeIn,
       binds: [Bind.lazyPut(() => ImageLogic())],
     ),
     //回收站

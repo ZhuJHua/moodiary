@@ -8,11 +8,8 @@ import 'package:mood_diary/utils/channel.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../utils/data/pref.dart';
-import 'start_state.dart';
 
 class StartLogic extends GetxController {
-  final StartState state = StartState();
-
   void toPrivacy() {
     Get.toNamed(AppRoutes.privacyPage);
   }

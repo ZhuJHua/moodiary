@@ -100,5 +100,7 @@
   "backupSyncLocal": "局域网传输",
   "backupSyncWebdav": "WebDAV",
   "backupSyncWebdavNoOption": "未配置",
-  "backupSyncWebdavOption": "已配置"
+  "backupSyncWebdavOption": "已配置",
+  "layoutErrorToast": "布局异常",
+  "errorToast": "出错了，请联系开发者"
 }

@@ -288,4 +288,64 @@ class MediaUtil {
       NoticeUtil.showToast('保存失败');
     }
   }
+
+  static DateTime? extractDateFromUUID(String uuid) {
+    final timestampHex = uuid.replaceAll('-', '').substring(0, 12);
+    final timestampInt = int.tryParse(timestampHex, radix: 16);
+    if (timestampInt == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(timestampInt);
+  }
+
+  /// 根据日期分组文件
+  static Map<DateTime, List<String>> groupImageFileByDate(List<String> filePaths) {
+    final Map<DateTime, List<String>> groupedMap = {};
+    for (var image in filePaths) {
+      // 根据媒体文件类型提取日期
+      final uuid = image.split('image-')[1].split('.')[0];
+      final dateTime = MediaUtil.extractDateFromUUID(uuid);
+      if (dateTime != null) {
+        // 获取日期部分
+        final dateOnly = DateTime(dateTime.year, dateTime.month, dateTime.day);
+        groupedMap.putIfAbsent(dateOnly, () => []).add(image);
+      }
+    }
+    // 返回按日期排序的分组数据
+    final sortedEntries = groupedMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
+    return Map.fromEntries(sortedEntries);
+  }
+
+  static Map<DateTime, List<String>> groupVideoFileByDate(List<String> filePaths) {
+    final Map<DateTime, List<String>> groupedMap = {};
+    for (var video in filePaths) {
+      // 根据媒体文件类型提取日期
+      if (!basename(video).startsWith('video-')) continue;
+      final uuid = video.split('video-')[1].split('.')[0];
+      final dateTime = MediaUtil.extractDateFromUUID(uuid);
+      if (dateTime != null) {
+        // 获取日期部分
+        final dateOnly = DateTime(dateTime.year, dateTime.month, dateTime.day);
+        groupedMap.putIfAbsent(dateOnly, () => []).add(video);
+      }
+    }
+    // 返回按日期排序的分组数据
+    final sortedEntries = groupedMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
+    return Map.fromEntries(sortedEntries);
+  }
+
+  static Map<DateTime, List<String>> groupAudioFileByDate(List<String> filePaths) {
+    final Map<DateTime, List<String>> groupedMap = {};
+    for (var audio in filePaths) {
+      // 根据媒体文件类型提取日期
+      final uuid = audio.split('audio-')[1].split('.')[0];
+      final dateTime = MediaUtil.extractDateFromUUID(uuid);
+      if (dateTime != null) {
+        // 获取日期部分
+        final dateOnly = DateTime(dateTime.year, dateTime.month, dateTime.day);
+        groupedMap.putIfAbsent(dateOnly, () => []).add(audio);
+      }
+    }
+    // 返回按日期排序的分组数据
+    final sortedEntries = groupedMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
+    return Map.fromEntries(sortedEntries);
+  }
 }

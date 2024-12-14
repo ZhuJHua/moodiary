@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,6 +20,7 @@ import 'package:mood_diary/utils/theme_util.dart';
 
 import '../../common/values/diary_type.dart';
 import '../../components/quill_embed/audio_embed.dart';
+import '../../main.dart';
 import '../../utils/file_util.dart';
 import 'edit_logic.dart';
 
@@ -48,7 +48,7 @@ class EditPage extends StatelessWidget {
     final state = Bind.find<EditLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.sizeOf(context);
-    final i18n = AppLocalizations.of(context)!;
+
     final textStyle = Theme.of(context).textTheme;
 
     Widget buildAddContainer(Widget icon) {
@@ -595,12 +595,12 @@ class EditPage extends StatelessWidget {
                                     onPressed: () {
                                       logic.cancelAddTag();
                                     },
-                                    child: Text(i18n.cancel)),
+                                    child: Text(l10n.cancel)),
                                 TextButton(
                                     onPressed: () {
                                       logic.addTag();
                                     },
-                                    child: Text(i18n.ok))
+                                    child: Text(l10n.ok))
                               ],
                             );
                           });

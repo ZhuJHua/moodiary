@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
+import '../../main.dart';
 import '../../utils/data/pref.dart';
 import 'laboratory_logic.dart';
 
@@ -13,7 +13,7 @@ class LaboratoryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<LaboratoryLogic>();
     // final state = Bind.find<LaboratoryLogic>().state;
-    final i18n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('实验室'),
@@ -62,12 +62,12 @@ class LaboratoryPage extends StatelessWidget {
                                   onPressed: () {
                                     Get.backLegacy();
                                   },
-                                  child: Text(i18n.cancel)),
+                                  child: Text(l10n.cancel)),
                               TextButton(
                                   onPressed: () {
                                     logic.setTencentID();
                                   },
-                                  child: Text(i18n.ok))
+                                  child: Text(l10n.ok))
                             ],
                           );
                         });
@@ -96,12 +96,12 @@ class LaboratoryPage extends StatelessWidget {
                                   onPressed: () {
                                     Get.backLegacy();
                                   },
-                                  child: Text(i18n.cancel)),
+                                  child: Text(l10n.cancel)),
                               TextButton(
                                   onPressed: () {
                                     logic.setQweatherKey();
                                   },
-                                  child: Text(i18n.ok))
+                                  child: Text(l10n.ok))
                             ],
                           );
                         });
@@ -130,12 +130,12 @@ class LaboratoryPage extends StatelessWidget {
                                   onPressed: () {
                                     Get.backLegacy();
                                   },
-                                  child: Text(i18n.cancel)),
+                                  child: Text(l10n.cancel)),
                               TextButton(
                                   onPressed: () {
                                     logic.setTiandituKey();
                                   },
-                                  child: Text(i18n.ok))
+                                  child: Text(l10n.ok))
                             ],
                           );
                         });

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
 
+import '../../main.dart';
 import 'category_add_logic.dart';
 
 class CategoryAddComponent extends StatelessWidget {
@@ -13,7 +13,6 @@ class CategoryAddComponent extends StatelessWidget {
     final logic = Get.put(CategoryAddLogic());
     final state = Bind.find<CategoryAddLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
-    final i18n = AppLocalizations.of(context)!;
 
     return GetBuilder<CategoryAddLogic>(
       assignId: true,
@@ -56,12 +55,12 @@ class CategoryAddComponent extends StatelessWidget {
                                         onPressed: () {
                                           logic.cancelAdd();
                                         },
-                                        child: Text(i18n.cancel)),
+                                        child: Text(l10n.cancel)),
                                     TextButton(
                                         onPressed: () async {
                                           await logic.addCategory();
                                         },
-                                        child: Text(i18n.ok))
+                                        child: Text(l10n.ok))
                                   ],
                                 );
                               });

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/diary_card/large_diary_card/large_diary_card_view.dart';
@@ -7,6 +6,7 @@ import 'package:mood_diary/components/diary_card/small_diary_card/small_diary_ca
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:waterfall_flow/waterfall_flow.dart';
 
+import '../../main.dart';
 import 'diary_tab_view_logic.dart';
 
 class DiaryTabViewComponent extends StatelessWidget {
@@ -19,7 +19,7 @@ class DiaryTabViewComponent extends StatelessWidget {
     final logicTag = categoryId ?? 'default';
     final logic = Get.put(DiaryTabViewLogic(categoryId: categoryId), tag: logicTag);
     final state = Bind.find<DiaryTabViewLogic>(tag: logicTag).state;
-    final i18n = AppLocalizations.of(context)!;
+
     final size = MediaQuery.sizeOf(context);
 
     Widget buildGrid() {
@@ -52,7 +52,7 @@ class DiaryTabViewComponent extends StatelessWidget {
       if (state.isFetching) {
         return const CircularProgressIndicator();
       } else if (state.diaryList.isEmpty) {
-        return Text(i18n.diaryTabViewEmpty);
+        return Text(l10n.diaryTabViewEmpty);
       } else {
         return const SizedBox.shrink();
       }

@@ -1,11 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/utils/function_extensions.dart';
 
+import '../../main.dart';
 import 'side_bar_logic.dart';
 
 class SideBarComponent extends StatelessWidget {
@@ -16,7 +16,7 @@ class SideBarComponent extends StatelessWidget {
     final logic = Get.put(SideBarLogic());
     final state = Bind.find<SideBarLogic>().state;
     final textStyle = Theme.of(context).textTheme;
-    final i18n = AppLocalizations.of(context)!;
+
     Widget buildWeather() {
       return Column(
         children: [
@@ -157,7 +157,7 @@ class SideBarComponent extends StatelessWidget {
                             ),
                           )
                         ],
-                        child: Text(i18n.sidebarAbout),
+                        child: Text(l10n.sidebarAbout),
                       );
                     }),
                     ListTile(
@@ -166,7 +166,7 @@ class SideBarComponent extends StatelessWidget {
                         logic.toPrivacy();
                       },
                       title: Text(
-                        i18n.sidebarPrivacy,
+                        l10n.sidebarPrivacy,
                       ),
                     ),
                     ListTile(
@@ -175,13 +175,13 @@ class SideBarComponent extends StatelessWidget {
                         logic.toReportPage();
                       },
                       title: Text(
-                        i18n.sidebarBug,
+                        l10n.sidebarBug,
                       ),
                     ),
                     ListTile(
                       leading: const Icon(Icons.update),
                       onTap: () async {}.throttleWithTimeout(timeout: 3000),
-                      title: Text(i18n.sidebarCheckUpdate),
+                      title: Text(l10n.sidebarCheckUpdate),
                     ),
                   ],
                 ),

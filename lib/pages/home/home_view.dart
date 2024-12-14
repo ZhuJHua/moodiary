@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
@@ -13,6 +12,7 @@ import 'package:mood_diary/pages/home/media/media_view.dart';
 import 'package:mood_diary/pages/home/setting/setting_view.dart';
 import 'package:unicons/unicons.dart';
 
+import '../../main.dart';
 import 'home_logic.dart';
 
 class HomePage extends StatelessWidget {
@@ -23,7 +23,7 @@ class HomePage extends StatelessWidget {
     final logic = Bind.find<HomeLogic>();
     final state = Bind.find<HomeLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
-    final i18n = AppLocalizations.of(context)!;
+
     final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
     final textStyle = Theme.of(context).textTheme;
@@ -240,22 +240,22 @@ class HomePage extends StatelessWidget {
     final List<NavigationDestination> destinations = [
       NavigationDestination(
         icon: const Icon(Icons.article_outlined),
-        label: i18n.homeNavigatorDiary,
+        label: l10n.homeNavigatorDiary,
         selectedIcon: const Icon(Icons.article),
       ),
       NavigationDestination(
         icon: const Icon(UniconsLine.calender),
-        label: i18n.homeNavigatorCalendar,
+        label: l10n.homeNavigatorCalendar,
         selectedIcon: const Icon(UniconsSolid.calender),
       ),
       NavigationDestination(
         icon: const Icon(UniconsLine.image_v),
-        label: i18n.homeNavigatorMedia,
+        label: l10n.homeNavigatorMedia,
         selectedIcon: const Icon(UniconsSolid.image_v),
       ),
       NavigationDestination(
         icon: const Icon(UniconsLine.layer_group),
-        label: i18n.homeNavigatorSetting,
+        label: l10n.homeNavigatorSetting,
         selectedIcon: const Icon(UniconsSolid.layer_group),
       ),
     ];

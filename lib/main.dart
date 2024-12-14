@@ -25,7 +25,7 @@ import 'package:video_player_media_kit/video_player_media_kit.dart';
 
 import 'components/window_buttons/window_buttons.dart';
 
-late final AppLocalizations l10n;
+late AppLocalizations l10n;
 
 Future<void> initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,14 +68,14 @@ void main() async {
   FlutterError.onError = (details) {
     LogUtil.printError('Flutter error', error: details.exception, stackTrace: details.stack);
     if (details.exceptionAsString().contains('Render')) {
-      NoticeUtil.showBug(message: '布局异常！');
+      NoticeUtil.showBug(message: l10n.layoutErrorToast);
     } else {
-      NoticeUtil.showBug(message: '出错了，请联系开发者处理！');
+      NoticeUtil.showBug(message: l10n.errorToast);
     }
   };
   PlatformDispatcher.instance.onError = (error, stack) {
     LogUtil.printWTF('Error', error: error, stackTrace: stack);
-    NoticeUtil.showBug(message: '出错了，请联系开发者处理！');
+    NoticeUtil.showBug(message: l10n.errorToast);
     return true;
   };
   runApp(GetMaterialApp.router(

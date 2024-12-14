@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/utils/update_util.dart';
 
+import '../../main.dart';
 import 'about_logic.dart';
 
 class AboutPage extends StatelessWidget {
@@ -14,7 +14,6 @@ class AboutPage extends StatelessWidget {
     final state = Bind.find<AboutLogic>().state;
 
     final colorScheme = Theme.of(context).colorScheme;
-    final i18n = AppLocalizations.of(context)!;
 
     final textStyle = Theme.of(context).textTheme;
 
@@ -43,7 +42,7 @@ class AboutPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(i18n.aboutTitle),
+        title: Text(l10n.aboutTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.all(4.0),
@@ -58,7 +57,7 @@ class AboutPage extends StatelessWidget {
                 GetBuilder<AboutLogic>(builder: (_) {
                   return ListTile(
                     leading: const Icon(Icons.update),
-                    title: Text(i18n.aboutUpdate),
+                    title: Text(l10n.aboutUpdate),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () async {
                       await UpdateUtil.checkShouldUpdate(state.appVersion, handle: true);
@@ -67,7 +66,7 @@ class AboutPage extends StatelessWidget {
                 }),
                 ListTile(
                   leading: const Icon(Icons.source_outlined),
-                  title: Text(i18n.aboutSource),
+                  title: Text(l10n.aboutSource),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () async {
                     await logic.toSource();
@@ -75,7 +74,7 @@ class AboutPage extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.file_copy_outlined),
-                  title: Text(i18n.aboutUserAgreement),
+                  title: Text(l10n.aboutUserAgreement),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     logic.toAgreement();
@@ -83,7 +82,7 @@ class AboutPage extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.security_outlined),
-                  title: Text(i18n.aboutPrivacyPolicy),
+                  title: Text(l10n.aboutPrivacyPolicy),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     logic.toPrivacy();
@@ -91,7 +90,7 @@ class AboutPage extends StatelessWidget {
                 ),
                 ListTile(
                   leading: const Icon(Icons.bug_report_outlined),
-                  title: Text(i18n.aboutBugReport),
+                  title: Text(l10n.aboutBugReport),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () async {
                     await logic.toReportPage();

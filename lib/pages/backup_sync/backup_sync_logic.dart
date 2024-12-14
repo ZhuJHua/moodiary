@@ -6,23 +6,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../utils/file_util.dart';
 import '../../utils/log_util.dart';
 import '../../utils/notice_util.dart';
-import 'backup_sync_state.dart';
 
 class BackupSyncLogic extends GetxController {
-  final BackupSyncState state = BackupSyncState();
-
-  @override
-  void onReady() {
-    // TODO: implement onReady
-    super.onReady();
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
-  }
-
   Future<void> exportFile() async {
     Get.backLegacy();
     NoticeUtil.showToast('正在处理中');
