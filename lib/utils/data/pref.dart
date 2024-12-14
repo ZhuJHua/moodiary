@@ -112,8 +112,18 @@ class PrefUtil {
 
     /// 修复bug
     /// v2.6.2
+    /// 修复部分视频缩略图无法生成的问题
     if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.2') < 0) {
       await MediaUtil.regenerateMissingThumbnails();
+    }
+
+    /// v2.6.3
+    /// 修复同步失败导致本地分类丢失
+    /// 视频缩略图重复生成
+    if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.3') < 0) {
+      await FileUtil.cleanFile();
+      await MediaUtil.regenerateMissingThumbnails();
+      await compute(IsarUtil.fixV2_6_3, FileUtil.getRealPath('database', ''));
     }
 
     // 如果是首次启动或版本不一致

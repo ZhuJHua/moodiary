@@ -96,7 +96,7 @@ class LocalSendServerLogic extends GetxController {
     }
     // 如果分类不为空，插入一个分类
     if (categoryName != null) {
-      await IsarUtil.insertACategory(Category()
+      await IsarUtil.updateACategory(Category()
         ..id = diary.categoryId!
         ..categoryName = categoryName);
     }

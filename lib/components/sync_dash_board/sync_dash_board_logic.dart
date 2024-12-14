@@ -22,7 +22,9 @@ class SyncDashBoardLogic extends GetxController {
 
   @override
   void onClose() {
-    pageController.dispose();
+    if (state.isFetching == false) {
+      pageController.dispose();
+    }
     super.onClose();
   }
 }

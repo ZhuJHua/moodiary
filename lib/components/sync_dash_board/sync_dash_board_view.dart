@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/components/loading/loading.dart';
 import 'package:mood_diary/components/local_send/local_send_view.dart';
 import 'package:mood_diary/components/sync_dash_board/sync_dash_board_state.dart';
 import 'package:mood_diary/components/sync_dash_board/web_dav_dashboard/web_dav_dashboard_view.dart';
-import 'package:rive_animated_icon/rive_animated_icon.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import 'sync_dash_board_logic.dart';
@@ -50,15 +50,7 @@ class SyncDashBoardComponent extends StatelessWidget {
                       )
                     ],
                   )
-                : Center(
-                    child: RiveAnimatedIcon(
-                      riveIcon: RiveIcon.wifi,
-                      width: 80,
-                      height: 80,
-                      color: colorScheme.onSurface,
-                      loopAnimation: true,
-                    ),
-                  ));
+                : const Center(child: NetworkLoading()));
       },
     );
   }
