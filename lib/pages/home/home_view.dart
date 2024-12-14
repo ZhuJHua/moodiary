@@ -196,34 +196,44 @@ class HomePage extends StatelessWidget {
           });
     }
 
+    Widget buildDiaryFab() {
+      return SizedBox(
+        height: 56 + 46 + 46 + 16,
+        width: 56 + 32 + textStyle.labelMedium!.fontSize! * 3,
+        child: Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            buildToTopButton(),
+            buildAnimatedActionButton(
+                label: '纯文字',
+                onTap: () async {
+                  await logic.toEditPage(type: DiaryType.text);
+                },
+                iconData: FontAwesomeIcons.font,
+                index: 2),
+            buildAnimatedActionButton(
+                label: '富文本',
+                onTap: () async {
+                  await logic.toEditPage(type: DiaryType.richText);
+                },
+                iconData: FontAwesomeIcons.feather,
+                index: 1),
+            buildFabButton(),
+          ],
+        ),
+      );
+    }
+
     Widget buildFab() {
-      return state.navigatorIndex == 0
-          ? SizedBox(
-              height: 56 + 46 + 46 + 16,
-              width: 56 + 32 + textStyle.labelMedium!.fontSize! * 3,
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  buildToTopButton(),
-                  buildAnimatedActionButton(
-                      label: '纯文字',
-                      onTap: () async {
-                        await logic.toEditPage(type: DiaryType.text);
-                      },
-                      iconData: FontAwesomeIcons.font,
-                      index: 2),
-                  buildAnimatedActionButton(
-                      label: '富文本',
-                      onTap: () async {
-                        await logic.toEditPage(type: DiaryType.richText);
-                      },
-                      iconData: FontAwesomeIcons.feather,
-                      index: 1),
-                  buildFabButton(),
-                ],
-              ),
-            )
-          : const SizedBox.shrink();
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: switch (state.navigatorIndex) {
+          0 => buildDiaryFab(),
+          _ => const SizedBox.shrink(
+              key: ValueKey('empty'),
+            ),
+        },
+      );
     }
 
     // 导航栏
@@ -249,71 +259,6 @@ class HomePage extends StatelessWidget {
         selectedIcon: const Icon(UniconsSolid.layer_group),
       ),
     ];
-    // Widget buildWindowsBar() {
-    //   return Container(
-    //     color: Platform.isMacOS ? colorScheme.surface : colorScheme.surfaceContainer,
-    //     child: Row(
-    //       mainAxisAlignment: Platform.isMacOS ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
-    //       children: [
-    //         Padding(
-    //           padding: const EdgeInsets.only(left: 8.0),
-    //           child: Row(
-    //             spacing: 8.0,
-    //             children: [
-    //               if (!Platform.isMacOS) ...[
-    //                 ClipRRect(
-    //                   borderRadius: const BorderRadius.all(Radius.circular(4.0)),
-    //                   child: Image.asset(
-    //                     'assets/icon/icon.png',
-    //                     height: 16.0,
-    //                     width: 16.0,
-    //                   ),
-    //                 )
-    //               ],
-    //               Text(state.hitokoto),
-    //             ],
-    //           ),
-    //         ),
-    //         if (!Platform.isMacOS) ...[
-    //           Row(
-    //             children: [
-    //               MinimizeWindowButton(
-    //                 colors: WindowButtonColors(
-    //                   iconNormal: colorScheme.secondary,
-    //                   mouseDown: colorScheme.secondaryContainer,
-    //                   normal: colorScheme.surfaceContainer,
-    //                   iconMouseDown: colorScheme.secondary,
-    //                   mouseOver: colorScheme.secondaryContainer,
-    //                   iconMouseOver: colorScheme.onSecondaryContainer,
-    //                 ),
-    //               ),
-    //               MaximizeWindowButton(
-    //                 colors: WindowButtonColors(
-    //                   iconNormal: colorScheme.secondary,
-    //                   mouseDown: colorScheme.secondaryContainer,
-    //                   normal: colorScheme.surfaceContainer,
-    //                   iconMouseDown: colorScheme.secondary,
-    //                   mouseOver: colorScheme.secondaryContainer,
-    //                   iconMouseOver: colorScheme.onSecondaryContainer,
-    //                 ),
-    //               ),
-    //               CloseWindowButton(
-    //                 colors: WindowButtonColors(
-    //                   iconNormal: colorScheme.secondary,
-    //                   mouseDown: colorScheme.secondaryContainer,
-    //                   normal: colorScheme.surfaceContainer,
-    //                   iconMouseDown: colorScheme.secondary,
-    //                   mouseOver: colorScheme.errorContainer,
-    //                   iconMouseOver: colorScheme.onErrorContainer,
-    //                 ),
-    //               ),
-    //             ],
-    //           )
-    //         ]
-    //       ],
-    //     ),
-    //   );
-    // }
 
     Widget buildNavigatorBar() {
       var navigatorBarHeight = state.navigatorBarHeight + padding.bottom;

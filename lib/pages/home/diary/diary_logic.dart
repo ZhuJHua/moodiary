@@ -42,7 +42,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   }
 
   Future<void> autoSync() async {
-    if (PrefUtil.getValue<bool>('autoSync') == true) {
+    if (PrefUtil.getValue<bool>('autoSync') == true && await WebDavUtil().checkConnectivity()) {
       var diary = await IsarUtil.getAllDiaries();
       await WebDavUtil().syncDiary(diary, onDownload: () async {
         await refreshAll();

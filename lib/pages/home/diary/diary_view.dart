@@ -7,7 +7,7 @@ import 'package:mood_diary/components/diary_tab_view/diary_tab_view_view.dart';
 import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
 import 'package:mood_diary/components/search_sheet/search_sheet_view.dart';
-import 'package:mood_diary/components/web_dav_dashboard/web_dav_dashboard_view.dart';
+import 'package:mood_diary/components/sync_dash_board/sync_dash_board_view.dart';
 import 'package:rive_animated_icon/rive_animated_icon.dart';
 
 import '../../../utils/webdav_util.dart';
@@ -140,7 +140,7 @@ class DiaryPage extends StatelessWidget {
                                   showModalBottomSheet(
                                       context: context,
                                       builder: (context) {
-                                        return const WebDavDashboardComponent();
+                                        return const SyncDashBoardComponent();
                                       },
                                       showDragHandle: true,
                                       useSafeArea: true);
@@ -150,7 +150,7 @@ class DiaryPage extends StatelessWidget {
                                   showModalBottomSheet(
                                       context: context,
                                       builder: (context) {
-                                        return const WebDavDashboardComponent();
+                                        return const SyncDashBoardComponent();
                                       },
                                       showDragHandle: true,
                                       useSafeArea: true);
