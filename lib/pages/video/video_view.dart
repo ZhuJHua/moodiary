@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:mood_diary/common/values/media_type.dart';
 
+import '../../utils/media_util.dart';
 import 'video_logic.dart';
 
 class VideoPage extends StatelessWidget {
@@ -55,6 +57,13 @@ class VideoPage extends StatelessWidget {
                 style: const TextStyle(color: Colors.white),
               );
             }),
+            actions: [
+              IconButton(
+                  onPressed: () {
+                    MediaUtil.saveToGallery(path: state.videoPathList[state.videoIndex.value], type: MediaType.video);
+                  },
+                  icon: const Icon(Icons.save_alt)),
+            ],
             iconTheme: const IconThemeData(color: Colors.white),
           ),
           body: Padding(
