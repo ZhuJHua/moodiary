@@ -1,11 +1,13 @@
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/media_type.dart';
 import 'package:mood_diary/components/loading/loading.dart';
 import 'package:mood_diary/components/lottie_modal/lottie_modal.dart';
 import 'package:mood_diary/components/media/media_audio_view.dart';
 import 'package:mood_diary/components/media/media_video_view.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../components/media/media_image_view.dart';
 import '../../../main.dart';
@@ -15,9 +17,9 @@ class MediaPage extends StatelessWidget {
   const MediaPage({super.key});
 
   static final iconMap = {
-    MediaType.image: FontAwesomeIcons.image,
-    MediaType.audio: FontAwesomeIcons.compactDisc,
-    MediaType.video: FontAwesomeIcons.video
+    MediaType.image: Icons.image_rounded,
+    MediaType.audio: Icons.audiotrack_rounded,
+    MediaType.video: Icons.movie_rounded
   };
 
   static final textMap = {
@@ -30,51 +32,8 @@ class MediaPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Get.put(MediaLogic());
     final state = Bind.find<MediaLogic>().state;
-    final size = MediaQuery.sizeOf(context);
-
-    Widget buildImageView() {
-      final dateKeys = state.datetimeMediaMap.keys.toList();
-      return ListView.builder(
-        cacheExtent: size.height * 2,
-        key: ValueKey(state.mediaType.value),
-        itemBuilder: (context, index) {
-          final datetime = dateKeys[index];
-          final imageList = state.datetimeMediaMap[datetime]!;
-          return MediaImageComponent(dateTime: datetime, imageList: imageList);
-        },
-        itemCount: dateKeys.length,
-      );
-    }
-
-    Widget buildAudioView() {
-      final dateKeys = state.datetimeMediaMap.keys.toList();
-      return ListView.builder(
-        cacheExtent: size.height * 2,
-        key: ValueKey(state.mediaType.value),
-        itemBuilder: (context, index) {
-          final datetime = dateKeys[index];
-          final audioList = state.datetimeMediaMap[datetime]!;
-          return MediaAudioComponent(dateTime: datetime, audioList: audioList);
-        },
-        itemCount: dateKeys.length,
-      );
-    }
-
-    //使用map
-    Widget buildVideoView() {
-      final dateKeys = state.datetimeMediaMap.keys.toList();
-      return ListView.builder(
-        cacheExtent: size.height * 2,
-        key: ValueKey(state.mediaType.value),
-        itemBuilder: (context, index) {
-          final datetime = dateKeys[index];
-          final videoList = state.datetimeMediaMap[datetime]!;
-          return MediaVideoComponent(dateTime: datetime, videoList: videoList);
-        },
-        itemCount: dateKeys.length,
-      );
-    }
-
+    final colorScheme = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme;
     return GetBuilder<MediaLogic>(
       assignId: true,
       builder: (_) {
@@ -87,10 +46,37 @@ class MediaPage extends StatelessWidget {
                   AppBar(
                     title: Text(l10n.homeNavigatorMedia),
                     actions: [
+                      IconButton(
+                          onPressed: () async {
+                            var res = await showCalendarDatePicker2Dialog(
+                                context: context,
+                                config: CalendarDatePicker2WithActionButtonsConfig(
+                                  calendarViewMode: CalendarDatePicker2Mode.day,
+                                  calendarType: CalendarDatePicker2Type.single,
+                                  hideMonthPickerDividers: true,
+                                  hideYearPickerDividers: true,
+                                  useAbbrLabelForMonthModePicker: true,
+                                  allowSameValueSelection: true,
+                                  dayTextStylePredicate: ({required DateTime date}) {
+                                    return state.dateTimeList.contains(date)
+                                        ? textStyle.labelMedium?.copyWith(color: colorScheme.primary)
+                                        : null;
+                                  },
+                                  selectableDayPredicate: (DateTime date) {
+                                    return state.dateTimeList.contains(date);
+                                  },
+                                ),
+                                borderRadius: AppBorderRadius.mediumBorderRadius,
+                                dialogSize: const Size(300, 400));
+                            if (res != null && res.isNotEmpty) {
+                              logic.jumpTo(res.first ?? state.dateTimeList.first);
+                            }
+                          },
+                          icon: const Icon(Icons.calendar_month_rounded)),
                       Obx(() {
                         return PopupMenuButton(
                           offset: const Offset(0, 46),
-                          icon: FaIcon(iconMap[state.mediaType.value]!),
+                          icon: Icon(iconMap[state.mediaType.value]!),
                           itemBuilder: (context) {
                             return MediaType.values.map((type) {
                               return CheckedPopupMenuItem(
@@ -124,18 +110,27 @@ class MediaPage extends StatelessWidget {
                     ],
                   ),
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 400),
-                        child: state.isFetching
-                            ? const Center(child: SearchLoading())
-                            : switch (state.mediaType.value) {
-                                MediaType.image => buildImageView(),
-                                MediaType.audio => buildAudioView(),
-                                MediaType.video => buildVideoView(),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: state.isFetching
+                          ? const Center(child: SearchLoading())
+                          : ScrollablePositionedList.builder(
+                              itemBuilder: (context, index) {
+                                final datetime = state.dateTimeList[index];
+                                final fileList = state.datetimeMediaMap[datetime]!;
+                                return switch (state.mediaType.value) {
+                                  MediaType.image => MediaImageComponent(dateTime: datetime, imageList: fileList),
+                                  MediaType.audio => MediaAudioComponent(dateTime: datetime, audioList: fileList),
+                                  MediaType.video => MediaVideoComponent(dateTime: datetime, videoList: fileList),
+                                };
                               },
-                      ),
+                              padding: const EdgeInsets.all(4.0),
+                              itemCount: state.dateTimeList.length,
+                              itemScrollController: logic.itemScrollController,
+                              itemPositionsListener: logic.itemPositionsListener,
+                              scrollOffsetController: logic.scrollOffsetController,
+                              scrollOffsetListener: logic.scrollOffsetListener,
+                            ),
                     ),
                   ),
                 ],

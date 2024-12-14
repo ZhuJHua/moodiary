@@ -100,7 +100,6 @@ class AppPages {
     GetPage(
       name: AppRoutes.editPage,
       page: () => const EditPage(),
-      canPop: false,
       transition: Transition.fadeIn,
       binds: [Bind.lazyPut(() => EditLogic())],
     ),
@@ -151,13 +150,11 @@ class AppPages {
       page: () => const UserPage(),
       binds: [Bind.lazyPut(() => UserLogic())],
     ),
-
     GetPage(
       name: AppRoutes.categoryManagerPage,
       page: () => const CategoryManagerPage(),
       binds: [Bind.lazyPut(() => CategoryManagerLogic())],
     ),
-
     GetPage(
       name: AppRoutes.aboutPage,
       page: () => const AboutPage(),
@@ -165,6 +162,8 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.videoPage,
+      transition: Transition.fadeIn,
+      popGesture: false,
       page: () => const VideoPage(),
       binds: [Bind.lazyPut(() => VideoLogic())],
     ),

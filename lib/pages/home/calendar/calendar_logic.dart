@@ -22,11 +22,6 @@ class CalendarLogic extends GetxController {
     super.onReady();
   }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
   // 获取当前月份的日记
   Future<void> getMonthDiary(DateTime value) async {
     state.isFetching.value = true;

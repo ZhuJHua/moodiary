@@ -4,7 +4,8 @@ import 'package:mood_diary/common/values/media_type.dart';
 class MediaState {
   late Rx<MediaType> mediaType = MediaType.image.obs;
 
-  late Map<DateTime, List<String>> datetimeMediaMap;
+  Map<DateTime, List<String>> datetimeMediaMap = {};
+  List<DateTime> dateTimeList = [];
 
   bool isFetching = true;
 

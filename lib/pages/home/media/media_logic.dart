@@ -2,6 +2,7 @@ import 'package:flutter/animation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/media_type.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../utils/file_util.dart';
 import '../../../utils/media_util.dart';
@@ -11,6 +12,10 @@ import 'media_state.dart';
 class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
   final MediaState state = MediaState();
   late final AnimationController animationController = AnimationController(vsync: this);
+  late final ItemScrollController itemScrollController = ItemScrollController();
+  late final ScrollOffsetController scrollOffsetController = ScrollOffsetController();
+  late final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
+  late final ScrollOffsetListener scrollOffsetListener = ScrollOffsetListener.create();
 
   @override
   void onReady() async {
@@ -41,41 +46,21 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
           MediaType.video => MediaUtil.groupVideoFileByDate,
         },
         await FileUtil.getDirFilePath(mediaType.value));
+    state.dateTimeList = state.datetimeMediaMap.keys.toList();
     state.isFetching = false;
     update();
   }
 
   Future<void> changeMediaType(MediaType mediaType) async {
-    await getFilePath(mediaType, isInit: false);
     state.mediaType.value = mediaType;
+    await getFilePath(mediaType, isInit: false);
   }
 
-  // void getVideoThumbnailMap(List<String> files) {
-  //   // 定义两个列表来存储视频和缩略图文件
-  //   List<String> videos = [];
-  //   List<String> thumbnails = [];
-  //   // 遍历文件列表，将视频和缩略图分别添加到对应的列表中
-  //   for (var file in files) {
-  //     if (file.startsWith('video-')) {
-  //       videos.add(file);
-  //     } else if (file.startsWith('thumbnail-')) {
-  //       thumbnails.add(file);
-  //     }
-  //   }
-  //   // 创建一个map来存储缩略图和视频的映射
-  //   Map<String, String> videoThumbnailMap = {};
-  //   // 遍历缩略图列表，并找到对应的视频
-  //   for (var thumbnail in thumbnails) {
-  //     // 提取唯一标识
-  //     var id = thumbnail.split('thumbnail-')[1].split('.jpeg')[0];
-  //     // 查找对应的视频
-  //     var video = videos.firstWhere((v) => v.contains(id));
-  //     // 如果找到对应的视频，则将其添加到map中
-  //     videoThumbnailMap[thumbnail] = video;
-  //   }
-  //
-  //   state.videoThumbnailMap.value = videoThumbnailMap;
-  // }
+  // 跳转到指定日期
+  void jumpTo(DateTime dateTime) {
+    final index = state.dateTimeList.indexWhere((element) => element == dateTime);
+    itemScrollController.scrollTo(index: index, duration: const Duration(seconds: 1), curve: Curves.easeInOutQuart);
+  }
 
   // 清理文件
   Future<void> cleanFile() async {
