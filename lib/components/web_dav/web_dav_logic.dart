@@ -62,8 +62,12 @@ class WebDavLogic extends GetxController {
           baseUrl: webDavUrlController.text, username: usernameController.text, password: passwordController.text);
       state.hasOption.value = true;
       await checkConnectivity();
-      await webDav.initDir();
-      NoticeUtil.showToast('保存成功');
+      if (state.connectivityStatus.value == WebDavConnectivityStatus.connected) {
+        await webDav.initDir();
+        NoticeUtil.showToast('保存成功');
+      } else {
+        NoticeUtil.showToast('保存失败，请检查配置');
+      }
     }
   }
 

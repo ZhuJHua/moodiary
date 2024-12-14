@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -58,7 +59,13 @@ class WebDavUtil {
       return false;
     }
     try {
-      await _client?.ping();
+      // 设置超时时间为 5 秒
+      await _client?.ping().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw TimeoutException('Ping operation timed out');
+        },
+      );
       return true;
     } catch (e) {
       return false;

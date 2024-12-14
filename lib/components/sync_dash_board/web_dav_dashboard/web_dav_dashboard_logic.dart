@@ -2,10 +2,10 @@ import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 
-import '../../common/values/webdav.dart';
-import '../../utils/data/isar.dart';
-import '../../utils/notice_util.dart';
-import '../../utils/webdav_util.dart';
+import '../../../common/values/webdav.dart';
+import '../../../utils/data/isar.dart';
+import '../../../utils/notice_util.dart';
+import '../../../utils/webdav_util.dart';
 import 'web_dav_dashboard_state.dart';
 
 class WebDavDashboardLogic extends GetxController {
@@ -15,12 +15,6 @@ class WebDavDashboardLogic extends GetxController {
   void onReady() async {
     await updateWebdav(isInit: true);
     super.onReady();
-  }
-
-  @override
-  void onClose() {
-    // TODO: implement onClose
-    super.onClose();
   }
 
   Future<void> updateWebdav({required bool isInit}) async {
