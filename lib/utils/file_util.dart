@@ -25,9 +25,9 @@ class FileUtil {
     }
   }
 
-  static File getErrorLogFile() {
+  static String getErrorLogFilePath() {
     //打开文件
-    return File(join(_filePath, 'error.log'));
+    return join(_filePath, 'error.log');
   }
 
   //删除指定文件夹

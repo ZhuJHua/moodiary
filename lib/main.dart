@@ -63,7 +63,7 @@ String getInitialRoute() {
 
 void main() async {
   await initSystem();
-  FlutterError.onError = (details) async {
+  FlutterError.onError = (details) {
     LogUtil.printError('Flutter error', error: details.exception, stackTrace: details.stack);
     if (details.exceptionAsString().contains('Render')) {
       NoticeUtil.showBug(message: '布局异常！');
