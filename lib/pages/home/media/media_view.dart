@@ -1,5 +1,6 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/media_type.dart';
@@ -114,23 +115,30 @@ class MediaPage extends StatelessWidget {
                       duration: const Duration(milliseconds: 400),
                       child: state.isFetching
                           ? const Center(child: SearchLoading())
-                          : ScrollablePositionedList.builder(
-                              itemBuilder: (context, index) {
-                                final datetime = state.dateTimeList[index];
-                                final fileList = state.datetimeMediaMap[datetime]!;
-                                return switch (state.mediaType.value) {
-                                  MediaType.image => MediaImageComponent(dateTime: datetime, imageList: fileList),
-                                  MediaType.audio => MediaAudioComponent(dateTime: datetime, audioList: fileList),
-                                  MediaType.video => MediaVideoComponent(dateTime: datetime, videoList: fileList),
-                                };
-                              },
-                              padding: const EdgeInsets.all(4.0),
-                              itemCount: state.dateTimeList.length,
-                              itemScrollController: logic.itemScrollController,
-                              itemPositionsListener: logic.itemPositionsListener,
-                              scrollOffsetController: logic.scrollOffsetController,
-                              scrollOffsetListener: logic.scrollOffsetListener,
-                            ),
+                          : (state.datetimeMediaMap.isNotEmpty
+                              ? ScrollablePositionedList.builder(
+                                  itemBuilder: (context, index) {
+                                    final datetime = state.dateTimeList[index];
+                                    final fileList = state.datetimeMediaMap[datetime]!;
+                                    return switch (state.mediaType.value) {
+                                      MediaType.image => MediaImageComponent(dateTime: datetime, imageList: fileList),
+                                      MediaType.audio => MediaAudioComponent(dateTime: datetime, audioList: fileList),
+                                      MediaType.video => MediaVideoComponent(dateTime: datetime, videoList: fileList),
+                                    };
+                                  },
+                                  padding: const EdgeInsets.all(4.0),
+                                  itemCount: state.dateTimeList.length,
+                                  itemScrollController: logic.itemScrollController,
+                                  itemPositionsListener: logic.itemPositionsListener,
+                                  scrollOffsetController: logic.scrollOffsetController,
+                                  scrollOffsetListener: logic.scrollOffsetListener,
+                                )
+                              : const Center(
+                                  child: FaIcon(
+                                    FontAwesomeIcons.boxArchive,
+                                    size: 80,
+                                  ),
+                                )),
                     ),
                   ),
                 ],

@@ -21,7 +21,6 @@ class SettingPage extends StatelessWidget {
     final state = Bind.find<SettingLogic>().state;
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-
     final size = MediaQuery.sizeOf(context);
 
     Widget buildDashboard() {
@@ -452,28 +451,21 @@ class SettingPage extends StatelessWidget {
     return GetBuilder<SettingLogic>(
       assignId: true,
       builder: (_) {
-        return CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              title: Text(l10n.homeNavigatorSetting),
-              pinned: true,
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
+        return Column(
+          children: [
+            AppBar(title: Text(l10n.homeNavigatorSetting)),
+            Expanded(
+              child: ListView(
+                cacheExtent: size.height * 2,
                 padding: const EdgeInsets.all(4.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 4.0,
-                  children: [
-                    buildDashboard(),
-                    buildFeature(),
-                    buildData(),
-                    buildDisplay(),
-                    buildPrivacy(),
-                    buildMore(),
-                  ],
-                ),
+                children: [
+                  buildDashboard(),
+                  buildFeature(),
+                  buildData(),
+                  buildDisplay(),
+                  buildPrivacy(),
+                  buildMore(),
+                ],
               ),
             ),
           ],
