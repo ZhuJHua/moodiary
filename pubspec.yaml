@@ -94,6 +94,7 @@ dependencies:
   flutter_native_splash: 2.4.3
   rive_animated_icon: 2.0.2
   network_info_plus: 6.1.2
+  scrollable_positioned_list: 0.3.8
   flutter_localizations:
     sdk: flutter
   rust_lib_mood_diary:
@@ -138,7 +139,7 @@ flutter_native_splash:
     color: "#ffffff"
     image_dark: assets/icon/dark/dark_splash_icon.png
     color_dark: "#000000"
-
+  fullscreen: true
   web: false
 
 flutter:
