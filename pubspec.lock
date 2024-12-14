@@ -971,7 +971,7 @@ packages:
     source: hosted
     version: "2.4.0"
   gal:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: gal
       sha256: "54c9b72528efce7c66234f3b6dd01cb0304fd8af8196de15571d7bdddb940977"
@@ -1965,11 +1965,12 @@ packages:
   rive_animated_icon:
     dependency: "direct main"
     description:
-      name: rive_animated_icon
-      sha256: f789e9f026c3e5a3bcb369db9baef0637ddd15d9a7c4fe4749505202cdc11942
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.0.2"
+      path: "."
+      ref: HEAD
+      resolved-ref: "7ab479ea6747480038fc24914d6b642984fd5bc9"
+      url: "https://github.com/ZhuJHua/rive_animated_icons.git"
+    source: git
+    version: "2.0.3"
   rive_common:
     dependency: transitive
     description:

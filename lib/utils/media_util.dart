@@ -4,13 +4,16 @@ import 'dart:io';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:gal/gal.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:mood_diary/src/rust/api/compress.dart';
 import 'package:mood_diary/utils/log_util.dart';
+import 'package:mood_diary/utils/notice_util.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
+import '../common/values/media_type.dart';
 import '../src/rust/api/constants.dart' as r_type;
 import 'data/pref.dart';
 import 'file_util.dart';
@@ -113,9 +116,10 @@ class MediaUtil {
     // 遍历视频文件
     final videoFiles = videoDir.listSync().whereType<File>();
     for (final videoFile in videoFiles) {
+      //如果是缩略图则跳过
+      if (videoFile.path.contains('thumbnail')) continue;
       final videoName = basename(videoFile.path);
       final thumbnailPath = getThumbnailPath(videoName);
-
       // 检查是否存在缩略图
       if (!File(thumbnailPath).existsSync()) {
         LogUtil.printInfo("Thumbnail missing for $videoName. Regenerating...");
@@ -267,5 +271,21 @@ class MediaUtil {
     };
     return await _thumbnail.getVideoThumbnail(
         srcFile: xFile.path, destFile: destPath, width: height, height: height, format: 'jpeg', quality: 90);
+  }
+
+  // 保存视频或者图片到相册
+  static Future<void> saveToGallery({required String path, required MediaType type}) async {
+    final hasAccess = await Gal.hasAccess(toAlbum: true);
+    if (!hasAccess) await Gal.requestAccess(toAlbum: true);
+    try {
+      if (type == MediaType.video) {
+        await Gal.putVideo(path, album: 'Moodiary');
+      } else {
+        await Gal.putImage(path, album: 'Moodiary');
+      }
+      NoticeUtil.showToast('已保存到相册');
+    } catch (e) {
+      NoticeUtil.showToast('保存失败');
+    }
   }
 }

@@ -1,7 +1,7 @@
 name: mood_diary
 description: "A new Flutter project."
 publish_to: 'none'
-version: 2.6.2+62
+version: 2.6.3+63
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -92,7 +92,10 @@ dependencies:
   webdav_client: 1.2.2
   confetti: 0.8.0
   flutter_native_splash: 2.4.3
-  rive_animated_icon: 2.0.2
+  gal: 2.3.0
+  rive_animated_icon:
+    git:
+      url: https://github.com/ZhuJHua/rive_animated_icons.git
   network_info_plus: 6.1.2
   scrollable_positioned_list: 0.3.8
   flutter_localizations:

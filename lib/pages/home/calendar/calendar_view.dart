@@ -5,9 +5,9 @@ import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/components/diary_card/calendar_diary_card/calendar_diary_card_view.dart';
+import 'package:mood_diary/components/loading/loading.dart';
 import 'package:mood_diary/components/time_line/time_line_view.dart';
 import 'package:mood_diary/utils/array_util.dart';
-import 'package:rive_animated_icon/rive_animated_icon.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'calendar_logic.dart';
@@ -230,17 +230,7 @@ class CalendarPage extends StatelessWidget {
                 Expanded(child: Obx(() {
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
-                    child: state.isFetching.value
-                        ? Center(
-                            child: RiveAnimatedIcon(
-                            riveIcon: RiveIcon.search,
-                            height: 80,
-                            width: 80,
-                            loopAnimation: true,
-                            strokeWidth: 4,
-                            color: colorScheme.onSurface,
-                          ))
-                        : buildCardList(),
+                    child: state.isFetching.value ? const Center(child: Processing()) : buildCardList(),
                   );
                 })),
               ],

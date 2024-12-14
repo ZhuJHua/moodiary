@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/common/values/media_type.dart';
+import 'package:mood_diary/utils/media_util.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 
@@ -26,6 +28,13 @@ class ImagePage extends StatelessWidget {
               style: const TextStyle(color: Colors.white),
             ),
             iconTheme: const IconThemeData(color: Colors.white),
+            actions: [
+              IconButton(
+                  onPressed: () {
+                    MediaUtil.saveToGallery(path: state.imagePathList[state.imageIndex], type: MediaType.image);
+                  },
+                  icon: const Icon(Icons.save_alt)),
+            ],
           ),
           body: PhotoViewGallery.builder(
             scrollPhysics: const PageScrollPhysics(),

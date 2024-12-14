@@ -1,10 +1,8 @@
 import 'package:flutter/animation.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/media_type.dart';
-import 'package:mood_diary/components/audio_player/audio_player_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 
-import '../../../utils/data/isar.dart';
 import '../../../utils/file_util.dart';
 import '../../../utils/notice_util.dart';
 import 'media_state.dart';
@@ -85,50 +83,7 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
     state.isCleaning = true;
     update(['modal']);
 
-    // 获取各类型的所有文件路径并转换为Set以提高查找效率
-    final imageFiles = (await FileUtil.getDirFileName(MediaType.image.value)).toSet();
-    final audioFiles = (await FileUtil.getDirFileName(MediaType.audio.value)).toSet();
-    final videoFiles = (await FileUtil.getDirFileName(MediaType.video.value)).toSet();
-
-    // 用于存储日记中引用的文件名的Set
-    final usedImages = <String>{};
-    final usedAudios = <String>{};
-    final usedVideos = <String>{};
-
-    // 获取日记总数
-    final count = IsarUtil.countAllDiary();
-
-    // 分批获取日记并收集引用的文件名
-    const batchSize = 50;
-    for (int i = 0; i < count; i += batchSize) {
-      final diaryList = await IsarUtil.getDiary(i, batchSize);
-      for (var diary in diaryList) {
-        usedImages.addAll(diary.imageName);
-        usedAudios.addAll(diary.audioName);
-        usedVideos.addAll(diary.videoName);
-        for (var name in diary.videoName) {
-          var thumbnailName = 'thumbnail-${name.substring(6, 42)}.jpeg';
-          usedVideos.add(thumbnailName);
-        }
-      }
-    }
-
-    // 计算需要删除的文件
-    final imagesToDelete = imageFiles.difference(usedImages);
-    final audiosToDelete = audioFiles.difference(usedAudios);
-    final videosToDelete = videoFiles.difference(usedVideos);
-
-    // delete controller when need
-    for (var path in audiosToDelete) {
-      Bind.delete<AudioPlayerLogic>(tag: path);
-    }
-
-    // 并行删除文件
-    await Future.wait([
-      FileUtil.deleteMediaFiles(imagesToDelete, MediaType.image.value),
-      FileUtil.deleteMediaFiles(audiosToDelete, MediaType.audio.value),
-      FileUtil.deleteMediaFiles(videosToDelete, MediaType.video.value),
-    ]);
+    await FileUtil.cleanFile();
     await getFilePath(state.mediaType.value);
     state.isCleaning = false;
     update(['modal']);
