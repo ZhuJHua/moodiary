@@ -35,7 +35,7 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
   BitsdojoWindowPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("BitsdojoWindowPlugin"));
   ConnectivityPlusWindowsPluginRegisterWithRegistrar(
-          registry->GetRegistrarForPlugin("ConnectivityPlusWindowsPlugin"));
+      registry->GetRegistrarForPlugin("ConnectivityPlusWindowsPlugin"));
   DynamicColorPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("DynamicColorPluginCApi"));
   FcNativeVideoThumbnailPluginCApiRegisterWithRegistrar(
@@ -43,7 +43,7 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
   FileSelectorWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FileSelectorWindows"));
   GalPluginCApiRegisterWithRegistrar(
-          registry->GetRegistrarForPlugin("GalPluginCApi"));
+      registry->GetRegistrarForPlugin("GalPluginCApi"));
   GeolocatorWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("GeolocatorWindows"));
   IsarFlutterLibsPluginRegisterWithRegistrar(
@@ -61,7 +61,7 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
   RecordWindowsPluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("RecordWindowsPluginCApi"));
   RivePluginRegisterWithRegistrar(
-          registry->GetRegistrarForPlugin("RivePlugin"));
+      registry->GetRegistrarForPlugin("RivePlugin"));
   ScreenBrightnessWindowsPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("ScreenBrightnessWindowsPlugin"));
   SharePlusWindowsPluginCApiRegisterWithRegistrar(
