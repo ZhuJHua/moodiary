@@ -155,7 +155,7 @@ class PrefUtil {
               (color.b * 255).toInt());
     }
 
-    await _prefs.setInt('color', _prefs.getInt('color') ?? (await ThemeUtil.supportDynamicColor() ? -1 : 0));
+    await _prefs.setInt('color', _prefs.getInt('color') ?? (await ThemeUtil.supportDynamicColor() ? -1 : 4));
     await _prefs.setInt('themeMode', _prefs.getInt('themeMode') ?? 0);
     await _prefs.setBool('dynamicColor', _prefs.getBool('dynamicColor') ?? true);
     await _prefs.setInt('quality', _prefs.getInt('quality') ?? 2);

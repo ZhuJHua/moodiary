@@ -457,6 +457,8 @@ class SettingPage extends StatelessWidget {
             Expanded(
               child: ListView(
                 cacheExtent: size.height * 2,
+                addAutomaticKeepAlives: false,
+                addRepaintBoundaries: false,
                 padding: const EdgeInsets.all(4.0),
                 children: [
                   buildDashboard(),

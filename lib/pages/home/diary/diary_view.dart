@@ -154,6 +154,7 @@ class DiaryPage extends StatelessWidget {
                                       showDragHandle: true,
                                       useSafeArea: true);
                                 },
+                                tooltip: '数据同步',
                                 icon: const Icon(Icons.cloud_sync_outlined),
                               );
                       }),
