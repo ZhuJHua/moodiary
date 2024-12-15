@@ -17,10 +17,10 @@ mixin BasicCardLogic {
       //如果分类为空，删除主页即可，如果分类不为空，双删除
       if (diary.categoryId != null && Bind.isRegistered<DiaryTabViewLogic>(tag: diary.categoryId)) {
         Bind.find<DiaryTabViewLogic>(tag: diary.categoryId).state.diaryList.removeWhere((e) => e.id == diary.id);
-        Bind.find<DiaryTabViewLogic>(tag: diary.categoryId).update(['TabView']);
+        Bind.find<DiaryTabViewLogic>(tag: diary.categoryId).update();
       }
       Bind.find<DiaryTabViewLogic>(tag: 'default').state.diaryList.removeWhere((e) => e.id == diary.id);
-      Bind.find<DiaryTabViewLogic>(tag: 'default').update(['TabView']);
+      Bind.find<DiaryTabViewLogic>(tag: 'default').update();
     } else {
       var newDiary = await IsarUtil.getDiaryByID(diary.isarId);
       if (diary == newDiary) {
@@ -34,7 +34,7 @@ mixin BasicCardLogic {
         var oldIndex =
             Bind.find<DiaryTabViewLogic>(tag: 'default').state.diaryList.indexWhere((e) => e.id == newDiary.id);
         Bind.find<DiaryTabViewLogic>(tag: 'default').state.diaryList.replaceRange(oldIndex, oldIndex + 1, [newDiary]);
-        Bind.find<DiaryTabViewLogic>(tag: 'default').update(['TabView']);
+        Bind.find<DiaryTabViewLogic>(tag: 'default').update();
         //如果注册了控制器
         if (newDiary.categoryId != null && Bind.isRegistered<DiaryTabViewLogic>(tag: newDiary.categoryId)) {
           var oldIndex = Bind.find<DiaryTabViewLogic>(tag: newDiary.categoryId)
@@ -45,7 +45,7 @@ mixin BasicCardLogic {
               .state
               .diaryList
               .replaceRange(oldIndex, oldIndex + 1, [newDiary]);
-          Bind.find<DiaryTabViewLogic>(tag: newDiary.categoryId).update(['TabView']);
+          Bind.find<DiaryTabViewLogic>(tag: newDiary.categoryId).update();
         }
         //await Bind.find<DiaryLogic>().updateDiary(oldCategoryId);
       } else {
