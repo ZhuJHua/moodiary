@@ -121,7 +121,7 @@ class PrefUtil {
     /// 修复同步失败导致本地分类丢失
     /// 视频缩略图重复生成
     if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.3') < 0) {
-      await FileUtil.cleanFile();
+      await compute(FileUtil.cleanFile, FileUtil.getRealPath('database', ''));
       await MediaUtil.regenerateMissingThumbnails();
       await compute(IsarUtil.fixV2_6_3, FileUtil.getRealPath('database', ''));
     }
