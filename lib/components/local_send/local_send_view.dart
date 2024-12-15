@@ -7,7 +7,9 @@ import 'local_send_logic.dart';
 import 'local_send_state.dart';
 
 class LocalSendComponent extends StatelessWidget {
-  const LocalSendComponent({super.key});
+  final bool isDashboard;
+
+  const LocalSendComponent({super.key, this.isDashboard = false});
 
   @override
   Widget build(BuildContext context) {
@@ -113,16 +115,12 @@ class LocalSendComponent extends StatelessWidget {
       );
     }
 
-    return ExpansionTile(
-      leading: const Icon(Icons.wifi_tethering_rounded),
-      title: const Text('局域网传输'),
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            spacing: 8.0,
+    Widget buildDashboard() {
+      return GetBuilder<LocalSendLogic>(
+        assignId: true,
+        builder: (_) {
+          return ListView(
+            padding: const EdgeInsets.all(16.0),
             children: [
               buildOption(),
               GetBuilder<LocalSendLogic>(
@@ -139,9 +137,44 @@ class LocalSendComponent extends StatelessWidget {
                     return state.type == 'send' ? const LocalSendClientComponent() : const LocalSendServerComponent();
                   }),
             ],
-          ),
-        )
-      ],
-    );
+          );
+        },
+      );
+    }
+
+    Widget buildCommon() {
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          spacing: 8.0,
+          children: [
+            buildOption(),
+            GetBuilder<LocalSendLogic>(
+                id: 'Info',
+                builder: (_) {
+                  return Visibility(
+                    visible: state.showInfo,
+                    child: buildWifiInfo(),
+                  );
+                }),
+            GetBuilder<LocalSendLogic>(
+                id: 'Panel',
+                builder: (_) {
+                  return state.type == 'send' ? const LocalSendClientComponent() : const LocalSendServerComponent();
+                }),
+          ],
+        ),
+      );
+    }
+
+    return isDashboard
+        ? buildDashboard()
+        : ExpansionTile(
+            leading: const Icon(Icons.wifi_tethering_rounded),
+            title: const Text('局域网传输'),
+            children: [buildCommon()],
+          );
   }
 }

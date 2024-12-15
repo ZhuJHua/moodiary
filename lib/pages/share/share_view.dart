@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
 
+import '../../main.dart';
 import '../../utils/file_util.dart';
 import 'share_logic.dart';
 
@@ -16,7 +16,7 @@ class SharePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<ShareLogic>();
     final state = Bind.find<ShareLogic>().state;
-    final i18n = AppLocalizations.of(context)!;
+
     final textStyle = Theme.of(context).textTheme;
     var imageColor = state.diary.imageColor;
     final colorScheme = imageColor != null
@@ -35,7 +35,7 @@ class SharePage extends StatelessWidget {
             backgroundColor: colorScheme.surface,
             appBar: AppBar(
               title: Text(
-                i18n.shareTitle,
+                l10n.shareTitle,
               ),
             ),
             extendBodyBehindAppBar: true,
@@ -113,7 +113,7 @@ class SharePage extends StatelessWidget {
                               ],
                             ),
                             Text(
-                              i18n.shareName,
+                              l10n.shareName,
                               style: textStyle.labelMedium,
                             )
                           ],

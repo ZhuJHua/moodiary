@@ -24,25 +24,32 @@ class RecycleLogic extends GetxController {
     update();
   }
 
-  //长按卡片删除
-  Future<void> deleteDiary(index) async {
-    //删除日记
-    if (await IsarUtil.deleteADiary(state.diaryList[index].isarId)) {
-      for (var name in state.diaryList[index].imageName) {
-        FileUtil.deleteFile(FileUtil.getRealPath('image', name));
-      }
-      for (var name in state.diaryList[index].audioName) {
-        FileUtil.deleteFile(FileUtil.getRealPath('audio', name));
-      }
-      for (var name in state.diaryList[index].videoName) {
-        FileUtil.deleteFile(FileUtil.getRealPath('video', name));
-        // 删除缩略图
-        FileUtil.deleteFile(FileUtil.getRealPath('thumbnail', name));
-      }
+  Future<void> deleteDiary(int index) async {
+    final diary = state.diaryList[index];
+    try {
+      await WebDavUtil().deleteSingleDiary(diary);
+    } catch (e) {
+      NoticeUtil.showToast('当前已断开与WebDAV的连接，无法删除');
+      return;
+    }
+    if (await IsarUtil.deleteADiary(diary.isarId)) {
+      final imageDeleteTasks = diary.imageName.map((name) => FileUtil.deleteFile(FileUtil.getRealPath('image', name)));
+      final audioDeleteTasks = diary.audioName.map((name) => FileUtil.deleteFile(FileUtil.getRealPath('audio', name)));
+      final videoDeleteTasks = diary.videoName.map((name) async {
+        // 删除视频文件
+        await FileUtil.deleteFile(FileUtil.getRealPath('video', name));
+        // 删除视频缩略图
+        await FileUtil.deleteFile(FileUtil.getRealPath('thumbnail', name));
+      });
+      // 合并所有删除任务并发执行
+      await Future.wait([
+        ...imageDeleteTasks,
+        ...audioDeleteTasks,
+        ...videoDeleteTasks,
+      ]);
       NoticeUtil.showToast('删除成功');
-      await WebDavUtil().deleteSingleDiary(state.diaryList[index]);
-      //重新获取
-      getDiaryList();
+      // 重新获取日记列表
+      await getDiaryList();
     }
   }
 

@@ -32,15 +32,14 @@ class CategoryAddLogic extends GetxController {
 
   Future<void> addCategory() async {
     if (textEditingController.text.isNotEmpty) {
-      if (await IsarUtil.insertACategory(Category()..categoryName = textEditingController.text)) {
-        Get.backLegacy();
-        textEditingController.clear();
-        getCategory();
-        await diaryLogic.updateCategory();
-      } else {
-        textEditingController.clear();
-        NoticeUtil.showToast('分类已存在');
+      var res = await IsarUtil.insertACategory(Category()..categoryName = textEditingController.text);
+      Get.backLegacy();
+      if (res == false) {
+        NoticeUtil.showToast('已经存在同名分类，已自动重命名');
       }
+      textEditingController.clear();
+      getCategory();
+      await diaryLogic.updateCategory();
     }
   }
 

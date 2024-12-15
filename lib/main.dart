@@ -25,16 +25,18 @@ import 'package:video_player_media_kit/video_player_media_kit.dart';
 
 import 'components/window_buttons/window_buttons.dart';
 
+late AppLocalizations l10n;
+
 Future<void> initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
   await findSystemLocale();
+  await RustLib.init();
   await PrefUtil.initPref();
   await IsarUtil.initIsar();
   await WebDavUtil().initWebDav();
   VideoPlayerMediaKit.ensureInitialized(android: true, iOS: true, macOS: true, windows: true);
   await FMTCObjectBoxBackend().initialise();
   await const FMTCStore('mapStore').manage.create();
-  await RustLib.init();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     systemNavigationBarColor: Colors.transparent,
@@ -63,17 +65,17 @@ String getInitialRoute() {
 
 void main() async {
   await initSystem();
-  FlutterError.onError = (details) async {
+  FlutterError.onError = (details) {
     LogUtil.printError('Flutter error', error: details.exception, stackTrace: details.stack);
     if (details.exceptionAsString().contains('Render')) {
-      NoticeUtil.showBug(message: '布局异常！');
+      NoticeUtil.showBug(message: l10n.layoutErrorToast);
     } else {
-      NoticeUtil.showBug(message: '出错了，请联系开发者处理！');
+      NoticeUtil.showBug(message: l10n.errorToast);
     }
   };
   PlatformDispatcher.instance.onError = (error, stack) {
     LogUtil.printWTF('Error', error: error, stackTrace: stack);
-    NoticeUtil.showBug(message: '出错了，请联系开发者处理！');
+    NoticeUtil.showBug(message: l10n.errorToast);
     return true;
   };
   runApp(GetMaterialApp.router(
@@ -81,13 +83,13 @@ void main() async {
     onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
     backButtonDispatcher: GetRootBackButtonDispatcher(),
     builder: (context, child) {
-      final colorScheme = Theme.of(context).colorScheme;
+      l10n = AppLocalizations.of(context)!;
       final mediaQuery = MediaQuery(
         data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(PrefUtil.getValue<double>('fontScale')!)),
         child: FToastBuilder()(context, child!),
       );
       final windowChild = (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
-          ? Column(children: [WindowButtons(colorScheme: colorScheme), Expanded(child: mediaQuery)])
+          ? Column(children: [WindowButtons(), Expanded(child: mediaQuery)])
           : mediaQuery;
       return windowChild;
     },

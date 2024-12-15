@@ -4,13 +4,16 @@ import 'dart:io';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:gal/gal.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:mood_diary/src/rust/api/compress.dart';
 import 'package:mood_diary/utils/log_util.dart';
+import 'package:mood_diary/utils/notice_util.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
+import '../common/values/media_type.dart';
 import '../src/rust/api/constants.dart' as r_type;
 import 'data/pref.dart';
 import 'file_util.dart';
@@ -35,6 +38,10 @@ class MediaUtil {
   static Future<Map<String, String>> saveImages({required List<XFile> imageFileList}) async {
     final imageNameMap = <String, String>{};
     await Future.wait(imageFileList.map((imageFile) async {
+      if (basename(imageFile.path).startsWith('image-')) {
+        imageNameMap[imageFile.path] = basename(imageFile.path);
+        return;
+      }
       final mimeType = lookupMimeType(imageFile.path) ?? 'image/png'; // 默认使用 PNG
       final config = _compressConfig[mimeType] ?? ['.png', r_type.CompressFormat.png];
       final extension = config[0] as String;
@@ -71,6 +78,10 @@ class MediaUtil {
     Map<String, String> videoNameMap = {};
 
     await Future.wait(videoFileList.map((videoFile) async {
+      if (basename(videoFile.path).startsWith('video-')) {
+        videoNameMap[videoFile.path] = basename(videoFile.path);
+        return;
+      }
       // 生成文件名
       final uuid = const Uuid().v7();
       var videoName = 'video-$uuid.mp4';
@@ -105,9 +116,10 @@ class MediaUtil {
     // 遍历视频文件
     final videoFiles = videoDir.listSync().whereType<File>();
     for (final videoFile in videoFiles) {
+      //如果是缩略图则跳过
+      if (videoFile.path.contains('thumbnail')) continue;
       final videoName = basename(videoFile.path);
       final thumbnailPath = getThumbnailPath(videoName);
-
       // 检查是否存在缩略图
       if (!File(thumbnailPath).existsSync()) {
         LogUtil.printInfo("Thumbnail missing for $videoName. Regenerating...");
@@ -259,5 +271,81 @@ class MediaUtil {
     };
     return await _thumbnail.getVideoThumbnail(
         srcFile: xFile.path, destFile: destPath, width: height, height: height, format: 'jpeg', quality: 90);
+  }
+
+  // 保存视频或者图片到相册
+  static Future<void> saveToGallery({required String path, required MediaType type}) async {
+    final hasAccess = await Gal.hasAccess(toAlbum: true);
+    if (!hasAccess) await Gal.requestAccess(toAlbum: true);
+    try {
+      if (type == MediaType.video) {
+        await Gal.putVideo(path, album: 'Moodiary');
+      } else {
+        await Gal.putImage(path, album: 'Moodiary');
+      }
+      NoticeUtil.showToast('已保存到相册');
+    } catch (e) {
+      NoticeUtil.showToast('保存失败');
+    }
+  }
+
+  static DateTime? extractDateFromUUID(String uuid) {
+    final timestampHex = uuid.replaceAll('-', '').substring(0, 12);
+    final timestampInt = int.tryParse(timestampHex, radix: 16);
+    if (timestampInt == null) return null;
+    return DateTime.fromMillisecondsSinceEpoch(timestampInt);
+  }
+
+  /// 根据日期分组文件
+  static Map<DateTime, List<String>> groupImageFileByDate(List<String> filePaths) {
+    final Map<DateTime, List<String>> groupedMap = {};
+    for (var image in filePaths) {
+      // 根据媒体文件类型提取日期
+      final uuid = image.split('image-')[1].split('.')[0];
+      final dateTime = MediaUtil.extractDateFromUUID(uuid);
+      if (dateTime != null) {
+        // 获取日期部分
+        final dateOnly = DateTime(dateTime.year, dateTime.month, dateTime.day);
+        groupedMap.putIfAbsent(dateOnly, () => []).add(image);
+      }
+    }
+    // 返回按日期排序的分组数据
+    final sortedEntries = groupedMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
+    return Map.fromEntries(sortedEntries);
+  }
+
+  static Map<DateTime, List<String>> groupVideoFileByDate(List<String> filePaths) {
+    final Map<DateTime, List<String>> groupedMap = {};
+    for (var video in filePaths) {
+      // 根据媒体文件类型提取日期
+      if (!basename(video).startsWith('video-')) continue;
+      final uuid = video.split('video-')[1].split('.')[0];
+      final dateTime = MediaUtil.extractDateFromUUID(uuid);
+      if (dateTime != null) {
+        // 获取日期部分
+        final dateOnly = DateTime(dateTime.year, dateTime.month, dateTime.day);
+        groupedMap.putIfAbsent(dateOnly, () => []).add(video);
+      }
+    }
+    // 返回按日期排序的分组数据
+    final sortedEntries = groupedMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
+    return Map.fromEntries(sortedEntries);
+  }
+
+  static Map<DateTime, List<String>> groupAudioFileByDate(List<String> filePaths) {
+    final Map<DateTime, List<String>> groupedMap = {};
+    for (var audio in filePaths) {
+      // 根据媒体文件类型提取日期
+      final uuid = audio.split('audio-')[1].split('.')[0];
+      final dateTime = MediaUtil.extractDateFromUUID(uuid);
+      if (dateTime != null) {
+        // 获取日期部分
+        final dateOnly = DateTime(dateTime.year, dateTime.month, dateTime.day);
+        groupedMap.putIfAbsent(dateOnly, () => []).add(audio);
+      }
+    }
+    // 返回按日期排序的分组数据
+    final sortedEntries = groupedMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
+    return Map.fromEntries(sortedEntries);
   }
 }

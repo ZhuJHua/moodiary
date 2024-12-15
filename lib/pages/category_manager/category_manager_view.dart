@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
 
+import '../../main.dart';
 import 'category_manager_logic.dart';
 
 class CategoryManagerPage extends StatelessWidget {
@@ -13,7 +13,6 @@ class CategoryManagerPage extends StatelessWidget {
     final logic = Bind.find<CategoryManagerLogic>();
     final state = Bind.find<CategoryManagerLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
-    final i18n = AppLocalizations.of(context)!;
 
     Widget inputDialog(Function() operate) {
       return AlertDialog(
@@ -35,8 +34,8 @@ class CategoryManagerPage extends StatelessWidget {
               onPressed: () {
                 Get.backLegacy();
               },
-              child: Text(i18n.cancel)),
-          TextButton(onPressed: operate, child: Text(i18n.ok))
+              child: Text(l10n.cancel)),
+          TextButton(onPressed: operate, child: Text(l10n.ok))
         ],
       );
     }

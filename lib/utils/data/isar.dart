@@ -187,21 +187,37 @@ class IsarUtil {
     return _isar.categorys.get(id);
   }
 
+  // 插入一个分类
   static Future<bool> insertACategory(Category category) async {
     return await _isar.writeAsync((isar) {
-      if (isar.categorys.where().categoryNameEqualTo(category.categoryName).isEmpty()) {
-        category.id = const Uuid().v7();
-        isar.categorys.put(category);
-        return true;
-      } else {
-        return false;
+      // 查询数据库中是否有同名但 ID 不同的分类
+      final existingCategory = isar.categorys.where().categoryNameEqualTo(category.categoryName).findFirst();
+      if (existingCategory != null && existingCategory.id != category.id) {
+        // 如果同名但 ID 不同，则修改分类名称并添加随机后缀
+        category.categoryName = '${category.categoryName}_${const Uuid().v4().substring(0, 4)}';
       }
+      // 为分类分配新的唯一 ID
+      category.id = const Uuid().v7();
+      // 将分类保存到数据库中
+      isar.categorys.put(category);
+      // 返回是否是新名称（true 表示没有冲突）
+      return existingCategory == null;
     });
   }
 
-  static Future<void> updateACategory(Category category) async {
-    await _isar.writeAsync((isar) {
+  // 更新一个分类
+  static Future<bool> updateACategory(Category category) async {
+    return await _isar.writeAsync((isar) {
+      // 查询数据库中是否有同名但 ID 不同的分类
+      final existingCategory = isar.categorys.where().categoryNameEqualTo(category.categoryName).findFirst();
+      if (existingCategory != null && existingCategory.id != category.id) {
+        // 如果同名但 ID 不同，则修改分类名称并添加随机后缀
+        category.categoryName = '${category.categoryName}_${const Uuid().v4().substring(0, 4)}';
+      }
+      // 将分类保存到数据库中
       isar.categorys.put(category);
+      // 返回是否是新名称（true 表示没有冲突）
+      return existingCategory == null;
     });
   }
 
@@ -325,6 +341,36 @@ class IsarUtil {
       });
     }
 
+    isar.close();
+  }
+
+  /// 2.6.3 修复
+  /// 修复之前webdav同步时，没有同步分类的问题
+  /// 遍历所有日记，如果本地没有日记的分类，就创建一个分类，名称为分类名
+  static void fixV2_6_3(String dir) {
+    var isar = Isar.open(
+      schemas: [DiarySchema, CategorySchema],
+      directory: dir,
+    );
+    final countDiary = isar.diarys.where().count();
+    for (var i = 0; i < countDiary; i += 50) {
+      var diaries = isar.diarys.where().findAll(offset: i, limit: 50);
+      var startIndex = 0;
+      isar.write((isar) {
+        for (var diary in diaries) {
+          // 如果日记有分类，但是本地没有这个分类，就创建一个分类，名称为“修复分类+数字”
+          final id = diary.categoryId;
+          if (id != null && isar.categorys.where().idEqualTo(id).isEmpty()) {
+            isar.categorys.put(
+              Category()
+                ..id = id
+                ..categoryName = '已修复${const Uuid().v4().substring(0, 4)}',
+            );
+            startIndex++;
+          }
+        }
+      });
+    }
     isar.close();
   }
 

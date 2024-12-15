@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../main.dart';
+
 class AppColor {
   static List<Color> themeColorList = [
     //群青
@@ -13,6 +15,17 @@ class AppColor {
     //瑾瑜
     const Color(0xFF1E2732),
   ];
+
+  static String colorName(index) {
+    return switch (index) {
+      0 => l10n.colorNameQunQin,
+      1 => l10n.colorNameJiHe,
+      2 => l10n.colorNameQinDai,
+      3 => l10n.colorNameXianYe,
+      4 => l10n.colorNameJinYu,
+      _ => l10n.colorNameSystem
+    };
+  }
 
   static List<Color> emoColorList = [const Color(0xFFFA4659), const Color(0xFF2EB872)];
 }

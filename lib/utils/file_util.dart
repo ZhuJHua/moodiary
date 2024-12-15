@@ -1,10 +1,13 @@
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
+import 'package:get/get.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../common/models/isar/diary.dart';
+import '../common/values/media_type.dart';
+import '../components/audio_player/audio_player_logic.dart';
 import 'data/isar.dart';
 import 'data/pref.dart';
 
@@ -25,9 +28,9 @@ class FileUtil {
     }
   }
 
-  static File getErrorLogFile() {
+  static String getErrorLogFilePath() {
     //打开文件
-    return File(join(_filePath, 'error.log'));
+    return join(_filePath, 'error.log');
   }
 
   //删除指定文件夹
@@ -208,5 +211,54 @@ class FileUtil {
     await deleteMediaFiles(oldDiary.videoName, newDiary.videoName, 'video');
     await deleteMediaFiles(oldDiary.audioName, newDiary.audioName, 'audio');
     await deleteMediaFiles(oldDiary.videoName, newDiary.videoName, 'thumbnail');
+  }
+
+  static Future<void> cleanFile() async {
+    // 获取各类型的所有文件路径并转换为Set以提高查找效率
+    final imageFiles = (await FileUtil.getDirFileName(MediaType.image.value)).toSet();
+    final audioFiles = (await FileUtil.getDirFileName(MediaType.audio.value)).toSet();
+    final videoFiles = (await FileUtil.getDirFileName(MediaType.video.value)).toSet();
+
+    // 用于存储日记中引用的文件名的Set
+    final usedImages = <String>{};
+    final usedAudios = <String>{};
+    final usedVideos = <String>{};
+
+    // 获取日记总数
+    final count = IsarUtil.countAllDiary();
+
+    // 分批获取日记并收集引用的文件名
+    const batchSize = 50;
+    for (int i = 0; i < count; i += batchSize) {
+      final diaryList = await IsarUtil.getDiary(i, batchSize);
+      for (var diary in diaryList) {
+        usedImages.addAll(diary.imageName);
+        usedAudios.addAll(diary.audioName);
+        usedVideos.addAll(diary.videoName);
+        for (var name in diary.videoName) {
+          var thumbnailName = 'thumbnail-${name.substring(6, 42)}.jpeg';
+          usedVideos.add(thumbnailName);
+        }
+      }
+    }
+
+    // 计算需要删除的文件
+    final imagesToDelete = imageFiles.difference(usedImages);
+    final audiosToDelete = audioFiles.difference(usedAudios);
+    final videosToDelete = videoFiles.difference(usedVideos);
+
+    // delete controller when need
+    for (var path in audiosToDelete) {
+      if (Bind.isRegistered<AudioPlayerLogic>(tag: path)) {
+        Bind.delete<AudioPlayerLogic>(tag: path);
+      }
+
+      // 并行删除文件
+      await Future.wait([
+        FileUtil.deleteMediaFiles(imagesToDelete, MediaType.image.value),
+        FileUtil.deleteMediaFiles(audiosToDelete, MediaType.audio.value),
+        FileUtil.deleteMediaFiles(videosToDelete, MediaType.video.value),
+      ]);
+    }
   }
 }

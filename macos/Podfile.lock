@@ -36,6 +36,8 @@ PODS:
     - FlutterMacOS
   - media_kit_video (0.0.1):
     - FlutterMacOS
+  - network_info_plus (0.0.1):
+    - FlutterMacOS
   - ObjectBox (4.0.1)
   - objectbox_flutter_libs (0.0.1):
     - FlutterMacOS
@@ -91,6 +93,7 @@ DEPENDENCIES:
   - media_kit_libs_macos_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_libs_macos_video/macos`)
   - media_kit_native_event_loop (from `Flutter/ephemeral/.symlinks/plugins/media_kit_native_event_loop/macos`)
   - media_kit_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos`)
+  - network_info_plus (from `Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos`)
   - objectbox_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/objectbox_flutter_libs/macos`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
@@ -146,6 +149,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/media_kit_native_event_loop/macos
   media_kit_video:
     :path: Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos
+  network_info_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos
   objectbox_flutter_libs:
     :path: Flutter/ephemeral/.symlinks/plugins/objectbox_flutter_libs/macos
   package_info_plus:
@@ -181,20 +186,21 @@ SPEC CHECKSUMS:
   app_links: 10e0a0ab602ffaf34d142cd4862f29d34b303b2a
   audioplayers_darwin: dcad41de4fbd0099cb3749f7ab3b0cb8f70b810c
   bitsdojo_window_macos: 44e3b8fe3dd463820e0321f6256c5b1c16bb6a00
-  connectivity_plus: 4c41c08fc6d7c91f63bc7aec70ffe3730b04f563
+  connectivity_plus: 18382e7311ba19efcaee94442b23b32507b20695
   device_info_plus: 1b14eed9bf95428983aed283a8d51cce3d8c4215
   dynamic_color: 2eaa27267de1ca20d879fbd6e01259773fb1670f
   fc_native_video_thumbnail: 927d4dcfd4c7e9f2cc1a20bb52dfee83de3792c2
   file_selector_macos: cc3858c981fe6889f364731200d6232dac1d812d
   flutter_image_compress_macos: c26c3c13ea0f28ae6dea4e139b3292e7729f99f1
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  gal: 61e868295d28fe67ffa297fae6dacebf56fd53e1
+  gal: 6a522c75909f1244732d4596d11d6a2f86ff37a5
   geolocator_apple: 72a78ae3f3e4ec0db62117bd93e34523f5011d58
   isar_flutter_libs: 43385c99864c168fadba7c9adeddc5d38838ca6a
   local_auth_darwin: 66e40372f1c29f383a314c738c7446e2f7fdadc3
   media_kit_libs_macos_video: b3e2bbec2eef97c285f2b1baa7963c67c753fb82
   media_kit_native_event_loop: 81fd5b45192b72f8b5b69eaf5b540f45777eb8d5
   media_kit_video: c75b07f14d59706c775778e4dd47dd027de8d1e5
+  network_info_plus: 2cb02d8435635eae13b3b79279681985121cf30c
   ObjectBox: 0bc4bb75eea85f6af06b369148b334c2056bbc29
   objectbox_flutter_libs: 769e6f44f7381c8a8e46a2ed5c71c6068bb476f7
   package_info_plus: 12f1c5c2cfe8727ca46cbd0b26677728972d9a5b

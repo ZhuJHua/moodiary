@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,6 +10,7 @@ import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/components/audio_player/audio_player_view.dart';
 import 'package:mood_diary/components/category_add/category_add_view.dart';
+import 'package:mood_diary/components/expand_button/expand_button_view.dart';
 import 'package:mood_diary/components/lottie_modal/lottie_modal.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
 import 'package:mood_diary/components/quill_embed/image_embed.dart';
@@ -21,6 +21,7 @@ import 'package:mood_diary/utils/theme_util.dart';
 
 import '../../common/values/diary_type.dart';
 import '../../components/quill_embed/audio_embed.dart';
+import '../../main.dart';
 import '../../utils/file_util.dart';
 import 'edit_logic.dart';
 
@@ -48,7 +49,7 @@ class EditPage extends StatelessWidget {
     final state = Bind.find<EditLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.sizeOf(context);
-    final i18n = AppLocalizations.of(context)!;
+
     final textStyle = Theme.of(context).textTheme;
 
     Widget buildAddContainer(Widget icon) {
@@ -595,12 +596,12 @@ class EditPage extends StatelessWidget {
                                     onPressed: () {
                                       logic.cancelAddTag();
                                     },
-                                    child: Text(i18n.cancel)),
+                                    child: Text(l10n.cancel)),
                                 TextButton(
                                     onPressed: () {
                                       logic.addTag();
                                     },
-                                    child: Text(i18n.ok))
+                                    child: Text(l10n.ok))
                               ],
                             );
                           });
@@ -718,65 +719,17 @@ class EditPage extends StatelessWidget {
           config: QuillSimpleToolbarConfig(
             showFontFamily: false,
             showFontSize: false,
-            showColorButton: false,
-            showBackgroundColorButton: false,
+            showBackgroundColorButton: true,
             showAlignmentButtons: true,
             showClipboardPaste: false,
             showClipboardCut: false,
             showClipboardCopy: false,
             showIndent: false,
             showDividers: false,
-            headerStyleType: HeaderStyleType.buttons,
             multiRowsDisplay: false,
+            headerStyleType: HeaderStyleType.original,
             showLink: false,
             embedButtons: [
-              if (state.type == DiaryType.richText) ...[
-                (context, embedContext) {
-                  return _buildToolBarButton(
-                    iconData: Icons.image,
-                    tooltip: 'Insert Image',
-                    onPressed: () async {
-                      await showDialog(
-                        context: context,
-                        builder: (context) {
-                          return buildPickImage();
-                        },
-                      );
-                    },
-                  );
-                },
-                (context, embedContext) {
-                  return _buildToolBarButton(
-                    iconData: Icons.movie,
-                    tooltip: 'Insert Video',
-                    onPressed: () async {
-                      await showDialog(
-                        context: context,
-                        builder: (context) {
-                          return buildPickVideo();
-                        },
-                      );
-                    },
-                  );
-                },
-                (context, embedContext) {
-                  return _buildToolBarButton(
-                    iconData: Icons.audiotrack,
-                    tooltip: 'Insert Audio',
-                    onPressed: () async {
-                      await showModalBottomSheet(
-                        context: context,
-                        showDragHandle: true,
-                        useSafeArea: true,
-                        isScrollControlled: true,
-                        builder: (context) {
-                          return const RecordSheetComponent();
-                        },
-                      );
-                    },
-                  );
-                },
-              ],
               (context, embedContext) {
                 return _buildToolBarButton(
                   iconData: Icons.format_indent_increase,
@@ -790,20 +743,73 @@ class EditPage extends StatelessWidget {
       );
     }
 
-    Widget buildMoreButton() {
-      return IconButton.filled(
-        icon: const Icon(Icons.keyboard_command_key),
-        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            builder: (context) {
-              return buildDetail();
+    Widget richTextToolBar() {
+      return Row(
+        children: [
+          ExpandButtonComponent(operatorMap: {
+            Icons.keyboard_command_key: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return buildDetail();
+                },
+                showDragHandle: true,
+                useSafeArea: true,
+              );
             },
-            showDragHandle: true,
-            useSafeArea: true,
-          );
-        },
+            Icons.image_rounded: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return buildPickImage();
+                },
+              );
+            },
+            Icons.movie_rounded: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return buildPickVideo();
+                },
+              );
+            },
+            Icons.audiotrack_rounded: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return const RecordSheetComponent();
+                },
+                showDragHandle: true,
+                useSafeArea: true,
+              );
+            }
+          }),
+          Expanded(
+            child: buildToolBar(),
+          ),
+        ],
+      );
+    }
+
+    Widget textToolBar() {
+      return Row(
+        children: [
+          IconButton.filled(
+            icon: const Icon(Icons.keyboard_command_key),
+            style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return buildDetail();
+                },
+                showDragHandle: true,
+                useSafeArea: true,
+              );
+            },
+          ),
+          Expanded(child: buildToolBar()),
+        ],
       );
     }
 
@@ -851,13 +857,10 @@ class EditPage extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Row(
-              spacing: 8.0,
-              children: [
-                buildMoreButton(),
-                Expanded(child: buildToolBar()),
-              ],
-            ),
+            child: switch (state.type) {
+              DiaryType.text => textToolBar(),
+              DiaryType.richText => richTextToolBar(),
+            },
           )
         ],
       );

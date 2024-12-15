@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
-import '../../common/values/webdav.dart';
-import '../../utils/webdav_util.dart';
+import '../../../common/values/webdav.dart';
+import '../../../utils/webdav_util.dart';
 import 'web_dav_dashboard_logic.dart';
 import 'web_dav_dashboard_state.dart';
 
@@ -172,6 +172,7 @@ class WebDavDashboardComponent extends StatelessWidget {
         assignId: true,
         builder: (_) {
           return Stack(
+            alignment: Alignment.center,
             children: [
               ListView(
                 children: [

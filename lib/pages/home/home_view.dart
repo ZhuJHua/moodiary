@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
@@ -13,6 +12,7 @@ import 'package:mood_diary/pages/home/media/media_view.dart';
 import 'package:mood_diary/pages/home/setting/setting_view.dart';
 import 'package:unicons/unicons.dart';
 
+import '../../main.dart';
 import 'home_logic.dart';
 
 class HomePage extends StatelessWidget {
@@ -23,7 +23,7 @@ class HomePage extends StatelessWidget {
     final logic = Bind.find<HomeLogic>();
     final state = Bind.find<HomeLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
-    final i18n = AppLocalizations.of(context)!;
+
     final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.paddingOf(context);
     final textStyle = Theme.of(context).textTheme;
@@ -196,124 +196,69 @@ class HomePage extends StatelessWidget {
           });
     }
 
+    Widget buildDiaryFab() {
+      return SizedBox(
+        height: 56 + 46 + 46 + 16,
+        width: 56 + 32 + textStyle.labelMedium!.fontSize! * 3,
+        child: Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            buildToTopButton(),
+            buildAnimatedActionButton(
+                label: '纯文字',
+                onTap: () async {
+                  await logic.toEditPage(type: DiaryType.text);
+                },
+                iconData: FontAwesomeIcons.font,
+                index: 2),
+            buildAnimatedActionButton(
+                label: '富文本',
+                onTap: () async {
+                  await logic.toEditPage(type: DiaryType.richText);
+                },
+                iconData: FontAwesomeIcons.feather,
+                index: 1),
+            buildFabButton(),
+          ],
+        ),
+      );
+    }
+
     Widget buildFab() {
-      return state.navigatorIndex == 0
-          ? SizedBox(
-              height: 56 + 46 + 46 + 16,
-              width: 56 + 32 + textStyle.labelMedium!.fontSize! * 3,
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  buildToTopButton(),
-                  buildAnimatedActionButton(
-                      label: '纯文字',
-                      onTap: () async {
-                        await logic.toEditPage(type: DiaryType.text);
-                      },
-                      iconData: FontAwesomeIcons.font,
-                      index: 2),
-                  buildAnimatedActionButton(
-                      label: '富文本',
-                      onTap: () async {
-                        await logic.toEditPage(type: DiaryType.richText);
-                      },
-                      iconData: FontAwesomeIcons.feather,
-                      index: 1),
-                  buildFabButton(),
-                ],
-              ),
-            )
-          : const SizedBox.shrink();
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: switch (state.navigatorIndex) {
+          0 => buildDiaryFab(),
+          _ => const SizedBox.shrink(
+              key: ValueKey('empty'),
+            ),
+        },
+      );
     }
 
     // 导航栏
     final List<NavigationDestination> destinations = [
       NavigationDestination(
         icon: const Icon(Icons.article_outlined),
-        label: i18n.homeNavigatorDiary,
+        label: l10n.homeNavigatorDiary,
         selectedIcon: const Icon(Icons.article),
       ),
       NavigationDestination(
         icon: const Icon(UniconsLine.calender),
-        label: i18n.homeNavigatorCalendar,
+        label: l10n.homeNavigatorCalendar,
         selectedIcon: const Icon(UniconsSolid.calender),
       ),
       NavigationDestination(
         icon: const Icon(UniconsLine.image_v),
-        label: i18n.homeNavigatorMedia,
+        label: l10n.homeNavigatorMedia,
         selectedIcon: const Icon(UniconsSolid.image_v),
       ),
       NavigationDestination(
         icon: const Icon(UniconsLine.layer_group),
-        label: i18n.homeNavigatorSetting,
+        label: l10n.homeNavigatorSetting,
         selectedIcon: const Icon(UniconsSolid.layer_group),
       ),
     ];
-    // Widget buildWindowsBar() {
-    //   return Container(
-    //     color: Platform.isMacOS ? colorScheme.surface : colorScheme.surfaceContainer,
-    //     child: Row(
-    //       mainAxisAlignment: Platform.isMacOS ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
-    //       children: [
-    //         Padding(
-    //           padding: const EdgeInsets.only(left: 8.0),
-    //           child: Row(
-    //             spacing: 8.0,
-    //             children: [
-    //               if (!Platform.isMacOS) ...[
-    //                 ClipRRect(
-    //                   borderRadius: const BorderRadius.all(Radius.circular(4.0)),
-    //                   child: Image.asset(
-    //                     'assets/icon/icon.png',
-    //                     height: 16.0,
-    //                     width: 16.0,
-    //                   ),
-    //                 )
-    //               ],
-    //               Text(state.hitokoto),
-    //             ],
-    //           ),
-    //         ),
-    //         if (!Platform.isMacOS) ...[
-    //           Row(
-    //             children: [
-    //               MinimizeWindowButton(
-    //                 colors: WindowButtonColors(
-    //                   iconNormal: colorScheme.secondary,
-    //                   mouseDown: colorScheme.secondaryContainer,
-    //                   normal: colorScheme.surfaceContainer,
-    //                   iconMouseDown: colorScheme.secondary,
-    //                   mouseOver: colorScheme.secondaryContainer,
-    //                   iconMouseOver: colorScheme.onSecondaryContainer,
-    //                 ),
-    //               ),
-    //               MaximizeWindowButton(
-    //                 colors: WindowButtonColors(
-    //                   iconNormal: colorScheme.secondary,
-    //                   mouseDown: colorScheme.secondaryContainer,
-    //                   normal: colorScheme.surfaceContainer,
-    //                   iconMouseDown: colorScheme.secondary,
-    //                   mouseOver: colorScheme.secondaryContainer,
-    //                   iconMouseOver: colorScheme.onSecondaryContainer,
-    //                 ),
-    //               ),
-    //               CloseWindowButton(
-    //                 colors: WindowButtonColors(
-    //                   iconNormal: colorScheme.secondary,
-    //                   mouseDown: colorScheme.secondaryContainer,
-    //                   normal: colorScheme.surfaceContainer,
-    //                   iconMouseDown: colorScheme.secondary,
-    //                   mouseOver: colorScheme.errorContainer,
-    //                   iconMouseOver: colorScheme.onErrorContainer,
-    //                 ),
-    //               ),
-    //             ],
-    //           )
-    //         ]
-    //       ],
-    //     ),
-    //   );
-    // }
 
     Widget buildNavigatorBar() {
       var navigatorBarHeight = state.navigatorBarHeight + padding.bottom;

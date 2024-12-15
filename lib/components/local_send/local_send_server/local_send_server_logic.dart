@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' as flutter;
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
@@ -71,7 +72,8 @@ class LocalSendServerLogic extends GetxController {
         final name = formData.name;
         // 读取日记 JSON 数据
         if (name == 'diary') {
-          diary = Diary.fromJson(jsonDecode(await formData.part.readString()));
+          diary = await flutter.compute(
+              Diary.fromJson, jsonDecode(await formData.part.readString()) as Map<String, dynamic>);
         } else if (name == 'image' || name == 'video' || name == 'thumbnail' || name == 'audio') {
           if (formData.filename != null) {
             // 写入文件到目录
@@ -94,7 +96,7 @@ class LocalSendServerLogic extends GetxController {
     }
     // 如果分类不为空，插入一个分类
     if (categoryName != null) {
-      await IsarUtil.insertACategory(Category()
+      await IsarUtil.updateACategory(Category()
         ..id = diary.categoryId!
         ..categoryName = categoryName);
     }
@@ -102,23 +104,6 @@ class LocalSendServerLogic extends GetxController {
     await IsarUtil.insertADiary(diary);
     await Bind.find<DiaryLogic>().refreshAll();
     state.receiveCount.value += 1;
-    return shelf.Response.ok('Data and files received successfully');
-  }
-
-  Future<shelf.Response> _handleAllData(shelf.Request request) async {
-    // 处理表单数据
-    if (request.formData() case var form?) {
-      await for (final formData in form.formData) {
-        final name = formData.name;
-        if (formData.filename != null) {
-          final tempFile = File(FileUtil.getCachePath(formData.filename!));
-          final sink = tempFile.openWrite();
-          await formData.part.pipe(sink);
-          await sink.close();
-          await FileUtil.extractFile(tempFile.path);
-        }
-      }
-    }
     return shelf.Response.ok('Data and files received successfully');
   }
 }

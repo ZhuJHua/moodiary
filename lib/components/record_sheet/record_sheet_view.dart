@@ -25,7 +25,7 @@ class RecordSheetComponent extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                height: 100,
+                height: 150,
                 child: Obx(() {
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 100),

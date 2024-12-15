@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/components/tile/setting_tile.dart';
 
+import '../../main.dart';
 import 'diary_setting_logic.dart';
 
 class DiarySettingPage extends StatelessWidget {
@@ -14,7 +14,6 @@ class DiarySettingPage extends StatelessWidget {
     final state = Bind.find<DiarySettingLogic>().state;
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    final i18n = AppLocalizations.of(context)!;
 
     // 通用设置
     List<Widget> buildCommon() {
@@ -112,15 +111,15 @@ class DiarySettingPage extends StatelessWidget {
           child: Column(
             children: [
               ListTile(
-                title: Text(i18n.settingImageQuality),
-                subtitle: Text(i18n.settingImageQualityDes),
+                title: Text(l10n.settingImageQuality),
+                subtitle: Text(l10n.settingImageQualityDes),
                 leading: const Icon(Icons.gradient_outlined),
                 trailing: Obx(() {
                   return Text(
                     switch (state.quality.value) {
-                      0 => i18n.qualityLow,
-                      1 => i18n.qualityMedium,
-                      2 => i18n.qualityHigh,
+                      0 => l10n.qualityLow,
+                      1 => l10n.qualityMedium,
+                      2 => l10n.qualityHigh,
                       int() => throw UnimplementedError(),
                     },
                     style: textStyle.bodySmall!.copyWith(
@@ -134,13 +133,13 @@ class DiarySettingPage extends StatelessWidget {
                       builder: (context) {
                         return Obx(() {
                           return SimpleDialog(
-                            title: Text(i18n.settingImageQuality),
+                            title: Text(l10n.settingImageQuality),
                             children: [
                               SimpleDialogOption(
                                 child: Row(
                                   spacing: 8.0,
                                   children: [
-                                    Text(i18n.qualityLow),
+                                    Text(l10n.qualityLow),
                                     if (state.quality.value == 0) ...[
                                       const Icon(Icons.check),
                                     ],
@@ -154,7 +153,7 @@ class DiarySettingPage extends StatelessWidget {
                                 child: Row(
                                   spacing: 8.0,
                                   children: [
-                                    Text(i18n.qualityMedium),
+                                    Text(l10n.qualityMedium),
                                     if (state.quality.value == 1) ...[
                                       const Icon(Icons.check),
                                     ],
@@ -168,7 +167,7 @@ class DiarySettingPage extends StatelessWidget {
                                 child: Row(
                                   spacing: 8.0,
                                   children: [
-                                    Text(i18n.qualityHigh),
+                                    Text(l10n.qualityHigh),
                                     if (state.quality.value == 2) ...[
                                       const Icon(Icons.check),
                                     ],

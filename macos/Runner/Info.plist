@@ -24,13 +24,17 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>$(PRODUCT_COPYRIGHT)</string>
+	<key>NSLocationUsageDescription</key>
+	<string></string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Some message to describe why you need this permission</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs access to location.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string></string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSMicrophoneUsageDescription</key>
-    <string>Some message to describe why you need this permission</string>
-    <key>NSLocationUsageDescription</key>
-    <string>This app needs access to location.</string>
 </dict>
 </plist>

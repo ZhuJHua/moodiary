@@ -13,9 +13,8 @@ import 'package:mood_diary/common/models/hunyuan.dart';
 import 'package:mood_diary/common/models/image.dart';
 import 'package:mood_diary/common/models/weather.dart';
 import 'package:mood_diary/utils/http_util.dart';
-import 'package:mood_diary/utils/permission_util.dart';
+import 'package:mood_diary/utils/notice_util.dart';
 import 'package:mood_diary/utils/signature_util.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../utils/data/pref.dart';
 
@@ -51,7 +50,19 @@ class Api {
 
   static Future<List<String>?> updatePosition() async {
     Position? position;
-    if (await PermissionUtil.checkPermission(Permission.location) && await Geolocator.isLocationServiceEnabled()) {
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        NoticeUtil.showToast('请开启定位权限');
+        return null;
+      }
+      if (permission == LocationPermission.deniedForever) {
+        NoticeUtil.showToast('请前往设置开启定位权限');
+        return null;
+      }
+    }
+    if (await Geolocator.isLocationServiceEnabled()) {
       position = await Geolocator.getLastKnownPosition(forceAndroidLocationManager: true);
       position ??= await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
     }

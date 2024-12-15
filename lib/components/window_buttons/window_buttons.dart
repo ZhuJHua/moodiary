@@ -7,8 +7,6 @@ import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/utils/cache_util.dart';
 
 class WindowButtons extends StatelessWidget {
-  final ColorScheme colorScheme;
-
   final RxString hitokoto = ''.obs;
 
   //获取一言
@@ -21,10 +19,11 @@ class WindowButtons extends StatelessWidget {
     }
   }
 
-  WindowButtons({super.key, required this.colorScheme});
+  WindowButtons({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     //getHitokoto();
     final buttonColors = WindowButtonColors(
       iconNormal: colorScheme.secondary,

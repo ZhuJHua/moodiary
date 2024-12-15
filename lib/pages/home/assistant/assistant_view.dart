@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:mood_diary/common/values/border.dart';
 
+import '../../../main.dart';
 import 'assistant_logic.dart';
 
 class AssistantPage extends StatelessWidget {
@@ -16,7 +16,6 @@ class AssistantPage extends StatelessWidget {
     final logic = Bind.find<AssistantLogic>();
     final state = Bind.find<AssistantLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
-    final i18n = AppLocalizations.of(context)!;
 
     final modelMap = {
       0: 'hunyuan-lite',
@@ -153,7 +152,7 @@ class AssistantPage extends StatelessWidget {
                       controller: logic.scrollController,
                       slivers: [
                         SliverAppBar(
-                          title: Text(i18n.homeNavigatorAssistant),
+                          title: Text(l10n.homeNavigatorAssistant),
                           pinned: true,
                           actions: [
                             Obx(() {

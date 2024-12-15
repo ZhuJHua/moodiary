@@ -38,8 +38,10 @@ class CategoryManagerLogic extends GetxController {
         await getCategory();
         await diaryLogic.updateCategory();
       } else {
-        textEditingController.clear();
-        NoticeUtil.showToast('分类已存在');
+        Get.backLegacy();
+        await getCategory();
+        await diaryLogic.updateCategory();
+        NoticeUtil.showToast('分类已存在，已自动添加后缀');
       }
     }
   }

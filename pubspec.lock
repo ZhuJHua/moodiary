@@ -900,10 +900,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_quill
-      sha256: "43ca068c81fcdad3771c027fdd0bdd49c9d3e518ca1ed1f210ce6f5923684bb9"
+      sha256: "97ca7ecf6177c45c171f4efa19bc5ea684bba43c53d973fbc8f38453ac5bd747"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "11.0.0-dev.14"
+    version: "11.0.0-dev.16"
   flutter_quill_delta_from_html:
     dependency: transitive
     description:
@@ -916,10 +916,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_quill_extensions
-      sha256: "69f2dc335628b87d674e813bdcc9c58616874e2b48f13b6680150a34a2573906"
+      sha256: "2ec12c1aed23a8334fbf1acb1e79b8f66d9814ce39b123c7a32613fb5b57db85"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "11.0.0-dev.4"
+    version: "11.0.0-dev.7"
   flutter_rust_bridge:
     dependency: "direct main"
     description:
@@ -942,10 +942,10 @@ packages:
     dependency: "direct main"
     description:
       name: fluttertoast
-      sha256: "95f349437aeebe524ef7d6c9bde3e6b4772717cf46a0eb6a3ceaddc740b297cc"
+      sha256: "24467dc20bbe49fd63e57d8e190798c4d22cbbdac30e54209d153a15273721d1"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "8.2.8"
+    version: "8.2.10"
   font_awesome_flutter:
     dependency: "direct main"
     description:
@@ -971,21 +971,13 @@ packages:
     source: hosted
     version: "2.4.0"
   gal:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: gal
-      sha256: "54c9b72528efce7c66234f3b6dd01cb0304fd8af8196de15571d7bdddb940977"
+      sha256: "2771519c8b29f784d5e27f4efc2667667eef51c6c47cccaa0435a8fe8aa208e4"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.3.0"
-  gal_linux:
-    dependency: transitive
-    description:
-      name: gal_linux
-      sha256: "0040d61843134cc5a93e4597080a86f2ba073217957e28b2a684b4d8b050873c"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.1.2"
+    version: "2.3.1"
   geolocator:
     dependency: "direct main"
     description:
@@ -1814,10 +1806,10 @@ packages:
     dependency: transitive
     description:
       name: quill_native_bridge
-      sha256: "0b3200c57bb4f1f12d6c764648d42482891f20f12024c75fe3479cafc1e132c9"
+      sha256: bda0f0ad9bc160dcdd4bd2b378a7ae8bdb55c3d4b7301bf739d5e3b065ee5e82
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "10.7.11"
+    version: "11.0.0"
   quill_native_bridge_android:
     dependency: transitive
     description:
@@ -1854,10 +1846,10 @@ packages:
     dependency: transitive
     description:
       name: quill_native_bridge_platform_interface
-      sha256: "2d71b6c5106db0a4b1d788640d1b949ccdd0e570b5a5e0384f7b28be9630a94a"
+      sha256: ea48bd12bf426741747ec8a575b122350971f338a75049099b349c63447582a2
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.0.1"
+    version: "0.0.1+1"
   quill_native_bridge_web:
     dependency: transitive
     description:
@@ -1965,11 +1957,12 @@ packages:
   rive_animated_icon:
     dependency: "direct main"
     description:
-      name: rive_animated_icon
-      sha256: f789e9f026c3e5a3bcb369db9baef0637ddd15d9a7c4fe4749505202cdc11942
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.0.2"
+      path: "."
+      ref: HEAD
+      resolved-ref: "7ab479ea6747480038fc24914d6b642984fd5bc9"
+      url: "https://github.com/ZhuJHua/rive_animated_icons.git"
+    source: git
+    version: "2.0.3"
   rive_common:
     dependency: transitive
     description:
@@ -2057,6 +2050,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.0.1"
+  scrollable_positioned_list:
+    dependency: "direct main"
+    description:
+      name: scrollable_positioned_list
+      sha256: "1b54d5f1329a1e263269abc9e2543d90806131aa14fe7c6062a8054d57249287"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.3.8"
   share_plus:
     dependency: "direct main"
     description:
@@ -2085,18 +2086,18 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences_android
-      sha256: "7f172d1b06de5da47b6264c2692ee2ead20bbbc246690427cdb4fc301cd0c549"
+      sha256: "02a7d8a9ef346c9af715811b01fbd8e27845ad2c41148eefd31321471b41863d"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.3.4"
+    version: "2.4.0"
   shared_preferences_foundation:
     dependency: transitive
     description:
       name: shared_preferences_foundation
-      sha256: "07e050c7cd39bad516f8d64c455f04508d09df104be326d8c02551590a0d513d"
+      sha256: "6a52cfcdaeac77cad8c97b539ff688ccfc458c007b4db12be584fbe5c0e49e03"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.5.3"
+    version: "2.5.4"
   shared_preferences_linux:
     dependency: transitive
     description:

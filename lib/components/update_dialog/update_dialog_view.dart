@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/models/github.dart';
 import 'package:mood_diary/components/update_dialog/update_dialog_logic.dart';
+
+import '../../main.dart';
 
 class UpdateDialogComponent extends StatelessWidget {
   const UpdateDialogComponent({super.key, required this.githubRelease});
@@ -12,8 +13,7 @@ class UpdateDialogComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Get.put(UpdateDialogLogic());
-    // final state = Bind.find<UpdateDialogLogic>().state;
-    final i18n = AppLocalizations.of(context)!;
+
     final colorScheme = Theme.of(context).colorScheme;
     return GetBuilder<UpdateDialogLogic>(
       assignId: true,
@@ -40,7 +40,7 @@ class UpdateDialogComponent extends StatelessWidget {
                 onPressed: () {
                   Get.backLegacy();
                 },
-                child: Text(i18n.cancel)),
+                child: Text(l10n.cancel)),
             FilledButton(
               onPressed: () async {
                 Get.backLegacy();
