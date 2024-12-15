@@ -6,11 +6,11 @@ list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   audioplayers_windows
   bitsdojo_window_windows
-        connectivity_plus
+  connectivity_plus
   dynamic_color
   fc_native_video_thumbnail
   file_selector_windows
-        gal
+  gal
   geolocator_windows
   isar_flutter_libs
   local_auth_windows
@@ -19,7 +19,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   objectbox_flutter_libs
   permission_handler_windows
   record_windows
-        rive_common
+  rive_common
   screen_brightness_windows
   share_plus
   url_launcher_windows

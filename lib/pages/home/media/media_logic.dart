@@ -66,7 +66,7 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
   Future<void> cleanFile() async {
     state.isCleaning = true;
     update(['modal']);
-    await FileUtil.cleanFile();
+    await FileUtil.cleanFile(FileUtil.getRealPath('database', ''));
     await getFilePath(state.mediaType.value);
     state.isCleaning = false;
     update(['modal']);

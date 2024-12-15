@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:get/get.dart';
+import 'package:isar/isar.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../common/models/isar/category.dart';
 import '../common/models/isar/diary.dart';
 import '../common/values/media_type.dart';
 import '../components/audio_player/audio_player_logic.dart';
@@ -213,7 +215,11 @@ class FileUtil {
     await deleteMediaFiles(oldDiary.videoName, newDiary.videoName, 'thumbnail');
   }
 
-  static Future<void> cleanFile() async {
+  static Future<void> cleanFile(String dir) async {
+    var isar = Isar.open(
+      schemas: [DiarySchema, CategorySchema],
+      directory: dir,
+    );
     // 获取各类型的所有文件路径并转换为Set以提高查找效率
     final imageFiles = (await FileUtil.getDirFileName(MediaType.image.value)).toSet();
     final audioFiles = (await FileUtil.getDirFileName(MediaType.audio.value)).toSet();
@@ -225,12 +231,12 @@ class FileUtil {
     final usedVideos = <String>{};
 
     // 获取日记总数
-    final count = IsarUtil.countAllDiary();
+    final count = isar.diarys.count();
 
     // 分批获取日记并收集引用的文件名
     const batchSize = 50;
     for (int i = 0; i < count; i += batchSize) {
-      final diaryList = await IsarUtil.getDiary(i, batchSize);
+      final diaryList = await isar.diarys.where().findAllAsync(offset: i, limit: batchSize);
       for (var diary in diaryList) {
         usedImages.addAll(diary.imageName);
         usedAudios.addAll(diary.audioName);
