@@ -16,10 +16,12 @@ class FileOutput extends LogOutput {
     this.encoding = utf8,
   });
 
-  /// 初始化文件输出流
   Future<void> _initializeSink() async {
     if (_sink == null) {
       file = File(FileUtil.getErrorLogPath());
+      if (!(await file!.exists())) {
+        await file!.create(recursive: true);
+      }
       _sink = file!.openWrite(
         mode: overrideExisting ? FileMode.write : FileMode.append,
         encoding: encoding,
@@ -30,7 +32,7 @@ class FileOutput extends LogOutput {
   @override
   void output(OutputEvent event) async {
     await _initializeSink();
-    if (_sink != null && event.level.index >= Level.info.index) {
+    if (event.level.value >= Level.warning.value) {
       _sink?.writeAll(event.lines, '\n');
     }
   }

@@ -7,14 +7,11 @@ class Processing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return RiveAnimatedIcon(
+    return LoopingRiveIcon(
       riveIcon: RiveIcon.reload,
       width: 80,
       height: 80,
       color: colorScheme.onSurface,
-      loopAnimation: true,
-      splashFactory: NoSplash.splashFactory,
-      mouseCursor: SystemMouseCursors.move,
       strokeWidth: 4.0,
     );
   }
@@ -26,14 +23,11 @@ class SearchLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return RiveAnimatedIcon(
+    return LoopingRiveIcon(
       riveIcon: RiveIcon.search,
       width: 80,
       height: 80,
       color: colorScheme.onSurface,
-      loopAnimation: true,
-      splashFactory: NoSplash.splashFactory,
-      mouseCursor: SystemMouseCursors.move,
       strokeWidth: 4.0,
     );
   }
@@ -45,14 +39,11 @@ class EditingLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return RiveAnimatedIcon(
+    return LoopingRiveIcon(
       riveIcon: RiveIcon.edit,
       width: 80,
       height: 80,
       color: colorScheme.onSurface,
-      loopAnimation: true,
-      splashFactory: NoSplash.splashFactory,
-      mouseCursor: SystemMouseCursors.move,
       strokeWidth: 4.0,
     );
   }
@@ -64,14 +55,11 @@ class NetworkLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return RiveAnimatedIcon(
+    return LoopingRiveIcon(
       riveIcon: RiveIcon.wifi,
       width: 80,
       height: 80,
       color: colorScheme.onSurface,
-      loopAnimation: true,
-      splashFactory: NoSplash.splashFactory,
-      mouseCursor: SystemMouseCursors.move,
       strokeWidth: 4.0,
     );
   }

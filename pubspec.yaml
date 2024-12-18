@@ -18,7 +18,7 @@ dependencies:
   flutter_drawing_board: 0.9.5
   flutter_displaymode: 0.6.0
   fl_chart: 0.69.2
-  file_picker: 8.1.4
+  file_picker: 8.1.6
   local_auth: 2.3.0
   local_auth_android: 1.0.46
   permission_handler: 11.3.1
@@ -96,6 +96,7 @@ dependencies:
   rive_animated_icon:
     git:
       url: https://github.com/ZhuJHua/rive_animated_icons.git
+      ref: feature/add-new-component
   network_info_plus: 6.1.2
   scrollable_positioned_list: 0.3.8
   flutter_localizations:
@@ -106,7 +107,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: 2.4.13
+  build_runner: 2.4.14
   flutter_launcher_icons: 0.14.2
   msix: 3.16.8
   flutter_lints: 5.0.0
