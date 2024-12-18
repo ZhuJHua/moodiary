@@ -156,3 +156,18 @@ This project is licensed under the AGPL-3.0 LICENSE, see the [LICENSE](LICENSE) 
 
 - Thanks to the Flutter team for the excellent framework.
 - Special thanks to the open source community for their valuable contributions.
+
+## 🥪 Sponsor
+
+You can buy me a sandwich to keep me motivated to continue developing.
+
+<img src="/Users/alex/project/moodiary/res/sponsor/wechat.jpg" style="width:300px" />
+
+### List of sponsors
+
+In no particular order
+
+| Sponsor                               | Price  |
+|---------------------------------------|--------|
+| [dsxksss](https://github.com/dsxksss) | 50 CNY |
+
