@@ -12,6 +12,7 @@ import '../../../utils/file_util.dart';
 import '../../../utils/http_util.dart';
 import '../../../utils/log_util.dart';
 import '../../../utils/notice_util.dart';
+import '../../../utils/send_util.dart';
 import 'local_send_client_state.dart';
 
 class LocalSendClientLogic extends GetxController {
@@ -161,15 +162,13 @@ class LocalSendClientLogic extends GetxController {
         await dio.MultipartFile.fromFile(filePath, filename: audioName),
       ));
     }
-    final startTime = DateTime.now();
-    // 发送请求并监听进度
+    final uploadSpeedCalculator = UploadSpeedCalculator();
     var response = await HttpUtil().upload(
       'http://${state.serverIp}:${state.serverPort}',
       data: formData,
       onSendProgress: (int sent, int total) {
-        final currentTime = DateTime.now();
-        final timeElapsed = currentTime.difference(startTime).inMilliseconds / 1000;
-        state.speed.value = sent / timeElapsed;
+        uploadSpeedCalculator.updateSpeed(sent);
+        state.speed.value = uploadSpeedCalculator.getSpeed();
         state.progress.value = sent / total;
       },
     );
@@ -209,15 +208,15 @@ class LocalSendClientLogic extends GetxController {
     // 添加 JSON 数据
     formData.files.add(MapEntry('file', await dio.MultipartFile.fromFile(filePath)));
 
-    final startTime = DateTime.now();
+    final uploadSpeedCalculator = UploadSpeedCalculator();
     // 发送请求并监听进度
     var response = await HttpUtil().upload(
       'http://${state.serverIp}:${state.serverPort}',
       data: formData,
       onSendProgress: (int sent, int total) {
-        final currentTime = DateTime.now();
-        final timeElapsed = currentTime.difference(startTime).inMilliseconds / 1000;
-        state.speed.value = sent / timeElapsed;
+        uploadSpeedCalculator.updateSpeed(sent);
+        final speed = uploadSpeedCalculator.getSpeed();
+        state.speed.value = speed;
         state.progress.value = sent / total;
       },
     );
