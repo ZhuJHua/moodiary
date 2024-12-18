@@ -15,7 +15,7 @@
   <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
   <img src="https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7">
 </div>
-   
+
 ## ✨ 功能特性
 
 - **跨平台支持**：🌍 兼容 Android、iOS\*、Windows\*、MacOS\*、Linux。
@@ -153,3 +153,18 @@
 
 - 感谢 Flutter 团队提供出色的框架。
 - 特别感谢开源社区的宝贵贡献。
+
+## 🥪 捐助
+
+可以给我买一个三明治，让我更有动力继续开发。
+
+<img src="res/sponsor/wechat.jpg" style="width:300px" alt="Sponsor"/>
+
+### 捐助者名单
+
+如果您想要出现在名单中，可以给我留言，排名不分先后。
+
+| 捐助者                                   | 金额     |
+|---------------------------------------|--------|
+| [dsxksss](https://github.com/dsxksss) | 50 CNY |
+
