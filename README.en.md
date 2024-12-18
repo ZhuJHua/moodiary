@@ -165,9 +165,10 @@ You can buy me a sandwich to keep me motivated to continue developing.
 
 ### List of sponsors
 
-If you want to be on the list, you can leave me a message, in no particular order.
+If you want to be on the list, you can leave your link in the comments, in no particular order.
 
 |                Sponsor                | Price  |
 |:-------------------------------------:|:------:|
 | [dsxksss](https://github.com/dsxksss) | 50 CNY |
 |                  沭飏秋                  | 10 CNY |
+|                  十一                   | 20 CNY |
