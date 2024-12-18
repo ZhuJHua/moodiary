@@ -161,11 +161,11 @@ This project is licensed under the AGPL-3.0 LICENSE, see the [LICENSE](LICENSE) 
 
 You can buy me a sandwich to keep me motivated to continue developing.
 
-<img src="/Users/alex/project/moodiary/res/sponsor/wechat.jpg" style="width:300px" />
+<img src="res/sponsor/wechat.jpg" style="width:300px"  alt="Sponsor"/>
 
 ### List of sponsors
 
-In no particular order
+If you want to be on the list, you can leave me a message, in no particular order.
 
 | Sponsor                               | Price  |
 |---------------------------------------|--------|

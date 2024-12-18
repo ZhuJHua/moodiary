@@ -158,11 +158,11 @@
 
 可以给我买一个三明治，让我更有动力继续开发。
 
-<img src="res/sponsor/wechat.jpg" style="width:300px" />
+<img src="res/sponsor/wechat.jpg" style="width:300px" alt="Sponsor"/>
 
 ### 捐助者名单
 
-排名不分先后
+如果您想要出现在名单中，可以给我留言，排名不分先后。
 
 | 捐助者                                   | 金额     |
 |---------------------------------------|--------|
