@@ -16,6 +16,7 @@ class SyncDashBoardComponent extends StatelessWidget {
     final SyncDashBoardLogic logic = Get.put(SyncDashBoardLogic());
     final SyncDashBoardState state = Bind.find<SyncDashBoardLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
+    final viewPadding = MediaQuery.viewPaddingOf(context);
 
     return GetBuilder<SyncDashBoardLogic>(
       assignId: true,
@@ -37,20 +38,42 @@ class SyncDashBoardComponent extends StatelessWidget {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: SmoothPageIndicator(
-                          controller: logic.pageController,
-                          count: 2,
-                          axisDirection: Axis.horizontal,
-                          effect: ExpandingDotsEffect(
-                              dotWidth: 8.0,
-                              dotHeight: 8.0,
-                              activeDotColor: colorScheme.primary,
-                              dotColor: colorScheme.primary),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                                onPressed: () {
+                                  logic.changePage(0);
+                                },
+                                icon: const Icon(Icons.chevron_left_rounded)),
+                            Expanded(
+                              child: Center(
+                                child: SmoothPageIndicator(
+                                  controller: logic.pageController,
+                                  count: 2,
+                                  axisDirection: Axis.horizontal,
+                                  effect: ExpandingDotsEffect(
+                                      dotWidth: 8.0,
+                                      dotHeight: 8.0,
+                                      activeDotColor: colorScheme.primary,
+                                      dotColor: colorScheme.secondary),
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                                onPressed: () {
+                                  logic.changePage(1);
+                                },
+                                icon: const Icon(Icons.chevron_right_rounded)),
+                          ],
                         ),
-                      )
+                      ),
+                      SizedBox(
+                        height: viewPadding.bottom,
+                      ),
                     ],
                   )
-                : const Center(child: NetworkLoading()));
+                : const Center(child: NetworkLoading1()));
       },
     );
   }

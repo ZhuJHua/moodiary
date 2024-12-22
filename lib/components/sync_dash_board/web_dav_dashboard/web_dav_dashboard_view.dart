@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/components/loading/loading.dart';
 
 import '../../../common/values/webdav.dart';
 import '../../../utils/webdav_util.dart';
@@ -187,7 +188,7 @@ class WebDavDashboardComponent extends StatelessWidget {
                   ],
                 ],
               ),
-              if (state.isFetching) const Center(child: CircularProgressIndicator()),
+              if (state.isFetching) const Center(child: Processing()),
               if (state.connectivityStatus.value == WebDavConnectivityStatus.unconnected) _buildError(),
             ],
           );
