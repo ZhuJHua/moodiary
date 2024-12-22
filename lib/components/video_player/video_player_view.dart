@@ -4,6 +4,7 @@ import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+import 'package:mood_diary/components/loading/loading.dart';
 
 import 'video_player_logic.dart';
 import 'video_player_state.dart';
@@ -49,11 +50,18 @@ class VideoPlayerComponent extends StatelessWidget {
 
     return AspectRatio(
       aspectRatio: 16 / 9,
-      child: Obx(() {
-        return state.isInitialized.value
-            ? Chewie(controller: logic.chewieController)
-            : const Center(child: CircularProgressIndicator());
-      }),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: Obx(() {
+          return state.isInitialized.value
+              ? Chewie(controller: logic.chewieController)
+              : Center(
+                  child: MediaLoading(
+                  color: colorScheme.primary,
+                  size: 56,
+                ));
+        }),
+      ),
     );
   }
 }

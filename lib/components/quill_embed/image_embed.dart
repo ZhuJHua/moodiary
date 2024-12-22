@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:get/get.dart';
+import 'package:mood_diary/router/app_routes.dart';
 
 import '../../utils/file_util.dart';
 
@@ -35,10 +37,20 @@ class ImageEmbedBuilder extends EmbedBuilder {
     // 从数据构造 ImageBlockEmbed
     final imagePath = isEdit ? imageEmbed.name : FileUtil.getRealPath('image', imageEmbed.name);
 
-    return Card.outlined(
-      clipBehavior: Clip.hardEdge,
-      color: Colors.transparent,
-      child: Image.file(File(imagePath)),
+    return GestureDetector(
+      onTap: () {
+        if (!isEdit) {
+          Get.toNamed(AppRoutes.photoPage, arguments: [
+            [imagePath],
+            0,
+          ]);
+        }
+      },
+      child: Card.outlined(
+        clipBehavior: Clip.hardEdge,
+        color: Colors.transparent,
+        child: Image.file(File(imagePath)),
+      ),
     );
   }
 }

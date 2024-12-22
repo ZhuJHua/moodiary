@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:chewie/chewie.dart';
@@ -12,26 +13,40 @@ class VideoPlayerLogic extends GetxController {
   late final videoPlayerController = VideoPlayerController.file(File(state.videoPath));
   late final chewieController = ChewieController(
     videoPlayerController: videoPlayerController,
-    aspectRatio: 16 / 9,
     useRootNavigator: false,
-    autoInitialize: true,
   );
+
+  Completer<void>? _initCompleter;
 
   VideoPlayerLogic({required String videoPath}) {
     state.videoPath = videoPath;
   }
 
   @override
-  void onInit() {
-    Future.delayed(const Duration(milliseconds: 500), () {
-      state.isInitialized.value = true;
+  void onReady() async {
+    _initCompleter = Completer<void>();
+    Future.delayed(const Duration(milliseconds: 300), () async {
+      if (!(_initCompleter?.isCompleted ?? true)) {
+        await videoPlayerController.initialize();
+        state.isInitialized.value = true;
+        _initCompleter?.complete();
+      }
     });
-    super.onInit();
+
+    super.onReady();
+  }
+
+  void cancelInitialization() {
+    if (!(_initCompleter?.isCompleted ?? true)) {
+      _initCompleter?.complete();
+      state.isInitialized.value = false;
+    }
   }
 
   @override
-  void onClose() {
-    videoPlayerController.dispose();
+  void onClose() async {
+    cancelInitialization();
+    await videoPlayerController.dispose();
     chewieController.dispose();
     super.onClose();
   }
