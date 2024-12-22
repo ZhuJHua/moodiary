@@ -48,6 +48,9 @@ class FileUtil {
     await createDir(join(_filePath, 'image'));
     await createDir(join(_filePath, 'audio'));
     await createDir(join(_filePath, 'video'));
+
+    // 字体文件夹
+    await createDir(join(_filePath, 'font'));
   }
 
   static Future<void> createDir(String path) async {

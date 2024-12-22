@@ -179,21 +179,24 @@ class EditLogic extends GetxController {
   void insertNewLine() {
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
-    quillController.replaceText(index, length, const TextIndentEmbed('2'), TextSelection.collapsed(offset: index + 1));
+    quillController.replaceText(index, length, const TextIndentEmbed('2'), null);
+    quillController.moveCursorToPosition(index + 1);
   }
 
   void insertNewImage({required String imagePath}) {
     final imageBlock = ImageBlockEmbed.fromName(imagePath);
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
-    quillController.replaceText(index, length, imageBlock, TextSelection.collapsed(offset: index + 1));
+    quillController.replaceText(index, length, imageBlock, null);
+    quillController.moveCursorToPosition(index + 1);
   }
 
   void insertNewVideo({required String videoPath}) {
     final videoBlock = VideoBlockEmbed.fromName(videoPath);
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
-    quillController.replaceText(index, length, videoBlock, TextSelection.collapsed(offset: index + 1));
+    quillController.replaceText(index, length, videoBlock, null);
+    quillController.moveCursorToPosition(index + 1);
   }
 
   Future<void> addNewImage(XFile xFile) async {
@@ -471,7 +474,8 @@ class EditLogic extends GetxController {
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
     // 插入音频 Embed
-    quillController.replaceText(index, length, audioBlock, TextSelection.collapsed(offset: index + 1));
+    quillController.replaceText(index, length, audioBlock, null);
+    quillController.moveCursorToPosition(index + 1);
     update(['Audio']);
   }
 

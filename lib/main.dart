@@ -93,8 +93,8 @@ void main() async {
           : mediaQuery;
       return windowChild;
     },
-    theme: ThemeUtil.buildTheme(Brightness.light),
-    darkTheme: ThemeUtil.buildTheme(Brightness.dark),
+    theme: await ThemeUtil.buildTheme(Brightness.light),
+    darkTheme: await ThemeUtil.buildTheme(Brightness.dark),
     themeMode: ThemeMode.values[PrefUtil.getValue<int>('themeMode')!],
     defaultTransition: Transition.cupertino,
     getPages: AppPages.routes,

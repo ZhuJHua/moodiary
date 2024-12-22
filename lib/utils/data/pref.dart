@@ -85,6 +85,8 @@ class PrefUtil {
     'showWritingTime',
     // 展示字数统计
     'showWordCount',
+    // 自定义字体
+    'customFont',
   };
 
   static Future<void> initPref() async {
@@ -180,6 +182,7 @@ class PrefUtil {
     await _prefs.setBool('autoCategory', _prefs.getBool('autoCategory') ?? false);
     await _prefs.setBool('showWritingTime', _prefs.getBool('showWritingTime') ?? true);
     await _prefs.setBool('showWordCount', _prefs.getBool('showWordCount') ?? true);
+    await _prefs.setString('customFont', _prefs.getString('customFont') ?? '');
   }
 
   static Future<void> setValue<T>(String key, T value) async {

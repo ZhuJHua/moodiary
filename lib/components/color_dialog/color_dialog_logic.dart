@@ -28,7 +28,7 @@ class ColorDialogLogic extends GetxController {
     state.currentColor = index;
     settingLogic.state.color = index;
     update();
-    Get.changeTheme(ThemeUtil.buildTheme(Brightness.light));
-    Get.changeTheme(ThemeUtil.buildTheme(Brightness.dark));
+    Get.changeTheme(await ThemeUtil.buildTheme(Brightness.light));
+    Get.changeTheme(await ThemeUtil.buildTheme(Brightness.dark));
   }
 }

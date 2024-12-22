@@ -17,7 +17,7 @@ dependencies:
   logger: 2.5.0
   flutter_drawing_board: 0.9.5
   flutter_displaymode: 0.6.0
-  fl_chart: 0.69.2
+  fl_chart: 0.70.0
   file_picker: 8.1.6
   local_auth: 2.3.0
   local_auth_android: 1.0.46
@@ -27,7 +27,7 @@ dependencies:
   photo_view: 0.15.0
   package_info_plus: 8.1.2
   uuid: 4.5.1
-  flutter_quill: 11.0.0-dev.16
+  flutter_quill: 11.0.0-dev.17
   share_plus: 10.1.3
   url_launcher: 6.3.1
   archive: 3.6.1
@@ -35,7 +35,7 @@ dependencies:
   markdown_widget: 2.3.2+6
   flutter_colorpicker: 1.1.0
   geolocator: 13.0.2
-  shared_preferences: 2.3.3
+  shared_preferences: 2.3.4
   isar: 4.0.0-dev.14
   isar_flutter_libs: 4.0.0-dev.14
   fluttertoast: 8.2.10
@@ -44,7 +44,7 @@ dependencies:
   record: 5.2.0
   duration: 4.0.3
   dynamic_color: 1.7.0
-  supabase_flutter: 2.8.1
+  supabase_flutter: 2.8.2
   bitsdojo_window: 0.1.6
   intl: 0.19.0
   collection: 1.19.0
@@ -73,7 +73,7 @@ dependencies:
   objectbox: 4.0.3
   faker: 2.2.0
   flutter_rust_bridge: 2.7.0
-  syncfusion_flutter_sliders: 28.1.33
+  syncfusion_flutter_sliders: 28.1.35
   flutter_quill_extensions: 11.0.0-dev.7
   connectivity_plus: 6.1.1
   image_picker_android: 0.8.12+18
@@ -99,6 +99,7 @@ dependencies:
       ref: feature/add-new-component
   network_info_plus: 6.1.2
   scrollable_positioned_list: 0.3.8
+  marquee: 2.3.0
   flutter_localizations:
     sdk: flutter
   rust_lib_mood_diary:

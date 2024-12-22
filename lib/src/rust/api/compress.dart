@@ -3,10 +3,9 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-
 import '../frb_generated.dart';
 import 'constants.dart';
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `calculate_target_dimensions`, `load_image`
 
@@ -24,8 +23,11 @@ abstract class DynamicImage implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompress>>
 abstract class ImageCompress implements RustOpaqueInterface {
-  static Future<Uint8List> contain(
-          {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality}) =>
+  static Future<Uint8List> contain({required String filePath,
+          CompressFormat? compressFormat,
+          int? maxWidth,
+          int? maxHeight,
+          int? quality}) =>
       RustLib.instance.api.crateApiCompressImageCompressContain(
           filePath: filePath,
           compressFormat: compressFormat,

@@ -203,4 +203,10 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   Future<void> toTop() async {
     await state.innerController.animateTo(0.0, duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
   }
+
+  // 更新标题
+  void updateTitle() {
+    state.customTitleName = PrefUtil.getValue<String>('customTitleName')!;
+    update(['Title']);
+  }
 }

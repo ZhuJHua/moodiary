@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/components/dashboard/dashboard_logic.dart';
+import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/theme_util.dart';
 
 import '../../../utils/data/pref.dart';
 import '../../../utils/file_util.dart';
@@ -134,16 +134,7 @@ class SettingLogic extends GetxController {
       await PrefUtil.setValue<String>('customTitleName', textEditingController.text);
       Get.backLegacy();
       textEditingController.clear();
-      NoticeUtil.showToast('重启应用后生效');
+      Bind.find<DiaryLogic>().updateTitle();
     }
-  }
-
-  //更改字体
-  Future<void> changeFontTheme(int value) async {
-    Get.backLegacy();
-    await PrefUtil.setValue<int>('fontTheme', value);
-    state.fontTheme.value = value;
-    Get.changeTheme(ThemeUtil.buildTheme(Brightness.light));
-    Get.changeTheme(ThemeUtil.buildTheme(Brightness.dark));
   }
 }
