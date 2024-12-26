@@ -18,7 +18,7 @@ dependencies:
   flutter_drawing_board: 0.9.5
   flutter_displaymode: 0.6.0
   fl_chart: 0.70.0
-  file_picker: 8.1.6
+  file_picker: ^8.1.7
   local_auth: 2.3.0
   local_auth_android: 1.0.46
   permission_handler: 11.3.1
@@ -73,10 +73,10 @@ dependencies:
   objectbox: 4.0.3
   faker: 2.2.0
   flutter_rust_bridge: 2.7.0
-  syncfusion_flutter_sliders: 28.1.35
+  syncfusion_flutter_sliders: 28.1.36
   flutter_quill_extensions: 11.0.0-dev.7
   connectivity_plus: 6.1.1
-  image_picker_android: 0.8.12+18
+  image_picker_android: 0.8.12+19
   video_player_media_kit: 1.0.5
   video_player: 2.9.2
   chewie: 1.8.5
