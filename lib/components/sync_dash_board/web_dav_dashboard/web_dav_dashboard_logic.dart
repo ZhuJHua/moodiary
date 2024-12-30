@@ -22,7 +22,12 @@ class WebDavDashboardLogic extends GetxController {
     if (!isInit) update();
     await checkConnectivity();
     if (state.connectivityStatus.value == WebDavConnectivityStatus.connected) {
-      await fetchingWebDavSyncFlag();
+      try {
+        await fetchingWebDavSyncFlag();
+      } catch (e) {
+        NoticeUtil.showBug(message: '获取配置失败，请检查配置');
+        return;
+      }
       if (isInit) await fetchDiaryList();
     }
     state.isFetching = false;

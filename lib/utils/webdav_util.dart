@@ -43,10 +43,12 @@ class WebDavUtil {
     // 尝试连接，如果失败，
 
     try {
-      _client = webdav.newClient(webDavOption[0],
-          user: webDavOption[1],
-          password: webDavOption[2],
-          debug: flutter.kDebugMode);
+      _client = webdav.newClient(
+        webDavOption[0],
+        user: webDavOption[1],
+        password: webDavOption[2],
+        debug: false,
+      );
     } catch (e) {
       _client = null;
       return;
