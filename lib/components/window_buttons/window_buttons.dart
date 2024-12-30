@@ -13,7 +13,8 @@ class WindowButtons extends StatelessWidget {
   //获取一言
   Future<void> getHitokoto() async {
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto, maxAgeMillis: 15 * 60000);
+      var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
+          maxAgeMillis: 15 * 60000);
       if (res != null) {
         hitokoto.value = res.first;
       }
@@ -26,7 +27,6 @@ class WindowButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     //unawaited(getHitokoto());
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
     final buttonColors = WindowButtonColors(
       iconNormal: colorScheme.secondary,
       mouseDown: colorScheme.secondaryContainer,

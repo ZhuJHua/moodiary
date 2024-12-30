@@ -44,16 +44,20 @@ class WaveFormComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Get.put(WaveFormLogic());
-    final state = Bind.find<WaveFormLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     return GetBuilder<WaveFormLogic>(
       assignId: true,
       builder: (_) {
         return Obx(() {
           return CustomPaint(
-            painter: WaveFormPainter(state.amplitudes.value,
-                color: colorScheme.primary, barWidth: state.barWidth, spaceWidth: state.spaceWidth),
-            size: Size(state.amplitudes.value.length * (state.barWidth + state.spaceWidth), 100),
+            painter: WaveFormPainter(logic.amplitudes.value,
+                color: colorScheme.primary,
+                barWidth: logic.barWidth,
+                spaceWidth: logic.spaceWidth),
+            size: Size(
+                logic.amplitudes.value.length *
+                    (logic.barWidth + logic.spaceWidth),
+                100),
           );
         });
       },

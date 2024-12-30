@@ -54,7 +54,8 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                   image: DecorationImage(
                     image: ResizeImage(
                       FileImage(
-                        File(FileUtil.getRealPath('image', diary.imageName[index])),
+                        File(FileUtil.getRealPath(
+                            'image', diary.imageName[index])),
                       ),
                       width: (100 * pixelRatio).toInt(),
                     ),

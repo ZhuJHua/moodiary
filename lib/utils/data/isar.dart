@@ -33,9 +33,11 @@ class IsarUtil {
   }
 
   static Future<void> dataMigration(String path) async {
-    var oldIsar = await Isar.openAsync(schemas: [DiarySchema, CategorySchema], directory: path, name: 'old');
+    var oldIsar = await Isar.openAsync(
+        schemas: [DiarySchema, CategorySchema], directory: path, name: 'old');
     List<Diary> oldDiaryList = await oldIsar.diarys.where().findAllAsync();
-    List<Category> oldCategoryList = await oldIsar.categorys.where().findAllAsync();
+    List<Category> oldCategoryList =
+        await oldIsar.categorys.where().findAllAsync();
 
     await _isar.writeAsync((isar) {
       isar.clear();
@@ -57,7 +59,8 @@ class IsarUtil {
   }
 
   //导出数据
-  static Future<void> exportIsar(String dir, String path, String fileName) async {
+  static Future<void> exportIsar(
+      String dir, String path, String fileName) async {
     var isar = Isar.open(
       schemas: [DiarySchema, CategorySchema],
       directory: join(dir, 'database'),
@@ -89,8 +92,13 @@ class IsarUtil {
   }
 
   //根据日期范围获取日记
-  static Future<List<Diary>> getDiariesByDateRange(DateTime start, DateTime end, {bool all = true}) async {
-    return await _isar.diarys.where().timeBetween(start, end).showEqualTo(all).findAllAsync();
+  static Future<List<Diary>> getDiariesByDateRange(DateTime start, DateTime end,
+      {bool all = true}) async {
+    return await _isar.diarys
+        .where()
+        .timeBetween(start, end)
+        .showEqualTo(all)
+        .findAllAsync();
   }
 
   //获取全部日记
@@ -99,7 +107,8 @@ class IsarUtil {
   }
 
   //获取指定范围内的天气
-  static Future<List<List<String>>> getWeatherByDateRange(DateTime start, DateTime end) async {
+  static Future<List<List<String>>> getWeatherByDateRange(
+      DateTime start, DateTime end) async {
     return (await _isar.diarys
             .where()
             .showEqualTo(true)
@@ -111,7 +120,8 @@ class IsarUtil {
   }
 
   //获取指定范围的心情指数
-  static Future<List<double>> getMoodByDateRange(DateTime start, DateTime end) async {
+  static Future<List<double>> getMoodByDateRange(
+      DateTime start, DateTime end) async {
     return (await _isar.diarys
             .where()
             .showEqualTo(true)
@@ -131,11 +141,16 @@ class IsarUtil {
 
   //回收站日记
   static Future<List<Diary>> getRecycleBinDiaries() async {
-    return await _isar.diarys.where().showEqualTo(false).sortByTimeDesc().findAllAsync();
+    return await _isar.diarys
+        .where()
+        .showEqualTo(false)
+        .sortByTimeDesc()
+        .findAllAsync();
   }
 
   //更新日记
-  static Future<void> updateADiary({Diary? oldDiary, required Diary newDiary}) async {
+  static Future<void> updateADiary(
+      {Diary? oldDiary, required Diary newDiary}) async {
     // 如果没有旧日记，说明是新增日记
     newDiary.lastModified = DateTime.now();
     await _isar.writeAsync((isar) {
@@ -146,17 +161,28 @@ class IsarUtil {
       // 清理本地媒体文件
       await FileUtil.cleanUpOldMediaFiles(oldDiary, newDiary);
       if (WebDavUtil().hasOption) {
-        unawaited(WebDavUtil().updateSingleDiary(oldDiary: oldDiary, newDiary: newDiary));
+        unawaited(WebDavUtil()
+            .updateSingleDiary(oldDiary: oldDiary, newDiary: newDiary));
       }
     } else {
-      if (WebDavUtil().hasOption) unawaited(WebDavUtil().uploadSingleDiary(newDiary));
+      if (WebDavUtil().hasOption) {
+        unawaited(WebDavUtil().uploadSingleDiary(newDiary));
+      }
     }
   }
 
   //查询日记
   static Future<List<Diary>> searchDiaries(String value) async {
-    var contentResults = await _isar.diarys.where().showEqualTo(true).contentTextContains(value).findAllAsync();
-    var titleResults = await _isar.diarys.where().showEqualTo(true).titleContains(value).findAllAsync();
+    var contentResults = await _isar.diarys
+        .where()
+        .showEqualTo(true)
+        .contentTextContains(value)
+        .findAllAsync();
+    var titleResults = await _isar.diarys
+        .where()
+        .showEqualTo(true)
+        .titleContains(value)
+        .findAllAsync();
 
     // 合并并去重
     var combinedResults = {...contentResults, ...titleResults}.toList();
@@ -165,7 +191,11 @@ class IsarUtil {
   }
 
   static Future<List<Diary>> searchDiariesByTag(String value) async {
-    return await _isar.diarys.where().showEqualTo(true).tagsElementContains(value).findAllAsync();
+    return await _isar.diarys
+        .where()
+        .showEqualTo(true)
+        .tagsElementContains(value)
+        .findAllAsync();
   }
 
   //获取不在回收站的日记总数
@@ -191,10 +221,14 @@ class IsarUtil {
   static Future<bool> insertACategory(Category category) async {
     return await _isar.writeAsync((isar) {
       // 查询数据库中是否有同名但 ID 不同的分类
-      final existingCategory = isar.categorys.where().categoryNameEqualTo(category.categoryName).findFirst();
+      final existingCategory = isar.categorys
+          .where()
+          .categoryNameEqualTo(category.categoryName)
+          .findFirst();
       if (existingCategory != null && existingCategory.id != category.id) {
         // 如果同名但 ID 不同，则修改分类名称并添加随机后缀
-        category.categoryName = '${category.categoryName}_${const Uuid().v4().substring(0, 4)}';
+        category.categoryName =
+            '${category.categoryName}_${const Uuid().v4().substring(0, 4)}';
       }
       // 为分类分配新的唯一 ID
       category.id = const Uuid().v7();
@@ -209,10 +243,14 @@ class IsarUtil {
   static Future<bool> updateACategory(Category category) async {
     return await _isar.writeAsync((isar) {
       // 查询数据库中是否有同名但 ID 不同的分类
-      final existingCategory = isar.categorys.where().categoryNameEqualTo(category.categoryName).findFirst();
+      final existingCategory = isar.categorys
+          .where()
+          .categoryNameEqualTo(category.categoryName)
+          .findFirst();
       if (existingCategory != null && existingCategory.id != category.id) {
         // 如果同名但 ID 不同，则修改分类名称并添加随机后缀
-        category.categoryName = '${category.categoryName}_${const Uuid().v4().substring(0, 4)}';
+        category.categoryName =
+            '${category.categoryName}_${const Uuid().v4().substring(0, 4)}';
       }
       // 将分类保存到数据库中
       isar.categorys.put(category);
@@ -233,7 +271,12 @@ class IsarUtil {
 
   // 获取所有日记内容
   static Future<List<String>> getContentList() async {
-    return (await _isar.diarys.where().showEqualTo(true).contentTextProperty().findAllAsync()).cast<String>();
+    return (await _isar.diarys
+            .where()
+            .showEqualTo(true)
+            .contentTextProperty()
+            .findAllAsync())
+        .cast<String>();
   }
 
   //获取所有分类，这是个同步方法，用于第一次初始化，要怪就怪 TabBar
@@ -246,9 +289,14 @@ class IsarUtil {
   }
 
   //获取对应分类的日记,如果为空，返回全部日记
-  static Future<List<Diary>> getDiaryByCategory(String? categoryId, int offset, int limit) async {
+  static Future<List<Diary>> getDiaryByCategory(
+      String? categoryId, int offset, int limit) async {
     if (categoryId == null) {
-      return await _isar.diarys.where().showEqualTo(true).sortByTimeDesc().findAllAsync(offset: offset, limit: limit);
+      return await _isar.diarys
+          .where()
+          .showEqualTo(true)
+          .sortByTimeDesc()
+          .findAllAsync(offset: offset, limit: limit);
     } else {
       return await _isar.diarys
           .where()
@@ -264,13 +312,16 @@ class IsarUtil {
     return await _isar.diarys
         .where()
         .showEqualTo(true)
-        .yMdEqualTo('${time.year.toString()}/${time.month.toString()}/${time.day.toString()}')
+        .yMdEqualTo(
+            '${time.year.toString()}/${time.month.toString()}/${time.day.toString()}')
         .sortByTimeDesc()
         .findAllAsync();
   }
 
   static Future<List<Diary>> getDiary(int offset, int limit) async {
-    return await _isar.diarys.where().findAllAsync(offset: offset, limit: limit);
+    return await _isar.diarys
+        .where()
+        .findAllAsync(offset: offset, limit: limit);
   }
 
   /// 2.4.8 版本变更
@@ -317,7 +368,8 @@ class IsarUtil {
           diary.type = DiaryType.richText.value;
           diary.lastModified = diary.time; // 设置最后修改时间
           // 遍历资源文件，将资源文件插入到富文本中
-          quillController.document = Document.fromJson(jsonDecode(diary.content));
+          quillController.document =
+              Document.fromJson(jsonDecode(diary.content));
 
           for (var image in diary.imageName) {
             insertNewImage(imageName: image, quillController: quillController);
@@ -330,7 +382,8 @@ class IsarUtil {
           }
 
           // 更新富文本内容
-          diary.content = jsonEncode(quillController.document.toDelta().toJson());
+          diary.content =
+              jsonEncode(quillController.document.toDelta().toJson());
 
           // 保存更新后的日记
           isar.diarys.put(diary);
@@ -355,7 +408,6 @@ class IsarUtil {
     final countDiary = isar.diarys.where().count();
     for (var i = 0; i < countDiary; i += 50) {
       var diaries = isar.diarys.where().findAll(offset: i, limit: 50);
-      var startIndex = 0;
       isar.write((isar) {
         for (var diary in diaries) {
           // 如果日记有分类，但是本地没有这个分类，就创建一个分类，名称为“修复分类+数字”
@@ -366,7 +418,6 @@ class IsarUtil {
                 ..id = id
                 ..categoryName = '已修复${const Uuid().v4().substring(0, 4)}',
             );
-            startIndex++;
           }
         }
       });
@@ -374,25 +425,31 @@ class IsarUtil {
     isar.close();
   }
 
-  static void insertNewImage({required String imageName, required QuillController quillController}) {
+  static void insertNewImage(
+      {required String imageName, required QuillController quillController}) {
     final imageBlock = ImageBlockEmbed.fromName(imageName);
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
-    quillController.replaceText(index, length, imageBlock, TextSelection.collapsed(offset: index + 1));
+    quillController.replaceText(
+        index, length, imageBlock, TextSelection.collapsed(offset: index + 1));
   }
 
-  static void insertNewVideo({required String videoName, required QuillController quillController}) {
+  static void insertNewVideo(
+      {required String videoName, required QuillController quillController}) {
     final videoBlock = VideoBlockEmbed.fromName(videoName);
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
-    quillController.replaceText(index, length, videoBlock, TextSelection.collapsed(offset: index + 1));
+    quillController.replaceText(
+        index, length, videoBlock, TextSelection.collapsed(offset: index + 1));
   }
 
-  static void insertAudio({required String audioName, required QuillController quillController}) {
+  static void insertAudio(
+      {required String audioName, required QuillController quillController}) {
     final audioBlock = AudioBlockEmbed.fromName(audioName);
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
-    quillController.replaceText(index, length, audioBlock, TextSelection.collapsed(offset: index + 1));
+    quillController.replaceText(
+        index, length, audioBlock, TextSelection.collapsed(offset: index + 1));
   }
 
   // 获取用于地图显示的对象
@@ -403,9 +460,16 @@ class IsarUtil {
     /// 要满足以下条件
     /// 1. 有定位坐标
     /// 2. show
-    var diaries = await _isar.diarys.where().showEqualTo(true).positionIsNotEmpty().findAllAsync();
+    var diaries = await _isar.diarys
+        .where()
+        .showEqualTo(true)
+        .positionIsNotEmpty()
+        .findAllAsync();
     for (var diary in diaries) {
-      res.add(DiaryMapItem(LatLng(double.parse(diary.position[0]), double.parse(diary.position[1])), diary.isarId,
+      res.add(DiaryMapItem(
+          LatLng(
+              double.parse(diary.position[0]), double.parse(diary.position[1])),
+          diary.isarId,
           diary.imageName.isEmpty ? '' : diary.imageName.first));
     }
     return res;

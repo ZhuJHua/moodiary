@@ -35,37 +35,53 @@ class ThemeUtil {
     if (customFont.isNotEmpty) {
       fontFamily = await FontReader.getFontNameFromTtf(ttfFilePath: customFont);
       if (fontFamily != null) {
-        await DynamicFont.file(fontFamily: fontFamily, filepath: customFont).load();
+        await DynamicFont.file(fontFamily: fontFamily, filepath: customFont)
+            .load();
       }
     }
     // 字体变体应用到 TextTheme 的函数
     TextTheme applyFontVariations(TextTheme baseTheme, String? fontFamily) {
       const fontVariation = FontVariation('wght', 400);
       return baseTheme.copyWith(
-        displayLarge: baseTheme.displayLarge?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        displayMedium: baseTheme.displayMedium?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        displaySmall: baseTheme.displaySmall?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        headlineLarge: baseTheme.headlineLarge
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [const FontVariation('wght', 500)]),
-        headlineMedium: baseTheme.headlineMedium
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [const FontVariation('wght', 500)]),
-        headlineSmall: baseTheme.headlineSmall
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [const FontVariation('wght', 500)]),
-        titleLarge:
-            baseTheme.titleLarge?.copyWith(fontFamily: fontFamily, fontVariations: [const FontVariation('wght', 600)]),
-        titleMedium:
-            baseTheme.titleMedium?.copyWith(fontFamily: fontFamily, fontVariations: [const FontVariation('wght', 500)]),
-        titleSmall:
-            baseTheme.titleSmall?.copyWith(fontFamily: fontFamily, fontVariations: [const FontVariation('wght', 400)]),
-        bodyLarge: baseTheme.bodyLarge?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        bodyMedium: baseTheme.bodyMedium?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        bodySmall:
-            baseTheme.bodySmall?.copyWith(fontFamily: fontFamily, fontVariations: [const FontVariation('wght', 300)]),
-        labelLarge:
-            baseTheme.labelLarge?.copyWith(fontFamily: fontFamily, fontVariations: [const FontVariation('wght', 500)]),
-        labelMedium: baseTheme.labelMedium?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        labelSmall:
-            baseTheme.labelSmall?.copyWith(fontFamily: fontFamily, fontVariations: [const FontVariation('wght', 300)]),
+        displayLarge: baseTheme.displayLarge
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        displayMedium: baseTheme.displayMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        displaySmall: baseTheme.displaySmall
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        headlineLarge: baseTheme.headlineLarge?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 500)]),
+        headlineMedium: baseTheme.headlineMedium?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 500)]),
+        headlineSmall: baseTheme.headlineSmall?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 500)]),
+        titleLarge: baseTheme.titleLarge?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 600)]),
+        titleMedium: baseTheme.titleMedium?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 500)]),
+        titleSmall: baseTheme.titleSmall?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 400)]),
+        bodyLarge: baseTheme.bodyLarge
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        bodyMedium: baseTheme.bodyMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        bodySmall: baseTheme.bodySmall?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 300)]),
+        labelLarge: baseTheme.labelLarge?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 500)]),
+        labelMedium: baseTheme.labelMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        labelSmall: baseTheme.labelSmall?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 300)]),
       );
     }
 
@@ -74,12 +90,16 @@ class ThemeUtil {
       colorScheme: ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: brightness,
-        dynamicSchemeVariant: color == 4 ? DynamicSchemeVariant.monochrome : DynamicSchemeVariant.tonalSpot,
+        dynamicSchemeVariant: color == 4
+            ? DynamicSchemeVariant.monochrome
+            : DynamicSchemeVariant.tonalSpot,
       ),
       materialTapTargetSize: MaterialTapTargetSize.padded,
       brightness: brightness,
       textTheme: applyFontVariations(
-        brightness == Brightness.light ? Typography.material2021().black : Typography.material2021().white,
+        brightness == Brightness.light
+            ? Typography.material2021().black
+            : Typography.material2021().white,
         fontFamily,
       ),
     );
@@ -263,7 +283,7 @@ class ThemeUtil {
           baseStyle.copyWith(
             fontSize: 20,
             height: 1.5,
-            color: Colors.grey.withOpacity(0.6),
+            color: Colors.grey.withValues(alpha: 0.6),
           ),
           baseHorizontalSpacing,
           VerticalSpacing.zero,
@@ -278,7 +298,7 @@ class ThemeUtil {
         null,
       ),
       quote: DefaultTextBlockStyle(
-        TextStyle(color: baseStyle.color!.withOpacity(0.6)),
+        TextStyle(color: baseStyle.color!.withValues(alpha: 0.6)),
         baseHorizontalSpacing,
         baseVerticalSpacing,
         const VerticalSpacing(6, 2),
@@ -290,7 +310,7 @@ class ThemeUtil {
       ),
       code: DefaultTextBlockStyle(
           TextStyle(
-            color: Colors.blue.shade900.withOpacity(0.9),
+            color: Colors.blue.shade900.withValues(alpha: 0.6),
             fontFamily: fontFamily,
             fontSize: 13,
             height: 1.15,

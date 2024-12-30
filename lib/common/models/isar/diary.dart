@@ -32,7 +32,8 @@ class Diary {
 
   //年月日索引
   @Index()
-  String get yMd => '${time.year.toString()}/${time.month.toString()}/${time.day.toString()}';
+  String get yMd =>
+      '${time.year.toString()}/${time.month.toString()}/${time.day.toString()}';
 
   //日期
   @Index()
@@ -133,7 +134,8 @@ class Diary {
       ..content = content
       ..contentText = contentText
       ..time = DateTime.fromMillisecondsSinceEpoch(time.millisecondsSinceEpoch)
-      ..lastModified = DateTime.fromMillisecondsSinceEpoch(lastModified.millisecondsSinceEpoch)
+      ..lastModified = DateTime.fromMillisecondsSinceEpoch(
+          lastModified.millisecondsSinceEpoch)
       ..show = show
       ..mood = mood
       ..weather = List<String>.from(weather)

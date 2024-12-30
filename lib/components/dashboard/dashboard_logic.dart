@@ -40,28 +40,37 @@ class DashboardLogic extends GetxController {
 
   //选中两个日期后，查询指定范围内的日记
   Future<void> getMoodAndWeatherByRange(DateTime start, DateTime end) async {
-    var moodList = await IsarUtil.getMoodByDateRange(start, end.subtract(const Duration(days: -1)));
-    var weatherList = await IsarUtil.getWeatherByDateRange(start, end.subtract(const Duration(days: -1)));
+    var moodList = await IsarUtil.getMoodByDateRange(
+        start, end.subtract(const Duration(days: -1)));
+    var weatherList = await IsarUtil.getWeatherByDateRange(
+        start, end.subtract(const Duration(days: -1)));
 
     //去掉没有天气
     weatherList.removeWhere((item) => item.isEmpty);
     if (moodList.isNotEmpty) {
-      state.recentMood.value =
-          ArrayUtil.countList(moodList).entries.reduce((a, b) => a.value > b.value ? a : b).key.toString();
+      state.recentMood.value = ArrayUtil.countList(moodList)
+          .entries
+          .reduce((a, b) => a.value > b.value ? a : b)
+          .key
+          .toString();
     } else {
       state.recentMood.value = 'none';
     }
     if (weatherList.isNotEmpty) {
-      var weatherCode = List.generate(weatherList.length, (index) => weatherList[index].first);
-      state.recentWeather.value =
-          ArrayUtil.countList(weatherCode).entries.reduce((a, b) => a.value > b.value ? a : b).key;
+      var weatherCode = List.generate(
+          weatherList.length, (index) => weatherList[index].first);
+      state.recentWeather.value = ArrayUtil.countList(weatherCode)
+          .entries
+          .reduce((a, b) => a.value > b.value ? a : b)
+          .key;
     } else {
       state.recentWeather.value = 'none';
     }
   }
 
   void getUseTime() {
-    DateTime firstStart = DateTime.fromMillisecondsSinceEpoch(PrefUtil.getValue<int>('startTime')!);
+    DateTime firstStart = DateTime.fromMillisecondsSinceEpoch(
+        PrefUtil.getValue<int>('startTime')!);
     Duration duration = DateTime.now().difference(firstStart);
     state.useTime.value = (duration.inDays + 1).toString();
   }

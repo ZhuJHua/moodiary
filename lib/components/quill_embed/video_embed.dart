@@ -31,7 +31,9 @@ class VideoEmbedBuilder extends EmbedBuilder {
     EmbedContext embedContext,
   ) {
     final videoEmbed = VideoBlockEmbed(embedContext.node.value.data);
-    final videoPath = isEdit ? videoEmbed.name : FileUtil.getRealPath('video', videoEmbed.name);
+    final videoPath = isEdit
+        ? videoEmbed.name
+        : FileUtil.getRealPath('video', videoEmbed.name);
     final colorScheme = Theme.of(context).colorScheme;
     return Card.outlined(
       clipBehavior: Clip.hardEdge,

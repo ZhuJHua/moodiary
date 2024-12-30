@@ -15,7 +15,8 @@ class SettingTitleTile extends StatelessWidget {
     return ListTile(
       title: Text(
         title,
-        style: textStyle.titleLarge!.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
+        style: textStyle.titleLarge!
+            .copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
       ),
       subtitle: subtitle != null ? Text(subtitle!) : null,
     );

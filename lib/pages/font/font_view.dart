@@ -30,12 +30,15 @@ class FontPage extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               borderRadius: AppBorderRadius.mediumBorderRadius,
-              border: Border.all(color: isSelected ? activeColor : inactiveColor, width: isSelected ? 2 : 1),
+              border: Border.all(
+                  color: isSelected ? activeColor : inactiveColor,
+                  width: isSelected ? 2 : 1),
             ),
             width: 64,
             height: 64,
             child: const Center(
-              child: Text('Aa', style: TextStyle(fontSize: 32, fontFamily: '系统字体')),
+              child: Text('Aa',
+                  style: TextStyle(fontSize: 32, fontFamily: '系统字体')),
             ),
           ),
         ),
@@ -84,12 +87,15 @@ class FontPage extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               borderRadius: AppBorderRadius.mediumBorderRadius,
-              border: Border.all(color: isSelected ? activeColor : inactiveColor, width: isSelected ? 2 : 1),
+              border: Border.all(
+                  color: isSelected ? activeColor : inactiveColor,
+                  width: isSelected ? 2 : 1),
             ),
             width: 64,
             height: 64,
             child: Center(
-              child: Text('Aa', style: TextStyle(fontSize: 32, fontFamily: fontName)),
+              child: Text('Aa',
+                  style: TextStyle(fontSize: 32, fontFamily: fontName)),
             ),
           ),
         ),
@@ -128,7 +134,8 @@ class FontPage extends StatelessWidget {
             onTap.call();
           },
           child: Container(
-            decoration: BoxDecoration(borderRadius: AppBorderRadius.mediumBorderRadius, color: color),
+            decoration: BoxDecoration(
+                borderRadius: AppBorderRadius.mediumBorderRadius, color: color),
             width: 64,
             height: 64,
             child: Center(
@@ -285,7 +292,10 @@ class FontPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [const Text('字体大小'), Text(fontSizeMap[state.fontScale.value] ?? '')],
+                children: [
+                  const Text('字体大小'),
+                  Text(fontSizeMap[state.fontScale.value] ?? '')
+                ],
               ),
             ),
             contentPadding: EdgeInsets.zero,
@@ -315,7 +325,10 @@ class FontPage extends StatelessWidget {
               ? Obx(() {
                   return !state.isFetching.value
                       ? Padding(
-                          padding: EdgeInsets.only(left: 16, right: 16, bottom: state.bottomSheetHeight.value),
+                          padding: EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              bottom: state.bottomSheetHeight.value),
                           child: buildText(),
                         )
                       : const Center(
@@ -328,7 +341,8 @@ class FontPage extends StatelessWidget {
                           children: [
                             Expanded(
                                 child: Padding(
-                              padding: const EdgeInsets.only(left: 16, right: 16),
+                              padding:
+                                  const EdgeInsets.only(left: 16, right: 16),
                               child: buildText(),
                             )),
                             Expanded(child: buildOption())

@@ -19,12 +19,15 @@ class DiaryState {
   //主滚动列表key
   late GlobalKey<NestedScrollViewState> nestedScrollKey;
 
-  ScrollController get innerController => nestedScrollKey.currentState!.innerController;
+  ScrollController get innerController =>
+      nestedScrollKey.currentState!.innerController;
 
-  ScrollController get outerController => nestedScrollKey.currentState!.outerController;
+  ScrollController get outerController =>
+      nestedScrollKey.currentState!.outerController;
 
   //视图模式状态
-  late ViewModeType viewModeType = ViewModeType.getType(PrefUtil.getValue<int>('homeViewMode')!);
+  late ViewModeType viewModeType =
+      ViewModeType.getType(PrefUtil.getValue<int>('homeViewMode')!);
 
   //当前tab bar位置
   late int currentTabBarIndex;

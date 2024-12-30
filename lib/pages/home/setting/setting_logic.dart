@@ -17,7 +17,8 @@ class SettingLogic extends GetxController {
   final SettingState state = SettingState();
   late final homeLogic = Bind.find<HomeLogic>();
 
-  late TextEditingController textEditingController = TextEditingController(text: state.customTitle);
+  late TextEditingController textEditingController =
+      TextEditingController(text: state.customTitle);
 
   @override
   void onInit() {
@@ -83,7 +84,8 @@ class SettingLogic extends GetxController {
   }
 
   Future<void> toAi() async {
-    if (PrefUtil.getValue<String>('tencentId') != null && PrefUtil.getValue<String>('tencentKey') != null) {
+    if (PrefUtil.getValue<String>('tencentId') != null &&
+        PrefUtil.getValue<String>('tencentKey') != null) {
       HapticFeedback.selectionClick();
       Get.toNamed(AppRoutes.assistantPage);
     } else {
@@ -131,7 +133,8 @@ class SettingLogic extends GetxController {
     if (textEditingController.text.isNotEmpty) {
       state.customTitle = textEditingController.text;
       update(['CustomTitle']);
-      await PrefUtil.setValue<String>('customTitleName', textEditingController.text);
+      await PrefUtil.setValue<String>(
+          'customTitleName', textEditingController.text);
       Get.backLegacy();
       textEditingController.clear();
       Bind.find<DiaryLogic>().updateTitle();

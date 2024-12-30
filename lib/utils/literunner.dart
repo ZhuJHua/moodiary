@@ -16,7 +16,8 @@ class LiteRunner {
     _interpreter = await Interpreter.fromAsset(modelPath);
     // 分配张量
     _interpreter.allocateTensors();
-    _isolateInterpreter = await IsolateInterpreter.create(address: _interpreter.address);
+    _isolateInterpreter =
+        await IsolateInterpreter.create(address: _interpreter.address);
     _tokenizer = tokenizer;
   }
 
@@ -83,7 +84,9 @@ class LiteRunner {
     var answerIndices = res.getAnswerIndices();
 
     if (answerIndices.first < answerIndices.last) {
-      return features.first.tokens.sublist(res.getAnswerIndices()[0], res.getAnswerIndices()[1] + 1).join('');
+      return features.first.tokens
+          .sublist(res.getAnswerIndices()[0], res.getAnswerIndices()[1] + 1)
+          .join('');
     } else {
       return null;
     }
@@ -102,7 +105,8 @@ class LiteRunner {
 
     for (int exampleIndex = 0; exampleIndex < examples.length; exampleIndex++) {
       SquadExample example = examples[exampleIndex];
-      List<String> queryTokens = tokenizer.basicTokenizer.tokenize(example.questionText);
+      List<String> queryTokens =
+          tokenizer.basicTokenizer.tokenize(example.questionText);
       if (queryTokens.length > maxQueryLength) {
         queryTokens = queryTokens.sublist(0, maxQueryLength);
       }
@@ -113,7 +117,8 @@ class LiteRunner {
 
       for (int i = 0; i < example.docTokens.length; i++) {
         origToTokIndex.add(allDocTokens.length);
-        List<String> subTokens = tokenizer.wordPieceTokenizer.tokenize(example.docTokens[i]);
+        List<String> subTokens =
+            tokenizer.wordPieceTokenizer.tokenize(example.docTokens[i]);
         for (var subToken in subTokens) {
           tokToOrigIndex.add(i);
           allDocTokens.add(subToken);
@@ -137,7 +142,9 @@ class LiteRunner {
         startOffset += (length < docStride) ? length : docStride;
       }
 
-      for (int docSpanIndex = 0; docSpanIndex < docSpans.length; docSpanIndex++) {
+      for (int docSpanIndex = 0;
+          docSpanIndex < docSpans.length;
+          docSpanIndex++) {
         DocSpan docSpan = docSpans[docSpanIndex];
         List<String> tokens = [];
         Map<int, int> tokenToOrigMap = {};
@@ -157,7 +164,8 @@ class LiteRunner {
           int splitTokenIndex = docSpan.start + i;
           tokenToOrigMap[tokens.length] = tokToOrigIndex[splitTokenIndex];
 
-          bool isMaxContext = _checkIsMaxContext(docSpans, docSpanIndex, splitTokenIndex);
+          bool isMaxContext =
+              _checkIsMaxContext(docSpans, docSpanIndex, splitTokenIndex);
           tokenIsMaxContext[tokens.length] = isMaxContext;
 
           tokens.add(allDocTokens[splitTokenIndex]);
@@ -167,7 +175,9 @@ class LiteRunner {
         segmentIds.add(1);
 
         List<int> inputIds = tokens
-            .map((token) => tokenizer.wordPieceTokenizer.vocab[token] ?? tokenizer.wordPieceTokenizer.vocab["[UNK]"]!)
+            .map((token) =>
+                tokenizer.wordPieceTokenizer.vocab[token] ??
+                tokenizer.wordPieceTokenizer.vocab["[UNK]"]!)
             .toList();
 
         // 创建 input_mask
@@ -217,7 +227,8 @@ class LiteRunner {
     return features;
   }
 
-  bool _checkIsMaxContext(List<DocSpan> docSpans, int docSpanIndex, int splitTokenIndex) {
+  bool _checkIsMaxContext(
+      List<DocSpan> docSpans, int docSpanIndex, int splitTokenIndex) {
     double? bestScore;
     int? bestSpanIndex;
 
@@ -231,7 +242,9 @@ class LiteRunner {
 
       int numLeftContext = splitTokenIndex - docSpan.start;
       int numRightContext = end - splitTokenIndex;
-      double score = (numLeftContext < numRightContext ? numLeftContext.toDouble() : numRightContext.toDouble()) +
+      double score = (numLeftContext < numRightContext
+              ? numLeftContext.toDouble()
+              : numRightContext.toDouble()) +
           0.01 * docSpan.length;
 
       if (bestScore == null || score > bestScore) {

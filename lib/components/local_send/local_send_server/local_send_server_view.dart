@@ -10,7 +10,7 @@ class LocalSendServerComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final LocalSendServerLogic logic = Get.put(LocalSendServerLogic());
+    //final LocalSendServerLogic logic = Get.put(LocalSendServerLogic());
     final LocalSendServerState state = Bind.find<LocalSendServerLogic>().state;
 
     return GetBuilder<LocalSendServerLogic>(

@@ -57,7 +57,8 @@ class EditState {
   bool get autoWeather => PrefUtil.getValue<bool>('autoWeather')!;
 
   // 首行缩进
-  bool get firstLineIndent => (PrefUtil.getValue<bool>('firstLineIndent')!) && type == DiaryType.text;
+  bool get firstLineIndent =>
+      (PrefUtil.getValue<bool>('firstLineIndent')!) && type == DiaryType.text;
 
   // 自动分类
   bool get autoCategory => PrefUtil.getValue<bool>('autoCategory')!;

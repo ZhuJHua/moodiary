@@ -34,7 +34,10 @@ class SmallThumbShape extends SfThumbShape {
     context.canvas.drawCircle(center, radius, thumbPaint);
 
     if (child != null) {
-      context.paintChild(child, Offset(center.dx - child.size.width / 2, center.dy - child.size.height / 2));
+      context.paintChild(
+          child,
+          Offset(center.dx - child.size.width / 2,
+              center.dy - child.size.height / 2));
     }
   }
 }
@@ -82,7 +85,8 @@ class AudioPlayerComponent extends StatelessWidget {
                       Obx(() {
                         return SfSlider(
                           value: state.totalDuration.value != Duration.zero
-                              ? ((state.currentDuration.value.inMilliseconds / state.totalDuration.value.inMilliseconds)
+                              ? ((state.currentDuration.value.inMilliseconds /
+                                      state.totalDuration.value.inMilliseconds)
                                   .clamp(0, 1))
                               : 0,
                           onChangeEnd: (value) {
@@ -103,15 +107,23 @@ class AudioPlayerComponent extends StatelessWidget {
                           children: [
                             Obx(() {
                               return Text(
-                                state.totalDuration.value.toString().split('.')[0].padLeft(8, '0'),
-                                style: TextStyle(color: colorScheme.onSecondaryContainer),
+                                state.totalDuration.value
+                                    .toString()
+                                    .split('.')[0]
+                                    .padLeft(8, '0'),
+                                style: TextStyle(
+                                    color: colorScheme.onSecondaryContainer),
                               );
                             }),
                             IconButton.filled(
                               onPressed: () {
-                                logic.audioPlayer.state == PlayerState.playing ? logic.pause() : logic.play(path);
+                                logic.audioPlayer.state == PlayerState.playing
+                                    ? logic.pause()
+                                    : logic.play(path);
                               },
-                              style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                              style: const ButtonStyle(
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap),
                               icon: AnimatedIcon(
                                 icon: AnimatedIcons.play_pause,
                                 color: colorScheme.onPrimary,
@@ -120,8 +132,12 @@ class AudioPlayerComponent extends StatelessWidget {
                             ),
                             Obx(() {
                               return Text(
-                                state.currentDuration.value.toString().split('.')[0].padLeft(8, '0'),
-                                style: TextStyle(color: colorScheme.onSecondaryContainer),
+                                state.currentDuration.value
+                                    .toString()
+                                    .split('.')[0]
+                                    .padLeft(8, '0'),
+                                style: TextStyle(
+                                    color: colorScheme.onSecondaryContainer),
                               );
                             }),
                           ],

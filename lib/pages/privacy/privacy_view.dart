@@ -104,7 +104,9 @@ class PrivacyPage extends StatelessWidget {
 我们鼓励父母或监护人指导未满十八岁的未成年人使用我们的服务。我们建议未成年人鼓励他们的父母或监护人阅读本《隐私政策》，并建议未成年人在提交的个人信息之前寻求父母或监护人的同意和指导。''',
         selectable: true,
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
-        config: colorScheme.brightness == Brightness.dark ? MarkdownConfig.darkConfig : MarkdownConfig.defaultConfig,
+        config: colorScheme.brightness == Brightness.dark
+            ? MarkdownConfig.darkConfig
+            : MarkdownConfig.defaultConfig,
       ),
     );
   }

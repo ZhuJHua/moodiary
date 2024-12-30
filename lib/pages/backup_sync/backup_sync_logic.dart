@@ -22,7 +22,8 @@ class BackupSyncLogic extends GetxController {
   //导入
   Future<void> import() async {
     Get.backLegacy();
-    FilePickerResult? result = await FilePicker.platform.pickFiles(allowedExtensions: ['zip'], type: FileType.custom);
+    FilePickerResult? result = await FilePicker.platform
+        .pickFiles(allowedExtensions: ['zip'], type: FileType.custom);
     if (result != null) {
       NoticeUtil.showToast('数据导入中，请不要离开页面');
       await FileUtil.extractFile(result.files.single.path!);

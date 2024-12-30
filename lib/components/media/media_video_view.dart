@@ -13,7 +13,8 @@ class MediaVideoComponent extends StatelessWidget {
   final DateTime dateTime;
   final List<String> videoList;
 
-  const MediaVideoComponent({super.key, required this.dateTime, required this.videoList});
+  const MediaVideoComponent(
+      {super.key, required this.dateTime, required this.videoList});
 
   //点击视频跳转到视频预览
   void _toVideoView(List<String> videoPathList, int index) {

@@ -52,9 +52,11 @@ class SearchSheetComponent extends StatelessWidget {
                     : ListView.builder(
                         itemCount: state.searchList.length,
                         itemBuilder: (context, index) {
-                          Bind.lazyPut(() => SearchCardLogic(), tag: index.toString());
+                          Bind.lazyPut(() => SearchCardLogic(),
+                              tag: index.toString());
                           return Padding(
-                            padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0, bottom: 0.0),
+                            padding: const EdgeInsets.only(
+                                left: 8.0, right: 8.0, top: 8.0, bottom: 0.0),
                             child: SearchCardComponent(
                               diary: state.searchList[index],
                               index: index.toString(),

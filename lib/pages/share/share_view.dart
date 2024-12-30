@@ -20,7 +20,9 @@ class SharePage extends StatelessWidget {
     final textStyle = Theme.of(context).textTheme;
     var imageColor = state.diary.imageColor;
     final colorScheme = imageColor != null
-        ? ColorScheme.fromSeed(seedColor: Color(imageColor), brightness: Theme.of(context).brightness)
+        ? ColorScheme.fromSeed(
+            seedColor: Color(imageColor),
+            brightness: Theme.of(context).brightness)
         : Theme.of(context).colorScheme;
     const cardSize = 300.0;
     return GetBuilder<ShareLogic>(
@@ -28,8 +30,9 @@ class SharePage extends StatelessWidget {
         return Theme(
           data: imageColor != null
               ? Theme.of(context).copyWith(
-                  colorScheme:
-                      ColorScheme.fromSeed(seedColor: Color(imageColor), brightness: Theme.of(context).brightness))
+                  colorScheme: ColorScheme.fromSeed(
+                      seedColor: Color(imageColor),
+                      brightness: Theme.of(context).brightness))
               : Theme.of(context),
           child: Scaffold(
             backgroundColor: colorScheme.surface,
@@ -47,7 +50,8 @@ class SharePage extends StatelessWidget {
                     color: colorScheme.surfaceContainerLow,
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.shadow.withAlpha((255 * 0.5).toInt()),
+                        color:
+                            colorScheme.shadow.withAlpha((255 * 0.5).toInt()),
                         blurRadius: 5.0,
                         offset: const Offset(5.0, 10.0),
                       )
@@ -63,7 +67,8 @@ class SharePage extends StatelessWidget {
                           height: cardSize * 1.618 * 0.618,
                           decoration: BoxDecoration(
                             image: DecorationImage(
-                                image: FileImage(File(FileUtil.getRealPath('image', state.diary.imageName.first))),
+                                image: FileImage(File(FileUtil.getRealPath(
+                                    'image', state.diary.imageName.first))),
                                 fit: BoxFit.cover),
                           ),
                         )
@@ -81,7 +86,8 @@ class SharePage extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
+                        padding: const EdgeInsets.only(
+                            left: 12, right: 12, bottom: 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -89,7 +95,8 @@ class SharePage extends StatelessWidget {
                               children: [
                                 MoodIconComponent(
                                   value: state.diary.mood,
-                                  width: (textStyle.titleSmall!.fontSize! * textStyle.titleSmall!.height!),
+                                  width: (textStyle.titleSmall!.fontSize! *
+                                      textStyle.titleSmall!.height!),
                                 ),
                                 if (state.diary.weather.isNotEmpty) ...[
                                   const SizedBox(
@@ -100,7 +107,8 @@ class SharePage extends StatelessWidget {
                                   ),
                                   Icon(
                                     WeatherIcon.map[state.diary.weather.first],
-                                    size: textStyle.titleSmall!.fontSize! * textStyle.titleSmall!.height!,
+                                    size: textStyle.titleSmall!.fontSize! *
+                                        textStyle.titleSmall!.height!,
                                   )
                                 ],
                                 const SizedBox(

@@ -34,7 +34,9 @@ class RecordSheetComponent extends StatelessWidget {
                         : Center(
                             child: Container(
                             decoration: BoxDecoration(
-                                border: Border.all(color: colorScheme.outline, width: 4.0), shape: BoxShape.circle),
+                                border: Border.all(
+                                    color: colorScheme.outline, width: 4.0),
+                                shape: BoxShape.circle),
                             child: IconButton(
                                 onPressed: () {
                                   logic.startRecorder();
@@ -66,7 +68,9 @@ class RecordSheetComponent extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Obx(() {
-                                    return Text(state.durationTime.value.toString().split('.')[0]);
+                                    return Text(state.durationTime.value
+                                        .toString()
+                                        .split('.')[0]);
                                   }),
                                 ],
                               ),
@@ -80,7 +84,9 @@ class RecordSheetComponent extends StatelessWidget {
                                       child: const Text('取消')),
                                   FilledButton(
                                       onPressed: () {
-                                        state.isRecording.value ? logic.pauseRecorder() : logic.resumeRecorder();
+                                        state.isRecording.value
+                                            ? logic.pauseRecorder()
+                                            : logic.resumeRecorder();
                                       },
                                       child: AnimatedIcon(
                                         icon: AnimatedIcons.play_pause,

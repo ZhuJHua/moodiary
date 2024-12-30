@@ -38,7 +38,8 @@ class LocalSendClientLogic extends GetxController {
 
   void _sendBroadcast() {
     const message = 'Looking for server';
-    socket.send(message.codeUnits, InternetAddress('255.255.255.255'), state.scanPort);
+    socket.send(
+        message.codeUnits, InternetAddress('255.255.255.255'), state.scanPort);
     LogUtil.printInfo('Broadcast sent');
   }
 
@@ -127,7 +128,8 @@ class LocalSendClientLogic extends GetxController {
     // 如果有分类，把分类名字带过去
     if (diary.categoryId != null) {
       LogUtil.printInfo(diary.categoryId);
-      var categoryName = IsarUtil.getCategoryName(diary.categoryId!)!.categoryName;
+      var categoryName =
+          IsarUtil.getCategoryName(diary.categoryId!)!.categoryName;
       formData.fields.add(MapEntry('categoryName', categoryName));
     }
     // 同步添加图片文件
@@ -151,7 +153,8 @@ class LocalSendClientLogic extends GetxController {
       final filePath = FileUtil.getRealPath('thumbnail', videoName);
       formData.files.add(MapEntry(
         'thumbnail',
-        await dio.MultipartFile.fromFile(filePath, filename: 'thumbnail-${videoName.substring(6, 42)}.jpeg'),
+        await dio.MultipartFile.fromFile(filePath,
+            filename: 'thumbnail-${videoName.substring(6, 42)}.jpeg'),
       ));
     }
     // 同步添加音频文件
@@ -206,7 +209,8 @@ class LocalSendClientLogic extends GetxController {
     // 创建 FormData 并同步添加 JSON 和文件
     dio.FormData formData = dio.FormData();
     // 添加 JSON 数据
-    formData.files.add(MapEntry('file', await dio.MultipartFile.fromFile(filePath)));
+    formData.files
+        .add(MapEntry('file', await dio.MultipartFile.fromFile(filePath)));
 
     final uploadSpeedCalculator = UploadSpeedCalculator();
     // 发送请求并监听进度
@@ -233,7 +237,8 @@ class LocalSendClientLogic extends GetxController {
   Future<void> setDiary(Duration duration) async {
     Get.backLegacy();
     var now = DateTime.now();
-    state.diaryToSend.value = await IsarUtil.getDiariesByDateRange(now.subtract(duration), now);
+    state.diaryToSend.value =
+        await IsarUtil.getDiariesByDateRange(now.subtract(duration), now);
   }
 
   Future<void> setAllDiary() async {

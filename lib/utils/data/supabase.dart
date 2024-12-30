@@ -38,7 +38,9 @@ class SupabaseUtil {
     //User不为空说明已经登录
     if (u != null) {
       //插入数据库时加一个UserID字段作为唯一标识
-      await _supabase.from('diary').insert(List.generate(diaryList.length, (index) {}));
+      await _supabase
+          .from('diary')
+          .insert(List.generate(diaryList.length, (index) {}));
     }
   }
 

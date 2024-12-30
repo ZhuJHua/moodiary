@@ -7,5 +7,6 @@ enum ViewModeType {
   final int number;
   final String value;
 
-  static ViewModeType getType(int number) => ViewModeType.values.firstWhere((e) => e.number == number);
+  static ViewModeType getType(int number) =>
+      ViewModeType.values.firstWhere((e) => e.number == number);
 }

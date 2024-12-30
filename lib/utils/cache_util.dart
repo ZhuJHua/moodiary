@@ -3,7 +3,8 @@ import 'dart:async';
 import 'data/pref.dart';
 
 class CacheUtil {
-  static Future<List<String>?> getCacheList(String key, Future<List<String>?> Function() fetchData,
+  static Future<List<String>?> getCacheList(
+      String key, Future<List<String>?> Function() fetchData,
       {int maxAgeMillis = 900000}) async {
     var cachedData = PrefUtil.getValue<List<String>>(key);
     // 检查缓存是否有效，如果无效则更新缓存
@@ -23,10 +24,12 @@ class CacheUtil {
     return DateTime.now().millisecondsSinceEpoch - timestamp >= maxAgeMillis;
   }
 
-  static Future<void> _updateCacheList(String key, Future<List<String>?> Function() fetchData) async {
+  static Future<void> _updateCacheList(
+      String key, Future<List<String>?> Function() fetchData) async {
     var newData = await fetchData();
     if (newData != null) {
-      await PrefUtil.setValue<List<String>>(key, newData..add(DateTime.now().millisecondsSinceEpoch.toString()));
+      await PrefUtil.setValue<List<String>>(
+          key, newData..add(DateTime.now().millisecondsSinceEpoch.toString()));
     }
   }
 }

@@ -12,10 +12,7 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<AboutLogic>();
     final state = Bind.find<AboutLogic>().state;
-
     final colorScheme = Theme.of(context).colorScheme;
-
-    final textStyle = Theme.of(context).textTheme;
 
     Widget buildLogoTitle() {
       return Padding(
@@ -33,7 +30,10 @@ class AboutPage extends StatelessWidget {
             Column(
               spacing: 4.0,
               mainAxisSize: MainAxisSize.min,
-              children: [Text(state.appName), Text('Version: ${state.appVersion}')],
+              children: [
+                Text(state.appName),
+                Text('Version: ${state.appVersion}')
+              ],
             )
           ],
         ),
@@ -60,7 +60,8 @@ class AboutPage extends StatelessWidget {
                     title: Text(l10n.aboutUpdate),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () async {
-                      await UpdateUtil.checkShouldUpdate(state.appVersion, handle: true);
+                      await UpdateUtil.checkShouldUpdate(state.appVersion,
+                          handle: true);
                     },
                   );
                 }),

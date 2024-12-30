@@ -91,7 +91,8 @@ class PrefUtil {
 
   static Future<void> initPref() async {
     _prefs = await SharedPreferencesWithCache.create(
-        cacheOptions: const SharedPreferencesWithCacheOptions(allowList: allowList));
+        cacheOptions:
+            const SharedPreferencesWithCacheOptions(allowList: allowList));
     // 首次启动
     var firstStart = _prefs.getBool('firstStart') ?? true;
     await _prefs.setBool('firstStart', firstStart);
@@ -104,12 +105,14 @@ class PrefUtil {
     /// 数据库版本变更
     /// v2.4.8
     if (appVersion != null && appVersion.split('+')[0].compareTo('2.4.8') < 0) {
-      await compute(IsarUtil.mergeToV2_4_8, FileUtil.getRealPath('database', ''));
+      await compute(
+          IsarUtil.mergeToV2_4_8, FileUtil.getRealPath('database', ''));
     }
 
     /// v2.6.0
     if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.0') < 0) {
-      await compute(IsarUtil.mergeToV2_6_0, FileUtil.getRealPath('database', ''));
+      await compute(
+          IsarUtil.mergeToV2_6_0, FileUtil.getRealPath('database', ''));
     }
 
     /// 修复bug
@@ -129,7 +132,10 @@ class PrefUtil {
     }
 
     // 如果是首次启动或版本不一致
-    if (kDebugMode || firstStart || appVersion == null || appVersion != currentVersion) {
+    if (kDebugMode ||
+        firstStart ||
+        appVersion == null ||
+        appVersion != currentVersion) {
       await _prefs.setString('appVersion', currentVersion);
       await setDefaultValues();
       //初始化所需目录
@@ -142,7 +148,8 @@ class PrefUtil {
     await _prefs.setBool('autoSync', _prefs.getBool('autoSync') ?? false);
 
     /// 支持相关，每次都重新获取
-    await _prefs.setBool('supportBiometrics', await AuthUtil.canCheckBiometrics());
+    await _prefs.setBool(
+        'supportBiometrics', await AuthUtil.canCheckBiometrics());
 
     var supportDynamicColor = await ThemeUtil.supportDynamicColor();
     await _prefs.setBool('supportDynamicColor', supportDynamicColor);
@@ -157,9 +164,13 @@ class PrefUtil {
               (color.b * 255).toInt());
     }
 
-    await _prefs.setInt('color', _prefs.getInt('color') ?? (await ThemeUtil.supportDynamicColor() ? -1 : 4));
+    await _prefs.setInt(
+        'color',
+        _prefs.getInt('color') ??
+            (await ThemeUtil.supportDynamicColor() ? -1 : 4));
     await _prefs.setInt('themeMode', _prefs.getInt('themeMode') ?? 0);
-    await _prefs.setBool('dynamicColor', _prefs.getBool('dynamicColor') ?? true);
+    await _prefs.setBool(
+        'dynamicColor', _prefs.getBool('dynamicColor') ?? true);
     await _prefs.setInt('quality', _prefs.getInt('quality') ?? 2);
     await _prefs.setBool('local', _prefs.getBool('local') ?? false);
     await _prefs.setBool('lock', _prefs.getBool('lock') ?? false);
@@ -168,20 +179,30 @@ class PrefUtil {
     await _prefs.setInt('fontTheme', _prefs.getInt('fontTheme') ?? 0);
 
     /// 支持相关，重新获取
-    await _prefs.setString('supportPath', (await getApplicationSupportDirectory()).path);
-    await _prefs.setString('cachePath', (await getApplicationCacheDirectory()).path);
+    await _prefs.setString(
+        'supportPath', (await getApplicationSupportDirectory()).path);
+    await _prefs.setString(
+        'cachePath', (await getApplicationCacheDirectory()).path);
 
     await _prefs.setBool('getWeather', _prefs.getBool('getWeather') ?? false);
-    await _prefs.setInt('startTime', _prefs.getInt('startTime') ?? DateTime.now().millisecondsSinceEpoch);
-    await _prefs.setString('customTitleName', _prefs.getString('customTitleName') ?? '');
-    await _prefs.setInt('homeViewMode', _prefs.getInt('homeViewMode') ?? ViewModeType.list.number);
+    await _prefs.setInt('startTime',
+        _prefs.getInt('startTime') ?? DateTime.now().millisecondsSinceEpoch);
+    await _prefs.setString(
+        'customTitleName', _prefs.getString('customTitleName') ?? '');
+    await _prefs.setInt('homeViewMode',
+        _prefs.getInt('homeViewMode') ?? ViewModeType.list.number);
     await _prefs.setBool('autoWeather', _prefs.getBool('autoWeather') ?? false);
-    await _prefs.setStringList('webDavOption', _prefs.getStringList('webDavOption') ?? []);
+    await _prefs.setStringList(
+        'webDavOption', _prefs.getStringList('webDavOption') ?? []);
     await _prefs.setBool('diaryHeader', _prefs.getBool('diaryHeader') ?? true);
-    await _prefs.setBool('firstLineIndent', _prefs.getBool('firstLineIndent') ?? false);
-    await _prefs.setBool('autoCategory', _prefs.getBool('autoCategory') ?? false);
-    await _prefs.setBool('showWritingTime', _prefs.getBool('showWritingTime') ?? true);
-    await _prefs.setBool('showWordCount', _prefs.getBool('showWordCount') ?? true);
+    await _prefs.setBool(
+        'firstLineIndent', _prefs.getBool('firstLineIndent') ?? false);
+    await _prefs.setBool(
+        'autoCategory', _prefs.getBool('autoCategory') ?? false);
+    await _prefs.setBool(
+        'showWritingTime', _prefs.getBool('showWritingTime') ?? true);
+    await _prefs.setBool(
+        'showWordCount', _prefs.getBool('showWordCount') ?? true);
     await _prefs.setString('customFont', _prefs.getString('customFont') ?? '');
   }
 

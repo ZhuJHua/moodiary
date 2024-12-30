@@ -21,7 +21,8 @@ class PrimaryScrollWrapperState extends State<PrimaryScrollWrapper> {
   @override
   Widget build(BuildContext context) {
     return CustomPrimaryScrollController(
-      scrollController: _scrollController..realController = PrimaryScrollController.of(context),
+      scrollController: _scrollController
+        ..realController = PrimaryScrollController.of(context),
       child: widget.child,
     );
   }
@@ -29,7 +30,8 @@ class PrimaryScrollWrapperState extends State<PrimaryScrollWrapper> {
   void onPageChange(bool show) => _scrollController.onAttachChange(show);
 }
 
-class CustomPrimaryScrollController extends InheritedWidget implements PrimaryScrollController {
+class CustomPrimaryScrollController extends InheritedWidget
+    implements PrimaryScrollController {
   final ScrollController scrollController;
 
   const CustomPrimaryScrollController({
@@ -45,10 +47,12 @@ class CustomPrimaryScrollController extends InheritedWidget implements PrimarySc
   get controller => scrollController;
 
   @override
-  bool updateShouldNotify(CustomPrimaryScrollController oldWidget) => controller != oldWidget.controller;
+  bool updateShouldNotify(CustomPrimaryScrollController oldWidget) =>
+      controller != oldWidget.controller;
 
   @override
-  Set<TargetPlatform> get automaticallyInheritForPlatforms => TargetPlatform.values.toSet();
+  Set<TargetPlatform> get automaticallyInheritForPlatforms =>
+      TargetPlatform.values.toSet();
 
   @override
   Axis get scrollDirection => Axis.vertical;
@@ -66,7 +70,8 @@ class ScrollControllerWrapper implements ScrollController {
   void addListener(listener) => realController.addListener(listener);
 
   @override
-  Future<void> animateTo(double offset, {required Duration duration, required Curve curve}) =>
+  Future<void> animateTo(double offset,
+          {required Duration duration, required Curve curve}) =>
       realController.animateTo(offset, duration: duration, curve: curve);
 
   @override
@@ -110,12 +115,14 @@ class ScrollControllerWrapper implements ScrollController {
   }
 
   @override
-  ScrollPosition createScrollPosition(ScrollPhysics physics, ScrollContext context, ScrollPosition? oldPosition) {
+  ScrollPosition createScrollPosition(ScrollPhysics physics,
+      ScrollContext context, ScrollPosition? oldPosition) {
     return realController.createScrollPosition(physics, context, oldPosition);
   }
 
   @override
-  void debugFillDescription(List<String> description) => realController.debugFillDescription(description);
+  void debugFillDescription(List<String> description) =>
+      realController.debugFillDescription(description);
 
   @override
   String? get debugLabel => realController.debugLabel;

@@ -33,7 +33,8 @@ class RegisterFormLogic extends GetxController {
     unFocus();
     if (state.formKey.currentState!.validate()) {
       state.formKey.currentState!.save();
-      await SupabaseUtil().signUp(state.email, state.password).then((value) {}, onError: (_) {
+      await SupabaseUtil().signUp(state.email, state.password).then((value) {},
+          onError: (_) {
         NoticeUtil.showToast('该账号已经注册');
       });
     }

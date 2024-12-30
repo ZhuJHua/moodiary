@@ -9,7 +9,10 @@ class OptionDialog extends StatelessWidget {
 
   const OptionDialog({super.key, required this.title, required this.options});
 
-  Widget _buildOption({required String option, required Function onTap, required ColorScheme colorScheme}) {
+  Widget _buildOption(
+      {required String option,
+      required Function onTap,
+      required ColorScheme colorScheme}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Ink(
@@ -24,7 +27,8 @@ class OptionDialog extends StatelessWidget {
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(option, style: TextStyle(color: colorScheme.onSecondaryContainer)),
+            child: Text(option,
+                style: TextStyle(color: colorScheme.onSecondaryContainer)),
           ),
         ),
       ),
@@ -37,7 +41,8 @@ class OptionDialog extends StatelessWidget {
     return SimpleDialog(
       title: Text(title),
       children: options.entries
-          .map((entry) => _buildOption(option: entry.key, onTap: entry.value, colorScheme: colorScheme))
+          .map((entry) => _buildOption(
+              option: entry.key, onTap: entry.value, colorScheme: colorScheme))
           .toList(),
     );
   }

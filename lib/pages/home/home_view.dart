@@ -34,7 +34,8 @@ class HomePage extends StatelessWidget {
           builder: (context, child) {
             return state.isFabExpanded
                 ? ModalBarrier(
-                    color: colorScheme.surfaceContainer.withAlpha((255 * 0.6 * logic.fabAnimation.value).toInt()),
+                    color: colorScheme.surfaceContainer.withAlpha(
+                        (255 * 0.6 * logic.fabAnimation.value).toInt()),
                     onDismiss: () async {
                       await logic.closeFab();
                     },
@@ -54,11 +55,13 @@ class HomePage extends StatelessWidget {
                 },
                 child: Container(
                   decoration: ShapeDecoration(
-                      shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: AppBorderRadius.largeBorderRadius),
                       color: colorScheme.tertiaryContainer,
                       shadows: [
                         BoxShadow(
-                            color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                            color: colorScheme.shadow
+                                .withAlpha((255 * 0.1).toInt()),
                             offset: const Offset(0, 2),
                             blurRadius: 2,
                             spreadRadius: 2)
@@ -90,7 +93,9 @@ class HomePage extends StatelessWidget {
         const double baseOffset = mainButtonHeight + mainButtonSpacing;
         return index == 1
             ? baseOffset * index * animationValue
-            : (baseOffset + (secondaryButtonHeight + mainButtonSpacing) * (index - 1)) * animationValue;
+            : (baseOffset +
+                    (secondaryButtonHeight + mainButtonSpacing) * (index - 1)) *
+                animationValue;
       }
 
       return Visibility(
@@ -98,7 +103,8 @@ class HomePage extends StatelessWidget {
         child: AnimatedBuilder(
           animation: logic.fabAnimation,
           builder: (context, child) {
-            final verticalTranslation = calculateVerticalTranslation(index, logic.fabAnimation.value);
+            final verticalTranslation =
+                calculateVerticalTranslation(index, logic.fabAnimation.value);
             return Positioned(
               left: 0,
               right: 0,
@@ -116,11 +122,13 @@ class HomePage extends StatelessWidget {
               children: [
                 Container(
                   decoration: ShapeDecoration(
-                    shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.smallBorderRadius),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: AppBorderRadius.smallBorderRadius),
                     color: colorScheme.secondaryContainer,
                     shadows: [
                       BoxShadow(
-                        color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                        color:
+                            colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
                         offset: const Offset(0, 2),
                         blurRadius: 2,
                         spreadRadius: 2,
@@ -130,16 +138,19 @@ class HomePage extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
                   child: Text(
                     label,
-                    style: textStyle.labelMedium!.copyWith(color: colorScheme.onSecondaryContainer),
+                    style: textStyle.labelMedium!
+                        .copyWith(color: colorScheme.onSecondaryContainer),
                   ),
                 ),
                 Container(
                   decoration: ShapeDecoration(
-                    shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: AppBorderRadius.largeBorderRadius),
                     color: colorScheme.primaryContainer,
                     shadows: [
                       BoxShadow(
-                        color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                        color:
+                            colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
                         offset: const Offset(0, 2),
                         blurRadius: 2,
                         spreadRadius: 2,
@@ -167,18 +178,24 @@ class HomePage extends StatelessWidget {
           builder: (context, child) {
             return GestureDetector(
               onTap: () async {
-                state.isFabExpanded ? await logic.closeFab() : await logic.openFab();
+                state.isFabExpanded
+                    ? await logic.closeFab()
+                    : await logic.openFab();
               },
               child: Container(
                 width: 56.0,
                 height: 56.0,
                 decoration: ShapeDecoration(
-                    shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.largeBorderRadius),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: AppBorderRadius.largeBorderRadius),
                     color: Color.lerp(
-                        colorScheme.primaryContainer, colorScheme.surfaceContainerHighest, logic.fabAnimation.value),
+                        colorScheme.primaryContainer,
+                        colorScheme.surfaceContainerHighest,
+                        logic.fabAnimation.value),
                     shadows: [
                       BoxShadow(
-                        color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                        color:
+                            colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
                         offset: const Offset(0, 2),
                         blurRadius: 2,
                         spreadRadius: 2,
@@ -188,8 +205,8 @@ class HomePage extends StatelessWidget {
                     angle: 3 * pi / 4 * logic.fabAnimation.value,
                     child: Icon(
                       FontAwesomeIcons.plus,
-                      color:
-                          Color.lerp(colorScheme.onPrimaryContainer, colorScheme.onSurface, logic.fabAnimation.value),
+                      color: Color.lerp(colorScheme.onPrimaryContainer,
+                          colorScheme.onSurface, logic.fabAnimation.value),
                     )),
               ),
             );
@@ -276,7 +293,10 @@ class HomePage extends StatelessWidget {
                 alignment: Alignment.topCenter,
                 child: Container(
                   decoration: BoxDecoration(
-                    border: Border(top: BorderSide(color: colorScheme.outline.withAlpha(150), width: 0.5)),
+                    border: Border(
+                        top: BorderSide(
+                            color: colorScheme.outline.withAlpha(150),
+                            width: 0.5)),
                   ),
                   child: Stack(
                     children: [
@@ -285,7 +305,8 @@ class HomePage extends StatelessWidget {
                         selectedIndex: state.navigatorIndex,
                         height: navigatorBarHeight,
                         onDestinationSelected: logic.changeNavigator,
-                        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                        labelBehavior:
+                            NavigationDestinationLabelBehavior.alwaysHide,
                       ),
                       buildModal()
                     ],
@@ -304,8 +325,10 @@ class HomePage extends StatelessWidget {
             key: const ValueKey('primary navigation medium'),
             builder: (_) {
               return AdaptiveScaffold.standardNavigationRail(
-                destinations:
-                    destinations.map((destination) => AdaptiveScaffold.toRailDestination(destination)).toList(),
+                destinations: destinations
+                    .map((destination) =>
+                        AdaptiveScaffold.toRailDestination(destination))
+                    .toList(),
                 selectedIndex: state.navigatorIndex,
                 onDestinationSelected: (index) {
                   logic.changeNavigator(index);
@@ -316,7 +339,10 @@ class HomePage extends StatelessWidget {
           Breakpoints.mediumLargeAndUp: SlotLayout.from(
             key: const ValueKey('primary navigation medium large'),
             builder: (_) => AdaptiveScaffold.standardNavigationRail(
-              destinations: destinations.map((destination) => AdaptiveScaffold.toRailDestination(destination)).toList(),
+              destinations: destinations
+                  .map((destination) =>
+                      AdaptiveScaffold.toRailDestination(destination))
+                  .toList(),
               extended: true,
               selectedIndex: state.navigatorIndex,
               onDestinationSelected: (index) {

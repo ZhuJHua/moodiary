@@ -78,11 +78,23 @@ class FileUtil {
     if (bytes < 1024) {
       return {'size': bytes.toString(), 'unit': 'B', 'bytes': bytes};
     } else if (bytes < 1024 * 1024) {
-      return {'size': (bytes / 1024).toStringAsFixed(2), 'unit': 'KB', 'bytes': bytes};
+      return {
+        'size': (bytes / 1024).toStringAsFixed(2),
+        'unit': 'KB',
+        'bytes': bytes
+      };
     } else if (bytes < 1024 * 1024 * 1024) {
-      return {'size': (bytes / (1024 * 1024)).toStringAsFixed(2), 'unit': 'MB', 'bytes': bytes};
+      return {
+        'size': (bytes / (1024 * 1024)).toStringAsFixed(2),
+        'unit': 'MB',
+        'bytes': bytes
+      };
     } else {
-      return {'size': (bytes / (1024 * 1024 * 1024)).toStringAsFixed(2), 'unit': 'GB', 'bytes': bytes};
+      return {
+        'size': (bytes / (1024 * 1024 * 1024)).toStringAsFixed(2),
+        'unit': 'GB',
+        'bytes': bytes
+      };
     }
   }
 
@@ -99,7 +111,8 @@ class FileUtil {
     var dataPath = params['dataPath'] as String;
     var zipEncoder = ZipFileEncoder();
     var datetime = DateTime.now();
-    var fileName = join(zipPath, '心绪日记${datetime.toString().split(' ')[0]}备份.zip');
+    var fileName =
+        join(zipPath, '心绪日记${datetime.toString().split(' ')[0]}备份.zip');
     final outputStream = OutputFileStream(fileName);
     zipEncoder.createWithBuffer(outputStream);
     //备份照片
@@ -109,8 +122,10 @@ class FileUtil {
     //备份视频
     await zipEncoder.addDirectory(Directory(join(dataPath, 'video')));
     //备份数据库
-    await IsarUtil.exportIsar(dataPath, zipPath, '${datetime.millisecondsSinceEpoch}.isar');
-    await zipEncoder.addFile(File(join(zipPath, '${datetime.millisecondsSinceEpoch}.isar')));
+    await IsarUtil.exportIsar(
+        dataPath, zipPath, '${datetime.millisecondsSinceEpoch}.isar');
+    await zipEncoder.addFile(
+        File(join(zipPath, '${datetime.millisecondsSinceEpoch}.isar')));
     await zipEncoder.close();
     return fileName;
   }
@@ -183,7 +198,8 @@ class FileUtil {
     return fileNames;
   }
 
-  static Future<void> deleteMediaFiles(Set<String> files, String mediaType) async {
+  static Future<void> deleteMediaFiles(
+      Set<String> files, String mediaType) async {
     for (var name in files) {
       final filePath = getRealPath(mediaType, name);
       final file = File(filePath);
@@ -201,9 +217,11 @@ class FileUtil {
     return join(_filePath, 'error.log');
   }
 
-  static Future<void> cleanUpOldMediaFiles(Diary oldDiary, Diary newDiary) async {
+  static Future<void> cleanUpOldMediaFiles(
+      Diary oldDiary, Diary newDiary) async {
     // 通用删除方法
-    Future<void> deleteMediaFiles(List<String> oldFiles, List<String> newFiles, String type) async {
+    Future<void> deleteMediaFiles(
+        List<String> oldFiles, List<String> newFiles, String type) async {
       final tasks = oldFiles
           .where((file) => !newFiles.contains(file))
           .map((file) => deleteFile(getRealPath(type, file)))
@@ -224,9 +242,12 @@ class FileUtil {
       directory: dir,
     );
     // 获取各类型的所有文件路径并转换为Set以提高查找效率
-    final imageFiles = (await FileUtil.getDirFileName(MediaType.image.value)).toSet();
-    final audioFiles = (await FileUtil.getDirFileName(MediaType.audio.value)).toSet();
-    final videoFiles = (await FileUtil.getDirFileName(MediaType.video.value)).toSet();
+    final imageFiles =
+        (await FileUtil.getDirFileName(MediaType.image.value)).toSet();
+    final audioFiles =
+        (await FileUtil.getDirFileName(MediaType.audio.value)).toSet();
+    final videoFiles =
+        (await FileUtil.getDirFileName(MediaType.video.value)).toSet();
 
     // 用于存储日记中引用的文件名的Set
     final usedImages = <String>{};
@@ -239,7 +260,8 @@ class FileUtil {
     // 分批获取日记并收集引用的文件名
     const batchSize = 50;
     for (int i = 0; i < count; i += batchSize) {
-      final diaryList = await isar.diarys.where().findAllAsync(offset: i, limit: batchSize);
+      final diaryList =
+          await isar.diarys.where().findAllAsync(offset: i, limit: batchSize);
       for (var diary in diaryList) {
         usedImages.addAll(diary.imageName);
         usedAudios.addAll(diary.audioName);

@@ -29,6 +29,7 @@ class SyncDashBoardLogic extends GetxController {
   }
 
   void changePage(int index) {
-    pageController.animateToPage(index, duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+    pageController.animateToPage(index,
+        duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
   }
 }

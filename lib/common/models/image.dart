@@ -5,8 +5,11 @@ class BingImage {
   BingImage({this.images, this.tooltips});
 
   BingImage.fromJson(Map<String, dynamic> json) {
-    images = json["images"] == null ? null : (json["images"] as List).map((e) => Images.fromJson(e)).toList();
-    tooltips = json["tooltips"] == null ? null : Tooltips.fromJson(json["tooltips"]);
+    images = json["images"] == null
+        ? null
+        : (json["images"] as List).map((e) => Images.fromJson(e)).toList();
+    tooltips =
+        json["tooltips"] == null ? null : Tooltips.fromJson(json["tooltips"]);
   }
 
   Map<String, dynamic> toJson() {

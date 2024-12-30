@@ -8,7 +8,7 @@ class DashboardComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Get.put(DashboardLogic());
+    //final logic = Get.put(DashboardLogic());
     final state = Bind.find<DashboardLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
@@ -131,7 +131,8 @@ class DashboardComponent extends StatelessWidget {
         children: [
           Text(
             title,
-            style: textStyle.labelMedium!.copyWith(color: colorScheme.onSurface.withAlpha(220)),
+            style: textStyle.labelMedium!
+                .copyWith(color: colorScheme.onSurface.withAlpha(220)),
           ),
           Text(
             count.isEmpty ? '...' : count,

@@ -47,13 +47,16 @@ class FileOutput extends LogOutput {
 }
 
 class LogUtil {
-  static final Logger _logger = Logger(output: kDebugMode ? null : FileOutput());
+  static final Logger _logger =
+      Logger(output: kDebugMode ? null : FileOutput());
 
-  static void printError(message, {required Object error, StackTrace? stackTrace}) {
+  static void printError(message,
+      {required Object error, StackTrace? stackTrace}) {
     _logger.e(message, error: error, stackTrace: stackTrace);
   }
 
-  static void printWTF(message, {required Object error, StackTrace? stackTrace}) {
+  static void printWTF(message,
+      {required Object error, StackTrace? stackTrace}) {
     _logger.f(message, error: error, stackTrace: stackTrace);
   }
 

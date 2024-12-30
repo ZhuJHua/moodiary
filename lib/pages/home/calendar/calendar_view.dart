@@ -30,7 +30,10 @@ class CalendarPage extends StatelessWidget {
     return count / 5;
   }
 
-  Widget _buildActiveInfo({required Color lessColor, required Color moreColor, required TextStyle? textStyle}) {
+  Widget _buildActiveInfo(
+      {required Color lessColor,
+      required Color moreColor,
+      required TextStyle? textStyle}) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
@@ -76,7 +79,8 @@ class CalendarPage extends StatelessWidget {
         // 如果不存在当前日期，则添加
         var time = diary.time;
         allDate.add(DateTime(time.year, time.month, time.day));
-        if (!dateWithDiaryList.contains(DateTime(time.year, time.month, time.day))) {
+        if (!dateWithDiaryList
+            .contains(DateTime(time.year, time.month, time.day))) {
           dateWithDiaryList.add(DateTime(time.year, time.month, time.day));
         }
       }
@@ -89,8 +93,10 @@ class CalendarPage extends StatelessWidget {
           child: ExpansionTile(
             title: Text(l10n.homeNavigatorCalendar),
             initiallyExpanded: true,
-            collapsedShape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.mediumBorderRadius),
-            shape: const RoundedRectangleBorder(borderRadius: AppBorderRadius.mediumBorderRadius),
+            collapsedShape: const RoundedRectangleBorder(
+                borderRadius: AppBorderRadius.mediumBorderRadius),
+            shape: const RoundedRectangleBorder(
+                borderRadius: AppBorderRadius.mediumBorderRadius),
             backgroundColor: colorScheme.surfaceContainer,
             collapsedBackgroundColor: colorScheme.surfaceContainerLow,
             controller: logic.expansionTileController,
@@ -117,7 +123,9 @@ class CalendarPage extends StatelessWidget {
                         }) {
                           final contains = dateWithDiaryList.contains(date);
                           final bgColor = contains
-                              ? Color.lerp(colorScheme.surfaceContainer, colorScheme.primary,
+                              ? Color.lerp(
+                                  colorScheme.surfaceContainer,
+                                  colorScheme.primary,
                                   getDayColor(count: dateCountMap[date] ?? 0))
                               : null;
                           return Padding(
@@ -132,7 +140,9 @@ class CalendarPage extends StatelessWidget {
                                   date.day.toString(),
                                   style: textStyle?.copyWith(
                                     color: contains
-                                        ? ThemeData.estimateBrightnessForColor(bgColor!) == Brightness.dark
+                                        ? ThemeData.estimateBrightnessForColor(
+                                                    bgColor!) ==
+                                                Brightness.dark
                                             ? Colors.white
                                             : Colors.black
                                         : null,
@@ -175,10 +185,12 @@ class CalendarPage extends StatelessWidget {
         onNotification: (ScrollNotification notification) {
           if (notification is ScrollUpdateNotification) {
             const double baseThreshold = 200.0; // 基础阈值
-            final double scrollDelta = notification.scrollDelta ?? 0.0; // 滚动增量（速度）
+            final double scrollDelta =
+                notification.scrollDelta ?? 0.0; // 滚动增量（速度）
 
             // 根据速度动态调整阈值，速度越快，阈值越高
-            final double dynamicThreshold = baseThreshold + (scrollDelta.abs() / 2);
+            final double dynamicThreshold =
+                baseThreshold + (scrollDelta.abs() / 2);
 
             final currentOffset = notification.metrics.pixels;
             final distance = (currentOffset - lastScrollOffset).abs(); // 滚动距离
@@ -201,8 +213,11 @@ class CalendarPage extends StatelessWidget {
             itemBuilder: (context, index) {
               return TimeLineComponent(
                 actionColor: Color.lerp(
-                    AppColor.emoColorList.first, AppColor.emoColorList.last, state.currentMonthDiaryList[index].mood)!,
-                child: CalendarDiaryCardComponent(diary: state.currentMonthDiaryList[index]),
+                    AppColor.emoColorList.first,
+                    AppColor.emoColorList.last,
+                    state.currentMonthDiaryList[index].mood)!,
+                child: CalendarDiaryCardComponent(
+                    diary: state.currentMonthDiaryList[index]),
               );
             },
             itemScrollController: logic.itemScrollController,
@@ -231,7 +246,8 @@ class CalendarPage extends StatelessWidget {
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
                     child: state.isFetching.value
-                        ? const Center(key: ValueKey('processing'), child: Processing())
+                        ? const Center(
+                            key: ValueKey('processing'), child: Processing())
                         : (state.currentMonthDiaryList.isNotEmpty
                             ? buildCardList()
                             : const Center(

@@ -12,14 +12,14 @@ class WebDavLogic extends GetxController {
 
   WebDavUtil get webDav => WebDavUtil();
 
-  late TextEditingController webDavUrlController =
-      TextEditingController(text: state.hasOption.value ? state.currentOptions[0] : null);
+  late TextEditingController webDavUrlController = TextEditingController(
+      text: state.hasOption.value ? state.currentOptions[0] : null);
   late FocusNode webDavUrlFocusNode = FocusNode();
-  late TextEditingController usernameController =
-      TextEditingController(text: state.hasOption.value ? state.currentOptions[1] : null);
+  late TextEditingController usernameController = TextEditingController(
+      text: state.hasOption.value ? state.currentOptions[1] : null);
   late FocusNode usernameFocusNode = FocusNode();
-  late TextEditingController passwordController =
-      TextEditingController(text: state.hasOption.value ? state.currentOptions[2] : null);
+  late TextEditingController passwordController = TextEditingController(
+      text: state.hasOption.value ? state.currentOptions[2] : null);
   late FocusNode passwordFocusNode = FocusNode();
 
   @override
@@ -44,7 +44,9 @@ class WebDavLogic extends GetxController {
   Future<void> checkConnectivity() async {
     state.connectivityStatus.value = WebDavConnectivityStatus.connecting;
     var res = await webDav.checkConnectivity();
-    state.connectivityStatus.value = res ? WebDavConnectivityStatus.connected : WebDavConnectivityStatus.unconnected;
+    state.connectivityStatus.value = res
+        ? WebDavConnectivityStatus.connected
+        : WebDavConnectivityStatus.unconnected;
   }
 
   void unFocus() {
@@ -59,10 +61,13 @@ class WebDavLogic extends GetxController {
       state.formKey.currentState?.save();
 
       await webDav.updateWebDav(
-          baseUrl: webDavUrlController.text, username: usernameController.text, password: passwordController.text);
+          baseUrl: webDavUrlController.text,
+          username: usernameController.text,
+          password: passwordController.text);
       state.hasOption.value = true;
       await checkConnectivity();
-      if (state.connectivityStatus.value == WebDavConnectivityStatus.connected) {
+      if (state.connectivityStatus.value ==
+          WebDavConnectivityStatus.connected) {
         await webDav.initDir();
         NoticeUtil.showToast('保存成功');
       } else {

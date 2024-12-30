@@ -5,7 +5,8 @@ class WeatherResponse {
   Now? now;
   Refer? refer;
 
-  WeatherResponse({this.code, this.updateTime, this.fxLink, this.now, this.refer});
+  WeatherResponse(
+      {this.code, this.updateTime, this.fxLink, this.now, this.refer});
 
   WeatherResponse.fromJson(Map<String, dynamic> json) {
     code = json["code"];
@@ -37,8 +38,10 @@ class Refer {
   Refer({this.sources, this.license});
 
   Refer.fromJson(Map<String, dynamic> json) {
-    sources = json["sources"] == null ? null : List<String>.from(json["sources"]);
-    license = json["license"] == null ? null : List<String>.from(json["license"]);
+    sources =
+        json["sources"] == null ? null : List<String>.from(json["sources"]);
+    license =
+        json["license"] == null ? null : List<String>.from(json["license"]);
   }
 
   Map<String, dynamic> toJson() {

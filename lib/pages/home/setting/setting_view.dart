@@ -27,7 +27,10 @@ class SettingPage extends StatelessWidget {
       return const DashboardComponent();
     }
 
-    Widget buildAFeatureButton({required Widget icon, required String text, required Function() onTap}) {
+    Widget buildAFeatureButton(
+        {required Widget icon,
+        required String text,
+        required Function() onTap}) {
       return InkWell(
         onTap: onTap,
         borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -53,8 +56,8 @@ class SettingPage extends StatelessWidget {
         children: [
           const SettingTitleTile(title: '功能'),
           GridView(
-            gridDelegate:
-                const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 100, childAspectRatio: 1.0),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 100, childAspectRatio: 1.0),
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -235,7 +238,8 @@ class SettingPage extends StatelessWidget {
                               decoration: InputDecoration(
                                 fillColor: colorScheme.secondaryContainer,
                                 border: const UnderlineInputBorder(
-                                  borderRadius: AppBorderRadius.smallBorderRadius,
+                                  borderRadius:
+                                      AppBorderRadius.smallBorderRadius,
                                   borderSide: BorderSide.none,
                                 ),
                                 filled: true,
@@ -289,7 +293,9 @@ class SettingPage extends StatelessWidget {
                     builder: (_) {
                       return ListTile(
                         trailing: Text(
-                          state.lock ? l10n.settingLockOpen : l10n.settingLockNotOpen,
+                          state.lock
+                              ? l10n.settingLockOpen
+                              : l10n.settingLockNotOpen,
                           style: textStyle.bodySmall!.copyWith(
                             color: colorScheme.primary,
                           ),
@@ -300,8 +306,9 @@ class SettingPage extends StatelessWidget {
                               builder: (context) {
                                 return AlertDialog(
                                   title: Text(l10n.settingLock),
-                                  content:
-                                      Text(state.lock ? l10n.settingLockResetLock : l10n.settingLockChooseLockType),
+                                  content: Text(state.lock
+                                      ? l10n.settingLockResetLock
+                                      : l10n.settingLockChooseLockType),
                                   actions: [
                                     TextButton(
                                         onPressed: () {

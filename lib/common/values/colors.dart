@@ -27,5 +27,8 @@ class AppColor {
     };
   }
 
-  static List<Color> emoColorList = [const Color(0xFFFA4659), const Color(0xFF2EB872)];
+  static List<Color> emoColorList = [
+    const Color(0xFFFA4659),
+    const Color(0xFF2EB872)
+  ];
 }

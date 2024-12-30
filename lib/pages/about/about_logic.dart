@@ -24,11 +24,16 @@ class AboutLogic extends GetxController {
 
   //跳转到反馈页
   Future<void> toReportPage() async {
-    var uri = Uri(scheme: 'https', host: 'support.qq.com', path: 'products/650147', queryParameters: {
-      'nickname': PrefUtil.getValue<String>('uuid'),
-      'avatar': 'https://txc.qq.com/static/desktop/img/products/def-product-logo.png',
-      'openid': PrefUtil.getValue<String>('uuid')
-    });
+    var uri = Uri(
+        scheme: 'https',
+        host: 'support.qq.com',
+        path: 'products/650147',
+        queryParameters: {
+          'nickname': PrefUtil.getValue<String>('uuid'),
+          'avatar':
+              'https://txc.qq.com/static/desktop/img/products/def-product-logo.png',
+          'openid': PrefUtil.getValue<String>('uuid')
+        });
     await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
 

@@ -165,14 +165,19 @@ class AssistantPage extends StatelessWidget {
                                       builder: (context) {
                                         return SimpleDialog(
                                           title: const Text('选择模型'),
-                                          children: List.generate(modelMap.length, (index) {
+                                          children: List.generate(
+                                              modelMap.length, (index) {
                                             return Obx(() {
                                               return SimpleDialogOption(
                                                 child: Row(
                                                   spacing: 4.0,
                                                   children: [
                                                     Text(modelMap[index]!),
-                                                    if (state.modelVersion.value == index) ...[const Icon(Icons.check)]
+                                                    if (state.modelVersion
+                                                            .value ==
+                                                        index) ...[
+                                                      const Icon(Icons.check)
+                                                    ]
                                                   ],
                                                 ),
                                                 onPressed: () {

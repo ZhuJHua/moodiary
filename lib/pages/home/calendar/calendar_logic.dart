@@ -9,11 +9,15 @@ class CalendarLogic extends GetxController {
   final CalendarState state = CalendarState();
 
   late final ItemScrollController itemScrollController = ItemScrollController();
-  late final ScrollOffsetController scrollOffsetController = ScrollOffsetController();
-  late final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
-  late final ScrollOffsetListener scrollOffsetListener = ScrollOffsetListener.create();
+  late final ScrollOffsetController scrollOffsetController =
+      ScrollOffsetController();
+  late final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
+  late final ScrollOffsetListener scrollOffsetListener =
+      ScrollOffsetListener.create();
 
-  late final ExpansionTileController expansionTileController = ExpansionTileController();
+  late final ExpansionTileController expansionTileController =
+      ExpansionTileController();
 
   @override
   void onReady() async {
@@ -26,20 +30,23 @@ class CalendarLogic extends GetxController {
   Future<void> getMonthDiary(DateTime value) async {
     state.isFetching.value = true;
     state.currentMonth.value = value;
-    state.currentMonthDiaryList.value = await IsarUtil.getDiaryByMonth(value.year, value.month);
+    state.currentMonthDiaryList.value =
+        await IsarUtil.getDiaryByMonth(value.year, value.month);
     state.isFetching.value = false;
   }
 
   int _pendingScrollOperations = 0;
 
   Future<void> animateToSelectedDateWithLock(DateTime value) async {
-    final index =
-        state.currentMonthDiaryList.indexWhere((element) => element.yMd == '${value.year}/${value.month}/${value.day}');
+    final index = state.currentMonthDiaryList.indexWhere((element) =>
+        element.yMd == '${value.year}/${value.month}/${value.day}');
     _pendingScrollOperations++;
     state.isControllerScrolling.value = true;
     try {
       await itemScrollController.scrollTo(
-          index: index, duration: const Duration(seconds: 1), curve: Curves.easeInOutQuart);
+          index: index,
+          duration: const Duration(seconds: 1),
+          curve: Curves.easeInOutQuart);
     } finally {
       _pendingScrollOperations--;
       if (_pendingScrollOperations == 0) {

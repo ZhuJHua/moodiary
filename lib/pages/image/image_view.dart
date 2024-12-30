@@ -37,7 +37,9 @@ class ImagePage extends StatelessWidget {
             actions: [
               IconButton(
                   onPressed: () {
-                    MediaUtil.saveToGallery(path: state.imagePathList[state.imageIndex.value], type: MediaType.image);
+                    MediaUtil.saveToGallery(
+                        path: state.imagePathList[state.imageIndex.value],
+                        type: MediaType.image);
                   },
                   icon: const Icon(Icons.save_alt)),
             ],
@@ -56,7 +58,8 @@ class ImagePage extends StatelessWidget {
                 },
                 itemCount: state.imagePathList.length,
                 onPageChanged: logic.changePage,
-                loadingBuilder: (context, event) => const Center(child: CircularProgressIndicator()),
+                loadingBuilder: (context, event) =>
+                    const Center(child: CircularProgressIndicator()),
               ),
               Obx(() {
                 return Visibility(
@@ -76,7 +79,8 @@ class ImagePage extends StatelessWidget {
               }),
               Obx(() {
                 return Visibility(
-                  visible: state.imageIndex.value != state.imagePathList.length - 1,
+                  visible:
+                      state.imageIndex.value != state.imagePathList.length - 1,
                   child: Positioned(
                     right: 16,
                     child: FrostedGlassButton(

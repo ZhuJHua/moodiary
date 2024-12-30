@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 class UpdateDialogLogic extends GetxController {
   Future<void> toDownload(GithubRelease githubRelease) async {
-    await launchUrl(Uri.parse(githubRelease.htmlUrl!), mode: LaunchMode.platformDefault);
+    await launchUrl(Uri.parse(githubRelease.htmlUrl!),
+        mode: LaunchMode.platformDefault);
   }
 }

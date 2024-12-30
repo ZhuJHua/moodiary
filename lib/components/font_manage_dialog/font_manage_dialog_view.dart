@@ -11,7 +11,8 @@ class FontManageDialogComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final FontManageDialogLogic logic = Get.put(FontManageDialogLogic(currentFontPath: fontPath));
+    final FontManageDialogLogic logic =
+        Get.put(FontManageDialogLogic(currentFontPath: fontPath));
     final colorScheme = Theme.of(context).colorScheme;
     return AlertDialog(
       title: const Text('字体管理'),
@@ -24,7 +25,8 @@ class FontManageDialogComponent extends StatelessWidget {
               fillColor: colorScheme.secondaryContainer,
               filled: true,
               border: const OutlineInputBorder(
-                  borderRadius: AppBorderRadius.smallBorderRadius, borderSide: BorderSide.none),
+                  borderRadius: AppBorderRadius.smallBorderRadius,
+                  borderSide: BorderSide.none),
             ),
           ),
         ],

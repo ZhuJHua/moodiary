@@ -17,7 +17,8 @@ class NoticeUtil {
         ),
         child: Text(
           message,
-          style: TextStyle(fontSize: 16.0, color: colorScheme.onPrimaryContainer),
+          style:
+              TextStyle(fontSize: 16.0, color: colorScheme.onPrimaryContainer),
         ),
       ),
       gravity: ToastGravity.CENTER,

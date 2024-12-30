@@ -35,7 +35,9 @@ class ImageEmbedBuilder extends EmbedBuilder {
   ) {
     final imageEmbed = ImageBlockEmbed(embedContext.node.value.data);
     // 从数据构造 ImageBlockEmbed
-    final imagePath = isEdit ? imageEmbed.name : FileUtil.getRealPath('image', imageEmbed.name);
+    final imagePath = isEdit
+        ? imageEmbed.name
+        : FileUtil.getRealPath('image', imageEmbed.name);
 
     return GestureDetector(
       onTap: () {

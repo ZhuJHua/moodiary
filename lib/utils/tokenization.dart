@@ -177,7 +177,8 @@ class WordPieceTokenizer {
   final String unkToken;
   final int maxInputCharsPerWord;
 
-  WordPieceTokenizer(this.vocab, {this.unkToken = "[UNK]", this.maxInputCharsPerWord = 100});
+  WordPieceTokenizer(this.vocab,
+      {this.unkToken = "[UNK]", this.maxInputCharsPerWord = 100});
 
   List<String> tokenize(String text) {
     List<String> outputTokens = [];

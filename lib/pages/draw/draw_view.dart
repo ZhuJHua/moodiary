@@ -26,8 +26,10 @@ class DrawPage extends StatelessWidget {
           width: drawWidth,
           height: (drawWidth * 1.618) + 96,
           decoration: BoxDecoration(
-              border: Border.fromBorderSide(
-                  BorderSide(strokeAlign: BorderSide.strokeAlignOutside, color: colorScheme.primary, width: 4.0))),
+              border: Border.fromBorderSide(BorderSide(
+                  strokeAlign: BorderSide.strokeAlignOutside,
+                  color: colorScheme.primary,
+                  width: 4.0))),
           child: GetBuilder<DrawLogic>(builder: (_) {
             return DrawingBoard(
               controller: logic.drawingController,

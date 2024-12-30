@@ -10,7 +10,8 @@ import 'video_player_state.dart';
 class VideoPlayerLogic extends GetxController {
   final VideoPlayerState state = VideoPlayerState();
 
-  late final videoPlayerController = VideoPlayerController.file(File(state.videoPath));
+  late final videoPlayerController =
+      VideoPlayerController.file(File(state.videoPath));
   late final chewieController = ChewieController(
     videoPlayerController: videoPlayerController,
     useRootNavigator: false,

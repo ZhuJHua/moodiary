@@ -24,7 +24,10 @@ class SignatureUtil {
 
   //生成腾讯云签名
   static String generateSignature(String id, String key, int timestamp, body) {
-    String dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: true).toString().split(' ')[0];
+    String dateTime =
+        DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: true)
+            .toString()
+            .split(' ')[0];
     //拼接规范请求串
     var canonicalRequest =
         'POST\n/\n\ncontent-type:application/json\nhost:hunyuan.tencentcloudapi.com\nx-tc-action:chatcompletions\n\ncontent-type;host;x-tc-action\n${sha256HexToLowercase(jsonEncode(body))}';

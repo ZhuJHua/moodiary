@@ -33,7 +33,8 @@ class SideBarComponent extends StatelessWidget {
           ),
           Text(
             '${state.weatherResponse[2]} ${state.weatherResponse[1]}°C',
-            style: textStyle.titleMedium!.copyWith(color: Colors.white, shadows: [
+            style:
+                textStyle.titleMedium!.copyWith(color: Colors.white, shadows: [
               const Shadow(
                 offset: Offset(2.0, 2.0),
                 blurRadius: 8.0,
@@ -50,7 +51,8 @@ class SideBarComponent extends StatelessWidget {
         child: Obx(() {
           return Text(
             state.hitokoto.value,
-            style: textStyle.titleMedium!.copyWith(color: Colors.white, shadows: [
+            style:
+                textStyle.titleMedium!.copyWith(color: Colors.white, shadows: [
               const Shadow(
                 offset: Offset(2.0, 2.0),
                 blurRadius: 8.0,
@@ -68,7 +70,8 @@ class SideBarComponent extends StatelessWidget {
         children: [
           Text(
             state.nowTime.day.toString(),
-            style: textStyle.displayMedium!.copyWith(color: Colors.white, shadows: [
+            style: textStyle.displayMedium!
+                .copyWith(color: Colors.white, shadows: [
               const Shadow(
                 offset: Offset(2.0, 2.0),
                 blurRadius: 8.0,
@@ -84,7 +87,8 @@ class SideBarComponent extends StatelessWidget {
             children: [
               Text(
                 DateFormat.MMM().format(state.nowTime),
-                style: textStyle.titleSmall!.copyWith(color: Colors.white, shadows: [
+                style: textStyle.titleSmall!
+                    .copyWith(color: Colors.white, shadows: [
                   const Shadow(
                     offset: Offset(2.0, 2.0),
                     blurRadius: 8.0,
@@ -94,7 +98,8 @@ class SideBarComponent extends StatelessWidget {
               ),
               Text(
                 DateFormat.EEEE().format(state.nowTime),
-                style: textStyle.titleMedium!.copyWith(color: Colors.white, shadows: [
+                style: textStyle.titleMedium!
+                    .copyWith(color: Colors.white, shadows: [
                   const Shadow(
                     offset: Offset(2.0, 2.0),
                     blurRadius: 8.0,
@@ -118,7 +123,8 @@ class SideBarComponent extends StatelessWidget {
                   decoration: BoxDecoration(
                       image: state.imageUrl.value.isNotEmpty
                           ? DecorationImage(
-                              image: CachedNetworkImageProvider(state.imageUrl.value),
+                              image: CachedNetworkImageProvider(
+                                  state.imageUrl.value),
                               fit: BoxFit.cover,
                             )
                           : null),
@@ -128,7 +134,10 @@ class SideBarComponent extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           buildDate(),
-                          if (state.getWeather && state.weatherResponse.value.isNotEmpty) ...[buildWeather()]
+                          if (state.getWeather &&
+                              state.weatherResponse.value.isNotEmpty) ...[
+                            buildWeather()
+                          ]
                         ],
                       ),
                       Expanded(child: buildHitokoto()),
@@ -144,7 +153,9 @@ class SideBarComponent extends StatelessWidget {
                     Obx(() {
                       return AboutListTile(
                         icon: const Icon(Icons.info_outline),
-                        applicationName: state.packageInfo.value != null ? state.packageInfo.value!.appName : '',
+                        applicationName: state.packageInfo.value != null
+                            ? state.packageInfo.value!.appName
+                            : '',
                         applicationVersion: state.packageInfo.value != null
                             ? 'v${state.packageInfo.value!.version}(${state.packageInfo.value!.buildNumber})'
                             : '',

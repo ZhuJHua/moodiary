@@ -50,7 +50,9 @@ class HunyuanResponse {
 
   HunyuanResponse.fromJson(Map<String, dynamic> json) {
     note = json["Note"];
-    choices = json["Choices"] == null ? null : (json["Choices"] as List).map((e) => Choices.fromJson(e)).toList();
+    choices = json["Choices"] == null
+        ? null
+        : (json["Choices"] as List).map((e) => Choices.fromJson(e)).toList();
     created = json["Created"];
     id = json["Id"];
     usage = json["Usage"] == null ? null : Usage.fromJson(json["Usage"]);

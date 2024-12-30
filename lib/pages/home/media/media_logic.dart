@@ -11,11 +11,15 @@ import 'media_state.dart';
 
 class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
   final MediaState state = MediaState();
-  late final AnimationController animationController = AnimationController(vsync: this);
+  late final AnimationController animationController =
+      AnimationController(vsync: this);
   late final ItemScrollController itemScrollController = ItemScrollController();
-  late final ScrollOffsetController scrollOffsetController = ScrollOffsetController();
-  late final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
-  late final ScrollOffsetListener scrollOffsetListener = ScrollOffsetListener.create();
+  late final ScrollOffsetController scrollOffsetController =
+      ScrollOffsetController();
+  late final ItemPositionsListener itemPositionsListener =
+      ItemPositionsListener.create();
+  late final ScrollOffsetListener scrollOffsetListener =
+      ScrollOffsetListener.create();
 
   @override
   void onReady() async {
@@ -58,8 +62,12 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
   // 跳转到指定日期
   void jumpTo(DateTime dateTime) {
-    final index = state.dateTimeList.indexWhere((element) => element == dateTime);
-    itemScrollController.scrollTo(index: index, duration: const Duration(seconds: 1), curve: Curves.easeInOutQuart);
+    final index =
+        state.dateTimeList.indexWhere((element) => element == dateTime);
+    itemScrollController.scrollTo(
+        index: index,
+        duration: const Duration(seconds: 1),
+        curve: Curves.easeInOutQuart);
   }
 
   // 清理文件

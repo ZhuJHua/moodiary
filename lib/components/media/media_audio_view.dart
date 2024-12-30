@@ -6,7 +6,8 @@ class MediaAudioComponent extends StatelessWidget {
   final DateTime dateTime;
   final List<String> audioList;
 
-  const MediaAudioComponent({super.key, required this.dateTime, required this.audioList});
+  const MediaAudioComponent(
+      {super.key, required this.dateTime, required this.audioList});
 
   @override
   Widget build(BuildContext context) {

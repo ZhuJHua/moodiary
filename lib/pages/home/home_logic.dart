@@ -15,20 +15,20 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   final HomeState state = HomeState();
 
   //fab动画控制器
-  late AnimationController fabAnimationController =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+  late AnimationController fabAnimationController = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 200));
 
   //fab动画插值器
-  late Animation<double> fabAnimation =
-      Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: fabAnimationController, curve: Curves.easeInOut));
+  late Animation<double> fabAnimation = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: fabAnimationController, curve: Curves.easeInOut));
 
   //bar动画控制器
-  late AnimationController barAnimationController =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
+  late AnimationController barAnimationController = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 200));
 
   //动画插值器
-  late Animation<double> barAnimation =
-      Tween(begin: 1.0, end: 0.0).animate(CurvedAnimation(parent: barAnimationController, curve: Curves.easeInOut));
+  late Animation<double> barAnimation = Tween(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(parent: barAnimationController, curve: Curves.easeInOut));
 
   late PageController pageController = PageController();
 
@@ -68,7 +68,8 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   //锁定屏幕
   void lockPage() {
     //如果开启密码的同时开启了立即锁定，就直接跳转到锁屏页面
-    if (PrefUtil.getValue<bool>('lock') == true && PrefUtil.getValue<bool>('lockNow') == true) {
+    if (PrefUtil.getValue<bool>('lock') == true &&
+        PrefUtil.getValue<bool>('lockNow') == true) {
       Get.toNamed(AppRoutes.lockPage, arguments: 'pause');
     }
   }
@@ -91,11 +92,13 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     if (diaryLogic.tabController.index == 0) {
       categoryId = null;
     } else {
-      categoryId = diaryLogic.state.categoryList[diaryLogic.tabController.index - 1].id;
+      categoryId =
+          diaryLogic.state.categoryList[diaryLogic.tabController.index - 1].id;
     }
 
     /// 需要注意，返回值为 '' 时才是没有选择分类，而返回值为 null 时，是没有进行操作直接返回
-    var res = await Get.toNamed(AppRoutes.editPage, arguments: [type, categoryId]);
+    var res =
+        await Get.toNamed(AppRoutes.editPage, arguments: [type, categoryId]);
     fabAnimationController.reset();
     state.isFabExpanded = false;
     update(['Fab']);

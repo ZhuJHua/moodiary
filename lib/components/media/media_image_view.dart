@@ -11,7 +11,8 @@ class MediaImageComponent extends StatelessWidget {
   final DateTime dateTime;
   final List<String> imageList;
 
-  const MediaImageComponent({super.key, required this.dateTime, required this.imageList});
+  const MediaImageComponent(
+      {super.key, required this.dateTime, required this.imageList});
 
   void _toPhotoView(int index, List<String> filePath) {
     Get.toNamed(AppRoutes.photoPage, arguments: [filePath, index]);

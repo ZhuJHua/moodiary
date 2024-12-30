@@ -8,7 +8,8 @@ class UploadSpeedCalculator {
 
   void updateSpeed(int sent) {
     final currentTime = DateTime.now();
-    final timeElapsed = currentTime.difference(_lastUpdateTime).inMilliseconds / 1000;
+    final timeElapsed =
+        currentTime.difference(_lastUpdateTime).inMilliseconds / 1000;
     if (timeElapsed >= (updateIntervalInMilliseconds / 1000)) {
       final sentSinceLastUpdate = sent - _previousSentBytes;
       _speed = sentSinceLastUpdate / timeElapsed;

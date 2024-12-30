@@ -16,7 +16,8 @@ import 'diary_logic.dart';
 class DiaryPage extends StatelessWidget {
   const DiaryPage({super.key});
 
-  Widget _buildSyncingButton({required ColorScheme colorScheme, required Function() onTap}) {
+  Widget _buildSyncingButton(
+      {required ColorScheme colorScheme, required Function() onTap}) {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Container(
@@ -92,7 +93,10 @@ class DiaryPage extends StatelessWidget {
       allViews.add(buildDiaryView(0, state.keyMap['default'], null));
       // 添加分类日记页面
       allViews.addAll(List.generate(state.categoryList.length, (index) {
-        return buildDiaryView(index + 1, state.keyMap[state.categoryList[index].id], state.categoryList[index].id);
+        return buildDiaryView(
+            index + 1,
+            state.keyMap[state.categoryList[index].id],
+            state.categoryList[index].id);
       }));
 
       return NotificationListener<ScrollNotification>(
@@ -119,13 +123,16 @@ class DiaryPage extends StatelessWidget {
             headerSliverBuilder: (context, _) {
               return [
                 SliverOverlapAbsorber(
-                  handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                  handle:
+                      NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                   sliver: SliverAppBar(
                     title: GetBuilder<DiaryLogic>(
                         id: 'Title',
                         builder: (_) {
                           return Text(
-                            state.customTitleName.isNotEmpty ? state.customTitleName : l10n.appName,
+                            state.customTitleName.isNotEmpty
+                                ? state.customTitleName
+                                : l10n.appName,
                             overflow: TextOverflow.ellipsis,
                           );
                         }),
@@ -195,7 +202,9 @@ class DiaryPage extends StatelessWidget {
                         },
                       ),
                     ],
-                    bottom: PreferredSize(preferredSize: const Size.fromHeight(46.0), child: buildTabBar()),
+                    bottom: PreferredSize(
+                        preferredSize: const Size.fromHeight(46.0),
+                        child: buildTabBar()),
                   ),
                 ),
               ];

@@ -28,7 +28,8 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
   void onVerticalDragStart(DragUpdateDetails details) {
     state.bottomSheetHeight.value -= details.delta.dy;
-    state.bottomSheetHeight.value = state.bottomSheetHeight.value.clamp(state.minHeight, state.maxHeight);
+    state.bottomSheetHeight.value =
+        state.bottomSheetHeight.value.clamp(state.minHeight, state.maxHeight);
   }
 
   void changeSelectedFontPath({required String path}) {
@@ -41,7 +42,8 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
     for (var filePath in filePathList) {
       if (filePath.endsWith('.ttf')) {
         //尝试获取字体名称，如果获取失败，不添加到列表
-        var fontName = await FontReader.getFontNameFromTtf(ttfFilePath: filePath);
+        var fontName =
+            await FontReader.getFontNameFromTtf(ttfFilePath: filePath);
         if (fontName != null) {
           state.fontMap[filePath] = fontName;
         }
@@ -50,7 +52,9 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
     List<Future<void>> fontLoadFutures = [];
     // 预加载字体
     for (var entry in state.fontMap.entries) {
-      fontLoadFutures.add(DynamicFont.file(fontFamily: entry.value, filepath: entry.key).load());
+      fontLoadFutures.add(
+          DynamicFont.file(fontFamily: entry.value, filepath: entry.key)
+              .load());
     }
     await Future.wait(fontLoadFutures);
 

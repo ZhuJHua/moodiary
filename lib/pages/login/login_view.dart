@@ -10,7 +10,7 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<LoginLogic>();
+    //final logic = Bind.find<LoginLogic>();
     final state = Bind.find<LoginLogic>().state;
 
     return GetBuilder<LoginLogic>(
@@ -21,7 +21,9 @@ class LoginPage extends StatelessWidget {
             ),
             body: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
-              child: state.isLogin ? const LoginFormComponent() : const RegisterFormComponent(),
+              child: state.isLogin
+                  ? const LoginFormComponent()
+                  : const RegisterFormComponent(),
             ));
       },
     );

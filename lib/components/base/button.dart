@@ -7,7 +7,8 @@ class FrostedGlassButton extends StatelessWidget {
   final double size;
   final Function()? onPressed;
 
-  const FrostedGlassButton({super.key, required this.child, required this.size, this.onPressed});
+  const FrostedGlassButton(
+      {super.key, required this.child, required this.size, this.onPressed});
 
   @override
   Widget build(BuildContext context) {

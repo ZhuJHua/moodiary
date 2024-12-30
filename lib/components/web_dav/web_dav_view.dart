@@ -26,9 +26,12 @@ class WebDavComponent extends StatelessWidget {
                   Icon(
                     Icons.circle,
                     color: switch (state.connectivityStatus.value) {
-                      WebDavConnectivityStatus.connected => WebDavOptions.connectivityColor,
-                      WebDavConnectivityStatus.unconnected => WebDavOptions.unConnectivityColor,
-                      WebDavConnectivityStatus.connecting => WebDavOptions.connectingColor,
+                      WebDavConnectivityStatus.connected =>
+                        WebDavOptions.connectivityColor,
+                      WebDavConnectivityStatus.unconnected =>
+                        WebDavOptions.unConnectivityColor,
+                      WebDavConnectivityStatus.connecting =>
+                        WebDavOptions.connectingColor,
                     },
                     size: 16,
                   ),
@@ -55,7 +58,8 @@ class WebDavComponent extends StatelessWidget {
                 TextFormField(
                   decoration: InputDecoration(
                     labelText: '服务器地址',
-                    border: const OutlineInputBorder(borderRadius: AppBorderRadius.smallBorderRadius),
+                    border: const OutlineInputBorder(
+                        borderRadius: AppBorderRadius.smallBorderRadius),
                     prefixIcon: const Padding(
                       padding: EdgeInsets.all(16.0),
                       child: FaIcon(
@@ -83,7 +87,8 @@ class WebDavComponent extends StatelessWidget {
                 TextFormField(
                   decoration: InputDecoration(
                     labelText: '用户名',
-                    border: const OutlineInputBorder(borderRadius: AppBorderRadius.smallBorderRadius),
+                    border: const OutlineInputBorder(
+                        borderRadius: AppBorderRadius.smallBorderRadius),
                     prefixIcon: const Padding(
                         padding: EdgeInsets.all(16.0),
                         child: FaIcon(
@@ -109,7 +114,8 @@ class WebDavComponent extends StatelessWidget {
                 TextFormField(
                   decoration: InputDecoration(
                     labelText: '密码',
-                    border: const OutlineInputBorder(borderRadius: AppBorderRadius.smallBorderRadius),
+                    border: const OutlineInputBorder(
+                        borderRadius: AppBorderRadius.smallBorderRadius),
                     prefixIcon: const Padding(
                       padding: EdgeInsets.all(16.0),
                       child: FaIcon(
