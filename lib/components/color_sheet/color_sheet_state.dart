@@ -8,6 +8,5 @@ class ColorSheetState {
 
   Color? systemColor;
 
-
   ColorSheetState();
 }
