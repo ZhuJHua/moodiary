@@ -9,29 +9,28 @@ class FileOutput extends LogOutput {
   final bool overrideExisting;
   final Encoding encoding;
   IOSink? _sink;
-  File? file;
+  late File _file;
 
   FileOutput({
     this.overrideExisting = false,
     this.encoding = utf8,
   });
 
-  Future<void> _initializeSink() async {
-    if (_sink == null) {
-      file = File(FileUtil.getErrorLogPath());
-      if (!(await file!.exists())) {
-        await file!.create(recursive: true);
-      }
-      _sink = file!.openWrite(
-        mode: overrideExisting ? FileMode.write : FileMode.append,
-        encoding: encoding,
-      );
+  @override
+  Future<void> init() async {
+    _file = File(FileUtil.getErrorLogPath());
+    if (!await _file.exists()) {
+      await _file.create(recursive: true);
     }
+    _sink = _file.openWrite(
+      mode: overrideExisting ? FileMode.write : FileMode.append,
+      encoding: encoding,
+    );
+    return super.init();
   }
 
   @override
-  void output(OutputEvent event) async {
-    await _initializeSink();
+  void output(OutputEvent event) {
     if (event.level.value >= Level.warning.value) {
       _sink?.writeAll(event.lines, '\n');
     }
