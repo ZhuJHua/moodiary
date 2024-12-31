@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class HomeState {
   //fab展开状态
   bool isFabExpanded = false;
@@ -9,6 +11,9 @@ class HomeState {
   int navigatorIndex = 0;
 
   double navigatorBarHeight = 56.0;
+
+  // fab key
+  //GlobalKey? fabKey = GlobalKey();
 
   HomeState();
 }

@@ -108,6 +108,9 @@ dependencies:
   slang: 4.4.0
   slang_flutter: 4.4.0
   slang_build_runner: 4.4.0
+  modal_bottom_sheet: 3.0.0
+  sheet: 1.0.0
+  tutorial_coach_mark: 1.2.12
 
 dev_dependencies:
   flutter_test:

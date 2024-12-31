@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/utils/auth_util.dart';
 import 'package:mood_diary/utils/media_util.dart';
@@ -26,6 +27,8 @@ class PrefUtil {
     'systemColor',
     //主题颜色
     'color',
+    //主题颜色类型
+    'colorType',
     //主题模式
     'themeMode',
     //动态配色
@@ -167,7 +170,9 @@ class PrefUtil {
     await _prefs.setInt(
         'color',
         _prefs.getInt('color') ??
-            (await ThemeUtil.supportDynamicColor() ? -1 : 4));
+            (await ThemeUtil.supportDynamicColor() ? -1 : 0));
+    await _prefs.setInt(
+        'colorType', _prefs.getInt('colorType') ?? AppColorType.common.value);
     await _prefs.setInt('themeMode', _prefs.getInt('themeMode') ?? 0);
     await _prefs.setBool(
         'dynamicColor', _prefs.getBool('dynamicColor') ?? true);

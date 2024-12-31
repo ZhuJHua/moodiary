@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
-import 'package:mood_diary/components/color_dialog/color_dialog_view.dart';
+import 'package:mood_diary/common/values/colors.dart';
+import 'package:mood_diary/components/base/sheet.dart';
+import 'package:mood_diary/components/color_sheet/color_sheet_view.dart';
 import 'package:mood_diary/components/dashboard/dashboard_view.dart';
 import 'package:mood_diary/components/remove_password/remove_password_view.dart';
 import 'package:mood_diary/components/set_password/set_password_view.dart';
@@ -186,24 +188,22 @@ class SettingPage extends StatelessWidget {
                   title: Text(l10n.settingColor),
                   leading: const Icon(Icons.color_lens_outlined),
                   trailing: Text(
-                    switch (state.color) {
-                      0 => l10n.colorNameQunQin,
-                      1 => l10n.colorNameJiHe,
-                      2 => l10n.colorNameQinDai,
-                      3 => l10n.colorNameXianYe,
-                      4 => l10n.colorNameJinYu,
-                      _ => l10n.colorNameSystem
-                    },
+                    AppColor.colorName(state.color),
                     style: textStyle.bodySmall!.copyWith(
                       color: colorScheme.primary,
                     ),
                   ),
                   onTap: () {
-                    showDialog(
+                    showFloatingModalBottomSheet(
                         context: context,
                         builder: (context) {
-                          return const ColorDialogComponent();
+                          return const ColorSheetComponent();
                         });
+                    // showDialog(
+                    //     context: context,
+                    //     builder: (context) {
+                    //       return const ColorDialogComponent();
+                    //     });
                   },
                 ),
                 ListTile(
@@ -313,11 +313,9 @@ class SettingPage extends StatelessWidget {
                                     TextButton(
                                         onPressed: () {
                                           Get.backLegacy();
-                                          showModalBottomSheet(
+                                          showFloatingModalBottomSheet(
                                               context: context,
                                               isScrollControlled: true,
-                                              showDragHandle: true,
-                                              useSafeArea: true,
                                               builder: (context) {
                                                 return state.lock
                                                     ? const RemovePasswordComponent()

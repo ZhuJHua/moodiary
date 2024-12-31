@@ -16,7 +16,6 @@ class SyncDashBoardComponent extends StatelessWidget {
     final SyncDashBoardLogic logic = Get.put(SyncDashBoardLogic());
     final SyncDashBoardState state = Bind.find<SyncDashBoardLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
-    final viewPadding = MediaQuery.viewPaddingOf(context);
 
     return GetBuilder<SyncDashBoardLogic>(
       assignId: true,
@@ -67,9 +66,6 @@ class SyncDashBoardComponent extends StatelessWidget {
                                 icon: const Icon(Icons.chevron_right_rounded)),
                           ],
                         ),
-                      ),
-                      SizedBox(
-                        height: viewPadding.bottom,
                       ),
                     ],
                   )

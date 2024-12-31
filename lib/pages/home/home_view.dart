@@ -177,14 +177,11 @@ class HomePage extends StatelessWidget {
           animation: logic.fabAnimation,
           builder: (context, child) {
             return GestureDetector(
-              onTap: () async {
-                state.isFabExpanded
-                    ? await logic.closeFab()
-                    : await logic.openFab();
-              },
+              onTap: state.isFabExpanded ? logic.closeFab : logic.openFab,
               child: Container(
                 width: 56.0,
                 height: 56.0,
+                // key: state.fabKey,
                 decoration: ShapeDecoration(
                     shape: const RoundedRectangleBorder(
                         borderRadius: AppBorderRadius.largeBorderRadius),

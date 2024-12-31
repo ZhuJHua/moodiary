@@ -68,64 +68,59 @@ class SetPasswordComponent extends StatelessWidget {
       assignId: true,
       builder: (_) {
         return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 16.0,
-            children: [
-              GetBuilder<SetPasswordLogic>(builder: (_) {
-                return Text(
+          padding: const EdgeInsets.all(32.0),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 16.0,
+              children: [
+                Text(
                   state.checkPassword.isEmpty ? '请输入密码' : '请确认密码',
                   style: textStyle.titleMedium,
-                );
-              }),
-              GetBuilder<SetPasswordLogic>(builder: (_) {
-                return AnimatedBuilder(
+                ),
+                AnimatedBuilder(
                   animation: logic.animation,
                   builder: (context, child) {
                     return Transform.translate(
                       offset:
                           Offset(logic.interpolate(logic.animation.value), 0),
-                      child: Wrap(
+                      child: Row(
                         spacing: 16.0,
+                        mainAxisSize: MainAxisSize.min,
                         children: buildPasswordIndicator(),
                       ),
                     );
                   },
-                );
-              }),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: buttonSize * 3 + 20,
-                    height: buttonSize * 4 + 30,
-                    child: GridView.count(
-                      crossAxisCount: 3,
-                      childAspectRatio: 1.0,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      children: [
-                        buildNumButton('1'),
-                        buildNumButton('2'),
-                        buildNumButton('3'),
-                        buildNumButton('4'),
-                        buildNumButton('5'),
-                        buildNumButton('6'),
-                        buildNumButton('7'),
-                        buildNumButton('8'),
-                        buildNumButton('9'),
-                        const SizedBox(),
-                        buildNumButton('0'),
-                        buildDeleteButton()
-                      ],
-                    ),
+                ),
+                SizedBox(
+                  width: buttonSize * 3 + 20,
+                  child: GridView.count(
+                    padding: EdgeInsets.zero,
+                    crossAxisCount: 3,
+                    childAspectRatio: 1.0,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    children: [
+                      buildNumButton('1'),
+                      buildNumButton('2'),
+                      buildNumButton('3'),
+                      buildNumButton('4'),
+                      buildNumButton('5'),
+                      buildNumButton('6'),
+                      buildNumButton('7'),
+                      buildNumButton('8'),
+                      buildNumButton('9'),
+                      const SizedBox(),
+                      buildNumButton('0'),
+                      buildDeleteButton()
+                    ],
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         );
       },

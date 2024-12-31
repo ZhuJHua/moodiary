@@ -44,13 +44,13 @@ class FileUtil {
   }
 
   static Future<void> initCreateDir() async {
-    await createDir(join(_filePath, 'database'));
-    await createDir(join(_filePath, 'image'));
-    await createDir(join(_filePath, 'audio'));
-    await createDir(join(_filePath, 'video'));
-
-    // 字体文件夹
-    await createDir(join(_filePath, 'font'));
+    await Future.wait([
+      createDir(join(_filePath, 'database')),
+      createDir(join(_filePath, 'image')),
+      createDir(join(_filePath, 'audio')),
+      createDir(join(_filePath, 'video')),
+      createDir(join(_filePath, 'font'))
+    ]);
   }
 
   static Future<void> createDir(String path) async {

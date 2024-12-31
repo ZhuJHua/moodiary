@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
+import 'package:mood_diary/components/base/sheet.dart';
 import 'package:mood_diary/components/category_add/category_add_view.dart';
 import 'package:mood_diary/components/expand_button/expand_button_view.dart';
 import 'package:mood_diary/components/lottie_modal/lottie_modal.dart';
@@ -499,6 +500,7 @@ class EditPage extends StatelessWidget {
 
     Widget buildDetail() {
       return ListView(
+        padding: EdgeInsets.zero,
         children: [
           ListTile(
             onTap: null,
@@ -651,7 +653,7 @@ class EditPage extends StatelessWidget {
     Widget buildTimer() {
       return Container(
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainer.withAlpha(240),
+          color: colorScheme.surfaceContainer.withValues(alpha: 0.8),
           borderRadius: AppBorderRadius.smallBorderRadius,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -677,7 +679,7 @@ class EditPage extends StatelessWidget {
     Widget buildCount() {
       return Container(
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainer.withAlpha(240),
+          color: colorScheme.surfaceContainer.withValues(alpha: 0.8),
           borderRadius: AppBorderRadius.smallBorderRadius,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -753,13 +755,11 @@ class EditPage extends StatelessWidget {
         children: [
           ExpandButtonComponent(operatorMap: {
             Icons.keyboard_command_key: () {
-              showModalBottomSheet(
+              showFloatingModalBottomSheet(
                 context: context,
                 builder: (context) {
                   return buildDetail();
                 },
-                showDragHandle: true,
-                useSafeArea: true,
               );
             },
             Icons.image_rounded: () {
@@ -779,13 +779,11 @@ class EditPage extends StatelessWidget {
               );
             },
             Icons.audiotrack_rounded: () {
-              showModalBottomSheet(
+              showFloatingModalBottomSheet(
                 context: context,
                 builder: (context) {
                   return const RecordSheetComponent();
                 },
-                showDragHandle: true,
-                useSafeArea: true,
               );
             }
           }),

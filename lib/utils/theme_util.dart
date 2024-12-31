@@ -18,15 +18,11 @@ class ThemeUtil {
   }
 
   static Future<ThemeData> buildTheme(Brightness brightness) async {
-    final color = PrefUtil.getValue<int>('color');
-    var seedColor = switch (color) {
-      0 => AppColor.themeColorList[0],
-      1 => AppColor.themeColorList[1],
-      2 => AppColor.themeColorList[2],
-      3 => AppColor.themeColorList[3],
-      4 => AppColor.themeColorList[4],
-      _ => Color(PrefUtil.getValue<int>('systemColor')!)
-    };
+    final color = PrefUtil.getValue<int>('color')!;
+    var seedColor = (color == -1)
+        ? Color(PrefUtil.getValue<int>('systemColor')!)
+        : AppColor.themeColorList[
+            (color >= 0 && color < AppColor.themeColorList.length) ? color : 0];
 
     final customFont = PrefUtil.getValue<String>('customFont')!;
     String? fontFamily;
@@ -90,7 +86,7 @@ class ThemeUtil {
       colorScheme: ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: brightness,
-        dynamicSchemeVariant: color == 4
+        dynamicSchemeVariant: color == 0
             ? DynamicSchemeVariant.monochrome
             : DynamicSchemeVariant.tonalSpot,
       ),

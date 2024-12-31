@@ -190,6 +190,7 @@ class WebDavDashboardComponent extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               ListView(
+                padding: EdgeInsets.zero,
                 children: [
                   _buildToWebDavSetting(
                       onTap: logic.toWebDavPage,

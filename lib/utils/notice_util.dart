@@ -13,7 +13,7 @@ class NoticeUtil {
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.0),
-          color: colorScheme.primaryContainer.withAlpha(240),
+          color: colorScheme.primaryContainer.withValues(alpha: 0.8),
         ),
         child: Text(
           message,

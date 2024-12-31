@@ -38,6 +38,8 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   void onReady() {
     //unawaited(Utils().updateUtil.checkShouldUpdate(PrefUtil.getValue<String>('appVersion')!.split('+')[0]));
     // unawaited(getHitokoto());
+    // Tutorial.getTutorial(targets: buildFabGuide())
+    //     .show(context: Get.overlayContext!);
     super.onReady();
   }
 
@@ -48,6 +50,23 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     pageController.dispose();
     super.onClose();
   }
+
+  // List<TargetFocus> buildFabGuide() {
+  //   return [
+  //     TargetFocus(
+  //       identify: 'fab',
+  //       keyTarget: state.fabKey,
+  //       contents: [
+  //         Tutorial.buildTargetContent(
+  //           title: '点击这里新建日记',
+  //           align: ContentAlign.top,
+  //         ),
+  //       ],
+  //       shape: ShapeLightFocus.RRect,
+  //       radius: 20,
+  //     ),
+  //   ];
+  // }
 
   //打开fab
   Future<void> openFab() async {

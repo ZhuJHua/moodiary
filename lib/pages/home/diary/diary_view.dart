@@ -1,7 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
+import 'package:mood_diary/components/base/sheet.dart';
 import 'package:mood_diary/components/diary_tab_view/diary_tab_view_view.dart';
 import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
@@ -53,26 +55,66 @@ class DiaryPage extends StatelessWidget {
       allTabs.addAll(List.generate(state.categoryList.length, (index) {
         return Tab(text: state.categoryList[index].categoryName);
       }));
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: TabBar(
-          controller: logic.tabController,
-          isScrollable: true,
-          dividerHeight: .0,
-          tabAlignment: TabAlignment.start,
-          indicatorSize: TabBarIndicatorSize.label,
-          splashFactory: NoSplash.splashFactory,
-          dragStartBehavior: DragStartBehavior.start,
-          indicator: UnderlineTabIndicator(
-            borderSide: BorderSide(
-              color: colorScheme.primary,
-              width: 4.0,
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                showFloatingModalBottomSheet(
+                    context: context,
+                    builder: (context) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            title: const Text('Cut'),
+                            leading: const Icon(Icons.content_cut),
+                            onTap: () {},
+                          ),
+                          ListTile(
+                            title: const Text('Move'),
+                            leading: const Icon(Icons.folder_open),
+                            onTap: () {},
+                          ),
+                          ListTile(
+                            title: const Text('Delete'),
+                            leading: const Icon(Icons.delete),
+                            onTap: () {},
+                          ),
+                        ],
+                      );
+                    });
+              },
+              icon: const FaIcon(
+                FontAwesomeIcons.bookBookmark,
+                size: 16,
+              ),
+              style: const ButtonStyle(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             ),
-            borderRadius: const BorderRadius.all(Radius.circular(2.0)),
-          ),
-          indicatorWeight: .0,
-          indicatorPadding: const EdgeInsets.symmetric(vertical: 4.0),
-          tabs: allTabs,
+            Expanded(
+              child: TabBar(
+                controller: logic.tabController,
+                isScrollable: true,
+                dividerHeight: .0,
+                tabAlignment: TabAlignment.start,
+                indicatorSize: TabBarIndicatorSize.label,
+                splashFactory: NoSplash.splashFactory,
+                dragStartBehavior: DragStartBehavior.start,
+                indicator: UnderlineTabIndicator(
+                  borderSide: BorderSide(
+                    color: colorScheme.primary,
+                    width: 4.0,
+                  ),
+                  borderRadius: const BorderRadius.all(Radius.circular(2.0)),
+                ),
+                indicatorWeight: .0,
+                indicatorPadding: const EdgeInsets.symmetric(vertical: 4.0),
+                tabs: allTabs,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -143,23 +185,21 @@ class DiaryPage extends StatelessWidget {
                             ? _buildSyncingButton(
                                 colorScheme: colorScheme,
                                 onTap: () {
-                                  showModalBottomSheet(
-                                      context: context,
-                                      builder: (context) {
-                                        return const SyncDashBoardComponent();
-                                      },
-                                      showDragHandle: true,
-                                      useSafeArea: true);
+                                  showFloatingModalBottomSheet(
+                                    context: context,
+                                    builder: (context) {
+                                      return const SyncDashBoardComponent();
+                                    },
+                                  );
                                 })
                             : IconButton(
                                 onPressed: () {
-                                  showModalBottomSheet(
-                                      context: context,
-                                      builder: (context) {
-                                        return const SyncDashBoardComponent();
-                                      },
-                                      showDragHandle: true,
-                                      useSafeArea: true);
+                                  showFloatingModalBottomSheet(
+                                    context: context,
+                                    builder: (context) {
+                                      return const SyncDashBoardComponent();
+                                    },
+                                  );
                                 },
                                 tooltip: '数据同步',
                                 icon: const Icon(Icons.cloud_sync_outlined),
@@ -167,10 +207,8 @@ class DiaryPage extends StatelessWidget {
                       }),
                       IconButton(
                         onPressed: () {
-                          showModalBottomSheet(
+                          showFloatingModalBottomSheet(
                               context: context,
-                              showDragHandle: true,
-                              useSafeArea: true,
                               builder: (context) {
                                 return const SearchSheetComponent();
                               });

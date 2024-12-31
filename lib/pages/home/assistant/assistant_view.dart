@@ -145,64 +145,68 @@ class AssistantPage extends StatelessWidget {
         return Scaffold(
           body: Stack(
             children: [
-              Column(
-                children: [
-                  Expanded(
-                    child: CustomScrollView(
-                      controller: logic.scrollController,
-                      slivers: [
-                        SliverAppBar(
-                          title: Text(l10n.homeNavigatorAssistant),
-                          pinned: true,
-                          actions: [
-                            Obx(() {
-                              return Text(modelMap[state.modelVersion.value]!);
-                            }),
-                            IconButton(
-                                onPressed: () {
-                                  showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return SimpleDialog(
-                                          title: const Text('选择模型'),
-                                          children: List.generate(
-                                              modelMap.length, (index) {
-                                            return Obx(() {
-                                              return SimpleDialogOption(
-                                                child: Row(
-                                                  spacing: 4.0,
-                                                  children: [
-                                                    Text(modelMap[index]!),
-                                                    if (state.modelVersion
-                                                            .value ==
-                                                        index) ...[
-                                                      const Icon(Icons.check)
-                                                    ]
-                                                  ],
-                                                ),
-                                                onPressed: () {
-                                                  logic.changeModel(index);
-                                                },
-                                              );
-                                            });
-                                          }),
-                                        );
-                                      });
-                                },
-                                icon: const Icon(Icons.change_circle_outlined)),
-                            IconButton(
-                                onPressed: () {
-                                  logic.newChat();
-                                },
-                                icon: const Icon(Icons.refresh)),
-                          ],
-                        ),
-                        buildChat(),
-                      ],
+              SafeArea(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: CustomScrollView(
+                        controller: logic.scrollController,
+                        slivers: [
+                          SliverAppBar(
+                            title: Text(l10n.homeNavigatorAssistant),
+                            pinned: true,
+                            actions: [
+                              Obx(() {
+                                return Text(
+                                    modelMap[state.modelVersion.value]!);
+                              }),
+                              IconButton(
+                                  onPressed: () {
+                                    showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return SimpleDialog(
+                                            title: const Text('选择模型'),
+                                            children: List.generate(
+                                                modelMap.length, (index) {
+                                              return Obx(() {
+                                                return SimpleDialogOption(
+                                                  child: Row(
+                                                    spacing: 4.0,
+                                                    children: [
+                                                      Text(modelMap[index]!),
+                                                      if (state.modelVersion
+                                                              .value ==
+                                                          index) ...[
+                                                        const Icon(Icons.check)
+                                                      ]
+                                                    ],
+                                                  ),
+                                                  onPressed: () {
+                                                    logic.changeModel(index);
+                                                  },
+                                                );
+                                              });
+                                            }),
+                                          );
+                                        });
+                                  },
+                                  icon:
+                                      const Icon(Icons.change_circle_outlined)),
+                              IconButton(
+                                  onPressed: () {
+                                    logic.newChat();
+                                  },
+                                  icon: const Icon(Icons.refresh)),
+                            ],
+                          ),
+                          buildChat(),
+                        ],
+                      ),
                     ),
-                  ),
-                  buildInput()
-                ],
+                    buildInput()
+                  ],
+                ),
               ),
               if (state.messages.isEmpty) ...[buildEmpty()]
             ],

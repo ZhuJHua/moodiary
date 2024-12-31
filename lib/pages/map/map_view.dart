@@ -37,15 +37,17 @@ class MapPage extends StatelessWidget {
                   children: [
                     TileLayer(
                       urlTemplate:
-                          'http://t6.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=img&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${state.tiandituKey}',
+                          'http://t6.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${state.tiandituKey}',
                       tileProvider:
                           const FMTCStore('mapStore').getTileProvider(),
+                      tileSize: 256,
                     ),
                     TileLayer(
                       urlTemplate:
                           'http://t6.tianditu.gov.cn/cva_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${state.tiandituKey}',
                       tileProvider:
                           const FMTCStore('mapStore').getTileProvider(),
+                      tileSize: 256,
                     ),
                     MarkerClusterLayerWidget(
                         options: MarkerClusterLayerOptions(
