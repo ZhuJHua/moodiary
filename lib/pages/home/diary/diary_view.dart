@@ -1,9 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/base/sheet.dart';
+import 'package:mood_diary/components/category_choice_sheet/category_choice_sheet_view.dart';
 import 'package:mood_diary/components/diary_tab_view/diary_tab_view_view.dart';
 import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
@@ -45,15 +45,22 @@ class DiaryPage extends StatelessWidget {
     final logic = Get.put(DiaryLogic());
     final state = Bind.find<DiaryLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme;
 
     //生成TabBar
     Widget buildTabBar() {
       List<Widget> allTabs = [];
       //默认的全部tab
-      allTabs.add(const Tab(text: '全部'));
+      allTabs.add(const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.0),
+        child: Tab(text: '全部'),
+      ));
       //根据分类生成分类Tab
       allTabs.addAll(List.generate(state.categoryList.length, (index) {
-        return Tab(text: state.categoryList[index].categoryName);
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Tab(text: state.categoryList[index].categoryName),
+        );
       }));
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -64,32 +71,10 @@ class DiaryPage extends StatelessWidget {
                 showFloatingModalBottomSheet(
                     context: context,
                     builder: (context) {
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ListTile(
-                            title: const Text('Cut'),
-                            leading: const Icon(Icons.content_cut),
-                            onTap: () {},
-                          ),
-                          ListTile(
-                            title: const Text('Move'),
-                            leading: const Icon(Icons.folder_open),
-                            onTap: () {},
-                          ),
-                          ListTile(
-                            title: const Text('Delete'),
-                            leading: const Icon(Icons.delete),
-                            onTap: () {},
-                          ),
-                        ],
-                      );
+                      return const CategoryChoiceSheetComponent();
                     });
               },
-              icon: const FaIcon(
-                FontAwesomeIcons.bookBookmark,
-                size: 16,
-              ),
+              icon: const Icon(Icons.menu_open_rounded),
               style: const ButtonStyle(
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             ),
@@ -102,15 +87,15 @@ class DiaryPage extends StatelessWidget {
                 indicatorSize: TabBarIndicatorSize.label,
                 splashFactory: NoSplash.splashFactory,
                 dragStartBehavior: DragStartBehavior.start,
-                indicator: UnderlineTabIndicator(
-                  borderSide: BorderSide(
-                    color: colorScheme.primary,
-                    width: 4.0,
-                  ),
-                  borderRadius: const BorderRadius.all(Radius.circular(2.0)),
+                indicator: ShapeDecoration(
+                  shape: const StadiumBorder(),
+                  color: colorScheme.secondaryContainer,
                 ),
                 indicatorWeight: .0,
-                indicatorPadding: const EdgeInsets.symmetric(vertical: 4.0),
+                labelPadding: EdgeInsets.zero,
+                indicatorPadding: const EdgeInsets.symmetric(vertical: 12.0),
+                // indicatorPadding:
+                //     const EdgeInsets.symmetric(vertical: 16.0, horizontal: 0.0),
                 tabs: allTabs,
               ),
             ),
@@ -171,11 +156,17 @@ class DiaryPage extends StatelessWidget {
                     title: GetBuilder<DiaryLogic>(
                         id: 'Title',
                         builder: (_) {
-                          return Text(
-                            state.customTitleName.isNotEmpty
-                                ? state.customTitleName
-                                : l10n.appName,
-                            overflow: TextOverflow.ellipsis,
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                state.customTitleName.isNotEmpty
+                                    ? state.customTitleName
+                                    : l10n.appName,
+                                overflow: TextOverflow.ellipsis,
+                                style: textStyle.titleLarge,
+                              ),
+                            ],
                           );
                         }),
                     pinned: true,
@@ -202,7 +193,7 @@ class DiaryPage extends StatelessWidget {
                                   );
                                 },
                                 tooltip: '数据同步',
-                                icon: const Icon(Icons.cloud_sync_outlined),
+                                icon: const Icon(Icons.cloud_sync_rounded),
                               );
                       }),
                       IconButton(
@@ -213,7 +204,7 @@ class DiaryPage extends StatelessWidget {
                                 return const SearchSheetComponent();
                               });
                         },
-                        icon: const Icon(Icons.search),
+                        icon: const Icon(Icons.search_rounded),
                         tooltip: l10n.diaryPageSearchButton,
                       ),
                       PopupMenuButton(

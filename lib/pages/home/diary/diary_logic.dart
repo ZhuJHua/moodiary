@@ -62,6 +62,18 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     homeLogic.resetNavigatorBar();
   }
 
+  /// 跳转到指定分类
+  void jumpToCategory({required String? categoryId}) {
+    if (categoryId == null) {
+      tabController.animateTo(0);
+      return;
+    }
+    int index = state.categoryList.indexWhere((e) => e.id == categoryId);
+    if (index != -1) {
+      tabController.animateTo(index + 1);
+    }
+  }
+
   /// inner controller 监听函数
   /// 用于分页
   void _innerControllerListener() async {

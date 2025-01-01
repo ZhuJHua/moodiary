@@ -557,9 +557,7 @@ class EditPage extends StatelessWidget {
                       : null,
                   trailing: IconButton.filledTonal(
                     onPressed: () {
-                      showModalBottomSheet(
-                          showDragHandle: true,
-                          useSafeArea: true,
+                      showFloatingModalBottomSheet(
                           context: context,
                           builder: (context) {
                             return const CategoryAddComponent();
