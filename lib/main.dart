@@ -27,6 +27,8 @@ import 'components/window_buttons/window_buttons.dart';
 
 late AppLocalizations l10n;
 
+bool devMode = false;
+
 Future<void> initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
   await findSystemLocale();
@@ -70,14 +72,17 @@ void main() async {
     LogUtil.printError('Flutter error',
         error: details.exception, stackTrace: details.stack);
     if (details.exceptionAsString().contains('Render')) {
-      NoticeUtil.showBug(message: l10n.layoutErrorToast);
+      NoticeUtil.showBug(
+          message:
+              devMode ? details.exceptionAsString() : l10n.layoutErrorToast);
     } else {
-      NoticeUtil.showBug(message: l10n.errorToast);
+      NoticeUtil.showBug(
+          message: devMode ? details.exceptionAsString() : l10n.errorToast);
     }
   };
   PlatformDispatcher.instance.onError = (error, stack) {
     LogUtil.printWTF('Error', error: error, stackTrace: stack);
-    NoticeUtil.showBug(message: l10n.errorToast);
+    NoticeUtil.showBug(message: devMode ? error.toString() : l10n.errorToast);
     return true;
   };
   runApp(GetMaterialApp.router(
