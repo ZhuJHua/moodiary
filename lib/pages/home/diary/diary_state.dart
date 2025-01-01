@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
@@ -31,6 +32,9 @@ class DiaryState {
 
   //当前tab bar位置
   late int currentTabBarIndex;
+
+  // 一言
+  RxString hitokoto = '...'.obs;
 
   DiaryState() {
     customTitleName = PrefUtil.getValue<String>('customTitleName')!;

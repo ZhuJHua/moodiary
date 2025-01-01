@@ -153,22 +153,38 @@ class DiaryPage extends StatelessWidget {
                   handle:
                       NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                   sliver: SliverAppBar(
-                    title: GetBuilder<DiaryLogic>(
-                        id: 'Title',
-                        builder: (_) {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                state.customTitleName.isNotEmpty
-                                    ? state.customTitleName
-                                    : l10n.appName,
-                                overflow: TextOverflow.ellipsis,
-                                style: textStyle.titleLarge,
-                              ),
-                            ],
-                          );
-                        }),
+                    title: GestureDetector(
+                      onTap: logic.getHitokoto,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GetBuilder<DiaryLogic>(
+                              id: 'Title',
+                              builder: (_) {
+                                return Text(
+                                  state.customTitleName.isNotEmpty
+                                      ? state.customTitleName
+                                      : l10n.appName,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textStyle.titleLarge,
+                                );
+                              }),
+                          ScrollConfiguration(
+                            behavior: ScrollConfiguration.of(context)
+                                .copyWith(scrollbars: false),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Obx(() {
+                                return Text(
+                                  state.hitokoto.value,
+                                  style: textStyle.labelSmall,
+                                );
+                              }),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     pinned: true,
                     actions: [
                       Obx(() {

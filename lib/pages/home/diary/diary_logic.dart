@@ -5,6 +5,8 @@ import 'package:mood_diary/components/diary_tab_view/diary_tab_view_logic.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 
+import '../../../api/api.dart';
+import '../../../utils/cache_util.dart';
 import '../../../utils/data/isar.dart';
 import '../../../utils/data/pref.dart';
 import '../../../utils/webdav_util.dart';
@@ -29,6 +31,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
 
   @override
   void onReady() {
+    getHitokoto();
     //监听 tab
     tabController.addListener(_tabBarListener);
     //监听 inner
@@ -40,6 +43,14 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   void onClose() {
     tabController.dispose();
     super.onClose();
+  }
+
+  Future<void> getHitokoto() async {
+    var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
+        maxAgeMillis: 15 * 60000);
+    if (res != null) {
+      state.hitokoto.value = res.first;
+    }
   }
 
   Future<void> autoSync() async {
