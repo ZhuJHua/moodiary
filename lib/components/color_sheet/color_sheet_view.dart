@@ -74,6 +74,12 @@ class ColorSheetComponent extends StatelessWidget {
                           text: AppColor.colorName(realIndex),
                           velocity: 20,
                           blankSpace: 20,
+                          pauseAfterRound: const Duration(seconds: 1),
+                          accelerationDuration: const Duration(seconds: 1),
+                          accelerationCurve: Curves.linear,
+                          decelerationDuration:
+                              const Duration(milliseconds: 500),
+                          decelerationCurve: Curves.easeOut,
                           style: textStyle?.copyWith(
                               color: customColorScheme.onPrimary),
                         ),
