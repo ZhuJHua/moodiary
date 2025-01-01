@@ -59,6 +59,7 @@ class WebDavLogic extends GetxController {
     if (state.formKey.currentState?.validate() ?? false) {
       unFocus();
       state.formKey.currentState?.save();
+      NoticeUtil.showLoading();
 
       await webDav.updateWebDav(
           baseUrl: webDavUrlController.text,

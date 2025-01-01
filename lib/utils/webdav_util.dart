@@ -100,7 +100,7 @@ class WebDavUtil {
       required String username,
       required String password}) async {
     await PrefUtil.setValue('webDavOption', [baseUrl, username, password]);
-    initWebDav();
+    await initWebDav();
   }
 
   Future<void> removeWebDavOption() async {
