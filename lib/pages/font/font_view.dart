@@ -7,6 +7,7 @@ import 'package:mood_diary/components/loading/loading.dart';
 import 'package:mood_diary/main.dart';
 import 'package:rive_animated_icon/rive_animated_icon.dart';
 
+import '../../utils/data/pref.dart';
 import 'font_logic.dart';
 
 class FontPage extends StatelessWidget {
@@ -66,9 +67,10 @@ class FontPage extends StatelessWidget {
     required Function onLongPress,
   }) {
     final textPainter = TextPainter(
-      text: TextSpan(text: fontName, style: textStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
+        text: TextSpan(text: fontName, style: textStyle),
+        textDirection: TextDirection.ltr,
+        textScaler: TextScaler.linear(PrefUtil.getValue<double>('fontScale')!))
+      ..layout();
     double textWidth = textPainter.size.width;
     double containerWidth = 60.0;
     bool shouldMarquee = textWidth > containerWidth;

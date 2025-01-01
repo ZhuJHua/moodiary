@@ -5,6 +5,7 @@ import 'package:marquee/marquee.dart';
 import 'package:mood_diary/common/values/colors.dart';
 
 import '../../common/values/border.dart';
+import '../../utils/data/pref.dart';
 import 'color_sheet_logic.dart';
 import 'color_sheet_state.dart';
 
@@ -34,9 +35,10 @@ class ColorSheetComponent extends StatelessWidget {
         brightness: brightness);
 
     final textPainter = TextPainter(
-      text: TextSpan(text: AppColor.colorName(realIndex), style: textStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
+        text: TextSpan(text: AppColor.colorName(realIndex), style: textStyle),
+        textDirection: TextDirection.ltr,
+        textScaler: TextScaler.linear(PrefUtil.getValue<double>('fontScale')!))
+      ..layout();
     final showMarquee = textPainter.width > constraints.maxWidth - 8.0;
     return Padding(
       padding: const EdgeInsets.all(4.0),
