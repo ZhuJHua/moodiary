@@ -64,45 +64,45 @@ class DiaryPage extends StatelessWidget {
           child: Tab(text: state.categoryList[index].categoryName),
         );
       }));
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: () {
-                showFloatingModalBottomSheet(
-                    context: context,
-                    builder: (context) {
-                      return const CategoryChoiceSheetComponent();
-                    });
-              },
-              icon: const Icon(Icons.menu_open_rounded),
-              style: const ButtonStyle(
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            ),
-            Expanded(
-              child: TabBar(
-                controller: logic.tabController,
-                isScrollable: true,
-                dividerHeight: .0,
-                tabAlignment: TabAlignment.start,
-                indicatorSize: TabBarIndicatorSize.label,
-                splashFactory: NoSplash.splashFactory,
-                dragStartBehavior: DragStartBehavior.start,
-                indicator: ShapeDecoration(
-                  shape: const StadiumBorder(),
-                  color: colorScheme.secondaryContainer,
-                ),
-                indicatorWeight: .0,
-                labelPadding: EdgeInsets.zero,
-                indicatorPadding: const EdgeInsets.symmetric(vertical: 12.0),
-                // indicatorPadding:
-                //     const EdgeInsets.symmetric(vertical: 16.0, horizontal: 0.0),
-                tabs: allTabs,
+      return Row(
+        children: [
+          IconButton(
+            onPressed: () {
+              showFloatingModalBottomSheet(
+                  context: context,
+                  builder: (context) {
+                    return const CategoryChoiceSheetComponent();
+                  });
+            },
+            icon: const Icon(Icons.menu_open_rounded),
+          ),
+          Expanded(
+            child: TabBar(
+              controller: logic.tabController,
+              isScrollable: true,
+              dividerHeight: .0,
+              tabAlignment: TabAlignment.start,
+              indicatorSize: TabBarIndicatorSize.label,
+              splashFactory: NoSplash.splashFactory,
+              dragStartBehavior: DragStartBehavior.start,
+              unselectedLabelStyle: textStyle.labelSmall,
+              labelStyle: textStyle.labelMedium!.copyWith(
+                  fontWeight: FontWeight.w500,
+                  fontVariations: [const FontVariation('wght', 500)]),
+              indicator: ShapeDecoration(
+                shape: const StadiumBorder(),
+                color: colorScheme.primaryContainer,
               ),
+              indicatorWeight: .0,
+              unselectedLabelColor:
+                  colorScheme.onSurface.withValues(alpha: 0.8),
+              labelColor: colorScheme.onPrimaryContainer,
+              labelPadding: EdgeInsets.zero,
+              indicatorPadding: const EdgeInsets.symmetric(vertical: 12.0),
+              tabs: allTabs,
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
