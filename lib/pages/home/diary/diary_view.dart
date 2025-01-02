@@ -171,49 +171,47 @@ class DiaryPage extends StatelessWidget {
                                   style: textStyle.titleLarge,
                                 );
                               }),
-                          ScrollConfiguration(
-                            behavior: ScrollConfiguration.of(context)
-                                .copyWith(scrollbars: false),
-                            child:
-                                LayoutBuilder(builder: (context, constraints) {
-                              return Obx(() {
-                                final textPainter = TextPainter(
-                                    text: TextSpan(
+                          LayoutBuilder(builder: (context, constraints) {
+                            return Obx(() {
+                              final textPainter = TextPainter(
+                                  text: TextSpan(
+                                      text: state.hitokoto.value,
+                                      style: textStyle.labelSmall),
+                                  textDirection: TextDirection.ltr,
+                                  textScaler: TextScaler.linear(
+                                      PrefUtil.getValue<double>('fontScale')!))
+                                ..layout();
+                              final showMarquee =
+                                  textPainter.width > constraints.maxWidth;
+                              return showMarquee
+                                  ? SizedBox(
+                                      height: textPainter.height,
+                                      width: constraints.maxWidth,
+                                      child: Marquee(
                                         text: state.hitokoto.value,
-                                        style: textStyle.labelSmall),
-                                    textDirection: TextDirection.ltr,
-                                    textScaler: TextScaler.linear(
-                                        PrefUtil.getValue<double>(
-                                            'fontScale')!))
-                                  ..layout();
-                                final showMarquee =
-                                    textPainter.width > constraints.maxWidth;
-                                return showMarquee
-                                    ? SizedBox(
-                                        height: textPainter.height,
-                                        width: constraints.maxWidth,
-                                        child: Marquee(
-                                          text: state.hitokoto.value,
-                                          velocity: 20,
-                                          blankSpace: 20,
-                                          pauseAfterRound:
-                                              const Duration(seconds: 1),
-                                          accelerationDuration:
-                                              const Duration(seconds: 1),
-                                          accelerationCurve: Curves.linear,
-                                          decelerationDuration:
-                                              const Duration(milliseconds: 500),
-                                          decelerationCurve: Curves.easeOut,
-                                          style: textStyle.labelSmall,
-                                        ),
-                                      )
-                                    : Text(
-                                        state.hitokoto.value,
-                                        style: textStyle.labelSmall,
-                                      );
-                              });
-                            }),
-                          ),
+                                        velocity: 20,
+                                        blankSpace: 20,
+                                        pauseAfterRound:
+                                            const Duration(seconds: 1),
+                                        accelerationDuration:
+                                            const Duration(seconds: 1),
+                                        accelerationCurve: Curves.linear,
+                                        decelerationDuration:
+                                            const Duration(milliseconds: 500),
+                                        decelerationCurve: Curves.easeOut,
+                                        style: textStyle.labelMedium?.copyWith(
+                                            color: colorScheme.onSurface
+                                                .withValues(alpha: 0.9)),
+                                      ),
+                                    )
+                                  : Text(
+                                      state.hitokoto.value,
+                                      style: textStyle.labelMedium?.copyWith(
+                                          color: colorScheme.onSurface
+                                              .withValues(alpha: 0.9)),
+                                    );
+                            });
+                          }),
                         ],
                       ),
                     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/diary_tab_view/diary_tab_view_logic.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
@@ -46,10 +47,14 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   }
 
   Future<void> getHitokoto() async {
-    var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
-        maxAgeMillis: 15 * 60000);
-    if (res != null) {
-      state.hitokoto.value = res.first;
+    try {
+      var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
+          maxAgeMillis: 15 * 60000);
+      if (res != null) {
+        state.hitokoto.value = res.first;
+      }
+    } catch (e) {
+      state.hitokoto.value = DateFormat.yMMMMEEEEd().format(DateTime.now());
     }
   }
 
