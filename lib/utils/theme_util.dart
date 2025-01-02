@@ -60,9 +60,8 @@ class ThemeUtil {
         titleMedium: baseTheme.titleMedium?.copyWith(
             fontFamily: fontFamily,
             fontVariations: [const FontVariation('wght', 500)]),
-        titleSmall: baseTheme.titleSmall?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 400)]),
+        titleSmall: baseTheme.titleSmall
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
         bodyLarge: baseTheme.bodyLarge
             ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
         bodyMedium: baseTheme.bodyMedium
@@ -81,6 +80,51 @@ class ThemeUtil {
       );
     }
 
+    TextTheme applyMiSansFontVariations(
+        TextTheme baseTheme, String? fontFamily) {
+      const fontVariation = FontVariation('wght', 330);
+      return baseTheme.copyWith(
+        displayLarge: baseTheme.displayLarge
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        displayMedium: baseTheme.displayMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        displaySmall: baseTheme.displaySmall
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        headlineLarge: baseTheme.headlineLarge?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 380)]),
+        headlineMedium: baseTheme.headlineMedium?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 380)]),
+        headlineSmall: baseTheme.headlineSmall?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 380)]),
+        titleLarge: baseTheme.titleLarge?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 520)]),
+        titleMedium: baseTheme.titleMedium?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 520)]),
+        titleSmall: baseTheme.titleSmall
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        bodyLarge: baseTheme.bodyLarge
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        bodyMedium: baseTheme.bodyMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        bodySmall: baseTheme.bodySmall?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 250)]),
+        labelLarge: baseTheme.labelLarge?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 380)]),
+        labelMedium: baseTheme.labelMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        labelSmall: baseTheme.labelSmall?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 250)]),
+      );
+    }
+
     // 基础主题
     return ThemeData(
       colorScheme: ColorScheme.fromSeed(
@@ -92,12 +136,19 @@ class ThemeUtil {
       ),
       materialTapTargetSize: MaterialTapTargetSize.padded,
       brightness: brightness,
-      textTheme: applyFontVariations(
-        brightness == Brightness.light
-            ? Typography.material2021().black
-            : Typography.material2021().white,
-        fontFamily,
-      ),
+      textTheme: fontFamily != 'MiSans VF'
+          ? applyFontVariations(
+              brightness == Brightness.light
+                  ? Typography.material2021().black
+                  : Typography.material2021().white,
+              fontFamily,
+            )
+          : applyMiSansFontVariations(
+              brightness == Brightness.light
+                  ? Typography.material2021().black
+                  : Typography.material2021().white,
+              fontFamily,
+            ),
     );
   }
 
