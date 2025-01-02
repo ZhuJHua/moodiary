@@ -42,7 +42,9 @@ class LoginFormComponent extends StatelessWidget {
                         state.email = value;
                       },
                       validator: (value) {
-                        return (value == null || !GetUtils.isEmail(value)) ? '请输入邮箱' : null;
+                        return (value == null || !GetUtils.isEmail(value))
+                            ? '请输入邮箱'
+                            : null;
                       },
                       focusNode: logic.emailFocusNode,
                     ),

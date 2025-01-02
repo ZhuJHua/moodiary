@@ -8,5 +8,6 @@ enum MediaType {
   final int number;
   final String value;
 
-  static MediaType getType(int number) => MediaType.values.firstWhere((e) => e.number == number);
+  static MediaType getType(int number) =>
+      MediaType.values.firstWhere((e) => e.number == number);
 }

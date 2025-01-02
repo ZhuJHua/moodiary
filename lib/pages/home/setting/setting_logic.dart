@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/components/dashboard/dashboard_logic.dart';
+import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/theme_util.dart';
 
 import '../../../utils/data/pref.dart';
 import '../../../utils/file_util.dart';
@@ -17,7 +17,8 @@ class SettingLogic extends GetxController {
   final SettingState state = SettingState();
   late final homeLogic = Bind.find<HomeLogic>();
 
-  late TextEditingController textEditingController = TextEditingController(text: state.customTitle);
+  late TextEditingController textEditingController =
+      TextEditingController(text: state.customTitle);
 
   @override
   void onInit() {
@@ -83,7 +84,8 @@ class SettingLogic extends GetxController {
   }
 
   Future<void> toAi() async {
-    if (PrefUtil.getValue<String>('tencentId') != null && PrefUtil.getValue<String>('tencentKey') != null) {
+    if (PrefUtil.getValue<String>('tencentId') != null &&
+        PrefUtil.getValue<String>('tencentKey') != null) {
       HapticFeedback.selectionClick();
       Get.toNamed(AppRoutes.assistantPage);
     } else {
@@ -131,19 +133,11 @@ class SettingLogic extends GetxController {
     if (textEditingController.text.isNotEmpty) {
       state.customTitle = textEditingController.text;
       update(['CustomTitle']);
-      await PrefUtil.setValue<String>('customTitleName', textEditingController.text);
+      await PrefUtil.setValue<String>(
+          'customTitleName', textEditingController.text);
       Get.backLegacy();
       textEditingController.clear();
-      NoticeUtil.showToast('重启应用后生效');
+      Bind.find<DiaryLogic>().updateTitle();
     }
-  }
-
-  //更改字体
-  Future<void> changeFontTheme(int value) async {
-    Get.backLegacy();
-    await PrefUtil.setValue<int>('fontTheme', value);
-    state.fontTheme.value = value;
-    Get.changeTheme(ThemeUtil.buildTheme(Brightness.light));
-    Get.changeTheme(ThemeUtil.buildTheme(Brightness.dark));
   }
 }

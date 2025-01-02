@@ -22,7 +22,12 @@ class WebDavDashboardLogic extends GetxController {
     if (!isInit) update();
     await checkConnectivity();
     if (state.connectivityStatus.value == WebDavConnectivityStatus.connected) {
-      await fetchingWebDavSyncFlag();
+      try {
+        await fetchingWebDavSyncFlag();
+      } catch (e) {
+        NoticeUtil.showBug(message: '获取配置失败，请检查配置');
+        return;
+      }
       if (isInit) await fetchDiaryList();
     }
     state.isFetching = false;
@@ -35,7 +40,9 @@ class WebDavDashboardLogic extends GetxController {
     state.toUploadDiaries.clear();
     state.toDownloadIds.clear();
     // 本地日记 Map，id 对应最后修改时间
-    final Map<String, DateTime> localDiaryMap = {for (var diary in state.diaryList) diary.id: diary.lastModified};
+    final Map<String, DateTime> localDiaryMap = {
+      for (var diary in state.diaryList) diary.id: diary.lastModified
+    };
     // 查找待上传的日记
     _findToUploadDiaries(localDiaryMap);
     // 查找待下载的日记
@@ -46,7 +53,8 @@ class WebDavDashboardLogic extends GetxController {
     for (var diary in state.diaryList) {
       final remoteModifiedTime = state.webdavSyncMap[diary.id];
       if (remoteModifiedTime == 'delete') continue;
-      if (remoteModifiedTime == null || DateTime.parse(remoteModifiedTime).isBefore(diary.lastModified)) {
+      if (remoteModifiedTime == null ||
+          DateTime.parse(remoteModifiedTime).isBefore(diary.lastModified)) {
         state.toUploadDiaries.add(diary);
       }
     }
@@ -60,7 +68,8 @@ class WebDavDashboardLogic extends GetxController {
       final remoteModifiedTime = DateTime.parse(entry.value);
 
       // 本地没有该日记，或者本地修改时间早于服务器
-      if (!localDiaryMap.containsKey(id) || remoteModifiedTime.isAfter(localDiaryMap[id]!)) {
+      if (!localDiaryMap.containsKey(id) ||
+          remoteModifiedTime.isAfter(localDiaryMap[id]!)) {
         state.toDownloadIds.add(id);
       }
     }
@@ -71,12 +80,17 @@ class WebDavDashboardLogic extends GetxController {
   Future<void> checkConnectivity() async {
     state.connectivityStatus.value = WebDavConnectivityStatus.connecting;
     var res = await WebDavUtil().checkConnectivity();
-    state.connectivityStatus.value = res ? WebDavConnectivityStatus.connected : WebDavConnectivityStatus.unconnected;
+    state.connectivityStatus.value = res
+        ? WebDavConnectivityStatus.connected
+        : WebDavConnectivityStatus.unconnected;
   }
 
   Future<void> fetchingWebDavSyncFlag() async {
     state.webdavSyncMap = await WebDavUtil().fetchServerSyncData();
-    state.webDavDiaryCount.value = state.webdavSyncMap.values.where((element) => element != 'delete').length.toString();
+    state.webDavDiaryCount.value = state.webdavSyncMap.values
+        .where((element) => element != 'delete')
+        .length
+        .toString();
   }
 
   void toWebDavPage() async {
@@ -90,10 +104,12 @@ class WebDavDashboardLogic extends GetxController {
     checkIsUploading();
     checkIsDownloading();
     await WebDavUtil().syncDiary(state.diaryList, onUpload: () {
-      state.toUploadDiariesCount.value = (int.parse(state.toUploadDiariesCount.value) - 1).toString();
+      state.toUploadDiariesCount.value =
+          (int.parse(state.toUploadDiariesCount.value) - 1).toString();
       checkIsUploading();
     }, onDownload: () async {
-      state.toDownloadIdsCount.value = (int.parse(state.toDownloadIdsCount.value) - 1).toString();
+      state.toDownloadIdsCount.value =
+          (int.parse(state.toDownloadIdsCount.value) - 1).toString();
       checkIsDownloading();
       await Bind.find<DiaryLogic>().refreshAll();
     }, onComplete: () {

@@ -76,7 +76,8 @@ class LaboratoryPage extends StatelessWidget {
             ),
             ListTile(
               title: const Text('和风天气密钥'),
-              subtitle: SelectionArea(child: Text(PrefUtil.getValue<String>('qweatherKey') ?? '')),
+              subtitle: SelectionArea(
+                  child: Text(PrefUtil.getValue<String>('qweatherKey') ?? '')),
               trailing: IconButton(
                   onPressed: () {
                     showDialog(
@@ -110,7 +111,8 @@ class LaboratoryPage extends StatelessWidget {
             ),
             ListTile(
               title: const Text('天地图密钥'),
-              subtitle: SelectionArea(child: Text(PrefUtil.getValue<String>('tiandituKey') ?? '')),
+              subtitle: SelectionArea(
+                  child: Text(PrefUtil.getValue<String>('tiandituKey') ?? '')),
               trailing: IconButton(
                   onPressed: () {
                     showDialog(

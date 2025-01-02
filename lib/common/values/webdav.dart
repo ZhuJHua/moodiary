@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 class WebDavOptions {
-  static const String basePath = '/Moodiary';
-  static const String imagePath = '/Moodiary/Asset/Image';
-  static const String audioPath = '/Moodiary/Asset/Audio';
-  static const String videoPath = '/Moodiary/Asset/Video';
+  static const String basePath = '/Moodiary/';
+  static const String imagePath = '/Moodiary/Asset/Image/';
+  static const String audioPath = '/Moodiary/Asset/Audio/';
+  static const String videoPath = '/Moodiary/Asset/Video/';
 
-  static const String diaryPath = '/Moodiary/Diary';
-  static const String categoryPath = '/Moodiary/Category';
+  static const String diaryPath = '/Moodiary/Diary/';
+  static const String categoryPath = '/Moodiary/Category/';
 
   //增量同步标记文件路径
   static const String syncFlagPath = '/Moodiary/sync.json';

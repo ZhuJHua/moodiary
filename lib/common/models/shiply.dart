@@ -35,8 +35,12 @@ class ShiplyResponse {
       this.updateTime});
 
   ShiplyResponse.fromJson(Map<String, dynamic> json) {
-    apkBasicInfo = json["apkBasicInfo"] == null ? null : ApkBasicInfo.fromJson(json["apkBasicInfo"]);
-    clientInfo = json["clientInfo"] == null ? null : ClientInfo.fromJson(json["clientInfo"]);
+    apkBasicInfo = json["apkBasicInfo"] == null
+        ? null
+        : ApkBasicInfo.fromJson(json["apkBasicInfo"]);
+    clientInfo = json["clientInfo"] == null
+        ? null
+        : ClientInfo.fromJson(json["clientInfo"]);
     extra = json["extra"] == null ? null : Extra.fromJson(json["extra"]);
     grayType = json["grayType"];
     newFeature = json["newFeature"];

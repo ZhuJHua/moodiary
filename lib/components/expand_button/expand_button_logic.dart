@@ -1,11 +1,13 @@
 import 'package:flutter/animation.dart';
 import 'package:get/get.dart';
 
-class ExpandButtonLogic extends GetxController with GetSingleTickerProviderStateMixin {
-  late final AnimationController animationController =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+class ExpandButtonLogic extends GetxController
+    with GetSingleTickerProviderStateMixin {
+  late final AnimationController animationController = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 400));
 
-  late final Animation<double> animation = CurvedAnimation(parent: animationController, curve: Curves.easeInOutQuart);
+  late final Animation<double> animation = CurvedAnimation(
+      parent: animationController, curve: Curves.easeInOutQuart);
 
   @override
   void onClose() {

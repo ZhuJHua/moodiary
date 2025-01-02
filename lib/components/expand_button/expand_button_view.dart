@@ -36,7 +36,8 @@ class ExpandButtonComponent extends StatelessWidget {
           icon,
           color: color,
         ),
-        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+        style:
+            const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
       ),
     );
   }
@@ -66,8 +67,10 @@ class ExpandButtonComponent extends StatelessWidget {
               )),
           IconButton.filled(
             onPressed: logic.animatedIcon,
-            style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            icon: AnimatedIcon(icon: AnimatedIcons.menu_close, progress: logic.animation),
+            style: const ButtonStyle(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            icon: AnimatedIcon(
+                icon: AnimatedIcons.menu_close, progress: logic.animation),
           ),
         ],
       ),

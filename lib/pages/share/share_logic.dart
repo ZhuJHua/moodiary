@@ -21,7 +21,8 @@ class ShareLogic extends GetxController {
   }
 
   Future<Uint8List> captureWidget() async {
-    var boundary = state.key.currentContext?.findRenderObject() as RenderRepaintBoundary;
+    var boundary =
+        state.key.currentContext?.findRenderObject() as RenderRepaintBoundary;
     var pixelRatio = MediaQuery.devicePixelRatioOf(Get.context!);
     var image = await boundary.toImage(pixelRatio: pixelRatio);
     var data = await image.toByteData(format: ImageByteFormat.png);

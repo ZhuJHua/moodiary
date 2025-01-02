@@ -28,10 +28,12 @@ class AskQuestionLogic extends GetxController with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       var height = MediaQuery.viewInsetsOf(Get.context!).bottom;
       if (heightList.isNotEmpty && height != heightList.last) {
-        if (height > heightList.last && state.keyboardState != KeyboardState.opening) {
+        if (height > heightList.last &&
+            state.keyboardState != KeyboardState.opening) {
           state.keyboardState = KeyboardState.opening;
           //正在打开
-        } else if (height < heightList.last && state.keyboardState != KeyboardState.closing) {
+        } else if (height < heightList.last &&
+            state.keyboardState != KeyboardState.closing) {
           state.keyboardState = KeyboardState.closing;
           //正在关闭
           unFocus();

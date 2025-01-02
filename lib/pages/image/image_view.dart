@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/media_type.dart';
+import 'package:mood_diary/components/base/button.dart';
 import 'package:mood_diary/utils/media_util.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -23,41 +24,77 @@ class ImagePage extends StatelessWidget {
           extendBodyBehindAppBar: true,
           appBar: AppBar(
             backgroundColor: colorScheme.scrim.withAlpha((255 * 0.6).toInt()),
-            title: Text(
-              '${state.imageIndex + 1}/${state.imagePathList.length}',
-              style: const TextStyle(color: Colors.white),
-            ),
+            title: Obx(() {
+              return Visibility(
+                visible: state.imagePathList.length > 1,
+                child: Text(
+                  '${state.imageIndex.value + 1}/${state.imagePathList.length}',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              );
+            }),
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
               IconButton(
                   onPressed: () {
-                    MediaUtil.saveToGallery(path: state.imagePathList[state.imageIndex], type: MediaType.image);
+                    MediaUtil.saveToGallery(
+                        path: state.imagePathList[state.imageIndex.value],
+                        type: MediaType.image);
                   },
                   icon: const Icon(Icons.save_alt)),
             ],
           ),
-          body: PhotoViewGallery.builder(
-            scrollPhysics: const PageScrollPhysics(),
-            pageController: state.pageController,
-            builder: (BuildContext context, int index) {
-              return PhotoViewGalleryPageOptions(
-                imageProvider: FileImage(File(state.imagePathList[index])),
-                heroAttributes: PhotoViewHeroAttributes(tag: index),
-              );
-            },
-            itemCount: state.imagePathList.length,
-            onPageChanged: (index) {
-              logic.changePage(index);
-            },
-            loadingBuilder: (context, event) => Center(
-              child: SizedBox(
-                width: 20.0,
-                height: 20.0,
-                child: CircularProgressIndicator(
-                  value: event == null ? 0 : (event.cumulativeBytesLoaded / event.expectedTotalBytes!),
-                ),
+          body: Stack(
+            alignment: Alignment.center,
+            children: [
+              PhotoViewGallery.builder(
+                scrollPhysics: const PageScrollPhysics(),
+                pageController: logic.pageController,
+                builder: (BuildContext context, int index) {
+                  return PhotoViewGalleryPageOptions(
+                    imageProvider: FileImage(File(state.imagePathList[index])),
+                    heroAttributes: PhotoViewHeroAttributes(tag: index),
+                  );
+                },
+                itemCount: state.imagePathList.length,
+                onPageChanged: logic.changePage,
+                loadingBuilder: (context, event) =>
+                    const Center(child: CircularProgressIndicator()),
               ),
-            ),
+              Obx(() {
+                return Visibility(
+                  visible: state.imageIndex.value != 0,
+                  child: Positioned(
+                    left: 16,
+                    child: FrostedGlassButton(
+                      size: 40,
+                      onPressed: logic.previous,
+                      child: const Icon(
+                        Icons.chevron_left_rounded,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+              Obx(() {
+                return Visibility(
+                  visible:
+                      state.imageIndex.value != state.imagePathList.length - 1,
+                  child: Positioned(
+                    right: 16,
+                    child: FrostedGlassButton(
+                      size: 40,
+                      onPressed: logic.next,
+                      child: const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
           ),
         );
       },

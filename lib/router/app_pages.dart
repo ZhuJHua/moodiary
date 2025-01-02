@@ -73,7 +73,7 @@ class AppPages {
     //日记页路由
     GetPage(
       name: AppRoutes.diaryPage,
-      transition: Transition.fadeIn,
+      //transition: Transition.topLevel,
       page: () => DiaryDetailsPage(),
     ),
     //图片路由
@@ -81,7 +81,7 @@ class AppPages {
       name: AppRoutes.photoPage,
       page: () => const ImagePage(),
       popGesture: false,
-      transition: Transition.fadeIn,
+      //transition: Transition.topLevel,
       binds: [Bind.lazyPut(() => ImageLogic())],
     ),
     //回收站
@@ -162,9 +162,9 @@ class AppPages {
     ),
     GetPage(
       name: AppRoutes.videoPage,
-      transition: Transition.fadeIn,
       popGesture: false,
       page: () => const VideoPage(),
+      // transition: Transition.topLevel,
       binds: [Bind.lazyPut(() => VideoLogic())],
     ),
     GetPage(

@@ -60,10 +60,12 @@ class LocalSendClientComponent extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Obx(() {
-                      return Text('${state.sendCount.value} / ${state.diaryToSend.length}');
+                      return Text(
+                          '${state.sendCount.value} / ${state.diaryToSend.length}');
                     }),
                     Obx(() {
-                      var speed = FileUtil.bytesToUnits(state.speed.value.toInt());
+                      var speed =
+                          FileUtil.bytesToUnits(state.speed.value.toInt());
                       return Text('${speed['size']}${speed['unit']}/s');
                     }),
                   ],

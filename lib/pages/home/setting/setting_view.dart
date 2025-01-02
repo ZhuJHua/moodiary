@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
-import 'package:mood_diary/components/color_dialog/color_dialog_view.dart';
+import 'package:mood_diary/common/values/colors.dart';
+import 'package:mood_diary/components/base/sheet.dart';
+import 'package:mood_diary/components/color_sheet/color_sheet_view.dart';
 import 'package:mood_diary/components/dashboard/dashboard_view.dart';
 import 'package:mood_diary/components/remove_password/remove_password_view.dart';
 import 'package:mood_diary/components/set_password/set_password_view.dart';
@@ -27,7 +29,10 @@ class SettingPage extends StatelessWidget {
       return const DashboardComponent();
     }
 
-    Widget buildAFeatureButton({required Widget icon, required String text, required Function() onTap}) {
+    Widget buildAFeatureButton(
+        {required Widget icon,
+        required String text,
+        required Function() onTap}) {
       return InkWell(
         onTap: onTap,
         borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -53,8 +58,8 @@ class SettingPage extends StatelessWidget {
         children: [
           const SettingTitleTile(title: '功能'),
           GridView(
-            gridDelegate:
-                const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 100, childAspectRatio: 1.0),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 100, childAspectRatio: 1.0),
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -183,103 +188,32 @@ class SettingPage extends StatelessWidget {
                   title: Text(l10n.settingColor),
                   leading: const Icon(Icons.color_lens_outlined),
                   trailing: Text(
-                    switch (state.color) {
-                      0 => l10n.colorNameQunQin,
-                      1 => l10n.colorNameJiHe,
-                      2 => l10n.colorNameQinDai,
-                      3 => l10n.colorNameXianYe,
-                      4 => l10n.colorNameJinYu,
-                      _ => l10n.colorNameSystem
-                    },
+                    AppColor.colorName(state.color),
                     style: textStyle.bodySmall!.copyWith(
                       color: colorScheme.primary,
                     ),
                   ),
                   onTap: () {
-                    showDialog(
+                    showFloatingModalBottomSheet(
                         context: context,
                         builder: (context) {
-                          return const ColorDialogComponent();
+                          return const ColorSheetComponent();
                         });
+                    // showDialog(
+                    //     context: context,
+                    //     builder: (context) {
+                    //       return const ColorDialogComponent();
+                    //     });
                   },
                 ),
                 ListTile(
-                  title: Text(l10n.settingFontSize),
+                  title: Text(l10n.settingFontStyle),
                   leading: const Icon(Icons.format_size_outlined),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     logic.toFontSizePage();
                   },
                 ),
-                // ListTile(
-                //   title: Text(l10n.settingFontStyle),
-                //   leading: const Icon(Icons.text_format_outlined),
-                //   trailing: Obx(() {
-                //     return Text(
-                //       switch (state.fontTheme.value) {
-                //         0 => '思源黑体',
-                //         1 => '思源宋体',
-                //         int() => throw UnimplementedError(),
-                //       },
-                //       style: textStyle.bodySmall!.copyWith(
-                //         color: colorScheme.primary,
-                //       ),
-                //     );
-                //   }),
-                //   onTap: () {
-                //     showDialog(
-                //         context: context,
-                //         builder: (context) {
-                //           return Obx(() {
-                //             return SimpleDialog(
-                //               title: Text(l10n.settingFontStyle),
-                //               children: [
-                //                 SimpleDialogOption(
-                //                   child: Row(
-                //                     children: [
-                //                       const Text(
-                //                         '思源黑体',
-                //                         style:
-                //                             TextStyle(fontFamily: 'NotoSans SC', fontFamilyFallback: ['NotoSans SC']),
-                //                       ),
-                //                       const SizedBox(
-                //                         width: 10,
-                //                       ),
-                //                       if (state.fontTheme.value == 0) ...[
-                //                         const Icon(Icons.check),
-                //                       ]
-                //                     ],
-                //                   ),
-                //                   onPressed: () {
-                //                     logic.changeFontTheme(0);
-                //                   },
-                //                 ),
-                //                 SimpleDialogOption(
-                //                   child: Row(
-                //                     children: [
-                //                       const Text(
-                //                         '思源宋体',
-                //                         style:
-                //                             TextStyle(fontFamily: 'NotoSerif SC', fontFamilyFallback: ['NotoSerif SC']),
-                //                       ),
-                //                       const SizedBox(
-                //                         width: 10,
-                //                       ),
-                //                       if (state.fontTheme.value == 1) ...[
-                //                         const Icon(Icons.check),
-                //                       ]
-                //                     ],
-                //                   ),
-                //                   onPressed: () {
-                //                     logic.changeFontTheme(1);
-                //                   },
-                //                 ),
-                //               ],
-                //             );
-                //           });
-                //         });
-                //   },
-                // ),
                 ListTile(
                   title: const Text('自定义首页名称'),
                   leading: const Icon(Icons.drive_file_rename_outline),
@@ -304,7 +238,8 @@ class SettingPage extends StatelessWidget {
                               decoration: InputDecoration(
                                 fillColor: colorScheme.secondaryContainer,
                                 border: const UnderlineInputBorder(
-                                  borderRadius: AppBorderRadius.smallBorderRadius,
+                                  borderRadius:
+                                      AppBorderRadius.smallBorderRadius,
                                   borderSide: BorderSide.none,
                                 ),
                                 filled: true,
@@ -358,7 +293,9 @@ class SettingPage extends StatelessWidget {
                     builder: (_) {
                       return ListTile(
                         trailing: Text(
-                          state.lock ? l10n.settingLockOpen : l10n.settingLockNotOpen,
+                          state.lock
+                              ? l10n.settingLockOpen
+                              : l10n.settingLockNotOpen,
                           style: textStyle.bodySmall!.copyWith(
                             color: colorScheme.primary,
                           ),
@@ -369,17 +306,16 @@ class SettingPage extends StatelessWidget {
                               builder: (context) {
                                 return AlertDialog(
                                   title: Text(l10n.settingLock),
-                                  content:
-                                      Text(state.lock ? l10n.settingLockResetLock : l10n.settingLockChooseLockType),
+                                  content: Text(state.lock
+                                      ? l10n.settingLockResetLock
+                                      : l10n.settingLockChooseLockType),
                                   actions: [
                                     TextButton(
                                         onPressed: () {
                                           Get.backLegacy();
-                                          showModalBottomSheet(
+                                          showFloatingModalBottomSheet(
                                               context: context,
                                               isScrollControlled: true,
-                                              showDragHandle: true,
-                                              useSafeArea: true,
                                               builder: (context) {
                                                 return state.lock
                                                     ? const RemovePasswordComponent()
@@ -457,8 +393,6 @@ class SettingPage extends StatelessWidget {
             Expanded(
               child: ListView(
                 cacheExtent: size.height * 2,
-                addAutomaticKeepAlives: false,
-                addRepaintBoundaries: false,
                 padding: const EdgeInsets.all(4.0),
                 children: [
                   buildDashboard(),

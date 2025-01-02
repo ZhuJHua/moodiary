@@ -49,8 +49,8 @@ class EditingLoading extends StatelessWidget {
   }
 }
 
-class NetworkLoading extends StatelessWidget {
-  const NetworkLoading({super.key});
+class NetworkLoading1 extends StatelessWidget {
+  const NetworkLoading1({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +60,42 @@ class NetworkLoading extends StatelessWidget {
       width: 80,
       height: 80,
       color: colorScheme.onSurface,
+      strokeWidth: 4.0,
+    );
+  }
+}
+
+class NetworkLoading2 extends StatelessWidget {
+  const NetworkLoading2({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return LoopingRiveIcon(
+      riveIcon: RiveIcon.globe,
+      width: 80,
+      height: 80,
+      color: colorScheme.onSurface,
+      strokeWidth: 4.0,
+    );
+  }
+}
+
+class MediaLoading extends StatelessWidget {
+  final Color? color;
+
+  final double? size;
+
+  const MediaLoading({super.key, this.color, this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return LoopingRiveIcon(
+      riveIcon: RiveIcon.gallery,
+      width: size ?? 80,
+      height: size ?? 80,
+      color: color ?? colorScheme.onSurface,
       strokeWidth: 4.0,
     );
   }

@@ -27,9 +27,11 @@ class AnalyseLogic extends GetxController {
     //获取数据开始
     state.finished = false;
     update();
-    state.moodList = await IsarUtil.getMoodByDateRange(start, end.subtract(const Duration(days: -1)));
+    state.moodList = await IsarUtil.getMoodByDateRange(
+        start, end.subtract(const Duration(days: -1)));
 
-    var weatherList = await IsarUtil.getWeatherByDateRange(start, end.subtract(const Duration(days: -1)));
+    var weatherList = await IsarUtil.getWeatherByDateRange(
+        start, end.subtract(const Duration(days: -1)));
     for (var weather in weatherList) {
       if (weather.isNotEmpty) {
         state.weatherList.add(weather.first);
@@ -84,7 +86,8 @@ class AnalyseLogic extends GetxController {
           0);
       stream?.listen((content) {
         if (content != '' && content.contains('data')) {
-          HunyuanResponse result = HunyuanResponse.fromJson(jsonDecode(content.split('data: ')[1]));
+          HunyuanResponse result =
+              HunyuanResponse.fromJson(jsonDecode(content.split('data: ')[1]));
           state.reply += result.choices!.first.delta!.content!;
           update();
         }

@@ -35,8 +35,10 @@ class MapLogic extends GetxController {
   Future<LatLng?> getLocation() async {
     if (await PermissionUtil.checkPermission(Permission.location)) {
       Position? position;
-      position = await Geolocator.getLastKnownPosition(forceAndroidLocationManager: true);
-      position ??= await Geolocator.getCurrentPosition(locationSettings: AndroidSettings(forceLocationManager: true));
+      position = await Geolocator.getLastKnownPosition(
+          forceAndroidLocationManager: true);
+      position ??= await Geolocator.getCurrentPosition(
+          locationSettings: AndroidSettings(forceLocationManager: true));
       return LatLng(position.latitude, position.longitude);
     }
     return null;

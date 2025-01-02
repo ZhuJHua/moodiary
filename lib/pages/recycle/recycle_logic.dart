@@ -33,8 +33,10 @@ class RecycleLogic extends GetxController {
       return;
     }
     if (await IsarUtil.deleteADiary(diary.isarId)) {
-      final imageDeleteTasks = diary.imageName.map((name) => FileUtil.deleteFile(FileUtil.getRealPath('image', name)));
-      final audioDeleteTasks = diary.audioName.map((name) => FileUtil.deleteFile(FileUtil.getRealPath('audio', name)));
+      final imageDeleteTasks = diary.imageName.map(
+          (name) => FileUtil.deleteFile(FileUtil.getRealPath('image', name)));
+      final audioDeleteTasks = diary.audioName.map(
+          (name) => FileUtil.deleteFile(FileUtil.getRealPath('audio', name)));
       final videoDeleteTasks = diary.videoName.map((name) async {
         // 删除视频文件
         await FileUtil.deleteFile(FileUtil.getRealPath('video', name));

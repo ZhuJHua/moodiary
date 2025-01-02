@@ -18,7 +18,8 @@ class DiaryTabViewComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logicTag = categoryId ?? 'default';
-    final logic = Get.put(DiaryTabViewLogic(categoryId: categoryId), tag: logicTag);
+    final logic =
+        Get.put(DiaryTabViewLogic(categoryId: categoryId), tag: logicTag);
     final state = Bind.find<DiaryTabViewLogic>(tag: logicTag).state;
     final size = MediaQuery.sizeOf(context);
     final placeholderHeight = size.height / 2 - kToolbarHeight - 46;
@@ -29,7 +30,9 @@ class DiaryTabViewComponent extends StatelessWidget {
           id: 'view',
           builder: (_) {
             return SliverWaterfallFlow(
-              gridDelegate: const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 250),
+              gridDelegate:
+                  const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 250),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   return LargeDiaryCardComponent(
@@ -59,20 +62,21 @@ class DiaryTabViewComponent extends StatelessWidget {
           });
     }
 
-    Widget buildPlaceHolder() {
-      if (state.isFetching) {
-        return const CircularProgressIndicator();
-      } else if (state.diaryList.isEmpty) {
-        return Text(l10n.diaryTabViewEmpty);
-      } else {
-        return const SizedBox.shrink();
-      }
-    }
+    // Widget buildPlaceHolder() {
+    //   if (state.isFetching) {
+    //     return const CircularProgressIndicator();
+    //   } else if (state.diaryList.isEmpty) {
+    //     return Text(l10n.diaryTabViewEmpty);
+    //   } else {
+    //     return const SizedBox.shrink();
+    //   }
+    // }
 
     return CustomScrollView(
       cacheExtent: size.height * 2,
       slivers: [
-        SliverOverlapInjector(handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
+        SliverOverlapInjector(
+            handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
         GetBuilder<DiaryTabViewLogic>(
             tag: logicTag,
             builder: (_) {

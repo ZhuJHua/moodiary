@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
-import 'package:mood_diary/components/audio_player/audio_player_view.dart';
+import 'package:mood_diary/components/base/sheet.dart';
 import 'package:mood_diary/components/category_add/category_add_view.dart';
 import 'package:mood_diary/components/expand_button/expand_button_view.dart';
 import 'package:mood_diary/components/lottie_modal/lottie_modal.dart';
@@ -22,7 +22,6 @@ import 'package:mood_diary/utils/theme_util.dart';
 import '../../common/values/diary_type.dart';
 import '../../components/quill_embed/audio_embed.dart';
 import '../../main.dart';
-import '../../utils/file_util.dart';
 import 'edit_logic.dart';
 
 class EditPage extends StatelessWidget {
@@ -48,22 +47,21 @@ class EditPage extends StatelessWidget {
     final logic = Bind.find<EditLogic>();
     final state = Bind.find<EditLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
-    final size = MediaQuery.sizeOf(context);
 
     final textStyle = Theme.of(context).textTheme;
 
-    Widget buildAddContainer(Widget icon) {
-      return Container(
-        decoration: BoxDecoration(
-          borderRadius: AppBorderRadius.smallBorderRadius,
-          color: colorScheme.surfaceContainerHighest,
-        ),
-        constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
-        width: ((size.width - 56.0) / 3).truncateToDouble(),
-        height: ((size.width - 56.0) / 3).truncateToDouble(),
-        child: Center(child: icon),
-      );
-    }
+    // Widget buildAddContainer(Widget icon) {
+    //   return Container(
+    //     decoration: BoxDecoration(
+    //       borderRadius: AppBorderRadius.smallBorderRadius,
+    //       color: colorScheme.surfaceContainerHighest,
+    //     ),
+    //     constraints: const BoxConstraints(maxWidth: 150, maxHeight: 150),
+    //     width: ((size.width - 56.0) / 3).truncateToDouble(),
+    //     height: ((size.width - 56.0) / 3).truncateToDouble(),
+    //     child: Center(child: icon),
+    //   );
+    // }
 
     //标签列表
     Widget? buildTagList() {
@@ -86,29 +84,30 @@ class EditPage extends StatelessWidget {
           : null;
     }
 
-    Widget buildAudioPlayer() {
-      return Wrap(
-        children: [
-          ...List.generate(state.audioNameList.length, (index) {
-            return AudioPlayerComponent(path: FileUtil.getCachePath(state.audioNameList[index]));
-          }),
-          ActionChip(
-            label: const Text('添加'),
-            avatar: const Icon(Icons.add),
-            onPressed: () {
-              showModalBottomSheet(
-                  context: context,
-                  showDragHandle: true,
-                  useSafeArea: true,
-                  isScrollControlled: true,
-                  builder: (context) {
-                    return const RecordSheetComponent();
-                  });
-            },
-          )
-        ],
-      );
-    }
+    // Widget buildAudioPlayer() {
+    //   return Wrap(
+    //     children: [
+    //       ...List.generate(state.audioNameList.length, (index) {
+    //         return AudioPlayerComponent(
+    //             path: FileUtil.getCachePath(state.audioNameList[index]));
+    //       }),
+    //       ActionChip(
+    //         label: const Text('添加'),
+    //         avatar: const Icon(Icons.add),
+    //         onPressed: () {
+    //           showModalBottomSheet(
+    //               context: context,
+    //               showDragHandle: true,
+    //               useSafeArea: true,
+    //               isScrollControlled: true,
+    //               builder: (context) {
+    //                 return const RecordSheetComponent();
+    //               });
+    //         },
+    //       )
+    //     ],
+    //   );
+    // }
 
     // Widget buildImage() {
     //   return Padding(
@@ -396,9 +395,10 @@ class EditPage extends StatelessWidget {
               child: Slider(
                   value: state.currentDiary.mood,
                   divisions: 10,
-                  label: '${(state.currentDiary.mood * 100).toStringAsFixed(0)}%',
-                  activeColor:
-                      Color.lerp(AppColor.emoColorList.first, AppColor.emoColorList.last, state.currentDiary.mood),
+                  label:
+                      '${(state.currentDiary.mood * 100).toStringAsFixed(0)}%',
+                  activeColor: Color.lerp(AppColor.emoColorList.first,
+                      AppColor.emoColorList.last, state.currentDiary.mood),
                   onChanged: (value) {
                     logic.changeRate(value);
                   }),
@@ -500,6 +500,7 @@ class EditPage extends StatelessWidget {
 
     Widget buildDetail() {
       return ListView(
+        padding: EdgeInsets.zero,
         children: [
           ListTile(
             onTap: null,
@@ -533,7 +534,8 @@ class EditPage extends StatelessWidget {
                 return ListTile(
                   title: const Text('天气'),
                   subtitle: state.currentDiary.weather.isNotEmpty
-                      ? Text('${state.currentDiary.weather[2]} ${state.currentDiary.weather[1]}°C')
+                      ? Text(
+                          '${state.currentDiary.weather[2]} ${state.currentDiary.weather[1]}°C')
                       : null,
                   trailing: state.isProcessing
                       ? const CircularProgressIndicator()
@@ -550,12 +552,12 @@ class EditPage extends StatelessWidget {
               builder: (_) {
                 return ListTile(
                   title: const Text('分类'),
-                  subtitle: state.categoryName.isNotEmpty ? Text(state.categoryName) : null,
+                  subtitle: state.categoryName.isNotEmpty
+                      ? Text(state.categoryName)
+                      : null,
                   trailing: IconButton.filledTonal(
                     onPressed: () {
-                      showModalBottomSheet(
-                          showDragHandle: true,
-                          useSafeArea: true,
+                      showFloatingModalBottomSheet(
                           context: context,
                           builder: (context) {
                             return const CategoryAddComponent();
@@ -584,7 +586,8 @@ class EditPage extends StatelessWidget {
                                 decoration: InputDecoration(
                                   fillColor: colorScheme.secondaryContainer,
                                   border: const UnderlineInputBorder(
-                                    borderRadius: AppBorderRadius.smallBorderRadius,
+                                    borderRadius:
+                                        AppBorderRadius.smallBorderRadius,
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
@@ -648,7 +651,7 @@ class EditPage extends StatelessWidget {
     Widget buildTimer() {
       return Container(
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainer.withAlpha(240),
+          color: colorScheme.surfaceContainer.withValues(alpha: 0.8),
           borderRadius: AppBorderRadius.smallBorderRadius,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -660,8 +663,9 @@ class EditPage extends StatelessWidget {
               children: [
                 TextSpan(
                   text: state.durationString.value.toString(),
-                  style: textStyle.labelSmall
-                      ?.copyWith(color: colorScheme.primary, fontFeatures: [const FontFeature.tabularFigures()]),
+                  style: textStyle.labelSmall?.copyWith(
+                      color: colorScheme.primary,
+                      fontFeatures: [const FontFeature.tabularFigures()]),
                 ),
               ],
             ),
@@ -673,7 +677,7 @@ class EditPage extends StatelessWidget {
     Widget buildCount() {
       return Container(
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainer.withAlpha(240),
+          color: colorScheme.surfaceContainer.withValues(alpha: 0.8),
           borderRadius: AppBorderRadius.smallBorderRadius,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -685,8 +689,9 @@ class EditPage extends StatelessWidget {
               children: [
                 TextSpan(
                   text: state.totalCount.value.toString(),
-                  style: textStyle.labelSmall
-                      ?.copyWith(color: colorScheme.primary, fontFeatures: [const FontFeature.tabularFigures()]),
+                  style: textStyle.labelSmall?.copyWith(
+                      color: colorScheme.primary,
+                      fontFeatures: [const FontFeature.tabularFigures()]),
                 ),
               ],
             ),
@@ -748,13 +753,11 @@ class EditPage extends StatelessWidget {
         children: [
           ExpandButtonComponent(operatorMap: {
             Icons.keyboard_command_key: () {
-              showModalBottomSheet(
+              showFloatingModalBottomSheet(
                 context: context,
                 builder: (context) {
                   return buildDetail();
                 },
-                showDragHandle: true,
-                useSafeArea: true,
               );
             },
             Icons.image_rounded: () {
@@ -774,13 +777,11 @@ class EditPage extends StatelessWidget {
               );
             },
             Icons.audiotrack_rounded: () {
-              showModalBottomSheet(
+              showFloatingModalBottomSheet(
                 context: context,
                 builder: (context) {
                   return const RecordSheetComponent();
                 },
-                showDragHandle: true,
-                useSafeArea: true,
               );
             }
           }),
@@ -796,7 +797,8 @@ class EditPage extends StatelessWidget {
         children: [
           IconButton.filled(
             icon: const Icon(Icons.keyboard_command_key),
-            style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            style: const ButtonStyle(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -828,7 +830,9 @@ class EditPage extends StatelessWidget {
                     placeholder: '正文',
                     expands: true,
                     paintCursorAboveText: true,
-                    keyboardAppearance: CupertinoTheme.maybeBrightnessOf(context) ?? Theme.of(context).brightness,
+                    keyboardAppearance:
+                        CupertinoTheme.maybeBrightnessOf(context) ??
+                            Theme.of(context).brightness,
                     customStyles: ThemeUtil.getInstance(context),
                     embedBuilders: [
                       if (state.type == DiaryType.richText) ...[
@@ -894,14 +898,18 @@ class EditPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  body:
-                      SafeArea(child: state.isInit ? buildWriting() : const Center(child: CircularProgressIndicator())),
+                  body: SafeArea(
+                      child: state.isInit
+                          ? buildWriting()
+                          : const Center(child: CircularProgressIndicator())),
                 );
               }),
           GetBuilder<EditLogic>(
               id: 'modal',
               builder: (_) {
-                return state.isSaving ? const LottieModal(type: LoadingType.cat) : const SizedBox.shrink();
+                return state.isSaving
+                    ? const LottieModal(type: LoadingType.cat)
+                    : const SizedBox.shrink();
               }),
         ],
       ),

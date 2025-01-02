@@ -26,7 +26,10 @@ class LayoutUtil {
           DeviceOrientation.landscapeLeft,
           DeviceOrientation.landscapeRight
         ],
-      ScreenSize.watch => [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown],
+      ScreenSize.watch => [
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown
+        ],
       ScreenSize.desktop => [
           DeviceOrientation.portraitUp,
           DeviceOrientation.landscapeLeft,

@@ -31,9 +31,11 @@ class StartLogic extends GetxController {
   Future<void> setUuid() async {
     var oaid = await OAIDChannel.getOAID();
     if (oaid != null) {
-      await PrefUtil.setValue<String>('uuid', md5.convert(utf8.encode(oaid)).toString());
+      await PrefUtil.setValue<String>(
+          'uuid', md5.convert(utf8.encode(oaid)).toString());
     } else {
-      await PrefUtil.setValue<String>('uuid', md5.convert(utf8.encode(const Uuid().v7())).toString());
+      await PrefUtil.setValue<String>(
+          'uuid', md5.convert(utf8.encode(const Uuid().v7())).toString());
     }
   }
 }

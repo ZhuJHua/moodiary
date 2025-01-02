@@ -43,7 +43,8 @@ class CategoryAddComponent extends StatelessWidget {
                                     decoration: InputDecoration(
                                       fillColor: colorScheme.secondaryContainer,
                                       border: const UnderlineInputBorder(
-                                        borderRadius: AppBorderRadius.smallBorderRadius,
+                                        borderRadius:
+                                            AppBorderRadius.smallBorderRadius,
                                         borderSide: BorderSide.none,
                                       ),
                                       filled: true,

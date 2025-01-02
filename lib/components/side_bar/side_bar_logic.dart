@@ -34,14 +34,16 @@ class SideBarLogic extends GetxController {
   // }
 
   Future<void> getHitokoto() async {
-    var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto, maxAgeMillis: 15 * 60000);
+    var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
+        maxAgeMillis: 15 * 60000);
     if (res != null) {
       state.hitokoto.value = res.first;
     }
   }
 
   Future<void> getImage() async {
-    var url = await CacheUtil.getCacheList('bingImage', Api.updateImageUrl, maxAgeMillis: 6 * 60 * 60000);
+    var url = await CacheUtil.getCacheList('bingImage', Api.updateImageUrl,
+        maxAgeMillis: 6 * 60 * 60000);
     if (url != null) {
       state.imageUrl.value = url.first;
     }
@@ -53,11 +55,16 @@ class SideBarLogic extends GetxController {
 
   //跳转到反馈页
   Future<void> toReportPage() async {
-    var uri = Uri(scheme: 'https', host: 'support.qq.com', path: 'products/650147', queryParameters: {
-      'nickname': PrefUtil.getValue<String>('uuid'),
-      'avatar': 'https://txc.qq.com/static/desktop/img/products/def-product-logo.png',
-      'openid': PrefUtil.getValue<String>('uuid')
-    });
+    var uri = Uri(
+        scheme: 'https',
+        host: 'support.qq.com',
+        path: 'products/650147',
+        queryParameters: {
+          'nickname': PrefUtil.getValue<String>('uuid'),
+          'avatar':
+              'https://txc.qq.com/static/desktop/img/products/def-product-logo.png',
+          'openid': PrefUtil.getValue<String>('uuid')
+        });
     await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
 

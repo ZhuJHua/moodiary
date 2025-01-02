@@ -23,7 +23,8 @@ class LocalSendServerLogic extends GetxController {
 
   @override
   void onReady() async {
-    socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, state.scanPort);
+    socket =
+        await RawDatagramSocket.bind(InternetAddress.anyIPv4, state.scanPort);
     state.serverIp = await getDeviceIP();
     update();
     if (state.serverIp != null) {
@@ -48,8 +49,10 @@ class LocalSendServerLogic extends GetxController {
         final datagram = socket.receive();
         if (datagram != null) {
           final message = String.fromCharCodes(datagram.data);
-          LogUtil.printInfo('Received broadcast: $message from ${datagram.address.address}');
-          final response = '${state.serverIp}:${state.transferPort}:${state.serverName}';
+          LogUtil.printInfo(
+              'Received broadcast: $message from ${datagram.address.address}');
+          final response =
+              '${state.serverIp}:${state.transferPort}:${state.serverName}';
           socket.send(response.codeUnits, datagram.address, datagram.port);
         }
       }
@@ -58,9 +61,12 @@ class LocalSendServerLogic extends GetxController {
 
   // 启动HTTP服务器
   Future<void> startServer() async {
-    final handler = const shelf.Pipeline().addMiddleware(shelf.logRequests()).addHandler(_handleRequest);
+    final handler = const shelf.Pipeline()
+        .addMiddleware(shelf.logRequests())
+        .addHandler(_handleRequest);
     httpServer = await serve(handler, state.serverIp!, state.transferPort);
-    LogUtil.printInfo('Server started on http://${state.serverIp}:${state.transferPort}');
+    LogUtil.printInfo(
+        'Server started on http://${state.serverIp}:${state.transferPort}');
   }
 
   Future<shelf.Response> _handleRequest(shelf.Request request) async {
@@ -73,8 +79,13 @@ class LocalSendServerLogic extends GetxController {
         // 读取日记 JSON 数据
         if (name == 'diary') {
           diary = await flutter.compute(
-              Diary.fromJson, jsonDecode(await formData.part.readString()) as Map<String, dynamic>);
-        } else if (name == 'image' || name == 'video' || name == 'thumbnail' || name == 'audio') {
+              Diary.fromJson,
+              jsonDecode(await formData.part.readString())
+                  as Map<String, dynamic>);
+        } else if (name == 'image' ||
+            name == 'video' ||
+            name == 'thumbnail' ||
+            name == 'audio') {
           if (formData.filename != null) {
             // 写入文件到目录
             File file;

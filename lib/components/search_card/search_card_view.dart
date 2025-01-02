@@ -6,7 +6,8 @@ import 'package:mood_diary/common/values/border.dart';
 import 'search_card_logic.dart';
 
 class SearchCardComponent extends StatelessWidget {
-  const SearchCardComponent({super.key, required this.diary, required this.index});
+  const SearchCardComponent(
+      {super.key, required this.diary, required this.index});
 
   final Diary diary;
   final String index;
@@ -26,7 +27,8 @@ class SearchCardComponent extends StatelessWidget {
           },
           child: Container(
             decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest, borderRadius: AppBorderRadius.smallBorderRadius),
+                color: colorScheme.surfaceContainerHighest,
+                borderRadius: AppBorderRadius.smallBorderRadius),
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [

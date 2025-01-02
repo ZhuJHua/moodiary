@@ -7,7 +7,9 @@ class GeoResponse {
 
   GeoResponse.fromJson(Map<String, dynamic> json) {
     code = json["code"];
-    location = json["location"] == null ? null : (json["location"] as List).map((e) => Location.fromJson(e)).toList();
+    location = json["location"] == null
+        ? null
+        : (json["location"] as List).map((e) => Location.fromJson(e)).toList();
     refer = json["refer"] == null ? null : Refer.fromJson(json["refer"]);
   }
 
@@ -27,8 +29,10 @@ class Refer {
   Refer({this.sources, this.license});
 
   Refer.fromJson(Map<String, dynamic> json) {
-    sources = json["sources"] == null ? null : List<String>.from(json["sources"]);
-    license = json["license"] == null ? null : List<String>.from(json["license"]);
+    sources =
+        json["sources"] == null ? null : List<String>.from(json["sources"]);
+    license =
+        json["license"] == null ? null : List<String>.from(json["license"]);
   }
 
   Map<String, dynamic> toJson() {

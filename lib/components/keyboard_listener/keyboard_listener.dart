@@ -47,7 +47,8 @@ class KeyboardObserver with WidgetsBindingObserver {
       if (height > _lastHeight && _keyboardState != KeyboardState.opening) {
         _keyboardState = KeyboardState.opening;
         onStateChanged?.call(_keyboardState);
-      } else if (height < _lastHeight && _keyboardState != KeyboardState.closing) {
+      } else if (height < _lastHeight &&
+          _keyboardState != KeyboardState.closing) {
         _keyboardState = KeyboardState.closing;
         onStateChanged?.call(_keyboardState);
       }

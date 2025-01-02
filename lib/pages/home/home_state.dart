@@ -10,5 +10,8 @@ class HomeState {
 
   double navigatorBarHeight = 56.0;
 
+  // fab key
+  //GlobalKey? fabKey = GlobalKey();
+
   HomeState();
 }

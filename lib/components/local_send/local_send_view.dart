@@ -53,30 +53,30 @@ class LocalSendComponent extends StatelessWidget {
       );
     }
 
-    Widget buildPortInfo() {
-      return Column(
-        spacing: 8.0,
-        children: [
-          Text(
-            '如果您不知道这是什么，请不要修改',
-            style: textStyle.titleSmall,
-          ),
-          Wrap(
-            spacing: 8.0,
-            children: [
-              ActionChip(
-                onPressed: () {},
-                label: Text('扫描端口: ${state.scanPort}'),
-              ),
-              ActionChip(
-                onPressed: () {},
-                label: Text('传输端口: ${state.transferPort}'),
-              ),
-            ],
-          ),
-        ],
-      );
-    }
+    // Widget buildPortInfo() {
+    //   return Column(
+    //     spacing: 8.0,
+    //     children: [
+    //       Text(
+    //         '如果您不知道这是什么，请不要修改',
+    //         style: textStyle.titleSmall,
+    //       ),
+    //       Wrap(
+    //         spacing: 8.0,
+    //         children: [
+    //           ActionChip(
+    //             onPressed: () {},
+    //             label: Text('扫描端口: ${state.scanPort}'),
+    //           ),
+    //           ActionChip(
+    //             onPressed: () {},
+    //             label: Text('传输端口: ${state.transferPort}'),
+    //           ),
+    //         ],
+    //       ),
+    //     ],
+    //   );
+    // }
 
     Widget buildOption() {
       return Row(
@@ -134,7 +134,9 @@ class LocalSendComponent extends StatelessWidget {
               GetBuilder<LocalSendLogic>(
                   id: 'Panel',
                   builder: (_) {
-                    return state.type == 'send' ? const LocalSendClientComponent() : const LocalSendServerComponent();
+                    return state.type == 'send'
+                        ? const LocalSendClientComponent()
+                        : const LocalSendServerComponent();
                   }),
             ],
           );
@@ -162,7 +164,9 @@ class LocalSendComponent extends StatelessWidget {
             GetBuilder<LocalSendLogic>(
                 id: 'Panel',
                 builder: (_) {
-                  return state.type == 'send' ? const LocalSendClientComponent() : const LocalSendServerComponent();
+                  return state.type == 'send'
+                      ? const LocalSendClientComponent()
+                      : const LocalSendServerComponent();
                 }),
           ],
         ),

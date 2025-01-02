@@ -30,10 +30,12 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       var height = MediaQuery.viewInsetsOf(Get.context!).bottom;
       if (heightList.isNotEmpty && height != heightList.last) {
-        if (height > heightList.last && state.keyboardState != KeyboardState.opening) {
+        if (height > heightList.last &&
+            state.keyboardState != KeyboardState.opening) {
           state.keyboardState = KeyboardState.opening;
           //正在打开
-        } else if (height < heightList.last && state.keyboardState != KeyboardState.closing) {
+        } else if (height < heightList.last &&
+            state.keyboardState != KeyboardState.closing) {
           state.keyboardState = KeyboardState.closing;
           //正在关闭
           unFocus();
@@ -113,8 +115,8 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
       update();
       toBottom();
       //带着上下文请求
-      var stream =
-          await Api.getHunYuan(check['id']!, check['key']!, state.messages.values.toList(), state.modelVersion.value);
+      var stream = await Api.getHunYuan(check['id']!, check['key']!,
+          state.messages.values.toList(), state.modelVersion.value);
       //如果收到了请求，添加一个回答上下文
       var replyTime = DateTime.now();
       state.messages[replyTime] = Message('assistant', '');
@@ -122,8 +124,10 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
       //接收stream
       stream?.listen((content) {
         if (content != '' && content.contains('data')) {
-          HunyuanResponse result = HunyuanResponse.fromJson(jsonDecode(content.split('data: ')[1]));
-          state.messages[replyTime]!.content += result.choices!.first.delta!.content!;
+          HunyuanResponse result =
+              HunyuanResponse.fromJson(jsonDecode(content.split('data: ')[1]));
+          state.messages[replyTime]!.content +=
+              result.choices!.first.delta!.content!;
           HapticFeedback.vibrate();
           update();
           toBottom();

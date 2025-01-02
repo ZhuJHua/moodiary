@@ -4,7 +4,8 @@ import 'package:mood_diary/common/models/isar/diary.dart';
 import '../../../common/values/webdav.dart';
 
 class WebDavDashboardState {
-  Rx<WebDavConnectivityStatus> connectivityStatus = WebDavConnectivityStatus.connecting.obs;
+  Rx<WebDavConnectivityStatus> connectivityStatus =
+      WebDavConnectivityStatus.connecting.obs;
 
   RxString webDavDiaryCount = '...'.obs;
 

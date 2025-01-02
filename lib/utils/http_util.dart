@@ -28,7 +28,8 @@ class HttpUtil {
         },
         onResponse: (response, handler) {
           if (_enableLogging) {
-            LogUtil.printInfo('Response [${response.statusCode}]: ${response.data}');
+            LogUtil.printInfo(
+                'Response [${response.statusCode}]: ${response.data}');
           }
           handler.next(response);
         },
@@ -66,22 +67,31 @@ class HttpUtil {
     );
   }
 
-  Future<Response<T>> get<T>(String path, {Map<String, dynamic>? parameters, ResponseType? type}) {
+  Future<Response<T>> get<T>(String path,
+      {Map<String, dynamic>? parameters, ResponseType? type}) {
     return _request(path, method: 'GET', parameters: parameters, type: type);
   }
 
-  Future<Response<T>> post<T>(String path, {Map<String, dynamic>? header, data, Options? option}) {
-    return _request(path, method: 'POST', header: header, data: data, option: option);
+  Future<Response<T>> post<T>(String path,
+      {Map<String, dynamic>? header, data, Options? option}) {
+    return _request(path,
+        method: 'POST', header: header, data: data, option: option);
   }
 
-  Future<Stream<String>?> postStream(String path, {Map<String, dynamic>? header, Object? data}) async {
-    Response<ResponseBody> response =
-        await dio.post(path, options: Options(responseType: ResponseType.stream, headers: header), data: data);
+  Future<Stream<String>?> postStream(String path,
+      {Map<String, dynamic>? header, Object? data}) async {
+    Response<ResponseBody> response = await dio.post(path,
+        options: Options(responseType: ResponseType.stream, headers: header),
+        data: data);
 
-    StreamTransformer<Uint8List, List<int>> transformer = StreamTransformer.fromHandlers(handleData: (data, sink) {
+    StreamTransformer<Uint8List, List<int>> transformer =
+        StreamTransformer.fromHandlers(handleData: (data, sink) {
       sink.add(List<int>.from(data));
     });
-    return response.data?.stream.transform(transformer).transform(const Utf8Decoder()).transform(const LineSplitter());
+    return response.data?.stream
+        .transform(transformer)
+        .transform(const Utf8Decoder())
+        .transform(const LineSplitter());
   }
 
   Future<Response<T>> upload<T>(

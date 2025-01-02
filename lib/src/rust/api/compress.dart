@@ -17,7 +17,11 @@ Future<Uint8List> compress(
         required CompressFormat compressFormat,
         required int quality}) =>
     RustLib.instance.api.crateApiCompressCompress(
-        img: img, dstHeight: dstHeight, dstWidth: dstWidth, compressFormat: compressFormat, quality: quality);
+        img: img,
+        dstHeight: dstHeight,
+        dstWidth: dstWidth,
+        compressFormat: compressFormat,
+        quality: quality);
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DynamicImage>>
 abstract class DynamicImage implements RustOpaqueInterface {}
@@ -25,7 +29,11 @@ abstract class DynamicImage implements RustOpaqueInterface {}
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompress>>
 abstract class ImageCompress implements RustOpaqueInterface {
   static Future<Uint8List> contain(
-          {required String filePath, CompressFormat? compressFormat, int? maxWidth, int? maxHeight, int? quality}) =>
+          {required String filePath,
+          CompressFormat? compressFormat,
+          int? maxWidth,
+          int? maxHeight,
+          int? quality}) =>
       RustLib.instance.api.crateApiCompressImageCompressContain(
           filePath: filePath,
           compressFormat: compressFormat,

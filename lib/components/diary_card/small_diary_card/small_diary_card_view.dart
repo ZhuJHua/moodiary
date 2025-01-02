@@ -9,7 +9,8 @@ import 'package:mood_diary/components/diary_card/basic_diary_card/basic_card_log
 import '../../../utils/file_util.dart';
 
 class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
-  const SmallDiaryCardComponent({super.key, required this.diary, required this.tag});
+  const SmallDiaryCardComponent(
+      {super.key, required this.diary, required this.tag});
 
   final Diary diary;
 
@@ -27,7 +28,8 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
           decoration: BoxDecoration(
             image: DecorationImage(
               image: ResizeImage(
-                FileImage(File(FileUtil.getRealPath('image', diary.imageName.first))),
+                FileImage(
+                    File(FileUtil.getRealPath('image', diary.imageName.first))),
                 width: (122 * pixelRatio).toInt(),
               ),
               fit: BoxFit.cover,
@@ -49,7 +51,9 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
           height: 122.0,
           child: Row(
             children: [
-              if (diary.imageName.isNotEmpty && int.parse(tag) & 1 == 0) ...[buildImage()],
+              if (diary.imageName.isNotEmpty && int.parse(tag) & 1 == 0) ...[
+                buildImage()
+              ],
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
@@ -79,7 +83,9 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                   ),
                 ),
               ),
-              if (diary.imageName.isNotEmpty && int.parse(tag) & 1 == 1) ...[buildImage()],
+              if (diary.imageName.isNotEmpty && int.parse(tag) & 1 == 1) ...[
+                buildImage()
+              ],
             ],
           ),
         ),

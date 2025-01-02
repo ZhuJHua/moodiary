@@ -33,7 +33,9 @@ class AgreementPage extends StatelessWidget {
 4.2 本协议条款无论因何种原因部分无效或不可执行，其余条款仍有效，对双方具有约束力。''',
         selectable: true,
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
-        config: colorScheme.brightness == Brightness.dark ? MarkdownConfig.darkConfig : MarkdownConfig.defaultConfig,
+        config: colorScheme.brightness == Brightness.dark
+            ? MarkdownConfig.darkConfig
+            : MarkdownConfig.defaultConfig,
       ),
     );
   }

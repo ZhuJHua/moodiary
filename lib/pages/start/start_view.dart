@@ -27,10 +27,15 @@ class StartPage extends StatelessWidget {
               width: 320,
               padding: const EdgeInsets.all(10.0),
               child: RichText(
-                text: TextSpan(children: [
-                  TextSpan(text: l10n.startTitle1),
-                  TextSpan(text: l10n.startTitle2, style: TextStyle(color: colorScheme.primary)),
-                ], style: textStyle.titleLarge!.copyWith(fontWeight: FontWeight.bold)),
+                text: TextSpan(
+                    children: [
+                      TextSpan(text: l10n.startTitle1),
+                      TextSpan(
+                          text: l10n.startTitle2,
+                          style: TextStyle(color: colorScheme.primary)),
+                    ],
+                    style: textStyle.titleLarge!
+                        .copyWith(fontWeight: FontWeight.bold)),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -50,7 +55,9 @@ class StartPage extends StatelessWidget {
                     TextSpan(text: l10n.welcome1),
                     TextSpan(
                         text: l10n.welcome2,
-                        style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
                             logic.toPrivacy();
@@ -58,7 +65,9 @@ class StartPage extends StatelessWidget {
                     TextSpan(text: l10n.welcome3),
                     TextSpan(
                         text: l10n.welcome4,
-                        style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
                             logic.toAgreement();

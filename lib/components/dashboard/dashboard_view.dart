@@ -9,7 +9,6 @@ class DashboardComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Get.put(DashboardLogic());
-    final state = Bind.find<DashboardLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
     //
@@ -131,7 +130,8 @@ class DashboardComponent extends StatelessWidget {
         children: [
           Text(
             title,
-            style: textStyle.labelMedium!.copyWith(color: colorScheme.onSurface.withAlpha(220)),
+            style: textStyle.labelMedium!
+                .copyWith(color: colorScheme.onSurface.withAlpha(220)),
           ),
           Text(
             count.isEmpty ? '...' : count,
@@ -148,16 +148,16 @@ class DashboardComponent extends StatelessWidget {
         alignment: WrapAlignment.spaceAround,
         children: [
           Obx(() {
-            return buildSection(title: '使用天数', count: state.useTime.value);
+            return buildSection(title: '使用天数', count: logic.useTime.value);
           }),
           Obx(() {
-            return buildSection(title: '日记数', count: state.diaryCount.value);
+            return buildSection(title: '日记数', count: logic.diaryCount.value);
           }),
           Obx(() {
-            return buildSection(title: '总字数', count: state.contentCount.value);
+            return buildSection(title: '总字数', count: logic.contentCount.value);
           }),
           Obx(() {
-            return buildSection(title: '分类数', count: state.categoryCount.value);
+            return buildSection(title: '分类数', count: logic.categoryCount.value);
           }),
         ],
       );

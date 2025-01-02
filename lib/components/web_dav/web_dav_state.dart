@@ -11,7 +11,8 @@ class WebDavState {
   RxBool hasOption = WebDavUtil().hasOption.obs;
   List<String> currentOptions = WebDavUtil().options;
 
-  Rx<WebDavConnectivityStatus> connectivityStatus = WebDavConnectivityStatus.connecting.obs;
+  Rx<WebDavConnectivityStatus> connectivityStatus =
+      WebDavConnectivityStatus.connecting.obs;
 
   RxBool autoSync = PrefUtil.getValue<bool>('autoSync')!.obs;
 

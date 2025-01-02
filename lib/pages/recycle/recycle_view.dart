@@ -24,7 +24,8 @@ class RecyclePage extends StatelessWidget {
             itemBuilder: (context, index) {
               return ListTile(
                 onTap: null,
-                title: Text(state.diaryList[index].time.toString().split('.')[0]),
+                title:
+                    Text(state.diaryList[index].time.toString().split('.')[0]),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

@@ -60,7 +60,9 @@ class VideoPage extends StatelessWidget {
             actions: [
               IconButton(
                   onPressed: () {
-                    MediaUtil.saveToGallery(path: state.videoPathList[state.videoIndex.value], type: MediaType.video);
+                    MediaUtil.saveToGallery(
+                        path: state.videoPathList[state.videoIndex.value],
+                        type: MediaType.video);
                   },
                   icon: const Icon(Icons.save_alt)),
             ],

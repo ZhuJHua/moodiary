@@ -19,12 +19,12 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Set Up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0-0.2.pre'
+          flutter-version: '3.27.1'
 
       - name: Install Dependencies
         run: flutter pub get
@@ -59,7 +59,7 @@ jobs:
       - name: Set Up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.0-0.2.pre'
+          flutter-version: '3.27.1'
 
       - name: Install Dependencies
         run: flutter pub get

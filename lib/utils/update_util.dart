@@ -7,7 +7,8 @@ import 'notice_util.dart';
 
 class UpdateUtil {
   //通过github检查更新
-  static Future<void> checkShouldUpdate(String currentVersion, {bool handle = false}) async {
+  static Future<void> checkShouldUpdate(String currentVersion,
+      {bool handle = false}) async {
     var githubRelease = await Api.getGithubRelease();
     if (githubRelease != null) {
       //当需要更新版本时
@@ -19,7 +20,8 @@ class UpdateUtil {
     }
   }
 
-  static TextSpan buildReleaseNote(String version, List<String> fix, List<String> add) {
+  static TextSpan buildReleaseNote(
+      String version, List<String> fix, List<String> add) {
     // 创建一个文本段落列表，用于存放每个部分的文本段
     List<TextSpan> children = [];
     final textStyle = Theme.of(Get.context!).textTheme;

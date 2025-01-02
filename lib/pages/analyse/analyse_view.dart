@@ -19,7 +19,8 @@ class AnalysePage extends StatelessWidget {
     final size = MediaQuery.sizeOf(context);
 
     //柱状图
-    Widget buildBarChart(Map<String, IconData> iconMap, Map<String, int> countMap, List<String> itemList) {
+    Widget buildBarChart(Map<String, IconData> iconMap,
+        Map<String, int> countMap, List<String> itemList) {
       //去重
       itemList = ArrayUtil.toSetList(itemList);
       return Card.filled(
@@ -36,7 +37,8 @@ class AnalysePage extends StatelessWidget {
                         show: true,
                         border: Border.symmetric(
                           horizontal: BorderSide(
-                            color: colorScheme.onSurface.withAlpha((255 * 0.6).toInt()),
+                            color: colorScheme.onSurface
+                                .withAlpha((255 * 0.6).toInt()),
                           ),
                         ),
                       ),
@@ -53,7 +55,9 @@ class AnalysePage extends StatelessWidget {
                               showTitles: true,
                               getTitlesWidget: (value, meta) {
                                 return SideTitleWidget(
-                                    axisSide: meta.axisSide, child: Icon(iconMap[itemList[value.toInt()]]));
+                                    axisSide: meta.axisSide,
+                                    child:
+                                        Icon(iconMap[itemList[value.toInt()]]));
                               }),
                         ),
                         topTitles: const AxisTitles(),
@@ -67,7 +71,8 @@ class AnalysePage extends StatelessWidget {
                         },
                         getDrawingHorizontalLine: (value) {
                           return FlLine(
-                            color: colorScheme.onSurface.withAlpha((255 * 0.2).toInt()),
+                            color: colorScheme.onSurface
+                                .withAlpha((255 * 0.2).toInt()),
                             strokeWidth: 1,
                           );
                         },
@@ -76,7 +81,9 @@ class AnalysePage extends StatelessWidget {
                         itemList.length,
                         (index) => BarChartGroupData(x: index, barRods: [
                           BarChartRodData(
-                              fromY: 0, toY: countMap[itemList[index]]!.toDouble(), color: colorScheme.primary)
+                              fromY: 0,
+                              toY: countMap[itemList[index]]!.toDouble(),
+                              color: colorScheme.primary)
                         ]),
                       ),
                     ),
@@ -87,7 +94,8 @@ class AnalysePage extends StatelessWidget {
                       if (state.finished) ...[
                         Text(
                           '暂无数据',
-                          style: textStyle.titleLarge!.copyWith(color: colorScheme.onSurface),
+                          style: textStyle.titleLarge!
+                              .copyWith(color: colorScheme.onSurface),
                         ),
                       ] else ...[
                         const CircularProgressIndicator(),
@@ -113,7 +121,8 @@ class AnalysePage extends StatelessWidget {
                         spacing: 8.0,
                         runSpacing: 8.0,
                         children: List.generate(state.moodList.length, (index) {
-                          return MoodIconComponent(value: state.moodList[index]);
+                          return MoodIconComponent(
+                              value: state.moodList[index]);
                         }),
                       ),
                     ),
@@ -124,7 +133,8 @@ class AnalysePage extends StatelessWidget {
                       if (state.finished) ...[
                         Text(
                           '暂无数据',
-                          style: textStyle.titleLarge!.copyWith(color: colorScheme.onSurface),
+                          style: textStyle.titleLarge!
+                              .copyWith(color: colorScheme.onSurface),
                         ),
                       ] else ...[
                         const CircularProgressIndicator(),
@@ -188,7 +198,8 @@ class AnalysePage extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
               children: [
-                buildBarChart(WeatherIcon.map, state.weatherMap, state.weatherList),
+                buildBarChart(
+                    WeatherIcon.map, state.weatherMap, state.weatherList),
                 buildMoodWrap(state.moodList)
               ],
             ),

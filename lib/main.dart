@@ -27,6 +27,8 @@ import 'components/window_buttons/window_buttons.dart';
 
 late AppLocalizations l10n;
 
+bool devMode = false;
+
 Future<void> initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
   await findSystemLocale();
@@ -34,7 +36,8 @@ Future<void> initSystem() async {
   await PrefUtil.initPref();
   await IsarUtil.initIsar();
   await WebDavUtil().initWebDav();
-  VideoPlayerMediaKit.ensureInitialized(android: true, iOS: true, macOS: true, windows: true);
+  VideoPlayerMediaKit.ensureInitialized(
+      android: true, iOS: true, macOS: true, windows: true);
   await FMTCObjectBoxBackend().initialise();
   await const FMTCStore('mapStore').manage.create();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -66,44 +69,56 @@ String getInitialRoute() {
 void main() async {
   await initSystem();
   FlutterError.onError = (details) {
-    LogUtil.printError('Flutter error', error: details.exception, stackTrace: details.stack);
+    LogUtil.printError('Flutter error',
+        error: details.exception, stackTrace: details.stack);
     if (details.exceptionAsString().contains('Render')) {
-      NoticeUtil.showBug(message: l10n.layoutErrorToast);
+      NoticeUtil.showBug(
+          message:
+              devMode ? details.exceptionAsString() : l10n.layoutErrorToast);
     } else {
-      NoticeUtil.showBug(message: l10n.errorToast);
+      NoticeUtil.showBug(
+          message: devMode ? details.exceptionAsString() : l10n.errorToast);
     }
   };
   PlatformDispatcher.instance.onError = (error, stack) {
     LogUtil.printWTF('Error', error: error, stackTrace: stack);
-    NoticeUtil.showBug(message: l10n.errorToast);
+    NoticeUtil.showBug(message: devMode ? error.toString() : l10n.errorToast);
     return true;
   };
   runApp(GetMaterialApp.router(
-    routeInformationParser: GetInformationParser.createInformationParser(initialRoute: getInitialRoute()),
+    routeInformationParser: GetInformationParser.createInformationParser(
+        initialRoute: getInitialRoute()),
     onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
     backButtonDispatcher: GetRootBackButtonDispatcher(),
     builder: (context, child) {
       l10n = AppLocalizations.of(context)!;
       final mediaQuery = MediaQuery(
-        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(PrefUtil.getValue<double>('fontScale')!)),
+        data: MediaQuery.of(context).copyWith(
+            textScaler:
+                TextScaler.linear(PrefUtil.getValue<double>('fontScale')!)),
         child: FToastBuilder()(context, child!),
       );
-      final windowChild = (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
-          ? Column(children: [WindowButtons(), Expanded(child: mediaQuery)])
-          : mediaQuery;
+      final windowChild =
+          (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
+              ? Column(children: [WindowButtons(), Expanded(child: mediaQuery)])
+              : mediaQuery;
       return windowChild;
     },
-    theme: ThemeUtil.buildTheme(Brightness.light),
-    darkTheme: ThemeUtil.buildTheme(Brightness.dark),
+    theme: await ThemeUtil.buildTheme(Brightness.light),
+    darkTheme: await ThemeUtil.buildTheme(Brightness.dark),
     themeMode: ThemeMode.values[PrefUtil.getValue<int>('themeMode')!],
     defaultTransition: Transition.cupertino,
     getPages: AppPages.routes,
-    localizationsDelegates: const [...AppLocalizations.localizationsDelegates, FlutterQuillLocalizations.delegate],
+    localizationsDelegates: const [
+      ...AppLocalizations.localizationsDelegates,
+      FlutterQuillLocalizations.delegate
+    ],
     supportedLocales: AppLocalizations.supportedLocales,
   ));
 }
 
-class GetRootBackButtonDispatcher extends BackButtonDispatcher with WidgetsBindingObserver {
+class GetRootBackButtonDispatcher extends BackButtonDispatcher
+    with WidgetsBindingObserver {
   GetRootBackButtonDispatcher();
 
   @override
@@ -124,6 +139,7 @@ class GetRootBackButtonDispatcher extends BackButtonDispatcher with WidgetsBindi
 
   @override
   Future<bool> didPopRoute() async {
-    return (await Get.rawRoute?.navigator?.maybePop()) ?? invokeCallback(Future.value(false));
+    return (await Get.rawRoute?.navigator?.maybePop()) ??
+        invokeCallback(Future.value(false));
   }
 }

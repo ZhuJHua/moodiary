@@ -18,10 +18,10 @@ class SearchSheetComponent extends StatelessWidget {
       assignId: true,
       builder: (_) {
         return Column(
-          spacing: 4.0,
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              padding: const EdgeInsets.only(
+                  left: 8.0, right: 8.0, top: 8.0, bottom: 4.0),
               child: TextField(
                 maxLines: 1,
                 controller: logic.textEditingController,
@@ -51,10 +51,13 @@ class SearchSheetComponent extends StatelessWidget {
                       )
                     : ListView.builder(
                         itemCount: state.searchList.length,
+                        padding: EdgeInsets.zero,
                         itemBuilder: (context, index) {
-                          Bind.lazyPut(() => SearchCardLogic(), tag: index.toString());
+                          Bind.lazyPut(() => SearchCardLogic(),
+                              tag: index.toString());
                           return Padding(
-                            padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 8.0, bottom: 0.0),
+                            padding: const EdgeInsets.only(
+                                left: 8.0, right: 8.0, top: 4.0, bottom: 4.0),
                             child: SearchCardComponent(
                               diary: state.searchList[index],
                               index: index.toString(),

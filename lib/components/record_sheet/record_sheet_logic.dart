@@ -19,8 +19,11 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
   late final AudioRecorder audioRecorder = AudioRecorder();
 
   //按钮动画控制器
-  late AnimationController animationController =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 100), lowerBound: 0, upperBound: 1.0);
+  late AnimationController animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0,
+      upperBound: 1.0);
 
   late final EditLogic editLogic = Bind.find<EditLogic>();
 
@@ -58,19 +61,23 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
       ///开始录制
       ///暂时保存在缓存目录中
       await audioRecorder.start(
-          const RecordConfig(androidConfig: AndroidRecordConfig(muteAudio: true, useLegacy: true)),
+          const RecordConfig(
+              androidConfig:
+                  AndroidRecordConfig(muteAudio: true, useLegacy: true)),
           path: FileUtil.getCachePath(state.fileName));
     }
   }
 
   void listenAmplitude() {
-    final amplitudeStream = audioRecorder.onAmplitudeChanged(const Duration(milliseconds: 40));
+    final amplitudeStream =
+        audioRecorder.onAmplitudeChanged(const Duration(milliseconds: 40));
     amplitudeStream.listen((amplitude) {
       state.durationTime.value += const Duration(milliseconds: 40);
       if (amplitude.current.isInfinite) {
         Bind.find<WaveFormLogic>().maxLengthAdd(.0, state.maxWidth);
       } else if (amplitude.current != amplitude.max) {
-        Bind.find<WaveFormLogic>().maxLengthAdd(normalizeAmplitude(amplitude.current), state.maxWidth);
+        Bind.find<WaveFormLogic>().maxLengthAdd(
+            normalizeAmplitude(amplitude.current), state.maxWidth);
       }
     });
   }

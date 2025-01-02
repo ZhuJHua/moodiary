@@ -5,12 +5,13 @@ import 'package:mood_diary/pages/edit/edit_logic.dart';
 
 import 'audio_player_state.dart';
 
-class AudioPlayerLogic extends GetxController with GetSingleTickerProviderStateMixin {
+class AudioPlayerLogic extends GetxController
+    with GetSingleTickerProviderStateMixin {
   final AudioPlayerState state = AudioPlayerState();
 
   final AudioPlayer audioPlayer = AudioPlayer();
-  late final AnimationController animationController =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 100));
+  late final AnimationController animationController = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 100));
   late final EditLogic editLogic = Bind.find<EditLogic>();
 
   @override
@@ -65,6 +66,8 @@ class AudioPlayerLogic extends GetxController with GetSingleTickerProviderStateM
 
   Future<void> changeValue(value) async {
     state.handleChange.value = true;
-    state.currentDuration.value = Duration(milliseconds: (state.totalDuration.value.inMilliseconds * value).toInt());
+    state.currentDuration.value = Duration(
+        milliseconds:
+            (state.totalDuration.value.inMilliseconds * value).toInt());
   }
 }

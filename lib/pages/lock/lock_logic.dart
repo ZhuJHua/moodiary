@@ -7,10 +7,10 @@ import 'lock_state.dart';
 
 class LockLogic extends GetxController with GetSingleTickerProviderStateMixin {
   final LockState state = LockState();
-  late AnimationController animationController =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 200));
-  late Animation<double> animation =
-      Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: animationController, curve: Curves.easeInOut));
+  late AnimationController animationController = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 200));
+  late Animation<double> animation = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: animationController, curve: Curves.easeInOut));
 
   @override
   void onClose() {
@@ -31,7 +31,8 @@ class LockLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
   void deletePassword() {
     if (state.password.value.isNotEmpty) {
-      state.password.value = state.password.value.substring(0, state.password.value.length - 1);
+      state.password.value =
+          state.password.value.substring(0, state.password.value.length - 1);
       HapticFeedback.selectionClick();
     }
   }

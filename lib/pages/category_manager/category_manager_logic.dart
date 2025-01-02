@@ -27,13 +27,15 @@ class CategoryManagerLogic extends GetxController {
   }
 
   Future<void> getCategory() async {
-    state.categoryList = await IsarUtil.getAllCategoryAsync();
-    update();
+    state.isFetching.value = true;
+    state.categoryList.value = await IsarUtil.getAllCategoryAsync();
+    state.isFetching.value = false;
   }
 
   Future<void> addCategory() async {
     if (textEditingController.text.isNotEmpty) {
-      if (await IsarUtil.insertACategory(Category()..categoryName = textEditingController.text)) {
+      if (await IsarUtil.insertACategory(
+          Category()..categoryName = textEditingController.text)) {
         Get.backLegacy();
         await getCategory();
         await diaryLogic.updateCategory();

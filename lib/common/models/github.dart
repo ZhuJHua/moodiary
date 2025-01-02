@@ -53,7 +53,9 @@ class GithubRelease {
     prerelease = json["prerelease"];
     createdAt = json["created_at"];
     publishedAt = json["published_at"];
-    assets = json["assets"] == null ? null : (json["assets"] as List).map((e) => Assets.fromJson(e)).toList();
+    assets = json["assets"] == null
+        ? null
+        : (json["assets"] as List).map((e) => Assets.fromJson(e)).toList();
     tarballUrl = json["tarball_url"];
     zipballUrl = json["zipball_url"];
     body = json["body"];
@@ -123,7 +125,8 @@ class Assets {
     nodeId = json["node_id"];
     name = json["name"];
     label = json["label"];
-    uploader = json["uploader"] == null ? null : Uploader.fromJson(json["uploader"]);
+    uploader =
+        json["uploader"] == null ? null : Uploader.fromJson(json["uploader"]);
     contentType = json["content_type"];
     state = json["state"];
     size = json["size"];

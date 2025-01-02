@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
@@ -12,7 +13,8 @@ class WindowButtons extends StatelessWidget {
   //获取一言
   Future<void> getHitokoto() async {
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto, maxAgeMillis: 15 * 60000);
+      var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
+          maxAgeMillis: 15 * 60000);
       if (res != null) {
         hitokoto.value = res.first;
       }
@@ -23,8 +25,8 @@ class WindowButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //unawaited(getHitokoto());
     final colorScheme = Theme.of(context).colorScheme;
-    //getHitokoto();
     final buttonColors = WindowButtonColors(
       iconNormal: colorScheme.secondary,
       mouseDown: colorScheme.secondaryContainer,
@@ -42,17 +44,18 @@ class WindowButtons extends StatelessWidget {
       mouseOver: colorScheme.errorContainer,
       iconMouseOver: colorScheme.onErrorContainer,
     );
-    return Container(
-      color: colorScheme.surface,
-      height: appWindow.titleBarHeight,
+    return WindowTitleBarBox(
       child: MoveWindow(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            MinimizeWindowButton(colors: buttonColors),
-            MaximizeWindowButton(colors: buttonColors),
-            CloseWindowButton(colors: closeButtonColors),
-          ],
+        child: Container(
+          color: colorScheme.surface,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              MinimizeWindowButton(colors: buttonColors),
+              MaximizeWindowButton(colors: buttonColors),
+              CloseWindowButton(colors: closeButtonColors),
+            ],
+          ),
         ),
       ),
     );

@@ -29,40 +29,58 @@ class MapPage extends StatelessWidget {
           return state.currentLatLng != null && state.tiandituKey != null
               ? FlutterMap(
                   mapController: logic.mapController,
-                  options:
-                      MapOptions(initialCenter: state.currentLatLng!, minZoom: 4.0, initialZoom: 16.0, maxZoom: 18.0),
+                  options: MapOptions(
+                      initialCenter: state.currentLatLng!,
+                      minZoom: 4.0,
+                      initialZoom: 16.0,
+                      maxZoom: 18.0),
                   children: [
                     TileLayer(
                       urlTemplate:
-                          'http://t6.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=img&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${state.tiandituKey}',
-                      tileProvider: const FMTCStore('mapStore').getTileProvider(),
+                          'http://t6.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${state.tiandituKey}',
+                      tileProvider:
+                          const FMTCStore('mapStore').getTileProvider(),
+                      tileSize: 256,
                     ),
                     TileLayer(
                       urlTemplate:
                           'http://t6.tianditu.gov.cn/cva_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${state.tiandituKey}',
-                      tileProvider: const FMTCStore('mapStore').getTileProvider(),
+                      tileProvider:
+                          const FMTCStore('mapStore').getTileProvider(),
+                      tileSize: 256,
                     ),
                     MarkerClusterLayerWidget(
                         options: MarkerClusterLayerOptions(
-                            markers: List.generate(state.diaryMapItemList.length, (index) {
+                            markers: List.generate(
+                                state.diaryMapItemList.length, (index) {
                               return Marker(
                                   point: state.diaryMapItemList[index].latLng,
                                   child: GestureDetector(
                                     onTap: () async {
-                                      await logic.toDiaryPage(isarId: state.diaryMapItemList[index].id);
+                                      await logic.toDiaryPage(
+                                          isarId:
+                                              state.diaryMapItemList[index].id);
                                     },
-                                    child: state.diaryMapItemList[index].coverImageName.isNotEmpty
+                                    child: state.diaryMapItemList[index]
+                                            .coverImageName.isNotEmpty
                                         ? Bubble(
-                                            backgroundColor: colorScheme.tertiary,
+                                            backgroundColor:
+                                                colorScheme.tertiary,
                                             borderRadius: 8,
                                             child: Container(
                                               width: 48,
                                               height: 48,
                                               decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(4),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
                                                 image: DecorationImage(
-                                                    image: FileImage(File(FileUtil.getRealPath(
-                                                        'image', state.diaryMapItemList[index].coverImageName))),
+                                                    image: FileImage(File(
+                                                        FileUtil.getRealPath(
+                                                            'image',
+                                                            state
+                                                                .diaryMapItemList[
+                                                                    index]
+                                                                .coverImageName))),
                                                     fit: BoxFit.cover),
                                               ),
                                             ))
@@ -71,8 +89,14 @@ class MapPage extends StatelessWidget {
                                             color: colorScheme.tertiary,
                                           ),
                                   ),
-                                  width: state.diaryMapItemList[index].coverImageName.isNotEmpty ? 56 : 30,
-                                  height: state.diaryMapItemList[index].coverImageName.isNotEmpty ? 64 : 30);
+                                  width: state.diaryMapItemList[index]
+                                          .coverImageName.isNotEmpty
+                                      ? 56
+                                      : 30,
+                                  height: state.diaryMapItemList[index]
+                                          .coverImageName.isNotEmpty
+                                      ? 64
+                                      : 30);
                             }),
                             rotate: true,
                             maxZoom: 18.0,
@@ -83,11 +107,13 @@ class MapPage extends StatelessWidget {
                                 decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
                                     color: colorScheme.tertiaryContainer,
-                                    border: Border.all(color: colorScheme.tertiary, width: 2)),
+                                    border: Border.all(
+                                        color: colorScheme.tertiary, width: 2)),
                                 child: Center(
                                   child: Text(
                                     markers.length.toString(),
-                                    style: TextStyle(color: colorScheme.onTertiaryContainer),
+                                    style: TextStyle(
+                                        color: colorScheme.onTertiaryContainer),
                                   ),
                                 ),
                               );

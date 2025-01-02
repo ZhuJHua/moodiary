@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
@@ -19,15 +20,21 @@ class DiaryState {
   //主滚动列表key
   late GlobalKey<NestedScrollViewState> nestedScrollKey;
 
-  ScrollController get innerController => nestedScrollKey.currentState!.innerController;
+  ScrollController get innerController =>
+      nestedScrollKey.currentState!.innerController;
 
-  ScrollController get outerController => nestedScrollKey.currentState!.outerController;
+  ScrollController get outerController =>
+      nestedScrollKey.currentState!.outerController;
 
   //视图模式状态
-  late ViewModeType viewModeType = ViewModeType.getType(PrefUtil.getValue<int>('homeViewMode')!);
+  late ViewModeType viewModeType =
+      ViewModeType.getType(PrefUtil.getValue<int>('homeViewMode')!);
 
   //当前tab bar位置
   late int currentTabBarIndex;
+
+  // 一言
+  RxString hitokoto = '...'.obs;
 
   DiaryState() {
     customTitleName = PrefUtil.getValue<String>('customTitleName')!;

@@ -5,6 +5,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/internal.dart';
 import 'package:mood_diary/common/values/colors.dart';
 
+import '../src/rust/api/font.dart';
 import 'data/pref.dart';
 
 class ThemeUtil {
@@ -16,82 +17,139 @@ class ThemeUtil {
     return Color((await DynamicColorPlugin.getCorePalette())!.primary.get(40));
   }
 
-  static ThemeData buildTheme(Brightness brightness) {
-    final color = PrefUtil.getValue<int>('color');
-    var seedColor = switch (color) {
-      0 => AppColor.themeColorList[0],
-      1 => AppColor.themeColorList[1],
-      2 => AppColor.themeColorList[2],
-      3 => AppColor.themeColorList[3],
-      4 => AppColor.themeColorList[4],
-      // -1为系统配色，如果选了-1，肯定有
-      _ => Color(PrefUtil.getValue<int>('systemColor')!)
-    };
+  static Future<ThemeData> buildTheme(Brightness brightness) async {
+    final color = PrefUtil.getValue<int>('color')!;
+    var seedColor = (color == -1)
+        ? Color(PrefUtil.getValue<int>('systemColor')!)
+        : AppColor.themeColorList[
+            (color >= 0 && color < AppColor.themeColorList.length) ? color : 0];
 
-    // 添加 fontVariations 的函数
-    TextTheme addFontVariationsToTextTheme(TextTheme baseTheme) {
+    final customFont = PrefUtil.getValue<String>('customFont')!;
+    String? fontFamily;
+
+    // 加载自定义字体
+    if (customFont.isNotEmpty) {
+      fontFamily = await FontReader.getFontNameFromTtf(ttfFilePath: customFont);
+      if (fontFamily != null) {
+        await DynamicFont.file(fontFamily: fontFamily, filepath: customFont)
+            .load();
+      }
+    }
+    // 字体变体应用到 TextTheme 的函数
+    TextTheme applyFontVariations(TextTheme baseTheme, String? fontFamily) {
+      const fontVariation = FontVariation('wght', 400);
       return baseTheme.copyWith(
-        displayLarge: baseTheme.displayLarge?.copyWith(
-          fontVariations: [const FontVariation('wght', 400)],
-        ),
-        displayMedium: baseTheme.displayMedium?.copyWith(
-          fontVariations: [const FontVariation('wght', 400)],
-        ),
-        displaySmall: baseTheme.displaySmall?.copyWith(
-          fontVariations: [const FontVariation('wght', 400)],
-        ),
+        displayLarge: baseTheme.displayLarge
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        displayMedium: baseTheme.displayMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        displaySmall: baseTheme.displaySmall
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
         headlineLarge: baseTheme.headlineLarge?.copyWith(
-          fontVariations: [const FontVariation('wght', 500)],
-        ),
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 500)]),
         headlineMedium: baseTheme.headlineMedium?.copyWith(
-          fontVariations: [const FontVariation('wght', 500)],
-        ),
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 500)]),
         headlineSmall: baseTheme.headlineSmall?.copyWith(
-          fontVariations: [const FontVariation('wght', 500)],
-        ),
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 500)]),
         titleLarge: baseTheme.titleLarge?.copyWith(
-          fontVariations: [const FontVariation('wght', 600)],
-        ),
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 600)]),
         titleMedium: baseTheme.titleMedium?.copyWith(
-          fontVariations: [const FontVariation('wght', 500)],
-        ),
-        titleSmall: baseTheme.titleSmall?.copyWith(
-          fontVariations: [const FontVariation('wght', 400)],
-        ),
-        bodyLarge: baseTheme.bodyLarge?.copyWith(
-          fontVariations: [const FontVariation('wght', 400)],
-        ),
-        bodyMedium: baseTheme.bodyMedium?.copyWith(
-          fontVariations: [const FontVariation('wght', 400)],
-        ),
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 500)]),
+        titleSmall: baseTheme.titleSmall
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        bodyLarge: baseTheme.bodyLarge
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        bodyMedium: baseTheme.bodyMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
         bodySmall: baseTheme.bodySmall?.copyWith(
-          fontVariations: [const FontVariation('wght', 300)],
-        ),
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 300)]),
         labelLarge: baseTheme.labelLarge?.copyWith(
-          fontVariations: [const FontVariation('wght', 500)],
-        ),
-        labelMedium: baseTheme.labelMedium?.copyWith(
-          fontVariations: [const FontVariation('wght', 400)],
-        ),
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 500)]),
+        labelMedium: baseTheme.labelMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
         labelSmall: baseTheme.labelSmall?.copyWith(
-          fontVariations: [const FontVariation('wght', 300)],
-        ),
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 300)]),
       );
     }
 
-    // 创建基础的 ThemeData
-    var themeData = ThemeData(
+    TextTheme applyMiSansFontVariations(
+        TextTheme baseTheme, String? fontFamily) {
+      const fontVariation = FontVariation('wght', 330);
+      return baseTheme.copyWith(
+        displayLarge: baseTheme.displayLarge
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        displayMedium: baseTheme.displayMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        displaySmall: baseTheme.displaySmall
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        headlineLarge: baseTheme.headlineLarge?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 380)]),
+        headlineMedium: baseTheme.headlineMedium?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 380)]),
+        headlineSmall: baseTheme.headlineSmall?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 380)]),
+        titleLarge: baseTheme.titleLarge?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 520)]),
+        titleMedium: baseTheme.titleMedium?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 520)]),
+        titleSmall: baseTheme.titleSmall
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        bodyLarge: baseTheme.bodyLarge
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        bodyMedium: baseTheme.bodyMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        bodySmall: baseTheme.bodySmall?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 250)]),
+        labelLarge: baseTheme.labelLarge?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 380)]),
+        labelMedium: baseTheme.labelMedium
+            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
+        labelSmall: baseTheme.labelSmall?.copyWith(
+            fontFamily: fontFamily,
+            fontVariations: [const FontVariation('wght', 250)]),
+      );
+    }
+
+    // 基础主题
+    return ThemeData(
       colorScheme: ColorScheme.fromSeed(
         seedColor: seedColor,
         brightness: brightness,
-        dynamicSchemeVariant: color == 4 ? DynamicSchemeVariant.monochrome : DynamicSchemeVariant.tonalSpot,
+        dynamicSchemeVariant: color == 0
+            ? DynamicSchemeVariant.monochrome
+            : DynamicSchemeVariant.tonalSpot,
       ),
       materialTapTargetSize: MaterialTapTargetSize.padded,
       brightness: brightness,
+      textTheme: fontFamily != 'MiSans VF'
+          ? applyFontVariations(
+              brightness == Brightness.light
+                  ? Typography.material2021().black
+                  : Typography.material2021().white,
+              fontFamily,
+            )
+          : applyMiSansFontVariations(
+              brightness == Brightness.light
+                  ? Typography.material2021().black
+                  : Typography.material2021().white,
+              fontFamily,
+            ),
     );
-
-    // 使用系统中文字体的扩展
-    return themeData.useSystemChineseFont(brightness);
   }
 
   static DefaultStyles getInstance(BuildContext context) {
@@ -272,7 +330,7 @@ class ThemeUtil {
           baseStyle.copyWith(
             fontSize: 20,
             height: 1.5,
-            color: Colors.grey.withOpacity(0.6),
+            color: Colors.grey.withValues(alpha: 0.6),
           ),
           baseHorizontalSpacing,
           VerticalSpacing.zero,
@@ -287,7 +345,7 @@ class ThemeUtil {
         null,
       ),
       quote: DefaultTextBlockStyle(
-        TextStyle(color: baseStyle.color!.withOpacity(0.6)),
+        TextStyle(color: baseStyle.color!.withValues(alpha: 0.6)),
         baseHorizontalSpacing,
         baseVerticalSpacing,
         const VerticalSpacing(6, 2),
@@ -299,7 +357,7 @@ class ThemeUtil {
       ),
       code: DefaultTextBlockStyle(
           TextStyle(
-            color: Colors.blue.shade900.withOpacity(0.9),
+            color: Colors.blue.shade900.withValues(alpha: 0.6),
             fontFamily: fontFamily,
             fontSize: 13,
             height: 1.15,
