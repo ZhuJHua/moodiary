@@ -330,34 +330,40 @@ class FontPage extends StatelessWidget {
           backgroundColor: colorScheme.surfaceContainerLow,
           body: size.width < 600
               ? Obx(() {
-                  return !state.isFetching.value
-                      ? Padding(
-                          padding: EdgeInsets.only(
-                              left: 16,
-                              right: 16,
-                              bottom: state.bottomSheetHeight.value),
-                          child: buildText(),
-                        )
-                      : const Center(
-                          child: Processing(),
-                        );
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: !state.isFetching.value
+                        ? Padding(
+                            padding: EdgeInsets.only(
+                                left: 16,
+                                right: 16,
+                                bottom: state.bottomSheetHeight.value),
+                            child: buildText(),
+                          )
+                        : const Center(
+                            child: Processing(),
+                          ),
+                  );
                 })
               : Obx(() {
-                  return !state.isFetching.value
-                      ? Row(
-                          children: [
-                            Expanded(
-                                child: Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 16, right: 16),
-                              child: buildText(),
-                            )),
-                            Expanded(child: buildOption())
-                          ],
-                        )
-                      : const Center(
-                          child: Processing(),
-                        );
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: !state.isFetching.value
+                        ? Row(
+                            children: [
+                              Expanded(
+                                  child: Padding(
+                                padding:
+                                    const EdgeInsets.only(left: 16, right: 16),
+                                child: buildText(),
+                              )),
+                              Expanded(child: buildOption())
+                            ],
+                          )
+                        : const Center(
+                            child: Processing(),
+                          ),
+                  );
                 }),
           resizeToAvoidBottomInset: false,
           bottomSheet: Obx(() {

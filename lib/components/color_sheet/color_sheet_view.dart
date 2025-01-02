@@ -186,7 +186,7 @@ class ColorSheetComponent extends StatelessWidget {
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             itemBuilder: (context, index) {
-              return SizedBox.shrink();
+              return const SizedBox.shrink();
             },
             itemCount: 0,
           ),
