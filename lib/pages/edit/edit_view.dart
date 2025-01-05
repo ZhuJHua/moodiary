@@ -45,16 +45,10 @@ class EditPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Bind.find<EditLogic>();
-    final state = Bind
-        .find<EditLogic>()
-        .state;
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final state = Bind.find<EditLogic>().state;
+    final colorScheme = Theme.of(context).colorScheme;
 
-    final textStyle = Theme
-        .of(context)
-        .textTheme;
+    final textStyle = Theme.of(context).textTheme;
 
     // Widget buildAddContainer(Widget icon) {
     //   return Container(
@@ -73,20 +67,20 @@ class EditPage extends StatelessWidget {
     Widget? buildTagList() {
       return state.currentDiary.tags.isNotEmpty
           ? Wrap(
-        spacing: 8.0,
-        children: List.generate(state.currentDiary.tags.length, (index) {
-          return Chip(
-            label: Text(
-              state.currentDiary.tags[index],
-              style: TextStyle(color: colorScheme.onSecondaryContainer),
-            ),
-            backgroundColor: colorScheme.secondaryContainer,
-            onDeleted: () {
-              logic.removeTag(index);
-            },
-          );
-        }),
-      )
+              spacing: 8.0,
+              children: List.generate(state.currentDiary.tags.length, (index) {
+                return Chip(
+                  label: Text(
+                    state.currentDiary.tags[index],
+                    style: TextStyle(color: colorScheme.onSecondaryContainer),
+                  ),
+                  backgroundColor: colorScheme.secondaryContainer,
+                  onDeleted: () {
+                    logic.removeTag(index);
+                  },
+                );
+              }),
+            )
           : null;
     }
 
@@ -402,7 +396,7 @@ class EditPage extends StatelessWidget {
                   value: state.currentDiary.mood,
                   divisions: 10,
                   label:
-                  '${(state.currentDiary.mood * 100).toStringAsFixed(0)}%',
+                      '${(state.currentDiary.mood * 100).toStringAsFixed(0)}%',
                   activeColor: Color.lerp(AppColor.emoColorList.first,
                       AppColor.emoColorList.last, state.currentDiary.mood),
                   onChanged: (value) {
@@ -541,17 +535,16 @@ class EditPage extends StatelessWidget {
                   title: const Text('天气'),
                   subtitle: state.currentDiary.weather.isNotEmpty
                       ? Text(
-                      '${state.currentDiary.weather[2]} ${state.currentDiary
-                          .weather[1]}°C')
+                          '${state.currentDiary.weather[2]} ${state.currentDiary.weather[1]}°C')
                       : null,
                   trailing: state.isProcessing
                       ? const CircularProgressIndicator()
                       : IconButton.filledTonal(
-                    onPressed: () async {
-                      await logic.getPositionAndWeather();
-                    },
-                    icon: const Icon(Icons.location_on),
-                  ),
+                          onPressed: () async {
+                            await logic.getPositionAndWeather();
+                          },
+                          icon: const Icon(Icons.location_on),
+                        ),
                 );
               }),
           GetBuilder<EditLogic>(
@@ -725,14 +718,15 @@ class EditPage extends StatelessWidget {
               headerStyleType: HeaderStyleType.buttons,
               buttonOptions: QuillSimpleToolbarButtonOptions(
                   selectHeaderStyleButtons:
-                  QuillToolbarSelectHeaderStyleButtonsOptions(
-                    iconTheme: QuillIconTheme(iconButtonSelectedData:IconButtonData(
-                      color: colorScheme.onPrimary,
-                    )),)
-              ),
+                      QuillToolbarSelectHeaderStyleButtonsOptions(
+                iconTheme: QuillIconTheme(
+                    iconButtonSelectedData: IconButtonData(
+                  color: colorScheme.onPrimary,
+                )),
+              )),
               showLink: false,
               embedButtons: [
-                    (context, embedContext) {
+                (context, embedContext) {
                   return _buildToolBarButton(
                     iconData: Icons.format_indent_increase,
                     tooltip: 'Text Indent',
@@ -827,10 +821,8 @@ class EditPage extends StatelessWidget {
                     expands: true,
                     paintCursorAboveText: true,
                     keyboardAppearance:
-                    CupertinoTheme.maybeBrightnessOf(context) ??
-                        Theme
-                            .of(context)
-                            .brightness,
+                        CupertinoTheme.maybeBrightnessOf(context) ??
+                            Theme.of(context).brightness,
                     customStyles: ThemeUtil.getInstance(context,
                         customColorScheme: colorScheme),
                     embedBuilders: [

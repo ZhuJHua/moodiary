@@ -6,7 +6,6 @@ import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/diary_card/basic_diary_card/basic_card_logic.dart';
 
-import '../../../common/values/colors.dart';
 import '../../../utils/file_util.dart';
 
 class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {

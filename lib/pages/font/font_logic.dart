@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/src/rust/api/font.dart';
 import 'package:mood_diary/utils/file_util.dart';
-import 'package:path/path.dart';
 
 import '../../utils/data/pref.dart';
 import '../../utils/notice_util.dart';
@@ -82,13 +81,14 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
         NoticeUtil.showToast('字体已存在');
         return;
       }
-      var newPath = FileUtil.getRealPath('font', basename(path));
+      var newPath = FileUtil.getRealPath('font', '$fontName.ttf');
       File(path).copy(newPath);
       await getFontList(inInit: false);
       NoticeUtil.showToast('添加成功');
     } else {
       NoticeUtil.showToast('取消文件选择');
     }
+    update();
   }
 
   //更改字体

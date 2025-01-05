@@ -1,5 +1,3 @@
 import 'package:get/get.dart';
 
-class InputDialogLogic extends GetxController {
-
-}
+class InputDialogLogic extends GetxController {}
