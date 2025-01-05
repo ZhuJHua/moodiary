@@ -3,6 +3,8 @@ class AboutState {
 
   late String appVersion;
 
+  String systemVersion = '';
+
   AboutState() {
     appName = '';
     appVersion = '';

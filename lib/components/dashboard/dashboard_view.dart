@@ -133,10 +133,21 @@ class DashboardComponent extends StatelessWidget {
             style: textStyle.labelMedium!
                 .copyWith(color: colorScheme.onSurface.withAlpha(220)),
           ),
-          Text(
-            count.isEmpty ? '...' : count,
-            style: textStyle.titleMedium,
-          )
+          AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: count.isEmpty
+                  ? Text(
+                      '...',
+                      key: const ValueKey('count_empty'),
+                      style: textStyle.titleMedium
+                          ?.copyWith(color: colorScheme.secondary),
+                    )
+                  : Text(
+                      count,
+                      key: const ValueKey('count'),
+                      style: textStyle.titleMedium
+                          ?.copyWith(color: colorScheme.secondary),
+                    )),
         ],
       );
     }

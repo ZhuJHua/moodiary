@@ -11,5 +11,9 @@ class CalendarState {
 
   late RxBool isControllerScrolling = false.obs;
 
+  double velocityThreshold = 800;
+
+  bool isUp = false;
+
   CalendarState();
 }

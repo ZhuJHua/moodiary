@@ -36,44 +36,76 @@ class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
       );
     }
 
-    return InkWell(
-      borderRadius: AppBorderRadius.mediumBorderRadius,
-      onTap: () {
-        toDiary(diary);
-      },
-      child: Card.filled(
-        color: colorScheme.surfaceContainerLow,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Card.filled(
+      color: colorScheme.surfaceContainerLow,
+      child: InkWell(
+        borderRadius: AppBorderRadius.mediumBorderRadius,
+        onTap: () {
+          toDiary(diary);
+        },
+        child: Stack(
           children: [
-            if (diary.imageName.isNotEmpty) ...[buildImage()],
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                spacing: 4.0,
-                children: [
-                  if (diary.title.isNotEmpty) ...[
-                    Text(
-                      diary.title,
-                      style: textStyle.titleMedium!.copyWith(),
-                    )
-                  ],
-                  Text(
-                    diary.contentText.trim(),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: getMaxLines(diary.contentText),
-                    style: textStyle.bodyMedium,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (diary.imageName.isNotEmpty) ...[buildImage()],
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    spacing: 4.0,
+                    children: [
+                      if (diary.title.isNotEmpty)
+                        Text(
+                          diary.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: textStyle.titleMedium
+                              ?.copyWith(color: colorScheme.onSurface),
+                        ),
+                      if (diary.contentText.isNotEmpty)
+                        Text(
+                          diary.contentText.trim(),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 4,
+                          style: textStyle.bodyMedium
+                              ?.copyWith(color: colorScheme.onSurface),
+                        ),
+                      Text(
+                        DateFormat.yMd().add_Hms().format(diary.time),
+                        style: textStyle.labelSmall?.copyWith(
+                            color:
+                                colorScheme.onSurface.withValues(alpha: 0.8)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  Text(
-                    DateFormat.yMMMd().add_Hms().format(diary.time),
-                    style: textStyle.labelSmall,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                ],
-              ),
-            )
+                )
+              ],
+            ),
+            // Positioned(
+            //   top: 4,
+            //   right: 4,
+            //   child: Container(
+            //     decoration: ShapeDecoration(
+            //         shape: const CircleBorder(),
+            //         color: colorScheme.surfaceContainerLow),
+            //     width: 12,
+            //     height: 12,
+            //     child: Center(
+            //       child: Container(
+            //         decoration: ShapeDecoration(
+            //           shape: const CircleBorder(),
+            //           color: Color.lerp(AppColor.emoColorList.first,
+            //               AppColor.emoColorList.last, diary.mood),
+            //         ),
+            //         width: 8,
+            //         height: 8,
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),

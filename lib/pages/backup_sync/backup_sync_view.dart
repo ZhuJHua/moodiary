@@ -43,7 +43,7 @@ class BackupSyncPage extends StatelessWidget {
                     );
                   });
             },
-            trailing: const Icon(Icons.chevron_right),
+            trailing: const Icon(Icons.chevron_right_rounded),
             leading: const Icon(Icons.file_upload_outlined),
           ),
           ListTile(
@@ -71,7 +71,7 @@ class BackupSyncPage extends StatelessWidget {
                     );
                   });
             },
-            trailing: const Icon(Icons.chevron_right),
+            trailing: const Icon(Icons.chevron_right_rounded),
             leading: const Icon(Icons.file_download_outlined),
           ),
           const LocalSendComponent(),

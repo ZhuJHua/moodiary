@@ -1,12 +1,15 @@
 import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/internal.dart';
-import 'package:mood_diary/common/values/colors.dart';
 
+import '../common/values/colors.dart';
 import '../src/rust/api/font.dart';
 import 'data/pref.dart';
+
+final Set<String> loadedFonts = {};
 
 class ThemeUtil {
   static Future<bool> supportDynamicColor() async {
@@ -15,6 +18,139 @@ class ThemeUtil {
 
   static Future<Color> getDynamicColor() async {
     return Color((await DynamicColorPlugin.getCorePalette())!.primary.get(40));
+  }
+
+  static Map<String, double> _unifyFontWeights(
+      Map<String, double> fontWeights) {
+    // 标准
+    final regular = fontWeights['default'] ?? 400;
+    // 名称映射表：将各种名称映射到统一的标准名称
+    const Map<String, String> nameMapping = {
+      "Thin": "Thin",
+      "Hairline": "Thin",
+      "ExtraLight": "ExtraLight",
+      "UltraLight": "ExtraLight",
+      "Light": "Light",
+      "Normal": "Regular",
+      "Regular": "Regular",
+      "Book": "Regular",
+      "Medium": "Medium",
+      "Demibold": "SemiBold",
+      "DemiBold": "SemiBold",
+      "Semibold": "SemiBold",
+      "SemiBold": "SemiBold",
+      "Bold": "Bold",
+      "Heavy": "Bold",
+      "ExtraBold": "ExtraBold",
+      "UltraBold": "ExtraBold",
+      "Black": "Black",
+      "HeavyBlack": "Black",
+      "ExtraBlack": "Black",
+    };
+
+    Map<String, double> unified = {};
+
+    for (var entry in fontWeights.entries) {
+      String originalName = entry.key;
+      double weight = entry.value;
+      String unifiedName = nameMapping[originalName] ?? originalName;
+
+      if (unified.containsKey(unifiedName)) {
+        double existingWeight = unified[unifiedName]!;
+        unified[unifiedName] =
+            (weight - regular).abs() < (existingWeight - regular).abs()
+                ? weight
+                : existingWeight;
+      } else {
+        unified[unifiedName] = weight;
+      }
+    }
+    return unified;
+  }
+
+  static TextTheme _applyFontVariations(TextTheme baseTheme, String? fontFamily,
+      {required Map<String, double> wghtAxisMap}) {
+    var regularFontWeight = wghtAxisMap['Regular'] ?? 400;
+    var mediumFontWeight = wghtAxisMap['Medium'] ?? 500;
+    var semiBoldFontWeight = wghtAxisMap['SemiBold'] ?? 600;
+    var boldFontWeight = wghtAxisMap['Bold'] ?? 700;
+    return baseTheme.copyWith(
+      displayLarge: baseTheme.displayLarge?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w500,
+        fontVariations: [FontVariation('wght', mediumFontWeight)],
+      ),
+      displayMedium: baseTheme.displayMedium?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w500,
+        fontVariations: [FontVariation('wght', mediumFontWeight)],
+      ),
+      displaySmall: baseTheme.displaySmall?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w500,
+        fontVariations: [FontVariation('wght', mediumFontWeight)],
+      ),
+      headlineLarge: baseTheme.headlineLarge?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w700,
+        fontVariations: [FontVariation('wght', boldFontWeight)],
+      ),
+      headlineMedium: baseTheme.headlineMedium?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w600,
+        fontVariations: [FontVariation('wght', semiBoldFontWeight)],
+      ),
+      headlineSmall: baseTheme.headlineSmall?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w500,
+        fontVariations: [FontVariation('wght', mediumFontWeight)],
+      ),
+      titleLarge: baseTheme.titleLarge?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w600,
+        fontVariations: [FontVariation('wght', semiBoldFontWeight)],
+      ),
+      titleMedium: baseTheme.titleMedium?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w500,
+        fontVariations: [FontVariation('wght', mediumFontWeight)],
+      ),
+      titleSmall: baseTheme.titleSmall?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w500,
+        fontVariations: [FontVariation('wght', mediumFontWeight)],
+      ),
+      bodyLarge: baseTheme.bodyLarge?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w400,
+        fontVariations: [FontVariation('wght', regularFontWeight)],
+      ),
+      bodyMedium: baseTheme.bodyMedium?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w400,
+        fontVariations: [FontVariation('wght', regularFontWeight)],
+      ),
+      bodySmall: baseTheme.bodySmall?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w400,
+        fontVariations: [FontVariation('wght', regularFontWeight)],
+      ),
+      labelLarge: baseTheme.labelLarge?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w500,
+        fontVariations: [FontVariation('wght', mediumFontWeight)],
+      ),
+      labelMedium: baseTheme.labelMedium?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w500,
+        fontVariations: [FontVariation('wght', mediumFontWeight)],
+      ),
+      labelSmall: baseTheme.labelSmall?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w400,
+        fontVariations: [FontVariation('wght', regularFontWeight)],
+      ),
+    );
   }
 
   static Future<ThemeData> buildTheme(Brightness brightness) async {
@@ -26,139 +162,56 @@ class ThemeUtil {
 
     final customFont = PrefUtil.getValue<String>('customFont')!;
     String? fontFamily;
+    Map<String, double> wghtAxisMap = {};
 
     // 加载自定义字体
     if (customFont.isNotEmpty) {
       fontFamily = await FontReader.getFontNameFromTtf(ttfFilePath: customFont);
       if (fontFamily != null) {
-        await DynamicFont.file(fontFamily: fontFamily, filepath: customFont)
-            .load();
+        if (!loadedFonts.contains(fontFamily)) {
+          var res = await DynamicFont.file(
+                  fontFamily: fontFamily, filepath: customFont)
+              .load();
+          if (res) loadedFonts.add(fontFamily);
+        }
+        wghtAxisMap = _unifyFontWeights(
+            await FontReader.getWghtAxisFromVfFont(ttfFilePath: customFont));
       }
     }
-    // 字体变体应用到 TextTheme 的函数
-    TextTheme applyFontVariations(TextTheme baseTheme, String? fontFamily) {
-      const fontVariation = FontVariation('wght', 400);
-      return baseTheme.copyWith(
-        displayLarge: baseTheme.displayLarge
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        displayMedium: baseTheme.displayMedium
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        displaySmall: baseTheme.displaySmall
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        headlineLarge: baseTheme.headlineLarge?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 500)]),
-        headlineMedium: baseTheme.headlineMedium?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 500)]),
-        headlineSmall: baseTheme.headlineSmall?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 500)]),
-        titleLarge: baseTheme.titleLarge?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 600)]),
-        titleMedium: baseTheme.titleMedium?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 500)]),
-        titleSmall: baseTheme.titleSmall
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        bodyLarge: baseTheme.bodyLarge
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        bodyMedium: baseTheme.bodyMedium
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        bodySmall: baseTheme.bodySmall?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 300)]),
-        labelLarge: baseTheme.labelLarge?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 500)]),
-        labelMedium: baseTheme.labelMedium
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        labelSmall: baseTheme.labelSmall?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 300)]),
-      );
-    }
 
-    TextTheme applyMiSansFontVariations(
-        TextTheme baseTheme, String? fontFamily) {
-      const fontVariation = FontVariation('wght', 330);
-      return baseTheme.copyWith(
-        displayLarge: baseTheme.displayLarge
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        displayMedium: baseTheme.displayMedium
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        displaySmall: baseTheme.displaySmall
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        headlineLarge: baseTheme.headlineLarge?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 380)]),
-        headlineMedium: baseTheme.headlineMedium?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 380)]),
-        headlineSmall: baseTheme.headlineSmall?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 380)]),
-        titleLarge: baseTheme.titleLarge?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 520)]),
-        titleMedium: baseTheme.titleMedium?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 520)]),
-        titleSmall: baseTheme.titleSmall
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        bodyLarge: baseTheme.bodyLarge
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        bodyMedium: baseTheme.bodyMedium
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        bodySmall: baseTheme.bodySmall?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 250)]),
-        labelLarge: baseTheme.labelLarge?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 380)]),
-        labelMedium: baseTheme.labelMedium
-            ?.copyWith(fontFamily: fontFamily, fontVariations: [fontVariation]),
-        labelSmall: baseTheme.labelSmall?.copyWith(
-            fontFamily: fontFamily,
-            fontVariations: [const FontVariation('wght', 250)]),
-      );
-    }
+    // colorScheme
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: seedColor,
+      brightness: brightness,
+      dynamicSchemeVariant: color == 0
+          ? DynamicSchemeVariant.monochrome
+          : DynamicSchemeVariant.tonalSpot,
+    );
+    // typography
+    final typography = Typography.material2021(
+        platform: defaultTargetPlatform, colorScheme: colorScheme);
+    final defaultTextTheme =
+        brightness == Brightness.light ? typography.black : typography.white;
 
-    // 基础主题
     return ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: seedColor,
-        brightness: brightness,
-        dynamicSchemeVariant: color == 0
-            ? DynamicSchemeVariant.monochrome
-            : DynamicSchemeVariant.tonalSpot,
-      ),
+      colorScheme: colorScheme,
       materialTapTargetSize: MaterialTapTargetSize.padded,
       brightness: brightness,
-      textTheme: fontFamily != 'MiSans VF'
-          ? applyFontVariations(
-              brightness == Brightness.light
-                  ? Typography.material2021().black
-                  : Typography.material2021().white,
-              fontFamily,
-            )
-          : applyMiSansFontVariations(
-              brightness == Brightness.light
-                  ? Typography.material2021().black
-                  : Typography.material2021().white,
-              fontFamily,
-            ),
+      fontFamily: fontFamily,
+      textTheme: _applyFontVariations(
+        defaultTextTheme,
+        fontFamily,
+        wghtAxisMap: wghtAxisMap,
+      ),
     );
   }
 
-  static DefaultStyles getInstance(BuildContext context) {
+  static DefaultStyles getInstance(BuildContext context,
+      {required ColorScheme customColorScheme}) {
     final themeData = Theme.of(context);
     final textStyle = Theme.of(context).textTheme;
     final baseStyle = textStyle.bodyMedium!.copyWith(
-      fontSize: 16,
-      height: 1.5,
-      decoration: TextDecoration.none,
+      color: customColorScheme.onSurface,
     );
     const baseHorizontalSpacing = HorizontalSpacing(0, 0);
     const baseVerticalSpacing = VerticalSpacing(6, 0);
@@ -172,82 +225,40 @@ class ThemeUtil {
 
     return DefaultStyles(
       h1: DefaultTextBlockStyle(
-          textStyle.titleLarge!.copyWith(
-            fontSize: 34,
-            color: textStyle.titleLarge!.color,
-            letterSpacing: -0.5,
-            height: 1.083,
-            fontWeight: FontWeight.bold,
-            decoration: TextDecoration.none,
-          ),
+          textStyle.titleLarge!.copyWith(color: customColorScheme.primary),
           baseHorizontalSpacing,
           const VerticalSpacing(16, 0),
           VerticalSpacing.zero,
           null),
       h2: DefaultTextBlockStyle(
-          textStyle.titleMedium!.copyWith(
-            fontSize: 30,
-            color: textStyle.titleMedium!.color,
-            letterSpacing: -0.8,
-            height: 1.067,
-            fontWeight: FontWeight.bold,
-            decoration: TextDecoration.none,
-          ),
+          textStyle.titleMedium!.copyWith(color: customColorScheme.secondary),
           baseHorizontalSpacing,
           const VerticalSpacing(8, 0),
           VerticalSpacing.zero,
           null),
       h3: DefaultTextBlockStyle(
-        textStyle.titleSmall!.copyWith(
-          fontSize: 24,
-          color: textStyle.titleSmall!.color,
-          letterSpacing: -0.5,
-          height: 1.083,
-          fontWeight: FontWeight.bold,
-          decoration: TextDecoration.none,
-        ),
+        textStyle.titleSmall!.copyWith(color: customColorScheme.onSurface),
         baseHorizontalSpacing,
         const VerticalSpacing(8, 0),
         VerticalSpacing.zero,
         null,
       ),
       h4: DefaultTextBlockStyle(
-        textStyle.titleSmall!.copyWith(
-          fontSize: 20,
-          color: textStyle.titleSmall!.color,
-          letterSpacing: -0.4,
-          height: 1.1,
-          fontWeight: FontWeight.bold,
-          decoration: TextDecoration.none,
-        ),
+        textStyle.titleSmall!.copyWith(color: customColorScheme.onSurface),
         baseHorizontalSpacing,
         const VerticalSpacing(6, 0),
         VerticalSpacing.zero,
         null,
       ),
       h5: DefaultTextBlockStyle(
-        textStyle.titleSmall!.copyWith(
-          fontSize: 18,
-          color: textStyle.titleSmall!.color,
-          letterSpacing: -0.2,
-          height: 1.11,
-          fontWeight: FontWeight.bold,
-          decoration: TextDecoration.none,
-        ),
+        textStyle.titleSmall!.copyWith(color: customColorScheme.onSurface),
         baseHorizontalSpacing,
         const VerticalSpacing(6, 0),
         VerticalSpacing.zero,
         null,
       ),
       h6: DefaultTextBlockStyle(
-        textStyle.titleSmall!.copyWith(
-          fontSize: 16,
-          color: textStyle.titleSmall!.color,
-          letterSpacing: -0.1,
-          height: 1.125,
-          fontWeight: FontWeight.bold,
-          decoration: TextDecoration.none,
-        ),
+        textStyle.titleSmall!.copyWith(color: customColorScheme.onSurface),
         baseHorizontalSpacing,
         const VerticalSpacing(4, 0),
         VerticalSpacing.zero,

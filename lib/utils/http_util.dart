@@ -10,7 +10,7 @@ import 'notice_util.dart';
 class HttpUtil {
   Dio? _dio;
 
-  final bool _enableLogging = kDebugMode;
+  final bool _enableLogging = false;
 
   Dio get dio {
     if (_dio == null) {

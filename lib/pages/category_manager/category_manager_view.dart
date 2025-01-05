@@ -1,9 +1,8 @@
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/loading/loading.dart';
 
-import '../../main.dart';
 import 'category_manager_logic.dart';
 
 class CategoryManagerPage extends StatelessWidget {
@@ -14,32 +13,6 @@ class CategoryManagerPage extends StatelessWidget {
     final logic = Bind.find<CategoryManagerLogic>();
     final state = Bind.find<CategoryManagerLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
-
-    Widget inputDialog(Function() operate) {
-      return AlertDialog(
-        title: TextField(
-          maxLines: 1,
-          controller: logic.textEditingController,
-          decoration: InputDecoration(
-            fillColor: colorScheme.secondaryContainer,
-            border: const UnderlineInputBorder(
-              borderRadius: AppBorderRadius.smallBorderRadius,
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            labelText: '分类',
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () {
-                Get.backLegacy();
-              },
-              child: Text(l10n.cancel)),
-          TextButton(onPressed: operate, child: Text(l10n.ok))
-        ],
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -62,17 +35,21 @@ class CategoryManagerPage extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            onPressed: () {
-                              logic.editInput(
-                                  state.categoryList[index].categoryName);
-                              showDialog(
+                            onPressed: () async {
+                              var res = await showTextInputDialog(
                                   context: context,
-                                  builder: (context) {
-                                    return inputDialog(() {
-                                      logic.editCategory(
-                                          state.categoryList[index].id);
-                                    });
-                                  });
+                                  title: '编辑分类',
+                                  textFields: [
+                                    DialogTextField(
+                                      hintText: '分类名称',
+                                      initialText: state
+                                          .categoryList[index].categoryName,
+                                    )
+                                  ]);
+                              if (res != null) {
+                                logic.editCategory(state.categoryList[index].id,
+                                    text: res.first);
+                              }
                             },
                             icon: const Icon(Icons.edit),
                           ),
@@ -101,14 +78,17 @@ class CategoryManagerPage extends StatelessWidget {
           child: !state.isFetching.value
               ? FloatingActionButton.extended(
                   onPressed: () async {
-                    logic.clearInput();
-                    showDialog(
+                    var res = await showTextInputDialog(
                         context: context,
-                        builder: (context) {
-                          return inputDialog(() {
-                            logic.addCategory();
-                          });
-                        });
+                        title: '添加分类',
+                        textFields: [
+                          const DialogTextField(
+                            hintText: '分类名称',
+                          )
+                        ]);
+                    if (res != null) {
+                      logic.addCategory(text: res.first);
+                    }
                   },
                   icon: const Icon(Icons.add),
                   label: const Text('添加分类'),

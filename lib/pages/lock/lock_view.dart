@@ -60,7 +60,7 @@ class LockPage extends StatelessWidget {
             }
           },
           child: const Icon(
-            Icons.fingerprint,
+            Icons.fingerprint_rounded,
           ),
         ),
       );
@@ -83,65 +83,63 @@ class LockPage extends StatelessWidget {
       });
     }
 
-    return GetBuilder<LockLogic>(
-      builder: (_) {
-        return Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+        ),
+        body: Center(
+          child: Column(
+            spacing: 16.0,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.lock),
+              Text(
+                '请输入密码',
+                style: textStyle.titleMedium,
+              ),
+              AnimatedBuilder(
+                animation: logic.animation,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(logic.interpolate(logic.animation.value), 0),
+                    child: Wrap(
+                      spacing: 16.0,
+                      children: buildPasswordIndicator(),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(
+                width: buttonSize * 3 + 20,
+                height: buttonSize * 4 + 30,
+                child: GridView.count(
+                  crossAxisCount: 3,
+                  childAspectRatio: 1.0,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    buildNumButton('1'),
+                    buildNumButton('2'),
+                    buildNumButton('3'),
+                    buildNumButton('4'),
+                    buildNumButton('5'),
+                    buildNumButton('6'),
+                    buildNumButton('7'),
+                    buildNumButton('8'),
+                    buildNumButton('9'),
+                    buildBiometricsButton(),
+                    buildNumButton('0'),
+                    buildDeleteButton()
+                  ],
+                ),
+              ),
+            ],
           ),
-          body: Center(
-            child: Column(
-              spacing: 16.0,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.lock),
-                Text(
-                  '请输入密码',
-                  style: textStyle.titleMedium,
-                ),
-                AnimatedBuilder(
-                  animation: logic.animation,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset:
-                          Offset(logic.interpolate(logic.animation.value), 0),
-                      child: Wrap(
-                        spacing: 16.0,
-                        children: buildPasswordIndicator(),
-                      ),
-                    );
-                  },
-                ),
-                SizedBox(
-                  width: buttonSize * 3 + 20,
-                  height: buttonSize * 4 + 30,
-                  child: GridView.count(
-                    crossAxisCount: 3,
-                    childAspectRatio: 1.0,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      buildNumButton('1'),
-                      buildNumButton('2'),
-                      buildNumButton('3'),
-                      buildNumButton('4'),
-                      buildNumButton('5'),
-                      buildNumButton('6'),
-                      buildNumButton('7'),
-                      buildNumButton('8'),
-                      buildNumButton('9'),
-                      buildBiometricsButton(),
-                      buildNumButton('0'),
-                      buildDeleteButton()
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

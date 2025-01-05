@@ -72,4 +72,7 @@ abstract class AppRoutes {
 
   //备份与同步页
   static const backupSyncPage = '/backupSync';
+
+  //捐助页
+  static const sponsorPage = '/sponsor';
 }

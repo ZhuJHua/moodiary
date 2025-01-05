@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/components/dashboard/dashboard_logic.dart';
@@ -17,9 +16,6 @@ class SettingLogic extends GetxController {
   final SettingState state = SettingState();
   late final homeLogic = Bind.find<HomeLogic>();
 
-  late TextEditingController textEditingController =
-      TextEditingController(text: state.customTitle);
-
   @override
   void onInit() {
     super.onInit();
@@ -33,7 +29,6 @@ class SettingLogic extends GetxController {
 
   @override
   void onClose() {
-    textEditingController.dispose();
     super.onClose();
   }
 
@@ -124,20 +119,10 @@ class SettingLogic extends GetxController {
     Get.toNamed(AppRoutes.backupSyncPage);
   }
 
-  void cancelCustomTitle() {
-    textEditingController.clear();
-    Get.backLegacy();
-  }
-
-  Future<void> setCustomTitle() async {
-    if (textEditingController.text.isNotEmpty) {
-      state.customTitle = textEditingController.text;
-      update(['CustomTitle']);
-      await PrefUtil.setValue<String>(
-          'customTitleName', textEditingController.text);
-      Get.backLegacy();
-      textEditingController.clear();
-      Bind.find<DiaryLogic>().updateTitle();
-    }
+  Future<void> setCustomTitle({required String title}) async {
+    state.customTitle = title.trim();
+    update(['CustomTitle']);
+    await PrefUtil.setValue<String>('customTitleName', state.customTitle);
+    Bind.find<DiaryLogic>().updateTitle();
   }
 }

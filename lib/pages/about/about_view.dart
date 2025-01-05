@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/utils/update_util.dart';
 
@@ -13,30 +14,53 @@ class AboutPage extends StatelessWidget {
     final logic = Bind.find<AboutLogic>();
     final state = Bind.find<AboutLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
+    final textStyle = Theme.of(context).textTheme;
 
     Widget buildLogoTitle() {
-      return Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              colorScheme.brightness == Brightness.light
-                  ? 'assets/icon/light/light_foreground.png'
-                  : 'assets/icon/dark/dark_foreground.png',
-              height: 160.0,
-              width: 160.0,
-            ),
-            Column(
-              spacing: 4.0,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(state.appName),
-                Text('Version: ${state.appVersion}')
-              ],
-            )
-          ],
-        ),
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            colorScheme.brightness == Brightness.light
+                ? 'assets/icon/light/light_foreground.png'
+                : 'assets/icon/dark/dark_foreground.png',
+            color: colorScheme.onSurface,
+            height: 160.0,
+            width: 160.0,
+          ),
+          Column(
+            spacing: 16.0,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                state.appName,
+                style: textStyle.titleLarge
+                    ?.copyWith(color: colorScheme.onSurface),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    state.appVersion,
+                    style: textStyle.labelSmall
+                        ?.copyWith(color: colorScheme.primary),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                    child: VerticalDivider(
+                      thickness: 2,
+                    ),
+                  ),
+                  Text(
+                    state.systemVersion,
+                    style: textStyle.labelSmall
+                        ?.copyWith(color: colorScheme.onSurface),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       );
     }
 
@@ -44,63 +68,127 @@ class AboutPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(l10n.aboutTitle),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(4.0),
-        children: [
-          GetBuilder<AboutLogic>(builder: (_) {
-            return buildLogoTitle();
-          }),
-          Card.outlined(
-            color: colorScheme.surfaceContainerLow,
-            child: Column(
-              children: [
-                GetBuilder<AboutLogic>(builder: (_) {
-                  return ListTile(
-                    leading: const Icon(Icons.update),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(4.0),
+          children: [
+            GetBuilder<AboutLogic>(builder: (_) {
+              return buildLogoTitle();
+            }),
+            const SizedBox(height: 16.0),
+            Card.outlined(
+              color: colorScheme.surfaceContainerLow,
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.update_rounded),
                     title: Text(l10n.aboutUpdate),
-                    trailing: const Icon(Icons.chevron_right),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(12.0),
+                        topRight: Radius.circular(12.0),
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () async {
                       await UpdateUtil.checkShouldUpdate(state.appVersion,
                           handle: true);
                     },
-                  );
-                }),
-                ListTile(
-                  leading: const Icon(Icons.source_outlined),
-                  title: Text(l10n.aboutSource),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    await logic.toSource();
-                  },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.source_rounded),
+                    title: Text(l10n.aboutSource),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () async {
+                      await logic.toSource();
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.file_copy_rounded),
+                    title: Text(l10n.aboutUserAgreement),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      logic.toAgreement();
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.security_rounded),
+                    title: Text(l10n.aboutPrivacyPolicy),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      logic.toPrivacy();
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.bug_report_rounded),
+                    title: Text(l10n.aboutBugReport),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () async {
+                      await logic.toReportPage();
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.attach_money_rounded),
+                    title: Text(l10n.aboutDonate),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(12.0),
+                        bottomRight: Radius.circular(12.0),
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: logic.toSponsor,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 4.0,
+              children: [
+                const FaIcon(
+                  FontAwesomeIcons.flutter,
+                  size: 16,
+                  color: Colors.lightBlue,
                 ),
-                ListTile(
-                  leading: const Icon(Icons.file_copy_outlined),
-                  title: Text(l10n.aboutUserAgreement),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    logic.toAgreement();
-                  },
+                const SizedBox(
+                  height: 12,
+                  child: VerticalDivider(
+                    thickness: 2,
+                  ),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.security_outlined),
-                  title: Text(l10n.aboutPrivacyPolicy),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    logic.toPrivacy();
-                  },
+                FaIcon(
+                  FontAwesomeIcons.dartLang,
+                  size: 16,
+                  color: colorScheme.onSurface.withValues(alpha: 0.8),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.bug_report_outlined),
-                  title: Text(l10n.aboutBugReport),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    await logic.toReportPage();
-                  },
+                const SizedBox(
+                  height: 12,
+                  child: VerticalDivider(
+                    thickness: 2,
+                  ),
+                ),
+                FaIcon(
+                  FontAwesomeIcons.rust,
+                  size: 16,
+                  color: colorScheme.onSurface.withValues(alpha: 0.8),
+                ),
+                const SizedBox(
+                  height: 12,
+                  child: VerticalDivider(
+                    thickness: 2,
+                  ),
+                ),
+                const FaIcon(
+                  FontAwesomeIcons.solidHeart,
+                  size: 16,
+                  color: Colors.pinkAccent,
                 ),
               ],
-            ),
-          ),
-        ],
+            )
+          ],
+        ),
       ),
     );
   }

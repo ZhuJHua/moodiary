@@ -1,3 +1,4 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:get/get.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/package_util.dart';
@@ -17,8 +18,20 @@ class AboutLogic extends GetxController {
 
   Future<void> getInfo() async {
     var packageInfo = await PackageUtil.getPackageInfo();
+    var deviceInfo = await PackageUtil.getInfo();
+    if (deviceInfo is AndroidDeviceInfo) {
+      state.systemVersion = 'Android ${deviceInfo.version.release}';
+    } else if (deviceInfo is IosDeviceInfo) {
+      state.systemVersion =
+          '${deviceInfo.systemName} ${deviceInfo.systemVersion}';
+    } else if (deviceInfo is WindowsDeviceInfo) {
+      state.systemVersion = 'Windows ${deviceInfo.majorVersion}';
+    } else if (deviceInfo is MacOsDeviceInfo) {
+      state.systemVersion = 'MacOS ${deviceInfo.osRelease} ';
+    }
+
     state.appName = packageInfo.appName;
-    state.appVersion = packageInfo.version;
+    state.appVersion = '${packageInfo.version}(${packageInfo.buildNumber})';
     update();
   }
 
@@ -53,5 +66,9 @@ class AboutLogic extends GetxController {
 
   void toAgreement() {
     Get.toNamed(AppRoutes.agreementPage);
+  }
+
+  void toSponsor() {
+    Get.toNamed(AppRoutes.sponsorPage);
   }
 }
