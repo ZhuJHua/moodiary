@@ -12,6 +12,7 @@ class MediaAudioComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textStyle = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -20,7 +21,7 @@ class MediaAudioComponent extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Text(
             DateFormat.yMMMEd().format(dateTime),
-            style: textStyle.titleSmall,
+            style: textStyle.titleSmall?.copyWith(color: colorScheme.secondary),
           ),
         ),
         ListView.builder(

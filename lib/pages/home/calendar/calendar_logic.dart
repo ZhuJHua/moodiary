@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mood_diary/utils/log_util.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import '../../../utils/data/isar.dart';
@@ -30,8 +31,9 @@ class CalendarLogic extends GetxController {
   Future<void> getMonthDiary(DateTime value) async {
     state.isFetching.value = true;
     state.currentMonth.value = value;
-    state.currentMonthDiaryList.value =
-        await IsarUtil.getDiaryByMonth(value.year, value.month);
+    // state.currentMonthDiaryList.value =
+    //     await IsarUtil.getDiaryByMonth(value.year, value.month);
+    state.currentMonthDiaryList.value = await IsarUtil.getAllDiariesSorted();
     state.isFetching.value = false;
   }
 
@@ -55,6 +57,17 @@ class CalendarLogic extends GetxController {
     }
   }
 
+  void _onVerticalDragUpdate(DragUpdateDetails details) {}
+
+  void onVerticalDragEnd(DragEndDetails details) {
+    double velocity = details.velocity.pixelsPerSecond.dy;
+    LogUtil.printInfo(velocity);
+    if (velocity > state.velocityThreshold) {
+      LogUtil.printInfo('1');
+      open(state.isUp);
+    }
+  }
+
   // // 选中日期后重新获取日记
   // Future<void> updateDate(DateTime value) async {
   //   state.selectedDate.value = value;
@@ -67,5 +80,21 @@ class CalendarLogic extends GetxController {
     } else if (!value && expansionTileController.isExpanded) {
       expansionTileController.collapse();
     }
+  }
+
+  DateTime? findLatestDateInMonth(List<DateTime> dates, int year, int month) {
+    // 过滤出符合条件的日期
+    List<DateTime> filteredDates = dates.where((date) {
+      return date.year == year && date.month == month;
+    }).toList();
+
+    // 如果没有符合条件的日期，返回 null
+    if (filteredDates.isEmpty) {
+      return null;
+    }
+
+    // 找到最晚的日期
+    filteredDates.sort((a, b) => b.compareTo(a)); // 降序排序
+    return filteredDates.first; // 返回第一个元素，即最晚的日期
   }
 }

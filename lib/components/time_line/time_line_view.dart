@@ -41,7 +41,7 @@ class TimeLineComponent extends StatelessWidget {
 
     return CustomPaint(
       painter: TimeLinePainter(
-          lineColor: colorScheme.outline,
+          lineColor: colorScheme.outlineVariant,
           actionColor: actionColor,
           lineWidth: 2.0),
       child: Padding(

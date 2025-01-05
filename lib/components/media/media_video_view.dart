@@ -25,6 +25,7 @@ class MediaVideoComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     final textStyle = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     // 将视频路径转换为缩略图路径
     final thumbnailList = videoList.map((e) {
       final id = e.split('video-')[1].split('.')[0];
@@ -39,7 +40,7 @@ class MediaVideoComponent extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Text(
             DateFormat.yMMMEd().format(dateTime),
-            style: textStyle.titleSmall,
+            style: textStyle.titleSmall?.copyWith(color: colorScheme.secondary),
           ),
         ),
         GridView.builder(

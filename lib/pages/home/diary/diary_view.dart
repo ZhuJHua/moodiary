@@ -86,9 +86,7 @@ class DiaryPage extends StatelessWidget {
               splashFactory: NoSplash.splashFactory,
               dragStartBehavior: DragStartBehavior.start,
               unselectedLabelStyle: textStyle.labelSmall,
-              labelStyle: textStyle.labelMedium!.copyWith(
-                  fontWeight: FontWeight.w500,
-                  fontVariations: [const FontVariation('wght', 500)]),
+              labelStyle: textStyle.labelMedium,
               indicator: ShapeDecoration(
                 shape: const StadiumBorder(),
                 color: colorScheme.primaryContainer,
@@ -168,7 +166,9 @@ class DiaryPage extends StatelessWidget {
                                       ? state.customTitleName
                                       : l10n.appName,
                                   overflow: TextOverflow.ellipsis,
-                                  style: textStyle.titleLarge,
+                                  style: textStyle.titleLarge?.copyWith(
+                                    color: colorScheme.onSurface,
+                                  ),
                                 );
                               }),
                           LayoutBuilder(builder: (context, constraints) {
@@ -201,14 +201,14 @@ class DiaryPage extends StatelessWidget {
                                         decelerationCurve: Curves.easeOut,
                                         style: textStyle.labelMedium?.copyWith(
                                             color: colorScheme.onSurface
-                                                .withValues(alpha: 0.9)),
+                                                .withValues(alpha: 0.8)),
                                       ),
                                     )
                                   : Text(
                                       state.hitokoto.value,
                                       style: textStyle.labelMedium?.copyWith(
                                           color: colorScheme.onSurface
-                                              .withValues(alpha: 0.9)),
+                                              .withValues(alpha: 0.8)),
                                     );
                             });
                           }),

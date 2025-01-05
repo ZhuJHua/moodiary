@@ -393,7 +393,8 @@ class DiaryDetailsPage extends StatelessWidget {
                               controller: logic.quillController,
                               config: QuillEditorConfig(
                                 showCursor: false,
-                                customStyles: ThemeUtil.getInstance(context),
+                                customStyles: ThemeUtil.getInstance(context,
+                                    customColorScheme: customColorScheme),
                                 embedBuilders: [
                                   ImageEmbedBuilder(isEdit: false),
                                   VideoEmbedBuilder(isEdit: false),

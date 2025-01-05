@@ -31,9 +31,6 @@ import 'edit_state.dart';
 class EditLogic extends GetxController {
   final EditState state = EditState();
 
-  //标签控制器
-  late TextEditingController tagTextEditingController = TextEditingController();
-
   //标题
   late TextEditingController titleTextEditingController =
       TextEditingController();
@@ -89,7 +86,6 @@ class EditLogic extends GetxController {
   @override
   void onClose() {
     keyboardObserver.stop();
-    tagTextEditingController.dispose();
     titleTextEditingController.dispose();
     titleFocusNode.dispose();
     contentFocusNode.dispose();
@@ -414,7 +410,7 @@ class EditLogic extends GetxController {
       lastDate: DateTime.now(),
       initialDatePickerMode: DatePickerMode.day,
       initialEntryMode: DatePickerEntryMode.calendarOnly,
-      firstDate: DateTime.now().subtract(const Duration(days: 31)),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
     );
     if (nowDateTime != null) {
       state.currentDiary.time = state.currentDiary.time.copyWith(
@@ -512,18 +508,18 @@ class EditLogic extends GetxController {
     NoticeUtil.showToast('删除成功');
   }
 
-  void cancelAddTag() {
-    Get.backLegacy();
-    tagTextEditingController.clear();
-  }
-
   //添加一个标签
-  void addTag() {
-    Get.backLegacy();
-    if (tagTextEditingController.text.isNotEmpty) {
-      state.currentDiary.tags.add(tagTextEditingController.text);
-      tagTextEditingController.clear();
+  void addTag({required String tag}) {
+    tag = tag.trim();
+    if (tag.isNotEmpty) {
+      if (state.currentDiary.tags.contains(tag)) {
+        NoticeUtil.showToast('标签已存在');
+        return;
+      }
+      state.currentDiary.tags.add(tag);
       update(['Tag']);
+    } else {
+      NoticeUtil.showToast('标签不能为空');
     }
   }
 

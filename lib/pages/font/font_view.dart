@@ -366,6 +366,13 @@ class FontPage extends StatelessWidget {
                   );
                 }),
           resizeToAvoidBottomInset: false,
+          floatingActionButton: size.width > 600
+              ? FloatingActionButton.extended(
+                  onPressed: logic.saveFontScale,
+                  label: const Text('应用'),
+                  icon: const Icon(Icons.check),
+                )
+              : null,
           bottomSheet: Obx(() {
             return Visibility(
               visible: !state.isFetching.value && size.width < 600,

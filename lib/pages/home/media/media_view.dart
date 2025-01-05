@@ -122,7 +122,9 @@ class MediaPage extends StatelessWidget {
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 400),
                       child: state.isFetching
-                          ? const Center(child: SearchLoading())
+                          ? const Center(
+                              key: ValueKey('searching'),
+                              child: SearchLoading())
                           : (state.datetimeMediaMap.isNotEmpty
                               ? ScrollablePositionedList.builder(
                                   itemBuilder: (context, index) {
@@ -153,6 +155,7 @@ class MediaPage extends StatelessWidget {
                                       logic.scrollOffsetListener,
                                 )
                               : const Center(
+                                  key: ValueKey('empty'),
                                   child: FaIcon(
                                     FontAwesomeIcons.boxArchive,
                                     size: 80,

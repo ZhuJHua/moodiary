@@ -193,7 +193,7 @@ class AnalysePage extends StatelessWidget {
               ),
             ),
             GridView.count(
-              crossAxisCount: size.width > 700 ? 2 : 1,
+              crossAxisCount: size.width > 600 ? 2 : 1,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,

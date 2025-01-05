@@ -36,8 +36,11 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
     state.currentFontPath.value = path;
   }
 
-  Future<void> getFontList() async {
-    state.isFetching.value = true;
+  Future<void> getFontList({bool inInit = true}) async {
+    if (inInit) {
+      state.isFetching.value = true;
+    }
+
     final filePathList = await FileUtil.getDirFilePath('font');
     for (var filePath in filePathList) {
       if (filePath.endsWith('.ttf')) {
@@ -52,12 +55,15 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
     List<Future<void>> fontLoadFutures = [];
     // 预加载字体
     for (var entry in state.fontMap.entries) {
+      if (loadedFonts.contains(entry.value)) {
+        continue;
+      }
       fontLoadFutures.add(
           DynamicFont.file(fontFamily: entry.value, filepath: entry.key)
               .load());
     }
     await Future.wait(fontLoadFutures);
-
+    update();
     state.isFetching.value = false;
   }
 
@@ -78,7 +84,7 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
       }
       var newPath = FileUtil.getRealPath('font', basename(path));
       File(path).copy(newPath);
-      await getFontList();
+      await getFontList(inInit: false);
       NoticeUtil.showToast('添加成功');
     } else {
       NoticeUtil.showToast('取消文件选择');

@@ -40,13 +40,13 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
       );
     }
 
-    return InkWell(
-      borderRadius: AppBorderRadius.mediumBorderRadius,
-      onTap: () async {
-        await toDiary(diary);
-      },
-      child: Card.filled(
-        color: colorScheme.surfaceContainerLow,
+    return Card.filled(
+      color: colorScheme.surfaceContainerLow,
+      child: InkWell(
+        borderRadius: AppBorderRadius.mediumBorderRadius,
+        onTap: () async {
+          await toDiary(diary);
+        },
         child: SizedBox(
           height: 122.0,
           child: Row(
@@ -65,7 +65,8 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                         Text(
                           diary.title,
                           overflow: TextOverflow.ellipsis,
-                          style: textStyle.titleMedium,
+                          style: textStyle.titleMedium
+                              ?.copyWith(color: colorScheme.onSurface),
                           maxLines: 1,
                         )
                       ],
@@ -73,11 +74,14 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                         diary.contentText.trim(),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 2,
-                        style: textStyle.bodyMedium,
+                        style: textStyle.bodyMedium
+                            ?.copyWith(color: colorScheme.onSurface),
                       ),
                       Text(
                         DateFormat.yMMMd().add_Hms().format(diary.time),
-                        style: textStyle.labelSmall,
+                        style: textStyle.labelSmall?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.8),
+                        ),
                       )
                     ],
                   ),

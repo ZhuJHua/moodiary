@@ -19,27 +19,6 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
     final textStyle = Theme.of(context).textTheme;
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
 
-    Widget buildContent() {
-      return Column(
-        spacing: 4.0,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ...[
-            Text(
-              diary.title,
-              style: textStyle.titleMedium!.copyWith(),
-            )
-          ],
-          Text(
-            diary.contentText.trim(),
-            overflow: TextOverflow.ellipsis,
-            maxLines: getMaxLines(diary.contentText),
-            style: textStyle.bodyMedium,
-          ),
-        ],
-      );
-    }
-
     Widget buildImage() {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -62,7 +41,7 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     fit: BoxFit.cover,
                   ),
                   border: Border.all(color: colorScheme.outline),
-                  borderRadius: AppBorderRadius.mediumBorderRadius,
+                  borderRadius: AppBorderRadius.smallBorderRadius,
                 ),
               ),
             );
@@ -73,25 +52,47 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
 
     Widget buildTime() {
       return Text(
-        DateFormat.yMd().add_jms().format(diary.time),
-        style: textStyle.labelSmall,
+        DateFormat.yMMMMEEEEd().add_jms().format(diary.time),
+        style: textStyle.labelSmall?.copyWith(color: colorScheme.secondary),
       );
     }
 
     return InkWell(
-      borderRadius: AppBorderRadius.mediumBorderRadius,
-      onTap: () async {
-        await toDiaryInCalendar(diary);
-      },
       child: Card.filled(
           color: colorScheme.surfaceContainerLow,
-          child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                spacing: 4.0,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [buildTime(), buildContent(), buildImage()],
-              ))),
+          child: InkWell(
+            borderRadius: AppBorderRadius.mediumBorderRadius,
+            onTap: () async {
+              await toDiaryInCalendar(diary);
+            },
+            child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  spacing: 4.0,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    buildTime(),
+                    if (diary.title.isNotEmpty)
+                      Text(
+                        diary.title,
+                        maxLines: 2,
+                        style: textStyle.titleMedium!.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    if (diary.contentText.isNotEmpty)
+                      Text(
+                        diary.contentText.trim(),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 4,
+                        style: textStyle.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    buildImage()
+                  ],
+                )),
+          )),
     );
   }
 }

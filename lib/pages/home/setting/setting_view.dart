@@ -1,3 +1,4 @@
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -44,7 +45,9 @@ class SettingPage extends StatelessWidget {
               icon,
               Text(
                 text,
-                style: textStyle.labelSmall,
+                style: textStyle.labelSmall?.copyWith(
+                  color: colorScheme.onSurface,
+                ),
               )
             ],
           ),
@@ -108,23 +111,23 @@ class SettingPage extends StatelessWidget {
               children: [
                 ListTile(
                   title: Text(l10n.settingRecycle),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     logic.toRecyclePage();
                   },
-                  leading: const Icon(Icons.delete_outline),
+                  leading: const Icon(Icons.delete_rounded),
                 ),
                 ListTile(
                   title: const Text('备份与同步'),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     logic.toBackupAndSyncPage();
                   },
-                  leading: const Icon(Icons.sync),
+                  leading: const Icon(Icons.sync_rounded),
                 ),
                 ListTile(
                   title: Text(l10n.settingClean),
-                  leading: const Icon(Icons.cleaning_services_outlined),
+                  leading: const Icon(Icons.cleaning_services_rounded),
                   trailing: GetBuilder<SettingLogic>(
                       id: 'DataUsage',
                       builder: (_) {
@@ -156,15 +159,15 @@ class SettingPage extends StatelessWidget {
               children: [
                 ListTile(
                   title: Text(l10n.settingDiary),
-                  leading: const Icon(Icons.article_outlined),
-                  trailing: const Icon(Icons.chevron_right),
+                  leading: const Icon(Icons.article_rounded),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     logic.toDiarySettingPage();
                   },
                 ),
                 ListTile(
                   title: Text(l10n.settingThemeMode),
-                  leading: const Icon(Icons.invert_colors),
+                  leading: const Icon(Icons.invert_colors_rounded),
                   trailing: Text(
                     switch (state.themeMode) {
                       0 => l10n.themeModeSystem,
@@ -186,7 +189,7 @@ class SettingPage extends StatelessWidget {
                 ),
                 ListTile(
                   title: Text(l10n.settingColor),
-                  leading: const Icon(Icons.color_lens_outlined),
+                  leading: const Icon(Icons.color_lens_rounded),
                   trailing: Text(
                     AppColor.colorName(state.color),
                     style: textStyle.bodySmall!.copyWith(
@@ -199,24 +202,19 @@ class SettingPage extends StatelessWidget {
                         builder: (context) {
                           return const ColorSheetComponent();
                         });
-                    // showDialog(
-                    //     context: context,
-                    //     builder: (context) {
-                    //       return const ColorDialogComponent();
-                    //     });
                   },
                 ),
                 ListTile(
                   title: Text(l10n.settingFontStyle),
-                  leading: const Icon(Icons.format_size_outlined),
-                  trailing: const Icon(Icons.chevron_right),
+                  leading: const Icon(Icons.format_size_rounded),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     logic.toFontSizePage();
                   },
                 ),
                 ListTile(
-                  title: const Text('自定义首页名称'),
-                  leading: const Icon(Icons.drive_file_rename_outline),
+                  title: const Text('首页名称'),
+                  leading: const Icon(Icons.drive_file_rename_outline_rounded),
                   trailing: GetBuilder<SettingLogic>(
                       id: 'CustomTitle',
                       builder: (_) {
@@ -227,39 +225,20 @@ class SettingPage extends StatelessWidget {
                           ),
                         );
                       }),
-                  onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            content: TextField(
-                              maxLines: 1,
-                              controller: logic.textEditingController,
-                              decoration: InputDecoration(
-                                fillColor: colorScheme.secondaryContainer,
-                                border: const UnderlineInputBorder(
-                                  borderRadius:
-                                      AppBorderRadius.smallBorderRadius,
-                                  borderSide: BorderSide.none,
-                                ),
-                                filled: true,
-                                labelText: '名称',
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                  onPressed: () {
-                                    logic.cancelCustomTitle();
-                                  },
-                                  child: Text(l10n.cancel)),
-                              TextButton(
-                                  onPressed: () async {
-                                    await logic.setCustomTitle();
-                                  },
-                                  child: Text(l10n.ok))
-                            ],
-                          );
-                        });
+                  onTap: () async {
+                    var res = await showTextInputDialog(
+                      context: context,
+                      textFields: [
+                        DialogTextField(
+                          hintText: '名称',
+                          initialText: state.customTitle,
+                        )
+                      ],
+                      title: '首页名称',
+                    );
+                    if (res != null) {
+                      logic.setCustomTitle(title: res.first);
+                    }
                   },
                 )
               ],
@@ -277,17 +256,17 @@ class SettingPage extends StatelessWidget {
             color: colorScheme.surfaceContainerLow,
             child: Column(
               children: [
-                GetBuilder<SettingLogic>(
-                    id: 'Local',
-                    builder: (_) {
-                      return SwitchListTile(
-                        value: state.local,
-                        onChanged: null,
-                        title: Text(l10n.settingLocal),
-                        subtitle: Text(l10n.settingLocalDes),
-                        secondary: const Icon(Icons.cloud_off_outlined),
-                      );
-                    }),
+                // GetBuilder<SettingLogic>(
+                //     id: 'Local',
+                //     builder: (_) {
+                //       return SwitchListTile(
+                //         value: state.local,
+                //         onChanged: null,
+                //         title: Text(l10n.settingLocal),
+                //         subtitle: Text(l10n.settingLocalDes),
+                //         secondary: const Icon(Icons.cloud_off_rounded),
+                //       );
+                //     }),
                 GetBuilder<SettingLogic>(
                     id: 'Lock',
                     builder: (_) {
@@ -328,7 +307,7 @@ class SettingPage extends StatelessWidget {
                               });
                         },
                         title: Text(l10n.settingLock),
-                        leading: const Icon(Icons.lock_outline),
+                        leading: const Icon(Icons.lock_rounded),
                       );
                     }),
                 GetBuilder<SettingLogic>(
@@ -343,7 +322,7 @@ class SettingPage extends StatelessWidget {
                             : null,
                         title: Text(l10n.settingLockNow),
                         subtitle: Text(l10n.settingLockNowDes),
-                        secondary: const Icon(Icons.lock_clock_outlined),
+                        secondary: const Icon(Icons.lock_clock_rounded),
                       );
                     }),
               ],
@@ -363,16 +342,16 @@ class SettingPage extends StatelessWidget {
               children: [
                 ListTile(
                   title: Text(l10n.settingAbout),
-                  leading: const Icon(Icons.info_outline),
-                  trailing: const Icon(Icons.chevron_right),
+                  leading: const Icon(Icons.info_rounded),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     logic.toAboutPage();
                   },
                 ),
                 ListTile(
                   title: Text(l10n.settingLab),
-                  leading: const Icon(Icons.science_outlined),
-                  trailing: const Icon(Icons.chevron_right),
+                  leading: const Icon(Icons.science_rounded),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     logic.toLaboratoryPage();
                   },
@@ -389,7 +368,10 @@ class SettingPage extends StatelessWidget {
       builder: (_) {
         return Column(
           children: [
-            AppBar(title: Text(l10n.homeNavigatorSetting)),
+            AppBar(
+              title: Text(l10n.homeNavigatorSetting),
+              centerTitle: false,
+            ),
             Expanded(
               child: ListView(
                 cacheExtent: size.height * 2,

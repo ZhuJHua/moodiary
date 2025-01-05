@@ -31,7 +31,7 @@ use crate::api::kmp::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
 use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
-use image::DynamicImage;
+
 // Section: boilerplate
 
 flutter_rust_bridge::frb_generated_boilerplate!(
@@ -40,7 +40,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.7.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1743857995;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 376160798;
 
 // Section: executor
 
@@ -76,6 +76,41 @@ fn wire__crate__api__font__FontReader_get_font_name_from_ttf_impl(
                 transform_result_sse::<_, ()>((move || {
                     let output_ok = Result::<_, ()>::Ok(
                         crate::api::font::FontReader::get_font_name_from_ttf(api_ttf_file_path),
+                    )?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__font__FontReader_get_wght_axis_from_vf_font_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "FontReader_get_wght_axis_from_vf_font",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_ttf_file_path = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(
+                        crate::api::font::FontReader::get_wght_axis_from_vf_font(api_ttf_file_path),
                     )?;
                     Ok(output_ok)
                 })())
@@ -405,6 +440,14 @@ impl SseDecode for std::collections::HashMap<String, String> {
     }
 }
 
+impl SseDecode for std::collections::HashMap<String, f32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <Vec<(String, f32)>>::sse_decode(deserializer);
+        return inner.into_iter().collect();
+    }
+}
+
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DynamicImage>>
 {
@@ -464,6 +507,13 @@ impl SseDecode for crate::api::constants::CompressFormat {
     }
 }
 
+impl SseDecode for f32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_f32::<NativeEndian>().unwrap()
+    }
+}
+
 impl SseDecode for i32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -514,6 +564,18 @@ impl SseDecode for Vec<usize> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<usize>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<(String, f32)> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<(String, f32)>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -577,6 +639,15 @@ impl SseDecode for Option<u8> {
     }
 }
 
+impl SseDecode for (String, f32) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_field0 = <String>::sse_decode(deserializer);
+        let mut var_field1 = <f32>::sse_decode(deserializer);
+        return (var_field0, var_field1);
+    }
+}
+
 impl SseDecode for (String, String) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -634,17 +705,23 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        2 => wire__crate__api__compress__ImageCompress_contain_impl(
+        2 => wire__crate__api__font__FontReader_get_wght_axis_from_vf_font_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        3 => wire__crate__api__kmp__Kmp_find_matches_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__kmp__Kmp_replace_with_kmp_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__kmp__build_prefix_table_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__compress__compress_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__kmp__kmp_search_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__api__compress__ImageCompress_contain_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        4 => wire__crate__api__kmp__Kmp_find_matches_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__kmp__Kmp_replace_with_kmp_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__kmp__build_prefix_table_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__compress__compress_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__kmp__kmp_search_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -776,6 +853,13 @@ impl SseEncode for std::collections::HashMap<String, String> {
     }
 }
 
+impl SseEncode for std::collections::HashMap<String, f32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<(String, f32)>>::sse_encode(self.into_iter().collect(), serializer);
+    }
+}
+
 impl SseEncode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DynamicImage>>
 {
@@ -842,6 +926,13 @@ impl SseEncode for crate::api::constants::CompressFormat {
     }
 }
 
+impl SseEncode for f32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_f32::<NativeEndian>(self).unwrap();
+    }
+}
+
 impl SseEncode for i32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -885,6 +976,16 @@ impl SseEncode for Vec<usize> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <usize>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<(String, f32)> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <(String, f32)>::sse_encode(item, serializer);
         }
     }
 }
@@ -936,6 +1037,14 @@ impl SseEncode for Option<u8> {
         if let Some(value) = self {
             <u8>::sse_encode(value, serializer);
         }
+    }
+}
+
+impl SseEncode for (String, f32) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.0, serializer);
+        <f32>::sse_encode(self.1, serializer);
     }
 }
 
@@ -1060,6 +1169,7 @@ mod io {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>>::decrement_strong_count(ptr as _);
     }
 }
+use image::DynamicImage;
 #[cfg(not(target_family = "wasm"))]
 pub use io::*;
 

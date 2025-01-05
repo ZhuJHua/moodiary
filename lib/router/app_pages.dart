@@ -37,6 +37,7 @@ import 'package:mood_diary/pages/recycle/recycle_logic.dart';
 import 'package:mood_diary/pages/recycle/recycle_view.dart';
 import 'package:mood_diary/pages/share/share_logic.dart';
 import 'package:mood_diary/pages/share/share_view.dart';
+import 'package:mood_diary/pages/sponsor/sponsor_view.dart';
 import 'package:mood_diary/pages/start/start_logic.dart';
 import 'package:mood_diary/pages/start/start_view.dart';
 import 'package:mood_diary/pages/user/user_logic.dart';
@@ -44,6 +45,7 @@ import 'package:mood_diary/pages/user/user_view.dart';
 import 'package:mood_diary/pages/video/video_logic.dart';
 import 'package:mood_diary/pages/video/video_view.dart';
 
+import '../pages/sponsor/sponsor_logic.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -60,9 +62,7 @@ class AppPages {
       name: AppRoutes.homePage,
       page: () => const HomePage(),
       transition: Transition.fadeIn,
-      binds: [
-        Bind.lazyPut(() => HomeLogic()),
-      ],
+      binds: [Bind.lazyPut(() => HomeLogic())],
     ),
     //分析
     GetPage(
@@ -73,7 +73,6 @@ class AppPages {
     //日记页路由
     GetPage(
       name: AppRoutes.diaryPage,
-      //transition: Transition.topLevel,
       page: () => DiaryDetailsPage(),
     ),
     //图片路由
@@ -81,7 +80,6 @@ class AppPages {
       name: AppRoutes.photoPage,
       page: () => const ImagePage(),
       popGesture: false,
-      //transition: Transition.topLevel,
       binds: [Bind.lazyPut(() => ImageLogic())],
     ),
     //回收站
@@ -100,7 +98,6 @@ class AppPages {
     GetPage(
       name: AppRoutes.editPage,
       page: () => const EditPage(),
-      transition: Transition.fadeIn,
       binds: [Bind.lazyPut(() => EditLogic())],
     ),
     //分享页路由
@@ -164,7 +161,6 @@ class AppPages {
       name: AppRoutes.videoPage,
       popGesture: false,
       page: () => const VideoPage(),
-      // transition: Transition.topLevel,
       binds: [Bind.lazyPut(() => VideoLogic())],
     ),
     GetPage(
@@ -186,6 +182,11 @@ class AppPages {
       name: AppRoutes.assistantPage,
       page: () => const AssistantPage(),
       binds: [Bind.lazyPut(() => AssistantLogic())],
+    ),
+    GetPage(
+      name: AppRoutes.sponsorPage,
+      page: () => const SponsorPage(),
+      binds: [Bind.lazyPut(() => SponsorLogic())],
     ),
   ];
 }

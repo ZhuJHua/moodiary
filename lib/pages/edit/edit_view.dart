@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,6 @@ import 'package:mood_diary/utils/theme_util.dart';
 
 import '../../common/values/diary_type.dart';
 import '../../components/quill_embed/audio_embed.dart';
-import '../../main.dart';
 import 'edit_logic.dart';
 
 class EditPage extends StatelessWidget {
@@ -45,10 +45,16 @@ class EditPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Bind.find<EditLogic>();
-    final state = Bind.find<EditLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
+    final state = Bind
+        .find<EditLogic>()
+        .state;
+    final colorScheme = Theme
+        .of(context)
+        .colorScheme;
 
-    final textStyle = Theme.of(context).textTheme;
+    final textStyle = Theme
+        .of(context)
+        .textTheme;
 
     // Widget buildAddContainer(Widget icon) {
     //   return Container(
@@ -67,20 +73,20 @@ class EditPage extends StatelessWidget {
     Widget? buildTagList() {
       return state.currentDiary.tags.isNotEmpty
           ? Wrap(
-              spacing: 8.0,
-              children: List.generate(state.currentDiary.tags.length, (index) {
-                return Chip(
-                  label: Text(
-                    state.currentDiary.tags[index],
-                    style: TextStyle(color: colorScheme.onSecondaryContainer),
-                  ),
-                  backgroundColor: colorScheme.secondaryContainer,
-                  onDeleted: () {
-                    logic.removeTag(index);
-                  },
-                );
-              }),
-            )
+        spacing: 8.0,
+        children: List.generate(state.currentDiary.tags.length, (index) {
+          return Chip(
+            label: Text(
+              state.currentDiary.tags[index],
+              style: TextStyle(color: colorScheme.onSecondaryContainer),
+            ),
+            backgroundColor: colorScheme.secondaryContainer,
+            onDeleted: () {
+              logic.removeTag(index);
+            },
+          );
+        }),
+      )
           : null;
     }
 
@@ -396,7 +402,7 @@ class EditPage extends StatelessWidget {
                   value: state.currentDiary.mood,
                   divisions: 10,
                   label:
-                      '${(state.currentDiary.mood * 100).toStringAsFixed(0)}%',
+                  '${(state.currentDiary.mood * 100).toStringAsFixed(0)}%',
                   activeColor: Color.lerp(AppColor.emoColorList.first,
                       AppColor.emoColorList.last, state.currentDiary.mood),
                   onChanged: (value) {
@@ -535,16 +541,17 @@ class EditPage extends StatelessWidget {
                   title: const Text('天气'),
                   subtitle: state.currentDiary.weather.isNotEmpty
                       ? Text(
-                          '${state.currentDiary.weather[2]} ${state.currentDiary.weather[1]}°C')
+                      '${state.currentDiary.weather[2]} ${state.currentDiary
+                          .weather[1]}°C')
                       : null,
                   trailing: state.isProcessing
                       ? const CircularProgressIndicator()
                       : IconButton.filledTonal(
-                          onPressed: () async {
-                            await logic.getPositionAndWeather();
-                          },
-                          icon: const Icon(Icons.location_on),
-                        ),
+                    onPressed: () async {
+                      await logic.getPositionAndWeather();
+                    },
+                    icon: const Icon(Icons.location_on),
+                  ),
                 );
               }),
           GetBuilder<EditLogic>(
@@ -575,39 +582,20 @@ class EditPage extends StatelessWidget {
                   subtitle: buildTagList(),
                   trailing: IconButton.filledTonal(
                     icon: const Icon(Icons.tag),
-                    onPressed: () {
-                      showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              content: TextField(
-                                maxLines: 1,
-                                controller: logic.tagTextEditingController,
-                                decoration: InputDecoration(
-                                  fillColor: colorScheme.secondaryContainer,
-                                  border: const UnderlineInputBorder(
-                                    borderRadius:
-                                        AppBorderRadius.smallBorderRadius,
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  filled: true,
-                                  labelText: '标签',
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                    onPressed: () {
-                                      logic.cancelAddTag();
-                                    },
-                                    child: Text(l10n.cancel)),
-                                TextButton(
-                                    onPressed: () {
-                                      logic.addTag();
-                                    },
-                                    child: Text(l10n.ok))
-                              ],
-                            );
-                          });
+                    onPressed: () async {
+                      var res = await showTextInputDialog(
+                        style: AdaptiveStyle.material,
+                        context: context,
+                        title: '添加标签',
+                        textFields: [
+                          const DialogTextField(
+                            hintText: '标签',
+                          )
+                        ],
+                      );
+                      if (res != null && res.isNotEmpty) {
+                        logic.addTag(tag: res.first);
+                      }
                     },
                   ),
                 );
@@ -717,32 +705,42 @@ class EditPage extends StatelessWidget {
     }
 
     Widget buildToolBar() {
-      return TooltipTheme(
-        data: const TooltipThemeData(preferBelow: false),
-        child: QuillSimpleToolbar(
-          controller: logic.quillController,
-          config: QuillSimpleToolbarConfig(
-            showFontFamily: false,
-            showFontSize: false,
-            showBackgroundColorButton: true,
-            showAlignmentButtons: true,
-            showClipboardPaste: false,
-            showClipboardCut: false,
-            showClipboardCopy: false,
-            showIndent: false,
-            showDividers: false,
-            multiRowsDisplay: false,
-            headerStyleType: HeaderStyleType.original,
-            showLink: false,
-            embedButtons: [
-              (context, embedContext) {
-                return _buildToolBarButton(
-                  iconData: Icons.format_indent_increase,
-                  tooltip: 'Text Indent',
-                  onPressed: logic.insertNewLine,
-                );
-              },
-            ],
+      return ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+        child: TooltipTheme(
+          data: const TooltipThemeData(preferBelow: false),
+          child: QuillSimpleToolbar(
+            controller: logic.quillController,
+            config: QuillSimpleToolbarConfig(
+              showFontFamily: false,
+              showFontSize: false,
+              showBackgroundColorButton: true,
+              showAlignmentButtons: true,
+              showClipboardPaste: false,
+              showClipboardCut: false,
+              showClipboardCopy: false,
+              showIndent: false,
+              showDividers: false,
+              multiRowsDisplay: false,
+              headerStyleType: HeaderStyleType.buttons,
+              buttonOptions: QuillSimpleToolbarButtonOptions(
+                  selectHeaderStyleButtons:
+                  QuillToolbarSelectHeaderStyleButtonsOptions(
+                    iconTheme: QuillIconTheme(iconButtonSelectedData:IconButtonData(
+                      color: colorScheme.onPrimary,
+                    )),)
+              ),
+              showLink: false,
+              embedButtons: [
+                    (context, embedContext) {
+                  return _buildToolBarButton(
+                    iconData: Icons.format_indent_increase,
+                    tooltip: 'Text Indent',
+                    onPressed: logic.insertNewLine,
+                  );
+                },
+              ],
+            ),
           ),
         ),
       );
@@ -800,13 +798,11 @@ class EditPage extends StatelessWidget {
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             onPressed: () {
-              showModalBottomSheet(
+              showFloatingModalBottomSheet(
                 context: context,
                 builder: (context) {
                   return buildDetail();
                 },
-                showDragHandle: true,
-                useSafeArea: true,
               );
             },
           ),
@@ -831,9 +827,12 @@ class EditPage extends StatelessWidget {
                     expands: true,
                     paintCursorAboveText: true,
                     keyboardAppearance:
-                        CupertinoTheme.maybeBrightnessOf(context) ??
-                            Theme.of(context).brightness,
-                    customStyles: ThemeUtil.getInstance(context),
+                    CupertinoTheme.maybeBrightnessOf(context) ??
+                        Theme
+                            .of(context)
+                            .brightness,
+                    customStyles: ThemeUtil.getInstance(context,
+                        customColorScheme: colorScheme),
                     embedBuilders: [
                       if (state.type == DiaryType.richText) ...[
                         ImageEmbedBuilder(isEdit: true),
@@ -860,7 +859,7 @@ class EditPage extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(16.0),
             child: switch (state.type) {
               DiaryType.text => textToolBar(),
               DiaryType.richText => richTextToolBar(),

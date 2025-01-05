@@ -34,12 +34,20 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
 
   late final DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
 
+  late final AppLifecycleListener appLifecycleListener;
+
   @override
   void onReady() {
     //unawaited(Utils().updateUtil.checkShouldUpdate(PrefUtil.getValue<String>('appVersion')!.split('+')[0]));
     // unawaited(getHitokoto());
     // Tutorial.getTutorial(targets: buildFabGuide())
     //     .show(context: Get.overlayContext!);
+    appLifecycleListener = AppLifecycleListener(onStateChange: (state) {
+      if (state == AppLifecycleState.inactive) {
+        lockPage();
+      }
+    });
+
     super.onReady();
   }
 

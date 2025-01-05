@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "cn.yooss" "\0"
-            VALUE "FileDescription", "mood_diary" "\0"
+            VALUE "FileDescription", "moodiary" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "mood_diary" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2024 cn.yooss. All rights reserved." "\0"
-            VALUE "OriginalFilename", "mood_diary.exe" "\0"
-            VALUE "ProductName", "mood_diary" "\0"
+            VALUE "InternalName", "moodiary" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2024 Moodiary All rights reserved." "\0"
+            VALUE "OriginalFilename", "moodiary.exe" "\0"
+            VALUE "ProductName", "moodiary" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

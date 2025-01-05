@@ -106,6 +106,11 @@ class IsarUtil {
     return await _isar.diarys.where().findAllAsync();
   }
 
+  /// 获取全部日记
+  static Future<List<Diary>> getAllDiariesSorted() async {
+    return _isar.diarys.where().sortByTimeDesc().findAllAsync();
+  }
+
   //获取指定范围内的天气
   static Future<List<List<String>>> getWeatherByDateRange(
       DateTime start, DateTime end) async {
