@@ -1,8 +1,7 @@
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:mood_diary/common/values/border.dart';
 
-import '../../main.dart';
 import 'category_add_logic.dart';
 
 class CategoryAddComponent extends StatelessWidget {
@@ -32,39 +31,18 @@ class CategoryAddComponent extends StatelessWidget {
                       FilledButton.icon(
                         icon: const Icon(Icons.add),
                         label: const Text('添加'),
-                        onPressed: () {
-                          showDialog(
+                        onPressed: () async {
+                          var res = await showTextInputDialog(
                               context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  content: TextField(
-                                    maxLines: 1,
-                                    controller: logic.textEditingController,
-                                    decoration: InputDecoration(
-                                      fillColor: colorScheme.secondaryContainer,
-                                      border: const UnderlineInputBorder(
-                                        borderRadius:
-                                            AppBorderRadius.smallBorderRadius,
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      filled: true,
-                                      labelText: '标签',
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () {
-                                          logic.cancelAdd();
-                                        },
-                                        child: Text(l10n.cancel)),
-                                    TextButton(
-                                        onPressed: () async {
-                                          await logic.addCategory();
-                                        },
-                                        child: Text(l10n.ok))
-                                  ],
-                                );
-                              });
+                              title: '输入分类名称',
+                              textFields: [
+                                const DialogTextField(
+                                  hintText: '分类名称',
+                                )
+                              ]);
+                          if (res != null) {
+                            logic.addCategory(text: res.first);
+                          }
                         },
                       ),
                       Text(state.categoryList.length.toString())

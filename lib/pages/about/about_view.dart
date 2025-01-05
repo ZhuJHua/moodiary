@@ -37,34 +37,27 @@ class AboutPage extends StatelessWidget {
                 style: textStyle.titleLarge
                     ?.copyWith(color: colorScheme.onSurface),
               ),
-              RichText(
-                text: TextSpan(
-                  style: textStyle.labelMedium
-                      ?.copyWith(color: colorScheme.onSurface),
-                  children: [
-                    TextSpan(
-                      text: 'Version: ',
-                      style: textStyle.labelSmall
-                          ?.copyWith(color: colorScheme.onSurface),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    state.appVersion,
+                    style: textStyle.labelSmall
+                        ?.copyWith(color: colorScheme.primary),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                    child: VerticalDivider(
+                      thickness: 2,
                     ),
-                    TextSpan(text: state.appVersion),
-                    const WidgetSpan(
-                        child: SizedBox(
-                          height: 12,
-                          child: VerticalDivider(
-                            thickness: 2,
-                          ),
-                        ),
-                        alignment: PlaceholderAlignment.middle),
-                    TextSpan(
-                      text: 'System: ',
-                      style: textStyle.labelSmall
-                          ?.copyWith(color: colorScheme.onSurface),
-                    ),
-                    TextSpan(text: state.systemVersion),
-                  ],
-                ),
-              )
+                  ),
+                  Text(
+                    state.systemVersion,
+                    style: textStyle.labelSmall
+                        ?.copyWith(color: colorScheme.onSurface),
+                  ),
+                ],
+              ),
             ],
           ),
         ],
@@ -87,17 +80,21 @@ class AboutPage extends StatelessWidget {
               color: colorScheme.surfaceContainerLow,
               child: Column(
                 children: [
-                  GetBuilder<AboutLogic>(builder: (_) {
-                    return ListTile(
-                      leading: const Icon(Icons.update_rounded),
-                      title: Text(l10n.aboutUpdate),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () async {
-                        await UpdateUtil.checkShouldUpdate(state.appVersion,
-                            handle: true);
-                      },
-                    );
-                  }),
+                  ListTile(
+                    leading: const Icon(Icons.update_rounded),
+                    title: Text(l10n.aboutUpdate),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(12.0),
+                        topRight: Radius.circular(12.0),
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () async {
+                      await UpdateUtil.checkShouldUpdate(state.appVersion,
+                          handle: true);
+                    },
+                  ),
                   ListTile(
                     leading: const Icon(Icons.source_rounded),
                     title: Text(l10n.aboutSource),
@@ -133,6 +130,12 @@ class AboutPage extends StatelessWidget {
                   ListTile(
                     leading: const Icon(Icons.attach_money_rounded),
                     title: Text(l10n.aboutDonate),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(12.0),
+                        bottomRight: Radius.circular(12.0),
+                      ),
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: logic.toSponsor,
                   ),

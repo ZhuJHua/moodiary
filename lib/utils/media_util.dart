@@ -227,6 +227,11 @@ class MediaUtil {
     String outputPath,
     dynamic format,
   ) async {
+    // 如果选择了原图，则直接复制文件
+    if (PrefUtil.getValue<int>('quality') == 3) {
+      await imageFile.saveTo(outputPath);
+      return;
+    }
     if (format == CompressFormat.heic) {
       await _compressNative(imageFile, outputPath, format);
     } else {

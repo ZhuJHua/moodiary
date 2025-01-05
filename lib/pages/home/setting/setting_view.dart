@@ -111,6 +111,12 @@ class SettingPage extends StatelessWidget {
               children: [
                 ListTile(
                   title: Text(l10n.settingRecycle),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12.0),
+                      topRight: Radius.circular(12.0),
+                    ),
+                  ),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     logic.toRecyclePage();
@@ -128,6 +134,12 @@ class SettingPage extends StatelessWidget {
                 ListTile(
                   title: Text(l10n.settingClean),
                   leading: const Icon(Icons.cleaning_services_rounded),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(12.0),
+                      bottomRight: Radius.circular(12.0),
+                    ),
+                  ),
                   trailing: GetBuilder<SettingLogic>(
                       id: 'DataUsage',
                       builder: (_) {
@@ -161,6 +173,12 @@ class SettingPage extends StatelessWidget {
                   title: Text(l10n.settingDiary),
                   leading: const Icon(Icons.article_rounded),
                   trailing: const Icon(Icons.chevron_right_rounded),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12.0),
+                      topRight: Radius.circular(12.0),
+                    ),
+                  ),
                   onTap: () {
                     logic.toDiarySettingPage();
                   },
@@ -215,6 +233,12 @@ class SettingPage extends StatelessWidget {
                 ListTile(
                   title: const Text('首页名称'),
                   leading: const Icon(Icons.drive_file_rename_outline_rounded),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(12.0),
+                      bottomRight: Radius.circular(12.0),
+                    ),
+                  ),
                   trailing: GetBuilder<SettingLogic>(
                       id: 'CustomTitle',
                       builder: (_) {
@@ -279,6 +303,12 @@ class SettingPage extends StatelessWidget {
                             color: colorScheme.primary,
                           ),
                         ),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(12.0),
+                            topRight: Radius.circular(12.0),
+                          ),
+                        ),
                         onTap: () {
                           showDialog(
                               context: context,
@@ -315,6 +345,12 @@ class SettingPage extends StatelessWidget {
                     builder: (_) {
                       return SwitchListTile(
                         value: state.lockNow,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(12.0),
+                            bottomRight: Radius.circular(12.0),
+                          ),
+                        ),
                         onChanged: state.lock
                             ? (value) {
                                 logic.lockNow(value);
@@ -344,6 +380,12 @@ class SettingPage extends StatelessWidget {
                   title: Text(l10n.settingAbout),
                   leading: const Icon(Icons.info_rounded),
                   trailing: const Icon(Icons.chevron_right_rounded),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12.0),
+                      topRight: Radius.circular(12.0),
+                    ),
+                  ),
                   onTap: () {
                     logic.toAboutPage();
                   },
@@ -352,6 +394,12 @@ class SettingPage extends StatelessWidget {
                   title: Text(l10n.settingLab),
                   leading: const Icon(Icons.science_rounded),
                   trailing: const Icon(Icons.chevron_right_rounded),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(12.0),
+                      bottomRight: Radius.circular(12.0),
+                    ),
+                  ),
                   onTap: () {
                     logic.toLaboratoryPage();
                   },
