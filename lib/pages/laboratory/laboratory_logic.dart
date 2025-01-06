@@ -61,11 +61,13 @@ class LaboratoryLogic extends GetxController {
   }
 
   Future<void> exportErrorLog() async {
-    if (await File(FileUtil.getErrorLogPath()).exists()) {
+    // 如果日志内容存在且内容不为空则导出
+    if (await File(FileUtil.getErrorLogPath()).exists() &&
+        (await File(FileUtil.getErrorLogPath()).readAsString()).isNotEmpty) {
       var result = await Share.shareXFiles([XFile(FileUtil.getErrorLogPath())]);
-      // 如果分享成功则删除日志
+      // 如果分享成功则清空本地日志
       if (result.status == ShareResultStatus.success) {
-        await File(FileUtil.getErrorLogPath()).delete();
+        await File(FileUtil.getErrorLogPath()).writeAsString('');
         NoticeUtil.showToast('日志导出成功，已删除本地日志');
       }
     } else {

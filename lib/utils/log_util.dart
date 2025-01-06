@@ -9,7 +9,6 @@ class FileOutput extends LogOutput {
   final bool overrideExisting;
   final Encoding encoding;
   IOSink? _sink;
-  late File _file;
 
   FileOutput({
     this.overrideExisting = false,
@@ -18,19 +17,24 @@ class FileOutput extends LogOutput {
 
   @override
   Future<void> init() async {
-    _file = File(FileUtil.getErrorLogPath());
-    if (!await _file.exists()) {
-      await _file.create(recursive: true);
+    final file = File(FileUtil.getErrorLogPath());
+    if (!await file.exists()) {
+      await file.create(recursive: true);
     }
-    _sink = _file.openWrite(
+    return super.init();
+  }
+
+  void _initIOSink() {
+    _sink = File(FileUtil.getErrorLogPath()).openWrite(
       mode: overrideExisting ? FileMode.write : FileMode.append,
       encoding: encoding,
     );
-    return super.init();
   }
 
   @override
   void output(OutputEvent event) {
+    if (_sink == null) _initIOSink();
+
     if (event.level.value >= Level.warning.value) {
       _sink?.writeAll(event.lines, '\n');
     }
