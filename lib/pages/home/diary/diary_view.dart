@@ -1,7 +1,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:marquee/marquee.dart';
+import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/base/sheet.dart';
 import 'package:mood_diary/components/category_choice_sheet/category_choice_sheet_view.dart';
@@ -153,67 +155,97 @@ class DiaryPage extends StatelessWidget {
                   handle:
                       NestedScrollView.sliverOverlapAbsorberHandleFor(context),
                   sliver: SliverAppBar(
-                    title: GestureDetector(
-                      onTap: logic.getHitokoto,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          GetBuilder<DiaryLogic>(
-                              id: 'Title',
-                              builder: (_) {
-                                return Text(
-                                  state.customTitleName.isNotEmpty
-                                      ? state.customTitleName
-                                      : l10n.appName,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textStyle.titleLarge?.copyWith(
-                                    color: colorScheme.onSurface,
-                                  ),
-                                );
-                              }),
-                          LayoutBuilder(builder: (context, constraints) {
-                            return Obx(() {
-                              final textPainter = TextPainter(
-                                  text: TextSpan(
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        InkWell(
+                          onTap: (){
+                            showFloatingModalBottomSheet(
+                              context: context,
+                              builder: (context) {
+                                return const CategoryChoiceSheetComponent();
+                              },
+                            );
+                          },
+                          borderRadius: AppBorderRadius.smallBorderRadius,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: Row(
+                              spacing: 4.0,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                FaIcon(
+                                  FontAwesomeIcons.book,
+                                  size: 16,
+                                  color: colorScheme.onSurface,
+                                ),
+                                Flexible(
+                                  fit: FlexFit.loose,
+                                  child: GetBuilder<DiaryLogic>(
+                                      id: 'Title',
+                                      builder: (_) {
+                                        return Text(
+                                          state.customTitleName.isNotEmpty
+                                              ? state.customTitleName
+                                              : l10n.appName,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: textStyle.titleLarge?.copyWith(
+                                            color: colorScheme.onSurface,
+                                          ),
+                                        );
+                                      }),
+                                ),
+                                FaIcon(
+                                  FontAwesomeIcons.chevronRight,
+                                  color: colorScheme.onSurface,
+                                  size: 12,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        LayoutBuilder(builder: (context, constraints) {
+                          return Obx(() {
+                            final textPainter = TextPainter(
+                                text: TextSpan(
+                                    text: state.hitokoto.value,
+                                    style: textStyle.labelSmall),
+                                textDirection: TextDirection.ltr,
+                                textScaler: TextScaler.linear(
+                                    PrefUtil.getValue<double>('fontScale')!))
+                              ..layout();
+                            final showMarquee =
+                                textPainter.width > constraints.maxWidth;
+                            return showMarquee
+                                ? SizedBox(
+                                    height: textPainter.height,
+                                    width: constraints.maxWidth,
+                                    child: Marquee(
                                       text: state.hitokoto.value,
-                                      style: textStyle.labelSmall),
-                                  textDirection: TextDirection.ltr,
-                                  textScaler: TextScaler.linear(
-                                      PrefUtil.getValue<double>('fontScale')!))
-                                ..layout();
-                              final showMarquee =
-                                  textPainter.width > constraints.maxWidth;
-                              return showMarquee
-                                  ? SizedBox(
-                                      height: textPainter.height,
-                                      width: constraints.maxWidth,
-                                      child: Marquee(
-                                        text: state.hitokoto.value,
-                                        velocity: 20,
-                                        blankSpace: 20,
-                                        pauseAfterRound:
-                                            const Duration(seconds: 1),
-                                        accelerationDuration:
-                                            const Duration(seconds: 1),
-                                        accelerationCurve: Curves.linear,
-                                        decelerationDuration:
-                                            const Duration(milliseconds: 500),
-                                        decelerationCurve: Curves.easeOut,
-                                        style: textStyle.labelMedium?.copyWith(
-                                            color: colorScheme.onSurface
-                                                .withValues(alpha: 0.8)),
-                                      ),
-                                    )
-                                  : Text(
-                                      state.hitokoto.value,
+                                      velocity: 20,
+                                      blankSpace: 20,
+                                      pauseAfterRound:
+                                          const Duration(seconds: 1),
+                                      accelerationDuration:
+                                          const Duration(seconds: 1),
+                                      accelerationCurve: Curves.linear,
+                                      decelerationDuration:
+                                          const Duration(milliseconds: 500),
+                                      decelerationCurve: Curves.easeOut,
                                       style: textStyle.labelMedium?.copyWith(
                                           color: colorScheme.onSurface
                                               .withValues(alpha: 0.8)),
-                                    );
-                            });
-                          }),
-                        ],
-                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    state.hitokoto.value,
+                                    style: textStyle.labelMedium?.copyWith(
+                                        color: colorScheme.onSurface
+                                            .withValues(alpha: 0.8)),
+                                  );
+                          });
+                        }),
+                      ],
                     ),
                     pinned: true,
                     actions: [
