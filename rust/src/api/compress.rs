@@ -23,8 +23,7 @@ pub fn compress(
     compress_format: CompressFormat,
     quality: u8,
 ) -> Result<Vec<u8>> {
-    // 创建一个待填充的图片
-    let pixel_type = img.pixel_type().unwrap(); // 获取像素类型
+    let pixel_type = img.pixel_type().unwrap();
     let mut dst_image = Image::new(dst_width, dst_height, pixel_type);
     let mut resizer = Resizer::new();
 
