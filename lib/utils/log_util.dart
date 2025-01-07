@@ -20,6 +20,7 @@ class FileOutput extends LogOutput {
     final file = File(FileUtil.getErrorLogPath());
     if (!await file.exists()) {
       await file.create(recursive: true);
+      await file.writeAsString('');
     }
     return super.init();
   }
