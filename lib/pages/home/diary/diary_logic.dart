@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/diary_tab_view/diary_tab_view_logic.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../api/api.dart';
 import '../../../utils/cache_util.dart';

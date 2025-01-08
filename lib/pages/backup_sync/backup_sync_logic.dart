@@ -1,6 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../utils/file_util.dart';
@@ -9,7 +9,6 @@ import '../../utils/notice_util.dart';
 
 class BackupSyncLogic extends GetxController {
   Future<void> exportFile() async {
-    Get.backLegacy();
     NoticeUtil.showToast('正在处理中');
     final dataPath = FileUtil.getRealPath('', '');
     final zipPath = FileUtil.getCachePath('');
@@ -21,7 +20,6 @@ class BackupSyncLogic extends GetxController {
 
   //导入
   Future<void> import() async {
-    Get.backLegacy();
     FilePickerResult? result = await FilePicker.platform
         .pickFiles(allowedExtensions: ['zip'], type: FileType.custom);
     if (result != null) {

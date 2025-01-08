@@ -1,7 +1,7 @@
-import 'package:flutter/animation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/setting/setting_logic.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/pref.dart';
 import '../../utils/notice_util.dart';
@@ -45,7 +45,7 @@ class RemovePasswordLogic extends GetxController
     }
   }
 
-  Future<void> updatePassword(String value) async {
+  Future<void> updatePassword(String value, BuildContext context) async {
     if (state.password.length < 4) {
       state.password += value;
       update();
@@ -55,7 +55,7 @@ class RemovePasswordLogic extends GetxController
       if (state.password.length == 4) {
         //密码正确
         if (state.password == state.realPassword) {
-          await removePassword();
+          if (context.mounted) await removePassword(context);
         } else {
           animationController.forward();
           await HapticFeedback.mediumImpact();
@@ -69,7 +69,7 @@ class RemovePasswordLogic extends GetxController
     });
   }
 
-  Future<void> removePassword() async {
+  Future<void> removePassword(BuildContext context) async {
     //lock标记为false说明关闭密码
     await PrefUtil.setValue<bool>('lock', false);
     //移除密码字段
@@ -77,6 +77,7 @@ class RemovePasswordLogic extends GetxController
     settingLogic.state.lock = false;
     settingLogic.update(['Lock']);
     NoticeUtil.showToast('关闭成功');
-    Get.backLegacy();
+
+    if (context.mounted) Navigator.pop(context);
   }
 }

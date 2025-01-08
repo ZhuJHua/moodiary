@@ -1,10 +1,10 @@
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:marquee/marquee.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/loading/loading.dart';
-import 'package:mood_diary/main.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:rive_animated_icon/rive_animated_icon.dart';
 
 import '../../utils/data/pref.dart';
@@ -237,31 +237,17 @@ class FontPage extends StatelessWidget {
               onTap: () {
                 logic.changeSelectedFontPath(path: e.key);
               },
-              onLongPress: () {
+              onLongPress: () async {
                 // 显示删除字体对话框
-                showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('提示'),
-                        content: Text('删除字体 ${e.value} 后，将无法恢复，是否继续？'),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Get.backLegacy();
-                            },
-                            child: Text(l10n.cancel),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              logic.deleteFont(fontPath: e.key);
-                              Get.backLegacy();
-                            },
-                            child: Text(l10n.ok),
-                          ),
-                        ],
-                      );
-                    });
+                var res = showOkCancelAlertDialog(
+                  context: context,
+                  title: '提示',
+                  style: AdaptiveStyle.material,
+                  message: '删除字体 ${e.value} 后，将无法恢复，是否确定？',
+                );
+                if (await res == OkCancelResult.ok) {
+                  logic.deleteFont(fontPath: e.key);
+                }
               });
         }),
         _buildManage(

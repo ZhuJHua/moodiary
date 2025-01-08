@@ -1,7 +1,8 @@
-import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/pages/edit/edit_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/isar.dart';
 import '../../utils/notice_util.dart';
@@ -16,11 +17,6 @@ class CategoryAddLogic extends GetxController {
   void onReady() {
     getCategory();
     super.onReady();
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
   }
 
   void getCategory() {
@@ -38,14 +34,14 @@ class CategoryAddLogic extends GetxController {
     }
   }
 
-  void selectCategory(int index) {
-    Get.backLegacy();
+  void selectCategory(int index, BuildContext context) {
+    Navigator.pop(context);
     editLogic.selectCategory(state.categoryList.value[index].id);
     editLogic.update(['CategoryName']);
   }
 
-  void cancelCategory() {
-    Get.backLegacy();
+  void cancelCategory(BuildContext context) {
+    Navigator.pop(context);
     editLogic.selectCategory(null);
     editLogic.update(['CategoryName']);
   }

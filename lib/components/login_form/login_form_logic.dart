@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/pages/login/login_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/supabase.dart';
 import 'login_form_state.dart';

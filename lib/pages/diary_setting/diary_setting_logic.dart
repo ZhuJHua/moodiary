@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/pref.dart';
 import 'diary_setting_state.dart';
@@ -8,7 +8,6 @@ class DiarySettingLogic extends GetxController {
 
   //图片质量
   Future<void> quality(int value) async {
-    Get.backLegacy();
     await PrefUtil.setValue<int>('quality', value);
     state.quality.value = value;
   }

@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
-import 'package:get/get.dart';
 import 'package:isar/isar.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../common/models/isar/category.dart';
 import '../common/models/isar/diary.dart';

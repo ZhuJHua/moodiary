@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/api/api.dart';
@@ -17,6 +16,7 @@ import 'package:mood_diary/components/quill_embed/video_embed.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/src/rust/api/kmp.dart';
 import 'package:mood_diary/utils/media_util.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../common/values/keyboard_state.dart';
@@ -209,11 +209,11 @@ class EditLogic extends GetxController {
   }
 
   //单张照片
-  Future<void> pickPhoto(ImageSource imageSource) async {
+  Future<void> pickPhoto(ImageSource imageSource, BuildContext context) async {
     //获取一张图片
     final XFile? photo = await MediaUtil.pickPhoto(imageSource);
-    if (photo != null) {
-      Get.backLegacy();
+    if (photo != null && context.mounted) {
+      Navigator.pop(context);
       await addNewImage(photo);
     } else {
       NoticeUtil.showToast('取消图片选择');
@@ -222,14 +222,13 @@ class EditLogic extends GetxController {
 
   //画图照片
   Future<void> pickDraw(Uint8List dataList) async {
-    Get.backLegacy();
     var path = FileUtil.getCachePath('${const Uuid().v7()}.png');
     addNewImage(XFile.fromData(dataList, path: path)..saveTo(path));
   }
 
   //网络图片
-  Future<void> networkImage() async {
-    Get.backLegacy();
+  Future<void> networkImage(BuildContext context) async {
+    Navigator.pop(context);
     NoticeUtil.showToast('图片获取中');
     var imageUrl = await Api.updateImageUrl();
     if (imageUrl == null) {
@@ -246,12 +245,12 @@ class EditLogic extends GetxController {
   }
 
   //相册选择多张照片
-  Future<void> pickMultiPhoto() async {
+  Future<void> pickMultiPhoto(BuildContext context) async {
     //获取一堆照片
     List<XFile> photoList = await MediaUtil.pickMultiPhoto(null);
-    if (photoList.isNotEmpty) {
+    if (photoList.isNotEmpty && context.mounted) {
       //关闭dialog
-      Get.backLegacy();
+      Navigator.pop(context);
       // if (photoList.length > 10 - state.imageFileList.length) {
       //   photoList = photoList.sublist(0, 10 - state.imageFileList.length);
       // }
@@ -259,8 +258,6 @@ class EditLogic extends GetxController {
         addNewImage(photo);
       }
     } else {
-      //关闭dialog
-      Get.backLegacy();
       //弹出一个提示
       NoticeUtil.showToast('取消图片选择');
     }
@@ -274,11 +271,11 @@ class EditLogic extends GetxController {
   }
 
   //选择视频
-  Future<void> pickVideo(ImageSource imageSource) async {
+  Future<void> pickVideo(ImageSource imageSource, BuildContext context) async {
     // 获取一个视频
     XFile? video = await MediaUtil.pickVideo(imageSource);
-    if (video != null) {
-      Get.backLegacy();
+    if (video != null && context.mounted) {
+      Navigator.pop(context);
       await addNewVideo(video);
     } else {
       NoticeUtil.showToast('取消视频选择');
@@ -303,15 +300,6 @@ class EditLogic extends GetxController {
     //Get.backLegacy();
     NoticeUtil.showToast('删除成功');
     update(['Image']);
-  }
-
-  //删除视频
-  void deleteVideo(index) async {
-    var videoFile = state.videoFileList.removeAt(index);
-    await FileUtil.deleteFile(videoFile.path);
-    Get.backLegacy();
-    NoticeUtil.showToast('删除成功');
-    update(['Video']);
   }
 
   //长按设置封面
@@ -385,8 +373,8 @@ class EditLogic extends GetxController {
     await IsarUtil.updateADiary(
         oldDiary: state.originalDiary, newDiary: state.currentDiary);
     state.isNew
-        ? Get.backLegacy(result: state.currentDiary.categoryId ?? '')
-        : Get.backLegacy(result: 'changed');
+        ? Get.back(result: state.currentDiary.categoryId ?? '')
+        : Get.back(result: 'changed');
     NoticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');
   }
 
@@ -396,7 +384,7 @@ class EditLogic extends GetxController {
     DateTime currentTime = DateTime.now();
     if (oldTime != null &&
         currentTime.difference(oldTime!) < const Duration(seconds: 3)) {
-      Get.backLegacy();
+      Get.back();
     } else {
       oldTime = currentTime;
       NoticeUtil.showToast('再滑一次退出');
@@ -438,7 +426,9 @@ class EditLogic extends GetxController {
   }
 
   //去画画
-  void toDrawPage() {
+  void toDrawPage(BuildContext context) {
+    Navigator.pop(context);
+    unFocus();
     Get.toNamed(AppRoutes.drawPage);
   }
 

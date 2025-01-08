@@ -14,7 +14,7 @@ import 'api/font.dart';
 import 'api/kmp.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
-if (dart.library.js_interop) 'frb_generated.webated.dart';
+    if (dart.library.js_interop) 'frb_generated.webated.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {

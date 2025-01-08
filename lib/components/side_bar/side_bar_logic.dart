@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:get/get.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/cache_util.dart';
 import 'package:mood_diary/utils/package_util.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../utils/data/pref.dart';

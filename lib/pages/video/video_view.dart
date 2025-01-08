@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:mood_diary/common/values/media_type.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/media_util.dart';
 import 'video_logic.dart';

@@ -2,11 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/api/api.dart';
 import 'package:mood_diary/common/models/hunyuan.dart';
 import 'package:mood_diary/common/values/keyboard_state.dart';
 import 'package:mood_diary/utils/signature_util.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../utils/notice_util.dart';
 import 'assistant_state.dart';
@@ -81,10 +81,10 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
     if (focusNode.hasFocus) {
       unFocus();
       Future.delayed(const Duration(seconds: 1), () {
-        Get.backLegacy();
+        Get.back();
       });
     } else {
-      Get.backLegacy();
+      Get.back();
     }
   }
 

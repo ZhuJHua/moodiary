@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/models/github.dart';
 import 'package:mood_diary/components/update_dialog/update_dialog_logic.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../main.dart';
 
@@ -38,12 +38,12 @@ class UpdateDialogComponent extends StatelessWidget {
           actions: [
             TextButton(
                 onPressed: () {
-                  Get.backLegacy();
+                  Navigator.pop(context);
                 },
                 child: Text(l10n.cancel)),
             FilledButton(
               onPressed: () async {
-                Get.backLegacy();
+                Navigator.pop(context);
                 await logic.toDownload(githubRelease);
               },
               child: const Text('前往更新'),

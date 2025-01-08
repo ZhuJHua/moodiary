@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
-import 'package:get/get.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/channel.dart';
+import 'package:mood_diary/utils/package_util.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../utils/data/pref.dart';
@@ -21,15 +23,30 @@ class StartLogic extends GetxController {
   Future<void> toHome() async {
     await PrefUtil.setValue<bool>('firstStart', false);
     if (Platform.isAndroid) {
-      await setUuid();
       //await SupabaseUtil().initSupabase();
       //await Utils().updateUtil.initShiply();
     }
+    await setUuid();
     Get.offAllNamed(AppRoutes.homePage);
   }
 
   Future<void> setUuid() async {
-    var oaid = await OAIDChannel.getOAID();
+    String? oaid;
+    switch (Platform.operatingSystem) {
+      case 'android':
+        oaid = await OAIDChannel.getOAID();
+        break;
+      case 'ios':
+        oaid = ((await PackageUtil.getInfo()) as IosDeviceInfo)
+            .identifierForVendor;
+        break;
+      case 'macos':
+        oaid = ((await PackageUtil.getInfo()) as MacOsDeviceInfo).systemGUID;
+        break;
+      case 'windows':
+        oaid = ((await PackageUtil.getInfo()) as WindowsDeviceInfo).deviceId;
+        break;
+    }
     if (oaid != null) {
       await PrefUtil.setValue<String>(
           'uuid', md5.convert(utf8.encode(oaid)).toString());

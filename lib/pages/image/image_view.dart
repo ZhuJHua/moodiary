@@ -1,12 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/values/media_type.dart';
 import 'package:mood_diary/components/base/button.dart';
 import 'package:mood_diary/utils/media_util.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'image_logic.dart';
 

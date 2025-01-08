@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/utils/auth_util.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'lock_logic.dart';
 

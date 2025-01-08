@@ -1,5 +1,5 @@
-import 'package:get/get.dart';
 import 'package:mood_diary/common/values/media_type.dart';
+import 'package:refreshed/refreshed.dart';
 
 class MediaState {
   late Rx<MediaType> mediaType = MediaType.image.obs;

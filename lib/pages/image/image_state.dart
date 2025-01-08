@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 class ImageState {
   List<String> imagePathList = Get.arguments[0];

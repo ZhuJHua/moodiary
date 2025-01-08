@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/components/sync_dash_board/sync_dash_board_state.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/webdav_util.dart';
 

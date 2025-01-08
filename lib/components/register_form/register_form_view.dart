@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/utils/function_extensions.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'register_form_logic.dart';
 
@@ -39,9 +39,7 @@ class RegisterFormComponent extends StatelessWidget {
                             state.email = value;
                           },
                           validator: (value) {
-                            return (value == null || !GetUtils.isEmail(value))
-                                ? '请输入邮箱'
-                                : null;
+                            return (value == null) ? '请输入邮箱' : null;
                           },
                           decoration: const InputDecoration(
                             border: OutlineInputBorder(),

@@ -370,10 +370,10 @@ packages:
     dependency: "direct main"
     description:
       name: chewie
-      sha256: "335df378c025588aef400c704bd71f0daea479d4cd57c471c88c056c1144e7cd"
+      sha256: "28d77bb89787b41430202fee9509289d75f3aa7fac408be1c0a74cb487e3bdba"
       url: "https://pub.dev"
     source: hosted
-    version: "1.8.5"
+    version: "1.9.0"
   chinese_font_library:
     dependency: "direct main"
     description:
@@ -819,6 +819,70 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.5"
+  flutter_inappwebview:
+    dependency: "direct main"
+    description:
+      name: flutter_inappwebview
+      sha256: "80092d13d3e29b6227e25b67973c67c7210bd5e35c4b747ca908e31eb71a46d5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.5"
+  flutter_inappwebview_android:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_android
+      sha256: "62557c15a5c2db5d195cb3892aab74fcaec266d7b86d59a6f0027abd672cddba"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.3"
+  flutter_inappwebview_internal_annotations:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_internal_annotations
+      sha256: "787171d43f8af67864740b6f04166c13190aa74a1468a1f1f1e9ee5b90c359cd"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
+  flutter_inappwebview_ios:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_ios
+      sha256: "5818cf9b26cf0cbb0f62ff50772217d41ea8d3d9cc00279c45f8aabaa1b4025d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.2"
+  flutter_inappwebview_macos:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_macos
+      sha256: c1fbb86af1a3738e3541364d7d1866315ffb0468a1a77e34198c9be571287da1
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.2"
+  flutter_inappwebview_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_platform_interface
+      sha256: cf5323e194096b6ede7a1ca808c3e0a078e4b33cc3f6338977d75b4024ba2500
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.0+1"
+  flutter_inappwebview_web:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_web
+      sha256: "55f89c83b0a0d3b7893306b3bb545ba4770a4df018204917148ebb42dc14a598"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.2"
+  flutter_inappwebview_windows:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_windows
+      sha256: "8b4d3a46078a2cdc636c4a3d10d10f2a16882f6be607962dbfff8874d1642055"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.6.0"
   flutter_keyboard_visibility_linux:
     dependency: transitive
     description:
@@ -940,10 +1004,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_quill
-      sha256: eccdd58b650b055d7b42d69a43d93d0044b87e97b5a74ae37ea0abf8b256e0b8
+      sha256: "7e41a131e9349b5b1b042c36d41017182c34df8b62ac4f5a095055c8624d9ec5"
       url: "https://pub.dev"
     source: hosted
-    version: "11.0.0-dev.17"
+    version: "11.0.0-dev.18"
   flutter_quill_delta_from_html:
     dependency: transitive
     description:
@@ -1066,14 +1130,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.3"
-  get:
-    dependency: "direct main"
-    description:
-      name: get
-      sha256: "7172032cf9acae0b16552ff367f211c36b321846509d7e56fc0938def2e147bc"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.0.0-release-candidate-9.2.1"
   get_it:
     dependency: transitive
     description:
@@ -1238,10 +1294,10 @@ packages:
     dependency: "direct main"
     description:
       name: image_picker_platform_interface
-      sha256: "9ec26d410ff46f483c5519c29c02ef0e02e13a543f882b152d4bfd2f06802f80"
+      sha256: "886d57f0be73c4b140004e78b9f28a8914a09e50c2d816bdd0520051a71236a0"
       url: "https://pub.dev"
     source: hosted
-    version: "2.10.0"
+    version: "2.10.1"
   image_picker_windows:
     dependency: transitive
     description:
@@ -1894,10 +1950,10 @@ packages:
     dependency: transitive
     description:
       name: pubspec_parse
-      sha256: "81876843eb50dc2e1e5b151792c9a985c5ed2536914115ed04e9c8528f6647b0"
+      sha256: "0560ba233314abbed0a48a2956f7f022cce7c3e1e73df540277da7544cad4082"
       url: "https://pub.dev"
     source: hosted
-    version: "1.4.0"
+    version: "1.5.0"
   quill_native_bridge:
     dependency: transitive
     description:
@@ -2034,6 +2090,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
+  refreshed:
+    dependency: "direct main"
+    description:
+      name: refreshed
+      sha256: "036588e8b4a8da8134b21f0c773256ece9ce5695943a9d1949959c966e420ce2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.10.3"
   retry:
     dependency: transitive
     description:
@@ -2435,18 +2499,18 @@ packages:
     dependency: transitive
     description:
       name: syncfusion_flutter_core
-      sha256: aa526af3b07691a25ea2700991a6a333ef35abfb6e6679002a26d13d1baa138a
+      sha256: "12735505d616320aebe39a6fc90b6608a09116378d66aee9636b0eddf7b75971"
       url: "https://pub.dev"
     source: hosted
-    version: "28.1.37"
+    version: "28.1.38"
   syncfusion_flutter_sliders:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_sliders
-      sha256: "130c326dd064402797841ff3428ec07ab0f96615225fe1fc72ae7d6ce5fdfdda"
+      sha256: "418a15a1cc3aa3f183c4b55abc4dd448499bfa08debc744d071ecdc0a9761c34"
       url: "https://pub.dev"
     source: hosted
-    version: "28.1.37"
+    version: "28.1.38"
   synchronized:
     dependency: transitive
     description:
@@ -2651,10 +2715,10 @@ packages:
     dependency: transitive
     description:
       name: video_player_android
-      sha256: "391e092ba4abe2f93b3e625bd6b6a6ec7d7414279462c1c0ee42b5ab8d0a0898"
+      sha256: "7018dbcb395e2bca0b9a898e73989e67c0c4a5db269528e1b036ca38bcca0d0b"
       url: "https://pub.dev"
     source: hosted
-    version: "2.7.16"
+    version: "2.7.17"
   video_player_avfoundation:
     dependency: transitive
     description:

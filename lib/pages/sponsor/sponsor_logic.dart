@@ -1,5 +1,5 @@
 import 'package:confetti/confetti.dart';
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 class SponsorLogic extends GetxController {
   late final ConfettiController confettiController =

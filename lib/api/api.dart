@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mood_diary/common/models/geo.dart';
 import 'package:mood_diary/common/models/github.dart';
@@ -15,6 +14,7 @@ import 'package:mood_diary/common/models/weather.dart';
 import 'package:mood_diary/utils/http_util.dart';
 import 'package:mood_diary/utils/notice_util.dart';
 import 'package:mood_diary/utils/signature_util.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../utils/data/pref.dart';
 

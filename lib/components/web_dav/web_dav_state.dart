@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/values/webdav.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/pref.dart';
 import '../../utils/webdav_util.dart';

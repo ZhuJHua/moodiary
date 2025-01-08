@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:gal/gal.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:mime/mime.dart';
 import 'package:mood_diary/src/rust/api/compress.dart';
 import 'package:mood_diary/utils/log_util.dart';
@@ -22,6 +24,14 @@ class MediaUtil {
   static final _picker = ImagePicker();
 
   static final _thumbnail = FcNativeVideoThumbnail();
+
+  static void useAndroidImagePicker() {
+    final ImagePickerPlatform imagePickerImplementation =
+        ImagePickerPlatform.instance;
+    if (imagePickerImplementation is ImagePickerAndroid) {
+      imagePickerImplementation.useAndroidPhotoPicker = true;
+    }
+  }
 
   // 定义 MIME 类型到扩展名和压缩格式的映射
   static final _compressConfig = {

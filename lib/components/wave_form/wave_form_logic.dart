@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 class WaveFormLogic extends GetxController {
   late double barWidth = 2.0;

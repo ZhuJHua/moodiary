@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'ask_question_logic.dart';
 

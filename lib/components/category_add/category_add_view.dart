@@ -1,6 +1,6 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'category_add_logic.dart';
 
@@ -51,7 +51,7 @@ class CategoryAddComponent extends StatelessWidget {
                   ActionChip(
                     label: const Text('无分类'),
                     onPressed: () {
-                      logic.cancelCategory();
+                      logic.cancelCategory(context);
                     },
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     padding: EdgeInsets.zero,
@@ -61,7 +61,7 @@ class CategoryAddComponent extends StatelessWidget {
                     return ActionChip(
                       label: Text(state.categoryList.value[index].categoryName),
                       onPressed: () {
-                        logic.selectCategory(index);
+                        logic.selectCategory(index, context);
                       },
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       padding: EdgeInsets.zero,

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/diary_card/large_diary_card/large_diary_card_view.dart';
 import 'package:mood_diary/components/diary_card/small_diary_card/small_diary_card_view.dart';
 import 'package:mood_diary/components/loading/loading.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:waterfall_flow/waterfall_flow.dart';
 

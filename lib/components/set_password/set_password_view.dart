@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'set_password_logic.dart';
 
@@ -23,7 +23,7 @@ class SetPasswordComponent extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.all(Radius.circular(buttonSize / 2)),
           onTap: () async {
-            await logic.updatePassword(num);
+            await logic.updatePassword(num, context);
           },
           child: Center(
               child: Text(

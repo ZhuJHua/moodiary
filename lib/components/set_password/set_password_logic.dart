@@ -1,7 +1,7 @@
-import 'package:flutter/animation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/setting/setting_logic.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/pref.dart';
 import '../../utils/notice_util.dart';
@@ -46,7 +46,7 @@ class SetPasswordLogic extends GetxController
     }
   }
 
-  Future<void> updatePassword(String value) async {
+  Future<void> updatePassword(String value, BuildContext context) async {
     if (state.password.length < 4) {
       state.password += value;
       update();
@@ -63,7 +63,7 @@ class SetPasswordLogic extends GetxController
       if (state.password.length == 4 && state.checkPassword.isNotEmpty) {
         //两次输入一致
         if (state.password == state.checkPassword) {
-          await setPassword();
+          if (context.mounted) await setPassword(context);
         } else {
           animationController.forward();
           await HapticFeedback.mediumImpact();
@@ -78,7 +78,7 @@ class SetPasswordLogic extends GetxController
     });
   }
 
-  Future<void> setPassword() async {
+  Future<void> setPassword(BuildContext context) async {
     //lock标记为true说明开启了密码
     await PrefUtil.setValue<bool>('lock', true);
     //设置密码字段
@@ -86,6 +86,6 @@ class SetPasswordLogic extends GetxController
     settingLogic.state.lock = true;
     settingLogic.update(['Lock']);
     NoticeUtil.showToast('设置成功');
-    Get.backLegacy();
+    if (context.mounted) Navigator.pop(context);
   }
 }

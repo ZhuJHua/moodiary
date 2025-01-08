@@ -75,4 +75,7 @@ abstract class AppRoutes {
 
   //捐助页
   static const sponsorPage = '/sponsor';
+
+  //webView
+  static const webViewPage = '/webView';
 }

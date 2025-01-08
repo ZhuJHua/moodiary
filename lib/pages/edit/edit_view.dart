@@ -5,7 +5,6 @@ import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
@@ -19,6 +18,7 @@ import 'package:mood_diary/components/quill_embed/text_indent.dart';
 import 'package:mood_diary/components/quill_embed/video_embed.dart';
 import 'package:mood_diary/components/record_sheet/record_sheet_view.dart';
 import 'package:mood_diary/utils/theme_util.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../common/values/diary_type.dart';
 import '../../components/quill_embed/audio_embed.dart';
@@ -421,7 +421,7 @@ class EditPage extends StatelessWidget {
               ],
             ),
             onPressed: () async {
-              await logic.pickPhoto(ImageSource.gallery);
+              await logic.pickPhoto(ImageSource.gallery, context);
             },
           ),
           if (Platform.isAndroid || Platform.isIOS)
@@ -434,7 +434,7 @@ class EditPage extends StatelessWidget {
                 ],
               ),
               onPressed: () async {
-                await logic.pickPhoto(ImageSource.camera);
+                await logic.pickPhoto(ImageSource.camera, context);
               },
             ),
           SimpleDialogOption(
@@ -446,7 +446,7 @@ class EditPage extends StatelessWidget {
               ],
             ),
             onPressed: () async {
-              await logic.networkImage();
+              await logic.networkImage(context);
             },
           ),
           SimpleDialogOption(
@@ -458,7 +458,7 @@ class EditPage extends StatelessWidget {
               ],
             ),
             onPressed: () {
-              logic.toDrawPage();
+              logic.toDrawPage(context);
             },
           ),
         ],
@@ -478,7 +478,7 @@ class EditPage extends StatelessWidget {
               ],
             ),
             onPressed: () async {
-              await logic.pickVideo(ImageSource.gallery);
+              await logic.pickVideo(ImageSource.gallery, context);
             },
           ),
           if (Platform.isAndroid || Platform.isIOS)
@@ -491,7 +491,7 @@ class EditPage extends StatelessWidget {
                 ],
               ),
               onPressed: () async {
-                await logic.pickVideo(ImageSource.camera);
+                await logic.pickVideo(ImageSource.camera, context);
               },
             ),
         ],

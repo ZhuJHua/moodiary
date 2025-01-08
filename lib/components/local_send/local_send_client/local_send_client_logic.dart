@@ -4,8 +4,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/foundation.dart';
-import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../utils/data/isar.dart';
 import '../../../utils/file_util.dart';
@@ -234,15 +235,15 @@ class LocalSendClientLogic extends GetxController {
     }
   }
 
-  Future<void> setDiary(Duration duration) async {
-    Get.backLegacy();
+  Future<void> setDiary(Duration duration, BuildContext context) async {
+    Navigator.pop(context);
     var now = DateTime.now();
     state.diaryToSend.value =
         await IsarUtil.getDiariesByDateRange(now.subtract(duration), now);
   }
 
-  Future<void> setAllDiary() async {
-    Get.backLegacy();
+  Future<void> setAllDiary(BuildContext context) async {
+    Navigator.pop(context);
     state.diaryToSend.value = await IsarUtil.getAllDiaries();
   }
 }

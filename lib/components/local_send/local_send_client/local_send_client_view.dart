@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../utils/file_util.dart';
 import 'local_send_client_logic.dart';
@@ -95,31 +95,35 @@ class LocalSendClientComponent extends StatelessWidget {
                             ActionChip(
                               label: const Text('一天内'),
                               onPressed: () async {
-                                await logic.setDiary(const Duration(days: 1));
+                                await logic.setDiary(
+                                    const Duration(days: 1), context);
                               },
                             ),
                             ActionChip(
                               label: const Text('一周内'),
                               onPressed: () async {
-                                await logic.setDiary(const Duration(days: 7));
+                                await logic.setDiary(
+                                    const Duration(days: 7), context);
                               },
                             ),
                             ActionChip(
                               label: const Text('一个月内'),
                               onPressed: () async {
-                                await logic.setDiary(const Duration(days: 31));
+                                await logic.setDiary(
+                                    const Duration(days: 31), context);
                               },
                             ),
                             ActionChip(
                               label: const Text('三个月'),
                               onPressed: () async {
-                                await logic.setDiary(const Duration(days: 31));
+                                await logic.setDiary(
+                                    const Duration(days: 31), context);
                               },
                             ),
                             ActionChip(
                               label: const Text('全部'),
                               onPressed: () async {
-                                await logic.setAllDiary();
+                                await logic.setAllDiary(context);
                               },
                             ),
                           ],

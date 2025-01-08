@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:get/get.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'local_send_state.dart';
 

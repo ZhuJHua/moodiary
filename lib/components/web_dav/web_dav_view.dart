@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/webdav.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'web_dav_logic.dart';
 import 'web_dav_state.dart';

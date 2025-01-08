@@ -1,4 +1,4 @@
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../utils/data/pref.dart';
 

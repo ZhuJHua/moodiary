@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../pages/home/setting/setting_logic.dart';
 import '../../utils/data/pref.dart';

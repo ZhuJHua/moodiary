@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/values/colors.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../main.dart';
 import 'color_dialog_logic.dart';

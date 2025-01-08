@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
 import 'package:marquee/marquee.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
@@ -12,6 +11,7 @@ import 'package:mood_diary/components/keepalive/keepalive.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
 import 'package:mood_diary/components/search_sheet/search_sheet_view.dart';
 import 'package:mood_diary/components/sync_dash_board/sync_dash_board_view.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:rive_animated_icon/rive_animated_icon.dart';
 
 import '../../../main.dart';
@@ -159,7 +159,7 @@ class DiaryPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         InkWell(
-                          onTap: (){
+                          onTap: () {
                             showFloatingModalBottomSheet(
                               context: context,
                               builder: (context) {
@@ -169,7 +169,8 @@ class DiaryPage extends StatelessWidget {
                           },
                           borderRadius: AppBorderRadius.smallBorderRadius,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 4.0),
                             child: Row(
                               spacing: 4.0,
                               mainAxisSize: MainAxisSize.min,

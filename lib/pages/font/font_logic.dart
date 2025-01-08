@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/src/rust/api/font.dart';
 import 'package:mood_diary/utils/file_util.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/pref.dart';
 import '../../utils/notice_util.dart';

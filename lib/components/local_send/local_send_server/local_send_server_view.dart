@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'local_send_server_logic.dart';
 import 'local_send_server_state.dart';

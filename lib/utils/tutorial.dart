@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class Tutorial {

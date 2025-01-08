@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/components/dashboard/dashboard_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/pages/home/home_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../utils/data/pref.dart';
 import '../../../utils/file_util.dart';

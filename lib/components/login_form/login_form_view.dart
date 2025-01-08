@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/utils/function_extensions.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'login_form_logic.dart';
 
@@ -42,9 +42,7 @@ class LoginFormComponent extends StatelessWidget {
                         state.email = value;
                       },
                       validator: (value) {
-                        return (value == null || !GetUtils.isEmail(value))
-                            ? '请输入邮箱'
-                            : null;
+                        return (value == null) ? '请输入邮箱' : null;
                       },
                       focusNode: logic.emailFocusNode,
                     ),

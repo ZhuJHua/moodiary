@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/values/size.dart';
+import 'package:refreshed/refreshed.dart';
 
 class LayoutUtil {
   //获取设备类型

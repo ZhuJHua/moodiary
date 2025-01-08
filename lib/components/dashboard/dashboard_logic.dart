@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/array_util.dart';
 import '../../utils/data/isar.dart';

@@ -1,3 +1,3 @@
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 class InputDialogLogic extends GetxController {}
