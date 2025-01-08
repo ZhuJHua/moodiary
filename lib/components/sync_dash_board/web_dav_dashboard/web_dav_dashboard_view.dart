@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/components/loading/loading.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../common/values/webdav.dart';
 import '../../../utils/webdav_util.dart';

@@ -1,8 +1,8 @@
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
-import '../../main.dart';
 import '../../utils/data/pref.dart';
 import 'laboratory_logic.dart';
 
@@ -12,7 +12,7 @@ class LaboratoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Bind.find<LaboratoryLogic>();
-    // final state = Bind.find<LaboratoryLogic>().state;
+    final textStyle = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -26,51 +26,31 @@ class LaboratoryPage extends StatelessWidget {
               isThreeLine: true,
               subtitle: SelectionArea(
                   child: Text(
-                      'ID:${PrefUtil.getValue<String>('tencentId') ?? ''}\nKey:${PrefUtil.getValue<String>('tencentKey') ?? ''}')),
+                'ID:${PrefUtil.getValue<String>('tencentId') ?? ''}\nKey:${PrefUtil.getValue<String>('tencentKey') ?? ''}',
+              )),
               trailing: IconButton(
-                  onPressed: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                TextField(
-                                  maxLines: 1,
-                                  controller: logic.idTextEditingController,
-                                  decoration: const InputDecoration(
-                                    labelText: 'ID',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 8.0,
-                                ),
-                                TextField(
-                                  maxLines: 1,
-                                  controller: logic.keyTextEditingController,
-                                  decoration: const InputDecoration(
-                                    labelText: 'KEY',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                  onPressed: () {
-                                    Get.backLegacy();
-                                  },
-                                  child: Text(l10n.cancel)),
-                              TextButton(
-                                  onPressed: () {
-                                    logic.setTencentID();
-                                  },
-                                  child: Text(l10n.ok))
-                            ],
-                          );
-                        });
+                  onPressed: () async {
+                    var res = await showTextInputDialog(
+                      context: context,
+                      textFields: [
+                        DialogTextField(
+                          hintText: 'ID',
+                          initialText:
+                              PrefUtil.getValue<String>('tencentId') ?? '',
+                        ),
+                        DialogTextField(
+                          hintText: 'KEY',
+                          initialText:
+                              PrefUtil.getValue<String>('tencentKey') ?? '',
+                        ),
+                      ],
+                      title: '腾讯云密钥',
+                      message: '在腾讯云控制台获取密钥',
+                      style: AdaptiveStyle.material,
+                    );
+                    if (res != null) {
+                      logic.setTencentID(id: res[0], key: res[1]);
+                    }
                   },
                   icon: const FaIcon(FontAwesomeIcons.wrench)),
             ),
@@ -79,33 +59,22 @@ class LaboratoryPage extends StatelessWidget {
               subtitle: SelectionArea(
                   child: Text(PrefUtil.getValue<String>('qweatherKey') ?? '')),
               trailing: IconButton(
-                  onPressed: () {
-                    showDialog(
+                  onPressed: () async {
+                    var res = await showTextInputDialog(
                         context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            content: TextField(
-                              maxLines: 1,
-                              controller: logic.qweatherTextEditingController,
-                              decoration: const InputDecoration(
-                                labelText: 'Key',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                  onPressed: () {
-                                    Get.backLegacy();
-                                  },
-                                  child: Text(l10n.cancel)),
-                              TextButton(
-                                  onPressed: () {
-                                    logic.setQweatherKey();
-                                  },
-                                  child: Text(l10n.ok))
-                            ],
-                          );
-                        });
+                        style: AdaptiveStyle.material,
+                        title: '和风天气密钥',
+                        message: '在和风天气控制台获取密钥',
+                        textFields: [
+                          DialogTextField(
+                            hintText: 'KEY',
+                            initialText:
+                                PrefUtil.getValue<String>('qweatherKey') ?? '',
+                          )
+                        ]);
+                    if (res != null) {
+                      logic.setQweatherKey(key: res[0]);
+                    }
                   },
                   icon: const FaIcon(FontAwesomeIcons.wrench)),
             ),
@@ -114,33 +83,22 @@ class LaboratoryPage extends StatelessWidget {
               subtitle: SelectionArea(
                   child: Text(PrefUtil.getValue<String>('tiandituKey') ?? '')),
               trailing: IconButton(
-                  onPressed: () {
-                    showDialog(
+                  onPressed: () async {
+                    var res = await showTextInputDialog(
                         context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            content: TextField(
-                              maxLines: 1,
-                              controller: logic.tiandituTextEditingController,
-                              decoration: const InputDecoration(
-                                labelText: 'Key',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                  onPressed: () {
-                                    Get.backLegacy();
-                                  },
-                                  child: Text(l10n.cancel)),
-                              TextButton(
-                                  onPressed: () {
-                                    logic.setTiandituKey();
-                                  },
-                                  child: Text(l10n.ok))
-                            ],
-                          );
-                        });
+                        textFields: [
+                          DialogTextField(
+                            hintText: 'KEY',
+                            initialText:
+                                PrefUtil.getValue<String>('tiandituKey') ?? '',
+                          )
+                        ],
+                        title: '天地图密钥',
+                        message: '在天地图控制台获取密钥',
+                        style: AdaptiveStyle.material);
+                    if (res != null) {
+                      logic.setTiandituKey(key: res[0]);
+                    }
                   },
                   icon: const FaIcon(FontAwesomeIcons.wrench)),
             ),

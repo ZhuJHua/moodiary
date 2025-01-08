@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/components/wave_form/wave_form_view.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'record_sheet_logic.dart';
 
@@ -94,7 +94,7 @@ class RecordSheetComponent extends StatelessWidget {
                                       )),
                                   TextButton(
                                       onPressed: () {
-                                        logic.stopRecorder();
+                                        logic.stopRecorder(context);
                                       },
                                       child: const Text('保存')),
                                 ],

@@ -1,6 +1,6 @@
-import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../common/values/webdav.dart';
 import '../../../utils/data/isar.dart';
@@ -113,7 +113,6 @@ class WebDavDashboardLogic extends GetxController {
       checkIsDownloading();
       await Bind.find<DiaryLogic>().refreshAll();
     }, onComplete: () {
-      Get.backLegacy();
       NoticeUtil.showToast('同步完成');
     });
   }

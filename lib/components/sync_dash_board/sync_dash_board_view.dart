@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/components/loading/loading.dart';
 import 'package:mood_diary/components/local_send/local_send_view.dart';
 import 'package:mood_diary/components/sync_dash_board/sync_dash_board_state.dart';
 import 'package:mood_diary/components/sync_dash_board/web_dav_dashboard/web_dav_dashboard_view.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import 'sync_dash_board_logic.dart';

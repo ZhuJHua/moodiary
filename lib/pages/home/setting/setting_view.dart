@@ -1,7 +1,6 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/components/base/sheet.dart';
@@ -11,6 +10,7 @@ import 'package:mood_diary/components/remove_password/remove_password_view.dart'
 import 'package:mood_diary/components/set_password/set_password_view.dart';
 import 'package:mood_diary/components/theme_mode_dialog/theme_mode_dialog_view.dart';
 import 'package:mood_diary/components/tile/setting_tile.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../main.dart';
 import 'setting_logic.dart';
@@ -309,32 +309,24 @@ class SettingPage extends StatelessWidget {
                             topRight: Radius.circular(12.0),
                           ),
                         ),
-                        onTap: () {
-                          showDialog(
+                        onTap: () async {
+                          var res = await showOkCancelAlertDialog(
                               context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Text(l10n.settingLock),
-                                  content: Text(state.lock
-                                      ? l10n.settingLockResetLock
-                                      : l10n.settingLockChooseLockType),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () {
-                                          Get.backLegacy();
-                                          showFloatingModalBottomSheet(
-                                              context: context,
-                                              isScrollControlled: true,
-                                              builder: (context) {
-                                                return state.lock
-                                                    ? const RemovePasswordComponent()
-                                                    : const SetPasswordComponent();
-                                              });
-                                        },
-                                        child: Text(state.lock ? '关闭' : '数字')),
-                                  ],
-                                );
-                              });
+                              title: l10n.settingLock,
+                              message: state.lock
+                                  ? l10n.settingLockResetLock
+                                  : l10n.settingLockChooseLockType,
+                              okLabel: state.lock ? '关闭密码' : '数字');
+                          if (res == OkCancelResult.ok && context.mounted) {
+                            showFloatingModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (context) {
+                                  return state.lock
+                                      ? const RemovePasswordComponent()
+                                      : const SetPasswordComponent();
+                                });
+                          }
                         },
                         title: Text(l10n.settingLock),
                         leading: const Icon(Icons.lock_rounded),

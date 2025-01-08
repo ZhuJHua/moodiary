@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:mood_diary/common/values/border.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../main.dart';
 import 'assistant_logic.dart';

@@ -1,7 +1,7 @@
 import 'package:cross_file/cross_file.dart';
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/diary_type.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/pref.dart';
 

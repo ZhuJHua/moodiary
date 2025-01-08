@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/components/loading/loading.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'category_choice_sheet_logic.dart';
 import 'category_choice_sheet_state.dart';
@@ -74,7 +74,9 @@ class CategoryChoiceSheetComponent extends StatelessWidget {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: logic.toCategoryManage,
+                              onPressed: () {
+                                logic.toCategoryManage(context);
+                              },
                               child: const Text('分类管理'),
                             ),
                           )

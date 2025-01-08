@@ -1,5 +1,5 @@
 import 'package:flutter/animation.dart';
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 class ExpandButtonLogic extends GetxController
     with GetSingleTickerProviderStateMixin {

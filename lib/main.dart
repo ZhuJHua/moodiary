@@ -10,24 +10,25 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:get/get.dart';
 import 'package:intl/find_locale.dart';
+import 'package:mood_diary/components/env_badge/badge.dart';
 import 'package:mood_diary/router/app_pages.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/src/rust/frb_generated.dart';
+import 'package:mood_diary/utils/data/env.dart';
 import 'package:mood_diary/utils/data/isar.dart';
 import 'package:mood_diary/utils/data/pref.dart';
 import 'package:mood_diary/utils/log_util.dart';
+import 'package:mood_diary/utils/media_util.dart';
 import 'package:mood_diary/utils/notice_util.dart';
 import 'package:mood_diary/utils/theme_util.dart';
 import 'package:mood_diary/utils/webdav_util.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:video_player_media_kit/video_player_media_kit.dart';
 
 import 'components/window_buttons/window_buttons.dart';
 
 late AppLocalizations l10n;
-
-bool devMode = false;
 
 Future<void> initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,7 +50,10 @@ Future<void> initSystem() async {
 }
 
 void platFormOption() {
-  if (Platform.isAndroid) unawaited(FlutterDisplayMode.setHighRefreshRate());
+  if (Platform.isAndroid) {
+    unawaited(FlutterDisplayMode.setHighRefreshRate());
+    MediaUtil.useAndroidImagePicker();
+  }
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
     doWhenWindowReady(() {
       appWindow.minSize = const Size(512, 640);
@@ -73,16 +77,20 @@ void main() async {
         error: details.exception, stackTrace: details.stack);
     if (details.exceptionAsString().contains('Render')) {
       NoticeUtil.showBug(
-          message:
-              devMode ? details.exceptionAsString() : l10n.layoutErrorToast);
+        message:
+            Env.debugMode ? details.exceptionAsString() : l10n.layoutErrorToast,
+      );
     } else {
       NoticeUtil.showBug(
-          message: devMode ? details.exceptionAsString() : l10n.errorToast);
+        message: Env.debugMode ? details.exceptionAsString() : l10n.errorToast,
+      );
     }
   };
   PlatformDispatcher.instance.onError = (error, stack) {
     LogUtil.printWTF('Error', error: error, stackTrace: stack);
-    NoticeUtil.showBug(message: devMode ? error.toString() : l10n.errorToast);
+    NoticeUtil.showBug(
+      message: Env.debugMode ? error.toString() : l10n.errorToast,
+    );
     return true;
   };
   runApp(GetMaterialApp.router(
@@ -102,7 +110,17 @@ void main() async {
           (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
               ? Column(children: [WindowButtons(), Expanded(child: mediaQuery)])
               : mediaQuery;
-      return windowChild;
+      return Stack(
+        children: [
+          windowChild,
+          if (Env.debugMode)
+            const Positioned(
+              top: -15,
+              right: -15,
+              child: EnvBadge(envMode: '测试版'),
+            ),
+        ],
+      );
     },
     theme: await ThemeUtil.buildTheme(Brightness.light),
     darkTheme: await ThemeUtil.buildTheme(Brightness.dark),

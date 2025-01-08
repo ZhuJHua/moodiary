@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/pages/login/login_logic.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/supabase.dart';
 import '../../utils/notice_util.dart';

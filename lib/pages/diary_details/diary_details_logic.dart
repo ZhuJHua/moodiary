@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/isar.dart';
 import 'diary_details_state.dart';
@@ -67,7 +67,7 @@ class DiaryDetailsLogic extends GetxController {
   Future<void> delete(Diary diary) async {
     var newDiary = diary.clone()..show = false;
     await IsarUtil.updateADiary(oldDiary: diary, newDiary: newDiary);
-    Get.backLegacy(result: 'delete');
+    Get.back(result: 'delete');
   }
 
   Future<void> jumpToPage(int index) async {

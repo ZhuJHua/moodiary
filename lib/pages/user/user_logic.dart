@@ -1,5 +1,5 @@
-import 'package:get/get.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/supabase.dart';
 import 'user_state.dart';

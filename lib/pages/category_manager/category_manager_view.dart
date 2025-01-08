@@ -1,7 +1,7 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/components/loading/loading.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'category_manager_logic.dart';
 

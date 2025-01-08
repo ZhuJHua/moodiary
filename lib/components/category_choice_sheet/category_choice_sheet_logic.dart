@@ -1,5 +1,6 @@
-import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../pages/home/diary/diary_logic.dart';
 import '../../utils/data/isar.dart';
@@ -27,8 +28,8 @@ class CategoryChoiceSheetLogic extends GetxController {
     diaryLogic.jumpToCategory(categoryId: categoryId);
   }
 
-  void toCategoryManage() {
-    Get.backLegacy();
+  void toCategoryManage(BuildContext context) {
+    Navigator.pop(context);
     Get.toNamed(AppRoutes.categoryManagerPage);
   }
 }

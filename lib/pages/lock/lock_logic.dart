@@ -1,7 +1,7 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'lock_state.dart';
 
@@ -67,7 +67,7 @@ class LockLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
     //如果是开启立即锁定后生命周期变化导致的锁定
     if (state.lockType == 'pause') {
-      Get.backLegacy();
+      Get.back();
     }
   }
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/scroll/fix_scroll.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../../utils/data/isar.dart';
 import '../../../utils/data/pref.dart';

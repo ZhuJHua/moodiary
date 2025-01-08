@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/tile/setting_tile.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../main.dart';
 import 'diary_setting_logic.dart';

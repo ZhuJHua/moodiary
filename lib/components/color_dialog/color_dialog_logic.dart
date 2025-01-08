@@ -1,8 +1,8 @@
 import 'dart:ui';
 
-import 'package:get/get.dart';
 import 'package:mood_diary/pages/home/setting/setting_logic.dart';
 import 'package:mood_diary/utils/theme_util.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/pref.dart';
 import 'color_dialog_state.dart';

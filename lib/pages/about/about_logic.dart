@@ -1,7 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/utils/package_util.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../utils/data/pref.dart';
@@ -47,7 +47,8 @@ class AboutLogic extends GetxController {
               'https://txc.qq.com/static/desktop/img/products/def-product-logo.png',
           'openid': PrefUtil.getValue<String>('uuid')
         });
-    await launchUrl(uri, mode: LaunchMode.platformDefault);
+    await Get.toNamed(AppRoutes.webViewPage, arguments: [uri.toString(), '反馈']);
+    //await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
 
   //跳转至源代码

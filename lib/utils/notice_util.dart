@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:get/get.dart';
+import 'package:refreshed/refreshed.dart';
 
 class NoticeUtil {
   static final _fToast = FToast()..init(Get.overlayContext!);

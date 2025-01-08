@@ -1,5 +1,5 @@
-import 'package:get/get.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:refreshed/refreshed.dart';
 
 class VideoState {
   //视频路径

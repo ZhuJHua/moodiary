@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/components/wave_form/wave_form_logic.dart';
 import 'package:mood_diary/pages/edit/edit_logic.dart';
 import 'package:mood_diary/utils/permission_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
+import 'package:refreshed/refreshed.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../utils/file_util.dart';
@@ -87,12 +87,12 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
     return (amplitude + baseline.abs()) / baseline.abs();
   }
 
-  Future<void> stopRecorder() async {
+  Future<void> stopRecorder(BuildContext context) async {
     state.isStop = true;
     await audioRecorder.stop();
     animationController.reset();
     editLogic.setAudioName(state.fileName);
-    Get.backLegacy();
+    if (context.mounted) Navigator.pop(context);
   }
 
   Future<void> pauseRecorder() async {

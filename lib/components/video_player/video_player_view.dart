@@ -1,7 +1,7 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/components/loading/loading.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'video_player_logic.dart';
 import 'video_player_state.dart';

@@ -1,4 +1,3 @@
-import 'package:get/get.dart';
 import 'package:mood_diary/pages/about/about_logic.dart';
 import 'package:mood_diary/pages/about/about_view.dart';
 import 'package:mood_diary/pages/agreement/agreement_view.dart';
@@ -44,8 +43,11 @@ import 'package:mood_diary/pages/user/user_logic.dart';
 import 'package:mood_diary/pages/user/user_view.dart';
 import 'package:mood_diary/pages/video/video_logic.dart';
 import 'package:mood_diary/pages/video/video_view.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../pages/sponsor/sponsor_logic.dart';
+import '../pages/web_view/web_view_logic.dart';
+import '../pages/web_view/web_view_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -187,6 +189,13 @@ class AppPages {
       name: AppRoutes.sponsorPage,
       page: () => const SponsorPage(),
       binds: [Bind.lazyPut(() => SponsorLogic())],
+    ),
+    GetPage(
+      name: AppRoutes.webViewPage,
+      page: () => const WebViewPage(),
+      binds: [
+        Bind.lazyPut(() => WebViewLogic()),
+      ],
     ),
   ];
 }

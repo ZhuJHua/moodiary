@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:marquee/marquee.dart';
 import 'package:mood_diary/common/values/colors.dart';
+import 'package:refreshed/refreshed.dart';
 
 import '../../common/values/border.dart';
 import '../../utils/data/pref.dart';

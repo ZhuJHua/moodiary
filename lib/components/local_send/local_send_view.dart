@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:mood_diary/components/local_send/local_send_client/local_send_client_view.dart';
 import 'package:mood_diary/components/local_send/local_send_server/local_send_server_view.dart';
+import 'package:refreshed/refreshed.dart';
 
 import 'local_send_logic.dart';
 import 'local_send_state.dart';
