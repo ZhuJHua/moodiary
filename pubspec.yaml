@@ -19,7 +19,7 @@ dependencies:
   logger: 2.5.0
   flutter_drawing_board: 0.9.5
   flutter_displaymode: 0.6.0
-  fl_chart: 0.70.0
+  fl_chart: 0.70.1
   file_picker: 8.1.7
   local_auth: 2.3.0
   local_auth_android: 1.0.46
