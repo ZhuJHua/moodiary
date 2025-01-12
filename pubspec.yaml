@@ -1,7 +1,7 @@
 name: mood_diary
 description: "A new Flutter project."
 publish_to: 'none'
-version: 2.6.5+66
+version: 2.6.5+69
 
 environment:
   sdk: '>=3.6.0'
@@ -29,10 +29,10 @@ dependencies:
   photo_view: 0.15.0
   package_info_plus: 8.1.2
   uuid: 4.5.1
-  flutter_quill: 11.0.0-dev.18
+  flutter_quill: 11.0.0-dev.19
   share_plus: 10.1.3
   url_launcher: 6.3.1
-  archive: 3.6.1
+  archive: 4.0.2
   crypto: 3.0.6
   markdown_widget: 2.3.2+6
   flutter_colorpicker: 1.1.0
@@ -54,7 +54,7 @@ dependencies:
   font_awesome_flutter: 10.8.0
   tflite_flutter: 0.11.0
   sliver_tools: 0.2.12
-  lottie: 3.3.0
+  lottie: 3.3.1
   media_kit: 1.1.11
   media_kit_video: 1.2.5
   media_kit_libs_video: 1.0.5
@@ -62,7 +62,7 @@ dependencies:
   cross_file: 0.3.4+2
   fc_native_video_thumbnail: 0.17.1
   flutter_map: 7.0.2
-  flutter_map_tile_caching: 9.1.4
+  flutter_map_tile_caching: 10.0.0
   flutter_map_marker_cluster: 1.4.0
   latlong2: 0.9.1
   shelf: 1.4.2
@@ -78,7 +78,7 @@ dependencies:
   syncfusion_flutter_sliders: 28.1.38
   flutter_quill_extensions: 11.0.0-dev.7
   connectivity_plus: 6.1.1
-  image_picker_android: 0.8.12+19
+  image_picker_android: 0.8.12+20
   video_player_media_kit: 1.0.5
   video_player: 2.9.2
   chewie: 1.9.0
@@ -108,12 +108,12 @@ dependencies:
     path: rust_builder
   slang: 4.4.1
   slang_flutter: 4.4.0
-  slang_build_runner: 4.4.0
   modal_bottom_sheet: 3.0.0
   sheet: 1.0.0
   tutorial_coach_mark: 1.2.12
   adaptive_dialog: 2.4.0
   flutter_inappwebview: 6.1.5
+  markdown_toolbar: 0.5.0
 
 
 dev_dependencies:
@@ -121,6 +121,7 @@ dev_dependencies:
   #    sdk: flutter
   build_runner: 2.4.14
   flutter_launcher_icons: 0.14.2
+  slang_build_runner: 4.4.0
   msix: 3.16.8
   flutter_lints: 5.0.0
 
