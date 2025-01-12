@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
-import 'package:mood_diary/components/diary_card/calendar_diary_card/calendar_diary_card_view.dart';
+import 'package:mood_diary/components/diary_card/calendar_diary_card_view.dart';
 import 'package:mood_diary/components/loading/loading.dart';
 import 'package:mood_diary/components/time_line/time_line_view.dart';
 import 'package:mood_diary/utils/array_util.dart';

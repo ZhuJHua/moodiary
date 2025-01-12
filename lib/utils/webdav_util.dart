@@ -215,9 +215,14 @@ class WebDavUtil {
       //本地不存在该日记，下载
       if (localLastModified == null) {
         syncingDiaries.add(diaryId);
-        final updatedDiary = await _downloadDiary(diaryId); // 下载日记的实现
-        await IsarUtil.insertADiary(updatedDiary); // 保存到本地的实现
+        try {
+          final updatedDiary = await _downloadDiary(diaryId); // 下载日记的实现
+          await IsarUtil.insertADiary(updatedDiary); // 保存到本地的实现
+        } catch (e) {
+          updatedSyncData.remove(diaryId);
+        }
         onDownload?.call();
+
         syncingDiaries.remove(diaryId);
       }
       // 本地存在该日记，但服务器版本较新，更新本地
@@ -226,8 +231,13 @@ class WebDavUtil {
         syncingDiaries.add(diaryId);
         final oldDiary =
             localDiaries.firstWhere((element) => element.id == diaryId);
-        final newDiary = await _downloadDiary(diaryId);
-        await IsarUtil.updateADiary(oldDiary: oldDiary, newDiary: newDiary);
+        try {
+          final newDiary = await _downloadDiary(diaryId);
+          await IsarUtil.updateADiary(oldDiary: oldDiary, newDiary: newDiary);
+        } catch (e) {
+          // 下载失败，移除sync.json中的记录
+          updatedSyncData.remove(diaryId);
+        }
         onDownload?.call();
         syncingDiaries.remove(diaryId);
       }

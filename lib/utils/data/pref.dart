@@ -90,6 +90,8 @@ class PrefUtil {
     'showWordCount',
     // 自定义字体
     'customFont',
+    // 后台隐私保护
+    'backendPrivacy',
   };
 
   static Future<void> initPref() async {
@@ -209,6 +211,8 @@ class PrefUtil {
     await _prefs.setBool(
         'showWordCount', _prefs.getBool('showWordCount') ?? true);
     await _prefs.setString('customFont', _prefs.getString('customFont') ?? '');
+    await _prefs.setBool(
+        'backendPrivacy', _prefs.getBool('backendPrivacy') ?? true);
   }
 
   static Future<void> setValue<T>(String key, T value) async {

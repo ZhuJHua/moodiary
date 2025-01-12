@@ -23,6 +23,10 @@ class WebViewPage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
             title: Text(state.title),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_rounded),
+              onPressed: Get.back,
+            ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.refresh_rounded),

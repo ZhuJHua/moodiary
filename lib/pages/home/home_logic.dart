@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mood_diary/components/frosted_glass_overlay/frosted_glass_overlay_logic.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:refreshed/refreshed.dart';
@@ -33,6 +34,8 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   late PageController pageController = PageController();
 
   late final DiaryLogic diaryLogic = Bind.find<DiaryLogic>();
+  late final FrostedGlassOverlayLogic frostedGlassOverlayLogic =
+      Bind.find<FrostedGlassOverlayLogic>();
 
   late final AppLifecycleListener appLifecycleListener;
 
@@ -44,7 +47,11 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     //     .show(context: Get.overlayContext!);
     appLifecycleListener = AppLifecycleListener(onStateChange: (state) {
       if (state == AppLifecycleState.inactive) {
-        lockPage();
+        frostedGlassOverlayLogic.enable();
+        //lockPage();
+      }
+      if (state == AppLifecycleState.resumed) {
+        frostedGlassOverlayLogic.disable();
       }
     });
 

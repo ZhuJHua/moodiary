@@ -27,17 +27,17 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Used to apply locks</string>
+	<string>使用你的摄像头拍摄媒体</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Used to apply locks</string>
+	<string>使用你的面部数据解锁</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to location when open.</string>
+	<string>访问你的位置信息</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Used to apply locks</string>
+	<string>使用你的麦克风来录制声音</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string></string>
+	<string>访问你的媒体数据</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string></string>
+	<string>访问你的照片</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

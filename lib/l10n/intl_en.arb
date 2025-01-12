@@ -52,6 +52,8 @@
   "settingLockNowDes": "Lock the app immediately upon leaving",
   "settingLockChooseLockType": "Please select a password type",
   "settingLockResetLock": "Password has been enabled, reset please close first",
+  "settingBackendPrivacyProtection": "Background Privacy Protection",
+  "settingBackendPrivacyProtectionDes": "When the application is in the background, hide the application content",
   "settingMore": "More",
   "settingLab": "Laboratory",
   "settingAbout": "About",

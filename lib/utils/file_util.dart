@@ -114,7 +114,7 @@ class FileUtil {
     var fileName =
         join(zipPath, '心绪日记${datetime.toString().split(' ')[0]}备份.zip');
     final outputStream = OutputFileStream(fileName);
-    zipEncoder.createWithBuffer(outputStream);
+    zipEncoder.createWithStream(outputStream);
     //备份照片
     await zipEncoder.addDirectory(Directory(join(dataPath, 'image')));
     //备份音频
@@ -145,7 +145,7 @@ class FileUtil {
     await createDir(join(_filePath, 'audio'));
     //重新创建视频文件夹
     await createDir(join(_filePath, 'video'));
-    var archive = ZipDecoder().decodeBuffer(inputStream);
+    var archive = ZipDecoder().decodeStream(inputStream);
     for (var file in archive.files) {
       //如果是数据库
       if (file.name.endsWith('.isar')) {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
-import 'package:mood_diary/components/diary_card/large_diary_card/large_diary_card_view.dart';
-import 'package:mood_diary/components/diary_card/small_diary_card/small_diary_card_view.dart';
+import 'package:mood_diary/components/diary_card/grid_diary_card_view.dart';
+import 'package:mood_diary/components/diary_card/list_diary_card_view.dart';
 import 'package:mood_diary/components/loading/loading.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:sliver_tools/sliver_tools.dart';
@@ -35,7 +35,7 @@ class DiaryTabViewComponent extends StatelessWidget {
                       maxCrossAxisExtent: 250),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  return LargeDiaryCardComponent(
+                  return GirdDiaryCardComponent(
                     diary: state.diaryList[index],
                   );
                 },
@@ -52,7 +52,7 @@ class DiaryTabViewComponent extends StatelessWidget {
           builder: (_) {
             return SliverList.builder(
               itemBuilder: (context, index) {
-                return SmallDiaryCardComponent(
+                return ListDiaryCardComponent(
                   tag: index.toString(),
                   diary: state.diaryList[index],
                 );
@@ -81,9 +81,9 @@ class DiaryTabViewComponent extends StatelessWidget {
             tag: logicTag,
             builder: (_) {
               return SliverPadding(
-                padding: const EdgeInsets.all(4.0),
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
                 sliver: SliverAnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
+                  duration: const Duration(milliseconds: 300),
                   child: state.isFetching
                       ? SliverToBoxAdapter(
                           child: SizedBox(

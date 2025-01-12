@@ -6,7 +6,7 @@ import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../../utils/data/isar.dart';
+import '../../utils/data/isar.dart';
 
 mixin BasicCardLogic {
   Future<void> toDiary(Diary diary) async {

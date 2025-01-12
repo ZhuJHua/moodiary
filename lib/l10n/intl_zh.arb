@@ -52,6 +52,8 @@
   "settingLockNowDes": "离开应用时立即锁定应用",
   "settingLockChooseLockType": "请选择密码类型",
   "settingLockResetLock": "已经开启密码，重新设置请先关闭",
+  "settingBackendPrivacyProtection": "后台隐私保护",
+  "settingBackendPrivacyProtectionDes": "应用处于后台时，隐藏应用内容",
   "settingMore": "更多",
   "settingLab": "实验室",
   "settingAbout": "关于",

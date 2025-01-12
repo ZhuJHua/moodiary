@@ -11,7 +11,6 @@ class FrostedGlassOverlayComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final FrostedGlassOverlayLogic logic = Get.put(FrostedGlassOverlayLogic());
-    final colorScheme = Theme.of(context).colorScheme;
 
     return AnimatedBuilder(
       animation: logic.animationController,
@@ -21,19 +20,10 @@ class FrostedGlassOverlayComponent extends StatelessWidget {
               sigmaX: 10 * logic.animationController.value,
               sigmaY: 10 * logic.animationController.value),
           enabled: logic.animationController.value > 0,
-          child: Opacity(
-            opacity: logic.animationController.value,
-            child: child,
-          ),
+          child: child,
         );
       },
-      child: Center(
-        child: Icon(
-          Icons.security_rounded,
-          color: colorScheme.onSurface,
-          size: 64,
-        ),
-      ),
+      child: const SizedBox.shrink(),
     );
   }
 }

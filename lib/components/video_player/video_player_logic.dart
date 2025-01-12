@@ -14,7 +14,6 @@ class VideoPlayerLogic extends GetxController {
       VideoPlayerController.file(File(state.videoPath));
   late final chewieController = ChewieController(
     videoPlayerController: videoPlayerController,
-    useRootNavigator: false,
   );
 
   Completer<void>? _initCompleter;

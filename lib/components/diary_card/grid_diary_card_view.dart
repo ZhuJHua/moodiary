@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/border.dart';
-import 'package:mood_diary/components/diary_card/basic_diary_card/basic_card_logic.dart';
+import 'package:mood_diary/components/diary_card/basic_card_logic.dart';
 
-import '../../../utils/file_util.dart';
+import '../../utils/file_util.dart';
 
-class LargeDiaryCardComponent extends StatelessWidget with BasicCardLogic {
-  const LargeDiaryCardComponent({super.key, required this.diary});
+class GirdDiaryCardComponent extends StatelessWidget with BasicCardLogic {
+  const GirdDiaryCardComponent({super.key, required this.diary});
 
   final Diary diary;
 

@@ -106,7 +106,6 @@ class HomePage extends StatelessWidget {
             final verticalTranslation =
                 calculateVerticalTranslation(index, logic.fabAnimation.value);
             return Positioned(
-              left: 0,
               right: 0,
               bottom: verticalTranslation,
               child: Opacity(
@@ -117,8 +116,11 @@ class HomePage extends StatelessWidget {
           },
           child: GestureDetector(
             onTap: onTap,
+            behavior: HitTestBehavior.translucent,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              spacing: 16.0,
               children: [
                 Container(
                   decoration: ShapeDecoration(
@@ -172,6 +174,71 @@ class HomePage extends StatelessWidget {
       );
     }
 
+    Widget buildActionButton({
+      required String label,
+      required Function() onTap,
+      required IconData iconData,
+    }) {
+      return AnimatedBuilder(
+        animation: logic.fabAnimation,
+        builder: (context, child) {
+          return child!;
+        },
+        child: GestureDetector(
+          onTap: onTap,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 16.0,
+            children: [
+              Container(
+                decoration: ShapeDecoration(
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: AppBorderRadius.smallBorderRadius),
+                  color: colorScheme.secondaryContainer,
+                  shadows: [
+                    BoxShadow(
+                      color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                      offset: const Offset(0, 2),
+                      blurRadius: 2,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
+                child: Text(
+                  label,
+                  style: textStyle.labelMedium!
+                      .copyWith(color: colorScheme.onSecondaryContainer),
+                ),
+              ),
+              Container(
+                decoration: ShapeDecoration(
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: AppBorderRadius.largeBorderRadius),
+                  color: colorScheme.primaryContainer,
+                  shadows: [
+                    BoxShadow(
+                      color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                      offset: const Offset(0, 2),
+                      blurRadius: 2,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                width: 56.0,
+                height: 46.0,
+                alignment: Alignment.center,
+                child: FaIcon(
+                  iconData,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     Widget buildFabButton() {
       return AnimatedBuilder(
           animation: logic.fabAnimation,
@@ -211,13 +278,29 @@ class HomePage extends StatelessWidget {
     }
 
     Widget buildDiaryFab() {
-      return SizedBox(
-        height: 56 + 46 + 46 + 16,
-        width: 56 + 32 + textStyle.labelMedium!.fontSize! * 3,
+      return AnimatedBuilder(
+        animation: logic.fabAnimation,
+        builder: (context, child) {
+          return SizedBox(
+            height: 56 +
+                8 +
+                56 +
+                ((46 + 8) * 3 - 56 - 8) * (logic.fabAnimation.value),
+            child: child,
+          );
+        },
         child: Stack(
           alignment: Alignment.bottomRight,
+          clipBehavior: Clip.none,
           children: [
             buildToTopButton(),
+            buildAnimatedActionButton(
+                label: 'Markdown',
+                onTap: () async {
+                  await logic.toEditPage(type: DiaryType.markdown);
+                },
+                iconData: FontAwesomeIcons.markdown,
+                index: 3),
             buildAnimatedActionButton(
                 label: '纯文字',
                 onTap: () async {

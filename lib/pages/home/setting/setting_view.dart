@@ -353,6 +353,15 @@ class SettingPage extends StatelessWidget {
                         secondary: const Icon(Icons.lock_clock_rounded),
                       );
                     }),
+                Obx(() {
+                  return SwitchListTile(
+                    value: state.backendPrivacy.value,
+                    onChanged: logic.changeBackendPrivacy,
+                    title: Text(l10n.settingBackendPrivacyProtection),
+                    subtitle: Text(l10n.settingBackendPrivacyProtectionDes),
+                    secondary: const Icon(Icons.remove_red_eye_rounded),
+                  );
+                }),
               ],
             ),
           )

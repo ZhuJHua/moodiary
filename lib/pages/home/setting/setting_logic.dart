@@ -93,6 +93,11 @@ class SettingLogic extends GetxController {
     Bind.find<DashboardLogic>().getCategoryCount();
   }
 
+  Future<void> changeBackendPrivacy(bool value) async {
+    await PrefUtil.setValue<bool>('backendPrivacy', value);
+    state.backendPrivacy.value = value;
+  }
+
   //进入回收站
   void toRecyclePage() {
     Get.toNamed(AppRoutes.recyclePage);
