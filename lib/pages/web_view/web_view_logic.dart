@@ -26,6 +26,7 @@ class WebViewLogic extends GetxController {
   }
 
   void reload() {
+    InAppWebViewController.clearAllCache();
     webViewController.reload();
   }
 

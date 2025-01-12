@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/border.dart';
-import 'package:mood_diary/components/diary_card/basic_diary_card/basic_card_logic.dart';
+import 'package:mood_diary/components/diary_card/basic_card_logic.dart';
 
-import '../../../utils/file_util.dart';
+import '../../utils/file_util.dart';
 
-class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
-  const SmallDiaryCardComponent(
+class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
+  const ListDiaryCardComponent(
       {super.key, required this.diary, required this.tag});
 
   final Diary diary;
@@ -30,7 +30,7 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
               image: ResizeImage(
                 FileImage(
                     File(FileUtil.getRealPath('image', diary.imageName.first))),
-                width: (122 * pixelRatio).toInt(),
+                width: (132 * pixelRatio).toInt(),
               ),
               fit: BoxFit.cover,
             ),
@@ -48,7 +48,7 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
           await toDiary(diary);
         },
         child: SizedBox(
-          height: 122.0,
+          height: 132.0,
           child: Row(
             children: [
               if (diary.imageName.isNotEmpty && int.parse(tag) & 1 == 0) ...[
@@ -59,7 +59,7 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    spacing: 4.0,
                     children: [
                       if (diary.title.isNotEmpty) ...[
                         Text(
@@ -70,12 +70,14 @@ class SmallDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                           maxLines: 1,
                         )
                       ],
-                      Text(
-                        diary.contentText.trim(),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                        style: textStyle.bodyMedium
-                            ?.copyWith(color: colorScheme.onSurface),
+                      Expanded(
+                        child: Text(
+                          diary.contentText.trim(),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 3,
+                          style: textStyle.bodyMedium
+                              ?.copyWith(color: colorScheme.onSurface),
+                        ),
                       ),
                       Text(
                         DateFormat.yMMMd().add_Hms().format(diary.time),

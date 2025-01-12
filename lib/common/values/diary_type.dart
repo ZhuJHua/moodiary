@@ -1,5 +1,6 @@
 enum DiaryType {
   text('text'),
+  markdown('markdown'),
   richText('richText');
 
   final String value;

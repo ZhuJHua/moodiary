@@ -112,7 +112,7 @@ class AboutPage extends StatelessWidget {
                     },
                   ),
                   ListTile(
-                    leading: const Icon(Icons.security_rounded),
+                    leading: const Icon(Icons.privacy_tip_rounded),
                     title: Text(l10n.aboutPrivacyPolicy),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () {

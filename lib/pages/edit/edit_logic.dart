@@ -199,6 +199,7 @@ class EditLogic extends GetxController {
     final index = quillController.selection.baseOffset;
     final length = quillController.selection.extentOffset - index;
     quillController.replaceText(index, length, videoBlock, null);
+    //插入一个换行
     quillController.moveCursorToPosition(index + 1);
   }
 

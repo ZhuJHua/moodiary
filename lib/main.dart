@@ -12,6 +12,7 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/find_locale.dart';
 import 'package:mood_diary/components/env_badge/badge.dart';
+import 'package:mood_diary/components/frosted_glass_overlay/frosted_glass_overlay_view.dart';
 import 'package:mood_diary/router/app_pages.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/src/rust/frb_generated.dart';
@@ -113,6 +114,7 @@ void main() async {
       return Stack(
         children: [
           windowChild,
+          const FrostedGlassOverlayComponent(),
           if (Env.debugMode)
             const Positioned(
               top: -15,

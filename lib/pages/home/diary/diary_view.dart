@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:marquee/marquee.dart';
-import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/base/sheet.dart';
 import 'package:mood_diary/components/category_choice_sheet/category_choice_sheet_view.dart';
@@ -158,51 +158,36 @@ class DiaryPage extends StatelessWidget {
                     title: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        InkWell(
+                        GestureDetector(
                           onTap: () {
-                            showFloatingModalBottomSheet(
-                              context: context,
-                              builder: (context) {
-                                return const CategoryChoiceSheetComponent();
-                              },
-                            );
+                            HapticFeedback.selectionClick();
                           },
-                          borderRadius: AppBorderRadius.smallBorderRadius,
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 4.0),
-                            child: Row(
-                              spacing: 4.0,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                FaIcon(
-                                  FontAwesomeIcons.book,
-                                  size: 16,
-                                  color: colorScheme.onSurface,
-                                ),
-                                Flexible(
-                                  fit: FlexFit.loose,
-                                  child: GetBuilder<DiaryLogic>(
-                                      id: 'Title',
-                                      builder: (_) {
-                                        return Text(
-                                          state.customTitleName.isNotEmpty
-                                              ? state.customTitleName
-                                              : l10n.appName,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: textStyle.titleLarge?.copyWith(
-                                            color: colorScheme.onSurface,
-                                          ),
-                                        );
-                                      }),
-                                ),
-                                FaIcon(
-                                  FontAwesomeIcons.chevronRight,
-                                  color: colorScheme.onSurface,
-                                  size: 12,
-                                ),
-                              ],
-                            ),
+                          child: Row(
+                            spacing: 4.0,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(
+                                fit: FlexFit.loose,
+                                child: GetBuilder<DiaryLogic>(
+                                    id: 'Title',
+                                    builder: (_) {
+                                      return Text(
+                                        state.customTitleName.isNotEmpty
+                                            ? state.customTitleName
+                                            : l10n.appName,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: textStyle.titleLarge?.copyWith(
+                                          color: colorScheme.onSurface,
+                                        ),
+                                      );
+                                    }),
+                              ),
+                              FaIcon(
+                                FontAwesomeIcons.chevronRight,
+                                color: colorScheme.onSurface,
+                                size: 12,
+                              ),
+                            ],
                           ),
                         ),
                         LayoutBuilder(builder: (context, constraints) {

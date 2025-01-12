@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:markdown_toolbar/markdown_toolbar.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/components/base/sheet.dart';
@@ -805,6 +806,33 @@ class EditPage extends StatelessWidget {
       );
     }
 
+    Widget markdownToolBar() {
+      return Row(
+        spacing: 4.0,
+        children: [
+          IconButton.filled(
+            icon: const Icon(Icons.keyboard_command_key),
+            style: const ButtonStyle(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            onPressed: () {
+              showFloatingModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return buildDetail();
+                },
+              );
+            },
+          ),
+          const Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: MarkdownToolbar(useIncludedTextField: false),
+            ),
+          ),
+        ],
+      );
+    }
+
     Widget buildWriting() {
       return Column(
         children: [
@@ -855,6 +883,7 @@ class EditPage extends StatelessWidget {
             child: switch (state.type) {
               DiaryType.text => textToolBar(),
               DiaryType.richText => richTextToolBar(),
+              DiaryType.markdown => markdownToolBar(),
             },
           )
         ],

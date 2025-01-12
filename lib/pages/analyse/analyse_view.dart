@@ -55,7 +55,7 @@ class AnalysePage extends StatelessWidget {
                               showTitles: true,
                               getTitlesWidget: (value, meta) {
                                 return SideTitleWidget(
-                                    axisSide: meta.axisSide,
+                                    meta: meta,
                                     child:
                                         Icon(iconMap[itemList[value.toInt()]]));
                               }),

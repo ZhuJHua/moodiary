@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/icons.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
+import 'package:mood_diary/utils/data/pref.dart';
 import 'package:mood_diary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -283,7 +284,8 @@ class DiaryDetailsPage extends StatelessWidget {
     return GetBuilder<DiaryDetailsLogic>(
         tag: state.diary.id,
         builder: (_) {
-          final customColorScheme = state.imageColor != null
+          final customColorScheme = (state.imageColor != null &&
+                  PrefUtil.getValue<bool>('dynamicColor') == true)
               ? ColorScheme.fromSeed(
                   seedColor: Color(state.imageColor!),
                   brightness: colorScheme.brightness,
@@ -306,6 +308,7 @@ class DiaryDetailsPage extends StatelessWidget {
                       state.diary.title,
                       style: textStyle.titleMedium,
                     ),
+                    centerTitle: false,
                     flexibleSpace: FlexibleSpaceBar(
                       collapseMode: CollapseMode.pin,
                       background: state.diaryHeader

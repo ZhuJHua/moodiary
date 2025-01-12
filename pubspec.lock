@@ -98,10 +98,10 @@ packages:
     dependency: "direct main"
     description:
       name: archive
-      sha256: cb6a278ef2dbb298455e1a713bda08524a175630ec643a242c399c932a0a1f7d
+      sha256: "6199c74e3db4fbfbd04f66d739e72fe11c8a8957d5f219f1f4482dbde6420b5a"
       url: "https://pub.dev"
     source: hosted
-    version: "3.6.1"
+    version: "4.0.2"
   args:
     dependency: transitive
     description:
@@ -498,10 +498,10 @@ packages:
     dependency: transitive
     description:
       name: dart_earcut
-      sha256: "41b493147e30a051efb2da1e3acb7f38fe0db60afba24ac1ea5684cee272721e"
+      sha256: e485001bfc05dcbc437d7bfb666316182e3522d4c3f9668048e004d0eb2ce43b
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "1.2.0"
   dart_quill_delta:
     dependency: transitive
     description:
@@ -706,10 +706,10 @@ packages:
     dependency: "direct main"
     description:
       name: fl_chart
-      sha256: c724234b05e378383e958f3e82ca84a3e1e3c06a0898462044dd8a24b1ee9864
+      sha256: "10ddaf334fe84d59333a12d153043e366f243e0bdfff2df0313e1e249f5bf926"
       url: "https://pub.dev"
     source: hosted
-    version: "0.70.0"
+    version: "0.70.1"
   flat_buffers:
     dependency: transitive
     description:
@@ -972,10 +972,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_map_tile_caching
-      sha256: "19b35c39a1958c0613a165b5f93df36d3446b023cd6e781145d29d18d5367402"
+      sha256: "1839c6157cf9b444083a626b30f3ba9f6db802ac8bb5292440e1628882faa392"
       url: "https://pub.dev"
     source: hosted
-    version: "9.1.4"
+    version: "10.0.0"
   flutter_markdown:
     dependency: "direct main"
     description:
@@ -1004,18 +1004,18 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_quill
-      sha256: "7e41a131e9349b5b1b042c36d41017182c34df8b62ac4f5a095055c8624d9ec5"
+      sha256: "1fe09d97633f46a7f3e1d30d4296e07adaa15e4cc141d434a857086c025d9038"
       url: "https://pub.dev"
     source: hosted
-    version: "11.0.0-dev.18"
+    version: "11.0.0-dev.19"
   flutter_quill_delta_from_html:
     dependency: transitive
     description:
       name: flutter_quill_delta_from_html
-      sha256: "3809961f59b323e3ff368921c8f4a2ae559ff05a6bd132e565d7e6180db868e8"
+      sha256: "79405765612016de9de2361be86383360b0b43a6bf88b818c079a953583f1849"
       url: "https://pub.dev"
     source: hosted
-    version: "1.4.5"
+    version: "1.5.0"
   flutter_quill_extensions:
     dependency: "direct main"
     description:
@@ -1238,10 +1238,10 @@ packages:
     dependency: transitive
     description:
       name: image
-      sha256: f31d52537dc417fdcde36088fdf11d191026fd5e4fae742491ebd40e5a8bea7d
+      sha256: "8346ad4b5173924b5ddddab782fc7d8a6300178c8b1dc427775405a01701c4a6"
       url: "https://pub.dev"
     source: hosted
-    version: "4.3.0"
+    version: "4.5.2"
   image_picker:
     dependency: "direct main"
     description:
@@ -1254,10 +1254,10 @@ packages:
     dependency: "direct main"
     description:
       name: image_picker_android
-      sha256: aa6f1280b670861ac45220cc95adc59bb6ae130259d36f980ccb62220dc5e59f
+      sha256: b62d34a506e12bb965e824b6db4fbf709ee4589cf5d3e99b45ab2287b008ee0c
       url: "https://pub.dev"
     source: hosted
-    version: "0.8.12+19"
+    version: "0.8.12+20"
   image_picker_for_web:
     dependency: transitive
     description:
@@ -1486,18 +1486,18 @@ packages:
     dependency: "direct main"
     description:
       name: lottie
-      sha256: "377d87b8dcef640c04717e93afb86a510f0e1117a399ab94dc4b3f39c85eaa87"
+      sha256: c5fa04a80a620066c15cf19cc44773e19e9b38e989ff23ea32e5903ef1015950
       url: "https://pub.dev"
     source: hosted
-    version: "3.3.0"
+    version: "3.3.1"
   macos_ui:
     dependency: transitive
     description:
       name: macos_ui
-      sha256: c524398d3db161ac52254ebc9617c3399bdcf269ce7a70e014f202b5c4da5ea4
+      sha256: "94753db0a67f6b065c1877c57563459afd717d800acd5d83a663a0a6e09747c5"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.4"
+    version: "2.1.5"
   macos_window_utils:
     dependency: transitive
     description:
@@ -1522,6 +1522,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.2.2"
+  markdown_toolbar:
+    dependency: "direct main"
+    description:
+      name: markdown_toolbar
+      sha256: "5f4e2548afe96cc2ccdad22da87d380e4726d2d3385ddbb7035aa94daf9a4d47"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.0"
   markdown_widget:
     dependency: "direct main"
     description:
@@ -1914,6 +1922,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.1"
+  posix:
+    dependency: transitive
+    description:
+      name: posix
+      sha256: a0117dc2167805aa9125b82eee515cc891819bac2f538c83646d355b16f58b9a
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.1"
   postgrest:
     dependency: transitive
     description:
@@ -2246,10 +2262,10 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences_android
-      sha256: "02a7d8a9ef346c9af715811b01fbd8e27845ad2c41148eefd31321471b41863d"
+      sha256: bf808be89fe9dc467475e982c1db6c2faf3d2acf54d526cd5ec37d86c99dbd84
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.0"
+    version: "2.4.1"
   shared_preferences_foundation:
     dependency: transitive
     description:
@@ -2344,7 +2360,7 @@ packages:
     source: hosted
     version: "4.4.1"
   slang_build_runner:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: slang_build_runner
       sha256: "2111b409ca65b0adf33db02f21cbe05eb557af920edc71038e2133657ed451c4"
@@ -2675,18 +2691,18 @@ packages:
     dependency: transitive
     description:
       name: url_launcher_web
-      sha256: "772638d3b34c779ede05ba3d38af34657a05ac55b06279ea6edd409e323dca8e"
+      sha256: "3ba963161bd0fe395917ba881d320b9c4f6dd3c4a233da62ab18a5025c85f1e9"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.3"
+    version: "2.4.0"
   url_launcher_windows:
     dependency: transitive
     description:
       name: url_launcher_windows
-      sha256: "44cf3aabcedde30f2dba119a9dea3b0f2672fbe6fa96e85536251d678216b3c4"
+      sha256: "3284b6d2ac454cf34f114e1d3319866fdd1e19cdc329999057e44ffe936cfa77"
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.3"
+    version: "3.1.4"
   uuid:
     dependency: "direct main"
     description:

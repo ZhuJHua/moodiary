@@ -20,6 +20,8 @@ class SettingState {
 
   String customTitle = PrefUtil.getValue<String>('customTitleName')!;
 
+  RxBool backendPrivacy = PrefUtil.getValue<bool>('backendPrivacy')!.obs;
+
   SettingState() {
     fontTheme = PrefUtil.getValue<int>('fontTheme')!.obs;
   }
