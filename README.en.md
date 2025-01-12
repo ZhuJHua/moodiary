@@ -19,9 +19,11 @@
 ## ✨ Feature
 
 - **Cross-platform support**：🌍 Compatible with Android, iOS\*, Windows\*, MacOS\*, Linux.
-- **Material Design**：🎨 The interface is intuitive and user-friendly, and follows the Material Design specifications.
+- **Material Design**：🎨 The interface is intuitive and user-friendly, and follows the Material
+  Design specifications.
 - **Rich text editing**：📝 Supports text editing in bold, italic, underline and other formats.
-- **Multimedia accessories**：📷 You can add pictures, audio, video or even draw a picture to your diary.
+- **Multimedia accessories**：📷 You can add pictures, audio, video or even draw a picture to your
+  diary.
 - **Search and classification**：🔍 Easily manage your diary by full-text search and categorization.
 - **Custom theme**：🌈 Supports light and dark modes, as well as a variety of color schemes.
 - **Data security**：🔒 Keep your diary safe with a password, supports biometric unlocking.
@@ -48,17 +50,26 @@ your own signatures)
 
 ### Mobile
 
-![Mobile](res/screenshot/mobile.webp)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/mobile_dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/mobile_light.webp">
+  <img alt="The mobile screenshot for moodiary." src="res/screenshot/mobile_light.webp">
+</picture>
 
 ### Desktop
 
-![Desktop](res/screenshot/desktop.webp)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/desktop_dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/desktop_light.webp">
+  <img alt="The desktop screenshot for moodiary." src="res/screenshot/desktop_light.webp">
+</picture>
 
 ## 🚀 Installation guide
 
 ### Third party SDK
 
-Some capabilities need to apply for third-party SDKS, and the following service providers provide free versions, and the obtained keys are configured in the lab.
+Some capabilities need to apply for third-party SDKS, and the following service providers provide
+free versions, and the obtained keys are configured in the lab.
 
 #### Weather service
 
@@ -74,7 +85,8 @@ Some capabilities need to apply for third-party SDKS, and the following service 
 
 ### Direct mounting
 
-Use it by downloading the compiled installation package in Release, or manually compiling it if you don't have the platform you need.
+Use it by downloading the compiled installation package in Release, or manually compiling it if you
+don't have the platform you need.
 
 ### Manual compilation
 
@@ -88,7 +100,8 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 #### Installation procedure
 
-> Note: When packaging, you need to modify the corresponding platform configuration file, such as Android platform build.gradle
+> Note: When packaging, you need to modify the corresponding platform configuration file, such as
+> Android platform build.gradle
 
 1. **Clone Repo**：
 
@@ -111,10 +124,10 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 4. **Package release**：
 
-   - Android: `flutter build apk`
-   - iOS: `flutter build ipa`
-   - Windows: `flutter build windows`
-   - MacOS: `flutter build macos`
+    - Android: `flutter build apk`
+    - iOS: `flutter build ipa`
+    - Windows: `flutter build windows`
+    - MacOS: `flutter build macos`
 
 ## 📝 More description
 
@@ -122,13 +135,20 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 > In the experimental stage
 
-Today, more and more industry products are beginning to incorporate AI technology, which undoubtedly greatly improves our experience. However, for diary applications, it is not acceptable to hand over the data to a large model because it is not certain that the data will be used for training. Therefore, a better approach is to adopt a local model. Although local models may not be as powerful as large models due to size limitations, they can still provide necessary help to a certain extent.
+Today, more and more industry products are beginning to incorporate AI technology, which undoubtedly
+greatly improves our experience. However, for diary applications, it is not acceptable to hand over
+the data to a large model because it is not certain that the data will be used for training.
+Therefore, a better approach is to adopt a local model. Although local models may not be as powerful
+as large models due to size limitations, they can still provide necessary help to a certain extent.
 
 Currently, I have the following tasks integrated into the source code:
 
 #### SQuAD task based on Bert pre-trained model
 
-I used MobileBert for the SQuAD task, which is a simple machine reading comprehension task. You can ask it questions and it will return the answers you need. The model files are in the `.tflite` format required by TensorFlow Lite, so you can add your own model files to the `assets/tflite` directory.
+I used MobileBert for the SQuAD task, which is a simple machine reading comprehension task. You can
+ask it questions and it will return the answers you need. The model files are in the `.tflite`
+format required by TensorFlow Lite, so you can add your own model files to the `assets/tflite`
+directory.
 
 Thanks to the following open source projects:
 
@@ -146,7 +166,9 @@ Contributions are welcome! Please follow these steps to contribute:
 4. Push to branch(`git push origin feature-branch-name`)。
 5. Create a Pull Request.
 
-Please make sure that your code to follow [Flutter style guide](https://flutter.dev/docs/development/tools/formatting) and include the appropriate tests.
+Please make sure that your code to
+follow [Flutter style guide](https://flutter.dev/docs/development/tools/formatting) and include the
+appropriate tests.
 
 ## 📄 License
 
@@ -165,9 +187,13 @@ You can buy me a sandwich to keep me motivated to continue developing.
 
 ### List of sponsors
 
-If you want to be on the list, you can leave me a message, in no particular order.
+If you want to be on the list, you can leave me a message, in no particular order, and the list will
+be updated regularly.
 
-| Sponsor                               | Price  |
-|---------------------------------------|--------|
-| [dsxksss](https://github.com/dsxksss) | 50 CNY |
+| Sponsor                               | Price    | Sponsor | Price  |
+|---------------------------------------|----------|---------|--------|
+| [dsxksss](https://github.com/dsxksss) | 50 CNY   | 十一      | 20 CNY |
+| 沭飏秋                                   | 10 CNY   | 朱东杰     | 60 CNY |
+| 匿名                                    | 5 CNY    | wu      | 10 CNY |
+| 云烨                                    | 2.76 CNY |         |        |
 
