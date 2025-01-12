@@ -97,29 +97,29 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 1. **Clone Repo**：
 
-   ```bash
-   git clone https://github.com/ZhuJHua/moodiary.git
-   cd moodiary
-   ```
+```bash
+git clone https://github.com/ZhuJHua/moodiary.git
+cd moodiary
+```
 
 2. **Installation dependency**：
 
-   ```bash
-   flutter pub get
-   ```
+```bash
+flutter pub get
+```
 
 3. **Running application**：
 
-   ```bash
-   flutter run
-   ```
+```bash
+flutter run
+```
 
 4. **Package release**：
 
-    - Android: `flutter build apk`
-    - iOS: `flutter build ipa`
-    - Windows: `flutter build windows`
-    - MacOS: `flutter build macos`
+- Android: `flutter build apk`
+- iOS: `flutter build ipa`
+- Windows: `flutter build windows`
+- MacOS: `flutter build macos`
 
 ## 📝 More description
 
