@@ -1,7 +1,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="res/banner/dark_en.svg">
   <source media="(prefers-color-scheme: light)" srcset="res/banner/light_en.svg">
-  <img alt="The preview for moodiary." src="res/banner/light_zh.svg">
+  <img alt="The preview for moodiary." src="res/banner/light_en.svg">
 </picture>
 
 <p align="center"><a href="README.md">简体中文</a> | English</p>
@@ -28,13 +28,10 @@
 - **Export and share**：🧾 Support all data import/export, as well as single diary sharing.
 - **Backup and synchronization**：☁ Support for LAN synchronization and WebDav backup.
 - **Footprint Map** : 🗺️ See your footprints on a map. Every step of your life is worth documenting.
-- **Intelligent assistant**：💬 Supports access to third-party large models, provides Q&A, sentiment
-  analysis and other functions.
-- **Local Natural Language Processing (NLP)**：🤖 A more secure intelligent assistant that lets your
-  diary know you better.
+- **Intelligent assistant**：💬 Supports access to third-party large models, provides Q&A, sentiment analysis and other functions.
+- **Local Natural Language Processing (NLP)**：🤖 A more secure intelligent assistant that lets your diary know you better.
 
-(Note: Cross-platform capabilities are provided by Flutter, platforms with * may need to configure
-your own signatures)
+(Note: Cross-platform capabilities are provided by Flutter, platforms with * may need to configure your own signatures)
 
 ## 🔧 Main Technology stack
 
@@ -48,11 +45,19 @@ your own signatures)
 
 ### Mobile
 
-![Mobile](res/screenshot/mobile.webp)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/mobile_dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/mobile_light.webp">
+  <img alt="The mobile screenshot for moodiary." src="res/screenshot/mobile_light.webp">
+</picture>
 
 ### Desktop
 
-![Desktop](res/screenshot/desktop.webp)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/desktop_dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/desktop_light.webp">
+  <img alt="The desktop screenshot for moodiary." src="res/screenshot/desktop_light.webp">
+</picture>
 
 ## 🚀 Installation guide
 
@@ -111,10 +116,10 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 4. **Package release**：
 
-   - Android: `flutter build apk`
-   - iOS: `flutter build ipa`
-   - Windows: `flutter build windows`
-   - MacOS: `flutter build macos`
+    - Android: `flutter build apk`
+    - iOS: `flutter build ipa`
+    - Windows: `flutter build windows`
+    - MacOS: `flutter build macos`
 
 ## 📝 More description
 
@@ -122,7 +127,7 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 > In the experimental stage
 
-Today, more and more industry products are beginning to incorporate AI technology, which undoubtedly greatly improves our experience. However, for diary applications, it is not acceptable to hand over the data to a large model because it is not certain that the data will be used for training. Therefore, a better approach is to adopt a local model. Although local models may not be as powerful as large models due to size limitations, they can still provide necessary help to a certain extent.
+Today, more and more industry products are beginning to incorporate AI technology, which undoubtedly greatly improves our experience. However, for diary applications, it is not acceptable to hand over the data to a large model because it is not certain that the data will be used for training. Therefore, a better approach is to adopt a local model. Although local models may not be as powerful as large models due to size limitations, they can still provide necessary help to a certain extent. 
 
 Currently, I have the following tasks integrated into the source code:
 
@@ -165,10 +170,11 @@ You can buy me a sandwich to keep me motivated to continue developing.
 
 ### List of sponsors
 
-If you want to be on the list, you can leave your link in the comments, in no particular order.
+If you want to be on the list, you can leave me a message, in no particular order, and the list will be updated regularly.
 
-|                Sponsor                | Price  |
-|:-------------------------------------:|:------:|
-| [dsxksss](https://github.com/dsxksss) | 50 CNY |
-|                  沭飏秋                  | 10 CNY |
-|                  十一                   | 20 CNY |
+| Sponsor                               | Price    | Sponsor | Price  |
+|---------------------------------------|----------|---------|--------|
+| [dsxksss](https://github.com/dsxksss) | 50 CNY   | 十一      | 20 CNY |
+| 沭飏秋                                   | 10 CNY   | 朱东杰     | 60 CNY |
+| 匿名                                    | 5 CNY    | wu      | 10 CNY |
+| 云烨                                    | 2.76 CNY |         |        |

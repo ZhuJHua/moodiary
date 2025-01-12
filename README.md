@@ -45,11 +45,19 @@
 
 ### 移动端
 
-![移动端](res/screenshot/mobile.webp)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/mobile_dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/mobile_light.webp">
+  <img alt="The mobile screenshot for moodiary." src="res/screenshot/mobile_light.webp">
+</picture>
 
 ### 桌面端
 
-![桌面端](res/screenshot/desktop.webp)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/desktop_dark.webp">
+  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/desktop_light.webp">
+  <img alt="The desktop screenshot for moodiary." src="res/screenshot/desktop_light.webp">
+</picture>
 
 ## 🚀 安装指南
 
@@ -109,9 +117,9 @@
 4. **打包发布**：
 
     - Android: `flutter build apk`
-   - iOS: `flutter build ipa`
+    - iOS: `flutter build ipa`
     - Windows: `flutter build windows`
-   - MacOS: `flutter build macos`
+    - MacOS: `flutter build macos`
 
 ## 📝 更多说明
 
@@ -162,10 +170,11 @@
 
 ### 捐助者名单
 
-如果您想要出现在名单中，可以在留言中留下您的链接，排名不分先后。
+如果您想要出现在名单中，可以给我留言，排名不分先后，名单会定期更新。
 
-|                  捐助者                  |   金额   |
-|:-------------------------------------:|:------:|
-| [dsxksss](https://github.com/dsxksss) | 50 CNY |
-|                  沭飏秋                  | 10 CNY |
-|                  十一                   | 20 CNY |
+| 捐助者                                   | 金额       | 捐助者 | 金额     |
+|---------------------------------------|----------|-----|--------|
+| [dsxksss](https://github.com/dsxksss) | 50 CNY   | 十一  | 20 CNY |
+| 沭飏秋                                   | 10 CNY   | 朱东杰 | 60 CNY |
+| 匿名                                    | 5 CNY    | wu  | 10 CNY |
+| 云烨                                    | 2.76 CNY |     |        |
