@@ -1,8 +1,9 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="res/banner/dark_en.svg">
   <source media="(prefers-color-scheme: light)" srcset="res/banner/light_en.svg">
-  <img alt="The preview for moodiary." src="res/banner/light_zh.svg">
+  <img alt="The preview for moodiary." src="res/banner/light_en.svg">
 </picture>
+
 
 <p align="center"><a href="README.md">简体中文</a> | English</p>
 
@@ -19,24 +20,19 @@
 ## ✨ Feature
 
 - **Cross-platform support**：🌍 Compatible with Android, iOS\*, Windows\*, MacOS\*, Linux.
-- **Material Design**：🎨 The interface is intuitive and user-friendly, and follows the Material
-  Design specifications.
+- **Material Design**：🎨 The interface is intuitive and user-friendly, and follows the Material Design specifications.
 - **Rich text editing**：📝 Supports text editing in bold, italic, underline and other formats.
-- **Multimedia accessories**：📷 You can add pictures, audio, video or even draw a picture to your
-  diary.
+- **Multimedia accessories**：📷 You can add pictures, audio, video or even draw a picture to your diary.
 - **Search and classification**：🔍 Easily manage your diary by full-text search and categorization.
 - **Custom theme**：🌈 Supports light and dark modes, as well as a variety of color schemes.
 - **Data security**：🔒 Keep your diary safe with a password, supports biometric unlocking.
 - **Export and share**：🧾 Support all data import/export, as well as single diary sharing.
 - **Backup and synchronization**：☁ Support for LAN synchronization and WebDav backup.
 - **Footprint Map** : 🗺️ See your footprints on a map. Every step of your life is worth documenting.
-- **Intelligent assistant**：💬 Supports access to third-party large models, provides Q&A, sentiment
-  analysis and other functions.
-- **Local Natural Language Processing (NLP)**：🤖 A more secure intelligent assistant that lets your
-  diary know you better.
+- **Intelligent assistant**：💬 Supports access to third-party large models, provides Q&A, sentiment analysis and other functions.
+- **Local Natural Language Processing (NLP)**：🤖 A more secure intelligent assistant that lets your diary know you better.
 
-(Note: Cross-platform capabilities are provided by Flutter, platforms with * may need to configure
-your own signatures)
+(Note: Cross-platform capabilities are provided by Flutter, platforms with * may need to configure your own signatures)
 
 ## 🔧 Main Technology stack
 
@@ -68,8 +64,7 @@ your own signatures)
 
 ### Third party SDK
 
-Some capabilities need to apply for third-party SDKS, and the following service providers provide
-free versions, and the obtained keys are configured in the lab.
+Some capabilities need to apply for third-party SDKS, and the following service providers provide free versions, and the obtained keys are configured in the lab.
 
 #### Weather service
 
@@ -85,8 +80,7 @@ free versions, and the obtained keys are configured in the lab.
 
 ### Direct mounting
 
-Use it by downloading the compiled installation package in Release, or manually compiling it if you
-don't have the platform you need.
+Use it by downloading the compiled installation package in Release, or manually compiling it if you don't have the platform you need.
 
 ### Manual compilation
 
@@ -100,8 +94,7 @@ don't have the platform you need.
 
 #### Installation procedure
 
-> Note: When packaging, you need to modify the corresponding platform configuration file, such as
-> Android platform build.gradle
+> Note: When packaging, you need to modify the corresponding platform configuration file, such as Android platform build.gradle
 
 1. **Clone Repo**：
 
@@ -135,20 +128,11 @@ don't have the platform you need.
 
 > In the experimental stage
 
-Today, more and more industry products are beginning to incorporate AI technology, which undoubtedly
-greatly improves our experience. However, for diary applications, it is not acceptable to hand over
-the data to a large model because it is not certain that the data will be used for training.
-Therefore, a better approach is to adopt a local model. Although local models may not be as powerful
-as large models due to size limitations, they can still provide necessary help to a certain extent.
-
-Currently, I have the following tasks integrated into the source code:
+Today, more and more industry products are beginning to incorporate AI technology, which undoubtedly greatly improves our experience. However, for diary applications, it is not acceptable to hand over the data to a large model because it is not certain that the data will be used for training. Therefore, a better approach is to adopt a local model. Although local models may not be as powerful as large models due to size limitations, they can still provide necessary help to a certain extent. Currently, I have the following tasks integrated into the source code:
 
 #### SQuAD task based on Bert pre-trained model
 
-I used MobileBert for the SQuAD task, which is a simple machine reading comprehension task. You can
-ask it questions and it will return the answers you need. The model files are in the `.tflite`
-format required by TensorFlow Lite, so you can add your own model files to the `assets/tflite`
-directory.
+I used MobileBert for the SQuAD task, which is a simple machine reading comprehension task. You can ask it questions and it will return the answers you need. The model files are in the `.tflite` format required by TensorFlow Lite, so you can add your own model files to the `assets/tflite` directory.
 
 Thanks to the following open source projects:
 
@@ -166,9 +150,7 @@ Contributions are welcome! Please follow these steps to contribute:
 4. Push to branch(`git push origin feature-branch-name`)。
 5. Create a Pull Request.
 
-Please make sure that your code to
-follow [Flutter style guide](https://flutter.dev/docs/development/tools/formatting) and include the
-appropriate tests.
+Please make sure that your code to follow [Flutter style guide](https://flutter.dev/docs/development/tools/formatting) and include the appropriate tests.
 
 ## 📄 License
 
@@ -187,8 +169,7 @@ You can buy me a sandwich to keep me motivated to continue developing.
 
 ### List of sponsors
 
-If you want to be on the list, you can leave me a message, in no particular order, and the list will
-be updated regularly.
+If you want to be on the list, you can leave me a message, in no particular order, and the list will be updated regularly.
 
 | Sponsor                               | Price    | Sponsor | Price  |
 |---------------------------------------|----------|---------|--------|
