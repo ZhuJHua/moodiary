@@ -97,29 +97,29 @@
 
 1. **克隆仓库**：
 
-   ```bash
-   git clone https://github.com/ZhuJHua/moodiary.git
-   cd moodiary
-   ```
+```bash
+git clone https://github.com/ZhuJHua/moodiary.git
+cd moodiary
+```
 
 2. **安装依赖**：
 
-   ```bash
-   flutter pub get
-   ```
+```bash
+flutter pub get
+```
 
 3. **运行应用**：
 
-   ```bash
-   flutter run
-   ```
+```bash
+flutter run
+```
 
 4. **打包发布**：
 
-    - Android: `flutter build apk`
-    - iOS: `flutter build ipa`
-    - Windows: `flutter build windows`
-    - MacOS: `flutter build macos`
+- Android: `flutter build apk`
+- iOS: `flutter build ipa`
+- Windows: `flutter build windows`
+- MacOS: `flutter build macos`
 
 ## 📝 更多说明
 
