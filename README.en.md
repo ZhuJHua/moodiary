@@ -4,7 +4,6 @@
   <img alt="The preview for moodiary." src="res/banner/light_en.svg">
 </picture>
 
-
 <p align="center"><a href="README.md">简体中文</a> | English</p>
 
 <p align="center">QQ Group: 760014526</p>
@@ -128,7 +127,9 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 > In the experimental stage
 
-Today, more and more industry products are beginning to incorporate AI technology, which undoubtedly greatly improves our experience. However, for diary applications, it is not acceptable to hand over the data to a large model because it is not certain that the data will be used for training. Therefore, a better approach is to adopt a local model. Although local models may not be as powerful as large models due to size limitations, they can still provide necessary help to a certain extent. Currently, I have the following tasks integrated into the source code:
+Today, more and more industry products are beginning to incorporate AI technology, which undoubtedly greatly improves our experience. However, for diary applications, it is not acceptable to hand over the data to a large model because it is not certain that the data will be used for training. Therefore, a better approach is to adopt a local model. Although local models may not be as powerful as large models due to size limitations, they can still provide necessary help to a certain extent. 
+
+Currently, I have the following tasks integrated into the source code:
 
 #### SQuAD task based on Bert pre-trained model
 
@@ -177,4 +178,3 @@ If you want to be on the list, you can leave me a message, in no particular orde
 | 沭飏秋                                   | 10 CNY   | 朱东杰     | 60 CNY |
 | 匿名                                    | 5 CNY    | wu      | 10 CNY |
 | 云烨                                    | 2.76 CNY |         |        |
-
