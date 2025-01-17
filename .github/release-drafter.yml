@@ -1,5 +1,6 @@
-name-template: 'v$NEXT_PATCH_VERSION'
-tag-template: 'v$NEXT_PATCH_VERSION'
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
 categories:
   - title: ✨ Features
     labels:
@@ -25,16 +26,9 @@ categories:
 
 change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
 template: |
-  # 📦 $RELEASE_TITLE
-
-  ## 🔥 What is New
-  Here's what's changed and improved in this release:
+  ## 🔥 What's Changed
 
   $CHANGES
 
-  ## 📋 Categories
-  $CATEGORY_RELEASES
-
   ---
-  🕒 Release Date: $DATE  
-  🔖 Compare Changes: [View Changes](https://github.com/$REPOSITORY/compare/$PREVIOUS_TAG...$TAG)
+  🔖 Compare Changes: [View Changes](https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION)
