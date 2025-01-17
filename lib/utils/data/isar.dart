@@ -10,6 +10,7 @@ import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/models/isar/sync_record.dart';
 import 'package:mood_diary/common/models/map.dart';
 import 'package:mood_diary/common/values/diary_type.dart';
+import 'package:mood_diary/utils/data/pref.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
@@ -165,12 +166,14 @@ class IsarUtil {
     if (oldDiary != null) {
       // 清理本地媒体文件
       await FileUtil.cleanUpOldMediaFiles(oldDiary, newDiary);
-      if (WebDavUtil().hasOption) {
+      if (WebDavUtil().hasOption &&
+          PrefUtil.getValue<bool>('autoSyncAfterChange') == true) {
         unawaited(WebDavUtil()
             .updateSingleDiary(oldDiary: oldDiary, newDiary: newDiary));
       }
     } else {
-      if (WebDavUtil().hasOption) {
+      if (WebDavUtil().hasOption &&
+          PrefUtil.getValue<bool>('autoSyncAfterChange') == true) {
         unawaited(WebDavUtil().uploadSingleDiary(newDiary));
       }
     }

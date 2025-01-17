@@ -106,4 +106,9 @@ class WebDavLogic extends GetxController {
     await PrefUtil.setValue<bool>('autoSync', value);
     state.autoSync.value = value;
   }
+
+  void setAutoSyncAfterChange(bool value) async {
+    await PrefUtil.setValue<bool>('autoSyncAfterChange', value);
+    state.autoSyncAfterChange.value = value;
+  }
 }
