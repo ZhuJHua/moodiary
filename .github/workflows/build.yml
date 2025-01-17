@@ -60,11 +60,11 @@ jobs:
           name: android-apk
           path: artifacts/android
 
-      - name: Extract Version
-        id: extract_version
+      - name: Extract Tag Version
+        id: extract_tag_version
         run: |
-          version=$(awk '/^version: / {print $2}' pubspec.yaml | tr -d '\r')
-          echo "VERSION=$version" >> $GITHUB_ENV
+          tag=$(git describe --tags --abbrev=0)
+          echo "VERSION=${tag#v}" >> $GITHUB_ENV
 
 
       - name: Rename Artifacts
