@@ -1,6 +1,7 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/services.dart';
 import 'package:mood_diary/router/app_routes.dart';
+import 'package:mood_diary/utils/auth_util.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'lock_state.dart';
@@ -11,6 +12,14 @@ class LockLogic extends GetxController with GetSingleTickerProviderStateMixin {
       vsync: this, duration: const Duration(milliseconds: 200));
   late Animation<double> animation = Tween(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: animationController, curve: Curves.easeInOut));
+
+  @override
+  void onReady() async {
+    if (state.supportBiometrics && state.lockType != 'pause') {
+      if (await AuthUtil.check()) checked();
+    }
+    super.onReady();
+  }
 
   @override
   void onClose() {

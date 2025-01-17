@@ -84,7 +84,7 @@ class LockPage extends StatelessWidget {
     }
 
     return PopScope(
-      canPop: false,
+      canPop: state.lockType != 'pause',
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
@@ -130,7 +130,9 @@ class LockPage extends StatelessWidget {
                     buildNumButton('7'),
                     buildNumButton('8'),
                     buildNumButton('9'),
-                    buildBiometricsButton(),
+                    state.supportBiometrics
+                        ? buildBiometricsButton()
+                        : const Spacer(),
                     buildNumButton('0'),
                     buildDeleteButton()
                   ],
