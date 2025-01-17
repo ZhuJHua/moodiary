@@ -3,15 +3,13 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'local_send_server_logic.dart';
-import 'local_send_server_state.dart';
 
 class LocalSendServerComponent extends StatelessWidget {
   const LocalSendServerComponent({super.key});
 
   @override
   Widget build(BuildContext context) {
-    //final LocalSendServerLogic logic = Get.put(LocalSendServerLogic());
-    final LocalSendServerState state = Bind.find<LocalSendServerLogic>().state;
+    final LocalSendServerLogic logic = Get.put(LocalSendServerLogic());
 
     return GetBuilder<LocalSendServerLogic>(
       assignId: true,
@@ -21,19 +19,19 @@ class LocalSendServerComponent extends StatelessWidget {
             children: [
               const ListTile(
                 leading: FaIcon(FontAwesomeIcons.solidLightbulb),
-                title: Text('在接收完成后请手动重启应用'),
+                title: Text('接收过程中不要操作'),
               ),
               ListTile(
                 leading: const FaIcon(FontAwesomeIcons.server),
-                title: Text(state.serverName),
+                title: Text(logic.serverName),
                 subtitle: const Text('服务器已启动'),
               ),
-              if (state.receiveCount.value > 0) ...[
+              if (logic.receiveCount.value > 0) ...[
                 ListTile(
                   title: const Text('已接收'),
                   subtitle: Obx(() {
                     return Text(
-                      state.receiveCount.value.toString(),
+                      logic.receiveCount.value.toString(),
                     );
                   }),
                 )

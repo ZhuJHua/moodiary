@@ -6,7 +6,6 @@ class LocalSendClientState {
   String? serverIp;
   String? serverName;
 
-  int scanPort = 50001;
   Duration broadcastInterval = const Duration(seconds: 3);
 
   RxDouble progress = .0.obs;

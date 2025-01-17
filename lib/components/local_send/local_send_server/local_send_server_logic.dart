@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:faker/faker.dart';
 import 'package:flutter/foundation.dart' as flutter;
 import 'package:mood_diary/common/models/isar/category.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
@@ -14,20 +15,31 @@ import '../../../pages/home/diary/diary_logic.dart';
 import '../../../utils/data/isar.dart';
 import '../../../utils/file_util.dart';
 import '../../../utils/log_util.dart';
-import 'local_send_server_state.dart';
 
 class LocalSendServerLogic extends GetxController {
-  final LocalSendServerState state = LocalSendServerState();
   late RawDatagramSocket socket;
   HttpServer? httpServer;
 
+  String? serverIp;
+  String serverName = Faker().animal.name();
+
+  RxDouble progress = .0.obs;
+
+  RxDouble speed = .0.obs;
+  RxInt receiveCount = 0.obs;
+
+  late final LocalSendLogic localSendLogic = Bind.find<LocalSendLogic>();
+
+  int get scanPort => localSendLogic.state.scanPort.value;
+
+  int get transferPort => localSendLogic.state.transferPort.value;
+
   @override
   void onReady() async {
-    socket =
-        await RawDatagramSocket.bind(InternetAddress.anyIPv4, state.scanPort);
-    state.serverIp = await getDeviceIP();
+    socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, scanPort);
+    serverIp = await getDeviceIP();
     update();
-    if (state.serverIp != null) {
+    if (serverIp != null) {
       await startBroadcastListener();
       await startServer();
     }
@@ -43,7 +55,7 @@ class LocalSendServerLogic extends GetxController {
 
   // 启动UDP广播监听
   Future<void> startBroadcastListener() async {
-    LogUtil.printInfo('Listening for broadcast on port ${state.scanPort}');
+    LogUtil.printInfo('Listening for broadcast on port $scanPort');
     socket.listen((RawSocketEvent event) {
       if (event == RawSocketEvent.read) {
         final datagram = socket.receive();
@@ -51,8 +63,7 @@ class LocalSendServerLogic extends GetxController {
           final message = String.fromCharCodes(datagram.data);
           LogUtil.printInfo(
               'Received broadcast: $message from ${datagram.address.address}');
-          final response =
-              '${state.serverIp}:${state.transferPort}:${state.serverName}';
+          final response = '$serverIp:$transferPort:$serverName';
           socket.send(response.codeUnits, datagram.address, datagram.port);
         }
       }
@@ -64,9 +75,8 @@ class LocalSendServerLogic extends GetxController {
     final handler = const shelf.Pipeline()
         .addMiddleware(shelf.logRequests())
         .addHandler(_handleRequest);
-    httpServer = await serve(handler, state.serverIp!, state.transferPort);
-    LogUtil.printInfo(
-        'Server started on http://${state.serverIp}:${state.transferPort}');
+    httpServer = await serve(handler, serverIp!, transferPort);
+    LogUtil.printInfo('Server started on http://$serverIp:$transferPort');
   }
 
   Future<shelf.Response> _handleRequest(shelf.Request request) async {
@@ -114,7 +124,7 @@ class LocalSendServerLogic extends GetxController {
     // 插入日记
     await IsarUtil.insertADiary(diary);
     await Bind.find<DiaryLogic>().refreshAll();
-    state.receiveCount.value += 1;
+    receiveCount.value += 1;
     return shelf.Response.ok('Data and files received successfully');
   }
 }

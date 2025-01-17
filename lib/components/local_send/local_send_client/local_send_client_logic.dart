@@ -6,6 +6,7 @@ import 'package:dio/dio.dart' as dio;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:mood_diary/components/local_send/local_send_logic.dart';
 import 'package:refreshed/refreshed.dart';
 
 import '../../../utils/data/isar.dart';
@@ -21,6 +22,9 @@ class LocalSendClientLogic extends GetxController {
 
   late RawDatagramSocket socket;
   Timer? timer;
+  late final LocalSendLogic localSendLogic = Bind.find<LocalSendLogic>();
+
+  int get scanPort => localSendLogic.state.scanPort.value;
 
   @override
   void onReady() async {
@@ -40,7 +44,7 @@ class LocalSendClientLogic extends GetxController {
   void _sendBroadcast() {
     const message = 'Looking for server';
     socket.send(
-        message.codeUnits, InternetAddress('255.255.255.255'), state.scanPort);
+        message.codeUnits, InternetAddress('255.255.255.255'), scanPort);
     LogUtil.printInfo('Broadcast sent');
   }
 
