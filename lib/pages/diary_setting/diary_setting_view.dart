@@ -204,7 +204,7 @@ class DiarySettingPage extends StatelessWidget {
                                 child: Row(
                                   spacing: 8.0,
                                   children: [
-                                    Text('原图'),
+                                    const Text('原图'),
                                     if (state.quality.value == 3) ...[
                                       const Icon(Icons.check_rounded),
                                     ],

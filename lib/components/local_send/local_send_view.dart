@@ -17,8 +17,6 @@ class LocalSendComponent extends StatelessWidget {
     final LocalSendLogic logic = Get.put(LocalSendLogic());
     final LocalSendState state = Bind.find<LocalSendLogic>().state;
 
-    final textStyle = Theme.of(context).textTheme;
-
     Widget buildWifiInfo() {
       return GetBuilder<LocalSendLogic>(
           id: 'WifiInfo',
