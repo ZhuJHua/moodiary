@@ -4,7 +4,6 @@ import 'package:mood_diary/utils/package_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../utils/data/pref.dart';
 import 'about_state.dart';
 
 class AboutLogic extends GetxController {
@@ -37,17 +36,8 @@ class AboutLogic extends GetxController {
 
   //跳转到反馈页
   Future<void> toReportPage() async {
-    var uri = Uri(
-        scheme: 'https',
-        host: 'support.qq.com',
-        path: 'products/650147',
-        queryParameters: {
-          'nickname': PrefUtil.getValue<String>('uuid'),
-          'avatar':
-              'https://txc.qq.com/static/desktop/img/products/def-product-logo.png',
-          'openid': PrefUtil.getValue<String>('uuid')
-        });
-    await Get.toNamed(AppRoutes.webViewPage, arguments: [uri.toString(), '反馈']);
+    await Get.toNamed(AppRoutes.webViewPage,
+        arguments: ['https://answer.moodiary.net', '反馈']);
     //await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
 

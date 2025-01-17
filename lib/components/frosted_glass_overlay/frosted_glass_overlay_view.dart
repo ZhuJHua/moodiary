@@ -20,10 +20,9 @@ class FrostedGlassOverlayComponent extends StatelessWidget {
               sigmaX: 10 * logic.animationController.value,
               sigmaY: 10 * logic.animationController.value),
           enabled: logic.animationController.value > 0,
-          child: child,
+          child: const SizedBox.shrink(),
         );
       },
-      child: const SizedBox.shrink(),
     );
   }
 }

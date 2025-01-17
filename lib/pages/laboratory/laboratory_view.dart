@@ -12,7 +12,6 @@ class LaboratoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Bind.find<LaboratoryLogic>();
-    final textStyle = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(

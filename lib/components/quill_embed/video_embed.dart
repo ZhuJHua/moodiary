@@ -35,11 +35,16 @@ class VideoEmbedBuilder extends EmbedBuilder {
         ? videoEmbed.name
         : FileUtil.getRealPath('video', videoEmbed.name);
     final colorScheme = Theme.of(context).colorScheme;
-    return Card.outlined(
-      clipBehavior: Clip.hardEdge,
-      color: colorScheme.surfaceContainerLowest,
-      child: VideoPlayerComponent(
-        videoPath: videoPath,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 300),
+        child: Card.outlined(
+          clipBehavior: Clip.hardEdge,
+          color: colorScheme.surfaceContainerLowest,
+          child: VideoPlayerComponent(
+            videoPath: videoPath,
+          ),
+        ),
       ),
     ); // 使用音频播放器组件渲染
   }

@@ -32,6 +32,9 @@ class AppColor {
     const Color(0xFFA47B67),
   ];
 
+  // PANTONE 2008 Blue Iris
+  static Color answerColor = const Color(0xFF5A5B9F);
+
   static String colorName(index) {
     return switch (index) {
       0 => l10n.colorNameBaiCaoShuang,

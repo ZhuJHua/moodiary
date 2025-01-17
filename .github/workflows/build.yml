@@ -47,31 +47,31 @@ jobs:
           name: android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
-  build-msix:
-    runs-on: windows-latest
-    name: Build MSIX
-    needs: build-apk
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Set Up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.27.1'
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Build MSIX
-        run: flutter build windows --release
-
-      - name: Upload MSIX Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: windows-msix
-          path: build/windows/runner/Release/*.msix
+  #  build-msix:
+  #    runs-on: windows-latest
+  #    name: Build MSIX
+  #    needs: build-apk
+  #
+  #    steps:
+  #      - name: Checkout Repository
+  #        uses: actions/checkout@v3
+  #
+  #      - name: Set Up Flutter
+  #        uses: subosito/flutter-action@v2
+  #        with:
+  #          flutter-version: '3.27.1'
+  #
+  #      - name: Install Dependencies
+  #        run: flutter pub get
+  #
+  #      - name: Build MSIX
+  #        run: flutter build windows --release
+  #
+  #      - name: Upload MSIX Artifact
+  #        uses: actions/upload-artifact@v3
+  #        with:
+  #          name: windows-msix
+  #          path: build/windows/runner/Release/*.msix
 
   #  build-ios-macos:
   #    runs-on: macos-latest
@@ -116,7 +116,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: Publish Release
-    needs: [ build-apk, build-msix ]
+    needs: [ build-apk ]
 
     steps:
       - name: Checkout Repository
@@ -129,11 +129,11 @@ jobs:
           name: android-apk
           path: artifacts/android
 
-      - name: Download MSIX Artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: windows-msix
-          path: artifacts/windows
+      #      - name: Download MSIX Artifact
+      #        uses: actions/download-artifact@v3
+      #        with:
+      #          name: windows-msix
+      #          path: artifacts/windows
 
       #      - name: Download iOS Artifact
       #        uses: actions/download-artifact@v3
@@ -159,7 +159,7 @@ jobs:
         run: |
           mkdir -p renamed-artifacts
           mv artifacts/android/app-release.apk renamed-artifacts/moodiary-${{ env.VERSION }}-android-arm64.apk
-          mv artifacts/windows/*.msix renamed-artifacts/moodiary-${{ env.VERSION }}-windows-x64.msix
+      #          mv artifacts/windows/*.msix renamed-artifacts/moodiary-${{ env.VERSION }}-windows-x64.msix
       #          mv artifacts/ios/*.ipa renamed-artifacts/moodiary-${{ env.VERSION }}-ios.ipa
       #          mv artifacts/macos/*.app renamed-artifacts/moodiary-${{ env.VERSION }}-macos.app
 

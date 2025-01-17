@@ -16,5 +16,8 @@ class WebDavState {
 
   RxBool autoSync = PrefUtil.getValue<bool>('autoSync')!.obs;
 
+  RxBool autoSyncAfterChange =
+      PrefUtil.getValue<bool>('autoSyncAfterChange')!.obs;
+
   WebDavState();
 }

@@ -57,8 +57,6 @@ class CalendarLogic extends GetxController {
     }
   }
 
-  void _onVerticalDragUpdate(DragUpdateDetails details) {}
-
   void onVerticalDragEnd(DragEndDetails details) {
     double velocity = details.velocity.pixelsPerSecond.dy;
     LogUtil.printInfo(velocity);

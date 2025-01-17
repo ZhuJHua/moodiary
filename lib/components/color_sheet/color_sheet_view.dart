@@ -165,34 +165,34 @@ class ColorSheetComponent extends StatelessWidget {
     }
 
     // 绘制特殊配色
-    Widget buildSpecialColor() {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              '特殊配色',
-              style: textStyle.titleMedium,
-            ),
-          ),
-          GridView.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 64,
-              childAspectRatio: 1.0,
-            ),
-            physics: const NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              return const SizedBox.shrink();
-            },
-            itemCount: 0,
-          ),
-        ],
-      );
-    }
+    // Widget buildSpecialColor() {
+    //   return Column(
+    //     crossAxisAlignment: CrossAxisAlignment.start,
+    //     mainAxisSize: MainAxisSize.min,
+    //     children: [
+    //       Padding(
+    //         padding: const EdgeInsets.all(8.0),
+    //         child: Text(
+    //           '特殊配色',
+    //           style: textStyle.titleMedium,
+    //         ),
+    //       ),
+    //       GridView.builder(
+    //         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+    //           maxCrossAxisExtent: 64,
+    //           childAspectRatio: 1.0,
+    //         ),
+    //         physics: const NeverScrollableScrollPhysics(),
+    //         padding: EdgeInsets.zero,
+    //         shrinkWrap: true,
+    //         itemBuilder: (context, index) {
+    //           return const SizedBox.shrink();
+    //         },
+    //         itemCount: 0,
+    //       ),
+    //     ],
+    //   );
+    // }
 
     return GetBuilder<ColorSheetLogic>(
       assignId: true,

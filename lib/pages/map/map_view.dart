@@ -39,14 +39,14 @@ class MapPage extends StatelessWidget {
                       urlTemplate:
                           'http://t6.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=vec&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${state.tiandituKey}',
                       tileProvider:
-                          const FMTCStore('mapStore').getTileProvider(),
+                          FMTCTileProvider(stores: const {'mapStore': null}),
                       tileSize: 256,
                     ),
                     TileLayer(
                       urlTemplate:
                           'http://t6.tianditu.gov.cn/cva_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=cva&STYLE=default&TILEMATRIXSET=w&FORMAT=tiles&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&tk=${state.tiandituKey}',
                       tileProvider:
-                          const FMTCStore('mapStore').getTileProvider(),
+                          FMTCTileProvider(stores: const {'mapStore': null}),
                       tileSize: 256,
                     ),
                     MarkerClusterLayerWidget(

@@ -5,7 +5,7 @@ class FrostedGlassOverlayLogic extends GetxController
     with GetSingleTickerProviderStateMixin {
   late final AnimationController animationController = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 150),
+    duration: const Duration(milliseconds: 100),
   );
 
   void enable() {
@@ -14,7 +14,7 @@ class FrostedGlassOverlayLogic extends GetxController
 
   void disable() {
     animationController.animateTo(0,
-        duration: const Duration(milliseconds: 100));
+        duration: const Duration(milliseconds: 50));
   }
 
   @override

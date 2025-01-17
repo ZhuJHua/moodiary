@@ -1,7 +1,6 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
 import 'package:mood_diary/components/diary_card/calendar_diary_card_view.dart';
 import 'package:mood_diary/components/loading/loading.dart';
@@ -10,7 +9,6 @@ import 'package:mood_diary/utils/array_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import '../../../main.dart';
 import 'calendar_logic.dart';
 
 class CalendarPage extends StatelessWidget {
@@ -169,99 +167,6 @@ class CalendarPage extends StatelessWidget {
           ),
         ],
       );
-      return Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          child: ExpansionTile(
-            title: Text(l10n.homeNavigatorCalendar),
-            initiallyExpanded: true,
-            collapsedShape: const RoundedRectangleBorder(
-                borderRadius: AppBorderRadius.mediumBorderRadius),
-            shape: const RoundedRectangleBorder(
-                borderRadius: AppBorderRadius.mediumBorderRadius),
-            backgroundColor: colorScheme.surfaceContainer,
-            collapsedBackgroundColor: colorScheme.surfaceContainerLow,
-            controller: logic.expansionTileController,
-            children: [
-              Stack(
-                children: [
-                  Obx(() {
-                    return CalendarDatePicker2(
-                      displayedMonthDate: state.currentMonth.value,
-                      config: CalendarDatePicker2Config(
-                        calendarViewMode: CalendarDatePicker2Mode.day,
-                        calendarType: CalendarDatePicker2Type.single,
-                        hideMonthPickerDividers: true,
-                        hideYearPickerDividers: true,
-                        useAbbrLabelForMonthModePicker: true,
-                        allowSameValueSelection: true,
-                        dayBuilder: ({
-                          required DateTime date,
-                          TextStyle? textStyle,
-                          BoxDecoration? decoration,
-                          bool? isSelected,
-                          bool? isDisabled,
-                          bool? isToday,
-                        }) {
-                          final contains = dateWithDiaryList.contains(date);
-                          final bgColor = contains
-                              ? Color.lerp(
-                                  colorScheme.surfaceContainer,
-                                  colorScheme.primary,
-                                  getDayColor(count: dateCountMap[date] ?? 0))
-                              : null;
-                          return Padding(
-                            padding: const EdgeInsets.all(2.0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: bgColor,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  date.day.toString(),
-                                  style: textStyle?.copyWith(
-                                    color: contains
-                                        ? ThemeData.estimateBrightnessForColor(
-                                                    bgColor!) ==
-                                                Brightness.dark
-                                            ? Colors.white
-                                            : Colors.black
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                        selectableDayPredicate: (DateTime date) {
-                          return dateWithDiaryList.contains(date);
-                        },
-                      ),
-                      onValueChanged: (value) {
-                        logic.animateToSelectedDateWithLock(value.first);
-                      },
-                      onDisplayedMonthChanged: logic.getMonthDiary,
-                      value: const [],
-                    );
-                  }),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: _buildActiveInfo(
-                        lessColor: colorScheme.surfaceContainer,
-                        moreColor: colorScheme.primary,
-                        textStyle: textStyle.labelSmall?.copyWith(
-                            color:
-                                colorScheme.onSurface.withValues(alpha: 0.8))),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
     }
 
     Widget buildCardList() {
@@ -341,10 +246,11 @@ class CalendarPage extends StatelessWidget {
                                   child: Processing())
                               : (state.currentMonthDiaryList.isNotEmpty
                                   ? buildCardList()
-                                  : const Center(
-                                      key: ValueKey('empty'),
+                                  : Center(
+                                      key: const ValueKey('empty'),
                                       child: FaIcon(
                                         FontAwesomeIcons.boxOpen,
+                                        color: colorScheme.onSurface,
                                         size: 56,
                                       ),
                                     )),

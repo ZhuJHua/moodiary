@@ -346,9 +346,14 @@ class MediaUtil {
       if (dateTime != null) {
         // 获取日期部分
         final dateOnly = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
         groupedMap.putIfAbsent(dateOnly, () => []).add(image);
       }
     }
+    groupedMap.forEach((key, value) {
+      value.sort((a, b) =>
+          basename(b).split('.')[0].compareTo(basename(a).split('.')[0]));
+    });
     // 返回按日期排序的分组数据
     final sortedEntries = groupedMap.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
@@ -369,6 +374,10 @@ class MediaUtil {
         groupedMap.putIfAbsent(dateOnly, () => []).add(video);
       }
     }
+    groupedMap.forEach((key, value) {
+      value.sort((a, b) =>
+          basename(b).split('.')[0].compareTo(basename(a).split('.')[0]));
+    });
     // 返回按日期排序的分组数据
     final sortedEntries = groupedMap.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
@@ -388,6 +397,10 @@ class MediaUtil {
         groupedMap.putIfAbsent(dateOnly, () => []).add(audio);
       }
     }
+    groupedMap.forEach((key, value) {
+      value.sort((a, b) =>
+          basename(b).split('.')[0].compareTo(basename(a).split('.')[0]));
+    });
     // 返回按日期排序的分组数据
     final sortedEntries = groupedMap.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));

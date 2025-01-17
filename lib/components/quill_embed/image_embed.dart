@@ -39,19 +39,24 @@ class ImageEmbedBuilder extends EmbedBuilder {
         ? imageEmbed.name
         : FileUtil.getRealPath('image', imageEmbed.name);
 
-    return GestureDetector(
-      onTap: () {
-        if (!isEdit) {
-          Get.toNamed(AppRoutes.photoPage, arguments: [
-            [imagePath],
-            0,
-          ]);
-        }
-      },
-      child: Card.outlined(
-        clipBehavior: Clip.hardEdge,
-        color: Colors.transparent,
-        child: Image.file(File(imagePath)),
+    return Center(
+      child: GestureDetector(
+        onTap: () {
+          if (!isEdit) {
+            Get.toNamed(AppRoutes.photoPage, arguments: [
+              [imagePath],
+              0,
+            ]);
+          }
+        },
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 300),
+          child: Card.outlined(
+            clipBehavior: Clip.hardEdge,
+            color: Colors.transparent,
+            child: Image.file(File(imagePath)),
+          ),
+        ),
       ),
     );
   }

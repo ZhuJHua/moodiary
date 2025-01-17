@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:mood_diary/components/local_send/local_send_client/local_send_client_logic.dart';
+import 'package:mood_diary/components/local_send/local_send_server/local_send_server_logic.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -64,5 +66,28 @@ class LocalSendLogic extends GetxController {
   void changeType(String value) {
     state.type = value;
     update(['SegmentButton', 'Panel']);
+  }
+
+  void changeScanPort(int value) {
+    state.scanPort.value = value;
+    if (Bind.isRegistered<LocalSendServerLogic>()) {
+      Bind.reload<LocalSendServerLogic>();
+    }
+
+    if (Bind.isRegistered<LocalSendClientLogic>()) {
+      Bind.reload<LocalSendClientLogic>();
+    }
+  }
+
+  void changeTransferPort(int value) {
+    state.transferPort.value = value;
+
+    if (Bind.isRegistered<LocalSendServerLogic>()) {
+      Bind.reload<LocalSendServerLogic>();
+    }
+
+    if (Bind.isRegistered<LocalSendClientLogic>()) {
+      Bind.reload<LocalSendClientLogic>();
+    }
   }
 }

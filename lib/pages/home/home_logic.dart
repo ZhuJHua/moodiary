@@ -47,11 +47,11 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     //     .show(context: Get.overlayContext!);
     appLifecycleListener = AppLifecycleListener(onStateChange: (state) {
       if (state == AppLifecycleState.inactive) {
-        frostedGlassOverlayLogic.enable();
-        //lockPage();
+        privacyMode(isEnable: true);
+        lockPage();
       }
       if (state == AppLifecycleState.resumed) {
-        frostedGlassOverlayLogic.disable();
+        privacyMode(isEnable: false);
       }
     });
 
@@ -104,7 +104,20 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     //如果开启密码的同时开启了立即锁定，就直接跳转到锁屏页面
     if (PrefUtil.getValue<bool>('lock') == true &&
         PrefUtil.getValue<bool>('lockNow') == true) {
-      Get.toNamed(AppRoutes.lockPage, arguments: 'pause');
+      // 如果当前不在编辑，分享页面
+      if (Get.currentRoute != AppRoutes.editPage &&
+          Get.currentRoute != AppRoutes.sharePage) {
+        Get.toNamed(AppRoutes.lockPage, arguments: 'pause');
+      }
+    }
+  }
+
+  //隐私模式
+  void privacyMode({required bool isEnable}) {
+    if (PrefUtil.getValue<bool>('backendPrivacy') == true) {
+      isEnable
+          ? frostedGlassOverlayLogic.enable()
+          : frostedGlassOverlayLogic.disable();
     }
   }
 

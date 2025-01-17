@@ -209,6 +209,21 @@ class EditLogic extends GetxController {
     update(['Image']);
   }
 
+  // 多张图片
+
+  Future<void> pickMultiPhoto(BuildContext context) async {
+    final List<XFile> photoList = await MediaUtil.pickMultiPhoto(10);
+    if (photoList.isNotEmpty && context.mounted) {
+      Navigator.pop(context);
+      for (var photo in photoList) {
+        await addNewImage(photo);
+      }
+      return;
+    } else {
+      NoticeUtil.showToast('取消图片选择');
+    }
+  }
+
   //单张照片
   Future<void> pickPhoto(ImageSource imageSource, BuildContext context) async {
     //获取一张图片
@@ -243,25 +258,6 @@ class EditLogic extends GetxController {
     }
     var path = FileUtil.getCachePath('${const Uuid().v7()}.png');
     addNewImage(XFile.fromData(imageData, path: path)..saveTo(path));
-  }
-
-  //相册选择多张照片
-  Future<void> pickMultiPhoto(BuildContext context) async {
-    //获取一堆照片
-    List<XFile> photoList = await MediaUtil.pickMultiPhoto(null);
-    if (photoList.isNotEmpty && context.mounted) {
-      //关闭dialog
-      Navigator.pop(context);
-      // if (photoList.length > 10 - state.imageFileList.length) {
-      //   photoList = photoList.sublist(0, 10 - state.imageFileList.length);
-      // }
-      for (var photo in photoList) {
-        addNewImage(photo);
-      }
-    } else {
-      //弹出一个提示
-      NoticeUtil.showToast('取消图片选择');
-    }
   }
 
   Future<void> addNewVideo(XFile xFile) async {

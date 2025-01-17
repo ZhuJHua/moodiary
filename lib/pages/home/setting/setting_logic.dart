@@ -27,11 +27,6 @@ class SettingLogic extends GetxController {
     super.onReady();
   }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
   //获取当前占用储存空间
   Future<void> getDataUsage() async {
     var sizeMap = await FileUtil.countSize();

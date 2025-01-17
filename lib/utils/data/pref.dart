@@ -92,6 +92,8 @@ class PrefUtil {
     'customFont',
     // 后台隐私保护
     'backendPrivacy',
+    // 日记状态改变时同步
+    'autoSyncAfterChange',
   };
 
   static Future<void> initPref() async {
@@ -213,6 +215,8 @@ class PrefUtil {
     await _prefs.setString('customFont', _prefs.getString('customFont') ?? '');
     await _prefs.setBool(
         'backendPrivacy', _prefs.getBool('backendPrivacy') ?? true);
+    await _prefs.setBool(
+        'autoSyncAfterChange', _prefs.getBool('autoSyncAfterChange') ?? false);
   }
 
   static Future<void> setValue<T>(String key, T value) async {

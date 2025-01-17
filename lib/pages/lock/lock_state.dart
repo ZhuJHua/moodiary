@@ -10,6 +10,9 @@ class LockState {
   //锁定类型，是立即锁定导致，还是启动锁定导致
   late String? lockType;
 
+  bool get supportBiometrics =>
+      PrefUtil.getValue<bool>('supportBiometrics') ?? false;
+
   LockState() {
     password = ''.obs;
     realPassword = PrefUtil.getValue<String>('password')!.obs;

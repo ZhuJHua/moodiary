@@ -48,6 +48,14 @@ class WebDavComponent extends StatelessWidget {
             subtitle: const Text('打开应用时自动同步日记'),
           );
         }),
+        Obx(() {
+          return SwitchListTile(
+            value: state.autoSyncAfterChange.value,
+            onChanged: logic.setAutoSyncAfterChange,
+            title: const Text('修改日记后同步'),
+            subtitle: const Text('新增，编辑，删除时同步日记'),
+          );
+        }),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Form(
