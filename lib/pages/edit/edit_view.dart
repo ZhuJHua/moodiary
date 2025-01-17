@@ -422,7 +422,9 @@ class EditPage extends StatelessWidget {
               ],
             ),
             onPressed: () async {
-              await logic.pickPhoto(ImageSource.gallery, context);
+              await logic.pickMultiPhoto(
+                context,
+              );
             },
           ),
           if (Platform.isAndroid || Platform.isIOS)
@@ -435,7 +437,10 @@ class EditPage extends StatelessWidget {
                 ],
               ),
               onPressed: () async {
-                await logic.pickPhoto(ImageSource.camera, context);
+                await logic.pickPhoto(
+                  ImageSource.camera,
+                  context,
+                );
               },
             ),
           SimpleDialogOption(
