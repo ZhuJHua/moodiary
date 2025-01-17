@@ -104,7 +104,11 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     //如果开启密码的同时开启了立即锁定，就直接跳转到锁屏页面
     if (PrefUtil.getValue<bool>('lock') == true &&
         PrefUtil.getValue<bool>('lockNow') == true) {
-      Get.toNamed(AppRoutes.lockPage, arguments: 'pause');
+      // 如果当前不在编辑，分享页面
+      if (Get.currentRoute != AppRoutes.editPage &&
+          Get.currentRoute != AppRoutes.sharePage) {
+        Get.toNamed(AppRoutes.lockPage, arguments: 'pause');
+      }
     }
   }
 
