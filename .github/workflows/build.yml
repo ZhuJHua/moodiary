@@ -119,60 +119,65 @@ jobs:
     needs: [ build-apk ]
 
     steps:
+
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 下载构建产物
       - name: Download APK Artifact
         uses: actions/download-artifact@v3
         with:
           name: android-apk
           path: artifacts/android
 
-      #      - name: Download MSIX Artifact
-      #        uses: actions/download-artifact@v3
-      #        with:
-      #          name: windows-msix
-      #          path: artifacts/windows
-
-      #      - name: Download iOS Artifact
-      #        uses: actions/download-artifact@v3
-      #        with:
-      #          name: ios-ipa
-      #          path: artifacts/ios
+      # - name: Download MSIX Artifact
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: windows-msix
+      #     path: artifacts/windows
       #
-      #      - name: Download macOS Artifact
-      #        uses: actions/download-artifact@v3
-      #        with:
-      #          name: macos-app
-      #          path: artifacts/macos
+      # - name: Download iOS Artifact
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: ios-ipa
+      #     path: artifacts/ios
+      #
+      # - name: Download macOS Artifact
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: macos-app
+      #     path: artifacts/macos
 
-      # 提取版本号
       - name: Extract Version
         id: extract_version
         run: |
-          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | tr -d '\r')
+          version=$(awk '/^version: / {print $2}' pubspec.yaml | tr -d '\r')
           echo "VERSION=$version" >> $GITHUB_ENV
 
-      # 重命名构建产物
+
       - name: Rename Artifacts
         run: |
           mkdir -p renamed-artifacts
-          mv artifacts/android/app-release.apk renamed-artifacts/moodiary-${{ env.VERSION }}-android-arm64.apk
-      #          mv artifacts/windows/*.msix renamed-artifacts/moodiary-${{ env.VERSION }}-windows-x64.msix
-      #          mv artifacts/ios/*.ipa renamed-artifacts/moodiary-${{ env.VERSION }}-ios.ipa
-      #          mv artifacts/macos/*.app renamed-artifacts/moodiary-${{ env.VERSION }}-macos.app
+          # Android APK
+          mv artifacts/android/*.apk renamed-artifacts/moodiary-${{ env.VERSION }}-android-arm64.apk
+          # mv artifacts/windows/*.msix renamed-artifacts/moodiary-${{ env.VERSION }}-windows-x64.msix
+          # mv artifacts/ios/*.ipa renamed-artifacts/moodiary-${{ env.VERSION }}-ios.ipa
+          # mv artifacts/macos/*.app renamed-artifacts/moodiary-${{ env.VERSION }}-macos.app
 
-      # 生成 Release Notes
       - name: Generate Release Notes
         id: release_notes
         uses: release-drafter/release-drafter@v5
         with:
           config-name: release-drafter.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 发布 Release
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: renamed-artifacts/*
           tag: v${{ env.VERSION }}
+          name: Release v${{ env.VERSION }}
+          body: ${{ steps.release_notes.outputs.notes }}
+          draft: true
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
