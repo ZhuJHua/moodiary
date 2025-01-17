@@ -50,7 +50,6 @@ jobs:
     needs: [ build-apk ]
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v3
 
@@ -69,7 +68,10 @@ jobs:
 
       - name: Extract Tag Version
         id: extract_tag_version
-        run: echo "VERSION=${{ steps.latest_tag.outputs.tag#v }}" >> $GITHUB_ENV
+        run: |
+          tag="${{ steps.latest_tag.outputs.tag }}"
+          version="${tag#v}"
+          echo "VERSION=$version" >> $GITHUB_ENV
 
       - name: Rename Artifacts
         run: |
