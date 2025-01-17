@@ -60,12 +60,16 @@ jobs:
           name: android-apk
           path: artifacts/android
 
+      - name: Get Latest Tag
+        id: latest_tag
+        uses: actions-ecosystem/action-get-latest-tag@v1.6.0
+        with:
+          fetch-all-tags: true
+          sort-tags: true
+
       - name: Extract Tag Version
         id: extract_tag_version
-        run: |
-          tag=$(git describe --tags --abbrev=0)
-          echo "VERSION=${tag#v}" >> $GITHUB_ENV
-
+        run: echo "VERSION=${{ steps.latest_tag.outputs.tag#v }}" >> $GITHUB_ENV
 
       - name: Rename Artifacts
         run: |
