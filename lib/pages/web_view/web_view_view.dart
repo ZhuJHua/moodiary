@@ -9,11 +9,24 @@ import 'web_view_logic.dart';
 class WebViewPage extends StatelessWidget {
   const WebViewPage({super.key});
 
-  Widget _buildBackToHomeButton() {
+  Widget _buildBackToHomeButton(
+      {required Color color, required Brightness brightness}) {
+    final colorScheme =
+        ColorScheme.fromSeed(seedColor: color, brightness: brightness);
     return FilledButton.icon(
-        onPressed: Get.back,
-        label: const Text('退出反馈'),
-        icon: const Icon(Icons.outbound_rounded));
+      onPressed: Get.back,
+      label: Text(
+        '退出反馈',
+        style: TextStyle(color: colorScheme.onPrimary),
+      ),
+      icon: Icon(
+        Icons.outbound_rounded,
+        color: colorScheme.onPrimary,
+      ),
+      style: ButtonStyle(
+        backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
+      ),
+    );
   }
 
   @override
@@ -21,7 +34,6 @@ class WebViewPage extends StatelessWidget {
     final WebViewLogic logic = Bind.find<WebViewLogic>();
     final WebViewState state = Bind.find<WebViewLogic>().state;
     final padding = MediaQuery.paddingOf(context);
-
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (canPop, _) {
@@ -38,7 +50,7 @@ class WebViewPage extends StatelessWidget {
                     return Container(
                       height: padding.top,
                       color: state.progress.value == 1
-                          ? AppColor.themeColorList[2]
+                          ? AppColor.answerColor
                           : null,
                     );
                   }),
@@ -58,25 +70,31 @@ class WebViewPage extends StatelessWidget {
                 ],
               ),
             ),
-            Obx(() {
-              return Visibility(
-                visible: state.progress.value == 1,
-                child: Positioned(
-                  bottom: (state.isTop.value) ? null : 30,
-                  top: (state.isTop.value) ? 30 : null,
-                  right: (state.isRight.value) ? 30 : null,
-                  left: (state.isRight.value) ? null : 30,
-                  child: Draggable(
-                    feedback: _buildBackToHomeButton(),
-                    childWhenDragging: Container(),
-                    onDragEnd: (draggableDetails) {
-                      logic.updatePosition(draggableDetails, context);
-                    },
-                    child: _buildBackToHomeButton(),
+            Obx(
+              () {
+                return Visibility(
+                  visible: state.progress.value == 1,
+                  child: Positioned(
+                    bottom: (state.isTop.value) ? null : 30,
+                    top: (state.isTop.value) ? 30 : null,
+                    right: (state.isRight.value) ? 30 : null,
+                    left: (state.isRight.value) ? null : 30,
+                    child: Draggable(
+                      feedback: _buildBackToHomeButton(
+                          color: AppColor.answerColor,
+                          brightness: Brightness.light),
+                      childWhenDragging: Container(),
+                      onDragEnd: (draggableDetails) {
+                        logic.updatePosition(draggableDetails, context);
+                      },
+                      child: _buildBackToHomeButton(
+                          color: AppColor.answerColor,
+                          brightness: Brightness.light),
+                    ),
                   ),
-                ),
-              );
-            }),
+                );
+              },
+            ),
           ],
         ),
       ),

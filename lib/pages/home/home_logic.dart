@@ -47,11 +47,11 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     //     .show(context: Get.overlayContext!);
     appLifecycleListener = AppLifecycleListener(onStateChange: (state) {
       if (state == AppLifecycleState.inactive) {
-        frostedGlassOverlayLogic.enable();
-        //lockPage();
+        privacyMode(isEnable: true);
+        lockPage();
       }
       if (state == AppLifecycleState.resumed) {
-        frostedGlassOverlayLogic.disable();
+        privacyMode(isEnable: false);
       }
     });
 
@@ -105,6 +105,15 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     if (PrefUtil.getValue<bool>('lock') == true &&
         PrefUtil.getValue<bool>('lockNow') == true) {
       Get.toNamed(AppRoutes.lockPage, arguments: 'pause');
+    }
+  }
+
+  //隐私模式
+  void privacyMode({required bool isEnable}) {
+    if (PrefUtil.getValue<bool>('backendPrivacy') == true) {
+      isEnable
+          ? frostedGlassOverlayLogic.enable()
+          : frostedGlassOverlayLogic.disable();
     }
   }
 

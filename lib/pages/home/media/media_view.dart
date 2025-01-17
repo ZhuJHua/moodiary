@@ -154,11 +154,12 @@ class MediaPage extends StatelessWidget {
                                   scrollOffsetListener:
                                       logic.scrollOffsetListener,
                                 )
-                              : const Center(
-                                  key: ValueKey('empty'),
+                              : Center(
+                                  key: const ValueKey('empty'),
                                   child: FaIcon(
                                     FontAwesomeIcons.boxArchive,
                                     size: 80,
+                                    color: colorScheme.onSurface,
                                   ),
                                 )),
                     ),

@@ -341,10 +341,11 @@ class CalendarPage extends StatelessWidget {
                                   child: Processing())
                               : (state.currentMonthDiaryList.isNotEmpty
                                   ? buildCardList()
-                                  : const Center(
-                                      key: ValueKey('empty'),
+                                  : Center(
+                                      key: const ValueKey('empty'),
                                       child: FaIcon(
                                         FontAwesomeIcons.boxOpen,
+                                        color: colorScheme.onSurface,
                                         size: 56,
                                       ),
                                     )),
