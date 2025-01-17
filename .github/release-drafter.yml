@@ -1,0 +1,40 @@
+name-template: 'v$NEXT_PATCH_VERSION'
+tag-template: 'v$NEXT_PATCH_VERSION'
+categories:
+  - title: ✨ Features
+    labels:
+      - feat
+  - title: 🐛 Bug Fixes
+    labels:
+      - fix
+  - title: 🛠️ Chores
+    labels:
+      - chore
+  - title: 🏗️ Build System
+    labels:
+      - build
+  - title: ⚡ Performance Improvements
+    labels:
+      - perf
+  - title: 🔨 Refactors
+    labels:
+      - refactor
+  - title: 🎨 Code Style Updates
+    labels:
+      - style
+
+change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
+template: |
+  # 📦 $RELEASE_TITLE
+
+  ## 🔥 What is New
+  Here's what's changed and improved in this release:
+
+  $CHANGES
+
+  ## 📋 Categories
+  $CATEGORY_RELEASES
+
+  ---
+  🕒 Release Date: $DATE  
+  🔖 Compare Changes: [View Changes](https://github.com/$REPOSITORY/compare/$PREVIOUS_TAG...$TAG)
