@@ -370,10 +370,10 @@ packages:
     dependency: "direct main"
     description:
       name: chewie
-      sha256: "28d77bb89787b41430202fee9509289d75f3aa7fac408be1c0a74cb487e3bdba"
+      sha256: "6386fcc7ad7a8f7b25709ce988cd089cdde894bf335c7a0024a1bfcf8788a452"
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.0"
+    version: "1.9.2"
   chinese_font_library:
     dependency: "direct main"
     description:
@@ -634,10 +634,10 @@ packages:
     dependency: "direct main"
     description:
       name: fc_native_video_thumbnail
-      sha256: "2d22441504284ca9149fc617af138a42fa31b8847c25c357db5731b0dd189a9f"
+      sha256: edebd03d98f5bd3914b17fa1666cef1b8e820e2e0c2b9ace5ff8d9de5fda33f7
       url: "https://pub.dev"
     source: hosted
-    version: "0.17.1"
+    version: "0.17.2"
   ffi:
     dependency: transitive
     description:
@@ -706,10 +706,10 @@ packages:
     dependency: "direct main"
     description:
       name: fl_chart
-      sha256: "10ddaf334fe84d59333a12d153043e366f243e0bdfff2df0313e1e249f5bf926"
+      sha256: "5276944c6ffc975ae796569a826c38a62d2abcf264e26b88fa6f482e107f4237"
       url: "https://pub.dev"
     source: hosted
-    version: "0.70.1"
+    version: "0.70.2"
   flat_buffers:
     dependency: transitive
     description:
@@ -1494,10 +1494,10 @@ packages:
     dependency: transitive
     description:
       name: macos_ui
-      sha256: "94753db0a67f6b065c1877c57563459afd717d800acd5d83a663a0a6e09747c5"
+      sha256: "1238bafdc3a60d122f20e1c3d62ad944af49bf09e8b85df2e48b75e8ddbbfd54"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.5"
+    version: "2.1.7"
   macos_window_utils:
     dependency: transitive
     description:
@@ -1878,10 +1878,10 @@ packages:
     dependency: "direct main"
     description:
       name: pinput
-      sha256: "7bf9aa7d0eeb3da9f7d49d2087c7bc7d36cd277d2e94cc31c6da52e1ebb048d0"
+      sha256: "8a73be426a91fefec90a7f130763ca39772d547e92f19a827cf4aa02e323d35a"
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.0"
+    version: "5.0.1"
   platform:
     dependency: transitive
     description:
@@ -2110,10 +2110,10 @@ packages:
     dependency: "direct main"
     description:
       name: refreshed
-      sha256: "036588e8b4a8da8134b21f0c773256ece9ce5695943a9d1949959c966e420ce2"
+      sha256: b11598bba34a21a9903634a4e093eaf4ab3bb2f9d5a7c98010e83840d83544b0
       url: "https://pub.dev"
     source: hosted
-    version: "2.10.3"
+    version: "2.10.4"
   retry:
     dependency: transitive
     description:
@@ -2234,6 +2234,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.8"
+  sensors_plus:
+    dependency: "direct main"
+    description:
+      name: sensors_plus
+      sha256: "905282c917c6bb731c242f928665c2ea15445aa491249dea9d98d7c79dc8fd39"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.1"
+  sensors_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: sensors_plus_platform_interface
+      sha256: "58815d2f5e46c0c41c40fb39375d3f127306f7742efe3b891c0b1c87e2b5cd5d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   share_plus:
     dependency: "direct main"
     description:
@@ -2739,10 +2755,10 @@ packages:
     dependency: transitive
     description:
       name: video_player_avfoundation
-      sha256: "61c54fb08fee52861d819a9b3b8e30b92456dad43a875434c677c892eb7772de"
+      sha256: "8a4e73a3faf2b13512978a43cf1cdda66feeeb900a0527f1fbfd7b19cf3458d3"
       url: "https://pub.dev"
     source: hosted
-    version: "2.6.6"
+    version: "2.6.7"
   video_player_media_kit:
     dependency: "direct main"
     description:
