@@ -1,9 +1,6 @@
 name: Build & Release
 
 on:
-  pull_request:
-    branches:
-      - master
   workflow_dispatch:
 
 jobs:
