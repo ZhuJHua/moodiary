@@ -77,6 +77,8 @@ jobs:
         uses: release-drafter/release-drafter@v5
         with:
           config-name: release-drafter.yml
+          tag: v${{ env.VERSION }}
+          publish: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -85,8 +87,8 @@ jobs:
         with:
           artifacts: renamed-artifacts/*
           tag: v${{ env.VERSION }}
-          name: Release v${{ env.VERSION }}
-          body: ${{ steps.release_notes.outputs.notes }}
+          name: v${{ env.VERSION }}
+          body: ${{ steps.release_notes.outputs.body }}
           draft: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
