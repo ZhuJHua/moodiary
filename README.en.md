@@ -6,7 +6,7 @@
 
 <p align="center"><a href="README.md">简体中文</a> | English</p>
 
-<p align="center">QQ Group: 760014526</p>
+<p align="center"><a href="https://answer.moodiary.net" target="_blank">Community Forum</a>丨QQ Group: 760014526</p>
 
 <div align="center">
   <img src="https://img.shields.io/badge/Flutter-3.27.0-blue?style=for-the-badge">
