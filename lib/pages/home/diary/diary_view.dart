@@ -54,9 +54,9 @@ class DiaryPage extends StatelessWidget {
     Widget buildTabBar() {
       List<Widget> allTabs = [];
       //默认的全部tab
-      allTabs.add(const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8.0),
-        child: Tab(text: '全部'),
+      allTabs.add(Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Tab(text: l10n.categoryAll),
       ));
       //根据分类生成分类Tab
       allTabs.addAll(List.generate(state.categoryList.length, (index) {
@@ -222,7 +222,7 @@ class DiaryPage extends StatelessWidget {
                                     },
                                   );
                                 },
-                                tooltip: '数据同步',
+                                tooltip: l10n.dataSync,
                                 icon: const Icon(Icons.cloud_sync_rounded),
                               );
                       }),

@@ -253,5 +253,10 @@
   "weatherSuccess": "天气获取成功",
   "sureToSave": "确定保存吗",
   "drawPickColor": "选择颜色",
-  "audioFileError": "音频文件错误"
+  "audioFileError": "音频文件错误",
+  "diaryDelete": "删除",
+  "diaryEdit": "编辑",
+  "diaryShare": "分享",
+  "diaryCount": "{count} 字",
+  "dataSync": "数据同步"
 }

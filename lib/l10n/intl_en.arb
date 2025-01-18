@@ -253,5 +253,10 @@
   "weatherSuccess": "Weather acquisition successful",
   "sureToSave": "Are you sure you want to save",
   "drawPickColor": "Pick Color",
-  "audioFileError": "Audio file error"
+  "audioFileError": "Audio file error",
+  "diaryDelete": "Delete",
+  "diaryEdit": "Edit",
+  "diaryShare": "Share",
+  "diaryCount": "{count} Words",
+  "dataSync": "Data sync"
 }
