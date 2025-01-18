@@ -6,7 +6,9 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/models/isar/diary.dart';
 import 'package:mood_diary/common/values/icons.dart';
+import 'package:mood_diary/components/base/button.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
+import 'package:mood_diary/main.dart';
 import 'package:mood_diary/utils/data/pref.dart';
 import 'package:mood_diary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -90,7 +92,7 @@ class DiaryDetailsPage extends StatelessWidget {
           ],
           buildAChip(
               Text(
-                '${state.diary.contentText.length} 字',
+                l10n.diaryCount(state.diary.contentText.length),
                 style: textStyle.labelLarge!
                     .copyWith(color: colorScheme.onSurface),
               ),
@@ -308,6 +310,7 @@ class DiaryDetailsPage extends StatelessWidget {
                       state.diary.title,
                       style: textStyle.titleMedium,
                     ),
+                    leading: const PageBackButton(),
                     centerTitle: false,
                     flexibleSpace: FlexibleSpaceBar(
                       collapseMode: CollapseMode.pin,
@@ -344,10 +347,13 @@ class DiaryDetailsPage extends StatelessWidget {
                                 onTap: () async {
                                   logic.delete(state.diary);
                                 },
-                                child: const Row(
+                                child: Row(
                                   spacing: 16.0,
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Icon(Icons.delete), Text('删除')],
+                                  children: [
+                                    const Icon(Icons.delete_rounded),
+                                    Text(l10n.diaryDelete)
+                                  ],
                                 ),
                               ),
                               const PopupMenuDivider(),
@@ -355,10 +361,13 @@ class DiaryDetailsPage extends StatelessWidget {
                                 onTap: () async {
                                   logic.toEditPage(state.diary);
                                 },
-                                child: const Row(
+                                child: Row(
                                   spacing: 16.0,
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [Icon(Icons.edit), Text('编辑')],
+                                  children: [
+                                    const Icon(Icons.edit_rounded),
+                                    Text(l10n.diaryEdit)
+                                  ],
                                 ),
                               ),
                               const PopupMenuDivider(),
@@ -367,10 +376,13 @@ class DiaryDetailsPage extends StatelessWidget {
                               onTap: () async {
                                 logic.toSharePage();
                               },
-                              child: const Row(
+                              child: Row(
                                 spacing: 16.0,
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: [Icon(Icons.share), Text('分享')],
+                                children: [
+                                  const Icon(Icons.share_rounded),
+                                  Text(l10n.diaryShare)
+                                ],
                               ),
                             ),
                           ];
