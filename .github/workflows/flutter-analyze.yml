@@ -1,0 +1,48 @@
+name: Flutter Analyze
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  analyze:
+    name: Analyze Flutter Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Read Flutter Version
+        id: flutter_version
+        run: |
+          if [ -f .fvmrc ]; then
+            FLUTTER_VERSION=$(cat .fvmrc | jq -r '.flutter')
+            echo "Flutter version detected: $FLUTTER_VERSION"
+            echo "flutter-version=$FLUTTER_VERSION" >> $GITHUB_ENV
+          else
+            echo ".fvmrc not found. Defaulting to latest Flutter version."
+            echo "flutter-version=stable" >> $GITHUB_ENV
+          fi
+
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.flutter-version }}
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Run Flutter Analyze
+        run: flutter analyze
+
+      - name: Fail on Errors
+        if: failure()
+        run: exit 1
