@@ -37,6 +37,10 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      - name: Install Dependencies for Rust Builder Project
+        cwd: rust_builder
+        run: flutter pub get
+
       - name: Run Flutter Analyze
         run: flutter analyze
 
