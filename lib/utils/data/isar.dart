@@ -109,7 +109,11 @@ class IsarUtil {
 
   /// 获取全部日记
   static Future<List<Diary>> getAllDiariesSorted() async {
-    return _isar.diarys.where().sortByTimeDesc().findAllAsync();
+    return _isar.diarys
+        .where()
+        .showEqualTo(true)
+        .sortByTimeDesc()
+        .findAllAsync();
   }
 
   //获取指定范围内的天气
