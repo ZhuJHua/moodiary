@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:mood_diary/main.dart';
+import 'package:refreshed/refreshed.dart';
 
 class FrostedGlassButton extends StatelessWidget {
   final Widget child;
@@ -94,5 +96,22 @@ class MultiFabLayoutDelegate extends MultiChildLayoutDelegate {
   bool shouldRelayout(MultiFabLayoutDelegate oldDelegate) {
     return oldDelegate.controller != controller ||
         oldDelegate.layoutIds != layoutIds;
+  }
+}
+
+class PageBackButton extends StatelessWidget {
+  const PageBackButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: IconButton(
+        onPressed: Get.back,
+        icon: const Icon(Icons.arrow_back_rounded),
+        color: colorScheme.onSurface,
+        tooltip: l10n.back,
+      ),
+    );
   }
 }

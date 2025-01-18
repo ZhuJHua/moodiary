@@ -2,6 +2,7 @@ import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:mood_diary/components/local_send/local_send_client/local_send_client_view.dart';
 import 'package:mood_diary/components/local_send/local_send_server/local_send_server_view.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'local_send_logic.dart';
@@ -28,17 +29,17 @@ class LocalSendComponent extends StatelessWidget {
                   onPressed: () {
                     logic.getWifiInfo();
                   },
-                  label: Text('IP : ${state.deviceIpAddress}'),
+                  label: Text('IP: ${state.deviceIpAddress}'),
                 ),
                 ActionChip(
                   onPressed: () async {
                     var res = await showTextInputDialog(
                         context: context,
-                        title: '修改扫描端口',
-                        message: '请确保两台设备端口一致',
+                        title: l10n.lanTransferChangeScanPort,
+                        message: l10n.lanTransferChangePortDes,
                         textFields: [
                           DialogTextField(
-                            hintText: '端口号',
+                            hintText: l10n.scanPort,
                             initialText: state.scanPort.value.toString(),
                             keyboardType: TextInputType.number,
                             maxLength: 5,
@@ -50,9 +51,9 @@ class LocalSendComponent extends StatelessWidget {
                                     port <= 65535) {
                                   return null;
                                 }
-                                return '请输入临时端口号(49152-65535)';
+                                return l10n.lanTransferChangePortError1;
                               }
-                              return '请输入端口号';
+                              return l10n.lanTransferChangePortError2;
                             },
                           ),
                         ]);
@@ -61,18 +62,18 @@ class LocalSendComponent extends StatelessWidget {
                     }
                   },
                   label: Obx(() {
-                    return Text('扫描端口: ${state.scanPort.value}');
+                    return Text('${l10n.scanPort}: ${state.scanPort.value}');
                   }),
                 ),
                 ActionChip(
                   onPressed: () async {
                     var res = await showTextInputDialog(
                         context: context,
-                        title: '修改传输端口',
-                        message: '请确保两台设备端口一致',
+                        title: l10n.lanTransferChangeTransferPort,
+                        message: l10n.lanTransferChangePortDes,
                         textFields: [
                           DialogTextField(
-                            hintText: '端口号',
+                            hintText: l10n.transferPort,
                             initialText: state.transferPort.value.toString(),
                             keyboardType: TextInputType.number,
                             maxLength: 5,
@@ -84,9 +85,9 @@ class LocalSendComponent extends StatelessWidget {
                                     port <= 65535) {
                                   return null;
                                 }
-                                return '请输入临时端口号(49152-65535)';
+                                return l10n.lanTransferChangePortError1;
                               }
-                              return '请输入端口号';
+                              return l10n.lanTransferChangePortError2;
                             },
                           ),
                         ]);
@@ -95,38 +96,14 @@ class LocalSendComponent extends StatelessWidget {
                     }
                   },
                   label: Obx(() {
-                    return Text('传输端口: ${state.transferPort.value}');
+                    return Text(
+                        '${l10n.transferPort}: ${state.transferPort.value}');
                   }),
                 ),
               ],
             );
           });
     }
-
-    // Widget buildPortInfo() {
-    //   return Column(
-    //     spacing: 8.0,
-    //     children: [
-    //       Text(
-    //         '如果您不知道这是什么，请不要修改',
-    //         style: textStyle.titleSmall,
-    //       ),
-    //       Wrap(
-    //         spacing: 8.0,
-    //         children: [
-    //           ActionChip(
-    //             onPressed: () {},
-    //             label: Text('扫描端口: ${state.scanPort}'),
-    //           ),
-    //           ActionChip(
-    //             onPressed: () {},
-    //             label: Text('传输端口: ${state.transferPort}'),
-    //           ),
-    //         ],
-    //       ),
-    //     ],
-    //   );
-    // }
 
     Widget buildOption() {
       return Row(
@@ -137,16 +114,16 @@ class LocalSendComponent extends StatelessWidget {
                 id: 'SegmentButton',
                 builder: (_) {
                   return SegmentedButton<String>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: 'send',
-                        icon: Icon(Icons.send_rounded),
-                        label: Text('发送'),
+                        icon: const Icon(Icons.send_rounded),
+                        label: Text(l10n.lanTransferSend),
                       ),
                       ButtonSegment(
                         value: 'receive',
-                        icon: Icon(Icons.move_to_inbox_rounded),
-                        label: Text('接收'),
+                        icon: const Icon(Icons.move_to_inbox_rounded),
+                        label: Text(l10n.lanTransferReceive),
                       ),
                     ],
                     selectedIcon: const Icon(Icons.check_circle_rounded),
@@ -160,7 +137,7 @@ class LocalSendComponent extends StatelessWidget {
           TextButton.icon(
             onPressed: logic.showInfo,
             icon: const Icon(Icons.info),
-            label: const Text('更多'),
+            label: Text(l10n.more),
           ),
         ],
       );
@@ -228,7 +205,7 @@ class LocalSendComponent extends StatelessWidget {
         ? buildDashboard()
         : ExpansionTile(
             leading: const Icon(Icons.wifi_tethering_rounded),
-            title: const Text('局域网传输'),
+            title: Text(l10n.backupSyncLANTransfer),
             children: [buildCommon()],
           );
   }

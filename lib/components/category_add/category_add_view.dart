@@ -1,5 +1,6 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'category_add_logic.dart';
@@ -30,14 +31,14 @@ class CategoryAddComponent extends StatelessWidget {
                     children: [
                       FilledButton.icon(
                         icon: const Icon(Icons.add),
-                        label: const Text('添加'),
+                        label: Text(l10n.categoryManageAdd),
                         onPressed: () async {
                           var res = await showTextInputDialog(
                               context: context,
-                              title: '输入分类名称',
+                              title: l10n.categoryManageAdd,
                               textFields: [
-                                const DialogTextField(
-                                  hintText: '分类名称',
+                                DialogTextField(
+                                  hintText: l10n.categoryManageName,
                                 )
                               ]);
                           if (res != null) {
@@ -49,7 +50,7 @@ class CategoryAddComponent extends StatelessWidget {
                     ],
                   ),
                   ActionChip(
-                    label: const Text('无分类'),
+                    label: Text(l10n.categoryNoCategory),
                     onPressed: () {
                       logic.cancelCategory(context);
                     },

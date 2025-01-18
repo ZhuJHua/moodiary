@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mood_diary/common/values/icons.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
 import 'package:mood_diary/utils/function_extensions.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -171,28 +172,24 @@ class SideBarComponent extends StatelessWidget {
                         child: Text(l10n.sidebarAbout),
                       );
                     }),
-                    ListTile(
+                    AdaptiveListTile(
                       leading: const Icon(Icons.security_outlined),
                       onTap: () {
                         logic.toPrivacy();
                       },
-                      title: Text(
-                        l10n.sidebarPrivacy,
-                      ),
+                      title: l10n.sidebarPrivacy,
                     ),
-                    ListTile(
+                    AdaptiveListTile(
                       leading: const Icon(Icons.bug_report_outlined),
                       onTap: () {
                         logic.toReportPage();
                       },
-                      title: Text(
-                        l10n.sidebarBug,
-                      ),
+                      title: l10n.sidebarBug,
                     ),
-                    ListTile(
+                    AdaptiveListTile(
                       leading: const Icon(Icons.update),
                       onTap: () async {}.throttleWithTimeout(timeout: 3000),
-                      title: Text(l10n.sidebarCheckUpdate),
+                      title: l10n.sidebarCheckUpdate,
                     ),
                   ],
                 ),

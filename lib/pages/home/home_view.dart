@@ -230,21 +230,21 @@ class HomePage extends StatelessWidget {
           children: [
             buildToTopButton(),
             // buildAnimatedActionButton(
-            //     label: 'Markdown',
+            //     label: l10n.homeNewDiaryMarkdown,
             //     onTap: () async {
             //       await logic.toEditPage(type: DiaryType.markdown);
             //     },
             //     iconData: FontAwesomeIcons.markdown,
             //     index: 3),
             buildAnimatedActionButton(
-                label: '纯文字',
+                label: l10n.homeNewDiaryPlainText,
                 onTap: () async {
                   await logic.toEditPage(type: DiaryType.text);
                 },
                 iconData: FontAwesomeIcons.font,
                 index: 2),
             buildAnimatedActionButton(
-                label: '富文本',
+                label: l10n.homeNewDiaryRichText,
                 onTap: () async {
                   await logic.toEditPage(type: DiaryType.richText);
                 },

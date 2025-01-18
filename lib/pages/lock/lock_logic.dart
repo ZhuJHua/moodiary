@@ -68,12 +68,14 @@ class LockLogic extends GetxController with GetSingleTickerProviderStateMixin {
     });
   }
 
-  void checked() {
+  void checked() async {
+    state.isCheck.value = true;
+
+    await Future.delayed(const Duration(milliseconds: 300));
     //如果是启动时的锁定，就跳转到homepage
     if (state.lockType == null) {
-      Get.offAllNamed(AppRoutes.homePage);
+      await Get.offAllNamed(AppRoutes.homePage);
     }
-
     //如果是开启立即锁定后生命周期变化导致的锁定
     if (state.lockType == 'pause') {
       Get.back();

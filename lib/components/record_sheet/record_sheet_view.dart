@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mood_diary/components/wave_form/wave_form_view.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'record_sheet_logic.dart';
@@ -81,7 +82,7 @@ class RecordSheetComponent extends StatelessWidget {
                                       onPressed: () {
                                         logic.cancelRecorder();
                                       },
-                                      child: const Text('取消')),
+                                      child: Text(l10n.cancel)),
                                   FilledButton(
                                       onPressed: () {
                                         state.isRecording.value
@@ -96,7 +97,7 @@ class RecordSheetComponent extends StatelessWidget {
                                       onPressed: () {
                                         logic.stopRecorder(context);
                                       },
-                                      child: const Text('保存')),
+                                      child: Text(l10n.save)),
                                 ],
                               )
                             ],

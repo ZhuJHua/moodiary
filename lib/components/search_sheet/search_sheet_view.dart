@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/components/search_card/search_card_logic.dart';
 import 'package:mood_diary/components/search_card/search_card_view.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'search_sheet_logic.dart';
@@ -33,7 +34,7 @@ class SearchSheetComponent extends StatelessWidget {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  labelText: '搜索',
+                  labelText: l10n.diarySearch,
                   suffixIcon: IconButton(
                     onPressed: () {
                       logic.search();
@@ -69,7 +70,7 @@ class SearchSheetComponent extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Obx(() {
-                return Text('共有${state.totalCount.value}篇');
+                return Text(l10n.diarySearchResult(state.totalCount.value));
               }),
             )
           ],

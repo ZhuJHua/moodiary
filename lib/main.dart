@@ -11,6 +11,8 @@ import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/find_locale.dart';
+import 'package:intl/intl.dart';
+import 'package:mood_diary/common/values/language.dart';
 import 'package:mood_diary/components/env_badge/badge.dart';
 import 'package:mood_diary/components/frosted_glass_overlay/frosted_glass_overlay_view.dart';
 import 'package:mood_diary/router/app_pages.dart';
@@ -30,10 +32,10 @@ import 'package:video_player_media_kit/video_player_media_kit.dart';
 import 'components/window_buttons/window_buttons.dart';
 
 late AppLocalizations l10n;
+late Locale locale;
 
-Future<void> initSystem() async {
+Future<void> _initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await findSystemLocale();
   await RustLib.init();
   await PrefUtil.initPref();
   await IsarUtil.initIsar();
@@ -47,12 +49,32 @@ Future<void> initSystem() async {
     systemNavigationBarColor: Colors.transparent,
     systemNavigationBarContrastEnforced: false,
   ));
-  platFormOption();
+  await _findLanguage();
+  await _platFormOption();
 }
 
-void platFormOption() {
+Future<void> _findLanguage() async {
+  Language language = Language.values.firstWhere(
+    (e) => e.languageCode == PrefUtil.getValue<String>('language')!,
+    orElse: () => Language.system,
+  );
+  if (language == Language.system) {
+    final systemLocale = await findSystemLocale();
+    final systemLanguageCode = systemLocale.contains('_')
+        ? systemLocale.split('_').first
+        : systemLocale;
+    language = Language.values.firstWhere(
+      (e) => e.languageCode == systemLanguageCode,
+      orElse: () => Language.english,
+    );
+  }
+  locale = Locale(language.languageCode);
+  Intl.defaultLocale = locale.languageCode;
+}
+
+Future<void> _platFormOption() async {
   if (Platform.isAndroid) {
-    unawaited(FlutterDisplayMode.setHighRefreshRate());
+    await FlutterDisplayMode.setHighRefreshRate();
     MediaUtil.useAndroidImagePicker();
   }
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
@@ -65,14 +87,14 @@ void platFormOption() {
   }
 }
 
-String getInitialRoute() {
+String _getInitialRoute() {
   if (PrefUtil.getValue<bool>('lock')!) return AppRoutes.lockPage;
   if (PrefUtil.getValue<bool>('firstStart')!) return AppRoutes.startPage;
   return AppRoutes.homePage;
 }
 
 void main() async {
-  await initSystem();
+  await _initSystem();
   FlutterError.onError = (details) {
     LogUtil.printError('Flutter error',
         error: details.exception, stackTrace: details.stack);
@@ -96,7 +118,8 @@ void main() async {
   };
   runApp(GetMaterialApp.router(
     routeInformationParser: GetInformationParser.createInformationParser(
-        initialRoute: getInitialRoute()),
+      initialRoute: _getInitialRoute(),
+    ),
     onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
     backButtonDispatcher: GetRootBackButtonDispatcher(),
     builder: (context, child) {
@@ -126,6 +149,7 @@ void main() async {
     },
     theme: await ThemeUtil.buildTheme(Brightness.light),
     darkTheme: await ThemeUtil.buildTheme(Brightness.dark),
+    locale: locale,
     themeMode: ThemeMode.values[PrefUtil.getValue<int>('themeMode')!],
     defaultTransition: Transition.cupertino,
     getPages: AppPages.routes,

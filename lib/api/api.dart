@@ -11,6 +11,7 @@ import 'package:mood_diary/common/models/hitokoto.dart';
 import 'package:mood_diary/common/models/hunyuan.dart';
 import 'package:mood_diary/common/models/image.dart';
 import 'package:mood_diary/common/models/weather.dart';
+import 'package:mood_diary/main.dart';
 import 'package:mood_diary/utils/http_util.dart';
 import 'package:mood_diary/utils/notice_util.dart';
 import 'package:mood_diary/utils/signature_util.dart';
@@ -58,11 +59,11 @@ class Api {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        NoticeUtil.showToast('请开启定位权限');
+        NoticeUtil.showToast(l10n.noticeEnableLocation);
         return null;
       }
       if (permission == LocationPermission.deniedForever) {
-        NoticeUtil.showToast('请前往设置开启定位权限');
+        NoticeUtil.showToast(l10n.noticeEnableLocation2);
         return null;
       }
     }

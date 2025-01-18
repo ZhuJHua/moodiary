@@ -18,6 +18,8 @@ import 'package:mood_diary/components/quill_embed/image_embed.dart';
 import 'package:mood_diary/components/quill_embed/text_indent.dart';
 import 'package:mood_diary/components/quill_embed/video_embed.dart';
 import 'package:mood_diary/components/record_sheet/record_sheet_view.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
+import 'package:mood_diary/main.dart';
 import 'package:mood_diary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -411,14 +413,14 @@ class EditPage extends StatelessWidget {
 
     Widget buildPickImage() {
       return SimpleDialog(
-        title: const Text('选择来源'),
+        title: Text(l10n.editPickImage),
         children: [
           SimpleDialogOption(
-            child: const Row(
+            child: Row(
               spacing: 8.0,
               children: [
-                Icon(Icons.photo_library_outlined),
-                Text('相册'),
+                const Icon(Icons.photo_library_outlined),
+                Text(l10n.editPickImageFromGallery),
               ],
             ),
             onPressed: () async {
@@ -429,11 +431,11 @@ class EditPage extends StatelessWidget {
           ),
           if (Platform.isAndroid || Platform.isIOS)
             SimpleDialogOption(
-              child: const Row(
+              child: Row(
                 spacing: 8.0,
                 children: [
-                  Icon(Icons.camera_alt_outlined),
-                  Text('相机'),
+                  const Icon(Icons.camera_alt_outlined),
+                  Text(l10n.editPickImageFromCamera),
                 ],
               ),
               onPressed: () async {
@@ -444,11 +446,11 @@ class EditPage extends StatelessWidget {
               },
             ),
           SimpleDialogOption(
-            child: const Row(
+            child: Row(
               spacing: 8.0,
               children: [
-                Icon(Icons.image_search_outlined),
-                Text('网络'),
+                const Icon(Icons.image_search_outlined),
+                Text(l10n.editPickImageFromWeb),
               ],
             ),
             onPressed: () async {
@@ -456,11 +458,11 @@ class EditPage extends StatelessWidget {
             },
           ),
           SimpleDialogOption(
-            child: const Row(
+            child: Row(
               spacing: 8.0,
               children: [
-                Icon(Icons.draw_outlined),
-                Text('画画'),
+                const Icon(Icons.draw_outlined),
+                Text(l10n.editPickImageFromDraw),
               ],
             ),
             onPressed: () {
@@ -473,14 +475,14 @@ class EditPage extends StatelessWidget {
 
     Widget buildPickVideo() {
       return SimpleDialog(
-        title: const Text('选择来源'),
+        title: Text(l10n.editPickVideo),
         children: [
           SimpleDialogOption(
-            child: const Row(
+            child: Row(
               spacing: 8.0,
               children: [
-                Icon(Icons.photo_library_outlined),
-                Text('相册'),
+                const Icon(Icons.photo_library_outlined),
+                Text(l10n.editPickVideoFromGallery),
               ],
             ),
             onPressed: () async {
@@ -489,11 +491,11 @@ class EditPage extends StatelessWidget {
           ),
           if (Platform.isAndroid || Platform.isIOS)
             SimpleDialogOption(
-              child: const Row(
+              child: Row(
                 spacing: 8.0,
                 children: [
-                  Icon(Icons.camera_alt_outlined),
-                  Text('拍摄'),
+                  const Icon(Icons.camera_alt_outlined),
+                  Text(l10n.editPickVideoFromCamera),
                 ],
               ),
               onPressed: () async {
@@ -508,9 +510,9 @@ class EditPage extends StatelessWidget {
       return ListView(
         padding: EdgeInsets.zero,
         children: [
-          ListTile(
+          AdaptiveListTile(
             onTap: null,
-            title: const Text('日期与时间'),
+            title: l10n.editDateAndTime,
             subtitle: GetBuilder<EditLogic>(
                 id: 'Date',
                 builder: (_) {
@@ -537,8 +539,8 @@ class EditPage extends StatelessWidget {
           GetBuilder<EditLogic>(
               id: 'Weather',
               builder: (_) {
-                return ListTile(
-                  title: const Text('天气'),
+                return AdaptiveListTile(
+                  title: l10n.editWeather,
                   subtitle: state.currentDiary.weather.isNotEmpty
                       ? Text(
                           '${state.currentDiary.weather[2]} ${state.currentDiary.weather[1]}°C')
@@ -556,8 +558,8 @@ class EditPage extends StatelessWidget {
           GetBuilder<EditLogic>(
               id: 'CategoryName',
               builder: (_) {
-                return ListTile(
-                  title: const Text('分类'),
+                return AdaptiveListTile(
+                  title: l10n.editCategory,
                   subtitle: state.categoryName.isNotEmpty
                       ? Text(state.categoryName)
                       : null,
@@ -576,8 +578,8 @@ class EditPage extends StatelessWidget {
           GetBuilder<EditLogic>(
               id: 'Tag',
               builder: (_) {
-                return ListTile(
-                  title: const Text('标签'),
+                return AdaptiveListTile(
+                  title: l10n.editTag,
                   subtitle: buildTagList(),
                   trailing: IconButton.filledTonal(
                     icon: const Icon(Icons.tag),
@@ -585,10 +587,10 @@ class EditPage extends StatelessWidget {
                       var res = await showTextInputDialog(
                         style: AdaptiveStyle.material,
                         context: context,
-                        title: '添加标签',
+                        title: l10n.editAddTag,
                         textFields: [
-                          const DialogTextField(
-                            hintText: '标签',
+                          DialogTextField(
+                            hintText: l10n.editTag,
                           )
                         ],
                       );
@@ -599,15 +601,15 @@ class EditPage extends StatelessWidget {
                   ),
                 );
               }),
-          ListTile(
-            title: const Text('心情指数'),
+          AdaptiveListTile(
+            title: l10n.editMood,
             subtitle: GetBuilder<EditLogic>(
                 id: 'Mood',
                 builder: (_) {
                   return buildMoodSlider();
                 }),
           ),
-          // ListTile(
+          // AdaptiveListTile(
           //   title: const Text('图片'),
           //   subtitle: GetBuilder<EditLogic>(
           //       id: 'Image',
@@ -615,7 +617,7 @@ class EditPage extends StatelessWidget {
           //         return buildImage();
           //       }),
           // ),
-          // ListTile(
+          // AdaptiveListTile(
           //   title: const Text('视频'),
           //   subtitle: GetBuilder<EditLogic>(
           //       id: 'Video',
@@ -623,7 +625,7 @@ class EditPage extends StatelessWidget {
           //         return buildVideo();
           //       }),
           // ),
-          // ListTile(
+          // AdaptiveListTile(
           //   title: const Text('音频'),
           //   subtitle: GetBuilder<EditLogic>(
           //       id: 'Audio',
@@ -645,7 +647,7 @@ class EditPage extends StatelessWidget {
         child: Obx(() {
           return RichText(
             text: TextSpan(
-              text: '时间 ',
+              text: '${l10n.editTime} ',
               style: textStyle.labelSmall,
               children: [
                 TextSpan(
@@ -671,7 +673,7 @@ class EditPage extends StatelessWidget {
         child: Obx(() {
           return RichText(
             text: TextSpan(
-              text: '字数 ',
+              text: '${l10n.editCount} ',
               style: textStyle.labelSmall,
               children: [
                 TextSpan(
@@ -695,10 +697,10 @@ class EditPage extends StatelessWidget {
         maxLines: 1,
         style: textStyle.titleLarge!.copyWith(fontWeight: FontWeight.bold),
         textInputAction: TextInputAction.done,
-        decoration: const InputDecoration(
-          border: UnderlineInputBorder(borderSide: BorderSide.none),
-          hintText: '标题',
-          contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
+        decoration: InputDecoration(
+          border: const UnderlineInputBorder(borderSide: BorderSide.none),
+          hintText: l10n.editTitle,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
         ),
       );
     }
@@ -735,7 +737,7 @@ class EditPage extends StatelessWidget {
                 (context, embedContext) {
                   return _buildToolBarButton(
                     iconData: Icons.format_indent_increase,
-                    tooltip: 'Text Indent',
+                    tooltip: l10n.editIndent,
                     onPressed: logic.insertNewLine,
                   );
                 },
@@ -850,7 +852,7 @@ class EditPage extends StatelessWidget {
                   controller: logic.quillController,
                   config: QuillEditorConfig(
                     padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                    placeholder: '正文',
+                    placeholder: l10n.editContent,
                     expands: true,
                     paintCursorAboveText: true,
                     keyboardAppearance:
@@ -919,7 +921,7 @@ class EditPage extends StatelessWidget {
                           logic.unFocus();
                           logic.saveDiary();
                         },
-                        tooltip: '保存',
+                        tooltip: l10n.save,
                       ),
                     ],
                   ),

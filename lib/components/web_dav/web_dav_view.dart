@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/webdav.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'web_dav_logic.dart';
@@ -17,12 +19,13 @@ class WebDavComponent extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return ExpansionTile(
       leading: const Icon(Icons.backup_rounded),
-      title: const Text('WebDav-测试版'),
+      title: Text(l10n.backupSyncWebdav),
       subtitle: Obx(() {
         return state.hasOption.value
             ? Row(
                 children: [
-                  const Text('已配置 连通性 '),
+                  Text(
+                      '${l10n.backupSyncWebdavOption} ${l10n.backupSyncWebDAVConnectivity} '),
                   Icon(
                     Icons.circle,
                     color: switch (state.connectivityStatus.value) {
@@ -37,23 +40,23 @@ class WebDavComponent extends StatelessWidget {
                   ),
                 ],
               )
-            : const Text('未配置');
+            : Text(l10n.backupSyncWebdavNoOption);
       }),
       children: [
         Obx(() {
-          return SwitchListTile(
+          return AdaptiveSwitchListTile(
             value: state.autoSync.value,
             onChanged: logic.setAutoSync,
-            title: const Text('启动时同步'),
-            subtitle: const Text('打开应用时自动同步日记'),
+            title: Text(l10n.webdavSyncWhenStartUp),
+            subtitle: l10n.webdavSyncWhenStartUpDes,
           );
         }),
         Obx(() {
-          return SwitchListTile(
+          return AdaptiveSwitchListTile(
             value: state.autoSyncAfterChange.value,
             onChanged: logic.setAutoSyncAfterChange,
-            title: const Text('修改日记后同步'),
-            subtitle: const Text('新增，编辑，删除时同步日记'),
+            title: Text(l10n.webdavSyncAfterChange),
+            subtitle: l10n.webdavSyncAfterChangeDes,
           );
         }),
         Padding(
@@ -65,7 +68,7 @@ class WebDavComponent extends StatelessWidget {
               children: [
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: '服务器地址',
+                    labelText: l10n.webdavOptionServer,
                     border: const OutlineInputBorder(
                         borderRadius: AppBorderRadius.smallBorderRadius),
                     prefixIcon: const Padding(
@@ -84,7 +87,7 @@ class WebDavComponent extends StatelessWidget {
                   keyboardType: TextInputType.url,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入服务器地址';
+                      return l10n.webdavOptionServerDes;
                     }
                     return null;
                   },
@@ -94,7 +97,7 @@ class WebDavComponent extends StatelessWidget {
                 ),
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: '用户名',
+                    labelText: l10n.webdavOptionUsername,
                     border: const OutlineInputBorder(
                         borderRadius: AppBorderRadius.smallBorderRadius),
                     prefixIcon: const Padding(
@@ -111,7 +114,7 @@ class WebDavComponent extends StatelessWidget {
                   controller: logic.usernameController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入用户名';
+                      return l10n.webdavOptionUsernameDes;
                     }
                     return null;
                   },
@@ -121,7 +124,7 @@ class WebDavComponent extends StatelessWidget {
                 ),
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: '密码',
+                    labelText: l10n.webdavOptionPassword,
                     border: const OutlineInputBorder(
                         borderRadius: AppBorderRadius.smallBorderRadius),
                     prefixIcon: const Padding(
@@ -140,7 +143,7 @@ class WebDavComponent extends StatelessWidget {
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '请输入密码';
+                      return l10n.webdavOptionPasswordDes;
                     }
                     return null;
                   },
@@ -154,13 +157,17 @@ class WebDavComponent extends StatelessWidget {
                     TextButton(
                         onPressed: logic.removeWebDavOption,
                         child: Text(
-                          '删除配置',
+                          l10n.webdavOptionDelete,
                           style: TextStyle(color: colorScheme.error),
                         )),
                     TextButton(
                       onPressed: logic.submitForm,
                       child: Obx(() {
-                        return Text(!state.hasOption.value ? '保存配置' : '更新配置');
+                        return Text(
+                          !state.hasOption.value
+                              ? l10n.webdavOptionSave
+                              : l10n.webdavOptionUpdate,
+                        );
                       }),
                     ),
                   ],

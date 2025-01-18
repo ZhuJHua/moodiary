@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import '../../../utils/file_util.dart';
@@ -16,15 +18,15 @@ class LocalSendClientComponent extends StatelessWidget {
 
     Widget buildSend() {
       if (state.isFindingServer) {
-        return ListTile(
-          title: const Text('查找服务器'),
+        return AdaptiveListTile(
+          title: l10n.lanTransferFindingServer,
           subtitle: LinearProgressIndicator(
             borderRadius: BorderRadius.circular(2.0),
           ),
         );
       } else if (state.serverIp == null) {
-        return ListTile(
-          title: const Text('未找到服务器'),
+        return AdaptiveListTile(
+          title: l10n.lanTransferCantFindServer,
           leading: const FaIcon(FontAwesomeIcons.triangleExclamation),
           trailing: FilledButton(
               onPressed: () {
@@ -33,9 +35,9 @@ class LocalSendClientComponent extends StatelessWidget {
               child: const FaIcon(FontAwesomeIcons.repeat)),
         );
       } else {
-        return ListTile(
-          title: Text(state.serverName!),
-          subtitle: Text(state.serverIp!),
+        return AdaptiveListTile(
+          title: state.serverName!,
+          subtitle: state.serverIp!,
           trailing: FilledButton(
             onPressed: () async {
               await logic.sendDiaryList();
@@ -77,9 +79,10 @@ class LocalSendClientComponent extends StatelessWidget {
 
     Widget buildSelect() {
       return Obx(() {
-        return ListTile(
-          title: const Text('选择你要传输的日记'),
-          subtitle: Text('已选择 ${state.diaryToSend.length}'),
+        return AdaptiveListTile(
+          title: l10n.lanTransferSelectDiary,
+          subtitle: Text(
+              '${l10n.lanTransferHasSelected} ${state.diaryToSend.length}'),
           trailing: FilledButton(
               onPressed: () {
                 showModalBottomSheet(

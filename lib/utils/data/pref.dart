@@ -94,6 +94,8 @@ class PrefUtil {
     'backendPrivacy',
     // 日记状态改变时同步
     'autoSyncAfterChange',
+    // 语言
+    'language',
   };
 
   static Future<void> initPref() async {
@@ -217,6 +219,8 @@ class PrefUtil {
         'backendPrivacy', _prefs.getBool('backendPrivacy') ?? true);
     await _prefs.setBool(
         'autoSyncAfterChange', _prefs.getBool('autoSyncAfterChange') ?? false);
+    await _prefs.setString(
+        'language', _prefs.getString('language') ?? 'system');
   }
 
   static Future<void> setValue<T>(String key, T value) async {

@@ -84,6 +84,7 @@ class SettingLogic extends GetxController {
   }
 
   Future<void> toCategoryManager() async {
+    HapticFeedback.selectionClick();
     await Get.toNamed(AppRoutes.categoryManagerPage);
     Bind.find<DashboardLogic>().getCategoryCount();
   }

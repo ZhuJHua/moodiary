@@ -1,6 +1,8 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:mood_diary/components/base/button.dart';
 import 'package:mood_diary/components/local_send/local_send_view.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
 import 'package:mood_diary/components/web_dav/web_dav_view.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -16,11 +18,12 @@ class BackupSyncPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('备份与同步'),
+        title: Text(l10n.settingDataSyncAndBackup),
+        leading: const PageBackButton(),
       ),
       body: ListView(
         children: [
-          ListTile(
+          AdaptiveListTile(
             title: Text(l10n.settingExport),
             onTap: () async {
               var res = await showOkCancelAlertDialog(
@@ -36,9 +39,9 @@ class BackupSyncPage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right_rounded),
             leading: const Icon(Icons.file_upload_outlined),
           ),
-          ListTile(
+          AdaptiveListTile(
             title: Text(l10n.settingImport),
-            subtitle: Text(l10n.settingImportDes),
+            subtitle: l10n.settingImportDes,
             onTap: () async {
               var res = await showOkCancelAlertDialog(
                 context: context,

@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
+import 'package:mood_diary/common/values/language.dart';
 import 'package:mood_diary/components/base/sheet.dart';
+import 'package:mood_diary/components/base/text.dart';
 import 'package:mood_diary/components/color_sheet/color_sheet_view.dart';
 import 'package:mood_diary/components/dashboard/dashboard_view.dart';
+import 'package:mood_diary/components/language_dialog/language_dialog_view.dart';
 import 'package:mood_diary/components/remove_password/remove_password_view.dart';
 import 'package:mood_diary/components/set_password/set_password_view.dart';
 import 'package:mood_diary/components/theme_mode_dialog/theme_mode_dialog_view.dart';
@@ -27,7 +30,12 @@ class SettingPage extends StatelessWidget {
     final size = MediaQuery.sizeOf(context);
 
     Widget buildDashboard() {
-      return const DashboardComponent();
+      return Column(
+        children: [
+          AdaptiveTitleTile(title: l10n.settingDashboard),
+          const DashboardComponent(),
+        ],
+      );
     }
 
     Widget buildAFeatureButton(
@@ -39,17 +47,20 @@ class SettingPage extends StatelessWidget {
         borderRadius: AppBorderRadius.mediumBorderRadius,
         child: Card.outlined(
           color: colorScheme.surfaceContainerLow,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              icon,
-              Text(
-                text,
-                style: textStyle.labelSmall?.copyWith(
-                  color: colorScheme.onSurface,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                icon,
+                buildAdaptiveText(
+                  text: text,
+                  textStyle: textStyle.labelSmall
+                      ?.copyWith(color: colorScheme.secondary),
+                  context: context,
                 ),
-              )
-            ],
+              ],
+            ),
           ),
         ),
       );
@@ -59,7 +70,7 @@ class SettingPage extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SettingTitleTile(title: '功能'),
+          AdaptiveTitleTile(title: l10n.settingFunction),
           GridView(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 100, childAspectRatio: 1.0),
@@ -72,28 +83,28 @@ class SettingPage extends StatelessWidget {
                     Icons.category_rounded,
                     color: colorScheme.secondary,
                   ),
-                  text: '分类管理',
+                  text: l10n.settingFunctionCategoryManage,
                   onTap: logic.toCategoryManager),
               buildAFeatureButton(
                   icon: FaIcon(
                     FontAwesomeIcons.squarePollVertical,
                     color: colorScheme.secondary,
                   ),
-                  text: '分析统计',
+                  text: l10n.settingFunctionAnalysis,
                   onTap: logic.toAnalysePage),
               buildAFeatureButton(
                   icon: FaIcon(
                     FontAwesomeIcons.solidMap,
                     color: colorScheme.secondary,
                   ),
-                  text: '足迹地图',
+                  text: l10n.settingFunctionTrailMap,
                   onTap: logic.toMap),
               buildAFeatureButton(
                   icon: FaIcon(
                     FontAwesomeIcons.solidCommentDots,
                     color: colorScheme.secondary,
                   ),
-                  text: '智能助手',
+                  text: l10n.settingFunctionAIAssistant,
                   onTap: logic.toAi),
             ],
           ),
@@ -104,42 +115,32 @@ class SettingPage extends StatelessWidget {
     Widget buildData() {
       return Column(
         children: [
-          SettingTitleTile(title: l10n.settingData),
+          AdaptiveTitleTile(title: l10n.settingData),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
               children: [
-                ListTile(
+                AdaptiveListTile(
                   title: Text(l10n.settingRecycle),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12.0),
-                      topRight: Radius.circular(12.0),
-                    ),
-                  ),
+                  isFirst: true,
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     logic.toRecyclePage();
                   },
                   leading: const Icon(Icons.delete_rounded),
                 ),
-                ListTile(
-                  title: const Text('备份与同步'),
+                AdaptiveListTile(
+                  title: Text(l10n.settingDataSyncAndBackup),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     logic.toBackupAndSyncPage();
                   },
                   leading: const Icon(Icons.sync_rounded),
                 ),
-                ListTile(
+                AdaptiveListTile(
                   title: Text(l10n.settingClean),
                   leading: const Icon(Icons.cleaning_services_rounded),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(12.0),
-                      bottomRight: Radius.circular(12.0),
-                    ),
-                  ),
+                  isLast: true,
                   trailing: GetBuilder<SettingLogic>(
                       id: 'DataUsage',
                       builder: (_) {
@@ -164,26 +165,21 @@ class SettingPage extends StatelessWidget {
     Widget buildDisplay() {
       return Column(
         children: [
-          SettingTitleTile(title: l10n.settingDisplay),
+          AdaptiveTitleTile(title: l10n.settingDisplay),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
               children: [
-                ListTile(
+                AdaptiveListTile(
                   title: Text(l10n.settingDiary),
                   leading: const Icon(Icons.article_rounded),
                   trailing: const Icon(Icons.chevron_right_rounded),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12.0),
-                      topRight: Radius.circular(12.0),
-                    ),
-                  ),
+                  isFirst: true,
                   onTap: () {
                     logic.toDiarySettingPage();
                   },
                 ),
-                ListTile(
+                AdaptiveListTile(
                   title: Text(l10n.settingThemeMode),
                   leading: const Icon(Icons.invert_colors_rounded),
                   trailing: Text(
@@ -205,7 +201,7 @@ class SettingPage extends StatelessWidget {
                         });
                   },
                 ),
-                ListTile(
+                AdaptiveListTile(
                   title: Text(l10n.settingColor),
                   leading: const Icon(Icons.color_lens_rounded),
                   trailing: Text(
@@ -222,7 +218,7 @@ class SettingPage extends StatelessWidget {
                         });
                   },
                 ),
-                ListTile(
+                AdaptiveListTile(
                   title: Text(l10n.settingFontStyle),
                   leading: const Icon(Icons.format_size_rounded),
                   trailing: const Icon(Icons.chevron_right_rounded),
@@ -230,15 +226,10 @@ class SettingPage extends StatelessWidget {
                     logic.toFontSizePage();
                   },
                 ),
-                ListTile(
-                  title: const Text('首页名称'),
+                AdaptiveListTile(
+                  title: Text(l10n.settingHomepageName),
                   leading: const Icon(Icons.drive_file_rename_outline_rounded),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(12.0),
-                      bottomRight: Radius.circular(12.0),
-                    ),
-                  ),
+                  isLast: true,
                   trailing: GetBuilder<SettingLogic>(
                       id: 'CustomTitle',
                       builder: (_) {
@@ -254,11 +245,10 @@ class SettingPage extends StatelessWidget {
                       context: context,
                       textFields: [
                         DialogTextField(
-                          hintText: '名称',
                           initialText: state.customTitle,
                         )
                       ],
-                      title: '首页名称',
+                      title: l10n.settingHomepageName,
                     );
                     if (res != null) {
                       logic.setCustomTitle(title: res.first);
@@ -275,7 +265,7 @@ class SettingPage extends StatelessWidget {
     Widget buildPrivacy() {
       return Column(
         children: [
-          SettingTitleTile(title: l10n.settingPrivacy),
+          AdaptiveTitleTile(title: l10n.settingPrivacy),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
@@ -283,7 +273,7 @@ class SettingPage extends StatelessWidget {
                 // GetBuilder<SettingLogic>(
                 //     id: 'Local',
                 //     builder: (_) {
-                //       return SwitchListTile(
+                //       return AdaptiveSwitchListTile(
                 //         value: state.local,
                 //         onChanged: null,
                 //         title: Text(l10n.settingLocal),
@@ -294,7 +284,7 @@ class SettingPage extends StatelessWidget {
                 GetBuilder<SettingLogic>(
                     id: 'Lock',
                     builder: (_) {
-                      return ListTile(
+                      return AdaptiveListTile(
                         trailing: Text(
                           state.lock
                               ? l10n.settingLockOpen
@@ -303,20 +293,18 @@ class SettingPage extends StatelessWidget {
                             color: colorScheme.primary,
                           ),
                         ),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(12.0),
-                            topRight: Radius.circular(12.0),
-                          ),
-                        ),
+                        isFirst: true,
                         onTap: () async {
                           var res = await showOkCancelAlertDialog(
-                              context: context,
-                              title: l10n.settingLock,
-                              message: state.lock
-                                  ? l10n.settingLockResetLock
-                                  : l10n.settingLockChooseLockType,
-                              okLabel: state.lock ? '关闭密码' : '数字');
+                            context: context,
+                            title: l10n.settingLock,
+                            message: state.lock
+                                ? l10n.settingLockResetLock
+                                : l10n.settingLockChooseLockType,
+                            okLabel: state.lock
+                                ? l10n.settingLockClose
+                                : l10n.settingLockTypeNumber,
+                          );
                           if (res == OkCancelResult.ok && context.mounted) {
                             showFloatingModalBottomSheet(
                                 context: context,
@@ -335,31 +323,26 @@ class SettingPage extends StatelessWidget {
                 GetBuilder<SettingLogic>(
                     id: 'Lock',
                     builder: (_) {
-                      return SwitchListTile(
+                      return AdaptiveSwitchListTile(
                         value: state.lockNow,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(12.0),
-                            bottomRight: Radius.circular(12.0),
-                          ),
-                        ),
                         onChanged: state.lock
                             ? (value) {
                                 logic.lockNow(value);
                               }
                             : null,
                         title: Text(l10n.settingLockNow),
-                        subtitle: Text(l10n.settingLockNowDes),
+                        subtitle: l10n.settingLockNowDes,
                         secondary: const Icon(Icons.lock_clock_rounded),
                       );
                     }),
                 Obx(() {
-                  return SwitchListTile(
+                  return AdaptiveSwitchListTile(
                     value: state.backendPrivacy.value,
                     onChanged: logic.changeBackendPrivacy,
-                    title: Text(l10n.settingBackendPrivacyProtection),
-                    subtitle: Text(l10n.settingBackendPrivacyProtectionDes),
+                    title: l10n.settingBackendPrivacyProtection,
+                    subtitle: l10n.settingBackendPrivacyProtectionDes,
                     secondary: const Icon(Icons.remove_red_eye_rounded),
+                    isLast: true,
                   );
                 }),
               ],
@@ -372,35 +355,45 @@ class SettingPage extends StatelessWidget {
     Widget buildMore() {
       return Column(
         children: [
-          SettingTitleTile(title: l10n.settingMore),
+          AdaptiveTitleTile(title: l10n.settingMore),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
             child: Column(
               children: [
-                ListTile(
+                AdaptiveListTile(
                   title: Text(l10n.settingAbout),
                   leading: const Icon(Icons.info_rounded),
                   trailing: const Icon(Icons.chevron_right_rounded),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(12.0),
-                      topRight: Radius.circular(12.0),
-                    ),
-                  ),
+                  isFirst: true,
                   onTap: () {
                     logic.toAboutPage();
                   },
                 ),
-                ListTile(
+                AdaptiveListTile(
+                  title: Text(l10n.settingLanguage),
+                  leading: const Icon(Icons.language_rounded),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return const LanguageDialogComponent();
+                      },
+                    );
+                  },
+                  trailing: Obx(() {
+                    return Text(
+                      state.language.value.l10nText,
+                      style: textStyle.bodySmall!.copyWith(
+                        color: colorScheme.primary,
+                      ),
+                    );
+                  }),
+                ),
+                AdaptiveListTile(
                   title: Text(l10n.settingLab),
                   leading: const Icon(Icons.science_rounded),
                   trailing: const Icon(Icons.chevron_right_rounded),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(12.0),
-                      bottomRight: Radius.circular(12.0),
-                    ),
-                  ),
+                  isLast: true,
                   onTap: () {
                     logic.toLaboratoryPage();
                   },
@@ -415,27 +408,19 @@ class SettingPage extends StatelessWidget {
     return GetBuilder<SettingLogic>(
       assignId: true,
       builder: (_) {
-        return Column(
-          children: [
-            AppBar(
-              title: Text(l10n.homeNavigatorSetting),
-              centerTitle: false,
-            ),
-            Expanded(
-              child: ListView(
-                cacheExtent: size.height * 2,
-                padding: const EdgeInsets.all(4.0),
-                children: [
-                  buildDashboard(),
-                  buildFeature(),
-                  buildData(),
-                  buildDisplay(),
-                  buildPrivacy(),
-                  buildMore(),
-                ],
-              ),
-            ),
-          ],
+        return SafeArea(
+          child: ListView(
+            cacheExtent: size.height * 2,
+            padding: const EdgeInsets.all(4.0),
+            children: [
+              buildDashboard(),
+              buildFeature(),
+              buildData(),
+              buildDisplay(),
+              buildPrivacy(),
+              buildMore(),
+            ],
+          ),
         );
       },
     );

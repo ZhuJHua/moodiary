@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'set_password_logic.dart';
@@ -43,7 +44,7 @@ class SetPasswordComponent extends StatelessWidget {
             logic.deletePassword();
           },
           child: const Icon(
-            Icons.backspace,
+            Icons.keyboard_backspace_rounded,
           ),
         ),
       );
@@ -76,7 +77,9 @@ class SetPasswordComponent extends StatelessWidget {
               spacing: 16.0,
               children: [
                 Text(
-                  state.checkPassword.isEmpty ? '请输入密码' : '请确认密码',
+                  state.checkPassword.isEmpty
+                      ? l10n.lockEnterPassword
+                      : l10n.lockConfirmPassword,
                   style: textStyle.titleMedium,
                 ),
                 AnimatedBuilder(

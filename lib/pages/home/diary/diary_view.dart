@@ -2,9 +2,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:marquee/marquee.dart';
 import 'package:mood_diary/common/values/view_mode.dart';
 import 'package:mood_diary/components/base/sheet.dart';
+import 'package:mood_diary/components/base/text.dart';
 import 'package:mood_diary/components/category_choice_sheet/category_choice_sheet_view.dart';
 import 'package:mood_diary/components/diary_tab_view/diary_tab_view_view.dart';
 import 'package:mood_diary/components/keepalive/keepalive.dart';
@@ -15,7 +15,6 @@ import 'package:refreshed/refreshed.dart';
 import 'package:rive_animated_icon/rive_animated_icon.dart';
 
 import '../../../main.dart';
-import '../../../utils/data/pref.dart';
 import '../../../utils/webdav_util.dart';
 import 'diary_logic.dart';
 
@@ -190,46 +189,13 @@ class DiaryPage extends StatelessWidget {
                             ],
                           ),
                         ),
-                        LayoutBuilder(builder: (context, constraints) {
-                          return Obx(() {
-                            final textPainter = TextPainter(
-                                text: TextSpan(
-                                    text: state.hitokoto.value,
-                                    style: textStyle.labelSmall),
-                                textDirection: TextDirection.ltr,
-                                textScaler: TextScaler.linear(
-                                    PrefUtil.getValue<double>('fontScale')!))
-                              ..layout();
-                            final showMarquee =
-                                textPainter.width > constraints.maxWidth;
-                            return showMarquee
-                                ? SizedBox(
-                                    height: textPainter.height,
-                                    width: constraints.maxWidth,
-                                    child: Marquee(
-                                      text: state.hitokoto.value,
-                                      velocity: 20,
-                                      blankSpace: 20,
-                                      pauseAfterRound:
-                                          const Duration(seconds: 1),
-                                      accelerationDuration:
-                                          const Duration(seconds: 1),
-                                      accelerationCurve: Curves.linear,
-                                      decelerationDuration:
-                                          const Duration(milliseconds: 500),
-                                      decelerationCurve: Curves.easeOut,
-                                      style: textStyle.labelMedium?.copyWith(
-                                          color: colorScheme.onSurface
-                                              .withValues(alpha: 0.8)),
-                                    ),
-                                  )
-                                : Text(
-                                    state.hitokoto.value,
-                                    style: textStyle.labelMedium?.copyWith(
-                                        color: colorScheme.onSurface
-                                            .withValues(alpha: 0.8)),
-                                  );
-                          });
+                        Obx(() {
+                          return buildAdaptiveText(
+                            text: state.hitokoto.value,
+                            textStyle: textStyle.labelSmall
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
+                            context: context,
+                          );
                         }),
                       ],
                     ),

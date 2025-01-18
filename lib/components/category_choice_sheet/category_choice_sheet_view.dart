@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mood_diary/components/loading/loading.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'category_choice_sheet_logic.dart';
@@ -36,7 +37,7 @@ class CategoryChoiceSheetComponent extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '所有分类',
+                                l10n.categoryAllCategory,
                                 style: textStyle.titleMedium,
                               ),
                               Text(
@@ -46,7 +47,7 @@ class CategoryChoiceSheetComponent extends StatelessWidget {
                             ],
                           ),
                           ActionChip(
-                            label: const Text('全部'),
+                            label: Text(l10n.categoryAll),
                             onPressed: () {
                               logic.selectCategory(categoryId: null);
                             },
@@ -77,7 +78,7 @@ class CategoryChoiceSheetComponent extends StatelessWidget {
                               onPressed: () {
                                 logic.toCategoryManage(context);
                               },
-                              child: const Text('分类管理'),
+                              child: Text(l10n.settingFunctionCategoryManage),
                             ),
                           )
                         ],
