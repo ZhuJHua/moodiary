@@ -1,6 +1,7 @@
 name: Flutter Analyze
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - master
@@ -38,7 +39,7 @@ jobs:
         run: flutter pub get
 
       - name: Install Dependencies for Rust Builder Project
-        cwd: rust_builder
+        working-directory: rust_builder
         run: flutter pub get
 
       - name: Run Flutter Analyze
