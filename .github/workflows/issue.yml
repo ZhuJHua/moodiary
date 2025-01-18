@@ -2,7 +2,7 @@ name: Issue Labeled
 
 on:
   issues:
-    types: [labeled]
+    types: [ labeled ]
 
 jobs:
   issue-labeled:
