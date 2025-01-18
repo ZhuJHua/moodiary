@@ -95,6 +95,11 @@ class WebViewPage extends StatelessWidget {
                 );
               },
             ),
+            Center(
+              child: CircularProgressIndicator(
+                value: state.progress.value,
+              ),
+            ),
           ],
         ),
       ),

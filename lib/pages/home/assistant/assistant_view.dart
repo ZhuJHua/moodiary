@@ -3,6 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:mood_diary/common/values/border.dart';
+import 'package:mood_diary/components/base/button.dart';
+import 'package:mood_diary/components/base/text.dart';
 import 'package:refreshed/refreshed.dart';
 
 import '../../../main.dart';
@@ -50,7 +52,7 @@ class AssistantPage extends StatelessWidget {
                 onPressed: () {
                   logic.checkGetAi();
                 },
-                icon: const Icon(Icons.arrow_upward))
+                icon: const Icon(Icons.arrow_upward_rounded))
           ],
         ),
       );
@@ -146,6 +148,7 @@ class AssistantPage extends StatelessWidget {
           body: Stack(
             children: [
               SafeArea(
+                top: false,
                 child: Column(
                   children: [
                     Expanded(
@@ -153,51 +156,57 @@ class AssistantPage extends StatelessWidget {
                         controller: logic.scrollController,
                         slivers: [
                           SliverAppBar(
-                            title: Text(l10n.homeNavigatorAssistant),
+                            title: buildAdaptiveText(
+                              text: l10n.settingFunctionAIAssistant,
+                              context: context,
+                              isTitle: true,
+                            ),
                             pinned: true,
+                            leading: const PageBackButton(),
                             actions: [
-                              Obx(() {
-                                return Text(
-                                    modelMap[state.modelVersion.value]!);
-                              }),
-                              IconButton(
-                                  onPressed: () {
-                                    showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          return SimpleDialog(
-                                            title: const Text('选择模型'),
-                                            children: List.generate(
-                                                modelMap.length, (index) {
-                                              return Obx(() {
-                                                return SimpleDialogOption(
-                                                  child: Row(
-                                                    spacing: 4.0,
-                                                    children: [
-                                                      Text(modelMap[index]!),
-                                                      if (state.modelVersion
-                                                              .value ==
-                                                          index) ...[
-                                                        const Icon(Icons.check)
-                                                      ]
-                                                    ],
-                                                  ),
-                                                  onPressed: () {
-                                                    logic.changeModel(index);
-                                                  },
-                                                );
-                                              });
-                                            }),
-                                          );
-                                        });
-                                  },
-                                  icon:
-                                      const Icon(Icons.change_circle_outlined)),
+                              GestureDetector(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return SimpleDialog(
+                                        title: const Text('选择模型'),
+                                        children: List.generate(modelMap.length,
+                                            (index) {
+                                          return Obx(() {
+                                            return SimpleDialogOption(
+                                              child: Row(
+                                                spacing: 4.0,
+                                                children: [
+                                                  Text(modelMap[index]!),
+                                                  if (state
+                                                          .modelVersion.value ==
+                                                      index) ...[
+                                                    const Icon(
+                                                        Icons.check_rounded)
+                                                  ]
+                                                ],
+                                              ),
+                                              onPressed: () {
+                                                logic.changeModel(index);
+                                              },
+                                            );
+                                          });
+                                        }),
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Obx(() {
+                                  return Text(
+                                      modelMap[state.modelVersion.value]!);
+                                }),
+                              ),
                               IconButton(
                                   onPressed: () {
                                     logic.newChat();
                                   },
-                                  icon: const Icon(Icons.refresh)),
+                                  icon: const Icon(Icons.refresh_rounded)),
                             ],
                           ),
                           buildChat(),

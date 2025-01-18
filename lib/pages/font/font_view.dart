@@ -1,13 +1,15 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:marquee/marquee.dart';
 import 'package:mood_diary/common/values/border.dart';
+import 'package:mood_diary/components/base/button.dart';
+import 'package:mood_diary/components/base/text.dart';
 import 'package:mood_diary/components/loading/loading.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:rive_animated_icon/rive_animated_icon.dart';
 
-import '../../utils/data/pref.dart';
 import 'font_logic.dart';
 
 class FontPage extends StatelessWidget {
@@ -19,9 +21,11 @@ class FontPage extends StatelessWidget {
     required Color inactiveColor,
     required TextStyle? textStyle,
     required Function onTap,
+    required BuildContext context,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
+      spacing: 4.0,
       children: [
         GestureDetector(
           onTap: () {
@@ -38,20 +42,14 @@ class FontPage extends StatelessWidget {
             width: 64,
             height: 64,
             child: const Center(
-              child: Text('Aa',
-                  style: TextStyle(fontSize: 32, fontFamily: '系统字体')),
+              child: Text('Aa', style: TextStyle(fontSize: 32)),
             ),
           ),
         ),
-        SizedBox(
-          width: 60,
-          height: 24,
-          child: Center(
-            child: Text(
-              '系统字体',
-              style: textStyle,
-            ),
-          ),
+        buildAdaptiveText(
+          text: l10n.fontStyleSystem,
+          textStyle: textStyle,
+          context: context,
         ),
       ],
     );
@@ -63,27 +61,19 @@ class FontPage extends StatelessWidget {
     required Color activeColor,
     required Color inactiveColor,
     required TextStyle? textStyle,
-    required Function onTap,
-    required Function onLongPress,
+    required Function() onTap,
+    required Function() onLongPress,
+    required BuildContext context,
   }) {
-    final textPainter = TextPainter(
-        text: TextSpan(text: fontName, style: textStyle),
-        textDirection: TextDirection.ltr,
-        textScaler: TextScaler.linear(PrefUtil.getValue<double>('fontScale')!))
-      ..layout();
-    double textWidth = textPainter.size.width;
-    double containerWidth = 60.0;
-    bool shouldMarquee = textWidth > containerWidth;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
+      spacing: 4.0,
       children: [
         GestureDetector(
-          onTap: () {
-            onTap.call();
-          },
+          onTap: onTap,
           onLongPress: () {
             HapticFeedback.selectionClick();
-            onLongPress.call();
+            onLongPress();
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
@@ -96,32 +86,21 @@ class FontPage extends StatelessWidget {
             width: 64,
             height: 64,
             child: Center(
-              child: Text('Aa',
-                  style: TextStyle(fontSize: 32, fontFamily: fontName)),
+              child: Text(
+                'Aa',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontFamily: fontName,
+                ),
+              ),
             ),
           ),
         ),
-        SizedBox(
-          width: containerWidth,
-          height: 24,
-          child: Center(
-            child: shouldMarquee
-                ? Marquee(
-                    text: fontName,
-                    style: textStyle,
-                    velocity: 20,
-                    blankSpace: 20,
-                    pauseAfterRound: const Duration(seconds: 1),
-                    accelerationDuration: const Duration(seconds: 1),
-                    accelerationCurve: Curves.linear,
-                    decelerationDuration: const Duration(milliseconds: 500),
-                    decelerationCurve: Curves.easeOut,
-                  )
-                : Text(
-                    fontName,
-                    style: textStyle,
-                  ),
-          ),
+        buildAdaptiveText(
+          text: fontName,
+          textStyle: textStyle,
+          context: context,
+          maxWidth: 64,
         ),
       ],
     );
@@ -160,14 +139,6 @@ class FontPage extends StatelessWidget {
       ],
     );
   }
-
-  static final fontSizeMap = {
-    0.8: '超小',
-    0.9: '小',
-    1.0: '标准',
-    1.1: '大',
-    1.2: '超大',
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -223,6 +194,7 @@ class FontPage extends StatelessWidget {
           activeColor: colorScheme.primary,
           inactiveColor: colorScheme.surfaceContainerHighest,
           textStyle: textStyle.labelSmall,
+          context: context,
           onTap: () {
             logic.changeSelectedFontPath(path: '');
           },
@@ -234,6 +206,7 @@ class FontPage extends StatelessWidget {
               activeColor: colorScheme.primary,
               inactiveColor: colorScheme.surfaceContainerHighest,
               textStyle: textStyle.labelSmall,
+              context: context,
               onTap: () {
                 logic.changeSelectedFontPath(path: e.key);
               },
@@ -241,9 +214,9 @@ class FontPage extends StatelessWidget {
                 // 显示删除字体对话框
                 var res = showOkCancelAlertDialog(
                   context: context,
-                  title: '提示',
+                  title: l10n.hint,
                   style: AdaptiveStyle.material,
-                  message: '删除字体 ${e.value} 后，将无法恢复，是否确定？',
+                  message: l10n.fontDeleteDes(e.value),
                 );
                 if (await res == OkCancelResult.ok) {
                   logic.deleteFont(fontPath: e.key);
@@ -280,14 +253,21 @@ class FontPage extends StatelessWidget {
                   ),
           ),
           const Divider(endIndent: 24, indent: 24),
-          ListTile(
+          AdaptiveListTile(
             title: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('字体大小'),
-                  Text(fontSizeMap[state.fontScale.value] ?? '')
+                  Text(l10n.fontStyleSize),
+                  Text(switch (state.fontScale.value) {
+                    0.8 => l10n.fontSizeSuperSmall,
+                    0.9 => l10n.fontSizeSmall,
+                    1.0 => l10n.fontSizeStandard,
+                    1.1 => l10n.fontSizeLarge,
+                    1.2 => l10n.fontSizeSuperLarge,
+                    _ => l10n.fontSizeStandard,
+                  })
                 ],
               ),
             ),
@@ -310,7 +290,8 @@ class FontPage extends StatelessWidget {
       builder: (_) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('字体'),
+            title: Text(l10n.settingFontStyle),
+            leading: const PageBackButton(),
             backgroundColor: colorScheme.surfaceContainerLow,
           ),
           backgroundColor: colorScheme.surfaceContainerLow,
@@ -355,8 +336,8 @@ class FontPage extends StatelessWidget {
           floatingActionButton: size.width > 600
               ? FloatingActionButton.extended(
                   onPressed: logic.saveFontScale,
-                  label: const Text('应用'),
-                  icon: const Icon(Icons.check),
+                  label: Text(l10n.apply),
+                  icon: const Icon(Icons.check_rounded),
                 )
               : null,
           bottomSheet: Obx(() {
@@ -403,7 +384,7 @@ class FontPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: FilledButton(
                         onPressed: logic.saveFontScale,
-                        child: const Text('应用'),
+                        child: Text(l10n.apply),
                       ),
                     ),
                   ],

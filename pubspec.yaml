@@ -101,7 +101,7 @@ dependencies:
       ref: feature/add-new-component
   network_info_plus: 6.1.3
   scrollable_positioned_list: 0.3.8
-  marquee: 2.3.0
+  fading_edge_scrollview: 4.1.1
   flutter_localizations:
     sdk: flutter
   rust_lib_mood_diary:
@@ -121,7 +121,7 @@ dev_dependencies:
   #  flutter_test:
   #    sdk: flutter
   build_runner: 2.4.14
-  flutter_launcher_icons: 0.14.2
+  flutter_launcher_icons: 0.14.3
   slang_build_runner: 4.4.0
   msix: 3.16.8
   flutter_lints: 5.0.0

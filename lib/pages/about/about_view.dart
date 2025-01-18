@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mood_diary/components/base/button.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
 import 'package:mood_diary/utils/update_util.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -67,6 +69,7 @@ class AboutPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.aboutTitle),
+        leading: const PageBackButton(),
       ),
       body: SafeArea(
         child: ListView(
@@ -80,22 +83,17 @@ class AboutPage extends StatelessWidget {
               color: colorScheme.surfaceContainerLow,
               child: Column(
                 children: [
-                  ListTile(
+                  AdaptiveListTile(
                     leading: const Icon(Icons.update_rounded),
                     title: Text(l10n.aboutUpdate),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(12.0),
-                        topRight: Radius.circular(12.0),
-                      ),
-                    ),
+                    isFirst: true,
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () async {
                       await UpdateUtil.checkShouldUpdate(state.appVersion,
                           handle: true);
                     },
                   ),
-                  ListTile(
+                  AdaptiveListTile(
                     leading: const Icon(Icons.source_rounded),
                     title: Text(l10n.aboutSource),
                     trailing: const Icon(Icons.chevron_right_rounded),
@@ -103,7 +101,7 @@ class AboutPage extends StatelessWidget {
                       await logic.toSource();
                     },
                   ),
-                  ListTile(
+                  AdaptiveListTile(
                     leading: const Icon(Icons.file_copy_rounded),
                     title: Text(l10n.aboutUserAgreement),
                     trailing: const Icon(Icons.chevron_right_rounded),
@@ -111,7 +109,7 @@ class AboutPage extends StatelessWidget {
                       logic.toAgreement();
                     },
                   ),
-                  ListTile(
+                  AdaptiveListTile(
                     leading: const Icon(Icons.privacy_tip_rounded),
                     title: Text(l10n.aboutPrivacyPolicy),
                     trailing: const Icon(Icons.chevron_right_rounded),
@@ -119,7 +117,7 @@ class AboutPage extends StatelessWidget {
                       logic.toPrivacy();
                     },
                   ),
-                  ListTile(
+                  AdaptiveListTile(
                     leading: const Icon(Icons.bug_report_rounded),
                     title: Text(l10n.aboutBugReport),
                     trailing: const Icon(Icons.chevron_right_rounded),
@@ -127,15 +125,10 @@ class AboutPage extends StatelessWidget {
                       await logic.toReportPage();
                     },
                   ),
-                  ListTile(
+                  AdaptiveListTile(
                     leading: const Icon(Icons.attach_money_rounded),
                     title: Text(l10n.aboutDonate),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(12.0),
-                        bottomRight: Radius.circular(12.0),
-                      ),
-                    ),
+                    isLast: true,
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: logic.toSponsor,
                   ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mood_diary/main.dart';
 import 'package:mood_diary/utils/auth_util.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -43,7 +44,7 @@ class RemovePasswordComponent extends StatelessWidget {
             logic.deletePassword();
           },
           child: const Icon(
-            Icons.backspace,
+            Icons.keyboard_backspace_rounded,
           ),
         ),
       );
@@ -60,7 +61,7 @@ class RemovePasswordComponent extends StatelessWidget {
             }
           },
           child: const Icon(
-            Icons.fingerprint,
+            Icons.fingerprint_rounded,
           ),
         ),
       );
@@ -93,7 +94,7 @@ class RemovePasswordComponent extends StatelessWidget {
               spacing: 16.0,
               children: [
                 Text(
-                  '请输入密码',
+                  l10n.lockEnterPassword,
                   style: textStyle.titleMedium,
                 ),
                 AnimatedBuilder(

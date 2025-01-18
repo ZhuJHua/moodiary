@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'local_send_server_logic.dart';
@@ -17,24 +19,22 @@ class LocalSendServerComponent extends StatelessWidget {
         return Obx(() {
           return Column(
             children: [
-              const ListTile(
-                leading: FaIcon(FontAwesomeIcons.solidLightbulb),
-                title: Text('接收过程中不要操作'),
+              AdaptiveListTile(
+                leading: const FaIcon(FontAwesomeIcons.solidLightbulb),
+                title: l10n.lanTransferReceiveDes,
               ),
-              ListTile(
+              AdaptiveListTile(
                 leading: const FaIcon(FontAwesomeIcons.server),
-                title: Text(logic.serverName),
-                subtitle: const Text('服务器已启动'),
+                title: logic.serverName,
+                subtitle: l10n.lanTransferReceiveServerStart,
               ),
               if (logic.receiveCount.value > 0) ...[
-                ListTile(
-                  title: const Text('已接收'),
-                  subtitle: Obx(() {
-                    return Text(
-                      logic.receiveCount.value.toString(),
-                    );
-                  }),
-                )
+                Obx(() {
+                  return AdaptiveListTile(
+                    title: l10n.lanTransferHasReceived,
+                    subtitle: logic.receiveCount.value.toString(),
+                  );
+                })
               ]
             ],
           );

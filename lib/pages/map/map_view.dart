@@ -5,7 +5,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mood_diary/components/base/button.dart';
 import 'package:mood_diary/components/bubble/bubble_view.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import '../../utils/file_util.dart';
@@ -22,7 +24,8 @@ class MapPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('足迹'),
+        title: Text(l10n.settingFunctionTrailMap),
+        leading: const PageBackButton(),
       ),
       body: GetBuilder<MapLogic>(
         builder: (_) {

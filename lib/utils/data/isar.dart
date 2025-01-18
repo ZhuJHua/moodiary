@@ -195,6 +195,9 @@ class IsarUtil {
     // 合并并去重
     var combinedResults = {...contentResults, ...titleResults}.toList();
 
+    // 按时间排序
+    combinedResults.sort((a, b) => b.time.compareTo(a.time));
+
     return combinedResults;
   }
 

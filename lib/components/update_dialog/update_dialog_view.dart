@@ -22,7 +22,7 @@ class UpdateDialogComponent extends StatelessWidget {
           title: Wrap(
             spacing: 8.0,
             children: [
-              const Text('发现新版本'),
+              Text(l10n.updateFound),
               Chip(
                 label: Text(
                   githubRelease.tagName!,
@@ -46,7 +46,7 @@ class UpdateDialogComponent extends StatelessWidget {
                 Navigator.pop(context);
                 await logic.toDownload(githubRelease);
               },
-              child: const Text('前往更新'),
+              child: Text(l10n.updateToGoNow),
             ),
           ],
         );

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mood_diary/components/base/button.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'recycle_logic.dart';
@@ -16,13 +19,14 @@ class RecyclePage extends StatelessWidget {
       builder: (_) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text(
-              '回收站',
+            title: Text(
+              l10n.settingRecycle,
             ),
+            leading: const PageBackButton(),
           ),
           body: ListView.builder(
             itemBuilder: (context, index) {
-              return ListTile(
+              return AdaptiveListTile(
                 onTap: null,
                 title:
                     Text(state.diaryList[index].time.toString().split('.')[0]),
@@ -33,13 +37,13 @@ class RecyclePage extends StatelessWidget {
                       onPressed: () {
                         logic.showDiary(state.diaryList[index]);
                       },
-                      icon: const Icon(Icons.settings_backup_restore),
+                      icon: const Icon(Icons.settings_backup_restore_rounded),
                     ),
                     IconButton(
                       onPressed: () {
                         logic.deleteDiary(index);
                       },
-                      icon: const Icon(Icons.delete_forever),
+                      icon: const Icon(Icons.delete_forever_rounded),
                       color: colorScheme.error,
                     )
                   ],

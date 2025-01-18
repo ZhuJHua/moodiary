@@ -1,6 +1,7 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import '../../utils/data/pref.dart';
@@ -15,7 +16,7 @@ class LaboratoryPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('实验室'),
+        title: Text(l10n.settingLab),
       ),
       body: GetBuilder<LaboratoryLogic>(builder: (_) {
         return ListView(

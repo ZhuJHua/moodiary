@@ -37,7 +37,7 @@ class AboutLogic extends GetxController {
   //跳转到反馈页
   Future<void> toReportPage() async {
     await Get.toNamed(AppRoutes.webViewPage,
-        arguments: ['https://answer.moodiary.net', '反馈']);
+        arguments: ['https://answer.moodiary.net', '']);
     //await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
 

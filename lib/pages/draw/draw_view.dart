@@ -4,6 +4,8 @@ import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
+import 'package:mood_diary/components/base/button.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'draw_logic.dart';
@@ -20,7 +22,8 @@ class DrawPage extends StatelessWidget {
     var drawWidth = min(300.0, size.width * 0.8);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('画板'),
+        title: Text(l10n.editPickImageFromDraw),
+        leading: const PageBackButton(),
       ),
       resizeToAvoidBottomInset: false,
       body: Center(
@@ -56,7 +59,7 @@ class DrawPage extends StatelessWidget {
                               context: context,
                               builder: (context) {
                                 return AlertDialog(
-                                  title: const Text('选择颜色'),
+                                  title: Text(l10n.drawPickColor),
                                   content: SingleChildScrollView(
                                     child: ColorPicker(
                                       pickerColor: state.pickerColor,
@@ -70,13 +73,13 @@ class DrawPage extends StatelessWidget {
                                         onPressed: () {
                                           Navigator.pop(context);
                                         },
-                                        child: const Text('取消')),
+                                        child: Text(l10n.cancel)),
                                     TextButton(
                                         onPressed: () {
                                           Navigator.pop(context);
                                           logic.setColor();
                                         },
-                                        child: const Text('确认'))
+                                        child: Text(l10n.ok))
                                   ],
                                 );
                               });
@@ -100,14 +103,14 @@ class DrawPage extends StatelessWidget {
             onPressed: () async {
               var res = await showOkCancelAlertDialog(
                   context: context,
-                  title: '提示',
-                  message: '确认保存吗',
+                  title: l10n.hint,
+                  message: l10n.sureToSave,
                   style: AdaptiveStyle.material);
               if (res == OkCancelResult.ok) {
                 await logic.getImageData();
               }
             },
-            child: const Text('保存'),
+            child: Text(l10n.save),
           ),
         ),
       ],

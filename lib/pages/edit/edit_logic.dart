@@ -13,6 +13,7 @@ import 'package:mood_diary/common/values/diary_type.dart';
 import 'package:mood_diary/components/keyboard_listener/keyboard_listener.dart';
 import 'package:mood_diary/components/quill_embed/text_indent.dart';
 import 'package:mood_diary/components/quill_embed/video_embed.dart';
+import 'package:mood_diary/main.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/src/rust/api/kmp.dart';
 import 'package:mood_diary/utils/media_util.dart';
@@ -220,7 +221,7 @@ class EditLogic extends GetxController {
       }
       return;
     } else {
-      NoticeUtil.showToast('取消图片选择');
+      NoticeUtil.showToast(l10n.cancelSelect);
     }
   }
 
@@ -232,7 +233,7 @@ class EditLogic extends GetxController {
       Navigator.pop(context);
       await addNewImage(photo);
     } else {
-      NoticeUtil.showToast('取消图片选择');
+      NoticeUtil.showToast(l10n.cancelSelect);
     }
   }
 
@@ -245,15 +246,15 @@ class EditLogic extends GetxController {
   //网络图片
   Future<void> networkImage(BuildContext context) async {
     Navigator.pop(context);
-    NoticeUtil.showToast('图片获取中');
+    NoticeUtil.showToast(l10n.imageFetching);
     var imageUrl = await Api.updateImageUrl();
     if (imageUrl == null) {
-      NoticeUtil.showToast('图片获取失败');
+      NoticeUtil.showToast(l10n.imageFetchError);
       return;
     }
     var imageData = await Api.getImageData(imageUrl.first);
     if (imageData == null) {
-      NoticeUtil.showToast('图片获取失败');
+      NoticeUtil.showToast(l10n.imageFetchError);
       return;
     }
     var path = FileUtil.getCachePath('${const Uuid().v7()}.png');
@@ -275,7 +276,7 @@ class EditLogic extends GetxController {
       Navigator.pop(context);
       await addNewVideo(video);
     } else {
-      NoticeUtil.showToast('取消视频选择');
+      NoticeUtil.showToast(l10n.cancelSelect);
     }
   }
 
@@ -372,7 +373,8 @@ class EditLogic extends GetxController {
     state.isNew
         ? Get.back(result: state.currentDiary.categoryId ?? '')
         : Get.back(result: 'changed');
-    NoticeUtil.showToast(state.isNew ? '保存成功' : '修改成功');
+    NoticeUtil.showToast(
+        state.isNew ? l10n.editSaveSuccess : l10n.editChangeSuccess);
   }
 
   DateTime? oldTime;
@@ -384,7 +386,7 @@ class EditLogic extends GetxController {
       Get.back();
     } else {
       oldTime = currentTime;
-      NoticeUtil.showToast('再滑一次退出');
+      NoticeUtil.showToast(l10n.backAgainToExit);
     }
   }
 
@@ -445,7 +447,7 @@ class EditLogic extends GetxController {
     // 获取定位
     var position = await Api.updatePosition();
     if (position == null) {
-      _handleError('定位失败');
+      _handleError(l10n.locationError);
       return;
     }
 
@@ -457,13 +459,13 @@ class EditLogic extends GetxController {
     );
 
     if (weather == null) {
-      _handleError('天气获取失败');
+      _handleError(l10n.weatherError);
       return;
     }
 
     state.currentDiary.weather = weather;
     state.isProcessing = false;
-    NoticeUtil.showToast('获取成功');
+    NoticeUtil.showToast(l10n.weatherSuccess);
     update(['Weather']);
   }
 
@@ -500,13 +502,13 @@ class EditLogic extends GetxController {
     tag = tag.trim();
     if (tag.isNotEmpty) {
       if (state.currentDiary.tags.contains(tag)) {
-        NoticeUtil.showToast('标签已存在');
+        NoticeUtil.showToast(l10n.editAddTagAlreadyExist);
         return;
       }
       state.currentDiary.tags.add(tag);
       update(['Tag']);
     } else {
-      NoticeUtil.showToast('标签不能为空');
+      NoticeUtil.showToast(l10n.editAddTagCannotEmpty);
     }
   }
 

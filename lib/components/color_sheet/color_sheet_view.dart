@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:marquee/marquee.dart';
 import 'package:mood_diary/common/values/colors.dart';
+import 'package:mood_diary/components/base/marquee.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import '../../common/values/border.dart';
@@ -129,7 +130,7 @@ class ColorSheetComponent extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
-              '普通配色',
+              l10n.colorCommon,
               style: textStyle.titleMedium,
             ),
           ),

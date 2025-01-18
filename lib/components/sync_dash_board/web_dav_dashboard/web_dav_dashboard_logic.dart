@@ -1,3 +1,4 @@
+import 'package:mood_diary/main.dart';
 import 'package:mood_diary/pages/home/diary/diary_logic.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:refreshed/refreshed.dart';
@@ -25,7 +26,7 @@ class WebDavDashboardLogic extends GetxController {
       try {
         await fetchingWebDavSyncFlag();
       } catch (e) {
-        NoticeUtil.showBug(message: '获取配置失败，请检查配置');
+        NoticeUtil.showBug(message: l10n.webdavSyncGetConfigError);
         return;
       }
       if (isInit) await fetchDiaryList();
@@ -113,7 +114,7 @@ class WebDavDashboardLogic extends GetxController {
       checkIsDownloading();
       await Bind.find<DiaryLogic>().refreshAll();
     }, onComplete: () {
-      NoticeUtil.showToast('同步完成');
+      NoticeUtil.showToast(l10n.webdavSyncSuccess);
     });
   }
 

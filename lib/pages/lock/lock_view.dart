@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mood_diary/main.dart';
 import 'package:mood_diary/utils/auth_util.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -43,7 +45,7 @@ class LockPage extends StatelessWidget {
             logic.deletePassword();
           },
           child: const Icon(
-            Icons.backspace,
+            Icons.keyboard_backspace_rounded,
           ),
         ),
       );
@@ -86,59 +88,74 @@ class LockPage extends StatelessWidget {
     return PopScope(
       canPop: state.lockType != 'pause',
       child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-        ),
         body: Center(
-          child: Column(
-            spacing: 16.0,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.lock),
-              Text(
-                '请输入密码',
-                style: textStyle.titleMedium,
-              ),
-              AnimatedBuilder(
-                animation: logic.animation,
-                builder: (context, child) {
-                  return Transform.translate(
-                    offset: Offset(logic.interpolate(logic.animation.value), 0),
-                    child: Wrap(
-                      spacing: 16.0,
-                      children: buildPasswordIndicator(),
-                    ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              spacing: 32.0,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Obx(() {
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: state.isCheck.value
+                        ? const FaIcon(
+                            FontAwesomeIcons.unlock,
+                            key: ValueKey('unlock'),
+                          )
+                        : const FaIcon(
+                            FontAwesomeIcons.lock,
+                            key: ValueKey('lock'),
+                          ),
                   );
-                },
-              ),
-              SizedBox(
-                width: buttonSize * 3 + 20,
-                height: buttonSize * 4 + 30,
-                child: GridView.count(
-                  crossAxisCount: 3,
-                  childAspectRatio: 1.0,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    buildNumButton('1'),
-                    buildNumButton('2'),
-                    buildNumButton('3'),
-                    buildNumButton('4'),
-                    buildNumButton('5'),
-                    buildNumButton('6'),
-                    buildNumButton('7'),
-                    buildNumButton('8'),
-                    buildNumButton('9'),
-                    state.supportBiometrics
-                        ? buildBiometricsButton()
-                        : const Spacer(),
-                    buildNumButton('0'),
-                    buildDeleteButton()
-                  ],
+                }),
+                Text(
+                  l10n.lockEnterPassword,
+                  style: textStyle.titleMedium,
                 ),
-              ),
-            ],
+                AnimatedBuilder(
+                  animation: logic.animation,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset:
+                          Offset(logic.interpolate(logic.animation.value), 0),
+                      child: Wrap(
+                        spacing: 16.0,
+                        children: buildPasswordIndicator(),
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(
+                  width: buttonSize * 3 + 20,
+                  height: buttonSize * 4 + 30,
+                  child: GridView.count(
+                    crossAxisCount: 3,
+                    childAspectRatio: 1.0,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    children: [
+                      buildNumButton('1'),
+                      buildNumButton('2'),
+                      buildNumButton('3'),
+                      buildNumButton('4'),
+                      buildNumButton('5'),
+                      buildNumButton('6'),
+                      buildNumButton('7'),
+                      buildNumButton('8'),
+                      buildNumButton('9'),
+                      state.supportBiometrics
+                          ? buildBiometricsButton()
+                          : const Spacer(),
+                      buildNumButton('0'),
+                      buildDeleteButton()
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

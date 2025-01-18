@@ -1,6 +1,9 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:mood_diary/components/base/button.dart';
 import 'package:mood_diary/components/loading/loading.dart';
+import 'package:mood_diary/components/tile/setting_tile.dart';
+import 'package:mood_diary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'category_manager_logic.dart';
@@ -16,7 +19,8 @@ class CategoryManagerPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('分类管理'),
+        title: Text(l10n.settingFunctionCategoryManage),
+        leading: const PageBackButton(),
       ),
       body: Obx(() {
         return AnimatedSwitcher(
@@ -24,7 +28,7 @@ class CategoryManagerPage extends StatelessWidget {
           child: !state.isFetching.value
               ? ListView.builder(
                   itemBuilder: (context, index) {
-                    return ListTile(
+                    return AdaptiveListTile(
                       title: Text(state.categoryList[index].categoryName),
                       subtitle: Text(
                         state.categoryList[index].id,
@@ -38,10 +42,10 @@ class CategoryManagerPage extends StatelessWidget {
                             onPressed: () async {
                               var res = await showTextInputDialog(
                                   context: context,
-                                  title: '编辑分类',
+                                  title: l10n.categoryManageEdit,
                                   textFields: [
                                     DialogTextField(
-                                      hintText: '分类名称',
+                                      hintText: l10n.categoryManageName,
                                       initialText: state
                                           .categoryList[index].categoryName,
                                     )
@@ -51,14 +55,14 @@ class CategoryManagerPage extends StatelessWidget {
                                     text: res.first);
                               }
                             },
-                            icon: const Icon(Icons.edit),
+                            icon: const Icon(Icons.edit_rounded),
                           ),
                           IconButton(
                             onPressed: () {
                               logic
                                   .deleteCategory(state.categoryList[index].id);
                             },
-                            icon: const Icon(Icons.delete_forever),
+                            icon: const Icon(Icons.delete_forever_rounded),
                             color: colorScheme.error,
                           )
                         ],
@@ -80,10 +84,10 @@ class CategoryManagerPage extends StatelessWidget {
                   onPressed: () async {
                     var res = await showTextInputDialog(
                         context: context,
-                        title: '添加分类',
+                        title: l10n.categoryManageAdd,
                         textFields: [
-                          const DialogTextField(
-                            hintText: '分类名称',
+                          DialogTextField(
+                            hintText: l10n.categoryManageName,
                           )
                         ]);
                     if (res != null) {
@@ -91,7 +95,7 @@ class CategoryManagerPage extends StatelessWidget {
                     }
                   },
                   icon: const Icon(Icons.add),
-                  label: const Text('添加分类'),
+                  label: Text(l10n.categoryManageAdd),
                 )
               : const SizedBox.shrink(),
         );

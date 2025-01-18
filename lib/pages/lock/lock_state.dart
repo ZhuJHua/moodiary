@@ -13,6 +13,8 @@ class LockState {
   bool get supportBiometrics =>
       PrefUtil.getValue<bool>('supportBiometrics') ?? false;
 
+  RxBool isCheck = false.obs;
+
   LockState() {
     password = ''.obs;
     realPassword = PrefUtil.getValue<String>('password')!.obs;
