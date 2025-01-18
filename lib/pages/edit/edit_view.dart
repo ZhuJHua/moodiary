@@ -506,6 +506,44 @@ class EditPage extends StatelessWidget {
       );
     }
 
+    Widget buildPickAudio() {
+      return SimpleDialog(
+        title: Text(l10n.editPickAudio),
+        children: [
+          SimpleDialogOption(
+            child: Row(
+              spacing: 8.0,
+              children: [
+                const Icon(Icons.audio_file_rounded),
+                Text(l10n.editPickAudioFromFile),
+              ],
+            ),
+            onPressed: () async {
+              await logic.pickAudio(context);
+            },
+          ),
+          SimpleDialogOption(
+            child: Row(
+              spacing: 8.0,
+              children: [
+                const Icon(Icons.mic_rounded),
+                Text(l10n.editPickAudioFromRecord),
+              ],
+            ),
+            onPressed: () async {
+              Navigator.pop(context);
+              await showFloatingModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return const RecordSheetComponent();
+                },
+              );
+            },
+          ),
+        ],
+      );
+    }
+
     Widget buildDetail() {
       return ListView(
         padding: EdgeInsets.zero,
@@ -777,10 +815,10 @@ class EditPage extends StatelessWidget {
               );
             },
             Icons.audiotrack_rounded: () {
-              showFloatingModalBottomSheet(
+              showDialog(
                 context: context,
                 builder: (context) {
-                  return const RecordSheetComponent();
+                  return buildPickAudio();
                 },
               );
             }

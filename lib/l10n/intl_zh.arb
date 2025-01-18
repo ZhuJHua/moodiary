@@ -227,7 +227,7 @@
   "editPickVideoFromGallery": "相册",
   "editPickAudio": "选择音频",
   "editPickAudioFromRecord": "录音",
-  "editPickAudioFromGallery": "音频",
+  "editPickAudioFromFile": "音频文件",
   "editDateAndTime": "日期和时间",
   "editWeather": "天气",
   "editCategory": "分类",
@@ -252,5 +252,6 @@
   "weatherFetching": "天气获取中",
   "weatherSuccess": "天气获取成功",
   "sureToSave": "确定保存吗",
-  "drawPickColor": "选择颜色"
+  "drawPickColor": "选择颜色",
+  "audioFileError": "音频文件错误"
 }
