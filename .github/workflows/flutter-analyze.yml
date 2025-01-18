@@ -42,6 +42,10 @@ jobs:
         working-directory: rust_builder
         run: flutter pub get
 
+      - name: Install Dependencies for Rust Builder Project
+        working-directory: rust_builder/cargokit/build_tool
+        run: flutter pub get
+
       - name: Run Flutter Analyze
         run: flutter analyze
 
