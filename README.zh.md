@@ -45,17 +45,17 @@
 ### 移动端
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/mobile_dark.webp">
-  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/mobile_light.webp">
-  <img alt="The mobile screenshot for moodiary." src="res/screenshot/mobile_light.webp">
+  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/mobile_dark_zh.webp">
+  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/mobile_light_zh.webp">
+  <img alt="The mobile screenshot for moodiary." src="res/screenshot/mobile_light_zh.webp">
 </picture>
 
 ### 桌面端
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/desktop_dark.webp">
-  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/desktop_light.webp">
-  <img alt="The desktop screenshot for moodiary." src="res/screenshot/desktop_light.webp">
+  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/desktop_dark_zh.webp">
+  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/desktop_light_zh.webp">
+  <img alt="The desktop screenshot for moodiary." src="res/screenshot/desktop_light_zh.webp">
 </picture>
 
 ## 🚀 安装指南
