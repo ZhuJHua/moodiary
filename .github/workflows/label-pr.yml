@@ -1,0 +1,54 @@
+name: Label PR Based on Conventional Commits
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  label-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Analyze PR Title
+        id: analyze_title
+        run: |
+          pr_title="${{ github.event.pull_request.title }}"
+          label=""
+
+          # Match against Conventional Commits
+          if [[ "$pr_title" == feat* ]]; then
+            label="feat"
+          elif [[ "$pr_title" == fix* ]]; then
+            label="fix"
+          elif [[ "$pr_title" == chore* ]]; then
+            label="chore"
+          elif [[ "$pr_title" == docs* ]]; then
+            label="docs"
+          elif [[ "$pr_title" == style* ]]; then
+            label="style"
+          elif [[ "$pr_title" == refactor* ]]; then
+            label="refactor"
+          elif [[ "$pr_title" == perf* ]]; then
+            label="perf"
+          elif [[ "$pr_title" == test* ]]; then
+            label="test"
+          elif [[ "$pr_title" == build* ]]; then
+            label="build"
+          elif [[ "$pr_title" == ci* ]]; then
+            label="ci"
+          elif [[ "$pr_title" == revert* ]]; then
+            label="revert"
+          else
+            label="?"
+          fi
+
+          echo "label=$label" >> $GITHUB_ENV
+
+      - name: Add Label to PR
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: ${{ env.label }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
