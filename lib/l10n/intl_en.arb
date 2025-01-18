@@ -227,7 +227,7 @@
   "editPickVideoFromGallery": "Album",
   "editPickAudio": "Select audio",
   "editPickAudioFromRecord": "Recording",
-  "editPickAudioFromGallery": "Audio",
+  "editPickAudioFromFile": "File Audio",
   "editDateAndTime": "Date and time",
   "editWeather": "weather",
   "editCategory": "Category",
@@ -252,5 +252,6 @@
   "weatherFetching": "Weather Fetching",
   "weatherSuccess": "Weather acquisition successful",
   "sureToSave": "Are you sure you want to save",
-  "drawPickColor": "Pick Color"
+  "drawPickColor": "Pick Color",
+  "audioFileError": "Audio file error"
 }

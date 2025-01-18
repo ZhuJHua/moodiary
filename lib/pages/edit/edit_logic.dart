@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
@@ -17,6 +18,7 @@ import 'package:mood_diary/main.dart';
 import 'package:mood_diary/router/app_routes.dart';
 import 'package:mood_diary/src/rust/api/kmp.dart';
 import 'package:mood_diary/utils/media_util.dart';
+import 'package:path/path.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:uuid/uuid.dart';
 
@@ -473,6 +475,38 @@ class EditLogic extends GetxController {
     state.isProcessing = false;
     NoticeUtil.showToast(message);
     update(['Weather']);
+  }
+
+  Future<void> pickAudio(BuildContext context) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.audio,
+        allowMultiple: false,
+        withReadStream: true,
+      );
+
+      if (result == null) {
+        NoticeUtil.showToast(l10n.cancelSelect);
+        return;
+      }
+
+      final pickedFile = result.files.single;
+      final originalFileName = pickedFile.name;
+      final fileExtension = extension(originalFileName);
+
+      final audioName = 'audio-${const Uuid().v7()}$fileExtension';
+      final cachePath = FileUtil.getCachePath(audioName);
+
+      await pickedFile.readStream!.pipe(File(cachePath).openWrite());
+
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+
+      setAudioName(audioName);
+    } catch (e) {
+      NoticeUtil.showToast(l10n.audioFileError);
+    }
   }
 
   //获取音频名称
