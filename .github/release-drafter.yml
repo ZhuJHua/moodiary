@@ -11,22 +11,37 @@ categories:
   - title: 🛠️ Chores
     labels:
       - chore
-  - title: 🏗️ Build System
+  - title: 📚 Documentation Updates
     labels:
-      - build
-  - title: ⚡ Performance Improvements
-    labels:
-      - perf
-  - title: 🔨 Refactors
-    labels:
-      - refactor
+      - docs
   - title: 🎨 Code Style Updates
     labels:
       - style
+  - title: 🔨 Refactors
+    labels:
+      - refactor
+  - title: ⚡ Performance Improvements
+    labels:
+      - perf
+  - title: ✅ Tests
+    labels:
+      - test
+  - title: 🏗️ Build System
+    labels:
+      - build
+  - title: 🧹 CI/CD Changes
+    labels:
+      - ci
+  - title: ⏪ Reverts
+    labels:
+      - revert
+  - title: ❓ What is This
+    labels:
+      - '?'
 
 change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
 template: |
-  ## 🔥 What's Changed
+  # 🔥 What's Changed
 
   $CHANGES
 
