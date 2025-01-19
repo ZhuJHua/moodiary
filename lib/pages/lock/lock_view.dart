@@ -88,6 +88,11 @@ class LockPage extends StatelessWidget {
     return PopScope(
       canPop: state.lockType != 'pause',
       child: Scaffold(
+        appBar: AppBar(
+          leading: null,
+          automaticallyImplyLeading: false,
+        ),
+        extendBodyBehindAppBar: true,
         body: Center(
           child: SingleChildScrollView(
             scrollDirection: Axis.vertical,
