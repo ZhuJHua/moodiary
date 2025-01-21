@@ -85,8 +85,10 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 #### Environmental requirement
 
-- Flutter SDK (>= 3.27.0)
-- Dart (>= 3.6.0)
+> I always use the latest Flutter version (if possible), using newer versions will bring more features and better performance improvements, never use older versions unless you want your code to become a piece of 💩
+
+- Flutter SDK (>= 3.27.2 Stable) (It is recommended to use FVM to manage the Flutter version)
+- Dart (>= 3.6.1)
 - Rust Toolchain (Optional)
 - Clang/LLVM (Optional)
 - Compatible IDE (e.g. Android Studio, Visual Studio Code)

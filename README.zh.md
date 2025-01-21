@@ -15,6 +15,7 @@
   <img src="https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7">
 </div>
 
+
 ## ✨ 功能特性
 
 - **跨平台支持**：🌍 兼容 Android、iOS、Windows、MacOS、Linux\*。
@@ -85,8 +86,10 @@
 
 #### 环境要求
 
-- Flutter SDK (>= 3.27.0)
-- Dart (>= 3.6.0)
+> 我总是会使用最新的 Flutter 版本（如果可能的话），使用新版本可以带来更多的功能和更好的性能提升，永远不要使用老版本除非你希望代码变成一坨 💩
+
+- Flutter SDK (>= 3.27.2 Stable)（建议使用 fvm 来管理 flutter 版本）
+- Dart (>= 3.6.1)
 - Rust 工具链（可选）
 - Clang/LLVM（可选）
 - 兼容的 IDE（如 Android Studio、Visual Studio Code）
