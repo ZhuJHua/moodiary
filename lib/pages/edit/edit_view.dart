@@ -6,14 +6,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:markdown_toolbar/markdown_toolbar.dart';
+import 'package:markdown_widget/config/configs.dart';
+import 'package:markdown_widget/widget/markdown.dart';
 import 'package:mood_diary/common/values/border.dart';
 import 'package:mood_diary/common/values/colors.dart';
+import 'package:mood_diary/common/values/diary_type.dart';
 import 'package:mood_diary/components/base/sheet.dart';
 import 'package:mood_diary/components/category_add/category_add_view.dart';
 import 'package:mood_diary/components/expand_button/expand_button_view.dart';
 import 'package:mood_diary/components/lottie_modal/lottie_modal.dart';
+import 'package:mood_diary/components/markdown_bar/markdown_bar.dart';
 import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
+import 'package:mood_diary/components/quill_embed/audio_embed.dart';
 import 'package:mood_diary/components/quill_embed/image_embed.dart';
 import 'package:mood_diary/components/quill_embed/text_indent.dart';
 import 'package:mood_diary/components/quill_embed/video_embed.dart';
@@ -23,8 +27,6 @@ import 'package:mood_diary/main.dart';
 import 'package:mood_diary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../common/values/diary_type.dart';
-import '../../components/quill_embed/audio_embed.dart';
 import 'edit_logic.dart';
 
 class EditPage extends StatelessWidget {
@@ -853,29 +855,107 @@ class EditPage extends StatelessWidget {
 
     Widget markdownToolBar() {
       return Row(
-        spacing: 4.0,
+        spacing: 8.0,
         children: [
           IconButton.filled(
             icon: const Icon(Icons.keyboard_command_key),
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             onPressed: () {
-              showFloatingModalBottomSheet(
-                context: context,
-                builder: (context) {
-                  return buildDetail();
-                },
-              );
+              logic.renderMarkdown();
+              // showFloatingModalBottomSheet(
+              //   context: context,
+              //   builder: (context) {
+              //     return buildDetail();
+              //   },
+              // );
             },
           ),
-          const Expanded(
+          Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: MarkdownToolbar(useIncludedTextField: false),
+              child: MarkdownToolbar(
+                useIncludedTextField: false,
+                collapsable: false,
+                controller: logic.markdownTextEditingController,
+                focusNode: logic.contentFocusNode,
+                backgroundColor: colorScheme.surfaceContainer,
+                iconColor: colorScheme.onSurface,
+                dropdownTextColor: colorScheme.onSurface,
+                borderRadius: BorderRadius.circular(20),
+                width: 40,
+                height: 40,
+              ),
             ),
           ),
         ],
       );
+    }
+
+    Widget buildContent() {
+      if (state.type == DiaryType.markdown) {
+        return Positioned.fill(
+          child: Obx(() {
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: !state.renderMarkdown.value
+                  ? GestureDetector(
+                      onTap: logic.focusContent,
+                      behavior: HitTestBehavior.translucent,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: TextField(
+                          controller: logic.markdownTextEditingController,
+                          focusNode: logic.contentFocusNode,
+                          maxLength: null,
+                          decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: l10n.editContent,
+                              contentPadding:
+                                  const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                              hintStyle: textStyle.bodyLarge?.copyWith(
+                                fontSize: 20,
+                                height: 1.5,
+                                color: Colors.grey.withValues(alpha: 0.6),
+                              )),
+                          maxLines: null,
+                        ),
+                      ),
+                    )
+                  : MarkdownWidget(
+                      config: colorScheme.brightness == Brightness.dark
+                          ? MarkdownConfig.darkConfig
+                          : MarkdownConfig.defaultConfig,
+                      data: logic.markdownTextEditingController.text,
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                    ),
+            );
+          }),
+        );
+      } else {
+        return QuillEditor.basic(
+          focusNode: logic.contentFocusNode,
+          controller: logic.quillController,
+          config: QuillEditorConfig(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+            placeholder: l10n.editContent,
+            expands: true,
+            paintCursorAboveText: true,
+            keyboardAppearance: CupertinoTheme.maybeBrightnessOf(context) ??
+                Theme.of(context).brightness,
+            customStyles:
+                ThemeUtil.getInstance(context, customColorScheme: colorScheme),
+            embedBuilders: [
+              if (state.type == DiaryType.richText) ...[
+                ImageEmbedBuilder(isEdit: true),
+                VideoEmbedBuilder(isEdit: true),
+                AudioEmbedBuilder(isEdit: true),
+              ],
+              TextIndentEmbedBuilder(isEdit: true),
+            ],
+          ),
+        );
+      }
     }
 
     Widget buildWriting() {
@@ -883,31 +963,8 @@ class EditPage extends StatelessWidget {
         children: [
           Flexible(
             child: Stack(
-              alignment: Alignment.center,
               children: [
-                QuillEditor.basic(
-                  focusNode: logic.contentFocusNode,
-                  controller: logic.quillController,
-                  config: QuillEditorConfig(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                    placeholder: l10n.editContent,
-                    expands: true,
-                    paintCursorAboveText: true,
-                    keyboardAppearance:
-                        CupertinoTheme.maybeBrightnessOf(context) ??
-                            Theme.of(context).brightness,
-                    customStyles: ThemeUtil.getInstance(context,
-                        customColorScheme: colorScheme),
-                    embedBuilders: [
-                      if (state.type == DiaryType.richText) ...[
-                        ImageEmbedBuilder(isEdit: true),
-                        VideoEmbedBuilder(isEdit: true),
-                        AudioEmbedBuilder(isEdit: true),
-                      ],
-                      TextIndentEmbedBuilder(isEdit: true),
-                    ],
-                  ),
-                ),
+                buildContent(),
                 Positioned(
                     top: 2,
                     left: 16,
@@ -924,7 +981,11 @@ class EditPage extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.only(
+              left: 16.0,
+              right: 16.0,
+              bottom: 16.0,
+            ),
             child: switch (state.type) {
               DiaryType.text => textToolBar(),
               DiaryType.richText => richTextToolBar(),

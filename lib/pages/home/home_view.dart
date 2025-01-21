@@ -220,7 +220,7 @@ class HomePage extends StatelessWidget {
             height: 56 +
                 8 +
                 56 +
-                ((46 + 8) * 2 - 56 - 8) * (logic.fabAnimation.value),
+                ((46 + 8) * 3 - 56 - 8) * (logic.fabAnimation.value),
             child: child,
           );
         },
@@ -229,13 +229,13 @@ class HomePage extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             buildToTopButton(),
-            // buildAnimatedActionButton(
-            //     label: l10n.homeNewDiaryMarkdown,
-            //     onTap: () async {
-            //       await logic.toEditPage(type: DiaryType.markdown);
-            //     },
-            //     iconData: FontAwesomeIcons.markdown,
-            //     index: 3),
+            buildAnimatedActionButton(
+                label: l10n.homeNewDiaryMarkdown,
+                onTap: () async {
+                  await logic.toEditPage(type: DiaryType.markdown);
+                },
+                iconData: FontAwesomeIcons.markdown,
+                index: 3),
             buildAnimatedActionButton(
                 label: l10n.homeNewDiaryPlainText,
                 onTap: () async {

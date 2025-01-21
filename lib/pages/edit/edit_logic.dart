@@ -35,11 +35,15 @@ class EditLogic extends GetxController {
   final EditState state = EditState();
 
   //标题
-  late TextEditingController titleTextEditingController =
+  late final TextEditingController titleTextEditingController =
       TextEditingController();
 
   //编辑器控制器
   late QuillController quillController;
+
+  // markdown控制器
+  late final TextEditingController markdownTextEditingController =
+      TextEditingController();
 
   //聚焦对象
   late FocusNode contentFocusNode = FocusNode();
@@ -93,6 +97,7 @@ class EditLogic extends GetxController {
     titleFocusNode.dispose();
     contentFocusNode.dispose();
     quillController.dispose();
+    markdownTextEditingController.dispose();
     _timer?.cancel();
     _timer = null;
     super.onClose();
@@ -563,5 +568,13 @@ class EditLogic extends GetxController {
       }
     }
     update(['CategoryName']);
+  }
+
+  void renderMarkdown() {
+    state.renderMarkdown.value = !state.renderMarkdown.value;
+  }
+
+  void focusContent() {
+    if (!contentFocusNode.hasFocus) contentFocusNode.requestFocus();
   }
 }

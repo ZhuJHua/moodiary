@@ -113,8 +113,8 @@ dependencies:
   tutorial_coach_mark: 1.2.12
   adaptive_dialog: 2.4.0
   flutter_inappwebview: 6.1.5
-  markdown_toolbar: 0.5.0
   sensors_plus: 6.1.1
+  markdown: 7.3.0
 
 
 dev_dependencies:
