@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mood_diary/components/base/button.dart';
-import 'package:mood_diary/components/tile/setting_tile.dart';
-import 'package:mood_diary/utils/update_util.dart';
+import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/components/tile/setting_tile.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/update_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../main.dart';
 import 'about_logic.dart';
 
 class AboutPage extends StatelessWidget {

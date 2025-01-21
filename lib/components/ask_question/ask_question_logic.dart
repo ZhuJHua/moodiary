@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/values/keyboard_state.dart';
-import 'package:mood_diary/utils/literunner.dart';
-import 'package:mood_diary/utils/tokenization.dart';
+import 'package:moodiary/common/values/keyboard_state.dart';
+import 'package:moodiary/utils/literunner.dart';
+import 'package:moodiary/utils/tokenization.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'ask_question_state.dart';

@@ -1,6 +1,6 @@
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/package_util.dart';
+import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/utils/package_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:url_launcher/url_launcher.dart';
 

@@ -2,13 +2,13 @@ import 'dart:convert';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
-import 'package:mood_diary/api/api.dart';
-import 'package:mood_diary/common/models/hunyuan.dart';
-import 'package:mood_diary/utils/array_util.dart';
-import 'package:mood_diary/utils/signature_util.dart';
+import 'package:moodiary/api/api.dart';
+import 'package:moodiary/common/models/hunyuan.dart';
+import 'package:moodiary/utils/array_util.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/signature_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/isar.dart';
 import 'analyse_state.dart';
 
 class AnalyseLogic extends GetxController {

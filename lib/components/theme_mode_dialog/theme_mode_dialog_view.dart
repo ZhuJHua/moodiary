@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../main.dart';
 import 'theme_mode_dialog_logic.dart';
 
 class ThemeModeDialogComponent extends StatelessWidget {

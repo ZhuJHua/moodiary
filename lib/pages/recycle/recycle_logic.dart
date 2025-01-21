@@ -1,11 +1,11 @@
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/notice_util.dart';
+import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/isar.dart';
-import '../../utils/file_util.dart';
-import '../../utils/notice_util.dart';
-import '../../utils/webdav_util.dart';
 import 'recycle_state.dart';
 
 class RecycleLogic extends GetxController {

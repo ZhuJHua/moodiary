@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
-import 'package:mood_diary/utils/file_util.dart';
+import 'package:moodiary/utils/file_util.dart';
 
 class FileOutput extends LogOutput {
   final bool overrideExisting;

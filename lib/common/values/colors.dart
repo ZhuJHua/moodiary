@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../../main.dart';
+import 'package:moodiary/main.dart';
 
 enum AppColorType {
   common(0),

@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:moodiary/utils/file_util.dart';
 
-import '../../utils/file_util.dart';
 import '../audio_player/audio_player_view.dart';
 
 class AudioBlockEmbed extends BlockEmbed {

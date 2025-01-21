@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/values/colors.dart';
+import 'package:moodiary/common/values/colors.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../main.dart';
 import 'color_dialog_logic.dart';
 
 class ColorDialogComponent extends StatelessWidget {

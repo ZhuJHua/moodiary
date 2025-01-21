@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/values/border.dart';
-import 'package:mood_diary/components/search_card/search_card_logic.dart';
-import 'package:mood_diary/components/search_card/search_card_view.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/components/search_card/search_card_logic.dart';
+import 'package:moodiary/components/search_card/search_card_view.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'search_sheet_logic.dart';

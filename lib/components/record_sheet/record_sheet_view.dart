@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/components/wave_form/wave_form_view.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/components/wave_form/wave_form_view.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'record_sheet_logic.dart';

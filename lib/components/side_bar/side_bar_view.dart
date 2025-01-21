@@ -1,12 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mood_diary/common/values/icons.dart';
-import 'package:mood_diary/components/tile/setting_tile.dart';
-import 'package:mood_diary/utils/function_extensions.dart';
+import 'package:moodiary/common/values/icons.dart';
+import 'package:moodiary/components/tile/setting_tile.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/function_extensions.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../main.dart';
 import 'side_bar_logic.dart';
 
 class SideBarComponent extends StatelessWidget {

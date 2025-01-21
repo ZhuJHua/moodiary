@@ -2,11 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/common/values/border.dart';
-import 'package:mood_diary/components/diary_card/basic_card_logic.dart';
-
-import '../../utils/file_util.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/components/diary_card/basic_card_logic.dart';
+import 'package:moodiary/utils/file_util.dart';
 
 class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
   const CalendarDiaryCardComponent({super.key, required this.diary});

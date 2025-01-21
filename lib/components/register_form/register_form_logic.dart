@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/pages/login/login_logic.dart';
+import 'package:moodiary/pages/login/login_logic.dart';
+import 'package:moodiary/utils/data/supabase.dart';
+import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/supabase.dart';
-import '../../utils/notice_util.dart';
 import 'register_form_state.dart';
 
 class RegisterFormLogic extends GetxController {

@@ -1,6 +1,5 @@
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../utils/data/pref.dart';
 
 class LockState {
   late RxString password;

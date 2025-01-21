@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../../utils/data/pref.dart';
+import 'package:moodiary/utils/data/pref.dart';
 
 class ColorDialogState {
   bool supportDynamic = PrefUtil.getValue<bool>('supportDynamicColor')!;

@@ -1,5 +1,5 @@
 import 'package:flutter/services.dart';
-import 'package:mood_diary/common/values/size.dart';
+import 'package:moodiary/common/values/size.dart';
 import 'package:refreshed/refreshed.dart';
 
 class LayoutUtil {

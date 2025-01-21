@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/models/github.dart';
-import 'package:mood_diary/components/update_dialog/update_dialog_logic.dart';
+import 'package:moodiary/common/models/github.dart';
+import 'package:moodiary/components/update_dialog/update_dialog_logic.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../main.dart';
 
 class UpdateDialogComponent extends StatelessWidget {
   const UpdateDialogComponent({super.key, required this.githubRelease});

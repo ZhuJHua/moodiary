@@ -2,15 +2,15 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:mood_diary/components/wave_form/wave_form_logic.dart';
-import 'package:mood_diary/pages/edit/edit_logic.dart';
-import 'package:mood_diary/utils/permission_util.dart';
+import 'package:moodiary/components/wave_form/wave_form_logic.dart';
+import 'package:moodiary/pages/edit/edit_logic.dart';
+import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/permission_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../utils/file_util.dart';
 import 'record_sheet_state.dart';
 
 class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {

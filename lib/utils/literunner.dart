@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:mood_diary/common/models/tflite.dart';
-import 'package:mood_diary/utils/tokenization.dart';
+import 'package:moodiary/common/models/tflite.dart';
+import 'package:moodiary/utils/tokenization.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 /// Runs inference with a TensorFlow Lite model.

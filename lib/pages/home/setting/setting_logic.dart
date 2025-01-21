@@ -1,15 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:mood_diary/components/dashboard/dashboard_logic.dart';
-import 'package:mood_diary/pages/home/diary/diary_logic.dart';
-import 'package:mood_diary/pages/home/home_logic.dart';
-import 'package:mood_diary/router/app_routes.dart';
+import 'package:moodiary/components/dashboard/dashboard_logic.dart';
+import 'package:moodiary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/pages/home/home_logic.dart';
+import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../../utils/data/pref.dart';
-import '../../../utils/file_util.dart';
-import '../../../utils/notice_util.dart';
 import 'setting_state.dart';
 
 class SettingLogic extends GetxController {

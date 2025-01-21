@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mood_diary/components/loading/loading.dart';
-import 'package:mood_diary/components/tile/setting_tile.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/common/values/webdav.dart';
+import 'package:moodiary/components/loading/loading.dart';
+import 'package:moodiary/components/tile/setting_tile.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../../common/values/webdav.dart';
-import '../../../utils/webdav_util.dart';
 import 'web_dav_dashboard_logic.dart';
 import 'web_dav_dashboard_state.dart';
 

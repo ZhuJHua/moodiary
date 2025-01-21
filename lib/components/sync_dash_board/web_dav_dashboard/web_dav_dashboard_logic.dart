@@ -1,12 +1,12 @@
-import 'package:mood_diary/main.dart';
-import 'package:mood_diary/pages/home/diary/diary_logic.dart';
-import 'package:mood_diary/router/app_routes.dart';
+import 'package:moodiary/common/values/webdav.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/notice_util.dart';
+import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../../common/values/webdav.dart';
-import '../../../utils/data/isar.dart';
-import '../../../utils/notice_util.dart';
-import '../../../utils/webdav_util.dart';
 import 'web_dav_dashboard_state.dart';
 
 class WebDavDashboardLogic extends GetxController {

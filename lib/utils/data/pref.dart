@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'package:mood_diary/common/values/colors.dart';
-import 'package:mood_diary/common/values/view_mode.dart';
-import 'package:mood_diary/utils/auth_util.dart';
-import 'package:mood_diary/utils/media_util.dart';
-import 'package:mood_diary/utils/package_util.dart';
-import 'package:mood_diary/utils/theme_util.dart';
+import 'package:moodiary/common/values/colors.dart';
+import 'package:moodiary/common/values/view_mode.dart';
+import 'package:moodiary/utils/auth_util.dart';
+import 'package:moodiary/utils/media_util.dart';
+import 'package:moodiary/utils/package_util.dart';
+import 'package:moodiary/utils/theme_util.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

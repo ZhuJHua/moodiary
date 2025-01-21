@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../../common/values/border.dart';
+import 'package:moodiary/common/values/border.dart';
 
 class OptionDialog extends StatelessWidget {
   final String title;

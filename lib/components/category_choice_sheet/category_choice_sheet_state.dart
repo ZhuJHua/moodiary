@@ -1,6 +1,5 @@
+import 'package:moodiary/common/models/isar/category.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../common/models/isar/category.dart';
 
 class CategoryChoiceSheetState {
   RxList<Category> categoryList = <Category>[].obs;

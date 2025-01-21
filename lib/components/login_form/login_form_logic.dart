@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/pages/login/login_logic.dart';
-import 'package:mood_diary/router/app_routes.dart';
+import 'package:moodiary/pages/login/login_logic.dart';
+import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/utils/data/supabase.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/supabase.dart';
 import 'login_form_state.dart';
 
 class LoginFormLogic extends GetxController {

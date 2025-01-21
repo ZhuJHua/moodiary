@@ -5,18 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:isar/isar.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:mood_diary/common/models/isar/category.dart';
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/common/models/isar/sync_record.dart';
-import 'package:mood_diary/common/models/map.dart';
-import 'package:mood_diary/common/values/diary_type.dart';
-import 'package:mood_diary/utils/data/pref.dart';
+import 'package:moodiary/common/models/isar/category.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/common/models/isar/sync_record.dart';
+import 'package:moodiary/common/models/map.dart';
+import 'package:moodiary/common/values/diary_type.dart';
+import 'package:moodiary/components/quill_embed/audio_embed.dart';
+import 'package:moodiary/components/quill_embed/image_embed.dart';
+import 'package:moodiary/components/quill_embed/video_embed.dart';
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../components/quill_embed/audio_embed.dart';
-import '../../components/quill_embed/image_embed.dart';
-import '../../components/quill_embed/video_embed.dart';
 import '../file_util.dart';
 import '../webdav_util.dart';
 

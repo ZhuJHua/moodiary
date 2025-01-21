@@ -2,20 +2,20 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mood_diary/common/values/view_mode.dart';
-import 'package:mood_diary/components/base/sheet.dart';
-import 'package:mood_diary/components/base/text.dart';
-import 'package:mood_diary/components/category_choice_sheet/category_choice_sheet_view.dart';
-import 'package:mood_diary/components/diary_tab_view/diary_tab_view_view.dart';
-import 'package:mood_diary/components/keepalive/keepalive.dart';
-import 'package:mood_diary/components/scroll/fix_scroll.dart';
-import 'package:mood_diary/components/search_sheet/search_sheet_view.dart';
-import 'package:mood_diary/components/sync_dash_board/sync_dash_board_view.dart';
+import 'package:moodiary/common/values/view_mode.dart';
+import 'package:moodiary/components/base/sheet.dart';
+import 'package:moodiary/components/base/text.dart';
+import 'package:moodiary/components/category_choice_sheet/category_choice_sheet_view.dart';
+import 'package:moodiary/components/diary_tab_view/diary_tab_view_view.dart';
+import 'package:moodiary/components/keepalive/keepalive.dart';
+import 'package:moodiary/components/scroll/fix_scroll.dart';
+import 'package:moodiary/components/search_sheet/search_sheet_view.dart';
+import 'package:moodiary/components/sync_dash_board/sync_dash_board_view.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:rive_animated_icon/rive_animated_icon.dart';
 
-import '../../../main.dart';
-import '../../../utils/webdav_util.dart';
 import 'diary_logic.dart';
 
 class DiaryPage extends StatelessWidget {

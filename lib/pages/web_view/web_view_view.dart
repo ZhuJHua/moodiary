@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:mood_diary/common/values/colors.dart';
-import 'package:mood_diary/pages/web_view/web_view_state.dart';
+import 'package:moodiary/common/values/colors.dart';
+import 'package:moodiary/pages/web_view/web_view_state.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'web_view_logic.dart';

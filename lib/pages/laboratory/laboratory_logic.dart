@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:share_plus/share_plus.dart';
-
-import '../../utils/data/pref.dart';
-import '../../utils/file_util.dart';
-import '../../utils/notice_util.dart';
 
 class LaboratoryLogic extends GetxController {
   Future<void> setTencentID({required String id, required String key}) async {

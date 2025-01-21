@@ -1,4 +1,4 @@
-import 'package:mood_diary/common/models/isar/category.dart';
+import 'package:moodiary/common/models/isar/category.dart';
 import 'package:refreshed/refreshed.dart';
 
 class CategoryManagerState {

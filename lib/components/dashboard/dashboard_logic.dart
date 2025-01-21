@@ -1,12 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:mood_diary/router/app_routes.dart';
+import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/utils/array_util.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../utils/array_util.dart';
-import '../../utils/data/isar.dart';
-import '../../utils/data/pref.dart';
 
 class DashboardLogic extends GetxController {
   //日记数量

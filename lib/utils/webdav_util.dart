@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' as flutter;
-import 'package:mood_diary/common/models/isar/category.dart';
-import 'package:mood_diary/common/values/webdav.dart';
-import 'package:mood_diary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/common/models/isar/category.dart';
+import 'package:moodiary/common/values/webdav.dart';
+import 'package:moodiary/pages/home/diary/diary_logic.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 

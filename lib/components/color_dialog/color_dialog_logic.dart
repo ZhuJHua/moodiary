@@ -1,10 +1,10 @@
 import 'dart:ui';
 
-import 'package:mood_diary/pages/home/setting/setting_logic.dart';
-import 'package:mood_diary/utils/theme_util.dart';
+import 'package:moodiary/pages/home/setting/setting_logic.dart';
+import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/pref.dart';
 import 'color_dialog_state.dart';
 
 class ColorDialogLogic extends GetxController {

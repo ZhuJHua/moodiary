@@ -4,21 +4,21 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/common/values/icons.dart';
-import 'package:mood_diary/components/base/button.dart';
-import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
-import 'package:mood_diary/main.dart';
-import 'package:mood_diary/utils/data/pref.dart';
-import 'package:mood_diary/utils/theme_util.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/common/values/icons.dart';
+import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/components/mood_icon/mood_icon_view.dart';
+import 'package:moodiary/components/quill_embed/audio_embed.dart';
+import 'package:moodiary/components/quill_embed/image_embed.dart';
+import 'package:moodiary/components/quill_embed/text_indent.dart';
+import 'package:moodiary/components/quill_embed/video_embed.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-import '../../components/quill_embed/audio_embed.dart';
-import '../../components/quill_embed/image_embed.dart';
-import '../../components/quill_embed/text_indent.dart';
-import '../../components/quill_embed/video_embed.dart';
-import '../../utils/file_util.dart';
 import 'diary_details_logic.dart';
 
 class DiaryDetailsPage extends StatelessWidget {

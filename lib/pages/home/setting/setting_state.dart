@@ -1,7 +1,6 @@
-import 'package:mood_diary/common/values/language.dart';
+import 'package:moodiary/common/values/language.dart';
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../../utils/data/pref.dart';
 
 class SettingState {
   //当前占用空间

@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
 
 class ShareState {
   late GlobalKey key;

@@ -1,9 +1,8 @@
 import 'package:cross_file/cross_file.dart';
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/common/values/diary_type.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/common/values/diary_type.dart';
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../utils/data/pref.dart';
 
 class EditState {
   // 当前编辑的日记对象

@@ -1,6 +1,6 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'category_add_logic.dart';

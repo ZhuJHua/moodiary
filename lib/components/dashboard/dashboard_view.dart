@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/components/base/text.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/components/base/text.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'dashboard_logic.dart';

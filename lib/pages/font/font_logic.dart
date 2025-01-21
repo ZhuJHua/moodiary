@@ -3,13 +3,13 @@ import 'dart:io';
 import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:mood_diary/src/rust/api/font.dart';
-import 'package:mood_diary/utils/file_util.dart';
+import 'package:moodiary/src/rust/api/font.dart';
+import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/notice_util.dart';
+import 'package:moodiary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/pref.dart';
-import '../../utils/notice_util.dart';
-import '../../utils/theme_util.dart';
 import 'font_state.dart';
 
 class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {

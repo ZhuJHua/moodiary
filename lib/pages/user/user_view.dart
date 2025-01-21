@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:moodiary/utils/log_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/log_util.dart';
 import 'user_logic.dart';
 
 class UserPage extends StatelessWidget {

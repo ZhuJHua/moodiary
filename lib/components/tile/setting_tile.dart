@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/components/base/text.dart';
+import 'package:moodiary/components/base/text.dart';
 
 class AdaptiveTitleTile extends StatelessWidget {
   const AdaptiveTitleTile({super.key, required this.title, this.subtitle});

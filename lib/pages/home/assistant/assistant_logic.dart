@@ -2,13 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mood_diary/api/api.dart';
-import 'package:mood_diary/common/models/hunyuan.dart';
-import 'package:mood_diary/common/values/keyboard_state.dart';
-import 'package:mood_diary/utils/signature_util.dart';
+import 'package:moodiary/api/api.dart';
+import 'package:moodiary/common/models/hunyuan.dart';
+import 'package:moodiary/common/values/keyboard_state.dart';
+import 'package:moodiary/utils/notice_util.dart';
+import 'package:moodiary/utils/signature_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../../utils/notice_util.dart';
 import 'assistant_state.dart';
 
 class AssistantLogic extends GetxController with WidgetsBindingObserver {

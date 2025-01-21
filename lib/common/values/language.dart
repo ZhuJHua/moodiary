@@ -1,4 +1,4 @@
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/main.dart';
 
 enum Language {
   system('system'),

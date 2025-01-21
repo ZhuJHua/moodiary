@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/values/view_mode.dart';
-import 'package:mood_diary/components/diary_card/grid_diary_card_view.dart';
-import 'package:mood_diary/components/diary_card/list_diary_card_view.dart';
-import 'package:mood_diary/components/loading/loading.dart';
+import 'package:moodiary/common/values/view_mode.dart';
+import 'package:moodiary/components/diary_card/grid_diary_card_view.dart';
+import 'package:moodiary/components/diary_card/list_diary_card_view.dart';
+import 'package:moodiary/components/loading/loading.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:waterfall_flow/waterfall_flow.dart';
 
-import '../../main.dart';
 import 'diary_tab_view_logic.dart';
 
 class DiaryTabViewComponent extends StatelessWidget {

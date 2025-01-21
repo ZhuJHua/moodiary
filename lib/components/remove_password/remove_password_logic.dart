@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mood_diary/pages/home/setting/setting_logic.dart';
+import 'package:moodiary/pages/home/setting/setting_logic.dart';
+import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/pref.dart';
-import '../../utils/notice_util.dart';
 import 'remove_password_state.dart';
 
 class RemovePasswordLogic extends GetxController

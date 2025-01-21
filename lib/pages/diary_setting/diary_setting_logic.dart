@@ -1,6 +1,6 @@
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/pref.dart';
 import 'diary_setting_state.dart';
 
 class DiarySettingLogic extends GetxController {

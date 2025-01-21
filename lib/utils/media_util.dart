@@ -9,9 +9,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_picker_android/image_picker_android.dart';
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:mime/mime.dart';
-import 'package:mood_diary/src/rust/api/compress.dart';
-import 'package:mood_diary/utils/log_util.dart';
-import 'package:mood_diary/utils/notice_util.dart';
+import 'package:moodiary/src/rust/api/compress.dart';
+import 'package:moodiary/utils/log_util.dart';
+import 'package:moodiary/utils/notice_util.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
 

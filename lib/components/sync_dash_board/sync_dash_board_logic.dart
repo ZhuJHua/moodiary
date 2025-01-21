@@ -1,8 +1,7 @@
 import 'package:flutter/widgets.dart';
-import 'package:mood_diary/components/sync_dash_board/sync_dash_board_state.dart';
+import 'package:moodiary/components/sync_dash_board/sync_dash_board_state.dart';
+import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../utils/webdav_util.dart';
 
 class SyncDashBoardLogic extends GetxController {
   final SyncDashBoardState state = SyncDashBoardState();

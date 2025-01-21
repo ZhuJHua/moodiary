@@ -3,18 +3,17 @@ import 'dart:io';
 
 import 'package:faker/faker.dart';
 import 'package:flutter/foundation.dart' as flutter;
-import 'package:mood_diary/common/models/isar/category.dart';
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/components/local_send/local_send_logic.dart';
+import 'package:moodiary/common/models/isar/category.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/components/local_send/local_send_logic.dart';
+import 'package:moodiary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/log_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_multipart/shelf_multipart.dart';
-
-import '../../../pages/home/diary/diary_logic.dart';
-import '../../../utils/data/isar.dart';
-import '../../../utils/file_util.dart';
-import '../../../utils/log_util.dart';
 
 class LocalSendServerLogic extends GetxController {
   late RawDatagramSocket socket;

@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mood_diary/components/frosted_glass_overlay/frosted_glass_overlay_logic.dart';
-import 'package:mood_diary/pages/home/diary/diary_logic.dart';
-import 'package:mood_diary/router/app_routes.dart';
+import 'package:moodiary/common/values/diary_type.dart';
+import 'package:moodiary/components/frosted_glass_overlay/frosted_glass_overlay_logic.dart';
+import 'package:moodiary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/utils/data/supabase.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../common/values/diary_type.dart';
-import '../../utils/data/pref.dart';
-import '../../utils/data/supabase.dart';
 import 'home_state.dart';
 
 class HomeLogic extends GetxController with GetTickerProviderStateMixin {

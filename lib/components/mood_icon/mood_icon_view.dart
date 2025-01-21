@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/values/border.dart';
+import 'package:moodiary/common/values/border.dart';
 
 class EmotionCurvePainter extends CustomPainter {
   final double value;
