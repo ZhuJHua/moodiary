@@ -53,6 +53,9 @@ class EditState {
   // 日记的类型
   late DiaryType type;
 
+  // 是否渲染markdown
+  RxBool renderMarkdown = false.obs;
+
   // 自动获取天气
   bool get autoWeather => PrefUtil.getValue<bool>('autoWeather')!;
 
