@@ -1,5 +1,5 @@
-name: mood_diary
-description: "A new Flutter project."
+name: moodiary
+description: "A fully open source cross-platform diary app written by flutter and rust."
 publish_to: 'none'
 version: 2.7.1+71
 

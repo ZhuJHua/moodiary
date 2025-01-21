@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
-import 'package:mood_diary/pages/edit/edit_logic.dart';
+import 'package:moodiary/pages/edit/edit_logic.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'draw_state.dart';

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mood_diary/common/values/border.dart';
-import 'package:mood_diary/common/values/webdav.dart';
-import 'package:mood_diary/components/tile/setting_tile.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/common/values/webdav.dart';
+import 'package:moodiary/components/tile/setting_tile.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'web_dav_logic.dart';

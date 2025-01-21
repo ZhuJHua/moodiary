@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/components/base/marquee.dart';
-import 'package:mood_diary/utils/data/pref.dart';
+import 'package:moodiary/components/base/marquee.dart';
+import 'package:moodiary/utils/data/pref.dart';
 
 Widget buildAdaptiveText({
   required String text,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/values/language.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/common/values/language.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'language_dialog_logic.dart';

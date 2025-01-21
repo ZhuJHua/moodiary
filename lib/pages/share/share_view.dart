@@ -1,12 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/values/icons.dart';
-import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
+import 'package:moodiary/common/values/icons.dart';
+import 'package:moodiary/components/mood_icon/mood_icon_view.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/file_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../main.dart';
-import '../../utils/file_util.dart';
 import 'share_logic.dart';
 
 class SharePage extends StatelessWidget {

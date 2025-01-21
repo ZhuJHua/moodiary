@@ -1,4 +1,4 @@
-import 'package:mood_diary/common/values/media_type.dart';
+import 'package:moodiary/common/values/media_type.dart';
 import 'package:refreshed/refreshed.dart';
 
 class MediaState {

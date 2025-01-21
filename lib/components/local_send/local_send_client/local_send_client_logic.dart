@@ -5,16 +5,16 @@ import 'dart:io';
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/components/local_send/local_send_logic.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/components/local_send/local_send_logic.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/http_util.dart';
+import 'package:moodiary/utils/log_util.dart';
+import 'package:moodiary/utils/notice_util.dart';
+import 'package:moodiary/utils/send_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../../utils/data/isar.dart';
-import '../../../utils/file_util.dart';
-import '../../../utils/http_util.dart';
-import '../../../utils/log_util.dart';
-import '../../../utils/notice_util.dart';
-import '../../../utils/send_util.dart';
 import 'local_send_client_state.dart';
 
 class LocalSendClientLogic extends GetxController {

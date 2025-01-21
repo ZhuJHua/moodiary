@@ -1,12 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/values/icons.dart';
-import 'package:mood_diary/components/base/button.dart';
-import 'package:mood_diary/components/mood_icon/mood_icon_view.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/common/values/icons.dart';
+import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/components/mood_icon/mood_icon_view.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/array_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/array_util.dart';
 import 'analyse_logic.dart';
 
 class AnalysePage extends StatelessWidget {

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mood_diary/common/values/view_mode.dart';
-import 'package:mood_diary/components/diary_tab_view/diary_tab_view_logic.dart';
-import 'package:mood_diary/components/scroll/fix_scroll.dart';
-import 'package:mood_diary/pages/home/home_logic.dart';
+import 'package:moodiary/api/api.dart';
+import 'package:moodiary/common/values/view_mode.dart';
+import 'package:moodiary/components/diary_tab_view/diary_tab_view_logic.dart';
+import 'package:moodiary/components/scroll/fix_scroll.dart';
+import 'package:moodiary/pages/home/home_logic.dart';
+import 'package:moodiary/utils/cache_util.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../../api/api.dart';
-import '../../../utils/cache_util.dart';
-import '../../../utils/data/isar.dart';
-import '../../../utils/data/pref.dart';
-import '../../../utils/webdav_util.dart';
 import 'diary_state.dart';
 
 class DiaryLogic extends GetxController with GetTickerProviderStateMixin {

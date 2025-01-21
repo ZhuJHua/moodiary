@@ -1,12 +1,11 @@
 import 'package:flutter/services.dart';
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/components/diary_tab_view/diary_tab_view_logic.dart';
-import 'package:mood_diary/pages/diary_details/diary_details_logic.dart';
-import 'package:mood_diary/pages/home/diary/diary_logic.dart';
-import 'package:mood_diary/router/app_routes.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/components/diary_tab_view/diary_tab_view_logic.dart';
+import 'package:moodiary/pages/diary_details/diary_details_logic.dart';
+import 'package:moodiary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/utils/data/isar.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../utils/data/isar.dart';
 
 mixin BasicCardLogic {
   Future<void> toDiary(Diary diary) async {

@@ -4,11 +4,11 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:moodiary/utils/file_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../utils/file_util.dart';
 import 'share_state.dart';
 
 class ShareLogic extends GetxController {

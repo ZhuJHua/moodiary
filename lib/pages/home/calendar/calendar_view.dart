@@ -1,11 +1,11 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mood_diary/common/values/colors.dart';
-import 'package:mood_diary/components/diary_card/calendar_diary_card_view.dart';
-import 'package:mood_diary/components/loading/loading.dart';
-import 'package:mood_diary/components/time_line/time_line_view.dart';
-import 'package:mood_diary/utils/array_util.dart';
+import 'package:moodiary/common/values/colors.dart';
+import 'package:moodiary/components/diary_card/calendar_diary_card_view.dart';
+import 'package:moodiary/components/loading/loading.dart';
+import 'package:moodiary/components/time_line/time_line_view.dart';
+import 'package:moodiary/utils/array_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 

@@ -1,6 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/animation.dart';
-import 'package:mood_diary/pages/edit/edit_logic.dart';
+import 'package:moodiary/pages/edit/edit_logic.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'audio_player_state.dart';

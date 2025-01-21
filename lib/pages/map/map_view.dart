@@ -5,12 +5,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mood_diary/components/base/button.dart';
-import 'package:mood_diary/components/bubble/bubble_view.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/components/bubble/bubble_view.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/file_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/file_util.dart';
 import 'map_logic.dart';
 
 class MapPage extends StatelessWidget {

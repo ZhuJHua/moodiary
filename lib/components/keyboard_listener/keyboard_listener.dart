@@ -1,8 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/widgets.dart';
-
-import '../../common/values/keyboard_state.dart';
+import 'package:moodiary/common/values/keyboard_state.dart';
 
 class KeyboardObserver with WidgetsBindingObserver {
   /// 键盘高度变化回调

@@ -2,15 +2,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:mood_diary/pages/diary_details/diary_details_logic.dart';
-import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/permission_util.dart';
+import 'package:moodiary/pages/diary_details/diary_details_logic.dart';
+import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/log_util.dart';
+import 'package:moodiary/utils/notice_util.dart';
+import 'package:moodiary/utils/permission_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/isar.dart';
-import '../../utils/log_util.dart';
-import '../../utils/notice_util.dart';
 import 'map_state.dart';
 
 class MapLogic extends GetxController {

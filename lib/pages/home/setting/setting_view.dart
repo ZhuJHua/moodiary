@@ -1,21 +1,21 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mood_diary/common/values/border.dart';
-import 'package:mood_diary/common/values/colors.dart';
-import 'package:mood_diary/common/values/language.dart';
-import 'package:mood_diary/components/base/sheet.dart';
-import 'package:mood_diary/components/base/text.dart';
-import 'package:mood_diary/components/color_sheet/color_sheet_view.dart';
-import 'package:mood_diary/components/dashboard/dashboard_view.dart';
-import 'package:mood_diary/components/language_dialog/language_dialog_view.dart';
-import 'package:mood_diary/components/remove_password/remove_password_view.dart';
-import 'package:mood_diary/components/set_password/set_password_view.dart';
-import 'package:mood_diary/components/theme_mode_dialog/theme_mode_dialog_view.dart';
-import 'package:mood_diary/components/tile/setting_tile.dart';
+import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/common/values/colors.dart';
+import 'package:moodiary/common/values/language.dart';
+import 'package:moodiary/components/base/sheet.dart';
+import 'package:moodiary/components/base/text.dart';
+import 'package:moodiary/components/color_sheet/color_sheet_view.dart';
+import 'package:moodiary/components/dashboard/dashboard_view.dart';
+import 'package:moodiary/components/language_dialog/language_dialog_view.dart';
+import 'package:moodiary/components/remove_password/remove_password_view.dart';
+import 'package:moodiary/components/set_password/set_password_view.dart';
+import 'package:moodiary/components/theme_mode_dialog/theme_mode_dialog_view.dart';
+import 'package:moodiary/components/tile/setting_tile.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../../main.dart';
 import 'setting_logic.dart';
 
 class SettingPage extends StatelessWidget {

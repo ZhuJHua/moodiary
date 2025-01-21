@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mood_diary/main.dart';
-import 'package:mood_diary/utils/auth_util.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/auth_util.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'lock_logic.dart';

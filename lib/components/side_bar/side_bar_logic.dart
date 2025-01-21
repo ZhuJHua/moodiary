@@ -1,14 +1,14 @@
 import 'dart:async';
 
-import 'package:mood_diary/api/api.dart';
-import 'package:mood_diary/pages/home/home_logic.dart';
-import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/cache_util.dart';
-import 'package:mood_diary/utils/package_util.dart';
+import 'package:moodiary/api/api.dart';
+import 'package:moodiary/pages/home/home_logic.dart';
+import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/utils/cache_util.dart';
+import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/utils/package_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../utils/data/pref.dart';
 import 'side_bar_state.dart';
 
 class SideBarLogic extends GetxController {

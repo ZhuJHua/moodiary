@@ -1,12 +1,12 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mood_diary/common/values/media_type.dart';
+import 'package:moodiary/common/values/media_type.dart';
+import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/media_util.dart';
+import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import '../../../utils/file_util.dart';
-import '../../../utils/media_util.dart';
-import '../../../utils/notice_util.dart';
 import 'media_state.dart';
 
 class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {

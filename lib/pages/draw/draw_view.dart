@@ -4,8 +4,8 @@ import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_drawing_board/flutter_drawing_board.dart';
-import 'package:mood_diary/components/base/button.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'draw_logic.dart';

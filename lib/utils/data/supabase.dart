@@ -1,5 +1,5 @@
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/utils/data/pref.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseUtil {

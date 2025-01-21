@@ -1,7 +1,7 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/services.dart';
-import 'package:mood_diary/router/app_routes.dart';
-import 'package:mood_diary/utils/auth_util.dart';
+import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/utils/auth_util.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'lock_state.dart';

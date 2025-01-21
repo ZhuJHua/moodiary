@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/models/isar/diary.dart';
-import 'package:mood_diary/common/values/border.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/common/values/border.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'search_card_logic.dart';

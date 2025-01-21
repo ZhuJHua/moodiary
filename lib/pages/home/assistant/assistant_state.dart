@@ -1,5 +1,5 @@
-import 'package:mood_diary/common/models/hunyuan.dart';
-import 'package:mood_diary/common/values/keyboard_state.dart';
+import 'package:moodiary/common/models/hunyuan.dart';
+import 'package:moodiary/common/values/keyboard_state.dart';
 import 'package:refreshed/refreshed.dart';
 
 class AssistantState {

@@ -1,10 +1,10 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/pref.dart';
 import 'laboratory_logic.dart';
 
 class LaboratoryPage extends StatelessWidget {

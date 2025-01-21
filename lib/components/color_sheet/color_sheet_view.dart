@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mood_diary/common/values/colors.dart';
-import 'package:mood_diary/components/base/marquee.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/common/values/colors.dart';
+import 'package:moodiary/components/base/marquee.dart';
+import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../common/values/border.dart';
-import '../../utils/data/pref.dart';
 import 'color_sheet_logic.dart';
 import 'color_sheet_state.dart';
 

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:mood_diary/components/video_player/video_player_view.dart';
-
-import '../../utils/file_util.dart';
+import 'package:moodiary/components/video_player/video_player_view.dart';
+import 'package:moodiary/utils/file_util.dart';
 
 class VideoBlockEmbed extends BlockEmbed {
   const VideoBlockEmbed(String value) : super(embedType, value);

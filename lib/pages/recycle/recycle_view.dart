@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/components/base/button.dart';
-import 'package:mood_diary/components/tile/setting_tile.dart';
-import 'package:mood_diary/main.dart';
+import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/components/tile/setting_tile.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'recycle_logic.dart';

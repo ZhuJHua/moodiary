@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:mood_diary/utils/function_extensions.dart';
+import 'package:moodiary/utils/function_extensions.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'login_form_logic.dart';

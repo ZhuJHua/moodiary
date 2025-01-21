@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/api/api.dart';
-import 'package:mood_diary/components/update_dialog/update_dialog_view.dart';
+import 'package:moodiary/api/api.dart';
+import 'package:moodiary/components/update_dialog/update_dialog_view.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'notice_util.dart';

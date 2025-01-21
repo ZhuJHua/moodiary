@@ -2,10 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/router/app_routes.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../common/values/border.dart';
-import '../../router/app_routes.dart';
 
 class MediaImageComponent extends StatelessWidget {
   final DateTime dateTime;

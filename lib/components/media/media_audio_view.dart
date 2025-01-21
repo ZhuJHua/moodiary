@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:mood_diary/components/audio_player/audio_player_view.dart';
+import 'package:moodiary/components/audio_player/audio_player_view.dart';
 
 class MediaAudioComponent extends StatelessWidget {
   final DateTime dateTime;

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/models/isar/category.dart';
-import 'package:mood_diary/common/values/view_mode.dart';
-import 'package:mood_diary/components/scroll/fix_scroll.dart';
+import 'package:moodiary/common/models/isar/category.dart';
+import 'package:moodiary/common/values/view_mode.dart';
+import 'package:moodiary/components/scroll/fix_scroll.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../../utils/data/isar.dart';
-import '../../../utils/data/pref.dart';
 
 class DiaryState {
   //自定义标题名称，如果为空则为默认值

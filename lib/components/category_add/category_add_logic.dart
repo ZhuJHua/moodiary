@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/common/models/isar/category.dart';
-import 'package:mood_diary/pages/edit/edit_logic.dart';
-import 'package:mood_diary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/common/models/isar/category.dart';
+import 'package:moodiary/pages/edit/edit_logic.dart';
+import 'package:moodiary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
 
-import '../../utils/data/isar.dart';
-import '../../utils/notice_util.dart';
 import 'category_add_state.dart';
 
 class CategoryAddLogic extends GetxController {

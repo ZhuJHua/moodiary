@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mood_diary/utils/log_util.dart';
+import 'package:moodiary/utils/log_util.dart';
 
 import 'notice_util.dart';
 

@@ -1,7 +1,6 @@
-import 'package:mood_diary/common/models/isar/diary.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/utils/data/pref.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../../utils/data/pref.dart';
 
 class DiaryDetailsState {
   Diary diary = Get.arguments[0];

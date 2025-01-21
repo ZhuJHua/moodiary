@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:mood_diary/utils/log_util.dart';
+import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/utils/log_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import '../../../utils/data/isar.dart';
 import 'calendar_state.dart';
 
 class CalendarLogic extends GetxController {

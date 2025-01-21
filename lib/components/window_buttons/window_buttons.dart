@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
-import 'package:mood_diary/api/api.dart';
-import 'package:mood_diary/utils/cache_util.dart';
+import 'package:moodiary/api/api.dart';
+import 'package:moodiary/utils/cache_util.dart';
 import 'package:refreshed/refreshed.dart';
 
 class WindowButtons extends StatelessWidget {
