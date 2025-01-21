@@ -5,10 +5,10 @@
 </picture>
 <p align="center"><a href="README.zh.md">简体中文</a> | English</p>
 
-<p align="center"><a href="https://answer.moodiary.net" target="_blank">Community Forum</a>丨QQ Group: 760014526</p>
+<p align="center"><a href="https://answer.moodiary.net" target="_blank">Official forum</a>丨QQ Group: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.27.0-blue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Flutter-3.27.2-blue?style=for-the-badge">
   <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
   <img src="https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a">
   <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
@@ -17,20 +17,21 @@
 
 ## ✨ Feature
 
-- **Cross-platform support**：🌍 Compatible with Android, iOS\*, Windows\*, MacOS\*, Linux.
-- **Material Design**：🎨 The interface is intuitive and user-friendly, and follows the Material Design specifications.
-- **Rich text editing**：📝 Supports text editing in bold, italic, underline and other formats.
-- **Multimedia accessories**：📷 You can add pictures, audio, video or even draw a picture to your diary.
-- **Search and classification**：🔍 Easily manage your diary by full-text search and categorization.
-- **Custom theme**：🌈 Supports light and dark modes, as well as a variety of color schemes.
-- **Data security**：🔒 Keep your diary safe with a password, supports biometric unlocking.
-- **Export and share**：🧾 Support all data import/export, as well as single diary sharing.
-- **Backup and synchronization**：☁ Support for LAN synchronization and WebDav backup.
-- **Footprint Map** : 🗺️ See your footprints on a map. Every step of your life is worth documenting.
-- **Intelligent assistant**：💬 Supports access to third-party large models, provides Q&A, sentiment analysis and other functions.
-- **Local Natural Language Processing (NLP)**：🤖 A more secure intelligent assistant that lets your diary know you better.
+- **Cross-platform support**: 🌍 Compatible with Android, iOS, Windows, MacOS, Linux\*.
+- **Material Design**: 🎨 The interface is intuitive and user-friendly, and follows the Material Design specifications.
+- **Multiple editors**: 📝 supports markdown, plain text, rich text and other forms of text editing.
+- **Multimedia accessories**: 📷 You can add pictures, audio, video or even draw a picture to your diary.
+- **Search and classification**: 🔍 Easily manage your diary by full-text search and categorization.
+- **Custom theme**: 🌈 Supports light and dark modes, as well as a variety of color schemes.
+- **Custom fonts**: ✍️ Supports importing different fonts, and supports variable fonts.
+- **Data security**: 🔒 Keep your diary safe with a password, supports biometric unlocking.
+- **Export and share**: 🧾 Support all data import/export, as well as single diary sharing.
+- **Backup and synchronization**: ☁ Support for LAN synchronization and WebDav backup.
+- **Trail Map**:  🗺️ See your footprints on a map. Every step of your life is worth documenting.
+- **Intelligent assistant**: 💬 Supports access to third-party large models, provides Q&A, sentiment analysis and other functions.
+- **Local Natural Language Processing (NLP)**: 🤖 A more secure intelligent assistant that lets your diary know you better.
 
-(Note: Cross-platform capabilities are provided by Flutter, platforms with * may need to configure your own signatures)
+(Note: Cross-platform capabilities are provided by Flutter, and platforms with * marks may require more testing)
 
 ## 🔧 Main Technology stack
 
@@ -86,13 +87,13 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 - Flutter SDK (>= 3.27.0)
 - Dart (>= 3.6.0)
-- Rust Toolchain (Latest)
-- Clang/LLVM (Latest)
-- Compatible ides (e.g. Android Studio, Visual Studio Code)
+- Rust Toolchain (Optional)
+- Clang/LLVM (Optional)
+- Compatible IDE (e.g. Android Studio, Visual Studio Code)
 
 #### Installation procedure
 
-> Note: When packaging, you need to modify the corresponding platform configuration file, such as Android platform build.gradle
+> Note: For security reasons, I did not include my signature in the code base, when you need to manually package, you need to modify the configuration file of the corresponding platform, such as build.gradle on the Android platform, and package after modifying the package name, thank you for your understanding.
 
 1. **Clone Repo**：
 
@@ -171,10 +172,10 @@ You can buy me a sandwich to keep me motivated to continue developing.
 
 If you want to be on the list, you can leave me a message, in no particular order, and the list will be updated regularly.
 
-| Sponsor                               | Price    | Sponsor      | Price  |
-| ------------------------------------- | -------- | ------------ | ------ |
-| [dsxksss](https://github.com/dsxksss) | 50 CNY   | 十一         | 20 CNY |
-| 沭飏秋                                | 10 CNY   | 朱东杰       | 60 CNY |
-| 匿名                                  | 5 CNY    | wu           | 10 CNY |
-| 云烨                                  | 2.76 CNY | 不对味的雪碧 | 10 CNY |
-| wireless                              | 6.6 CNY  |              |        |
+| Sponsor                               | Price    | Sponsor                                          | Price  |
+| ------------------------------------- | -------- | ------------------------------------------------ | ------ |
+| [dsxksss](https://github.com/dsxksss) | 50 CNY   | 十一                                             | 20 CNY |
+| 沭飏秋                                | 10 CNY   | 朱东杰                                           | 60 CNY |
+| 匿名                                  | 5 CNY    | wu                                               | 10 CNY |
+| 云烨                                  | 2.76 CNY | 不对味的雪碧                                     | 10 CNY |
+| wireless                              | 6.6 CNY  | [帕斯卡的芦苇](https://github.com/xiaoxianzi-99) | 10 CNY |
