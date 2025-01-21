@@ -5,10 +5,10 @@
 </picture>
 <p align="center">简体中文 | <a href="README.md">English</a></p>
 
-<p align="center"><a href="https://answer.moodiary.net" target="_blank">交流论坛</a>丨QQ群: 760014526</p>
+<p align="center"><a href="https://answer.moodiary.net" target="_blank">官方论坛</a>丨QQ群: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.27.0-blue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Flutter-3.27.2-blue?style=for-the-badge">
   <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
   <img src="https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a">
   <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
@@ -17,12 +17,13 @@
 
 ## ✨ 功能特性
 
-- **跨平台支持**：🌍 兼容 Android、iOS\*、Windows\*、MacOS\*、Linux。
+- **跨平台支持**：🌍 兼容 Android、iOS、Windows、MacOS、Linux\*。
 - **Material Design**：🎨 界面直观且用户友好，遵循 Material Design 设计规范。
-- **富文本编辑**：📝 支持加粗、斜体、下划线等多种格式的文本编辑。
+- **多种编辑器**：📝 支持 Markdown 、纯文本、富文本等多种形式的文本编辑。
 - **多媒体附件**：📷 可以为你的日记添加图片、音频、视频甚至画一张画。
 - **搜索和分类**：🔍 轻松通过全文搜索及分类管理你的日记。
 - **自定义主题**：🌈 支持浅色和深色模式，以及多种配色的主题。
+- **自定义字体**：✍️ 支持导入不同的字体，并支持可变字体。
 - **数据安全**：🔒 通过密码来保障你的日记安全，支持通过生物识别解锁。
 - **导出和分享**：🧾 支持所有数据的导入/导出，以及单篇日记的分享。
 - **备份与同步**：☁ 支持局域网同步，快速在设备间同步数据，以及 WebDav 备份。
@@ -30,7 +31,7 @@
 - **智能助手**：💬 支持接入第三方大模型，提供问答、情绪分析等功能。
 - **本地自然语言处理（NLP）**：🤖 更安全的智能助手，让你的日记更懂你。
 
-（注：跨平台能力由 Flutter 提供，带 * 号的平台可能需要自行配置签名）
+（注：跨平台能力由 Flutter 提供，带 * 号的平台可能需要更多测试）
 
 ## 🔧 主要技术栈
 
@@ -86,13 +87,13 @@
 
 - Flutter SDK (>= 3.27.0)
 - Dart (>= 3.6.0)
-- Rust 工具链 (Latest)
-- Clang/LLVM (Latest)
+- Rust 工具链（可选）
+- Clang/LLVM（可选）
 - 兼容的 IDE（如 Android Studio、Visual Studio Code）
 
 #### 安装步骤
 
-> 注意：当打包时，需要自己修改对应平台的配置文件，例如安卓平台的 build.gradle
+> 注意：出于安全考虑，我并没有在代码库中包含我的签名，当您需要手动打包时，需要自己修改对应平台的配置文件，例如安卓平台的 build.gradle，修改包名后打包，感谢您的理解
 
 1. **克隆仓库**：
 
@@ -171,10 +172,10 @@ flutter run
 
 如果您想要出现在名单中，可以给我留言，排名不分先后，名单会定期更新。
 
-| 捐助者                                   | 金额     | 捐助者       | 金额   |
-|---------------------------------------| -------- | ------------ | ------ |
-| [dsxksss](https://github.com/dsxksss) | 50 CNY   | 十一         | 20 CNY |
-| 沭飏秋                                   | 10 CNY   | 朱东杰       | 60 CNY |
-| 匿名                                    | 5 CNY    | wu           | 10 CNY |
+| 捐助者                                   | 金额     | 捐助者    | 金额     |
+|---------------------------------------| -------- |--------|--------|
+| [dsxksss](https://github.com/dsxksss) | 50 CNY   | 十一     | 20 CNY |
+| 沭飏秋                                   | 10 CNY   | 朱东杰    | 60 CNY |
+| 匿名                                    | 5 CNY    | wu     | 10 CNY |
 | 云烨                                    | 2.76 CNY | 不对味的雪碧 | 10 CNY |
-| wireless                              | 6.6 CNY  |              |        |
+| wireless                              | 6.6 CNY  | 帕斯卡的芦苇 | 10 CNY |
