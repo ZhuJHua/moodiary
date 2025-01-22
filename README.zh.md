@@ -8,7 +8,7 @@
 <p align="center"><a href="https://answer.moodiary.net" target="_blank">官方论坛</a>丨QQ群: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.27.2-blue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Flutter-3.27.3-blue?style=for-the-badge">
   <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
   <img src="https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a">
   <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
@@ -88,10 +88,10 @@
 
 > 我总是会使用最新的 Flutter 版本（如果可能的话），使用新版本可以带来更多的功能和更好的性能提升，永远不要使用老版本除非你希望代码变成一坨 💩
 
-- Flutter SDK (>= 3.27.2 Stable)（建议使用 fvm 来管理 flutter 版本）
-- Dart (>= 3.6.1)
-- Rust 工具链（可选）
-- Clang/LLVM（可选）
+- Flutter SDK (>= 3.27.0 Stable)（建议使用 fvm 来管理 flutter 版本）
+- Dart (>= 3.6.0)
+- Rust 工具链
+- Clang/LLVM
 - 兼容的 IDE（如 Android Studio、Visual Studio Code）
 
 #### 安装步骤
