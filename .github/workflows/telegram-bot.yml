@@ -8,14 +8,20 @@ on:
 
 jobs:
   notify-telegram:
-    name: Notify Telegram on Release
+    name: Notify Telegram
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
 
-      - name: Send Telegram Notification
+      - name: Get Latest Release Info
+        id: latest_release
+        run: |
+          release=$(gh release view --json name,tagName,body,url --jq '{name: .name, tag: .tagName, notes: .body, url: .url}')
+          echo "RELEASE_NAME=$(echo $release | jq -r '.name')" >> $GITHUB_ENV
+          echo "RELEASE_TAG=$(echo $release | jq -r '.tag')" >> $GITHUB_ENV
+          echo "RELEASE_NOTES=$(echo $release | jq -r '.notes')" >> $GITHUB_ENV
+          echo "RELEASE_URL=$(echo $release | jq -r '.url')" >> $GITHUB_ENV
+
+      - name: Send Telegram Message
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
@@ -23,10 +29,8 @@ jobs:
           message: |
             🎉 A new release is live! 🎉
 
-            **Release:** ${{ github.event.release.name }}
-            **Tag:** ${{ github.event.release.tag_name }}
-            **Notes:**
-            ${{ github.event.release.body }}
+            **Release:** ${{ env.RELEASE_NAME }}
+            **Tag:** ${{ env.RELEASE_TAG }}
+            **Notes:** ${{ env.RELEASE_NOTES }}
 
-            🔗 [View Release](${{ github.event.release.html_url }})
-          format: markdown
+            🔗 [View Release](${{ env.RELEASE_URL }})
