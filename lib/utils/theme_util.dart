@@ -195,6 +195,11 @@ class ThemeUtil {
     return ThemeData(
       colorScheme: colorScheme,
       materialTapTargetSize: MaterialTapTargetSize.padded,
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.all(colorScheme.primaryContainer),
+        thickness: WidgetStateProperty.all(4.0),
+        radius: const Radius.circular(2.0),
+      ),
       brightness: brightness,
       fontFamily: fontFamily,
       textTheme: _applyFontVariations(

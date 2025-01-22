@@ -276,6 +276,8 @@ class DesktopHomeFabComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textStyle = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -290,33 +292,40 @@ class DesktopHomeFabComponent extends StatelessWidget {
                   icon: const Icon(Icons.arrow_upward_rounded)),
             );
           }),
-          IconButton.filled(
+          IconButton(
             onPressed: toMarkdown,
             icon: const FaIcon(
               FontAwesomeIcons.markdown,
-              size: 16,
+              size: 20,
             ),
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
           ),
-          IconButton.filled(
+          IconButton(
             onPressed: toPlainText,
             icon: const FaIcon(
               FontAwesomeIcons.font,
-              size: 16,
+              size: 20,
             ),
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
           ),
-          IconButton.filled(
+          IconButton(
             onPressed: toRichText,
             icon: const FaIcon(
               FontAwesomeIcons.feather,
-              size: 16,
+              size: 20,
             ),
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
           ),
+          Text(
+            l10n.shareName,
+            style: textStyle.labelSmall?.copyWith(
+              fontSize: 10,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          )
         ],
       ),
     );

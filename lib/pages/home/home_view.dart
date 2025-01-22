@@ -21,29 +21,6 @@ import 'home_logic.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  static List<NavigationDestination> destinations = [
-    NavigationDestination(
-      icon: const Icon(Icons.article_outlined),
-      label: l10n.homeNavigatorDiary,
-      selectedIcon: const Icon(Icons.article),
-    ),
-    NavigationDestination(
-      icon: const Icon(UniconsLine.calender),
-      label: l10n.homeNavigatorCalendar,
-      selectedIcon: const Icon(UniconsSolid.calender),
-    ),
-    NavigationDestination(
-      icon: const Icon(UniconsLine.image_v),
-      label: l10n.homeNavigatorMedia,
-      selectedIcon: const Icon(UniconsSolid.image_v),
-    ),
-    NavigationDestination(
-      icon: const Icon(UniconsLine.layer_group),
-      label: l10n.homeNavigatorSetting,
-      selectedIcon: const Icon(UniconsSolid.layer_group),
-    ),
-  ];
-
   bool get _isMobile => Platform.isAndroid || Platform.isIOS;
 
   @override
@@ -69,7 +46,29 @@ class HomePage extends StatelessWidget {
                         padding: const EdgeInsets.all(8.0),
                         color: colorScheme.surfaceContainer,
                         child: AdaptiveScaffold.standardNavigationRail(
-                          destinations: destinations
+                          destinations: [
+                            NavigationDestination(
+                              icon: const Icon(Icons.article_outlined),
+                              label: l10n.homeNavigatorDiary,
+                              selectedIcon: const Icon(Icons.article),
+                            ),
+                            NavigationDestination(
+                              icon: const Icon(UniconsLine.calender),
+                              label: l10n.homeNavigatorCalendar,
+                              selectedIcon: const Icon(UniconsSolid.calender),
+                            ),
+                            NavigationDestination(
+                              icon: const Icon(UniconsLine.image_v),
+                              label: l10n.homeNavigatorMedia,
+                              selectedIcon: const Icon(UniconsSolid.image_v),
+                            ),
+                            NavigationDestination(
+                              icon: const Icon(UniconsLine.layer_group),
+                              label: l10n.homeNavigatorSetting,
+                              selectedIcon:
+                                  const Icon(UniconsSolid.layer_group),
+                            ),
+                          ]
                               .map((destination) =>
                                   AdaptiveScaffold.toRailDestination(
                                       destination))

@@ -1,9 +1,10 @@
 import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:refreshed/refreshed.dart';
 
 class DiaryTabViewState {
-  List<Diary> diaryList = <Diary>[];
+  RxList<Diary> diaryList = <Diary>[].obs;
 
-  bool isFetching = true;
+  RxBool isFetching = true.obs;
 
   //首次加载的个数
   int initLen = 30;

@@ -20,23 +20,21 @@ class DiaryTabViewLogic extends GetxController {
   }
 
   Future<void> _getDiary() async {
-    state.diaryList =
+    state.isFetching.value = true;
+    state.diaryList.value =
         await IsarUtil.getDiaryByCategory(state.categoryId, 0, state.initLen);
-    state.isFetching = false;
-    update();
+    state.isFetching.value = false;
   }
 
   Future<void> updateDiary() async {
-    state.isFetching = true;
-    state.diaryList =
+    state.isFetching.value = true;
+    state.diaryList.value =
         await IsarUtil.getDiaryByCategory(state.categoryId, 0, state.initLen);
-    state.isFetching = false;
-    update();
+    state.isFetching.value = false;
   }
 
   Future<void> paginationDiary() async {
-    state.diaryList += await IsarUtil.getDiaryByCategory(
+    state.diaryList.value += await IsarUtil.getDiaryByCategory(
         state.categoryId, state.diaryList.length, state.pageLen);
-    update(['view']);
   }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary/components/base/modal.dart';
-import 'package:moodiary/pages/home/home_view.dart';
+import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
+import 'package:unicons/unicons.dart';
 
 class HomeNavigatorBar extends StatelessWidget {
   static const double defaultNavigatorBarHeight = 56.0;
@@ -52,7 +53,28 @@ class HomeNavigatorBar extends StatelessWidget {
               children: [
                 Obx(() {
                   return NavigationBar(
-                    destinations: HomePage.destinations,
+                    destinations: [
+                      NavigationDestination(
+                        icon: const Icon(Icons.article_outlined),
+                        label: l10n.homeNavigatorDiary,
+                        selectedIcon: const Icon(Icons.article),
+                      ),
+                      NavigationDestination(
+                        icon: const Icon(UniconsLine.calender),
+                        label: l10n.homeNavigatorCalendar,
+                        selectedIcon: const Icon(UniconsSolid.calender),
+                      ),
+                      NavigationDestination(
+                        icon: const Icon(UniconsLine.image_v),
+                        label: l10n.homeNavigatorMedia,
+                        selectedIcon: const Icon(UniconsSolid.image_v),
+                      ),
+                      NavigationDestination(
+                        icon: const Icon(UniconsLine.layer_group),
+                        label: l10n.homeNavigatorSetting,
+                        selectedIcon: const Icon(UniconsSolid.layer_group),
+                      ),
+                    ],
                     selectedIndex: navigatorIndex.value,
                     height: navigatorBarHeight,
                     onDestinationSelected: onTap,
