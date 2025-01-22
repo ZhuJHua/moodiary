@@ -13,7 +13,7 @@ import 'package:moodiary/components/quill_embed/image_embed.dart';
 import 'package:moodiary/components/quill_embed/text_indent.dart';
 import 'package:moodiary/components/quill_embed/video_embed.dart';
 import 'package:moodiary/main.dart';
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';

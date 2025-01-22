@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/components/local_send/local_send_logic.dart';
-import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/http_util.dart';
 import 'package:moodiary/utils/log_util.dart';

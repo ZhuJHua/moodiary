@@ -4,7 +4,7 @@ import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/components/base/marquee.dart';
 import 'package:moodiary/main.dart';
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'color_sheet_logic.dart';

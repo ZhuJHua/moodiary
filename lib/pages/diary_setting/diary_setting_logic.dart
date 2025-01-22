@@ -1,4 +1,4 @@
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'diary_setting_state.dart';

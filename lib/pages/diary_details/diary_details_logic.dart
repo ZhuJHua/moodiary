@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/router/app_routes.dart';
-import 'package:moodiary/utils/data/isar.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'diary_details_state.dart';

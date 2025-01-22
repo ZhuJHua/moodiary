@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/utils/array_util.dart';
-import 'package:moodiary/utils/data/isar.dart';
-import 'package:moodiary/utils/data/pref.dart';
 import 'package:refreshed/refreshed.dart';
 
 class DashboardLogic extends GetxController {

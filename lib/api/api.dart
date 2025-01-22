@@ -12,12 +12,11 @@ import 'package:moodiary/common/models/hunyuan.dart';
 import 'package:moodiary/common/models/image.dart';
 import 'package:moodiary/common/models/weather.dart';
 import 'package:moodiary/main.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/utils/http_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/signature_util.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../utils/data/pref.dart';
 
 class Api {
   static Future<Stream<String>?> getHunYuan(

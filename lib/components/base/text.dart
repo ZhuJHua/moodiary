@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary/components/base/marquee.dart';
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 
 Widget buildAdaptiveText({
   required String text,

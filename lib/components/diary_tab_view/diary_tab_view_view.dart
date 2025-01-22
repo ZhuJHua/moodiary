@@ -95,10 +95,13 @@ class DiaryTabViewComponent extends StatelessWidget {
                           ),
                         )
                       : (state.diaryList.isNotEmpty
-                          ? switch (logic.diaryLogic.state.viewModeType) {
-                              ViewModeType.list => buildList(),
-                              ViewModeType.grid => buildGrid(),
-                            }
+                          ? Obx(() {
+                              return switch (
+                                  logic.diaryLogic.state.viewModeType.value) {
+                                ViewModeType.list => buildList(),
+                                ViewModeType.grid => buildGrid(),
+                              };
+                            })
                           : SliverToBoxAdapter(
                               child: SizedBox(
                                 height: placeholderHeight,

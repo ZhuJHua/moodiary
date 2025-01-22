@@ -3,7 +3,7 @@ import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/values/language.dart';
 import 'package:moodiary/pages/home/setting/setting_logic.dart';
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:refreshed/refreshed.dart';
 
 class LanguageDialogLogic extends GetxController {

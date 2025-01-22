@@ -143,8 +143,6 @@ class DiaryPage extends StatelessWidget {
     }
 
     return GetBuilder<DiaryLogic>(
-        id: 'All',
-        assignId: true,
         builder: (_) {
           return NestedScrollView(
             key: state.nestedScrollKey,
@@ -167,19 +165,17 @@ class DiaryPage extends StatelessWidget {
                             children: [
                               Flexible(
                                 fit: FlexFit.loose,
-                                child: GetBuilder<DiaryLogic>(
-                                    id: 'Title',
-                                    builder: (_) {
-                                      return Text(
-                                        state.customTitleName.isNotEmpty
-                                            ? state.customTitleName
-                                            : l10n.appName,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: textStyle.titleLarge?.copyWith(
-                                          color: colorScheme.onSurface,
-                                        ),
-                                      );
-                                    }),
+                                child: Obx(() {
+                                  return Text(
+                                    state.customTitleName.value.isNotEmpty
+                                        ? state.customTitleName.value
+                                        : l10n.appName,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: textStyle.titleLarge?.copyWith(
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  );
+                                }),
                               ),
                               FaIcon(
                                 FontAwesomeIcons.chevronRight,
@@ -243,7 +239,8 @@ class DiaryPage extends StatelessWidget {
                         itemBuilder: (context) {
                           return <PopupMenuEntry<String>>[
                             CheckedPopupMenuItem(
-                              checked: state.viewModeType == ViewModeType.list,
+                              checked:
+                                  state.viewModeType.value == ViewModeType.list,
                               onTap: () async {
                                 await logic.changeViewMode(ViewModeType.list);
                               },
@@ -251,7 +248,8 @@ class DiaryPage extends StatelessWidget {
                             ),
                             const PopupMenuDivider(),
                             CheckedPopupMenuItem(
-                              checked: state.viewModeType == ViewModeType.grid,
+                              checked:
+                                  state.viewModeType.value == ViewModeType.grid,
                               onTap: () async {
                                 await logic.changeViewMode(ViewModeType.grid);
                               },
@@ -268,11 +266,7 @@ class DiaryPage extends StatelessWidget {
                 ),
               ];
             },
-            body: GetBuilder<DiaryLogic>(
-                id: 'TabBarView',
-                builder: (_) {
-                  return buildTabBarView();
-                }),
+            body: buildTabBarView(),
           );
         });
   }

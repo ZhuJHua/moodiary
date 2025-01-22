@@ -5,9 +5,9 @@ import 'package:moodiary/common/values/view_mode.dart';
 import 'package:moodiary/components/diary_tab_view/diary_tab_view_logic.dart';
 import 'package:moodiary/components/scroll/fix_scroll.dart';
 import 'package:moodiary/pages/home/home_logic.dart';
+import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/utils/cache_util.dart';
-import 'package:moodiary/utils/data/isar.dart';
-import 'package:moodiary/utils/data/pref.dart';
 import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -17,8 +17,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   final DiaryState state = DiaryState();
 
   //初始化tab控制器，长度加一由于有一个默认分类
-  late TabController tabController =
-      TabController(length: state.categoryList.length + 1, vsync: this);
+  late TabController tabController;
 
   late HomeLogic homeLogic = Bind.find<HomeLogic>();
 
@@ -27,12 +26,17 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   @override
   void onInit() {
     autoSync();
+    tabController = TabController(
+      length: state.categoryList.length + 1,
+      vsync: this,
+    );
     super.onInit();
   }
 
   @override
   void onReady() {
     getHitokoto();
+
     //监听 tab
     tabController.addListener(_tabBarListener);
     //监听 inner
@@ -75,7 +79,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     checkPageChange();
     // 检查是否显示顶部内容
     _checkShowTop();
-    homeLogic.resetNavigatorBar();
+    //homeLogic.resetNavigatorBar();
   }
 
   /// 跳转到指定分类
@@ -125,13 +129,11 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   /// 3. view mode刷新时（实际上肯定在顶部，干脆直接改state）
   void _checkShowTop() {
     if (state.innerController.hasClients) {
-      if (homeLogic.state.isToTopShow != state.innerController.offset > 100) {
-        homeLogic.state.isToTopShow = state.innerController.offset > 100;
-        homeLogic.update(['Fab']);
+      if (homeLogic.isToTopShow.value != state.innerController.offset > 100) {
+        homeLogic.isToTopShow.value = state.innerController.offset > 100;
       }
     } else {
-      homeLogic.state.isToTopShow = false;
-      homeLogic.update(['Fab']);
+      homeLogic.isToTopShow.value = false;
     }
   }
 
@@ -226,14 +228,13 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
         vsync: this,
         initialIndex: state.currentTabBarIndex);
     tabController.addListener(_tabBarListener);
-    update(['All']);
+    update();
     checkPageChange();
   }
 
   //切换视图模式
   Future<void> changeViewMode(ViewModeType viewModeType) async {
-    state.viewModeType = viewModeType;
-    update(['TabBarView']);
+    state.viewModeType.value = viewModeType;
     _checkShowTop();
     await PrefUtil.setValue<int>('homeViewMode', viewModeType.number);
   }
@@ -246,7 +247,6 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
 
   // 更新标题
   void updateTitle() {
-    state.customTitleName = PrefUtil.getValue<String>('customTitleName')!;
-    update(['Title']);
+    state.customTitleName.value = PrefUtil.getValue<String>('customTitleName')!;
   }
 }

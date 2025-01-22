@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';

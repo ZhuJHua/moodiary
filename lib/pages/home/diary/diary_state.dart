@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:moodiary/common/models/isar/category.dart';
 import 'package:moodiary/common/values/view_mode.dart';
 import 'package:moodiary/components/scroll/fix_scroll.dart';
-import 'package:moodiary/utils/data/isar.dart';
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:refreshed/refreshed.dart';
 
 class DiaryState {
   //自定义标题名称，如果为空则为默认值
-  late String customTitleName;
+  late RxString customTitleName;
 
   //分类列表，用于tab显示
   late List<Category> categoryList;
@@ -26,8 +26,8 @@ class DiaryState {
       nestedScrollKey.currentState!.outerController;
 
   //视图模式状态
-  late ViewModeType viewModeType =
-      ViewModeType.getType(PrefUtil.getValue<int>('homeViewMode')!);
+  late Rx<ViewModeType> viewModeType =
+      ViewModeType.getType(PrefUtil.getValue<int>('homeViewMode')!).obs;
 
   //当前tab bar位置
   late int currentTabBarIndex;
@@ -36,7 +36,7 @@ class DiaryState {
   RxString hitokoto = '...'.obs;
 
   DiaryState() {
-    customTitleName = PrefUtil.getValue<String>('customTitleName')!;
+    customTitleName = PrefUtil.getValue<String>('customTitleName')!.obs;
 
     nestedScrollKey = GlobalKey<NestedScrollViewState>();
 

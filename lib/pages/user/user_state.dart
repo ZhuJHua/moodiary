@@ -1,4 +1,4 @@
-import 'package:moodiary/utils/data/supabase.dart';
+import 'package:moodiary/presentation/supabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserState {

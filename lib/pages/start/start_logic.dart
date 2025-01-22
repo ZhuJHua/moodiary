@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/utils/channel.dart';
-import 'package:moodiary/utils/data/pref.dart';
 import 'package:moodiary/utils/package_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:uuid/uuid.dart';

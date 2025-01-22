@@ -4,10 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/internal.dart';
-
-import '../common/values/colors.dart';
-import '../src/rust/api/font.dart';
-import 'data/pref.dart';
+import 'package:moodiary/common/values/colors.dart';
+import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/src/rust/api/font.dart';
 
 final Set<String> loadedFonts = {};
 

@@ -3,8 +3,8 @@ import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/components/diary_tab_view/diary_tab_view_logic.dart';
 import 'package:moodiary/pages/diary_details/diary_details_logic.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/router/app_routes.dart';
-import 'package:moodiary/utils/data/isar.dart';
 import 'package:refreshed/refreshed.dart';
 
 mixin BasicCardLogic {

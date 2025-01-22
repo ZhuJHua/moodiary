@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 
 class CacheUtil {
   static Future<List<String>?> getCacheList(

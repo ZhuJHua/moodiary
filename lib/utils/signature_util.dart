@@ -1,9 +1,8 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-
-import 'data/pref.dart';
-import 'notice_util.dart';
+import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/utils/notice_util.dart';
 
 class SignatureUtil {
   static String _hex(List<int> bytes) {

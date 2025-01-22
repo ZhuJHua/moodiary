@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moodiary/common/models/isar/category.dart';
 import 'package:moodiary/pages/edit/edit_logic.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
-import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
 
