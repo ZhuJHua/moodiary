@@ -28,8 +28,25 @@ const CategorySchema = IsarGeneratedSchema(
         name: 'categoryName',
         type: IsarType.string,
       ),
+      IsarPropertySchema(
+        name: 'parentId',
+        type: IsarType.string,
+      ),
+      IsarPropertySchema(
+        name: 'level',
+        type: IsarType.string,
+      ),
     ],
-    indexes: [],
+    indexes: [
+      IsarIndexSchema(
+        name: 'level',
+        properties: [
+          "level",
+        ],
+        unique: false,
+        hash: false,
+      ),
+    ],
   ),
   converter: IsarObjectConverter<String, Category>(
     serialize: serializeCategory,
@@ -43,6 +60,15 @@ const CategorySchema = IsarGeneratedSchema(
 int serializeCategory(IsarWriter writer, Category object) {
   IsarCore.writeString(writer, 1, object.id);
   IsarCore.writeString(writer, 2, object.categoryName);
+  {
+    final value = object.parentId;
+    if (value == null) {
+      IsarCore.writeNull(writer, 3);
+    } else {
+      IsarCore.writeString(writer, 3, value);
+    }
+  }
+  IsarCore.writeString(writer, 4, object.level);
   return Isar.fastHash(object.id);
 }
 
@@ -51,6 +77,7 @@ Category deserializeCategory(IsarReader reader) {
   final object = Category();
   object.id = IsarCore.readString(reader, 1) ?? '';
   object.categoryName = IsarCore.readString(reader, 2) ?? '';
+  object.parentId = IsarCore.readString(reader, 3);
   return object;
 }
 
@@ -61,6 +88,10 @@ dynamic deserializeCategoryProp(IsarReader reader, int property) {
       return IsarCore.readString(reader, 1) ?? '';
     case 2:
       return IsarCore.readString(reader, 2) ?? '';
+    case 3:
+      return IsarCore.readString(reader, 3);
+    case 4:
+      return IsarCore.readString(reader, 4) ?? '';
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -70,6 +101,8 @@ sealed class _CategoryUpdate {
   bool call({
     required String id,
     String? categoryName,
+    String? parentId,
+    String? level,
   });
 }
 
@@ -82,11 +115,15 @@ class _CategoryUpdateImpl implements _CategoryUpdate {
   bool call({
     required String id,
     Object? categoryName = ignore,
+    Object? parentId = ignore,
+    Object? level = ignore,
   }) {
     return collection.updateProperties([
           id
         ], {
           if (categoryName != ignore) 2: categoryName as String?,
+          if (parentId != ignore) 3: parentId as String?,
+          if (level != ignore) 4: level as String?,
         }) >
         0;
   }
@@ -96,6 +133,8 @@ sealed class _CategoryUpdateAll {
   int call({
     required List<String> id,
     String? categoryName,
+    String? parentId,
+    String? level,
   });
 }
 
@@ -108,9 +147,13 @@ class _CategoryUpdateAllImpl implements _CategoryUpdateAll {
   int call({
     required List<String> id,
     Object? categoryName = ignore,
+    Object? parentId = ignore,
+    Object? level = ignore,
   }) {
     return collection.updateProperties(id, {
       if (categoryName != ignore) 2: categoryName as String?,
+      if (parentId != ignore) 3: parentId as String?,
+      if (level != ignore) 4: level as String?,
     });
   }
 }
@@ -124,6 +167,8 @@ extension CategoryUpdate on IsarCollection<String, Category> {
 sealed class _CategoryQueryUpdate {
   int call({
     String? categoryName,
+    String? parentId,
+    String? level,
   });
 }
 
@@ -136,9 +181,13 @@ class _CategoryQueryUpdateImpl implements _CategoryQueryUpdate {
   @override
   int call({
     Object? categoryName = ignore,
+    Object? parentId = ignore,
+    Object? level = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (categoryName != ignore) 2: categoryName as String?,
+      if (parentId != ignore) 3: parentId as String?,
+      if (level != ignore) 4: level as String?,
     });
   }
 }
@@ -159,11 +208,15 @@ class _CategoryQueryBuilderUpdateImpl implements _CategoryQueryUpdate {
   @override
   int call({
     Object? categoryName = ignore,
+    Object? parentId = ignore,
+    Object? level = ignore,
   }) {
     final q = query.build();
     try {
       return q.updateProperties(limit: limit, {
         if (categoryName != ignore) 2: categoryName as String?,
+        if (parentId != ignore) 3: parentId as String?,
+        if (level != ignore) 4: level as String?,
       });
     } finally {
       q.close();
@@ -531,6 +584,366 @@ extension CategoryQueryFilter
       );
     });
   }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 3));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 3));
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(
+          property: 3,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdGreaterThan(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 3,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition>
+      parentIdGreaterThanOrEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 3,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdLessThan(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(
+          property: 3,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition>
+      parentIdLessThanOrEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 3,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdBetween(
+    String? lower,
+    String? upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 3,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 3,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 3,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 3,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 3,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(
+          property: 3,
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> parentIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(
+          property: 3,
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> levelEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(
+          property: 4,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> levelGreaterThan(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 4,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition>
+      levelGreaterThanOrEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 4,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> levelLessThan(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(
+          property: 4,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition>
+      levelLessThanOrEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 4,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> levelBetween(
+    String lower,
+    String upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 4,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> levelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 4,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> levelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 4,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> levelContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 4,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> levelMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 4,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> levelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(
+          property: 4,
+          value: '',
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterFilterCondition> levelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(
+          property: 4,
+          value: '',
+        ),
+      );
+    });
+  }
 }
 
 extension CategoryQueryObject
@@ -578,6 +991,48 @@ extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
       );
     });
   }
+
+  QueryBuilder<Category, Category, QAfterSortBy> sortByParentId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(
+        3,
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> sortByParentIdDesc(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(
+        3,
+        sort: Sort.desc,
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> sortByLevel(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(
+        4,
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> sortByLevelDesc(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(
+        4,
+        sort: Sort.desc,
+        caseSensitive: caseSensitive,
+      );
+    });
+  }
 }
 
 extension CategoryQuerySortThenBy
@@ -609,6 +1064,34 @@ extension CategoryQuerySortThenBy
       return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<Category, Category, QAfterSortBy> thenByParentId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(3, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> thenByParentIdDesc(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> thenByLevel(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(4, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterSortBy> thenByLevelDesc(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(4, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension CategoryQueryWhereDistinct
@@ -617,6 +1100,20 @@ extension CategoryQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(2, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterDistinct> distinctByParentId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(3, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Category, Category, QAfterDistinct> distinctByLevel(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(4, caseSensitive: caseSensitive);
     });
   }
 }
@@ -634,6 +1131,18 @@ extension CategoryQueryProperty1
       return query.addProperty(2);
     });
   }
+
+  QueryBuilder<Category, String?, QAfterProperty> parentIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(3);
+    });
+  }
+
+  QueryBuilder<Category, String, QAfterProperty> levelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(4);
+    });
+  }
 }
 
 extension CategoryQueryProperty2<R>
@@ -649,6 +1158,18 @@ extension CategoryQueryProperty2<R>
       return query.addProperty(2);
     });
   }
+
+  QueryBuilder<Category, (R, String?), QAfterProperty> parentIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(3);
+    });
+  }
+
+  QueryBuilder<Category, (R, String), QAfterProperty> levelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(4);
+    });
+  }
 }
 
 extension CategoryQueryProperty3<R1, R2>
@@ -662,6 +1183,18 @@ extension CategoryQueryProperty3<R1, R2>
   QueryBuilder<Category, (R1, R2, String), QOperations> categoryNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
+    });
+  }
+
+  QueryBuilder<Category, (R1, R2, String?), QOperations> parentIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(3);
+    });
+  }
+
+  QueryBuilder<Category, (R1, R2, String), QOperations> levelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(4);
     });
   }
 }
