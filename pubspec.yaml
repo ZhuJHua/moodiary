@@ -29,7 +29,7 @@ dependencies:
   photo_view: 0.15.0
   package_info_plus: 8.1.3
   uuid: 4.5.1
-  flutter_quill: 11.0.0-dev.20
+  flutter_quill: 11.0.0-dev.21
   share_plus: 10.1.4
   url_launcher: 6.3.1
   archive: 4.0.2
@@ -69,7 +69,6 @@ dependencies:
   shelf_multipart: 2.0.0
   waterfall_flow: 3.1.0
   smooth_page_indicator: 1.2.0+3
-  table_calendar: 3.1.3
   unicons: 3.0.0
   encrypt: 5.0.3
   objectbox: 4.0.3
@@ -82,10 +81,7 @@ dependencies:
   video_player_media_kit: 1.0.5
   video_player: 2.9.2
   chewie: 1.9.2
-  http_status_code: 0.0.2
-  pinput: 5.0.1
   flutter_markdown: 0.7.5
-  google_fonts: 6.2.1
   image_picker_platform_interface: 2.10.1
   chinese_font_library: 1.2.0
   flutter_image_compress: 2.4.0
@@ -101,7 +97,6 @@ dependencies:
       ref: feature/add-new-component
   network_info_plus: 6.1.3
   scrollable_positioned_list: 0.3.8
-  fading_edge_scrollview: 4.1.1
   flutter_localizations:
     sdk: flutter
   rust_lib_mood_diary:

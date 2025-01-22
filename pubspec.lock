@@ -606,14 +606,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
-  fading_edge_scrollview:
-    dependency: "direct main"
-    description:
-      name: fading_edge_scrollview
-      sha256: "1f84fe3ea8e251d00d5735e27502a6a250e4aa3d3b330d3fdcb475af741464ef"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.1.1"
   fake_async:
     dependency: transitive
     description:
@@ -1004,10 +996,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_quill
-      sha256: "8a87fa28f5df1a8f467750ffca578323d0f782bf4e97a2d8a1c62f079418c28d"
+      sha256: "0acca7cf646eb2feba5333338d046514c17159741ab5744c7c4290778656fa4a"
       url: "https://pub.dev"
     source: hosted
-    version: "11.0.0-dev.20"
+    version: "11.0.0-dev.21"
   flutter_quill_delta_from_html:
     dependency: transitive
     description:
@@ -1146,14 +1138,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
-  google_fonts:
-    dependency: "direct main"
-    description:
-      name: google_fonts
-      sha256: b1ac0fe2832c9cc95e5e88b57d627c5e68c223b9657f4b96e1487aa9098c7b82
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.2.1"
   gotrue:
     dependency: transitive
     description:
@@ -1226,14 +1210,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
-  http_status_code:
-    dependency: "direct main"
-    description:
-      name: http_status_code
-      sha256: "052b42add019380f060cbf9cc9669b6831ca7e0244c925c520de8c1867dd139d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.2"
   image:
     dependency: transitive
     description:
@@ -1858,14 +1834,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.15.0"
-  pinput:
-    dependency: "direct main"
-    description:
-      name: pinput
-      sha256: "8a73be426a91fefec90a7f130763ca39772d547e92f19a827cf4aa02e323d35a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.0.1"
   platform:
     dependency: transitive
     description:
@@ -2338,14 +2306,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.1"
-  simple_gesture_detector:
-    dependency: transitive
-    description:
-      name: simple_gesture_detector
-      sha256: ba2cd5af24ff20a0b8d609cec3f40e5b0744d2a71804a2616ae086b9c19d19a3
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.1"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -2535,14 +2495,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.3.0+3"
-  table_calendar:
-    dependency: "direct main"
-    description:
-      name: table_calendar
-      sha256: b2896b7c86adf3a4d9c911d860120fe3dbe03c85db43b22fd61f14ee78cdbb63
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.1.3"
   term_glyph:
     dependency: transitive
     description:
