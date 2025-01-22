@@ -1,0 +1,42 @@
+name: Release Notification
+
+on:
+  workflow_dispatch:
+  release:
+    types:
+      - published
+
+jobs:
+  notify-telegram:
+    name: Notify Telegram on Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Send Telegram Message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            🎉 A new release has been published! 🎉
+
+            📦 **Release:** ${{ github.event.release.name }}
+            🔖 **Tag:** ${{ github.event.release.tag_name }}
+            📝 **Release Notes:**
+            ${{ github.event.release.body }}
+
+            📂 **Assets:**
+            {% if github.event.release.assets %}
+            {% for asset in github.event.release.assets %}
+            - [{{ asset.name }}]({{ asset.browser_download_url }})
+            {% endfor %}
+            {% else %}
+            No assets uploaded.
+            {% endif %}
+
+            🔗 **View Release:** [Click here](${{ github.event.release.html_url }})
+
+          parse_mode: markdown
