@@ -15,28 +15,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Send Telegram Message
+      - name: Send Telegram Notification
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            🎉 A new release has been published! 🎉
+            🎉 A new release is live! 🎉
 
-            📦 **Release:** ${{ github.event.release.name }}
-            🔖 **Tag:** ${{ github.event.release.tag_name }}
-            📝 **Release Notes:**
+            **Release:** ${{ github.event.release.name }}
+            **Tag:** ${{ github.event.release.tag_name }}
+            **Notes:**
             ${{ github.event.release.body }}
 
-            📂 **Assets:**
-            {% if github.event.release.assets %}
-            {% for asset in github.event.release.assets %}
-            - [{{ asset.name }}]({{ asset.browser_download_url }})
-            {% endfor %}
-            {% else %}
-            No assets uploaded.
-            {% endif %}
-
-            🔗 **View Release:** [Click here](${{ github.event.release.html_url }})
-
-          parse_mode: markdown
+            🔗 [View Release](${{ github.event.release.html_url }})
+          format: markdown
