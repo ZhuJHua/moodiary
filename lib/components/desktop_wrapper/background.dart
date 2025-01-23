@@ -16,6 +16,7 @@ class AdaptiveBackground extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return LayoutBuilder(builder: (context, constraints) {
       bool showBackground = constraints.maxWidth >= 600;
+      if (!showBackground) return child;
       return Stack(
         children: [
           if (showBackground)
@@ -24,19 +25,15 @@ class AdaptiveBackground extends StatelessWidget {
                 color: colorScheme.surfaceContainer,
                 padding: const EdgeInsets.only(top: 16, right: 16, bottom: 16),
                 child: Container(
+                  padding: const EdgeInsets.all(8.0),
                   decoration: BoxDecoration(
                     borderRadius: AppBorderRadius.mediumBorderRadius,
                     color: colorScheme.surface,
                   ),
+                  child: child,
                 ),
               ),
             ),
-          Padding(
-            padding: showBackground
-                ? const EdgeInsets.only(left: 8, top: 24, right: 24, bottom: 24)
-                : EdgeInsets.zero,
-            child: child,
-          ),
           if (!_isMobile)
             Positioned(
               top: 0,

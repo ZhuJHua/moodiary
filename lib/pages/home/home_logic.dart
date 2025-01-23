@@ -16,6 +16,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
 
   RxInt navigatorIndex = 0.obs;
 
+  late final GlobalKey bodyKey = GlobalKey();
   late final AnimationController _fabAnimationController = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 200));
 

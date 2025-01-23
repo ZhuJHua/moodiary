@@ -111,18 +111,22 @@ class HomePage extends StatelessWidget {
                   key: const ValueKey('body'),
                   builder: (_) {
                     return AdaptiveBackground(
-                      child: Obx(() {
-                        return AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 150),
-                            reverseDuration: const Duration(milliseconds: 100),
-                            child: switch (logic.navigatorIndex.value) {
-                              0 => const DiaryPage(),
-                              1 => const CalendarPage(),
-                              2 => const MediaPage(),
-                              3 => const SettingPage(),
-                              _ => throw UnimplementedError(),
-                            });
-                      }),
+                      child: Obx(
+                        () {
+                          return AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 150),
+                              reverseDuration:
+                                  const Duration(milliseconds: 100),
+                              key: logic.bodyKey,
+                              child: switch (logic.navigatorIndex.value) {
+                                0 => const DiaryPage(),
+                                1 => const CalendarPage(),
+                                2 => const MediaPage(),
+                                3 => const SettingPage(),
+                                _ => throw UnimplementedError(),
+                              });
+                        },
+                      ),
                     );
                   },
                 )
