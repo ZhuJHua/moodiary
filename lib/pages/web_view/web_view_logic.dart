@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:refreshed/refreshed.dart';
@@ -8,6 +7,7 @@ import 'web_view_state.dart';
 class WebViewLogic extends GetxController {
   final state = WebViewState();
   late final InAppWebViewController webViewController;
+
   // late final PullToRefreshController pullToRefreshController =
   //     PullToRefreshController(
   //   onRefresh: () async {
