@@ -24,7 +24,7 @@ class AboutLogic extends GetxController with GetSingleTickerProviderStateMixin {
   );
 
   late final ConfettiController confettiController =
-      ConfettiController(duration: const Duration(seconds: 2));
+      ConfettiController(duration: const Duration(seconds: 4));
 
   @override
   void onReady() async {

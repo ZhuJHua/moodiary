@@ -81,143 +81,144 @@ class AboutPage extends StatelessWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.aboutTitle),
-        leading: const PageBackButton(),
-      ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            ListView(
-              padding: const EdgeInsets.all(16.0),
-              physics: const ClampingScrollPhysics(),
-              children: [
-                GetBuilder<AboutLogic>(builder: (_) {
-                  return buildLogoTitle();
-                }),
-                const SizedBox(height: 16.0),
-                Card.outlined(
-                  color: colorScheme.surfaceContainerLow,
-                  child: Column(
-                    children: [
-                      AdaptiveListTile(
-                        leading: const Icon(Icons.update_rounded),
-                        title: Text(l10n.aboutUpdate),
-                        isFirst: true,
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () async {
-                          await UpdateUtil.checkShouldUpdate(state.appVersion,
-                              handle: true);
-                        },
-                      ),
-                      AdaptiveListTile(
-                        leading: const Icon(Icons.source_rounded),
-                        title: Text(l10n.aboutSource),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () async {
-                          await logic.toSource();
-                        },
-                      ),
-                      AdaptiveListTile(
-                        leading: const Icon(Icons.file_copy_rounded),
-                        title: Text(l10n.aboutUserAgreement),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () {
-                          logic.toAgreement();
-                        },
-                      ),
-                      AdaptiveListTile(
-                        leading: const Icon(Icons.privacy_tip_rounded),
-                        title: Text(l10n.aboutPrivacyPolicy),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () {
-                          logic.toPrivacy();
-                        },
-                      ),
-                      AdaptiveListTile(
-                        leading: const Icon(Icons.bug_report_rounded),
-                        title: Text(l10n.aboutBugReport),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () async {
-                          await logic.toReportPage();
-                        },
-                      ),
-                      AdaptiveListTile(
-                        leading: const Icon(Icons.attach_money_rounded),
-                        title: Text(l10n.aboutDonate),
-                        isLast: true,
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: logic.toSponsor,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: 4.0,
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: Text(l10n.aboutTitle),
+            leading: const PageBackButton(),
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(16.0),
+            physics: const ClampingScrollPhysics(),
+            children: [
+              GetBuilder<AboutLogic>(builder: (_) {
+                return buildLogoTitle();
+              }),
+              const SizedBox(height: 16.0),
+              Card.outlined(
+                color: colorScheme.surfaceContainerLow,
+                child: Column(
                   children: [
-                    const FaIcon(
-                      FontAwesomeIcons.flutter,
-                      size: 16,
-                      color: Colors.lightBlue,
+                    AdaptiveListTile(
+                      leading: const Icon(Icons.update_rounded),
+                      title: Text(l10n.aboutUpdate),
+                      isFirst: true,
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () async {
+                        await UpdateUtil.checkShouldUpdate(state.appVersion,
+                            handle: true);
+                      },
                     ),
-                    const SizedBox(
-                      height: 12,
-                      child: VerticalDivider(
-                        thickness: 2,
-                      ),
+                    AdaptiveListTile(
+                      leading: const Icon(Icons.source_rounded),
+                      title: Text(l10n.aboutSource),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () async {
+                        await logic.toSource();
+                      },
                     ),
-                    FaIcon(
-                      FontAwesomeIcons.dartLang,
-                      size: 16,
-                      color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    AdaptiveListTile(
+                      leading: const Icon(Icons.file_copy_rounded),
+                      title: Text(l10n.aboutUserAgreement),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () {
+                        logic.toAgreement();
+                      },
                     ),
-                    const SizedBox(
-                      height: 12,
-                      child: VerticalDivider(
-                        thickness: 2,
-                      ),
+                    AdaptiveListTile(
+                      leading: const Icon(Icons.privacy_tip_rounded),
+                      title: Text(l10n.aboutPrivacyPolicy),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () {
+                        logic.toPrivacy();
+                      },
                     ),
-                    FaIcon(
-                      FontAwesomeIcons.rust,
-                      size: 16,
-                      color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    AdaptiveListTile(
+                      leading: const Icon(Icons.bug_report_rounded),
+                      title: Text(l10n.aboutBugReport),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () async {
+                        await logic.toReportPage();
+                      },
                     ),
-                    const SizedBox(
-                      height: 12,
-                      child: VerticalDivider(
-                        thickness: 2,
-                      ),
-                    ),
-                    const FaIcon(
-                      FontAwesomeIcons.solidHeart,
-                      size: 16,
-                      color: Colors.pinkAccent,
+                    AdaptiveListTile(
+                      leading: const Icon(Icons.attach_money_rounded),
+                      title: Text(l10n.aboutDonate),
+                      isLast: true,
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: logic.toSponsor,
                     ),
                   ],
-                )
-              ],
-            ),
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: logic.confettiController,
-                blastDirectionality: BlastDirectionality.directional,
-                blastDirection: pi / 2,
-                emissionFrequency: 0.1,
-                colors: const [
-                  Colors.green,
-                  Colors.blue,
-                  Colors.yellow,
-                  Colors.red,
-                ],
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 4.0,
+                children: [
+                  const FaIcon(
+                    FontAwesomeIcons.flutter,
+                    size: 16,
+                    color: Colors.lightBlue,
+                  ),
+                  const SizedBox(
+                    height: 12,
+                    child: VerticalDivider(
+                      thickness: 2,
+                    ),
+                  ),
+                  FaIcon(
+                    FontAwesomeIcons.dartLang,
+                    size: 16,
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+                  ),
+                  const SizedBox(
+                    height: 12,
+                    child: VerticalDivider(
+                      thickness: 2,
+                    ),
+                  ),
+                  FaIcon(
+                    FontAwesomeIcons.rust,
+                    size: 16,
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+                  ),
+                  const SizedBox(
+                    height: 12,
+                    child: VerticalDivider(
+                      thickness: 2,
+                    ),
+                  ),
+                  const FaIcon(
+                    FontAwesomeIcons.solidHeart,
+                    size: 16,
+                    color: Colors.pinkAccent,
+                  ),
+                ],
+              )
+            ],
+          ),
         ),
-      ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: ConfettiWidget(
+            confettiController: logic.confettiController,
+            blastDirectionality: BlastDirectionality.directional,
+            blastDirection: pi / 2,
+            emissionFrequency: 0.1,
+            colors: const [
+              Colors.red,
+              Colors.orange,
+              Colors.yellow,
+              Colors.green,
+              Colors.cyan,
+              Colors.blue,
+              Colors.purple,
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
