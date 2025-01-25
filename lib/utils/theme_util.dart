@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
@@ -176,6 +178,8 @@ class ThemeUtil {
         wghtAxisMap = _unifyFontWeights(
             await FontReader.getWghtAxisFromVfFont(ttfFilePath: customFont));
       }
+    } else if (Platform.isWindows) {
+      fontFamily = 'Microsoft Yahei UI';
     }
 
     // colorScheme
