@@ -170,9 +170,9 @@ flutter:
 
   uses-material-design: true
 
-  msix_config:
-    display_name: JHZhu.Moodiary
-    publisher_display_name: CN=8FC154B5-951B-4B96-B1CA-5A8A86B49C11
-    identity_name: JH Zhu
-    capabilities: internetClient, location, microphone
-    store: true
+msix_config:
+  display_name: JHZhu.Moodiary
+  publisher_display_name: CN=8FC154B5-951B-4B96-B1CA-5A8A86B49C11
+  identity_name: JH Zhu
+  capabilities: internetClient, location, microphone
+  store: true
