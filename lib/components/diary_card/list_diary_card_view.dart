@@ -73,15 +73,15 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                         child: Text(
                           diary.contentText.trim(),
                           overflow: TextOverflow.ellipsis,
-                          maxLines: 3,
+                          maxLines: diary.title.isNotEmpty ? 3 : 4,
                           style: textStyle.bodyMedium
                               ?.copyWith(color: colorScheme.onSurface),
                         ),
                       ),
                       Text(
-                        DateFormat.yMMMd().add_Hms().format(diary.time),
+                        DateFormat.yMMMMEEEEd().add_Hms().format(diary.time),
                         style: textStyle.labelSmall?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.8),
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       )
                     ],
