@@ -66,19 +66,15 @@ Widget buildAdaptiveText({
 Widget getEllipsisText({
   required String text,
   required int maxLine,
-  required TextStyle textStyle,
-  required BuildContext context,
+  TextStyle? textStyle,
   required TextScaler textScaler,
+  String ellipsis = '...',
 }) {
   return LayoutBuilder(builder: (context, constraints) {
     if (text.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final maxAllowedWidth = constraints.maxWidth;
-    const ellipsis = '...';
-
-    // Helper function to calculate text width
     double calculateTextWidth(String text) {
       final span = TextSpan(text: text.fixAutoLines(), style: textStyle);
       final tp = TextPainter(
@@ -90,19 +86,16 @@ Widget getEllipsisText({
       return tp.width;
     }
 
-    // Helper function to create a TextPainter
     TextPainter createTextPainter(String displayText) {
       return TextPainter(
         text: TextSpan(text: displayText.fixAutoLines(), style: textStyle),
         maxLines: maxLine,
         textDirection: TextDirection.ltr,
         textScaler: textScaler,
-      )..layout(maxWidth: maxAllowedWidth);
+      )..layout(maxWidth: constraints.maxWidth);
     }
 
-    // Step 1: Check if the full text fits
-    final fullTextPainter = createTextPainter(text);
-    if (!fullTextPainter.didExceedMaxLines) {
+    if (!createTextPainter(text).didExceedMaxLines) {
       return Text(
         text.fixAutoLines(),
         maxLines: maxLine,
@@ -112,33 +105,41 @@ Widget getEllipsisText({
       );
     }
 
-    // Step 2: Binary search for truncating text
     int leftIndex = 0;
     int rightIndex = text.length;
+    double leftWidth = 0;
+    double rightWidth = 0;
+
     String truncatedText = text;
 
+    int lastValidLeftIndex = 0;
+    int lastValidRightIndex = text.length;
+
     while (leftIndex < rightIndex) {
-      // Calculate widths for left and right segments
-      final leftText = text.substring(0, leftIndex);
-      final rightText = text.substring(rightIndex);
-      final testText = '$leftText$ellipsis$rightText';
-
-      final totalWidth = calculateTextWidth(leftText) +
-          calculateTextWidth(rightText) +
-          calculateTextWidth(ellipsis);
-
-      if (totalWidth > maxAllowedWidth) {
-        // Adjust longer side (prefer balanced width)
-        if (calculateTextWidth(leftText) <= calculateTextWidth(rightText)) {
-          rightIndex--;
-        } else {
-          leftIndex++;
-        }
+      final nextLeftWidth = calculateTextWidth(text[leftIndex]) + leftWidth;
+      final nextRightWidth =
+          calculateTextWidth(text[rightIndex - 1]) + rightWidth;
+      final currentText =
+          '${text.substring(0, leftIndex)}$ellipsis${text.substring(rightIndex)}';
+      if (createTextPainter(currentText).didExceedMaxLines) {
+        break;
       } else {
-        truncatedText = testText;
-        leftIndex++;
+        lastValidLeftIndex = leftIndex;
+        lastValidRightIndex = rightIndex;
+        if (leftWidth <= rightWidth) {
+          leftWidth = nextLeftWidth;
+          leftIndex++;
+        } else {
+          rightWidth = nextRightWidth;
+          rightIndex--;
+        }
       }
     }
+
+    final leftText = text.substring(0, lastValidLeftIndex);
+    final rightText = text.substring(lastValidRightIndex);
+
+    truncatedText = '$leftText$ellipsis$rightText';
 
     return Text(
       truncatedText.fixAutoLines(),
