@@ -6,8 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:markdown_widget/config/configs.dart';
-import 'package:markdown_widget/widget/markdown.dart';
+import 'package:markdown_widget/markdown_widget.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/common/values/diary_type.dart';
@@ -24,6 +23,7 @@ import 'package:moodiary/components/quill_embed/video_embed.dart';
 import 'package:moodiary/components/record_sheet/record_sheet_view.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
 import 'package:moodiary/main.dart';
+import 'package:moodiary/utils/log_util.dart';
 import 'package:moodiary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -855,21 +855,40 @@ class EditPage extends StatelessWidget {
 
     Widget markdownToolBar() {
       return Row(
-        spacing: 8.0,
+        spacing: 4.0,
         children: [
           IconButton.filled(
             icon: const Icon(Icons.keyboard_command_key),
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             onPressed: () {
-              logic.renderMarkdown();
-              // showFloatingModalBottomSheet(
-              //   context: context,
-              //   builder: (context) {
-              //     return buildDetail();
-              //   },
-              // );
+              showFloatingModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return buildDetail();
+                },
+              );
             },
+          ),
+          IconButton.filled(
+            onPressed: logic.renderMarkdown,
+            style: const ButtonStyle(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            icon: Obx(() {
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                reverseDuration: const Duration(milliseconds: 100),
+                child: state.renderMarkdown.value
+                    ? const Icon(
+                        Icons.visibility_off_rounded,
+                        key: ValueKey('off_icon'),
+                      )
+                    : const Icon(
+                        Icons.visibility_rounded,
+                        key: ValueKey('on_icon'),
+                      ),
+              );
+            }),
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -924,7 +943,14 @@ class EditPage extends StatelessWidget {
                     )
                   : MarkdownWidget(
                       config: colorScheme.brightness == Brightness.dark
-                          ? MarkdownConfig.darkConfig
+                          ? MarkdownConfig.darkConfig.copy(configs: [
+                              ImgConfig(
+                                builder: (str, map) {
+                                  LogUtil.printInfo(str);
+                                  return SizedBox.shrink();
+                                },
+                              )
+                            ])
                           : MarkdownConfig.defaultConfig,
                       data: logic.markdownTextEditingController.text,
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
