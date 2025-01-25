@@ -13,8 +13,8 @@ class EenBadgePainter extends CustomPainter {
       ..color = const Color(0xffc03546)
       ..style = PaintingStyle.fill;
 
-    double diagonal = size.width * sqrt(2);
-    double height = size.height / 3;
+    final double diagonal = size.width * sqrt(2);
+    final double height = size.height / 3;
 
     canvas.save();
 
@@ -39,8 +39,8 @@ class EenBadgePainter extends CustomPainter {
     );
     textPainter.layout();
 
-    double centerX = diagonal / 2 - textPainter.width / 2;
-    double centerY = height / 2 - textPainter.height / 2;
+    final double centerX = diagonal / 2 - textPainter.width / 2;
+    final double centerY = height / 2 - textPainter.height / 2;
     textPainter.paint(canvas, Offset(centerX, centerY));
     canvas.restore();
   }

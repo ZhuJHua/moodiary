@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary/common/values/webdav.dart';
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -43,7 +43,7 @@ class WebDavLogic extends GetxController {
 
   Future<void> checkConnectivity() async {
     state.connectivityStatus.value = WebDavConnectivityStatus.connecting;
-    var res = await webDav.checkConnectivity();
+    final res = await webDav.checkConnectivity();
     state.connectivityStatus.value = res
         ? WebDavConnectivityStatus.connected
         : WebDavConnectivityStatus.unconnected;

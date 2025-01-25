@@ -33,7 +33,7 @@ class CategoryAddComponent extends StatelessWidget {
                         icon: const Icon(Icons.add),
                         label: Text(l10n.categoryManageAdd),
                         onPressed: () async {
-                          var res = await showTextInputDialog(
+                          final res = await showTextInputDialog(
                               context: context,
                               title: l10n.categoryManageAdd,
                               textFields: [

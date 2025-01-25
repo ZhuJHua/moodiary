@@ -74,8 +74,8 @@ class GirdDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                       Text(
                         DateFormat.yMd().add_Hms().format(diary.time),
                         style: textStyle.labelSmall?.copyWith(
-                            color:
-                                colorScheme.onSurface.withValues(alpha: 0.8)),
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],

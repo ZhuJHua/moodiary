@@ -14,10 +14,10 @@ class TimeLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var linePaint = Paint()
+    final linePaint = Paint()
       ..color = lineColor
       ..strokeWidth = lineWidth;
-    var actionPaint = Paint()..color = actionColor;
+    final actionPaint = Paint()..color = actionColor;
     canvas.drawLine(const Offset(20, 0), Offset(20, size.height), linePaint);
     canvas.drawCircle(Offset(20, size.height / 2), 10.0, actionPaint);
   }

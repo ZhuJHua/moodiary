@@ -18,10 +18,10 @@ import 'package:moodiary/components/quill_embed/image_embed.dart';
 import 'package:moodiary/components/quill_embed/text_indent.dart';
 import 'package:moodiary/components/quill_embed/video_embed.dart';
 import 'package:moodiary/main.dart';
+import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/src/rust/api/kmp.dart';
-import 'package:moodiary/utils/data/isar.dart';
-import 'package:moodiary/utils/data/pref.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/media_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
@@ -80,8 +80,8 @@ class EditLogic extends GetxController {
     quillController.addListener(_listenCount);
     if (state.firstLineIndent) {
       quillController.document.changes.listen((change) {
-        var operations = change.change.operations;
-        var lastOperation = operations.last;
+        final operations = change.change.operations;
+        final lastOperation = operations.last;
         if (lastOperation.key == 'insert' && lastOperation.value == '\n') {
           insertNewLine();
         }
@@ -131,24 +131,24 @@ class EditLogic extends GetxController {
       // 初始化标题控制器
       titleTextEditingController.text = state.originalDiary!.title;
       // 待替换的字符串map
-      Map<String, String> replaceMap = {};
+      final Map<String, String> replaceMap = {};
       //临时拷贝一份图片数据
-      for (var name in state.originalDiary!.imageName) {
+      for (final name in state.originalDiary!.imageName) {
         // 生成一个临时文件
-        var xFile = XFile(FileUtil.getRealPath('image', name));
+        final xFile = XFile(FileUtil.getRealPath('image', name));
         replaceMap[name] = xFile.path;
         state.imageFileList.add(xFile);
       }
       //临时拷贝一份拷贝音频数据到缓存目录
-      for (var name in state.originalDiary!.audioName) {
+      for (final name in state.originalDiary!.audioName) {
         state.audioNameList.add(name);
         await File(FileUtil.getRealPath('audio', name))
             .copy(FileUtil.getCachePath(name));
       }
       //临时拷贝一份视频数据，别忘记了缩略图
-      for (var name in state.originalDiary!.videoName) {
+      for (final name in state.originalDiary!.videoName) {
         // 生成一个临时文件
-        var videoXFile = XFile(FileUtil.getRealPath('video', name));
+        final videoXFile = XFile(FileUtil.getRealPath('video', name));
         replaceMap[name] = videoXFile.path;
         state.videoFileList.add(videoXFile);
       }
@@ -223,7 +223,7 @@ class EditLogic extends GetxController {
     final List<XFile> photoList = await MediaUtil.pickMultiPhoto(10);
     if (photoList.isNotEmpty && context.mounted) {
       Navigator.pop(context);
-      for (var photo in photoList) {
+      for (final photo in photoList) {
         await addNewImage(photo);
       }
       return;
@@ -246,7 +246,7 @@ class EditLogic extends GetxController {
 
   //画图照片
   Future<void> pickDraw(Uint8List dataList) async {
-    var path = FileUtil.getCachePath('${const Uuid().v7()}.png');
+    final path = FileUtil.getCachePath('${const Uuid().v7()}.png');
     addNewImage(XFile.fromData(dataList, path: path)..saveTo(path));
   }
 
@@ -254,17 +254,17 @@ class EditLogic extends GetxController {
   Future<void> networkImage(BuildContext context) async {
     Navigator.pop(context);
     NoticeUtil.showToast(l10n.imageFetching);
-    var imageUrl = await Api.updateImageUrl();
+    final imageUrl = await Api.updateImageUrl();
     if (imageUrl == null) {
       NoticeUtil.showToast(l10n.imageFetchError);
       return;
     }
-    var imageData = await Api.getImageData(imageUrl.first);
+    final imageData = await Api.getImageData(imageUrl.first);
     if (imageData == null) {
       NoticeUtil.showToast(l10n.imageFetchError);
       return;
     }
-    var path = FileUtil.getCachePath('${const Uuid().v7()}.png');
+    final path = FileUtil.getCachePath('${const Uuid().v7()}.png');
     addNewImage(XFile.fromData(imageData, path: path)..saveTo(path));
   }
 
@@ -278,7 +278,7 @@ class EditLogic extends GetxController {
   //选择视频
   Future<void> pickVideo(ImageSource imageSource, BuildContext context) async {
     // 获取一个视频
-    XFile? video = await MediaUtil.pickVideo(imageSource);
+    final XFile? video = await MediaUtil.pickVideo(imageSource);
     if (video != null && context.mounted) {
       Navigator.pop(context);
       await addNewVideo(video);
@@ -309,7 +309,7 @@ class EditLogic extends GetxController {
 
   //长按设置封面
   void setCover(int index) {
-    var coverFile = state.imageFileList[index];
+    final coverFile = state.imageFileList[index];
     state.imageFileList
       ..removeAt(index)
       ..insert(0, coverFile);
@@ -343,25 +343,26 @@ class EditLogic extends GetxController {
     state.isSaving = true;
     update(['modal']);
     // 根据文本中的实际内容移除不需要的资源
-    var originContent = jsonEncode(quillController.document.toDelta().toJson());
-    var needImage = await Kmp.findMatches(
+    final originContent =
+        jsonEncode(quillController.document.toDelta().toJson());
+    final needImage = await Kmp.findMatches(
         text: originContent, patterns: state.imagePathList);
-    var needVideo = await Kmp.findMatches(
+    final needVideo = await Kmp.findMatches(
         text: originContent, patterns: state.videoPathList);
-    var needAudio = await Kmp.findMatches(
+    final needAudio = await Kmp.findMatches(
         text: originContent, patterns: state.audioNameList);
     state.imageFileList.removeWhere((file) => !needImage.contains(file.path));
     state.videoFileList.removeWhere((file) => !needVideo.contains(file.path));
     state.audioNameList.removeWhere((name) => !needAudio.contains(name));
     // 保存图片
-    var imageNameMap =
+    final imageNameMap =
         await MediaUtil.saveImages(imageFileList: state.imageFileList);
     // 保存视频
-    var videoNameMap =
+    final videoNameMap =
         await MediaUtil.saveVideo(videoFileList: state.videoFileList);
     //保存录音
-    var audioNameMap = await MediaUtil.saveAudio(state.audioNameList);
-    var content = await Kmp.replaceWithKmp(
+    final audioNameMap = await MediaUtil.saveAudio(state.audioNameList);
+    final content = await Kmp.replaceWithKmp(
         text: originContent,
         replacements: {...imageNameMap, ...videoNameMap, ...audioNameMap});
     state.currentDiary
@@ -387,7 +388,7 @@ class EditLogic extends GetxController {
   DateTime? oldTime;
 
   void handleBack() {
-    DateTime currentTime = DateTime.now();
+    final DateTime currentTime = DateTime.now();
     if (oldTime != null &&
         currentTime.difference(oldTime!) < const Duration(seconds: 3)) {
       Get.back();
@@ -398,7 +399,7 @@ class EditLogic extends GetxController {
   }
 
   Future<void> changeDate() async {
-    var nowDateTime = await showDatePicker(
+    final nowDateTime = await showDatePicker(
       context: Get.context!,
       initialDate: state.currentDiary.time,
       lastDate: DateTime.now(),
@@ -416,7 +417,7 @@ class EditLogic extends GetxController {
   }
 
   Future<void> changeTime() async {
-    var nowTime = await showTimePicker(
+    final nowTime = await showTimePicker(
         context: Get.context!,
         initialTime: TimeOfDay.fromDateTime(state.currentDiary.time));
     if (nowTime != null) {
@@ -445,14 +446,14 @@ class EditLogic extends GetxController {
 
   //获取天气，同时获取定位
   Future<void> getPositionAndWeather() async {
-    var key = PrefUtil.getValue<String>('qweatherKey');
+    final key = PrefUtil.getValue<String>('qweatherKey');
     if (key == null) return;
 
     state.isProcessing = true;
     update(['Weather']);
 
     // 获取定位
-    var position = await Api.updatePosition();
+    final position = await Api.updatePosition();
     if (position == null) {
       _handleError(l10n.locationError);
       return;
@@ -461,7 +462,7 @@ class EditLogic extends GetxController {
     state.currentDiary.position = position;
 
     // 获取天气
-    var weather = await Api.updateWeather(
+    final weather = await Api.updateWeather(
       position: LatLng(double.parse(position[0]), double.parse(position[1])),
     );
 
@@ -562,7 +563,7 @@ class EditLogic extends GetxController {
     if (id == null) {
       state.categoryName = '';
     } else {
-      var category = IsarUtil.getCategoryName(id);
+      final category = IsarUtil.getCategoryName(id);
       if (category != null) {
         state.categoryName = category.categoryName;
       }

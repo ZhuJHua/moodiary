@@ -52,7 +52,7 @@ class DiaryPage extends StatelessWidget {
 
     //生成TabBar
     Widget buildTabBar() {
-      List<Widget> allTabs = [];
+      final List<Widget> allTabs = [];
       //默认的全部tab
       allTabs.add(Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -88,6 +88,7 @@ class DiaryPage extends StatelessWidget {
               dragStartBehavior: DragStartBehavior.start,
               unselectedLabelStyle: textStyle.labelSmall,
               labelStyle: textStyle.labelMedium,
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
               indicator: ShapeDecoration(
                 shape: const StadiumBorder(),
                 color: colorScheme.primaryContainer,
@@ -116,7 +117,7 @@ class DiaryPage extends StatelessWidget {
     }
 
     Widget buildTabBarView() {
-      List<Widget> allViews = [];
+      final List<Widget> allViews = [];
       // 添加全部日记页面
       allViews.add(buildDiaryView(0, state.keyMap['default'], null));
       // 添加分类日记页面
@@ -142,138 +143,131 @@ class DiaryPage extends StatelessWidget {
       );
     }
 
-    return GetBuilder<DiaryLogic>(
-        id: 'All',
-        assignId: true,
-        builder: (_) {
-          return NestedScrollView(
-            key: state.nestedScrollKey,
-            headerSliverBuilder: (context, _) {
-              return [
-                SliverOverlapAbsorber(
-                  handle:
-                      NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                  sliver: SliverAppBar(
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                          },
-                          child: Row(
-                            spacing: 4.0,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(
-                                fit: FlexFit.loose,
-                                child: GetBuilder<DiaryLogic>(
-                                    id: 'Title',
-                                    builder: (_) {
-                                      return Text(
-                                        state.customTitleName.isNotEmpty
-                                            ? state.customTitleName
-                                            : l10n.appName,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: textStyle.titleLarge?.copyWith(
-                                          color: colorScheme.onSurface,
-                                        ),
-                                      );
-                                    }),
-                              ),
-                              FaIcon(
-                                FontAwesomeIcons.chevronRight,
-                                color: colorScheme.onSurface,
-                                size: 12,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Obx(() {
-                          return buildAdaptiveText(
-                            text: state.hitokoto.value,
-                            textStyle: textStyle.labelSmall
-                                ?.copyWith(color: colorScheme.onSurfaceVariant),
-                            context: context,
-                          );
-                        }),
-                      ],
-                    ),
-                    pinned: true,
-                    actions: [
-                      Obx(() {
-                        return WebDavUtil().syncingDiaries.isNotEmpty
-                            ? _buildSyncingButton(
-                                colorScheme: colorScheme,
-                                onTap: () {
-                                  showFloatingModalBottomSheet(
-                                    context: context,
-                                    builder: (context) {
-                                      return const SyncDashBoardComponent();
-                                    },
-                                  );
-                                })
-                            : IconButton(
-                                onPressed: () {
-                                  showFloatingModalBottomSheet(
-                                    context: context,
-                                    builder: (context) {
-                                      return const SyncDashBoardComponent();
-                                    },
-                                  );
-                                },
-                                tooltip: l10n.dataSync,
-                                icon: const Icon(Icons.cloud_sync_rounded),
+    return GetBuilder<DiaryLogic>(builder: (_) {
+      return NestedScrollView(
+        key: state.nestedScrollKey,
+        headerSliverBuilder: (context, _) {
+          return [
+            SliverOverlapAbsorber(
+              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+              sliver: SliverAppBar(
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                      },
+                      child: Row(
+                        spacing: 4.0,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            fit: FlexFit.loose,
+                            child: Obx(() {
+                              return Text(
+                                state.customTitleName.value.isNotEmpty
+                                    ? state.customTitleName.value
+                                    : l10n.appName,
+                                overflow: TextOverflow.ellipsis,
+                                style: textStyle.titleLarge?.copyWith(
+                                  color: colorScheme.onSurface,
+                                ),
                               );
-                      }),
-                      IconButton(
-                        onPressed: () {
-                          showFloatingModalBottomSheet(
-                              context: context,
-                              builder: (context) {
-                                return const SearchSheetComponent();
-                              });
-                        },
-                        icon: const Icon(Icons.search_rounded),
-                        tooltip: l10n.diaryPageSearchButton,
+                            }),
+                          ),
+                          FaIcon(
+                            FontAwesomeIcons.chevronRight,
+                            color: colorScheme.onSurface,
+                            size: 12,
+                          ),
+                        ],
                       ),
-                      PopupMenuButton(
-                        offset: const Offset(0, 46),
-                        tooltip: l10n.diaryPageViewModeButton,
-                        itemBuilder: (context) {
-                          return <PopupMenuEntry<String>>[
-                            CheckedPopupMenuItem(
-                              checked: state.viewModeType == ViewModeType.list,
-                              onTap: () async {
-                                await logic.changeViewMode(ViewModeType.list);
-                              },
-                              child: Text(l10n.diaryViewModeList),
-                            ),
-                            const PopupMenuDivider(),
-                            CheckedPopupMenuItem(
-                              checked: state.viewModeType == ViewModeType.grid,
-                              onTap: () async {
-                                await logic.changeViewMode(ViewModeType.grid);
-                              },
-                              child: Text(l10n.diaryViewModeGrid),
-                            ),
-                          ];
-                        },
-                      ),
-                    ],
-                    bottom: PreferredSize(
-                        preferredSize: const Size.fromHeight(46.0),
-                        child: buildTabBar()),
-                  ),
+                    ),
+                    Obx(() {
+                      return buildAdaptiveText(
+                        text: state.hitokoto.value,
+                        textStyle: textStyle.labelSmall
+                            ?.copyWith(color: colorScheme.onSurfaceVariant),
+                        context: context,
+                      );
+                    }),
+                  ],
                 ),
-              ];
-            },
-            body: GetBuilder<DiaryLogic>(
-                id: 'TabBarView',
-                builder: (_) {
-                  return buildTabBarView();
-                }),
-          );
-        });
+                pinned: true,
+                actions: [
+                  Obx(() {
+                    return WebDavUtil().syncingDiaries.isNotEmpty
+                        ? _buildSyncingButton(
+                            colorScheme: colorScheme,
+                            onTap: () {
+                              showFloatingModalBottomSheet(
+                                context: context,
+                                builder: (context) {
+                                  return const SyncDashBoardComponent();
+                                },
+                              );
+                            })
+                        : IconButton(
+                            onPressed: () {
+                              showFloatingModalBottomSheet(
+                                context: context,
+                                builder: (context) {
+                                  return const SyncDashBoardComponent();
+                                },
+                              );
+                            },
+                            tooltip: l10n.dataSync,
+                            icon: const Icon(Icons.cloud_sync_rounded),
+                          );
+                  }),
+                  IconButton(
+                    onPressed: () {
+                      showFloatingModalBottomSheet(
+                          context: context,
+                          builder: (context) {
+                            return const SearchSheetComponent();
+                          });
+                    },
+                    icon: const Icon(Icons.search_rounded),
+                    tooltip: l10n.diaryPageSearchButton,
+                  ),
+                  PopupMenuButton(
+                    offset: const Offset(0, 46),
+                    tooltip: l10n.diaryPageViewModeButton,
+                    icon: const Icon(Icons.more_vert_rounded),
+                    itemBuilder: (context) {
+                      return <PopupMenuEntry<String>>[
+                        CheckedPopupMenuItem(
+                          checked:
+                              state.viewModeType.value == ViewModeType.list,
+                          onTap: () async {
+                            await logic.changeViewMode(ViewModeType.list);
+                          },
+                          child: Text(l10n.diaryViewModeList),
+                        ),
+                        const PopupMenuDivider(),
+                        CheckedPopupMenuItem(
+                          checked:
+                              state.viewModeType.value == ViewModeType.grid,
+                          onTap: () async {
+                            await logic.changeViewMode(ViewModeType.grid);
+                          },
+                          child: Text(l10n.diaryViewModeGrid),
+                        ),
+                      ];
+                    },
+                  ),
+                ],
+                bottom: PreferredSize(
+                    preferredSize: const Size.fromHeight(46.0),
+                    child: buildTabBar()),
+              ),
+            ),
+          ];
+        },
+        body: buildTabBarView(),
+      );
+    });
   }
 }

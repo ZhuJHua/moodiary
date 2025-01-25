@@ -189,7 +189,7 @@ class Format {
   }
 
   void format() {
-    String selectionText =
+    final String selectionText =
         controller.text.substring(selection.start, selection.end);
 
     beforeText = controller.text.substring(0, selection.start);
@@ -240,7 +240,7 @@ class Format {
         }
         return selectionText.contains(character!);
       case FormatOption.formatList:
-        var exp = RegExp(r'[0-9]. ');
+        final exp = RegExp(r'[0-9]. ');
         //TODO if same -> remove /// if other -> remove AND add new
         if (multipleCharacters != null) {
           for (var i = 0; i < multipleCharacters!.length; i++) {
@@ -299,9 +299,9 @@ class Format {
         break;
       case FormatOption.formatList:
         newText = controller.text.substring(selection.start, selection.end);
-        var exp = RegExp(r'[0-9]. ');
+        final exp = RegExp(r'[0-9]. ');
 
-        var lines = newText.split('\n');
+        final lines = newText.split('\n');
         var orderedIndex =
             int.tryParse(lines[0].substring(0, lines[0].indexOf(exp) + 1)) ?? 0;
 
@@ -372,7 +372,7 @@ class Format {
         break;
       case FormatOption.formatList:
         newText = controller.text.substring(selection.start, selection.end);
-        var lines = newText.split('\n');
+        final lines = newText.split('\n');
         var orderedIndex = 0;
 
         for (var i = 0; i < lines.length; i++) {
@@ -433,7 +433,7 @@ class Format {
         }
         break;
       case FormatOption.formatList:
-        var lines = newText.split('\n');
+        final lines = newText.split('\n');
         var index = 0;
         for (var i = 0; i < lines.length; i++) {
           if (lines[i].isNotEmpty) {
@@ -497,18 +497,18 @@ class Format {
     var extentOffset = 0;
     switch (formatOption) {
       case FormatOption.formatStartEnd:
-        var newText = character;
-        var beforeText = controller.text.substring(0, selection.start);
-        var afterText =
+        final newText = character;
+        final beforeText = controller.text.substring(0, selection.start);
+        final afterText =
             controller.text.substring(selection.end, controller.text.length);
         controller.text = '$beforeText$newText$placeholder$newText$afterText';
         baseOffset = selection.start + character!.length;
         extentOffset = selection.end + placeholder.length + character!.length;
         break;
       case FormatOption.formatStart:
-        var newText = character;
-        var beforeText = controller.text.substring(0, selection.start);
-        var afterText =
+        final newText = character;
+        final beforeText = controller.text.substring(0, selection.start);
+        final afterText =
             controller.text.substring(selection.end, controller.text.length);
         controller.text = '$beforeText$newText$placeholder$afterText';
 
@@ -516,9 +516,9 @@ class Format {
         extentOffset = selection.end + placeholder.length + character!.length;
         break;
       case FormatOption.formatList:
-        var newText = orderedList == true ? '1. ' : character;
-        var beforeText = controller.text.substring(0, selection.start);
-        var afterText =
+        final newText = orderedList == true ? '1. ' : character;
+        final beforeText = controller.text.substring(0, selection.start);
+        final afterText =
             controller.text.substring(selection.end, controller.text.length);
         controller.text = '$beforeText$newText$placeholder$afterText';
         baseOffset = selection.start + newText!.length;
@@ -550,16 +550,16 @@ void formatTextLink({
   required TextEditingController controller,
   required TextSelection selection,
 }) {
-  String selectionText =
+  final String selectionText =
       controller.text.substring(selection.start, selection.end);
-  String placeholder = 'My Link text';
-  String placeholderEnd = 'https://example.com';
+  const String placeholder = 'My Link text';
+  const String placeholderEnd = 'https://example.com';
 
   if (controller.text.isNotEmpty && selectionText.isNotEmpty) {
     var newText = selectionText;
 
-    var beforeText = controller.text.substring(0, selection.start);
-    var afterText =
+    final beforeText = controller.text.substring(0, selection.start);
+    final afterText =
         controller.text.substring(selection.end, controller.text.length);
 
     newText = '[$newText]($placeholderEnd)';
@@ -572,8 +572,8 @@ void formatTextLink({
             selection.start + 3 + selectionText.length + 'https://'.length,
         extentOffset: selection.end + placeholderEnd.length + 3);
   } else {
-    var beforeText = controller.text.substring(0, selection.start);
-    var afterText =
+    final beforeText = controller.text.substring(0, selection.start);
+    final afterText =
         controller.text.substring(selection.end, controller.text.length);
     controller.text = '$beforeText[$placeholder]($placeholderEnd)$afterText';
 
@@ -589,11 +589,11 @@ void formatImage({
   required TextEditingController controller,
   required TextSelection selection,
 }) {
-  String altPlaceholder = 'Alt text';
-  String linkPlaceholder = '/link/to/picture.jpg';
+  const String altPlaceholder = 'Alt text';
+  const String linkPlaceholder = '/link/to/picture.jpg';
 
-  var beforeText = controller.text.substring(0, selection.start);
-  var afterText =
+  final beforeText = controller.text.substring(0, selection.start);
+  final afterText =
       controller.text.substring(selection.end, controller.text.length);
   controller.text = '$beforeText![$altPlaceholder]($linkPlaceholder)$afterText';
 

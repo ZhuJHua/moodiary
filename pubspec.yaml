@@ -37,7 +37,7 @@ dependencies:
   markdown_widget: 2.3.2+6
   flutter_colorpicker: 1.1.0
   geolocator: 13.0.2
-  shared_preferences: 2.3.5
+  shared_preferences: 2.4.0
   isar: 4.0.0-dev.14
   isar_flutter_libs: 4.0.0-dev.14
   fluttertoast: 8.2.10
@@ -67,7 +67,7 @@ dependencies:
   latlong2: 0.9.1
   shelf: 1.4.2
   shelf_multipart: 2.0.0
-  waterfall_flow: 3.1.0
+  waterfall_flow: 3.1.1
   smooth_page_indicator: 1.2.0+3
   unicons: 3.0.0
   encrypt: 5.0.3
@@ -117,7 +117,7 @@ dev_dependencies:
   #    sdk: flutter
   build_runner: 2.4.14
   flutter_launcher_icons: 0.14.3
-  slang_build_runner: 4.4.0
+  slang_build_runner: 4.4.2
   msix: 3.16.8
   flutter_lints: 5.0.0
 
@@ -172,9 +172,9 @@ flutter:
 
 msix_config:
   display_name: Moodiary
-  publisher_display_name: <PublisherName>
-  identity_name: <PublisherName.AppName>
-  publisher: <PublisherID>
-  msix_version: 1.0.0.0
-  logo_path: ./logo/<file_name.png>
+  identity_name: JHZhu.Moodiary
+  publisher: CN=8FC154B5-951B-4B96-B1CA-5A8A86B49C11
+  publisher_display_name: JH Zhu
+  capabilities: internetClient, location, microphone
+  logo_path: assets/icon/light/light_icon_desktop.png
   store: true

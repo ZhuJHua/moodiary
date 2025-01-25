@@ -5,7 +5,7 @@ import 'package:refreshed/refreshed.dart';
 class LayoutUtil {
   //获取设备类型
   static ScreenSize getSize() {
-    var deviceWidth = Get.size.shortestSide;
+    final deviceWidth = Get.size.shortestSide;
     if (deviceWidth > 900) return ScreenSize.desktop;
     if (deviceWidth > 600) return ScreenSize.tablet;
     if (deviceWidth > 300) return ScreenSize.handset;

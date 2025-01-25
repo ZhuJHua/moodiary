@@ -1,8 +1,8 @@
 import 'package:moodiary/common/values/webdav.dart';
 import 'package:moodiary/main.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/router/app_routes.dart';
-import 'package:moodiary/utils/data/isar.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -42,7 +42,7 @@ class WebDavDashboardLogic extends GetxController {
     state.toDownloadIds.clear();
     // 本地日记 Map，id 对应最后修改时间
     final Map<String, DateTime> localDiaryMap = {
-      for (var diary in state.diaryList) diary.id: diary.lastModified
+      for (final diary in state.diaryList) diary.id: diary.lastModified
     };
     // 查找待上传的日记
     _findToUploadDiaries(localDiaryMap);
@@ -51,7 +51,7 @@ class WebDavDashboardLogic extends GetxController {
   }
 
   void _findToUploadDiaries(Map<String, DateTime> localDiaryMap) {
-    for (var diary in state.diaryList) {
+    for (final diary in state.diaryList) {
       final remoteModifiedTime = state.webdavSyncMap[diary.id];
       if (remoteModifiedTime == 'delete') continue;
       if (remoteModifiedTime == null ||
@@ -63,7 +63,7 @@ class WebDavDashboardLogic extends GetxController {
   }
 
   void _findToDownloadIds(Map<String, DateTime> localDiaryMap) {
-    for (var entry in state.webdavSyncMap.entries) {
+    for (final entry in state.webdavSyncMap.entries) {
       if (entry.value == 'delete') continue;
       final id = entry.key;
       final remoteModifiedTime = DateTime.parse(entry.value);
@@ -80,7 +80,7 @@ class WebDavDashboardLogic extends GetxController {
 
   Future<void> checkConnectivity() async {
     state.connectivityStatus.value = WebDavConnectivityStatus.connecting;
-    var res = await WebDavUtil().checkConnectivity();
+    final res = await WebDavUtil().checkConnectivity();
     state.connectivityStatus.value = res
         ? WebDavConnectivityStatus.connected
         : WebDavConnectivityStatus.unconnected;

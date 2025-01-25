@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 
 class ColorSheetState {
   bool supportDynamic = PrefUtil.getValue<bool>('supportDynamicColor')!;

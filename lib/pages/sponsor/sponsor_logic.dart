@@ -6,12 +6,6 @@ class SponsorLogic extends GetxController {
       ConfettiController(duration: const Duration(seconds: 2));
 
   @override
-  void onReady() {
-    confettiController.play();
-    super.onReady();
-  }
-
-  @override
   void onClose() {
     confettiController.dispose();
     super.onClose();

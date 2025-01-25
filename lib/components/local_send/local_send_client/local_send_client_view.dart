@@ -66,7 +66,7 @@ class LocalSendClientComponent extends StatelessWidget {
                           '${state.sendCount.value} / ${state.diaryToSend.length}');
                     }),
                     Obx(() {
-                      var speed =
+                      final speed =
                           FileUtil.bytesToUnits(state.speed.value.toInt());
                       return Text('${speed['size']}${speed['unit']}/s');
                     }),

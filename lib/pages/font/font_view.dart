@@ -212,7 +212,7 @@ class FontPage extends StatelessWidget {
               },
               onLongPress: () async {
                 // 显示删除字体对话框
-                var res = showOkCancelAlertDialog(
+                final res = showOkCancelAlertDialog(
                   context: context,
                   title: l10n.hint,
                   style: AdaptiveStyle.material,

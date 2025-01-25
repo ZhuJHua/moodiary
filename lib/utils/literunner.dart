@@ -29,22 +29,22 @@ class LiteRunner {
     required int uniqueId,
   }) async {
     // 准备输入列表
-    var inputs = [
+    final inputs = [
       Int32List.fromList(inputIds).reshape([1, 384]),
       Int32List.fromList(inputMask).reshape([1, 384]),
       Int32List.fromList(segmentIds).reshape([1, 384]),
     ];
 
     // 准备输出缓冲区
-    var endLogitsBuffer = List<double>.filled(384, 0).reshape([1, 384]);
-    var startLogitsBuffer = List<double>.filled(384, 0).reshape([1, 384]);
-    var output = {0: endLogitsBuffer, 1: startLogitsBuffer};
+    final endLogitsBuffer = List<double>.filled(384, 0).reshape([1, 384]);
+    final startLogitsBuffer = List<double>.filled(384, 0).reshape([1, 384]);
+    final output = {0: endLogitsBuffer, 1: startLogitsBuffer};
     // 运行推理
     await _isolateInterpreter.runForMultipleInputs(inputs, output);
 
     // 将输出转换为List<double>
-    List<double> endLogits = List<double>.from(endLogitsBuffer[0]);
-    List<double> startLogits = List<double>.from(startLogitsBuffer[0]);
+    final List<double> endLogits = List<double>.from(endLogitsBuffer[0]);
+    final List<double> startLogits = List<double>.from(startLogitsBuffer[0]);
 
     // 返回结果
     return RawResult(
@@ -56,7 +56,7 @@ class LiteRunner {
 
   Future<String?> ask(String doc, String question) async {
     // 创建数据
-    List<SquadExample> examples = [
+    final List<SquadExample> examples = [
       SquadExample(
         qasId: "1",
         questionText: question,
@@ -67,7 +67,7 @@ class LiteRunner {
       ),
     ];
     // 转换为特征
-    List<InputFeatures> features = await convertExamplesToFeatures(
+    final List<InputFeatures> features = await convertExamplesToFeatures(
       examples: examples,
       tokenizer: _tokenizer,
       maxSeqLength: 384,
@@ -75,13 +75,13 @@ class LiteRunner {
       maxQueryLength: 64,
     );
 
-    var res = await _run(
+    final res = await _run(
         inputIds: features.first.inputIds,
         inputMask: features.first.inputMask,
         segmentIds: features.first.segmentIds,
         uniqueId: DateTime.now().millisecondsSinceEpoch);
 
-    var answerIndices = res.getAnswerIndices();
+    final answerIndices = res.getAnswerIndices();
 
     if (answerIndices.first < answerIndices.last) {
       return features.first.tokens
@@ -101,34 +101,34 @@ class LiteRunner {
     required int maxQueryLength,
   }) async {
     int uniqueId = 1000000000;
-    List<InputFeatures> features = [];
+    final List<InputFeatures> features = [];
 
     for (int exampleIndex = 0; exampleIndex < examples.length; exampleIndex++) {
-      SquadExample example = examples[exampleIndex];
+      final SquadExample example = examples[exampleIndex];
       List<String> queryTokens =
           tokenizer.basicTokenizer.tokenize(example.questionText);
       if (queryTokens.length > maxQueryLength) {
         queryTokens = queryTokens.sublist(0, maxQueryLength);
       }
 
-      List<int> tokToOrigIndex = [];
-      List<int> origToTokIndex = [];
-      List<String> allDocTokens = [];
+      final List<int> tokToOrigIndex = [];
+      final List<int> origToTokIndex = [];
+      final List<String> allDocTokens = [];
 
       for (int i = 0; i < example.docTokens.length; i++) {
         origToTokIndex.add(allDocTokens.length);
-        List<String> subTokens =
+        final List<String> subTokens =
             tokenizer.wordPieceTokenizer.tokenize(example.docTokens[i]);
-        for (var subToken in subTokens) {
+        for (final subToken in subTokens) {
           tokToOrigIndex.add(i);
           allDocTokens.add(subToken);
         }
       }
 
-      int maxTokensForDoc = maxSeqLength - queryTokens.length - 3;
+      final int maxTokensForDoc = maxSeqLength - queryTokens.length - 3;
 
       // 滑动窗口
-      List<DocSpan> docSpans = [];
+      final List<DocSpan> docSpans = [];
       int startOffset = 0;
       while (startOffset < allDocTokens.length) {
         int length = allDocTokens.length - startOffset;
@@ -145,15 +145,15 @@ class LiteRunner {
       for (int docSpanIndex = 0;
           docSpanIndex < docSpans.length;
           docSpanIndex++) {
-        DocSpan docSpan = docSpans[docSpanIndex];
-        List<String> tokens = [];
-        Map<int, int> tokenToOrigMap = {};
-        Map<int, bool> tokenIsMaxContext = {};
+        final DocSpan docSpan = docSpans[docSpanIndex];
+        final List<String> tokens = [];
+        final Map<int, int> tokenToOrigMap = {};
+        final Map<int, bool> tokenIsMaxContext = {};
         List<int> segmentIds = [];
 
         tokens.add("[CLS]");
         segmentIds.add(0);
-        for (var token in queryTokens) {
+        for (final token in queryTokens) {
           tokens.add(token);
           segmentIds.add(0);
         }
@@ -161,10 +161,10 @@ class LiteRunner {
         segmentIds.add(0);
 
         for (int i = 0; i < docSpan.length; i++) {
-          int splitTokenIndex = docSpan.start + i;
+          final int splitTokenIndex = docSpan.start + i;
           tokenToOrigMap[tokens.length] = tokToOrigIndex[splitTokenIndex];
 
-          bool isMaxContext =
+          final bool isMaxContext =
               _checkIsMaxContext(docSpans, docSpanIndex, splitTokenIndex);
           tokenIsMaxContext[tokens.length] = isMaxContext;
 
@@ -204,7 +204,7 @@ class LiteRunner {
         int? startPosition;
         int? endPosition;
 
-        InputFeatures feature = InputFeatures(
+        final InputFeatures feature = InputFeatures(
           uniqueId: uniqueId,
           qasId: example.qasId,
           exampleIndex: exampleIndex,
@@ -233,16 +233,16 @@ class LiteRunner {
     int? bestSpanIndex;
 
     for (int spanIndex = 0; spanIndex < docSpans.length; spanIndex++) {
-      DocSpan docSpan = docSpans[spanIndex];
-      int end = docSpan.start + docSpan.length - 1;
+      final DocSpan docSpan = docSpans[spanIndex];
+      final int end = docSpan.start + docSpan.length - 1;
 
       if (splitTokenIndex < docSpan.start || splitTokenIndex > end) {
         continue;
       }
 
-      int numLeftContext = splitTokenIndex - docSpan.start;
-      int numRightContext = end - splitTokenIndex;
-      double score = (numLeftContext < numRightContext
+      final int numLeftContext = splitTokenIndex - docSpan.start;
+      final int numRightContext = end - splitTokenIndex;
+      final double score = (numLeftContext < numRightContext
               ? numLeftContext.toDouble()
               : numRightContext.toDouble()) +
           0.01 * docSpan.length;

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 
 class CacheUtil {
   static Future<List<String>?> getCacheList(
@@ -20,13 +20,13 @@ class CacheUtil {
     if (cachedData.length < 2) {
       return true; // 缓存数据格式不正确，视为过期
     }
-    int timestamp = int.parse(cachedData.last);
+    final int timestamp = int.parse(cachedData.last);
     return DateTime.now().millisecondsSinceEpoch - timestamp >= maxAgeMillis;
   }
 
   static Future<void> _updateCacheList(
       String key, Future<List<String>?> Function() fetchData) async {
-    var newData = await fetchData();
+    final newData = await fetchData();
     if (newData != null) {
       await PrefUtil.setValue<List<String>>(
           key, newData..add(DateTime.now().millisecondsSinceEpoch.toString()));

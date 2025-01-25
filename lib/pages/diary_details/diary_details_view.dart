@@ -13,7 +13,7 @@ import 'package:moodiary/components/quill_embed/image_embed.dart';
 import 'package:moodiary/components/quill_embed/text_indent.dart';
 import 'package:moodiary/components/quill_embed/video_embed.dart';
 import 'package:moodiary/main.dart';
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -47,10 +47,10 @@ class DiaryDetailsPage extends StatelessWidget {
     }
 
     Widget buildChipList(ColorScheme colorScheme) {
-      var dateTime =
+      final dateTime =
           DateFormat.yMMMd().add_Hms().format(state.diary.time).split(' ');
-      var date = dateTime.first;
-      var time = dateTime.last;
+      final date = dateTime.first;
+      final time = dateTime.last;
       return Wrap(
         spacing: 8.0,
         children: [

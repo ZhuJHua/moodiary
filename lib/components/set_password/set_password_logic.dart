@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moodiary/pages/home/setting/setting_logic.dart';
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -25,7 +25,7 @@ class SetPasswordLogic extends GetxController
   }
 
   double interpolate(double x) {
-    var step = 10.0;
+    const step = 10.0;
     if (x <= 0.25) {
       // 第一段: (0, step) - 单调递增
       return 4 * step * x;

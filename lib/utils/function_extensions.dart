@@ -27,8 +27,8 @@ class FunctionProxy {
 
   // Throttle function to limit the execution rate
   void throttle() async {
-    int key = target.hashCode;
-    bool canExecute = _throttleMap[key] ?? true;
+    final int key = target.hashCode;
+    final bool canExecute = _throttleMap[key] ?? true;
     if (canExecute) {
       _throttleMap[key] = false;
       try {
@@ -43,8 +43,8 @@ class FunctionProxy {
 
   // Throttle function with a specified timeout
   void throttleWithTimeout() {
-    int key = target.hashCode;
-    bool canExecute = _throttleMap[key] ?? true;
+    final int key = target.hashCode;
+    final bool canExecute = _throttleMap[key] ?? true;
     if (canExecute) {
       _throttleMap[key] = false;
       Timer(Duration(milliseconds: timeout), () {
@@ -56,7 +56,7 @@ class FunctionProxy {
 
   // Debounce function to delay execution until after a specified period
   void debounce() {
-    int key = target.hashCode;
+    final int key = target.hashCode;
     _debounceMap[key]?.cancel();
     _debounceMap[key] = Timer(Duration(milliseconds: timeout), () {
       _debounceMap.remove(key);

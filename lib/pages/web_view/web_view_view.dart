@@ -58,7 +58,7 @@ class WebViewPage extends StatelessWidget {
                     child: InAppWebView(
                       initialUrlRequest: URLRequest(url: WebUri(state.url)),
                       initialSettings: logic.webSettings,
-                      pullToRefreshController: logic.pullToRefreshController,
+                     // pullToRefreshController: logic.pullToRefreshController,
                       onWebViewCreated: (controller) {
                         logic.webViewController = controller;
                       },

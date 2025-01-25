@@ -1,4 +1,4 @@
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 
 class RemovePasswordState {
   String password = '';

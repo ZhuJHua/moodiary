@@ -7,7 +7,7 @@ import 'package:moodiary/common/models/isar/category.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/components/local_send/local_send_logic.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
-import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/log_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -82,7 +82,7 @@ class LocalSendServerLogic extends GetxController {
     late Diary diary;
     String? categoryName;
     // 处理表单数据
-    if (request.formData() case var form?) {
+    if (request.formData() case final form?) {
       await for (final formData in form.formData) {
         final name = formData.name;
         // 读取日记 JSON 数据

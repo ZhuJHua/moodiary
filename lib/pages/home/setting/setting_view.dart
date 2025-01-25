@@ -241,7 +241,7 @@ class SettingPage extends StatelessWidget {
                         );
                       }),
                   onTap: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                       context: context,
                       textFields: [
                         DialogTextField(
@@ -295,7 +295,7 @@ class SettingPage extends StatelessWidget {
                         ),
                         isFirst: true,
                         onTap: () async {
-                          var res = await showOkCancelAlertDialog(
+                          final res = await showOkCancelAlertDialog(
                             context: context,
                             title: l10n.settingLock,
                             message: state.lock

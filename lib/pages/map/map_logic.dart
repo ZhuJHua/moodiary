@@ -3,8 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary/pages/diary_details/diary_details_logic.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/router/app_routes.dart';
-import 'package:moodiary/utils/data/isar.dart';
 import 'package:moodiary/utils/log_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/permission_util.dart';
@@ -50,7 +50,7 @@ class MapLogic extends GetxController {
 
   Future<void> toCurrentPosition() async {
     NoticeUtil.showToast('定位中');
-    var currentPosition = await getLocation();
+    final currentPosition = await getLocation();
     LogUtil.printInfo(currentPosition.toString());
     NoticeUtil.showToast('定位成功');
     mapController.move(currentPosition!, mapController.camera.maxZoom!);
@@ -58,7 +58,7 @@ class MapLogic extends GetxController {
 
   Future<void> toDiaryPage({required int isarId}) async {
     await HapticFeedback.mediumImpact();
-    var diary = await IsarUtil.getDiaryByID(isarId);
+    final diary = await IsarUtil.getDiaryByID(isarId);
     Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary!.id);
     await Get.toNamed(
       AppRoutes.diaryPage,

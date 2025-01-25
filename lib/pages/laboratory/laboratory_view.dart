@@ -2,7 +2,7 @@ import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:moodiary/main.dart';
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'laboratory_logic.dart';
@@ -30,7 +30,7 @@ class LaboratoryPage extends StatelessWidget {
               )),
               trailing: IconButton(
                   onPressed: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                       context: context,
                       textFields: [
                         DialogTextField(
@@ -60,7 +60,7 @@ class LaboratoryPage extends StatelessWidget {
                   child: Text(PrefUtil.getValue<String>('qweatherKey') ?? '')),
               trailing: IconButton(
                   onPressed: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                         context: context,
                         style: AdaptiveStyle.material,
                         title: '和风天气密钥',
@@ -84,7 +84,7 @@ class LaboratoryPage extends StatelessWidget {
                   child: Text(PrefUtil.getValue<String>('tiandituKey') ?? '')),
               trailing: IconButton(
                   onPressed: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                         context: context,
                         textFields: [
                           DialogTextField(

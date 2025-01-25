@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/utils/log_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -58,7 +58,7 @@ class CalendarLogic extends GetxController {
   }
 
   void onVerticalDragEnd(DragEndDetails details) {
-    double velocity = details.velocity.pixelsPerSecond.dy;
+    final double velocity = details.velocity.pixelsPerSecond.dy;
     LogUtil.printInfo(velocity);
     if (velocity > state.velocityThreshold) {
       LogUtil.printInfo('1');
@@ -82,7 +82,7 @@ class CalendarLogic extends GetxController {
 
   DateTime? findLatestDateInMonth(List<DateTime> dates, int year, int month) {
     // 过滤出符合条件的日期
-    List<DateTime> filteredDates = dates.where((date) {
+    final List<DateTime> filteredDates = dates.where((date) {
       return date.year == year && date.month == month;
     }).toList();
 

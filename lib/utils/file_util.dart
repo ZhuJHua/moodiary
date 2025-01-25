@@ -2,16 +2,15 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:isar/isar.dart';
+import 'package:moodiary/common/models/isar/category.dart';
+import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/common/values/media_type.dart';
+import 'package:moodiary/components/audio_player/audio_player_logic.dart';
+import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:refreshed/refreshed.dart';
-
-import '../common/models/isar/category.dart';
-import '../common/models/isar/diary.dart';
-import '../common/values/media_type.dart';
-import '../components/audio_player/audio_player_logic.dart';
-import 'data/isar.dart';
-import 'data/pref.dart';
 
 class FileUtil {
   static final String _filePath = PrefUtil.getValue<String>('supportPath')!;
@@ -20,7 +19,7 @@ class FileUtil {
 
   // 删除文件
   static Future<bool> deleteFile(String path) async {
-    File file = File(path);
+    final File file = File(path);
     if (await file.exists()) {
       await file.delete();
       return true; // 返回删除成功
@@ -37,7 +36,7 @@ class FileUtil {
 
   //删除指定文件夹
   static Future<void> deleteDir(String path) async {
-    Directory directory = Directory(path);
+    final Directory directory = Directory(path);
     if (await directory.exists()) {
       await directory.delete(recursive: true);
     }
@@ -54,17 +53,17 @@ class FileUtil {
   }
 
   static Future<void> createDir(String path) async {
-    Directory directory = Directory(path);
+    final Directory directory = Directory(path);
     await directory.create(recursive: true);
   }
 
   //计算指定路径下文件的大小
   static Future<Map<String, dynamic>> countSize() async {
-    var cacheDir = await getApplicationCacheDirectory();
+    final cacheDir = await getApplicationCacheDirectory();
     var bytes = 0;
-    var fileList = cacheDir.listSync(recursive: true);
+    final fileList = cacheDir.listSync(recursive: true);
     // 计算文件总大小（字节）
-    for (var file in fileList) {
+    for (final file in fileList) {
       if (file is File) {
         bytes += file.lengthSync();
       }
@@ -99,7 +98,7 @@ class FileUtil {
   }
 
   static Future<void> clearCache() async {
-    var cacheDir = await getApplicationCacheDirectory();
+    final cacheDir = await getApplicationCacheDirectory();
     if (await cacheDir.exists()) {
       await cacheDir.delete(recursive: true);
     }
@@ -107,11 +106,11 @@ class FileUtil {
 
   //文件导出
   static Future<String> zipFile(Map<String, dynamic> params) async {
-    var zipPath = params['zipPath'] as String;
-    var dataPath = params['dataPath'] as String;
-    var zipEncoder = ZipFileEncoder();
-    var datetime = DateTime.now();
-    var fileName =
+    final zipPath = params['zipPath'] as String;
+    final dataPath = params['dataPath'] as String;
+    final zipEncoder = ZipFileEncoder();
+    final datetime = DateTime.now();
+    final fileName =
         join(zipPath, '心绪日记${datetime.toString().split(' ')[0]}备份.zip');
     final outputStream = OutputFileStream(fileName);
     zipEncoder.createWithStream(outputStream);
@@ -145,8 +144,8 @@ class FileUtil {
     await createDir(join(_filePath, 'audio'));
     //重新创建视频文件夹
     await createDir(join(_filePath, 'video'));
-    var archive = ZipDecoder().decodeStream(inputStream);
-    for (var file in archive.files) {
+    final archive = ZipDecoder().decodeStream(inputStream);
+    for (final file in archive.files) {
       //如果是数据库
       if (file.name.endsWith('.isar')) {
         final outputStream = OutputFileStream(join(_cachePath, 'old.isar'));
@@ -163,7 +162,7 @@ class FileUtil {
 
   static String getRealPath(String fileType, String fileName) {
     if (fileType == 'thumbnail') {
-      var thumbnailName = 'thumbnail-${fileName.substring(6, 42)}.jpeg';
+      final thumbnailName = 'thumbnail-${fileName.substring(6, 42)}.jpeg';
       return join(_filePath, 'video', thumbnailName);
     }
     return join(_filePath, fileType, fileName);
@@ -171,11 +170,11 @@ class FileUtil {
 
   // 媒体库
   static Future<List<String>> getDirFilePath(String fileType) async {
-    var path = join(_filePath, fileType);
-    List<String> filePaths = [];
-    Directory directory = Directory(path);
+    final path = join(_filePath, fileType);
+    final List<String> filePaths = [];
+    final Directory directory = Directory(path);
     if (await directory.exists()) {
-      await for (var entity in directory.list()) {
+      await for (final entity in directory.list()) {
         if (entity is File) {
           filePaths.add(entity.path);
         }
@@ -185,11 +184,11 @@ class FileUtil {
   }
 
   static Future<List<String>> getDirFileName(String fileType) async {
-    var path = join(_filePath, fileType);
-    List<String> fileNames = [];
-    Directory directory = Directory(path);
+    final path = join(_filePath, fileType);
+    final List<String> fileNames = [];
+    final Directory directory = Directory(path);
     if (await directory.exists()) {
-      await for (var entity in directory.list()) {
+      await for (final entity in directory.list()) {
         if (entity is File) {
           fileNames.add(basename(entity.path));
         }
@@ -200,7 +199,7 @@ class FileUtil {
 
   static Future<void> deleteMediaFiles(
       Set<String> files, String mediaType) async {
-    for (var name in files) {
+    for (final name in files) {
       final filePath = getRealPath(mediaType, name);
       final file = File(filePath);
       if (await file.exists()) {
@@ -237,7 +236,7 @@ class FileUtil {
   }
 
   static Future<void> cleanFile(String dir) async {
-    var isar = Isar.open(
+    final isar = Isar.open(
       schemas: [DiarySchema, CategorySchema],
       directory: dir,
     );
@@ -262,12 +261,12 @@ class FileUtil {
     for (int i = 0; i < count; i += batchSize) {
       final diaryList =
           await isar.diarys.where().findAllAsync(offset: i, limit: batchSize);
-      for (var diary in diaryList) {
+      for (final diary in diaryList) {
         usedImages.addAll(diary.imageName);
         usedAudios.addAll(diary.audioName);
         usedVideos.addAll(diary.videoName);
-        for (var name in diary.videoName) {
-          var thumbnailName = 'thumbnail-${name.substring(6, 42)}.jpeg';
+        for (final name in diary.videoName) {
+          final thumbnailName = 'thumbnail-${name.substring(6, 42)}.jpeg';
           usedVideos.add(thumbnailName);
         }
       }
@@ -279,7 +278,7 @@ class FileUtil {
     final videosToDelete = videoFiles.difference(usedVideos);
 
     // delete controller when need
-    for (var path in audiosToDelete) {
+    for (final path in audiosToDelete) {
       if (Bind.isRegistered<AudioPlayerLogic>(tag: path)) {
         Bind.delete<AudioPlayerLogic>(tag: path);
       }

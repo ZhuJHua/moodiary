@@ -33,7 +33,7 @@ class LocalSendComponent extends StatelessWidget {
                 ),
                 ActionChip(
                   onPressed: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                         context: context,
                         title: l10n.lanTransferChangeScanPort,
                         message: l10n.lanTransferChangePortDes,
@@ -45,7 +45,7 @@ class LocalSendComponent extends StatelessWidget {
                             maxLength: 5,
                             validator: (value) {
                               if (value != null) {
-                                var port = int.tryParse(value);
+                                final port = int.tryParse(value);
                                 if (port != null &&
                                     port >= 49152 &&
                                     port <= 65535) {
@@ -67,7 +67,7 @@ class LocalSendComponent extends StatelessWidget {
                 ),
                 ActionChip(
                   onPressed: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                         context: context,
                         title: l10n.lanTransferChangeTransferPort,
                         message: l10n.lanTransferChangePortDes,
@@ -79,7 +79,7 @@ class LocalSendComponent extends StatelessWidget {
                             maxLength: 5,
                             validator: (value) {
                               if (value != null) {
-                                var port = int.tryParse(value);
+                                final port = int.tryParse(value);
                                 if (port != null &&
                                     port >= 49152 &&
                                     port <= 65535) {

@@ -18,7 +18,7 @@ class SharePage extends StatelessWidget {
     final state = Bind.find<ShareLogic>().state;
 
     final textStyle = Theme.of(context).textTheme;
-    var imageColor = state.diary.imageColor;
+    final imageColor = state.diary.imageColor;
     final colorScheme = imageColor != null
         ? ColorScheme.fromSeed(
             seedColor: Color(imageColor),

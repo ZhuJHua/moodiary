@@ -71,12 +71,12 @@ class CalendarPage extends StatelessWidget {
 
     //生成日历选择器
     Widget buildDatePicker() {
-      var dateWithDiaryList = <DateTime>[];
-      var allDate = <DateTime>[];
+      final dateWithDiaryList = <DateTime>[];
+      final allDate = <DateTime>[];
       // 获取有日记的日期，只需要年月日
-      for (var diary in state.currentMonthDiaryList) {
+      for (final diary in state.currentMonthDiaryList) {
         // 如果不存在当前日期，则添加
-        var time = diary.time;
+        final time = diary.time;
         allDate.add(DateTime(time.year, time.month, time.day));
         if (!dateWithDiaryList
             .contains(DateTime(time.year, time.month, time.day))) {
@@ -146,7 +146,7 @@ class CalendarPage extends StatelessWidget {
                   logic.animateToSelectedDateWithLock(value.first);
                 },
                 onDisplayedMonthChanged: (value) async {
-                  var lastDate = logic.findLatestDateInMonth(
+                  final lastDate = logic.findLatestDateInMonth(
                       dateWithDiaryList, value.year, value.month);
                   if (lastDate != null) {
                     await logic.animateToSelectedDateWithLock(lastDate);

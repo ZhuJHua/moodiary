@@ -229,9 +229,10 @@ class _TabStyle extends AnimatedWidget {
     // Calculate adjusted height based on isSelected state.
     double adjustedHeight(
         double fontSize, double? currentHeight, bool isSelected) {
-      double effectiveHeight =
+      final double effectiveHeight =
           currentHeight ?? 1.0; // Default height is 1.0 if null.
-      double actualLineHeight = fixPrecision(fontSize * effectiveHeight, 6);
+      final double actualLineHeight =
+          fixPrecision(fontSize * effectiveHeight, 6);
       double adjustedLineHeight;
       if (isSelected) {
         // Use ceil for selected state to round up.

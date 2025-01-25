@@ -1,5 +1,5 @@
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
-import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'diary_tab_view_state.dart';
@@ -20,23 +20,21 @@ class DiaryTabViewLogic extends GetxController {
   }
 
   Future<void> _getDiary() async {
-    state.diaryList =
+    state.isFetching.value = true;
+    state.diaryList.value =
         await IsarUtil.getDiaryByCategory(state.categoryId, 0, state.initLen);
-    state.isFetching = false;
-    update();
+    state.isFetching.value = false;
   }
 
   Future<void> updateDiary() async {
-    state.isFetching = true;
-    state.diaryList =
+    state.isFetching.value = true;
+    state.diaryList.value =
         await IsarUtil.getDiaryByCategory(state.categoryId, 0, state.initLen);
-    state.isFetching = false;
-    update();
+    state.isFetching.value = false;
   }
 
   Future<void> paginationDiary() async {
-    state.diaryList += await IsarUtil.getDiaryByCategory(
+    state.diaryList.value += await IsarUtil.getDiaryByCategory(
         state.categoryId, state.diaryList.length, state.pageLen);
-    update(['view']);
   }
 }

@@ -26,7 +26,7 @@ class AskQuestionLogic extends GetxController with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      var height = MediaQuery.viewInsetsOf(Get.context!).bottom;
+      final height = MediaQuery.viewInsetsOf(Get.context!).bottom;
       if (heightList.isNotEmpty && height != heightList.last) {
         if (height > heightList.last &&
             state.keyboardState != KeyboardState.opening) {
@@ -85,7 +85,7 @@ class AskQuestionLogic extends GetxController with WidgetsBindingObserver {
     // 添加提问
     state.qaList.add(question);
 
-    var answer = await liteRunner.ask(content, question);
+    final answer = await liteRunner.ask(content, question);
     // 添加回答
     if (answer != null) {
       state.qaList.add(answer);
@@ -103,7 +103,7 @@ class AskQuestionLogic extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> ask(String content) async {
-    var text = textEditingController.text;
+    final text = textEditingController.text;
     if (text.isNotEmpty) {
       //await getAnswer(content, text);
     }

@@ -4,8 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:moodiary/components/dashboard/dashboard_logic.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
 import 'package:moodiary/pages/home/home_logic.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/router/app_routes.dart';
-import 'package:moodiary/utils/data/pref.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -29,7 +29,7 @@ class SettingLogic extends GetxController {
 
   //获取当前占用储存空间
   Future<void> getDataUsage() async {
-    var sizeMap = await FileUtil.countSize();
+    final sizeMap = await FileUtil.countSize();
     state.dataUsage = '${sizeMap['size']} ${sizeMap['unit']}';
     update(['DataUsage']);
     if (sizeMap['bytes'] > (1024 * 1024 * 100)) {

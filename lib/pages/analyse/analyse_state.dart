@@ -19,7 +19,7 @@ class AnalyseState {
   late String reply;
 
   AnalyseState() {
-    var now = DateTime.now().copyWith(hour: 0, minute: 0, second: 0);
+    final now = DateTime.now().copyWith(hour: 0, minute: 0, second: 0);
     reply = '';
     finished = false;
     dateRange = [now.subtract(const Duration(days: 30)), now];

@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/components/local_send/local_send_logic.dart';
-import 'package:moodiary/utils/data/isar.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/http_util.dart';
 import 'package:moodiary/utils/log_util.dart';
@@ -127,18 +127,18 @@ class LocalSendClientLogic extends GetxController {
   Future<void> sendData(Diary diary) async {
     state.isSending.value = true;
     // 创建 FormData 并同步添加 JSON 和文件
-    dio.FormData formData = dio.FormData();
+    final dio.FormData formData = dio.FormData();
     // 添加 JSON 数据
     formData.fields.add(MapEntry('diary', jsonEncode(diary.toJson())));
     // 如果有分类，把分类名字带过去
     if (diary.categoryId != null) {
       LogUtil.printInfo(diary.categoryId);
-      var categoryName =
+      final categoryName =
           IsarUtil.getCategoryName(diary.categoryId!)!.categoryName;
       formData.fields.add(MapEntry('categoryName', categoryName));
     }
     // 同步添加图片文件
-    for (var imageName in diary.imageName) {
+    for (final imageName in diary.imageName) {
       final filePath = FileUtil.getRealPath('image', imageName);
       formData.files.add(MapEntry(
         'image',
@@ -146,7 +146,7 @@ class LocalSendClientLogic extends GetxController {
       ));
     }
     // 同步添加视频文件
-    for (var videoName in diary.videoName) {
+    for (final videoName in diary.videoName) {
       final filePath = FileUtil.getRealPath('video', videoName);
       formData.files.add(MapEntry(
         'video',
@@ -154,7 +154,7 @@ class LocalSendClientLogic extends GetxController {
       ));
     }
     // 同步添加缩略图文件
-    for (var videoName in diary.videoName) {
+    for (final videoName in diary.videoName) {
       final filePath = FileUtil.getRealPath('thumbnail', videoName);
       formData.files.add(MapEntry(
         'thumbnail',
@@ -163,7 +163,7 @@ class LocalSendClientLogic extends GetxController {
       ));
     }
     // 同步添加音频文件
-    for (var audioName in diary.audioName) {
+    for (final audioName in diary.audioName) {
       final filePath = FileUtil.getRealPath('audio', audioName);
       formData.files.add(MapEntry(
         'audio',
@@ -171,7 +171,7 @@ class LocalSendClientLogic extends GetxController {
       ));
     }
     final uploadSpeedCalculator = UploadSpeedCalculator();
-    var response = await HttpUtil().upload(
+    final response = await HttpUtil().upload(
       'http://${state.serverIp}:${state.serverPort}',
       data: formData,
       onSendProgress: (int sent, int total) {
@@ -189,7 +189,7 @@ class LocalSendClientLogic extends GetxController {
 
   Future<void> sendDiaryList() async {
     if (state.diaryToSend.isNotEmpty) {
-      for (var diary in state.diaryToSend) {
+      for (final diary in state.diaryToSend) {
         await sendData(diary);
         state.progress.value = .0;
       }
@@ -209,17 +209,17 @@ class LocalSendClientLogic extends GetxController {
     final zipPath = FileUtil.getCachePath('');
     final isolateParams = {'zipPath': zipPath, 'dataPath': dataPath};
     // 获取压缩文件路径
-    var filePath = await compute(FileUtil.zipFile, isolateParams);
+    final filePath = await compute(FileUtil.zipFile, isolateParams);
 
     // 创建 FormData 并同步添加 JSON 和文件
-    dio.FormData formData = dio.FormData();
+    final dio.FormData formData = dio.FormData();
     // 添加 JSON 数据
     formData.files
         .add(MapEntry('file', await dio.MultipartFile.fromFile(filePath)));
 
     final uploadSpeedCalculator = UploadSpeedCalculator();
     // 发送请求并监听进度
-    var response = await HttpUtil().upload(
+    final response = await HttpUtil().upload(
       'http://${state.serverIp}:${state.serverPort}',
       data: formData,
       onSendProgress: (int sent, int total) {
@@ -241,7 +241,7 @@ class LocalSendClientLogic extends GetxController {
 
   Future<void> setDiary(Duration duration, BuildContext context) async {
     Navigator.pop(context);
-    var now = DateTime.now();
+    final now = DateTime.now();
     state.diaryToSend.value =
         await IsarUtil.getDiariesByDateRange(now.subtract(duration), now);
   }

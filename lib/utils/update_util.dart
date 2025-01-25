@@ -9,7 +9,7 @@ class UpdateUtil {
   //通过github检查更新
   static Future<void> checkShouldUpdate(String currentVersion,
       {bool handle = false}) async {
-    var githubRelease = await Api.getGithubRelease();
+    final githubRelease = await Api.getGithubRelease();
     if (githubRelease != null) {
       //当需要更新版本时
       if (githubRelease.tagName!.split('v')[1].compareTo(currentVersion) > 0) {
@@ -23,7 +23,7 @@ class UpdateUtil {
   static TextSpan buildReleaseNote(
       String version, List<String> fix, List<String> add) {
     // 创建一个文本段落列表，用于存放每个部分的文本段
-    List<TextSpan> children = [];
+    final List<TextSpan> children = [];
     final textStyle = Theme.of(Get.context!).textTheme;
     // 添加版本信息
     children.add(TextSpan(
@@ -40,7 +40,7 @@ class UpdateUtil {
         style: textStyle.titleSmall,
       ));
       // 遍历新增内容列表，将每个新增项目添加到文本段落中
-      for (String item in add) {
+      for (final String item in add) {
         children.add(TextSpan(
           text: '• $item\n',
           style: textStyle.bodySmall,
@@ -55,7 +55,7 @@ class UpdateUtil {
         style: textStyle.titleSmall,
       ));
       // 遍历修复内容列表，将每个修复项目添加到文本段落中
-      for (String item in fix) {
+      for (final String item in fix) {
         children.add(TextSpan(
           text: '• $item\n',
           style: textStyle.bodySmall,

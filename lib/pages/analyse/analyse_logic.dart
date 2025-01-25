@@ -4,8 +4,8 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary/api/api.dart';
 import 'package:moodiary/common/models/hunyuan.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/utils/array_util.dart';
-import 'package:moodiary/utils/data/isar.dart';
 import 'package:moodiary/utils/signature_util.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -30,9 +30,9 @@ class AnalyseLogic extends GetxController {
     state.moodList = await IsarUtil.getMoodByDateRange(
         start, end.subtract(const Duration(days: -1)));
 
-    var weatherList = await IsarUtil.getWeatherByDateRange(
+    final weatherList = await IsarUtil.getWeatherByDateRange(
         start, end.subtract(const Duration(days: -1)));
-    for (var weather in weatherList) {
+    for (final weather in weatherList) {
       if (weather.isNotEmpty) {
         state.weatherList.add(weather.first);
       }
@@ -52,7 +52,7 @@ class AnalyseLogic extends GetxController {
 
   //弹出日期选择框
   Future<void> openDatePicker(context) async {
-    var result = await showCalendarDatePicker2Dialog(
+    final result = await showCalendarDatePicker2Dialog(
         context: context,
         config: CalendarDatePicker2WithActionButtonsConfig(
           calendarViewMode: CalendarDatePicker2Mode.day,
@@ -71,11 +71,11 @@ class AnalyseLogic extends GetxController {
   }
 
   Future<void> getAi() async {
-    var check = SignatureUtil.checkTencent();
+    final check = SignatureUtil.checkTencent();
     if (check != null) {
       state.reply = '';
       update();
-      var stream = await Api.getHunYuan(
+      final stream = await Api.getHunYuan(
           check['id']!,
           check['key']!,
           [
@@ -88,7 +88,7 @@ class AnalyseLogic extends GetxController {
           0);
       stream?.listen((content) {
         if (content != '' && content.contains('data')) {
-          HunyuanResponse result =
+          final HunyuanResponse result =
               HunyuanResponse.fromJson(jsonDecode(content.split('data: ')[1]));
           state.reply += result.choices!.first.delta!.content!;
           update();

@@ -1,13 +1,14 @@
+import 'dart:io';
+
 import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/internal.dart';
-
-import '../common/values/colors.dart';
-import '../src/rust/api/font.dart';
-import 'data/pref.dart';
+import 'package:moodiary/common/values/colors.dart';
+import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/src/rust/api/font.dart';
 
 final Set<String> loadedFonts = {};
 
@@ -48,15 +49,15 @@ class ThemeUtil {
       "ExtraBlack": "Black",
     };
 
-    Map<String, double> unified = {};
+    final Map<String, double> unified = {};
 
-    for (var entry in fontWeights.entries) {
-      String originalName = entry.key;
-      double weight = entry.value;
-      String unifiedName = nameMapping[originalName] ?? originalName;
+    for (final entry in fontWeights.entries) {
+      final String originalName = entry.key;
+      final double weight = entry.value;
+      final String unifiedName = nameMapping[originalName] ?? originalName;
 
       if (unified.containsKey(unifiedName)) {
-        double existingWeight = unified[unifiedName]!;
+        final double existingWeight = unified[unifiedName]!;
         unified[unifiedName] =
             (weight - regular).abs() < (existingWeight - regular).abs()
                 ? weight
@@ -70,10 +71,10 @@ class ThemeUtil {
 
   static TextTheme _applyFontVariations(TextTheme baseTheme, String? fontFamily,
       {required Map<String, double> wghtAxisMap}) {
-    var regularFontWeight = wghtAxisMap['Regular'] ?? 400;
-    var mediumFontWeight = wghtAxisMap['Medium'] ?? 500;
-    var semiBoldFontWeight = wghtAxisMap['SemiBold'] ?? 600;
-    var boldFontWeight = wghtAxisMap['Bold'] ?? 700;
+    final regularFontWeight = wghtAxisMap['Regular'] ?? 400;
+    final mediumFontWeight = wghtAxisMap['Medium'] ?? 500;
+    final semiBoldFontWeight = wghtAxisMap['SemiBold'] ?? 600;
+    final boldFontWeight = wghtAxisMap['Bold'] ?? 700;
     return baseTheme.copyWith(
       displayLarge: baseTheme.displayLarge?.copyWith(
         fontFamily: fontFamily,
@@ -155,7 +156,7 @@ class ThemeUtil {
 
   static Future<ThemeData> buildTheme(Brightness brightness) async {
     final color = PrefUtil.getValue<int>('color')!;
-    var seedColor = (color == -1)
+    final seedColor = (color == -1)
         ? Color(PrefUtil.getValue<int>('systemColor')!)
         : AppColor.themeColorList[
             (color >= 0 && color < AppColor.themeColorList.length) ? color : 0];
@@ -169,7 +170,7 @@ class ThemeUtil {
       fontFamily = await FontReader.getFontNameFromTtf(ttfFilePath: customFont);
       if (fontFamily != null) {
         if (!loadedFonts.contains(fontFamily)) {
-          var res = await DynamicFont.file(
+          final res = await DynamicFont.file(
                   fontFamily: fontFamily, filepath: customFont)
               .load();
           if (res) loadedFonts.add(fontFamily);
@@ -177,6 +178,8 @@ class ThemeUtil {
         wghtAxisMap = _unifyFontWeights(
             await FontReader.getWghtAxisFromVfFont(ttfFilePath: customFont));
       }
+    } else if (Platform.isWindows) {
+      fontFamily = 'Microsoft Yahei UI';
     }
 
     // colorScheme
@@ -196,6 +199,11 @@ class ThemeUtil {
     return ThemeData(
       colorScheme: colorScheme,
       materialTapTargetSize: MaterialTapTargetSize.padded,
+      scrollbarTheme: ScrollbarThemeData(
+        thumbColor: WidgetStateProperty.all(colorScheme.primaryContainer),
+        thickness: WidgetStateProperty.all(4.0),
+        radius: const Radius.circular(2.0),
+      ),
       brightness: brightness,
       fontFamily: fontFamily,
       textTheme: _applyFontVariations(

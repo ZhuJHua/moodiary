@@ -1,5 +1,5 @@
 import 'package:moodiary/common/models/isar/diary.dart';
-import 'package:moodiary/utils/data/pref.dart';
+import 'package:moodiary/presentation/pref.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseUtil {
@@ -34,7 +34,7 @@ class SupabaseUtil {
   }
 
   Future<void> uploadDiary(List<Diary> diaryList) async {
-    var u = _supabase.auth.currentUser;
+    final u = _supabase.auth.currentUser;
     //User不为空说明已经登录
     if (u != null) {
       //插入数据库时加一个UserID字段作为唯一标识

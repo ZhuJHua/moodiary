@@ -15,6 +15,32 @@ class DiaryTabViewComponent extends StatelessWidget {
 
   final String? categoryId;
 
+  Widget _buildPlaceholder(double height) {
+    return SliverToBoxAdapter(
+      key: const ValueKey('placeholder'),
+      child: SizedBox(
+        height: height,
+        child: const Align(
+          alignment: Alignment.bottomCenter,
+          child: EditingLoading(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmpty(double height) {
+    return SliverToBoxAdapter(
+      key: const ValueKey('empty'),
+      child: SizedBox(
+        height: height,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Text(l10n.diaryTabViewEmpty),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final logicTag = categoryId ?? 'default';
@@ -25,92 +51,64 @@ class DiaryTabViewComponent extends StatelessWidget {
     final placeholderHeight = size.height / 2 - kToolbarHeight - 46;
 
     Widget buildGrid() {
-      return GetBuilder<DiaryTabViewLogic>(
-          tag: logicTag,
-          id: 'view',
-          builder: (_) {
-            return SliverWaterfallFlow(
-              gridDelegate:
-                  const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 250),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return GirdDiaryCardComponent(
-                    diary: state.diaryList[index],
-                  );
-                },
-                childCount: state.diaryList.length,
-              ),
-            );
-          });
-    }
-
-    Widget buildList() {
-      return GetBuilder<DiaryTabViewLogic>(
-          tag: logicTag,
-          id: 'view',
-          builder: (_) {
-            return SliverList.builder(
-              itemBuilder: (context, index) {
-                return ListDiaryCardComponent(
-                  tag: index.toString(),
+      return Obx(
+        () {
+          return SliverWaterfallFlow(
+            gridDelegate:
+                const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 250),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                return GirdDiaryCardComponent(
                   diary: state.diaryList[index],
                 );
               },
-              itemCount: state.diaryList.length,
-            );
-          });
+              childCount: state.diaryList.length,
+            ),
+          );
+        },
+        key: const ValueKey('grid'),
+      );
     }
 
-    // Widget buildPlaceHolder() {
-    //   if (state.isFetching) {
-    //     return const CircularProgressIndicator();
-    //   } else if (state.diaryList.isEmpty) {
-    //     return Text(l10n.diaryTabViewEmpty);
-    //   } else {
-    //     return const SizedBox.shrink();
-    //   }
-    // }
+    Widget buildList() {
+      return Obx(() {
+        return SliverList.builder(
+          itemBuilder: (context, index) {
+            return ListDiaryCardComponent(
+              tag: index.toString(),
+              diary: state.diaryList[index],
+            );
+          },
+          itemCount: state.diaryList.length,
+        );
+      }, key: const ValueKey('list'));
+    }
 
     return CustomScrollView(
       cacheExtent: size.height * 2,
       slivers: [
         SliverOverlapInjector(
             handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
-        GetBuilder<DiaryTabViewLogic>(
-            tag: logicTag,
-            builder: (_) {
-              return SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                sliver: SliverAnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: state.isFetching
-                      ? SliverToBoxAdapter(
-                          child: SizedBox(
-                            height: placeholderHeight,
-                            child: const Align(
-                              alignment: Alignment.bottomCenter,
-                              child: EditingLoading(),
-                            ),
-                          ),
-                        )
-                      : (state.diaryList.isNotEmpty
-                          ? switch (logic.diaryLogic.state.viewModeType) {
-                              ViewModeType.list => buildList(),
-                              ViewModeType.grid => buildGrid(),
-                            }
-                          : SliverToBoxAdapter(
-                              child: SizedBox(
-                                height: placeholderHeight,
-                                child: Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Text(l10n.diaryTabViewEmpty),
-                                ),
-                              ),
-                            )),
-                ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          sliver: Obx(
+            () {
+              return SliverAnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                reverseDuration: const Duration(milliseconds: 100),
+                child: state.isFetching.value
+                    ? _buildPlaceholder(placeholderHeight)
+                    : state.diaryList.isEmpty
+                        ? _buildEmpty(placeholderHeight)
+                        : switch (logic.diaryLogic.state.viewModeType.value) {
+                            ViewModeType.list => buildList(),
+                            ViewModeType.grid => buildGrid(),
+                          },
               );
-            }),
+            },
+          ),
+        ),
       ],
     );
   }

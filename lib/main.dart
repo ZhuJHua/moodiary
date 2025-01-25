@@ -15,12 +15,12 @@ import 'package:intl/intl.dart';
 import 'package:moodiary/common/values/language.dart';
 import 'package:moodiary/components/env_badge/badge.dart';
 import 'package:moodiary/components/frosted_glass_overlay/frosted_glass_overlay_view.dart';
+import 'package:moodiary/components/window_buttons/window_buttons.dart';
+import 'package:moodiary/config/env.dart';
+import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/router/app_pages.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/src/rust/frb_generated.dart';
-import 'package:moodiary/utils/data/env.dart';
-import 'package:moodiary/utils/data/isar.dart';
-import 'package:moodiary/utils/data/pref.dart';
 import 'package:moodiary/utils/log_util.dart';
 import 'package:moodiary/utils/media_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
@@ -29,7 +29,7 @@ import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:video_player_media_kit/video_player_media_kit.dart';
 
-import 'components/window_buttons/window_buttons.dart';
+import 'presentation/pref.dart';
 
 late AppLocalizations l10n;
 late Locale locale;
@@ -79,7 +79,7 @@ Future<void> _platFormOption() async {
   }
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
     doWhenWindowReady(() {
-      appWindow.minSize = const Size(512, 640);
+      appWindow.minSize = const Size(600, 640);
       appWindow.size = const Size(1024, 640);
       appWindow.alignment = Alignment.center;
       appWindow.show();
@@ -130,19 +130,22 @@ void main() async {
                 TextScaler.linear(PrefUtil.getValue<double>('fontScale')!)),
         child: FToastBuilder()(context, child!),
       );
-      final windowChild =
-          (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
-              ? Column(children: [WindowButtons(), Expanded(child: mediaQuery)])
-              : mediaQuery;
       return Stack(
         children: [
-          windowChild,
+          mediaQuery,
           const FrostedGlassOverlayComponent(),
           if (Env.debugMode)
             const Positioned(
               top: -15,
               right: -15,
               child: EnvBadge(envMode: '测试版'),
+            ),
+          if (!Platform.isAndroid && !Platform.isIOS)
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: WindowButtons(),
             ),
         ],
       );

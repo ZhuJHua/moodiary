@@ -6,8 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:markdown_widget/config/configs.dart';
-import 'package:markdown_widget/widget/markdown.dart';
+import 'package:markdown_widget/markdown_widget.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/common/values/diary_type.dart';
@@ -624,7 +623,7 @@ class EditPage extends StatelessWidget {
                   trailing: IconButton.filledTonal(
                     icon: const Icon(Icons.tag),
                     onPressed: () async {
-                      var res = await showTextInputDialog(
+                      final res = await showTextInputDialog(
                         style: AdaptiveStyle.material,
                         context: context,
                         title: l10n.editAddTag,
@@ -855,21 +854,40 @@ class EditPage extends StatelessWidget {
 
     Widget markdownToolBar() {
       return Row(
-        spacing: 8.0,
+        spacing: 4.0,
         children: [
           IconButton.filled(
             icon: const Icon(Icons.keyboard_command_key),
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
             onPressed: () {
-              logic.renderMarkdown();
-              // showFloatingModalBottomSheet(
-              //   context: context,
-              //   builder: (context) {
-              //     return buildDetail();
-              //   },
-              // );
+              showFloatingModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return buildDetail();
+                },
+              );
             },
+          ),
+          IconButton.filled(
+            onPressed: logic.renderMarkdown,
+            style: const ButtonStyle(
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            icon: Obx(() {
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                reverseDuration: const Duration(milliseconds: 100),
+                child: state.renderMarkdown.value
+                    ? const Icon(
+                        Icons.visibility_off_rounded,
+                        key: ValueKey('off_icon'),
+                      )
+                    : const Icon(
+                        Icons.visibility_rounded,
+                        key: ValueKey('on_icon'),
+                      ),
+              );
+            }),
           ),
           Expanded(
             child: SingleChildScrollView(

@@ -10,7 +10,7 @@ class PackageUtil {
   }
 
   static Future<BaseDeviceInfo> getInfo() async {
-    DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+    final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
     if (Platform.isAndroid) {
       return await deviceInfoPlugin.androidInfo;
     }
