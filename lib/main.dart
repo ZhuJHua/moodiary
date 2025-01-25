@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:moodiary/common/values/language.dart';
 import 'package:moodiary/components/env_badge/badge.dart';
 import 'package:moodiary/components/frosted_glass_overlay/frosted_glass_overlay_view.dart';
+import 'package:moodiary/components/window_buttons/window_buttons.dart';
 import 'package:moodiary/config/env.dart';
 import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/router/app_pages.dart';
@@ -138,6 +139,13 @@ void main() async {
               top: -15,
               right: -15,
               child: EnvBadge(envMode: '测试版'),
+            ),
+          if (!Platform.isAndroid && !Platform.isIOS)
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: WindowButtons(),
             ),
         ],
       );

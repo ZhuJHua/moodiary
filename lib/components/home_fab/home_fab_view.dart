@@ -292,32 +292,35 @@ class DesktopHomeFabComponent extends StatelessWidget {
                   icon: const Icon(Icons.arrow_upward_rounded)),
             );
           }),
-          IconButton(
+          IconButton.filled(
             onPressed: toMarkdown,
             icon: const FaIcon(
               FontAwesomeIcons.markdown,
-              size: 20,
+              size: 16,
             ),
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            tooltip: l10n.homeNewDiaryMarkdown,
           ),
-          IconButton(
+          IconButton.filled(
             onPressed: toPlainText,
             icon: const FaIcon(
               FontAwesomeIcons.font,
-              size: 20,
+              size: 16,
             ),
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            tooltip: l10n.homeNewDiaryPlainText,
           ),
-          IconButton(
+          IconButton.filled(
             onPressed: toRichText,
             icon: const FaIcon(
               FontAwesomeIcons.feather,
-              size: 20,
+              size: 16,
             ),
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            tooltip: l10n.homeNewDiaryRichText,
           ),
           Text(
             l10n.shareName,
