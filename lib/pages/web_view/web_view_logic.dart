@@ -8,17 +8,17 @@ import 'web_view_state.dart';
 class WebViewLogic extends GetxController {
   final state = WebViewState();
   late final InAppWebViewController webViewController;
-  late final PullToRefreshController pullToRefreshController =
-      PullToRefreshController(
-    onRefresh: () async {
-      if (defaultTargetPlatform == TargetPlatform.android) {
-        webViewController.reload();
-      } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-        webViewController.loadUrl(
-            urlRequest: URLRequest(url: await webViewController.getUrl()));
-      }
-    },
-  );
+  // late final PullToRefreshController pullToRefreshController =
+  //     PullToRefreshController(
+  //   onRefresh: () async {
+  //     if (defaultTargetPlatform == TargetPlatform.android) {
+  //       webViewController.reload();
+  //     } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+  //       webViewController.loadUrl(
+  //           urlRequest: URLRequest(url: await webViewController.getUrl()));
+  //     }
+  //   },
+  // );
   final InAppWebViewSettings webSettings = InAppWebViewSettings(
     javaScriptEnabled: true,
     javaScriptCanOpenWindowsAutomatically: true,
