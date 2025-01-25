@@ -47,10 +47,10 @@ class DiaryDetailsPage extends StatelessWidget {
     }
 
     Widget buildChipList(ColorScheme colorScheme) {
-      var dateTime =
+      final dateTime =
           DateFormat.yMMMd().add_Hms().format(state.diary.time).split(' ');
-      var date = dateTime.first;
-      var time = dateTime.last;
+      final date = dateTime.first;
+      final time = dateTime.last;
       return Wrap(
         spacing: 8.0,
         children: [

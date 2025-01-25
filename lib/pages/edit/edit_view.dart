@@ -23,7 +23,6 @@ import 'package:moodiary/components/quill_embed/video_embed.dart';
 import 'package:moodiary/components/record_sheet/record_sheet_view.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
 import 'package:moodiary/main.dart';
-import 'package:moodiary/utils/log_util.dart';
 import 'package:moodiary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -624,7 +623,7 @@ class EditPage extends StatelessWidget {
                   trailing: IconButton.filledTonal(
                     icon: const Icon(Icons.tag),
                     onPressed: () async {
-                      var res = await showTextInputDialog(
+                      final res = await showTextInputDialog(
                         style: AdaptiveStyle.material,
                         context: context,
                         title: l10n.editAddTag,
@@ -943,14 +942,7 @@ class EditPage extends StatelessWidget {
                     )
                   : MarkdownWidget(
                       config: colorScheme.brightness == Brightness.dark
-                          ? MarkdownConfig.darkConfig.copy(configs: [
-                              ImgConfig(
-                                builder: (str, map) {
-                                  LogUtil.printInfo(str);
-                                  return SizedBox.shrink();
-                                },
-                              )
-                            ])
+                          ? MarkdownConfig.darkConfig
                           : MarkdownConfig.defaultConfig,
                       data: logic.markdownTextEditingController.text,
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),

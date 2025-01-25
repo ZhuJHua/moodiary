@@ -28,7 +28,7 @@ class LockLogic extends GetxController with GetSingleTickerProviderStateMixin {
   }
 
   double interpolate(double x) {
-    var step = 10.0;
+    const step = 10.0;
     if (x <= 0.25) {
       return 4 * step * x;
     } else if (x <= 0.75) {

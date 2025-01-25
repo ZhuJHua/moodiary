@@ -15,7 +15,7 @@ class AdaptiveBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return LayoutBuilder(builder: (context, constraints) {
-      bool showBackground = constraints.maxWidth >= 600;
+      final bool showBackground = constraints.maxWidth >= 600;
       if (!showBackground) return child;
       return Stack(
         children: [

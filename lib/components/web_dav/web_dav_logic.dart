@@ -43,7 +43,7 @@ class WebDavLogic extends GetxController {
 
   Future<void> checkConnectivity() async {
     state.connectivityStatus.value = WebDavConnectivityStatus.connecting;
-    var res = await webDav.checkConnectivity();
+    final res = await webDav.checkConnectivity();
     state.connectivityStatus.value = res
         ? WebDavConnectivityStatus.connected
         : WebDavConnectivityStatus.unconnected;

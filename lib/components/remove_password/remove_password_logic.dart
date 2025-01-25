@@ -24,7 +24,7 @@ class RemovePasswordLogic extends GetxController
   }
 
   double interpolate(double x) {
-    var step = 10.0;
+    const step = 10.0;
     if (x <= 0.25) {
       // 第一段: (0, step) - 单调递增
       return 4 * step * x;

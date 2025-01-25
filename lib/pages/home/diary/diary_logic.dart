@@ -52,7 +52,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
 
   Future<void> getHitokoto() async {
     try {
-      var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
+      final res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
           maxAgeMillis: 15 * 60000);
       if (res != null) {
         state.hitokoto.value = res.first;
@@ -65,7 +65,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   Future<void> autoSync() async {
     if (PrefUtil.getValue<bool>('autoSync') == true &&
         await WebDavUtil().checkConnectivity()) {
-      var diary = await IsarUtil.getAllDiaries();
+      final diary = await IsarUtil.getAllDiaries();
       await WebDavUtil().syncDiary(diary, onDownload: () async {
         await refreshAll();
       });
@@ -88,7 +88,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
       tabController.animateTo(0);
       return;
     }
-    int index = state.categoryList.indexWhere((e) => e.id == categoryId);
+    final int index = state.categoryList.indexWhere((e) => e.id == categoryId);
     if (index != -1) {
       tabController.animateTo(index + 1);
     }
@@ -97,8 +97,9 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   /// inner controller 监听函数
   /// 用于分页
   void _innerControllerListener() async {
-    double offset = state.innerController.offset;
-    double maxScrollExtent = state.innerController.position.maxScrollExtent;
+    final double offset = state.innerController.offset;
+    final double maxScrollExtent =
+        state.innerController.position.maxScrollExtent;
     _checkShowTop();
     if (offset - lastScrollOffset > 100) {
       lastScrollOffset = offset;
@@ -144,7 +145,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   void checkPageChange() {
     state.currentTabBarIndex = tabController.index;
     // 获取当前分类ID，若为默认分类，设为 'default'
-    String categoryId = state.currentTabBarIndex == 0
+    final String categoryId = state.currentTabBarIndex == 0
         ? 'default'
         : state.categoryList[state.currentTabBarIndex - 1].id;
     // 遍历 keyMap，更新每个分类的状态
@@ -209,7 +210,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
         k != 'default');
 
     // 为新的 Category 添加新的 GlobalKey
-    for (var category in state.categoryList) {
+    for (final category in state.categoryList) {
       if (!state.keyMap.containsKey(category.id)) {
         state.keyMap[category.id] = GlobalKey<PrimaryScrollWrapperState>();
       }

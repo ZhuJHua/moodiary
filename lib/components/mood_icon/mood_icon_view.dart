@@ -9,17 +9,18 @@ class EmotionCurvePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
+    final Paint paint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = strokeWidth;
 
-    Path path = Path();
+    final Path path = Path();
 
-    double centerX = size.width / 2;
-    double centerY = size.height / 2;
-    double controlPointY = centerY + (value - 0.5) * size.height; // 动态控制点的Y坐标
+    final double centerX = size.width / 2;
+    final double centerY = size.height / 2;
+    final double controlPointY =
+        centerY + (value - 0.5) * size.height; // 动态控制点的Y坐标
 
     // 起点
     path.moveTo(centerX + strokeWidth / 2 - size.width / 2, centerY);

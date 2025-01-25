@@ -40,7 +40,7 @@ class CategoryManagerPage extends StatelessWidget {
                         children: [
                           IconButton(
                             onPressed: () async {
-                              var res = await showTextInputDialog(
+                              final res = await showTextInputDialog(
                                   context: context,
                                   title: l10n.categoryManageEdit,
                                   textFields: [
@@ -82,7 +82,7 @@ class CategoryManagerPage extends StatelessWidget {
           child: !state.isFetching.value
               ? FloatingActionButton.extended(
                   onPressed: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                         context: context,
                         title: l10n.categoryManageAdd,
                         textFields: [

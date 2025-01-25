@@ -63,8 +63,8 @@ class AssistantPage extends StatelessWidget {
         padding: const EdgeInsets.all(4.0),
         sliver: SliverList.builder(
           itemBuilder: (context, index) {
-            var timeList = state.messages.keys.toList();
-            var messageList = state.messages.values.toList();
+            final timeList = state.messages.keys.toList();
+            final messageList = state.messages.values.toList();
             if (messageList[index].role == 'user') {
               return Card.outlined(
                 child: Padding(

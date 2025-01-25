@@ -12,14 +12,14 @@ class BackupSyncLogic extends GetxController {
     final dataPath = FileUtil.getRealPath('', '');
     final zipPath = FileUtil.getCachePath('');
     final isolateParams = {'zipPath': zipPath, 'dataPath': dataPath};
-    var path = await compute(FileUtil.zipFile, isolateParams);
+    final path = await compute(FileUtil.zipFile, isolateParams);
     LogUtil.printInfo(path);
     await Share.shareXFiles([XFile(path)]);
   }
 
   //导入
   Future<void> import() async {
-    FilePickerResult? result = await FilePicker.platform
+    final FilePickerResult? result = await FilePicker.platform
         .pickFiles(allowedExtensions: ['zip'], type: FileType.custom);
     if (result != null) {
       NoticeUtil.showToast('数据导入中，请不要离开页面');

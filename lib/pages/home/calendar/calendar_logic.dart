@@ -58,7 +58,7 @@ class CalendarLogic extends GetxController {
   }
 
   void onVerticalDragEnd(DragEndDetails details) {
-    double velocity = details.velocity.pixelsPerSecond.dy;
+    final double velocity = details.velocity.pixelsPerSecond.dy;
     LogUtil.printInfo(velocity);
     if (velocity > state.velocityThreshold) {
       LogUtil.printInfo('1');
@@ -82,7 +82,7 @@ class CalendarLogic extends GetxController {
 
   DateTime? findLatestDateInMonth(List<DateTime> dates, int year, int month) {
     // 过滤出符合条件的日期
-    List<DateTime> filteredDates = dates.where((date) {
+    final List<DateTime> filteredDates = dates.where((date) {
       return date.year == year && date.month == month;
     }).toList();
 

@@ -88,7 +88,7 @@ class MediaUtil {
   /// value：实际的文件名
   static Future<Map<String, String>> saveVideo(
       {required List<XFile> videoFileList}) async {
-    Map<String, String> videoNameMap = {};
+    final Map<String, String> videoNameMap = {};
 
     await Future.wait(videoFileList.map((videoFile) async {
       if (basename(videoFile.path).startsWith('video-')) {
@@ -97,16 +97,16 @@ class MediaUtil {
       }
       // 生成文件名
       final uuid = const Uuid().v7();
-      var videoName = 'video-$uuid.mp4';
+      final videoName = 'video-$uuid.mp4';
       videoNameMap[videoFile.path] = videoName;
       // 保存视频文件
       await videoFile.saveTo(FileUtil.getRealPath('video', videoName));
       // 获取缩略图
-      var tempThumbnailPath =
+      final tempThumbnailPath =
           FileUtil.getCachePath('${const Uuid().v7()}.jpeg');
       await _getVideoThumbnail(videoFile, tempThumbnailPath);
       // 压缩缩略图并保存
-      var compressedPath = FileUtil.getRealPath('thumbnail', videoName);
+      final compressedPath = FileUtil.getRealPath('thumbnail', videoName);
       await _compressRust(
         XFile(tempThumbnailPath),
         compressedPath,
@@ -217,7 +217,7 @@ class MediaUtil {
 
   //异步获取图片颜色
   static Future<int> getColorScheme(ImageProvider imageProvider) async {
-    var color =
+    final color =
         (await ColorScheme.fromImageProvider(provider: imageProvider)).primary;
     return ((color.a * 255).toInt() << 24) |
         ((color.r * 255).toInt() << 16) |
@@ -250,14 +250,14 @@ class MediaUtil {
 
   static Future<void> _compressRust(
       XFile oldImage, String targetPath, r_type.CompressFormat format) async {
-    var quality = switch (PrefUtil.getValue<int>('quality')) {
+    final quality = switch (PrefUtil.getValue<int>('quality')) {
       0 => 720,
       1 => 1080,
       2 => 1440,
       _ => 1080,
     };
-    var oldPath = oldImage.path;
-    var newImage = await ImageCompress.contain(
+    final oldPath = oldImage.path;
+    final newImage = await ImageCompress.contain(
         filePath: oldPath,
         maxWidth: quality,
         maxHeight: quality,
@@ -272,14 +272,14 @@ class MediaUtil {
       oldImage.saveTo(targetPath);
       return;
     }
-    var quality = PrefUtil.getValue<int>('quality');
-    var height = switch (quality) {
+    final quality = PrefUtil.getValue<int>('quality');
+    final height = switch (quality) {
       0 => 720,
       1 => 1080,
       2 => 1440,
       _ => 1080,
     };
-    var newImage = await FlutterImageCompress.compressWithFile(
+    final newImage = await FlutterImageCompress.compressWithFile(
       oldImage.path,
       minHeight: height,
       minWidth: height,
@@ -294,8 +294,8 @@ class MediaUtil {
 
   //获取视频缩略图
   static Future<bool> _getVideoThumbnail(XFile xFile, destPath) async {
-    var quality = PrefUtil.getValue<int>('quality');
-    var height = switch (quality) {
+    final quality = PrefUtil.getValue<int>('quality');
+    final height = switch (quality) {
       0 => 720,
       1 => 1080,
       2 => 1440,
@@ -338,7 +338,7 @@ class MediaUtil {
   static Map<DateTime, List<String>> groupImageFileByDate(
       List<String> filePaths) {
     final Map<DateTime, List<String>> groupedMap = {};
-    for (var image in filePaths) {
+    for (final image in filePaths) {
       // 根据媒体文件类型提取日期
       final uuid = image.split('image-')[1].split('.')[0];
       final dateTime = MediaUtil.extractDateFromUUID(uuid);
@@ -362,7 +362,7 @@ class MediaUtil {
   static Map<DateTime, List<String>> groupVideoFileByDate(
       List<String> filePaths) {
     final Map<DateTime, List<String>> groupedMap = {};
-    for (var video in filePaths) {
+    for (final video in filePaths) {
       // 根据媒体文件类型提取日期
       if (!basename(video).startsWith('video-')) continue;
       final uuid = video.split('video-')[1].split('.')[0];
@@ -386,7 +386,7 @@ class MediaUtil {
   static Map<DateTime, List<String>> groupAudioFileByDate(
       List<String> filePaths) {
     final Map<DateTime, List<String>> groupedMap = {};
-    for (var audio in filePaths) {
+    for (final audio in filePaths) {
       // 根据媒体文件类型提取日期
       final uuid = audio.split('audio-')[1].split('.')[0];
       final dateTime = MediaUtil.extractDateFromUUID(uuid);

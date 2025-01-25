@@ -30,7 +30,7 @@ class LaboratoryPage extends StatelessWidget {
               )),
               trailing: IconButton(
                   onPressed: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                       context: context,
                       textFields: [
                         DialogTextField(
@@ -60,7 +60,7 @@ class LaboratoryPage extends StatelessWidget {
                   child: Text(PrefUtil.getValue<String>('qweatherKey') ?? '')),
               trailing: IconButton(
                   onPressed: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                         context: context,
                         style: AdaptiveStyle.material,
                         title: '和风天气密钥',
@@ -84,7 +84,7 @@ class LaboratoryPage extends StatelessWidget {
                   child: Text(PrefUtil.getValue<String>('tiandituKey') ?? '')),
               trailing: IconButton(
                   onPressed: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                         context: context,
                         textFields: [
                           DialogTextField(

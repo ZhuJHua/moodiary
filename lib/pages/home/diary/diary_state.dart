@@ -48,7 +48,7 @@ class DiaryState {
     //默认分类
     keyMap = {'default': GlobalKey<PrimaryScrollWrapperState>()};
     //其他分类
-    for (var category in categoryList) {
+    for (final category in categoryList) {
       keyMap[category.id] = GlobalKey<PrimaryScrollWrapperState>();
     }
   }

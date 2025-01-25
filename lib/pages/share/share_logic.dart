@@ -21,16 +21,16 @@ class ShareLogic extends GetxController {
   }
 
   Future<Uint8List> captureWidget() async {
-    var boundary =
+    final boundary =
         state.key.currentContext?.findRenderObject() as RenderRepaintBoundary;
-    var pixelRatio = MediaQuery.devicePixelRatioOf(Get.context!);
-    var image = await boundary.toImage(pixelRatio: pixelRatio);
-    var data = await image.toByteData(format: ImageByteFormat.png);
+    final pixelRatio = MediaQuery.devicePixelRatioOf(Get.context!);
+    final image = await boundary.toImage(pixelRatio: pixelRatio);
+    final data = await image.toByteData(format: ImageByteFormat.png);
     return data!.buffer.asUint8List();
   }
 
   Future<void> share() async {
-    var name = 'screenshot-${const Uuid().v7()}.png';
+    final name = 'screenshot-${const Uuid().v7()}.png';
     File(FileUtil.getCachePath(name)).writeAsBytes(await captureWidget());
     await Share.shareXFiles([XFile(FileUtil.getCachePath(name))]);
   }

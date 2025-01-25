@@ -80,11 +80,11 @@ class HttpUtil {
 
   Future<Stream<String>?> postStream(String path,
       {Map<String, dynamic>? header, Object? data}) async {
-    Response<ResponseBody> response = await dio.post(path,
+    final Response<ResponseBody> response = await dio.post(path,
         options: Options(responseType: ResponseType.stream, headers: header),
         data: data);
 
-    StreamTransformer<Uint8List, List<int>> transformer =
+    final StreamTransformer<Uint8List, List<int>> transformer =
         StreamTransformer.fromHandlers(handleData: (data, sink) {
       sink.add(List<int>.from(data));
     });

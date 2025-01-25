@@ -13,7 +13,7 @@ class WindowButtons extends StatelessWidget {
   //获取一言
   Future<void> getHitokoto() async {
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      var res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
+      final res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
           maxAgeMillis: 15 * 60000);
       if (res != null) {
         hitokoto.value = res.first;

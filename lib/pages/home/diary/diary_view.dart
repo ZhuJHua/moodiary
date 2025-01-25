@@ -52,7 +52,7 @@ class DiaryPage extends StatelessWidget {
 
     //生成TabBar
     Widget buildTabBar() {
-      List<Widget> allTabs = [];
+      final List<Widget> allTabs = [];
       //默认的全部tab
       allTabs.add(Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -117,7 +117,7 @@ class DiaryPage extends StatelessWidget {
     }
 
     Widget buildTabBarView() {
-      List<Widget> allViews = [];
+      final List<Widget> allViews = [];
       // 添加全部日记页面
       allViews.add(buildDiaryView(0, state.keyMap['default'], null));
       // 添加分类日记页面

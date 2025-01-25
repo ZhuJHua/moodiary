@@ -126,7 +126,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     }
 
     /// 需要注意，返回值为 '' 时才是没有选择分类，而返回值为 null 时，是没有进行操作直接返回
-    var res =
+    final res =
         await Get.toNamed(AppRoutes.editPage, arguments: [type, categoryId]);
     _fabAnimationController.reset();
     isFabExpanded.value = false;

@@ -47,7 +47,7 @@ class MediaPage extends StatelessWidget {
                 actions: [
                   IconButton(
                       onPressed: () async {
-                        var res = await showCalendarDatePicker2Dialog(
+                        final res = await showCalendarDatePicker2Dialog(
                             context: context,
                             config: CalendarDatePicker2WithActionButtonsConfig(
                               calendarViewMode: CalendarDatePicker2Mode.day,

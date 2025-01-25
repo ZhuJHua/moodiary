@@ -19,7 +19,7 @@ class DrawPage extends StatelessWidget {
     final state = Bind.find<DrawLogic>().state;
     final size = MediaQuery.sizeOf(context);
     final colorScheme = Theme.of(context).colorScheme;
-    var drawWidth = min(300.0, size.width * 0.8);
+    final drawWidth = min(300.0, size.width * 0.8);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.editPickImageFromDraw),
@@ -101,7 +101,7 @@ class DrawPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: FilledButton(
             onPressed: () async {
-              var res = await showOkCancelAlertDialog(
+              final res = await showOkCancelAlertDialog(
                   context: context,
                   title: l10n.hint,
                   message: l10n.sureToSave,

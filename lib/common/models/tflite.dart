@@ -24,7 +24,7 @@ class SquadExample {
   String toString() => _repr();
 
   String _repr() {
-    var s = StringBuffer();
+    final s = StringBuffer();
     s.write('qas_id: ${_printableText(qasId)}, ');
     s.write('question_text: ${_printableText(questionText)}, ');
     s.write('doc_tokens: [${docTokens.join(' ')}]');
@@ -104,9 +104,10 @@ class RawResult {
   });
 
   List<int> getAnswerIndices() {
-    int startIndex =
+    final int startIndex =
         startLogits.indexOf(startLogits.reduce((a, b) => a > b ? a : b));
-    int endIndex = endLogits.indexOf(endLogits.reduce((a, b) => a > b ? a : b));
+    final int endIndex =
+        endLogits.indexOf(endLogits.reduce((a, b) => a > b ? a : b));
     return [startIndex, endIndex];
   }
 

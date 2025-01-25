@@ -40,8 +40,8 @@ class AboutLogic extends GetxController with GetSingleTickerProviderStateMixin {
   }
 
   Future<void> getInfo() async {
-    var packageInfo = await PackageUtil.getPackageInfo();
-    var deviceInfo = await PackageUtil.getInfo();
+    final packageInfo = await PackageUtil.getPackageInfo();
+    final deviceInfo = await PackageUtil.getInfo();
     if (deviceInfo is AndroidDeviceInfo) {
       state.systemVersion = 'Android ${deviceInfo.version.release}';
     } else if (deviceInfo is IosDeviceInfo) {
@@ -67,7 +67,7 @@ class AboutLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
   //跳转至源代码
   Future<void> toSource() async {
-    var uri = Uri(
+    final uri = Uri(
       scheme: 'https',
       host: 'github.com',
       path: 'ZhuJHua/moodiary',

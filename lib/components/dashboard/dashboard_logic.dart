@@ -34,26 +34,26 @@ class DashboardLogic extends GetxController {
   }
 
   Future<void> getCountContent() async {
-    var list = await IsarUtil.getContentList();
-    int count = await compute(ArrayUtil.countListItemLength, list);
+    final list = await IsarUtil.getContentList();
+    final int count = await compute(ArrayUtil.countListItemLength, list);
     contentCount.value = count.toString();
   }
 
   void getDiaryCount() {
-    int count = IsarUtil.countAllDiary();
+    final int count = IsarUtil.countAllDiary();
     diaryCount.value = count.toString();
   }
 
   void getCategoryCount() {
-    int count = IsarUtil.countCategories();
+    final int count = IsarUtil.countCategories();
     categoryCount.value = count.toString();
   }
 
   //选中两个日期后，查询指定范围内的日记
   Future<void> getMoodAndWeatherByRange(DateTime start, DateTime end) async {
-    var moodList = await IsarUtil.getMoodByDateRange(
+    final moodList = await IsarUtil.getMoodByDateRange(
         start, end.subtract(const Duration(days: -1)));
-    var weatherList = await IsarUtil.getWeatherByDateRange(
+    final weatherList = await IsarUtil.getWeatherByDateRange(
         start, end.subtract(const Duration(days: -1)));
 
     //去掉没有天气
@@ -68,7 +68,7 @@ class DashboardLogic extends GetxController {
       recentMood.value = 'none';
     }
     if (weatherList.isNotEmpty) {
-      var weatherCode = List.generate(
+      final weatherCode = List.generate(
           weatherList.length, (index) => weatherList[index].first);
       recentWeather.value = ArrayUtil.countList(weatherCode)
           .entries
@@ -80,9 +80,9 @@ class DashboardLogic extends GetxController {
   }
 
   void getUseTime() {
-    DateTime firstStart = DateTime.fromMillisecondsSinceEpoch(
+    final DateTime firstStart = DateTime.fromMillisecondsSinceEpoch(
         PrefUtil.getValue<int>('startTime')!);
-    Duration duration = DateTime.now().difference(firstStart);
+    final Duration duration = DateTime.now().difference(firstStart);
     useTime.value = (duration.inDays + 1).toString();
   }
 

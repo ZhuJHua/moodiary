@@ -82,7 +82,7 @@ class LocalSendServerLogic extends GetxController {
     late Diary diary;
     String? categoryName;
     // 处理表单数据
-    if (request.formData() case var form?) {
+    if (request.formData() case final form?) {
       await for (final formData in form.formData) {
         final name = formData.name;
         // 读取日记 JSON 数据

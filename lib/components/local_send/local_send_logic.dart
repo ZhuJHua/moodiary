@@ -10,7 +10,7 @@ import 'local_send_state.dart';
 
 Future<String?> getDeviceIP() async {
   // 获取当前的连接状态
-  var connectivityResult = await Connectivity().checkConnectivity();
+  final connectivityResult = await Connectivity().checkConnectivity();
 
   if (connectivityResult.isNotEmpty) {
     // 如果当前连接到wifi
@@ -19,9 +19,9 @@ Future<String?> getDeviceIP() async {
       return info.getWifiIP();
     } else {
       // 获取所有网络接口
-      for (var interface in await NetworkInterface.list()) {
+      for (final interface in await NetworkInterface.list()) {
         // 检查接口是否有 IPv4 地址
-        for (var address in interface.addresses) {
+        for (final address in interface.addresses) {
           if (address.type == InternetAddressType.IPv4) {
             return address.address; // 返回第一个有效的 IPv4 地址
           }

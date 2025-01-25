@@ -65,7 +65,7 @@ class DiaryDetailsLogic extends GetxController {
 
   //放入回收站
   Future<void> delete(Diary diary) async {
-    var newDiary = diary.clone()..show = false;
+    final newDiary = diary.clone()..show = false;
     await IsarUtil.updateADiary(oldDiary: diary, newDiary: newDiary);
     Get.back(result: 'delete');
   }

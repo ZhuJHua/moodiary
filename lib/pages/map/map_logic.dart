@@ -50,7 +50,7 @@ class MapLogic extends GetxController {
 
   Future<void> toCurrentPosition() async {
     NoticeUtil.showToast('定位中');
-    var currentPosition = await getLocation();
+    final currentPosition = await getLocation();
     LogUtil.printInfo(currentPosition.toString());
     NoticeUtil.showToast('定位成功');
     mapController.move(currentPosition!, mapController.camera.maxZoom!);
@@ -58,7 +58,7 @@ class MapLogic extends GetxController {
 
   Future<void> toDiaryPage({required int isarId}) async {
     await HapticFeedback.mediumImpact();
-    var diary = await IsarUtil.getDiaryByID(isarId);
+    final diary = await IsarUtil.getDiaryByID(isarId);
     Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary!.id);
     await Get.toNamed(
       AppRoutes.diaryPage,

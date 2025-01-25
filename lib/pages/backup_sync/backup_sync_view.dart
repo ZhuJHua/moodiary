@@ -26,7 +26,7 @@ class BackupSyncPage extends StatelessWidget {
           AdaptiveListTile(
             title: Text(l10n.settingExport),
             onTap: () async {
-              var res = await showOkCancelAlertDialog(
+              final res = await showOkCancelAlertDialog(
                 context: context,
                 title: l10n.settingExportDialogTitle,
                 message: l10n.settingExportDialogContent,
@@ -43,7 +43,7 @@ class BackupSyncPage extends StatelessWidget {
             title: Text(l10n.settingImport),
             subtitle: l10n.settingImportDes,
             onTap: () async {
-              var res = await showOkCancelAlertDialog(
+              final res = await showOkCancelAlertDialog(
                 context: context,
                 title: l10n.settingImportDialogTitle,
                 message: l10n.settingImportDialogContent,

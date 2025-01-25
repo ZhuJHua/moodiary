@@ -25,7 +25,8 @@ class CategoryAddLogic extends GetxController {
 
   Future<void> addCategory({required String text}) async {
     if (text.isNotEmpty) {
-      var res = await IsarUtil.insertACategory(Category()..categoryName = text);
+      final res =
+          await IsarUtil.insertACategory(Category()..categoryName = text);
       if (res == false) {
         NoticeUtil.showToast('已经存在同名分类，已自动重命名');
       }

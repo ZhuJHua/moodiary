@@ -3,8 +3,8 @@ import 'dart:convert';
 class ArrayUtil {
   //统计列表元素出现次数
   static Map<T, int> countList<T>(List<T> list) {
-    Map<T, int> counts = {};
-    for (var item in list) {
+    final Map<T, int> counts = {};
+    for (final item in list) {
       counts[item] = counts.containsKey(item) ? counts[item]! + 1 : 1;
     }
     return counts;

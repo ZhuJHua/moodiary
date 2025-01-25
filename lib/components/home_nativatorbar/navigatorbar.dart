@@ -27,7 +27,7 @@ class HomeNavigatorBar extends StatelessWidget {
     final padding = MediaQuery.paddingOf(context);
     final size = MediaQuery.sizeOf(context);
     final colorScheme = Theme.of(context).colorScheme;
-    var navigatorBarHeight = defaultNavigatorBarHeight + padding.bottom;
+    final navigatorBarHeight = defaultNavigatorBarHeight + padding.bottom;
     return Visibility(
       visible: size.width < 600,
       child: AnimatedBuilder(

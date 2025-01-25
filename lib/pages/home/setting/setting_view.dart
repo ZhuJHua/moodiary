@@ -21,19 +21,12 @@ import 'setting_logic.dart';
 class SettingPage extends StatelessWidget {
   const SettingPage({super.key});
 
-
   @override
   Widget build(BuildContext context) {
     final logic = Get.put(SettingLogic());
-    final state = Bind
-        .find<SettingLogic>()
-        .state;
-    final textStyle = Theme
-        .of(context)
-        .textTheme;
-    final colorScheme = Theme
-        .of(context)
-        .colorScheme;
+    final state = Bind.find<SettingLogic>().state;
+    final textStyle = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     final size = MediaQuery.sizeOf(context);
 
     Widget buildDashboard() {
@@ -45,9 +38,10 @@ class SettingPage extends StatelessWidget {
       );
     }
 
-    Widget buildAFeatureButton({required Widget icon,
-      required String text,
-      required Function() onTap}) {
+    Widget buildAFeatureButton(
+        {required Widget icon,
+        required String text,
+        required Function() onTap}) {
       return InkWell(
         onTap: onTap,
         borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -247,7 +241,7 @@ class SettingPage extends StatelessWidget {
                         );
                       }),
                   onTap: () async {
-                    var res = await showTextInputDialog(
+                    final res = await showTextInputDialog(
                       context: context,
                       textFields: [
                         DialogTextField(
@@ -301,7 +295,7 @@ class SettingPage extends StatelessWidget {
                         ),
                         isFirst: true,
                         onTap: () async {
-                          var res = await showOkCancelAlertDialog(
+                          final res = await showOkCancelAlertDialog(
                             context: context,
                             title: l10n.settingLock,
                             message: state.lock
@@ -333,8 +327,8 @@ class SettingPage extends StatelessWidget {
                         value: state.lockNow,
                         onChanged: state.lock
                             ? (value) {
-                          logic.lockNow(value);
-                        }
+                                logic.lockNow(value);
+                              }
                             : null,
                         title: Text(l10n.settingLockNow),
                         subtitle: l10n.settingLockNowDes,

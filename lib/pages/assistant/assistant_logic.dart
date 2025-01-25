@@ -28,7 +28,7 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      var height = MediaQuery.viewInsetsOf(Get.context!).bottom;
+      final height = MediaQuery.viewInsetsOf(Get.context!).bottom;
       if (heightList.isNotEmpty && height != heightList.last) {
         if (height > heightList.last &&
             state.keyboardState != KeyboardState.opening) {
@@ -103,28 +103,28 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
 
   //对话
   Future<void> getAi(String ask) async {
-    var check = SignatureUtil.checkTencent();
+    final check = SignatureUtil.checkTencent();
     if (check != null) {
       //清空输入框
       clearText();
       //失去焦点
       unFocus();
       //拿到用户提问后，对话上下文中增加一项用户提问
-      var askTime = DateTime.now();
+      final askTime = DateTime.now();
       state.messages[askTime] = Message('user', ask);
       update();
       toBottom();
       //带着上下文请求
-      var stream = await Api.getHunYuan(check['id']!, check['key']!,
+      final stream = await Api.getHunYuan(check['id']!, check['key']!,
           state.messages.values.toList(), state.modelVersion.value);
       //如果收到了请求，添加一个回答上下文
-      var replyTime = DateTime.now();
+      final replyTime = DateTime.now();
       state.messages[replyTime] = Message('assistant', '');
       update();
       //接收stream
       stream?.listen((content) {
         if (content != '' && content.contains('data')) {
-          HunyuanResponse result =
+          final HunyuanResponse result =
               HunyuanResponse.fromJson(jsonDecode(content.split('data: ')[1]));
           state.messages[replyTime]!.content +=
               result.choices!.first.delta!.content!;
@@ -145,7 +145,7 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> checkGetAi() async {
-    var text = getText();
+    final text = getText();
     if (text != '') {
       await getAi(text);
     } else {

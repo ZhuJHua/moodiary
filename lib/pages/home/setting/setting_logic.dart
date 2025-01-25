@@ -29,7 +29,7 @@ class SettingLogic extends GetxController {
 
   //获取当前占用储存空间
   Future<void> getDataUsage() async {
-    var sizeMap = await FileUtil.countSize();
+    final sizeMap = await FileUtil.countSize();
     state.dataUsage = '${sizeMap['size']} ${sizeMap['unit']}';
     update(['DataUsage']);
     if (sizeMap['bytes'] > (1024 * 1024 * 100)) {

@@ -102,13 +102,13 @@ class PrefUtil {
         cacheOptions:
             const SharedPreferencesWithCacheOptions(allowList: allowList));
     // 首次启动
-    var firstStart = _prefs.getBool('firstStart') ?? true;
+    final firstStart = _prefs.getBool('firstStart') ?? true;
     await _prefs.setBool('firstStart', firstStart);
 
     // 获取当前应用版本
-    var packageInfo = await PackageUtil.getPackageInfo();
-    var currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
-    var appVersion = _prefs.getString('appVersion');
+    final packageInfo = await PackageUtil.getPackageInfo();
+    final currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+    final appVersion = _prefs.getString('appVersion');
 
     /// 数据库版本变更
     /// v2.4.8
@@ -159,11 +159,11 @@ class PrefUtil {
     await _prefs.setBool(
         'supportBiometrics', await AuthUtil.canCheckBiometrics());
 
-    var supportDynamicColor = await ThemeUtil.supportDynamicColor();
+    final supportDynamicColor = await ThemeUtil.supportDynamicColor();
     await _prefs.setBool('supportDynamicColor', supportDynamicColor);
 
     if (supportDynamicColor) {
-      var color = await ThemeUtil.getDynamicColor();
+      final color = await ThemeUtil.getDynamicColor();
       await _prefs.setInt(
           'systemColor',
           ((color.a * 255).toInt() << 24) |

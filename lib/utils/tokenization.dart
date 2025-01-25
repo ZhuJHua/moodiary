@@ -21,9 +21,9 @@ class FullTokenizer {
   }
 
   List<String> tokenize(String text) {
-    var splitTokens = <String>[];
-    for (var token in _basicTokenizer.tokenize(text)) {
-      for (var subToken in _wordPieceTokenizer.tokenize(token)) {
+    final splitTokens = <String>[];
+    for (final token in _basicTokenizer.tokenize(text)) {
+      for (final subToken in _wordPieceTokenizer.tokenize(token)) {
         splitTokens.add(subToken);
       }
     }
@@ -31,16 +31,16 @@ class FullTokenizer {
   }
 
   List<int> convertTokensToIds(tokens) {
-    var output = <int>[];
-    for (var token in tokens) {
+    final output = <int>[];
+    for (final token in tokens) {
       output.add(_vocab[token]!);
     }
     return output;
   }
 
   List<String> convertIdsToTokens(ids) {
-    var output = <String>[];
-    for (var id in ids) {
+    final output = <String>[];
+    for (final id in ids) {
       output.add(_invVocab[id]!);
     }
     return output;
@@ -82,8 +82,8 @@ class BasicTokenizer {
     text = _tokenizeChineseChars(text);
 
     // 基本的空白分割
-    List<String> origTokens = _whitespaceTokenize(text);
-    List<String> splitTokens = [];
+    final List<String> origTokens = _whitespaceTokenize(text);
+    final List<String> splitTokens = [];
     for (String token in origTokens) {
       if (doLowerCase) {
         token = token.toLowerCase();
@@ -97,9 +97,9 @@ class BasicTokenizer {
 
   // 清理文本，去除不合法字符
   String _cleanText(String text) {
-    StringBuffer buffer = StringBuffer();
+    final StringBuffer buffer = StringBuffer();
     for (int i = 0; i < text.length; i++) {
-      String char = text[i];
+      final String char = text[i];
       if (_isWhitespace(char)) {
         buffer.write(" ");
       } else if (!_isControl(char)) {
@@ -111,9 +111,9 @@ class BasicTokenizer {
 
   // 判断是否为中文字符，并在字符前后添加空格
   String _tokenizeChineseChars(String text) {
-    StringBuffer buffer = StringBuffer();
+    final StringBuffer buffer = StringBuffer();
     for (int i = 0; i < text.length; i++) {
-      int cp = text.codeUnitAt(i);
+      final int cp = text.codeUnitAt(i);
       if (_isChineseChar(cp)) {
         buffer.write(" ");
         buffer.write(String.fromCharCode(cp));
@@ -131,10 +131,10 @@ class BasicTokenizer {
 
   // 分割标点符号
   List<String> _runSplitOnPunc(String token) {
-    List<String> result = [];
-    StringBuffer currentWord = StringBuffer();
+    final List<String> result = [];
+    final StringBuffer currentWord = StringBuffer();
     for (int i = 0; i < token.length; i++) {
-      String char = token[i];
+      final String char = token[i];
       if (_isPunctuation(char)) {
         if (currentWord.isNotEmpty) {
           result.add(currentWord.toString());
@@ -150,7 +150,7 @@ class BasicTokenizer {
   }
 
   bool _isPunctuation(String char) {
-    int cp = char.codeUnitAt(0);
+    final int cp = char.codeUnitAt(0);
     return ((cp >= 33 && cp <= 47) || (cp >= 58 && cp <= 64)); // 判断ASCII标点符号
   }
 
@@ -181,16 +181,16 @@ class WordPieceTokenizer {
       {this.unkToken = "[UNK]", this.maxInputCharsPerWord = 100});
 
   List<String> tokenize(String text) {
-    List<String> outputTokens = [];
-    List<String> tokens = text.split(" ");
+    final List<String> outputTokens = [];
+    final List<String> tokens = text.split(" ");
 
-    for (String token in tokens) {
+    for (final String token in tokens) {
       if (token.length > maxInputCharsPerWord) {
         outputTokens.add(unkToken);
         continue;
       }
 
-      List<String> subTokens = [];
+      final List<String> subTokens = [];
       bool isBad = false;
       int start = 0;
 
