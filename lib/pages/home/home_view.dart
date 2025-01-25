@@ -21,7 +21,9 @@ import 'home_logic.dart';
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  bool get _isMobile => Platform.isAndroid || Platform.isIOS;
+  //bool get _isMobile => Platform.isAndroid || Platform.isIOS;
+
+  bool get _isMacOS => Platform.isMacOS;
 
   @override
   Widget build(BuildContext context) {
@@ -75,11 +77,9 @@ class HomePage extends StatelessWidget {
                               .toList(),
                           selectedIndex: logic.navigatorIndex.value,
                           backgroundColor: colorScheme.surfaceContainer,
-                          labelType: _isMobile
-                              ? NavigationRailLabelType.none
-                              : NavigationRailLabelType.all,
+                          labelType: NavigationRailLabelType.all,
                           padding: EdgeInsets.zero,
-                          leading: _isMobile ? null : const SizedBox(height: 8),
+                          leading: _isMacOS ? const SizedBox(height: 8) : null,
                           trailing: Expanded(
                             child: DesktopHomeFabComponent(
                               isToTopShow: logic.isToTopShow,
