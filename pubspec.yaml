@@ -176,4 +176,5 @@ msix_config:
   publisher: CN=8FC154B5-951B-4B96-B1CA-5A8A86B49C11
   publisher_display_name: JH Zhu
   capabilities: internetClient, location, microphone
+  logo_path: assets/icon/light/light_icon_desktop.png
   store: true
