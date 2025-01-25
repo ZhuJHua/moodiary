@@ -9,20 +9,29 @@ class WindowButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final buttonColors = WindowButtonColors(
-      iconNormal: colorScheme.secondary,
+    final primaryButtonColors = WindowButtonColors(
+      iconNormal: colorScheme.onSurfaceVariant,
+      mouseDown: colorScheme.primaryContainer,
+      normal: Colors.transparent,
+      iconMouseDown: colorScheme.onPrimaryContainer,
+      mouseOver: colorScheme.primaryContainer,
+      iconMouseOver: colorScheme.onPrimaryContainer,
+    );
+
+    final secondaryButtonColors = WindowButtonColors(
+      iconNormal: colorScheme.onSurfaceVariant,
       mouseDown: colorScheme.secondaryContainer,
-      normal: colorScheme.surfaceContainer,
-      iconMouseDown: colorScheme.secondary,
+      normal: Colors.transparent,
+      iconMouseDown: colorScheme.onSecondaryContainer,
       mouseOver: colorScheme.secondaryContainer,
       iconMouseOver: colorScheme.onSecondaryContainer,
     );
 
     final closeButtonColors = WindowButtonColors(
       iconNormal: colorScheme.secondary,
-      mouseDown: colorScheme.secondaryContainer,
-      normal: colorScheme.surfaceContainer,
-      iconMouseDown: colorScheme.secondary,
+      mouseDown: colorScheme.errorContainer,
+      normal: Colors.transparent,
+      iconMouseDown: colorScheme.onErrorContainer,
       mouseOver: colorScheme.errorContainer,
       iconMouseOver: colorScheme.onErrorContainer,
     );
@@ -39,11 +48,11 @@ class WindowButtons extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 MinimizeWindowButton(
-                  colors: buttonColors,
+                  colors: secondaryButtonColors,
                   animate: true,
                 ),
                 MaximizeWindowButton(
-                  colors: buttonColors,
+                  colors: primaryButtonColors,
                   animate: true,
                 ),
                 CloseWindowButton(

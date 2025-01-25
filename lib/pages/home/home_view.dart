@@ -77,7 +77,7 @@ class HomePage extends StatelessWidget {
                           padding: EdgeInsets.zero,
                           leading: Platform.isMacOS
                               ? const SizedBox(height: 20)
-                              : null,
+                              : const SizedBox(height: 4),
                           trailing: Expanded(
                             child: DesktopHomeFabComponent(
                               isToTopShow: logic.isToTopShow,

@@ -11,9 +11,9 @@ class AdaptiveBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final toolbarHeight = Platform.isMacOS ? 16.0 : 32.0;
+    final toolbarHeight = Platform.isMacOS ? 16.0 : 28.0;
     return LayoutBuilder(builder: (context, constraints) {
-      final bool showBackground = constraints.maxWidth >= 600;
+      final bool showBackground = constraints.maxWidth >= 512;
       if (!showBackground) return child;
       return Container(
         color: colorScheme.surfaceContainer,
