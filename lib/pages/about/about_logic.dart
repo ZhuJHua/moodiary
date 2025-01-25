@@ -1,4 +1,7 @@
+import 'package:confetti/confetti.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/utils/package_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -6,13 +9,34 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'about_state.dart';
 
-class AboutLogic extends GetxController {
+class AboutLogic extends GetxController with GetSingleTickerProviderStateMixin {
   final AboutState state = AboutState();
+
+  late final AnimationController _animationController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 500),
+  )..repeat(reverse: true);
+  late final animation = Tween<double>(begin: -0.06, end: 0.06).animate(
+    CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ),
+  );
+
+  late final ConfettiController confettiController =
+      ConfettiController(duration: const Duration(seconds: 2));
 
   @override
   void onReady() async {
     await getInfo();
     super.onReady();
+  }
+
+  @override
+  void onClose() {
+    _animationController.dispose();
+    confettiController.dispose();
+    super.onClose();
   }
 
   Future<void> getInfo() async {
@@ -49,6 +73,11 @@ class AboutLogic extends GetxController {
       path: 'ZhuJHua/moodiary',
     );
     await launchUrl(uri, mode: LaunchMode.platformDefault);
+  }
+
+  void playConfetti() {
+    HapticFeedback.selectionClick();
+    confettiController.play();
   }
 
   void toPrivacy() {
