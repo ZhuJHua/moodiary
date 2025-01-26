@@ -17,11 +17,11 @@ class DrawLogic extends GetxController {
     super.onClose();
   }
 
-  Future<void> getImageData() async {
+  Future<void> getImageData(BuildContext context) async {
     final data = await drawingController.getImageData();
     final image = data!.buffer.asUint8List();
-    Get.back();
-    editLogic.pickDraw(image);
+    if (context.mounted) Navigator.pop(context);
+    if (context.mounted) await editLogic.pickDraw(image, context);
   }
 
   void pickColor(Color color) {

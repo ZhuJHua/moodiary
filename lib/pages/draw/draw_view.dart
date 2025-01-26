@@ -106,8 +106,8 @@ class DrawPage extends StatelessWidget {
                   title: l10n.hint,
                   message: l10n.sureToSave,
                   style: AdaptiveStyle.material);
-              if (res == OkCancelResult.ok) {
-                await logic.getImageData();
+              if (res == OkCancelResult.ok && context.mounted) {
+                await logic.getImageData(context);
               }
             },
             child: Text(l10n.save),

@@ -2,11 +2,16 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_highlight/themes/a11y-dark.dart';
+import 'package:flutter_highlight/themes/a11y-light.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:intl/intl.dart';
+import 'package:markdown_widget/markdown_widget.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/common/values/diary_type.dart';
 import 'package:moodiary/common/values/icons.dart';
 import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/components/markdown_embed/image_embed.dart';
 import 'package:moodiary/components/mood_icon/mood_icon_view.dart';
 import 'package:moodiary/components/quill_embed/audio_embed.dart';
 import 'package:moodiary/components/quill_embed/image_embed.dart';
@@ -25,6 +30,23 @@ class DiaryDetailsPage extends StatelessWidget {
   DiaryDetailsPage({super.key});
 
   final tag = (Get.arguments[0] as Diary).id;
+
+  Widget _buildMarkdownWidget(
+      {required Brightness brightness, required String data}) {
+    final config = brightness == Brightness.dark
+        ? MarkdownConfig.darkConfig
+        : MarkdownConfig.defaultConfig;
+    return MarkdownBlock(
+        data: data,
+        config: config.copy(configs: [
+          ImgConfig(builder: (src, _) {
+            return MarkdownImageEmbed(isEdit: false, imageName: src);
+          }),
+          brightness == Brightness.dark
+              ? PreConfig.darkConfig.copy(theme: a11yDarkTheme)
+              : const PreConfig().copy(theme: a11yLightTheme)
+        ]));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -402,23 +424,28 @@ class DiaryDetailsPage extends StatelessWidget {
                         ),
                         Card.filled(
                           color: customColorScheme.surfaceContainerLow,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: QuillEditor.basic(
-                              controller: logic.quillController,
-                              config: QuillEditorConfig(
-                                showCursor: false,
-                                customStyles: ThemeUtil.getInstance(context,
-                                    customColorScheme: customColorScheme),
-                                embedBuilders: [
-                                  ImageEmbedBuilder(isEdit: false),
-                                  VideoEmbedBuilder(isEdit: false),
-                                  AudioEmbedBuilder(isEdit: false),
-                                  TextIndentEmbedBuilder(isEdit: false),
-                                ],
-                              ),
-                            ),
-                          ),
+                          child: state.diary.type == DiaryType.markdown.value
+                              ? Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: _buildMarkdownWidget(
+                                      brightness: customColorScheme.brightness,
+                                      data: state.diary.content),
+                                )
+                              : QuillEditor.basic(
+                                  controller: logic.quillController!,
+                                  config: QuillEditorConfig(
+                                    showCursor: false,
+                                    padding: const EdgeInsets.all(8.0),
+                                    customStyles: ThemeUtil.getInstance(context,
+                                        customColorScheme: customColorScheme),
+                                    embedBuilders: [
+                                      ImageEmbedBuilder(isEdit: false),
+                                      VideoEmbedBuilder(isEdit: false),
+                                      AudioEmbedBuilder(isEdit: false),
+                                      TextIndentEmbedBuilder(isEdit: false),
+                                    ],
+                                  ),
+                                ),
                         ),
                       ],
                     ),

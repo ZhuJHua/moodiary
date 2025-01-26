@@ -23,6 +23,7 @@ import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/src/rust/api/kmp.dart';
 import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/markdown_util.dart';
 import 'package:moodiary/utils/media_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:path/path.dart';
@@ -39,11 +40,10 @@ class EditLogic extends GetxController {
       TextEditingController();
 
   //编辑器控制器
-  late QuillController quillController;
+  QuillController? quillController;
 
   // markdown控制器
-  late final TextEditingController markdownTextEditingController =
-      TextEditingController();
+  TextEditingController? markdownTextEditingController;
 
   //聚焦对象
   late FocusNode contentFocusNode = FocusNode();
@@ -77,9 +77,10 @@ class EditLogic extends GetxController {
   @override
   void onReady() async {
     await _initEdit();
-    quillController.addListener(_listenCount);
+    quillController?.addListener(_listenCount);
+    markdownTextEditingController?.addListener(_listenCount);
     if (state.firstLineIndent) {
-      quillController.document.changes.listen((change) {
+      quillController?.document.changes.listen((change) {
         final operations = change.change.operations;
         final lastOperation = operations.last;
         if (lastOperation.key == 'insert' && lastOperation.value == '\n') {
@@ -96,8 +97,8 @@ class EditLogic extends GetxController {
     titleTextEditingController.dispose();
     titleFocusNode.dispose();
     contentFocusNode.dispose();
-    quillController.dispose();
-    markdownTextEditingController.dispose();
+    quillController?.dispose();
+    markdownTextEditingController?.dispose();
     _timer?.cancel();
     _timer = null;
     super.onClose();
@@ -108,7 +109,11 @@ class EditLogic extends GetxController {
     if (Get.arguments.runtimeType == List<Object?>) {
       // 配置日记类型
       state.type = Get.arguments[0] as DiaryType;
-      quillController = QuillController.basic();
+      if (state.type == DiaryType.markdown) {
+        markdownTextEditingController = TextEditingController();
+      } else {
+        quillController = QuillController.basic();
+      }
       state.currentDiary = Diary();
       if (state.firstLineIndent) insertNewLine();
       if (state.autoWeather) {
@@ -173,12 +178,20 @@ class EditLogic extends GetxController {
   }
 
   String _toPlainText() {
-    return quillController.document.toPlainText([
-      ImageEmbedBuilder(isEdit: true),
-      VideoEmbedBuilder(isEdit: true),
-      AudioEmbedBuilder(isEdit: true),
-      TextIndentEmbedBuilder(isEdit: true),
-    ]).trim();
+    return state.type == DiaryType.markdown
+        ? _markdownToPlainText(markdownTextEditingController!.text)
+        : quillController!.document.toPlainText([
+            ImageEmbedBuilder(isEdit: true),
+            VideoEmbedBuilder(isEdit: true),
+            AudioEmbedBuilder(isEdit: true),
+            TextIndentEmbedBuilder(isEdit: true),
+          ]).trim();
+  }
+
+  String _markdownToPlainText(String markdown) {
+    if (markdown.isEmpty) return '';
+
+    return MarkdownConverter.convert(markdown);
   }
 
   void _listenCount() {
@@ -187,33 +200,36 @@ class EditLogic extends GetxController {
 
   // 插入换行时自动首行缩进
   void insertNewLine() {
-    final index = quillController.selection.baseOffset;
-    final length = quillController.selection.extentOffset - index;
-    quillController.replaceText(
+    if (quillController == null) return;
+    final index = quillController!.selection.baseOffset;
+    final length = quillController!.selection.extentOffset - index;
+    quillController?.replaceText(
         index, length, const TextIndentEmbed('2'), null);
-    quillController.moveCursorToPosition(index + 1);
+    quillController?.moveCursorToPosition(index + 1);
   }
 
   void insertNewImage({required String imagePath}) {
+    if (quillController == null) return;
     final imageBlock = ImageBlockEmbed.fromName(imagePath);
-    final index = quillController.selection.baseOffset;
-    final length = quillController.selection.extentOffset - index;
-    quillController.replaceText(index, length, imageBlock, null);
-    quillController.moveCursorToPosition(index + 1);
+    final index = quillController!.selection.baseOffset;
+    final length = quillController!.selection.extentOffset - index;
+    quillController?.replaceText(index, length, imageBlock, null);
+    quillController?.moveCursorToPosition(index + 1);
   }
 
   void insertNewVideo({required String videoPath}) {
+    if (quillController == null) return;
     final videoBlock = VideoBlockEmbed.fromName(videoPath);
-    final index = quillController.selection.baseOffset;
-    final length = quillController.selection.extentOffset - index;
-    quillController.replaceText(index, length, videoBlock, null);
+    final index = quillController!.selection.baseOffset;
+    final length = quillController!.selection.extentOffset - index;
+    quillController?.replaceText(index, length, videoBlock, null);
     //插入一个换行
-    quillController.moveCursorToPosition(index + 1);
+    quillController?.moveCursorToPosition(index + 1);
   }
 
-  Future<void> addNewImage(XFile xFile) async {
+  Future<void> addNewImage(XFile xFile, {bool isMarkdown = false}) async {
     state.imageFileList.add(xFile);
-    insertNewImage(imagePath: xFile.path);
+    if (!isMarkdown) insertNewImage(imagePath: xFile.path);
     update(['Image']);
   }
 
@@ -224,7 +240,7 @@ class EditLogic extends GetxController {
     if (photoList.isNotEmpty && context.mounted) {
       Navigator.pop(context);
       for (final photo in photoList) {
-        await addNewImage(photo);
+        await addNewImage(photo, isMarkdown: false);
       }
       return;
     } else {
@@ -233,26 +249,27 @@ class EditLogic extends GetxController {
   }
 
   //单张照片
-  Future<void> pickPhoto(ImageSource imageSource, BuildContext context) async {
+  Future<void> pickPhoto(ImageSource imageSource, BuildContext context,
+      {bool isMarkdown = false}) async {
     //获取一张图片
     final XFile? photo = await MediaUtil.pickPhoto(imageSource);
     if (photo != null && context.mounted) {
-      Navigator.pop(context);
-      await addNewImage(photo);
+      Navigator.pop<String>(context, photo.path);
+      await addNewImage(photo, isMarkdown: isMarkdown);
     } else {
       NoticeUtil.showToast(l10n.cancelSelect);
     }
   }
 
   //画图照片
-  Future<void> pickDraw(Uint8List dataList) async {
+  Future<void> pickDraw(Uint8List dataList, BuildContext context) async {
     final path = FileUtil.getCachePath('${const Uuid().v7()}.png');
+    Navigator.pop(context, path);
     addNewImage(XFile.fromData(dataList, path: path)..saveTo(path));
   }
 
   //网络图片
   Future<void> networkImage(BuildContext context) async {
-    Navigator.pop(context);
     NoticeUtil.showToast(l10n.imageFetching);
     final imageUrl = await Api.updateImageUrl();
     if (imageUrl == null) {
@@ -265,6 +282,7 @@ class EditLogic extends GetxController {
       return;
     }
     final path = FileUtil.getCachePath('${const Uuid().v7()}.png');
+    if (context.mounted) Navigator.pop(context, path);
     addNewImage(XFile.fromData(imageData, path: path)..saveTo(path));
   }
 
@@ -343,8 +361,9 @@ class EditLogic extends GetxController {
     state.isSaving = true;
     update(['modal']);
     // 根据文本中的实际内容移除不需要的资源
-    final originContent =
-        jsonEncode(quillController.document.toDelta().toJson());
+    final originContent = state.type == DiaryType.markdown
+        ? markdownTextEditingController!.text.trim()
+        : jsonEncode(quillController!.document.toDelta().toJson());
     final needImage = await Kmp.findMatches(
         text: originContent, patterns: state.imagePathList);
     final needVideo = await Kmp.findMatches(
@@ -434,7 +453,6 @@ class EditLogic extends GetxController {
 
   //去画画
   void toDrawPage(BuildContext context) {
-    Navigator.pop(context);
     unFocus();
     Get.toNamed(AppRoutes.drawPage);
   }
@@ -517,13 +535,14 @@ class EditLogic extends GetxController {
 
   //获取音频名称
   void setAudioName(String name) {
+    if (quillController == null) return;
     state.audioNameList.add(name);
     final audioBlock = AudioBlockEmbed.fromName(name);
-    final index = quillController.selection.baseOffset;
-    final length = quillController.selection.extentOffset - index;
+    final index = quillController!.selection.baseOffset;
+    final length = quillController!.selection.extentOffset - index;
     // 插入音频 Embed
-    quillController.replaceText(index, length, audioBlock, null);
-    quillController.moveCursorToPosition(index + 1);
+    quillController?.replaceText(index, length, audioBlock, null);
+    quillController?.moveCursorToPosition(index + 1);
     update(['Audio']);
   }
 

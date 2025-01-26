@@ -4,17 +4,21 @@ import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_highlight/themes/a11y-dark.dart';
+import 'package:flutter_highlight/themes/a11y-light.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/common/values/diary_type.dart';
+import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/sheet.dart';
 import 'package:moodiary/components/category_add/category_add_view.dart';
 import 'package:moodiary/components/expand_button/expand_button_view.dart';
 import 'package:moodiary/components/lottie_modal/lottie_modal.dart';
 import 'package:moodiary/components/markdown_bar/markdown_bar.dart';
+import 'package:moodiary/components/markdown_embed/image_embed.dart';
 import 'package:moodiary/components/mood_icon/mood_icon_view.dart';
 import 'package:moodiary/components/quill_embed/audio_embed.dart';
 import 'package:moodiary/components/quill_embed/image_embed.dart';
@@ -44,6 +48,24 @@ class EditPage extends StatelessWidget {
       tooltip: tooltip,
       onPressed: onPressed,
     );
+  }
+
+  Widget _buildMarkdownWidget(
+      {required Brightness brightness, required String data}) {
+    final config = brightness == Brightness.dark
+        ? MarkdownConfig.darkConfig
+        : MarkdownConfig.defaultConfig;
+    return MarkdownWidget(
+        data: data,
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+        config: config.copy(configs: [
+          ImgConfig(builder: (src, _) {
+            return MarkdownImageEmbed(isEdit: true, imageName: src);
+          }),
+          brightness == Brightness.dark
+              ? PreConfig.darkConfig.copy(theme: a11yDarkTheme)
+              : const PreConfig().copy(theme: a11yLightTheme)
+        ]));
   }
 
   @override
@@ -412,7 +434,7 @@ class EditPage extends StatelessWidget {
       );
     }
 
-    Widget buildPickImage() {
+    Widget buildPickImage({bool allowMulti = false, bool isMarkdown = false}) {
       return SimpleDialog(
         title: Text(l10n.editPickImage),
         children: [
@@ -425,9 +447,15 @@ class EditPage extends StatelessWidget {
               ],
             ),
             onPressed: () async {
-              await logic.pickMultiPhoto(
-                context,
-              );
+              allowMulti
+                  ? await logic.pickMultiPhoto(
+                      context,
+                    )
+                  : await logic.pickPhoto(
+                      ImageSource.gallery,
+                      context,
+                      isMarkdown: isMarkdown,
+                    );
             },
           ),
           if (Platform.isAndroid || Platform.isIOS)
@@ -443,6 +471,7 @@ class EditPage extends StatelessWidget {
                 await logic.pickPhoto(
                   ImageSource.camera,
                   context,
+                  isMarkdown: isMarkdown,
                 );
               },
             ),
@@ -676,6 +705,34 @@ class EditPage extends StatelessWidget {
       );
     }
 
+    Widget buildType() {
+      return Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainer.withValues(alpha: 0.8),
+          borderRadius: AppBorderRadius.smallBorderRadius,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: RichText(
+          text: TextSpan(
+            text: '${l10n.diaryType} ',
+            style: textStyle.labelSmall,
+            children: [
+              TextSpan(
+                text: switch (state.type) {
+                  DiaryType.text => l10n.homeNewDiaryPlainText,
+                  DiaryType.markdown => l10n.homeNewDiaryMarkdown,
+                  DiaryType.richText => l10n.homeNewDiaryRichText,
+                },
+                style: textStyle.labelSmall?.copyWith(
+                  color: colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     Widget buildTimer() {
       return Container(
         decoration: BoxDecoration(
@@ -750,7 +807,7 @@ class EditPage extends StatelessWidget {
         child: TooltipTheme(
           data: const TooltipThemeData(preferBelow: false),
           child: QuillSimpleToolbar(
-            controller: logic.quillController,
+            controller: logic.quillController!,
             config: QuillSimpleToolbarConfig(
               showFontFamily: false,
               showFontSize: false,
@@ -803,7 +860,7 @@ class EditPage extends StatelessWidget {
               showDialog(
                 context: context,
                 builder: (context) {
-                  return buildPickImage();
+                  return buildPickImage(allowMulti: true);
                 },
               );
             },
@@ -854,7 +911,7 @@ class EditPage extends StatelessWidget {
 
     Widget markdownToolBar() {
       return Row(
-        spacing: 4.0,
+        spacing: 8.0,
         children: [
           IconButton.filled(
             icon: const Icon(Icons.keyboard_command_key),
@@ -869,7 +926,7 @@ class EditPage extends StatelessWidget {
               );
             },
           ),
-          IconButton.filled(
+          IconButton.filledTonal(
             onPressed: logic.renderMarkdown,
             style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap),
@@ -895,6 +952,7 @@ class EditPage extends StatelessWidget {
               child: MarkdownToolbar(
                 useIncludedTextField: false,
                 collapsable: false,
+                spacing: 8.0,
                 controller: logic.markdownTextEditingController,
                 focusNode: logic.contentFocusNode,
                 backgroundColor: colorScheme.surfaceContainer,
@@ -903,6 +961,17 @@ class EditPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 width: 40,
                 height: 40,
+                beforeImagePressed: () async {
+                  return await showDialog<String>(
+                    context: context,
+                    builder: (context) {
+                      return buildPickImage(
+                        allowMulti: false,
+                        isMarkdown: true,
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ),
@@ -940,12 +1009,9 @@ class EditPage extends StatelessWidget {
                         ),
                       ),
                     )
-                  : MarkdownWidget(
-                      config: colorScheme.brightness == Brightness.dark
-                          ? MarkdownConfig.darkConfig
-                          : MarkdownConfig.defaultConfig,
-                      data: logic.markdownTextEditingController.text,
-                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                  : _buildMarkdownWidget(
+                      brightness: colorScheme.brightness,
+                      data: logic.markdownTextEditingController!.text,
                     ),
             );
           }),
@@ -953,7 +1019,7 @@ class EditPage extends StatelessWidget {
       } else {
         return QuillEditor.basic(
           focusNode: logic.contentFocusNode,
-          controller: logic.quillController,
+          controller: logic.quillController!,
           config: QuillEditorConfig(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
             placeholder: l10n.editContent,
@@ -991,6 +1057,7 @@ class EditPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       spacing: 8.0,
                       children: [
+                        buildType(),
                         if (state.showWriteTime) buildTimer(),
                         if (state.showWordCount) buildCount(),
                       ],
@@ -1030,15 +1097,21 @@ class EditPage extends StatelessWidget {
                   appBar: AppBar(
                     title: buildTitle(),
                     titleSpacing: .0,
+                    leading: PageBackButton(
+                      onBack: logic.handleBack,
+                    ),
                     centerTitle: true,
                     actions: [
-                      IconButton(
-                        icon: const Icon(Icons.check),
-                        onPressed: () {
-                          logic.unFocus();
-                          logic.saveDiary();
-                        },
-                        tooltip: l10n.save,
+                      Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: IconButton(
+                          icon: const Icon(Icons.check_rounded),
+                          onPressed: () {
+                            logic.unFocus();
+                            logic.saveDiary();
+                          },
+                          tooltip: l10n.save,
+                        ),
                       ),
                     ],
                   ),
