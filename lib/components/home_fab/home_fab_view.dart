@@ -23,6 +23,8 @@ class HomeFabComponent extends StatelessWidget {
   final Function() toPlainText;
   final Function() toRichText;
 
+  final bool showShadow;
+
   const HomeFabComponent({
     super.key,
     required this.animation,
@@ -35,6 +37,7 @@ class HomeFabComponent extends StatelessWidget {
     required this.toRichText,
     required this.closeFab,
     required this.openFab,
+    required this.showShadow,
   });
 
   @override
@@ -250,7 +253,7 @@ class HomeFabComponent extends StatelessWidget {
       return Obx(() {
         return Visibility(
           visible: shouldShow.value && constraints.maxWidth < 600,
-          child: RepaintBoundary(child: buildDiaryFab(false)),
+          child: RepaintBoundary(child: buildDiaryFab(showShadow)),
         );
       });
     });

@@ -151,6 +151,7 @@ class HomePage extends StatelessWidget {
         shouldShow: logic.shouldShow,
         isToTopShow: logic.isToTopShow,
         isExpanded: logic.isFabExpanded,
+        showShadow: true,
         toTop: logic.toTop,
         toMarkdown: () async {
           await logic.toEditPage(type: DiaryType.markdown);
