@@ -154,7 +154,7 @@ void main() async {
     darkTheme: await ThemeUtil.buildTheme(Brightness.dark),
     locale: locale,
     themeMode: ThemeMode.values[PrefUtil.getValue<int>('themeMode')!],
-    defaultTransition: Transition.cupertino,
+    defaultTransition: Transition.native,
     getPages: AppPages.routes,
     localizationsDelegates: const [
       ...AppLocalizations.localizationsDelegates,

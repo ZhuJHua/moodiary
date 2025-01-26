@@ -53,7 +53,9 @@ class ImagePage extends StatelessWidget {
                 builder: (BuildContext context, int index) {
                   return PhotoViewGalleryPageOptions(
                     imageProvider: FileImage(File(state.imagePathList[index])),
-                    heroAttributes: PhotoViewHeroAttributes(tag: index),
+                    heroAttributes: PhotoViewHeroAttributes(
+                      tag: state.imagePathList[index],
+                    ),
                   );
                 },
                 itemCount: state.imagePathList.length,

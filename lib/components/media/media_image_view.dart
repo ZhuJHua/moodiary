@@ -48,12 +48,15 @@ class MediaImageComponent extends StatelessWidget {
               onTap: () {
                 _toPhotoView(index, imageList);
               },
-              child: Card(
-                clipBehavior: Clip.hardEdge,
-                child: Image.file(
-                  File(imageList[index]),
-                  fit: BoxFit.cover,
-                  cacheWidth: 120 * pixelRatio.toInt(),
+              child: Hero(
+                tag: imageList[index],
+                child: Card(
+                  clipBehavior: Clip.hardEdge,
+                  child: Image.file(
+                    File(imageList[index]),
+                    fit: BoxFit.cover,
+                    cacheWidth: 120 * pixelRatio.toInt(),
+                  ),
                 ),
               ),
             );
