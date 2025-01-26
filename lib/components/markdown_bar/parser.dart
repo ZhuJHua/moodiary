@@ -67,6 +67,7 @@ class Format {
     String? customCodeCharacter,
     String? customBulletedListCharacter,
     String? customHorizontalRuleCharacter,
+    String? mediaPath,
   }) {
     switch (markdownToolbarOption) {
       case MarkdownToolbarOption.bold:
@@ -174,6 +175,7 @@ class Format {
         formatImage(
           controller: controller,
           selection: selection,
+          imgPath: mediaPath,
         );
         break;
       case MarkdownToolbarOption.horizontalRule:
@@ -588,17 +590,21 @@ void formatTextLink({
 void formatImage({
   required TextEditingController controller,
   required TextSelection selection,
+  required String? imgPath,
 }) {
-  const String altPlaceholder = 'Alt text';
-  const String linkPlaceholder = '/link/to/picture.jpg';
+  const String altPlaceholder = '';
+  const String linkPlaceholder = '';
 
   final beforeText = controller.text.substring(0, selection.start);
   final afterText =
       controller.text.substring(selection.end, controller.text.length);
-  controller.text = '$beforeText![$altPlaceholder]($linkPlaceholder)$afterText';
+  controller.text =
+      '$beforeText![$altPlaceholder](${imgPath ?? linkPlaceholder})$afterText';
 
   controller.selection = TextSelection(
       baseOffset: selection.start + 4 + altPlaceholder.length,
-      extentOffset:
-          selection.start + altPlaceholder.length + 4 + linkPlaceholder.length);
+      extentOffset: selection.start +
+          altPlaceholder.length +
+          4 +
+          (imgPath ?? linkPlaceholder).length);
 }

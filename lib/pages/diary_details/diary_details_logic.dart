@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/common/values/diary_type.dart';
 import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:refreshed/refreshed.dart';
@@ -15,18 +16,26 @@ class DiaryDetailsLogic extends GetxController {
   final DiaryDetailsState state = DiaryDetailsState();
 
   // 编辑器控制器
-  late QuillController quillController = QuillController(
-    document: Document.fromJson(jsonDecode(state.diary.content)),
-    readOnly: true,
-    selection: const TextSelection.collapsed(offset: 0),
-  );
+  QuillController? quillController;
 
   // 图片预览
   late final PageController pageController = PageController();
 
   @override
+  void onInit() {
+    if (state.diary.type != DiaryType.markdown.value) {
+      quillController = QuillController(
+        document: Document.fromJson(jsonDecode(state.diary.content)),
+        readOnly: true,
+        selection: const TextSelection.collapsed(offset: 0),
+      );
+    }
+    super.onInit();
+  }
+
+  @override
   void onClose() {
-    quillController.dispose();
+    quillController?.dispose();
     pageController.dispose();
     super.onClose();
   }

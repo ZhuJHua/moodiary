@@ -258,5 +258,6 @@
   "diaryEdit": "Edit",
   "diaryShare": "Share",
   "diaryCount": "{count} Words",
-  "dataSync": "Data sync"
+  "dataSync": "Data sync",
+  "diaryType": "Type"
 }

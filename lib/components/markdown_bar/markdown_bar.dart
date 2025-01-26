@@ -62,6 +62,7 @@ class MarkdownToolbar extends StatefulWidget {
     this.checkboxTooltip = 'Checkbox',
     this.quoteTooltip = 'Quote',
     this.horizontalRuleTooltip = 'Horizontal rule',
+    required this.beforeImagePressed,
   });
 
   /// It is recommended that you use your own TextField outside this widget for more customization.
@@ -242,6 +243,8 @@ class MarkdownToolbar extends StatefulWidget {
 
   /// Set a custom tooltip [String] for the horizontal rule button. Leave blank `''` to disable tooltip.
   final String horizontalRuleTooltip;
+
+  final Future<String?> Function() beforeImagePressed;
 
   @override
   State<MarkdownToolbar> createState() => MarkdownToolbarState();
@@ -602,8 +605,13 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
   void onLinkPressed() =>
       onToolbarItemPressed(markdownToolbarOption: MarkdownToolbarOption.link);
 
-  void onImagePressed() =>
-      onToolbarItemPressed(markdownToolbarOption: MarkdownToolbarOption.image);
+  void onImagePressed() async {
+    final path = await widget.beforeImagePressed();
+    onToolbarItemPressed(
+      markdownToolbarOption: MarkdownToolbarOption.image,
+      mediaPath: path,
+    );
+  }
 
   void onCodePressed() =>
       onToolbarItemPressed(markdownToolbarOption: MarkdownToolbarOption.code);
@@ -626,6 +634,7 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
   void onToolbarItemPressed({
     required MarkdownToolbarOption markdownToolbarOption,
     int? option,
+    String? mediaPath,
   }) {
     widget.useIncludedTextField
         ? _includedFocusNode.requestFocus()
@@ -644,6 +653,7 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
       customCodeCharacter: widget.codeCharacter,
       customBulletedListCharacter: widget.bulletedListCharacter,
       customHorizontalRuleCharacter: widget.horizontalRuleCharacter,
+      mediaPath: mediaPath,
     );
   }
 

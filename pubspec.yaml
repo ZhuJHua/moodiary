@@ -110,6 +110,7 @@ dependencies:
   flutter_inappwebview: 6.1.5
   sensors_plus: 6.1.1
   markdown: 7.3.0
+  flutter_highlight: 0.7.0
 
 
 dev_dependencies:
