@@ -6,6 +6,9 @@ on:
       - publish
   workflow_dispatch:
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   notify-telegram:
     name: Notify Telegram
