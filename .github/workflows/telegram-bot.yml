@@ -32,7 +32,7 @@ jobs:
           echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
           echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
           echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          echo 'OUTDATED_DEPENDENCIES=<<EOF' >> $GITHUB_ENV
 
       - name: Send Telegram Message
         uses: appleboy/telegram-action@master
