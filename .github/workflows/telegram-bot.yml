@@ -3,7 +3,7 @@ name: Release Notification
 on:
   release:
     types:
-      - publish
+      - released
   workflow_dispatch:
 
 env:
