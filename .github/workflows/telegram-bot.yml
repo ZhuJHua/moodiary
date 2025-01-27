@@ -42,7 +42,7 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: text
+          format: html
           message: |
             🎉 A new release is live! 🎉
 
