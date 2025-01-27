@@ -3,7 +3,8 @@ name: Release Notification
 on:
   release:
     types:
-      - published
+      - publish
+  workflow_dispatch:
 
 jobs:
   notify-telegram:
@@ -11,13 +12,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Extract Release Info
-        id: extract_release
+      - name: Get Latest Release Info
+        id: get_latest_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "RELEASE_NAME=${{ github.event.release.name }}" >> $GITHUB_ENV
-          echo "RELEASE_TAG=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-          echo "RELEASE_NOTES=${{ github.event.release.body }}" >> $GITHUB_ENV
-          echo "RELEASE_URL=${{ github.event.release.html_url }}" >> $GITHUB_ENV
+          # Use GitHub API to fetch the latest release
+          response=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/latest")
+          
+          # Parse the response to extract needed fields
+          RELEASE_TAG=$(echo "$response" | jq -r '.tag_name')
+          RELEASE_NAME=$(echo "$response" | jq -r '.name')
+          RELEASE_NOTES=$(echo "$response" | jq -r '.body')
+          RELEASE_URL=$(echo "$response" | jq -r '.html_url')
+          
+          # Export as environment variables
+          echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+          echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
+          echo "RELEASE_URL=$RELEASE_URL" >> $GITHUB_ENV
 
       - name: Send Telegram Message
         uses: appleboy/telegram-action@master
@@ -28,9 +42,9 @@ jobs:
           message: |
             🎉 *A new release is live!* 🎉
 
-            **Release:** ${{ env.RELEASE_NAME }}
+            **Release Name:** ${{ env.RELEASE_NAME }}
             **Tag:** ${{ env.RELEASE_TAG }}
-            **Notes:**
+            **Release Notes:**
             ${{ env.RELEASE_NOTES }}
-            
+
             🔗 [View Release](${{ env.RELEASE_URL }})
