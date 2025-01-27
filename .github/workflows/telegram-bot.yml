@@ -42,12 +42,13 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
-          format: markdown
+          format: html
           message: |
-            🎉 **A new release is live!** 🎉
+            🎉 A new release is live! 🎉
 
-            **Version:** ${{ env.RELEASE_TAG }}
-            **Release Notes:**
+            Version: ${{ env.RELEASE_TAG }}
+            
+            Release Notes:
             ${{ env.RELEASE_NOTES }}
 
-            🔗 [View Release](${{ env.RELEASE_URL }})
+            🔗 View Release: ${{ env.RELEASE_URL }}
