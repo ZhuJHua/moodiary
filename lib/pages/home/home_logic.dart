@@ -31,7 +31,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
       CurvedAnimation(
           parent: _barAnimationController, curve: Curves.easeInOut));
 
-  //late final PageController pageController = PageController();
+  late final PageController pageController = PageController();
 
   late final FrostedGlassOverlayLogic frostedGlassOverlayLogic =
       Bind.find<FrostedGlassOverlayLogic>();
@@ -58,7 +58,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   void onClose() {
     _fabAnimationController.dispose();
     _barAnimationController.dispose();
-    //pageController.dispose();
+    pageController.dispose();
     _appLifecycleListener.dispose();
     super.onClose();
   }
@@ -100,7 +100,7 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   void changeNavigator(int index) {
     navigatorIndex.value = index;
     shouldShow.value = index == 0;
-    //pageController.jumpToPage(index);
+    pageController.jumpToPage(index);
   }
 
   Future<void> hideNavigatorBar() async {

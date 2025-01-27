@@ -126,7 +126,9 @@ class MediaPage extends StatelessWidget {
                                   state.datetimeMediaMap[datetime]!;
                               return switch (state.mediaType.value) {
                                 MediaType.image => MediaImageComponent(
-                                    dateTime: datetime, imageList: fileList),
+                                    dateTime: datetime,
+                                    imageList: fileList,
+                                  ),
                                 MediaType.audio => MediaAudioComponent(
                                     dateTime: datetime, audioList: fileList),
                                 MediaType.video => MediaVideoComponent(

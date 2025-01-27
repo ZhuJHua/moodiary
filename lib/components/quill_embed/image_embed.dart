@@ -50,10 +50,13 @@ class ImageEmbedBuilder extends EmbedBuilder {
         },
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 300),
-          child: Card.outlined(
-            clipBehavior: Clip.hardEdge,
-            color: Colors.transparent,
-            child: Image.file(File(imagePath)),
+          child: Hero(
+            tag: imagePath,
+            child: Card.outlined(
+              clipBehavior: Clip.hardEdge,
+              color: Colors.transparent,
+              child: Image.file(File(imagePath)),
+            ),
           ),
         ),
       ),

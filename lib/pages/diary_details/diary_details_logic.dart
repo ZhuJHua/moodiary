@@ -41,9 +41,11 @@ class DiaryDetailsLogic extends GetxController {
   }
 
   //点击图片跳转到图片预览页面
-  void toPhotoView(List<String> imagePathList, int index) {
+  void toPhotoView(
+      List<String> imagePathList, int index, BuildContext context) {
     HapticFeedback.selectionClick();
     Get.toNamed(AppRoutes.photoPage, arguments: [imagePathList, index]);
+    // showImagePreview(context, imagePathList, index);
   }
 
   //点击视频跳转到视频预览页面

@@ -306,9 +306,9 @@ class EditLogic extends GetxController {
   }
 
   //预览图片
-  void toPhotoView(List<String> imagePath, int index) {
-    Get.toNamed(AppRoutes.photoPage, arguments: [imagePath, index]);
-  }
+  // void toPhotoView(List<String> imagePath, int index) {
+  //   Get.toNamed(AppRoutes.photoPage, arguments: [imagePath, index]);
+  // }
 
   //预览视频
   void toVideoView(List<String> videoPath, int index) {

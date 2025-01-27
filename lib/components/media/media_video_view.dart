@@ -1,9 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/components/base/image.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:path/path.dart';
 import 'package:refreshed/refreshed.dart';
@@ -22,7 +20,6 @@ class MediaVideoComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     // 将视频路径转换为缩略图路径
@@ -36,7 +33,7 @@ class MediaVideoComponent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(4.0),
           child: Text(
             DateFormat.yMMMEd().format(dateTime),
             style: textStyle.titleSmall?.copyWith(color: colorScheme.secondary),
@@ -44,34 +41,26 @@ class MediaVideoComponent extends StatelessWidget {
         ),
         GridView.builder(
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 120,
-            childAspectRatio: 1.0,
-          ),
+              maxCrossAxisExtent: 120,
+              childAspectRatio: 1.0,
+              crossAxisSpacing: 1.0,
+              mainAxisSpacing: 1.0),
           physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
+          padding: const EdgeInsets.all(4.0),
           shrinkWrap: true,
           itemBuilder: (context, index) {
-            return InkWell(
-              borderRadius: AppBorderRadius.mediumBorderRadius,
-              onTap: () {
-                _toVideoView(videoList, index);
-              },
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: Card(
-                      clipBehavior: Clip.hardEdge,
-                      child: Image.file(
-                        File(thumbnailList[index]),
-                        fit: BoxFit.cover,
-                        cacheWidth: 120 * pixelRatio.toInt(),
-                      ),
-                    ),
-                  ),
-                  const FaIcon(FontAwesomeIcons.play)
-                ],
-              ),
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                ThumbnailImage(
+                  imagePath: thumbnailList[index],
+                  size: 120,
+                  onTap: () {
+                    _toVideoView(videoList, index);
+                  },
+                ),
+                const FaIcon(FontAwesomeIcons.play)
+              ],
             );
           },
           itemCount: thumbnailList.length,

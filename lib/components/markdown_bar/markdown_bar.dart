@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'parser.dart';
@@ -639,22 +640,28 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
     widget.useIncludedTextField
         ? _includedFocusNode.requestFocus()
         : widget.focusNode?.requestFocus();
-    Format.toolbarItemPressed(
-      markdownToolbarOption: markdownToolbarOption,
-      controller: widget.useIncludedTextField
-          ? _includedController
-          : widget.controller ?? _includedController,
-      selection: widget.useIncludedTextField
-          ? _includedController.selection
-          : widget.controller?.selection ?? _includedController.selection,
-      option: option,
-      customBoldCharacter: widget.boldCharacter,
-      customItalicCharacter: widget.italicCharacter,
-      customCodeCharacter: widget.codeCharacter,
-      customBulletedListCharacter: widget.bulletedListCharacter,
-      customHorizontalRuleCharacter: widget.horizontalRuleCharacter,
-      mediaPath: mediaPath,
-    );
+    try {
+      Format.toolbarItemPressed(
+        markdownToolbarOption: markdownToolbarOption,
+        controller: widget.useIncludedTextField
+            ? _includedController
+            : widget.controller ?? _includedController,
+        selection: widget.useIncludedTextField
+            ? _includedController.selection
+            : widget.controller?.selection ?? _includedController.selection,
+        option: option,
+        customBoldCharacter: widget.boldCharacter,
+        customItalicCharacter: widget.italicCharacter,
+        customCodeCharacter: widget.codeCharacter,
+        customBulletedListCharacter: widget.bulletedListCharacter,
+        customHorizontalRuleCharacter: widget.horizontalRuleCharacter,
+        mediaPath: mediaPath,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+    }
   }
 
   @override

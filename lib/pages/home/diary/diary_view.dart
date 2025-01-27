@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:moodiary/common/values/view_mode.dart';
 import 'package:moodiary/components/base/sheet.dart';
 import 'package:moodiary/components/base/text.dart';
@@ -158,31 +157,16 @@ class DiaryPage extends StatelessWidget {
                       onTap: () {
                         HapticFeedback.selectionClick();
                       },
-                      child: Row(
-                        spacing: 4.0,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            fit: FlexFit.loose,
-                            child: Obx(() {
-                              return Text(
-                                state.customTitleName.value.isNotEmpty
-                                    ? state.customTitleName.value
-                                    : l10n.appName,
-                                overflow: TextOverflow.ellipsis,
-                                style: textStyle.titleLarge?.copyWith(
-                                  color: colorScheme.onSurface,
-                                ),
-                              );
-                            }),
-                          ),
-                          FaIcon(
-                            FontAwesomeIcons.chevronRight,
-                            color: colorScheme.onSurface,
-                            size: 12,
-                          ),
-                        ],
-                      ),
+                      child: Obx(() {
+                        return buildAdaptiveText(
+                            text: state.customTitleName.value.isNotEmpty
+                                ? state.customTitleName.value
+                                : l10n.appName,
+                            context: context,
+                            textStyle: textStyle.titleLarge?.copyWith(
+                              color: colorScheme.onSurface,
+                            ));
+                      }),
                     ),
                     Obx(() {
                       return buildAdaptiveText(

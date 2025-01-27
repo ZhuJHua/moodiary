@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:rive_animated_icon/rive_animated_icon.dart';
 
 class Processing extends StatelessWidget {
-  const Processing({super.key});
+  final Color? color;
+
+  const Processing({super.key, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -11,7 +13,7 @@ class Processing extends StatelessWidget {
       riveIcon: RiveIcon.reload,
       width: 80,
       height: 80,
-      color: colorScheme.onSurface,
+      color: color ?? colorScheme.onSurface,
       strokeWidth: 4.0,
     );
   }
