@@ -256,6 +256,7 @@ class DiaryDetailsPage extends StatelessWidget {
                           'image', state.diary.imageName[i]);
                     }),
                     index,
+                    context,
                   );
                 },
                 child: Image.file(

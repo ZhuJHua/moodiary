@@ -36,7 +36,6 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   @override
   void onReady() {
     getHitokoto();
-
     //监听 tab
     tabController.addListener(_tabBarListener);
     //监听 inner
@@ -79,7 +78,7 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     checkPageChange();
     // 检查是否显示顶部内容
     _checkShowTop();
-    //homeLogic.resetNavigatorBar();
+    homeLogic.resetNavigatorBar();
   }
 
   /// 跳转到指定分类

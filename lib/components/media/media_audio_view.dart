@@ -18,7 +18,7 @@ class MediaAudioComponent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(4.0),
           child: Text(
             DateFormat.yMMMEd().format(dateTime),
             style: textStyle.titleSmall?.copyWith(color: colorScheme.secondary),

@@ -1,8 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/components/base/image.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -19,7 +17,6 @@ class MediaImageComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     final textStyle = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -28,9 +25,9 @@ class MediaImageComponent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(4.0),
           child: Text(
-            DateFormat.yMMMEd().format(dateTime),
+            DateFormat.yMMMMEEEEd().format(dateTime),
             style: textStyle.titleSmall?.copyWith(color: colorScheme.secondary),
           ),
         ),
@@ -38,27 +35,19 @@ class MediaImageComponent extends StatelessWidget {
           gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
             maxCrossAxisExtent: 120,
             childAspectRatio: 1.0,
+            crossAxisSpacing: 1.0,
+            mainAxisSpacing: 1.0,
           ),
           physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
+          padding: const EdgeInsets.all(4.0),
           shrinkWrap: true,
           itemBuilder: (context, index) {
-            return InkWell(
-              borderRadius: AppBorderRadius.mediumBorderRadius,
+            return ThumbnailImage(
+              imagePath: imageList[index],
+              size: 120,
               onTap: () {
                 _toPhotoView(index, imageList);
               },
-              child: Hero(
-                tag: imageList[index],
-                child: Card(
-                  clipBehavior: Clip.hardEdge,
-                  child: Image.file(
-                    File(imageList[index]),
-                    fit: BoxFit.cover,
-                    cacheWidth: 120 * pixelRatio.toInt(),
-                  ),
-                ),
-              ),
             );
           },
           itemCount: imageList.length,

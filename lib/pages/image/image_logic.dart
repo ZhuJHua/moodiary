@@ -5,8 +5,13 @@ import 'image_state.dart';
 
 class ImageLogic extends GetxController {
   final ImageState state = ImageState();
-  late final PageController pageController =
-      PageController(initialPage: state.imageIndex.value);
+  late final PageController pageController;
+
+  @override
+  void onInit() {
+    pageController = PageController(initialPage: state.imageIndex.value);
+    super.onInit();
+  }
 
   @override
   void onClose() {

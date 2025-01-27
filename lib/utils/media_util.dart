@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
@@ -185,22 +186,45 @@ class MediaUtil {
     return completer.future;
   }
 
-  //获取图片宽高比例
+  static const int _maxCacheSize = 1000;
+  static final LinkedHashMap<String, double> _cache = LinkedHashMap();
+
   static Future<double> getImageAspectRatio(ImageProvider imageProvider) async {
-    final Completer<double> completer = Completer<double>();
-    final ImageStream stream =
-        imageProvider.resolve(const ImageConfiguration());
-    stream.addListener(
-      ImageStreamListener(
-        (ImageInfo info, bool _) {
-          final double aspectRatio = double.parse(
-              (info.image.width.toDouble() / info.image.height.toDouble())
-                  .toStringAsPrecision(2));
-          completer.complete(aspectRatio);
-        },
-      ),
+    final key = _getImageKey(imageProvider);
+
+    if (_cache.containsKey(key)) {
+      return _cache[key]!;
+    }
+
+    final completer = Completer<double>();
+    final imageStream = imageProvider.resolve(const ImageConfiguration());
+    imageStream.addListener(
+      ImageStreamListener((ImageInfo info, bool _) {
+        final aspectRatio = info.image.width / info.image.height;
+        _addToCache(key, aspectRatio);
+        completer.complete(aspectRatio);
+      }),
     );
+
     return completer.future;
+  }
+
+  static void _addToCache(String key, double ratio) {
+    if (_cache.length >= _maxCacheSize) {
+      _cache.remove(_cache.keys.first);
+    }
+    _cache[key] = ratio;
+  }
+
+  static String _getImageKey(ImageProvider imageProvider) {
+    if (imageProvider is AssetImage) {
+      return 'asset_${imageProvider.assetName}';
+    } else if (imageProvider is NetworkImage) {
+      return 'network_${imageProvider.url}';
+    } else if (imageProvider is FileImage) {
+      return 'file_${imageProvider.file.path}';
+    }
+    return imageProvider.toString();
   }
 
   //获取单个图片，拍照或者相册
