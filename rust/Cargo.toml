@@ -7,9 +7,9 @@ edition = "2021"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-flutter_rust_bridge = "=2.7.0"
+flutter_rust_bridge = "2.7.1"
 image = "0.25.5"
-fast_image_resize = { version = "5.1.0", features = ["image"] }
-anyhow = "1.0.94"
+fast_image_resize = { version = "5.1.1", features = ["image"] }
+anyhow = "1.0.95"
 bytemuck = "1.21.0"
 ttf-parser = {git = "https://github.com/inferiorhumanorgans/ttf-parser.git", branch = "fvar-instance"}
