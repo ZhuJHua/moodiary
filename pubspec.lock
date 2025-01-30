@@ -554,10 +554,10 @@ packages:
     dependency: "direct main"
     description:
       name: dio
-      sha256: "5fe8c82766abd7494130a3dc5b9ffb8ca916898900c75a369b287267eac8d5b0"
+      sha256: "253a18bbd4851fecba42f7343a1df3a9a4c1d31a2c1b37e221086b4fa8c8dbc9"
       url: "https://pub.dev"
     source: hosted
-    version: "5.8.0"
+    version: "5.8.0+1"
   dio_web_adapter:
     dependency: transitive
     description:
@@ -650,10 +650,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: "3ddd0838d4fd028e23771a9e5f83f4ec6b3d73919cd1d72ae02709a47c1fcf7d"
+      sha256: c9943dd7d702ab4199d199bc151a2d79c86db031a02ad84566dab58c494d2adc
       url: "https://pub.dev"
     source: hosted
-    version: "8.2.0"
+    version: "8.3.1"
   file_selector_linux:
     dependency: transitive
     description:
@@ -1402,6 +1402,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  llama_cpp_dart:
+    dependency: "direct main"
+    description:
+      name: llama_cpp_dart
+      sha256: d200f269aff58b5f4453ba7b9fe6df7793894fc4573bf6b499f7d97549cedff4
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.8"
   local_auth:
     dependency: "direct main"
     description:
@@ -2222,10 +2230,10 @@ packages:
     dependency: "direct main"
     description:
       name: shared_preferences
-      sha256: c59819dacc6669a1165d54d2735a9543f136f9b3cec94ca65cea6ab8dffc422e
+      sha256: "688ee90fbfb6989c980254a56cb26ebe9bb30a3a2dff439a78894211f73de67a"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.0"
+    version: "2.5.1"
   shared_preferences_android:
     dependency: transitive
     description:
@@ -2543,6 +2551,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  typed_isolate:
+    dependency: transitive
+    description:
+      name: typed_isolate
+      sha256: e245b87368104f9da13a75268e0bce16a2a8d4c9a4194a5eb50bb569be680c65
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.0"
   unicode:
     dependency: transitive
     description:
