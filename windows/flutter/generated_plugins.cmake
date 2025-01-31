@@ -27,7 +27,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
-  llama_cpp_dart
   media_kit_native_event_loop
   rust_lib_mood_diary
   tflite_flutter

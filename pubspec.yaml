@@ -81,7 +81,7 @@ dependencies:
   video_player_media_kit: 1.0.5
   video_player: 2.9.2
   chewie: 1.10.0
-  flutter_markdown: 0.7.5
+  flutter_markdown: 0.7.6
   image_picker_platform_interface: 2.10.1
   chinese_font_library: 1.2.0
   flutter_image_compress: 2.4.0
@@ -111,7 +111,7 @@ dependencies:
   sensors_plus: 6.1.1
   markdown: 7.3.0
   flutter_highlight: 0.7.0
-  llama_cpp_dart: 0.0.8
+#  //llama_cpp_dart: 0.0.8
 
 
 dev_dependencies:

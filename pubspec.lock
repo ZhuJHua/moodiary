@@ -972,10 +972,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_markdown
-      sha256: e37f4c69a07b07bb92622ef6b131a53c9aae48f64b176340af9e8e5238718487
+      sha256: "46cdcdcd216f15ac04c80e24e814a89ea7143654442c53ba67fec349b4d44565"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.5"
+    version: "0.7.6"
   flutter_native_splash:
     dependency: "direct main"
     description:
@@ -1402,14 +1402,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
-  llama_cpp_dart:
-    dependency: "direct main"
-    description:
-      name: llama_cpp_dart
-      sha256: d200f269aff58b5f4453ba7b9fe6df7793894fc4573bf6b499f7d97549cedff4
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.8"
   local_auth:
     dependency: "direct main"
     description:
@@ -2551,14 +2543,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
-  typed_isolate:
-    dependency: transitive
-    description:
-      name: typed_isolate
-      sha256: e245b87368104f9da13a75268e0bce16a2a8d4c9a4194a5eb50bb569be680c65
-      url: "https://pub.dev"
-    source: hosted
-    version: "6.0.0"
   unicode:
     dependency: transitive
     description:
@@ -2731,10 +2715,10 @@ packages:
     dependency: transitive
     description:
       name: video_player_web
-      sha256: "881b375a934d8ebf868c7fb1423b2bfaa393a0a265fa3f733079a86536064a10"
+      sha256: "3ef40ea6d72434edbfdba4624b90fd3a80a0740d260667d91e7ecd2d79e13476"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.3"
+    version: "2.3.4"
   visibility_detector:
     dependency: transitive
     description:
