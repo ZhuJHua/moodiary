@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/diary_card/basic_card_logic.dart';
 import 'package:moodiary/utils/file_util.dart';
 
@@ -61,18 +62,16 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     spacing: 4.0,
                     children: [
                       if (diary.title.isNotEmpty) ...[
-                        Text(
+                        EllipsisText(
                           diary.title,
-                          overflow: TextOverflow.ellipsis,
                           style: textStyle.titleMedium
                               ?.copyWith(color: colorScheme.onSurface),
                           maxLines: 1,
                         )
                       ],
                       Expanded(
-                        child: Text(
+                        child: EllipsisText(
                           diary.contentText.trim(),
-                          overflow: TextOverflow.ellipsis,
                           maxLines: diary.title.isNotEmpty ? 3 : 4,
                           style: textStyle.bodyMedium
                               ?.copyWith(color: colorScheme.onSurface),
