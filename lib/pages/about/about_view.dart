@@ -4,6 +4,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
 import 'package:moodiary/main.dart';
 import 'package:moodiary/utils/update_util.dart';
@@ -47,32 +48,41 @@ class AboutPage extends StatelessWidget {
                       child: child,
                     );
                   },
-                  child: Text(
-                    state.appName,
-                    style: textStyle.titleLarge
-                        ?.copyWith(color: colorScheme.onSurface),
-                  ),
+                  child: Obx(() {
+                    return AnimatedText(
+                      state.appName,
+                      style: textStyle.titleLarge
+                          ?.copyWith(color: colorScheme.onSurface),
+                      isFetching: state.isFetching.value,
+                    );
+                  }),
                 ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    state.appVersion,
-                    style: textStyle.labelSmall
-                        ?.copyWith(color: colorScheme.primary),
-                  ),
+                  Obx(() {
+                    return AnimatedText(
+                      state.appVersion,
+                      style: textStyle.labelSmall
+                          ?.copyWith(color: colorScheme.primary),
+                      isFetching: state.isFetching.value,
+                    );
+                  }),
                   const SizedBox(
                     height: 10,
                     child: VerticalDivider(
                       thickness: 2,
                     ),
                   ),
-                  Text(
-                    state.systemVersion,
-                    style: textStyle.labelSmall
-                        ?.copyWith(color: colorScheme.onSurface),
-                  ),
+                  Obx(() {
+                    return AnimatedText(
+                      state.systemVersion,
+                      style: textStyle.labelSmall
+                          ?.copyWith(color: colorScheme.onSurface),
+                      isFetching: state.isFetching.value,
+                    );
+                  }),
                 ],
               ),
             ],
@@ -92,9 +102,7 @@ class AboutPage extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             physics: const ClampingScrollPhysics(),
             children: [
-              GetBuilder<AboutLogic>(builder: (_) {
-                return buildLogoTitle();
-              }),
+              buildLogoTitle(),
               const SizedBox(height: 16.0),
               Card.outlined(
                 color: colorScheme.surfaceContainerLow,
