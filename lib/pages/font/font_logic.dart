@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary/presentation/pref.dart';
-import 'package:moodiary/src/rust/api/font.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/font_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
@@ -35,30 +34,18 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
     state.currentFontPath.value = path;
   }
 
-  Future<void> getFontList({bool inInit = true}) async {
-    if (inInit) {
-      state.isFetching.value = true;
-    }
-
+  Future<void> getFontList() async {
+    state.isFetching.value = true;
     final filePathList = await FileUtil.getDirFilePath('font');
     for (final filePath in filePathList) {
       if (filePath.endsWith('.ttf')) {
-        //尝试获取字体名称，如果获取失败，不添加到列表
-        final fontName =
-            await FontReader.getFontNameFromTtf(ttfFilePath: filePath);
+        final fontName = await FontUtil.getFontName(filePath: filePath);
         if (fontName != null) {
           state.fontMap[filePath] = fontName;
+          await FontUtil.loadFont(fontName: fontName, fontPath: filePath);
         }
       }
     }
-    final List<Future<void>> fontLoadFutures = [];
-    // 预加载字体
-    for (final entry in state.fontMap.entries) {
-      fontLoadFutures
-          .add(FontUtil.loadFont(fontName: entry.key, fontPath: entry.value));
-    }
-    await Future.wait(fontLoadFutures);
-    update();
     state.isFetching.value = false;
   }
 
@@ -72,14 +59,14 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
     if (res != null) {
       final path = res.files.single.path!;
       // 检查字体名称，是否已经存在
-      final fontName = await FontReader.getFontNameFromTtf(ttfFilePath: path);
+      final fontName = await FontUtil.getFontName(filePath: path);
       if (state.fontMap.containsValue(fontName)) {
         NoticeUtil.showToast('字体已存在');
         return;
       }
       final newPath = FileUtil.getRealPath('font', '$fontName.ttf');
       File(path).copy(newPath);
-      await getFontList(inInit: false);
+      await getFontList();
       NoticeUtil.showToast('添加成功');
     } else {
       NoticeUtil.showToast('取消文件选择');

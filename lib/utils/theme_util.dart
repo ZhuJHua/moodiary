@@ -7,7 +7,6 @@ import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/internal.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/presentation/pref.dart';
-import 'package:moodiary/src/rust/api/font.dart';
 import 'package:moodiary/utils/font_util.dart';
 
 class ThemeUtil {
@@ -165,11 +164,11 @@ class ThemeUtil {
 
     // 加载自定义字体
     if (customFont.isNotEmpty) {
-      fontFamily = await FontReader.getFontNameFromTtf(ttfFilePath: customFont);
+      fontFamily = await FontUtil.getFontName(filePath: customFont);
       if (fontFamily != null) {
         await FontUtil.loadFont(fontName: fontFamily, fontPath: customFont);
         wghtAxisMap = _unifyFontWeights(
-            await FontReader.getWghtAxisFromVfFont(ttfFilePath: customFont));
+            await FontUtil.getFontWghtAxis(filePath: customFont));
       }
     } else if (Platform.isWindows) {
       fontFamily = 'Microsoft Yahei UI';

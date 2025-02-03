@@ -299,26 +299,22 @@ class FontPage extends StatelessWidget {
           backgroundColor: colorScheme.surfaceContainerLow,
           body: size.width < 600
               ? Obx(() {
-                  return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: !state.isFetching.value
-                        ? Padding(
-                            padding: EdgeInsets.only(
-                                left: 16,
-                                right: 16,
-                                bottom: state.bottomSheetHeight.value),
-                            child: buildText(),
-                          )
-                        : const Center(
-                            child: Processing(),
-                          ),
-                  );
+                  return !state.isFetching.value
+                      ? Padding(
+                          padding: EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              bottom: state.bottomSheetHeight.value),
+                          child: buildText(),
+                        )
+                      : const Center(
+                          child: Processing(),
+                        );
                 })
               : Obx(() {
-                  return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: !state.isFetching.value
-                        ? Row(
+                  return !state.isFetching.value
+                      ? RepaintBoundary(
+                          child: Row(
                             children: [
                               Expanded(
                                   child: Padding(
@@ -328,11 +324,11 @@ class FontPage extends StatelessWidget {
                               )),
                               Expanded(child: buildOption())
                             ],
-                          )
-                        : const Center(
-                            child: Processing(),
                           ),
-                  );
+                        )
+                      : const Center(
+                          child: Processing(),
+                        );
                 }),
           resizeToAvoidBottomInset: false,
           floatingActionButton: size.width > 600
