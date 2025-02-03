@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/src/rust/api/font.dart';
 import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/font_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -54,12 +54,8 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
     final List<Future<void>> fontLoadFutures = [];
     // 预加载字体
     for (final entry in state.fontMap.entries) {
-      if (loadedFonts.contains(entry.value)) {
-        continue;
-      }
-      fontLoadFutures.add(
-          DynamicFont.file(fontFamily: entry.value, filepath: entry.key)
-              .load());
+      fontLoadFutures
+          .add(FontUtil.loadFont(fontName: entry.key, fontPath: entry.value));
     }
     await Future.wait(fontLoadFutures);
     update();

@@ -83,7 +83,6 @@ dependencies:
   chewie: 1.10.0
   flutter_markdown: 0.7.6
   image_picker_platform_interface: 2.10.1
-  chinese_font_library: 1.2.0
   flutter_image_compress: 2.4.0
   mime: 2.0.0
   auto_size_text_field: 2.2.4

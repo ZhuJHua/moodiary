@@ -42,7 +42,11 @@ class FontPage extends StatelessWidget {
             width: 64,
             height: 64,
             child: const Center(
-              child: Text('Aa', style: TextStyle(fontSize: 32)),
+              child: Text('Aa',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontFamily: '',
+                  )),
             ),
           ),
         ),
