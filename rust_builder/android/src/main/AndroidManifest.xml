@@ -1,2 +1,2 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.flutter_rust_bridge.rust_lib_mood_diary"></manifest>
+    package="com.flutter_rust_bridge.moodiary_rust"></manifest>

@@ -98,6 +98,8 @@ PODS:
     - Flutter
   - media_kit_video (0.0.1):
     - Flutter
+  - moodiary_rust (0.0.1):
+    - Flutter
   - network_info_plus (0.0.1):
     - Flutter
   - ObjectBox (4.0.1)
@@ -117,8 +119,6 @@ PODS:
   - record_darwin (1.0.0):
     - Flutter
   - rive_common (0.0.1):
-    - Flutter
-  - rust_lib_mood_diary (0.0.1):
     - Flutter
   - screen_brightness_ios (0.1.0):
     - Flutter
@@ -193,6 +193,7 @@ DEPENDENCIES:
   - media_kit_libs_ios_video (from `.symlinks/plugins/media_kit_libs_ios_video/ios`)
   - media_kit_native_event_loop (from `.symlinks/plugins/media_kit_native_event_loop/ios`)
   - media_kit_video (from `.symlinks/plugins/media_kit_video/ios`)
+  - moodiary_rust (from `.symlinks/plugins/moodiary_rust/ios`)
   - network_info_plus (from `.symlinks/plugins/network_info_plus/ios`)
   - objectbox_flutter_libs (from `.symlinks/plugins/objectbox_flutter_libs/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
@@ -201,7 +202,6 @@ DEPENDENCIES:
   - quill_native_bridge_ios (from `.symlinks/plugins/quill_native_bridge_ios/ios`)
   - record_darwin (from `.symlinks/plugins/record_darwin/ios`)
   - rive_common (from `.symlinks/plugins/rive_common/ios`)
-  - rust_lib_mood_diary (from `.symlinks/plugins/rust_lib_mood_diary/ios`)
   - screen_brightness_ios (from `.symlinks/plugins/screen_brightness_ios/ios`)
   - sensors_plus (from `.symlinks/plugins/sensors_plus/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
@@ -269,6 +269,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/media_kit_native_event_loop/ios"
   media_kit_video:
     :path: ".symlinks/plugins/media_kit_video/ios"
+  moodiary_rust:
+    :path: ".symlinks/plugins/moodiary_rust/ios"
   network_info_plus:
     :path: ".symlinks/plugins/network_info_plus/ios"
   objectbox_flutter_libs:
@@ -285,8 +287,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/record_darwin/ios"
   rive_common:
     :path: ".symlinks/plugins/rive_common/ios"
-  rust_lib_mood_diary:
-    :path: ".symlinks/plugins/rust_lib_mood_diary/ios"
   screen_brightness_ios:
     :path: ".symlinks/plugins/screen_brightness_ios/ios"
   sensors_plus:
@@ -316,7 +316,7 @@ SPEC CHECKSUMS:
   DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
   DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
   fc_native_video_thumbnail: ea75aa9d0f7e7b58215d2ad99ac9dddafc038bc9
-  file_picker: 9b3292d7c8bc68c8a7bf8eb78f730e49c8efc517
+  file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_image_compress_common: 1697a328fd72bfb335507c6bca1a65fa5ad87df1
   flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
@@ -333,6 +333,7 @@ SPEC CHECKSUMS:
   media_kit_libs_ios_video: 5a18affdb97d1f5d466dc79988b13eff6c5e2854
   media_kit_native_event_loop: 5fba1a849a6c87a34985f1e178a0de5bd444a0cf
   media_kit_video: 1746e198cb697d1ffb734b1d05ec429d1fcd1474
+  moodiary_rust: e75b3fb63e53d3ba5cfed0edf0b6df5f98c4c5f1
   network_info_plus: cf61925ab5205dce05a4f0895989afdb6aade5fc
   ObjectBox: 0bc4bb75eea85f6af06b369148b334c2056bbc29
   objectbox_flutter_libs: 3af037f7cc35e687acca01f1f6da6cb6c2abc22b
@@ -343,7 +344,6 @@ SPEC CHECKSUMS:
   quill_native_bridge_ios: f47af4b14e7757968486641656c5d23250cee521
   record_darwin: fb1f375f1d9603714f55b8708a903bbb91ffdb0a
   rive_common: dd421daaf9ae69f0125aa761dd96abd278399952
-  rust_lib_mood_diary: ea9f784d50426d5994e53cecee71cd23d965542a
   screen_brightness_ios: 5ed898fa50fa82a26171c086ca5e28228f932576
   SDWebImage: 8a6b7b160b4d710e2a22b6900e25301075c34cb3
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380

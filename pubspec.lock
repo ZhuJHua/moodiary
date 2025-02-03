@@ -1626,6 +1626,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  moodiary_rust:
+    dependency: "direct main"
+    description:
+      path: rust_builder
+      relative: true
+    source: path
+    version: "0.0.1"
   msix:
     dependency: "direct dev"
     description:
@@ -2099,13 +2106,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.15"
-  rust_lib_mood_diary:
-    dependency: "direct main"
-    description:
-      path: rust_builder
-      relative: true
-    source: path
-    version: "0.0.1"
   rxdart:
     dependency: transitive
     description:

@@ -817,6 +817,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "moodiary_rust"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "fast_image_resize",
+ "flutter_rust_bridge",
+ "image",
+ "ttf-parser",
+]
+
+[[package]]
 name = "new_debug_unreachable"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1162,18 +1174,6 @@ name = "rgb"
 version = "0.8.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57397d16646700483b67d2dd6511d79318f9d057fdbd21a4066aeac8b41d310a"
-
-[[package]]
-name = "rust_lib_mood_diary"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bytemuck",
- "fast_image_resize",
- "flutter_rust_bridge",
- "image",
- "ttf-parser",
-]
 
 [[package]]
 name = "rustc-demangle"

@@ -99,7 +99,7 @@ dependencies:
   scrollable_positioned_list: 0.3.8
   flutter_localizations:
     sdk: flutter
-  rust_lib_mood_diary:
+  moodiary_rust:
     path: rust_builder
   slang: 4.4.1
   slang_flutter: 4.4.0

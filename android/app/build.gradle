@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace = "cn.yooss.mood_diary"
+    namespace = "cn.yooss.moodiary"
     compileSdk = 35
     ndkVersion = "27.2.12479018"
 

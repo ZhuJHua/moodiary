@@ -1,4 +1,4 @@
-package cn.yooss.mood_diary
+package cn.yooss.moodiary
 
 import com.github.gzuliyujiang.oaid.DeviceID
 import com.github.gzuliyujiang.oaid.IGetter

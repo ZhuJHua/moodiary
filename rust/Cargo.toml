@@ -1,5 +1,5 @@
 [package]
-name = "rust_lib_mood_diary"
+name = "moodiary_rust"
 version = "0.1.0"
 edition = "2021"
 
