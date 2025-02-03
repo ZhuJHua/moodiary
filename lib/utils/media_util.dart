@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:io';
 
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
@@ -16,6 +15,7 @@ import 'package:moodiary/src/rust/api/compress.dart';
 import 'package:moodiary/src/rust/api/constants.dart' as r_type;
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/log_util.dart';
+import 'package:moodiary/utils/lru.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
@@ -24,6 +24,9 @@ class MediaUtil {
   static final _picker = ImagePicker();
 
   static final _thumbnail = FcNativeVideoThumbnail();
+
+  static final _imageAspectRatioCache =
+      AsyncLRUCache<String, double>(maxSize: 1000);
 
   static void useAndroidImagePicker() {
     final ImagePickerPlatform imagePickerImplementation =
@@ -186,34 +189,23 @@ class MediaUtil {
     return completer.future;
   }
 
-  static const int _maxCacheSize = 1000;
-  static final LinkedHashMap<String, double> _cache = LinkedHashMap();
-
   static Future<double> getImageAspectRatio(ImageProvider imageProvider) async {
     final key = _getImageKey(imageProvider);
-
-    if (_cache.containsKey(key)) {
-      return _cache[key]!;
+    final cachedAspectRatio = await _imageAspectRatioCache.get(key);
+    if (cachedAspectRatio != null) {
+      return cachedAspectRatio;
     }
 
     final completer = Completer<double>();
     final imageStream = imageProvider.resolve(const ImageConfiguration());
     imageStream.addListener(
-      ImageStreamListener((ImageInfo info, bool _) {
+      ImageStreamListener((ImageInfo info, bool _) async {
         final aspectRatio = info.image.width / info.image.height;
-        _addToCache(key, aspectRatio);
+        await _imageAspectRatioCache.put(key, aspectRatio);
         completer.complete(aspectRatio);
       }),
     );
-
     return completer.future;
-  }
-
-  static void _addToCache(String key, double ratio) {
-    if (_cache.length >= _maxCacheSize) {
-      _cache.remove(_cache.keys.first);
-    }
-    _cache[key] = ratio;
   }
 
   static String _getImageKey(ImageProvider imageProvider) {

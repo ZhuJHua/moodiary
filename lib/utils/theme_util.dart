@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +8,7 @@ import 'package:flutter_quill/internal.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/src/rust/api/font.dart';
-
-final Set<String> loadedFonts = {};
+import 'package:moodiary/utils/font_util.dart';
 
 class ThemeUtil {
   static Future<bool> supportDynamicColor() async {
@@ -169,12 +167,7 @@ class ThemeUtil {
     if (customFont.isNotEmpty) {
       fontFamily = await FontReader.getFontNameFromTtf(ttfFilePath: customFont);
       if (fontFamily != null) {
-        if (!loadedFonts.contains(fontFamily)) {
-          final res = await DynamicFont.file(
-                  fontFamily: fontFamily, filepath: customFont)
-              .load();
-          if (res) loadedFonts.add(fontFamily);
-        }
+        await FontUtil.loadFont(fontName: fontFamily, fontPath: customFont);
         wghtAxisMap = _unifyFontWeights(
             await FontReader.getWghtAxisFromVfFont(ttfFilePath: customFont));
       }

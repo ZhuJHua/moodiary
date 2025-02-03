@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary/components/base/marquee.dart';
+import 'package:moodiary/utils/lru.dart';
 
 class AdaptiveText extends StatelessWidget {
   final String text;
@@ -82,6 +83,8 @@ class EllipsisText extends StatelessWidget {
   final String ellipsis;
   final int? maxLines;
 
+  static final _cache = LRUCache<String, String>(maxSize: 1000);
+
   const EllipsisText(
     this.text, {
     super.key,
@@ -90,10 +93,7 @@ class EllipsisText extends StatelessWidget {
     this.maxLines,
   });
 
-  double _calculateTextWidth(
-    String text,
-    TextScaler textScaler,
-  ) {
+  double _calculateTextWidth(String text, TextScaler textScaler) {
     final span = TextSpan(text: text.fixAutoLines(), style: style);
     final tp = TextPainter(
       text: span,
@@ -120,15 +120,31 @@ class EllipsisText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textScaler = MediaQuery.textScalerOf(context);
+
     return LayoutBuilder(builder: (context, constraints) {
       if (text.isEmpty) {
         return const SizedBox.shrink();
       }
+
+      final cacheKey =
+          '${text.hashCode}_${ellipsis}_${constraints.maxWidth}_$maxLines';
+      final cachedResult = _cache.get(cacheKey);
+      if (cachedResult != null) {
+        return Text(
+          cachedResult,
+          maxLines: maxLines,
+          overflow: TextOverflow.ellipsis,
+          style: style,
+          textScaler: textScaler,
+        );
+      }
+
       if (!_createTextPainter(
         text,
         constraints.maxWidth,
         textScaler,
       ).didExceedMaxLines) {
+        _cache.put(cacheKey, text.fixAutoLines());
         return Text(
           text.fixAutoLines(),
           maxLines: maxLines,
@@ -143,8 +159,6 @@ class EllipsisText extends StatelessWidget {
       double leftWidth = 0;
       double rightWidth = 0;
 
-      String truncatedText = text;
-
       int lastValidLeftIndex = 0;
       int lastValidRightIndex = text.characters.length;
 
@@ -157,6 +171,7 @@ class EllipsisText extends StatelessWidget {
             rightWidth;
         final currentText =
             '${text.runeSubstring(0, leftIndex)}$ellipsis${text.runeSubstring(rightIndex)}';
+
         if (_createTextPainter(
           currentText,
           constraints.maxWidth,
@@ -176,10 +191,10 @@ class EllipsisText extends StatelessWidget {
         }
       }
 
-      final leftText = text.runeSubstring(0, lastValidLeftIndex);
-      final rightText = text.runeSubstring(lastValidRightIndex);
+      final truncatedText =
+          '${text.runeSubstring(0, lastValidLeftIndex)}$ellipsis${text.runeSubstring(lastValidRightIndex)}';
 
-      truncatedText = '$leftText$ellipsis$rightText';
+      _cache.put(cacheKey, truncatedText.fixAutoLines());
 
       return Text(
         truncatedText.fixAutoLines(),

@@ -17,6 +17,8 @@ PODS:
   - fc_native_video_thumbnail (0.0.1):
     - Flutter
     - FlutterMacOS
+  - file_picker (0.0.1):
+    - FlutterMacOS
   - file_selector_macos (0.0.1):
     - FlutterMacOS
   - flutter_image_compress_macos (1.0.0):
@@ -45,6 +47,8 @@ PODS:
     - FlutterMacOS
   - media_kit_video (0.0.1):
     - FlutterMacOS
+  - moodiary_rust (0.0.1):
+    - FlutterMacOS
   - network_info_plus (0.0.1):
     - FlutterMacOS
   - ObjectBox (4.0.1)
@@ -62,8 +66,6 @@ PODS:
   - record_darwin (1.0.0):
     - FlutterMacOS
   - rive_common (0.0.1):
-    - FlutterMacOS
-  - rust_lib_mood_diary (0.0.1):
     - FlutterMacOS
   - screen_brightness_macos (0.1.0):
     - FlutterMacOS
@@ -94,6 +96,7 @@ DEPENDENCIES:
   - device_info_plus (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos`)
   - dynamic_color (from `Flutter/ephemeral/.symlinks/plugins/dynamic_color/macos`)
   - fc_native_video_thumbnail (from `Flutter/ephemeral/.symlinks/plugins/fc_native_video_thumbnail/darwin`)
+  - file_picker (from `Flutter/ephemeral/.symlinks/plugins/file_picker/macos`)
   - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - flutter_image_compress_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_image_compress_macos/macos`)
   - flutter_inappwebview_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos`)
@@ -107,6 +110,7 @@ DEPENDENCIES:
   - media_kit_libs_macos_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_libs_macos_video/macos`)
   - media_kit_native_event_loop (from `Flutter/ephemeral/.symlinks/plugins/media_kit_native_event_loop/macos`)
   - media_kit_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos`)
+  - moodiary_rust (from `Flutter/ephemeral/.symlinks/plugins/moodiary_rust/macos`)
   - network_info_plus (from `Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos`)
   - objectbox_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/objectbox_flutter_libs/macos`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
@@ -114,7 +118,6 @@ DEPENDENCIES:
   - quill_native_bridge_macos (from `Flutter/ephemeral/.symlinks/plugins/quill_native_bridge_macos/macos`)
   - record_darwin (from `Flutter/ephemeral/.symlinks/plugins/record_darwin/macos`)
   - rive_common (from `Flutter/ephemeral/.symlinks/plugins/rive_common/macos`)
-  - rust_lib_mood_diary (from `Flutter/ephemeral/.symlinks/plugins/rust_lib_mood_diary/macos`)
   - screen_brightness_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_brightness_macos/macos`)
   - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
@@ -146,6 +149,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/dynamic_color/macos
   fc_native_video_thumbnail:
     :path: Flutter/ephemeral/.symlinks/plugins/fc_native_video_thumbnail/darwin
+  file_picker:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_picker/macos
   file_selector_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
   flutter_image_compress_macos:
@@ -172,6 +177,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/media_kit_native_event_loop/macos
   media_kit_video:
     :path: Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos
+  moodiary_rust:
+    :path: Flutter/ephemeral/.symlinks/plugins/moodiary_rust/macos
   network_info_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos
   objectbox_flutter_libs:
@@ -186,8 +193,6 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/record_darwin/macos
   rive_common:
     :path: Flutter/ephemeral/.symlinks/plugins/rive_common/macos
-  rust_lib_mood_diary:
-    :path: Flutter/ephemeral/.symlinks/plugins/rust_lib_mood_diary/macos
   screen_brightness_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/screen_brightness_macos/macos
   share_plus:
@@ -214,6 +219,7 @@ SPEC CHECKSUMS:
   device_info_plus: 4fb280989f669696856f8b129e4a5e3cd6c48f76
   dynamic_color: b820c000cc68df65e7ba7ff177cb98404ce56651
   fc_native_video_thumbnail: ea75aa9d0f7e7b58215d2ad99ac9dddafc038bc9
+  file_picker: 7584aae6fa07a041af2b36a2655122d42f578c1a
   file_selector_macos: 6280b52b459ae6c590af5d78fc35c7267a3c4b31
   flutter_image_compress_macos: e68daf54bb4bf2144c580fd4d151c949cbf492f0
   flutter_inappwebview_macos: c2d68649f9f8f1831bfcd98d73fd6256366d9d1d
@@ -227,6 +233,7 @@ SPEC CHECKSUMS:
   media_kit_libs_macos_video: 85a23e549b5f480e72cae3e5634b5514bc692f65
   media_kit_native_event_loop: a80d071c835c612fd80173e79390a50ec409f1b1
   media_kit_video: fa6564e3799a0a28bff39442334817088b7ca758
+  moodiary_rust: 2f0ea7e60816f68d22e387a10b460860168eced5
   network_info_plus: 21d1cd6a015ccb2fdff06a1fbfa88d54b4e92f61
   ObjectBox: 0bc4bb75eea85f6af06b369148b334c2056bbc29
   objectbox_flutter_libs: 9d334e5c1008f69d6747d484afccf0860844a006
@@ -236,7 +243,6 @@ SPEC CHECKSUMS:
   quill_native_bridge_macos: 2b005cb56902bb740e0cd9620aa399dfac6b4882
   record_darwin: 30509266ae213af8afdb09a8ae7467cb64c1377e
   rive_common: ea79040f86acf053a2d5a75a2506175ee39796a5
-  rust_lib_mood_diary: fa02a6736c2f54973072fc9cf6bf9593da8bce36
   screen_brightness_macos: 2a3ee243f8051c340381e8e51bcedced8360f421
   share_plus: 510bf0af1a42cd602274b4629920c9649c52f4cc
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
