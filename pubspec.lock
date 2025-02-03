@@ -2062,10 +2062,10 @@ packages:
     dependency: "direct main"
     description:
       name: refreshed
-      sha256: b11598bba34a21a9903634a4e093eaf4ab3bb2f9d5a7c98010e83840d83544b0
+      sha256: dee0b1d0299083783c07142e4e0542ed90d3f9a83cf3ff5fefcea1289a1ec26a
       url: "https://pub.dev"
     source: hosted
-    version: "2.10.4"
+    version: "3.0.0"
   retry:
     dependency: transitive
     description:
