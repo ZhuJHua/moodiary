@@ -52,10 +52,9 @@ class AboutLogic extends GetxController with GetSingleTickerProviderStateMixin {
     } else if (deviceInfo is MacOsDeviceInfo) {
       state.systemVersion = 'MacOS ${deviceInfo.osRelease} ';
     }
-
     state.appName = packageInfo.appName;
     state.appVersion = '${packageInfo.version}(${packageInfo.buildNumber})';
-    update();
+    state.isFetching.value = false;
   }
 
   //跳转到反馈页

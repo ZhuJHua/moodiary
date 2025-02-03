@@ -156,9 +156,8 @@ class AssistantPage extends StatelessWidget {
                         controller: logic.scrollController,
                         slivers: [
                           SliverAppBar(
-                            title: buildAdaptiveText(
-                              text: l10n.settingFunctionAIAssistant,
-                              context: context,
+                            title: AdaptiveText(
+                              l10n.settingFunctionAIAssistant,
                               isTitle: true,
                             ),
                             pinned: true,

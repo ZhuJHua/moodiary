@@ -20,16 +20,14 @@ class AdaptiveTitleTile extends StatelessWidget {
     );
     return ListTile(
       title: (title is String)
-          ? buildAdaptiveText(
-              text: title,
-              context: context,
+          ? AdaptiveText(
+              title,
               isPrimaryTitle: true,
             )
           : title,
       subtitle: (subtitle is String)
-          ? buildAdaptiveText(
-              text: subtitle!,
-              context: context,
+          ? AdaptiveText(
+              subtitle!,
               isTileSubtitle: true,
             )
           : subtitle,
@@ -86,9 +84,8 @@ class AdaptiveListTile extends StatelessWidget {
     }
     return ListTile(
       title: (realTitle is String)
-          ? buildAdaptiveText(
-              text: realTitle,
-              context: context,
+          ? AdaptiveText(
+              realTitle,
               isTileTitle: true,
             )
           : realTitle,
@@ -100,9 +97,8 @@ class AdaptiveListTile extends StatelessWidget {
       ),
       contentPadding: contentPadding,
       subtitle: (realSubtitle is String)
-          ? buildAdaptiveText(
-              text: realSubtitle,
-              context: context,
+          ? AdaptiveText(
+              realSubtitle,
               isTileSubtitle: true,
             )
           : realSubtitle,
@@ -162,9 +158,8 @@ class AdaptiveSwitchListTile extends StatelessWidget {
     }
     return SwitchListTile(
       title: (realTitle is String)
-          ? buildAdaptiveText(
-              text: realTitle,
-              context: context,
+          ? AdaptiveText(
+              realTitle,
               isTileTitle: true,
             )
           : realTitle,
@@ -179,9 +174,8 @@ class AdaptiveSwitchListTile extends StatelessWidget {
               ),
       ),
       subtitle: (realSubtitle is String)
-          ? buildAdaptiveText(
-              text: realSubtitle,
-              context: context,
+          ? AdaptiveText(
+              realSubtitle,
               isTileSubtitle: true,
             )
           : realSubtitle,

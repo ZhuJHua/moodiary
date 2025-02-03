@@ -18,27 +18,17 @@ class DashboardComponent extends StatelessWidget {
       return Column(
         spacing: 8.0,
         children: [
-          buildAdaptiveText(
-            text: title,
-            textStyle:
+          AdaptiveText(
+            title,
+            style:
                 textStyle.labelMedium?.copyWith(color: colorScheme.onSurface),
-            context: context,
           ),
-          AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: count.isEmpty
-                  ? Text(
-                      '...',
-                      key: const ValueKey('count_empty'),
-                      style: textStyle.titleMedium
-                          ?.copyWith(color: colorScheme.secondary),
-                    )
-                  : Text(
-                      count,
-                      key: const ValueKey('count'),
-                      style: textStyle.titleMedium
-                          ?.copyWith(color: colorScheme.secondary),
-                    )),
+          AnimatedText(
+            count,
+            style:
+                textStyle.titleMedium?.copyWith(color: colorScheme.secondary),
+            isFetching: count.isEmpty,
+          ),
         ],
       );
     }

@@ -1,12 +1,11 @@
+import 'package:refreshed/refreshed.dart';
+
 class AboutState {
-  late String appName;
+  String appName = '';
 
-  late String appVersion;
-
+  String appVersion = '';
   String systemVersion = '';
+  RxBool isFetching = true.obs;
 
-  AboutState() {
-    appName = '';
-    appVersion = '';
-  }
+  AboutState();
 }

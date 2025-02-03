@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  refreshed: 2.10.4
+  refreshed: 3.0.0
   dio: 5.8.0+1
   path: 1.9.0
   path_provider: 2.1.5

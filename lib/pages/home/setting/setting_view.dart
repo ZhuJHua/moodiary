@@ -53,11 +53,10 @@ class SettingPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 icon,
-                buildAdaptiveText(
-                  text: text,
-                  textStyle: textStyle.labelSmall
+                AdaptiveText(
+                  text,
+                  style: textStyle.labelSmall
                       ?.copyWith(color: colorScheme.secondary),
-                  context: context,
                 ),
               ],
             ),

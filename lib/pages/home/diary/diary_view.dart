@@ -158,22 +158,20 @@ class DiaryPage extends StatelessWidget {
                         HapticFeedback.selectionClick();
                       },
                       child: Obx(() {
-                        return buildAdaptiveText(
-                            text: state.customTitleName.value.isNotEmpty
+                        return AdaptiveText(
+                            state.customTitleName.value.isNotEmpty
                                 ? state.customTitleName.value
                                 : l10n.appName,
-                            context: context,
-                            textStyle: textStyle.titleLarge?.copyWith(
+                            style: textStyle.titleLarge?.copyWith(
                               color: colorScheme.onSurface,
                             ));
                       }),
                     ),
                     Obx(() {
-                      return buildAdaptiveText(
-                        text: state.hitokoto.value,
-                        textStyle: textStyle.labelSmall
+                      return AdaptiveText(
+                        state.hitokoto.value,
+                        style: textStyle.labelSmall
                             ?.copyWith(color: colorScheme.onSurfaceVariant),
-                        context: context,
                       );
                     }),
                   ],

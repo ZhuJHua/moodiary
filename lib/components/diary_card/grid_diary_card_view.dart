@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/diary_card/basic_card_logic.dart';
 import 'package:moodiary/utils/file_util.dart';
 
@@ -56,17 +57,15 @@ class GirdDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     spacing: 4.0,
                     children: [
                       if (diary.title.isNotEmpty)
-                        Text(
+                        EllipsisText(
                           diary.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                           style: textStyle.titleMedium
                               ?.copyWith(color: colorScheme.onSurface),
                         ),
                       if (diary.contentText.isNotEmpty)
-                        Text(
+                        EllipsisText(
                           diary.contentText.trim(),
-                          overflow: TextOverflow.ellipsis,
                           maxLines: 4,
                           style: textStyle.bodyMedium
                               ?.copyWith(color: colorScheme.onSurface),
@@ -83,28 +82,6 @@ class GirdDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                 )
               ],
             ),
-            // Positioned(
-            //   top: 4,
-            //   right: 4,
-            //   child: Container(
-            //     decoration: ShapeDecoration(
-            //         shape: const CircleBorder(),
-            //         color: colorScheme.surfaceContainerLow),
-            //     width: 12,
-            //     height: 12,
-            //     child: Center(
-            //       child: Container(
-            //         decoration: ShapeDecoration(
-            //           shape: const CircleBorder(),
-            //           color: Color.lerp(AppColor.emoColorList.first,
-            //               AppColor.emoColorList.last, diary.mood),
-            //         ),
-            //         width: 8,
-            //         height: 8,
-            //       ),
-            //     ),
-            //   ),
-            // ),
           ],
         ),
       ),

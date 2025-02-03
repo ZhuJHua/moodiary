@@ -44,7 +44,7 @@ class Marquee extends StatefulWidget {
     super.key,
     required this.text,
     this.style,
-    this.textScaleFactor,
+    this.textScaler,
     this.textDirection = TextDirection.ltr,
     this.scrollAxis = Axis.horizontal,
     this.crossAxisAlignment = CrossAxisAlignment.center,
@@ -97,7 +97,7 @@ class Marquee extends StatefulWidget {
         decelerationCurve = IntegralCurve(decelerationCurve);
   final String text;
   final TextStyle? style;
-  final double? textScaleFactor;
+  final TextScaler? textScaler;
   final TextDirection textDirection;
   final Axis scrollAxis;
   final CrossAxisAlignment crossAxisAlignment;
@@ -279,9 +279,7 @@ class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
             ? Text(
                 widget.text,
                 style: widget.style,
-                textScaler: widget.textScaleFactor != null
-                    ? TextScaler.linear(widget.textScaleFactor!)
-                    : null,
+                textScaler: widget.textScaler,
               )
             : SizedBox(
                 width: widget.scrollAxis == Axis.horizontal

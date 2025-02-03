@@ -46,10 +46,9 @@ class FontPage extends StatelessWidget {
             ),
           ),
         ),
-        buildAdaptiveText(
-          text: l10n.fontStyleSystem,
-          textStyle: textStyle,
-          context: context,
+        AdaptiveText(
+          l10n.fontStyleSystem,
+          style: textStyle,
         ),
       ],
     );
@@ -96,10 +95,9 @@ class FontPage extends StatelessWidget {
             ),
           ),
         ),
-        buildAdaptiveText(
-          text: fontName,
-          textStyle: textStyle,
-          context: context,
+        AdaptiveText(
+          fontName,
+          style: textStyle,
           maxWidth: 64,
         ),
       ],
