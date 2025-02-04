@@ -174,10 +174,11 @@ You can buy me a sandwich to keep me motivated to continue developing.
 
 If you want to be on the list, you can leave me a message, in no particular order, and the list will be updated regularly.
 
-| Sponsor                               | Price    | Sponsor                                          | Price  |
-| ------------------------------------- | -------- | ------------------------------------------------ | ------ |
+| Sponsor                           | Price    | Sponsor                                          | Price  |
+|-----------------------------------| -------- | ------------------------------------------------ | ------ |
 | [dsxksss](https://github.com/dsxksss) | 50 CNY   | 十一                                             | 20 CNY |
-| 沭飏秋                                | 10 CNY   | 朱东杰                                           | 60 CNY |
-| 匿名                                  | 5 CNY    | wu                                               | 10 CNY |
-| 云烨                                  | 2.76 CNY | 不对味的雪碧                                     | 10 CNY |
-| wireless                              | 6.6 CNY  | [帕斯卡的芦苇](https://github.com/xiaoxianzi-99) | 10 CNY |
+| 沭飏秋                               | 10 CNY   | 朱东杰                                           | 60 CNY |
+| 匿名                                | 5 CNY    | wu                                               | 10 CNY |
+| 云烨                                | 2.76 CNY | 不对味的雪碧                                     | 10 CNY |
+| wireless                          | 6.6 CNY  | [帕斯卡的芦苇](https://github.com/xiaoxianzi-99) | 10 CNY |
+| 不歪猫 | 20 CNY | 曾祥军 | 20 CNY |
