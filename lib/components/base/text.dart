@@ -48,9 +48,10 @@ class AdaptiveText extends StatelessWidget {
         final textPainter = TextPainter(
           text: TextSpan(text: text, style: textStyle),
           textDirection: TextDirection.ltr,
+          maxLines: 1,
           textScaler: textScaler,
-        )..layout();
-        return textPainter.width > (maxWidth ?? constraints.maxWidth)
+        )..layout(maxWidth: maxWidth ?? constraints.maxWidth);
+        return textPainter.didExceedMaxLines
             ? SizedBox(
                 height: textPainter.height,
                 width: maxWidth ?? constraints.maxWidth,
@@ -70,6 +71,7 @@ class AdaptiveText extends StatelessWidget {
             : Text(
                 text,
                 style: textStyle,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               );
       },
@@ -125,7 +127,6 @@ class EllipsisText extends StatelessWidget {
       if (text.isEmpty) {
         return const SizedBox.shrink();
       }
-
       final cacheKey =
           '${text.hashCode}_${ellipsis}_${constraints.maxWidth}_$maxLines';
       final cachedResult = _cache.get(cacheKey);
@@ -163,11 +164,11 @@ class EllipsisText extends StatelessWidget {
       int lastValidRightIndex = text.characters.length;
 
       while (leftIndex < rightIndex) {
-        final nextLeftWidth =
-            _calculateTextWidth(text.getCharacters(leftIndex), textScaler) +
-                leftWidth;
+        final nextLeftWidth = _calculateTextWidth(
+                text.characters.elementAt(leftIndex), textScaler) +
+            leftWidth;
         final nextRightWidth = _calculateTextWidth(
-                text.getCharacters(rightIndex - 1), textScaler) +
+                text.characters.elementAt(rightIndex - 1), textScaler) +
             rightWidth;
         final currentText =
             '${text.runeSubstring(0, leftIndex)}$ellipsis${text.runeSubstring(rightIndex)}';
@@ -207,17 +208,13 @@ class EllipsisText extends StatelessWidget {
 }
 
 extension StringExt on String {
-  String fixAutoLines() {
-    return Characters(this).join('\u{200B}');
-  }
+  String fixAutoLines() => characters.join('\u{200B}');
 
   String runeSubstring(int start, [int? end]) {
     return String.fromCharCodes(runes.toList().sublist(start, end));
   }
 
-  String getCharacters(int index) {
-    return Characters(this).elementAt(index);
-  }
+  String removeLineBreaks() => replaceAll(RegExp(r'[\r\n]+'), '');
 }
 
 class AnimatedText extends StatelessWidget {
