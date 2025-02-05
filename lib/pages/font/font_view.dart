@@ -159,7 +159,7 @@ class FontPage extends StatelessWidget {
               '八月的忧愁',
               style: textStyle.titleLarge?.copyWith(
                 height: 2,
-                fontFamily: state.fontMap[state.currentFontPath.value] ?? '',
+                fontFamily: state.currentFontFamily.value,
               ),
               textScaler: TextScaler.linear(state.fontScale.value),
             );
@@ -180,7 +180,7 @@ class FontPage extends StatelessWidget {
               '仍不明白生活同梦怎样的连牵。',
               style: textStyle.bodyMedium?.copyWith(
                 height: 2,
-                fontFamily: state.fontMap[state.currentFontPath.value] ?? '',
+                fontFamily: state.currentFontFamily.value,
               ),
               textScaler: TextScaler.linear(state.fontScale.value),
             );
@@ -192,25 +192,26 @@ class FontPage extends StatelessWidget {
     List<Widget> buildFontButton() {
       return [
         _buildDefault(
-          isSelected: state.currentFontPath.value == '',
+          isSelected: state.currentFontFamily.value == '',
           activeColor: colorScheme.primary,
           inactiveColor: colorScheme.surfaceContainerHighest,
           textStyle: textStyle.labelSmall,
           context: context,
           onTap: () {
-            logic.changeSelectedFontPath(path: '');
+            logic.changeSelectedFont(font: null);
           },
         ),
-        ...state.fontMap.entries.map((e) {
+        ...List.generate(state.fontList.length, (index) {
           return _buildFont(
-              isSelected: state.currentFontPath.value == e.key,
-              fontName: e.value,
+              isSelected: state.currentFontFamily.value ==
+                  state.fontList[index].fontFamily,
+              fontName: state.fontList[index].fontFamily,
               activeColor: colorScheme.primary,
               inactiveColor: colorScheme.surfaceContainerHighest,
               textStyle: textStyle.labelSmall,
               context: context,
               onTap: () {
-                logic.changeSelectedFontPath(path: e.key);
+                logic.changeSelectedFont(font: state.fontList[index]);
               },
               onLongPress: () async {
                 // 显示删除字体对话框
@@ -218,10 +219,10 @@ class FontPage extends StatelessWidget {
                   context: context,
                   title: l10n.hint,
                   style: AdaptiveStyle.material,
-                  message: l10n.fontDeleteDes(e.value),
+                  message: l10n.fontDeleteDes(state.fontList[index].fontFamily),
                 );
                 if (await res == OkCancelResult.ok) {
-                  logic.deleteFont(fontPath: e.key);
+                  logic.deleteFont(font: state.fontList[index]);
                 }
               });
         }),
