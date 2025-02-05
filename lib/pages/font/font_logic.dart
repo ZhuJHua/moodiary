@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary/common/models/isar/font.dart';
+import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/utils/file_util.dart';
@@ -92,6 +93,7 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
         'customFont', state.currentFontFamily.value);
     Get.changeTheme(await ThemeUtil.buildTheme(Brightness.light));
     Get.changeTheme(await ThemeUtil.buildTheme(Brightness.dark));
+    EllipsisText.clearCache();
   }
 
   //删除字体

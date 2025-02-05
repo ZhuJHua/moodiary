@@ -87,6 +87,11 @@ class EllipsisText extends StatelessWidget {
 
   static final _cache = LRUCache<String, String>(maxSize: 1000);
 
+  /// 当字体相关属性发生变化时，需要清空缓存
+  static void clearCache() {
+    _cache.clear();
+  }
+
   const EllipsisText(
     this.text, {
     super.key,
