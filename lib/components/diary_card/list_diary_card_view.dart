@@ -63,7 +63,7 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     children: [
                       if (diary.title.isNotEmpty) ...[
                         EllipsisText(
-                          diary.title,
+                          diary.title.trim(),
                           style: textStyle.titleMedium
                               ?.copyWith(color: colorScheme.onSurface),
                           maxLines: 1,
@@ -71,7 +71,7 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                       ],
                       Expanded(
                         child: EllipsisText(
-                          diary.contentText.trim(),
+                          diary.contentText.trim().removeLineBreaks(),
                           maxLines: diary.title.isNotEmpty ? 3 : 4,
                           style: textStyle.bodyMedium
                               ?.copyWith(color: colorScheme.onSurface),

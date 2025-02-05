@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/diary_card/basic_card_logic.dart';
 import 'package:moodiary/utils/file_util.dart';
 
@@ -72,17 +73,16 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                   children: [
                     buildTime(),
                     if (diary.title.isNotEmpty)
-                      Text(
-                        diary.title,
-                        maxLines: 2,
+                      EllipsisText(
+                        diary.title.trim(),
+                        maxLines: 1,
                         style: textStyle.titleMedium!.copyWith(
                           color: colorScheme.onSurface,
                         ),
                       ),
                     if (diary.contentText.isNotEmpty)
-                      Text(
-                        diary.contentText.trim(),
-                        overflow: TextOverflow.ellipsis,
+                      EllipsisText(
+                        diary.contentText.trim().removeLineBreaks(),
                         maxLines: 4,
                         style: textStyle.bodyMedium?.copyWith(
                           color: colorScheme.onSurface,

@@ -58,14 +58,14 @@ class GirdDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     children: [
                       if (diary.title.isNotEmpty)
                         EllipsisText(
-                          diary.title,
+                          diary.title.trim(),
                           maxLines: 1,
                           style: textStyle.titleMedium
                               ?.copyWith(color: colorScheme.onSurface),
                         ),
                       if (diary.contentText.isNotEmpty)
                         EllipsisText(
-                          diary.contentText.trim(),
+                          diary.contentText.trim().removeLineBreaks(),
                           maxLines: 4,
                           style: textStyle.bodyMedium
                               ?.copyWith(color: colorScheme.onSurface),
