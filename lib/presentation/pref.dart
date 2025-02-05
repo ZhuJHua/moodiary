@@ -1,10 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/common/values/view_mode.dart';
-import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/merge/merge.dart';
 import 'package:moodiary/utils/auth_util.dart';
 import 'package:moodiary/utils/file_util.dart';
-import 'package:moodiary/utils/media_util.dart';
 import 'package:moodiary/utils/package_util.dart';
 import 'package:moodiary/utils/theme_util.dart';
 import 'package:path_provider/path_provider.dart';
@@ -109,36 +108,7 @@ class PrefUtil {
     final packageInfo = await PackageUtil.getPackageInfo();
     final currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
     final appVersion = _prefs.getString('appVersion');
-
-    /// 数据库版本变更
-    /// v2.4.8
-    if (appVersion != null && appVersion.split('+')[0].compareTo('2.4.8') < 0) {
-      await compute(
-          IsarUtil.mergeToV2_4_8, FileUtil.getRealPath('database', ''));
-    }
-
-    /// v2.6.0
-    if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.0') < 0) {
-      await compute(
-          IsarUtil.mergeToV2_6_0, FileUtil.getRealPath('database', ''));
-    }
-
-    /// 修复bug
-    /// v2.6.2
-    /// 修复部分视频缩略图无法生成的问题
-    if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.2') < 0) {
-      await MediaUtil.regenerateMissingThumbnails();
-    }
-
-    /// v2.6.3
-    /// 修复同步失败导致本地分类丢失
-    /// 视频缩略图重复生成
-    if (appVersion != null && appVersion.split('+')[0].compareTo('2.6.3') < 0) {
-      await FileUtil.cleanFile(FileUtil.getRealPath('database', ''));
-      await MediaUtil.regenerateMissingThumbnails();
-      await compute(IsarUtil.fixV2_6_3, FileUtil.getRealPath('database', ''));
-    }
-
+    if (appVersion != null) MergeUtil.merge(lastAppVersion: appVersion);
     // 如果是首次启动或版本不一致
     if (kDebugMode ||
         firstStart ||

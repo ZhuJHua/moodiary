@@ -7,6 +7,7 @@ import 'package:isar/isar.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary/common/models/isar/category.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
+import 'package:moodiary/common/models/isar/font.dart';
 import 'package:moodiary/common/models/isar/sync_record.dart';
 import 'package:moodiary/common/models/map.dart';
 import 'package:moodiary/common/values/diary_type.dart';
@@ -22,28 +23,36 @@ import 'package:uuid/uuid.dart';
 class IsarUtil {
   static late final Isar _isar;
 
+  static final _schemas = [
+    DiarySchema,
+    CategorySchema,
+    FontSchema,
+  ];
+
   static Future<void> initIsar() async {
     _isar = await Isar.openAsync(
-      schemas: [
-        DiarySchema,
-        CategorySchema,
-      ],
+      schemas: _schemas,
       directory: FileUtil.getRealPath('database', ''),
     );
   }
 
   static Future<void> dataMigration(String path) async {
     final oldIsar = await Isar.openAsync(
-        schemas: [DiarySchema, CategorySchema], directory: path, name: 'old');
+      schemas: _schemas,
+      directory: path,
+      name: 'old',
+    );
     final List<Diary> oldDiaryList =
         await oldIsar.diarys.where().findAllAsync();
     final List<Category> oldCategoryList =
         await oldIsar.categorys.where().findAllAsync();
+    final List<Font> oldFontList = await oldIsar.fonts.where().findAllAsync();
 
     await _isar.writeAsync((isar) {
       isar.clear();
       isar.diarys.putAll(oldDiaryList);
       isar.categorys.putAll(oldCategoryList);
+      isar.fonts.putAll(oldFontList);
     });
     oldIsar.close(deleteFromDisk: true);
   }
@@ -63,7 +72,7 @@ class IsarUtil {
   static Future<void> exportIsar(
       String dir, String path, String fileName) async {
     final isar = Isar.open(
-      schemas: [DiarySchema, CategorySchema],
+      schemas: _schemas,
       directory: join(dir, 'database'),
     );
     isar.copyToFile(join(path, fileName));
@@ -344,7 +353,7 @@ class IsarUtil {
   /// 1.position 用于记录位置
   static void mergeToV2_4_8(String dir) {
     final isar = Isar.open(
-      schemas: [DiarySchema, CategorySchema],
+      schemas: _schemas,
       directory: dir,
     );
     final countDiary = isar.diarys.where().count();
@@ -366,7 +375,7 @@ class IsarUtil {
   /// 2.将类型字段修改为富文本
   static void mergeToV2_6_0(String dir) {
     final isar = Isar.open(
-      schemas: [DiarySchema, CategorySchema],
+      schemas: _schemas,
       directory: dir,
     );
     final countDiary = isar.diarys.where().count();
@@ -417,7 +426,7 @@ class IsarUtil {
   /// 遍历所有日记，如果本地没有日记的分类，就创建一个分类，名称为分类名
   static void fixV2_6_3(String dir) {
     final isar = Isar.open(
-      schemas: [DiarySchema, CategorySchema],
+      schemas: _schemas,
       directory: dir,
     );
     final countDiary = isar.diarys.where().count();
@@ -490,34 +499,6 @@ class IsarUtil {
     return res;
   }
 
-  //构建搜索
-  static void buildSearch(String dir) async {
-    final isar = Isar.open(
-      schemas: [DiarySchema, CategorySchema],
-      directory: dir,
-    );
-    final countDiary = isar.diarys.where().count();
-    final result = <Diary>[];
-    for (var i = 0; i < countDiary; i += 50) {
-      final diaries = isar.diarys.where().findAll(offset: i, limit: 50);
-      for (final diary in diaries) {
-        //获取封面比例
-        // if (diary.imageName.isNotEmpty) {
-        //   diary.aspect = await Utils()
-        //       .mediaUtil
-        //       .getImageAspectRatio(FileImage(File(FileUtil.getRealPath('image', diary.imageName.first))));
-        //   result.add(diary);
-        // }
-        diary.contentText = diary.contentText.trim();
-        result.add(diary);
-      }
-      //final categorys = isar.categorys.where().findAll();
-      isar.write((isar) {
-        isar.diarys.putAll(result);
-      });
-    }
-  }
-
   // 添加sync任务
   static Future<void> addSyncRecord(SyncRecord record) async {
     await _isar.writeAsync((isar) {
@@ -534,6 +515,41 @@ class IsarUtil {
   static Future<void> deleteSyncRecord(int id) async {
     await _isar.writeAsync((isar) {
       isar.syncRecords.delete(id);
+    });
+  }
+
+  static Future<List<Font>> getAllFonts() async {
+    return await _isar.fonts.where().findAllAsync();
+  }
+
+  static Future<void> mergeToV2_7_3(Map<String, dynamic> parma) async {
+    final isar = Isar.open(
+      schemas: _schemas,
+      directory: parma['database']!,
+    );
+
+    await isar.writeAsync((isar) {
+      isar.fonts.clear();
+      isar.fonts.putAll(parma['fonts']);
+    });
+  }
+
+  static Future<void> insertAFont(Font font) async {
+    await _isar.writeAsync((isar) {
+      isar.fonts.put(font);
+    });
+  }
+
+  static Future<Font?> getFontByFontFamily(String fontFamily) async {
+    return await _isar.fonts
+        .where()
+        .fontFamilyEqualTo(fontFamily)
+        .findFirstAsync();
+  }
+
+  static Future<bool> deleteFont(int id) async {
+    return await _isar.writeAsync((isar) {
+      return isar.fonts.delete(id);
     });
   }
 }

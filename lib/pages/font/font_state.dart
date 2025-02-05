@@ -1,3 +1,4 @@
+import 'package:moodiary/common/models/isar/font.dart';
 import 'package:moodiary/presentation/pref.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -7,11 +8,9 @@ class FontState {
   double minHeight = 200.0; // 最小高度
   double maxHeight = 400.0; // 最大高度
 
-  // 当前的自定义字体的路径
-  RxString currentFontPath = PrefUtil.getValue<String>('customFont')!.obs;
+  RxString currentFontFamily = PrefUtil.getValue<String>('customFont')!.obs;
 
-  // 字体路径,名称map
-  RxMap<String, String> fontMap = <String, String>{}.obs;
+  RxList<Font> fontList = <Font>[].obs;
 
   RxBool isFetching = true.obs;
 

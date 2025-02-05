@@ -120,6 +120,8 @@ class FileUtil {
     await zipEncoder.addDirectory(Directory(join(dataPath, 'audio')));
     //备份视频
     await zipEncoder.addDirectory(Directory(join(dataPath, 'video')));
+    //备份字体
+    await zipEncoder.addDirectory(Directory(join(dataPath, 'font')));
     //备份数据库
     await IsarUtil.exportIsar(
         dataPath, zipPath, '${datetime.millisecondsSinceEpoch}.isar');
@@ -144,6 +146,10 @@ class FileUtil {
     await createDir(join(_filePath, 'audio'));
     //重新创建视频文件夹
     await createDir(join(_filePath, 'video'));
+    //删除字体文件夹
+    await deleteDir(join(_filePath, 'font'));
+    //重新创建字体文件夹
+    await createDir(join(_filePath, 'font'));
     final archive = ZipDecoder().decodeStream(inputStream);
     for (final file in archive.files) {
       //如果是数据库
@@ -151,7 +157,6 @@ class FileUtil {
         final outputStream = OutputFileStream(join(_cachePath, 'old.isar'));
         file.writeContent(outputStream);
       } else {
-        //图片
         final outputStream = OutputFileStream(join(_filePath, file.name));
         file.writeContent(outputStream);
       }
