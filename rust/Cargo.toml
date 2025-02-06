@@ -13,3 +13,4 @@ fast_image_resize = { version = "5.1.1", features = ["image"] }
 anyhow = "1.0.95"
 bytemuck = "1.21.0"
 ttf-parser = {git = "https://github.com/inferiorhumanorgans/ttf-parser.git", branch = "fvar-instance"}
+ring = "0.17.8"

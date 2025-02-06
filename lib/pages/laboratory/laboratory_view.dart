@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:moodiary/main.dart';
 import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'laboratory_logic.dart';
@@ -107,6 +108,17 @@ class LaboratoryPage extends StatelessWidget {
                 logic.exportErrorLog();
               },
               title: const Text('导出日志文件'),
+            ),
+            ListTile(
+              onTap: () async {
+                final res = await logic.aesTest();
+                if (res) {
+                  NoticeUtil.showToast('加密测试通过');
+                } else {
+                  NoticeUtil.showToast('加密测试失败');
+                }
+              },
+              title: const Text('加密测试'),
             ),
           ],
         );

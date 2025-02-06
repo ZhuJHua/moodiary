@@ -1,26 +1,40 @@
-import 'package:encrypt/encrypt.dart' as encrypt;
+import 'dart:convert';
+import 'dart:typed_data';
 
-class AESUtil {
-  final encrypt.Key _key;
-  final encrypt.IV _iv;
+import 'package:moodiary/src/rust/api/aes.dart';
 
-  // 初始化时设置密钥和初始化向量（IV）
-  AESUtil(String key, String iv)
-      : _key = encrypt.Key.fromUtf8(key.padRight(32, ' ')),
-        // 32字节密钥
-        _iv = encrypt.IV.fromUtf8(iv.padRight(16, ' ')); // 16字节IV
-
-  // 加密数据
-  String encryptData(String data) {
-    final encrypter = encrypt.Encrypter(encrypt.AES(_key));
-    final encrypted = encrypter.encrypt(data, iv: _iv);
-    return encrypted.base64; // 返回加密后的数据
+class AesUtil {
+  /// 生成密钥
+  static Future<Uint8List> deriveKey({
+    required String salt,
+    required String userKey,
+  }) async {
+    return await AesEncryption.deriveKey(salt: salt, userKey: userKey);
   }
 
-  // 解密数据
-  String decryptData(String encryptedData) {
-    final encrypter = encrypt.Encrypter(encrypt.AES(_key));
-    final decrypted = encrypter.decrypt64(encryptedData, iv: _iv);
-    return decrypted; // 返回解密后的数据
+  /// 加密数据
+  static Future<Uint8List> encrypt({
+    required Uint8List key,
+    required String data,
+  }) async {
+    final keyBytes = key;
+    final dataBytes = utf8.encode(data);
+    final encrypted =
+        await AesEncryption.encrypt(key: keyBytes, data: dataBytes);
+
+    return encrypted;
   }
+
+  /// 解密数据
+  static Future<String> decrypt({
+    required Uint8List key,
+    required Uint8List encryptedData,
+  }) async {
+    final keyBytes = key;
+    final encryptedBytes = encryptedData;
+    final decrypted = await AesEncryption.decrypt(
+        key: keyBytes, encryptedData: encryptedBytes);
+    return utf8.decode(decrypted);
+  }
+
 }
