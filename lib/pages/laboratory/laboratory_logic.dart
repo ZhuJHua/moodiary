@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/utils/aes_util.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -37,5 +38,12 @@ class LaboratoryLogic extends GetxController {
     } else {
       NoticeUtil.showToast('暂无日志');
     }
+  }
+
+  Future<bool> aesTest() async {
+    final key = await AesUtil.deriveKey(salt: 'salt', userKey: 'password');
+    final encrypted = await AesUtil.encrypt(key: key, data: 'Hello World');
+    final decrypted = await AesUtil.decrypt(key: key, encryptedData: encrypted);
+    return decrypted == 'Hello World';
   }
 }

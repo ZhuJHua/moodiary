@@ -1,7 +1,7 @@
 name: moodiary
 description: "A fully open source cross-platform diary app written by flutter and rust."
 publish_to: 'none'
-version: 2.7.2+72
+version: 2.7.3+73
 
 environment:
   sdk: '>=3.6.0'
@@ -40,7 +40,7 @@ dependencies:
   shared_preferences: 2.5.1
   isar: 4.0.0-dev.14
   isar_flutter_libs: 4.0.0-dev.14
-  fluttertoast: 8.2.10
+  fluttertoast: 8.2.11
   cached_network_image: 3.4.1
   audioplayers: 6.1.1
   record: 5.2.0
@@ -71,17 +71,16 @@ dependencies:
   smooth_page_indicator: 1.2.0+3
   unicons: 3.0.0
   encrypt: 5.0.3
-  objectbox: 4.0.3
   faker: 2.2.0
   flutter_rust_bridge: 2.7.1
-  syncfusion_flutter_sliders: 28.2.3
+  syncfusion_flutter_sliders: 28.2.4
   flutter_quill_extensions: 11.0.0-dev.7
   connectivity_plus: 6.1.2
   image_picker_android: 0.8.12+20
   video_player_media_kit: 1.0.5
   video_player: 2.9.2
   chewie: 1.10.0
-  flutter_markdown: 0.7.6
+  flutter_markdown: 0.7.6+1
   image_picker_platform_interface: 2.10.1
   flutter_image_compress: 2.4.0
   mime: 2.0.0
@@ -108,12 +107,11 @@ dependencies:
   markdown: 7.3.0
   flutter_highlight: 0.7.0
   synchronized: 3.3.0+3
+  flutter_secure_storage: 9.2.4
 #  //llama_cpp_dart: 0.0.8
 
 
 dev_dependencies:
-  #  flutter_test:
-  #    sdk: flutter
   build_runner: 2.4.14
   flutter_launcher_icons: 0.14.3
   msix: 3.16.8
