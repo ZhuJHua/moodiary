@@ -4,8 +4,8 @@ publish_to: 'none'
 version: 2.7.3+73
 
 environment:
-  sdk: '>=3.6.0'
-  flutter: '>=3.27.0'
+  sdk: '>=3.7.0'
+  flutter: '>=3.29.0'
 
 dependencies:
   flutter:
@@ -13,7 +13,7 @@ dependencies:
 
   refreshed: 3.0.0
   dio: 5.8.0+1
-  path: 1.9.0
+  path: 1.9.1
   path_provider: 2.1.5
   calendar_date_picker2: 1.1.8
   logger: 2.5.0
@@ -49,7 +49,7 @@ dependencies:
   supabase_flutter: 2.8.3
   bitsdojo_window: 0.1.6
   intl: 0.19.0
-  collection: 1.19.0
+  collection: 1.19.1
   cupertino_icons: 1.0.8
   font_awesome_flutter: 10.8.0
   tflite_flutter: 0.11.0
@@ -106,11 +106,12 @@ dependencies:
   flutter_inappwebview: 6.1.5
   markdown: 7.3.0
   flutter_highlight: 0.7.0
-  synchronized: 3.3.0+3
+  synchronized: 3.3.1
   flutter_secure_storage: 9.2.4
   fpdart: 2.0.0-dev.3
   rxdart: 0.28.0
   minio: 3.5.7
+  page_transition: 2.2.1
 
 
 dev_dependencies:
