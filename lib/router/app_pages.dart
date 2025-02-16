@@ -62,19 +62,19 @@ class AppPages {
     MoodiaryGetPage(
       name: AppRoutes.startPage,
       page: () => const StartPage(),
-      binds: [Bind.lazyPut(() => StartLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => StartLogic())],
     ),
     //首页路由
     MoodiaryGetPage(
       name: AppRoutes.homePage,
       page: () => const HomePage(),
-      binds: [Bind.lazyPut(() => HomeLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => HomeLogic())],
     ),
     //分析
     MoodiaryGetPage(
       name: AppRoutes.analysePage,
       page: () => const AnalysePage(),
-      binds: [Bind.lazyPut(() => AnalyseLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => AnalyseLogic())],
     ),
     //日记页路由
     MoodiaryGetPage(name: AppRoutes.diaryPage, page: () => DiaryDetailsPage()),
@@ -82,55 +82,55 @@ class AppPages {
     MoodiaryGetPage(
       name: AppRoutes.photoPage,
       page: () => const ImagePage(),
-      binds: [Bind.lazyPut(() => ImageLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => ImageLogic())],
     ),
     //回收站
     MoodiaryGetPage(
       name: AppRoutes.recyclePage,
       page: () => const RecyclePage(),
-      binds: [Bind.lazyPut(() => RecycleLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => RecycleLogic())],
     ),
     //登录路由
     MoodiaryGetPage(
       name: AppRoutes.loginPage,
       page: () => const LoginPage(),
-      binds: [Bind.lazyPut(() => LoginLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => LoginLogic())],
     ),
     //新增/编辑日记路由
     MoodiaryGetPage(
       name: AppRoutes.editPage,
       page: () => const EditPage(),
-      binds: [Bind.lazyPut(() => EditLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => EditLogic())],
     ),
     //分享页路由
     MoodiaryGetPage(
       name: AppRoutes.sharePage,
       page: () => const SharePage(),
-      binds: [Bind.lazyPut(() => ShareLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => ShareLogic())],
     ),
     //字体页路由
     MoodiaryGetPage(
       name: AppRoutes.fontPage,
       page: () => const FontPage(),
-      binds: [Bind.lazyPut(() => FontLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => FontLogic())],
     ),
     //实验室路由
     MoodiaryGetPage(
       name: AppRoutes.laboratoryPage,
       page: () => const LaboratoryPage(),
-      binds: [Bind.lazyPut(() => LaboratoryLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => LaboratoryLogic())],
     ),
     //画画路由
     MoodiaryGetPage(
       name: AppRoutes.drawPage,
       page: () => const DrawPage(),
-      binds: [Bind.lazyPut(() => DrawLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => DrawLogic())],
     ),
     //隐私政策
     MoodiaryGetPage(
       name: AppRoutes.privacyPage,
       page: () => const PrivacyPage(),
-      binds: [Bind.lazyPut(() => PrivacyLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => PrivacyLogic())],
     ),
     //用户协议
     MoodiaryGetPage(
@@ -141,57 +141,57 @@ class AppPages {
     MoodiaryGetPage(
       name: AppRoutes.lockPage,
       page: () => const LockPage(),
-      binds: [Bind.lazyPut(() => LockLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => LockLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.userPage,
       page: () => const UserPage(),
-      binds: [Bind.lazyPut(() => UserLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => UserLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.categoryManagerPage,
       page: () => const CategoryManagerPage(),
-      binds: [Bind.lazyPut(() => CategoryManagerLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => CategoryManagerLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.aboutPage,
       page: () => const AboutPage(),
-      binds: [Bind.lazyPut(() => AboutLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => AboutLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.videoPage,
       page: () => const VideoPage(),
-      binds: [Bind.lazyPut(() => VideoLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => VideoLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.mapPage,
       page: () => const MapPage(),
-      binds: [Bind.lazyPut(() => MapLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => MapLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.diarySettingPage,
       page: () => const DiarySettingPage(),
-      binds: [Bind.lazyPut(() => DiarySettingLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => DiarySettingLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.backupSyncPage,
       page: () => const BackupSyncPage(),
-      binds: [Bind.lazyPut(() => BackupSyncLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => BackupSyncLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.assistantPage,
       page: () => const AssistantPage(),
-      binds: [Bind.lazyPut(() => AssistantLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => AssistantLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.sponsorPage,
       page: () => const SponsorPage(),
-      binds: [Bind.lazyPut(() => SponsorLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => SponsorLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.webViewPage,
       page: () => const WebViewPage(),
-      binds: [Bind.lazyPut(() => WebViewLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => WebViewLogic())],
     ),
   ];
 }

@@ -346,10 +346,10 @@ packages:
     dependency: "direct main"
     description:
       name: calendar_date_picker2
-      sha256: b5169b1e6aea0890ff4acaa037c81b697e985b149da64ae53e96afcfebb2e18e
+      sha256: "7b5f20f2a02768df70b3d1fb181c217ab9f8992f39fd6c3fc2ff95b0885820a2"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.8"
+    version: "1.1.9"
   characters:
     dependency: transitive
     description:
@@ -642,10 +642,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: ab13ae8ef5580a411c458d6207b6774a6c237d77ac37011b13994879f68a8810
+      sha256: "6f6bfa8797f296965bdc3e1f702574ab49a540c19b9237b401e7c2b25dfe594c"
       url: "https://pub.dev"
     source: hosted
-    version: "8.3.7"
+    version: "9.0.0"
   file_selector_linux:
     dependency: transitive
     description:
@@ -674,10 +674,10 @@ packages:
     dependency: transitive
     description:
       name: file_selector_windows
-      sha256: "8f5d2f6590d51ecd9179ba39c64f722edc15226cc93dcc8698466ad36a4a85a4"
+      sha256: "320fcfb6f33caa90f0b58380489fc5ac05d99ee94b61aa96ec2bff0ba81d3c2b"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.3+3"
+    version: "0.9.3+4"
   fixnum:
     dependency: transitive
     description:
@@ -711,10 +711,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_adaptive_scaffold
-      sha256: f044e1022702c15bf543d18faf137eed43a6d878b10ba30488a914532410d19c
+      sha256: "7279d74da2f2531a16d21c2ec327308778c3aedd672dfe4eaf3bf416463501f8"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.1+1"
+    version: "0.3.2"
   flutter_cache_manager:
     dependency: transitive
     description:
@@ -2125,10 +2125,10 @@ packages:
     dependency: "direct main"
     description:
       name: refreshed
-      sha256: dee0b1d0299083783c07142e4e0542ed90d3f9a83cf3ff5fefcea1289a1ec26a
+      sha256: cefd293c2b33d0cc5d0181bde65e6818cc5614cf4603fd91bf1a4a88235c64c2
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.0"
+    version: "3.0.1"
   retry:
     dependency: transitive
     description:

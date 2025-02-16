@@ -11,16 +11,16 @@ dependencies:
   flutter:
     sdk: flutter
 
-  refreshed: 3.0.0
+  refreshed: 3.0.1
   dio: 5.8.0+1
   path: 1.9.1
   path_provider: 2.1.5
-  calendar_date_picker2: 1.1.8
+  calendar_date_picker2: 1.1.9
   logger: 2.5.0
   flutter_drawing_board: 0.9.5
   flutter_displaymode: 0.6.0
   fl_chart: 0.70.2
-  file_picker: 8.3.7
+  file_picker: 9.0.0
   local_auth: 2.3.0
   local_auth_android: 1.0.46
   permission_handler: 11.3.1
@@ -58,7 +58,7 @@ dependencies:
   media_kit: 1.1.11
   media_kit_video: 1.2.5
   media_kit_libs_video: 1.0.5
-  flutter_adaptive_scaffold: 0.3.1+1
+  flutter_adaptive_scaffold: 0.3.2
   cross_file: 0.3.4+2
   fc_native_video_thumbnail: 0.17.2
   flutter_map: 7.0.2
