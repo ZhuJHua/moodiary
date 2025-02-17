@@ -26,10 +26,12 @@ dependencies:
   permission_handler: 11.3.1
   image_picker: 1.1.2
   device_info_plus: 11.3.0
-  photo_view: 0.15.0
+  photo_view:
+    git:
+      url: https://github.com/ZhuJHua/photo_view.git
   package_info_plus: 8.2.1
   uuid: 4.5.1
-  flutter_quill: 11.0.0-dev.21
+  flutter_quill: 11.0.0
   share_plus: 10.1.4
   url_launcher: 6.3.1
   archive: 4.0.2
@@ -87,7 +89,7 @@ dependencies:
   auto_size_text_field: 2.2.4
   webdav_client: 1.2.2
   confetti: 0.8.0
-  flutter_native_splash: 2.4.4
+  flutter_native_splash: ^2.4.5
   gal: 2.3.1
   rive_animated_icon:
     git:
@@ -112,6 +114,7 @@ dependencies:
   rxdart: 0.28.0
   minio: 3.5.7
   page_transition: 2.2.1
+  dismissible_page: 1.0.2
 
 
 dev_dependencies:
@@ -121,6 +124,12 @@ dev_dependencies:
   flutter_launcher_icons: 0.14.3
   msix: 3.16.8
   flutter_lints: 5.0.0
+
+dependency_overrides:
+  photo_view:
+    git:
+      url: https://github.com/ZhuJHua/photo_view.git
+
 
 flutter_launcher_icons:
   android: "launcher_icon"

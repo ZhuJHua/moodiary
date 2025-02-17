@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/components/base/image.dart';
-import 'package:moodiary/router/app_routes.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/pages/image/image_view.dart';
 
 class MediaImageComponent extends StatelessWidget {
   final DateTime dateTime;
   final List<String> imageList;
 
-  const MediaImageComponent(
-      {super.key, required this.dateTime, required this.imageList});
-
-  void _toPhotoView(int index, List<String> filePath) {
-    Get.toNamed(AppRoutes.photoPage, arguments: [filePath, index]);
-  }
+  const MediaImageComponent({
+    super.key,
+    required this.dateTime,
+    required this.imageList,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +43,8 @@ class MediaImageComponent extends StatelessWidget {
             return ThumbnailImage(
               imagePath: imageList[index],
               size: 120,
-              onTap: () {
-                _toPhotoView(index, imageList);
+              onTap: () async {
+                await showImageView(context, imageList, index);
               },
             );
           },

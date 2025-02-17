@@ -558,6 +558,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
+  dismissible_page:
+    dependency: "direct main"
+    description:
+      name: dismissible_page
+      sha256: "5b2316f770fe83583f770df1f6505cb19102081c5971979806e77f2e507a9958"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   duration:
     dependency: "direct main"
     description:
@@ -972,10 +980,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_native_splash
-      sha256: "7062602e0dbd29141fb8eb19220b5871ca650be5197ab9c1f193a28b17537bc7"
+      sha256: edb09c35ee9230c4b03f13dd45bb3a276d0801865f0a4650b7e2a3bba61a803a
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.4"
+    version: "2.4.5"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -988,10 +996,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_quill
-      sha256: "0acca7cf646eb2feba5333338d046514c17159741ab5744c7c4290778656fa4a"
+      sha256: "3765d057bb63e6e5b7d5aba7c8fb048ec1b38c8a3428ded8c22e57cf2682a580"
       url: "https://pub.dev"
     source: hosted
-    version: "11.0.0-dev.21"
+    version: "11.0.0"
   flutter_quill_delta_from_html:
     dependency: transitive
     description:
@@ -1892,10 +1900,11 @@ packages:
   photo_view:
     dependency: "direct main"
     description:
-      name: photo_view
-      sha256: "1fc3d970a91295fbd1364296575f854c9863f225505c28c46e0a03e48960c75e"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "7c01240f9b79256c7b9923256e533336a0d5e8e0"
+      url: "https://github.com/ZhuJHua/photo_view.git"
+    source: git
     version: "0.15.0"
   platform:
     dependency: transitive

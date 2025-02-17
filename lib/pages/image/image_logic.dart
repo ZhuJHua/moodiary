@@ -7,6 +7,11 @@ class ImageLogic extends GetxController {
   final ImageState state = ImageState();
   late final PageController pageController;
 
+  ImageLogic({required List<String> imagePathList, required int initialIndex}) {
+    state.imagePathList = imagePathList;
+    state.imageIndex = initialIndex.obs;
+  }
+
   @override
   void onInit() {
     pageController = PageController(initialPage: state.imageIndex.value);
@@ -28,8 +33,11 @@ class ImageLogic extends GetxController {
   void previous() {
     if (state.imageIndex.value > 0) {
       state.imageIndex.value--;
-      pageController.animateToPage(state.imageIndex.value,
-          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+      pageController.animateToPage(
+        state.imageIndex.value,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
@@ -37,8 +45,15 @@ class ImageLogic extends GetxController {
   void next() {
     if (state.imageIndex.value < state.imagePathList.length - 1) {
       state.imageIndex.value++;
-      pageController.animateToPage(state.imageIndex.value,
-          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+      pageController.animateToPage(
+        state.imageIndex.value,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
     }
+  }
+
+  void updateOpacity(double value) {
+    state.opacity.value = value;
   }
 }

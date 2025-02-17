@@ -1,10 +1,12 @@
 import 'package:refreshed/refreshed.dart';
 
 class ImageState {
-  List<String> imagePathList = Get.arguments[0];
+  late List<String> imagePathList;
 
   //当前图片的的位置
-  RxInt imageIndex = (Get.arguments[1] as int).obs;
+  late RxInt imageIndex;
+
+  late RxDouble opacity = 0.9.obs;
 
   ImageState();
 }
