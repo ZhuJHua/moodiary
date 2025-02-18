@@ -7,16 +7,20 @@ import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/pages/image/image_logic.dart';
 import 'package:moodiary/utils/media_util.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
 import 'package:refreshed/refreshed.dart';
 
 Future<T?> showImageView<T>(
   BuildContext context,
   List<String> imagePathList,
-  int initialIndex,
-) async {
+  int initialIndex, {
+  required String heroTagPrefix,
+}) async {
   return await context.pushTransparentRoute(
-    ImagePage(imagePathList: imagePathList, initialIndex: initialIndex),
+    ImagePage(
+      imagePathList: imagePathList,
+      initialIndex: initialIndex,
+      heroTagPrefix: heroTagPrefix,
+    ),
   );
 }
 
@@ -24,14 +28,18 @@ class ImagePage extends StatelessWidget {
   final List<String> _imagePathList;
   final int _initialIndex;
 
+  final String _heroTagPrefix;
+
   String get _tag => Object.hash(_imagePathList, _initialIndex).toString();
 
   const ImagePage({
     required List<String> imagePathList,
     required int initialIndex,
+    required String heroTagPrefix,
     super.key,
   }) : _imagePathList = imagePathList,
-       _initialIndex = initialIndex;
+       _initialIndex = initialIndex,
+       _heroTagPrefix = heroTagPrefix;
 
   Widget _buildOperationButton({
     required Function() onSaved,
@@ -121,33 +129,11 @@ class ImagePage extends StatelessWidget {
     );
     final state = Bind.find<ImageLogic>(tag: _tag).state;
     final textStyle = Theme.of(context).textTheme;
-    final gallery = PhotoViewGallery.builder(
-      scrollPhysics: const PageScrollPhysics(),
-      backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+    final imageView = ImageViewGallery(
+      imagePathList: state.imagePathList,
+      initialIndex: state.imageIndex.value,
       pageController: logic.pageController,
-      enableRotation: false,
-      scrollDirection: Axis.horizontal,
-      wantKeepAlive: true,
-      itemWrapper: (context, index, child) {
-        return Obx(() {
-          return HeroMode(
-            enabled: index == state.imageIndex.value,
-            child: child,
-          );
-        });
-      },
-      builder: (BuildContext context, int index) {
-        return PhotoViewGalleryPageOptions(
-          imageProvider: FileImage(File(state.imagePathList[index])),
-          heroAttributes: PhotoViewHeroAttributes(
-            tag: state.imagePathList[index],
-          ),
-          initialScale: PhotoViewComputedScale.contained,
-          tightMode: true,
-        );
-      },
-      itemCount: state.imagePathList.length,
-      onPageChanged: logic.changePage,
+      heroTagPrefix: _heroTagPrefix,
     );
     return GetBuilder<ImageLogic>(
       tag: _tag,
@@ -170,9 +156,11 @@ class ImagePage extends StatelessWidget {
                 },
                 direction: DismissiblePageDismissDirection.vertical,
                 isFullScreen: true,
-                minScale: 0.3,
-                dragSensitivity: 1.0,
-                child: gallery,
+                minScale: 0.2,
+                dragSensitivity: 0.8,
+                startingOpacity: 0.9,
+                maxTransformValue: 0.6,
+                child: imageView,
               ),
               Positioned(
                 left: 24,
@@ -211,6 +199,82 @@ class ImagePage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class ImageViewGallery extends StatefulWidget {
+  final List<String> imagePathList;
+  final int initialIndex;
+
+  final String _heroTagPrefix;
+
+  final PageController pageController;
+
+  const ImageViewGallery({
+    required this.imagePathList,
+    required this.initialIndex,
+    required this.pageController,
+    required String heroTagPrefix,
+    super.key,
+  }) : _heroTagPrefix = heroTagPrefix;
+
+  @override
+  State<ImageViewGallery> createState() => _ImageViewGalleryState();
+}
+
+class _ImageViewGalleryState extends State<ImageViewGallery> {
+  late int currentIndex;
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    currentIndex = widget.initialIndex;
+    widget.pageController.addListener(() {
+      final index = widget.pageController.page?.round() ?? 0;
+      if (currentIndex != index) {
+        setState(() {
+          currentIndex = index;
+        });
+      }
+    });
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.imagePathList.length == 1) {
+      return PhotoView(
+        imageProvider: FileImage(File(widget.imagePathList[0])),
+        backgroundDecoration: const BoxDecoration(color: Colors.transparent),
+        initialScale: PhotoViewComputedScale.contained,
+        heroAttributes: PhotoViewHeroAttributes(
+          tag: '${widget._heroTagPrefix}0',
+        ),
+      );
+    }
+    return PageView.builder(
+      itemBuilder: (context, index) {
+        return HeroMode(
+          enabled: index == currentIndex,
+          child: PhotoView(
+            imageProvider: FileImage(File(widget.imagePathList[index])),
+            heroAttributes: PhotoViewHeroAttributes(
+              tag: '${widget._heroTagPrefix}$index',
+            ),
+            backgroundDecoration: const BoxDecoration(
+              color: Colors.transparent,
+            ),
+            initialScale: PhotoViewComputedScale.contained,
+          ),
+        );
+      },
+      controller: widget.pageController,
+      itemCount: widget.imagePathList.length,
     );
   }
 }

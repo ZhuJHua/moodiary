@@ -25,8 +25,6 @@ import 'package:moodiary/pages/font/font_logic.dart';
 import 'package:moodiary/pages/font/font_view.dart';
 import 'package:moodiary/pages/home/home_logic.dart';
 import 'package:moodiary/pages/home/home_view.dart';
-import 'package:moodiary/pages/image/image_logic.dart';
-import 'package:moodiary/pages/image/image_view.dart';
 import 'package:moodiary/pages/laboratory/laboratory_logic.dart';
 import 'package:moodiary/pages/laboratory/laboratory_view.dart';
 import 'package:moodiary/pages/lock/lock_logic.dart';
@@ -78,12 +76,6 @@ class AppPages {
     ),
     //日记页路由
     MoodiaryGetPage(name: AppRoutes.diaryPage, page: () => DiaryDetailsPage()),
-    //图片路由
-    MoodiaryGetPage(
-      name: AppRoutes.photoPage,
-      page: () => const ImagePage(),
-      binds: [Bind.lazyPut(fenix: true, () => ImageLogic())],
-    ),
     //回收站
     MoodiaryGetPage(
       name: AppRoutes.recyclePage,
