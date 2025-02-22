@@ -224,6 +224,15 @@ class _MoodiaryPageTransition implements CustomTransition {
   ) {
     final pageRoute = ModalRoute.of(context) as PageRoute;
     if (Platform.isAndroid) {
+      if (pageRoute.popGestureInProgress) {
+        return const PredictiveBackPageTransitionsBuilder().buildTransitions(
+          pageRoute,
+          context,
+          animation,
+          secondaryAnimation,
+          child,
+        );
+      }
       return const FadeForwardsPageTransitionsBuilder().buildTransitions(
         pageRoute,
         context,

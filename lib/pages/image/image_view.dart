@@ -139,64 +139,59 @@ class ImagePage extends StatelessWidget {
       tag: _tag,
       assignId: true,
       builder: (_) {
-        return GestureDetector(
-          onTap: () {
-            Navigator.pop(context);
-          },
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              DismissiblePage(
-                backgroundColor: Colors.black,
-                onDismissed: () {
-                  Navigator.pop(context);
-                },
-                onDragUpdate: (details) {
-                  logic.updateOpacity(details.opacity);
-                },
-                direction: DismissiblePageDismissDirection.vertical,
-                isFullScreen: true,
-                minScale: 0.2,
-                dragSensitivity: 0.8,
-                startingOpacity: 0.9,
-                maxTransformValue: 0.6,
-                child: imageView,
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            DismissiblePage(
+              backgroundColor: Colors.black,
+              onDismissed: () {
+                Navigator.pop(context);
+              },
+              onDragUpdate: (details) {
+                logic.updateOpacity(details.opacity);
+              },
+              direction: DismissiblePageDismissDirection.vertical,
+              minScale: 0.2,
+              dragSensitivity: 0.8,
+              startingOpacity: 0.9,
+              maxTransformValue: 0.6,
+              child: imageView,
+            ),
+            Positioned(
+              left: 24,
+              right: 24,
+              child: _buildPageButton(
+                previous: logic.previous,
+                next: logic.next,
+                opacity: state.opacity,
+                imageIndex: state.imageIndex,
+                imagePathList: state.imagePathList,
               ),
-              Positioned(
-                left: 24,
-                right: 24,
-                child: _buildPageButton(
-                  previous: logic.previous,
-                  next: logic.next,
-                  opacity: state.opacity,
+            ),
+            Positioned(
+              bottom: 24,
+              left: 24,
+              right: 24,
+              child: SafeArea(
+                top: false,
+                child: _buildOperationButton(
+                  onSaved: () {
+                    MediaUtil.saveToGallery(
+                      path: state.imagePathList[state.imageIndex.value],
+                      type: MediaType.image,
+                    );
+                  },
+                  onExit: () {
+                    Navigator.pop(context);
+                  },
                   imageIndex: state.imageIndex,
                   imagePathList: state.imagePathList,
+                  textStyle: textStyle.labelLarge,
+                  opacity: state.opacity,
                 ),
               ),
-              Positioned(
-                bottom: 24,
-                left: 24,
-                right: 24,
-                child: SafeArea(
-                  child: _buildOperationButton(
-                    onSaved: () {
-                      MediaUtil.saveToGallery(
-                        path: state.imagePathList[state.imageIndex.value],
-                        type: MediaType.image,
-                      );
-                    },
-                    onExit: () {
-                      Navigator.pop(context);
-                    },
-                    imageIndex: state.imageIndex,
-                    imagePathList: state.imagePathList,
-                    textStyle: textStyle.labelLarge,
-                    opacity: state.opacity,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -252,6 +247,10 @@ class _ImageViewGalleryState extends State<ImageViewGallery> {
         imageProvider: FileImage(File(widget.imagePathList[0])),
         backgroundDecoration: const BoxDecoration(color: Colors.transparent),
         initialScale: PhotoViewComputedScale.contained,
+        minScale: PhotoViewComputedScale.contained,
+        onTapDown: (context, details, controllerValue) {
+          Navigator.pop(context);
+        },
         heroAttributes: PhotoViewHeroAttributes(
           tag: '${widget._heroTagPrefix}0',
         ),
@@ -266,10 +265,14 @@ class _ImageViewGalleryState extends State<ImageViewGallery> {
             heroAttributes: PhotoViewHeroAttributes(
               tag: '${widget._heroTagPrefix}$index',
             ),
+            onTapDown: (context, details, controllerValue) {
+              Navigator.pop(context);
+            },
             backgroundDecoration: const BoxDecoration(
               color: Colors.transparent,
             ),
             initialScale: PhotoViewComputedScale.contained,
+            minScale: PhotoViewComputedScale.contained,
           ),
         );
       },

@@ -29,7 +29,7 @@ class ThumbnailImage extends StatelessWidget {
       key: ValueKey(imagePath),
       image: ResizeImage(
         imageProvider,
-        width: aspectRatio < 1.0 ? size * pixelRatio.toInt() : null,
+        width: aspectRatio < 1.0 ? (size * pixelRatio).toInt() : null,
         height: aspectRatio >= 1.0 ? (size * pixelRatio).toInt() : null,
       ),
       fit: fit ?? BoxFit.cover,
