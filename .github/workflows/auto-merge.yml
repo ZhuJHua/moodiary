@@ -18,7 +18,7 @@ on:
       - completed
   status: { }
   workflow_run:
-    workflows: [ "Git Cliff" ]
+    workflows: [ Git Cliff ]
     types:
       - completed
 jobs:
