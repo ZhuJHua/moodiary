@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/image.dart';
+import 'package:moodiary/main.dart';
 import 'package:moodiary/pages/video/video_view.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
@@ -44,7 +45,7 @@ class MediaVideoComponent extends StatelessWidget {
                 ),
               ),
               Text(
-                '${videoList.length} ${videoList.length > 1 ? 'Videos' : 'Video'}',
+                l10n.mediaVideoCount(videoList.length),
                 style: textStyle.labelMedium?.copyWith(
                   color: colorScheme.tertiary,
                 ),

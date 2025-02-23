@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:moodiary/common/values/view_mode.dart';
 import 'package:moodiary/components/base/sheet.dart';
 import 'package:moodiary/components/base/text.dart';
@@ -46,7 +45,7 @@ class DiaryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Get.put(DiaryLogic());
+    final logic = Bind.find<DiaryLogic>();
     final state = Bind.find<DiaryLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
@@ -153,6 +152,23 @@ class DiaryPage extends StatelessWidget {
       );
     }
 
+    final title = Obx(() {
+      return AdaptiveText(
+        state.customTitleName.value.isNotEmpty
+            ? state.customTitleName.value
+            : l10n.appName,
+        style: textStyle.titleLarge?.copyWith(color: colorScheme.onSurface),
+      );
+    });
+
+    final hitokoto = Obx(() {
+      return AdaptiveText(
+        state.hitokoto.value,
+        style: textStyle.labelSmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
+      );
+    });
     return GetBuilder<DiaryLogic>(
       builder: (_) {
         return NestedScrollView(
@@ -166,31 +182,7 @@ class DiaryPage extends StatelessWidget {
                 sliver: SliverAppBar(
                   title: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                        },
-                        child: Obx(() {
-                          return AdaptiveText(
-                            state.customTitleName.value.isNotEmpty
-                                ? state.customTitleName.value
-                                : l10n.appName,
-                            style: textStyle.titleLarge?.copyWith(
-                              color: colorScheme.onSurface,
-                            ),
-                          );
-                        }),
-                      ),
-                      Obx(() {
-                        return AdaptiveText(
-                          state.hitokoto.value,
-                          style: textStyle.labelSmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        );
-                      }),
-                    ],
+                    children: [title, hitokoto],
                   ),
                   pinned: true,
                   actions: [

@@ -5,6 +5,7 @@ import 'package:moodiary/components/dashboard/dashboard_logic.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
 import 'package:moodiary/pages/home/home_logic.dart';
 import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/presentation/secure_storage.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
@@ -24,7 +25,13 @@ class SettingLogic extends GetxController {
   @override
   void onReady() {
     unawaited(getDataUsage());
+    unawaited(checkHasUserKey());
     super.onReady();
+  }
+
+  Future<void> checkHasUserKey() async {
+    state.hasUserKey.value =
+        (await SecureStorageUtil.getValue('userKey')) != null;
   }
 
   //获取当前占用储存空间
@@ -125,5 +132,19 @@ class SettingLogic extends GetxController {
     update(['CustomTitle']);
     await PrefUtil.setValue<String>('customTitleName', state.customTitle);
     Bind.find<DiaryLogic>().updateTitle();
+  }
+
+  Future<void> setUserKey({required String key}) async {
+    if (key.isBlank) {
+      NoticeUtil.showToast('密钥不能为空');
+      return;
+    }
+    await SecureStorageUtil.setValue('userKey', key);
+    state.hasUserKey.value = true;
+  }
+
+  Future<void> removeUserKey() async {
+    await SecureStorageUtil.remove('userKey');
+    state.hasUserKey.value = false;
   }
 }

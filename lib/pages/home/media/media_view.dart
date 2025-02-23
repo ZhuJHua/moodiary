@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/media_type.dart';
+import 'package:moodiary/components/base/clipper.dart';
 import 'package:moodiary/components/loading/loading.dart';
 import 'package:moodiary/components/lottie_modal/lottie_modal.dart';
 import 'package:moodiary/components/media/media_audio_view.dart';
@@ -124,41 +125,36 @@ class MediaPage extends StatelessWidget {
                           child: SearchLoading(),
                         )
                         : (state.datetimeMediaMap.isNotEmpty
-                            ? Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: ClipRRect(
-                                borderRadius:
-                                    AppBorderRadius.mediumBorderRadius,
-                                child: ScrollablePositionedList.builder(
-                                  itemBuilder: (context, index) {
-                                    final datetime = state.dateTimeList[index];
-                                    final fileList =
-                                        state.datetimeMediaMap[datetime]!;
-                                    return switch (state.mediaType.value) {
-                                      MediaType.image => MediaImageComponent(
-                                        dateTime: datetime,
-                                        imageList: fileList,
-                                      ),
-                                      MediaType.audio => MediaAudioComponent(
-                                        dateTime: datetime,
-                                        audioList: fileList,
-                                      ),
-                                      MediaType.video => MediaVideoComponent(
-                                        dateTime: datetime,
-                                        videoList: fileList,
-                                      ),
-                                    };
-                                  },
-                                  itemCount: state.dateTimeList.length,
-                                  itemScrollController:
-                                      logic.itemScrollController,
-                                  itemPositionsListener:
-                                      logic.itemPositionsListener,
-                                  scrollOffsetController:
-                                      logic.scrollOffsetController,
-                                  scrollOffsetListener:
-                                      logic.scrollOffsetListener,
-                                ),
+                            ? PageClipper(
+                              child: ScrollablePositionedList.builder(
+                                itemBuilder: (context, index) {
+                                  final datetime = state.dateTimeList[index];
+                                  final fileList =
+                                      state.datetimeMediaMap[datetime]!;
+                                  return switch (state.mediaType.value) {
+                                    MediaType.image => MediaImageComponent(
+                                      dateTime: datetime,
+                                      imageList: fileList,
+                                    ),
+                                    MediaType.audio => MediaAudioComponent(
+                                      dateTime: datetime,
+                                      audioList: fileList,
+                                    ),
+                                    MediaType.video => MediaVideoComponent(
+                                      dateTime: datetime,
+                                      videoList: fileList,
+                                    ),
+                                  };
+                                },
+                                itemCount: state.dateTimeList.length,
+                                itemScrollController:
+                                    logic.itemScrollController,
+                                itemPositionsListener:
+                                    logic.itemPositionsListener,
+                                scrollOffsetController:
+                                    logic.scrollOffsetController,
+                                scrollOffsetListener:
+                                    logic.scrollOffsetListener,
                               ),
                             )
                             : Center(

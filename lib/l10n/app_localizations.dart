@@ -1714,6 +1714,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'类型'**
   String get diaryType;
+
+  /// No description provided for @mediaImageCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 张照片'**
+  String mediaImageCount(num count);
+
+  /// No description provided for @mediaAudioCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 段音频'**
+  String mediaAudioCount(num count);
+
+  /// No description provided for @mediaVideoCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 段视频'**
+  String mediaVideoCount(num count);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

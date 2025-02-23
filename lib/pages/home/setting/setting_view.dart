@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/common/values/language.dart';
+import 'package:moodiary/components/base/clipper.dart';
 import 'package:moodiary/components/base/sheet.dart';
 import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/color_sheet/color_sheet_view.dart';
@@ -38,15 +39,17 @@ class SettingPage extends StatelessWidget {
       );
     }
 
-    Widget buildAFeatureButton(
-        {required Widget icon,
-        required String text,
-        required Function() onTap}) {
+    Widget buildAFeatureButton({
+      required Widget icon,
+      required String text,
+      required Function() onTap,
+    }) {
       return InkWell(
         onTap: onTap,
         borderRadius: AppBorderRadius.mediumBorderRadius,
         child: Card.outlined(
           color: colorScheme.surfaceContainerLow,
+          margin: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
@@ -55,8 +58,9 @@ class SettingPage extends StatelessWidget {
                 icon,
                 AdaptiveText(
                   text,
-                  style: textStyle.labelSmall
-                      ?.copyWith(color: colorScheme.secondary),
+                  style: textStyle.labelSmall?.copyWith(
+                    color: colorScheme.secondary,
+                  ),
                 ),
               ],
             ),
@@ -72,39 +76,47 @@ class SettingPage extends StatelessWidget {
           AdaptiveTitleTile(title: l10n.settingFunction),
           GridView(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 100, childAspectRatio: 1.0),
+              maxCrossAxisExtent: 100,
+              childAspectRatio: 1.0,
+              mainAxisSpacing: 8.0,
+              crossAxisSpacing: 8.0,
+            ),
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: [
               buildAFeatureButton(
-                  icon: Icon(
-                    Icons.category_rounded,
-                    color: colorScheme.secondary,
-                  ),
-                  text: l10n.settingFunctionCategoryManage,
-                  onTap: logic.toCategoryManager),
+                icon: Icon(
+                  Icons.category_rounded,
+                  color: colorScheme.secondary,
+                ),
+                text: l10n.settingFunctionCategoryManage,
+                onTap: logic.toCategoryManager,
+              ),
               buildAFeatureButton(
-                  icon: FaIcon(
-                    FontAwesomeIcons.squarePollVertical,
-                    color: colorScheme.secondary,
-                  ),
-                  text: l10n.settingFunctionAnalysis,
-                  onTap: logic.toAnalysePage),
+                icon: FaIcon(
+                  FontAwesomeIcons.squarePollVertical,
+                  color: colorScheme.secondary,
+                ),
+                text: l10n.settingFunctionAnalysis,
+                onTap: logic.toAnalysePage,
+              ),
               buildAFeatureButton(
-                  icon: FaIcon(
-                    FontAwesomeIcons.solidMap,
-                    color: colorScheme.secondary,
-                  ),
-                  text: l10n.settingFunctionTrailMap,
-                  onTap: logic.toMap),
+                icon: FaIcon(
+                  FontAwesomeIcons.solidMap,
+                  color: colorScheme.secondary,
+                ),
+                text: l10n.settingFunctionTrailMap,
+                onTap: logic.toMap,
+              ),
               buildAFeatureButton(
-                  icon: FaIcon(
-                    FontAwesomeIcons.solidCommentDots,
-                    color: colorScheme.secondary,
-                  ),
-                  text: l10n.settingFunctionAIAssistant,
-                  onTap: logic.toAi),
+                icon: FaIcon(
+                  FontAwesomeIcons.solidCommentDots,
+                  color: colorScheme.secondary,
+                ),
+                text: l10n.settingFunctionAIAssistant,
+                onTap: logic.toAi,
+              ),
             ],
           ),
         ],
@@ -117,6 +129,7 @@ class SettingPage extends StatelessWidget {
           AdaptiveTitleTile(title: l10n.settingData),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
+            margin: EdgeInsets.zero,
             child: Column(
               children: [
                 AdaptiveListTile(
@@ -141,22 +154,23 @@ class SettingPage extends StatelessWidget {
                   leading: const Icon(Icons.cleaning_services_rounded),
                   isLast: true,
                   trailing: GetBuilder<SettingLogic>(
-                      id: 'DataUsage',
-                      builder: (_) {
-                        return Text(
-                          state.dataUsage,
-                          style: textStyle.bodySmall!.copyWith(
-                            color: colorScheme.primary,
-                          ),
-                        );
-                      }),
+                    id: 'DataUsage',
+                    builder: (_) {
+                      return Text(
+                        state.dataUsage,
+                        style: textStyle.bodySmall!.copyWith(
+                          color: colorScheme.primary,
+                        ),
+                      );
+                    },
+                  ),
                   onTap: () {
                     logic.deleteCache();
                   },
                 ),
               ],
             ),
-          )
+          ),
         ],
       );
     }
@@ -167,6 +181,7 @@ class SettingPage extends StatelessWidget {
           AdaptiveTitleTile(title: l10n.settingDisplay),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
+            margin: EdgeInsets.zero,
             child: Column(
               children: [
                 AdaptiveListTile(
@@ -194,10 +209,11 @@ class SettingPage extends StatelessWidget {
                   ),
                   onTap: () {
                     showDialog(
-                        context: context,
-                        builder: (context) {
-                          return const ThemeModeDialogComponent();
-                        });
+                      context: context,
+                      builder: (context) {
+                        return const ThemeModeDialogComponent();
+                      },
+                    );
                   },
                 ),
                 AdaptiveListTile(
@@ -211,10 +227,11 @@ class SettingPage extends StatelessWidget {
                   ),
                   onTap: () {
                     showFloatingModalBottomSheet(
-                        context: context,
-                        builder: (context) {
-                          return const ColorSheetComponent();
-                        });
+                      context: context,
+                      builder: (context) {
+                        return const ColorSheetComponent();
+                      },
+                    );
                   },
                 ),
                 AdaptiveListTile(
@@ -230,22 +247,21 @@ class SettingPage extends StatelessWidget {
                   leading: const Icon(Icons.drive_file_rename_outline_rounded),
                   isLast: true,
                   trailing: GetBuilder<SettingLogic>(
-                      id: 'CustomTitle',
-                      builder: (_) {
-                        return Text(
-                          state.customTitle,
-                          style: textStyle.bodySmall!.copyWith(
-                            color: colorScheme.primary,
-                          ),
-                        );
-                      }),
+                    id: 'CustomTitle',
+                    builder: (_) {
+                      return Text(
+                        state.customTitle,
+                        style: textStyle.bodySmall!.copyWith(
+                          color: colorScheme.primary,
+                        ),
+                      );
+                    },
+                  ),
                   onTap: () async {
                     final res = await showTextInputDialog(
                       context: context,
                       textFields: [
-                        DialogTextField(
-                          initialText: state.customTitle,
-                        )
+                        DialogTextField(initialText: state.customTitle),
                       ],
                       title: l10n.settingHomepageName,
                     );
@@ -253,10 +269,10 @@ class SettingPage extends StatelessWidget {
                       logic.setCustomTitle(title: res.first);
                     }
                   },
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       );
     }
@@ -267,6 +283,7 @@ class SettingPage extends StatelessWidget {
           AdaptiveTitleTile(title: l10n.settingPrivacy),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
+            margin: EdgeInsets.zero,
             child: Column(
               children: [
                 // GetBuilder<SettingLogic>(
@@ -281,59 +298,103 @@ class SettingPage extends StatelessWidget {
                 //       );
                 //     }),
                 GetBuilder<SettingLogic>(
-                    id: 'Lock',
-                    builder: (_) {
-                      return AdaptiveListTile(
-                        trailing: Text(
-                          state.lock
-                              ? l10n.settingLockOpen
-                              : l10n.settingLockNotOpen,
-                          style: textStyle.bodySmall!.copyWith(
-                            color: colorScheme.primary,
-                          ),
+                  id: 'Lock',
+                  builder: (_) {
+                    return AdaptiveListTile(
+                      trailing: Text(
+                        state.lock
+                            ? l10n.settingLockOpen
+                            : l10n.settingLockNotOpen,
+                        style: textStyle.bodySmall!.copyWith(
+                          color: colorScheme.primary,
                         ),
-                        isFirst: true,
-                        onTap: () async {
-                          final res = await showOkCancelAlertDialog(
+                      ),
+                      isFirst: true,
+                      onTap: () async {
+                        final res = await showOkCancelAlertDialog(
+                          context: context,
+                          title: l10n.settingLock,
+                          message:
+                              state.lock
+                                  ? l10n.settingLockResetLock
+                                  : l10n.settingLockChooseLockType,
+                          okLabel:
+                              state.lock
+                                  ? l10n.settingLockClose
+                                  : l10n.settingLockTypeNumber,
+                        );
+                        if (res == OkCancelResult.ok && context.mounted) {
+                          showFloatingModalBottomSheet(
                             context: context,
-                            title: l10n.settingLock,
-                            message: state.lock
-                                ? l10n.settingLockResetLock
-                                : l10n.settingLockChooseLockType,
-                            okLabel: state.lock
-                                ? l10n.settingLockClose
-                                : l10n.settingLockTypeNumber,
+                            isScrollControlled: true,
+                            builder: (context) {
+                              return state.lock
+                                  ? const RemovePasswordComponent()
+                                  : const SetPasswordComponent();
+                            },
                           );
-                          if (res == OkCancelResult.ok && context.mounted) {
-                            showFloatingModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                builder: (context) {
-                                  return state.lock
-                                      ? const RemovePasswordComponent()
-                                      : const SetPasswordComponent();
-                                });
-                          }
-                        },
-                        title: Text(l10n.settingLock),
-                        leading: const Icon(Icons.lock_rounded),
+                        }
+                      },
+                      title: Text(l10n.settingLock),
+                      leading: const Icon(Icons.lock_rounded),
+                    );
+                  },
+                ),
+                AdaptiveListTile(
+                  title: l10n.settingUserKey,
+                  subtitle: l10n.settingUserKeyDes,
+                  onTap: () async {
+                    if (state.hasUserKey.value) {
+                      final res = await showOkCancelAlertDialog(
+                        context: context,
+                        title: l10n.settingUserKeyReset,
+                        message: l10n.settingUserKeyResetDes,
                       );
-                    }),
+                      if (res == OkCancelResult.ok) {
+                        logic.removeUserKey();
+                      }
+                      return;
+                    } else {
+                      final res = await showTextInputDialog(
+                        title: l10n.settingUserKeySet,
+                        message: l10n.settingUserKeySetDes,
+                        context: context,
+                        textFields: [const DialogTextField()],
+                      );
+                      if (res != null) {
+                        logic.setUserKey(key: res.first);
+                      }
+                    }
+                  },
+                  trailing: Obx(() {
+                    return Text(
+                      state.hasUserKey.value
+                          ? l10n.settingUserKeyHasSet
+                          : l10n.settingUserKeyNotSet,
+                      style: textStyle.bodySmall!.copyWith(
+                        color: colorScheme.primary,
+                      ),
+                    );
+                  }),
+                  leading: const Icon(Icons.key_rounded),
+                ),
                 GetBuilder<SettingLogic>(
-                    id: 'Lock',
-                    builder: (_) {
-                      return AdaptiveSwitchListTile(
-                        value: state.lockNow,
-                        onChanged: state.lock
-                            ? (value) {
+                  id: 'Lock',
+                  builder: (_) {
+                    return AdaptiveSwitchListTile(
+                      value: state.lockNow,
+                      onChanged:
+                          state.lock
+                              ? (value) {
                                 logic.lockNow(value);
                               }
-                            : null,
-                        title: Text(l10n.settingLockNow),
-                        subtitle: l10n.settingLockNowDes,
-                        secondary: const Icon(Icons.lock_clock_rounded),
-                      );
-                    }),
+                              : null,
+                      title: Text(l10n.settingLockNow),
+                      subtitle: l10n.settingLockNowDes,
+                      secondary: const Icon(Icons.lock_clock_rounded),
+                    );
+                  },
+                ),
                 Obx(() {
                   return AdaptiveSwitchListTile(
                     value: state.backendPrivacy.value,
@@ -346,7 +407,7 @@ class SettingPage extends StatelessWidget {
                 }),
               ],
             ),
-          )
+          ),
         ],
       );
     }
@@ -357,6 +418,7 @@ class SettingPage extends StatelessWidget {
           AdaptiveTitleTile(title: l10n.settingMore),
           Card.filled(
             color: colorScheme.surfaceContainerLow,
+            margin: EdgeInsets.zero,
             child: Column(
               children: [
                 AdaptiveListTile(
@@ -407,10 +469,9 @@ class SettingPage extends StatelessWidget {
     return GetBuilder<SettingLogic>(
       assignId: true,
       builder: (_) {
-        return SafeArea(
+        return PageClipper(
           child: ListView(
             cacheExtent: size.height * 2,
-            padding: const EdgeInsets.all(4.0),
             children: [
               buildDashboard(),
               buildFeature(),

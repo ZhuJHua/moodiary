@@ -1,4 +1,5 @@
-import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
+import 'package:moodiary/common/values/border.dart';
 
 class TopRRectClipper extends CustomClipper<RRect> {
   final double topOffset;
@@ -20,5 +21,24 @@ class TopRRectClipper extends CustomClipper<RRect> {
   @override
   bool shouldReclip(covariant TopRRectClipper oldClipper) {
     return oldClipper.topOffset != topOffset;
+  }
+}
+
+class PageClipper extends StatelessWidget {
+  final Widget child;
+  final CustomClipper<RRect>? clipper;
+
+  const PageClipper({super.key, required this.child, this.clipper});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ClipRRect(
+        borderRadius: AppBorderRadius.mediumBorderRadius,
+        clipper: clipper,
+        child: child,
+      ),
+    );
   }
 }
