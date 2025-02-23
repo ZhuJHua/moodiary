@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary/common/values/view_mode.dart';
+import 'package:moodiary/components/base/clipper.dart';
 import 'package:moodiary/components/diary_card/grid_diary_card_view.dart';
 import 'package:moodiary/components/diary_card/list_diary_card_view.dart';
 import 'package:moodiary/components/loading/loading.dart';
@@ -44,72 +45,79 @@ class DiaryTabViewComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logicTag = categoryId ?? 'default';
-    final logic =
-        Get.put(DiaryTabViewLogic(categoryId: categoryId), tag: logicTag);
+    final barHeight = 46 + kToolbarHeight + MediaQuery.paddingOf(context).top;
+    final logic = Get.put(
+      DiaryTabViewLogic(categoryId: categoryId),
+      tag: logicTag,
+    );
     final state = Bind.find<DiaryTabViewLogic>(tag: logicTag).state;
     final size = MediaQuery.sizeOf(context);
     final placeholderHeight = size.height / 2 - kToolbarHeight - 46;
 
     Widget buildGrid() {
-      return Obx(
-        () {
-          return SliverWaterfallFlow(
-            gridDelegate:
-                const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 250),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                return GirdDiaryCardComponent(
-                  diary: state.diaryList[index],
-                );
-              },
-              childCount: state.diaryList.length,
-            ),
-          );
-        },
-        key: const ValueKey('grid'),
-      );
+      return Obx(() {
+        return SliverWaterfallFlow(
+          gridDelegate: const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 250,
+            mainAxisSpacing: 8.0,
+            crossAxisSpacing: 8.0,
+          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            return GirdDiaryCardComponent(diary: state.diaryList[index]);
+          }, childCount: state.diaryList.length),
+        );
+      }, key: const ValueKey('grid'));
     }
 
     Widget buildList() {
       return Obx(() {
-        return SliverList.builder(
+        return SliverList.separated(
           itemBuilder: (context, index) {
             return ListDiaryCardComponent(
               tag: index.toString(),
               diary: state.diaryList[index],
             );
           },
+          separatorBuilder: (context, index) {
+            return const SizedBox(height: 8.0);
+          },
           itemCount: state.diaryList.length,
         );
       }, key: const ValueKey('list'));
     }
 
-    return CustomScrollView(
-      cacheExtent: size.height * 2,
-      slivers: [
-        SliverOverlapInjector(
-            handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context)),
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          sliver: Obx(
-            () {
+    final sliverHandle = NestedScrollView.sliverOverlapAbsorberHandleFor(
+      context,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
+      child: ClipRRect(
+        clipper: TopRRectClipper(
+          topOffset: sliverHandle.layoutExtent ?? barHeight,
+        ),
+        child: CustomScrollView(
+          cacheExtent: size.height * 2,
+          slivers: [
+            SliverOverlapInjector(handle: sliverHandle),
+            Obx(() {
               return SliverAnimatedSwitcher(
                 duration: const Duration(milliseconds: 150),
                 reverseDuration: const Duration(milliseconds: 100),
-                child: state.isFetching.value
-                    ? _buildPlaceholder(placeholderHeight)
-                    : state.diaryList.isEmpty
+                child:
+                    state.isFetching.value
+                        ? _buildPlaceholder(placeholderHeight)
+                        : state.diaryList.isEmpty
                         ? _buildEmpty(placeholderHeight)
                         : switch (logic.diaryLogic.state.viewModeType.value) {
-                            ViewModeType.list => buildList(),
-                            ViewModeType.grid => buildGrid(),
-                          },
+                          ViewModeType.list => buildList(),
+                          ViewModeType.grid => buildGrid(),
+                        },
               );
-            },
-          ),
+            }),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

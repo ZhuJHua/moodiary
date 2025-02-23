@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:refreshed/refreshed.dart';
@@ -54,6 +55,7 @@ class NoticeUtil {
   }
 
   static void showBug({required String message}) {
+    if(kDebugMode) return;
     _fToast.removeCustomToast();
     _fToast.showToast(
       child: Container(

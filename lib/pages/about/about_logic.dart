@@ -50,7 +50,7 @@ class AboutLogic extends GetxController with GetSingleTickerProviderStateMixin {
     } else if (deviceInfo is WindowsDeviceInfo) {
       state.systemVersion = 'Windows ${deviceInfo.majorVersion}';
     } else if (deviceInfo is MacOsDeviceInfo) {
-      state.systemVersion = 'MacOS ${deviceInfo.osRelease} ';
+      state.systemVersion = 'MacOS ${deviceInfo.majorVersion} ';
     }
     state.appName = packageInfo.appName;
     state.appVersion = '${packageInfo.version}(${packageInfo.buildNumber})';

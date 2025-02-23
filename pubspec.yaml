@@ -67,7 +67,7 @@ dependencies:
   shelf: 1.4.2
   shelf_multipart: 2.0.1
   waterfall_flow: 3.1.1
-  smooth_page_indicator: 1.2.0+3
+  smooth_page_indicator: 1.2.1
   unicons: 3.0.0
   encrypt: 5.0.3
   faker: 2.2.0

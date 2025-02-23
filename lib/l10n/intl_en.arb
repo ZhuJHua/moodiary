@@ -69,6 +69,14 @@
   "settingLockResetLock": "Password has been enabled, reset please close first",
   "settingBackendPrivacyProtection": "Background Privacy Protection",
   "settingBackendPrivacyProtectionDes": "When the application is in the background, hide the application content",
+  "settingUserKey": "Private Key",
+  "settingUserKeyDes": "Can be used for data encryption",
+  "settingUserKeySet": "Setting key",
+  "settingUserKeySetDes": "⚠️ The key cannot be obtained after setting it, please keep it properly. If you need to use encrypted data on other devices, please make sure to use the same key.",
+  "settingUserKeyReset": "Reset key",
+  "settingUserKeyResetDes": "Are you sure you want to reset the key?",
+  "settingUserKeyHasSet": "Set",
+  "settingUserKeyNotSet": "Not set",
   "settingMore": "More",
   "settingLab": "Laboratory",
   "settingAbout": "About",
@@ -167,6 +175,8 @@
   "webdavSyncWhenStartUpDes": "Automatically synchronize when starting the application",
   "webdavSyncAfterChange": "Sync after change",
   "webdavSyncAfterChangeDes": "Automatically synchronize after changing data",
+  "webdavSyncEncryption": "Encryption",
+  "webdavSyncEncryptionDes": "Encrypting synchronous data, you need to set a private key",
   "webdavOptionServer": "Server address",
   "webdavOptionServerDes": "Please fill in the server address",
   "webdavOptionUsername": "username",
@@ -259,5 +269,8 @@
   "diaryShare": "Share",
   "diaryCount": "{count} Words",
   "dataSync": "Data sync",
-  "diaryType": "Type"
+  "diaryType": "Type",
+  "mediaImageCount": "{count, plural, =1 {# Photo} other {# Photos}}",
+  "mediaAudioCount": "{count, plural, =1 {# Audio} other {# Audios}}",
+  "mediaVideoCount": "{count, plural, =1 {# Video} other {# Videos}}"
 }

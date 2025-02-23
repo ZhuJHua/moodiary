@@ -9,8 +9,11 @@ import 'package:moodiary/components/diary_card/basic_card_logic.dart';
 import 'package:moodiary/utils/file_util.dart';
 
 class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
-  const ListDiaryCardComponent(
-      {super.key, required this.diary, required this.tag});
+  const ListDiaryCardComponent({
+    super.key,
+    required this.diary,
+    required this.tag,
+  });
 
   final Diary diary;
 
@@ -29,7 +32,8 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
             image: DecorationImage(
               image: ResizeImage(
                 FileImage(
-                    File(FileUtil.getRealPath('image', diary.imageName.first))),
+                  File(FileUtil.getRealPath('image', diary.imageName.first)),
+                ),
                 width: (132 * pixelRatio).toInt(),
               ),
               fit: BoxFit.cover,
@@ -42,6 +46,7 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
 
     return Card.filled(
       color: colorScheme.surfaceContainerLow,
+      margin: EdgeInsets.zero,
       child: InkWell(
         borderRadius: AppBorderRadius.mediumBorderRadius,
         onTap: () async {
@@ -52,7 +57,7 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
           child: Row(
             children: [
               if (diary.imageName.isNotEmpty && int.parse(tag) & 1 == 0) ...[
-                buildImage()
+                buildImage(),
               ],
               Expanded(
                 child: Padding(
@@ -64,17 +69,19 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                       if (diary.title.isNotEmpty) ...[
                         EllipsisText(
                           diary.title.trim(),
-                          style: textStyle.titleMedium
-                              ?.copyWith(color: colorScheme.onSurface),
+                          style: textStyle.titleMedium?.copyWith(
+                            color: colorScheme.onSurface,
+                          ),
                           maxLines: 1,
-                        )
+                        ),
                       ],
                       Expanded(
                         child: EllipsisText(
                           diary.contentText.trim().removeLineBreaks(),
                           maxLines: diary.title.isNotEmpty ? 3 : 4,
-                          style: textStyle.bodyMedium
-                              ?.copyWith(color: colorScheme.onSurface),
+                          style: textStyle.bodyMedium?.copyWith(
+                            color: colorScheme.onSurface,
+                          ),
                         ),
                       ),
                       Text(
@@ -82,13 +89,13 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                         style: textStyle.labelSmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
               ),
               if (diary.imageName.isNotEmpty && int.parse(tag) & 1 == 1) ...[
-                buildImage()
+                buildImage(),
               ],
             ],
           ),

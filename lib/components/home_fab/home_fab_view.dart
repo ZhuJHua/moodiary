@@ -326,9 +326,8 @@ class DesktopHomeFabComponent extends StatelessWidget {
             tooltip: l10n.homeNewDiaryRichText,
           ),
           Text(
-            l10n.shareName,
+            l10n.appName,
             style: textStyle.labelSmall?.copyWith(
-              fontSize: 10,
               color: colorScheme.onSurfaceVariant,
             ),
           )

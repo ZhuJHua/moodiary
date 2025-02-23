@@ -83,6 +83,7 @@ class DashboardComponent extends StatelessWidget {
       builder: (_) {
         return Card.filled(
           color: colorScheme.surfaceContainerLow,
+          margin: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: buildDashBoard(),

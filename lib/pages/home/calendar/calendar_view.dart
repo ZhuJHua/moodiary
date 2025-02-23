@@ -1,6 +1,7 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/components/diary_card/calendar_diary_card_view.dart';
 import 'package:moodiary/components/loading/loading.dart';
@@ -28,20 +29,18 @@ class CalendarPage extends StatelessWidget {
     return count / 5;
   }
 
-  Widget _buildActiveInfo(
-      {required Color lessColor,
-      required Color moreColor,
-      required TextStyle? textStyle}) {
+  Widget _buildActiveInfo({
+    required Color lessColor,
+    required Color moreColor,
+    required TextStyle? textStyle,
+  }) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Row(
         spacing: 2.0,
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text(
-            '少',
-            style: textStyle,
-          ),
+          Text('少', style: textStyle),
           ...List.generate(5, (index) {
             return Container(
               width: 12.0,
@@ -52,10 +51,7 @@ class CalendarPage extends StatelessWidget {
               ),
             );
           }),
-          Text(
-            '多',
-            style: textStyle,
-          )
+          Text('多', style: textStyle),
         ],
       ),
     );
@@ -78,8 +74,9 @@ class CalendarPage extends StatelessWidget {
         // 如果不存在当前日期，则添加
         final time = diary.time;
         allDate.add(DateTime(time.year, time.month, time.day));
-        if (!dateWithDiaryList
-            .contains(DateTime(time.year, time.month, time.day))) {
+        if (!dateWithDiaryList.contains(
+          DateTime(time.year, time.month, time.day),
+        )) {
           dateWithDiaryList.add(DateTime(time.year, time.month, time.day));
         }
       }
@@ -89,6 +86,7 @@ class CalendarPage extends StatelessWidget {
         children: [
           Card.filled(
             color: colorScheme.surfaceContainerLow,
+            margin: EdgeInsets.zero,
             child: Obx(() {
               return CalendarDatePicker2(
                 displayedMonthDate: state.currentMonth.value,
@@ -108,12 +106,14 @@ class CalendarPage extends StatelessWidget {
                     bool? isToday,
                   }) {
                     final contains = dateWithDiaryList.contains(date);
-                    final bgColor = contains
-                        ? Color.lerp(
-                            colorScheme.surfaceContainer,
-                            colorScheme.primary,
-                            getDayColor(count: dateCountMap[date] ?? 0))
-                        : null;
+                    final bgColor =
+                        contains
+                            ? Color.lerp(
+                              colorScheme.surfaceContainer,
+                              colorScheme.primary,
+                              getDayColor(count: dateCountMap[date] ?? 0),
+                            )
+                            : null;
                     return Padding(
                       padding: const EdgeInsets.all(2.0),
                       child: Container(
@@ -125,13 +125,15 @@ class CalendarPage extends StatelessWidget {
                           child: Text(
                             date.day.toString(),
                             style: textStyle?.copyWith(
-                              color: contains
-                                  ? ThemeData.estimateBrightnessForColor(
-                                              bgColor!) ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black
-                                  : null,
+                              color:
+                                  contains
+                                      ? ThemeData.estimateBrightnessForColor(
+                                                bgColor!,
+                                              ) ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black
+                                      : null,
                             ),
                           ),
                         ),
@@ -147,7 +149,10 @@ class CalendarPage extends StatelessWidget {
                 },
                 onDisplayedMonthChanged: (value) async {
                   final lastDate = logic.findLatestDateInMonth(
-                      dateWithDiaryList, value.year, value.month);
+                    dateWithDiaryList,
+                    value.year,
+                    value.month,
+                  );
                   if (lastDate != null) {
                     await logic.animateToSelectedDateWithLock(lastDate);
                   }
@@ -160,10 +165,12 @@ class CalendarPage extends StatelessWidget {
             bottom: 4,
             right: 4,
             child: _buildActiveInfo(
-                lessColor: colorScheme.surfaceContainer,
-                moreColor: colorScheme.primary,
-                textStyle: textStyle.labelSmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.8))),
+              lessColor: colorScheme.surfaceContainer,
+              moreColor: colorScheme.primary,
+              textStyle: textStyle.labelSmall?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.8),
+              ),
+            ),
           ),
         ],
       );
@@ -174,12 +181,22 @@ class CalendarPage extends StatelessWidget {
         return ScrollablePositionedList.builder(
           itemBuilder: (context, index) {
             return TimeLineComponent(
-              actionColor: Color.lerp(
-                  AppColor.emoColorList.first,
-                  AppColor.emoColorList.last,
-                  state.currentMonthDiaryList[index].mood)!,
-              child: CalendarDiaryCardComponent(
-                  diary: state.currentMonthDiaryList[index]),
+              actionColor:
+                  Color.lerp(
+                    AppColor.emoColorList.first,
+                    AppColor.emoColorList.last,
+                    state.currentMonthDiaryList[index].mood,
+                  )!,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: index == 0 ? 0 : 4.0,
+                  bottom:
+                      index == state.currentMonthDiaryList.length - 1 ? 0 : 4.0,
+                ),
+                child: CalendarDiaryCardComponent(
+                  diary: state.currentMonthDiaryList[index],
+                ),
+              ),
             );
           },
           itemScrollController: logic.itemScrollController,
@@ -191,73 +208,57 @@ class CalendarPage extends StatelessWidget {
       });
     }
 
+    final calendar = Obx(() {
+      return buildDatePicker();
+    });
+
+    final diaryBody = ClipRRect(
+      borderRadius: AppBorderRadius.mediumBorderRadius,
+      child: Obx(() {
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child:
+              state.isFetching.value
+                  ? const Center(
+                    key: ValueKey('processing'),
+                    child: Processing(),
+                  )
+                  : (state.currentMonthDiaryList.isNotEmpty
+                      ? buildCardList()
+                      : Center(
+                        key: const ValueKey('empty'),
+                        child: FaIcon(
+                          FontAwesomeIcons.boxOpen,
+                          color: colorScheme.onSurface,
+                          size: 56,
+                        ),
+                      )),
+        );
+      }),
+    );
+
     return GetBuilder<CalendarLogic>(
       assignId: true,
       builder: (_) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: size.width > 600
-                ? Row(
-                    children: [
-                      Expanded(
-                        child: Obx(() {
-                          return AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: state.isFetching.value
-                                ? const Center(
-                                    key: ValueKey('processing'),
-                                    child: Processing())
-                                : (state.currentMonthDiaryList.isNotEmpty
-                                    ? buildCardList()
-                                    : const Center(
-                                        key: ValueKey('empty'),
-                                        child: FaIcon(
-                                          FontAwesomeIcons.boxOpen,
-                                          size: 56,
-                                        ),
-                                      )),
-                          );
-                        }),
-                      ),
-                      Align(
-                        alignment: Alignment.topCenter,
-                        child: SizedBox(
-                          width: 320,
-                          child: Obx(() {
-                            return buildDatePicker();
-                          }),
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SafeArea(
+            child:
+                size.width > 600
+                    ? Row(
+                      spacing: 8.0,
+                      children: [
+                        Expanded(child: diaryBody),
+                        Align(
+                          alignment: Alignment.topCenter,
+                          child: SizedBox(width: 320, child: calendar),
                         ),
-                      ),
-                    ],
-                  )
-                : Column(
-                    spacing: 4.0,
-                    children: [
-                      Obx(() {
-                        return buildDatePicker();
-                      }),
-                      Expanded(child: Obx(() {
-                        return AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          child: state.isFetching.value
-                              ? const Center(
-                                  key: ValueKey('processing'),
-                                  child: Processing())
-                              : (state.currentMonthDiaryList.isNotEmpty
-                                  ? buildCardList()
-                                  : Center(
-                                      key: const ValueKey('empty'),
-                                      child: FaIcon(
-                                        FontAwesomeIcons.boxOpen,
-                                        color: colorScheme.onSurface,
-                                        size: 56,
-                                      ),
-                                    )),
-                        );
-                      })),
-                    ],
-                  ),
+                      ],
+                    )
+                    : Column(
+                      spacing: 8.0,
+                      children: [calendar, Expanded(child: diaryBody)],
+                    ),
           ),
         );
       },

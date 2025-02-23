@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:moodiary/common/values/view_mode.dart';
 import 'package:moodiary/components/base/sheet.dart';
 import 'package:moodiary/components/base/text.dart';
@@ -20,8 +19,10 @@ import 'diary_logic.dart';
 class DiaryPage extends StatelessWidget {
   const DiaryPage({super.key});
 
-  Widget _buildSyncingButton(
-      {required ColorScheme colorScheme, required Function() onTap}) {
+  Widget _buildSyncingButton({
+    required ColorScheme colorScheme,
+    required Function() onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Container(
@@ -44,7 +45,7 @@ class DiaryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Get.put(DiaryLogic());
+    final logic = Bind.find<DiaryLogic>();
     final state = Bind.find<DiaryLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
@@ -53,26 +54,31 @@ class DiaryPage extends StatelessWidget {
     Widget buildTabBar() {
       final List<Widget> allTabs = [];
       //默认的全部tab
-      allTabs.add(Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        child: Tab(text: l10n.categoryAll),
-      ));
-      //根据分类生成分类Tab
-      allTabs.addAll(List.generate(state.categoryList.length, (index) {
-        return Padding(
+      allTabs.add(
+        Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Tab(text: state.categoryList[index].categoryName),
-        );
-      }));
+          child: Tab(text: l10n.categoryAll),
+        ),
+      );
+      //根据分类生成分类Tab
+      allTabs.addAll(
+        List.generate(state.categoryList.length, (index) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Tab(text: state.categoryList[index].categoryName),
+          );
+        }),
+      );
       return Row(
         children: [
           IconButton(
             onPressed: () {
               showFloatingModalBottomSheet(
-                  context: context,
-                  builder: (context) {
-                    return const CategoryChoiceSheetComponent();
-                  });
+                context: context,
+                builder: (context) {
+                  return const CategoryChoiceSheetComponent();
+                },
+              );
             },
             icon: const Icon(Icons.menu_open_rounded),
           ),
@@ -93,8 +99,9 @@ class DiaryPage extends StatelessWidget {
                 color: colorScheme.primaryContainer,
               ),
               indicatorWeight: .0,
-              unselectedLabelColor:
-                  colorScheme.onSurface.withValues(alpha: 0.8),
+              unselectedLabelColor: colorScheme.onSurface.withValues(
+                alpha: 0.8,
+              ),
               labelColor: colorScheme.onPrimaryContainer,
               labelPadding: EdgeInsets.zero,
               indicatorPadding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -120,12 +127,15 @@ class DiaryPage extends StatelessWidget {
       // 添加全部日记页面
       allViews.add(buildDiaryView(0, state.keyMap['default'], null));
       // 添加分类日记页面
-      allViews.addAll(List.generate(state.categoryList.length, (index) {
-        return buildDiaryView(
+      allViews.addAll(
+        List.generate(state.categoryList.length, (index) {
+          return buildDiaryView(
             index + 1,
             state.keyMap[state.categoryList[index].id],
-            state.categoryList[index].id);
-      }));
+            state.categoryList[index].id,
+          );
+        }),
+      );
 
       return NotificationListener<ScrollNotification>(
         onNotification: (ScrollNotification notification) {
@@ -142,45 +152,43 @@ class DiaryPage extends StatelessWidget {
       );
     }
 
-    return GetBuilder<DiaryLogic>(builder: (_) {
-      return NestedScrollView(
-        key: state.nestedScrollKey,
-        headerSliverBuilder: (context, _) {
-          return [
-            SliverOverlapAbsorber(
-              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-              sliver: SliverAppBar(
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                      },
-                      child: Obx(() {
-                        return AdaptiveText(
-                            state.customTitleName.value.isNotEmpty
-                                ? state.customTitleName.value
-                                : l10n.appName,
-                            style: textStyle.titleLarge?.copyWith(
-                              color: colorScheme.onSurface,
-                            ));
-                      }),
-                    ),
-                    Obx(() {
-                      return AdaptiveText(
-                        state.hitokoto.value,
-                        style: textStyle.labelSmall
-                            ?.copyWith(color: colorScheme.onSurfaceVariant),
-                      );
-                    }),
-                  ],
+    final title = Obx(() {
+      return AdaptiveText(
+        state.customTitleName.value.isNotEmpty
+            ? state.customTitleName.value
+            : l10n.appName,
+        style: textStyle.titleLarge?.copyWith(color: colorScheme.onSurface),
+      );
+    });
+
+    final hitokoto = Obx(() {
+      return AdaptiveText(
+        state.hitokoto.value,
+        style: textStyle.labelSmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
+      );
+    });
+    return GetBuilder<DiaryLogic>(
+      builder: (_) {
+        return NestedScrollView(
+          key: state.nestedScrollKey,
+          headerSliverBuilder: (context, _) {
+            return [
+              SliverOverlapAbsorber(
+                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
+                  context,
                 ),
-                pinned: true,
-                actions: [
-                  Obx(() {
-                    return WebDavUtil().syncingDiaries.isNotEmpty
-                        ? _buildSyncingButton(
+                sliver: SliverAppBar(
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [title, hitokoto],
+                  ),
+                  pinned: true,
+                  actions: [
+                    Obx(() {
+                      return WebDavUtil().syncingDiaries.isNotEmpty
+                          ? _buildSyncingButton(
                             colorScheme: colorScheme,
                             onTap: () {
                               showFloatingModalBottomSheet(
@@ -189,8 +197,9 @@ class DiaryPage extends StatelessWidget {
                                   return const SyncDashBoardComponent();
                                 },
                               );
-                            })
-                        : IconButton(
+                            },
+                          )
+                          : IconButton(
                             onPressed: () {
                               showFloatingModalBottomSheet(
                                 context: context,
@@ -202,54 +211,57 @@ class DiaryPage extends StatelessWidget {
                             tooltip: l10n.dataSync,
                             icon: const Icon(Icons.cloud_sync_rounded),
                           );
-                  }),
-                  IconButton(
-                    onPressed: () {
-                      showFloatingModalBottomSheet(
+                    }),
+                    IconButton(
+                      onPressed: () {
+                        showFloatingModalBottomSheet(
                           context: context,
                           builder: (context) {
                             return const SearchSheetComponent();
-                          });
-                    },
-                    icon: const Icon(Icons.search_rounded),
-                    tooltip: l10n.diaryPageSearchButton,
-                  ),
-                  PopupMenuButton(
-                    offset: const Offset(0, 46),
-                    tooltip: l10n.diaryPageViewModeButton,
-                    icon: const Icon(Icons.more_vert_rounded),
-                    itemBuilder: (context) {
-                      return <PopupMenuEntry<String>>[
-                        CheckedPopupMenuItem(
-                          checked:
-                              state.viewModeType.value == ViewModeType.list,
-                          onTap: () async {
-                            await logic.changeViewMode(ViewModeType.list);
                           },
-                          child: Text(l10n.diaryViewModeList),
-                        ),
-                        const PopupMenuDivider(),
-                        CheckedPopupMenuItem(
-                          checked:
-                              state.viewModeType.value == ViewModeType.grid,
-                          onTap: () async {
-                            await logic.changeViewMode(ViewModeType.grid);
-                          },
-                          child: Text(l10n.diaryViewModeGrid),
-                        ),
-                      ];
-                    },
-                  ),
-                ],
-                bottom: PreferredSize(
+                        );
+                      },
+                      icon: const Icon(Icons.search_rounded),
+                      tooltip: l10n.diaryPageSearchButton,
+                    ),
+                    PopupMenuButton(
+                      offset: const Offset(0, 46),
+                      tooltip: l10n.diaryPageViewModeButton,
+                      icon: const Icon(Icons.more_vert_rounded),
+                      itemBuilder: (context) {
+                        return <PopupMenuEntry<String>>[
+                          CheckedPopupMenuItem(
+                            checked:
+                                state.viewModeType.value == ViewModeType.list,
+                            onTap: () async {
+                              await logic.changeViewMode(ViewModeType.list);
+                            },
+                            child: Text(l10n.diaryViewModeList),
+                          ),
+                          const PopupMenuDivider(),
+                          CheckedPopupMenuItem(
+                            checked:
+                                state.viewModeType.value == ViewModeType.grid,
+                            onTap: () async {
+                              await logic.changeViewMode(ViewModeType.grid);
+                            },
+                            child: Text(l10n.diaryViewModeGrid),
+                          ),
+                        ];
+                      },
+                    ),
+                  ],
+                  bottom: PreferredSize(
                     preferredSize: const Size.fromHeight(46.0),
-                    child: buildTabBar()),
+                    child: buildTabBar(),
+                  ),
+                ),
               ),
-            ),
-          ];
-        },
-        body: buildTabBarView(),
-      );
-    });
+            ];
+          },
+          body: buildTabBarView(),
+        );
+      },
+    );
   }
 }
