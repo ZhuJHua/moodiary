@@ -24,8 +24,8 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - id: auto merge
-        name: auto merge
+      - id: automerge
+        name: automerge
         uses: "pascalgn/automerge-action@v0.16.4"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
