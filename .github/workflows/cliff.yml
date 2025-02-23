@@ -11,19 +11,14 @@ on:
 
 jobs:
   changelog:
-    name: Generate changelog
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # 确保获取完整的 git 历史
 
-      - name: Generate changelog
+      - name: Generate changelog using Git Cliff
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
@@ -32,20 +27,17 @@ jobs:
           OUTPUT: CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
 
-      - name: Create a new branch and commit changelog
+      - name: Commit and push changelog changes
         run: |
           git checkout -b changelog-update
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          set +e
           git add CHANGELOG.md
           git commit -m "Update changelog"
-          git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git changelog-update
+          git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git changelog-update
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          title: 'Update Changelog'
-          body: 'Automated changelog update from Git Cliff.'
-          head: changelog-update
-          base: master
+        run: |
+          gh pr create --base master --head changelog-update --title "Update changelog" --body "This PR updates the changelog based on recent changes."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
