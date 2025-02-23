@@ -6,7 +6,6 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -17,6 +16,7 @@ import 'package:moodiary/components/env_badge/badge.dart';
 import 'package:moodiary/components/frosted_glass_overlay/frosted_glass_overlay_view.dart';
 import 'package:moodiary/components/window_buttons/window_buttons.dart';
 import 'package:moodiary/config/env.dart';
+import 'package:moodiary/l10n/app_localizations.dart';
 import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/router/app_pages.dart';
 import 'package:moodiary/router/app_routes.dart';
@@ -99,14 +99,14 @@ void main() async {
     LogUtil.printError('Flutter error',
         error: details.exception, stackTrace: details.stack);
     if (details.exceptionAsString().contains('Render')) {
-      NoticeUtil.showBug(
-        message:
-            Env.debugMode ? details.exceptionAsString() : l10n.layoutErrorToast,
-      );
+      // NoticeUtil.showBug(
+      //   message:
+      //       Env.debugMode ? details.exceptionAsString() : l10n.layoutErrorToast,
+      // );
     } else {
-      NoticeUtil.showBug(
-        message: Env.debugMode ? details.exceptionAsString() : l10n.errorToast,
-      );
+      // NoticeUtil.showBug(
+      //   message: Env.debugMode ? details.exceptionAsString() : l10n.errorToast,
+      // );
     }
   };
   PlatformDispatcher.instance.onError = (error, stack) {
@@ -140,12 +140,12 @@ void main() async {
               right: -15,
               child: EnvBadge(envMode: '测试版'),
             ),
-          if (!Platform.isAndroid && !Platform.isIOS)
+          if (Platform.isWindows || Platform.isMacOS || Platform.isLinux)
             const Positioned(
               top: 0,
               left: 0,
               right: 0,
-              child: WindowButtons(),
+              child: MoveTitle(),
             ),
         ],
       );
@@ -154,7 +154,6 @@ void main() async {
     darkTheme: await ThemeUtil.buildTheme(Brightness.dark),
     locale: locale,
     themeMode: ThemeMode.values[PrefUtil.getValue<int>('themeMode')!],
-    defaultTransition: Transition.native,
     getPages: AppPages.routes,
     localizationsDelegates: const [
       ...AppLocalizations.localizationsDelegates,

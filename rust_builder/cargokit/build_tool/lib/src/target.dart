@@ -98,7 +98,10 @@ class Target {
   }
 
   static List<Target> androidTargets() {
-    return all.where((element) => element.android != null).toList(growable: false);
+    return all
+        .where((element) =>
+            (element.android != null && element.flutter == 'android-arm64'))
+        .toList(growable: false);
   }
 
   /// Returns buildable targets on current host platform ignoring Android targets.

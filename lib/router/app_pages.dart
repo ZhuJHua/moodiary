@@ -1,3 +1,8 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/material.dart';
+import 'package:moodiary/components/desktop_wrapper/background.dart';
+import 'package:moodiary/components/window_buttons/window_buttons.dart';
 import 'package:moodiary/pages/about/about_logic.dart';
 import 'package:moodiary/pages/about/about_view.dart';
 import 'package:moodiary/pages/agreement/agreement_view.dart';
@@ -20,8 +25,6 @@ import 'package:moodiary/pages/font/font_logic.dart';
 import 'package:moodiary/pages/font/font_view.dart';
 import 'package:moodiary/pages/home/home_logic.dart';
 import 'package:moodiary/pages/home/home_view.dart';
-import 'package:moodiary/pages/image/image_logic.dart';
-import 'package:moodiary/pages/image/image_view.dart';
 import 'package:moodiary/pages/laboratory/laboratory_logic.dart';
 import 'package:moodiary/pages/laboratory/laboratory_view.dart';
 import 'package:moodiary/pages/lock/lock_logic.dart';
@@ -41,8 +44,7 @@ import 'package:moodiary/pages/start/start_logic.dart';
 import 'package:moodiary/pages/start/start_view.dart';
 import 'package:moodiary/pages/user/user_logic.dart';
 import 'package:moodiary/pages/user/user_view.dart';
-import 'package:moodiary/pages/video/video_logic.dart';
-import 'package:moodiary/pages/video/video_view.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:refreshed/refreshed.dart';
 
 import '../pages/sponsor/sponsor_logic.dart';
@@ -53,169 +55,197 @@ import 'app_routes.dart';
 class AppPages {
   static final List<GetPage> routes = [
     //启动页
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.startPage,
       page: () => const StartPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => StartLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => StartLogic())],
     ),
     //首页路由
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.homePage,
       page: () => const HomePage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => HomeLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => HomeLogic())],
     ),
     //分析
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.analysePage,
       page: () => const AnalysePage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => AnalyseLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => AnalyseLogic())],
     ),
     //日记页路由
-    GetPage(
-      name: AppRoutes.diaryPage,
-      showCupertinoParallax: false,
-      page: () => DiaryDetailsPage(),
-    ),
-    //图片路由
-    GetPage(
-      name: AppRoutes.photoPage,
-      page: () => const ImagePage(),
-      popGesture: false,
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => ImageLogic())],
-    ),
+    MoodiaryGetPage(name: AppRoutes.diaryPage, page: () => DiaryDetailsPage()),
     //回收站
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.recyclePage,
       page: () => const RecyclePage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => RecycleLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => RecycleLogic())],
     ),
     //登录路由
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.loginPage,
       page: () => const LoginPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => LoginLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => LoginLogic())],
     ),
     //新增/编辑日记路由
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.editPage,
       page: () => const EditPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => EditLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => EditLogic())],
     ),
     //分享页路由
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.sharePage,
       page: () => const SharePage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => ShareLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => ShareLogic())],
     ),
     //字体页路由
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.fontPage,
       page: () => const FontPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => FontLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => FontLogic())],
     ),
     //实验室路由
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.laboratoryPage,
       page: () => const LaboratoryPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => LaboratoryLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => LaboratoryLogic())],
     ),
     //画画路由
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.drawPage,
       page: () => const DrawPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => DrawLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => DrawLogic())],
     ),
     //隐私政策
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.privacyPage,
       page: () => const PrivacyPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => PrivacyLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => PrivacyLogic())],
     ),
     //用户协议
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.agreementPage,
-      showCupertinoParallax: false,
       page: () => const AgreementPage(),
     ),
     //锁
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.lockPage,
       page: () => const LockPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => LockLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => LockLogic())],
     ),
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.userPage,
       page: () => const UserPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => UserLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => UserLogic())],
     ),
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.categoryManagerPage,
       page: () => const CategoryManagerPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => CategoryManagerLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => CategoryManagerLogic())],
     ),
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.aboutPage,
       page: () => const AboutPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => AboutLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => AboutLogic())],
     ),
-    GetPage(
-      name: AppRoutes.videoPage,
-      popGesture: false,
-      page: () => const VideoPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => VideoLogic())],
-    ),
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.mapPage,
       page: () => const MapPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => MapLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => MapLogic())],
     ),
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.diarySettingPage,
       page: () => const DiarySettingPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => DiarySettingLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => DiarySettingLogic())],
     ),
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.backupSyncPage,
       page: () => const BackupSyncPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => BackupSyncLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => BackupSyncLogic())],
     ),
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.assistantPage,
       page: () => const AssistantPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => AssistantLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => AssistantLogic())],
     ),
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.sponsorPage,
       page: () => const SponsorPage(),
-      showCupertinoParallax: false,
-      binds: [Bind.lazyPut(() => SponsorLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => SponsorLogic())],
     ),
-    GetPage(
+    MoodiaryGetPage(
       name: AppRoutes.webViewPage,
-      showCupertinoParallax: false,
       page: () => const WebViewPage(),
-      binds: [Bind.lazyPut(() => WebViewLogic())],
+      binds: [Bind.lazyPut(fenix: true, () => WebViewLogic())],
     ),
   ];
+}
+
+class MoodiaryGetPage extends GetPage {
+  MoodiaryGetPage({
+    required super.name,
+    List<Bind> binds = const <Bind>[],
+    required Widget Function() page,
+  }) : super(
+         curve: Curves.linear,
+         page: () {
+           final body = PageAdaptiveBackground(
+             isHome: name == AppRoutes.homePage,
+             child: page(),
+           );
+           if (Platform.isAndroid || Platform.isIOS) {
+             return body;
+           } else {
+             return Column(
+               children: [const WindowsBar(), Expanded(child: body)],
+             );
+           }
+         },
+         customTransition: _MoodiaryPageTransition(),
+       );
+}
+
+class _MoodiaryPageTransition implements CustomTransition {
+  @override
+  Widget buildTransition(
+    BuildContext context,
+    Curve? curve,
+    Alignment? alignment,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final pageRoute = ModalRoute.of(context) as PageRoute;
+    if (Platform.isAndroid) {
+      if (pageRoute.popGestureInProgress) {
+        return const PredictiveBackPageTransitionsBuilder().buildTransitions(
+          pageRoute,
+          context,
+          animation,
+          secondaryAnimation,
+          child,
+        );
+      }
+      return const FadeForwardsPageTransitionsBuilder().buildTransitions(
+        pageRoute,
+        context,
+        animation,
+        secondaryAnimation,
+        child,
+      );
+    }
+    if (Platform.isIOS) {
+      return const CupertinoPageTransitionsBuilder().buildTransitions(
+        pageRoute,
+        context,
+        animation,
+        secondaryAnimation,
+        child,
+      );
+    }
+    return PageTransition(
+      type: PageTransitionType.fade,
+      child: child,
+    ).buildTransitions(context, animation, secondaryAnimation, child);
+  }
 }

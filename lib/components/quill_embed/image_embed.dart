@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/pages/image/image_view.dart';
 import 'package:moodiary/utils/file_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 class ImageBlockEmbed extends BlockEmbed {
   const ImageBlockEmbed(String value) : super(embedType, value);
@@ -28,34 +28,35 @@ class ImageEmbedBuilder extends EmbedBuilder {
   String toPlainText(Embed node) => '';
 
   @override
-  Widget build(
-    BuildContext context,
-    EmbedContext embedContext,
-  ) {
+  Widget build(BuildContext context, EmbedContext embedContext) {
     final imageEmbed = ImageBlockEmbed(embedContext.node.value.data);
     // 从数据构造 ImageBlockEmbed
-    final imagePath = isEdit
-        ? imageEmbed.name
-        : FileUtil.getRealPath('image', imageEmbed.name);
-
+    final imagePath =
+        isEdit
+            ? imageEmbed.name
+            : FileUtil.getRealPath('image', imageEmbed.name);
     return Center(
       child: GestureDetector(
         onTap: () {
           if (!isEdit) {
-            Get.toNamed(AppRoutes.photoPage, arguments: [
+            showImageView(
+              context,
               [imagePath],
               0,
-            ]);
+              heroTagPrefix: imageEmbed.name,
+            );
           }
         },
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 300),
-          child: Hero(
-            tag: imagePath,
-            child: Card.outlined(
-              clipBehavior: Clip.hardEdge,
-              color: Colors.transparent,
-              child: Image.file(File(imagePath)),
+          child: Card.outlined(
+            color: Colors.transparent,
+            child: Hero(
+              tag: '${imageEmbed.name}0',
+              child: ClipRRect(
+                borderRadius: AppBorderRadius.mediumBorderRadius,
+                child: Image.file(File(imagePath)),
+              ),
             ),
           ),
         ),

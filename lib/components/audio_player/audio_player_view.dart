@@ -27,31 +27,38 @@ class SmallThumbShape extends SfThumbShape {
   }) {
     // 使用原有逻辑绘制缩小的滑块
     final double radius = getPreferredSize(themeData).width / 2;
-    final Paint thumbPaint = Paint()
-      ..color = themeData.thumbColor ?? Colors.blue
-      ..isAntiAlias = true;
+    final Paint thumbPaint =
+        Paint()
+          ..color = themeData.thumbColor ?? Colors.blue
+          ..isAntiAlias = true;
 
     context.canvas.drawCircle(center, radius, thumbPaint);
 
     if (child != null) {
       context.paintChild(
-          child,
-          Offset(center.dx - child.size.width / 2,
-              center.dy - child.size.height / 2));
+        child,
+        Offset(
+          center.dx - child.size.width / 2,
+          center.dy - child.size.height / 2,
+        ),
+      );
     }
   }
 }
 
 class NoOverlayShape extends SfOverlayShape {
   @override
-  void paint(PaintingContext context, Offset center,
-      {required RenderBox parentBox,
-      required dynamic themeData,
-      SfRangeValues? currentValues,
-      currentValue,
-      required Paint? paint,
-      required Animation<double> animation,
-      required SfThumb? thumb}) {}
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required RenderBox parentBox,
+    required dynamic themeData,
+    SfRangeValues? currentValues,
+    currentValue,
+    required Paint? paint,
+    required Animation<double> animation,
+    required SfThumb? thumb,
+  }) {}
 }
 
 class AudioPlayerComponent extends StatelessWidget {
@@ -74,6 +81,7 @@ class AudioPlayerComponent extends StatelessWidget {
       builder: (_) {
         return Card.filled(
           color: colorScheme.secondaryContainer,
+          margin: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -84,11 +92,18 @@ class AudioPlayerComponent extends StatelessWidget {
                     children: [
                       Obx(() {
                         return SfSlider(
-                          value: state.totalDuration.value != Duration.zero
-                              ? ((state.currentDuration.value.inMilliseconds /
-                                      state.totalDuration.value.inMilliseconds)
-                                  .clamp(0, 1))
-                              : 0,
+                          value:
+                              state.totalDuration.value != Duration.zero
+                                  ? ((state
+                                              .currentDuration
+                                              .value
+                                              .inMilliseconds /
+                                          state
+                                              .totalDuration
+                                              .value
+                                              .inMilliseconds)
+                                      .clamp(0, 1))
+                                  : 0,
                           onChangeEnd: (value) {
                             logic.to(value);
                           },
@@ -112,7 +127,8 @@ class AudioPlayerComponent extends StatelessWidget {
                                     .split('.')[0]
                                     .padLeft(8, '0'),
                                 style: TextStyle(
-                                    color: colorScheme.onSecondaryContainer),
+                                  color: colorScheme.onSecondaryContainer,
+                                ),
                               );
                             }),
                             IconButton.filled(
@@ -121,9 +137,6 @@ class AudioPlayerComponent extends StatelessWidget {
                                     ? logic.pause()
                                     : logic.play(path);
                               },
-                              style: const ButtonStyle(
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap),
                               icon: AnimatedIcon(
                                 icon: AnimatedIcons.play_pause,
                                 color: colorScheme.onPrimary,
@@ -137,7 +150,8 @@ class AudioPlayerComponent extends StatelessWidget {
                                     .split('.')[0]
                                     .padLeft(8, '0'),
                                 style: TextStyle(
-                                    color: colorScheme.onSecondaryContainer),
+                                  color: colorScheme.onSecondaryContainer,
+                                ),
                               );
                             }),
                           ],

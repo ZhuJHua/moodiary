@@ -55,15 +55,38 @@ class WindowButtons extends StatelessWidget {
                   colors: primaryButtonColors,
                   animate: true,
                 ),
-                CloseWindowButton(
-                  colors: closeButtonColors,
-                  animate: true,
-                ),
+                CloseWindowButton(colors: closeButtonColors, animate: true),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class WindowsBar extends StatelessWidget {
+  const WindowsBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ColoredBox(
+      color: colorScheme.surfaceContainer,
+      child: const SizedBox(height: 24, width: double.infinity),
+    );
+  }
+}
+
+class MoveTitle extends StatelessWidget {
+  const MoveTitle({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanStart: (_) => appWindow.startDragging(),
+      behavior: HitTestBehavior.translucent,
+      child: const SizedBox(height: 32),
     );
   }
 }

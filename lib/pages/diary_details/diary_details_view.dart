@@ -23,6 +23,7 @@ import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:uuid/uuid.dart';
 
 import 'diary_details_logic.dart';
 
@@ -31,21 +32,29 @@ class DiaryDetailsPage extends StatelessWidget {
 
   final tag = (Get.arguments[0] as Diary).id;
 
-  Widget _buildMarkdownWidget(
-      {required Brightness brightness, required String data}) {
-    final config = brightness == Brightness.dark
-        ? MarkdownConfig.darkConfig
-        : MarkdownConfig.defaultConfig;
+  Widget _buildMarkdownWidget({
+    required Brightness brightness,
+    required String data,
+  }) {
+    final config =
+        brightness == Brightness.dark
+            ? MarkdownConfig.darkConfig
+            : MarkdownConfig.defaultConfig;
     return MarkdownBlock(
-        data: data,
-        config: config.copy(configs: [
-          ImgConfig(builder: (src, _) {
-            return MarkdownImageEmbed(isEdit: false, imageName: src);
-          }),
+      data: data,
+      config: config.copy(
+        configs: [
+          ImgConfig(
+            builder: (src, _) {
+              return MarkdownImageEmbed(isEdit: false, imageName: src);
+            },
+          ),
           brightness == Brightness.dark
               ? PreConfig.darkConfig.copy(theme: a11yDarkTheme)
-              : const PreConfig().copy(theme: a11yLightTheme)
-        ]));
+              : const PreConfig().copy(theme: a11yLightTheme),
+        ],
+      ),
+    );
   }
 
   @override
@@ -69,71 +78,82 @@ class DiaryDetailsPage extends StatelessWidget {
     }
 
     Widget buildChipList(ColorScheme colorScheme) {
-      final dateTime =
-          DateFormat.yMMMd().add_Hms().format(state.diary.time).split(' ');
+      final dateTime = DateFormat.yMMMd()
+          .add_Hms()
+          .format(state.diary.time)
+          .split(' ');
       final date = dateTime.first;
       final time = dateTime.last;
       return Wrap(
         spacing: 8.0,
         children: [
           buildAChip(
-              MoodIconComponent(value: state.diary.mood), null, colorScheme),
+            MoodIconComponent(value: state.diary.mood),
+            null,
+            colorScheme,
+          ),
           buildAChip(
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    date,
-                    style: textStyle.labelSmall!
-                        .copyWith(color: colorScheme.onSurface),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  date,
+                  style: textStyle.labelSmall!.copyWith(
+                    color: colorScheme.onSurface,
                   ),
-                  Text(
-                    time,
-                    style: textStyle.labelSmall!
-                        .copyWith(color: colorScheme.onSurface),
-                  )
-                ],
-              ),
-              const Icon(Icons.access_time_outlined),
-              colorScheme),
+                ),
+                Text(
+                  time,
+                  style: textStyle.labelSmall!.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            const Icon(Icons.access_time_outlined),
+            colorScheme,
+          ),
           if (state.diary.position.isNotEmpty) ...[
-            buildAChip(Text(state.diary.position[2]),
-                const Icon(Icons.location_city_rounded), colorScheme)
+            buildAChip(
+              Text(state.diary.position[2]),
+              const Icon(Icons.location_city_rounded),
+              colorScheme,
+            ),
           ],
           if (state.diary.weather.isNotEmpty) ...[
             buildAChip(
-                Text(
-                  '${state.diary.weather[2]} ${state.diary.weather[1]}°C',
-                  style: textStyle.labelLarge!
-                      .copyWith(color: colorScheme.onSurface),
+              Text(
+                '${state.diary.weather[2]} ${state.diary.weather[1]}°C',
+                style: textStyle.labelLarge!.copyWith(
+                  color: colorScheme.onSurface,
                 ),
-                Icon(
-                  WeatherIcon.map[state.diary.weather[0]],
-                ),
-                colorScheme)
+              ),
+              Icon(WeatherIcon.map[state.diary.weather[0]]),
+              colorScheme,
+            ),
           ],
           buildAChip(
-              Text(
-                l10n.diaryCount(state.diary.contentText.length),
-                style: textStyle.labelLarge!
-                    .copyWith(color: colorScheme.onSurface),
+            Text(
+              l10n.diaryCount(state.diary.contentText.length),
+              style: textStyle.labelLarge!.copyWith(
+                color: colorScheme.onSurface,
               ),
-              const Icon(
-                Icons.text_fields_outlined,
-              ),
-              colorScheme),
+            ),
+            const Icon(Icons.text_fields_outlined),
+            colorScheme,
+          ),
           ...List.generate(state.diary.tags.length, (index) {
             return buildAChip(
-                Text(
-                  state.diary.tags[index],
-                  style: textStyle.labelLarge!
-                      .copyWith(color: colorScheme.onSurface),
+              Text(
+                state.diary.tags[index],
+                style: textStyle.labelLarge!.copyWith(
+                  color: colorScheme.onSurface,
                 ),
-                const Icon(
-                  Icons.tag_outlined,
-                ),
-                colorScheme);
-          })
+              ),
+              const Icon(Icons.tag_outlined),
+              colorScheme,
+            );
+          }),
         ],
       );
     }
@@ -242,6 +262,7 @@ class DiaryDetailsPage extends StatelessWidget {
     // }
 
     Widget buildImageView(ColorScheme colorScheme) {
+      final heroPrefix = const Uuid().v4();
       return Stack(
         alignment: Alignment.center,
         children: [
@@ -249,20 +270,30 @@ class DiaryDetailsPage extends StatelessWidget {
             controller: logic.pageController,
             itemBuilder: (context, index) {
               return GestureDetector(
-                onTap: () {
-                  logic.toPhotoView(
+                onTap: () async {
+                  await logic.toPhotoView(
                     List.generate(state.diary.imageName.length, (i) {
                       return FileUtil.getRealPath(
-                          'image', state.diary.imageName[i]);
+                        'image',
+                        state.diary.imageName[i],
+                      );
                     }),
                     index,
                     context,
+                    heroPrefix,
                   );
                 },
-                child: Image.file(
-                  File(FileUtil.getRealPath(
-                      'image', state.diary.imageName[index])),
-                  fit: BoxFit.cover,
+                child: Hero(
+                  tag: '$heroPrefix$index',
+                  child: Image.file(
+                    File(
+                      FileUtil.getRealPath(
+                        'image',
+                        state.diary.imageName[index],
+                      ),
+                    ),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               );
             },
@@ -274,171 +305,184 @@ class DiaryDetailsPage extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               child: Container(
                 decoration: ShapeDecoration(
-                    shape: const StadiumBorder(side: BorderSide.none),
-                    color: colorScheme.surfaceContainer.withAlpha(100)),
-                padding: state.diary.imageName.length > 9
-                    ? const EdgeInsets.fromLTRB(6.0, 2.0, 6.0, 2.0)
-                    : const EdgeInsets.all(2.0),
+                  shape: const StadiumBorder(side: BorderSide.none),
+                  color: colorScheme.surfaceContainer.withAlpha(100),
+                ),
+                padding:
+                    state.diary.imageName.length > 9
+                        ? const EdgeInsets.fromLTRB(6.0, 2.0, 6.0, 2.0)
+                        : const EdgeInsets.all(2.0),
                 child: SmoothPageIndicator(
                   controller: logic.pageController,
                   count: state.diary.imageName.length,
-                  effect: state.diary.imageName.length > 9
-                      ? ScrollingDotsEffect(
-                          activeDotColor: colorScheme.tertiary,
-                          dotColor:
-                              colorScheme.surfaceContainerLow.withAlpha(200),
-                          dotWidth: 8,
-                          dotHeight: 8,
-                          maxVisibleDots: 9)
-                      : WormEffect(
-                          activeDotColor: colorScheme.tertiary,
-                          dotColor:
-                              colorScheme.surfaceContainerLow.withAlpha(200),
-                          dotWidth: 8,
-                          dotHeight: 8,
-                        ),
+                  effect:
+                      state.diary.imageName.length > 9
+                          ? ScrollingDotsEffect(
+                            activeDotColor: colorScheme.tertiary,
+                            dotColor: colorScheme.surfaceContainerLow.withAlpha(
+                              200,
+                            ),
+                            dotWidth: 8,
+                            dotHeight: 8,
+                            maxVisibleDots: 9,
+                          )
+                          : WormEffect(
+                            activeDotColor: colorScheme.tertiary,
+                            dotColor: colorScheme.surfaceContainerLow.withAlpha(
+                              200,
+                            ),
+                            dotWidth: 8,
+                            dotHeight: 8,
+                          ),
                   onDotClicked: logic.jumpToPage,
                 ),
               ),
             ),
-          )
+          ),
         ],
       );
     }
 
     return GetBuilder<DiaryDetailsLogic>(
-        tag: state.diary.id,
-        builder: (_) {
-          final customColorScheme = (state.imageColor != null &&
-                  PrefUtil.getValue<bool>('dynamicColor') == true)
-              ? ColorScheme.fromSeed(
+      tag: state.diary.id,
+      builder: (_) {
+        final customColorScheme =
+            (state.imageColor != null &&
+                    PrefUtil.getValue<bool>('dynamicColor') == true)
+                ? ColorScheme.fromSeed(
                   seedColor: Color(state.imageColor!),
                   brightness: colorScheme.brightness,
                 )
-              : colorScheme;
-          return Theme(
-            data: Theme.of(context).copyWith(colorScheme: customColorScheme),
-            child: Scaffold(
-              backgroundColor: customColorScheme.surface,
-              body: CustomScrollView(
-                slivers: [
-                  SliverAppBar(
-                    expandedHeight: state.diaryHeader
-                        ? (state.aspect != null
-                            ? min(
-                                size.width / state.aspect!, size.height * 0.382)
-                            : null)
-                        : null,
-                    title: Text(
-                      state.diary.title,
-                      style: textStyle.titleMedium,
-                    ),
-                    leading: const PageBackButton(),
-                    centerTitle: false,
-                    flexibleSpace: FlexibleSpaceBar(
-                      collapseMode: CollapseMode.pin,
-                      background: state.diaryHeader
-                          ? (state.diary.imageName.isNotEmpty
-                              ? buildImageView(customColorScheme)
+                : colorScheme;
+        return Theme(
+          data: Theme.of(context).copyWith(colorScheme: customColorScheme),
+          child: Scaffold(
+            backgroundColor: customColorScheme.surface,
+            body: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  expandedHeight:
+                      state.diaryHeader
+                          ? (state.aspect != null
+                              ? min(
+                                size.width / state.aspect!,
+                                size.height * 0.382,
+                              )
                               : null)
                           : null,
-                    ),
-                    pinned: true,
-                    actions: [
-                      // IconButton(
-                      //     onPressed: () {
-                      //       showModalBottomSheet(
-                      //           context: context,
-                      //           useSafeArea: true,
-                      //           showDragHandle: true,
-                      //           builder: (context) {
-                      //             return Padding(
-                      //               padding: MediaQuery.viewInsetsOf(context),
-                      //               child: AskQuestionComponent(
-                      //                 content: state.diary.contentText,
-                      //               ),
-                      //             );
-                      //           });
-                      //     },
-                      //     icon: const Icon(Icons.chat)),
-                      PopupMenuButton(
-                        offset: const Offset(0, 46),
-                        itemBuilder: (context) {
-                          return <PopupMenuEntry<String>>[
-                            if (state.showAction) ...[
-                              PopupMenuItem(
-                                onTap: () async {
-                                  logic.delete(state.diary);
-                                },
-                                child: Row(
-                                  spacing: 16.0,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.delete_rounded),
-                                    Text(l10n.diaryDelete)
-                                  ],
-                                ),
-                              ),
-                              const PopupMenuDivider(),
-                              PopupMenuItem(
-                                onTap: () async {
-                                  logic.toEditPage(state.diary);
-                                },
-                                child: Row(
-                                  spacing: 16.0,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.edit_rounded),
-                                    Text(l10n.diaryEdit)
-                                  ],
-                                ),
-                              ),
-                              const PopupMenuDivider(),
-                            ],
+                  title: Text(state.diary.title, style: textStyle.titleMedium),
+                  leading: const PageBackButton(),
+                  centerTitle: false,
+                  flexibleSpace: FlexibleSpaceBar(
+                    collapseMode: CollapseMode.pin,
+                    background:
+                        state.diaryHeader
+                            ? (state.diary.imageName.isNotEmpty
+                                ? buildImageView(customColorScheme)
+                                : null)
+                            : null,
+                  ),
+                  pinned: true,
+                  actions: [
+                    // IconButton(
+                    //     onPressed: () {
+                    //       showModalBottomSheet(
+                    //           context: context,
+                    //           useSafeArea: true,
+                    //           showDragHandle: true,
+                    //           builder: (context) {
+                    //             return Padding(
+                    //               padding: MediaQuery.viewInsetsOf(context),
+                    //               child: AskQuestionComponent(
+                    //                 content: state.diary.contentText,
+                    //               ),
+                    //             );
+                    //           });
+                    //     },
+                    //     icon: const Icon(Icons.chat)),
+                    PopupMenuButton(
+                      offset: const Offset(0, 46),
+                      itemBuilder: (context) {
+                        return <PopupMenuEntry<String>>[
+                          if (state.showAction) ...[
                             PopupMenuItem(
                               onTap: () async {
-                                logic.toSharePage();
+                                logic.delete(state.diary);
                               },
                               child: Row(
                                 spacing: 16.0,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.share_rounded),
-                                  Text(l10n.diaryShare)
+                                  const Icon(Icons.delete_rounded),
+                                  Text(l10n.diaryDelete),
                                 ],
                               ),
                             ),
-                          ];
-                        },
-                      ),
-                    ],
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.all(4.0),
-                    sliver: SliverList.list(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: buildChipList(customColorScheme)),
+                            const PopupMenuDivider(),
+                            PopupMenuItem(
+                              onTap: () async {
+                                logic.toEditPage(state.diary);
+                              },
+                              child: Row(
+                                spacing: 16.0,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.edit_rounded),
+                                  Text(l10n.diaryEdit),
+                                ],
+                              ),
+                            ),
+                            const PopupMenuDivider(),
+                          ],
+                          PopupMenuItem(
+                            onTap: () async {
+                              logic.toSharePage();
+                            },
+                            child: Row(
+                              spacing: 16.0,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.share_rounded),
+                                Text(l10n.diaryShare),
+                              ],
+                            ),
+                          ),
+                        ];
+                      },
+                    ),
+                  ],
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.all(4.0),
+                  sliver: SliverList.list(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: buildChipList(customColorScheme),
                         ),
-                        Card.filled(
-                          color: customColorScheme.surfaceContainerLow,
-                          child: state.diary.type == DiaryType.markdown.value
-                              ? Padding(
+                      ),
+                      Card.filled(
+                        color: customColorScheme.surfaceContainerLow,
+                        child:
+                            state.diary.type == DiaryType.markdown.value
+                                ? Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: _buildMarkdownWidget(
-                                      brightness: customColorScheme.brightness,
-                                      data: state.diary.content),
+                                    brightness: customColorScheme.brightness,
+                                    data: state.diary.content,
+                                  ),
                                 )
-                              : QuillEditor.basic(
+                                : QuillEditor.basic(
                                   controller: logic.quillController!,
                                   config: QuillEditorConfig(
                                     showCursor: false,
                                     padding: const EdgeInsets.all(8.0),
-                                    customStyles: ThemeUtil.getInstance(context,
-                                        customColorScheme: customColorScheme),
+                                    customStyles: ThemeUtil.getInstance(
+                                      context,
+                                      customColorScheme: customColorScheme,
+                                    ),
                                     embedBuilders: [
                                       ImageEmbedBuilder(isEdit: false),
                                       VideoEmbedBuilder(isEdit: false),
@@ -447,14 +491,15 @@ class DiaryDetailsPage extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        });
+          ),
+        );
+      },
+    );
   }
 }

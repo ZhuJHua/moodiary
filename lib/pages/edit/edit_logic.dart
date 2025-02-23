@@ -56,20 +56,21 @@ class EditLogic extends GetxController {
   void onInit() {
     if (state.showWriteTime) _calculateDuration();
     keyboardObserver = KeyboardObserver(
-        onHeightChanged: (_) {},
-        onStateChanged: (state) {
-          switch (state) {
-            case KeyboardState.opening:
-              break;
-            case KeyboardState.closing:
-              unFocus();
-              break;
-            case KeyboardState.closed:
-              break;
-            case KeyboardState.unknown:
-              break;
-          }
-        });
+      onHeightChanged: (_) {},
+      onStateChanged: (state) {
+        switch (state) {
+          case KeyboardState.opening:
+            break;
+          case KeyboardState.closing:
+            unFocus();
+            break;
+          case KeyboardState.closed:
+            break;
+          case KeyboardState.unknown:
+            break;
+        }
+      },
+    );
     keyboardObserver.start();
     super.onInit();
   }
@@ -124,14 +125,16 @@ class EditLogic extends GetxController {
       //如果是编辑，将日记对象赋值
       state.isNew = false;
       state.originalDiary = Get.arguments as Diary;
-      state.type = DiaryType.values
-          .firstWhere((type) => type.value == state.originalDiary!.type);
+      state.type = DiaryType.values.firstWhere(
+        (type) => type.value == state.originalDiary!.type,
+      );
       state.currentDiary = state.originalDiary!.clone();
       // 获取分类名称
       if (state.originalDiary!.categoryId != null) {
         state.categoryName =
-            IsarUtil.getCategoryName(state.originalDiary!.categoryId!)!
-                .categoryName;
+            IsarUtil.getCategoryName(
+              state.originalDiary!.categoryId!,
+            )!.categoryName;
       }
       // 初始化标题控制器
       titleTextEditingController.text = state.originalDiary!.title;
@@ -147,8 +150,9 @@ class EditLogic extends GetxController {
       //临时拷贝一份拷贝音频数据到缓存目录
       for (final name in state.originalDiary!.audioName) {
         state.audioNameList.add(name);
-        await File(FileUtil.getRealPath('audio', name))
-            .copy(FileUtil.getCachePath(name));
+        await File(
+          FileUtil.getRealPath('audio', name),
+        ).copy(FileUtil.getCachePath(name));
       }
       //临时拷贝一份视频数据，别忘记了缩略图
       for (final name in state.originalDiary!.videoName) {
@@ -158,9 +162,16 @@ class EditLogic extends GetxController {
         state.videoFileList.add(videoXFile);
       }
       quillController = QuillController(
-          document: Document.fromJson(jsonDecode(await Kmp.replaceWithKmp(
-              text: state.originalDiary!.content, replacements: replaceMap))),
-          selection: const TextSelection.collapsed(offset: 0));
+        document: Document.fromJson(
+          jsonDecode(
+            await Kmp.replaceWithKmp(
+              text: state.originalDiary!.content,
+              replacements: replaceMap,
+            ),
+          ),
+        ),
+        selection: const TextSelection.collapsed(offset: 0),
+      );
       state.totalCount.value = _toPlainText().length;
     }
     state.isInit = true;
@@ -172,8 +183,10 @@ class EditLogic extends GetxController {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       state.duration += const Duration(seconds: 1);
-      state.durationString.value =
-          state.duration.toString().split('.')[0].padLeft(8, '0');
+      state.durationString.value = state.duration
+          .toString()
+          .split('.')[0]
+          .padLeft(8, '0');
     });
   }
 
@@ -181,11 +194,11 @@ class EditLogic extends GetxController {
     return state.type == DiaryType.markdown
         ? _markdownToPlainText(markdownTextEditingController!.text)
         : quillController!.document.toPlainText([
-            ImageEmbedBuilder(isEdit: true),
-            VideoEmbedBuilder(isEdit: true),
-            AudioEmbedBuilder(isEdit: true),
-            TextIndentEmbedBuilder(isEdit: true),
-          ]).trim();
+          ImageEmbedBuilder(isEdit: true),
+          VideoEmbedBuilder(isEdit: true),
+          AudioEmbedBuilder(isEdit: true),
+          TextIndentEmbedBuilder(isEdit: true),
+        ]).trim();
   }
 
   String _markdownToPlainText(String markdown) {
@@ -204,7 +217,11 @@ class EditLogic extends GetxController {
     final index = quillController!.selection.baseOffset;
     final length = quillController!.selection.extentOffset - index;
     quillController?.replaceText(
-        index, length, const TextIndentEmbed('2'), null);
+      index,
+      length,
+      const TextIndentEmbed('2'),
+      null,
+    );
     quillController?.moveCursorToPosition(index + 1);
   }
 
@@ -249,8 +266,11 @@ class EditLogic extends GetxController {
   }
 
   //单张照片
-  Future<void> pickPhoto(ImageSource imageSource, BuildContext context,
-      {bool isMarkdown = false}) async {
+  Future<void> pickPhoto(
+    ImageSource imageSource,
+    BuildContext context, {
+    bool isMarkdown = false,
+  }) async {
     //获取一张图片
     final XFile? photo = await MediaUtil.pickPhoto(imageSource);
     if (photo != null && context.mounted) {
@@ -311,9 +331,9 @@ class EditLogic extends GetxController {
   // }
 
   //预览视频
-  void toVideoView(List<String> videoPath, int index) {
-    Get.toNamed(AppRoutes.videoPage, arguments: [videoPath, index]);
-  }
+  // void toVideoView(List<String> videoPath, int index) {
+  //   Get.toNamed(AppRoutes.videoPage, arguments: [videoPath, index]);
+  // }
 
   //删除图片
   void deleteImage({required String path}) async {
@@ -339,7 +359,8 @@ class EditLogic extends GetxController {
   Future<int?> getCoverColor() async {
     if (state.imageFileList.isNotEmpty) {
       return await MediaUtil.getColorScheme(
-          FileImage(File(state.imageFileList.first.path)));
+        FileImage(File(state.imageFileList.first.path)),
+      );
     } else {
       return null;
     }
@@ -350,7 +371,8 @@ class EditLogic extends GetxController {
     //如果有封面就获取
     if (state.imageFileList.isNotEmpty) {
       return await MediaUtil.getImageAspectRatio(
-          FileImage(File(state.imageFileList.first.path)));
+        FileImage(File(state.imageFileList.first.path)),
+      );
     } else {
       return null;
     }
@@ -361,29 +383,39 @@ class EditLogic extends GetxController {
     state.isSaving = true;
     update(['modal']);
     // 根据文本中的实际内容移除不需要的资源
-    final originContent = state.type == DiaryType.markdown
-        ? markdownTextEditingController!.text.trim()
-        : jsonEncode(quillController!.document.toDelta().toJson());
+    final originContent =
+        state.type == DiaryType.markdown
+            ? markdownTextEditingController!.text.trim()
+            : jsonEncode(quillController!.document.toDelta().toJson());
     final needImage = await Kmp.findMatches(
-        text: originContent, patterns: state.imagePathList);
+      text: originContent,
+      patterns: state.imagePathList,
+    );
     final needVideo = await Kmp.findMatches(
-        text: originContent, patterns: state.videoPathList);
+      text: originContent,
+      patterns: state.videoPathList,
+    );
     final needAudio = await Kmp.findMatches(
-        text: originContent, patterns: state.audioNameList);
+      text: originContent,
+      patterns: state.audioNameList,
+    );
     state.imageFileList.removeWhere((file) => !needImage.contains(file.path));
     state.videoFileList.removeWhere((file) => !needVideo.contains(file.path));
     state.audioNameList.removeWhere((name) => !needAudio.contains(name));
     // 保存图片
-    final imageNameMap =
-        await MediaUtil.saveImages(imageFileList: state.imageFileList);
+    final imageNameMap = await MediaUtil.saveImages(
+      imageFileList: state.imageFileList,
+    );
     // 保存视频
-    final videoNameMap =
-        await MediaUtil.saveVideo(videoFileList: state.videoFileList);
+    final videoNameMap = await MediaUtil.saveVideo(
+      videoFileList: state.videoFileList,
+    );
     //保存录音
     final audioNameMap = await MediaUtil.saveAudio(state.audioNameList);
     final content = await Kmp.replaceWithKmp(
-        text: originContent,
-        replacements: {...imageNameMap, ...videoNameMap, ...audioNameMap});
+      text: originContent,
+      replacements: {...imageNameMap, ...videoNameMap, ...audioNameMap},
+    );
     state.currentDiary
       ..title = titleTextEditingController.text
       ..content = content
@@ -396,12 +428,15 @@ class EditLogic extends GetxController {
       ..aspect = await getCoverAspect();
 
     await IsarUtil.updateADiary(
-        oldDiary: state.originalDiary, newDiary: state.currentDiary);
+      oldDiary: state.originalDiary,
+      newDiary: state.currentDiary,
+    );
     state.isNew
         ? Get.back(result: state.currentDiary.categoryId ?? '')
         : Get.back(result: 'changed');
     NoticeUtil.showToast(
-        state.isNew ? l10n.editSaveSuccess : l10n.editChangeSuccess);
+      state.isNew ? l10n.editSaveSuccess : l10n.editChangeSuccess,
+    );
   }
 
   DateTime? oldTime;
@@ -428,20 +463,24 @@ class EditLogic extends GetxController {
     );
     if (nowDateTime != null) {
       state.currentDiary.time = state.currentDiary.time.copyWith(
-          year: nowDateTime.year,
-          month: nowDateTime.month,
-          day: nowDateTime.day);
+        year: nowDateTime.year,
+        month: nowDateTime.month,
+        day: nowDateTime.day,
+      );
       update(['Date']);
     }
   }
 
   Future<void> changeTime() async {
     final nowTime = await showTimePicker(
-        context: Get.context!,
-        initialTime: TimeOfDay.fromDateTime(state.currentDiary.time));
+      context: Get.context!,
+      initialTime: TimeOfDay.fromDateTime(state.currentDiary.time),
+    );
     if (nowTime != null) {
-      state.currentDiary.time = state.currentDiary.time
-          .copyWith(hour: nowTime.hour, minute: nowTime.minute);
+      state.currentDiary.time = state.currentDiary.time.copyWith(
+        hour: nowTime.hour,
+        minute: nowTime.minute,
+      );
       update(['Date']);
     }
   }

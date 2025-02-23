@@ -17,9 +17,6 @@ abstract class AppRoutes {
   //新增/编辑日记页路由
   static const editPage = '/edit';
 
-  //图片预览路由
-  static const photoPage = '/photo';
-
   //回收站路由
   static const recyclePage = '/recycle';
 
@@ -60,9 +57,6 @@ abstract class AppRoutes {
 
   //关于
   static const aboutPage = '/about';
-
-  //视频预览路由
-  static const videoPage = '/video';
 
   //地图
   static const mapPage = '/map';
