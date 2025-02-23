@@ -18,18 +18,22 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
 
   late final GlobalKey bodyKey = GlobalKey();
   late final AnimationController _fabAnimationController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 200));
+    vsync: this,
+    duration: const Duration(milliseconds: 200),
+  );
 
   late Animation<double> fabAnimation = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _fabAnimationController, curve: Curves.easeInOut));
+    CurvedAnimation(parent: _fabAnimationController, curve: Curves.easeInOut),
+  );
 
   late final AnimationController _barAnimationController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 200));
+    vsync: this,
+    duration: const Duration(milliseconds: 200),
+  );
 
   late Animation<double> barAnimation = Tween(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-          parent: _barAnimationController, curve: Curves.easeInOut));
+    CurvedAnimation(parent: _barAnimationController, curve: Curves.easeInOut),
+  );
 
   late final PageController pageController = PageController();
 
@@ -41,16 +45,19 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
   late final AppLifecycleListener _appLifecycleListener;
 
   @override
-  void onReady() {
-    _appLifecycleListener = AppLifecycleListener(onStateChange: (state) {
-      if (state == AppLifecycleState.inactive) {
-        _privacyMode(isEnable: true);
-        _lockPage();
-      }
-      if (state == AppLifecycleState.resumed) {
-        _privacyMode(isEnable: false);
-      }
-    });
+  void onReady() async {
+    _appLifecycleListener = AppLifecycleListener(
+      onStateChange: (state) {
+        if (state == AppLifecycleState.inactive) {
+          _privacyMode(isEnable: true);
+          _lockPage();
+        }
+        if (state == AppLifecycleState.resumed) {
+          _privacyMode(isEnable: false);
+        }
+      },
+    );
+
     super.onReady();
   }
 
@@ -126,8 +133,10 @@ class HomeLogic extends GetxController with GetTickerProviderStateMixin {
     }
 
     /// 需要注意，返回值为 '' 时才是没有选择分类，而返回值为 null 时，是没有进行操作直接返回
-    final res =
-        await Get.toNamed(AppRoutes.editPage, arguments: [type, categoryId]);
+    final res = await Get.toNamed(
+      AppRoutes.editPage,
+      arguments: [type, categoryId],
+    );
     _fabAnimationController.reset();
     isFabExpanded.value = false;
     if (res != null) {

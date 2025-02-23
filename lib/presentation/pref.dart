@@ -94,6 +94,8 @@ class PrefUtil {
     'autoSyncAfterChange',
     // 语言
     'language',
+    // webdav加密
+    'syncEncryption',
   };
 
   static Future<void> initPref() async {
@@ -190,6 +192,8 @@ class PrefUtil {
         'autoSyncAfterChange', _prefs.getBool('autoSyncAfterChange') ?? false);
     await _prefs.setString(
         'language', _prefs.getString('language') ?? 'system');
+    await _prefs.setBool(
+        'syncEncryption', _prefs.getBool('syncEncryption') ?? false);
   }
 
   static Future<void> setValue<T>(String key, T value) async {

@@ -21,7 +21,8 @@ class ThemeUtil {
   }
 
   static Map<String, double> _unifyFontWeights(
-      Map<String, double> fontWeights) {
+    Map<String, double> fontWeights,
+  ) {
     // 标准
     final regular = fontWeights['default'] ?? 400;
     // 名称映射表：将各种名称映射到统一的标准名称
@@ -68,8 +69,11 @@ class ThemeUtil {
     return unified;
   }
 
-  static TextTheme _applyFontVariations(TextTheme baseTheme, String? fontFamily,
-      {required Map<String, double> wghtAxisMap}) {
+  static TextTheme _applyFontVariations(
+    TextTheme baseTheme,
+    String? fontFamily, {
+    required Map<String, double> wghtAxisMap,
+  }) {
     final regularFontWeight = wghtAxisMap['Regular'] ?? 400;
     final mediumFontWeight = wghtAxisMap['Medium'] ?? 500;
     final semiBoldFontWeight = wghtAxisMap['SemiBold'] ?? 600;
@@ -155,10 +159,13 @@ class ThemeUtil {
 
   static Future<ThemeData> buildTheme(Brightness brightness) async {
     final color = PrefUtil.getValue<int>('color')!;
-    final seedColor = (color == -1)
-        ? Color(PrefUtil.getValue<int>('systemColor')!)
-        : AppColor.themeColorList[
-            (color >= 0 && color < AppColor.themeColorList.length) ? color : 0];
+    final seedColor =
+        (color == -1)
+            ? Color(PrefUtil.getValue<int>('systemColor')!)
+            : AppColor.themeColorList[(color >= 0 &&
+                    color < AppColor.themeColorList.length)
+                ? color
+                : 0];
 
     final customFont = PrefUtil.getValue<String>('customFont')!;
     String? fontFamily;
@@ -173,8 +180,9 @@ class ThemeUtil {
           fontPath: FileUtil.getRealPath('font', font.fontFileName),
         );
         fontFamily = font.fontFamily;
-        wghtAxisMap =
-            _unifyFontWeights(font.fontWghtAxisMap.cast<String, double>());
+        wghtAxisMap = _unifyFontWeights(
+          font.fontWghtAxisMap.cast<String, double>(),
+        );
       }
     } else if (Platform.isWindows) {
       fontFamily = 'Microsoft Yahei UI';
@@ -184,13 +192,16 @@ class ThemeUtil {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: seedColor,
       brightness: brightness,
-      dynamicSchemeVariant: color == 0
-          ? DynamicSchemeVariant.monochrome
-          : DynamicSchemeVariant.tonalSpot,
+      dynamicSchemeVariant:
+          color == 0
+              ? DynamicSchemeVariant.monochrome
+              : DynamicSchemeVariant.tonalSpot,
     );
     // typography
     final typography = Typography.material2021(
-        platform: defaultTargetPlatform, colorScheme: colorScheme);
+      platform: defaultTargetPlatform,
+      colorScheme: colorScheme,
+    );
     final defaultTextTheme =
         brightness == Brightness.light ? typography.black : typography.white;
 
@@ -198,11 +209,16 @@ class ThemeUtil {
       colorScheme: colorScheme,
       materialTapTargetSize: MaterialTapTargetSize.padded,
       scrollbarTheme: ScrollbarThemeData(
-        thumbColor: WidgetStateProperty.all(colorScheme.primaryContainer),
+        thumbColor: WidgetStateProperty.all(colorScheme.secondary),
         thickness: WidgetStateProperty.all(4.0),
         radius: const Radius.circular(2.0),
       ),
       brightness: brightness,
+      appBarTheme: AppBarTheme(
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: .0,
+        backgroundColor: colorScheme.surface,
+      ),
       fontFamily: fontFamily,
       textTheme: _applyFontVariations(
         defaultTextTheme,
@@ -212,8 +228,10 @@ class ThemeUtil {
     );
   }
 
-  static DefaultStyles getInstance(BuildContext context,
-      {required ColorScheme customColorScheme}) {
+  static DefaultStyles getInstance(
+    BuildContext context, {
+    required ColorScheme customColorScheme,
+  }) {
     final themeData = Theme.of(context);
     final textStyle = Theme.of(context).textTheme;
     final baseStyle = textStyle.bodyMedium!.copyWith(
@@ -231,17 +249,19 @@ class ThemeUtil {
 
     return DefaultStyles(
       h1: DefaultTextBlockStyle(
-          textStyle.titleLarge!.copyWith(color: customColorScheme.primary),
-          baseHorizontalSpacing,
-          const VerticalSpacing(16, 0),
-          VerticalSpacing.zero,
-          null),
+        textStyle.titleLarge!.copyWith(color: customColorScheme.primary),
+        baseHorizontalSpacing,
+        const VerticalSpacing(16, 0),
+        VerticalSpacing.zero,
+        null,
+      ),
       h2: DefaultTextBlockStyle(
-          textStyle.titleMedium!.copyWith(color: customColorScheme.secondary),
-          baseHorizontalSpacing,
-          const VerticalSpacing(8, 0),
-          VerticalSpacing.zero,
-          null),
+        textStyle.titleMedium!.copyWith(color: customColorScheme.secondary),
+        baseHorizontalSpacing,
+        const VerticalSpacing(8, 0),
+        VerticalSpacing.zero,
+        null,
+      ),
       h3: DefaultTextBlockStyle(
         textStyle.titleSmall!.copyWith(color: customColorScheme.onSurface),
         baseHorizontalSpacing,
@@ -307,16 +327,10 @@ class ThemeUtil {
       ),
       bold: const TextStyle(fontWeight: FontWeight.bold),
       subscript: const TextStyle(
-        fontFeatures: [
-          FontFeature.liningFigures(),
-          FontFeature.subscripts(),
-        ],
+        fontFeatures: [FontFeature.liningFigures(), FontFeature.subscripts()],
       ),
       superscript: const TextStyle(
-        fontFeatures: [
-          FontFeature.liningFigures(),
-          FontFeature.superscripts(),
-        ],
+        fontFeatures: [FontFeature.liningFigures(), FontFeature.superscripts()],
       ),
       italic: const TextStyle(fontStyle: FontStyle.italic),
       small: const TextStyle(fontSize: 12),
@@ -344,15 +358,16 @@ class ThemeUtil {
         decoration: TextDecoration.underline,
       ),
       placeHolder: DefaultTextBlockStyle(
-          baseStyle.copyWith(
-            fontSize: 20,
-            height: 1.5,
-            color: Colors.grey.withValues(alpha: 0.6),
-          ),
-          baseHorizontalSpacing,
-          VerticalSpacing.zero,
-          VerticalSpacing.zero,
-          null),
+        baseStyle.copyWith(
+          fontSize: 20,
+          height: 1.5,
+          color: Colors.grey.withValues(alpha: 0.6),
+        ),
+        baseHorizontalSpacing,
+        VerticalSpacing.zero,
+        VerticalSpacing.zero,
+        null,
+      ),
       lists: DefaultListBlockStyle(
         baseStyle,
         baseHorizontalSpacing,
@@ -373,19 +388,20 @@ class ThemeUtil {
         ),
       ),
       code: DefaultTextBlockStyle(
-          TextStyle(
-            color: Colors.blue.shade900.withValues(alpha: 0.6),
-            fontFamily: fontFamily,
-            fontSize: 13,
-            height: 1.15,
-          ),
-          baseHorizontalSpacing,
-          baseVerticalSpacing,
-          VerticalSpacing.zero,
-          BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(2),
-          )),
+        TextStyle(
+          color: Colors.blue.shade900.withValues(alpha: 0.6),
+          fontFamily: fontFamily,
+          fontSize: 13,
+          height: 1.15,
+        ),
+        baseHorizontalSpacing,
+        baseVerticalSpacing,
+        VerticalSpacing.zero,
+        BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
       indent: DefaultTextBlockStyle(
         baseStyle,
         baseHorizontalSpacing,

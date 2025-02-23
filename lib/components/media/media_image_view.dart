@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/components/base/image.dart';
+import 'package:moodiary/main.dart';
 import 'package:moodiary/pages/image/image_view.dart';
 import 'package:uuid/uuid.dart';
 
@@ -36,7 +37,7 @@ class MediaImageComponent extends StatelessWidget {
                 ),
               ),
               Text(
-                '${imageList.length} ${imageList.length > 1 ? 'Photos' : 'Photo'}',
+                l10n.mediaImageCount(imageList.length),
                 style: textStyle.labelMedium?.copyWith(
                   color: colorScheme.tertiary,
                 ),

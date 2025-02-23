@@ -823,4 +823,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diaryType => 'Type';
+
+  @override
+  String mediaImageCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# Photos',
+      one: '# Photo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mediaAudioCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# Audios',
+      one: '# Audio',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mediaVideoCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# Videos',
+      one: '# Video',
+    );
+    return '$_temp0';
+  }
 }

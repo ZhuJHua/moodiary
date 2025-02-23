@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/components/base/clipper.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
 import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
@@ -25,6 +26,7 @@ class DiarySettingPage extends StatelessWidget {
         ),
         Card.filled(
           color: colorScheme.surfaceContainerLow,
+          margin: EdgeInsets.zero,
           child: Column(
             children: [
               Obx(() {
@@ -86,6 +88,7 @@ class DiarySettingPage extends StatelessWidget {
         ),
         Card.filled(
           color: colorScheme.surfaceContainerLow,
+          margin: EdgeInsets.zero,
           child: Column(
             children: [
               Obx(() {
@@ -111,6 +114,7 @@ class DiarySettingPage extends StatelessWidget {
         ),
         Card.filled(
           color: colorScheme.surfaceContainerLow,
+          margin: EdgeInsets.zero,
           child: Column(
             children: [
               AdaptiveListTile(
@@ -134,72 +138,73 @@ class DiarySettingPage extends StatelessWidget {
                 }),
                 onTap: () {
                   showDialog(
-                      context: context,
-                      builder: (context) {
-                        return Obx(() {
-                          return SimpleDialog(
-                            title: Text(l10n.settingImageQuality),
-                            children: [
-                              SimpleDialogOption(
-                                child: Row(
-                                  spacing: 8.0,
-                                  children: [
-                                    Text(l10n.qualityLow),
-                                    if (state.quality.value == 0) ...[
-                                      const Icon(Icons.check_rounded),
-                                    ],
+                    context: context,
+                    builder: (context) {
+                      return Obx(() {
+                        return SimpleDialog(
+                          title: Text(l10n.settingImageQuality),
+                          children: [
+                            SimpleDialogOption(
+                              child: Row(
+                                spacing: 8.0,
+                                children: [
+                                  Text(l10n.qualityLow),
+                                  if (state.quality.value == 0) ...[
+                                    const Icon(Icons.check_rounded),
                                   ],
-                                ),
-                                onPressed: () {
-                                  logic.quality(0);
-                                },
+                                ],
                               ),
-                              SimpleDialogOption(
-                                child: Row(
-                                  spacing: 8.0,
-                                  children: [
-                                    Text(l10n.qualityMedium),
-                                    if (state.quality.value == 1) ...[
-                                      const Icon(Icons.check_rounded),
-                                    ],
+                              onPressed: () {
+                                logic.quality(0);
+                              },
+                            ),
+                            SimpleDialogOption(
+                              child: Row(
+                                spacing: 8.0,
+                                children: [
+                                  Text(l10n.qualityMedium),
+                                  if (state.quality.value == 1) ...[
+                                    const Icon(Icons.check_rounded),
                                   ],
-                                ),
-                                onPressed: () {
-                                  logic.quality(1);
-                                },
+                                ],
                               ),
-                              SimpleDialogOption(
-                                child: Row(
-                                  spacing: 8.0,
-                                  children: [
-                                    Text(l10n.qualityHigh),
-                                    if (state.quality.value == 2) ...[
-                                      const Icon(Icons.check_rounded),
-                                    ],
+                              onPressed: () {
+                                logic.quality(1);
+                              },
+                            ),
+                            SimpleDialogOption(
+                              child: Row(
+                                spacing: 8.0,
+                                children: [
+                                  Text(l10n.qualityHigh),
+                                  if (state.quality.value == 2) ...[
+                                    const Icon(Icons.check_rounded),
                                   ],
-                                ),
-                                onPressed: () {
-                                  logic.quality(2);
-                                },
+                                ],
                               ),
-                              SimpleDialogOption(
-                                child: Row(
-                                  spacing: 8.0,
-                                  children: [
-                                    Text(l10n.qualityOriginal),
-                                    if (state.quality.value == 3) ...[
-                                      const Icon(Icons.check_rounded),
-                                    ],
+                              onPressed: () {
+                                logic.quality(2);
+                              },
+                            ),
+                            SimpleDialogOption(
+                              child: Row(
+                                spacing: 8.0,
+                                children: [
+                                  Text(l10n.qualityOriginal),
+                                  if (state.quality.value == 3) ...[
+                                    const Icon(Icons.check_rounded),
                                   ],
-                                ),
-                                onPressed: () {
-                                  logic.quality(3);
-                                },
+                                ],
                               ),
-                            ],
-                          );
-                        });
+                              onPressed: () {
+                                logic.quality(3);
+                              },
+                            ),
+                          ],
+                        );
                       });
+                    },
+                  );
                 },
               ),
               Obx(() {
@@ -222,9 +227,8 @@ class DiarySettingPage extends StatelessWidget {
         title: Text(l10n.settingDiary),
         leading: const PageBackButton(),
       ),
-      body: SafeArea(
+      body: PageClipper(
         child: ListView(
-          padding: const EdgeInsets.all(4.0),
           children: [...buildRichText(), ...buildPureText(), ...buildCommon()],
         ),
       ),

@@ -823,4 +823,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diaryType => '类型';
+
+  @override
+  String mediaImageCount(num count) {
+    return '$count 张照片';
+  }
+
+  @override
+  String mediaAudioCount(num count) {
+    return '$count 段音频';
+  }
+
+  @override
+  String mediaVideoCount(num count) {
+    return '$count 段视频';
+  }
 }

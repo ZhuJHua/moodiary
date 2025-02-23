@@ -215,7 +215,7 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/wakelock_plus/macos
 
 SPEC CHECKSUMS:
-  app_links: 9028728e32c83a0831d9db8cf91c526d16cc5468
+  app_links: afe860c55c7ef176cea7fb630a2b7d7736de591d
   appkit_ui_element_colors: 711e7a2aa027790964e6fd90c78a666efe631432
   audioplayers_darwin: 761f2948df701d05b5db603220c384fb55720012
   bitsdojo_window_macos: 7959fb0ca65a3ccda30095c181ecb856fae48ea9

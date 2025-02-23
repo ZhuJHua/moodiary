@@ -69,6 +69,14 @@
   "settingLockResetLock": "已经开启密码，重新设置请先关闭",
   "settingBackendPrivacyProtection": "后台隐私保护",
   "settingBackendPrivacyProtectionDes": "应用处于后台时，隐藏应用内容",
+  "settingUserKey": "私有密钥",
+  "settingUserKeyDes": "可用于数据加密",
+  "settingUserKeySet": "设置密钥",
+  "settingUserKeySetDes": "⚠️ 密钥设置后无法获取，请妥善保管，如果您需要在其他设备上使用加密数据，请确保使用相同的密钥。",
+  "settingUserKeyReset": "重置密钥",
+  "settingUserKeyResetDes": "确定要重置密钥吗？",
+  "settingUserKeyHasSet": "已设置",
+  "settingUserKeyNotSet": "未设置",
   "settingMore": "更多",
   "settingLab": "实验室",
   "settingAbout": "关于",
@@ -167,6 +175,8 @@
   "webdavSyncWhenStartUpDes": "启动应用时自动同步",
   "webdavSyncAfterChange": "更改后同步",
   "webdavSyncAfterChangeDes": "更改数据后自动同步",
+  "webdavSyncEncryption": "加密",
+  "webdavSyncEncryptionDes": "加密同步数据，需要设置私有密钥",
   "webdavOptionServer": "服务器地址",
   "webdavOptionServerDes": "请填写服务器地址",
   "webdavOptionUsername": "用户名",
@@ -259,5 +269,8 @@
   "diaryShare": "分享",
   "diaryCount": "{count} 字",
   "dataSync": "数据同步",
-  "diaryType": "类型"
+  "diaryType": "类型",
+  "mediaImageCount": "{count} 张照片",
+  "mediaAudioCount": "{count} 段音频",
+  "mediaVideoCount": "{count} 段视频"
 }
