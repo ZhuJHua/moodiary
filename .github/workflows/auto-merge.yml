@@ -24,10 +24,11 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - id: auto merge
-        name: auto merge
+      - id: automerge
+        name: automerge
         uses: "pascalgn/automerge-action@v0.16.4"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           MERGE_REMOVE_LABELS: "automerge"
           MERGE_METHOD: "squash"
+          MERGE_DELETE_BRANCH: "true"
