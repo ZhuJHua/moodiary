@@ -1,9 +1,6 @@
 name: Git Cliff
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
       - master
