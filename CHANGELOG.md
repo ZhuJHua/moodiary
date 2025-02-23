@@ -24,8 +24,8 @@ All notable changes to this project will be documented in this file.
 - Enhance image viewing experience with hero transitions and loading states
 - Improve image handling with enhanced hero transitions and dynamic sizing
 - Add WindowsBar and MoveTitle widgets for improved window management
-- Improve UI consistency
-- Improve UI components
+- Enhance UI and improve desktop experience (#179)
+- Add workflow_run trigger for Git Cliff completion
 
 ### 🐛 Bug Fixes
 
@@ -68,7 +68,6 @@ All notable changes to this project will be documented in this file.
 - Add git-cliff to generate changelog
 - Add git-cliff to generate changelog
 - Add git-cliff to generate changelog
-- Update smooth_page_indicator to version 1.2.1
 
 ## [2.7.2] - 2025-01-27
 
