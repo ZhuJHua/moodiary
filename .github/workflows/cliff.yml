@@ -37,12 +37,10 @@ jobs:
           git checkout -b changelog-update
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
+          set +e
           git add CHANGELOG.md
           git commit -m "Update changelog"
-
-      - name: Push changelog branch
-        run: |
-          git push origin changelog-update
+          git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git changelog-update
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
