@@ -1,4 +1,5 @@
 name: Git Cliff
+
 on:
   push:
     branches:
@@ -12,17 +13,48 @@ jobs:
   changelog:
     name: Generate changelog
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Generate a changelog
+      - name: Generate changelog
         uses: orhun/git-cliff-action@v4
-        id: git-cliff
         with:
           config: cliff.toml
           args: --verbose
         env:
           OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
+
+      - name: Create a new branch and commit changelog
+        run: |
+          git checkout -b changelog-update
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add CHANGELOG.md
+          git commit -m "Update changelog"
+
+      - name: Push changelog branch
+        run: |
+          git push origin changelog-update
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: 'Update Changelog'
+          body: 'Automated changelog update from Git Cliff.'
+          head: changelog-update
+          base: master
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto Merge PR (if no conflicts)
+        uses: peter-evans/auto-merge@v2
+        with:
+          merge-method: squash
+          token: ${{ secrets.GITHUB_TOKEN }}
