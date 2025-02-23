@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - Update localization configuration to include synthetic package option
 - Update dependencies and remove unused localization imports
 - Ci (#177)
+- Correct syntax for workflow_run trigger in auto-merge.yml
 
 ### 💼 Other
 
