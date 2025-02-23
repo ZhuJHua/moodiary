@@ -20,13 +20,13 @@ class MediaPage extends StatelessWidget {
   static final iconMap = {
     MediaType.image: Icons.image_rounded,
     MediaType.audio: Icons.audiotrack_rounded,
-    MediaType.video: Icons.movie_rounded
+    MediaType.video: Icons.movie_rounded,
   };
 
   static final textMap = {
     MediaType.image: l10n.mediaTypeImage,
     MediaType.audio: l10n.mediaTypeAudio,
-    MediaType.video: l10n.mediaTypeVideo
+    MediaType.video: l10n.mediaTypeVideo,
   };
 
   @override
@@ -46,34 +46,36 @@ class MediaPage extends StatelessWidget {
                 title: Text(l10n.homeNavigatorMedia),
                 actions: [
                   IconButton(
-                      onPressed: () async {
-                        final res = await showCalendarDatePicker2Dialog(
-                            context: context,
-                            config: CalendarDatePicker2WithActionButtonsConfig(
-                              calendarViewMode: CalendarDatePicker2Mode.day,
-                              calendarType: CalendarDatePicker2Type.single,
-                              hideMonthPickerDividers: true,
-                              hideYearPickerDividers: true,
-                              useAbbrLabelForMonthModePicker: true,
-                              allowSameValueSelection: true,
-                              dayTextStylePredicate: (
-                                  {required DateTime date}) {
-                                return state.dateTimeList.contains(date)
-                                    ? textStyle.labelMedium
-                                        ?.copyWith(color: colorScheme.primary)
-                                    : null;
-                              },
-                              selectableDayPredicate: (DateTime date) {
-                                return state.dateTimeList.contains(date);
-                              },
-                            ),
-                            borderRadius: AppBorderRadius.mediumBorderRadius,
-                            dialogSize: const Size(300, 400));
-                        if (res != null && res.isNotEmpty) {
-                          logic.jumpTo(res.first ?? state.dateTimeList.first);
-                        }
-                      },
-                      icon: const Icon(Icons.calendar_month_rounded)),
+                    onPressed: () async {
+                      final res = await showCalendarDatePicker2Dialog(
+                        context: context,
+                        config: CalendarDatePicker2WithActionButtonsConfig(
+                          calendarViewMode: CalendarDatePicker2Mode.day,
+                          calendarType: CalendarDatePicker2Type.single,
+                          hideMonthPickerDividers: true,
+                          hideYearPickerDividers: true,
+                          useAbbrLabelForMonthModePicker: true,
+                          allowSameValueSelection: true,
+                          dayTextStylePredicate: ({required DateTime date}) {
+                            return state.dateTimeList.contains(date)
+                                ? textStyle.labelMedium?.copyWith(
+                                  color: colorScheme.primary,
+                                )
+                                : null;
+                          },
+                          selectableDayPredicate: (DateTime date) {
+                            return state.dateTimeList.contains(date);
+                          },
+                        ),
+                        borderRadius: AppBorderRadius.mediumBorderRadius,
+                        dialogSize: const Size(300, 400),
+                      );
+                      if (res != null && res.isNotEmpty) {
+                        logic.jumpTo(res.first ?? state.dateTimeList.first);
+                      }
+                    },
+                    icon: const Icon(Icons.calendar_month_rounded),
+                  ),
                   Obx(() {
                     return PopupMenuButton(
                       offset: const Offset(0, 46),
@@ -104,7 +106,7 @@ class MediaPage extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Icon(Icons.delete_sweep),
-                              Text(l10n.mediaDeleteUseLessFile)
+                              Text(l10n.mediaDeleteUseLessFile),
                             ],
                           ),
                         ),
@@ -115,51 +117,68 @@ class MediaPage extends StatelessWidget {
               ),
               body: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 400),
-                child: state.isFetching
-                    ? const Center(
-                        key: ValueKey('searching'), child: SearchLoading())
-                    : (state.datetimeMediaMap.isNotEmpty
-                        ? ScrollablePositionedList.builder(
-                            itemBuilder: (context, index) {
-                              final datetime = state.dateTimeList[index];
-                              final fileList =
-                                  state.datetimeMediaMap[datetime]!;
-                              return switch (state.mediaType.value) {
-                                MediaType.image => MediaImageComponent(
-                                    dateTime: datetime,
-                                    imageList: fileList,
-                                  ),
-                                MediaType.audio => MediaAudioComponent(
-                                    dateTime: datetime, audioList: fileList),
-                                MediaType.video => MediaVideoComponent(
-                                    dateTime: datetime, videoList: fileList),
-                              };
-                            },
-                            padding: const EdgeInsets.all(4.0),
-                            itemCount: state.dateTimeList.length,
-                            itemScrollController: logic.itemScrollController,
-                            itemPositionsListener: logic.itemPositionsListener,
-                            scrollOffsetController:
-                                logic.scrollOffsetController,
-                            scrollOffsetListener: logic.scrollOffsetListener,
-                          )
-                        : Center(
-                            key: const ValueKey('empty'),
-                            child: FaIcon(
-                              FontAwesomeIcons.boxArchive,
-                              size: 80,
-                              color: colorScheme.onSurface,
-                            ),
-                          )),
+                child:
+                    state.isFetching
+                        ? const Center(
+                          key: ValueKey('searching'),
+                          child: SearchLoading(),
+                        )
+                        : (state.datetimeMediaMap.isNotEmpty
+                            ? Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: ClipRRect(
+                                borderRadius:
+                                    AppBorderRadius.mediumBorderRadius,
+                                child: ScrollablePositionedList.builder(
+                                  itemBuilder: (context, index) {
+                                    final datetime = state.dateTimeList[index];
+                                    final fileList =
+                                        state.datetimeMediaMap[datetime]!;
+                                    return switch (state.mediaType.value) {
+                                      MediaType.image => MediaImageComponent(
+                                        dateTime: datetime,
+                                        imageList: fileList,
+                                      ),
+                                      MediaType.audio => MediaAudioComponent(
+                                        dateTime: datetime,
+                                        audioList: fileList,
+                                      ),
+                                      MediaType.video => MediaVideoComponent(
+                                        dateTime: datetime,
+                                        videoList: fileList,
+                                      ),
+                                    };
+                                  },
+                                  itemCount: state.dateTimeList.length,
+                                  itemScrollController:
+                                      logic.itemScrollController,
+                                  itemPositionsListener:
+                                      logic.itemPositionsListener,
+                                  scrollOffsetController:
+                                      logic.scrollOffsetController,
+                                  scrollOffsetListener:
+                                      logic.scrollOffsetListener,
+                                ),
+                              ),
+                            )
+                            : Center(
+                              key: const ValueKey('empty'),
+                              child: FaIcon(
+                                FontAwesomeIcons.boxArchive,
+                                size: 80,
+                                color: colorScheme.onSurface,
+                              ),
+                            )),
               ),
             ),
             GetBuilder<MediaLogic>(
-                id: 'modal',
-                builder: (_) {
-                  return state.isCleaning
-                      ? const LottieModal(type: LoadingType.fileProcess)
-                      : const SizedBox.shrink();
-                }),
+              id: 'modal',
+              builder: (_) {
+                return state.isCleaning
+                    ? const LottieModal(type: LoadingType.fileProcess)
+                    : const SizedBox.shrink();
+              },
+            ),
           ],
         );
       },

@@ -10,8 +10,5 @@ class VideoState {
   //当前位置
   late Rx<int> videoIndex;
 
-  VideoState() {
-    videoPathList = Get.arguments[0] as List<String>;
-    videoIndex = (Get.arguments[1] as int).obs;
-  }
+  VideoState();
 }

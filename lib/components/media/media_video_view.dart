@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/image.dart';
-import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/pages/video/video_view.dart';
 import 'package:path/path.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:uuid/uuid.dart';
 
 class MediaVideoComponent extends StatelessWidget {
@@ -16,11 +16,6 @@ class MediaVideoComponent extends StatelessWidget {
     required this.dateTime,
     required this.videoList,
   });
-
-  //点击视频跳转到视频预览
-  void _toVideoView(List<String> videoPathList, int index) {
-    Get.toNamed(AppRoutes.videoPage, arguments: [videoPathList, index]);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,39 +33,66 @@ class MediaVideoComponent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: Text(
-            DateFormat.yMMMEd().format(dateTime),
-            style: textStyle.titleSmall?.copyWith(color: colorScheme.secondary),
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                DateFormat.yMMMEd().format(dateTime),
+                style: textStyle.titleSmall?.copyWith(
+                  color: colorScheme.secondary,
+                ),
+              ),
+              Text(
+                '${videoList.length} ${videoList.length > 1 ? 'Videos' : 'Video'}',
+                style: textStyle.labelMedium?.copyWith(
+                  color: colorScheme.tertiary,
+                ),
+              ),
+            ],
           ),
         ),
-        GridView.builder(
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 120,
-            childAspectRatio: 1.0,
-            crossAxisSpacing: 1.0,
-            mainAxisSpacing: 1.0,
-          ),
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(4.0),
-          shrinkWrap: true,
-          itemBuilder: (context, index) {
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                ThumbnailImage(
-                  imagePath: thumbnailList[index],
-                  heroTag: '$heroPrefix$index',
-                  size: 120,
-                  onTap: () {
-                    _toVideoView(videoList, index);
-                  },
+        ClipRRect(
+          borderRadius: AppBorderRadius.mediumBorderRadius,
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 120,
+              childAspectRatio: 1.0,
+              crossAxisSpacing: 1.0,
+              mainAxisSpacing: 1.0,
+            ),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () async {
+                  await showVideoView(
+                    context,
+                    videoList,
+                    index,
+                    heroTagPrefix: '$heroPrefix$index',
+                  );
+                },
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Positioned.fill(
+                      child: ThumbnailImage(
+                        imagePath: thumbnailList[index],
+                        heroTag: '$heroPrefix$index',
+                        size: 120,
+                      ),
+                    ),
+                    const FrostedGlassButton(
+                      size: 32,
+                      child: Center(child: Icon(Icons.play_arrow_rounded)),
+                    ),
+                  ],
                 ),
-                const FaIcon(FontAwesomeIcons.play),
-              ],
-            );
-          },
-          itemCount: thumbnailList.length,
+              );
+            },
+            itemCount: thumbnailList.length,
+          ),
         ),
       ],
     );

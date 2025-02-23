@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/diary_type.dart';
+import 'package:moodiary/pages/image/image_view.dart';
+import 'package:moodiary/pages/video/video_view.dart';
 import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:refreshed/refreshed.dart';
@@ -41,16 +43,35 @@ class DiaryDetailsLogic extends GetxController {
   }
 
   //点击图片跳转到图片预览页面
-  void toPhotoView(
-      List<String> imagePathList, int index, BuildContext context) {
+  Future<void> toPhotoView(
+    List<String> imagePathList,
+    int index,
+    BuildContext context,
+    String heroPrefix,
+  ) async {
     HapticFeedback.selectionClick();
-    Get.toNamed(AppRoutes.photoPage, arguments: [imagePathList, index]);
-    // showImagePreview(context, imagePathList, index);
+    await showImageView(
+      context,
+      imagePathList,
+      index,
+      heroTagPrefix: heroPrefix,
+    );
   }
 
   //点击视频跳转到视频预览页面
-  void toVideoView(List<String> videoPathList, int index) {
-    Get.toNamed(AppRoutes.videoPage, arguments: [videoPathList, index]);
+  Future<void> toVideoView(
+    List<String> videoPathList,
+    int index,
+    BuildContext context,
+    String heroPrefix,
+  ) async {
+    HapticFeedback.selectionClick();
+    await showVideoView(
+      context,
+      videoPathList,
+      index,
+      heroTagPrefix: heroPrefix,
+    );
   }
 
   //点击分享跳转到分享页面
@@ -82,7 +103,10 @@ class DiaryDetailsLogic extends GetxController {
   }
 
   Future<void> jumpToPage(int index) async {
-    await pageController.animateToPage(index,
-        duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+    await pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+    );
   }
 }

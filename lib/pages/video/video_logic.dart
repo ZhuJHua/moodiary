@@ -10,13 +10,19 @@ class VideoLogic extends GetxController {
 
   late final videoController = media_kit.VideoController(player);
 
+  VideoLogic({required List<String> videoPathList, required int initialIndex}) {
+    state.videoPathList = videoPathList;
+    state.videoIndex = initialIndex.obs;
+  }
+
   @override
   void onInit() {
     state.playable = Playlist(
-        List.generate(state.videoPathList.length, (index) {
-          return Media(state.videoPathList[index]);
-        }),
-        index: state.videoIndex.value);
+      List.generate(state.videoPathList.length, (index) {
+        return Media(state.videoPathList[index]);
+      }),
+      index: state.videoIndex.value,
+    );
     super.onInit();
   }
 

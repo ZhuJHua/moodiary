@@ -7,7 +7,7 @@ class ThumbnailImage extends StatelessWidget {
   final String imagePath;
   final int size;
   final BoxFit? fit;
-  final Function() onTap;
+  final VoidCallback? onTap;
 
   final String heroTag;
 
@@ -16,7 +16,7 @@ class ThumbnailImage extends StatelessWidget {
     required this.imagePath,
     required this.size,
     this.fit,
-    required this.onTap,
+    this.onTap,
     required this.heroTag,
   });
 

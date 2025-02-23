@@ -25,7 +25,7 @@ class MediaImageComponent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+          padding: const EdgeInsets.all(8.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -44,47 +44,44 @@ class MediaImageComponent extends StatelessWidget {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: ClipRRect(
-            borderRadius: AppBorderRadius.mediumBorderRadius,
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 120,
-                childAspectRatio: 1.0,
-                crossAxisSpacing: 1.5,
-                mainAxisSpacing: 1.5,
-              ),
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemBuilder: (context, index) {
-                final image = ThumbnailImage(
-                  imagePath: imageList[index],
-                  size: 120,
-                  heroTag: '$heroPrefix$index',
-                  onTap: () async {
-                    await showImageView(
-                      context,
-                      imageList,
-                      index,
-                      heroTagPrefix: heroPrefix,
-                    );
-                  },
-                );
-                return GestureDetector(
-                  onTap: () async {
-                    await showImageView(
-                      context,
-                      imageList,
-                      index,
-                      heroTagPrefix: heroPrefix,
-                    );
-                  },
-                  child: image,
-                );
-              },
-              itemCount: imageList.length,
+        ClipRRect(
+          borderRadius: AppBorderRadius.mediumBorderRadius,
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 120,
+              childAspectRatio: 1.0,
+              crossAxisSpacing: 1.5,
+              mainAxisSpacing: 1.5,
             ),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemBuilder: (context, index) {
+              final image = ThumbnailImage(
+                imagePath: imageList[index],
+                size: 120,
+                heroTag: '$heroPrefix$index',
+                onTap: () async {
+                  await showImageView(
+                    context,
+                    imageList,
+                    index,
+                    heroTagPrefix: heroPrefix,
+                  );
+                },
+              );
+              return GestureDetector(
+                onTap: () async {
+                  await showImageView(
+                    context,
+                    imageList,
+                    index,
+                    heroTagPrefix: heroPrefix,
+                  );
+                },
+                child: image,
+              );
+            },
+            itemCount: imageList.length,
           ),
         ),
       ],

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dismissible_page/dismissible_page.dart';
 import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:moodiary/common/values/media_type.dart';
@@ -8,13 +9,45 @@ import 'package:refreshed/refreshed.dart';
 
 import 'video_logic.dart';
 
+Future<T?> showVideoView<T>(
+  BuildContext context,
+  List<String> videoPathList,
+  int initialIndex, {
+  required String heroTagPrefix,
+}) async {
+  return await context.pushTransparentRoute(
+    VideoPage(
+      videoPathList: videoPathList,
+      initialIndex: initialIndex,
+      heroTagPrefix: heroTagPrefix,
+    ),
+  );
+}
+
 class VideoPage extends StatelessWidget {
-  const VideoPage({super.key});
+  final List<String> _videoPathList;
+  final int _initialIndex;
+
+  final String _heroTagPrefix;
+
+  String get _tag => Object.hash(_videoPathList, _initialIndex).toString();
+
+  const VideoPage({
+    super.key,
+    required List<String> videoPathList,
+    required int initialIndex,
+    required String heroTagPrefix,
+  }) : _videoPathList = videoPathList,
+       _initialIndex = initialIndex,
+       _heroTagPrefix = heroTagPrefix;
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<VideoLogic>();
-    final state = Bind.find<VideoLogic>().state;
+    final logic = Get.put(
+      VideoLogic(videoPathList: _videoPathList, initialIndex: _initialIndex),
+      tag: _tag,
+    );
+    final state = Bind.find<VideoLogic>(tag: _tag).state;
     final colorScheme = Theme.of(context).colorScheme;
 
     Widget buildCustomTheme({required Widget child}) {
@@ -46,6 +79,8 @@ class VideoPage extends StatelessWidget {
     }
 
     return GetBuilder<VideoLogic>(
+      tag: _tag,
+      assignId: true,
       builder: (_) {
         return Scaffold(
           backgroundColor: Colors.black,
@@ -59,22 +94,27 @@ class VideoPage extends StatelessWidget {
             }),
             actions: [
               IconButton(
-                  onPressed: () {
-                    MediaUtil.saveToGallery(
-                        path: state.videoPathList[state.videoIndex.value],
-                        type: MediaType.video);
-                  },
-                  icon: const Icon(Icons.save_alt)),
+                onPressed: () {
+                  MediaUtil.saveToGallery(
+                    path: state.videoPathList[state.videoIndex.value],
+                    type: MediaType.video,
+                  );
+                },
+                icon: const Icon(Icons.save_alt),
+              ),
             ],
             iconTheme: const IconThemeData(color: Colors.white),
           ),
           body: Padding(
             padding: const EdgeInsets.symmetric(vertical: 56.0),
             child: buildCustomTheme(
-              child: Video(
-                controller: logic.videoController,
-                controls: AdaptiveVideoControls,
-                alignment: Alignment.center,
+              child: Hero(
+                tag: '$_heroTagPrefix${state.videoIndex.value}',
+                child: Video(
+                  controller: logic.videoController,
+                  controls: AdaptiveVideoControls,
+                  alignment: Alignment.center,
+                ),
               ),
             ),
           ),

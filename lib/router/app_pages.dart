@@ -44,8 +44,6 @@ import 'package:moodiary/pages/start/start_logic.dart';
 import 'package:moodiary/pages/start/start_view.dart';
 import 'package:moodiary/pages/user/user_logic.dart';
 import 'package:moodiary/pages/user/user_view.dart';
-import 'package:moodiary/pages/video/video_logic.dart';
-import 'package:moodiary/pages/video/video_view.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -149,11 +147,6 @@ class AppPages {
       name: AppRoutes.aboutPage,
       page: () => const AboutPage(),
       binds: [Bind.lazyPut(fenix: true, () => AboutLogic())],
-    ),
-    MoodiaryGetPage(
-      name: AppRoutes.videoPage,
-      page: () => const VideoPage(),
-      binds: [Bind.lazyPut(fenix: true, () => VideoLogic())],
     ),
     MoodiaryGetPage(
       name: AppRoutes.mapPage,
