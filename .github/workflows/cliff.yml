@@ -1,9 +1,6 @@
 name: Git Cliff
 
 on:
-  push:
-    branches:
-      - master
   pull_request:
     branches:
       - master
@@ -38,6 +35,6 @@ jobs:
 
       - name: Create Pull Request
         run: |
-          gh pr create --base master --head changelog-update --title "Update changelog" --body "This PR updates the changelog based on recent changes."
+          gh pr create --base master --head changelog-update --title "Update changelog" --body "This PR updates the changelog based on recent changes." --label automerge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
