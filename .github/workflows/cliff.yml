@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - master
+    types:
+      - closed
   workflow_dispatch:
 
 jobs:
@@ -13,7 +15,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 确保获取完整的 git 历史
+          fetch-depth: 0
+
+      - name: Check if PR is merged
+        run: |
+          if [ "${{ github.event.pull_request.merged }}" == "true" ]; then
+            echo "PR is merged, proceeding with changelog update."
+          else
+            echo "PR is not merged, skipping changelog update."
+            exit 0
+          fi
 
       - name: Generate changelog using Git Cliff
         uses: orhun/git-cliff-action@v4
@@ -35,6 +46,12 @@ jobs:
 
       - name: Create Pull Request
         run: |
-          gh pr create --base master --head changelog-update --title "Update changelog" --body "This PR updates the changelog based on recent changes." --label automerge
+          gh pr create --base master --head changelog-update --title "Update changelog" --body "This PR updates the changelog based on recent changes." --label bot
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto Merge Pull Request
+        run: |
+          gh pr merge --merge --delete-branch --squash "changelog-update"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
