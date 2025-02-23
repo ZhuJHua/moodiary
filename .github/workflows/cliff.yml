@@ -52,6 +52,6 @@ jobs:
 
       - name: Auto Merge Pull Request
         run: |
-          gh pr merge --merge --delete-branch --squash "changelog-update"
+          gh pr merge --merge --delete-branch "changelog-update"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
