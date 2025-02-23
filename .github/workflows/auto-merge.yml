@@ -31,3 +31,4 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           MERGE_REMOVE_LABELS: "automerge"
           MERGE_METHOD: "squash"
+          MERGE_DELETE_BRANCH: "true"
