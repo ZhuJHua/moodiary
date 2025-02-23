@@ -24,6 +24,8 @@ All notable changes to this project will be documented in this file.
 - Enhance image viewing experience with hero transitions and loading states
 - Improve image handling with enhanced hero transitions and dynamic sizing
 - Add WindowsBar and MoveTitle widgets for improved window management
+- Improve UI consistency
+- Improve UI components
 
 ### 🐛 Bug Fixes
 
@@ -34,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Update application name and improve debug configuration
 - Update localization configuration to include synthetic package option
 - Update dependencies and remove unused localization imports
+- Ci (#177)
 
 ### 💼 Other
 
@@ -65,9 +68,7 @@ All notable changes to this project will be documented in this file.
 - Add git-cliff to generate changelog
 - Add git-cliff to generate changelog
 - Add git-cliff to generate changelog
-- Update cliff.yml to trigger on pull requests only
-- Update auto-merge action and add label to changelog PR
-- Update auto-merge action and add label to changelog PR
+- Update smooth_page_indicator to version 1.2.1
 
 ## [2.7.2] - 2025-01-27
 
