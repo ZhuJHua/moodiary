@@ -60,6 +60,7 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
     return InkWell(
       child: Card.filled(
           color: colorScheme.surfaceContainerLow,
+          margin: EdgeInsets.zero,
           child: InkWell(
             borderRadius: AppBorderRadius.mediumBorderRadius,
             onTap: () async {

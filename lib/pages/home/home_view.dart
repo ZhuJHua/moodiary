@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
@@ -41,7 +39,7 @@ class HomePage extends StatelessWidget {
                     },
                     child: Obx(() {
                       return Container(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         color: colorScheme.surfaceContainer,
                         child: AdaptiveScaffold.standardNavigationRail(
                           destinations: [
@@ -75,9 +73,6 @@ class HomePage extends StatelessWidget {
                           backgroundColor: colorScheme.surfaceContainer,
                           labelType: NavigationRailLabelType.all,
                           padding: EdgeInsets.zero,
-                          leading: Platform.isMacOS
-                              ? const SizedBox(height: 20)
-                              : const SizedBox(height: 4),
                           trailing: Expanded(
                             child: DesktopHomeFabComponent(
                               isToTopShow: logic.isToTopShow,
