@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - Add WindowsBar and MoveTitle widgets for improved window management
 - Enhance UI and improve desktop experience (#179)
 - Add workflow_run trigger for Git Cliff completion
+- Update changelog workflow to check PR merge status before generating changelog
 
 ### 🐛 Bug Fixes
 
@@ -37,6 +38,7 @@ All notable changes to this project will be documented in this file.
 - Update localization configuration to include synthetic package option
 - Update dependencies and remove unused localization imports
 - Ci (#177)
+- Correct syntax for workflow_run trigger in auto-merge.yml
 
 ### 💼 Other
 
@@ -68,6 +70,8 @@ All notable changes to this project will be documented in this file.
 - Add git-cliff to generate changelog
 - Add git-cliff to generate changelog
 - Add git-cliff to generate changelog
+- Upgrade actions/checkout to v4 across workflow files
+- Fix cliff ci
 
 ## [2.7.2] - 2025-01-27
 
