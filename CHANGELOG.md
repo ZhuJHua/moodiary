@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - Update dependencies and remove unused localization imports
 - Ci (#177)
 - Correct syntax for workflow_run trigger in auto-merge.yml
+- Update diary_view to use Get.put for DiaryLogic instantiation
 
 ### 💼 Other
 
