@@ -45,7 +45,7 @@ class DiaryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final logic = Bind.find<DiaryLogic>();
+    final logic = Get.put(DiaryLogic());
     final state = Bind.find<DiaryLogic>().state;
     final colorScheme = Theme.of(context).colorScheme;
     final textStyle = Theme.of(context).textTheme;
