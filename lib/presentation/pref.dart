@@ -5,7 +5,6 @@ import 'package:moodiary/merge/merge.dart';
 import 'package:moodiary/utils/auth_util.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/package_util.dart';
-import 'package:moodiary/utils/theme_util.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,10 +18,6 @@ class PrefUtil {
     'firstStart',
     //自动同步
     'autoSync',
-    //动态配色支持
-    'supportDynamicColor',
-    //当前系统颜色
-    'systemColor',
     //主题颜色
     'color',
     //主题颜色类型
@@ -100,8 +95,10 @@ class PrefUtil {
 
   static Future<void> initPref() async {
     _prefs = await SharedPreferencesWithCache.create(
-        cacheOptions:
-            const SharedPreferencesWithCacheOptions(allowList: allowList));
+      cacheOptions: const SharedPreferencesWithCacheOptions(
+        allowList: allowList,
+      ),
+    );
     // 首次启动
     final firstStart = _prefs.getBool('firstStart') ?? true;
     await _prefs.setBool('firstStart', firstStart);
@@ -129,30 +126,19 @@ class PrefUtil {
 
     /// 支持相关，每次都重新获取
     await _prefs.setBool(
-        'supportBiometrics', await AuthUtil.canCheckBiometrics());
-
-    final supportDynamicColor = await ThemeUtil.supportDynamicColor();
-    await _prefs.setBool('supportDynamicColor', supportDynamicColor);
-
-    if (supportDynamicColor) {
-      final color = await ThemeUtil.getDynamicColor();
-      await _prefs.setInt(
-          'systemColor',
-          ((color.a * 255).toInt() << 24) |
-              ((color.r * 255).toInt() << 16) |
-              ((color.g * 255).toInt() << 8) |
-              (color.b * 255).toInt());
-    }
+      'supportBiometrics',
+      await AuthUtil.canCheckBiometrics(),
+    );
 
     await _prefs.setInt(
-        'color',
-        _prefs.getInt('color') ??
-            (await ThemeUtil.supportDynamicColor() ? -1 : 0));
-    await _prefs.setInt(
-        'colorType', _prefs.getInt('colorType') ?? AppColorType.common.value);
+      'colorType',
+      _prefs.getInt('colorType') ?? AppColorType.common.value,
+    );
     await _prefs.setInt('themeMode', _prefs.getInt('themeMode') ?? 0);
     await _prefs.setBool(
-        'dynamicColor', _prefs.getBool('dynamicColor') ?? true);
+      'dynamicColor',
+      _prefs.getBool('dynamicColor') ?? true,
+    );
     await _prefs.setInt('quality', _prefs.getInt('quality') ?? 2);
     await _prefs.setBool('local', _prefs.getBool('local') ?? false);
     await _prefs.setBool('lock', _prefs.getBool('lock') ?? false);
@@ -162,38 +148,66 @@ class PrefUtil {
 
     /// 支持相关，重新获取
     await _prefs.setString(
-        'supportPath', (await getApplicationSupportDirectory()).path);
+      'supportPath',
+      (await getApplicationSupportDirectory()).path,
+    );
     await _prefs.setString(
-        'cachePath', (await getApplicationCacheDirectory()).path);
+      'cachePath',
+      (await getApplicationCacheDirectory()).path,
+    );
 
     await _prefs.setBool('getWeather', _prefs.getBool('getWeather') ?? false);
-    await _prefs.setInt('startTime',
-        _prefs.getInt('startTime') ?? DateTime.now().millisecondsSinceEpoch);
+    await _prefs.setInt(
+      'startTime',
+      _prefs.getInt('startTime') ?? DateTime.now().millisecondsSinceEpoch,
+    );
     await _prefs.setString(
-        'customTitleName', _prefs.getString('customTitleName') ?? '');
-    await _prefs.setInt('homeViewMode',
-        _prefs.getInt('homeViewMode') ?? ViewModeType.list.number);
+      'customTitleName',
+      _prefs.getString('customTitleName') ?? '',
+    );
+    await _prefs.setInt(
+      'homeViewMode',
+      _prefs.getInt('homeViewMode') ?? ViewModeType.list.number,
+    );
     await _prefs.setBool('autoWeather', _prefs.getBool('autoWeather') ?? false);
     await _prefs.setStringList(
-        'webDavOption', _prefs.getStringList('webDavOption') ?? []);
+      'webDavOption',
+      _prefs.getStringList('webDavOption') ?? [],
+    );
     await _prefs.setBool('diaryHeader', _prefs.getBool('diaryHeader') ?? true);
     await _prefs.setBool(
-        'firstLineIndent', _prefs.getBool('firstLineIndent') ?? false);
+      'firstLineIndent',
+      _prefs.getBool('firstLineIndent') ?? false,
+    );
     await _prefs.setBool(
-        'autoCategory', _prefs.getBool('autoCategory') ?? false);
+      'autoCategory',
+      _prefs.getBool('autoCategory') ?? false,
+    );
     await _prefs.setBool(
-        'showWritingTime', _prefs.getBool('showWritingTime') ?? true);
+      'showWritingTime',
+      _prefs.getBool('showWritingTime') ?? true,
+    );
     await _prefs.setBool(
-        'showWordCount', _prefs.getBool('showWordCount') ?? true);
+      'showWordCount',
+      _prefs.getBool('showWordCount') ?? true,
+    );
     await _prefs.setString('customFont', _prefs.getString('customFont') ?? '');
     await _prefs.setBool(
-        'backendPrivacy', _prefs.getBool('backendPrivacy') ?? true);
+      'backendPrivacy',
+      _prefs.getBool('backendPrivacy') ?? true,
+    );
     await _prefs.setBool(
-        'autoSyncAfterChange', _prefs.getBool('autoSyncAfterChange') ?? false);
+      'autoSyncAfterChange',
+      _prefs.getBool('autoSyncAfterChange') ?? false,
+    );
     await _prefs.setString(
-        'language', _prefs.getString('language') ?? 'system');
+      'language',
+      _prefs.getString('language') ?? 'system',
+    );
     await _prefs.setBool(
-        'syncEncryption', _prefs.getBool('syncEncryption') ?? false);
+      'syncEncryption',
+      _prefs.getBool('syncEncryption') ?? false,
+    );
   }
 
   static Future<void> setValue<T>(String key, T value) async {

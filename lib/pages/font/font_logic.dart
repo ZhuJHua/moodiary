@@ -27,8 +27,10 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
   void onVerticalDragStart(DragUpdateDetails details) {
     state.bottomSheetHeight.value -= details.delta.dy;
-    state.bottomSheetHeight.value =
-        state.bottomSheetHeight.value.clamp(state.minHeight, state.maxHeight);
+    state.bottomSheetHeight.value = state.bottomSheetHeight.value.clamp(
+      state.minHeight,
+      state.maxHeight,
+    );
   }
 
   void changeSelectedFont({Font? font}) async {
@@ -45,10 +47,12 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
     state.fontList.value = await IsarUtil.getAllFonts();
     final loadList = <Future>[];
     for (final font in state.fontList) {
-      loadList.add(FontUtil.loadFont(
-        fontName: font.fontFamily,
-        fontPath: FileUtil.getRealPath('font', font.fontFileName),
-      ));
+      loadList.add(
+        FontUtil.loadFont(
+          fontName: font.fontFamily,
+          fontPath: FileUtil.getRealPath('font', font.fontFileName),
+        ),
+      );
     }
     await Future.wait(loadList);
     state.isFetching.value = false;
@@ -90,9 +94,11 @@ class FontLogic extends GetxController with GetSingleTickerProviderStateMixin {
   //更改字体
   Future<void> changeFontTheme() async {
     await PrefUtil.setValue<String>(
-        'customFont', state.currentFontFamily.value);
-    Get.changeTheme(await ThemeUtil.buildTheme(Brightness.light));
-    Get.changeTheme(await ThemeUtil.buildTheme(Brightness.dark));
+      'customFont',
+      state.currentFontFamily.value,
+    );
+    await ThemeUtil.forceUpdateTheme();
+
     EllipsisText.clearCache();
   }
 
