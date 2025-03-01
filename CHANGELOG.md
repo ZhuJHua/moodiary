@@ -49,6 +49,7 @@ All notable changes to this project will be documented in this file.
 
 - Rename rust library from rust_lib_mood_diary to moodiary_rust
 - Remove video page routing and update video state initialization
+- Streamline theme management and dynamic color support
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -73,6 +74,7 @@ All notable changes to this project will be documented in this file.
 - Add git-cliff to generate changelog
 - Upgrade actions/checkout to v4 across workflow files
 - Fix cliff ci
+- Update dependencies in pubspec.yaml to latest versions
 
 ## [2.7.2] - 2025-01-27
 
