@@ -50,6 +50,7 @@ All notable changes to this project will be documented in this file.
 - Rename rust library from rust_lib_mood_diary to moodiary_rust
 - Remove video page routing and update video state initialization
 - Streamline theme management and dynamic color support
+- Remove Objectbox plugin references and update tile caching implementation
 
 ### ⚙️ Miscellaneous Tasks
 
