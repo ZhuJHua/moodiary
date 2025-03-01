@@ -5,6 +5,7 @@ import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/components/base/marquee.dart';
 import 'package:moodiary/main.dart';
 import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/utils/theme_util.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'color_sheet_logic.dart';
@@ -19,27 +20,28 @@ class ColorSheetComponent extends StatelessWidget {
     required Brightness brightness,
     required TextStyle? textStyle,
     required VoidCallback onTap,
-    required VoidCallback onEnd,
     required BoxConstraints constraints,
     bool isSystemColor = false,
-    Color? systemColor,
   }) {
-    if (isSystemColor) assert(systemColor != null);
-
-    final customColorScheme = ColorScheme.fromSeed(
-        seedColor: (isSystemColor && systemColor != null)
-            ? systemColor
-            : AppColor.themeColorList[realIndex],
-        dynamicSchemeVariant: (realIndex == 0)
-            ? DynamicSchemeVariant.monochrome
-            : DynamicSchemeVariant.tonalSpot,
-        brightness: brightness);
+    final customColorScheme =
+        isSystemColor
+            ? (brightness == Brightness.light
+                ? ThemeUtil().lightDynamic!
+                : ThemeUtil().darkDynamic!)
+            : ColorScheme.fromSeed(
+              seedColor: AppColor.themeColorList[realIndex],
+              dynamicSchemeVariant:
+                  (realIndex == 0)
+                      ? DynamicSchemeVariant.monochrome
+                      : DynamicSchemeVariant.tonalSpot,
+              brightness: brightness,
+            );
 
     final textPainter = TextPainter(
-        text: TextSpan(text: AppColor.colorName(realIndex), style: textStyle),
-        textDirection: TextDirection.ltr,
-        textScaler: TextScaler.linear(PrefUtil.getValue<double>('fontScale')!))
-      ..layout();
+      text: TextSpan(text: AppColor.colorName(realIndex), style: textStyle),
+      textDirection: TextDirection.ltr,
+      textScaler: TextScaler.linear(PrefUtil.getValue<double>('fontScale')!),
+    )..layout();
     final showMarquee = textPainter.width > constraints.maxWidth - 8.0;
     return Padding(
       padding: const EdgeInsets.all(4.0),
@@ -57,52 +59,60 @@ class ColorSheetComponent extends StatelessWidget {
           child: Stack(
             children: [
               AnimatedPositioned(
-                left: currentColor == realIndex
-                    ? 6
-                    : (constraints.maxWidth / 2 - textPainter.width / 2 - 4.0),
-                bottom: currentColor == realIndex
-                    ? 6
-                    : (constraints.maxHeight / 2 -
-                        textPainter.height / 2 -
-                        4.0),
+                left:
+                    currentColor == realIndex
+                        ? 6
+                        : (constraints.maxWidth / 2 -
+                            textPainter.width / 2 -
+                            4.0),
+                bottom:
+                    currentColor == realIndex
+                        ? 6
+                        : (constraints.maxHeight / 2 -
+                            textPainter.height / 2 -
+                            4.0),
                 duration: const Duration(milliseconds: 300),
-                onEnd: onEnd,
-                child: showMarquee
-                    ? SizedBox(
-                        height: textPainter.height,
-                        width: constraints.maxWidth - 8.0,
-                        child: Marquee(
-                          text: AppColor.colorName(realIndex),
-                          velocity: 20,
-                          blankSpace: 20,
-                          pauseAfterRound: const Duration(seconds: 1),
-                          accelerationDuration: const Duration(seconds: 1),
-                          accelerationCurve: Curves.linear,
-                          decelerationDuration:
-                              const Duration(milliseconds: 500),
-                          decelerationCurve: Curves.easeOut,
+                child:
+                    showMarquee
+                        ? SizedBox(
+                          height: textPainter.height,
+                          width: constraints.maxWidth - 8.0,
+                          child: Marquee(
+                            text: AppColor.colorName(realIndex),
+                            velocity: 20,
+                            blankSpace: 20,
+                            pauseAfterRound: const Duration(seconds: 1),
+                            accelerationDuration: const Duration(seconds: 1),
+                            accelerationCurve: Curves.linear,
+                            decelerationDuration: const Duration(
+                              milliseconds: 500,
+                            ),
+                            decelerationCurve: Curves.easeOut,
+                            style: textStyle?.copyWith(
+                              color: customColorScheme.onPrimary,
+                            ),
+                          ),
+                        )
+                        : Text(
+                          AppColor.colorName(realIndex),
                           style: textStyle?.copyWith(
-                              color: customColorScheme.onPrimary),
+                            color: customColorScheme.onPrimary,
+                          ),
                         ),
-                      )
-                    : Text(
-                        AppColor.colorName(realIndex),
-                        style: textStyle?.copyWith(
-                            color: customColorScheme.onPrimary),
-                      ),
               ),
               Positioned(
                 top: 6,
                 right: 6,
                 child: AnimatedOpacity(
-                    opacity: currentColor == realIndex ? 1 : 0,
-                    duration: const Duration(milliseconds: 300),
-                    child: Icon(
-                      Icons.check_circle,
-                      size: 12,
-                      color: customColorScheme.onPrimary,
-                    )),
-              )
+                  opacity: currentColor == realIndex ? 1 : 0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Icon(
+                    Icons.check_circle,
+                    size: 12,
+                    color: customColorScheme.onPrimary,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -119,20 +129,18 @@ class ColorSheetComponent extends StatelessWidget {
 
     // 绘制普通配色
     Widget buildCommonColor() {
-      final hasSystemColor = state.supportDynamic && state.systemColor != null;
-      final itemCount = hasSystemColor
-          ? AppColor.themeColorList.length + 1
-          : AppColor.themeColorList.length;
+      final hasSystemColor = ThemeUtil().supportDynamic;
+      final itemCount =
+          hasSystemColor
+              ? AppColor.themeColorList.length + 1
+              : AppColor.themeColorList.length;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(
-              l10n.colorCommon,
-              style: textStyle.titleMedium,
-            ),
+            child: Text(l10n.colorCommon, style: textStyle.titleMedium),
           ),
           GridView.builder(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -144,20 +152,21 @@ class ColorSheetComponent extends StatelessWidget {
             shrinkWrap: true,
             itemBuilder: (context, index) {
               final realIndex = hasSystemColor ? index - 1 : index;
-              return LayoutBuilder(builder: (context, constraints) {
-                return buildColorOption(
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  return buildColorOption(
                     currentColor: state.currentColor,
                     realIndex: realIndex,
                     brightness: colorScheme.brightness,
                     textStyle: textStyle.labelMedium,
                     isSystemColor: realIndex == -1,
-                    systemColor: state.systemColor,
                     constraints: constraints,
                     onTap: () {
                       logic.changeSeedColor(realIndex);
                     },
-                    onEnd: logic.changeTheme);
-              });
+                  );
+                },
+              );
             },
             itemCount: itemCount,
           ),

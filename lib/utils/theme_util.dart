@@ -1,28 +1,49 @@
 import 'dart:io';
 
+import 'package:dartx/dartx.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/internal.dart';
+import 'package:material_color_utilities/palettes/core_palette.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/presentation/pref.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/font_util.dart';
+import 'package:moodiary/utils/log_util.dart';
+import 'package:refreshed/refreshed.dart';
 
 class ThemeUtil {
-  static Future<bool> supportDynamicColor() async {
-    return (await DynamicColorPlugin.getCorePalette()) != null;
-  }
+  ThemeUtil._();
 
-  static Future<Color> getDynamicColor() async {
-    return Color((await DynamicColorPlugin.getCorePalette())!.primary.get(40));
-  }
+  static final ThemeUtil instance = ThemeUtil._();
 
-  static Map<String, double> _unifyFontWeights(
-    Map<String, double> fontWeights,
-  ) {
+  factory ThemeUtil() => instance;
+
+  // 亮色模式的主题缓存
+  ThemeData? _lightTheme;
+
+  // 暗色模式的主题缓存
+  ThemeData? _darkTheme;
+
+  // 字体的字重缓存
+  Map<String, double> wghtAxisMap = {};
+
+  // 动态配色的浅色主题
+  ColorScheme? lightDynamic;
+
+  // 动态配色的深色主题
+  ColorScheme? darkDynamic;
+
+  bool get supportDynamic => lightDynamic != null && darkDynamic != null;
+
+  // 字体的名称缓存
+  String? fontFamily;
+
+  Map<String, double> _unifyFontWeights(Map<String, double> fontWeights) {
     // 标准
     final regular = fontWeights['default'] ?? 400;
     // 名称映射表：将各种名称映射到统一的标准名称
@@ -69,11 +90,7 @@ class ThemeUtil {
     return unified;
   }
 
-  static TextTheme _applyFontVariations(
-    TextTheme baseTheme,
-    String? fontFamily, {
-    required Map<String, double> wghtAxisMap,
-  }) {
+  TextTheme _applyFontVariations(TextTheme baseTheme) {
     final regularFontWeight = wghtAxisMap['Regular'] ?? 400;
     final mediumFontWeight = wghtAxisMap['Medium'] ?? 500;
     final semiBoldFontWeight = wghtAxisMap['SemiBold'] ?? 600;
@@ -157,23 +174,49 @@ class ThemeUtil {
     );
   }
 
-  static Future<ThemeData> buildTheme(Brightness brightness) async {
-    final color = PrefUtil.getValue<int>('color')!;
-    final seedColor =
-        (color == -1)
-            ? Color(PrefUtil.getValue<int>('systemColor')!)
-            : AppColor.themeColorList[(color >= 0 &&
-                    color < AppColor.themeColorList.length)
-                ? color
-                : 0];
+  /// 构建主题
+  /// 第一个返回值为亮色主题，第二个为暗色主题
+  Future<void> buildTheme() async {
+    await findDynamicColor();
 
-    final customFont = PrefUtil.getValue<String>('customFont')!;
-    String? fontFamily;
-    Map<String, double> wghtAxisMap = {};
+    var color = PrefUtil.getValue<int>('color');
+
+    // 如果是首次打开软件，还没有设置配色，检查是否支持动态配色
+    if (color == null) {
+      // 如果支持动态配色，设置为动态配色
+      if (supportDynamic) {
+        PrefUtil.setValue('color', -1);
+        color = -1;
+      } else {
+        // 否则设置为默认配色
+        PrefUtil.setValue('color', 0);
+        color = 0;
+      }
+    }
+
+    final isDynamic = color == -1 && supportDynamic;
+
+    late final normalColor =
+        AppColor.themeColorList[(color! >= 0 &&
+                color < AppColor.themeColorList.length)
+            ? color
+            : 0];
+
+    final lightColorScheme =
+        isDynamic
+            ? lightDynamic!
+            : buildColorScheme(normalColor, Brightness.light, color);
+
+    final darkColorScheme =
+        isDynamic
+            ? darkDynamic!
+            : buildColorScheme(normalColor, Brightness.dark, color);
+
+    final customFont = PrefUtil.getValue<String>('customFont');
 
     // 加载自定义字体
-    if (customFont.isNotEmpty) {
-      final font = await IsarUtil.getFontByFontFamily(customFont);
+    if (customFont.isNotNullOrBlank) {
+      final font = await IsarUtil.getFontByFontFamily(customFont!);
       if (font != null) {
         await FontUtil.loadFont(
           fontName: font.fontFamily,
@@ -188,23 +231,77 @@ class ThemeUtil {
       fontFamily = 'Microsoft Yahei UI';
     }
 
-    // colorScheme
-    final colorScheme = ColorScheme.fromSeed(
+    final lightTextTheme = buildTextTheme(lightColorScheme);
+    final darkTextTheme = buildTextTheme(darkColorScheme);
+
+    final lightTypography = buildTypography(lightColorScheme);
+    final darkTypography = buildTypography(darkColorScheme);
+
+    _lightTheme = buildThemeData(
+      lightColorScheme,
+      lightTextTheme,
+      lightTypography,
+      fontFamily,
+      wghtAxisMap,
+      Brightness.light,
+    );
+    _darkTheme = buildThemeData(
+      darkColorScheme,
+      darkTextTheme,
+      darkTypography,
+      fontFamily,
+      wghtAxisMap,
+      Brightness.dark,
+    );
+  }
+
+  // 辅助函数：构建 colorScheme
+  ColorScheme buildColorScheme(
+    Color seedColor,
+    Brightness brightness,
+    int color,
+  ) {
+    // 默认的配色生成算法，这个会生成低饱和度的配色
+    var dynamicSchemeVariant = DynamicSchemeVariant.tonalSpot;
+    if (color == 0) {
+      dynamicSchemeVariant = DynamicSchemeVariant.monochrome;
+    }
+    if (color == -1) {
+      dynamicSchemeVariant = DynamicSchemeVariant.tonalSpot;
+    }
+    return ColorScheme.fromSeed(
       seedColor: seedColor,
       brightness: brightness,
-      dynamicSchemeVariant:
-          color == 0
-              ? DynamicSchemeVariant.monochrome
-              : DynamicSchemeVariant.tonalSpot,
-    );
-    // typography
-    final typography = Typography.material2021(
+      dynamicSchemeVariant: dynamicSchemeVariant,
+    ).harmonized();
+  }
+
+  // 辅助函数：构建 typography
+  Typography buildTypography(ColorScheme colorScheme) {
+    return Typography.material2021(
       platform: defaultTargetPlatform,
       colorScheme: colorScheme,
     );
-    final defaultTextTheme =
-        brightness == Brightness.light ? typography.black : typography.white;
+  }
 
+  TextTheme buildTextTheme(ColorScheme colorScheme) {
+    final typography = buildTypography(colorScheme);
+    final textTheme =
+        colorScheme.brightness == Brightness.light
+            ? typography.black
+            : typography.white;
+    return _applyFontVariations(textTheme);
+  }
+
+  // 辅助函数：构建 ThemeData
+  ThemeData buildThemeData(
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    Typography typography,
+    String? fontFamily,
+    Map<String, double> wghtAxisMap,
+    Brightness brightness,
+  ) {
     return ThemeData(
       colorScheme: colorScheme,
       materialTapTargetSize: MaterialTapTargetSize.padded,
@@ -220,12 +317,74 @@ class ThemeUtil {
         backgroundColor: colorScheme.surface,
       ),
       fontFamily: fontFamily,
-      textTheme: _applyFontVariations(
-        defaultTextTheme,
-        fontFamily,
-        wghtAxisMap: wghtAxisMap,
-      ),
+      typography: typography,
+      textTheme: _applyFontVariations(textTheme),
     );
+  }
+
+  Future<void> findDynamicColor() async {
+    try {
+      final CorePalette? corePalette =
+          await DynamicColorPlugin.getCorePalette();
+
+      if (corePalette != null) {
+        final seedColor = Color(corePalette.primary.get(40));
+
+        lightDynamic = buildColorScheme(seedColor, Brightness.light, -1);
+        darkDynamic = buildColorScheme(seedColor, Brightness.dark, -1);
+        return;
+      }
+    } on PlatformException {
+      LogUtil.printInfo('dynamic_color: Failed to obtain core palette.');
+    }
+
+    try {
+      final Color? accentColor = await DynamicColorPlugin.getAccentColor();
+
+      if (accentColor != null) {
+        lightDynamic = buildColorScheme(accentColor, Brightness.light, -1);
+        darkDynamic = buildColorScheme(accentColor, Brightness.dark, -1);
+        return;
+      }
+    } on PlatformException {
+      LogUtil.printInfo('dynamic_color: Failed to obtain accent color.');
+    }
+
+    LogUtil.printInfo(
+      'dynamic_color: Dynamic color not detected on this device.',
+    );
+  }
+
+  (ThemeData, ThemeData) getThemeData() {
+    final isDynamic = supportDynamic && PrefUtil.getValue<int>('color') == -1;
+    if (isDynamic) {
+      return (
+        _lightTheme?.copyWith(
+              colorScheme: lightDynamic,
+              textTheme: buildTextTheme(lightDynamic!),
+              typography: buildTypography(lightDynamic!),
+            ) ??
+            ThemeData.light(),
+        _darkTheme?.copyWith(
+              colorScheme: darkDynamic,
+              textTheme: buildTextTheme(darkDynamic!),
+              typography: buildTypography(darkDynamic!),
+            ) ??
+            ThemeData.dark(),
+      );
+    } else {
+      return (_lightTheme ?? ThemeData.light(), _darkTheme ?? ThemeData.dark());
+    }
+  }
+
+  /// 强制更新主题
+  /// 一般在更改了主题色或者字体后调用
+  static Future<void> forceUpdateTheme() async {
+    await ThemeUtil().buildTheme();
+    final themeData = ThemeUtil().getThemeData();
+    Get.changeTheme(themeData.$1);
+    Get.changeTheme(themeData.$2);
+    await Get.forceAppUpdate();
   }
 
   static DefaultStyles getInstance(
