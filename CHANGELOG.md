@@ -76,6 +76,8 @@ All notable changes to this project will be documented in this file.
 - Upgrade actions/checkout to v4 across workflow files
 - Fix cliff ci
 - Update dependencies in pubspec.yaml to latest versions
+- Update NDK and plugin versions in build configuration
+- Update .gitignore
 
 ## [2.7.2] - 2025-01-27
 
