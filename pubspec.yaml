@@ -61,8 +61,9 @@ dependencies:
   cross_file: 0.3.4+2
   fc_native_video_thumbnail: 0.17.2
   flutter_map: 7.0.2
-  flutter_map_tile_caching: 10.0.0
+  flutter_map_cache: 1.5.2
   flutter_map_marker_cluster: 1.4.0
+  dio_cache_interceptor_hive_store: 4.0.0
   latlong2: 0.9.1
   shelf: 1.4.2
   shelf_multipart: 2.0.1
