@@ -10,30 +10,33 @@ import 'notice_util.dart';
 class HttpUtil {
   Dio? _dio;
 
-  final bool _enableLogging = false;
+  final bool _enableLogging = kDebugMode;
 
   Dio get dio {
     if (_dio == null) {
       _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 5)));
-      _dio!.interceptors.add(InterceptorsWrapper(
-        onError: (error, handler) {
-          NoticeUtil.showToast('网络异常！');
-          handler.next(error);
-        },
-        onRequest: (options, handler) {
-          if (_enableLogging) {
-            LogUtil.printInfo('Request: ${options.method} ${options.path}');
-          }
-          handler.next(options);
-        },
-        onResponse: (response, handler) {
-          if (_enableLogging) {
-            LogUtil.printInfo(
-                'Response [${response.statusCode}]: ${response.data}');
-          }
-          handler.next(response);
-        },
-      ));
+      _dio?.interceptors.add(
+        InterceptorsWrapper(
+          onError: (error, handler) {
+            if (error.type != DioExceptionType.cancel) {
+              NoticeUtil.showToast('Network Error ${error.error}');
+            }
+            handler.next(error);
+          },
+          onRequest: (options, handler) {
+            if (_enableLogging) {
+              LogUtil.printInfo('Request: ${options.method} ${options.path}');
+            }
+            handler.next(options);
+          },
+          onResponse: (response, handler) {
+            if (_enableLogging) {
+              LogUtil.printInfo('Response ${response.statusCode}');
+            }
+            handler.next(response);
+          },
+        ),
+      );
     }
     return _dio!;
   }
@@ -67,27 +70,46 @@ class HttpUtil {
     );
   }
 
-  Future<Response<T>> get<T>(String path,
-      {Map<String, dynamic>? parameters, ResponseType? type}) {
+  Future<Response<T>> get<T>(
+    String path, {
+    Map<String, dynamic>? parameters,
+    ResponseType? type,
+  }) {
     return _request(path, method: 'GET', parameters: parameters, type: type);
   }
 
-  Future<Response<T>> post<T>(String path,
-      {Map<String, dynamic>? header, data, Options? option}) {
-    return _request(path,
-        method: 'POST', header: header, data: data, option: option);
+  Future<Response<T>> post<T>(
+    String path, {
+    Map<String, dynamic>? header,
+    data,
+    Options? option,
+  }) {
+    return _request(
+      path,
+      method: 'POST',
+      header: header,
+      data: data,
+      option: option,
+    );
   }
 
-  Future<Stream<String>?> postStream(String path,
-      {Map<String, dynamic>? header, Object? data}) async {
-    final Response<ResponseBody> response = await dio.post(path,
-        options: Options(responseType: ResponseType.stream, headers: header),
-        data: data);
+  Future<Stream<String>?> postStream(
+    String path, {
+    Map<String, dynamic>? header,
+    Object? data,
+  }) async {
+    final Response<ResponseBody> response = await dio.post(
+      path,
+      options: Options(responseType: ResponseType.stream, headers: header),
+      data: data,
+    );
 
     final StreamTransformer<Uint8List, List<int>> transformer =
-        StreamTransformer.fromHandlers(handleData: (data, sink) {
-      sink.add(List<int>.from(data));
-    });
+        StreamTransformer.fromHandlers(
+          handleData: (data, sink) {
+            sink.add(List<int>.from(data));
+          },
+        );
     return response.data?.stream
         .transform(transformer)
         .transform(const Utf8Decoder())

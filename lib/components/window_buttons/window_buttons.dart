@@ -35,30 +35,42 @@ class WindowButtons extends StatelessWidget {
       mouseOver: colorScheme.errorContainer,
       iconMouseOver: colorScheme.onErrorContainer,
     );
-    return GestureDetector(
-      onPanStart: (_) => appWindow.startDragging(),
-      behavior: HitTestBehavior.translucent,
-      child: SizedBox(
-        height: 46,
-        child: Visibility(
-          visible: Platform.isWindows,
-          child: Align(
-            alignment: Alignment.topRight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                MinimizeWindowButton(
-                  colors: secondaryButtonColors,
-                  animate: true,
-                ),
-                MaximizeWindowButton(
-                  colors: primaryButtonColors,
-                  animate: true,
-                ),
-                CloseWindowButton(colors: closeButtonColors, animate: true),
-              ],
+    var isMaximized = appWindow.isMaximized;
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 8.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MinimizeWindowButton(colors: secondaryButtonColors, animate: true),
+            StatefulBuilder(
+              builder: (context, setState) {
+                return isMaximized
+                    ? RestoreWindowButton(
+                      colors: primaryButtonColors,
+                      animate: true,
+                      onPressed: () {
+                        appWindow.maximizeOrRestore();
+                        setState(() {
+                          isMaximized = !isMaximized;
+                        });
+                      },
+                    )
+                    : MaximizeWindowButton(
+                      colors: primaryButtonColors,
+                      animate: true,
+                      onPressed: () {
+                        appWindow.maximizeOrRestore();
+                        setState(() {
+                          isMaximized = !isMaximized;
+                        });
+                      },
+                    );
+              },
             ),
-          ),
+            CloseWindowButton(colors: closeButtonColors, animate: true),
+          ],
         ),
       ),
     );
@@ -86,7 +98,13 @@ class MoveTitle extends StatelessWidget {
     return GestureDetector(
       onPanStart: (_) => appWindow.startDragging(),
       behavior: HitTestBehavior.translucent,
-      child: const SizedBox(height: 32),
+      child: SizedBox(
+        height: 32,
+        child: Visibility(
+          visible: Platform.isWindows || Platform.isLinux,
+          child: const WindowButtons(),
+        ),
+      ),
     );
   }
 }
