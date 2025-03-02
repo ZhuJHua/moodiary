@@ -18,5 +18,8 @@ class WebDavState {
   RxBool autoSyncAfterChange =
       PrefUtil.getValue<bool>('autoSyncAfterChange')!.obs;
 
+  RxBool syncEncryption = PrefUtil.getValue<bool>('syncEncryption')!.obs;
+  RxBool hasUserKey = false.obs;
+
   WebDavState();
 }
