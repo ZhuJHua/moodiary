@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/image.dart';
 import 'package:moodiary/main.dart';
@@ -53,47 +52,44 @@ class MediaVideoComponent extends StatelessWidget {
             ],
           ),
         ),
-        ClipRRect(
-          borderRadius: AppBorderRadius.mediumBorderRadius,
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 120,
-              childAspectRatio: 1.0,
-              crossAxisSpacing: 1.0,
-              mainAxisSpacing: 1.0,
-            ),
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () async {
-                  await showVideoView(
-                    context,
-                    videoList,
-                    index,
-                    heroTagPrefix: '$heroPrefix$index',
-                  );
-                },
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Positioned.fill(
-                      child: ThumbnailImage(
-                        imagePath: thumbnailList[index],
-                        heroTag: '$heroPrefix$index',
-                        size: 120,
-                      ),
-                    ),
-                    const FrostedGlassButton(
-                      size: 32,
-                      child: Center(child: Icon(Icons.play_arrow_rounded)),
-                    ),
-                  ],
-                ),
-              );
-            },
-            itemCount: thumbnailList.length,
+        GridView.builder(
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 120,
+            childAspectRatio: 1.0,
+            crossAxisSpacing: 1.0,
+            mainAxisSpacing: 1.0,
           ),
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemBuilder: (context, index) {
+            return GestureDetector(
+              onTap: () async {
+                await showVideoView(
+                  context,
+                  videoList,
+                  index,
+                  heroTagPrefix: '$heroPrefix$index',
+                );
+              },
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: ThumbnailImage(
+                      imagePath: thumbnailList[index],
+                      heroTag: '$heroPrefix$index',
+                      size: 120,
+                    ),
+                  ),
+                  const FrostedGlassButton(
+                    size: 32,
+                    child: Center(child: Icon(Icons.play_arrow_rounded)),
+                  ),
+                ],
+              ),
+            );
+          },
+          itemCount: thumbnailList.length,
         ),
       ],
     );

@@ -132,6 +132,7 @@ class AppPages {
       name: AppRoutes.lockPage,
       page: () => const LockPage(),
       binds: [Bind.lazyPut(fenix: true, () => LockLogic())],
+      useFade: true,
     ),
     MoodiaryGetPage(
       name: AppRoutes.userPage,
@@ -186,6 +187,7 @@ class MoodiaryGetPage extends GetPage {
     required super.name,
     List<Bind> binds = const <Bind>[],
     required Widget Function() page,
+    bool? useFade = false,
   }) : super(
          curve: Curves.linear,
          page: () {
@@ -201,11 +203,15 @@ class MoodiaryGetPage extends GetPage {
              );
            }
          },
-         customTransition: _MoodiaryPageTransition(),
+         customTransition: _MoodiaryPageTransition(useFade: useFade),
        );
 }
 
 class _MoodiaryPageTransition implements CustomTransition {
+  final bool? useFade;
+
+  _MoodiaryPageTransition({required this.useFade});
+
   @override
   Widget buildTransition(
     BuildContext context,
@@ -215,7 +221,13 @@ class _MoodiaryPageTransition implements CustomTransition {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    final pageRoute = ModalRoute.of(context) as PageRoute;
+    late final pageRoute = ModalRoute.of(context) as PageRoute;
+    if (useFade == true) {
+      return PageTransition(
+        type: PageTransitionType.fade,
+        child: child,
+      ).buildTransitions(context, animation, secondaryAnimation, child);
+    }
     if (Platform.isAndroid) {
       if (pageRoute.popGestureInProgress) {
         return const PredictiveBackPageTransitionsBuilder().buildTransitions(

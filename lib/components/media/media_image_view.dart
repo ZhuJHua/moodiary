@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/components/base/image.dart';
 import 'package:moodiary/main.dart';
 import 'package:moodiary/pages/image/image_view.dart';
@@ -45,45 +44,42 @@ class MediaImageComponent extends StatelessWidget {
             ],
           ),
         ),
-        ClipRRect(
-          borderRadius: AppBorderRadius.mediumBorderRadius,
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 120,
-              childAspectRatio: 1.0,
-              crossAxisSpacing: 1.5,
-              mainAxisSpacing: 1.5,
-            ),
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              final image = ThumbnailImage(
-                imagePath: imageList[index],
-                size: 120,
-                heroTag: '$heroPrefix$index',
-                onTap: () async {
-                  await showImageView(
-                    context,
-                    imageList,
-                    index,
-                    heroTagPrefix: heroPrefix,
-                  );
-                },
-              );
-              return GestureDetector(
-                onTap: () async {
-                  await showImageView(
-                    context,
-                    imageList,
-                    index,
-                    heroTagPrefix: heroPrefix,
-                  );
-                },
-                child: image,
-              );
-            },
-            itemCount: imageList.length,
+        GridView.builder(
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 120,
+            childAspectRatio: 1.0,
+            crossAxisSpacing: 1.5,
+            mainAxisSpacing: 1.5,
           ),
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemBuilder: (context, index) {
+            final image = ThumbnailImage(
+              imagePath: imageList[index],
+              size: 120,
+              heroTag: '$heroPrefix$index',
+              onTap: () async {
+                await showImageView(
+                  context,
+                  imageList,
+                  index,
+                  heroTagPrefix: heroPrefix,
+                );
+              },
+            );
+            return GestureDetector(
+              onTap: () async {
+                await showImageView(
+                  context,
+                  imageList,
+                  index,
+                  heroTagPrefix: heroPrefix,
+                );
+              },
+              child: image,
+            );
+          },
+          itemCount: imageList.length,
         ),
       ],
     );
