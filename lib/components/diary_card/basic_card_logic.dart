@@ -11,22 +11,22 @@ mixin BasicCardLogic {
   Future<void> toDiary(Diary diary) async {
     HapticFeedback.mediumImpact();
     Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary.id);
-    final res = await Get.toNamed(AppRoutes.diaryPage,
-        arguments: [diary.clone(), true]);
+    final res = await Get.toNamed(
+      AppRoutes.diaryPage,
+      arguments: [diary.clone(), true],
+    );
     if (res == 'delete') {
       //如果分类为空，删除主页即可，如果分类不为空，双删除
       if (diary.categoryId != null &&
           Bind.isRegistered<DiaryTabViewLogic>(tag: diary.categoryId)) {
-        Bind.find<DiaryTabViewLogic>(tag: diary.categoryId)
-            .state
-            .diaryList
-            .removeWhere((e) => e.id == diary.id);
+        Bind.find<DiaryTabViewLogic>(
+          tag: diary.categoryId,
+        ).state.diaryList.removeWhere((e) => e.id == diary.id);
         Bind.find<DiaryTabViewLogic>(tag: diary.categoryId).update();
       }
-      Bind.find<DiaryTabViewLogic>(tag: 'default')
-          .state
-          .diaryList
-          .removeWhere((e) => e.id == diary.id);
+      Bind.find<DiaryTabViewLogic>(
+        tag: 'default',
+      ).state.diaryList.removeWhere((e) => e.id == diary.id);
       Bind.find<DiaryTabViewLogic>(tag: 'default').update();
     } else {
       final newDiary = await IsarUtil.getDiaryByID(diary.isarId);
@@ -38,27 +38,22 @@ mixin BasicCardLogic {
       //如果修改了但是没有修改分类，就替换掉原来的
       if (oldCategoryId == newCategoryId) {
         //替换掉全部分类中的
-        final oldIndex = Bind.find<DiaryTabViewLogic>(tag: 'default')
-            .state
-            .diaryList
-            .indexWhere((e) => e.id == newDiary.id);
-        Bind.find<DiaryTabViewLogic>(tag: 'default')
-            .state
-            .diaryList
-            .replaceRange(oldIndex, oldIndex + 1, [newDiary]);
+        final oldIndex = Bind.find<DiaryTabViewLogic>(
+          tag: 'default',
+        ).state.diaryList.indexWhere((e) => e.id == newDiary.id);
+        Bind.find<DiaryTabViewLogic>(
+          tag: 'default',
+        ).state.diaryList.replaceRange(oldIndex, oldIndex + 1, [newDiary]);
         Bind.find<DiaryTabViewLogic>(tag: 'default').update();
         //如果注册了控制器
         if (newDiary.categoryId != null &&
             Bind.isRegistered<DiaryTabViewLogic>(tag: newDiary.categoryId)) {
-          final oldIndex =
-              Bind.find<DiaryTabViewLogic>(tag: newDiary.categoryId)
-                  .state
-                  .diaryList
-                  .indexWhere((e) => e.id == newDiary.id);
-          Bind.find<DiaryTabViewLogic>(tag: newDiary.categoryId)
-              .state
-              .diaryList
-              .replaceRange(oldIndex, oldIndex + 1, [newDiary]);
+          final oldIndex = Bind.find<DiaryTabViewLogic>(
+            tag: newDiary.categoryId,
+          ).state.diaryList.indexWhere((e) => e.id == newDiary.id);
+          Bind.find<DiaryTabViewLogic>(
+            tag: newDiary.categoryId,
+          ).state.diaryList.replaceRange(oldIndex, oldIndex + 1, [newDiary]);
           Bind.find<DiaryTabViewLogic>(tag: newDiary.categoryId).update();
         }
         //await Bind.find<DiaryLogic>().updateDiary(oldCategoryId);
@@ -75,10 +70,7 @@ mixin BasicCardLogic {
   Future<void> toDiaryInCalendar(Diary diary) async {
     await HapticFeedback.mediumImpact();
     Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary.id);
-    await Get.toNamed(
-      AppRoutes.diaryPage,
-      arguments: [diary.clone(), false],
-    );
+    await Get.toNamed(AppRoutes.diaryPage, arguments: [diary.clone(), false]);
   }
 
   int getMaxLines(String context) {

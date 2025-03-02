@@ -110,10 +110,12 @@ class EditLogic extends GetxController {
     if (Get.arguments.runtimeType == List<Object?>) {
       // 配置日记类型
       state.type = Get.arguments[0] as DiaryType;
-      if (state.type == DiaryType.markdown) {
-        markdownTextEditingController = TextEditingController();
-      } else {
-        quillController = QuillController.basic();
+      switch (state.type) {
+        case DiaryType.text:
+        case DiaryType.richText:
+          quillController = QuillController.basic();
+        case DiaryType.markdown:
+          markdownTextEditingController = TextEditingController();
       }
       state.currentDiary = Diary();
       if (state.firstLineIndent) insertNewLine();
@@ -161,17 +163,28 @@ class EditLogic extends GetxController {
         replaceMap[name] = videoXFile.path;
         state.videoFileList.add(videoXFile);
       }
-      quillController = QuillController(
-        document: Document.fromJson(
-          jsonDecode(
-            await Kmp.replaceWithKmp(
+      switch (state.type) {
+        case DiaryType.text:
+        case DiaryType.richText:
+          quillController = QuillController(
+            document: Document.fromJson(
+              jsonDecode(
+                await Kmp.replaceWithKmp(
+                  text: state.originalDiary!.content,
+                  replacements: replaceMap,
+                ),
+              ),
+            ),
+            selection: const TextSelection.collapsed(offset: 0),
+          );
+        case DiaryType.markdown:
+          markdownTextEditingController = TextEditingController(
+            text: await Kmp.replaceWithKmp(
               text: state.originalDiary!.content,
               replacements: replaceMap,
             ),
-          ),
-        ),
-        selection: const TextSelection.collapsed(offset: 0),
-      );
+          );
+      }
       state.totalCount.value = _toPlainText().length;
     }
     state.isInit = true;

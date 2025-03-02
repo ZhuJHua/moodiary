@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/common/values/diary_type.dart';
 import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/diary_card/basic_card_logic.dart';
 import 'package:moodiary/utils/file_util.dart';
@@ -84,11 +86,23 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                           ),
                         ),
                       ),
-                      Text(
-                        DateFormat.yMMMMEEEEd().add_Hms().format(diary.time),
-                        style: textStyle.labelSmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                      Row(
+                        spacing: 4.0,
+                        children: [
+                          Text(
+                            DateFormat.yMMMMEEEEd().add_Hms().format(
+                              diary.time,
+                            ),
+                            style: textStyle.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          FaIcon(
+                            DiaryType.fromValue(diary.type).icon,
+                            size: 10,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ],
                       ),
                     ],
                   ),
