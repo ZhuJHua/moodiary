@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Enhance UI and improve desktop experience (#179)
 - Add workflow_run trigger for Git Cliff completion
 - Update changelog workflow to check PR merge status before generating changelog
+- Add an abstract sync interface
 
 ### 🐛 Bug Fixes
 
