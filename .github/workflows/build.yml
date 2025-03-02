@@ -69,7 +69,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download APK Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: android-apk
           path: artifacts/android
