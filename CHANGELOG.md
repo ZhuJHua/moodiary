@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - Add workflow_run trigger for Git Cliff completion
 - Update changelog workflow to check PR merge status before generating changelog
 - Add an abstract sync interface
+- Enhance diary card views with icons and improve page transitions
 
 ### 🐛 Bug Fixes
 
