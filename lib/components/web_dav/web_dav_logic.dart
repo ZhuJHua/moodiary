@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary/common/values/webdav.dart';
 import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/presentation/secure_storage.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -27,6 +28,7 @@ class WebDavLogic extends GetxController {
     if (state.hasOption.value) {
       await checkConnectivity();
     }
+    await checkHasUserKey();
     super.onReady();
   }
 
@@ -39,6 +41,11 @@ class WebDavLogic extends GetxController {
     usernameController.dispose();
     passwordController.dispose();
     super.onClose();
+  }
+
+  Future<void> checkHasUserKey() async {
+    state.hasUserKey.value =
+        (await SecureStorageUtil.getValue('userKey')) != null;
   }
 
   Future<void> checkConnectivity() async {
@@ -110,5 +117,10 @@ class WebDavLogic extends GetxController {
   void setAutoSyncAfterChange(bool value) async {
     await PrefUtil.setValue<bool>('autoSyncAfterChange', value);
     state.autoSyncAfterChange.value = value;
+  }
+
+  void setSyncEncryption(bool value) async {
+    await PrefUtil.setValue<bool>('syncEncryption', value);
+    state.syncEncryption.value = value;
   }
 }

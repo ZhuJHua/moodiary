@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' as flutter;
 import 'package:moodiary/common/models/isar/category.dart';
@@ -9,6 +10,8 @@ import 'package:moodiary/common/values/webdav.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
 import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/presentation/secure_storage.dart';
+import 'package:moodiary/utils/aes_util.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/log_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -40,7 +43,6 @@ class WebDavUtil {
       _client = null;
     }
     // 尝试连接，如果失败，
-
     try {
       _client = webdav.newClient(
         webDavOption[0],
@@ -134,6 +136,7 @@ class WebDavUtil {
     await updateServerSyncData(serverSyncData);
     // 删除日记json
     await _client!.remove('${WebDavOptions.diaryPath}/${diary.id}.json');
+    await _client!.remove('${WebDavOptions.diaryPath}/${diary.id}.bin');
     // 遍历删除日记资源文件
     await _deleteFiles(
         diary.imageName, '${WebDavOptions.imagePath}/${diary.id}', 'image');
@@ -341,7 +344,30 @@ class WebDavUtil {
     }
   }
 
+  Future<bool> _checkShouldEncrypt() async {
+    return PrefUtil.getValue<bool>('syncEncryption') == true &&
+        (await SecureStorageUtil.getValue('userKey')) != null;
+  }
+
   Future<void> _uploadDiary(Diary diary) async {
+    Uint8List diaryData;
+    String diaryPath;
+    // 检查有没有开启加密
+    final shouldEncrypt = await _checkShouldEncrypt();
+    if (shouldEncrypt) {
+      // 尝试获取用户密钥
+      final userKey = await SecureStorageUtil.getValue('userKey');
+      // 生成加密密钥, 用日记 ID 和用户密钥生成
+      final key = await AesUtil.deriveKey(salt: diary.id, userKey: userKey!);
+      // 加密日记内容
+      diaryPath = '${WebDavOptions.diaryPath}/${diary.id}.bin';
+      diaryData =
+          await AesUtil.encrypt(key: key, data: jsonEncode(diary.toJson()));
+    } else {
+      diaryPath = '${WebDavOptions.diaryPath}/${diary.id}.json';
+      diaryData = utf8.encode(jsonEncode(diary.toJson()));
+    }
+
     // 检查并上传分类
     if (diary.categoryId != null) {
       final categoryName =
@@ -350,20 +376,16 @@ class WebDavUtil {
         await _uploadCategory(diary.categoryId!, categoryName);
       }
     }
-
-    // 上传日记 JSON 数据
-    final diaryPath = '${WebDavOptions.diaryPath}/${diary.id}.json';
-    final diaryData = jsonEncode(diary.toJson());
-    LogUtil.printInfo(diaryData);
     try {
       _client!.setHeaders({
         'accept-charset': 'utf-8',
-        'Content-Type': 'application/json',
+        'Content-Type':
+            shouldEncrypt ? 'application/octet-stream' : 'application/json',
       });
-      await _client!.write(diaryPath, utf8.encode(diaryData));
-      LogUtil.printInfo('Diary JSON uploaded: $diaryPath');
+      await _client!.write(diaryPath, diaryData);
+      LogUtil.printInfo('Diary  uploaded: $diaryPath');
     } catch (e) {
-      LogUtil.printInfo('Failed to upload diary JSON: $e');
+      LogUtil.printInfo('Failed to upload diary : $e');
       rethrow;
     }
 
@@ -422,17 +444,43 @@ class WebDavUtil {
 
   Future<Diary> _downloadDiary(String diaryId) async {
     // 下载日记 JSON 数据
-    final diaryPath = '${WebDavOptions.diaryPath}/$diaryId.json';
+    final normalDiaryPath = '${WebDavOptions.diaryPath}/$diaryId.json';
+    final encryptedDiaryPath = '${WebDavOptions.diaryPath}/$diaryId.bin';
     late Diary diary;
-
     try {
-      final diaryData = await _client!.read(diaryPath);
-      diary = await flutter.compute(Diary.fromJson,
-          jsonDecode(utf8.decode(diaryData)) as Map<String, dynamic>);
-      LogUtil.printInfo('Diary JSON downloaded: $diaryPath');
+      // 先尝试普通 JSON 格式
+      try {
+        final diaryData = await _client!.read(normalDiaryPath);
+        diary = await flutter.compute(Diary.fromJson,
+            jsonDecode(utf8.decode(diaryData)) as Map<String, dynamic>);
+        LogUtil.printInfo('Diary JSON downloaded: $normalDiaryPath');
+      } catch (e) {
+        LogUtil.printInfo('Failed to download normal JSON: $e');
+        // 再尝试二进制格式
+        try {
+          final encryptedDiaryData = await _client!.read(encryptedDiaryPath);
+          // 解密日记内容
+          final userKey = await SecureStorageUtil.getValue('userKey');
+          final shouldEncrypt = await _checkShouldEncrypt();
+          if (!shouldEncrypt) {
+            throw Exception('User key not found or encryption not enabled');
+          }
+          final key = await AesUtil.deriveKey(salt: diaryId, userKey: userKey!);
+          final decryptedData = await AesUtil.decrypt(
+            key: key,
+            encryptedData: Uint8List.fromList(encryptedDiaryData),
+          );
+          diary = await flutter.compute(Diary.fromJson,
+              jsonDecode(decryptedData) as Map<String, dynamic>);
+          LogUtil.printInfo('Diary binary downloaded: $encryptedDiaryPath');
+        } catch (e) {
+          LogUtil.printInfo('Failed to download binary diary: $e');
+          // 两种方式都失败，抛出最终异常
+          rethrow;
+        }
+      }
     } catch (e) {
-      LogUtil.printInfo('Failed to download diary JSON: $e');
-      rethrow;
+      throw Exception('Failed to download diary: $e');
     }
 
     // 同步分类

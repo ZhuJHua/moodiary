@@ -59,6 +59,14 @@ class WebDavComponent extends StatelessWidget {
             subtitle: l10n.webdavSyncAfterChangeDes,
           );
         }),
+        Obx(() {
+          return AdaptiveSwitchListTile(
+            value: state.syncEncryption.value,
+            onChanged: state.hasUserKey.value ? logic.setSyncEncryption : null,
+            title: Text(l10n.webdavSyncEncryption),
+            subtitle: l10n.webdavSyncEncryptionDes,
+          );
+        }),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Form(
