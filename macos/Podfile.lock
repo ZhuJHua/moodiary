@@ -52,10 +52,6 @@ PODS:
     - FlutterMacOS
   - network_info_plus (0.0.1):
     - FlutterMacOS
-  - ObjectBox (4.1.0)
-  - objectbox_flutter_libs (0.0.1):
-    - FlutterMacOS
-    - ObjectBox (= 4.1.0)
   - OrderedSet (6.0.3)
   - package_info_plus (0.0.1):
     - FlutterMacOS
@@ -114,7 +110,6 @@ DEPENDENCIES:
   - media_kit_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos`)
   - moodiary_rust (from `Flutter/ephemeral/.symlinks/plugins/moodiary_rust/macos`)
   - network_info_plus (from `Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos`)
-  - objectbox_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/objectbox_flutter_libs/macos`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
   - quill_native_bridge_macos (from `Flutter/ephemeral/.symlinks/plugins/quill_native_bridge_macos/macos`)
@@ -131,7 +126,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - ObjectBox
     - OrderedSet
 
 EXTERNAL SOURCES:
@@ -185,8 +179,6 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/moodiary_rust/macos
   network_info_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos
-  objectbox_flutter_libs:
-    :path: Flutter/ephemeral/.symlinks/plugins/objectbox_flutter_libs/macos
   package_info_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos
   path_provider_foundation:
@@ -240,8 +232,6 @@ SPEC CHECKSUMS:
   media_kit_video: fa6564e3799a0a28bff39442334817088b7ca758
   moodiary_rust: 2f0ea7e60816f68d22e387a10b460860168eced5
   network_info_plus: 21d1cd6a015ccb2fdff06a1fbfa88d54b4e92f61
-  ObjectBox: bf3d4b51075d52868422d5d1f2f2141b1d630d30
-  objectbox_flutter_libs: 947b3a4e371d88c3c5b59f6a2e95e108cc072e6b
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
   package_info_plus: f0052d280d17aa382b932f399edf32507174e870
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
