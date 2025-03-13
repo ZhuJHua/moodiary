@@ -20,7 +20,7 @@ dependencies:
   flutter_drawing_board: 0.9.5
   flutter_displaymode: 0.6.0
   fl_chart: 0.70.2
-  file_picker: 9.0.2
+  file_picker: 9.1.0
   local_auth: 2.3.0
   local_auth_android: 1.0.48
   permission_handler: 11.4.0
