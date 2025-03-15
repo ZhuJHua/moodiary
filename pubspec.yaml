@@ -79,7 +79,7 @@ dependencies:
   image_picker_android: 0.8.12+22
   video_player_media_kit: 1.0.5
   video_player: 2.9.3
-  chewie: 1.10.0
+  chewie: 1.11.0
   flutter_markdown: 0.7.6+2
   image_picker_platform_interface: 2.10.1
   flutter_image_compress: 2.4.0
