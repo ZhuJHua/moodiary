@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary/common/values/view_mode.dart';
+import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/base/sheet.dart';
 import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/category_choice_sheet/category_choice_sheet_view.dart';
@@ -12,7 +13,6 @@ import 'package:moodiary/components/sync_dash_board/sync_dash_board_view.dart';
 import 'package:moodiary/main.dart';
 import 'package:moodiary/utils/webdav_util.dart';
 import 'package:refreshed/refreshed.dart';
-import 'package:rive_animated_icon/rive_animated_icon.dart';
 
 import 'diary_logic.dart';
 
@@ -31,14 +31,7 @@ class DiaryPage extends StatelessWidget {
           color: colorScheme.primaryContainer,
           shape: BoxShape.circle,
         ),
-        child: RiveAnimatedIcon(
-          riveIcon: RiveIcon.reload,
-          color: colorScheme.onPrimaryContainer,
-          width: 24,
-          height: 24,
-          loopAnimation: true,
-          onTap: onTap,
-        ),
+        child: const MoodiarySyncing(),
       ),
     );
   }

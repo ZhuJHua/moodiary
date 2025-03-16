@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary/components/loading/loading.dart';
+import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 
@@ -27,65 +27,67 @@ class CategoryChoiceSheetComponent extends StatelessWidget {
             child: Obx(() {
               return AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
-                child: !state.isFetching.value
-                    ? Wrap(
-                        spacing: 4.0,
-                        runSpacing: 4.0,
-                        alignment: WrapAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                l10n.categoryAllCategory,
-                                style: textStyle.titleMedium,
-                              ),
-                              Text(
-                                state.categoryList.length.toString(),
-                                style: textStyle.titleMedium,
-                              )
-                            ],
-                          ),
-                          ActionChip(
-                            label: Text(l10n.categoryAll),
-                            onPressed: () {
-                              logic.selectCategory(categoryId: null);
-                            },
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                            padding: EdgeInsets.zero,
-                            backgroundColor: colorScheme.tertiaryContainer,
-                          ),
-                          ...List.generate(state.categoryList.value.length,
-                              (index) {
-                            return ActionChip(
-                              label: Text(
-                                  state.categoryList.value[index].categoryName),
+                child:
+                    !state.isFetching.value
+                        ? Wrap(
+                          spacing: 4.0,
+                          runSpacing: 4.0,
+                          alignment: WrapAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  l10n.categoryAllCategory,
+                                  style: textStyle.titleMedium,
+                                ),
+                                Text(
+                                  state.categoryList.length.toString(),
+                                  style: textStyle.titleMedium,
+                                ),
+                              ],
+                            ),
+                            ActionChip(
+                              label: Text(l10n.categoryAll),
                               onPressed: () {
-                                logic.selectCategory(
-                                    categoryId:
-                                        state.categoryList.value[index].id);
+                                logic.selectCategory(categoryId: null);
                               },
                               materialTapTargetSize:
                                   MaterialTapTargetSize.shrinkWrap,
                               padding: EdgeInsets.zero,
-                              backgroundColor: colorScheme.secondaryContainer,
-                            );
-                          }),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {
-                                logic.toCategoryManage(context);
-                              },
-                              child: Text(l10n.settingFunctionCategoryManage),
+                              backgroundColor: colorScheme.tertiaryContainer,
                             ),
-                          )
-                        ],
-                      )
-                    : const Center(
-                        child: Processing(),
-                      ),
+                            ...List.generate(state.categoryList.value.length, (
+                              index,
+                            ) {
+                              return ActionChip(
+                                label: Text(
+                                  state.categoryList.value[index].categoryName,
+                                ),
+                                onPressed: () {
+                                  logic.selectCategory(
+                                    categoryId:
+                                        state.categoryList.value[index].id,
+                                  );
+                                },
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                padding: EdgeInsets.zero,
+                                backgroundColor: colorScheme.secondaryContainer,
+                              );
+                            }),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  logic.toCategoryManage(context);
+                                },
+                                child: Text(l10n.settingFunctionCategoryManage),
+                              ),
+                            ),
+                          ],
+                        )
+                        : const MoodiaryLoading(),
               );
             }),
           ),

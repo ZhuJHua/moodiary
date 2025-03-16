@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary/common/values/view_mode.dart';
 import 'package:moodiary/components/base/clipper.dart';
+import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/diary_card/grid_diary_card_view.dart';
 import 'package:moodiary/components/diary_card/list_diary_card_view.dart';
-import 'package:moodiary/components/loading/loading.dart';
 import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
 import 'package:sliver_tools/sliver_tools.dart';
@@ -19,13 +19,7 @@ class DiaryTabViewComponent extends StatelessWidget {
   Widget _buildPlaceholder(double height) {
     return SliverToBoxAdapter(
       key: const ValueKey('placeholder'),
-      child: SizedBox(
-        height: height,
-        child: const Align(
-          alignment: Alignment.bottomCenter,
-          child: EditingLoading(),
-        ),
-      ),
+      child: SizedBox(height: height, child: const MoodiaryLoading()),
     );
   }
 
@@ -34,10 +28,7 @@ class DiaryTabViewComponent extends StatelessWidget {
       key: const ValueKey('empty'),
       child: SizedBox(
         height: height,
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Text(l10n.diaryTabViewEmpty),
-        ),
+        child: Center(child: Text(l10n.diaryTabViewEmpty)),
       ),
     );
   }
@@ -52,7 +43,12 @@ class DiaryTabViewComponent extends StatelessWidget {
     );
     final state = Bind.find<DiaryTabViewLogic>(tag: logicTag).state;
     final size = MediaQuery.sizeOf(context);
-    final placeholderHeight = size.height / 2 - kToolbarHeight - 46;
+    final placeholderHeight =
+        size.height -
+        barHeight -
+        MediaQuery.paddingOf(context).bottom -
+        56 -
+        46;
 
     Widget buildGrid() {
       return Obx(() {

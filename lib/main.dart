@@ -39,12 +39,7 @@ Future<void> _initSystem() async {
   await IsarUtil.initIsar();
   await ThemeUtil().buildTheme();
   await WebDavUtil().initWebDav();
-  VideoPlayerMediaKit.ensureInitialized(
-    android: true,
-    iOS: true,
-    macOS: true,
-    windows: true,
-  );
+  VideoPlayerMediaKit.ensureInitialized(windows: true);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

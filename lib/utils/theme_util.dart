@@ -310,6 +310,14 @@ class ThemeUtil {
         thickness: WidgetStateProperty.all(4.0),
         radius: const Radius.circular(2.0),
       ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        // ignore: deprecated_member_use
+        year2023: false,
+      ),
+      sliderTheme: const SliderThemeData(
+        // ignore: deprecated_member_use
+        year2023: false,
+      ),
       brightness: brightness,
       appBarTheme: AppBarTheme(
         surfaceTintColor: Colors.transparent,

@@ -1,7 +1,7 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary/components/base/button.dart';
-import 'package:moodiary/components/loading/loading.dart';
+import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
 import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
@@ -71,9 +71,7 @@ class CategoryManagerPage extends StatelessWidget {
                   },
                   itemCount: state.categoryList.length,
                 )
-              : const Center(
-                  child: Processing(),
-                ),
+              : const MoodiaryLoading(),
         );
       }),
       floatingActionButton: Obx(() {

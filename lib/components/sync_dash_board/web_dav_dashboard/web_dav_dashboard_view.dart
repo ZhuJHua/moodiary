@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:moodiary/common/values/webdav.dart';
-import 'package:moodiary/components/loading/loading.dart';
+import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
 import 'package:moodiary/main.dart';
 import 'package:moodiary/utils/webdav_util.dart';
@@ -198,7 +198,7 @@ class WebDavDashboardComponent extends StatelessWidget {
                   ],
                 ],
               ),
-              if (state.isFetching) const Center(child: Processing()),
+              if (state.isFetching) const MoodiaryLoading(),
               if (state.connectivityStatus.value ==
                   WebDavConnectivityStatus.unconnected)
                 _buildError(),

@@ -4,7 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/media_type.dart';
 import 'package:moodiary/components/base/clipper.dart';
-import 'package:moodiary/components/loading/loading.dart';
+import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/lottie_modal/lottie_modal.dart';
 import 'package:moodiary/components/media/media_audio_view.dart';
 import 'package:moodiary/components/media/media_image_view.dart';
@@ -120,10 +120,7 @@ class MediaPage extends StatelessWidget {
                 duration: const Duration(milliseconds: 400),
                 child:
                     state.isFetching
-                        ? const Center(
-                          key: ValueKey('searching'),
-                          child: SearchLoading(),
-                        )
+                        ? const MoodiaryLoading()
                         : (state.datetimeMediaMap.isNotEmpty
                             ? PageClipper(
                               child: ScrollablePositionedList.builder(
