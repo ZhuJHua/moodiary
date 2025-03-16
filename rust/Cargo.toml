@@ -1,16 +1,20 @@
 [package]
 name = "moodiary_rust"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [lib]
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-flutter_rust_bridge = "=2.8.0"
+flutter_rust_bridge = "=2.9.0"
 image = "0.25.5"
-fast_image_resize = { version = "5.1.1", features = ["image"] }
-anyhow = "1.0.95"
-bytemuck = "1.21.0"
-ttf-parser = {git = "https://github.com/inferiorhumanorgans/ttf-parser.git", branch = "fvar-instance"}
-ring = "0.17.8"
+fast_image_resize = { version = "5.1.2", features = ["image"] }
+anyhow = "1.0.97"
+ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", branch = "fvar" }
+ring = "0.17.14"
+zip = "2.2.3"
+walkdir = "2.5.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

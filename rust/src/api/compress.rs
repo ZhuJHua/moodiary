@@ -10,8 +10,8 @@ use image::{
         jpeg::JpegEncoder,
         png::{CompressionType, FilterType, PngEncoder},
         webp::WebPEncoder,
-    },
-    DynamicImage, GenericImageView, ImageEncoder, ImageReader,
+    }, DynamicImage, GenericImageView, ImageEncoder,
+    ImageReader,
 };
 
 use super::constants::CompressFormat;

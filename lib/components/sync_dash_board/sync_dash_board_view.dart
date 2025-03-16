@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary/components/loading/loading.dart';
+import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/local_send/local_send_view.dart';
 import 'package:moodiary/components/sync_dash_board/sync_dash_board_state.dart';
 import 'package:moodiary/components/sync_dash_board/web_dav_dashboard/web_dav_dashboard_view.dart';
@@ -21,9 +21,10 @@ class SyncDashBoardComponent extends StatelessWidget {
       assignId: true,
       builder: (_) {
         return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            child: !state.isFetching
-                ? Column(
+          duration: const Duration(milliseconds: 400),
+          child:
+              !state.isFetching
+                  ? Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Expanded(
@@ -41,10 +42,11 @@ class SyncDashBoardComponent extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             IconButton(
-                                onPressed: () {
-                                  logic.changePage(0);
-                                },
-                                icon: const Icon(Icons.chevron_left_rounded)),
+                              onPressed: () {
+                                logic.changePage(0);
+                              },
+                              icon: const Icon(Icons.chevron_left_rounded),
+                            ),
                             Expanded(
                               child: Center(
                                 child: SmoothPageIndicator(
@@ -52,24 +54,27 @@ class SyncDashBoardComponent extends StatelessWidget {
                                   count: 2,
                                   axisDirection: Axis.horizontal,
                                   effect: ExpandingDotsEffect(
-                                      dotWidth: 8.0,
-                                      dotHeight: 8.0,
-                                      activeDotColor: colorScheme.primary,
-                                      dotColor: colorScheme.secondary),
+                                    dotWidth: 8.0,
+                                    dotHeight: 8.0,
+                                    activeDotColor: colorScheme.primary,
+                                    dotColor: colorScheme.secondary,
+                                  ),
                                 ),
                               ),
                             ),
                             IconButton(
-                                onPressed: () {
-                                  logic.changePage(1);
-                                },
-                                icon: const Icon(Icons.chevron_right_rounded)),
+                              onPressed: () {
+                                logic.changePage(1);
+                              },
+                              icon: const Icon(Icons.chevron_right_rounded),
+                            ),
                           ],
                         ),
                       ),
                     ],
                   )
-                : const Center(child: NetworkLoading1()));
+                  : const MoodiaryLoading(),
+        );
       },
     );
   }

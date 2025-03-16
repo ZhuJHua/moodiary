@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/colors.dart';
+import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/diary_card/calendar_diary_card_view.dart';
-import 'package:moodiary/components/loading/loading.dart';
 import 'package:moodiary/components/time_line/time_line_view.dart';
 import 'package:moodiary/utils/array_util.dart';
 import 'package:refreshed/refreshed.dart';
@@ -219,10 +219,7 @@ class CalendarPage extends StatelessWidget {
           duration: const Duration(milliseconds: 300),
           child:
               state.isFetching.value
-                  ? const Center(
-                    key: ValueKey('processing'),
-                    child: Processing(),
-                  )
+                  ? const MoodiaryLoading()
                   : (state.currentMonthDiaryList.isNotEmpty
                       ? buildCardList()
                       : Center(

@@ -1,5 +1,4 @@
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/log_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
@@ -12,15 +11,17 @@ class BackupSyncLogic extends GetxController {
     final dataPath = FileUtil.getRealPath('', '');
     final zipPath = FileUtil.getCachePath('');
     final isolateParams = {'zipPath': zipPath, 'dataPath': dataPath};
-    final path = await compute(FileUtil.zipFile, isolateParams);
+    final path = await FileUtil.zipFileUseRust(isolateParams);
     LogUtil.printInfo(path);
     await Share.shareXFiles([XFile(path)]);
   }
 
   //导入
   Future<void> import() async {
-    final FilePickerResult? result = await FilePicker.platform
-        .pickFiles(allowedExtensions: ['zip'], type: FileType.custom);
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowedExtensions: ['zip'],
+      type: FileType.custom,
+    );
     if (result != null) {
       NoticeUtil.showToast('数据导入中，请不要离开页面');
       await FileUtil.extractFile(result.files.single.path!);

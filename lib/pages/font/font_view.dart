@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/base/text.dart';
-import 'package:moodiary/components/loading/loading.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
 import 'package:moodiary/main.dart';
 import 'package:refreshed/refreshed.dart';
-import 'package:rive_animated_icon/rive_animated_icon.dart';
 
 import 'font_logic.dart';
 
@@ -36,24 +35,18 @@ class FontPage extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: AppBorderRadius.mediumBorderRadius,
               border: Border.all(
-                  color: isSelected ? activeColor : inactiveColor,
-                  width: isSelected ? 2 : 1),
+                color: isSelected ? activeColor : inactiveColor,
+                width: isSelected ? 2 : 1,
+              ),
             ),
             width: 64,
             height: 64,
             child: const Center(
-              child: Text('Aa',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontFamily: '',
-                  )),
+              child: Text('Aa', style: TextStyle(fontSize: 32, fontFamily: '')),
             ),
           ),
         ),
-        AdaptiveText(
-          l10n.fontStyleSystem,
-          style: textStyle,
-        ),
+        AdaptiveText(l10n.fontStyleSystem, style: textStyle),
       ],
     );
   }
@@ -83,27 +76,21 @@ class FontPage extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: AppBorderRadius.mediumBorderRadius,
               border: Border.all(
-                  color: isSelected ? activeColor : inactiveColor,
-                  width: isSelected ? 2 : 1),
+                color: isSelected ? activeColor : inactiveColor,
+                width: isSelected ? 2 : 1,
+              ),
             ),
             width: 64,
             height: 64,
             child: Center(
               child: Text(
                 'Aa',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontFamily: fontName,
-                ),
+                style: TextStyle(fontSize: 32, fontFamily: fontName),
               ),
             ),
           ),
         ),
-        AdaptiveText(
-          fontName,
-          style: textStyle,
-          maxWidth: 64,
-        ),
+        AdaptiveText(fontName, style: textStyle, maxWidth: 64),
       ],
     );
   }
@@ -123,18 +110,12 @@ class FontPage extends StatelessWidget {
           },
           child: Container(
             decoration: BoxDecoration(
-                borderRadius: AppBorderRadius.mediumBorderRadius, color: color),
+              borderRadius: AppBorderRadius.mediumBorderRadius,
+              color: color,
+            ),
             width: 64,
             height: 64,
-            child: Center(
-              child: LoopingRiveIcon(
-                riveIcon: RiveIcon.add,
-                width: 32,
-                height: 32,
-                strokeWidth: 4,
-                color: iconColor,
-              ),
-            ),
+            child: const Center(child: Icon(Icons.add_circle_rounded)),
           ),
         ),
         const SizedBox(height: 24),
@@ -203,28 +184,30 @@ class FontPage extends StatelessWidget {
         ),
         ...List.generate(state.fontList.length, (index) {
           return _buildFont(
-              isSelected: state.currentFontFamily.value ==
-                  state.fontList[index].fontFamily,
-              fontName: state.fontList[index].fontFamily,
-              activeColor: colorScheme.primary,
-              inactiveColor: colorScheme.surfaceContainerHighest,
-              textStyle: textStyle.labelSmall,
-              context: context,
-              onTap: () {
-                logic.changeSelectedFont(font: state.fontList[index]);
-              },
-              onLongPress: () async {
-                // 显示删除字体对话框
-                final res = showOkCancelAlertDialog(
-                  context: context,
-                  title: l10n.hint,
-                  style: AdaptiveStyle.material,
-                  message: l10n.fontDeleteDes(state.fontList[index].fontFamily),
-                );
-                if (await res == OkCancelResult.ok) {
-                  logic.deleteFont(font: state.fontList[index]);
-                }
-              });
+            isSelected:
+                state.currentFontFamily.value ==
+                state.fontList[index].fontFamily,
+            fontName: state.fontList[index].fontFamily,
+            activeColor: colorScheme.primary,
+            inactiveColor: colorScheme.surfaceContainerHighest,
+            textStyle: textStyle.labelSmall,
+            context: context,
+            onTap: () {
+              logic.changeSelectedFont(font: state.fontList[index]);
+            },
+            onLongPress: () async {
+              // 显示删除字体对话框
+              final res = showOkCancelAlertDialog(
+                context: context,
+                title: l10n.hint,
+                style: AdaptiveStyle.material,
+                message: l10n.fontDeleteDes(state.fontList[index].fontFamily),
+              );
+              if (await res == OkCancelResult.ok) {
+                logic.deleteFont(font: state.fontList[index]);
+              }
+            },
+          );
         }),
         _buildManage(
           onTap: logic.addFont,
@@ -239,21 +222,19 @@ class FontPage extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: size.width < 600
-                ? SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Obx(() {
-                      return Row(
-                        spacing: 16,
-                        children: buildFontButton(),
-                      );
-                    }),
-                  )
-                : Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: buildFontButton(),
-                  ),
+            child:
+                size.width < 600
+                    ? SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Obx(() {
+                        return Row(spacing: 16, children: buildFontButton());
+                      }),
+                    )
+                    : Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: buildFontButton(),
+                    ),
           ),
           const Divider(endIndent: 24, indent: 24),
           AdaptiveListTile(
@@ -270,7 +251,7 @@ class FontPage extends StatelessWidget {
                     1.1 => l10n.fontSizeLarge,
                     1.2 => l10n.fontSizeSuperLarge,
                     _ => l10n.fontSizeStandard,
-                  })
+                  }),
                 ],
               ),
             ),
@@ -298,47 +279,49 @@ class FontPage extends StatelessWidget {
             backgroundColor: colorScheme.surfaceContainerLow,
           ),
           backgroundColor: colorScheme.surfaceContainerLow,
-          body: size.width < 600
-              ? Obx(() {
-                  return !state.isFetching.value
-                      ? Padding(
+          body:
+              size.width < 600
+                  ? Obx(() {
+                    return !state.isFetching.value
+                        ? Padding(
                           padding: EdgeInsets.only(
-                              left: 16,
-                              right: 16,
-                              bottom: state.bottomSheetHeight.value),
+                            left: 16,
+                            right: 16,
+                            bottom: state.bottomSheetHeight.value,
+                          ),
                           child: buildText(),
                         )
-                      : const Center(
-                          child: Processing(),
-                        );
-                })
-              : Obx(() {
-                  return !state.isFetching.value
-                      ? RepaintBoundary(
+                        : const MoodiaryLoading();
+                  })
+                  : Obx(() {
+                    return !state.isFetching.value
+                        ? RepaintBoundary(
                           child: Row(
                             children: [
                               Expanded(
-                                  child: Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 16, right: 16),
-                                child: buildText(),
-                              )),
-                              Expanded(child: buildOption())
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 16,
+                                    right: 16,
+                                  ),
+                                  child: buildText(),
+                                ),
+                              ),
+                              Expanded(child: buildOption()),
                             ],
                           ),
                         )
-                      : const Center(
-                          child: Processing(),
-                        );
-                }),
+                        : const MoodiaryLoading();
+                  }),
           resizeToAvoidBottomInset: false,
-          floatingActionButton: size.width > 600
-              ? FloatingActionButton.extended(
-                  onPressed: logic.saveFontScale,
-                  label: Text(l10n.apply),
-                  icon: const Icon(Icons.check_rounded),
-                )
-              : null,
+          floatingActionButton:
+              size.width > 600
+                  ? FloatingActionButton.extended(
+                    onPressed: logic.saveFontScale,
+                    label: Text(l10n.apply),
+                    icon: const Icon(Icons.check_rounded),
+                  )
+                  : null,
           bottomSheet: Obx(() {
             return Visibility(
               visible: !state.isFetching.value && size.width < 600,
@@ -376,9 +359,7 @@ class FontPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: buildOption(),
-                    ),
+                    Expanded(child: buildOption()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: FilledButton(

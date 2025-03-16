@@ -1,6 +1,6 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
-import 'package:moodiary/components/loading/loading.dart';
+import 'package:moodiary/components/base/loading.dart';
 import 'package:refreshed/refreshed.dart';
 
 import 'video_player_logic.dart';
@@ -13,11 +13,12 @@ class VideoPlayerComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final VideoPlayerLogic logic =
-        Get.put(VideoPlayerLogic(videoPath: videoPath), tag: videoPath);
+    final VideoPlayerLogic logic = Get.put(
+      VideoPlayerLogic(videoPath: videoPath),
+      tag: videoPath,
+    );
     final VideoPlayerState state =
         Bind.find<VideoPlayerLogic>(tag: videoPath).state;
-    final colorScheme = Theme.of(context).colorScheme;
 
     // Widget buildCustomTheme({required Widget child}) {
     //   if (Platform.isAndroid || Platform.isIOS) {
@@ -54,11 +55,7 @@ class VideoPlayerComponent extends StatelessWidget {
         child: Obx(() {
           return state.isInitialized.value
               ? Chewie(controller: logic.chewieController)
-              : Center(
-                  child: MediaLoading(
-                  color: colorScheme.primary,
-                  size: 56,
-                ));
+              : const MoodiaryLoading();
         }),
       ),
     );

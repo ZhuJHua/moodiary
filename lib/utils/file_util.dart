@@ -8,6 +8,7 @@ import 'package:moodiary/common/values/media_type.dart';
 import 'package:moodiary/components/audio_player/audio_player_logic.dart';
 import 'package:moodiary/presentation/isar.dart';
 import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/src/rust/api/zip.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:refreshed/refreshed.dart';
@@ -48,7 +49,7 @@ class FileUtil {
       createDir(join(_filePath, 'image')),
       createDir(join(_filePath, 'audio')),
       createDir(join(_filePath, 'video')),
-      createDir(join(_filePath, 'font'))
+      createDir(join(_filePath, 'font')),
     ]);
   }
 
@@ -80,19 +81,19 @@ class FileUtil {
       return {
         'size': (bytes / 1024).toStringAsFixed(2),
         'unit': 'KB',
-        'bytes': bytes
+        'bytes': bytes,
       };
     } else if (bytes < 1024 * 1024 * 1024) {
       return {
         'size': (bytes / (1024 * 1024)).toStringAsFixed(2),
         'unit': 'MB',
-        'bytes': bytes
+        'bytes': bytes,
       };
     } else {
       return {
         'size': (bytes / (1024 * 1024 * 1024)).toStringAsFixed(2),
         'unit': 'GB',
-        'bytes': bytes
+        'bytes': bytes,
       };
     }
   }
@@ -110,8 +111,10 @@ class FileUtil {
     final dataPath = params['dataPath'] as String;
     final zipEncoder = ZipFileEncoder();
     final datetime = DateTime.now();
-    final fileName =
-        join(zipPath, '心绪日记${datetime.toString().split(' ')[0]}备份.zip');
+    final fileName = join(
+      zipPath,
+      '心绪日记${datetime.toString().split(' ')[0]}备份.zip',
+    );
     final outputStream = OutputFileStream(fileName);
     zipEncoder.createWithStream(outputStream);
     //备份照片
@@ -124,11 +127,62 @@ class FileUtil {
     await zipEncoder.addDirectory(Directory(join(dataPath, 'font')));
     //备份数据库
     await IsarUtil.exportIsar(
-        dataPath, zipPath, '${datetime.millisecondsSinceEpoch}.isar');
+      dataPath,
+      zipPath,
+      '${datetime.millisecondsSinceEpoch}.isar',
+    );
     await zipEncoder.addFile(
-        File(join(zipPath, '${datetime.millisecondsSinceEpoch}.isar')));
+      File(join(zipPath, '${datetime.millisecondsSinceEpoch}.isar')),
+    );
     await zipEncoder.close();
     return fileName;
+  }
+
+  static Future<String> zipFileUseRust(Map<String, dynamic> params) async {
+    final zipPath = params['zipPath'] as String;
+    final dataPath = params['dataPath'] as String;
+    final datetime = DateTime.now();
+    final filePath = join(
+      zipPath,
+      '心绪日记${datetime.toString().split(' ')[0]}备份.zip',
+    );
+    final zip = Zip(filePath: filePath);
+    await Future.wait([
+      zip.addDir(
+        dirPath: join(dataPath, 'image'),
+        basePath: 'image',
+        password: '123',
+      ),
+      zip.addDir(
+        dirPath: join(dataPath, 'audio'),
+        basePath: 'audio',
+        password: '123',
+      ),
+      zip.addDir(
+        dirPath: join(dataPath, 'video'),
+        basePath: 'video',
+        password: '123',
+      ),
+      zip.addDir(
+        dirPath: join(dataPath, 'font'),
+        basePath: 'font',
+        password: '123',
+      ),
+      IsarUtil.exportIsar(
+        dataPath,
+        zipPath,
+        '${datetime.millisecondsSinceEpoch}.isar',
+      ),
+
+      zip.addFile(
+        filePath: join(zipPath, '${datetime.millisecondsSinceEpoch}.isar'),
+        zipPath: '${datetime.millisecondsSinceEpoch}.isar',
+        password: '123',
+      ),
+    ]);
+    await zip.finish();
+    zip.dispose();
+    return filePath;
   }
 
   //导入文件
@@ -203,7 +257,9 @@ class FileUtil {
   }
 
   static Future<void> deleteMediaFiles(
-      Set<String> files, String mediaType) async {
+    Set<String> files,
+    String mediaType,
+  ) async {
     for (final name in files) {
       final filePath = getRealPath(mediaType, name);
       final file = File(filePath);
@@ -222,14 +278,20 @@ class FileUtil {
   }
 
   static Future<void> cleanUpOldMediaFiles(
-      Diary oldDiary, Diary newDiary) async {
+    Diary oldDiary,
+    Diary newDiary,
+  ) async {
     // 通用删除方法
     Future<void> deleteMediaFiles(
-        List<String> oldFiles, List<String> newFiles, String type) async {
-      final tasks = oldFiles
-          .where((file) => !newFiles.contains(file))
-          .map((file) => deleteFile(getRealPath(type, file)))
-          .toList();
+      List<String> oldFiles,
+      List<String> newFiles,
+      String type,
+    ) async {
+      final tasks =
+          oldFiles
+              .where((file) => !newFiles.contains(file))
+              .map((file) => deleteFile(getRealPath(type, file)))
+              .toList();
       await Future.wait(tasks);
     }
 
@@ -264,8 +326,10 @@ class FileUtil {
     // 分批获取日记并收集引用的文件名
     const batchSize = 50;
     for (int i = 0; i < count; i += batchSize) {
-      final diaryList =
-          await isar.diarys.where().findAllAsync(offset: i, limit: batchSize);
+      final diaryList = await isar.diarys.where().findAllAsync(
+        offset: i,
+        limit: batchSize,
+      );
       for (final diary in diaryList) {
         usedImages.addAll(diary.imageName);
         usedAudios.addAll(diary.audioName);
