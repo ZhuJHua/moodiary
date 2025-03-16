@@ -172,13 +172,16 @@ You can buy me a sandwich to keep me motivated to continue developing.
 
 ### List of sponsors
 
-If you want to be on the list, you can leave me a message, in no particular order, and the list will be updated regularly.
+If you want to appear on the list, you can leave your Github username in the comment, in no particular order, and the list will be updated regularly.
 
 | Sponsor                           | Price    | Sponsor                                          | Price  |
 |-----------------------------------| -------- | ------------------------------------------------ | ------ |
-| [dsxksss](https://github.com/dsxksss) | 50 CNY   | 十一                                             | 20 CNY |
-| 沭飏秋                               | 10 CNY   | 朱东杰                                           | 60 CNY |
-| 匿名                                | 5 CNY    | wu                                               | 10 CNY |
-| 云烨                                | 2.76 CNY | 不对味的雪碧                                     | 10 CNY |
-| wireless                          | 6.6 CNY  | [帕斯卡的芦苇](https://github.com/xiaoxianzi-99) | 10 CNY |
-| 不歪猫 | 20 CNY | 曾祥军 | 20 CNY |
+| [dsxksss](https://github.com/dsxksss) | 50 CNY   | 十*                                            | 20 CNY |
+| 沭**                             | 10 CNY   | 朱东杰                                           | 60 CNY |
+| *Person*                    | 5 CNY    | wu*                                             | 10 CNY |
+| 云*                               | 2.76 CNY | 不对味的雪碧                                     | 10 CNY |
+| w**                        | 6.6 CNY  | [帕斯卡的芦苇](https://github.com/xiaoxianzi-99) | 10 CNY |
+| 不** | 20 CNY | 曾** | 20 CNY |
+| *Person* | 20 CNY | *Person* | 18.88 CNY |
+| Lucci | 9.9 CNY | *Person* | 5 CNY |
+| 宋** | 5 CNY | 翰** | 5 CNY |
