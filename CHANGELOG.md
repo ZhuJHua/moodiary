@@ -6,6 +6,17 @@ All notable changes to this project will be documented in this file.
 
 ### 🚀 Features
 
+- *(zip)* Use rust to increase data export speed
+
+### ⚙️ Miscellaneous Tasks
+
+- Fix build
+- *(ci)* Remove redundant dependency installation for Rust builder
+
+## [2.7.3] - 2025-03-02
+
+### 🚀 Features
+
 - *(telegram-bot)* Enhance release notification workflow
 - *(telegram-bot)* Enhance release notification workflow
 - *(llama)* Add LlamaUtil class and update dependencies
@@ -80,6 +91,7 @@ All notable changes to this project will be documented in this file.
 - Update dependencies in pubspec.yaml to latest versions
 - Update NDK and plugin versions in build configuration
 - Update .gitignore
+- *(fix build error)* [skip ci]
 
 ## [2.7.2] - 2025-01-27
 
