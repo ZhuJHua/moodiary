@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/log_util.dart';
@@ -13,7 +15,10 @@ class BackupSyncLogic extends GetxController {
     final isolateParams = {'zipPath': zipPath, 'dataPath': dataPath};
     final path = await FileUtil.zipFileUseRust(isolateParams);
     LogUtil.printInfo(path);
-    await Share.shareXFiles([XFile(path)]);
+    final res = await Share.shareXFiles([XFile(path)]);
+    if (res.status == ShareResultStatus.success) {
+      await File(path).delete();
+    }
   }
 
   //导入

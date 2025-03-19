@@ -148,36 +148,18 @@ class FileUtil {
     );
     final zip = Zip(filePath: filePath);
     await Future.wait([
-      zip.addDir(
-        dirPath: join(dataPath, 'image'),
-        basePath: 'image',
-        password: '123',
-      ),
-      zip.addDir(
-        dirPath: join(dataPath, 'audio'),
-        basePath: 'audio',
-        password: '123',
-      ),
-      zip.addDir(
-        dirPath: join(dataPath, 'video'),
-        basePath: 'video',
-        password: '123',
-      ),
-      zip.addDir(
-        dirPath: join(dataPath, 'font'),
-        basePath: 'font',
-        password: '123',
-      ),
+      zip.addDir(dirPath: join(dataPath, 'image'), basePath: 'image'),
+      zip.addDir(dirPath: join(dataPath, 'audio'), basePath: 'audio'),
+      zip.addDir(dirPath: join(dataPath, 'video'), basePath: 'video'),
+      zip.addDir(dirPath: join(dataPath, 'font'), basePath: 'font'),
       IsarUtil.exportIsar(
         dataPath,
         zipPath,
         '${datetime.millisecondsSinceEpoch}.isar',
       ),
-
       zip.addFile(
         filePath: join(zipPath, '${datetime.millisecondsSinceEpoch}.isar'),
         zipPath: '${datetime.millisecondsSinceEpoch}.isar',
-        password: '123',
       ),
     ]);
     await zip.finish();

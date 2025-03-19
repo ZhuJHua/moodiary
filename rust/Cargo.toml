@@ -13,7 +13,7 @@ fast_image_resize = { version = "5.1.2", features = ["image"] }
 anyhow = "1.0.97"
 ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", branch = "fvar" }
 ring = "0.17.14"
-zip = "2.2.3"
+zip = "2.4.2"
 walkdir = "2.5.0"
 
 [lints.rust]
