@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - *(zip)* Use rust to increase data export speed
 
+### 📚 Documentation
+
+- Update sponsor list
+
 ### ⚙️ Miscellaneous Tasks
 
 - Fix build
