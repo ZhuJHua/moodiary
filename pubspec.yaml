@@ -19,9 +19,9 @@ dependencies:
   dio: 5.8.0+1
   path: 1.9.1
   path_provider: 2.1.5
-  calendar_date_picker2: 1.1.9
+  calendar_date_picker2: 2.0.0
   logger: 2.5.0
-  flutter_drawing_board: 0.9.5
+  flutter_drawing_board: 0.9.8
   flutter_displaymode: 0.6.0
   fl_chart: 0.70.2
   file_picker: 9.2.1
@@ -32,7 +32,7 @@ dependencies:
   device_info_plus: 11.3.3
   package_info_plus: 8.3.0
   uuid: 4.5.1
-  flutter_quill: 11.1.0
+  flutter_quill: 11.1.1
   share_plus: 10.1.4
   url_launcher: 6.3.1
   archive: 4.0.4

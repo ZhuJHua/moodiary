@@ -370,10 +370,10 @@ packages:
     dependency: "direct main"
     description:
       name: calendar_date_picker2
-      sha256: "7b5f20f2a02768df70b3d1fb181c217ab9f8992f39fd6c3fc2ff95b0885820a2"
+      sha256: "293020a283210ccefff669499178c127acbb5e77ae13864f992c8a3e68a8aca1"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.9"
+    version: "2.0.0"
   characters:
     dependency: transitive
     description:
@@ -863,10 +863,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_drawing_board
-      sha256: cc0a7bc665320628f2927632e2cdeee935ebbb48e0e6400ed504663ae704e713
+      sha256: b7eef8c506a12485853e8b4cdc110d1d307993279b588f3a35902a7d7082dbd4
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.5"
+    version: "0.9.8"
   flutter_gen:
     dependency: "direct dev"
     description:
@@ -1132,10 +1132,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_quill
-      sha256: "30a85c53ef19dba5403d0f4b8030c0f22fd2d3614f115ff07004bdecbda2b8f6"
+      sha256: cdc3802700bf6718b8286ec6c999094f45abb885b5b3b65380f25d1b4369032d
       url: "https://pub.dev"
     source: hosted
-    version: "11.1.0"
+    version: "11.1.1"
   flutter_quill_delta_from_html:
     dependency: transitive
     description:
@@ -1302,18 +1302,18 @@ packages:
     dependency: transitive
     description:
       name: geolocator_apple
-      sha256: "419e50f754281d3606750af07b198ecfe938e8648d3e30a898d3ac342ab717e6"
+      sha256: dbdd8789d5aaf14cf69f74d4925ad1336b4433a6efdf2fce91e8955dc921bf22
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.12"
+    version: "2.3.13"
   geolocator_platform_interface:
     dependency: transitive
     description:
       name: geolocator_platform_interface
-      sha256: "722db30c0a2caa82a59d6655f04ef0a492da003036b880342cc67e6f1abc188f"
+      sha256: "30cb64f0b9adcc0fb36f628b4ebf4f731a2961a0ebd849f4b56200205056fe67"
       url: "https://pub.dev"
     source: hosted
-    version: "4.2.5"
+    version: "4.2.6"
   geolocator_web:
     dependency: transitive
     description:
