@@ -42,7 +42,10 @@ dependencies:
   geolocator: 13.0.3
   shared_preferences: 2.5.2
   isar: 4.0.0-dev.14
-  isar_flutter_libs: 4.0.0-dev.14
+  isar_flutter_libs:
+    git:
+      url: https://github.com/ZhuJHua/isar
+      path: packages/isar_flutter_libs
   fluttertoast: 8.2.12
   cached_network_image: 3.4.1
   audioplayers: 6.4.0
@@ -121,7 +124,6 @@ dependencies:
   freezed_annotation: 2.4.4
   json_annotation: 4.9.0
   audioplayers_android_exo: 0.1.2
-
 
 dev_dependencies:
   flutter_test:
