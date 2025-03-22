@@ -7,10 +7,6 @@ environment:
   sdk: '>=3.7.0'
   flutter: '>=3.29.0'
 
-workspace:
-  - rust_builder
-  - rust_builder/cargokit/build_tool
-
 dependencies:
   flutter:
     sdk: flutter
@@ -19,9 +15,9 @@ dependencies:
   dio: 5.8.0+1
   path: 1.9.1
   path_provider: 2.1.5
-  calendar_date_picker2: 1.1.9
+  calendar_date_picker2: 2.0.0
   logger: 2.5.0
-  flutter_drawing_board: 0.9.5
+  flutter_drawing_board: 0.9.8
   flutter_displaymode: 0.6.0
   fl_chart: 0.70.2
   file_picker: 9.2.1
@@ -32,7 +28,7 @@ dependencies:
   device_info_plus: 11.3.3
   package_info_plus: 8.3.0
   uuid: 4.5.1
-  flutter_quill: 11.1.0
+  flutter_quill: 11.1.1
   share_plus: 10.1.4
   url_launcher: 6.3.1
   archive: 4.0.4
@@ -42,7 +38,10 @@ dependencies:
   geolocator: 13.0.3
   shared_preferences: 2.5.2
   isar: 4.0.0-dev.14
-  isar_flutter_libs: 4.0.0-dev.14
+  isar_flutter_libs:
+    git:
+      url: https://github.com/ZhuJHua/isar
+      path: packages/isar_flutter_libs
   fluttertoast: 8.2.12
   cached_network_image: 3.4.1
   audioplayers: 6.4.0
@@ -121,7 +120,6 @@ dependencies:
   freezed_annotation: 2.4.4
   json_annotation: 4.9.0
   audioplayers_android_exo: 0.1.2
-
 
 dev_dependencies:
   flutter_test:

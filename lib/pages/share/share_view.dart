@@ -134,7 +134,7 @@ class SharePage extends StatelessWidget {
             ),
             floatingActionButton: FloatingActionButton(
               onPressed: () {
-                logic.share();
+                logic.share(context);
               },
               child: const Icon(Icons.share),
             ),

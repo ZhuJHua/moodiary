@@ -8,12 +8,13 @@
 <p align="center"><a href="https://answer.moodiary.net" target="_blank">Official forum</a>丨QQ Group: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.27.3-blue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Flutter-3.29.2-blue?style=for-the-badge">
   <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
   <img src="https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a">
   <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
   <img src="https://img.shields.io/github/license/ZhuJHua/moodiary?style=for-the-badge&color=4ac6b7">
 </div>
+
 
 ## ✨ Feature
 
@@ -77,7 +78,7 @@ Some capabilities need to apply for third-party SDKS, and the following service 
 
 - [Tencent Hunyuan](https://cloud.tencent.com/document/product/1729/97731)
 
-### Direct mounting
+### Direct install
 
 Use it by downloading the compiled installation package in Release, or manually compiling it if you don't have the platform you need.
 
@@ -87,9 +88,9 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 > I always use the latest Flutter version (if possible), using newer versions will bring more features and better performance improvements, never use older versions unless you want your code to become a piece of 💩
 
-- Flutter SDK (>= 3.27.0 Stable) (It is recommended to use FVM to manage the Flutter version)
-- Dart (>= 3.6.0)
-- Rust Toolchain
+- Flutter SDK (>= 3.29.0 Stable) (It is recommended to use FVM to manage the Flutter version)
+- Dart (>= 3.7.0)
+- Rust Toolchain (Nightly)
 - Clang/LLVM
 - Compatible IDE (e.g. Android Studio, Visual Studio Code)
 
