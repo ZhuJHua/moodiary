@@ -129,8 +129,6 @@ dev_dependencies:
   msix: 3.16.8
   flutter_lints: 5.0.0
   riverpod_generator: 2.6.3
-  custom_lint: 0.7.0
-  riverpod_lint: 2.6.3
   json_serializable: 6.9.0
   flutter_gen: 5.10.0
   flutter_gen_runner: 5.10.0
