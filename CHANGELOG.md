@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 - Fix build
 - *(ci)* Remove redundant dependency installation for Rust builder
+- Remove custom_lint to fix dart analyzer slow
 
 ## [2.7.3] - 2025-03-02
 
