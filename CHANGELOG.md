@@ -8,6 +8,11 @@ All notable changes to this project will be documented in this file.
 
 - *(zip)* Use rust to increase data export speed
 
+### 🐛 Bug Fixes
+
+- *(share)* Fix capture and share methods
+- Remove workspace
+
 ### 📚 Documentation
 
 - Update sponsor list
@@ -150,7 +155,6 @@ All notable changes to this project will be documented in this file.
 ### ⚙️ Miscellaneous Tasks
 
 - *(flutter)* Update flutter version to 3.27.2
-- *(readme)* Update readme for new features and improvements
 - Simplify telegram release notification
 - *(ci)* Enhance telegram notification with release details
 - Refine release notification workflow
@@ -193,7 +197,6 @@ All notable changes to this project will be documented in this file.
 - *(ci)* Install dependencies for rust builder project in flutter analyze workflow
 - *(workflow)* Update flutter analyze workflow
 - *(ci)* Add dependency installation step for rust builder
-- *(readme)* Update screenshots for different languages
 - *(*)* Bump version to 2.7.1+71
 
 ## [2.7.0] - 2025-01-17
