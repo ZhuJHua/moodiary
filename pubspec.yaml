@@ -7,10 +7,6 @@ environment:
   sdk: '>=3.7.0'
   flutter: '>=3.29.0'
 
-workspace:
-  - rust_builder
-  - rust_builder/cargokit/build_tool
-
 dependencies:
   flutter:
     sdk: flutter
