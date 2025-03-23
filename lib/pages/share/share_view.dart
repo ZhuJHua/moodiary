@@ -19,29 +19,28 @@ class SharePage extends StatelessWidget {
 
     final textStyle = Theme.of(context).textTheme;
     final imageColor = state.diary.imageColor;
-    final colorScheme =
-        imageColor != null
-            ? ColorScheme.fromSeed(
-              seedColor: Color(imageColor),
-              brightness: Theme.of(context).brightness,
-            )
-            : Theme.of(context).colorScheme;
+    final colorScheme = imageColor != null
+        ? ColorScheme.fromSeed(
+            seedColor: Color(imageColor),
+            brightness: Theme.of(context).brightness)
+        : Theme.of(context).colorScheme;
     const cardSize = 300.0;
     return GetBuilder<ShareLogic>(
       builder: (_) {
         return Theme(
-          data:
-              imageColor != null
-                  ? Theme.of(context).copyWith(
-                    colorScheme: ColorScheme.fromSeed(
+          data: imageColor != null
+              ? Theme.of(context).copyWith(
+                  colorScheme: ColorScheme.fromSeed(
                       seedColor: Color(imageColor),
-                      brightness: Theme.of(context).brightness,
-                    ),
-                  )
-                  : Theme.of(context),
+                      brightness: Theme.of(context).brightness))
+              : Theme.of(context),
           child: Scaffold(
             backgroundColor: colorScheme.surface,
-            appBar: AppBar(title: Text(l10n.shareTitle)),
+            appBar: AppBar(
+              title: Text(
+                l10n.shareTitle,
+              ),
+            ),
             extendBodyBehindAppBar: true,
             body: Center(
               child: SingleChildScrollView(
