@@ -20,7 +20,7 @@ dependencies:
   flutter_drawing_board: 0.9.8
   flutter_displaymode: 0.6.0
   fl_chart: 0.70.2
-  file_picker: 9.2.2
+  file_picker: 9.2.3
   local_auth: 2.3.0
   local_auth_android: 1.0.48
   permission_handler: 11.4.0
@@ -64,9 +64,12 @@ dependencies:
   cross_file: 0.3.4+2
   fc_native_video_thumbnail: 0.17.2
   flutter_map: 7.0.2
-  flutter_map_cache: 1.5.2
+  flutter_map_cache:
+    git:
+      url: https://github.com/ZhuJHua/flutter_map_plugins
+      path: flutter_map_cache
   flutter_map_marker_cluster: 1.4.0
-  dio_cache_interceptor_hive_store: 4.0.0
+  http_cache_hive_store: 5.0.0
   latlong2: 0.9.1
   shelf: 1.4.2
   shelf_multipart: 2.0.1

@@ -602,15 +602,7 @@ packages:
     dependency: transitive
     description:
       name: dio_cache_interceptor
-      sha256: "1346705a2057c265014d7696e3e2318b560bfb00b484dac7f9b01e2ceaebb07d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.5.1"
-  dio_cache_interceptor_hive_store:
-    dependency: "direct main"
-    description:
-      name: dio_cache_interceptor_hive_store
-      sha256: "127cda24a485f5b6469172edd8b81fac819147318bedd654be167527c498bf55"
+      sha256: f9787fbf7a521289ee5216ff8cee926ef128d66fd1dfcd80ff181e25bbb2781e
       url: "https://pub.dev"
     source: hosted
     version: "4.0.0"
@@ -714,10 +706,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: "6a8720a68b0e048d97b328d853bd0443e2e9cbf49754dd19b36f8347fd1eea7f"
+      sha256: "09b474c0c8117484b80cbebc043801ff91e05cfbd2874d512825c899e1754694"
       url: "https://pub.dev"
     source: hosted
-    version: "9.2.2"
+    version: "9.2.3"
   file_selector_linux:
     dependency: transitive
     description:
@@ -1027,11 +1019,12 @@ packages:
   flutter_map_cache:
     dependency: "direct main"
     description:
-      name: flutter_map_cache
-      sha256: "5b30c9b0d36315a22f4ee070737104a6017e7ff990e8addc8128ba81786e03ef"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.5.2"
+      path: flutter_map_cache
+      ref: HEAD
+      resolved-ref: "2b2e971ef14ce240d0f555da0771556ccbcf3455"
+      url: "https://github.com/ZhuJHua/flutter_map_plugins"
+    source: git
+    version: "1.5.3"
   flutter_map_marker_cluster:
     dependency: "direct main"
     description:
@@ -1362,6 +1355,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  http_cache_core:
+    dependency: transitive
+    description:
+      name: http_cache_core
+      sha256: "14fb2b54f9a5de2e028c1d418b26deded9c9f5e49c91c21cd1d0d4ac7fc9c6e2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  http_cache_hive_store:
+    dependency: "direct main"
+    description:
+      name: http_cache_hive_store
+      sha256: bef5934e01b70fd76e5bbbd0ee4183ad4a034ed67265625cb37d2f4ef823b8f7
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.0"
   http_multi_server:
     dependency: transitive
     description:
