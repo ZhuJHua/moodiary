@@ -602,10 +602,10 @@ packages:
     dependency: transitive
     description:
       name: dio_cache_interceptor
-      sha256: f9787fbf7a521289ee5216ff8cee926ef128d66fd1dfcd80ff181e25bbb2781e
+      sha256: a78447974aba320d1975ad98fc60dd47dde3a7b45a2056ba1d22d6360bbaee22
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.0"
+    version: "4.0.2"
   dio_web_adapter:
     dependency: transitive
     description:
@@ -706,10 +706,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: "09b474c0c8117484b80cbebc043801ff91e05cfbd2874d512825c899e1754694"
+      sha256: "36a1652d99cb6bf8ccc8b9f43aded1fd60b234d23ce78af422c07f950a436ef7"
       url: "https://pub.dev"
     source: hosted
-    version: "9.2.3"
+    version: "10.0.0"
   file_selector_linux:
     dependency: transitive
     description:
@@ -1021,10 +1021,10 @@ packages:
     description:
       path: flutter_map_cache
       ref: HEAD
-      resolved-ref: "2b2e971ef14ce240d0f555da0771556ccbcf3455"
+      resolved-ref: "74721766f918faedd15818fb1e932ca14b0fddbe"
       url: "https://github.com/ZhuJHua/flutter_map_plugins"
     source: git
-    version: "1.5.3"
+    version: "2.0.0"
   flutter_map_marker_cluster:
     dependency: "direct main"
     description:
@@ -1223,10 +1223,10 @@ packages:
     dependency: "direct main"
     description:
       name: geolocator
-      sha256: afebc912cbe6496e8823e064ca519afb5610072bb9c4a9feea715f6feb4f7f28
+      sha256: f62bcd90459e63210bbf9c35deb6a51c521f992a78de19a1fe5c11704f9530e2
       url: "https://pub.dev"
     source: hosted
-    version: "13.0.3"
+    version: "13.0.4"
   geolocator_android:
     dependency: transitive
     description:
@@ -1255,10 +1255,10 @@ packages:
     dependency: transitive
     description:
       name: geolocator_web
-      sha256: e54434b2ce9c677759a188d7e32e950802f79a9e9f45728239404bece0f1bd8d
+      sha256: b1ae9bdfd90f861fde8fd4f209c37b953d65e92823cb73c7dee1fa021b06f172
       url: "https://pub.dev"
     source: hosted
-    version: "4.1.2"
+    version: "4.1.3"
   geolocator_windows:
     dependency: transitive
     description:
@@ -1359,18 +1359,18 @@ packages:
     dependency: transitive
     description:
       name: http_cache_core
-      sha256: "14fb2b54f9a5de2e028c1d418b26deded9c9f5e49c91c21cd1d0d4ac7fc9c6e2"
+      sha256: "29f367764daa69bc35a09d603c3b3d20f5ee272b16c5fe3fa1ed61d5d685a623"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "1.1.0"
   http_cache_hive_store:
     dependency: "direct main"
     description:
       name: http_cache_hive_store
-      sha256: bef5934e01b70fd76e5bbbd0ee4183ad4a034ed67265625cb37d2f4ef823b8f7
+      sha256: "85847efdb18094961a66b74d3b856da093ddcbaf7739adecdc28149e871fb8fe"
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.0"
+    version: "5.0.1"
   http_multi_server:
     dependency: transitive
     description:
@@ -1664,10 +1664,10 @@ packages:
     dependency: transitive
     description:
       name: macos_window_utils
-      sha256: "10036bd91202d3542b75d40b5b3f4001ca5a232081477ca71690d7c4ea91f7cb"
+      sha256: "28ebb4e6d5cbaa1330b5f78d13cf9693779830d0ffc64b471f8d384dd73b7b21"
       url: "https://pub.dev"
     source: hosted
-    version: "1.7.0"
+    version: "1.7.1"
   macros:
     dependency: transitive
     description:
@@ -2588,18 +2588,18 @@ packages:
     dependency: transitive
     description:
       name: syncfusion_flutter_core
-      sha256: f56ee689d572c86a0d96cc986120a1e81a9cee9ff6d3c33acb030766a2ad1c04
+      sha256: be5eff439bb6c16eb2f297aa3dde779cc5352485f2df1825557d14f09d5b26b6
       url: "https://pub.dev"
     source: hosted
-    version: "29.1.33"
+    version: "29.1.35"
   syncfusion_flutter_sliders:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_sliders
-      sha256: e93998bc84fdbc74ac4b5a17893c4f533d26711fb81cf93a4e1e767e9c6fcb2a
+      sha256: "41cd490746c481be63f8aea629163cd24293c7db352eebf76179b53dca3f3ad7"
       url: "https://pub.dev"
     source: hosted
-    version: "29.1.33"
+    version: "29.1.35"
   synchronized:
     dependency: "direct main"
     description:
@@ -2868,10 +2868,10 @@ packages:
     dependency: transitive
     description:
       name: volume_controller
-      sha256: "4c2a873c242da6ce69ae1d17c256c5626e0c481be1824d6c5fc95e68c31f3b36"
+      sha256: e82fd689bb8e1fe8e64be3fa5946ff8699058f8cf9f4c1679acdba20cda7f5bd
       url: "https://pub.dev"
     source: hosted
-    version: "3.3.2"
+    version: "3.3.3"
   wakelock_plus:
     dependency: transitive
     description:
