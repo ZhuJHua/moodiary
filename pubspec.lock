@@ -1342,10 +1342,10 @@ packages:
     dependency: transitive
     description:
       name: html
-      sha256: "1fc58edeaec4307368c60d59b7e15b9d658b57d7f3125098b6294153c75337ec"
+      sha256: "9475be233c437f0e3637af55e7702cbbe5c23a68bd56e8a5fa2d426297b7c6c8"
       url: "https://pub.dev"
     source: hosted
-    version: "0.15.5"
+    version: "0.15.5+1"
   http:
     dependency: transitive
     description:
@@ -1926,18 +1926,18 @@ packages:
     dependency: "direct main"
     description:
       name: permission_handler
-      sha256: "59adad729136f01ea9e35a48f5d1395e25cba6cea552249ddbe9cf950f5d7849"
+      sha256: e78d066ca88fe337b989d89c19c674cd8c879a6d61410d825a904fd713f32c54
       url: "https://pub.dev"
     source: hosted
-    version: "11.4.0"
+    version: "12.0.0"
   permission_handler_android:
     dependency: transitive
     description:
       name: permission_handler_android
-      sha256: d3971dcdd76182a0c198c096b5db2f0884b0d4196723d21a866fc4cdea057ebc
+      sha256: "1e3bc410ca1bf84662104b100eb126e066cb55791b7451307f9708d4007350e6"
       url: "https://pub.dev"
     source: hosted
-    version: "12.1.0"
+    version: "13.0.1"
   permission_handler_apple:
     dependency: transitive
     description:
@@ -2587,18 +2587,18 @@ packages:
     dependency: transitive
     description:
       name: syncfusion_flutter_core
-      sha256: be5eff439bb6c16eb2f297aa3dde779cc5352485f2df1825557d14f09d5b26b6
+      sha256: a9b203c3b4ad5c3bfed3e82c3f43f6861c4f2e8a12dca43b8abb8f128ffe42b5
       url: "https://pub.dev"
     source: hosted
-    version: "29.1.35"
+    version: "29.1.37"
   syncfusion_flutter_sliders:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_sliders
-      sha256: "41cd490746c481be63f8aea629163cd24293c7db352eebf76179b53dca3f3ad7"
+      sha256: be2d61f6376be8eb3639537f73c2e69eb5837554d1ee369f82a4d1ed9adcaeb7
       url: "https://pub.dev"
     source: hosted
-    version: "29.1.35"
+    version: "29.1.37"
   synchronized:
     dependency: "direct main"
     description:
