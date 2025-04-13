@@ -21,10 +21,7 @@ class Bubble extends StatelessWidget {
       ),
       child: Align(
         alignment: Alignment.topCenter,
-        child: Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: child,
-        ),
+        child: Padding(padding: const EdgeInsets.all(4.0), child: child),
       ),
     );
   }
@@ -38,9 +35,10 @@ class BubblePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
+    final paint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.fill;
     const arrowWidth = 16.0;
     const arrowHeight = 8.0;
     final rectWidth = size.width;
@@ -56,11 +54,12 @@ class BubblePainter extends CustomPainter {
     );
 
     // 创建路径
-    final path = Path()
-      ..addRRect(rrect) // 添加圆角矩形
-      ..moveTo((rectWidth - arrowWidth) / 2, rectHeight) // 箭头左侧
-      ..lineTo(rectWidth / 2, rectHeight + arrowHeight) // 箭头尖端
-      ..lineTo((rectWidth + arrowWidth) / 2, rectHeight); // 箭头右侧
+    final path =
+        Path()
+          ..addRRect(rrect) // 添加圆角矩形
+          ..moveTo((rectWidth - arrowWidth) / 2, rectHeight) // 箭头左侧
+          ..lineTo(rectWidth / 2, rectHeight + arrowHeight) // 箭头尖端
+          ..lineTo((rectWidth + arrowWidth) / 2, rectHeight); // 箭头右侧
 
     canvas.drawPath(path, paint);
   }

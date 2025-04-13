@@ -12,19 +12,20 @@ class HitokotoResponse {
   String? createdAt;
   int? length;
 
-  HitokotoResponse(
-      {this.id,
-      this.uuid,
-      this.hitokoto,
-      this.type,
-      this.from,
-      this.fromWho,
-      this.creator,
-      this.creatorUid,
-      this.reviewer,
-      this.commitFrom,
-      this.createdAt,
-      this.length});
+  HitokotoResponse({
+    this.id,
+    this.uuid,
+    this.hitokoto,
+    this.type,
+    this.from,
+    this.fromWho,
+    this.creator,
+    this.creatorUid,
+    this.reviewer,
+    this.commitFrom,
+    this.createdAt,
+    this.length,
+  });
 
   HitokotoResponse.fromJson(Map<String, dynamic> json) {
     id = json["id"];

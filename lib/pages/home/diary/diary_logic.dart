@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/api/api.dart';
 import 'package:moodiary/common/values/view_mode.dart';
 import 'package:moodiary/components/diary_tab_view/diary_tab_view_logic.dart';
 import 'package:moodiary/components/scroll/fix_scroll.dart';
 import 'package:moodiary/pages/home/home_logic.dart';
-import 'package:moodiary/presentation/isar.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/isar.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/cache_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'diary_state.dart';
 
@@ -51,8 +51,11 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
 
   Future<void> getHitokoto() async {
     try {
-      final res = await CacheUtil.getCacheList('hitokoto', Api.updateHitokoto,
-          maxAgeMillis: 15 * 60000);
+      final res = await CacheUtil.getCacheList(
+        'hitokoto',
+        Api.updateHitokoto,
+        maxAgeMillis: 15 * 60000,
+      );
       if (res != null) {
         state.hitokoto.value = res.first;
       }
@@ -65,9 +68,12 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     if (PrefUtil.getValue<bool>('autoSync') == true &&
         await WebDavUtil().checkConnectivity()) {
       final diary = await IsarUtil.getAllDiaries();
-      await WebDavUtil().syncDiary(diary, onDownload: () async {
-        await refreshAll();
-      });
+      await WebDavUtil().syncDiary(
+        diary,
+        onDownload: () async {
+          await refreshAll();
+        },
+      );
     }
   }
 
@@ -113,8 +119,8 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
         await Bind.find<DiaryTabViewLogic>(tag: 'default').paginationDiary();
       } else {
         await Bind.find<DiaryTabViewLogic>(
-                tag: state.categoryList[tabController.index - 1].id)
-            .paginationDiary();
+          tag: state.categoryList[tabController.index - 1].id,
+        ).paginationDiary();
       }
     }
   }
@@ -144,9 +150,10 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
   void checkPageChange() {
     state.currentTabBarIndex = tabController.index;
     // 获取当前分类ID，若为默认分类，设为 'default'
-    final String categoryId = state.currentTabBarIndex == 0
-        ? 'default'
-        : state.categoryList[state.currentTabBarIndex - 1].id;
+    final String categoryId =
+        state.currentTabBarIndex == 0
+            ? 'default'
+            : state.categoryList[state.currentTabBarIndex - 1].id;
     // 遍历 keyMap，更新每个分类的状态
     state.keyMap.forEach((k, v) {
       v.currentState?.onPageChange(k == categoryId);
@@ -204,9 +211,11 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     state.categoryList = await IsarUtil.getAllCategoryAsync();
 
     // 移除 Map 中不再存在的 Category id
-    state.keyMap.removeWhere((k, v) =>
-        !state.categoryList.map((category) => category.id).contains(k) &&
-        k != 'default');
+    state.keyMap.removeWhere(
+      (k, v) =>
+          !state.categoryList.map((category) => category.id).contains(k) &&
+          k != 'default',
+    );
 
     // 为新的 Category 添加新的 GlobalKey
     for (final category in state.categoryList) {
@@ -224,9 +233,10 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
     //重新创建控制器
     tabController.removeListener(_tabBarListener);
     tabController = TabController(
-        length: state.categoryList.length + 1,
-        vsync: this,
-        initialIndex: state.currentTabBarIndex);
+      length: state.categoryList.length + 1,
+      vsync: this,
+      initialIndex: state.currentTabBarIndex,
+    );
     tabController.addListener(_tabBarListener);
     update();
     checkPageChange();
@@ -241,8 +251,11 @@ class DiaryLogic extends GetxController with GetTickerProviderStateMixin {
 
   // 回到顶部函数
   Future<void> toTop() async {
-    await state.innerController.animateTo(0.0,
-        duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
+    await state.innerController.animateTo(
+      0.0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+    );
   }
 
   // 更新标题

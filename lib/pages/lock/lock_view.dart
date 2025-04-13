@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:moodiary/main.dart';
+import 'package:get/get.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/utils/auth_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'lock_logic.dart';
 
@@ -13,25 +13,24 @@ class LockPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<LockLogic>();
     final state = Bind.find<LockLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
 
     final buttonSize =
-        (textStyle.displayLarge!.fontSize! * textStyle.displayLarge!.height!);
+        (context.textTheme.displayLarge!.fontSize! *
+            context.textTheme.displayLarge!.height!);
     Widget buildNumButton(String num) {
       return Ink(
         decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest, shape: BoxShape.circle),
+          color: context.theme.colorScheme.surfaceContainerHighest,
+          shape: BoxShape.circle,
+        ),
         child: InkWell(
           borderRadius: BorderRadius.all(Radius.circular(buttonSize / 2)),
           onTap: () async {
             await logic.updatePassword(num);
           },
           child: Center(
-              child: Text(
-            num,
-            style: textStyle.displaySmall,
-          )),
+            child: Text(num, style: context.textTheme.displaySmall),
+          ),
         ),
       );
     }
@@ -44,9 +43,7 @@ class LockPage extends StatelessWidget {
           onTap: () {
             logic.deletePassword();
           },
-          child: const Icon(
-            Icons.keyboard_backspace_rounded,
-          ),
+          child: const Icon(Icons.keyboard_backspace_rounded),
         ),
       );
     }
@@ -61,9 +58,7 @@ class LockPage extends StatelessWidget {
               logic.checked();
             }
           },
-          child: const Icon(
-            Icons.fingerprint_rounded,
-          ),
+          child: const Icon(Icons.fingerprint_rounded),
         ),
       );
     }
@@ -75,11 +70,12 @@ class LockPage extends StatelessWidget {
             Icons.circle,
             size: 16,
             color: Color.lerp(
-                state.password.value.length > index
-                    ? colorScheme.onSurface
-                    : colorScheme.surfaceContainerHighest,
-                Colors.red,
-                logic.animation.value),
+              state.password.value.length > index
+                  ? context.theme.colorScheme.onSurface
+                  : context.theme.colorScheme.surfaceContainerHighest,
+              Colors.red,
+              logic.animation.value,
+            ),
           );
         });
       });
@@ -88,10 +84,7 @@ class LockPage extends StatelessWidget {
     return PopScope(
       canPop: state.lockType != 'pause',
       child: Scaffold(
-        appBar: AppBar(
-          leading: null,
-          automaticallyImplyLeading: false,
-        ),
+        appBar: AppBar(leading: null, automaticallyImplyLeading: false),
         extendBodyBehindAppBar: true,
         body: Center(
           child: SingleChildScrollView(
@@ -103,27 +96,30 @@ class LockPage extends StatelessWidget {
                 Obx(() {
                   return AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
-                    child: state.isCheck.value
-                        ? const FaIcon(
-                            FontAwesomeIcons.unlock,
-                            key: ValueKey('unlock'),
-                          )
-                        : const FaIcon(
-                            FontAwesomeIcons.lock,
-                            key: ValueKey('lock'),
-                          ),
+                    child:
+                        state.isCheck.value
+                            ? const FaIcon(
+                              FontAwesomeIcons.unlock,
+                              key: ValueKey('unlock'),
+                            )
+                            : const FaIcon(
+                              FontAwesomeIcons.lock,
+                              key: ValueKey('lock'),
+                            ),
                   );
                 }),
                 Text(
-                  l10n.lockEnterPassword,
-                  style: textStyle.titleMedium,
+                  context.l10n.lockEnterPassword,
+                  style: context.textTheme.titleMedium,
                 ),
                 AnimatedBuilder(
                   animation: logic.animation,
                   builder: (context, child) {
                     return Transform.translate(
-                      offset:
-                          Offset(logic.interpolate(logic.animation.value), 0),
+                      offset: Offset(
+                        logic.interpolate(logic.animation.value),
+                        0,
+                      ),
                       child: Wrap(
                         spacing: 16.0,
                         children: buildPasswordIndicator(),
@@ -155,7 +151,7 @@ class LockPage extends StatelessWidget {
                           ? buildBiometricsButton()
                           : const Spacer(),
                       buildNumButton('0'),
-                      buildDeleteButton()
+                      buildDeleteButton(),
                     ],
                   ),
                 ),

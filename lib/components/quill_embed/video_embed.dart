@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/video_player/video_player_view.dart';
 import 'package:moodiary/utils/file_util.dart';
 
@@ -25,24 +26,20 @@ class VideoEmbedBuilder extends EmbedBuilder {
   String toPlainText(Embed node) => '';
 
   @override
-  Widget build(
-    BuildContext context,
-    EmbedContext embedContext,
-  ) {
+  Widget build(BuildContext context, EmbedContext embedContext) {
     final videoEmbed = VideoBlockEmbed(embedContext.node.value.data);
-    final videoPath = isEdit
-        ? videoEmbed.name
-        : FileUtil.getRealPath('video', videoEmbed.name);
-    final colorScheme = Theme.of(context).colorScheme;
+    final videoPath =
+        isEdit
+            ? videoEmbed.name
+            : FileUtil.getRealPath('video', videoEmbed.name);
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 300),
         child: Card.outlined(
           clipBehavior: Clip.hardEdge,
-          color: colorScheme.surfaceContainerLowest,
-          child: VideoPlayerComponent(
-            videoPath: videoPath,
-          ),
+          color: context.theme.colorScheme.surfaceContainerLowest,
+          child: VideoPlayerComponent(videoPath: videoPath),
         ),
       ),
     ); // 使用音频播放器组件渲染

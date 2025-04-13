@@ -20,22 +20,10 @@ const SyncRecordSchema = IsarGeneratedSchema(
     idName: 'isarId',
     embedded: false,
     properties: [
-      IsarPropertySchema(
-        name: 'syncId',
-        type: IsarType.string,
-      ),
-      IsarPropertySchema(
-        name: 'diaryId',
-        type: IsarType.string,
-      ),
-      IsarPropertySchema(
-        name: 'diaryJson',
-        type: IsarType.string,
-      ),
-      IsarPropertySchema(
-        name: 'time',
-        type: IsarType.dateTime,
-      ),
+      IsarPropertySchema(name: 'syncId', type: IsarType.string),
+      IsarPropertySchema(name: 'diaryId', type: IsarType.string),
+      IsarPropertySchema(name: 'diaryJson', type: IsarType.string),
+      IsarPropertySchema(name: 'time', type: IsarType.dateTime),
       IsarPropertySchema(
         name: 'syncType',
         type: IsarType.byte,
@@ -104,8 +92,10 @@ dynamic deserializeSyncRecordProp(IsarReader reader, int property) {
         if (value == -9223372036854775808) {
           return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true).toLocal();
         } else {
-          return DateTime.fromMicrosecondsSinceEpoch(value, isUtc: true)
-              .toLocal();
+          return DateTime.fromMicrosecondsSinceEpoch(
+            value,
+            isUtc: true,
+          ).toLocal();
         }
       }
     case 5:
@@ -149,15 +139,16 @@ class _SyncRecordUpdateImpl implements _SyncRecordUpdate {
     Object? time = ignore,
     Object? syncType = ignore,
   }) {
-    return collection.updateProperties([
-          isarId
-        ], {
-          if (syncId != ignore) 1: syncId as String?,
-          if (diaryId != ignore) 2: diaryId as String?,
-          if (diaryJson != ignore) 3: diaryJson as String?,
-          if (time != ignore) 4: time as DateTime?,
-          if (syncType != ignore) 5: syncType as SyncType?,
-        }) >
+    return collection.updateProperties(
+          [isarId],
+          {
+            if (syncId != ignore) 1: syncId as String?,
+            if (diaryId != ignore) 2: diaryId as String?,
+            if (diaryJson != ignore) 3: diaryJson as String?,
+            if (time != ignore) 4: time as DateTime?,
+            if (syncType != ignore) 5: syncType as SyncType?,
+          },
+        ) >
         0;
   }
 }
@@ -297,11 +288,7 @@ extension SyncRecordQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 1,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        EqualCondition(property: 1, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -322,10 +309,7 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      syncIdGreaterThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  syncIdGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
@@ -343,20 +327,13 @@ extension SyncRecordQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 1,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        LessCondition(property: 1, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      syncIdLessThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  syncIdLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
@@ -416,8 +393,9 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition> syncIdContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -430,8 +408,9 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition> syncIdMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -446,22 +425,16 @@ extension SyncRecordQueryFilter
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition> syncIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(
-          property: 1,
-          value: '',
-        ),
+        const EqualCondition(property: 1, value: ''),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      syncIdIsNotEmpty() {
+  syncIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(
-          property: 1,
-          value: '',
-        ),
+        const GreaterCondition(property: 1, value: ''),
       );
     });
   }
@@ -472,20 +445,13 @@ extension SyncRecordQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 2,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        EqualCondition(property: 2, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      diaryIdGreaterThan(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  diaryIdGreaterThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
@@ -498,10 +464,7 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      diaryIdGreaterThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  diaryIdGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
@@ -519,20 +482,13 @@ extension SyncRecordQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 2,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        LessCondition(property: 2, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      diaryIdLessThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  diaryIdLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
@@ -592,8 +548,9 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition> diaryIdContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -606,8 +563,9 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition> diaryIdMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -622,22 +580,16 @@ extension SyncRecordQueryFilter
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition> diaryIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(
-          property: 2,
-          value: '',
-        ),
+        const EqualCondition(property: 2, value: ''),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      diaryIdIsNotEmpty() {
+  diaryIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(
-          property: 2,
-          value: '',
-        ),
+        const GreaterCondition(property: 2, value: ''),
       );
     });
   }
@@ -648,20 +600,13 @@ extension SyncRecordQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 3,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        EqualCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      diaryJsonGreaterThan(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  diaryJsonGreaterThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
@@ -674,10 +619,7 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      diaryJsonGreaterThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  diaryJsonGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
@@ -695,20 +637,13 @@ extension SyncRecordQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 3,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        LessCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      diaryJsonLessThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  diaryJsonLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
@@ -738,10 +673,7 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      diaryJsonStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  diaryJsonStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
@@ -769,8 +701,9 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition> diaryJsonContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -783,8 +716,9 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition> diaryJsonMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -797,25 +731,19 @@ extension SyncRecordQueryFilter
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      diaryJsonIsEmpty() {
+  diaryJsonIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(
-          property: 3,
-          value: '',
-        ),
+        const EqualCondition(property: 3, value: ''),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      diaryJsonIsNotEmpty() {
+  diaryJsonIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(
-          property: 3,
-          value: '',
-        ),
+        const GreaterCondition(property: 3, value: ''),
       );
     });
   }
@@ -825,10 +753,7 @@ extension SyncRecordQueryFilter
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 4,
-          value: value,
-        ),
+        EqualCondition(property: 4, value: value),
       );
     });
   }
@@ -838,24 +763,16 @@ extension SyncRecordQueryFilter
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(
-          property: 4,
-          value: value,
-        ),
+        GreaterCondition(property: 4, value: value),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      timeGreaterThanOrEqualTo(
-    DateTime value,
-  ) {
+  timeGreaterThanOrEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(
-          property: 4,
-          value: value,
-        ),
+        GreaterOrEqualCondition(property: 4, value: value),
       );
     });
   }
@@ -864,25 +781,15 @@ extension SyncRecordQueryFilter
     DateTime value,
   ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        LessCondition(
-          property: 4,
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(LessCondition(property: 4, value: value));
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      timeLessThanOrEqualTo(
-    DateTime value,
-  ) {
+  timeLessThanOrEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(
-          property: 4,
-          value: value,
-        ),
+        LessOrEqualCondition(property: 4, value: value),
       );
     });
   }
@@ -893,11 +800,7 @@ extension SyncRecordQueryFilter
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        BetweenCondition(
-          property: 4,
-          lower: lower,
-          upper: upper,
-        ),
+        BetweenCondition(property: 4, lower: lower, upper: upper),
       );
     });
   }
@@ -907,38 +810,25 @@ extension SyncRecordQueryFilter
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 5,
-          value: value.index,
-        ),
+        EqualCondition(property: 5, value: value.index),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      syncTypeGreaterThan(
-    SyncType value,
-  ) {
+  syncTypeGreaterThan(SyncType value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(
-          property: 5,
-          value: value.index,
-        ),
+        GreaterCondition(property: 5, value: value.index),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      syncTypeGreaterThanOrEqualTo(
-    SyncType value,
-  ) {
+  syncTypeGreaterThanOrEqualTo(SyncType value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(
-          property: 5,
-          value: value.index,
-        ),
+        GreaterOrEqualCondition(property: 5, value: value.index),
       );
     });
   }
@@ -948,24 +838,16 @@ extension SyncRecordQueryFilter
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 5,
-          value: value.index,
-        ),
+        LessCondition(property: 5, value: value.index),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      syncTypeLessThanOrEqualTo(
-    SyncType value,
-  ) {
+  syncTypeLessThanOrEqualTo(SyncType value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(
-          property: 5,
-          value: value.index,
-        ),
+        LessOrEqualCondition(property: 5, value: value.index),
       );
     });
   }
@@ -976,11 +858,7 @@ extension SyncRecordQueryFilter
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        BetweenCondition(
-          property: 5,
-          lower: lower.index,
-          upper: upper.index,
-        ),
+        BetweenCondition(property: 5, lower: lower.index, upper: upper.index),
       );
     });
   }
@@ -990,10 +868,7 @@ extension SyncRecordQueryFilter
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 0,
-          value: value,
-        ),
+        EqualCondition(property: 0, value: value),
       );
     });
   }
@@ -1003,24 +878,16 @@ extension SyncRecordQueryFilter
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(
-          property: 0,
-          value: value,
-        ),
+        GreaterCondition(property: 0, value: value),
       );
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      isarIdGreaterThanOrEqualTo(
-    int value,
-  ) {
+  isarIdGreaterThanOrEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(
-          property: 0,
-          value: value,
-        ),
+        GreaterOrEqualCondition(property: 0, value: value),
       );
     });
   }
@@ -1029,25 +896,15 @@ extension SyncRecordQueryFilter
     int value,
   ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        LessCondition(
-          property: 0,
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(LessCondition(property: 0, value: value));
     });
   }
 
   QueryBuilder<SyncRecord, SyncRecord, QAfterFilterCondition>
-      isarIdLessThanOrEqualTo(
-    int value,
-  ) {
+  isarIdLessThanOrEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(
-          property: 0,
-          value: value,
-        ),
+        LessOrEqualCondition(property: 0, value: value),
       );
     });
   }
@@ -1058,11 +915,7 @@ extension SyncRecordQueryFilter
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        BetweenCondition(
-          property: 0,
-          lower: lower,
-          upper: upper,
-        ),
+        BetweenCondition(property: 0, lower: lower, upper: upper),
       );
     });
   }
@@ -1073,66 +926,51 @@ extension SyncRecordQueryObject
 
 extension SyncRecordQuerySortBy
     on QueryBuilder<SyncRecord, SyncRecord, QSortBy> {
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortBySyncId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortBySyncId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        1,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(1, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortBySyncIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortBySyncIdDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        1,
-        sort: Sort.desc,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortByDiaryId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortByDiaryId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        2,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(2, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortByDiaryIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortByDiaryIdDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        2,
-        sort: Sort.desc,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortByDiaryJson(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortByDiaryJson({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        3,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(3, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortByDiaryJsonDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> sortByDiaryJsonDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        3,
-        sort: Sort.desc,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -1175,43 +1013,49 @@ extension SyncRecordQuerySortBy
 
 extension SyncRecordQuerySortThenBy
     on QueryBuilder<SyncRecord, SyncRecord, QSortThenBy> {
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenBySyncId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenBySyncId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(1, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenBySyncIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenBySyncIdDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenByDiaryId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenByDiaryId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(2, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenByDiaryIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenByDiaryIdDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenByDiaryJson(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenByDiaryJson({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(3, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenByDiaryJsonDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterSortBy> thenByDiaryJsonDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
     });
@@ -1256,22 +1100,25 @@ extension SyncRecordQuerySortThenBy
 
 extension SyncRecordQueryWhereDistinct
     on QueryBuilder<SyncRecord, SyncRecord, QDistinct> {
-  QueryBuilder<SyncRecord, SyncRecord, QAfterDistinct> distinctBySyncId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterDistinct> distinctBySyncId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(1, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterDistinct> distinctByDiaryId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterDistinct> distinctByDiaryId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(2, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<SyncRecord, SyncRecord, QAfterDistinct> distinctByDiaryJson(
-      {bool caseSensitive = true}) {
+  QueryBuilder<SyncRecord, SyncRecord, QAfterDistinct> distinctByDiaryJson({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(3, caseSensitive: caseSensitive);
     });

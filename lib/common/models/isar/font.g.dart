@@ -20,22 +20,10 @@ const FontSchema = IsarGeneratedSchema(
     idName: 'id',
     embedded: false,
     properties: [
-      IsarPropertySchema(
-        name: 'fontFileName',
-        type: IsarType.string,
-      ),
-      IsarPropertySchema(
-        name: 'fontWghtAxisMap',
-        type: IsarType.json,
-      ),
-      IsarPropertySchema(
-        name: 'fontFamily',
-        type: IsarType.string,
-      ),
-      IsarPropertySchema(
-        name: 'fontType',
-        type: IsarType.string,
-      ),
+      IsarPropertySchema(name: 'fontFileName', type: IsarType.string),
+      IsarPropertySchema(name: 'fontWghtAxisMap', type: IsarType.json),
+      IsarPropertySchema(name: 'fontFamily', type: IsarType.string),
+      IsarPropertySchema(name: 'fontType', type: IsarType.string),
     ],
     indexes: [],
   ),
@@ -122,13 +110,14 @@ class _FontUpdateImpl implements _FontUpdate {
     Object? fontFamily = ignore,
     Object? fontType = ignore,
   }) {
-    return collection.updateProperties([
-          id
-        ], {
-          if (fontFileName != ignore) 1: fontFileName as String?,
-          if (fontFamily != ignore) 3: fontFamily as String?,
-          if (fontType != ignore) 4: fontType as String?,
-        }) >
+    return collection.updateProperties(
+          [id],
+          {
+            if (fontFileName != ignore) 1: fontFileName as String?,
+            if (fontFamily != ignore) 3: fontFamily as String?,
+            if (fontType != ignore) 4: fontType as String?,
+          },
+        ) >
         0;
   }
 }
@@ -169,11 +158,7 @@ extension FontUpdate on IsarCollection<int, Font> {
 }
 
 sealed class _FontQueryUpdate {
-  int call({
-    String? fontFileName,
-    String? fontFamily,
-    String? fontType,
-  });
+  int call({String? fontFileName, String? fontFamily, String? fontType});
 }
 
 class _FontQueryUpdateImpl implements _FontQueryUpdate {
@@ -241,11 +226,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 1,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        EqualCondition(property: 1, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -266,10 +247,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }
 
   QueryBuilder<Font, Font, QAfterFilterCondition>
-      fontFileNameGreaterThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  fontFileNameGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
@@ -287,11 +265,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 1,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        LessCondition(property: 1, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -359,8 +333,9 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }
 
   QueryBuilder<Font, Font, QAfterFilterCondition> fontFileNameContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -373,8 +348,9 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }
 
   QueryBuilder<Font, Font, QAfterFilterCondition> fontFileNameMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -389,10 +365,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   QueryBuilder<Font, Font, QAfterFilterCondition> fontFileNameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(
-          property: 1,
-          value: '',
-        ),
+        const EqualCondition(property: 1, value: ''),
       );
     });
   }
@@ -400,36 +373,23 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   QueryBuilder<Font, Font, QAfterFilterCondition> fontFileNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(
-          property: 1,
-          value: '',
-        ),
+        const GreaterCondition(property: 1, value: ''),
       );
     });
   }
 
-  QueryBuilder<Font, Font, QAfterFilterCondition> idEqualTo(
-    int value,
-  ) {
+  QueryBuilder<Font, Font, QAfterFilterCondition> idEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 0,
-          value: value,
-        ),
+        EqualCondition(property: 0, value: value),
       );
     });
   }
 
-  QueryBuilder<Font, Font, QAfterFilterCondition> idGreaterThan(
-    int value,
-  ) {
+  QueryBuilder<Font, Font, QAfterFilterCondition> idGreaterThan(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(
-          property: 0,
-          value: value,
-        ),
+        GreaterCondition(property: 0, value: value),
       );
     });
   }
@@ -439,24 +399,14 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(
-          property: 0,
-          value: value,
-        ),
+        GreaterOrEqualCondition(property: 0, value: value),
       );
     });
   }
 
-  QueryBuilder<Font, Font, QAfterFilterCondition> idLessThan(
-    int value,
-  ) {
+  QueryBuilder<Font, Font, QAfterFilterCondition> idLessThan(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        LessCondition(
-          property: 0,
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(LessCondition(property: 0, value: value));
     });
   }
 
@@ -465,10 +415,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(
-          property: 0,
-          value: value,
-        ),
+        LessOrEqualCondition(property: 0, value: value),
       );
     });
   }
@@ -479,11 +426,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        BetweenCondition(
-          property: 0,
-          lower: lower,
-          upper: upper,
-        ),
+        BetweenCondition(property: 0, lower: lower, upper: upper),
       );
     });
   }
@@ -494,11 +437,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 3,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        EqualCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -519,10 +458,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }
 
   QueryBuilder<Font, Font, QAfterFilterCondition>
-      fontFamilyGreaterThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  fontFamilyGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
@@ -540,11 +476,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 3,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        LessCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -612,8 +544,9 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }
 
   QueryBuilder<Font, Font, QAfterFilterCondition> fontFamilyContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -626,8 +559,9 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }
 
   QueryBuilder<Font, Font, QAfterFilterCondition> fontFamilyMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -642,10 +576,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   QueryBuilder<Font, Font, QAfterFilterCondition> fontFamilyIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(
-          property: 3,
-          value: '',
-        ),
+        const EqualCondition(property: 3, value: ''),
       );
     });
   }
@@ -653,10 +584,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   QueryBuilder<Font, Font, QAfterFilterCondition> fontFamilyIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(
-          property: 3,
-          value: '',
-        ),
+        const GreaterCondition(property: 3, value: ''),
       );
     });
   }
@@ -667,11 +595,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 4,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        EqualCondition(property: 4, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -712,11 +636,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 4,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        LessCondition(property: 4, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -783,8 +703,10 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Font, Font, QAfterFilterCondition> fontTypeContains(String value,
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterFilterCondition> fontTypeContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -797,8 +719,9 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   }
 
   QueryBuilder<Font, Font, QAfterFilterCondition> fontTypeMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -813,10 +736,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   QueryBuilder<Font, Font, QAfterFilterCondition> fontTypeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(
-          property: 4,
-          value: '',
-        ),
+        const EqualCondition(property: 4, value: ''),
       );
     });
   }
@@ -824,10 +744,7 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
   QueryBuilder<Font, Font, QAfterFilterCondition> fontTypeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(
-          property: 4,
-          value: '',
-        ),
+        const GreaterCondition(property: 4, value: ''),
       );
     });
   }
@@ -836,24 +753,19 @@ extension FontQueryFilter on QueryBuilder<Font, Font, QFilterCondition> {
 extension FontQueryObject on QueryBuilder<Font, Font, QFilterCondition> {}
 
 extension FontQuerySortBy on QueryBuilder<Font, Font, QSortBy> {
-  QueryBuilder<Font, Font, QAfterSortBy> sortByFontFileName(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> sortByFontFileName({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        1,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(1, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Font, Font, QAfterSortBy> sortByFontFileNameDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> sortByFontFileNameDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        1,
-        sort: Sort.desc,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -881,59 +793,51 @@ extension FontQuerySortBy on QueryBuilder<Font, Font, QSortBy> {
     });
   }
 
-  QueryBuilder<Font, Font, QAfterSortBy> sortByFontFamily(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> sortByFontFamily({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        3,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(3, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Font, Font, QAfterSortBy> sortByFontFamilyDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> sortByFontFamilyDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        3,
-        sort: Sort.desc,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Font, Font, QAfterSortBy> sortByFontType(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> sortByFontType({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        4,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(4, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Font, Font, QAfterSortBy> sortByFontTypeDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> sortByFontTypeDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        4,
-        sort: Sort.desc,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(4, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 }
 
 extension FontQuerySortThenBy on QueryBuilder<Font, Font, QSortThenBy> {
-  QueryBuilder<Font, Font, QAfterSortBy> thenByFontFileName(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> thenByFontFileName({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(1, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Font, Font, QAfterSortBy> thenByFontFileNameDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> thenByFontFileNameDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
     });
@@ -963,29 +867,33 @@ extension FontQuerySortThenBy on QueryBuilder<Font, Font, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Font, Font, QAfterSortBy> thenByFontFamily(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> thenByFontFamily({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(3, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Font, Font, QAfterSortBy> thenByFontFamilyDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> thenByFontFamilyDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Font, Font, QAfterSortBy> thenByFontType(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> thenByFontType({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(4, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Font, Font, QAfterSortBy> thenByFontTypeDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterSortBy> thenByFontTypeDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(4, sort: Sort.desc, caseSensitive: caseSensitive);
     });
@@ -993,8 +901,9 @@ extension FontQuerySortThenBy on QueryBuilder<Font, Font, QSortThenBy> {
 }
 
 extension FontQueryWhereDistinct on QueryBuilder<Font, Font, QDistinct> {
-  QueryBuilder<Font, Font, QAfterDistinct> distinctByFontFileName(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterDistinct> distinctByFontFileName({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(1, caseSensitive: caseSensitive);
     });
@@ -1006,15 +915,17 @@ extension FontQueryWhereDistinct on QueryBuilder<Font, Font, QDistinct> {
     });
   }
 
-  QueryBuilder<Font, Font, QAfterDistinct> distinctByFontFamily(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterDistinct> distinctByFontFamily({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(3, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Font, Font, QAfterDistinct> distinctByFontType(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Font, Font, QAfterDistinct> distinctByFontType({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(4, caseSensitive: caseSensitive);
     });
@@ -1029,7 +940,7 @@ extension FontQueryProperty1 on QueryBuilder<Font, Font, QProperty> {
   }
 
   QueryBuilder<Font, Map<String, dynamic>, QAfterProperty>
-      fontWghtAxisMapProperty() {
+  fontWghtAxisMapProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });
@@ -1062,7 +973,7 @@ extension FontQueryProperty2<R> on QueryBuilder<Font, R, QAfterProperty> {
   }
 
   QueryBuilder<Font, (R, Map<String, dynamic>), QAfterProperty>
-      fontWghtAxisMapProperty() {
+  fontWghtAxisMapProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });
@@ -1096,7 +1007,7 @@ extension FontQueryProperty3<R1, R2>
   }
 
   QueryBuilder<Font, (R1, R2, Map<String, dynamic>), QOperations>
-      fontWghtAxisMapProperty() {
+  fontWghtAxisMapProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });

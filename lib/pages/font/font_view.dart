@@ -1,13 +1,13 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'font_logic.dart';
 
@@ -46,7 +46,7 @@ class FontPage extends StatelessWidget {
             ),
           ),
         ),
-        AdaptiveText(l10n.fontStyleSystem, style: textStyle),
+        AdaptiveText(context.l10n.fontStyleSystem, style: textStyle),
       ],
     );
   }
@@ -127,8 +127,7 @@ class FontPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<FontLogic>();
     final state = Bind.find<FontLogic>().state;
-    final textStyle = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
+
     final viewPadding = MediaQuery.viewPaddingOf(context);
     final size = MediaQuery.sizeOf(context);
 
@@ -138,7 +137,7 @@ class FontPage extends StatelessWidget {
           Obx(() {
             return Text(
               '八月的忧愁',
-              style: textStyle.titleLarge?.copyWith(
+              style: context.textTheme.titleLarge?.copyWith(
                 height: 2,
                 fontFamily: state.currentFontFamily.value,
               ),
@@ -159,7 +158,7 @@ class FontPage extends StatelessWidget {
               '夏天过去了，也不到秋天。\n'
               '但我望着田垄，土墙上的瓜，\n'
               '仍不明白生活同梦怎样的连牵。',
-              style: textStyle.bodyMedium?.copyWith(
+              style: context.textTheme.bodyMedium?.copyWith(
                 height: 2,
                 fontFamily: state.currentFontFamily.value,
               ),
@@ -174,9 +173,9 @@ class FontPage extends StatelessWidget {
       return [
         _buildDefault(
           isSelected: state.currentFontFamily.value == '',
-          activeColor: colorScheme.primary,
-          inactiveColor: colorScheme.surfaceContainerHighest,
-          textStyle: textStyle.labelSmall,
+          activeColor: context.theme.colorScheme.primary,
+          inactiveColor: context.theme.colorScheme.surfaceContainerHighest,
+          textStyle: context.textTheme.labelSmall,
           context: context,
           onTap: () {
             logic.changeSelectedFont(font: null);
@@ -188,9 +187,9 @@ class FontPage extends StatelessWidget {
                 state.currentFontFamily.value ==
                 state.fontList[index].fontFamily,
             fontName: state.fontList[index].fontFamily,
-            activeColor: colorScheme.primary,
-            inactiveColor: colorScheme.surfaceContainerHighest,
-            textStyle: textStyle.labelSmall,
+            activeColor: context.theme.colorScheme.primary,
+            inactiveColor: context.theme.colorScheme.surfaceContainerHighest,
+            textStyle: context.textTheme.labelSmall,
             context: context,
             onTap: () {
               logic.changeSelectedFont(font: state.fontList[index]);
@@ -199,9 +198,11 @@ class FontPage extends StatelessWidget {
               // 显示删除字体对话框
               final res = showOkCancelAlertDialog(
                 context: context,
-                title: l10n.hint,
+                title: context.l10n.hint,
                 style: AdaptiveStyle.material,
-                message: l10n.fontDeleteDes(state.fontList[index].fontFamily),
+                message: context.l10n.fontDeleteDes(
+                  state.fontList[index].fontFamily,
+                ),
               );
               if (await res == OkCancelResult.ok) {
                 logic.deleteFont(font: state.fontList[index]);
@@ -211,8 +212,8 @@ class FontPage extends StatelessWidget {
         }),
         _buildManage(
           onTap: logic.addFont,
-          color: colorScheme.surfaceContainer,
-          iconColor: colorScheme.onSurface,
+          color: context.theme.colorScheme.surfaceContainer,
+          iconColor: context.theme.colorScheme.onSurface,
         ),
       ];
     }
@@ -243,14 +244,14 @@ class FontPage extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(l10n.fontStyleSize),
+                  Text(context.l10n.fontStyleSize),
                   Text(switch (state.fontScale.value) {
-                    0.8 => l10n.fontSizeSuperSmall,
-                    0.9 => l10n.fontSizeSmall,
-                    1.0 => l10n.fontSizeStandard,
-                    1.1 => l10n.fontSizeLarge,
-                    1.2 => l10n.fontSizeSuperLarge,
-                    _ => l10n.fontSizeStandard,
+                    0.8 => context.l10n.fontSizeSuperSmall,
+                    0.9 => context.l10n.fontSizeSmall,
+                    1.0 => context.l10n.fontSizeStandard,
+                    1.1 => context.l10n.fontSizeLarge,
+                    1.2 => context.l10n.fontSizeSuperLarge,
+                    _ => context.l10n.fontSizeStandard,
                   }),
                 ],
               ),
@@ -274,11 +275,11 @@ class FontPage extends StatelessWidget {
       builder: (_) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(l10n.settingFontStyle),
+            title: Text(context.l10n.settingFontStyle),
             leading: const PageBackButton(),
-            backgroundColor: colorScheme.surfaceContainerLow,
+            backgroundColor: context.theme.colorScheme.surfaceContainerLow,
           ),
-          backgroundColor: colorScheme.surfaceContainerLow,
+          backgroundColor: context.theme.colorScheme.surfaceContainerLow,
           body:
               size.width < 600
                   ? Obx(() {
@@ -318,7 +319,7 @@ class FontPage extends StatelessWidget {
               size.width > 600
                   ? FloatingActionButton.extended(
                     onPressed: logic.saveFontScale,
-                    label: Text(l10n.apply),
+                    label: Text(context.l10n.apply),
                     icon: const Icon(Icons.check_rounded),
                   )
                   : null,
@@ -329,7 +330,7 @@ class FontPage extends StatelessWidget {
                 height: state.bottomSheetHeight.value,
                 padding: EdgeInsets.only(bottom: viewPadding.bottom),
                 decoration: ShapeDecoration(
-                  color: colorScheme.surface,
+                  color: context.theme.colorScheme.surface,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(16),
@@ -350,7 +351,11 @@ class FontPage extends StatelessWidget {
                             width: 68,
                             height: 5,
                             decoration: ShapeDecoration(
-                              color: colorScheme.surfaceContainerHighest,
+                              color:
+                                  context
+                                      .theme
+                                      .colorScheme
+                                      .surfaceContainerHighest,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(2.50),
                               ),
@@ -364,7 +369,7 @@ class FontPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: FilledButton(
                         onPressed: logic.saveFontScale,
-                        child: Text(l10n.apply),
+                        child: Text(context.l10n.apply),
                       ),
                     ),
                   ],

@@ -1,7 +1,7 @@
+import 'package:get/get.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/pages/diary_details/diary_details_logic.dart';
 import 'package:moodiary/router/app_routes.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'search_card_state.dart';
 

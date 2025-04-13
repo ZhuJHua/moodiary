@@ -1,6 +1,6 @@
+import 'package:get/get.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/webdav.dart';
-import 'package:refreshed/refreshed.dart';
 
 class WebDavDashboardState {
   Rx<WebDavConnectivityStatus> connectivityStatus =

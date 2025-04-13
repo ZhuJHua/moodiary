@@ -288,74 +288,78 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
   }) {
     return Tooltip(
       message: tooltip,
-      child: dropdown
-          ? SizedBox(
-              width: widget.width,
-              height: widget.height,
-              child: IconButton(
-                style: IconButton.styleFrom(
-                  backgroundColor: widget.backgroundColor,
-                  padding: const EdgeInsets.all(0),
-                  shape:
-                      RoundedRectangleBorder(borderRadius: widget.borderRadius),
-                ),
-                onPressed: () {},
-                icon: Stack(
-                  alignment: AlignmentDirectional.center,
-                  children: [
-                    dropdownString != null
-                        ? Text(
+      child:
+          dropdown
+              ? SizedBox(
+                width: widget.width,
+                height: widget.height,
+                child: IconButton(
+                  style: IconButton.styleFrom(
+                    backgroundColor: widget.backgroundColor,
+                    padding: const EdgeInsets.all(0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: widget.borderRadius,
+                    ),
+                  ),
+                  onPressed: () {},
+                  icon: Stack(
+                    alignment: AlignmentDirectional.center,
+                    children: [
+                      dropdownString != null
+                          ? Text(
                             dropdownString,
                             style: TextStyle(
-                                color: widget.iconColor,
-                                fontSize: 16.0 * widget.iconSize / 20),
+                              color: widget.iconColor,
+                              fontSize: 16.0 * widget.iconSize / 20,
+                            ),
                           )
-                        : Icon(
+                          : Icon(
                             icon,
                             color: widget.iconColor,
                             size: widget.iconSize,
                           ),
-                    ClipRRect(
-                      borderRadius: widget.borderRadius,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton(
-                            isExpanded: true,
-                            items: dropdownItems,
-                            onChanged: (option) {
-                              if (onDropdownButtonSelect != null) {
-                                onDropdownButtonSelect(option ?? 0);
-                              }
-                            },
-                            icon: Container(),
+                      ClipRRect(
+                        borderRadius: widget.borderRadius,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton(
+                              isExpanded: true,
+                              items: dropdownItems,
+                              onChanged: (option) {
+                                if (onDropdownButtonSelect != null) {
+                                  onDropdownButtonSelect(option ?? 0);
+                                }
+                              },
+                              icon: Container(),
+                            ),
                           ),
                         ),
                       ),
-                    )
-                  ],
+                    ],
+                  ),
+                ),
+              )
+              : SizedBox(
+                width: widget.width,
+                height: widget.height,
+                child: IconButton(
+                  style: IconButton.styleFrom(
+                    backgroundColor: widget.backgroundColor,
+                    foregroundColor: widget.iconColor,
+                    padding: const EdgeInsets.all(0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: widget.borderRadius,
+                    ),
+                  ),
+                  onPressed: dropdown ? null : onPressed,
+                  icon: Icon(
+                    icon,
+                    color: widget.iconColor,
+                    size: widget.iconSize,
+                  ),
                 ),
               ),
-            )
-          : SizedBox(
-              width: widget.width,
-              height: widget.height,
-              child: IconButton(
-                style: IconButton.styleFrom(
-                  backgroundColor: widget.backgroundColor,
-                  foregroundColor: widget.iconColor,
-                  padding: const EdgeInsets.all(0),
-                  shape:
-                      RoundedRectangleBorder(borderRadius: widget.borderRadius),
-                ),
-                onPressed: dropdown ? null : onPressed,
-                icon: Icon(
-                  icon,
-                  color: widget.iconColor,
-                  size: widget.iconSize,
-                ),
-              ),
-            ),
     );
   }
 
@@ -370,9 +374,10 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
           padding: const EdgeInsets.all(0),
           shape: RoundedRectangleBorder(borderRadius: widget.borderRadius),
         ),
-        onPressed: () => setState(() {
-          isCollapsed = !isCollapsed;
-        }),
+        onPressed:
+            () => setState(() {
+              isCollapsed = !isCollapsed;
+            }),
         icon: RotatedBox(
           quarterTurns: widget.flipCollapseButtonIcon == true ? 3 : 1,
           child: Icon(
@@ -415,9 +420,7 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
     required String horizontalRuleTooltip,
   }) {
     if (collapsable && isCollapsed) {
-      return [
-        _buildCollapseItem(),
-      ];
+      return [_buildCollapseItem()];
     } else {
       return [
         if (collapsable && !widget.alignCollapseButtonEnd) _buildCollapseItem(),
@@ -425,9 +428,10 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
           _buildToolbarItem(
             icon: Icons.h_mobiledata,
             tooltip: showTooltips == true ? headingTooltip : '',
-            onPressed: () => onToolbarItemPressed(
-              markdownToolbarOption: MarkdownToolbarOption.heading,
-            ),
+            onPressed:
+                () => onToolbarItemPressed(
+                  markdownToolbarOption: MarkdownToolbarOption.heading,
+                ),
             onDropdownButtonSelect: (int option) => onHeadingPressed(option),
             dropdown: true,
             dropdownItems: [
@@ -552,9 +556,10 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
           _buildToolbarItem(
             icon: Icons.check_box,
             tooltip: showTooltips == true ? checkboxTooltip : '',
-            onPressed: () => onToolbarItemPressed(
-              markdownToolbarOption: MarkdownToolbarOption.checkbox,
-            ),
+            onPressed:
+                () => onToolbarItemPressed(
+                  markdownToolbarOption: MarkdownToolbarOption.checkbox,
+                ),
             onDropdownButtonSelect: (int option) => onCheckboxPressed(option),
             dropdown: true,
             dropdownItems: [
@@ -567,10 +572,7 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
               ),
               DropdownMenuItem<int>(
                 value: 1,
-                child: Icon(
-                  Icons.check_box,
-                  color: widget.dropdownTextColor,
-                ),
+                child: Icon(Icons.check_box, color: widget.dropdownTextColor),
               ),
             ],
           ),
@@ -592,7 +594,9 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
   }
 
   void onHeadingPressed(int option) => onToolbarItemPressed(
-      option: option, markdownToolbarOption: MarkdownToolbarOption.heading);
+    option: option,
+    markdownToolbarOption: MarkdownToolbarOption.heading,
+  );
 
   void onBoldPressed() =>
       onToolbarItemPressed(markdownToolbarOption: MarkdownToolbarOption.bold);
@@ -601,7 +605,8 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
       onToolbarItemPressed(markdownToolbarOption: MarkdownToolbarOption.italic);
 
   void onStrikethroughPressed() => onToolbarItemPressed(
-      markdownToolbarOption: MarkdownToolbarOption.strikethrough);
+    markdownToolbarOption: MarkdownToolbarOption.strikethrough,
+  );
 
   void onLinkPressed() =>
       onToolbarItemPressed(markdownToolbarOption: MarkdownToolbarOption.link);
@@ -618,19 +623,24 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
       onToolbarItemPressed(markdownToolbarOption: MarkdownToolbarOption.code);
 
   void onUnorderedListPressed() => onToolbarItemPressed(
-      markdownToolbarOption: MarkdownToolbarOption.unorderedList);
+    markdownToolbarOption: MarkdownToolbarOption.unorderedList,
+  );
 
   void onOrderedListPressed() => onToolbarItemPressed(
-      markdownToolbarOption: MarkdownToolbarOption.orderedList);
+    markdownToolbarOption: MarkdownToolbarOption.orderedList,
+  );
 
   void onCheckboxPressed(int option) => onToolbarItemPressed(
-      option: option, markdownToolbarOption: MarkdownToolbarOption.checkbox);
+    option: option,
+    markdownToolbarOption: MarkdownToolbarOption.checkbox,
+  );
 
   void onQuotePressed() =>
       onToolbarItemPressed(markdownToolbarOption: MarkdownToolbarOption.quote);
 
   void onHorizontalRulePressed() => onToolbarItemPressed(
-      markdownToolbarOption: MarkdownToolbarOption.horizontalRule);
+    markdownToolbarOption: MarkdownToolbarOption.horizontalRule,
+  );
 
   void onToolbarItemPressed({
     required MarkdownToolbarOption markdownToolbarOption,
@@ -643,12 +653,14 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
     try {
       Format.toolbarItemPressed(
         markdownToolbarOption: markdownToolbarOption,
-        controller: widget.useIncludedTextField
-            ? _includedController
-            : widget.controller ?? _includedController,
-        selection: widget.useIncludedTextField
-            ? _includedController.selection
-            : widget.controller?.selection ?? _includedController.selection,
+        controller:
+            widget.useIncludedTextField
+                ? _includedController
+                : widget.controller ?? _includedController,
+        selection:
+            widget.useIncludedTextField
+                ? _includedController.selection
+                : widget.controller?.selection ?? _includedController.selection,
         option: option,
         customBoldCharacter: widget.boldCharacter,
         customItalicCharacter: widget.italicCharacter,
@@ -705,12 +717,14 @@ class MarkdownToolbarState extends State<MarkdownToolbar> {
         if (widget.useIncludedTextField) const SizedBox(height: 4.0),
         if (widget.useIncludedTextField)
           TextField(
-            controller: widget.useIncludedTextField
-                ? _includedController
-                : widget.controller,
-            focusNode: widget.useIncludedTextField
-                ? _includedFocusNode
-                : widget.focusNode,
+            controller:
+                widget.useIncludedTextField
+                    ? _includedController
+                    : widget.controller,
+            focusNode:
+                widget.useIncludedTextField
+                    ? _includedFocusNode
+                    : widget.focusNode,
             minLines: 1,
             maxLines: null,
             decoration: const InputDecoration(

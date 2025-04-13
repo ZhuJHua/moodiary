@@ -19,8 +19,10 @@ class AesUtil {
   }) async {
     final keyBytes = key;
     final dataBytes = utf8.encode(data);
-    final encrypted =
-        await AesEncryption.encrypt(key: keyBytes, data: dataBytes);
+    final encrypted = await AesEncryption.encrypt(
+      key: keyBytes,
+      data: dataBytes,
+    );
 
     return encrypted;
   }
@@ -33,8 +35,9 @@ class AesUtil {
     final keyBytes = key;
     final encryptedBytes = encryptedData;
     final decrypted = await AesEncryption.decrypt(
-        key: keyBytes, encryptedData: encryptedBytes);
+      key: keyBytes,
+      encryptedData: encryptedBytes,
+    );
     return utf8.decode(decrypted);
   }
-
 }

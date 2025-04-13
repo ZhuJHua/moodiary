@@ -1,5 +1,5 @@
-import 'package:moodiary/presentation/pref.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
+import 'package:moodiary/persistence/pref.dart';
 
 class DiarySettingState {
   // 图片质量

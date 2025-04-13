@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/base/button.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'sponsor_logic.dart';
 
@@ -22,7 +22,7 @@ class SponsorPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.aboutDonate),
+        title: Text(context.l10n.aboutDonate),
         leading: const PageBackButton(),
       ),
       body: Stack(
@@ -34,7 +34,7 @@ class SponsorPage extends StatelessWidget {
               spacing: 24.0,
               children: [
                 _buildWechat(),
-                Text(l10n.hopeYouHappyToday),
+                Text(context.l10n.hopeYouHappyToday),
                 const FaIcon(FontAwesomeIcons.weixin),
               ],
             ),

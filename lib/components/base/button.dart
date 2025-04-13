@@ -1,16 +1,20 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 class FrostedGlassButton extends StatelessWidget {
   final Widget child;
   final double size;
   final Function()? onPressed;
 
-  const FrostedGlassButton(
-      {super.key, required this.child, required this.size, this.onPressed});
+  const FrostedGlassButton({
+    super.key,
+    required this.child,
+    required this.size,
+    this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,10 +35,8 @@ class FrostedGlassButton extends StatelessWidget {
 }
 
 class MultiFabLayoutDelegate extends MultiChildLayoutDelegate {
-  MultiFabLayoutDelegate({
-    required this.controller,
-    required this.layoutIds,
-  }) : super(relayout: controller);
+  MultiFabLayoutDelegate({required this.controller, required this.layoutIds})
+    : super(relayout: controller);
 
   final Animation<double> controller;
   final List<int> layoutIds;
@@ -55,8 +57,10 @@ class MultiFabLayoutDelegate extends MultiChildLayoutDelegate {
       );
       positionChild(
         0,
-        Offset(size.width - mainButtonSize.width,
-            size.height - mainButtonSize.height),
+        Offset(
+          size.width - mainButtonSize.width,
+          size.height - mainButtonSize.height,
+        ),
       );
     }
 
@@ -66,18 +70,17 @@ class MultiFabLayoutDelegate extends MultiChildLayoutDelegate {
       if (hasChild(layoutId)) {
         final childButtonSize = layoutChild(
           layoutId,
-          BoxConstraints(
-            maxWidth: size.width,
-            maxHeight: childButtonHeight,
-          ),
+          BoxConstraints(maxWidth: size.width, maxHeight: childButtonHeight),
         );
 
         // 动态计算子按钮的垂直偏移量
-        final dyOffset = (mainButtonHeight + buttonSpacing) +
+        final dyOffset =
+            (mainButtonHeight + buttonSpacing) +
             (i - 1) * (childButtonSize.height + buttonSpacing) * animationValue;
 
         // 动态计算水平偏移量，使子按钮完全隐藏在主按钮底部时的水平位置对齐
-        final dxOffset = (mainButtonHeight - childButtonSize.width) /
+        final dxOffset =
+            (mainButtonHeight - childButtonSize.width) /
             2 *
             (1 - animationValue);
 
@@ -102,20 +105,16 @@ class MultiFabLayoutDelegate extends MultiChildLayoutDelegate {
 class PageBackButton extends StatelessWidget {
   final Function()? onBack;
 
-  const PageBackButton({
-    super.key,
-    this.onBack,
-  });
+  const PageBackButton({super.key, this.onBack});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: IconButton(
         onPressed: onBack ?? Get.back,
         icon: const Icon(Icons.arrow_back_rounded),
-        color: colorScheme.onSurface,
-        tooltip: l10n.back,
+        color: context.theme.colorScheme.onSurface,
+        tooltip: context.l10n.back,
       ),
     );
   }

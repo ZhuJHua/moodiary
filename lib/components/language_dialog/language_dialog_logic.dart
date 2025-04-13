@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'dart:ui';
+
+import 'package:get/get.dart';
 import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/values/language.dart';
 import 'package:moodiary/pages/home/setting/setting_logic.dart';
-import 'package:moodiary/presentation/pref.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/persistence/pref.dart';
 
 class LanguageDialogLogic extends GetxController {
   late final SettingLogic settingLogic = Bind.find<SettingLogic>();
@@ -14,9 +15,10 @@ class LanguageDialogLogic extends GetxController {
     final originLanguage = language;
     if (language == Language.system) {
       final systemLocale = await findSystemLocale();
-      final systemLanguageCode = systemLocale.contains('_')
-          ? systemLocale.split('_').first
-          : systemLocale;
+      final systemLanguageCode =
+          systemLocale.contains('_')
+              ? systemLocale.split('_').first
+              : systemLocale;
       language = Language.values.firstWhere(
         (e) => e.languageCode == systemLanguageCode,
         orElse: () => Language.english,

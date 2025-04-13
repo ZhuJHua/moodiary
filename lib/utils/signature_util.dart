@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/notice_util.dart';
 
 class SignatureUtil {
@@ -24,9 +24,10 @@ class SignatureUtil {
   //生成腾讯云签名
   static String generateSignature(String id, String key, int timestamp, body) {
     final String dateTime =
-        DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: true)
-            .toString()
-            .split(' ')[0];
+        DateTime.fromMillisecondsSinceEpoch(
+          timestamp,
+          isUtc: true,
+        ).toString().split(' ')[0];
     //拼接规范请求串
     final canonicalRequest =
         'POST\n/\n\ncontent-type:application/json\nhost:hunyuan.tencentcloudapi.com\nx-tc-action:chatcompletions\n\ncontent-type;host;x-tc-action\n${sha256HexToLowercase(jsonEncode(body))}';
@@ -46,7 +47,7 @@ class SignatureUtil {
     final id = PrefUtil.getValue<String>('tencentId');
     final key = PrefUtil.getValue<String>('tencentKey');
     if (id == null || key == null) {
-      NoticeUtil.showToast('请先配置Key');
+      toast.info(message: '请先配置Key');
       return null;
     } else {
       return {'id': id, 'key': key};

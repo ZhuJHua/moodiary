@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
 
 import 'web_view_state.dart';
 

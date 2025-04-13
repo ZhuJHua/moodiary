@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/pages/home/setting/setting_logic.dart';
-import 'package:moodiary/presentation/pref.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/persistence/pref.dart';
 
 import 'theme_mode_dialog_state.dart';
 

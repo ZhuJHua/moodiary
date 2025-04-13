@@ -1,4 +1,4 @@
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
 
 class WebViewState {
   RxDouble progress = 0.0.obs;

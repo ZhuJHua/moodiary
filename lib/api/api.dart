@@ -11,16 +11,19 @@ import 'package:moodiary/common/models/hitokoto.dart';
 import 'package:moodiary/common/models/hunyuan.dart';
 import 'package:moodiary/common/models/image.dart';
 import 'package:moodiary/common/models/weather.dart';
-import 'package:moodiary/main.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/l10n/l10n.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/http_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/signature_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 class Api {
   static Future<Stream<String>?> getHunYuan(
-      String id, String key, List<Message> messages, int model) async {
+    String id,
+    String key,
+    List<Message> messages,
+    int model,
+  ) async {
     //获取时间戳
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final hunyuanModel = switch (model) {
@@ -38,59 +41,75 @@ class Api {
     };
 
     //获取签名
-    final authorization =
-        SignatureUtil.generateSignature(id, key, timestamp, body);
+    final authorization = SignatureUtil.generateSignature(
+      id,
+      key,
+      timestamp,
+      body,
+    );
     //构造请求头
     final header = PublicHeader(
-        'ChatCompletions', timestamp ~/ 1000, '2023-09-01', authorization);
+      'ChatCompletions',
+      timestamp ~/ 1000,
+      '2023-09-01',
+      authorization,
+    );
     //发起请求
-    return await HttpUtil().postStream('https://hunyuan.tencentcloudapi.com',
-        header: header.toMap(), data: body);
+    return await HttpUtil().postStream(
+      'https://hunyuan.tencentcloudapi.com',
+      header: header.toMap(),
+      data: body,
+    );
   }
 
   static Future<Uint8List?> getImageData(String url) async {
     return (await HttpUtil().get(url, type: ResponseType.bytes)).data;
   }
 
-  static Future<List<String>?> updatePosition() async {
+  static Future<List<String>?> updatePosition(BuildContext context) async {
     Position? position;
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        NoticeUtil.showToast(l10n.noticeEnableLocation);
+      if (permission == LocationPermission.denied && context.mounted) {
+        toast.info(message: context.l10n.noticeEnableLocation);
         return null;
       }
-      if (permission == LocationPermission.deniedForever) {
-        NoticeUtil.showToast(l10n.noticeEnableLocation2);
+      if (permission == LocationPermission.deniedForever && context.mounted) {
+        toast.info(message: context.l10n.noticeEnableLocation2);
         return null;
       }
     }
     if (await Geolocator.isLocationServiceEnabled()) {
       position = await Geolocator.getLastKnownPosition(
-          forceAndroidLocationManager: true);
+        forceAndroidLocationManager: true,
+      );
       position ??= await Geolocator.getCurrentPosition(
-          locationSettings: AndroidSettings(forceLocationManager: true));
+        locationSettings: AndroidSettings(forceLocationManager: true),
+      );
     }
-    if (position != null) {
-      final local = Localizations.localeOf(Get.context!);
+    if (position != null && context.mounted) {
+      final local = Localizations.localeOf(context);
       final parameters = {
         'location':
             '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.latitude.toStringAsFixed(2))}',
         'key': PrefUtil.getValue<String>('qweatherKey'),
-        'lang': local
+        'lang': local,
       };
       final res = await HttpUtil().get(
-          'https://geoapi.qweather.com/v2/city/lookup',
-          parameters: parameters);
-      final geo =
-          await compute(GeoResponse.fromJson, res.data as Map<String, dynamic>);
+        'https://geoapi.qweather.com/v2/city/lookup',
+        parameters: parameters,
+      );
+      final geo = await compute(
+        GeoResponse.fromJson,
+        res.data as Map<String, dynamic>,
+      );
       if (geo.location != null && geo.location!.isNotEmpty) {
         final city = geo.location!.first;
         return [
           position.latitude.toString(),
           position.longitude.toString(),
-          '${city.adm2} ${city.name}'
+          '${city.adm2} ${city.name}',
         ];
       } else {
         return null;
@@ -100,36 +119,41 @@ class Api {
     }
   }
 
-  static Future<List<String>?> updateWeather({required LatLng position}) async {
-    final local = Localizations.localeOf(Get.context!);
+  static Future<List<String>?> updateWeather({
+    required BuildContext context,
+    required LatLng position,
+  }) async {
+    final local = Localizations.localeOf(context);
     final parameters = {
       'location':
           '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.latitude.toStringAsFixed(2))}',
       'key': PrefUtil.getValue<String>('qweatherKey'),
-      'lang': local
+      'lang': local,
     };
     final res = await HttpUtil().get(
-        'https://devapi.qweather.com/v7/weather/now',
-        parameters: parameters);
+      'https://devapi.qweather.com/v7/weather/now',
+      parameters: parameters,
+    );
     final weather = await compute(
-        WeatherResponse.fromJson, res.data as Map<String, dynamic>);
+      WeatherResponse.fromJson,
+      res.data as Map<String, dynamic>,
+    );
     if (weather.now != null) {
-      return [
-        weather.now!.icon!,
-        weather.now!.temp!,
-        weather.now!.text!,
-      ];
+      return [weather.now!.icon!, weather.now!.temp!, weather.now!.text!];
     } else {
       return null;
     }
   }
 
   static Future<GithubRelease?> getGithubRelease() async {
-    final res = await HttpUtil()
-        .get('https://api.github.com/repos/ZhuJHua/moodiary/releases/latest');
+    final res = await HttpUtil().get(
+      'https://api.github.com/repos/ZhuJHua/moodiary/releases/latest',
+    );
     if (res.data != null) {
       final githubRelease = await compute(
-          GithubRelease.fromJson, res.data as Map<String, dynamic>);
+        GithubRelease.fromJson,
+        res.data as Map<String, dynamic>,
+      );
       return githubRelease;
     }
     return null;
@@ -138,15 +162,20 @@ class Api {
   static Future<List<String>?> updateHitokoto() async {
     final res = await HttpUtil().get('https://v1.hitokoto.cn');
     final hitokoto = await compute(
-        HitokotoResponse.fromJson, res.data as Map<String, dynamic>);
+      HitokotoResponse.fromJson,
+      res.data as Map<String, dynamic>,
+    );
     return [hitokoto.hitokoto!];
   }
 
   static Future<List<String>?> updateImageUrl() async {
-    final res = await HttpUtil()
-        .get('https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1');
-    final BingImage bingImage =
-        await compute(BingImage.fromJson, res.data as Map<String, dynamic>);
+    final res = await HttpUtil().get(
+      'https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1',
+    );
+    final BingImage bingImage = await compute(
+      BingImage.fromJson,
+      res.data as Map<String, dynamic>,
+    );
     return ['https://cn.bing.com${bingImage.images?[0].url}'];
   }
 }

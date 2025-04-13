@@ -585,7 +585,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				PRODUCT_BUNDLE_IDENTIFIER = cn.yooss.moodiary;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "moodiary-dev-mac";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "moodiary-mac";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Profile;
@@ -725,7 +725,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 12.4;
 				PRODUCT_BUNDLE_IDENTIFIER = cn.yooss.moodiary;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "moodiary-dev-mac";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "moodiary-mac";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
@@ -754,7 +754,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = cn.yooss.moodiary;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "moodiary-dev-mac";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "moodiary-mac";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;

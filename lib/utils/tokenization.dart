@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:moodiary/gen/assets.gen.dart';
 
 class FullTokenizer {
   late BasicTokenizer _basicTokenizer;
@@ -10,7 +11,7 @@ class FullTokenizer {
 
   Future<void> init() async {
     // 加载词表
-    _vocab = await _loadVocab('assets/tflite/vocab.txt');
+    _vocab = await _loadVocab(Assets.tflite.vocab);
     _invVocab = {};
     // 创建反向词表
     _vocab.forEach((key, value) {
@@ -177,8 +178,11 @@ class WordPieceTokenizer {
   final String unkToken;
   final int maxInputCharsPerWord;
 
-  WordPieceTokenizer(this.vocab,
-      {this.unkToken = "[UNK]", this.maxInputCharsPerWord = 100});
+  WordPieceTokenizer(
+    this.vocab, {
+    this.unkToken = "[UNK]",
+    this.maxInputCharsPerWord = 100,
+  });
 
   List<String> tokenize(String text) {
     final List<String> outputTokens = [];

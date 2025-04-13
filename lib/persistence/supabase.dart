@@ -1,5 +1,5 @@
 import 'package:moodiary/common/models/isar/diary.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseUtil {
@@ -17,19 +17,13 @@ class SupabaseUtil {
 
   Future<void> initSupabase() async {
     if (PrefUtil.getValue<bool>('firstStart') == false) {
-      await Supabase.initialize(
-        url: '',
-        anonKey: '',
-      );
+      await Supabase.initialize(url: '', anonKey: '');
     }
   }
 
   //注册
   Future<void> signUp(String email, String password) async {
-    await _supabase.auth.signUp(
-      email: email,
-      password: password,
-    );
+    await _supabase.auth.signUp(email: email, password: password);
     await _supabase.from('test').select('*');
   }
 

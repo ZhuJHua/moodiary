@@ -272,5 +272,8 @@
   "diaryType": "类型",
   "mediaImageCount": "{count} 张照片",
   "mediaAudioCount": "{count} 段音频",
-  "mediaVideoCount": "{count} 段视频"
+  "mediaVideoCount": "{count} 段视频",
+  "toastSuccess": "成功",
+  "toastError": "出错了",
+  "toastLoading": "加载中"
 }

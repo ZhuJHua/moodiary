@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:moodiary/presentation/pref.dart';
+import 'package:get/get.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/aes_util.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:share_plus/share_plus.dart';
 
 class LaboratoryLogic extends GetxController {
@@ -28,15 +28,16 @@ class LaboratoryLogic extends GetxController {
   Future<void> exportErrorLog() async {
     // 如果日志内容存在且内容不为空则导出
     if ((await File(FileUtil.getErrorLogPath()).readAsString()).isNotEmpty) {
-      final result =
-          await Share.shareXFiles([XFile(FileUtil.getErrorLogPath())]);
+      final result = await Share.shareXFiles([
+        XFile(FileUtil.getErrorLogPath()),
+      ]);
       // 如果分享成功则清空本地日志
       if (result.status == ShareResultStatus.success) {
         await File(FileUtil.getErrorLogPath()).writeAsString('');
-        NoticeUtil.showToast('日志导出成功，已删除本地日志');
+        toast.success(message: '日志导出成功，已删除本地日志');
       }
     } else {
-      NoticeUtil.showToast('暂无日志');
+      toast.info(message: '暂无日志');
     }
   }
 

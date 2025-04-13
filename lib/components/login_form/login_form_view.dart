@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/utils/function_extensions.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'login_form_logic.dart';
 
@@ -46,9 +46,7 @@ class LoginFormComponent extends StatelessWidget {
                       },
                       focusNode: logic.emailFocusNode,
                     ),
-                    const SizedBox(
-                      height: 20.0,
-                    ),
+                    const SizedBox(height: 20.0),
                     TextFormField(
                       validator: (value) {
                         if (value!.isEmpty) {
@@ -72,17 +70,16 @@ class LoginFormComponent extends StatelessWidget {
                       ),
                       focusNode: logic.passwordFocusNode,
                     ),
-                    const SizedBox(
-                      height: 20.0,
-                    ),
+                    const SizedBox(height: 20.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
-                            onPressed: () {
-                              logic.loginLogic.changeForm();
-                            },
-                            child: const Text("注册")),
+                          onPressed: () {
+                            logic.loginLogic.changeForm();
+                          },
+                          child: const Text("注册"),
+                        ),
                         ElevatedButton(
                           onPressed: () {
                             logic.submit();
@@ -90,7 +87,7 @@ class LoginFormComponent extends StatelessWidget {
                           child: const Icon(Icons.login),
                         ),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),

@@ -3,14 +3,14 @@ import 'dart:io';
 
 import 'package:faker/faker.dart';
 import 'package:flutter/foundation.dart' as flutter;
+import 'package:get/get.dart';
 import 'package:moodiary/common/models/isar/category.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/components/local_send/local_send_logic.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
-import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/persistence/isar.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/log_util.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_multipart/shelf_multipart.dart';
@@ -54,14 +54,15 @@ class LocalSendServerLogic extends GetxController {
 
   // 启动UDP广播监听
   Future<void> startBroadcastListener() async {
-    LogUtil.printInfo('Listening for broadcast on port $scanPort');
+    logger.i('Listening for broadcast on port $scanPort');
     socket.listen((RawSocketEvent event) {
       if (event == RawSocketEvent.read) {
         final datagram = socket.receive();
         if (datagram != null) {
           final message = String.fromCharCodes(datagram.data);
-          LogUtil.printInfo(
-              'Received broadcast: $message from ${datagram.address.address}');
+          logger.i(
+            'Received broadcast: $message from ${datagram.address.address}',
+          );
           final response = '$serverIp:$transferPort:$serverName';
           socket.send(response.codeUnits, datagram.address, datagram.port);
         }
@@ -75,7 +76,7 @@ class LocalSendServerLogic extends GetxController {
         .addMiddleware(shelf.logRequests())
         .addHandler(_handleRequest);
     httpServer = await serve(handler, serverIp!, transferPort);
-    LogUtil.printInfo('Server started on http://$serverIp:$transferPort');
+    logger.i('Server started on http://$serverIp:$transferPort');
   }
 
   Future<shelf.Response> _handleRequest(shelf.Request request) async {
@@ -88,9 +89,10 @@ class LocalSendServerLogic extends GetxController {
         // 读取日记 JSON 数据
         if (name == 'diary') {
           diary = await flutter.compute(
-              Diary.fromJson,
-              jsonDecode(await formData.part.readString())
-                  as Map<String, dynamic>);
+            Diary.fromJson,
+            jsonDecode(await formData.part.readString())
+                as Map<String, dynamic>,
+          );
         } else if (name == 'image' ||
             name == 'video' ||
             name == 'thumbnail' ||
@@ -116,9 +118,11 @@ class LocalSendServerLogic extends GetxController {
     }
     // 如果分类不为空，插入一个分类
     if (categoryName != null) {
-      await IsarUtil.updateACategory(Category()
-        ..id = diary.categoryId!
-        ..categoryName = categoryName);
+      await IsarUtil.updateACategory(
+        Category()
+          ..id = diary.categoryId!
+          ..categoryName = categoryName,
+      );
     }
     // 插入日记
     await IsarUtil.insertADiary(diary);

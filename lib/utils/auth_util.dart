@@ -18,14 +18,15 @@ class AuthUtil {
           goToSettingsButton: "设置",
           goToSettingsDescription: "请先在系统中开启指纹",
           signInTitle: "扫描您的指纹以继续",
-        )
+        ),
       ],
       localizedReason: '安全验证',
       options: AuthenticationOptions(
-          useErrorDialogs: true,
-          stickyAuth: true,
-          sensitiveTransaction: true,
-          biometricOnly: Platform.isWindows ? false : true),
+        useErrorDialogs: true,
+        stickyAuth: true,
+        sensitiveTransaction: true,
+        biometricOnly: Platform.isWindows ? false : true,
+      ),
     );
   }
 

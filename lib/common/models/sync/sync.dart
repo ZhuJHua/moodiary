@@ -4,8 +4,5 @@ class SyncResult<T> {
   final SyncStatus status;
   T? data;
 
-  SyncResult({
-    required this.status,
-    this.data,
-  });
+  SyncResult({required this.status, this.data});
 }

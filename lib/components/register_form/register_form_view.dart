@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/utils/function_extensions.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'register_form_logic.dart';
 
@@ -47,9 +47,7 @@ class RegisterFormComponent extends StatelessWidget {
                           ),
                           focusNode: logic.emailFocusNode,
                         ),
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
                         TextFormField(
                           validator: (value) {
                             if (value!.isEmpty) {
@@ -72,9 +70,7 @@ class RegisterFormComponent extends StatelessWidget {
                           ),
                           focusNode: logic.passwordFocusNode,
                         ),
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
                         TextFormField(
                           validator: (value) {
                             if (value!.isEmpty) {
@@ -97,9 +93,7 @@ class RegisterFormComponent extends StatelessWidget {
                           ),
                           focusNode: logic.rePasswordFocusNode,
                         ),
-                        const SizedBox(
-                          height: 20,
-                        ),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -107,10 +101,11 @@ class RegisterFormComponent extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       TextButton(
-                          onPressed: () {
-                            logic.loginLogic.changeForm();
-                          },
-                          child: const Text("返回登录")),
+                        onPressed: () {
+                          logic.loginLogic.changeForm();
+                        },
+                        child: const Text("返回登录"),
+                      ),
                       ElevatedButton(
                         onPressed: () {
                           logic.submit();
@@ -118,7 +113,7 @@ class RegisterFormComponent extends StatelessWidget {
                         child: const Icon(Icons.check),
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),

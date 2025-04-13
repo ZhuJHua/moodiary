@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:dismissible_page/dismissible_page.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/media_type.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/pages/image/image_logic.dart';
 import 'package:moodiary/utils/media_util.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:refreshed/refreshed.dart';
 
 Future<T?> showImageView<T>(
   BuildContext context,
@@ -128,7 +128,7 @@ class ImagePage extends StatelessWidget {
       tag: _tag,
     );
     final state = Bind.find<ImageLogic>(tag: _tag).state;
-    final textStyle = Theme.of(context).textTheme;
+
     final imageView = ImageViewGallery(
       imagePathList: state.imagePathList,
       initialIndex: state.imageIndex.value,
@@ -186,7 +186,7 @@ class ImagePage extends StatelessWidget {
                   },
                   imageIndex: state.imageIndex,
                   imagePathList: state.imagePathList,
-                  textStyle: textStyle.labelLarge,
+                  textStyle: context.textTheme.labelLarge,
                   opacity: state.opacity,
                 ),
               ),

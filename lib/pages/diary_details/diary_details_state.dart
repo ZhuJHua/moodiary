@@ -1,6 +1,6 @@
+import 'package:get/get.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
-import 'package:moodiary/presentation/pref.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/persistence/pref.dart';
 
 class DiaryDetailsState {
   Diary diary = Get.arguments[0];

@@ -22,8 +22,9 @@ class MarkdownConverter {
   }
 
   static String _handleEscapedCharacters(String input) {
-    return input.replaceAllMapped(RegExp(r'\\([\\*_`~{}\[\]()#+\-.!|])'),
-        (match) {
+    return input.replaceAllMapped(RegExp(r'\\([\\*_`~{}\[\]()#+\-.!|])'), (
+      match,
+    ) {
       return match.group(1) ?? '';
     });
   }
@@ -47,9 +48,11 @@ class MarkdownConverter {
 
   static String _processLists(String input) {
     return input.replaceAllMapped(
-        RegExp(r'^(\s*[-*+]\s+)(.+)', multiLine: true), (match) {
-      return '- ${match.group(2)?.trim()}';
-    });
+      RegExp(r'^(\s*[-*+]\s+)(.+)', multiLine: true),
+      (match) {
+        return '- ${match.group(2)?.trim()}';
+      },
+    );
   }
 
   static String _removeHTMLAndComments(String input) {
@@ -61,7 +64,9 @@ class MarkdownConverter {
   static String _processFormatting(String input) {
     return input
         .replaceAllMapped(
-            RegExp(r'\*\*(.+?)\*\*'), (match) => match.group(1) ?? '')
+          RegExp(r'\*\*(.+?)\*\*'),
+          (match) => match.group(1) ?? '',
+        )
         .replaceAllMapped(RegExp(r'_(.+?)_'), (match) => match.group(1) ?? '')
         .replaceAllMapped(RegExp(r'~(.+?)~'), (match) => match.group(1) ?? '');
   }
@@ -69,17 +74,29 @@ class MarkdownConverter {
   static String _processBlocks(String input) {
     return input
         .replaceAllMapped(
-            RegExp(r'^# (.+)', multiLine: true), (match) => '${match.group(1)}')
-        .replaceAllMapped(RegExp(r'^## (.+)', multiLine: true),
-            (match) => '${match.group(1)}')
-        .replaceAllMapped(RegExp(r'^### (.+)', multiLine: true),
-            (match) => '${match.group(1)}')
-        .replaceAllMapped(RegExp(r'^#### (.+)', multiLine: true),
-            (match) => '${match.group(1)}')
-        .replaceAllMapped(RegExp(r'^##### (.+)', multiLine: true),
-            (match) => '${match.group(1)}')
-        .replaceAllMapped(RegExp(r'^###### (.+)', multiLine: true),
-            (match) => '${match.group(1)}');
+          RegExp(r'^# (.+)', multiLine: true),
+          (match) => '${match.group(1)}',
+        )
+        .replaceAllMapped(
+          RegExp(r'^## (.+)', multiLine: true),
+          (match) => '${match.group(1)}',
+        )
+        .replaceAllMapped(
+          RegExp(r'^### (.+)', multiLine: true),
+          (match) => '${match.group(1)}',
+        )
+        .replaceAllMapped(
+          RegExp(r'^#### (.+)', multiLine: true),
+          (match) => '${match.group(1)}',
+        )
+        .replaceAllMapped(
+          RegExp(r'^##### (.+)', multiLine: true),
+          (match) => '${match.group(1)}',
+        )
+        .replaceAllMapped(
+          RegExp(r'^###### (.+)', multiLine: true),
+          (match) => '${match.group(1)}',
+        );
   }
 
   static String _processLinks(String input) {
@@ -96,7 +113,9 @@ class MarkdownConverter {
 
   static String _processMath(String input) {
     return input.replaceAllMapped(
-        RegExp(r'\$(.+?)\$'), (match) => match.group(1) ?? '');
+      RegExp(r'\$(.+?)\$'),
+      (match) => match.group(1) ?? '',
+    );
   }
 
   static String _cleanupText(String input) {

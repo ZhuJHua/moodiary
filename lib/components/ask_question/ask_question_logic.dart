@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/keyboard_state.dart';
+import 'package:moodiary/components/keyboard_listener/keyboard_listener.dart';
 import 'package:moodiary/utils/literunner.dart';
 import 'package:moodiary/utils/tokenization.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'ask_question_state.dart';
 
-class AskQuestionLogic extends GetxController with WidgetsBindingObserver {
+class AskQuestionLogic extends GetxController {
   final AskQuestionState state = AskQuestionState();
 
   //输入框控制器
@@ -23,42 +24,31 @@ class AskQuestionLogic extends GetxController with WidgetsBindingObserver {
 
   List<double> heightList = [];
 
+  late final KeyboardObserver keyboardObserver;
+
   @override
-  void didChangeMetrics() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final height = MediaQuery.viewInsetsOf(Get.context!).bottom;
-      if (heightList.isNotEmpty && height != heightList.last) {
-        if (height > heightList.last &&
-            state.keyboardState != KeyboardState.opening) {
-          state.keyboardState = KeyboardState.opening;
-          //正在打开
-        } else if (height < heightList.last &&
-            state.keyboardState != KeyboardState.closing) {
-          state.keyboardState = KeyboardState.closing;
-          //正在关闭
-          unFocus();
+  void onInit() {
+    keyboardObserver = KeyboardObserver(
+      onStateChanged: (state) {
+        switch (state) {
+          case KeyboardState.opening:
+            break;
+          case KeyboardState.closing:
+            unFocus();
+            break;
+          case KeyboardState.closed:
+            toBottom();
+            break;
+          case KeyboardState.unknown:
+            break;
         }
-      }
-
-      // 只在高度变化时记录高度
-      if (heightList.isEmpty || height != heightList.last) {
-        heightList.add(height);
-      }
-
-      // 当高度为0且键盘经历了开启关闭过程时，认为键盘已完全关闭
-      if (height == 0 && state.keyboardState != KeyboardState.closed) {
-        state.keyboardState = KeyboardState.closed;
-        heightList.clear();
-        toBottom();
-        //已经关闭
-      }
-    });
-    super.didChangeMetrics();
+      },
+    );
+    super.onInit();
   }
 
   @override
   void onReady() async {
-    WidgetsBinding.instance.addObserver(this);
     //await fullTokenizer.init();
     //await liteRunner.initializeInterpreter(state.modelPath, fullTokenizer);
     super.onReady();
@@ -66,11 +56,10 @@ class AskQuestionLogic extends GetxController with WidgetsBindingObserver {
 
   @override
   void onClose() {
-    WidgetsBinding.instance.removeObserver(this);
+    keyboardObserver.stop();
     textEditingController.dispose();
     scrollController.dispose();
     focusNode.dispose();
-    // 销毁实例
     liteRunner.close();
     super.onClose();
   }
@@ -98,8 +87,11 @@ class AskQuestionLogic extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> toBottom() async {
-    await scrollController.animateTo(scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 100), curve: Curves.linear);
+    await scrollController.animateTo(
+      scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 100),
+      curve: Curves.linear,
+    );
   }
 
   Future<void> ask(String content) async {

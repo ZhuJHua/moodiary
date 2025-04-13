@@ -7,14 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_quill/internal.dart';
+import 'package:get/get.dart';
 import 'package:material_color_utilities/palettes/core_palette.dart';
 import 'package:moodiary/common/values/colors.dart';
-import 'package:moodiary/presentation/isar.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/isar.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/font_util.dart';
 import 'package:moodiary/utils/log_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 class ThemeUtil {
   ThemeUtil._();
@@ -37,6 +37,10 @@ class ThemeUtil {
 
   // 动态配色的深色主题
   ColorScheme? darkDynamic;
+
+  ThemeData get lightTheme => _lightTheme ?? ThemeData.light();
+
+  ThemeData get darkTheme => _darkTheme ?? ThemeData.dark();
 
   bool get supportDynamic => lightDynamic != null && darkDynamic != null;
 
@@ -343,7 +347,7 @@ class ThemeUtil {
         return;
       }
     } on PlatformException {
-      LogUtil.printInfo('dynamic_color: Failed to obtain core palette.');
+      logger.d('dynamic_color: Failed to obtain core palette.');
     }
 
     try {
@@ -355,12 +359,10 @@ class ThemeUtil {
         return;
       }
     } on PlatformException {
-      LogUtil.printInfo('dynamic_color: Failed to obtain accent color.');
+      logger.d('dynamic_color: Failed to obtain accent color.');
     }
 
-    LogUtil.printInfo(
-      'dynamic_color: Dynamic color not detected on this device.',
-    );
+    logger.d('dynamic_color: Dynamic color not detected on this device.');
   }
 
   (ThemeData, ThemeData) getThemeData() {
@@ -400,8 +402,8 @@ class ThemeUtil {
     required ColorScheme customColorScheme,
   }) {
     final themeData = Theme.of(context);
-    final textStyle = Theme.of(context).textTheme;
-    final baseStyle = textStyle.bodyMedium!.copyWith(
+
+    final baseStyle = context.theme.textTheme.bodyMedium!.copyWith(
       color: customColorScheme.onSurface,
     );
     const baseHorizontalSpacing = HorizontalSpacing(0, 0);
@@ -416,42 +418,54 @@ class ThemeUtil {
 
     return DefaultStyles(
       h1: DefaultTextBlockStyle(
-        textStyle.titleLarge!.copyWith(color: customColorScheme.primary),
+        context.theme.textTheme.titleLarge!.copyWith(
+          color: customColorScheme.primary,
+        ),
         baseHorizontalSpacing,
         const VerticalSpacing(16, 0),
         VerticalSpacing.zero,
         null,
       ),
       h2: DefaultTextBlockStyle(
-        textStyle.titleMedium!.copyWith(color: customColorScheme.secondary),
+        context.theme.textTheme.titleMedium!.copyWith(
+          color: customColorScheme.secondary,
+        ),
         baseHorizontalSpacing,
         const VerticalSpacing(8, 0),
         VerticalSpacing.zero,
         null,
       ),
       h3: DefaultTextBlockStyle(
-        textStyle.titleSmall!.copyWith(color: customColorScheme.onSurface),
+        context.theme.textTheme.titleSmall!.copyWith(
+          color: customColorScheme.onSurface,
+        ),
         baseHorizontalSpacing,
         const VerticalSpacing(8, 0),
         VerticalSpacing.zero,
         null,
       ),
       h4: DefaultTextBlockStyle(
-        textStyle.titleSmall!.copyWith(color: customColorScheme.onSurface),
+        context.theme.textTheme.titleSmall!.copyWith(
+          color: customColorScheme.onSurface,
+        ),
         baseHorizontalSpacing,
         const VerticalSpacing(6, 0),
         VerticalSpacing.zero,
         null,
       ),
       h5: DefaultTextBlockStyle(
-        textStyle.titleSmall!.copyWith(color: customColorScheme.onSurface),
+        context.theme.textTheme.titleSmall!.copyWith(
+          color: customColorScheme.onSurface,
+        ),
         baseHorizontalSpacing,
         const VerticalSpacing(6, 0),
         VerticalSpacing.zero,
         null,
       ),
       h6: DefaultTextBlockStyle(
-        textStyle.titleSmall!.copyWith(color: customColorScheme.onSurface),
+        context.theme.textTheme.titleSmall!.copyWith(
+          color: customColorScheme.onSurface,
+        ),
         baseHorizontalSpacing,
         const VerticalSpacing(4, 0),
         VerticalSpacing.zero,

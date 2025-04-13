@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary/api/api.dart';
@@ -17,9 +18,9 @@ import 'package:moodiary/components/quill_embed/audio_embed.dart';
 import 'package:moodiary/components/quill_embed/image_embed.dart';
 import 'package:moodiary/components/quill_embed/text_indent.dart';
 import 'package:moodiary/components/quill_embed/video_embed.dart';
-import 'package:moodiary/main.dart';
-import 'package:moodiary/presentation/isar.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/l10n/l10n.dart';
+import 'package:moodiary/persistence/isar.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/src/rust/api/kmp.dart';
 import 'package:moodiary/utils/file_util.dart';
@@ -27,7 +28,6 @@ import 'package:moodiary/utils/markdown_util.dart';
 import 'package:moodiary/utils/media_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:path/path.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:uuid/uuid.dart';
 
 import 'edit_state.dart';
@@ -120,7 +120,7 @@ class EditLogic extends GetxController {
       state.currentDiary = Diary();
       if (state.firstLineIndent) insertNewLine();
       if (state.autoWeather) {
-        unawaited(getPositionAndWeather());
+        unawaited(getPositionAndWeather(context: Get.context!));
       }
       if (state.autoCategory) selectCategory(Get.arguments[1] as String?);
     } else {
@@ -221,7 +221,10 @@ class EditLogic extends GetxController {
   }
 
   void _listenCount() {
-    state.totalCount.value = _toPlainText().length;
+    state.totalCount.value =
+        markdownTextEditingController?.text.length ??
+        quillController?.selection.baseOffset ??
+        0;
   }
 
   // 插入换行时自动首行缩进
@@ -274,7 +277,8 @@ class EditLogic extends GetxController {
       }
       return;
     } else {
-      NoticeUtil.showToast(l10n.cancelSelect);
+      if (!context.mounted) return;
+      toast.info(message: context.l10n.cancelSelect);
     }
   }
 
@@ -290,7 +294,8 @@ class EditLogic extends GetxController {
       Navigator.pop<String>(context, photo.path);
       await addNewImage(photo, isMarkdown: isMarkdown);
     } else {
-      NoticeUtil.showToast(l10n.cancelSelect);
+      if (!context.mounted) return;
+      toast.info(message: context.l10n.cancelSelect);
     }
   }
 
@@ -303,20 +308,20 @@ class EditLogic extends GetxController {
 
   //网络图片
   Future<void> networkImage(BuildContext context) async {
-    NoticeUtil.showToast(l10n.imageFetching);
+    toast.info(message: context.l10n.imageFetching);
     final imageUrl = await Api.updateImageUrl();
-    if (imageUrl == null) {
-      NoticeUtil.showToast(l10n.imageFetchError);
+    if (imageUrl == null && context.mounted) {
+      toast.error(message: context.l10n.imageFetchError);
       return;
     }
-    final imageData = await Api.getImageData(imageUrl.first);
-    if (imageData == null) {
-      NoticeUtil.showToast(l10n.imageFetchError);
+    final imageData = await Api.getImageData(imageUrl!.first);
+    if (imageData == null && context.mounted) {
+      toast.error(message: context.l10n.imageFetchError);
       return;
     }
     final path = FileUtil.getCachePath('${const Uuid().v7()}.png');
     if (context.mounted) Navigator.pop(context, path);
-    addNewImage(XFile.fromData(imageData, path: path)..saveTo(path));
+    addNewImage(XFile.fromData(imageData!, path: path)..saveTo(path));
   }
 
   Future<void> addNewVideo(XFile xFile) async {
@@ -334,7 +339,8 @@ class EditLogic extends GetxController {
       Navigator.pop(context);
       await addNewVideo(video);
     } else {
-      NoticeUtil.showToast(l10n.cancelSelect);
+      if (!context.mounted) return;
+      toast.info(message: context.l10n.cancelSelect);
     }
   }
 
@@ -354,7 +360,7 @@ class EditLogic extends GetxController {
     state.imageFileList.removeWhere((file) => file.path == path);
     await FileUtil.deleteFile(path);
     //Get.backLegacy();
-    NoticeUtil.showToast('删除成功');
+    toast.success(message: '删除成功');
     update(['Image']);
   }
 
@@ -364,7 +370,7 @@ class EditLogic extends GetxController {
     state.imageFileList
       ..removeAt(index)
       ..insert(0, coverFile);
-    NoticeUtil.showToast('设置第${index + 1}张图片为封面');
+    toast.info(message: '设置第${index + 1}张图片为封面');
     update(['Image']);
   }
 
@@ -392,7 +398,7 @@ class EditLogic extends GetxController {
   }
 
   //保存日记
-  Future<void> saveDiary() async {
+  Future<void> saveDiary({required BuildContext context}) async {
     state.isSaving = true;
     update(['modal']);
     // 根据文本中的实际内容移除不需要的资源
@@ -447,27 +453,31 @@ class EditLogic extends GetxController {
     state.isNew
         ? Get.back(result: state.currentDiary.categoryId ?? '')
         : Get.back(result: 'changed');
-    NoticeUtil.showToast(
-      state.isNew ? l10n.editSaveSuccess : l10n.editChangeSuccess,
+    if (!context.mounted) return;
+    toast.success(
+      message:
+          state.isNew
+              ? context.l10n.editSaveSuccess
+              : context.l10n.editChangeSuccess,
     );
   }
 
   DateTime? oldTime;
 
-  void handleBack() {
+  void handleBack({required BuildContext context}) {
     final DateTime currentTime = DateTime.now();
     if (oldTime != null &&
         currentTime.difference(oldTime!) < const Duration(seconds: 3)) {
       Get.back();
     } else {
       oldTime = currentTime;
-      NoticeUtil.showToast(l10n.backAgainToExit);
+      toast.info(message: context.l10n.backAgainToExit);
     }
   }
 
-  Future<void> changeDate() async {
+  Future<void> changeDate({required BuildContext context}) async {
     final nowDateTime = await showDatePicker(
-      context: Get.context!,
+      context: context,
       initialDate: state.currentDiary.time,
       lastDate: DateTime.now(),
       initialDatePickerMode: DatePickerMode.day,
@@ -484,9 +494,9 @@ class EditLogic extends GetxController {
     }
   }
 
-  Future<void> changeTime() async {
+  Future<void> changeTime({required BuildContext context}) async {
     final nowTime = await showTimePicker(
-      context: Get.context!,
+      context: context,
       initialTime: TimeOfDay.fromDateTime(state.currentDiary.time),
     );
     if (nowTime != null) {
@@ -515,7 +525,7 @@ class EditLogic extends GetxController {
   }
 
   //获取天气，同时获取定位
-  Future<void> getPositionAndWeather() async {
+  Future<void> getPositionAndWeather({required BuildContext context}) async {
     final key = PrefUtil.getValue<String>('qweatherKey');
     if (key == null) return;
 
@@ -523,33 +533,37 @@ class EditLogic extends GetxController {
     update(['Weather']);
 
     // 获取定位
-    final position = await Api.updatePosition();
-    if (position == null) {
-      _handleError(l10n.locationError);
+    final position = await Api.updatePosition(context);
+    if (position == null && context.mounted) {
+      _handleError(context.l10n.locationError);
       return;
     }
 
-    state.currentDiary.position = position;
+    state.currentDiary.position = position!;
 
+    if (!context.mounted) return;
     // 获取天气
     final weather = await Api.updateWeather(
+      context: context,
       position: LatLng(double.parse(position[0]), double.parse(position[1])),
     );
 
-    if (weather == null) {
-      _handleError(l10n.weatherError);
+    if (weather == null && context.mounted) {
+      _handleError(context.l10n.weatherError);
       return;
     }
 
-    state.currentDiary.weather = weather;
+    state.currentDiary.weather = weather!;
     state.isProcessing = false;
-    NoticeUtil.showToast(l10n.weatherSuccess);
+    if (context.mounted) {
+      toast.success(message: context.l10n.weatherSuccess);
+    }
     update(['Weather']);
   }
 
   void _handleError(String message) {
     state.isProcessing = false;
-    NoticeUtil.showToast(message);
+    toast.error(message: message);
     update(['Weather']);
   }
 
@@ -561,12 +575,12 @@ class EditLogic extends GetxController {
         withReadStream: true,
       );
 
-      if (result == null) {
-        NoticeUtil.showToast(l10n.cancelSelect);
+      if (result == null && context.mounted) {
+        toast.info(message: context.l10n.cancelSelect);
         return;
       }
 
-      final pickedFile = result.files.single;
+      final pickedFile = result!.files.single;
       final originalFileName = pickedFile.name;
       final fileExtension = extension(originalFileName);
 
@@ -581,7 +595,8 @@ class EditLogic extends GetxController {
 
       setAudioName(audioName);
     } catch (e) {
-      NoticeUtil.showToast(l10n.audioFileError);
+      if (!context.mounted) return;
+      toast.error(message: context.l10n.audioFileError);
     }
   }
 
@@ -605,21 +620,21 @@ class EditLogic extends GetxController {
     // 删除对应的组件
     state.audioNameList.removeWhere((name) => path.endsWith(name));
     update(['Audio']);
-    NoticeUtil.showToast('删除成功');
+    toast.success(message: '删除成功');
   }
 
   //添加一个标签
-  void addTag({required String tag}) {
+  void addTag({required String tag, required BuildContext context}) {
     tag = tag.trim();
     if (tag.isNotEmpty) {
       if (state.currentDiary.tags.contains(tag)) {
-        NoticeUtil.showToast(l10n.editAddTagAlreadyExist);
+        toast.info(message: context.l10n.editAddTagAlreadyExist);
         return;
       }
       state.currentDiary.tags.add(tag);
       update(['Tag']);
     } else {
-      NoticeUtil.showToast(l10n.editAddTagCannotEmpty);
+      toast.info(message: context.l10n.editAddTagCannotEmpty);
     }
   }
 

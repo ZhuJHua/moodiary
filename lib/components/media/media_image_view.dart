@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/components/base/image.dart';
-import 'package:moodiary/main.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/pages/image/image_view.dart';
 import 'package:uuid/uuid.dart';
 
@@ -17,8 +18,6 @@ class MediaImageComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
     final heroPrefix = const Uuid().v4();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,14 +30,14 @@ class MediaImageComponent extends StatelessWidget {
             children: [
               Text(
                 DateFormat.yMMMMEEEEd().format(dateTime),
-                style: textStyle.titleSmall?.copyWith(
-                  color: colorScheme.secondary,
+                style: context.textTheme.titleSmall?.copyWith(
+                  color: context.theme.colorScheme.secondary,
                 ),
               ),
               Text(
-                l10n.mediaImageCount(imageList.length),
-                style: textStyle.labelMedium?.copyWith(
-                  color: colorScheme.tertiary,
+                context.l10n.mediaImageCount(imageList.length),
+                style: context.textTheme.labelMedium?.copyWith(
+                  color: context.theme.colorScheme.tertiary,
                 ),
               ),
             ],

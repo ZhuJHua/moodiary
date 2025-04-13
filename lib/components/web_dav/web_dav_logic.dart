@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/webdav.dart';
-import 'package:moodiary/presentation/pref.dart';
-import 'package:moodiary/presentation/secure_storage.dart';
+import 'package:moodiary/persistence/pref.dart';
+import 'package:moodiary/persistence/secure_storage.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'web_dav_state.dart';
 
@@ -14,13 +14,16 @@ class WebDavLogic extends GetxController {
   WebDavUtil get webDav => WebDavUtil();
 
   late TextEditingController webDavUrlController = TextEditingController(
-      text: state.hasOption.value ? state.currentOptions[0] : null);
+    text: state.hasOption.value ? state.currentOptions[0] : null,
+  );
   late FocusNode webDavUrlFocusNode = FocusNode();
   late TextEditingController usernameController = TextEditingController(
-      text: state.hasOption.value ? state.currentOptions[1] : null);
+    text: state.hasOption.value ? state.currentOptions[1] : null,
+  );
   late FocusNode usernameFocusNode = FocusNode();
   late TextEditingController passwordController = TextEditingController(
-      text: state.hasOption.value ? state.currentOptions[2] : null);
+    text: state.hasOption.value ? state.currentOptions[2] : null,
+  );
   late FocusNode passwordFocusNode = FocusNode();
 
   @override
@@ -51,9 +54,10 @@ class WebDavLogic extends GetxController {
   Future<void> checkConnectivity() async {
     state.connectivityStatus.value = WebDavConnectivityStatus.connecting;
     final res = await webDav.checkConnectivity();
-    state.connectivityStatus.value = res
-        ? WebDavConnectivityStatus.connected
-        : WebDavConnectivityStatus.unconnected;
+    state.connectivityStatus.value =
+        res
+            ? WebDavConnectivityStatus.connected
+            : WebDavConnectivityStatus.unconnected;
   }
 
   void unFocus() {
@@ -66,20 +70,22 @@ class WebDavLogic extends GetxController {
     if (state.formKey.currentState?.validate() ?? false) {
       unFocus();
       state.formKey.currentState?.save();
-      NoticeUtil.showLoading();
+      toast.loading();
 
       await webDav.updateWebDav(
-          baseUrl: webDavUrlController.text,
-          username: usernameController.text,
-          password: passwordController.text);
+        baseUrl: webDavUrlController.text,
+        username: usernameController.text,
+        password: passwordController.text,
+      );
       state.hasOption.value = true;
       await checkConnectivity();
+      await toast.dismiss();
       if (state.connectivityStatus.value ==
           WebDavConnectivityStatus.connected) {
         await webDav.initDir();
-        NoticeUtil.showToast('保存成功');
+        toast.success(message: '保存成功');
       } else {
-        NoticeUtil.showToast('保存失败，请检查配置');
+        toast.error(message: '保存失败，请检查配置');
       }
     }
   }
@@ -91,7 +97,7 @@ class WebDavLogic extends GetxController {
 
     if (_firstClickTime == null) {
       _firstClickTime = currentTime;
-      NoticeUtil.showToast('请再次点击确认删除');
+      toast.info(message: '请再次点击确认删除');
       return;
     }
     if (currentTime.difference(_firstClickTime!).inSeconds <= 2) {
@@ -101,11 +107,11 @@ class WebDavLogic extends GetxController {
       passwordController.text = '';
       state.hasOption.value = false;
       webDav.removeWebDavOption();
-      NoticeUtil.showToast('删除成功');
+      toast.success(message: '删除成功');
     } else {
       // 超过3秒，重置点击时间并提示
       _firstClickTime = currentTime;
-      NoticeUtil.showToast('请再次点击确认删除');
+      toast.info(message: '请再次点击确认删除');
     }
   }
 

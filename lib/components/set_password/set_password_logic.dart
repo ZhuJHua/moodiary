@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/pages/home/setting/setting_logic.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/notice_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'set_password_state.dart';
 
@@ -12,9 +12,12 @@ class SetPasswordLogic extends GetxController
   final SetPasswordState state = SetPasswordState();
 
   late AnimationController animationController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 200));
+    vsync: this,
+    duration: const Duration(milliseconds: 200),
+  );
   late Animation<double> animation = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: animationController, curve: Curves.easeInOut));
+    CurvedAnimation(parent: animationController, curve: Curves.easeInOut),
+  );
 
   late final settingLogic = Bind.find<SettingLogic>();
 
@@ -85,7 +88,7 @@ class SetPasswordLogic extends GetxController
     await PrefUtil.setValue<String>('password', state.password);
     settingLogic.state.lock = true;
     settingLogic.update(['Lock']);
-    NoticeUtil.showToast('设置成功');
+    toast.success(message: '设置成功');
     if (context.mounted) Navigator.pop(context);
   }
 }

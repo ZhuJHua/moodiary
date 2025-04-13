@@ -1,7 +1,7 @@
+import 'package:get/get.dart';
 import 'package:moodiary/pages/home/setting/setting_logic.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/theme_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'color_sheet_state.dart';
 

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/components/base/marquee.dart';
-import 'package:moodiary/main.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/l10n/l10n.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/theme_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'color_sheet_logic.dart';
 import 'color_sheet_state.dart';
@@ -15,6 +15,7 @@ class ColorSheetComponent extends StatelessWidget {
   const ColorSheetComponent({super.key});
 
   Widget buildColorOption({
+    required BuildContext context,
     required int currentColor,
     required int realIndex,
     required Brightness brightness,
@@ -38,7 +39,10 @@ class ColorSheetComponent extends StatelessWidget {
             );
 
     final textPainter = TextPainter(
-      text: TextSpan(text: AppColor.colorName(realIndex), style: textStyle),
+      text: TextSpan(
+        text: AppColor.colorName(realIndex, context),
+        style: textStyle,
+      ),
       textDirection: TextDirection.ltr,
       textScaler: TextScaler.linear(PrefUtil.getValue<double>('fontScale')!),
     )..layout();
@@ -78,7 +82,7 @@ class ColorSheetComponent extends StatelessWidget {
                           height: textPainter.height,
                           width: constraints.maxWidth - 8.0,
                           child: Marquee(
-                            text: AppColor.colorName(realIndex),
+                            text: AppColor.colorName(realIndex, context),
                             velocity: 20,
                             blankSpace: 20,
                             pauseAfterRound: const Duration(seconds: 1),
@@ -94,7 +98,7 @@ class ColorSheetComponent extends StatelessWidget {
                           ),
                         )
                         : Text(
-                          AppColor.colorName(realIndex),
+                          AppColor.colorName(realIndex, context),
                           style: textStyle?.copyWith(
                             color: customColorScheme.onPrimary,
                           ),
@@ -124,8 +128,6 @@ class ColorSheetComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorSheetLogic logic = Get.put(ColorSheetLogic());
     final ColorSheetState state = Bind.find<ColorSheetLogic>().state;
-    final textStyle = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
 
     // 绘制普通配色
     Widget buildCommonColor() {
@@ -140,7 +142,10 @@ class ColorSheetComponent extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(l10n.colorCommon, style: textStyle.titleMedium),
+            child: Text(
+              context.l10n.colorCommon,
+              style: context.textTheme.titleMedium,
+            ),
           ),
           GridView.builder(
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -155,10 +160,11 @@ class ColorSheetComponent extends StatelessWidget {
               return LayoutBuilder(
                 builder: (context, constraints) {
                   return buildColorOption(
+                    context: context,
                     currentColor: state.currentColor,
                     realIndex: realIndex,
-                    brightness: colorScheme.brightness,
-                    textStyle: textStyle.labelMedium,
+                    brightness: context.theme.colorScheme.brightness,
+                    textStyle: context.textTheme.labelMedium,
                     isSystemColor: realIndex == -1,
                     constraints: constraints,
                     onTap: () {

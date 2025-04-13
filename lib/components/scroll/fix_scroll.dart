@@ -21,8 +21,9 @@ class PrimaryScrollWrapperState extends State<PrimaryScrollWrapper> {
   @override
   Widget build(BuildContext context) {
     return CustomPrimaryScrollController(
-      scrollController: _scrollController
-        ..realController = PrimaryScrollController.of(context),
+      scrollController:
+          _scrollController
+            ..realController = PrimaryScrollController.of(context),
       child: widget.child,
     );
   }
@@ -70,9 +71,11 @@ class ScrollControllerWrapper implements ScrollController {
   void addListener(listener) => realController.addListener(listener);
 
   @override
-  Future<void> animateTo(double offset,
-          {required Duration duration, required Curve curve}) =>
-      realController.animateTo(offset, duration: duration, curve: curve);
+  Future<void> animateTo(
+    double offset, {
+    required Duration duration,
+    required Curve curve,
+  }) => realController.animateTo(offset, duration: duration, curve: curve);
 
   @override
   void attach(ScrollPosition position) {
@@ -115,8 +118,11 @@ class ScrollControllerWrapper implements ScrollController {
   }
 
   @override
-  ScrollPosition createScrollPosition(ScrollPhysics physics,
-      ScrollContext context, ScrollPosition? oldPosition) {
+  ScrollPosition createScrollPosition(
+    ScrollPhysics physics,
+    ScrollContext context,
+    ScrollPosition? oldPosition,
+  ) {
     return realController.createScrollPosition(physics, context, oldPosition);
   }
 

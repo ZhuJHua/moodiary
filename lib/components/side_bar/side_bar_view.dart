@@ -5,7 +5,7 @@
 // import 'package:moodiary/components/tile/setting_tile.dart';
 // import 'package:moodiary/main.dart';
 // import 'package:moodiary/utils/function_extensions.dart';
-// import 'package:refreshed/refreshed.dart';
+// import 'package:get/get.dart';
 //
 // import 'side_bar_logic.dart';
 //
@@ -16,7 +16,7 @@
 //   Widget build(BuildContext context) {
 //     final logic = Get.put(SideBarLogic());
 //     final state = Bind.find<SideBarLogic>().state;
-//     final textStyle = Theme.of(context).textTheme;
+//
 //
 //     Widget buildWeather() {
 //       return Column(
@@ -169,7 +169,7 @@
 //                             ),
 //                           )
 //                         ],
-//                         child: Text(l10n.sidebarAbout),
+//                         child: Text(context.l10n.sidebarAbout),
 //                       );
 //                     }),
 //                     AdaptiveListTile(
@@ -177,19 +177,19 @@
 //                       onTap: () {
 //                         logic.toPrivacy();
 //                       },
-//                       title: l10n.sidebarPrivacy,
+//                       title: context.l10n.sidebarPrivacy,
 //                     ),
 //                     AdaptiveListTile(
 //                       leading: const Icon(Icons.bug_report_outlined),
 //                       onTap: () {
 //                         logic.toReportPage();
 //                       },
-//                       title: l10n.sidebarBug,
+//                       title: context.l10n.sidebarBug,
 //                     ),
 //                     AdaptiveListTile(
 //                       leading: const Icon(Icons.update),
 //                       onTap: () async {}.throttleWithTimeout(timeout: 3000),
-//                       title: l10n.sidebarCheckUpdate,
+//                       title: context.l10n.sidebarCheckUpdate,
 //                     ),
 //                   ],
 //                 ),

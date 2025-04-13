@@ -1,15 +1,16 @@
 import 'dart:async';
 
+import 'package:dartx/dartx.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/dashboard/dashboard_logic.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
 import 'package:moodiary/pages/home/home_logic.dart';
-import 'package:moodiary/presentation/pref.dart';
-import 'package:moodiary/presentation/secure_storage.dart';
+import 'package:moodiary/persistence/pref.dart';
+import 'package:moodiary/persistence/secure_storage.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'setting_state.dart';
 
@@ -42,14 +43,14 @@ class SettingLogic extends GetxController {
     if (sizeMap['bytes'] > (1024 * 1024 * 100)) {
       await FileUtil.clearCache();
       await getDataUsage();
-      NoticeUtil.showToast('缓存已自动清理');
+      toast.info(message: '缓存已自动清理');
     }
   }
 
   Future<void> deleteCache() async {
     await FileUtil.clearCache();
     await getDataUsage();
-    NoticeUtil.showToast('清理成功');
+    toast.success(message: '清理成功');
   }
 
   //本地化
@@ -76,7 +77,7 @@ class SettingLogic extends GetxController {
       HapticFeedback.selectionClick();
       Get.toNamed(AppRoutes.mapPage);
     } else {
-      NoticeUtil.showToast('请先配置Key');
+      toast.info(message: '请先配置Key');
     }
   }
 
@@ -86,7 +87,7 @@ class SettingLogic extends GetxController {
       HapticFeedback.selectionClick();
       Get.toNamed(AppRoutes.assistantPage);
     } else {
-      NoticeUtil.showToast('请先配置Key');
+      toast.info(message: '请先配置Key');
     }
   }
 
@@ -135,8 +136,8 @@ class SettingLogic extends GetxController {
   }
 
   Future<void> setUserKey({required String key}) async {
-    if (key.isBlank) {
-      NoticeUtil.showToast('密钥不能为空');
+    if (key.isNullOrBlank) {
+      toast.info(message: '密钥不能为空');
       return;
     }
     await SecureStorageUtil.setValue('userKey', key);

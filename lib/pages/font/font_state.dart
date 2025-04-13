@@ -1,6 +1,6 @@
+import 'package:get/get.dart';
 import 'package:moodiary/common/models/isar/font.dart';
-import 'package:moodiary/presentation/pref.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/persistence/pref.dart';
 
 class FontState {
   RxDouble fontScale = PrefUtil.getValue<double>('fontScale')!.obs;

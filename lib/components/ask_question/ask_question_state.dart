@@ -1,5 +1,5 @@
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/keyboard_state.dart';
-import 'package:refreshed/refreshed.dart';
 
 class AskQuestionState {
   late String modelPath;

@@ -9,11 +9,12 @@ class EmotionCurvePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = strokeWidth;
+    final Paint paint =
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = strokeWidth;
 
     final Path path = Path();
 
@@ -26,8 +27,12 @@ class EmotionCurvePainter extends CustomPainter {
     path.moveTo(centerX + strokeWidth / 2 - size.width / 2, centerY);
 
     // 控制点和终点
-    path.quadraticBezierTo(centerX, controlPointY,
-        centerX - strokeWidth / 2 + size.width / 2, centerY);
+    path.quadraticBezierTo(
+      centerX,
+      controlPointY,
+      centerX - strokeWidth / 2 + size.width / 2,
+      centerY,
+    );
 
     canvas.drawPath(path, paint);
   }
@@ -52,9 +57,13 @@ class MoodIconComponent extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-          color: Color.lerp(
-              const Color(0xFFFA4659), const Color(0xFF2EB872), value),
-          borderRadius: AppBorderRadius.smallBorderRadius),
+        color: Color.lerp(
+          const Color(0xFFFA4659),
+          const Color(0xFF2EB872),
+          value,
+        ),
+        borderRadius: AppBorderRadius.smallBorderRadius,
+      ),
       padding: const EdgeInsets.all(4.0),
       child: CustomPaint(
         size: Size(width - 8.0, width - 8.0),

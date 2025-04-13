@@ -1,6 +1,6 @@
+import 'package:get/get.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart' as media_kit;
-import 'package:refreshed/refreshed.dart';
 
 import 'video_state.dart';
 

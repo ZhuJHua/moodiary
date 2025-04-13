@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/view_mode.dart';
 import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/base/sheet.dart';
@@ -10,9 +11,8 @@ import 'package:moodiary/components/keepalive/keepalive.dart';
 import 'package:moodiary/components/scroll/fix_scroll.dart';
 import 'package:moodiary/components/search_sheet/search_sheet_view.dart';
 import 'package:moodiary/components/sync_dash_board/sync_dash_board_view.dart';
-import 'package:moodiary/main.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/utils/webdav_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'diary_logic.dart';
 
@@ -20,7 +20,7 @@ class DiaryPage extends StatelessWidget {
   const DiaryPage({super.key});
 
   Widget _buildSyncingButton({
-    required ColorScheme colorScheme,
+    required BuildContext context,
     required Function() onTap,
   }) {
     return Padding(
@@ -28,7 +28,7 @@ class DiaryPage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(4.0),
         decoration: BoxDecoration(
-          color: colorScheme.primaryContainer,
+          color: context.theme.colorScheme.primaryContainer,
           shape: BoxShape.circle,
         ),
         child: const MoodiarySyncing(),
@@ -40,8 +40,6 @@ class DiaryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Get.put(DiaryLogic());
     final state = Bind.find<DiaryLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
 
     //生成TabBar
     Widget buildTabBar() {
@@ -50,7 +48,7 @@ class DiaryPage extends StatelessWidget {
       allTabs.add(
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Tab(text: l10n.categoryAll),
+          child: Tab(text: context.l10n.categoryAll),
         ),
       );
       //根据分类生成分类Tab
@@ -84,18 +82,17 @@ class DiaryPage extends StatelessWidget {
               indicatorSize: TabBarIndicatorSize.label,
               splashFactory: NoSplash.splashFactory,
               dragStartBehavior: DragStartBehavior.start,
-              unselectedLabelStyle: textStyle.labelSmall,
-              labelStyle: textStyle.labelMedium,
+              unselectedLabelStyle: context.textTheme.labelSmall,
+              labelStyle: context.textTheme.labelMedium,
               overlayColor: WidgetStateProperty.all(Colors.transparent),
               indicator: ShapeDecoration(
                 shape: const StadiumBorder(),
-                color: colorScheme.primaryContainer,
+                color: context.theme.colorScheme.primaryContainer,
               ),
               indicatorWeight: .0,
-              unselectedLabelColor: colorScheme.onSurface.withValues(
-                alpha: 0.8,
-              ),
-              labelColor: colorScheme.onPrimaryContainer,
+              unselectedLabelColor: context.theme.colorScheme.onSurface
+                  .withValues(alpha: 0.8),
+              labelColor: context.theme.colorScheme.onPrimaryContainer,
               labelPadding: EdgeInsets.zero,
               indicatorPadding: const EdgeInsets.symmetric(vertical: 12.0),
               tabs: allTabs,
@@ -149,16 +146,18 @@ class DiaryPage extends StatelessWidget {
       return AdaptiveText(
         state.customTitleName.value.isNotEmpty
             ? state.customTitleName.value
-            : l10n.appName,
-        style: textStyle.titleLarge?.copyWith(color: colorScheme.onSurface),
+            : context.l10n.appName,
+        style: context.textTheme.titleLarge?.copyWith(
+          color: context.theme.colorScheme.onSurface,
+        ),
       );
     });
 
     final hitokoto = Obx(() {
       return AdaptiveText(
         state.hitokoto.value,
-        style: textStyle.labelSmall?.copyWith(
-          color: colorScheme.onSurfaceVariant,
+        style: context.textTheme.labelSmall?.copyWith(
+          color: context.theme.colorScheme.onSurfaceVariant,
         ),
       );
     });
@@ -182,7 +181,7 @@ class DiaryPage extends StatelessWidget {
                     Obx(() {
                       return WebDavUtil().syncingDiaries.isNotEmpty
                           ? _buildSyncingButton(
-                            colorScheme: colorScheme,
+                            context: context,
                             onTap: () {
                               showFloatingModalBottomSheet(
                                 context: context,
@@ -201,7 +200,7 @@ class DiaryPage extends StatelessWidget {
                                 },
                               );
                             },
-                            tooltip: l10n.dataSync,
+                            tooltip: context.l10n.dataSync,
                             icon: const Icon(Icons.cloud_sync_rounded),
                           );
                     }),
@@ -215,11 +214,11 @@ class DiaryPage extends StatelessWidget {
                         );
                       },
                       icon: const Icon(Icons.search_rounded),
-                      tooltip: l10n.diaryPageSearchButton,
+                      tooltip: context.l10n.diaryPageSearchButton,
                     ),
                     PopupMenuButton(
                       offset: const Offset(0, 46),
-                      tooltip: l10n.diaryPageViewModeButton,
+                      tooltip: context.l10n.diaryPageViewModeButton,
                       icon: const Icon(Icons.more_vert_rounded),
                       itemBuilder: (context) {
                         return <PopupMenuEntry<String>>[
@@ -229,7 +228,7 @@ class DiaryPage extends StatelessWidget {
                             onTap: () async {
                               await logic.changeViewMode(ViewModeType.list);
                             },
-                            child: Text(l10n.diaryViewModeList),
+                            child: Text(context.l10n.diaryViewModeList),
                           ),
                           const PopupMenuDivider(),
                           CheckedPopupMenuItem(
@@ -238,7 +237,7 @@ class DiaryPage extends StatelessWidget {
                             onTap: () async {
                               await logic.changeViewMode(ViewModeType.grid);
                             },
-                            child: Text(l10n.diaryViewModeGrid),
+                            child: Text(context.l10n.diaryViewModeGrid),
                           ),
                         ];
                       },

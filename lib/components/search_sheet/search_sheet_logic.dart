@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary/presentation/isar.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
+import 'package:moodiary/persistence/isar.dart';
 
 import 'search_sheet_state.dart';
 
@@ -25,8 +25,9 @@ class SearchSheetLogic extends GetxController {
     focusNode.unfocus();
     if (textEditingController.text != '') {
       state.isSearching.value = true;
-      state.searchList =
-          await IsarUtil.searchDiaries(textEditingController.text);
+      state.searchList = await IsarUtil.searchDiaries(
+        textEditingController.text,
+      );
       state.totalCount.value = state.searchList.length;
       state.isSearching.value = false;
     }

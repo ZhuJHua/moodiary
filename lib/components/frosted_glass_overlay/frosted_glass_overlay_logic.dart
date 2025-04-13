@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
 
 class FrostedGlassOverlayLogic extends GetxController
     with GetSingleTickerProviderStateMixin {
@@ -13,8 +13,10 @@ class FrostedGlassOverlayLogic extends GetxController
   }
 
   void disable() {
-    animationController.animateTo(0,
-        duration: const Duration(milliseconds: 50));
+    animationController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 50),
+    );
   }
 
   @override

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary/presentation/isar.dart';
-import 'package:moodiary/utils/log_util.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
+import 'package:moodiary/persistence/isar.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'calendar_state.dart';
@@ -40,15 +39,17 @@ class CalendarLogic extends GetxController {
   int _pendingScrollOperations = 0;
 
   Future<void> animateToSelectedDateWithLock(DateTime value) async {
-    final index = state.currentMonthDiaryList.indexWhere((element) =>
-        element.yMd == '${value.year}/${value.month}/${value.day}');
+    final index = state.currentMonthDiaryList.indexWhere(
+      (element) => element.yMd == '${value.year}/${value.month}/${value.day}',
+    );
     _pendingScrollOperations++;
     state.isControllerScrolling.value = true;
     try {
       await itemScrollController.scrollTo(
-          index: index,
-          duration: const Duration(seconds: 1),
-          curve: Curves.easeInOutQuart);
+        index: index,
+        duration: const Duration(seconds: 1),
+        curve: Curves.easeInOutQuart,
+      );
     } finally {
       _pendingScrollOperations--;
       if (_pendingScrollOperations == 0) {
@@ -59,9 +60,7 @@ class CalendarLogic extends GetxController {
 
   void onVerticalDragEnd(DragEndDetails details) {
     final double velocity = details.velocity.pixelsPerSecond.dy;
-    LogUtil.printInfo(velocity);
     if (velocity > state.velocityThreshold) {
-      LogUtil.printInfo('1');
       open(state.isUp);
     }
   }
@@ -82,9 +81,10 @@ class CalendarLogic extends GetxController {
 
   DateTime? findLatestDateInMonth(List<DateTime> dates, int year, int month) {
     // 过滤出符合条件的日期
-    final List<DateTime> filteredDates = dates.where((date) {
-      return date.year == year && date.month == month;
-    }).toList();
+    final List<DateTime> filteredDates =
+        dates.where((date) {
+          return date.year == year && date.month == month;
+        }).toList();
 
     // 如果没有符合条件的日期，返回 null
     if (filteredDates.isEmpty) {

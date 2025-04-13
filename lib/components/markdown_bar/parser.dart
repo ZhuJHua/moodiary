@@ -15,12 +15,7 @@ enum MarkdownToolbarOption {
   horizontalRule,
 }
 
-enum FormatOption {
-  formatStartEnd,
-  formatStart,
-  formatList,
-  formatAddNew,
-}
+enum FormatOption { formatStartEnd, formatStart, formatList, formatAddNew }
 
 enum TextApplyOption {
   selectionHasCharacter,
@@ -118,7 +113,7 @@ class Format {
             '### ',
             '#### ',
             '##### ',
-            '###### '
+            '###### ',
           ],
           multipleCharactersOption: option,
           newLine: true,
@@ -140,9 +135,10 @@ class Format {
           formatOption: FormatOption.formatList,
           controller: controller,
           selection: selection,
-          character: customBulletedListCharacter != null
-              ? '$customBulletedListCharacter '
-              : '- ',
+          character:
+              customBulletedListCharacter != null
+                  ? '$customBulletedListCharacter '
+                  : '- ',
           placeholder: 'Bulleted list',
         ).format();
         break;
@@ -166,10 +162,7 @@ class Format {
         ).format();
         break;
       case MarkdownToolbarOption.link:
-        formatTextLink(
-          controller: controller,
-          selection: selection,
-        );
+        formatTextLink(controller: controller, selection: selection);
         break;
       case MarkdownToolbarOption.image:
         formatImage(
@@ -191,25 +184,33 @@ class Format {
   }
 
   void format() {
-    final String selectionText =
-        controller.text.substring(selection.start, selection.end);
+    final String selectionText = controller.text.substring(
+      selection.start,
+      selection.end,
+    );
 
     beforeText = controller.text.substring(0, selection.start);
-    afterText =
-        controller.text.substring(selection.end, controller.text.length);
-    reversedBeforeText =
-        String.fromCharCodes(beforeText.runes.toList().reversed);
+    afterText = controller.text.substring(
+      selection.end,
+      controller.text.length,
+    );
+    reversedBeforeText = String.fromCharCodes(
+      beforeText.runes.toList().reversed,
+    );
     reversedAfterText = String.fromCharCodes(afterText.runes.toList().reversed);
 
-    character = multipleCharacters != null
-        ? multipleCharacters![multipleCharactersOption ?? 0]
-        : character ?? '';
+    character =
+        multipleCharacters != null
+            ? multipleCharacters![multipleCharactersOption ?? 0]
+            : character ?? '';
 
     if (controller.text.isNotEmpty && selectionText.isNotEmpty) {
       newText = selectionText;
 
       if (selectionCharacterBool(
-          formatOption: formatOption, selectionText: selectionText)) {
+        formatOption: formatOption,
+        selectionText: selectionText,
+      )) {
         selectionHasCharacterFunction(formatOption: formatOption);
       } else if (outsideSelectionHasCharacterBool(formatOption: formatOption)) {
         outsideHasCharacterFunction(formatOption: formatOption);
@@ -259,9 +260,7 @@ class Format {
     }
   }
 
-  bool outsideSelectionHasCharacterBool({
-    required FormatOption formatOption,
-  }) {
+  bool outsideSelectionHasCharacterBool({required FormatOption formatOption}) {
     if (formatOption == FormatOption.formatStartEnd) {
       return beforeText.isNotEmpty &&
           reversedBeforeText[0] != ' ' &&
@@ -274,9 +273,7 @@ class Format {
     }
   }
 
-  void selectionHasCharacterFunction({
-    required FormatOption formatOption,
-  }) {
+  void selectionHasCharacterFunction({required FormatOption formatOption}) {
     textApplyOption = TextApplyOption.selectionHasCharacter;
     switch (formatOption) {
       case FormatOption.formatStartEnd:
@@ -343,21 +340,18 @@ class Format {
     }
   }
 
-  void outsideHasCharacterFunction({
-    required FormatOption formatOption,
-  }) {
+  void outsideHasCharacterFunction({required FormatOption formatOption}) {
     textApplyOption = TextApplyOption.outsideSelectionHasCharacter;
     if (formatOption == FormatOption.formatStartEnd) {
       reversedBeforeText = reversedBeforeText.replaceFirst(character!, '');
-      beforeText =
-          String.fromCharCodes(reversedBeforeText.runes.toList().reversed);
+      beforeText = String.fromCharCodes(
+        reversedBeforeText.runes.toList().reversed,
+      );
       afterText = afterText.replaceFirst(character!, '');
     }
   }
 
-  void addFunction({
-    required FormatOption formatOption,
-  }) {
+  void addFunction({required FormatOption formatOption}) {
     textApplyOption = TextApplyOption.noneAddNew;
     switch (formatOption) {
       case FormatOption.formatStartEnd:
@@ -399,9 +393,7 @@ class Format {
     }
   }
 
-  void applyFunction({
-    required FormatOption formatOption,
-  }) {
+  void applyFunction({required FormatOption formatOption}) {
     var baseOffset = 0;
     var extentOffset = 0;
     switch (formatOption) {
@@ -492,17 +484,17 @@ class Format {
     );
   }
 
-  void emptyAddNewFunction({
-    required FormatOption formatOption,
-  }) {
+  void emptyAddNewFunction({required FormatOption formatOption}) {
     var baseOffset = 0;
     var extentOffset = 0;
     switch (formatOption) {
       case FormatOption.formatStartEnd:
         final newText = character;
         final beforeText = controller.text.substring(0, selection.start);
-        final afterText =
-            controller.text.substring(selection.end, controller.text.length);
+        final afterText = controller.text.substring(
+          selection.end,
+          controller.text.length,
+        );
         controller.text = '$beforeText$newText$placeholder$newText$afterText';
         baseOffset = selection.start + character!.length;
         extentOffset = selection.end + placeholder.length + character!.length;
@@ -510,8 +502,10 @@ class Format {
       case FormatOption.formatStart:
         final newText = character;
         final beforeText = controller.text.substring(0, selection.start);
-        final afterText =
-            controller.text.substring(selection.end, controller.text.length);
+        final afterText = controller.text.substring(
+          selection.end,
+          controller.text.length,
+        );
         controller.text = '$beforeText$newText$placeholder$afterText';
 
         baseOffset = selection.start + character!.length;
@@ -520,8 +514,10 @@ class Format {
       case FormatOption.formatList:
         final newText = orderedList == true ? '1. ' : character;
         final beforeText = controller.text.substring(0, selection.start);
-        final afterText =
-            controller.text.substring(selection.end, controller.text.length);
+        final afterText = controller.text.substring(
+          selection.end,
+          controller.text.length,
+        );
         controller.text = '$beforeText$newText$placeholder$afterText';
         baseOffset = selection.start + newText!.length;
         extentOffset = selection.end + placeholder.length + newText.length;
@@ -552,8 +548,10 @@ void formatTextLink({
   required TextEditingController controller,
   required TextSelection selection,
 }) {
-  final String selectionText =
-      controller.text.substring(selection.start, selection.end);
+  final String selectionText = controller.text.substring(
+    selection.start,
+    selection.end,
+  );
   const String placeholder = 'My Link text';
   const String placeholderEnd = 'https://example.com';
 
@@ -561,8 +559,10 @@ void formatTextLink({
     var newText = selectionText;
 
     final beforeText = controller.text.substring(0, selection.start);
-    final afterText =
-        controller.text.substring(selection.end, controller.text.length);
+    final afterText = controller.text.substring(
+      selection.end,
+      controller.text.length,
+    );
 
     newText = '[$newText]($placeholderEnd)';
     newText = '$beforeText$newText$afterText';
@@ -570,20 +570,23 @@ void formatTextLink({
     controller.text = newText;
 
     controller.selection = TextSelection(
-        baseOffset:
-            selection.start + 3 + selectionText.length + 'https://'.length,
-        extentOffset: selection.end + placeholderEnd.length + 3);
+      baseOffset:
+          selection.start + 3 + selectionText.length + 'https://'.length,
+      extentOffset: selection.end + placeholderEnd.length + 3,
+    );
   } else {
     final beforeText = controller.text.substring(0, selection.start);
-    final afterText =
-        controller.text.substring(selection.end, controller.text.length);
+    final afterText = controller.text.substring(
+      selection.end,
+      controller.text.length,
+    );
     controller.text = '$beforeText[$placeholder]($placeholderEnd)$afterText';
 
     controller.selection = TextSelection(
-        baseOffset:
-            selection.start + 3 + placeholder.length + 'https://'.length,
-        extentOffset:
-            selection.end + placeholder.length + 3 + placeholderEnd.length);
+      baseOffset: selection.start + 3 + placeholder.length + 'https://'.length,
+      extentOffset:
+          selection.end + placeholder.length + 3 + placeholderEnd.length,
+    );
   }
 }
 
@@ -596,15 +599,19 @@ void formatImage({
   const String linkPlaceholder = '';
 
   final beforeText = controller.text.substring(0, selection.start);
-  final afterText =
-      controller.text.substring(selection.end, controller.text.length);
+  final afterText = controller.text.substring(
+    selection.end,
+    controller.text.length,
+  );
   controller.text =
       '$beforeText![$altPlaceholder](${imgPath ?? linkPlaceholder})$afterText';
 
   controller.selection = TextSelection(
-      baseOffset: selection.start + 4 + altPlaceholder.length,
-      extentOffset: selection.start +
-          altPlaceholder.length +
-          4 +
-          (imgPath ?? linkPlaceholder).length);
+    baseOffset: selection.start + 4 + altPlaceholder.length,
+    extentOffset:
+        selection.start +
+        altPlaceholder.length +
+        4 +
+        (imgPath ?? linkPlaceholder).length,
+  );
 }

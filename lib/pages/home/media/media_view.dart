@@ -1,6 +1,7 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/media_type.dart';
 import 'package:moodiary/components/base/clipper.dart';
@@ -9,8 +10,7 @@ import 'package:moodiary/components/lottie_modal/lottie_modal.dart';
 import 'package:moodiary/components/media/media_audio_view.dart';
 import 'package:moodiary/components/media/media_image_view.dart';
 import 'package:moodiary/components/media/media_video_view.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'media_logic.dart';
@@ -24,18 +24,16 @@ class MediaPage extends StatelessWidget {
     MediaType.video: Icons.movie_rounded,
   };
 
-  static final textMap = {
-    MediaType.image: l10n.mediaTypeImage,
-    MediaType.audio: l10n.mediaTypeAudio,
-    MediaType.video: l10n.mediaTypeVideo,
-  };
-
   @override
   Widget build(BuildContext context) {
+    final textMap = {
+      MediaType.image: context.l10n.mediaTypeImage,
+      MediaType.audio: context.l10n.mediaTypeAudio,
+      MediaType.video: context.l10n.mediaTypeVideo,
+    };
     final logic = Get.put(MediaLogic());
     final state = Bind.find<MediaLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
+
     return GetBuilder<MediaLogic>(
       assignId: true,
       builder: (_) {
@@ -44,7 +42,7 @@ class MediaPage extends StatelessWidget {
           children: [
             Scaffold(
               appBar: AppBar(
-                title: Text(l10n.homeNavigatorMedia),
+                title: Text(context.l10n.homeNavigatorMedia),
                 actions: [
                   IconButton(
                     onPressed: () async {
@@ -59,8 +57,8 @@ class MediaPage extends StatelessWidget {
                           allowSameValueSelection: true,
                           dayTextStylePredicate: ({required DateTime date}) {
                             return state.dateTimeList.contains(date)
-                                ? textStyle.labelMedium?.copyWith(
-                                  color: colorScheme.primary,
+                                ? context.theme.textTheme.labelMedium?.copyWith(
+                                  color: context.theme.colorScheme.primary,
                                 )
                                 : null;
                           },
@@ -107,7 +105,7 @@ class MediaPage extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Icon(Icons.delete_sweep),
-                              Text(l10n.mediaDeleteUseLessFile),
+                              Text(context.l10n.mediaDeleteUseLessFile),
                             ],
                           ),
                         ),
@@ -159,7 +157,7 @@ class MediaPage extends StatelessWidget {
                               child: FaIcon(
                                 FontAwesomeIcons.boxArchive,
                                 size: 80,
-                                color: colorScheme.onSurface,
+                                color: context.theme.colorScheme.onSurface,
                               ),
                             )),
               ),

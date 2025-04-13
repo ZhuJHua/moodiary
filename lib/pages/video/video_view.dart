@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:dismissible_page/dismissible_page.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:moodiary/common/values/media_type.dart';
 import 'package:moodiary/utils/media_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'video_logic.dart';
 
@@ -48,30 +48,29 @@ class VideoPage extends StatelessWidget {
       tag: _tag,
     );
     final state = Bind.find<VideoLogic>(tag: _tag).state;
-    final colorScheme = Theme.of(context).colorScheme;
 
     Widget buildCustomTheme({required Widget child}) {
       if (Platform.isAndroid || Platform.isIOS) {
         return MaterialVideoControlsTheme(
           normal: kDefaultMaterialVideoControlsThemeData.copyWith(
-            seekBarPositionColor: colorScheme.primary,
-            seekBarThumbColor: colorScheme.primary,
+            seekBarPositionColor: context.theme.colorScheme.primary,
+            seekBarThumbColor: context.theme.colorScheme.primary,
           ),
           fullscreen: kDefaultMaterialVideoControlsThemeDataFullscreen.copyWith(
-            seekBarPositionColor: colorScheme.primary,
-            seekBarThumbColor: colorScheme.primary,
+            seekBarPositionColor: context.theme.colorScheme.primary,
+            seekBarThumbColor: context.theme.colorScheme.primary,
           ),
           child: child,
         );
       } else {
         return MaterialDesktopVideoControlsTheme(
           normal: kDefaultMaterialDesktopVideoControlsThemeData.copyWith(
-            seekBarPositionColor: colorScheme.primary,
-            seekBarThumbColor: colorScheme.primary,
+            seekBarPositionColor: context.theme.colorScheme.primary,
+            seekBarThumbColor: context.theme.colorScheme.primary,
           ),
           fullscreen: kDefaultMaterialDesktopVideoControlsThemeData.copyWith(
-            seekBarPositionColor: colorScheme.primary,
-            seekBarThumbColor: colorScheme.primary,
+            seekBarPositionColor: context.theme.colorScheme.primary,
+            seekBarThumbColor: context.theme.colorScheme.primary,
           ),
           child: child,
         );

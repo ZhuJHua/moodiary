@@ -1,6 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 
 import 'audio_player_logic.dart';
@@ -71,7 +71,6 @@ class AudioPlayerComponent extends StatelessWidget {
     final logic = Get.put(AudioPlayerLogic(), tag: path);
     final state = Bind.find<AudioPlayerLogic>(tag: path).state;
 
-    final colorScheme = Theme.of(context).colorScheme;
     return GetBuilder<AudioPlayerLogic>(
       tag: path,
       initState: (_) async {
@@ -80,7 +79,7 @@ class AudioPlayerComponent extends StatelessWidget {
       assignId: true,
       builder: (_) {
         return Card.filled(
-          color: colorScheme.secondaryContainer,
+          color: context.theme.colorScheme.secondaryContainer,
           margin: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -110,7 +109,8 @@ class AudioPlayerComponent extends StatelessWidget {
                           onChanged: (value) {
                             logic.changeValue(value);
                           },
-                          inactiveColor: colorScheme.surfaceContainer,
+                          inactiveColor:
+                              context.theme.colorScheme.surfaceContainer,
                           overlayShape: NoOverlayShape(),
                           thumbShape: SmallThumbShape(),
                         );
@@ -127,7 +127,11 @@ class AudioPlayerComponent extends StatelessWidget {
                                     .split('.')[0]
                                     .padLeft(8, '0'),
                                 style: TextStyle(
-                                  color: colorScheme.onSecondaryContainer,
+                                  color:
+                                      context
+                                          .theme
+                                          .colorScheme
+                                          .onSecondaryContainer,
                                 ),
                               );
                             }),
@@ -139,7 +143,7 @@ class AudioPlayerComponent extends StatelessWidget {
                               },
                               icon: AnimatedIcon(
                                 icon: AnimatedIcons.play_pause,
-                                color: colorScheme.onPrimary,
+                                color: context.theme.colorScheme.onPrimary,
                                 progress: logic.animationController,
                               ),
                             ),
@@ -150,7 +154,11 @@ class AudioPlayerComponent extends StatelessWidget {
                                     .split('.')[0]
                                     .padLeft(8, '0'),
                                 style: TextStyle(
-                                  color: colorScheme.onSecondaryContainer,
+                                  color:
+                                      context
+                                          .theme
+                                          .colorScheme
+                                          .onSecondaryContainer,
                                 ),
                               );
                             }),

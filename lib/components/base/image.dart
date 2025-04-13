@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/utils/media_util.dart';
 
 class ThumbnailImage extends StatelessWidget {
@@ -44,10 +45,10 @@ class ThumbnailImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final fileImage = FileImage(File(imagePath));
     final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
-    final colorScheme = Theme.of(context).colorScheme;
+
     final Future getAspectRatio = MediaUtil.getImageAspectRatio(fileImage);
     final loading = ColoredBox(
-      color: colorScheme.surfaceContainer,
+      color: context.theme.colorScheme.surfaceContainer,
       child: const Center(child: Icon(Icons.image_search_rounded)),
     );
     return FutureBuilder(

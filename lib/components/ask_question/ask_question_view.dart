@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/border.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'ask_question_logic.dart';
 
@@ -13,7 +13,7 @@ class AskQuestionComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Get.put(AskQuestionLogic());
     final state = Bind.find<AskQuestionLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
+
     Widget buildInput() {
       return Container(
         padding: const EdgeInsets.all(8.0),
@@ -21,25 +21,28 @@ class AskQuestionComponent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
-                child: TextField(
-              focusNode: logic.focusNode,
-              controller: logic.textEditingController,
-              maxLines: 1,
-              decoration: InputDecoration(
-                  fillColor: colorScheme.surfaceContainerHighest,
+              child: TextField(
+                focusNode: logic.focusNode,
+                controller: logic.textEditingController,
+                maxLines: 1,
+                decoration: InputDecoration(
+                  fillColor: context.theme.colorScheme.surfaceContainerHighest,
                   filled: true,
                   isDense: true,
                   hintText: '提问',
                   border: const OutlineInputBorder(
                     borderRadius: AppBorderRadius.largeBorderRadius,
                     borderSide: BorderSide.none,
-                  )),
-            )),
+                  ),
+                ),
+              ),
+            ),
             IconButton.filled(
-                onPressed: () async {
-                  await logic.ask(content);
-                },
-                icon: const Icon(Icons.arrow_upward))
+              onPressed: () async {
+                await logic.ask(content);
+              },
+              icon: const Icon(Icons.arrow_upward),
+            ),
           ],
         ),
       );
@@ -52,12 +55,14 @@ class AskQuestionComponent extends StatelessWidget {
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: constraint.maxWidth * 0.618),
             child: Card.filled(
-              color: colorScheme.surfaceContainerHigh,
+              color: context.theme.colorScheme.surfaceContainerHigh,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   text,
-                  style: TextStyle(color: colorScheme.onSecondaryContainer),
+                  style: TextStyle(
+                    color: context.theme.colorScheme.onSecondaryContainer,
+                  ),
                 ),
               ),
             ),
@@ -72,12 +77,14 @@ class AskQuestionComponent extends StatelessWidget {
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: constraint.maxWidth * 0.618),
             child: Card.filled(
-              color: colorScheme.primaryContainer,
+              color: context.theme.colorScheme.primaryContainer,
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   text,
-                  style: TextStyle(color: colorScheme.onPrimaryContainer),
+                  style: TextStyle(
+                    color: context.theme.colorScheme.onPrimaryContainer,
+                  ),
                 ),
               ),
             ),
@@ -106,10 +113,12 @@ class AskQuestionComponent extends StatelessWidget {
           builder: (_) {
             return Column(
               children: [
-                Expanded(child: Obx(() {
-                  return buildChat(constraint);
-                })),
-                buildInput()
+                Expanded(
+                  child: Obx(() {
+                    return buildChat(constraint);
+                  }),
+                ),
+                buildInput(),
               ],
             );
           },

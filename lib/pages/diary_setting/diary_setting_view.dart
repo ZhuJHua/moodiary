@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/clipper.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'diary_setting_logic.dart';
 
@@ -14,18 +14,16 @@ class DiarySettingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<DiarySettingLogic>();
     final state = Bind.find<DiarySettingLogic>().state;
-    final textStyle = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
 
     // 通用设置
     List<Widget> buildCommon() {
       return [
         AdaptiveTitleTile(
-          title: l10n.diarySettingCommon,
-          subtitle: l10n.diarySettingCommonDes,
+          title: context.l10n.diarySettingCommon,
+          subtitle: context.l10n.diarySettingCommonDes,
         ),
         Card.filled(
-          color: colorScheme.surfaceContainerLow,
+          color: context.theme.colorScheme.surfaceContainerLow,
           margin: EdgeInsets.zero,
           child: Column(
             children: [
@@ -36,7 +34,7 @@ class DiarySettingPage extends StatelessWidget {
                   onChanged: (value) {
                     logic.autoWeather(value);
                   },
-                  title: l10n.diarySettingAutoGetWeather,
+                  title: context.l10n.diarySettingAutoGetWeather,
                   secondary: const Icon(Icons.wb_sunny_rounded),
                 );
               }),
@@ -45,7 +43,7 @@ class DiarySettingPage extends StatelessWidget {
                   value: state.autoCategory.value,
                   onChanged: logic.autoCategory,
                   secondary: const Icon(Icons.category_rounded),
-                  title: l10n.diarySettingAutoSetCategory,
+                  title: context.l10n.diarySettingAutoSetCategory,
                 );
               }),
               Obx(() {
@@ -53,7 +51,7 @@ class DiarySettingPage extends StatelessWidget {
                   value: state.showWriteTime.value,
                   onChanged: logic.showWriteTime,
                   secondary: const Icon(Icons.timer_rounded),
-                  title: l10n.diarySettingShowWritingTime,
+                  title: context.l10n.diarySettingShowWritingTime,
                 );
               }),
               Obx(() {
@@ -61,7 +59,7 @@ class DiarySettingPage extends StatelessWidget {
                   value: state.showWordCount.value,
                   onChanged: logic.showWordCount,
                   secondary: const Icon(Icons.font_download_rounded),
-                  title: l10n.diarySettingShowWriteCount,
+                  title: context.l10n.diarySettingShowWriteCount,
                 );
               }),
               Obx(() {
@@ -70,8 +68,8 @@ class DiarySettingPage extends StatelessWidget {
                   onChanged: logic.dynamicColor,
                   secondary: const Icon(Icons.colorize_rounded),
                   isLast: true,
-                  title: l10n.diarySettingDynamicColor,
-                  subtitle: l10n.diarySettingDynamicColorDes,
+                  title: context.l10n.diarySettingDynamicColor,
+                  subtitle: context.l10n.diarySettingDynamicColorDes,
                 );
               }),
             ],
@@ -83,11 +81,11 @@ class DiarySettingPage extends StatelessWidget {
     List<Widget> buildPureText() {
       return [
         AdaptiveTitleTile(
-          title: l10n.diarySettingPlainText,
-          subtitle: l10n.diarySettingPlainTextDes,
+          title: context.l10n.diarySettingPlainText,
+          subtitle: context.l10n.diarySettingPlainTextDes,
         ),
         Card.filled(
-          color: colorScheme.surfaceContainerLow,
+          color: context.theme.colorScheme.surfaceContainerLow,
           margin: EdgeInsets.zero,
           child: Column(
             children: [
@@ -95,7 +93,7 @@ class DiarySettingPage extends StatelessWidget {
                 return AdaptiveSwitchListTile(
                   value: state.firstLineIndent.value,
                   onChanged: logic.firstLineIndent,
-                  title: l10n.diarySettingFirstLineIndent,
+                  title: context.l10n.diarySettingFirstLineIndent,
                   isSingle: true,
                   secondary: const Icon(Icons.format_indent_increase_rounded),
                 );
@@ -109,30 +107,30 @@ class DiarySettingPage extends StatelessWidget {
     List<Widget> buildRichText() {
       return [
         AdaptiveTitleTile(
-          title: l10n.diarySettingRichText,
-          subtitle: l10n.diarySettingRichTextDes,
+          title: context.l10n.diarySettingRichText,
+          subtitle: context.l10n.diarySettingRichTextDes,
         ),
         Card.filled(
-          color: colorScheme.surfaceContainerLow,
+          color: context.theme.colorScheme.surfaceContainerLow,
           margin: EdgeInsets.zero,
           child: Column(
             children: [
               AdaptiveListTile(
-                title: l10n.settingImageQuality,
-                subtitle: l10n.settingImageQualityDes,
+                title: context.l10n.settingImageQuality,
+                subtitle: context.l10n.settingImageQualityDes,
                 isFirst: true,
                 leading: const Icon(Icons.gradient_rounded),
                 trailing: Obx(() {
                   return Text(
                     switch (state.quality.value) {
-                      0 => l10n.qualityLow,
-                      1 => l10n.qualityMedium,
-                      2 => l10n.qualityHigh,
-                      3 => l10n.qualityOriginal,
+                      0 => context.l10n.qualityLow,
+                      1 => context.l10n.qualityMedium,
+                      2 => context.l10n.qualityHigh,
+                      3 => context.l10n.qualityOriginal,
                       int() => throw UnimplementedError(),
                     },
-                    style: textStyle.bodySmall!.copyWith(
-                      color: colorScheme.primary,
+                    style: context.textTheme.bodySmall!.copyWith(
+                      color: context.theme.colorScheme.primary,
                     ),
                   );
                 }),
@@ -142,13 +140,13 @@ class DiarySettingPage extends StatelessWidget {
                     builder: (context) {
                       return Obx(() {
                         return SimpleDialog(
-                          title: Text(l10n.settingImageQuality),
+                          title: Text(context.l10n.settingImageQuality),
                           children: [
                             SimpleDialogOption(
                               child: Row(
                                 spacing: 8.0,
                                 children: [
-                                  Text(l10n.qualityLow),
+                                  Text(context.l10n.qualityLow),
                                   if (state.quality.value == 0) ...[
                                     const Icon(Icons.check_rounded),
                                   ],
@@ -162,7 +160,7 @@ class DiarySettingPage extends StatelessWidget {
                               child: Row(
                                 spacing: 8.0,
                                 children: [
-                                  Text(l10n.qualityMedium),
+                                  Text(context.l10n.qualityMedium),
                                   if (state.quality.value == 1) ...[
                                     const Icon(Icons.check_rounded),
                                   ],
@@ -176,7 +174,7 @@ class DiarySettingPage extends StatelessWidget {
                               child: Row(
                                 spacing: 8.0,
                                 children: [
-                                  Text(l10n.qualityHigh),
+                                  Text(context.l10n.qualityHigh),
                                   if (state.quality.value == 2) ...[
                                     const Icon(Icons.check_rounded),
                                   ],
@@ -190,7 +188,7 @@ class DiarySettingPage extends StatelessWidget {
                               child: Row(
                                 spacing: 8.0,
                                 children: [
-                                  Text(l10n.qualityOriginal),
+                                  Text(context.l10n.qualityOriginal),
                                   if (state.quality.value == 3) ...[
                                     const Icon(Icons.check_rounded),
                                   ],
@@ -212,7 +210,7 @@ class DiarySettingPage extends StatelessWidget {
                   value: state.diaryHeader.value,
                   onChanged: logic.diaryHeader,
                   isLast: true,
-                  title: l10n.diarySettingShowHeaderImage,
+                  title: context.l10n.diarySettingShowHeaderImage,
                   secondary: const Icon(Icons.broken_image_rounded),
                 );
               }),
@@ -224,7 +222,7 @@ class DiarySettingPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settingDiary),
+        title: Text(context.l10n.settingDiary),
         leading: const PageBackButton(),
       ),
       body: PageClipper(

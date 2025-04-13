@@ -135,7 +135,8 @@ class Diary {
       ..contentText = contentText
       ..time = DateTime.fromMillisecondsSinceEpoch(time.millisecondsSinceEpoch)
       ..lastModified = DateTime.fromMillisecondsSinceEpoch(
-          lastModified.millisecondsSinceEpoch)
+        lastModified.millisecondsSinceEpoch,
+      )
       ..show = show
       ..mood = mood
       ..weather = List<String>.from(weather)

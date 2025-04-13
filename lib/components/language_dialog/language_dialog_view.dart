@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/language.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'language_dialog_logic.dart';
 
@@ -16,14 +16,14 @@ class LanguageDialogComponent extends StatelessWidget {
       assignId: true,
       builder: (_) {
         return SimpleDialog(
-          title: Text(l10n.settingLanguage),
+          title: Text(context.l10n.settingLanguage),
           children: List.generate(Language.values.length, (index) {
             return SimpleDialogOption(
               child: Obx(() {
                 return Row(
                   spacing: 8.0,
                   children: [
-                    Text(Language.values[index].l10nText),
+                    Text(Language.values[index].l10nText(context)),
                     if (logic.settingLogic.state.language.value ==
                         Language.values[index]) ...[
                       const Icon(Icons.check_rounded),

@@ -17,13 +17,13 @@ class PermissionUtil {
       //尝试申请权限
       final permissionStatus = await permission.request();
       if (permissionStatus.isDenied || permissionStatus.isPermanentlyDenied) {
-        NoticeUtil.showToast('请授予相关权限');
+        toast.info(message: '请授予相关权限');
         return false;
       } else {
         return true;
       }
     } else if (status.isPermanentlyDenied) {
-      NoticeUtil.showToast('相关权限被禁用，请去设置中手动开启');
+      toast.error(message: '相关权限被禁用，请去设置中手动开启');
       Future.delayed(const Duration(seconds: 2), () => openAppSettings());
       return false;
     } else {

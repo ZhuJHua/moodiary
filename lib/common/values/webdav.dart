@@ -18,8 +18,4 @@ class WebDavOptions {
   static const Color connectingColor = Color(0xFFFFC107);
 }
 
-enum WebDavConnectivityStatus {
-  connected,
-  unconnected,
-  connecting,
-}
+enum WebDavConnectivityStatus { connected, unconnected, connecting }

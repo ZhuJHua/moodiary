@@ -46,7 +46,10 @@ class _MoodiarySyncingState extends State<MoodiarySyncing>
       child: AnimatedBuilder(
         animation: _animation,
         builder: (context, child) {
-          return Transform.rotate(angle: _animation.value * 2 * pi, child: child);
+          return Transform.rotate(
+            angle: _animation.value * 2 * pi,
+            child: child,
+          );
         },
         child: const Icon(Icons.sync_rounded),
       ),

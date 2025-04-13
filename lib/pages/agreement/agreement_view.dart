@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 
 class AgreementPage extends StatelessWidget {
@@ -6,7 +7,6 @@ class AgreementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('用户协议')),
       body: MarkdownWidget(
@@ -33,9 +33,10 @@ class AgreementPage extends StatelessWidget {
 4.2 本协议条款无论因何种原因部分无效或不可执行，其余条款仍有效，对双方具有约束力。''',
         selectable: true,
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
-        config: colorScheme.brightness == Brightness.dark
-            ? MarkdownConfig.darkConfig
-            : MarkdownConfig.defaultConfig,
+        config:
+            context.theme.colorScheme.brightness == Brightness.dark
+                ? MarkdownConfig.darkConfig
+                : MarkdownConfig.defaultConfig,
       ),
     );
   }

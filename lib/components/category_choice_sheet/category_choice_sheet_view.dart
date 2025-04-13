@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/base/loading.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'category_choice_sheet_logic.dart';
 import 'category_choice_sheet_state.dart';
@@ -14,9 +14,6 @@ class CategoryChoiceSheetComponent extends StatelessWidget {
     final CategoryChoiceSheetLogic logic = Get.put(CategoryChoiceSheetLogic());
     final CategoryChoiceSheetState state =
         Bind.find<CategoryChoiceSheetLogic>().state;
-
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
 
     return GetBuilder<CategoryChoiceSheetLogic>(
       assignId: true,
@@ -38,24 +35,25 @@ class CategoryChoiceSheetComponent extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  l10n.categoryAllCategory,
-                                  style: textStyle.titleMedium,
+                                  context.l10n.categoryAllCategory,
+                                  style: context.textTheme.titleMedium,
                                 ),
                                 Text(
                                   state.categoryList.length.toString(),
-                                  style: textStyle.titleMedium,
+                                  style: context.textTheme.titleMedium,
                                 ),
                               ],
                             ),
                             ActionChip(
-                              label: Text(l10n.categoryAll),
+                              label: Text(context.l10n.categoryAll),
                               onPressed: () {
                                 logic.selectCategory(categoryId: null);
                               },
                               materialTapTargetSize:
                                   MaterialTapTargetSize.shrinkWrap,
                               padding: EdgeInsets.zero,
-                              backgroundColor: colorScheme.tertiaryContainer,
+                              backgroundColor:
+                                  context.theme.colorScheme.tertiaryContainer,
                             ),
                             ...List.generate(state.categoryList.value.length, (
                               index,
@@ -73,7 +71,11 @@ class CategoryChoiceSheetComponent extends StatelessWidget {
                                 materialTapTargetSize:
                                     MaterialTapTargetSize.shrinkWrap,
                                 padding: EdgeInsets.zero,
-                                backgroundColor: colorScheme.secondaryContainer,
+                                backgroundColor:
+                                    context
+                                        .theme
+                                        .colorScheme
+                                        .secondaryContainer,
                               );
                             }),
                             Align(
@@ -82,7 +84,9 @@ class CategoryChoiceSheetComponent extends StatelessWidget {
                                 onPressed: () {
                                   logic.toCategoryManage(context);
                                 },
-                                child: Text(l10n.settingFunctionCategoryManage),
+                                child: Text(
+                                  context.l10n.settingFunctionCategoryManage,
+                                ),
                               ),
                             ),
                           ],

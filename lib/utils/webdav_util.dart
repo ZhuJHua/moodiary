@@ -4,17 +4,17 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' as flutter;
+import 'package:get/get.dart';
 import 'package:moodiary/common/models/isar/category.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/webdav.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
-import 'package:moodiary/presentation/isar.dart';
-import 'package:moodiary/presentation/pref.dart';
-import 'package:moodiary/presentation/secure_storage.dart';
+import 'package:moodiary/persistence/isar.dart';
+import 'package:moodiary/persistence/pref.dart';
+import 'package:moodiary/persistence/secure_storage.dart';
 import 'package:moodiary/utils/aes_util.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/log_util.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
 class WebDavUtil {
@@ -91,15 +91,18 @@ class WebDavUtil {
     try {
       await _client!.read(WebDavOptions.syncFlagPath);
     } catch (e) {
-      await _client!
-          .write(WebDavOptions.syncFlagPath, utf8.encode(jsonEncode({})));
+      await _client!.write(
+        WebDavOptions.syncFlagPath,
+        utf8.encode(jsonEncode({})),
+      );
     }
   }
 
-  Future<void> updateWebDav(
-      {required String baseUrl,
-      required String username,
-      required String password}) async {
+  Future<void> updateWebDav({
+    required String baseUrl,
+    required String username,
+    required String password,
+  }) async {
     await PrefUtil.setValue('webDavOption', [baseUrl, username, password]);
     await initWebDav();
   }
@@ -121,8 +124,10 @@ class WebDavUtil {
 
   Future<void> updateServerSyncData(Map<String, String> syncData) async {
     if (_client != null) {
-      await _client!
-          .write(WebDavOptions.syncFlagPath, utf8.encode(jsonEncode(syncData)));
+      await _client!.write(
+        WebDavOptions.syncFlagPath,
+        utf8.encode(jsonEncode(syncData)),
+      );
     }
   }
 
@@ -139,17 +144,27 @@ class WebDavUtil {
     await _client!.remove('${WebDavOptions.diaryPath}/${diary.id}.bin');
     // 遍历删除日记资源文件
     await _deleteFiles(
-        diary.imageName, '${WebDavOptions.imagePath}/${diary.id}', 'image');
+      diary.imageName,
+      '${WebDavOptions.imagePath}/${diary.id}',
+      'image',
+    );
     await _deleteFiles(
-        diary.audioName, '${WebDavOptions.audioPath}/${diary.id}', 'audio');
+      diary.audioName,
+      '${WebDavOptions.audioPath}/${diary.id}',
+      'audio',
+    );
     await _deleteFiles(
-        diary.videoName, '${WebDavOptions.videoPath}/${diary.id}', 'video');
+      diary.videoName,
+      '${WebDavOptions.videoPath}/${diary.id}',
+      'video',
+    );
     await _deleteFiles(
-        diary.videoName
-            .map((videoName) => 'thumbnail-${videoName.substring(6, 42)}.jpeg')
-            .toList(),
-        '${WebDavOptions.videoPath}/${diary.id}',
-        'thumbnail');
+      diary.videoName
+          .map((videoName) => 'thumbnail-${videoName.substring(6, 42)}.jpeg')
+          .toList(),
+      '${WebDavOptions.videoPath}/${diary.id}',
+      'thumbnail',
+    );
     // 删除对应目录
     await _client!.remove('${WebDavOptions.imagePath}/${diary.id}');
     await _client!.remove('${WebDavOptions.audioPath}/${diary.id}');
@@ -159,10 +174,13 @@ class WebDavUtil {
   Future<void> _deleteDiary(Diary diary) async {
     // 删除文件的通用方法
     Future<void> deleteFiles(List<String> names, String folder) async {
-      final tasks = names
-          .map(
-              (name) => FileUtil.deleteFile(FileUtil.getRealPath(folder, name)))
-          .toList();
+      final tasks =
+          names
+              .map(
+                (name) =>
+                    FileUtil.deleteFile(FileUtil.getRealPath(folder, name)),
+              )
+              .toList();
       await Future.wait(tasks);
     }
 
@@ -190,7 +208,7 @@ class WebDavUtil {
     // 本地日记的 ID -> 修改时间映射
     final Map<String, String> localDiaryMap = {
       for (final diary in localDiaries)
-        diary.id: diary.lastModified.toIso8601String()
+        diary.id: diary.lastModified.toIso8601String(),
     };
 
     for (final entry in serverSyncData.entries) {
@@ -207,7 +225,8 @@ class WebDavUtil {
         if (localLastModified != null) {
           syncingDiaries.add(diaryId);
           await _deleteDiary(
-              localDiaries.firstWhere((element) => element.id == diaryId));
+            localDiaries.firstWhere((element) => element.id == diaryId),
+          );
           Bind.find<DiaryLogic>().refreshAll();
           syncingDiaries.remove(diaryId);
         }
@@ -231,8 +250,9 @@ class WebDavUtil {
       if (localLastModified != null &&
           serverLastModified.compareTo(localLastModified) > 0) {
         syncingDiaries.add(diaryId);
-        final oldDiary =
-            localDiaries.firstWhere((element) => element.id == diaryId);
+        final oldDiary = localDiaries.firstWhere(
+          (element) => element.id == diaryId,
+        );
         try {
           final newDiary = await _downloadDiary(diaryId);
           await IsarUtil.updateADiary(oldDiary: oldDiary, newDiary: newDiary);
@@ -290,7 +310,7 @@ class WebDavUtil {
 
       onUpload?.call();
     } catch (e) {
-      LogUtil.printInfo('Failed to upload diary: $e');
+      logger.d('Failed to upload diary: $e');
     } finally {
       syncingDiaries.remove(diary.id);
       onComplete?.call(); // 调用完成回调
@@ -309,26 +329,44 @@ class WebDavUtil {
     syncingDiaries.add(newDiary.id);
     try {
       // 遍历删除日记资源文件
-      final needToDeleteImage = oldDiary.imageName
-          .where((element) => !newDiary.imageName.contains(element))
-          .toList();
-      final needToDeleteAudio = oldDiary.audioName
-          .where((element) => !newDiary.audioName.contains(element))
-          .toList();
-      final needToDeleteVideo = oldDiary.videoName
-          .where((element) => !newDiary.videoName.contains(element))
-          .toList();
-      final needToDeleteThumbnail = needToDeleteVideo
-          .map((videoName) => 'thumbnail-${videoName.substring(6, 42)}.jpeg')
-          .toList();
-      await _deleteFiles(needToDeleteImage,
-          '${WebDavOptions.imagePath}/${newDiary.id}', 'image');
-      await _deleteFiles(needToDeleteAudio,
-          '${WebDavOptions.audioPath}/${newDiary.id}', 'audio');
-      await _deleteFiles(needToDeleteVideo,
-          '${WebDavOptions.videoPath}/${newDiary.id}', 'video');
-      await _deleteFiles(needToDeleteThumbnail,
-          '${WebDavOptions.videoPath}/${newDiary.id}', 'thumbnail');
+      final needToDeleteImage =
+          oldDiary.imageName
+              .where((element) => !newDiary.imageName.contains(element))
+              .toList();
+      final needToDeleteAudio =
+          oldDiary.audioName
+              .where((element) => !newDiary.audioName.contains(element))
+              .toList();
+      final needToDeleteVideo =
+          oldDiary.videoName
+              .where((element) => !newDiary.videoName.contains(element))
+              .toList();
+      final needToDeleteThumbnail =
+          needToDeleteVideo
+              .map(
+                (videoName) => 'thumbnail-${videoName.substring(6, 42)}.jpeg',
+              )
+              .toList();
+      await _deleteFiles(
+        needToDeleteImage,
+        '${WebDavOptions.imagePath}/${newDiary.id}',
+        'image',
+      );
+      await _deleteFiles(
+        needToDeleteAudio,
+        '${WebDavOptions.audioPath}/${newDiary.id}',
+        'audio',
+      );
+      await _deleteFiles(
+        needToDeleteVideo,
+        '${WebDavOptions.videoPath}/${newDiary.id}',
+        'video',
+      );
+      await _deleteFiles(
+        needToDeleteThumbnail,
+        '${WebDavOptions.videoPath}/${newDiary.id}',
+        'thumbnail',
+      );
       // 上传日记到服务器
       await _uploadDiary(newDiary); // 上传日记的实现
       // 更新服务器同步数据
@@ -337,7 +375,7 @@ class WebDavUtil {
       await updateServerSyncData(serverSyncData);
       onUpload?.call();
     } catch (e) {
-      LogUtil.printInfo('Failed to upload diary: $e');
+      logger.d('Failed to upload diary: $e');
     } finally {
       syncingDiaries.remove(newDiary.id);
       onComplete?.call(); // 调用完成回调
@@ -361,8 +399,10 @@ class WebDavUtil {
       final key = await AesUtil.deriveKey(salt: diary.id, userKey: userKey!);
       // 加密日记内容
       diaryPath = '${WebDavOptions.diaryPath}/${diary.id}.bin';
-      diaryData =
-          await AesUtil.encrypt(key: key, data: jsonEncode(diary.toJson()));
+      diaryData = await AesUtil.encrypt(
+        key: key,
+        data: jsonEncode(diary.toJson()),
+      );
     } else {
       diaryPath = '${WebDavOptions.diaryPath}/${diary.id}.json';
       diaryData = utf8.encode(jsonEncode(diary.toJson()));
@@ -383,35 +423,51 @@ class WebDavUtil {
             shouldEncrypt ? 'application/octet-stream' : 'application/json',
       });
       await _client!.write(diaryPath, diaryData);
-      LogUtil.printInfo('Diary  uploaded: $diaryPath');
+      logger.d('Diary  uploaded: $diaryPath');
     } catch (e) {
-      LogUtil.printInfo('Failed to upload diary : $e');
+      logger.d('Failed to upload diary : $e');
       rethrow;
     }
 
     // 上传资源文件，目标路径是资源文件夹下的日记id
     await _uploadFiles(
-        diary.imageName, '${WebDavOptions.imagePath}/${diary.id}', 'image');
+      diary.imageName,
+      '${WebDavOptions.imagePath}/${diary.id}',
+      'image',
+    );
     await _uploadFiles(
-        diary.audioName, '${WebDavOptions.audioPath}/${diary.id}', 'audio');
+      diary.audioName,
+      '${WebDavOptions.audioPath}/${diary.id}',
+      'audio',
+    );
     await _uploadFiles(
-        diary.videoName, '${WebDavOptions.videoPath}/${diary.id}', 'video');
+      diary.videoName,
+      '${WebDavOptions.videoPath}/${diary.id}',
+      'video',
+    );
     await _uploadFiles(
-        diary.videoName, '${WebDavOptions.videoPath}/${diary.id}', 'thumbnail');
+      diary.videoName,
+      '${WebDavOptions.videoPath}/${diary.id}',
+      'thumbnail',
+    );
   }
 
   Future<void> _uploadFiles(
-      List<String> fileNames, String resourcePath, String type) async {
+    List<String> fileNames,
+    String resourcePath,
+    String type,
+  ) async {
     await _client!.mkdirAll(resourcePath);
     final existingFiles = await _client!.readDir(resourcePath);
 
     for (var fileName in fileNames) {
       final filePath = FileUtil.getRealPath(type, fileName);
-      fileName = type == 'thumbnail'
-          ? 'thumbnail-${fileName.substring(6, 42)}.jpeg'
-          : fileName;
+      fileName =
+          type == 'thumbnail'
+              ? 'thumbnail-${fileName.substring(6, 42)}.jpeg'
+              : fileName;
       if (existingFiles.any((file) => file.name == fileName)) {
-        LogUtil.printInfo('$type file already exists: $fileName');
+        logger.d('$type file already exists: $fileName');
         continue;
       }
       try {
@@ -421,22 +477,25 @@ class WebDavUtil {
           'Content-Type': 'application/octet-stream',
         });
         await _client!.write('$resourcePath/$fileName', fileBytes);
-        LogUtil.printInfo('$type file uploaded: $fileName');
+        logger.d('$type file uploaded: $fileName');
       } catch (e) {
-        LogUtil.printInfo('Failed to upload $type file: $fileName, Error: $e');
+        logger.d('Failed to upload $type file: $fileName, Error: $e');
         rethrow;
       }
     }
   }
 
   Future<void> _deleteFiles(
-      List<String> fileNames, String resourcePath, String type) async {
+    List<String> fileNames,
+    String resourcePath,
+    String type,
+  ) async {
     for (final fileName in fileNames) {
       try {
         await _client!.remove('$resourcePath/$fileName');
-        LogUtil.printInfo('$type file deleted: $fileName');
+        logger.d('$type file deleted: $fileName');
       } catch (e) {
-        LogUtil.printInfo('Failed to delete $type file: $fileName, Error: $e');
+        logger.d('Failed to delete $type file: $fileName, Error: $e');
         rethrow;
       }
     }
@@ -451,11 +510,13 @@ class WebDavUtil {
       // 先尝试普通 JSON 格式
       try {
         final diaryData = await _client!.read(normalDiaryPath);
-        diary = await flutter.compute(Diary.fromJson,
-            jsonDecode(utf8.decode(diaryData)) as Map<String, dynamic>);
-        LogUtil.printInfo('Diary JSON downloaded: $normalDiaryPath');
+        diary = await flutter.compute(
+          Diary.fromJson,
+          jsonDecode(utf8.decode(diaryData)) as Map<String, dynamic>,
+        );
+        logger.d('Diary JSON downloaded: $normalDiaryPath');
       } catch (e) {
-        LogUtil.printInfo('Failed to download normal JSON: $e');
+        logger.d('Failed to download normal JSON: $e');
         // 再尝试二进制格式
         try {
           final encryptedDiaryData = await _client!.read(encryptedDiaryPath);
@@ -470,11 +531,13 @@ class WebDavUtil {
             key: key,
             encryptedData: Uint8List.fromList(encryptedDiaryData),
           );
-          diary = await flutter.compute(Diary.fromJson,
-              jsonDecode(decryptedData) as Map<String, dynamic>);
-          LogUtil.printInfo('Diary binary downloaded: $encryptedDiaryPath');
+          diary = await flutter.compute(
+            Diary.fromJson,
+            jsonDecode(decryptedData) as Map<String, dynamic>,
+          );
+          logger.d('Diary binary downloaded: $encryptedDiaryPath');
         } catch (e) {
-          LogUtil.printInfo('Failed to download binary diary: $e');
+          logger.d('Failed to download binary diary: $e');
           // 两种方式都失败，抛出最终异常
           rethrow;
         }
@@ -487,36 +550,53 @@ class WebDavUtil {
     if (diary.categoryId != null) {
       try {
         final category = await _downloadCategory(diary.categoryId!);
-        await IsarUtil.updateACategory(Category()
-          ..id = category['id']!
-          ..categoryName = category['name']!);
+        await IsarUtil.updateACategory(
+          Category()
+            ..id = category['id']!
+            ..categoryName = category['name']!,
+        );
       } catch (e) {
-        LogUtil.printInfo(
-            'Failed to sync category for diary: $diaryId, Error: $e');
+        logger.d('Failed to sync category for diary: $diaryId, Error: $e');
       }
     }
 
     // 下载资源文件
     diary.imageName = await _downloadFiles(
-        diary.imageName, '${WebDavOptions.imagePath}/$diaryId', 'image');
+      diary.imageName,
+      '${WebDavOptions.imagePath}/$diaryId',
+      'image',
+    );
     diary.audioName = await _downloadFiles(
-        diary.audioName, '${WebDavOptions.audioPath}/$diaryId', 'audio');
+      diary.audioName,
+      '${WebDavOptions.audioPath}/$diaryId',
+      'audio',
+    );
     diary.videoName = await _downloadFiles(
-        diary.videoName, '${WebDavOptions.videoPath}/$diaryId', 'video');
+      diary.videoName,
+      '${WebDavOptions.videoPath}/$diaryId',
+      'video',
+    );
     // 下载视频缩略图
     await _downloadFiles(
-        diary.videoName, '${WebDavOptions.videoPath}/$diaryId', 'thumbnail');
+      diary.videoName,
+      '${WebDavOptions.videoPath}/$diaryId',
+      'thumbnail',
+    );
     return diary;
   }
 
   Future<List<String>> _downloadFiles(
-      List<String> fileNames, String resourcePath, String type) async {
+    List<String> fileNames,
+    String resourcePath,
+    String type,
+  ) async {
     final localFileNames = <String>[];
 
     for (final fileName in fileNames) {
-      final serverFilePath = type == 'thumbnail'
-          ? '$resourcePath/thumbnail-${fileName.substring(6, 42)}.jpeg'
-          : '$resourcePath/$fileName';
+      final serverFilePath =
+          type == 'thumbnail'
+              ? '$resourcePath/thumbnail-${fileName.substring(6, 42)}.jpeg'
+              : '$resourcePath/$fileName';
       final localFilePath = FileUtil.getRealPath(type, fileName);
 
       try {
@@ -524,10 +604,9 @@ class WebDavUtil {
         final file = File(localFilePath);
         await file.writeAsBytes(fileBytes);
         localFileNames.add(fileName);
-        LogUtil.printInfo('$type file downloaded: $fileName');
+        logger.d('$type file downloaded: $fileName');
       } catch (e) {
-        LogUtil.printInfo(
-            'Failed to download $type file: $fileName, Error: $e');
+        logger.d('Failed to download $type file: $fileName, Error: $e');
       }
     }
 
@@ -544,9 +623,9 @@ class WebDavUtil {
         'Content-Type': 'application/json',
       });
       await _client!.write(categoryPath, utf8.encode(categoryData));
-      LogUtil.printInfo('Category uploaded: $categoryPath');
+      logger.d('Category uploaded: $categoryPath');
     } catch (e) {
-      LogUtil.printInfo('Failed to upload category: $e');
+      logger.d('Failed to upload category: $e');
       rethrow;
     }
   }
@@ -559,10 +638,10 @@ class WebDavUtil {
       final categoryMap =
           jsonDecode(utf8.decode(categoryData)) as Map<String, dynamic>;
       final categoryName = categoryMap['name'] as String;
-      LogUtil.printInfo('Category downloaded: $categoryPath');
+      logger.d('Category downloaded: $categoryPath');
       return {'id': categoryId, 'name': categoryName};
     } catch (e) {
-      LogUtil.printInfo('Failed to download category: $e');
+      logger.d('Failed to download category: $e');
       throw Exception('Category not found: $categoryId');
     }
   }
