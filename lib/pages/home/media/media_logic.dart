@@ -1,18 +1,19 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/media_type.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/media_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'media_state.dart';
 
 class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
   final MediaState state = MediaState();
-  late final AnimationController animationController =
-      AnimationController(vsync: this);
+  late final AnimationController animationController = AnimationController(
+    vsync: this,
+  );
   late final ItemScrollController itemScrollController = ItemScrollController();
   late final ScrollOffsetController scrollOffsetController =
       ScrollOffsetController();
@@ -43,13 +44,11 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
       state.isFetching = true;
       update();
     }
-    state.datetimeMediaMap = await compute(
-        switch (mediaType) {
-          MediaType.image => MediaUtil.groupImageFileByDate,
-          MediaType.audio => MediaUtil.groupAudioFileByDate,
-          MediaType.video => MediaUtil.groupVideoFileByDate,
-        },
-        await FileUtil.getDirFilePath(mediaType.value));
+    state.datetimeMediaMap = await compute(switch (mediaType) {
+      MediaType.image => MediaUtil.groupImageFileByDate,
+      MediaType.audio => MediaUtil.groupAudioFileByDate,
+      MediaType.video => MediaUtil.groupVideoFileByDate,
+    }, await FileUtil.getDirFilePath(mediaType.value));
     state.dateTimeList = state.datetimeMediaMap.keys.toList();
     state.isFetching = false;
     update();
@@ -62,12 +61,14 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
   // 跳转到指定日期
   void jumpTo(DateTime dateTime) {
-    final index =
-        state.dateTimeList.indexWhere((element) => element == dateTime);
+    final index = state.dateTimeList.indexWhere(
+      (element) => element == dateTime,
+    );
     itemScrollController.scrollTo(
-        index: index,
-        duration: const Duration(seconds: 1),
-        curve: Curves.easeInOutQuart);
+      index: index,
+      duration: const Duration(seconds: 1),
+      curve: Curves.easeInOutQuart,
+    );
   }
 
   // 清理文件
@@ -78,6 +79,6 @@ class MediaLogic extends GetxController with GetSingleTickerProviderStateMixin {
     await getFilePath(state.mediaType.value);
     state.isCleaning = false;
     update(['modal']);
-    NoticeUtil.showToast('清理成功');
+    toast.success(message: '清理成功');
   }
 }

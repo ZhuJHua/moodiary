@@ -1,11 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/models/sync/sync.dart';
 import 'package:moodiary/common/values/sync_status.dart';
 import 'package:moodiary/services/sync/impl/webdav_impl.dart';
-import 'package:refreshed/refreshed.dart';
 
 /// 同步服务的抽象基类
 abstract class SyncService {

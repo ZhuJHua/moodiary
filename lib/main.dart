@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:get/get.dart';
 import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/values/language.dart';
@@ -16,7 +17,9 @@ import 'package:moodiary/components/frosted_glass_overlay/frosted_glass_overlay_
 import 'package:moodiary/components/window_buttons/window_buttons.dart';
 import 'package:moodiary/config/env.dart';
 import 'package:moodiary/l10n/app_localizations.dart';
-import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/l10n/l10n.dart';
+import 'package:moodiary/persistence/isar.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/router/app_pages.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/src/rust/frb_generated.dart';
@@ -24,13 +27,7 @@ import 'package:moodiary/utils/log_util.dart';
 import 'package:moodiary/utils/media_util.dart';
 import 'package:moodiary/utils/theme_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:video_player_media_kit/video_player_media_kit.dart';
-
-import 'presentation/pref.dart';
-
-late AppLocalizations l10n;
-late Locale locale;
 
 Future<void> _initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,11 +44,10 @@ Future<void> _initSystem() async {
       systemNavigationBarContrastEnforced: false,
     ),
   );
-  await _findLanguage();
   await _platFormOption();
 }
 
-Future<void> _findLanguage() async {
+Future<Locale> _findLanguage() async {
   Language language = Language.values.firstWhere(
     (e) => e.languageCode == PrefUtil.getValue<String>('language')!,
     orElse: () => Language.system,
@@ -67,8 +63,9 @@ Future<void> _findLanguage() async {
       orElse: () => Language.english,
     );
   }
-  locale = Locale(language.languageCode);
+  final locale = Locale(language.languageCode);
   Intl.defaultLocale = locale.languageCode;
+  return locale;
 }
 
 Future<void> _platFormOption() async {
@@ -94,36 +91,48 @@ String _getInitialRoute() {
 
 void main() async {
   await _initSystem();
+  final locale = await _findLanguage();
   FlutterError.onError = (details) {
-    LogUtil.printError(
+    logger.e(
       'Flutter error',
       error: details.exception,
       stackTrace: details.stack,
     );
   };
   PlatformDispatcher.instance.onError = (error, stack) {
-    LogUtil.printWTF('Error', error: error, stackTrace: stack);
+    logger.f('Error', error: error, stackTrace: stack);
     return true;
   };
-  final themeData = ThemeUtil().getThemeData();
-  runApp(
-    GetMaterialApp.router(
+
+  runApp(Moodiary(locale: locale));
+}
+
+class Moodiary extends StatelessWidget {
+  final Locale locale;
+
+  const Moodiary({super.key, required this.locale});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeData = ThemeUtil().getThemeData();
+    return GetMaterialApp.router(
       routeInformationParser: GetInformationParser.createInformationParser(
         initialRoute: _getInitialRoute(),
       ),
-      onGenerateTitle: (context) => AppLocalizations.of(context)!.appName,
+      onGenerateTitle: (context) => context.l10n.appName,
       backButtonDispatcher: GetRootBackButtonDispatcher(),
+      navigatorObservers: [FlutterSmartDialog.observer],
       builder: (context, child) {
-        l10n = AppLocalizations.of(context)!;
+        final smartDialog = FlutterSmartDialog.init();
         final mediaQuery = MediaQuery(
-          data: MediaQuery.of(context).copyWith(
+          data: context.mediaQuery.copyWith(
             textScaler: TextScaler.linear(
               PrefUtil.getValue<double>('fontScale')!,
             ),
           ),
-          child: FToastBuilder()(context, child!),
+          child: child!,
         );
-        return Stack(
+        final home = Stack(
           children: [
             mediaQuery,
             const FrostedGlassOverlayComponent(),
@@ -137,6 +146,7 @@ void main() async {
               const Positioned(top: 0, left: 0, right: 0, child: MoveTitle()),
           ],
         );
+        return smartDialog(context, home);
       },
       theme: themeData.$1,
       darkTheme: themeData.$2,
@@ -148,8 +158,8 @@ void main() async {
         FlutterQuillLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-    ),
-  );
+    );
+  }
 }
 
 class GetRootBackButtonDispatcher extends BackButtonDispatcher

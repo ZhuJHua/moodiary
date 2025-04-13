@@ -93,8 +93,6 @@ PODS:
   - Mantle (2.2.0):
     - Mantle/extobjc (= 2.2.0)
   - Mantle/extobjc (2.2.0)
-  - media_kit_native_event_loop (1.0.0):
-    - Flutter
   - media_kit_video (0.0.1):
     - Flutter
   - moodiary_rust (0.0.1):
@@ -111,9 +109,7 @@ PODS:
     - Flutter
   - quill_native_bridge_ios (0.0.1):
     - Flutter
-  - record_darwin (1.0.0):
-    - Flutter
-  - screen_brightness_ios (0.1.0):
+  - record_ios (1.0.0):
     - Flutter
   - SDWebImage (5.19.7):
     - SDWebImage/Core (= 5.19.7)
@@ -181,7 +177,6 @@ DEPENDENCIES:
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - isar_flutter_libs (from `.symlinks/plugins/isar_flutter_libs/ios`)
   - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
-  - media_kit_native_event_loop (from `.symlinks/plugins/media_kit_native_event_loop/ios`)
   - media_kit_video (from `.symlinks/plugins/media_kit_video/ios`)
   - moodiary_rust (from `.symlinks/plugins/moodiary_rust/ios`)
   - network_info_plus (from `.symlinks/plugins/network_info_plus/ios`)
@@ -189,8 +184,7 @@ DEPENDENCIES:
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - quill_native_bridge_ios (from `.symlinks/plugins/quill_native_bridge_ios/ios`)
-  - record_darwin (from `.symlinks/plugins/record_darwin/ios`)
-  - screen_brightness_ios (from `.symlinks/plugins/screen_brightness_ios/ios`)
+  - record_ios (from `.symlinks/plugins/record_ios/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
@@ -250,8 +244,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/isar_flutter_libs/ios"
   local_auth_darwin:
     :path: ".symlinks/plugins/local_auth_darwin/darwin"
-  media_kit_native_event_loop:
-    :path: ".symlinks/plugins/media_kit_native_event_loop/ios"
   media_kit_video:
     :path: ".symlinks/plugins/media_kit_video/ios"
   moodiary_rust:
@@ -266,10 +258,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   quill_native_bridge_ios:
     :path: ".symlinks/plugins/quill_native_bridge_ios/ios"
-  record_darwin:
-    :path: ".symlinks/plugins/record_darwin/ios"
-  screen_brightness_ios:
-    :path: ".symlinks/plugins/screen_brightness_ios/ios"
+  record_ios:
+    :path: ".symlinks/plugins/record_ios/ios"
   share_plus:
     :path: ".symlinks/plugins/share_plus/ios"
   shared_preferences_foundation:
@@ -310,7 +300,6 @@ SPEC CHECKSUMS:
   libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
   local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
   Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
-  media_kit_native_event_loop: 02f537bbf34235ec34dbbc7439a97ee96b776193
   media_kit_video: f3b0d035d89def15cfbbcf7dc2ae278f201e2f83
   moodiary_rust: e75b3fb63e53d3ba5cfed0edf0b6df5f98c4c5f1
   network_info_plus: cf61925ab5205dce05a4f0895989afdb6aade5fc
@@ -319,8 +308,7 @@ SPEC CHECKSUMS:
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   quill_native_bridge_ios: f47af4b14e7757968486641656c5d23250cee521
-  record_darwin: fb1f375f1d9603714f55b8708a903bbb91ffdb0a
-  screen_brightness_ios: 5ed898fa50fa82a26171c086ca5e28228f932576
+  record_ios: fee1c924aa4879b882ebca2b4bce6011bcfc3d8b
   SDWebImage: 8a6b7b160b4d710e2a22b6900e25301075c34cb3
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
@@ -332,7 +320,7 @@ SPEC CHECKSUMS:
   tflite_flutter: 64b192e11352fe36943ab6656e1d49207f1a5595
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
   video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
-  volume_controller: ca1cde542ee70fad77d388f82e9616488110942b
+  volume_controller: 3657a1f65bedb98fa41ff7dc5793537919f31b12
   wakelock_plus: 04623e3f525556020ebd4034310f20fe7fda8b49
 
 PODFILE CHECKSUM: 9752b5340b4d3f9618318fcd530d907790e2a9f5

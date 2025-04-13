@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/wave_form/wave_form_logic.dart';
 import 'package:moodiary/pages/edit/edit_logic.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/permission_util.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:uuid/uuid.dart';
 
 import 'record_sheet_state.dart';
@@ -20,10 +20,11 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
 
   //按钮动画控制器
   late AnimationController animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-      lowerBound: 0,
-      upperBound: 1.0);
+    vsync: this,
+    duration: const Duration(milliseconds: 100),
+    lowerBound: 0,
+    upperBound: 1.0,
+  );
 
   late final EditLogic editLogic = Bind.find<EditLogic>();
 
@@ -61,23 +62,27 @@ class RecordSheetLogic extends GetxController with GetTickerProviderStateMixin {
       ///开始录制
       ///暂时保存在缓存目录中
       await audioRecorder.start(
-          const RecordConfig(
-              androidConfig:
-                  AndroidRecordConfig(muteAudio: true, useLegacy: true)),
-          path: FileUtil.getCachePath(state.fileName));
+        const RecordConfig(
+          androidConfig: AndroidRecordConfig(muteAudio: true, useLegacy: true),
+        ),
+        path: FileUtil.getCachePath(state.fileName),
+      );
     }
   }
 
   void listenAmplitude() {
-    final amplitudeStream =
-        audioRecorder.onAmplitudeChanged(const Duration(milliseconds: 40));
+    final amplitudeStream = audioRecorder.onAmplitudeChanged(
+      const Duration(milliseconds: 40),
+    );
     amplitudeStream.listen((amplitude) {
       state.durationTime.value += const Duration(milliseconds: 40);
       if (amplitude.current.isInfinite) {
         Bind.find<WaveFormLogic>().maxLengthAdd(.0, state.maxWidth);
       } else if (amplitude.current != amplitude.max) {
         Bind.find<WaveFormLogic>().maxLengthAdd(
-            normalizeAmplitude(amplitude.current), state.maxWidth);
+          normalizeAmplitude(amplitude.current),
+          state.maxWidth,
+        );
       }
     });
   }

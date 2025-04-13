@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/pages/home/setting/setting_logic.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/notice_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'remove_password_state.dart';
 
@@ -11,9 +11,12 @@ class RemovePasswordLogic extends GetxController
     with GetSingleTickerProviderStateMixin {
   final RemovePasswordState state = RemovePasswordState();
   late AnimationController animationController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 200));
+    vsync: this,
+    duration: const Duration(milliseconds: 200),
+  );
   late Animation<double> animation = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: animationController, curve: Curves.easeInOut));
+    CurvedAnimation(parent: animationController, curve: Curves.easeInOut),
+  );
 
   late final settingLogic = Bind.find<SettingLogic>();
 
@@ -76,7 +79,7 @@ class RemovePasswordLogic extends GetxController
     await PrefUtil.removeValue('password');
     settingLogic.state.lock = false;
     settingLogic.update(['Lock']);
-    NoticeUtil.showToast('关闭成功');
+    toast.success(message: '关闭成功');
 
     if (context.mounted) Navigator.pop(context);
   }

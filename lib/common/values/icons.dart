@@ -419,6 +419,6 @@ class WeatherIcon {
     "2425": const IconData(62147, fontFamily: 'qweather'),
     "2426": const IconData(62148, fontFamily: 'qweather'),
     "9998": const IconData(61898, fontFamily: 'qweather'),
-    "9999": const IconData(61899, fontFamily: 'qweather')
+    "9999": const IconData(61899, fontFamily: 'qweather'),
   };
 }

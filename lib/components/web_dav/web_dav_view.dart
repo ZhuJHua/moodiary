@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/webdav.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'web_dav_logic.dart';
 import 'web_dav_state.dart';
@@ -16,55 +16,56 @@ class WebDavComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     final WebDavLogic logic = Get.put(WebDavLogic());
     final WebDavState state = Bind.find<WebDavLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
+
     return ExpansionTile(
       leading: const Icon(Icons.backup_rounded),
-      title: Text(l10n.backupSyncWebdav),
+      title: Text(context.l10n.backupSyncWebdav),
       subtitle: Obx(() {
         return state.hasOption.value
             ? Row(
-                children: [
-                  Text(
-                      '${l10n.backupSyncWebdavOption} ${l10n.backupSyncWebDAVConnectivity} '),
-                  Icon(
-                    Icons.circle,
-                    color: switch (state.connectivityStatus.value) {
-                      WebDavConnectivityStatus.connected =>
-                        WebDavOptions.connectivityColor,
-                      WebDavConnectivityStatus.unconnected =>
-                        WebDavOptions.unConnectivityColor,
-                      WebDavConnectivityStatus.connecting =>
-                        WebDavOptions.connectingColor,
-                    },
-                    size: 16,
-                  ),
-                ],
-              )
-            : Text(l10n.backupSyncWebdavNoOption);
+              children: [
+                Text(
+                  '${context.l10n.backupSyncWebdavOption} ${context.l10n.backupSyncWebDAVConnectivity} ',
+                ),
+                Icon(
+                  Icons.circle,
+                  color: switch (state.connectivityStatus.value) {
+                    WebDavConnectivityStatus.connected =>
+                      WebDavOptions.connectivityColor,
+                    WebDavConnectivityStatus.unconnected =>
+                      WebDavOptions.unConnectivityColor,
+                    WebDavConnectivityStatus.connecting =>
+                      WebDavOptions.connectingColor,
+                  },
+                  size: 16,
+                ),
+              ],
+            )
+            : Text(context.l10n.backupSyncWebdavNoOption);
       }),
       children: [
         Obx(() {
           return AdaptiveSwitchListTile(
             value: state.autoSync.value,
             onChanged: logic.setAutoSync,
-            title: Text(l10n.webdavSyncWhenStartUp),
-            subtitle: l10n.webdavSyncWhenStartUpDes,
+            title: Text(context.l10n.webdavSyncWhenStartUp),
+            subtitle: context.l10n.webdavSyncWhenStartUpDes,
           );
         }),
         Obx(() {
           return AdaptiveSwitchListTile(
             value: state.autoSyncAfterChange.value,
             onChanged: logic.setAutoSyncAfterChange,
-            title: Text(l10n.webdavSyncAfterChange),
-            subtitle: l10n.webdavSyncAfterChangeDes,
+            title: Text(context.l10n.webdavSyncAfterChange),
+            subtitle: context.l10n.webdavSyncAfterChangeDes,
           );
         }),
         Obx(() {
           return AdaptiveSwitchListTile(
             value: state.syncEncryption.value,
             onChanged: state.hasUserKey.value ? logic.setSyncEncryption : null,
-            title: Text(l10n.webdavSyncEncryption),
-            subtitle: l10n.webdavSyncEncryptionDes,
+            title: Text(context.l10n.webdavSyncEncryption),
+            subtitle: context.l10n.webdavSyncEncryptionDes,
           );
         }),
         Padding(
@@ -76,17 +77,15 @@ class WebDavComponent extends StatelessWidget {
               children: [
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: l10n.webdavOptionServer,
+                    labelText: context.l10n.webdavOptionServer,
                     border: const OutlineInputBorder(
-                        borderRadius: AppBorderRadius.smallBorderRadius),
+                      borderRadius: AppBorderRadius.smallBorderRadius,
+                    ),
                     prefixIcon: const Padding(
                       padding: EdgeInsets.all(16.0),
-                      child: FaIcon(
-                        FontAwesomeIcons.globe,
-                        size: 16,
-                      ),
+                      child: FaIcon(FontAwesomeIcons.globe, size: 16),
                     ),
-                    fillColor: colorScheme.surfaceContainer,
+                    fillColor: context.theme.colorScheme.surfaceContainer,
                     filled: true,
                   ),
                   focusNode: logic.webDavUrlFocusNode,
@@ -95,7 +94,7 @@ class WebDavComponent extends StatelessWidget {
                   keyboardType: TextInputType.url,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return l10n.webdavOptionServerDes;
+                      return context.l10n.webdavOptionServerDes;
                     }
                     return null;
                   },
@@ -105,16 +104,15 @@ class WebDavComponent extends StatelessWidget {
                 ),
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: l10n.webdavOptionUsername,
+                    labelText: context.l10n.webdavOptionUsername,
                     border: const OutlineInputBorder(
-                        borderRadius: AppBorderRadius.smallBorderRadius),
+                      borderRadius: AppBorderRadius.smallBorderRadius,
+                    ),
                     prefixIcon: const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: FaIcon(
-                          FontAwesomeIcons.solidUser,
-                          size: 16,
-                        )),
-                    fillColor: colorScheme.surfaceContainer,
+                      padding: EdgeInsets.all(16.0),
+                      child: FaIcon(FontAwesomeIcons.solidUser, size: 16),
+                    ),
+                    fillColor: context.theme.colorScheme.surfaceContainer,
                     filled: true,
                   ),
                   textInputAction: TextInputAction.next,
@@ -122,7 +120,7 @@ class WebDavComponent extends StatelessWidget {
                   controller: logic.usernameController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return l10n.webdavOptionUsernameDes;
+                      return context.l10n.webdavOptionUsernameDes;
                     }
                     return null;
                   },
@@ -132,17 +130,15 @@ class WebDavComponent extends StatelessWidget {
                 ),
                 TextFormField(
                   decoration: InputDecoration(
-                    labelText: l10n.webdavOptionPassword,
+                    labelText: context.l10n.webdavOptionPassword,
                     border: const OutlineInputBorder(
-                        borderRadius: AppBorderRadius.smallBorderRadius),
+                      borderRadius: AppBorderRadius.smallBorderRadius,
+                    ),
                     prefixIcon: const Padding(
                       padding: EdgeInsets.all(16.0),
-                      child: FaIcon(
-                        FontAwesomeIcons.lock,
-                        size: 16,
-                      ),
+                      child: FaIcon(FontAwesomeIcons.lock, size: 16),
                     ),
-                    fillColor: colorScheme.surfaceContainer,
+                    fillColor: context.theme.colorScheme.surfaceContainer,
                     filled: true,
                   ),
                   textInputAction: TextInputAction.done,
@@ -151,7 +147,7 @@ class WebDavComponent extends StatelessWidget {
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return l10n.webdavOptionPasswordDes;
+                      return context.l10n.webdavOptionPasswordDes;
                     }
                     return null;
                   },
@@ -163,18 +159,21 @@ class WebDavComponent extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                        onPressed: logic.removeWebDavOption,
-                        child: Text(
-                          l10n.webdavOptionDelete,
-                          style: TextStyle(color: colorScheme.error),
-                        )),
+                      onPressed: logic.removeWebDavOption,
+                      child: Text(
+                        context.l10n.webdavOptionDelete,
+                        style: TextStyle(
+                          color: context.theme.colorScheme.error,
+                        ),
+                      ),
+                    ),
                     TextButton(
                       onPressed: logic.submitForm,
                       child: Obx(() {
                         return Text(
                           !state.hasOption.value
-                              ? l10n.webdavOptionSave
-                              : l10n.webdavOptionUpdate,
+                              ? context.l10n.webdavOptionSave
+                              : context.l10n.webdavOptionUpdate,
                         );
                       }),
                     ),
@@ -183,7 +182,7 @@ class WebDavComponent extends StatelessWidget {
               ],
             ),
           ),
-        )
+        ),
       ],
     );
   }

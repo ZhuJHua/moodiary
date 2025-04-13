@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:moodiary/presentation/isar.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:get/get.dart';
+import 'package:moodiary/persistence/isar.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/utils/array_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 class DashboardLogic extends GetxController {
   //日记数量
@@ -52,28 +52,33 @@ class DashboardLogic extends GetxController {
   //选中两个日期后，查询指定范围内的日记
   Future<void> getMoodAndWeatherByRange(DateTime start, DateTime end) async {
     final moodList = await IsarUtil.getMoodByDateRange(
-        start, end.subtract(const Duration(days: -1)));
+      start,
+      end.subtract(const Duration(days: -1)),
+    );
     final weatherList = await IsarUtil.getWeatherByDateRange(
-        start, end.subtract(const Duration(days: -1)));
+      start,
+      end.subtract(const Duration(days: -1)),
+    );
 
     //去掉没有天气
     weatherList.removeWhere((item) => item.isEmpty);
     if (moodList.isNotEmpty) {
-      recentMood.value = ArrayUtil.countList(moodList)
-          .entries
-          .reduce((a, b) => a.value > b.value ? a : b)
-          .key
-          .toString();
+      recentMood.value =
+          ArrayUtil.countList(
+            moodList,
+          ).entries.reduce((a, b) => a.value > b.value ? a : b).key.toString();
     } else {
       recentMood.value = 'none';
     }
     if (weatherList.isNotEmpty) {
       final weatherCode = List.generate(
-          weatherList.length, (index) => weatherList[index].first);
-      recentWeather.value = ArrayUtil.countList(weatherCode)
-          .entries
-          .reduce((a, b) => a.value > b.value ? a : b)
-          .key;
+        weatherList.length,
+        (index) => weatherList[index].first,
+      );
+      recentWeather.value =
+          ArrayUtil.countList(
+            weatherCode,
+          ).entries.reduce((a, b) => a.value > b.value ? a : b).key;
     } else {
       recentWeather.value = 'none';
     }
@@ -81,7 +86,8 @@ class DashboardLogic extends GetxController {
 
   void getUseTime() {
     final DateTime firstStart = DateTime.fromMillisecondsSinceEpoch(
-        PrefUtil.getValue<int>('startTime')!);
+      PrefUtil.getValue<int>('startTime')!,
+    );
     final Duration duration = DateTime.now().difference(firstStart);
     useTime.value = (duration.inDays + 1).toString();
   }

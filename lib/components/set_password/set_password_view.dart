@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'set_password_logic.dart';
 
@@ -12,25 +12,23 @@ class SetPasswordComponent extends StatelessWidget {
     final logic = Get.put(SetPasswordLogic());
     final state = Bind.find<SetPasswordLogic>().state;
 
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
-
     final buttonSize =
-        (textStyle.displayLarge!.fontSize! * textStyle.displayLarge!.height!);
+        (context.textTheme.displayLarge!.fontSize! *
+            context.textTheme.displayLarge!.height!);
     Widget buildNumButton(String num) {
       return Ink(
         decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest, shape: BoxShape.circle),
+          color: context.theme.colorScheme.surfaceContainerHighest,
+          shape: BoxShape.circle,
+        ),
         child: InkWell(
           borderRadius: BorderRadius.all(Radius.circular(buttonSize / 2)),
           onTap: () async {
             await logic.updatePassword(num, context);
           },
           child: Center(
-              child: Text(
-            num,
-            style: textStyle.displaySmall,
-          )),
+            child: Text(num, style: context.textTheme.displaySmall),
+          ),
         ),
       );
     }
@@ -43,9 +41,7 @@ class SetPasswordComponent extends StatelessWidget {
           onTap: () {
             logic.deletePassword();
           },
-          child: const Icon(
-            Icons.keyboard_backspace_rounded,
-          ),
+          child: const Icon(Icons.keyboard_backspace_rounded),
         ),
       );
     }
@@ -56,11 +52,12 @@ class SetPasswordComponent extends StatelessWidget {
           Icons.circle,
           size: 16,
           color: Color.lerp(
-              state.password.length > index
-                  ? colorScheme.onSurface
-                  : colorScheme.surfaceContainerHighest,
-              Colors.red,
-              logic.animation.value),
+            state.password.length > index
+                ? context.theme.colorScheme.onSurface
+                : context.theme.colorScheme.surfaceContainerHighest,
+            Colors.red,
+            logic.animation.value,
+          ),
         );
       });
     }
@@ -78,16 +75,18 @@ class SetPasswordComponent extends StatelessWidget {
               children: [
                 Text(
                   state.checkPassword.isEmpty
-                      ? l10n.lockEnterPassword
-                      : l10n.lockConfirmPassword,
-                  style: textStyle.titleMedium,
+                      ? context.l10n.lockEnterPassword
+                      : context.l10n.lockConfirmPassword,
+                  style: context.textTheme.titleMedium,
                 ),
                 AnimatedBuilder(
                   animation: logic.animation,
                   builder: (context, child) {
                     return Transform.translate(
-                      offset:
-                          Offset(logic.interpolate(logic.animation.value), 0),
+                      offset: Offset(
+                        logic.interpolate(logic.animation.value),
+                        0,
+                      ),
                       child: Row(
                         spacing: 16.0,
                         mainAxisSize: MainAxisSize.min,
@@ -118,7 +117,7 @@ class SetPasswordComponent extends StatelessWidget {
                       buildNumButton('9'),
                       const SizedBox(),
                       buildNumButton('0'),
-                      buildDeleteButton()
+                      buildDeleteButton(),
                     ],
                   ),
                 ),

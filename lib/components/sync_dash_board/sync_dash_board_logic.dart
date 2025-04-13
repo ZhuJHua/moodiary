@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/sync_dash_board/sync_dash_board_state.dart';
 import 'package:moodiary/utils/webdav_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 class SyncDashBoardLogic extends GetxController {
   final SyncDashBoardState state = SyncDashBoardState();
@@ -28,7 +28,10 @@ class SyncDashBoardLogic extends GetxController {
   }
 
   void changePage(int index) {
-    pageController.animateToPage(index,
-        duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
+    pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
   }
 }

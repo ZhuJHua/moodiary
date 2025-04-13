@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/webdav.dart';
 import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
-import 'package:moodiary/main.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/utils/webdav_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'web_dav_dashboard_logic.dart';
 import 'web_dav_dashboard_state.dart';
@@ -13,33 +13,33 @@ import 'web_dav_dashboard_state.dart';
 class WebDavDashboardComponent extends StatelessWidget {
   const WebDavDashboardComponent({super.key});
 
-  Widget _buildError() {
+  Widget _buildError({required BuildContext context}) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         spacing: 8.0,
         children: [
-          const FaIcon(
-            FontAwesomeIcons.solidCircleXmark,
-            size: 56,
-          ),
-          Text(l10n.webdavDashboardConnectionError)
+          const FaIcon(FontAwesomeIcons.solidCircleXmark, size: 56),
+          Text(context.l10n.webdavDashboardConnectionError),
         ],
       ),
     );
   }
 
   // 当前任务队列
-  Widget _buildTaskQueue(
-      {required bool isUploading, required bool isDownloading}) {
+  Widget _buildTaskQueue({
+    required BuildContext context,
+    required bool isUploading,
+    required bool isDownloading,
+  }) {
     String status;
     if (WebDavUtil().syncingDiaries.isNotEmpty) {
-      status = l10n.webdavDashboardTaskSync;
+      status = context.l10n.webdavDashboardTaskSync;
     } else {
-      status = l10n.webdavDashboardTaskEmpty;
+      status = context.l10n.webdavDashboardTaskEmpty;
     }
     return AdaptiveListTile(
-      title: l10n.webdavDashboardCurrentTaskQueue,
+      title: context.l10n.webdavDashboardCurrentTaskQueue,
       subtitle: status,
       trailing: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -52,11 +52,8 @@ class WebDavDashboardComponent extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 spacing: 8.0,
                 children: [
-                  const FaIcon(
-                    FontAwesomeIcons.arrowUp,
-                    size: 12,
-                  ),
-                  Text(l10n.webdavDashboardUpload),
+                  const FaIcon(FontAwesomeIcons.arrowUp, size: 12),
+                  Text(context.l10n.webdavDashboardUpload),
                 ],
               ),
             ),
@@ -66,11 +63,8 @@ class WebDavDashboardComponent extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 spacing: 8.0,
                 children: [
-                  const FaIcon(
-                    FontAwesomeIcons.arrowDown,
-                    size: 12,
-                  ),
-                  Text(l10n.webdavDashboardDownload),
+                  const FaIcon(FontAwesomeIcons.arrowDown, size: 12),
+                  Text(context.l10n.webdavDashboardDownload),
                 ],
               ),
             ),
@@ -80,28 +74,36 @@ class WebDavDashboardComponent extends StatelessWidget {
     );
   }
 
-  Widget _buildCloudCount(
-      {required String cloudCount, required Function() onTap}) {
+  Widget _buildCloudCount({
+    required BuildContext context,
+    required String cloudCount,
+    required Function() onTap,
+  }) {
     return AdaptiveListTile(
-      title: l10n.webdavDashboardRemoteDiaryCount,
+      title: context.l10n.webdavDashboardRemoteDiaryCount,
       subtitle: cloudCount,
       trailing: FilledButton(
-          onPressed: onTap, child: const FaIcon(FontAwesomeIcons.arrowsRotate)),
+        onPressed: onTap,
+        child: const FaIcon(FontAwesomeIcons.arrowsRotate),
+      ),
     );
   }
 
   // 本地日记数量，包括待上传和待下载
-  Widget _buildLocalDiaryCount(
-      {required String toUploadCount,
-      required String toDownloadCount,
-      required Function() onTap}) {
+  Widget _buildLocalDiaryCount({
+    required BuildContext context,
+    required String toUploadCount,
+    required String toDownloadCount,
+    required Function() onTap,
+  }) {
     return AdaptiveListTile(
-      title: l10n.webdavDashboardLocalDiaryCount,
+      title: context.l10n.webdavDashboardLocalDiaryCount,
       subtitle:
-          '${l10n.webdavDashboardWaitingForUpload} $toUploadCount  ${l10n.webdavDashboardWaitingForDownload}$toDownloadCount',
+          '${context.l10n.webdavDashboardWaitingForUpload} $toUploadCount  ${context.l10n.webdavDashboardWaitingForDownload}$toDownloadCount',
       trailing: FilledButton(
-          onPressed: WebDavUtil().syncingDiaries.isNotEmpty ? null : onTap,
-          child: const FaIcon(FontAwesomeIcons.arrowRightArrowLeft)),
+        onPressed: WebDavUtil().syncingDiaries.isNotEmpty ? null : onTap,
+        child: const FaIcon(FontAwesomeIcons.arrowRightArrowLeft),
+      ),
     );
   }
 
@@ -129,12 +131,15 @@ class WebDavDashboardComponent extends StatelessWidget {
   //           onPressed: onTap, child: const FaIcon(FontAwesomeIcons.download)));
   // }
 
-  Widget _buildToWebDavSetting(
-      {required WebDavConnectivityStatus state, required Function() onTap}) {
+  Widget _buildToWebDavSetting({
+    required BuildContext context,
+    required WebDavConnectivityStatus state,
+    required Function() onTap,
+  }) {
     return AdaptiveListTile(
       title: Row(
         children: [
-          Text(l10n.backupSyncWebDAVConnectivity),
+          Text(context.l10n.backupSyncWebDAVConnectivity),
           Icon(
             Icons.circle,
             color: switch (state) {
@@ -146,11 +151,13 @@ class WebDavDashboardComponent extends StatelessWidget {
                 WebDavOptions.connectingColor,
             },
             size: 16,
-          )
+          ),
         ],
       ),
       trailing: TextButton(
-          onPressed: onTap, child: Text(l10n.webdavDashboardSetting)),
+        onPressed: onTap,
+        child: Text(context.l10n.webdavDashboardSetting),
+      ),
     );
   }
 
@@ -160,50 +167,57 @@ class WebDavDashboardComponent extends StatelessWidget {
     final WebDavDashboardState state = Bind.find<WebDavDashboardLogic>().state;
 
     return GetBuilder<WebDavDashboardLogic>(
-        assignId: true,
-        builder: (_) {
-          return Stack(
-            alignment: Alignment.center,
-            children: [
-              ListView(
-                padding: EdgeInsets.zero,
-                children: [
+      assignId: true,
+      builder: (_) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                Obx(() {
+                  return _buildToWebDavSetting(
+                    context: context,
+                    onTap: logic.toWebDavPage,
+                    state: state.connectivityStatus.value,
+                  );
+                }),
+                if (state.connectivityStatus.value ==
+                    WebDavConnectivityStatus.connected) ...[
                   Obx(() {
-                    return _buildToWebDavSetting(
-                      onTap: logic.toWebDavPage,
-                      state: state.connectivityStatus.value,
+                    return _buildTaskQueue(
+                      context: context,
+                      isUploading: state.isUploading.value,
+                      isDownloading: state.isDownloading.value,
                     );
                   }),
-                  if (state.connectivityStatus.value ==
-                      WebDavConnectivityStatus.connected) ...[
-                    Obx(() {
-                      return _buildTaskQueue(
-                        isUploading: state.isUploading.value,
-                        isDownloading: state.isDownloading.value,
-                      );
-                    }),
-                    Obx(() {
-                      return _buildCloudCount(
-                        cloudCount: state.webDavDiaryCount.value,
-                        onTap: logic.fetchingWebDavSyncFlag,
-                      );
-                    }),
-                    Obx(() {
-                      return _buildLocalDiaryCount(
-                        toUploadCount: state.toUploadDiariesCount.value,
-                        toDownloadCount: state.toDownloadIdsCount.value,
-                        onTap: logic.syncDiary,
-                      );
-                    })
-                  ],
+                  Obx(() {
+                    return _buildCloudCount(
+                      context: context,
+                      cloudCount: state.webDavDiaryCount.value,
+                      onTap: logic.fetchingWebDavSyncFlag,
+                    );
+                  }),
+                  Obx(() {
+                    return _buildLocalDiaryCount(
+                      context: context,
+                      toUploadCount: state.toUploadDiariesCount.value,
+                      toDownloadCount: state.toDownloadIdsCount.value,
+                      onTap: () {
+                        logic.syncDiary(context: context);
+                      },
+                    );
+                  }),
                 ],
-              ),
-              if (state.isFetching) const MoodiaryLoading(),
-              if (state.connectivityStatus.value ==
-                  WebDavConnectivityStatus.unconnected)
-                _buildError(),
-            ],
-          );
-        });
+              ],
+            ),
+            if (state.isFetching) const MoodiaryLoading(),
+            if (state.connectivityStatus.value ==
+                WebDavConnectivityStatus.unconnected)
+              _buildError(context: context),
+          ],
+        );
+      },
+    );
   }
 }

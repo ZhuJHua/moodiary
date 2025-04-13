@@ -1,11 +1,13 @@
 import 'dart:async';
 
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/pref.dart';
 
 class CacheUtil {
   static Future<List<String>?> getCacheList(
-      String key, Future<List<String>?> Function() fetchData,
-      {int maxAgeMillis = 900000}) async {
+    String key,
+    Future<List<String>?> Function() fetchData, {
+    int maxAgeMillis = 900000,
+  }) async {
     var cachedData = PrefUtil.getValue<List<String>>(key);
     // 检查缓存是否有效，如果无效则更新缓存
     if (cachedData == null || _isCacheExpired(cachedData, maxAgeMillis)) {
@@ -25,11 +27,15 @@ class CacheUtil {
   }
 
   static Future<void> _updateCacheList(
-      String key, Future<List<String>?> Function() fetchData) async {
+    String key,
+    Future<List<String>?> Function() fetchData,
+  ) async {
     final newData = await fetchData();
     if (newData != null) {
       await PrefUtil.setValue<List<String>>(
-          key, newData..add(DateTime.now().millisecondsSinceEpoch.toString()));
+        key,
+        newData..add(DateTime.now().millisecondsSinceEpoch.toString()),
+      );
     }
   }
 }

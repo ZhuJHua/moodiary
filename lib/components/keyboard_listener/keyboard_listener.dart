@@ -5,10 +5,10 @@ import 'package:moodiary/common/values/keyboard_state.dart';
 
 class KeyboardObserver with WidgetsBindingObserver {
   /// 键盘高度变化回调
-  final void Function(double height) onHeightChanged;
+  final void Function(double height)? onHeightChanged;
 
   /// 键盘状态变化回调
-  final void Function(KeyboardState state)? onStateChanged;
+  final void Function(KeyboardState state) onStateChanged;
 
   /// 上一次的键盘高度
   double _lastHeight = 0;
@@ -16,10 +16,7 @@ class KeyboardObserver with WidgetsBindingObserver {
   /// 当前键盘状态
   KeyboardState _keyboardState = KeyboardState.closed;
 
-  KeyboardObserver({
-    required this.onHeightChanged,
-    this.onStateChanged,
-  });
+  KeyboardObserver({this.onHeightChanged, required this.onStateChanged});
 
   /// 开始监听
   void start() {
@@ -39,23 +36,23 @@ class KeyboardObserver with WidgetsBindingObserver {
 
       // 通知键盘高度变化
       if (height != _lastHeight) {
-        onHeightChanged(height);
+        onHeightChanged?.call(height);
       }
 
       // 检测键盘状态变化
       if (height > _lastHeight && _keyboardState != KeyboardState.opening) {
         _keyboardState = KeyboardState.opening;
-        onStateChanged?.call(_keyboardState);
+        onStateChanged.call(_keyboardState);
       } else if (height < _lastHeight &&
           _keyboardState != KeyboardState.closing) {
         _keyboardState = KeyboardState.closing;
-        onStateChanged?.call(_keyboardState);
+        onStateChanged.call(_keyboardState);
       }
 
       // 如果键盘完全关闭
       if (height == 0 && _keyboardState != KeyboardState.closed) {
         _keyboardState = KeyboardState.closed;
-        onStateChanged?.call(_keyboardState);
+        onStateChanged.call(_keyboardState);
       }
 
       // 更新最后的高度

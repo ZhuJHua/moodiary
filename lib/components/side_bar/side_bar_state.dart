@@ -1,7 +1,7 @@
 // import 'package:moodiary/common/models/isar/diary.dart';
-// import 'package:moodiary/presentation/pref.dart';
+// import 'package:moodiary/persistence/pref.dart';
 // import 'package:package_info_plus/package_info_plus.dart';
-// import 'package:refreshed/refreshed.dart';
+// import 'package:get/get.dart';
 //
 // class SideBarState {
 //   var packageInfo = Rx<PackageInfo?>(null);

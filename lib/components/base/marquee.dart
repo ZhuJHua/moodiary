@@ -61,40 +61,40 @@ class Marquee extends StatefulWidget {
     this.decelerationDuration = Duration.zero,
     Curve decelerationCurve = Curves.decelerate,
     this.onDone,
-  })  : assert(!blankSpace.isNaN),
-        assert(blankSpace >= 0, "The blankSpace needs to be positive or zero."),
-        assert(blankSpace.isFinite),
-        assert(!velocity.isNaN),
-        assert(velocity != 0.0, "The velocity cannot be zero."),
-        assert(velocity.isFinite),
-        assert(
-          pauseAfterRound >= Duration.zero,
-          "The pauseAfterRound cannot be negative as time travel isn't "
-          "invented yet.",
-        ),
-        assert(
-          fadingEdgeStartFraction >= 0 && fadingEdgeStartFraction <= 1,
-          "The fadingEdgeGradientFractionOnStart value should be between 0 and "
-          "1, inclusive",
-        ),
-        assert(
-          fadingEdgeEndFraction >= 0 && fadingEdgeEndFraction <= 1,
-          "The fadingEdgeGradientFractionOnEnd value should be between 0 and "
-          "1, inclusive",
-        ),
-        assert(numberOfRounds == null || numberOfRounds > 0),
-        assert(
-          accelerationDuration >= Duration.zero,
-          "The accelerationDuration cannot be negative as time travel isn't "
-          "invented yet.",
-        ),
-        assert(
-          decelerationDuration >= Duration.zero,
-          "The decelerationDuration must be positive or zero as time travel "
-          "isn't invented yet.",
-        ),
-        accelerationCurve = IntegralCurve(accelerationCurve),
-        decelerationCurve = IntegralCurve(decelerationCurve);
+  }) : assert(!blankSpace.isNaN),
+       assert(blankSpace >= 0, "The blankSpace needs to be positive or zero."),
+       assert(blankSpace.isFinite),
+       assert(!velocity.isNaN),
+       assert(velocity != 0.0, "The velocity cannot be zero."),
+       assert(velocity.isFinite),
+       assert(
+         pauseAfterRound >= Duration.zero,
+         "The pauseAfterRound cannot be negative as time travel isn't "
+         "invented yet.",
+       ),
+       assert(
+         fadingEdgeStartFraction >= 0 && fadingEdgeStartFraction <= 1,
+         "The fadingEdgeGradientFractionOnStart value should be between 0 and "
+         "1, inclusive",
+       ),
+       assert(
+         fadingEdgeEndFraction >= 0 && fadingEdgeEndFraction <= 1,
+         "The fadingEdgeGradientFractionOnEnd value should be between 0 and "
+         "1, inclusive",
+       ),
+       assert(numberOfRounds == null || numberOfRounds > 0),
+       assert(
+         accelerationDuration >= Duration.zero,
+         "The accelerationDuration cannot be negative as time travel isn't "
+         "invented yet.",
+       ),
+       assert(
+         decelerationDuration >= Duration.zero,
+         "The decelerationDuration must be positive or zero as time travel "
+         "isn't invented yet.",
+       ),
+       accelerationCurve = IntegralCurve(accelerationCurve),
+       decelerationCurve = IntegralCurve(decelerationCurve);
   final String text;
   final TextStyle? style;
   final TextScaler? textScaler;
@@ -137,9 +137,10 @@ class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
   bool _running = false;
   int _roundCounter = 0;
 
-  bool get isDone => widget.numberOfRounds == null
-      ? false
-      : widget.numberOfRounds == _roundCounter;
+  bool get isDone =>
+      widget.numberOfRounds == null
+          ? false
+          : widget.numberOfRounds == _roundCounter;
 
   @override
   void initState() {
@@ -178,24 +179,27 @@ class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
 
   void _initialize(BuildContext context) {
     final totalLength = _getTextWidth(context) + widget.blankSpace;
-    final accelerationLength = widget.accelerationCurve.integral *
+    final accelerationLength =
+        widget.accelerationCurve.integral *
         widget.velocity *
         _accelerationDuration.inMilliseconds /
         1000.0;
-    final decelerationLength = widget.decelerationCurve.integral *
+    final decelerationLength =
+        widget.decelerationCurve.integral *
         widget.velocity *
         _decelerationDuration.inMilliseconds /
         1000.0;
     final linearLength =
         (totalLength - accelerationLength.abs() - decelerationLength.abs()) *
-            (widget.velocity > 0 ? 1 : -1);
+        (widget.velocity > 0 ? 1 : -1);
 
     _startPosition = 2 * totalLength - widget.startPadding;
     _accelerationTarget = _startPosition + accelerationLength;
     _linearTarget = _accelerationTarget + linearLength;
     _decelerationTarget = _linearTarget + decelerationLength;
 
-    _totalDuration = _accelerationDuration +
+    _totalDuration =
+        _accelerationDuration +
         _decelerationDuration +
         Duration(milliseconds: (linearLength / widget.velocity * 1000).toInt());
     _linearDuration =
@@ -259,10 +263,12 @@ class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
     final richTextWidget = Text.rich(span).build(context) as RichText;
     final renderObject = richTextWidget.createRenderObject(context);
     renderObject.layout(constraints);
-    final boxes = renderObject.getBoxesForSelection(TextSelection(
-      baseOffset: 0,
-      extentOffset: TextSpan(text: widget.text).toPlainText().length,
-    ));
+    final boxes = renderObject.getBoxesForSelection(
+      TextSelection(
+        baseOffset: 0,
+        extentOffset: TextSpan(text: widget.text).toPlainText().length,
+      ),
+    );
     return boxes.last.right;
   }
 
@@ -277,18 +283,18 @@ class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
       itemBuilder: (_, i) {
         return i.isEven
             ? Text(
-                widget.text,
-                style: widget.style,
-                textScaler: widget.textScaler,
-              )
+              widget.text,
+              style: widget.style,
+              textScaler: widget.textScaler,
+            )
             : SizedBox(
-                width: widget.scrollAxis == Axis.horizontal
-                    ? widget.blankSpace
-                    : null,
-                height: widget.scrollAxis == Axis.vertical
-                    ? widget.blankSpace
-                    : null,
-              );
+              width:
+                  widget.scrollAxis == Axis.horizontal
+                      ? widget.blankSpace
+                      : null,
+              height:
+                  widget.scrollAxis == Axis.vertical ? widget.blankSpace : null,
+            );
       },
     );
   }

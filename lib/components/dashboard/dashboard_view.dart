@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/base/text.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'dashboard_logic.dart';
 
@@ -11,8 +11,6 @@ class DashboardComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Get.put(DashboardLogic());
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
 
     Widget buildSection({required String title, required String count}) {
       return Column(
@@ -20,13 +18,15 @@ class DashboardComponent extends StatelessWidget {
         children: [
           AdaptiveText(
             title,
-            style:
-                textStyle.labelMedium?.copyWith(color: colorScheme.onSurface),
+            style: context.textTheme.labelMedium?.copyWith(
+              color: context.theme.colorScheme.onSurface,
+            ),
           ),
           AnimatedText(
             count,
-            style:
-                textStyle.titleMedium?.copyWith(color: colorScheme.secondary),
+            style: context.textTheme.titleMedium?.copyWith(
+              color: context.theme.colorScheme.secondary,
+            ),
             isFetching: count.isEmpty,
           ),
         ],
@@ -42,7 +42,7 @@ class DashboardComponent extends StatelessWidget {
             flex: 1,
             child: Obx(() {
               return buildSection(
-                title: l10n.dashboardUseDays,
+                title: context.l10n.dashboardUseDays,
                 count: logic.useTime.value,
               );
             }),
@@ -51,7 +51,7 @@ class DashboardComponent extends StatelessWidget {
             flex: 1,
             child: Obx(() {
               return buildSection(
-                title: l10n.dashboardTotalDiary,
+                title: context.l10n.dashboardTotalDiary,
                 count: logic.diaryCount.value,
               );
             }),
@@ -60,7 +60,7 @@ class DashboardComponent extends StatelessWidget {
             flex: 1,
             child: Obx(() {
               return buildSection(
-                title: l10n.dashboardTotalText,
+                title: context.l10n.dashboardTotalText,
                 count: logic.contentCount.value,
               );
             }),
@@ -69,7 +69,7 @@ class DashboardComponent extends StatelessWidget {
             flex: 1,
             child: Obx(() {
               return buildSection(
-                title: l10n.dashboardTotalCategory,
+                title: context.l10n.dashboardTotalCategory,
                 count: logic.categoryCount.value,
               );
             }),
@@ -82,7 +82,7 @@ class DashboardComponent extends StatelessWidget {
       assignId: true,
       builder: (_) {
         return Card.filled(
-          color: colorScheme.surfaceContainerLow,
+          color: context.theme.colorScheme.surfaceContainerLow,
           margin: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(16.0),

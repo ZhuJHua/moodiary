@@ -16,31 +16,34 @@ class ShiplyResponse {
   int? updateStrategy;
   int? updateTime;
 
-  ShiplyResponse(
-      {this.apkBasicInfo,
-      this.clientInfo,
-      this.extra,
-      this.grayType,
-      this.newFeature,
-      this.popInterval,
-      this.popTimes,
-      this.publishTime,
-      this.receiveMoment,
-      this.remindType,
-      this.status,
-      this.tacticsId,
-      this.title,
-      this.undisturbedDuration,
-      this.updateStrategy,
-      this.updateTime});
+  ShiplyResponse({
+    this.apkBasicInfo,
+    this.clientInfo,
+    this.extra,
+    this.grayType,
+    this.newFeature,
+    this.popInterval,
+    this.popTimes,
+    this.publishTime,
+    this.receiveMoment,
+    this.remindType,
+    this.status,
+    this.tacticsId,
+    this.title,
+    this.undisturbedDuration,
+    this.updateStrategy,
+    this.updateTime,
+  });
 
   ShiplyResponse.fromJson(Map<String, dynamic> json) {
-    apkBasicInfo = json["apkBasicInfo"] == null
-        ? null
-        : ApkBasicInfo.fromJson(json["apkBasicInfo"]);
-    clientInfo = json["clientInfo"] == null
-        ? null
-        : ClientInfo.fromJson(json["clientInfo"]);
+    apkBasicInfo =
+        json["apkBasicInfo"] == null
+            ? null
+            : ApkBasicInfo.fromJson(json["apkBasicInfo"]);
+    clientInfo =
+        json["clientInfo"] == null
+            ? null
+            : ClientInfo.fromJson(json["clientInfo"]);
     extra = json["extra"] == null ? null : Extra.fromJson(json["extra"]);
     grayType = json["grayType"];
     newFeature = json["newFeature"];
@@ -129,15 +132,16 @@ class ApkBasicInfo {
   int? versionCode;
   String? version;
 
-  ApkBasicInfo(
-      {this.md5,
-      this.pkgSize,
-      this.buildNo,
-      this.bundleId,
-      this.downloadUrl,
-      this.pkgName,
-      this.versionCode,
-      this.version});
+  ApkBasicInfo({
+    this.md5,
+    this.pkgSize,
+    this.buildNo,
+    this.bundleId,
+    this.downloadUrl,
+    this.pkgName,
+    this.versionCode,
+    this.version,
+  });
 
   ApkBasicInfo.fromJson(Map<String, dynamic> json) {
     md5 = json["md5"];

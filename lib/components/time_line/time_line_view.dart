@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class TimeLinePainter extends CustomPainter {
   final double lineWidth;
@@ -14,9 +15,10 @@ class TimeLinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final linePaint = Paint()
-      ..color = lineColor
-      ..strokeWidth = lineWidth;
+    final linePaint =
+        Paint()
+          ..color = lineColor
+          ..strokeWidth = lineWidth;
     final actionPaint = Paint()..color = actionColor;
     canvas.drawLine(const Offset(20, 0), Offset(20, size.height), linePaint);
     canvas.drawCircle(Offset(20, size.height / 2), 10.0, actionPaint);
@@ -29,25 +31,24 @@ class TimeLinePainter extends CustomPainter {
 }
 
 class TimeLineComponent extends StatelessWidget {
-  const TimeLineComponent(
-      {super.key, required this.actionColor, required this.child});
+  const TimeLineComponent({
+    super.key,
+    required this.actionColor,
+    required this.child,
+  });
 
   final Color actionColor;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return CustomPaint(
       painter: TimeLinePainter(
-          lineColor: colorScheme.outlineVariant,
-          actionColor: actionColor,
-          lineWidth: 2.0),
-      child: Padding(
-        padding: const EdgeInsets.only(left: 40.0),
-        child: child,
+        lineColor: context.theme.colorScheme.outlineVariant,
+        actionColor: actionColor,
+        lineWidth: 2.0,
       ),
+      child: Padding(padding: const EdgeInsets.only(left: 40.0), child: child),
     );
   }
 }

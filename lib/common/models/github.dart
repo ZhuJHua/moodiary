@@ -18,25 +18,26 @@ class GithubRelease {
   String? zipballUrl;
   String? body;
 
-  GithubRelease(
-      {this.url,
-      this.assetsUrl,
-      this.uploadUrl,
-      this.htmlUrl,
-      this.id,
-      this.author,
-      this.nodeId,
-      this.tagName,
-      this.targetCommitish,
-      this.name,
-      this.draft,
-      this.prerelease,
-      this.createdAt,
-      this.publishedAt,
-      this.assets,
-      this.tarballUrl,
-      this.zipballUrl,
-      this.body});
+  GithubRelease({
+    this.url,
+    this.assetsUrl,
+    this.uploadUrl,
+    this.htmlUrl,
+    this.id,
+    this.author,
+    this.nodeId,
+    this.tagName,
+    this.targetCommitish,
+    this.name,
+    this.draft,
+    this.prerelease,
+    this.createdAt,
+    this.publishedAt,
+    this.assets,
+    this.tarballUrl,
+    this.zipballUrl,
+    this.body,
+  });
 
   GithubRelease.fromJson(Map<String, dynamic> json) {
     url = json["url"];
@@ -53,9 +54,10 @@ class GithubRelease {
     prerelease = json["prerelease"];
     createdAt = json["created_at"];
     publishedAt = json["published_at"];
-    assets = json["assets"] == null
-        ? null
-        : (json["assets"] as List).map((e) => Assets.fromJson(e)).toList();
+    assets =
+        json["assets"] == null
+            ? null
+            : (json["assets"] as List).map((e) => Assets.fromJson(e)).toList();
     tarballUrl = json["tarball_url"];
     zipballUrl = json["zipball_url"];
     body = json["body"];
@@ -104,20 +106,21 @@ class Assets {
   String? updatedAt;
   String? browserDownloadUrl;
 
-  Assets(
-      {this.url,
-      this.id,
-      this.nodeId,
-      this.name,
-      this.label,
-      this.uploader,
-      this.contentType,
-      this.state,
-      this.size,
-      this.downloadCount,
-      this.createdAt,
-      this.updatedAt,
-      this.browserDownloadUrl});
+  Assets({
+    this.url,
+    this.id,
+    this.nodeId,
+    this.name,
+    this.label,
+    this.uploader,
+    this.contentType,
+    this.state,
+    this.size,
+    this.downloadCount,
+    this.createdAt,
+    this.updatedAt,
+    this.browserDownloadUrl,
+  });
 
   Assets.fromJson(Map<String, dynamic> json) {
     url = json["url"];
@@ -178,26 +181,27 @@ class Uploader {
   String? userViewType;
   bool? siteAdmin;
 
-  Uploader(
-      {this.login,
-      this.id,
-      this.nodeId,
-      this.avatarUrl,
-      this.gravatarId,
-      this.url,
-      this.htmlUrl,
-      this.followersUrl,
-      this.followingUrl,
-      this.gistsUrl,
-      this.starredUrl,
-      this.subscriptionsUrl,
-      this.organizationsUrl,
-      this.reposUrl,
-      this.eventsUrl,
-      this.receivedEventsUrl,
-      this.type,
-      this.userViewType,
-      this.siteAdmin});
+  Uploader({
+    this.login,
+    this.id,
+    this.nodeId,
+    this.avatarUrl,
+    this.gravatarId,
+    this.url,
+    this.htmlUrl,
+    this.followersUrl,
+    this.followingUrl,
+    this.gistsUrl,
+    this.starredUrl,
+    this.subscriptionsUrl,
+    this.organizationsUrl,
+    this.reposUrl,
+    this.eventsUrl,
+    this.receivedEventsUrl,
+    this.type,
+    this.userViewType,
+    this.siteAdmin,
+  });
 
   Uploader.fromJson(Map<String, dynamic> json) {
     login = json["login"];
@@ -267,26 +271,27 @@ class Author {
   String? userViewType;
   bool? siteAdmin;
 
-  Author(
-      {this.login,
-      this.id,
-      this.nodeId,
-      this.avatarUrl,
-      this.gravatarId,
-      this.url,
-      this.htmlUrl,
-      this.followersUrl,
-      this.followingUrl,
-      this.gistsUrl,
-      this.starredUrl,
-      this.subscriptionsUrl,
-      this.organizationsUrl,
-      this.reposUrl,
-      this.eventsUrl,
-      this.receivedEventsUrl,
-      this.type,
-      this.userViewType,
-      this.siteAdmin});
+  Author({
+    this.login,
+    this.id,
+    this.nodeId,
+    this.avatarUrl,
+    this.gravatarId,
+    this.url,
+    this.htmlUrl,
+    this.followersUrl,
+    this.followingUrl,
+    this.gistsUrl,
+    this.starredUrl,
+    this.subscriptionsUrl,
+    this.organizationsUrl,
+    this.reposUrl,
+    this.eventsUrl,
+    this.receivedEventsUrl,
+    this.type,
+    this.userViewType,
+    this.siteAdmin,
+  });
 
   Author.fromJson(Map<String, dynamic> json) {
     login = json["login"];

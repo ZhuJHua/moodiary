@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:moodiary/presentation/isar.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/isar.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/font_util.dart';
 import 'package:moodiary/utils/media_util.dart';
@@ -13,13 +13,17 @@ class MergeUtil {
     /// v2.4.8
     if (appVersionCode.compareTo('2.4.8') < 0) {
       await compute(
-          IsarUtil.mergeToV2_4_8, FileUtil.getRealPath('database', ''));
+        IsarUtil.mergeToV2_4_8,
+        FileUtil.getRealPath('database', ''),
+      );
     }
 
     /// v2.6.0
     if (appVersionCode.compareTo('2.6.0') < 0) {
       await compute(
-          IsarUtil.mergeToV2_6_0, FileUtil.getRealPath('database', ''));
+        IsarUtil.mergeToV2_6_0,
+        FileUtil.getRealPath('database', ''),
+      );
     }
 
     /// 修复bug

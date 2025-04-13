@@ -104,10 +104,12 @@ class RawResult {
   });
 
   List<int> getAnswerIndices() {
-    final int startIndex =
-        startLogits.indexOf(startLogits.reduce((a, b) => a > b ? a : b));
-    final int endIndex =
-        endLogits.indexOf(endLogits.reduce((a, b) => a > b ? a : b));
+    final int startIndex = startLogits.indexOf(
+      startLogits.reduce((a, b) => a > b ? a : b),
+    );
+    final int endIndex = endLogits.indexOf(
+      endLogits.reduce((a, b) => a > b ? a : b),
+    );
     return [startIndex, endIndex];
   }
 

@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/models/sync/sync.dart';
 import 'package:moodiary/common/values/sync_status.dart';
 import 'package:moodiary/common/values/webdav.dart';
 import 'package:moodiary/services/sync/sync.dart';
 import 'package:moodiary/utils/log_util.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
 class WebdavSyncServiceImpl implements SyncService {
@@ -60,7 +60,7 @@ class WebdavSyncServiceImpl implements SyncService {
       await _client.ping().timeout(const Duration(seconds: 3));
       _connectivity.value = ConnectivityStatus.connected;
     } catch (e) {
-      LogUtil.printError("WebDAV Error Check Connectivity", error: e);
+      logger.e("WebDAV Error Check Connectivity", error: e);
       _connectivity.value = ConnectivityStatus.disconnected;
     }
   }
@@ -80,7 +80,7 @@ class WebdavSyncServiceImpl implements SyncService {
       try {
         await _client.mkdirAll(path);
       } catch (e) {
-        LogUtil.printError("创建目录失败: $path", error: e);
+        logger.e("创建目录失败: $path", error: e);
       }
     }
 
@@ -107,7 +107,7 @@ class WebdavSyncServiceImpl implements SyncService {
         );
       }
     } catch (e) {
-      LogUtil.printError("获取服务器同步数据失败", error: e);
+      logger.e("获取服务器同步数据失败", error: e);
     }
     return SyncResult(status: SyncStatus.failure);
   }
@@ -125,7 +125,7 @@ class WebdavSyncServiceImpl implements SyncService {
       );
       return SyncResult(status: SyncStatus.success, data: true);
     } catch (e) {
-      LogUtil.printError("更新服务器同步数据失败", error: e);
+      logger.e("更新服务器同步数据失败", error: e);
       return SyncResult(status: SyncStatus.failure);
     }
   }
@@ -180,7 +180,7 @@ class WebdavSyncServiceImpl implements SyncService {
         _deleteFile('${WebDavOptions.videoPath}/${diary.id}'),
       ]);
     } catch (e) {
-      LogUtil.printError("删除日记失败", error: e);
+      logger.e("删除日记失败", error: e);
       return SyncResult(status: SyncStatus.failure);
     }
 
@@ -241,7 +241,6 @@ class WebdavSyncServiceImpl implements SyncService {
     VoidCallback? onComplete,
     Function(int p1, int p2)? onProgress,
   }) {
-    // TODO: implement updateDiary
     throw UnimplementedError();
   }
 
@@ -257,10 +256,8 @@ class WebdavSyncServiceImpl implements SyncService {
   }
 
   @override
-  // TODO: implement hasConfig
   bool get hasConfig => throw UnimplementedError();
 
   @override
-  // TODO: implement connectivity
   ConnectivityStatus get rxConnectivity => _connectivity.value;
 }

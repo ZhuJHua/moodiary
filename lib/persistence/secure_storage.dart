@@ -2,9 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageUtil {
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
   static Future<void> setValue(String key, dynamic value) async {

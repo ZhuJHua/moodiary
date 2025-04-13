@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/border.dart';
@@ -17,8 +18,6 @@ class GirdDiaryCardComponent extends StatelessWidget with BasicCardLogic {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
 
     Widget buildImage() {
@@ -40,7 +39,7 @@ class GirdDiaryCardComponent extends StatelessWidget with BasicCardLogic {
     }
 
     return Card.filled(
-      color: colorScheme.surfaceContainerLow,
+      color: context.theme.colorScheme.surfaceContainerLow,
       margin: EdgeInsets.zero,
       child: InkWell(
         borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -64,16 +63,16 @@ class GirdDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                         EllipsisText(
                           diary.title.trim(),
                           maxLines: 1,
-                          style: textStyle.titleMedium?.copyWith(
-                            color: colorScheme.onSurface,
+                          style: context.textTheme.titleMedium?.copyWith(
+                            color: context.theme.colorScheme.onSurface,
                           ),
                         ),
                       if (diary.contentText.isNotEmpty)
                         EllipsisText(
                           diary.contentText.trim().removeLineBreaks(),
                           maxLines: 4,
-                          style: textStyle.bodyMedium?.copyWith(
-                            color: colorScheme.onSurface,
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: context.theme.colorScheme.onSurface,
                           ),
                         ),
                       Row(
@@ -81,15 +80,15 @@ class GirdDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                         children: [
                           Text(
                             DateFormat.yMd().add_Hms().format(diary.time),
-                            style: textStyle.labelSmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+                            style: context.textTheme.labelSmall?.copyWith(
+                              color: context.theme.colorScheme.onSurfaceVariant,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                           FaIcon(
                             DiaryType.fromValue(diary.type).icon,
                             size: 10,
-                            color: colorScheme.onSurfaceVariant,
+                            color: context.theme.colorScheme.onSurfaceVariant,
                           ),
                         ],
                       ),

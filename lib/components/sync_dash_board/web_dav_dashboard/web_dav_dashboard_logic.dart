@@ -1,11 +1,12 @@
+import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/webdav.dart';
-import 'package:moodiary/main.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
-import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/persistence/isar.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'web_dav_dashboard_state.dart';
 
@@ -14,11 +15,14 @@ class WebDavDashboardLogic extends GetxController {
 
   @override
   void onReady() async {
-    await updateWebdav(isInit: true);
+    await updateWebdav(isInit: true, context: Get.context!);
     super.onReady();
   }
 
-  Future<void> updateWebdav({required bool isInit}) async {
+  Future<void> updateWebdav({
+    required BuildContext context,
+    required bool isInit,
+  }) async {
     state.isFetching = true;
     if (!isInit) update();
     await checkConnectivity();
@@ -26,7 +30,10 @@ class WebDavDashboardLogic extends GetxController {
       try {
         await fetchingWebDavSyncFlag();
       } catch (e) {
-        NoticeUtil.showBug(message: l10n.webdavSyncGetConfigError);
+        if (context.mounted) {
+          toast.error(message: context.l10n.webdavSyncGetConfigError);
+        }
+
         return;
       }
       if (isInit) await fetchDiaryList();
@@ -42,7 +49,7 @@ class WebDavDashboardLogic extends GetxController {
     state.toDownloadIds.clear();
     // 本地日记 Map，id 对应最后修改时间
     final Map<String, DateTime> localDiaryMap = {
-      for (final diary in state.diaryList) diary.id: diary.lastModified
+      for (final diary in state.diaryList) diary.id: diary.lastModified,
     };
     // 查找待上传的日记
     _findToUploadDiaries(localDiaryMap);
@@ -81,41 +88,48 @@ class WebDavDashboardLogic extends GetxController {
   Future<void> checkConnectivity() async {
     state.connectivityStatus.value = WebDavConnectivityStatus.connecting;
     final res = await WebDavUtil().checkConnectivity();
-    state.connectivityStatus.value = res
-        ? WebDavConnectivityStatus.connected
-        : WebDavConnectivityStatus.unconnected;
+    state.connectivityStatus.value =
+        res
+            ? WebDavConnectivityStatus.connected
+            : WebDavConnectivityStatus.unconnected;
   }
 
   Future<void> fetchingWebDavSyncFlag() async {
     state.webdavSyncMap = await WebDavUtil().fetchServerSyncData();
-    state.webDavDiaryCount.value = state.webdavSyncMap.values
-        .where((element) => element != 'delete')
-        .length
-        .toString();
+    state.webDavDiaryCount.value =
+        state.webdavSyncMap.values
+            .where((element) => element != 'delete')
+            .length
+            .toString();
   }
 
   void toWebDavPage() async {
     await Get.toNamed(AppRoutes.backupSyncPage);
-    await updateWebdav(isInit: false);
+    await updateWebdav(isInit: false, context: Get.context!);
   }
 
   // 同步日记
 
-  Future<void> syncDiary() async {
+  Future<void> syncDiary({required BuildContext context}) async {
     checkIsUploading();
     checkIsDownloading();
-    await WebDavUtil().syncDiary(state.diaryList, onUpload: () {
-      state.toUploadDiariesCount.value =
-          (int.parse(state.toUploadDiariesCount.value) - 1).toString();
-      checkIsUploading();
-    }, onDownload: () async {
-      state.toDownloadIdsCount.value =
-          (int.parse(state.toDownloadIdsCount.value) - 1).toString();
-      checkIsDownloading();
-      await Bind.find<DiaryLogic>().refreshAll();
-    }, onComplete: () {
-      NoticeUtil.showToast(l10n.webdavSyncSuccess);
-    });
+    await WebDavUtil().syncDiary(
+      state.diaryList,
+      onUpload: () {
+        state.toUploadDiariesCount.value =
+            (int.parse(state.toUploadDiariesCount.value) - 1).toString();
+        checkIsUploading();
+      },
+      onDownload: () async {
+        state.toDownloadIdsCount.value =
+            (int.parse(state.toDownloadIdsCount.value) - 1).toString();
+        checkIsDownloading();
+        await Bind.find<DiaryLogic>().refreshAll();
+      },
+      onComplete: () {
+        toast.success(message: context.l10n.webdavSyncSuccess);
+      },
+    );
   }
 
   void checkIsUploading() {
@@ -126,20 +140,20 @@ class WebDavDashboardLogic extends GetxController {
     state.isDownloading.value = int.parse(state.toDownloadIdsCount.value) > 0;
   }
 
-// Future<void> uploadDiary() async {
-//   state.isUploading.value = true;
-//   await WebDavUtil().syncDiary(state.toUploadDiaries);
-//   state.isUploading.value = false;
-//   await fetchingWebDavSyncFlag();
-//   await fetchDiaryList();
-// }
-//
-// // 下载日记
-// Future<void> downloadDiary() async {
-//   state.isDownloading.value = true;
-//   await WebDavUtil().syncDiary();
-//   state.isDownloading.value = false;
-//   await fetchingWebDavSyncFlag();
-//   await fetchDiaryList();
-// }
+  // Future<void> uploadDiary() async {
+  //   state.isUploading.value = true;
+  //   await WebDavUtil().syncDiary(state.toUploadDiaries);
+  //   state.isUploading.value = false;
+  //   await fetchingWebDavSyncFlag();
+  //   await fetchDiaryList();
+  // }
+  //
+  // // 下载日记
+  // Future<void> downloadDiary() async {
+  //   state.isDownloading.value = true;
+  //   await WebDavUtil().syncDiary();
+  //   state.isDownloading.value = false;
+  //   await fetchingWebDavSyncFlag();
+  //   await fetchDiaryList();
+  // }
 }

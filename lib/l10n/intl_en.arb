@@ -10,7 +10,7 @@
   "hopeYouHappyToday": "Hope you happy today",
   "appName": "Moodiary",
   "startTitle1": "Welcome to the ",
-  "startTitle2": "Mood Diary",
+  "startTitle2": "Moodiary",
   "startTitle3": "An ad-free, social-free, intimate diary",
   "welcome1": "Thanks for downloading this product! Before use, we hope you can read and understand our ",
   "welcome2": "Privacy Policy ",
@@ -23,7 +23,7 @@
   "permission2": "In order to better use the experience, we need the following permissions",
   "permission3": "• Location permission (for getting the weather)",
   "shareTitle": "Share",
-  "shareName": "\u00A9 Mood Diary",
+  "shareName": "\u00A9 Moodiary",
   "settingFunction": "Function",
   "settingFunctionCategoryManage": "Category Management",
   "settingFunctionAnalysis": "Analysis Statistics",
@@ -272,5 +272,8 @@
   "diaryType": "Type",
   "mediaImageCount": "{count, plural, =1 {# Photo} other {# Photos}}",
   "mediaAudioCount": "{count, plural, =1 {# Audio} other {# Audios}}",
-  "mediaVideoCount": "{count, plural, =1 {# Video} other {# Videos}}"
+  "mediaVideoCount": "{count, plural, =1 {# Video} other {# Videos}}",
+  "toastSuccess": "Success",
+  "toastError": "Error",
+  "toastLoading": "Loading"
 }

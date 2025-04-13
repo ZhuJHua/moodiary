@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
 
 import 'wave_form_logic.dart';
 
@@ -15,11 +15,12 @@ class WaveFormPainter extends CustomPainter {
     required this.barWidth,
     required this.spaceWidth,
     this.color = Colors.white,
-  }) : _paint = Paint()
-          ..color = color
-          ..strokeCap = StrokeCap.round
-          ..strokeWidth = barWidth
-          ..style = PaintingStyle.fill;
+  }) : _paint =
+           Paint()
+             ..color = color
+             ..strokeCap = StrokeCap.round
+             ..strokeWidth = barWidth
+             ..style = PaintingStyle.fill;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -44,20 +45,23 @@ class WaveFormComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final logic = Get.put(WaveFormLogic());
-    final colorScheme = Theme.of(context).colorScheme;
+
     return GetBuilder<WaveFormLogic>(
       assignId: true,
       builder: (_) {
         return Obx(() {
           return CustomPaint(
-            painter: WaveFormPainter(logic.amplitudes.value,
-                color: colorScheme.primary,
-                barWidth: logic.barWidth,
-                spaceWidth: logic.spaceWidth),
+            painter: WaveFormPainter(
+              logic.amplitudes.value,
+              color: context.theme.colorScheme.primary,
+              barWidth: logic.barWidth,
+              spaceWidth: logic.spaceWidth,
+            ),
             size: Size(
-                logic.amplitudes.value.length *
-                    (logic.barWidth + logic.spaceWidth),
-                100),
+              logic.amplitudes.value.length *
+                  (logic.barWidth + logic.spaceWidth),
+              100,
+            ),
           );
         });
       },

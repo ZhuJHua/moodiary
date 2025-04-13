@@ -1,5 +1,5 @@
+import 'package:get/get.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
-import 'package:refreshed/refreshed.dart';
 
 class DiaryTabViewState {
   RxList<Diary> diaryList = <Diary>[].obs;

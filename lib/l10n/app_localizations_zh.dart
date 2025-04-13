@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -57,7 +58,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get welcome4 => '《用户协议》';
 
   @override
-  String get welcome5 => '。我们一向尊重并会严格保护您在使用本产品时的合法权益不受到任何侵犯。用户开始使用本产品将视为已经接受本协议，如果您不能接受本协议中的全部条款，请勿开始使用本产品。';
+  String get welcome5 =>
+      '。我们一向尊重并会严格保护您在使用本产品时的合法权益不受到任何侵犯。用户开始使用本产品将视为已经接受本协议，如果您不能接受本协议中的全部条款，请勿开始使用本产品。';
 
   @override
   String get startChoice1 => '退出';
@@ -114,7 +116,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingExportDialogTitle => '数据导出';
 
   @override
-  String get settingExportDialogContent => '确认后会将当前应用的数据导出为 ZIP 文件，文件可用于应用内导入使用。';
+  String get settingExportDialogContent =>
+      '确认后会将当前应用的数据导出为 ZIP 文件，文件可用于应用内导入使用。';
 
   @override
   String get settingImport => '导入';
@@ -123,7 +126,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingImportDialogTitle => '数据导入';
 
   @override
-  String get settingImportDialogContent => '导入数据会覆盖当前已经有的数据，且原有数据无法恢复！请确认备份好原有数据。';
+  String get settingImportDialogContent =>
+      '导入数据会覆盖当前已经有的数据，且原有数据无法恢复！请确认备份好原有数据。';
 
   @override
   String get settingImportSelectFile => '选择文件';
@@ -225,7 +229,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingUserKeySet => '设置密钥';
 
   @override
-  String get settingUserKeySetDes => '⚠️ 密钥设置后无法获取，请妥善保管，如果您需要在其他设备上使用加密数据，请确保使用相同的密钥。';
+  String get settingUserKeySetDes =>
+      '⚠️ 密钥设置后无法获取，请妥善保管，如果您需要在其他设备上使用加密数据，请确保使用相同的密钥。';
 
   @override
   String get settingUserKeyReset => '重置密钥';
@@ -838,4 +843,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String mediaVideoCount(num count) {
     return '$count 段视频';
   }
+
+  @override
+  String get toastSuccess => '成功';
+
+  @override
+  String get toastError => '出错了';
+
+  @override
+  String get toastLoading => '加载中';
 }

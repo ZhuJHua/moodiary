@@ -5,9 +5,10 @@ class BingImage {
   BingImage({this.images, this.tooltips});
 
   BingImage.fromJson(Map<String, dynamic> json) {
-    images = json["images"] == null
-        ? null
-        : (json["images"] as List).map((e) => Images.fromJson(e)).toList();
+    images =
+        json["images"] == null
+            ? null
+            : (json["images"] as List).map((e) => Images.fromJson(e)).toList();
     tooltips =
         json["tooltips"] == null ? null : Tooltips.fromJson(json["tooltips"]);
   }
@@ -69,22 +70,23 @@ class Images {
   int? bot;
   List<dynamic>? hs;
 
-  Images(
-      {this.startdate,
-      this.fullstartdate,
-      this.enddate,
-      this.url,
-      this.urlbase,
-      this.copyright,
-      this.copyrightlink,
-      this.title,
-      this.quiz,
-      this.wp,
-      this.hsh,
-      this.drk,
-      this.top,
-      this.bot,
-      this.hs});
+  Images({
+    this.startdate,
+    this.fullstartdate,
+    this.enddate,
+    this.url,
+    this.urlbase,
+    this.copyright,
+    this.copyrightlink,
+    this.title,
+    this.quiz,
+    this.wp,
+    this.hsh,
+    this.drk,
+    this.top,
+    this.bot,
+    this.hs,
+  });
 
   Images.fromJson(Map<String, dynamic> json) {
     startdate = json["startdate"];

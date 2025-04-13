@@ -19,19 +19,19 @@ class HttpUtil {
         InterceptorsWrapper(
           onError: (error, handler) {
             if (error.type != DioExceptionType.cancel) {
-              NoticeUtil.showToast('Network Error ${error.error}');
+              toast.error(message: 'Network Error ${error.error}');
             }
             handler.next(error);
           },
           onRequest: (options, handler) {
             if (_enableLogging) {
-              LogUtil.printInfo('Request: ${options.method} ${options.path}');
+              logger.i('Request: ${options.method} ${options.path}');
             }
             handler.next(options);
           },
           onResponse: (response, handler) {
             if (_enableLogging) {
-              LogUtil.printInfo('Response ${response.statusCode}');
+              logger.i('Response ${response.statusCode}');
             }
             handler.next(response);
           },

@@ -1,4 +1,4 @@
-import 'package:refreshed/get_rx/get_rx.dart';
+import 'package:get/get.dart';
 
 class LocalSendState {
   String deviceIpAddress = '';

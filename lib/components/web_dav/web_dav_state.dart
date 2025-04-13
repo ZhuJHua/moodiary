@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/webdav.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/webdav_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 class WebDavState {
   final formKey = GlobalKey<FormState>();

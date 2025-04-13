@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'recycle_logic.dart';
 
@@ -13,23 +13,21 @@ class RecyclePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<RecycleLogic>();
     final state = Bind.find<RecycleLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return GetBuilder<RecycleLogic>(
       builder: (_) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(
-              l10n.settingRecycle,
-            ),
+            title: Text(context.l10n.settingRecycle),
             leading: const PageBackButton(),
           ),
           body: ListView.builder(
             itemBuilder: (context, index) {
               return AdaptiveListTile(
                 onTap: null,
-                title:
-                    Text(state.diaryList[index].time.toString().split('.')[0]),
+                title: Text(
+                  state.diaryList[index].time.toString().split('.')[0],
+                ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -44,8 +42,8 @@ class RecyclePage extends StatelessWidget {
                         logic.deleteDiary(index);
                       },
                       icon: const Icon(Icons.delete_forever_rounded),
-                      color: colorScheme.error,
-                    )
+                      color: context.theme.colorScheme.error,
+                    ),
                   ],
                 ),
               );

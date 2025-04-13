@@ -42,8 +42,9 @@ class FontUtil {
     return await FontReader.getFontNameFromTtf(ttfFilePath: filePath);
   }
 
-  static Future<Map<String, dynamic>> getFontWghtAxis(
-      {required String filePath}) async {
+  static Future<Map<String, dynamic>> getFontWghtAxis({
+    required String filePath,
+  }) async {
     return await FontReader.getWghtAxisFromVfFont(ttfFilePath: filePath);
   }
 

@@ -10,7 +10,7 @@ import 'package:image_picker_android/image_picker_android.dart';
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:mime/mime.dart';
 import 'package:moodiary/common/values/media_type.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/src/rust/api/compress.dart';
 import 'package:moodiary/src/rust/api/constants.dart' as r_type;
 import 'package:moodiary/utils/file_util.dart';
@@ -25,8 +25,9 @@ class MediaUtil {
 
   static final _thumbnail = FcNativeVideoThumbnail();
 
-  static final _imageAspectRatioCache =
-      AsyncLRUCache<String, double>(maxSize: 1000);
+  static final _imageAspectRatioCache = AsyncLRUCache<String, double>(
+    maxSize: 1000,
+  );
 
   static void useAndroidImagePicker() {
     final ImagePickerPlatform imagePickerImplementation =
@@ -48,25 +49,28 @@ class MediaUtil {
   /// 返回值：
   /// key：XFile 文件的临时目录
   /// value：实际的文件名
-  static Future<Map<String, String>> saveImages(
-      {required List<XFile> imageFileList}) async {
+  static Future<Map<String, String>> saveImages({
+    required List<XFile> imageFileList,
+  }) async {
     final imageNameMap = <String, String>{};
-    await Future.wait(imageFileList.map((imageFile) async {
-      if (basename(imageFile.path).startsWith('image-')) {
-        imageNameMap[imageFile.path] = basename(imageFile.path);
-        return;
-      }
-      final mimeType =
-          lookupMimeType(imageFile.path) ?? 'image/png'; // 默认使用 PNG
-      final config =
-          _compressConfig[mimeType] ?? ['.png', r_type.CompressFormat.png];
-      final extension = config[0] as String;
-      final format = config[1];
-      final imageName = 'image-${const Uuid().v7()}$extension';
-      final outputPath = FileUtil.getRealPath('image', imageName);
-      await _compressImage(imageFile, outputPath, format);
-      imageNameMap[imageFile.path] = imageName;
-    }));
+    await Future.wait(
+      imageFileList.map((imageFile) async {
+        if (basename(imageFile.path).startsWith('image-')) {
+          imageNameMap[imageFile.path] = basename(imageFile.path);
+          return;
+        }
+        final mimeType =
+            lookupMimeType(imageFile.path) ?? 'image/png'; // 默认使用 PNG
+        final config =
+            _compressConfig[mimeType] ?? ['.png', r_type.CompressFormat.png];
+        final extension = config[0] as String;
+        final format = config[1];
+        final imageName = 'image-${const Uuid().v7()}$extension';
+        final outputPath = FileUtil.getRealPath('image', imageName);
+        await _compressImage(imageFile, outputPath, format);
+        imageNameMap[imageFile.path] = imageName;
+      }),
+    );
 
     return imageNameMap;
   }
@@ -77,12 +81,14 @@ class MediaUtil {
   /// value：实际的文件名
   static Future<Map<String, String>> saveAudio(List<String> audioNames) async {
     final audioNameMap = <String, String>{};
-    await Future.wait(audioNames.map((name) async {
-      final file = File(FileUtil.getCachePath(name));
-      final targetPath = FileUtil.getRealPath('audio', name);
-      audioNameMap[file.path] = name;
-      await file.copy(targetPath);
-    }));
+    await Future.wait(
+      audioNames.map((name) async {
+        final file = File(FileUtil.getCachePath(name));
+        final targetPath = FileUtil.getRealPath('audio', name);
+        audioNameMap[file.path] = name;
+        await file.copy(targetPath);
+      }),
+    );
     return audioNameMap;
   }
 
@@ -90,35 +96,39 @@ class MediaUtil {
   /// 返回值：
   /// key：XFile 文件的临时目录
   /// value：实际的文件名
-  static Future<Map<String, String>> saveVideo(
-      {required List<XFile> videoFileList}) async {
+  static Future<Map<String, String>> saveVideo({
+    required List<XFile> videoFileList,
+  }) async {
     final Map<String, String> videoNameMap = {};
 
-    await Future.wait(videoFileList.map((videoFile) async {
-      if (basename(videoFile.path).startsWith('video-')) {
-        videoNameMap[videoFile.path] = basename(videoFile.path);
-        return;
-      }
-      // 生成文件名
-      final uuid = const Uuid().v7();
-      final videoName = 'video-$uuid.mp4';
-      videoNameMap[videoFile.path] = videoName;
-      // 保存视频文件
-      await videoFile.saveTo(FileUtil.getRealPath('video', videoName));
-      // 获取缩略图
-      final tempThumbnailPath =
-          FileUtil.getCachePath('${const Uuid().v7()}.jpeg');
-      await _getVideoThumbnail(videoFile, tempThumbnailPath);
-      // 压缩缩略图并保存
-      final compressedPath = FileUtil.getRealPath('thumbnail', videoName);
-      await _compressRust(
-        XFile(tempThumbnailPath),
-        compressedPath,
-        r_type.CompressFormat.jpeg,
-      );
-      // 清理临时文件
-      await File(tempThumbnailPath).delete();
-    }));
+    await Future.wait(
+      videoFileList.map((videoFile) async {
+        if (basename(videoFile.path).startsWith('video-')) {
+          videoNameMap[videoFile.path] = basename(videoFile.path);
+          return;
+        }
+        // 生成文件名
+        final uuid = const Uuid().v7();
+        final videoName = 'video-$uuid.mp4';
+        videoNameMap[videoFile.path] = videoName;
+        // 保存视频文件
+        await videoFile.saveTo(FileUtil.getRealPath('video', videoName));
+        // 获取缩略图
+        final tempThumbnailPath = FileUtil.getCachePath(
+          '${const Uuid().v7()}.jpeg',
+        );
+        await _getVideoThumbnail(videoFile, tempThumbnailPath);
+        // 压缩缩略图并保存
+        final compressedPath = FileUtil.getRealPath('thumbnail', videoName);
+        await _compressRust(
+          XFile(tempThumbnailPath),
+          compressedPath,
+          r_type.CompressFormat.jpeg,
+        );
+        // 清理临时文件
+        await File(tempThumbnailPath).delete();
+      }),
+    );
 
     return videoNameMap;
   }
@@ -141,12 +151,13 @@ class MediaUtil {
       final thumbnailPath = getThumbnailPath(videoName);
       // 检查是否存在缩略图
       if (!File(thumbnailPath).existsSync()) {
-        LogUtil.printInfo("Thumbnail missing for $videoName. Regenerating...");
+        logger.d("Thumbnail missing for $videoName. Regenerating...");
 
         try {
           // 生成临时缩略图路径
-          final tempThumbnailPath =
-              FileUtil.getCachePath('${const Uuid().v7()}.jpeg');
+          final tempThumbnailPath = FileUtil.getCachePath(
+            '${const Uuid().v7()}.jpeg',
+          );
 
           // 获取视频缩略图
           await _getVideoThumbnail(XFile(videoFile.path), tempThumbnailPath);
@@ -161,13 +172,12 @@ class MediaUtil {
           // 删除临时文件
           await File(tempThumbnailPath).delete();
 
-          LogUtil.printInfo("Thumbnail regenerated for $videoName.");
+          logger.d("Thumbnail regenerated for $videoName.");
         } catch (e) {
-          LogUtil.printInfo(
-              "Failed to regenerate thumbnail for $videoName: $e");
+          logger.d("Failed to regenerate thumbnail for $videoName: $e");
         }
       } else {
-        LogUtil.printInfo("Thumbnail exists for $videoName.");
+        logger.d("Thumbnail exists for $videoName.");
       }
     }
   }
@@ -175,16 +185,17 @@ class MediaUtil {
   //获取图片宽高
   static Future<Size> getImageSize(ImageProvider imageProvider) async {
     final Completer<Size> completer = Completer<Size>();
-    final ImageStream stream =
-        imageProvider.resolve(const ImageConfiguration());
+    final ImageStream stream = imageProvider.resolve(
+      const ImageConfiguration(),
+    );
     stream.addListener(
-      ImageStreamListener(
-        (ImageInfo info, bool _) {
-          final Size size =
-              Size(info.image.width.toDouble(), info.image.height.toDouble());
-          completer.complete(size);
-        },
-      ),
+      ImageStreamListener((ImageInfo info, bool _) {
+        final Size size = Size(
+          info.image.width.toDouble(),
+          info.image.height.toDouble(),
+        );
+        completer.complete(size);
+      }),
     );
     return completer.future;
   }
@@ -221,9 +232,7 @@ class MediaUtil {
 
   //获取单个图片，拍照或者相册
   static Future<XFile?> pickPhoto(ImageSource imageSource) async {
-    return await _picker.pickImage(
-      source: imageSource,
-    );
+    return await _picker.pickImage(source: imageSource);
   }
 
   //获取单个视频
@@ -265,7 +274,10 @@ class MediaUtil {
   }
 
   static Future<void> _compressRust(
-      XFile oldImage, String targetPath, r_type.CompressFormat format) async {
+    XFile oldImage,
+    String targetPath,
+    r_type.CompressFormat format,
+  ) async {
     final quality = switch (PrefUtil.getValue<int>('quality')) {
       0 => 720,
       1 => 1080,
@@ -274,16 +286,20 @@ class MediaUtil {
     };
     final oldPath = oldImage.path;
     final newImage = await ImageCompress.contain(
-        filePath: oldPath,
-        maxWidth: quality,
-        maxHeight: quality,
-        compressFormat: format);
+      filePath: oldPath,
+      maxWidth: quality,
+      maxHeight: quality,
+      compressFormat: format,
+    );
     await File(targetPath).writeAsBytes(newImage);
   }
 
   //图片压缩
   static Future<void> _compressNative(
-      XFile oldImage, String targetPath, CompressFormat format) async {
+    XFile oldImage,
+    String targetPath,
+    CompressFormat format,
+  ) async {
     if (Platform.isWindows) {
       oldImage.saveTo(targetPath);
       return;
@@ -318,17 +334,20 @@ class MediaUtil {
       _ => 1080,
     };
     return await _thumbnail.getVideoThumbnail(
-        srcFile: xFile.path,
-        destFile: destPath,
-        width: height,
-        height: height,
-        format: 'jpeg',
-        quality: 90);
+      srcFile: xFile.path,
+      destFile: destPath,
+      width: height,
+      height: height,
+      format: 'jpeg',
+      quality: 90,
+    );
   }
 
   // 保存视频或者图片到相册
-  static Future<void> saveToGallery(
-      {required String path, required MediaType type}) async {
+  static Future<void> saveToGallery({
+    required String path,
+    required MediaType type,
+  }) async {
     final hasAccess = await Gal.hasAccess(toAlbum: true);
     if (!hasAccess) await Gal.requestAccess(toAlbum: true);
     try {
@@ -337,9 +356,9 @@ class MediaUtil {
       } else {
         await Gal.putImage(path, album: 'Moodiary');
       }
-      NoticeUtil.showToast('已保存到相册');
+      toast.success(message: '已保存到相册');
     } catch (e) {
-      NoticeUtil.showToast('保存失败');
+      toast.error(message: '保存失败');
     }
   }
 
@@ -352,7 +371,8 @@ class MediaUtil {
 
   /// 根据日期分组文件
   static Map<DateTime, List<String>> groupImageFileByDate(
-      List<String> filePaths) {
+    List<String> filePaths,
+  ) {
     final Map<DateTime, List<String>> groupedMap = {};
     for (final image in filePaths) {
       // 根据媒体文件类型提取日期
@@ -366,17 +386,20 @@ class MediaUtil {
       }
     }
     groupedMap.forEach((key, value) {
-      value.sort((a, b) =>
-          basename(b).split('.')[0].compareTo(basename(a).split('.')[0]));
+      value.sort(
+        (a, b) =>
+            basename(b).split('.')[0].compareTo(basename(a).split('.')[0]),
+      );
     });
     // 返回按日期排序的分组数据
-    final sortedEntries = groupedMap.entries.toList()
-      ..sort((a, b) => b.key.compareTo(a.key));
+    final sortedEntries =
+        groupedMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
     return Map.fromEntries(sortedEntries);
   }
 
   static Map<DateTime, List<String>> groupVideoFileByDate(
-      List<String> filePaths) {
+    List<String> filePaths,
+  ) {
     final Map<DateTime, List<String>> groupedMap = {};
     for (final video in filePaths) {
       // 根据媒体文件类型提取日期
@@ -390,17 +413,20 @@ class MediaUtil {
       }
     }
     groupedMap.forEach((key, value) {
-      value.sort((a, b) =>
-          basename(b).split('.')[0].compareTo(basename(a).split('.')[0]));
+      value.sort(
+        (a, b) =>
+            basename(b).split('.')[0].compareTo(basename(a).split('.')[0]),
+      );
     });
     // 返回按日期排序的分组数据
-    final sortedEntries = groupedMap.entries.toList()
-      ..sort((a, b) => b.key.compareTo(a.key));
+    final sortedEntries =
+        groupedMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
     return Map.fromEntries(sortedEntries);
   }
 
   static Map<DateTime, List<String>> groupAudioFileByDate(
-      List<String> filePaths) {
+    List<String> filePaths,
+  ) {
     final Map<DateTime, List<String>> groupedMap = {};
     for (final audio in filePaths) {
       // 根据媒体文件类型提取日期
@@ -413,12 +439,14 @@ class MediaUtil {
       }
     }
     groupedMap.forEach((key, value) {
-      value.sort((a, b) =>
-          basename(b).split('.')[0].compareTo(basename(a).split('.')[0]));
+      value.sort(
+        (a, b) =>
+            basename(b).split('.')[0].compareTo(basename(a).split('.')[0]),
+      );
     });
     // 返回按日期排序的分组数据
-    final sortedEntries = groupedMap.entries.toList()
-      ..sort((a, b) => b.key.compareTo(a.key));
+    final sortedEntries =
+        groupedMap.entries.toList()..sort((a, b) => b.key.compareTo(a.key));
     return Map.fromEntries(sortedEntries);
   }
 }

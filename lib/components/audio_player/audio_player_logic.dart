@@ -1,7 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/animation.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/pages/edit/edit_logic.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'audio_player_state.dart';
 
@@ -11,7 +11,9 @@ class AudioPlayerLogic extends GetxController
 
   final AudioPlayer audioPlayer = AudioPlayer();
   late final AnimationController animationController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 100));
+    vsync: this,
+    duration: const Duration(milliseconds: 100),
+  );
   late final EditLogic editLogic = Bind.find<EditLogic>();
 
   @override
@@ -67,7 +69,7 @@ class AudioPlayerLogic extends GetxController
   Future<void> changeValue(value) async {
     state.handleChange.value = true;
     state.currentDuration.value = Duration(
-        milliseconds:
-            (state.totalDuration.value.inMilliseconds * value).toInt());
+      milliseconds: (state.totalDuration.value.inMilliseconds * value).toInt(),
+    );
   }
 }

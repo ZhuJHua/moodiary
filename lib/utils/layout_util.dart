@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/size.dart';
-import 'package:refreshed/refreshed.dart';
 
 class LayoutUtil {
   //获取设备类型
@@ -22,19 +22,19 @@ class LayoutUtil {
       //手机只能竖屏
       ScreenSize.handset => [DeviceOrientation.portraitUp],
       ScreenSize.tablet => [
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight
-        ],
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ],
       ScreenSize.watch => [
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.portraitDown
-        ],
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ],
       ScreenSize.desktop => [
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight
-        ],
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ],
     };
   }
 }

@@ -20,29 +20,15 @@ const CategorySchema = IsarGeneratedSchema(
     idName: 'id',
     embedded: false,
     properties: [
-      IsarPropertySchema(
-        name: 'id',
-        type: IsarType.string,
-      ),
-      IsarPropertySchema(
-        name: 'categoryName',
-        type: IsarType.string,
-      ),
-      IsarPropertySchema(
-        name: 'parentId',
-        type: IsarType.string,
-      ),
-      IsarPropertySchema(
-        name: 'level',
-        type: IsarType.string,
-      ),
+      IsarPropertySchema(name: 'id', type: IsarType.string),
+      IsarPropertySchema(name: 'categoryName', type: IsarType.string),
+      IsarPropertySchema(name: 'parentId', type: IsarType.string),
+      IsarPropertySchema(name: 'level', type: IsarType.string),
     ],
     indexes: [
       IsarIndexSchema(
         name: 'level',
-        properties: [
-          "level",
-        ],
+        properties: ["level"],
         unique: false,
         hash: false,
       ),
@@ -118,13 +104,14 @@ class _CategoryUpdateImpl implements _CategoryUpdate {
     Object? parentId = ignore,
     Object? level = ignore,
   }) {
-    return collection.updateProperties([
-          id
-        ], {
-          if (categoryName != ignore) 2: categoryName as String?,
-          if (parentId != ignore) 3: parentId as String?,
-          if (level != ignore) 4: level as String?,
-        }) >
+    return collection.updateProperties(
+          [id],
+          {
+            if (categoryName != ignore) 2: categoryName as String?,
+            if (parentId != ignore) 3: parentId as String?,
+            if (level != ignore) 4: level as String?,
+          },
+        ) >
         0;
   }
 }
@@ -165,11 +152,7 @@ extension CategoryUpdate on IsarCollection<String, Category> {
 }
 
 sealed class _CategoryQueryUpdate {
-  int call({
-    String? categoryName,
-    String? parentId,
-    String? level,
-  });
+  int call({String? categoryName, String? parentId, String? level});
 }
 
 class _CategoryQueryUpdateImpl implements _CategoryQueryUpdate {
@@ -240,11 +223,7 @@ extension CategoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 1,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        EqualCondition(property: 1, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -265,10 +244,7 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      idGreaterThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  idGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
@@ -286,11 +262,7 @@ extension CategoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 1,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        LessCondition(property: 1, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -358,8 +330,9 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition> idContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -372,8 +345,9 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition> idMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -388,10 +362,7 @@ extension CategoryQueryFilter
   QueryBuilder<Category, Category, QAfterFilterCondition> idIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(
-          property: 1,
-          value: '',
-        ),
+        const EqualCondition(property: 1, value: ''),
       );
     });
   }
@@ -399,10 +370,7 @@ extension CategoryQueryFilter
   QueryBuilder<Category, Category, QAfterFilterCondition> idIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(
-          property: 1,
-          value: '',
-        ),
+        const GreaterCondition(property: 1, value: ''),
       );
     });
   }
@@ -413,20 +381,13 @@ extension CategoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 2,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        EqualCondition(property: 2, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameGreaterThan(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  categoryNameGreaterThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
@@ -439,10 +400,7 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameGreaterThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  categoryNameGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
@@ -460,20 +418,13 @@ extension CategoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 2,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        LessCondition(property: 2, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameLessThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  categoryNameLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
@@ -503,10 +454,7 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  categoryNameStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
@@ -534,8 +482,9 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -548,8 +497,9 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition> categoryNameMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -562,25 +512,19 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameIsEmpty() {
+  categoryNameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(
-          property: 2,
-          value: '',
-        ),
+        const EqualCondition(property: 2, value: ''),
       );
     });
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      categoryNameIsNotEmpty() {
+  categoryNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(
-          property: 2,
-          value: '',
-        ),
+        const GreaterCondition(property: 2, value: ''),
       );
     });
   }
@@ -603,11 +547,7 @@ extension CategoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 3,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        EqualCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -628,10 +568,7 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      parentIdGreaterThanOrEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  parentIdGreaterThanOrEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
@@ -649,20 +586,13 @@ extension CategoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 3,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        LessCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      parentIdLessThanOrEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  parentIdLessThanOrEqualTo(String? value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
@@ -722,8 +652,9 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition> parentIdContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -736,8 +667,9 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition> parentIdMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -752,10 +684,7 @@ extension CategoryQueryFilter
   QueryBuilder<Category, Category, QAfterFilterCondition> parentIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(
-          property: 3,
-          value: '',
-        ),
+        const EqualCondition(property: 3, value: ''),
       );
     });
   }
@@ -763,10 +692,7 @@ extension CategoryQueryFilter
   QueryBuilder<Category, Category, QAfterFilterCondition> parentIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(
-          property: 3,
-          value: '',
-        ),
+        const GreaterCondition(property: 3, value: ''),
       );
     });
   }
@@ -777,11 +703,7 @@ extension CategoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(
-          property: 4,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        EqualCondition(property: 4, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -802,10 +724,7 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      levelGreaterThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  levelGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
@@ -823,20 +742,13 @@ extension CategoryQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(
-          property: 4,
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
+        LessCondition(property: 4, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition>
-      levelLessThanOrEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  levelLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
@@ -896,8 +808,9 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition> levelContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
@@ -910,8 +823,9 @@ extension CategoryQueryFilter
   }
 
   QueryBuilder<Category, Category, QAfterFilterCondition> levelMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
@@ -926,10 +840,7 @@ extension CategoryQueryFilter
   QueryBuilder<Category, Category, QAfterFilterCondition> levelIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(
-          property: 4,
-          value: '',
-        ),
+        const EqualCondition(property: 4, value: ''),
       );
     });
   }
@@ -937,10 +848,7 @@ extension CategoryQueryFilter
   QueryBuilder<Category, Category, QAfterFilterCondition> levelIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(
-          property: 4,
-          value: '',
-        ),
+        const GreaterCondition(property: 4, value: ''),
       );
     });
   }
@@ -950,144 +858,132 @@ extension CategoryQueryObject
     on QueryBuilder<Category, Category, QFilterCondition> {}
 
 extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
-  QueryBuilder<Category, Category, QAfterSortBy> sortById(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortById({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        1,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(1, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> sortByIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByIdDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        1,
-        sort: Sort.desc,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> sortByCategoryName(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByCategoryName({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        2,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(2, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> sortByCategoryNameDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByCategoryNameDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        2,
-        sort: Sort.desc,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> sortByParentId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByParentId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        3,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(3, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> sortByParentIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByParentIdDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        3,
-        sort: Sort.desc,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> sortByLevel(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByLevel({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        4,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(4, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> sortByLevelDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> sortByLevelDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(
-        4,
-        sort: Sort.desc,
-        caseSensitive: caseSensitive,
-      );
+      return query.addSortBy(4, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 }
 
 extension CategoryQuerySortThenBy
     on QueryBuilder<Category, Category, QSortThenBy> {
-  QueryBuilder<Category, Category, QAfterSortBy> thenById(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenById({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(1, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> thenByIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByIdDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> thenByCategoryName(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByCategoryName({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(2, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> thenByCategoryNameDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByCategoryNameDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> thenByParentId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByParentId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(3, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> thenByParentIdDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByParentIdDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> thenByLevel(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByLevel({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(4, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterSortBy> thenByLevelDesc(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterSortBy> thenByLevelDesc({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(4, sort: Sort.desc, caseSensitive: caseSensitive);
     });
@@ -1096,22 +992,25 @@ extension CategoryQuerySortThenBy
 
 extension CategoryQueryWhereDistinct
     on QueryBuilder<Category, Category, QDistinct> {
-  QueryBuilder<Category, Category, QAfterDistinct> distinctByCategoryName(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterDistinct> distinctByCategoryName({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(2, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterDistinct> distinctByParentId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterDistinct> distinctByParentId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(3, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Category, Category, QAfterDistinct> distinctByLevel(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Category, Category, QAfterDistinct> distinctByLevel({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(4, caseSensitive: caseSensitive);
     });

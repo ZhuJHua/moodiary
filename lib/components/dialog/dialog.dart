@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/border.dart';
 
 class OptionDialog extends StatelessWidget {
@@ -8,10 +9,11 @@ class OptionDialog extends StatelessWidget {
 
   const OptionDialog({super.key, required this.title, required this.options});
 
-  Widget _buildOption(
-      {required String option,
-      required Function onTap,
-      required ColorScheme colorScheme}) {
+  Widget _buildOption({
+    required String option,
+    required Function onTap,
+    required ColorScheme colorScheme,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Ink(
@@ -26,8 +28,10 @@ class OptionDialog extends StatelessWidget {
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(option,
-                style: TextStyle(color: colorScheme.onSecondaryContainer)),
+            child: Text(
+              option,
+              style: TextStyle(color: colorScheme.onSecondaryContainer),
+            ),
           ),
         ),
       ),
@@ -36,13 +40,18 @@ class OptionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return SimpleDialog(
       title: Text(title),
-      children: options.entries
-          .map((entry) => _buildOption(
-              option: entry.key, onTap: entry.value, colorScheme: colorScheme))
-          .toList(),
+      children:
+          options.entries
+              .map(
+                (entry) => _buildOption(
+                  option: entry.key,
+                  onTap: entry.value,
+                  colorScheme: context.theme.colorScheme,
+                ),
+              )
+              .toList(),
     );
   }
 }

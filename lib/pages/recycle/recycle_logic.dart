@@ -1,10 +1,10 @@
+import 'package:get/get.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/pages/home/diary/diary_logic.dart';
-import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/persistence/isar.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'recycle_state.dart';
 
@@ -29,14 +29,16 @@ class RecycleLogic extends GetxController {
     try {
       await WebDavUtil().deleteSingleDiary(diary);
     } catch (e) {
-      NoticeUtil.showToast('当前已断开与WebDAV的连接，无法删除');
+      toast.info(message: '当前已断开与WebDAV的连接，无法删除');
       return;
     }
     if (await IsarUtil.deleteADiary(diary.isarId)) {
       final imageDeleteTasks = diary.imageName.map(
-          (name) => FileUtil.deleteFile(FileUtil.getRealPath('image', name)));
+        (name) => FileUtil.deleteFile(FileUtil.getRealPath('image', name)),
+      );
       final audioDeleteTasks = diary.audioName.map(
-          (name) => FileUtil.deleteFile(FileUtil.getRealPath('audio', name)));
+        (name) => FileUtil.deleteFile(FileUtil.getRealPath('audio', name)),
+      );
       final videoDeleteTasks = diary.videoName.map((name) async {
         // 删除视频文件
         await FileUtil.deleteFile(FileUtil.getRealPath('video', name));
@@ -49,7 +51,7 @@ class RecycleLogic extends GetxController {
         ...audioDeleteTasks,
         ...videoDeleteTasks,
       ]);
-      NoticeUtil.showToast('删除成功');
+      toast.success(message: '删除成功');
       // 重新获取日记列表
       await getDiaryList();
     }
@@ -65,6 +67,6 @@ class RecycleLogic extends GetxController {
     getDiaryList();
     update();
     await diaryLogic.updateDiary(diary.categoryId);
-    NoticeUtil.showToast('已恢复');
+    toast.success(message: '已恢复');
   }
 }

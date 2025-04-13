@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary/common/models/map.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/pref.dart';
 
 class MapState {
   LatLng? currentLatLng;

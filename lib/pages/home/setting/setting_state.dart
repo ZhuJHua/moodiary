@@ -1,6 +1,6 @@
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/language.dart';
-import 'package:moodiary/presentation/pref.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/persistence/pref.dart';
 
 class SettingState {
   //当前占用空间
@@ -24,12 +24,13 @@ class SettingState {
 
   RxBool hasUserKey = false.obs;
 
-  Rx<Language> language = Language.values
-      .firstWhere(
-        (e) => e.languageCode == PrefUtil.getValue<String>('language')!,
-        orElse: () => Language.system,
-      )
-      .obs;
+  Rx<Language> language =
+      Language.values
+          .firstWhere(
+            (e) => e.languageCode == PrefUtil.getValue<String>('language')!,
+            orElse: () => Language.system,
+          )
+          .obs;
 
   SettingState() {
     fontTheme = PrefUtil.getValue<int>('fontTheme')!.obs;

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/border.dart';
@@ -17,8 +18,6 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
 
     Widget buildImage() {
@@ -43,7 +42,7 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     ),
                     fit: BoxFit.cover,
                   ),
-                  border: Border.all(color: colorScheme.outline),
+                  border: Border.all(color: context.theme.colorScheme.outline),
                   borderRadius: AppBorderRadius.smallBorderRadius,
                 ),
               ),
@@ -56,13 +55,15 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
     Widget buildTime() {
       return Text(
         DateFormat.yMMMMEEEEd().add_jms().format(diary.time),
-        style: textStyle.labelSmall?.copyWith(color: colorScheme.secondary),
+        style: context.textTheme.labelSmall?.copyWith(
+          color: context.theme.colorScheme.secondary,
+        ),
       );
     }
 
     return InkWell(
       child: Card.filled(
-        color: colorScheme.surfaceContainerLow,
+        color: context.theme.colorScheme.surfaceContainerLow,
         margin: EdgeInsets.zero,
         child: InkWell(
           borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -82,7 +83,7 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                     FaIcon(
                       DiaryType.fromValue(diary.type).icon,
                       size: 10,
-                      color: colorScheme.secondary,
+                      color: context.theme.colorScheme.secondary,
                     ),
                   ],
                 ),
@@ -90,16 +91,16 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                   EllipsisText(
                     diary.title.trim(),
                     maxLines: 1,
-                    style: textStyle.titleMedium!.copyWith(
-                      color: colorScheme.onSurface,
+                    style: context.textTheme.titleMedium?.copyWith(
+                      color: context.theme.colorScheme.onSurface,
                     ),
                   ),
                 if (diary.contentText.isNotEmpty)
                   EllipsisText(
                     diary.contentText.trim().removeLineBreaks(),
                     maxLines: 4,
-                    style: textStyle.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface,
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: context.theme.colorScheme.onSurface,
                     ),
                   ),
                 buildImage(),

@@ -1,17 +1,17 @@
 import 'dart:io';
 
-import 'package:dio_cache_interceptor_hive_store/dio_cache_interceptor_hive_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_cache/flutter_map_cache.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
+import 'package:http_cache_hive_store/http_cache_hive_store.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/bubble/bubble_view.dart';
-import 'package:moodiary/main.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/http_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'map_logic.dart';
 
@@ -22,11 +22,10 @@ class MapPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<MapLogic>();
     final state = Bind.find<MapLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settingFunctionTrailMap),
+        title: Text(context.l10n.settingFunctionTrailMap),
         leading: const PageBackButton(),
       ),
       body: GetBuilder<MapLogic>(
@@ -84,7 +83,8 @@ class MapPage extends StatelessWidget {
                                         .coverImageName
                                         .isNotEmpty
                                     ? Bubble(
-                                      backgroundColor: colorScheme.tertiary,
+                                      backgroundColor:
+                                          context.theme.colorScheme.tertiary,
                                       borderRadius: 8,
                                       child: Container(
                                         width: 48,
@@ -111,7 +111,7 @@ class MapPage extends StatelessWidget {
                                     )
                                     : FaIcon(
                                       FontAwesomeIcons.locationDot,
-                                      color: colorScheme.tertiary,
+                                      color: context.theme.colorScheme.tertiary,
                                     ),
                           ),
                           width:
@@ -138,9 +138,9 @@ class MapPage extends StatelessWidget {
                         return Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            color: colorScheme.tertiaryContainer,
+                            color: context.theme.colorScheme.tertiaryContainer,
                             border: Border.all(
-                              color: colorScheme.tertiary,
+                              color: context.theme.colorScheme.tertiary,
                               width: 2,
                             ),
                           ),
@@ -148,7 +148,11 @@ class MapPage extends StatelessWidget {
                             child: Text(
                               markers.length.toString(),
                               style: TextStyle(
-                                color: colorScheme.onTertiaryContainer,
+                                color:
+                                    context
+                                        .theme
+                                        .colorScheme
+                                        .onTertiaryContainer,
                               ),
                             ),
                           ),

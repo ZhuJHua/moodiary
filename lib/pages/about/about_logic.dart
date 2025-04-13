@@ -2,9 +2,9 @@ import 'package:confetti/confetti.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/utils/package_util.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'about_state.dart';
@@ -17,14 +17,12 @@ class AboutLogic extends GetxController with GetSingleTickerProviderStateMixin {
     duration: const Duration(milliseconds: 500),
   )..repeat(reverse: true);
   late final animation = Tween<double>(begin: -0.06, end: 0.06).animate(
-    CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ),
+    CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
   );
 
-  late final ConfettiController confettiController =
-      ConfettiController(duration: const Duration(seconds: 4));
+  late final ConfettiController confettiController = ConfettiController(
+    duration: const Duration(seconds: 4),
+  );
 
   @override
   void onReady() async {
@@ -59,8 +57,10 @@ class AboutLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
   //跳转到反馈页
   Future<void> toReportPage() async {
-    await Get.toNamed(AppRoutes.webViewPage,
-        arguments: ['https://answer.moodiary.net', '']);
+    await Get.toNamed(
+      AppRoutes.webViewPage,
+      arguments: ['https://answer.moodiary.net', ''],
+    );
     //await launchUrl(uri, mode: LaunchMode.platformDefault);
   }
 

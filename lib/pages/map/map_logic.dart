@@ -1,15 +1,14 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary/pages/diary_details/diary_details_logic.dart';
-import 'package:moodiary/presentation/isar.dart';
+import 'package:moodiary/persistence/isar.dart';
 import 'package:moodiary/router/app_routes.dart';
-import 'package:moodiary/utils/log_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/permission_util.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'map_state.dart';
 
@@ -36,9 +35,11 @@ class MapLogic extends GetxController {
     if (await PermissionUtil.checkPermission(Permission.location)) {
       Position? position;
       position = await Geolocator.getLastKnownPosition(
-          forceAndroidLocationManager: true);
+        forceAndroidLocationManager: true,
+      );
       position ??= await Geolocator.getCurrentPosition(
-          locationSettings: AndroidSettings(forceLocationManager: true));
+        locationSettings: AndroidSettings(forceLocationManager: true),
+      );
       return LatLng(position.latitude, position.longitude);
     }
     return null;
@@ -49,10 +50,9 @@ class MapLogic extends GetxController {
   }
 
   Future<void> toCurrentPosition() async {
-    NoticeUtil.showToast('定位中');
+    toast.info(message: '定位中');
     final currentPosition = await getLocation();
-    LogUtil.printInfo(currentPosition.toString());
-    NoticeUtil.showToast('定位成功');
+    toast.success(message: '定位成功');
     mapController.move(currentPosition!, mapController.camera.maxZoom!);
   }
 
@@ -60,9 +60,6 @@ class MapLogic extends GetxController {
     await HapticFeedback.mediumImpact();
     final diary = await IsarUtil.getDiaryByID(isarId);
     Bind.lazyPut(() => DiaryDetailsLogic(), tag: diary!.id);
-    await Get.toNamed(
-      AppRoutes.diaryPage,
-      arguments: [diary.clone(), false],
-    );
+    await Get.toNamed(AppRoutes.diaryPage, arguments: [diary.clone(), false]);
   }
 }

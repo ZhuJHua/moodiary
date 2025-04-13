@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/view_mode.dart';
 import 'package:moodiary/components/base/clipper.dart';
 import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/diary_card/grid_diary_card_view.dart';
 import 'package:moodiary/components/diary_card/list_diary_card_view.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:waterfall_flow/waterfall_flow.dart';
 
@@ -23,12 +23,12 @@ class DiaryTabViewComponent extends StatelessWidget {
     );
   }
 
-  Widget _buildEmpty(double height) {
+  Widget _buildEmpty(BuildContext context, double height) {
     return SliverToBoxAdapter(
       key: const ValueKey('empty'),
       child: SizedBox(
         height: height,
-        child: Center(child: Text(l10n.diaryTabViewEmpty)),
+        child: Center(child: Text(context.l10n.diaryTabViewEmpty)),
       ),
     );
   }
@@ -104,7 +104,7 @@ class DiaryTabViewComponent extends StatelessWidget {
                     state.isFetching.value
                         ? _buildPlaceholder(placeholderHeight)
                         : state.diaryList.isEmpty
-                        ? _buildEmpty(placeholderHeight)
+                        ? _buildEmpty(context, placeholderHeight)
                         : switch (logic.diaryLogic.state.viewModeType.value) {
                           ViewModeType.list => buildList(),
                           ViewModeType.grid => buildGrid(),

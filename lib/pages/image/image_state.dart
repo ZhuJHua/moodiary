@@ -1,4 +1,4 @@
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
 
 class ImageState {
   late List<String> imagePathList;

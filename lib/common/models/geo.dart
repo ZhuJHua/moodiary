@@ -7,9 +7,12 @@ class GeoResponse {
 
   GeoResponse.fromJson(Map<String, dynamic> json) {
     code = json["code"];
-    location = json["location"] == null
-        ? null
-        : (json["location"] as List).map((e) => Location.fromJson(e)).toList();
+    location =
+        json["location"] == null
+            ? null
+            : (json["location"] as List)
+                .map((e) => Location.fromJson(e))
+                .toList();
     refer = json["refer"] == null ? null : Refer.fromJson(json["refer"]);
   }
 

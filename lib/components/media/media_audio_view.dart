@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/components/audio_player/audio_player_view.dart';
-import 'package:moodiary/main.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 class MediaAudioComponent extends StatelessWidget {
   final DateTime dateTime;
@@ -15,8 +16,6 @@ class MediaAudioComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -28,14 +27,14 @@ class MediaAudioComponent extends StatelessWidget {
             children: [
               Text(
                 DateFormat.yMMMEd().format(dateTime),
-                style: textStyle.titleSmall?.copyWith(
-                  color: colorScheme.secondary,
+                style: context.textTheme.titleSmall?.copyWith(
+                  color: context.theme.colorScheme.secondary,
                 ),
               ),
               Text(
-                l10n.mediaAudioCount(audioList.length),
-                style: textStyle.labelMedium?.copyWith(
-                  color: colorScheme.tertiary,
+                context.l10n.mediaAudioCount(audioList.length),
+                style: context.textTheme.labelMedium?.copyWith(
+                  color: context.theme.colorScheme.tertiary,
                 ),
               ),
             ],

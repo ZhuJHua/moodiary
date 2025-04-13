@@ -17,11 +17,7 @@ class Category {
   Category();
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'categoryName': categoryName,
-      'parentId': parentId,
-    };
+    return {'id': id, 'categoryName': categoryName, 'parentId': parentId};
   }
 
   factory Category.fromJson(Map<String, dynamic> json) {

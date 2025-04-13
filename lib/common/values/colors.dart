@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary/main.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 enum AppColorType {
   common(0),
@@ -34,21 +34,33 @@ class AppColor {
   // PANTONE 2008 Blue Iris
   static Color answerColor = const Color(0xFF5A5B9F);
 
-  static String colorName(index) {
+  static String colorName(index, BuildContext context) {
     return switch (index) {
-      0 => l10n.colorNameBaiCaoShuang,
-      1 => l10n.colorNameQunQin,
-      2 => l10n.colorNameQinDai,
-      3 => l10n.colorNameShuiZhuHua,
-      4 => l10n.colorNameJiHe,
-      5 => l10n.colorNameXiangYe,
-      9990 => l10n.specialColorNameMochaMousse,
-      _ => l10n.colorNameSystem
+      0 => context.l10n.colorNameBaiCaoShuang,
+      1 => context.l10n.colorNameQunQin,
+      2 => context.l10n.colorNameQinDai,
+      3 => context.l10n.colorNameShuiZhuHua,
+      4 => context.l10n.colorNameJiHe,
+      5 => context.l10n.colorNameXiangYe,
+      9990 => context.l10n.specialColorNameMochaMousse,
+      _ => context.l10n.colorNameSystem,
     };
   }
 
   static List<Color> emoColorList = [
     const Color(0xFFFA4659),
-    const Color(0xFF2EB872)
+    const Color(0xFF2EB872),
+  ];
+}
+
+class ShareCardColor {
+  static List<Color> cardColorList = [
+    const Color(0xFFF8F3D4),
+    const Color(0xFFF5F5F5),
+    const Color(0xFFFFFFFF),
+    const Color(0xFF393e46),
+    const Color(0xFF252A34),
+    const Color(0xFF212121),
+    const Color(0xFF000000),
   ];
 }

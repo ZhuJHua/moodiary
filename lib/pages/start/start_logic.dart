@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:get/get.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/utils/channel.dart';
 import 'package:moodiary/utils/package_util.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:uuid/uuid.dart';
 
 class StartLogic extends GetxController {
@@ -36,8 +36,9 @@ class StartLogic extends GetxController {
         oaid = await OAIDChannel.getOAID();
         break;
       case 'ios':
-        oaid = ((await PackageUtil.getInfo()) as IosDeviceInfo)
-            .identifierForVendor;
+        oaid =
+            ((await PackageUtil.getInfo()) as IosDeviceInfo)
+                .identifierForVendor;
         break;
       case 'macos':
         oaid = ((await PackageUtil.getInfo()) as MacOsDeviceInfo).systemGUID;
@@ -48,10 +49,14 @@ class StartLogic extends GetxController {
     }
     if (oaid != null) {
       await PrefUtil.setValue<String>(
-          'uuid', md5.convert(utf8.encode(oaid)).toString());
+        'uuid',
+        md5.convert(utf8.encode(oaid)).toString(),
+      );
     } else {
       await PrefUtil.setValue<String>(
-          'uuid', md5.convert(utf8.encode(const Uuid().v7())).toString());
+        'uuid',
+        md5.convert(utf8.encode(const Uuid().v7())).toString(),
+      );
     }
   }
 }

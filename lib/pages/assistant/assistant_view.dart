@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/text.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'assistant_logic.dart';
 
@@ -17,7 +17,6 @@ class AssistantPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<AssistantLogic>();
     final state = Bind.find<AssistantLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
 
     final modelMap = {
       0: 'hunyuan-lite',
@@ -33,26 +32,29 @@ class AssistantPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
-                child: TextField(
-              focusNode: logic.focusNode,
-              controller: logic.textEditingController,
-              minLines: 1,
-              maxLines: 4,
-              decoration: InputDecoration(
-                  fillColor: colorScheme.surfaceContainerHighest,
+              child: TextField(
+                focusNode: logic.focusNode,
+                controller: logic.textEditingController,
+                minLines: 1,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  fillColor: context.theme.colorScheme.surfaceContainerHighest,
                   filled: true,
                   isDense: true,
                   hintText: '消息',
                   border: const OutlineInputBorder(
                     borderRadius: AppBorderRadius.largeBorderRadius,
                     borderSide: BorderSide.none,
-                  )),
-            )),
+                  ),
+                ),
+              ),
+            ),
             IconButton.filled(
-                onPressed: () {
-                  logic.checkGetAi();
-                },
-                icon: const Icon(Icons.arrow_upward_rounded))
+              onPressed: () {
+                logic.checkGetAi();
+              },
+              icon: const Icon(Icons.arrow_upward_rounded),
+            ),
           ],
         ),
       );
@@ -79,25 +81,24 @@ class AssistantPage extends StatelessWidget {
                             FontAwesomeIcons.circleQuestion,
                             size: 16.0,
                           ),
-                          Text(
-                            DateFormat.jms().format(timeList[index]),
-                          )
+                          Text(DateFormat.jms().format(timeList[index])),
                         ],
                       ),
                       MarkdownBlock(
                         data: messageList[index].content,
                         selectable: true,
-                        config: colorScheme.brightness == Brightness.dark
-                            ? MarkdownConfig.darkConfig
-                            : MarkdownConfig.defaultConfig,
-                      )
+                        config:
+                            context.isDarkMode
+                                ? MarkdownConfig.darkConfig
+                                : MarkdownConfig.defaultConfig,
+                      ),
                     ],
                   ),
                 ),
               );
             } else {
               return Card.filled(
-                color: colorScheme.surfaceContainer,
+                color: context.theme.colorScheme.surfaceContainer,
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
@@ -108,19 +109,18 @@ class AssistantPage extends StatelessWidget {
                         children: [
                           FaIcon(
                             FontAwesomeIcons.bots,
-                            color: colorScheme.tertiary,
+                            color: context.theme.colorScheme.tertiary,
                           ),
-                          Text(
-                            DateFormat.jms().format(timeList[index]),
-                          )
+                          Text(DateFormat.jms().format(timeList[index])),
                         ],
                       ),
                       MarkdownBlock(
                         data: messageList[index].content,
                         selectable: true,
-                        config: colorScheme.brightness == Brightness.dark
-                            ? MarkdownConfig.darkConfig
-                            : MarkdownConfig.defaultConfig,
+                        config:
+                            context.isDarkMode
+                                ? MarkdownConfig.darkConfig
+                                : MarkdownConfig.defaultConfig,
                       ),
                     ],
                   ),
@@ -134,12 +134,7 @@ class AssistantPage extends StatelessWidget {
     }
 
     Widget buildEmpty() {
-      return const Center(
-        child: FaIcon(
-          FontAwesomeIcons.comments,
-          size: 46.0,
-        ),
-      );
+      return const Center(child: FaIcon(FontAwesomeIcons.comments, size: 46.0));
     }
 
     return GetBuilder<AssistantLogic>(
@@ -157,7 +152,7 @@ class AssistantPage extends StatelessWidget {
                         slivers: [
                           SliverAppBar(
                             title: AdaptiveText(
-                              l10n.settingFunctionAIAssistant,
+                              context.l10n.settingFunctionAIAssistant,
                               isTitle: true,
                             ),
                             pinned: true,
@@ -170,53 +165,59 @@ class AssistantPage extends StatelessWidget {
                                     builder: (context) {
                                       return SimpleDialog(
                                         title: const Text('选择模型'),
-                                        children: List.generate(modelMap.length,
-                                            (index) {
-                                          return Obx(() {
-                                            return SimpleDialogOption(
-                                              child: Row(
-                                                spacing: 4.0,
-                                                children: [
-                                                  Text(modelMap[index]!),
-                                                  if (state
-                                                          .modelVersion.value ==
-                                                      index) ...[
-                                                    const Icon(
-                                                        Icons.check_rounded)
-                                                  ]
-                                                ],
-                                              ),
-                                              onPressed: () {
-                                                logic.changeModel(index);
-                                              },
-                                            );
-                                          });
-                                        }),
+                                        children: List.generate(
+                                          modelMap.length,
+                                          (index) {
+                                            return Obx(() {
+                                              return SimpleDialogOption(
+                                                child: Row(
+                                                  spacing: 4.0,
+                                                  children: [
+                                                    Text(modelMap[index]!),
+                                                    if (state
+                                                            .modelVersion
+                                                            .value ==
+                                                        index) ...[
+                                                      const Icon(
+                                                        Icons.check_rounded,
+                                                      ),
+                                                    ],
+                                                  ],
+                                                ),
+                                                onPressed: () {
+                                                  logic.changeModel(index);
+                                                },
+                                              );
+                                            });
+                                          },
+                                        ),
                                       );
                                     },
                                   );
                                 },
                                 child: Obx(() {
                                   return Text(
-                                      modelMap[state.modelVersion.value]!);
+                                    modelMap[state.modelVersion.value]!,
+                                  );
                                 }),
                               ),
                               IconButton(
-                                  onPressed: () {
-                                    logic.newChat();
-                                  },
-                                  icon: const Icon(Icons.refresh_rounded)),
+                                onPressed: () {
+                                  logic.newChat();
+                                },
+                                icon: const Icon(Icons.refresh_rounded),
+                              ),
                             ],
                           ),
                           buildChat(),
                         ],
                       ),
                     ),
-                    buildInput()
+                    buildInput(),
                   ],
                 ),
               ),
-              if (state.messages.isEmpty) ...[buildEmpty()]
+              if (state.messages.isEmpty) ...[buildEmpty()],
             ],
           ),
         );

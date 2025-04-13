@@ -3,12 +3,13 @@ import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
-import 'package:moodiary/main.dart';
+import 'package:moodiary/gen/assets.gen.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/utils/update_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'about_logic.dart';
 
@@ -19,18 +20,16 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Bind.find<AboutLogic>();
     final state = Bind.find<AboutLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
 
     Widget buildLogoTitle() {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Image.asset(
-            colorScheme.brightness == Brightness.light
-                ? 'assets/icon/light/light_foreground.png'
-                : 'assets/icon/dark/dark_foreground.png',
-            color: colorScheme.onSurface,
+            context.isDarkMode
+                ? Assets.icon.dark.darkForeground.path
+                : Assets.icon.light.lightForeground.path,
+            color: context.theme.colorScheme.onSurface,
             height: 160.0,
             width: 160.0,
           ),
@@ -51,8 +50,9 @@ class AboutPage extends StatelessWidget {
                   child: Obx(() {
                     return AnimatedText(
                       state.appName,
-                      style: textStyle.titleLarge
-                          ?.copyWith(color: colorScheme.onSurface),
+                      style: context.textTheme.titleLarge?.copyWith(
+                        color: context.theme.colorScheme.onSurface,
+                      ),
                       isFetching: state.isFetching.value,
                     );
                   }),
@@ -64,22 +64,22 @@ class AboutPage extends StatelessWidget {
                   Obx(() {
                     return AnimatedText(
                       state.appVersion,
-                      style: textStyle.labelSmall
-                          ?.copyWith(color: colorScheme.primary),
+                      style: context.textTheme.labelSmall?.copyWith(
+                        color: context.theme.colorScheme.primary,
+                      ),
                       isFetching: state.isFetching.value,
                     );
                   }),
                   const SizedBox(
                     height: 10,
-                    child: VerticalDivider(
-                      thickness: 2,
-                    ),
+                    child: VerticalDivider(thickness: 2),
                   ),
                   Obx(() {
                     return AnimatedText(
                       state.systemVersion,
-                      style: textStyle.labelSmall
-                          ?.copyWith(color: colorScheme.onSurface),
+                      style: context.textTheme.labelSmall?.copyWith(
+                        color: context.theme.colorScheme.onSurface,
+                      ),
                       isFetching: state.isFetching.value,
                     );
                   }),
@@ -95,7 +95,7 @@ class AboutPage extends StatelessWidget {
       children: [
         Scaffold(
           appBar: AppBar(
-            title: Text(l10n.aboutTitle),
+            title: Text(context.l10n.aboutTitle),
             leading: const PageBackButton(),
           ),
           body: ListView(
@@ -105,22 +105,24 @@ class AboutPage extends StatelessWidget {
               buildLogoTitle(),
               const SizedBox(height: 16.0),
               Card.outlined(
-                color: colorScheme.surfaceContainerLow,
+                color: context.theme.colorScheme.surfaceContainerLow,
                 child: Column(
                   children: [
                     AdaptiveListTile(
                       leading: const Icon(Icons.update_rounded),
-                      title: Text(l10n.aboutUpdate),
+                      title: Text(context.l10n.aboutUpdate),
                       isFirst: true,
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: () async {
-                        await UpdateUtil.checkShouldUpdate(state.appVersion,
-                            handle: true);
+                        await UpdateUtil.checkShouldUpdate(
+                          state.appVersion,
+                          handle: true,
+                        );
                       },
                     ),
                     AdaptiveListTile(
                       leading: const Icon(Icons.source_rounded),
-                      title: Text(l10n.aboutSource),
+                      title: Text(context.l10n.aboutSource),
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: () async {
                         await logic.toSource();
@@ -128,7 +130,7 @@ class AboutPage extends StatelessWidget {
                     ),
                     AdaptiveListTile(
                       leading: const Icon(Icons.file_copy_rounded),
-                      title: Text(l10n.aboutUserAgreement),
+                      title: Text(context.l10n.aboutUserAgreement),
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: () {
                         logic.toAgreement();
@@ -136,7 +138,7 @@ class AboutPage extends StatelessWidget {
                     ),
                     AdaptiveListTile(
                       leading: const Icon(Icons.privacy_tip_rounded),
-                      title: Text(l10n.aboutPrivacyPolicy),
+                      title: Text(context.l10n.aboutPrivacyPolicy),
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: () {
                         logic.toPrivacy();
@@ -144,7 +146,7 @@ class AboutPage extends StatelessWidget {
                     ),
                     AdaptiveListTile(
                       leading: const Icon(Icons.bug_report_rounded),
-                      title: Text(l10n.aboutBugReport),
+                      title: Text(context.l10n.aboutBugReport),
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: () async {
                         await logic.toReportPage();
@@ -152,7 +154,7 @@ class AboutPage extends StatelessWidget {
                     ),
                     AdaptiveListTile(
                       leading: const Icon(Icons.attach_money_rounded),
-                      title: Text(l10n.aboutDonate),
+                      title: Text(context.l10n.aboutDonate),
                       isLast: true,
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: logic.toSponsor,
@@ -172,31 +174,29 @@ class AboutPage extends StatelessWidget {
                   ),
                   const SizedBox(
                     height: 12,
-                    child: VerticalDivider(
-                      thickness: 2,
-                    ),
+                    child: VerticalDivider(thickness: 2),
                   ),
                   FaIcon(
                     FontAwesomeIcons.dartLang,
                     size: 16,
-                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    color: context.theme.colorScheme.onSurface.withValues(
+                      alpha: 0.8,
+                    ),
                   ),
                   const SizedBox(
                     height: 12,
-                    child: VerticalDivider(
-                      thickness: 2,
-                    ),
+                    child: VerticalDivider(thickness: 2),
                   ),
                   FaIcon(
                     FontAwesomeIcons.rust,
                     size: 16,
-                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    color: context.theme.colorScheme.onSurface.withValues(
+                      alpha: 0.8,
+                    ),
                   ),
                   const SizedBox(
                     height: 12,
-                    child: VerticalDivider(
-                      thickness: 2,
-                    ),
+                    child: VerticalDivider(thickness: 2),
                   ),
                   const FaIcon(
                     FontAwesomeIcons.solidHeart,
@@ -204,7 +204,7 @@ class AboutPage extends StatelessWidget {
                     color: Colors.pinkAccent,
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

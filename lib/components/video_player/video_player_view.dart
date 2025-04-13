@@ -1,7 +1,7 @@
 import 'package:chewie/chewie.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/base/loading.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'video_player_logic.dart';
 import 'video_player_state.dart';

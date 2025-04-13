@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 import 'theme_mode_dialog_logic.dart';
 
@@ -16,7 +16,7 @@ class ThemeModeDialogComponent extends StatelessWidget {
       assignId: true,
       builder: (_) {
         return SimpleDialog(
-          title: Text(l10n.settingThemeMode),
+          title: Text(context.l10n.settingThemeMode),
           children: [
             SimpleDialogOption(
               child: Row(
@@ -27,7 +27,7 @@ class ThemeModeDialogComponent extends StatelessWidget {
                   ] else ...[
                     const Icon(Icons.brightness_auto_outlined),
                   ],
-                  Text(l10n.themeModeSystem),
+                  Text(context.l10n.themeModeSystem),
                 ],
               ),
               onPressed: () {
@@ -43,7 +43,7 @@ class ThemeModeDialogComponent extends StatelessWidget {
                   ] else ...[
                     const Icon(Icons.light_mode_outlined),
                   ],
-                  Text(l10n.themeModeLight),
+                  Text(context.l10n.themeModeLight),
                 ],
               ),
               onPressed: () {
@@ -59,7 +59,7 @@ class ThemeModeDialogComponent extends StatelessWidget {
                   ] else ...[
                     const Icon(Icons.dark_mode_outlined),
                   ],
-                  Text(l10n.themeModeDark),
+                  Text(context.l10n.themeModeDark),
                 ],
               ),
               onPressed: () {

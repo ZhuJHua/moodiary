@@ -1,4 +1,4 @@
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
 
 import 'mood_icon_state.dart';
 

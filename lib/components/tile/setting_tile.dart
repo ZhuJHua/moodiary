@@ -19,18 +19,12 @@ class AdaptiveTitleTile extends StatelessWidget {
       'subtitle must be a String or a Widget',
     );
     return ListTile(
-      title: (title is String)
-          ? AdaptiveText(
-              title,
-              isPrimaryTitle: true,
-            )
-          : title,
-      subtitle: (subtitle is String)
-          ? AdaptiveText(
-              subtitle!,
-              isTileSubtitle: true,
-            )
-          : subtitle,
+      title:
+          (title is String) ? AdaptiveText(title, isPrimaryTitle: true) : title,
+      subtitle:
+          (subtitle is String)
+              ? AdaptiveText(subtitle!, isTileSubtitle: true)
+              : subtitle,
     );
   }
 }
@@ -83,12 +77,10 @@ class AdaptiveListTile extends StatelessWidget {
       realSubtitle = (subtitle as Text).data;
     }
     return ListTile(
-      title: (realTitle is String)
-          ? AdaptiveText(
-              realTitle,
-              isTileTitle: true,
-            )
-          : realTitle,
+      title:
+          (realTitle is String)
+              ? AdaptiveText(realTitle, isTileTitle: true)
+              : realTitle,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: isFirst == true ? const Radius.circular(12) : Radius.zero,
@@ -96,12 +88,10 @@ class AdaptiveListTile extends StatelessWidget {
         ),
       ),
       contentPadding: contentPadding,
-      subtitle: (realSubtitle is String)
-          ? AdaptiveText(
-              realSubtitle,
-              isTileSubtitle: true,
-            )
-          : realSubtitle,
+      subtitle:
+          (realSubtitle is String)
+              ? AdaptiveText(realSubtitle, isTileSubtitle: true)
+              : realSubtitle,
       trailing: trailing,
       leading: leading,
       onTap: onTap,
@@ -157,28 +147,26 @@ class AdaptiveSwitchListTile extends StatelessWidget {
       realSubtitle = (subtitle as Text).data;
     }
     return SwitchListTile(
-      title: (realTitle is String)
-          ? AdaptiveText(
-              realTitle,
-              isTileTitle: true,
-            )
-          : realTitle,
+      title:
+          (realTitle is String)
+              ? AdaptiveText(realTitle, isTileTitle: true)
+              : realTitle,
       secondary: secondary,
       shape: RoundedRectangleBorder(
-        borderRadius: isSingle == true
-            ? BorderRadius.circular(12)
-            : BorderRadius.vertical(
-                top: isFirst == true ? const Radius.circular(12) : Radius.zero,
-                bottom:
-                    isLast == true ? const Radius.circular(12) : Radius.zero,
-              ),
+        borderRadius:
+            isSingle == true
+                ? BorderRadius.circular(12)
+                : BorderRadius.vertical(
+                  top:
+                      isFirst == true ? const Radius.circular(12) : Radius.zero,
+                  bottom:
+                      isLast == true ? const Radius.circular(12) : Radius.zero,
+                ),
       ),
-      subtitle: (realSubtitle is String)
-          ? AdaptiveText(
-              realSubtitle,
-              isTileSubtitle: true,
-            )
-          : realSubtitle,
+      subtitle:
+          (realSubtitle is String)
+              ? AdaptiveText(realSubtitle, isTileSubtitle: true)
+              : realSubtitle,
       value: value,
       onChanged: onChanged,
     );

@@ -706,10 +706,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: "36a1652d99cb6bf8ccc8b9f43aded1fd60b234d23ce78af422c07f950a436ef7"
+      sha256: "8986dec4581b4bcd4b6df5d75a2ea0bede3db802f500635d05fa8be298f9467f"
       url: "https://pub.dev"
     source: hosted
-    version: "10.0.0"
+    version: "10.1.2"
   file_selector_linux:
     dependency: transitive
     description:
@@ -1076,10 +1076,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_quill_delta_from_html
-      sha256: "231d4fcd2be117044daf6e1d0a00caf2f2c7f366e9741fa1629e37a7b88fc9d9"
+      sha256: "4597bd0853a704696837aa6b05cffd851f587b176204c234edddfed1c1862a09"
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.1"
+    version: "1.5.2"
   flutter_quill_extensions:
     dependency: "direct main"
     description:
@@ -1152,6 +1152,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  flutter_smart_dialog:
+    dependency: "direct main"
+    description:
+      name: flutter_smart_dialog
+      sha256: a3aaf690b2737ee6b2c7e7a983bc685e5f118e5de7e2042d2e0b7db26eb074f2
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.9.8+7"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -1266,6 +1274,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.5"
+  get:
+    dependency: "direct main"
+    description:
+      name: get
+      sha256: b3294002946e99314c341bff0b4f3094e631a1f8cf37785e93aa7c2f04b0768e
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.0-release-candidate-9.3.2"
   get_it:
     dependency: transitive
     description:
@@ -1926,10 +1942,10 @@ packages:
     dependency: "direct main"
     description:
       name: permission_handler
-      sha256: e78d066ca88fe337b989d89c19c674cd8c879a6d61410d825a904fd713f32c54
+      sha256: "2d070d8684b68efb580a5997eb62f675e8a885ef0be6e754fb9ef489c177470f"
       url: "https://pub.dev"
     source: hosted
-    version: "12.0.0"
+    version: "12.0.0+1"
   permission_handler_android:
     dependency: transitive
     description:
@@ -1942,10 +1958,10 @@ packages:
     dependency: transitive
     description:
       name: permission_handler_apple
-      sha256: f84a188e79a35c687c132a0a0556c254747a08561e99ab933f12f6ca71ef3c98
+      sha256: f000131e755c54cf4d84a5d8bd6e4149e262cc31c5a8b1d698de1ac85fa41023
       url: "https://pub.dev"
     source: hosted
-    version: "9.4.6"
+    version: "9.4.7"
   permission_handler_html:
     dependency: transitive
     description:
@@ -2218,14 +2234,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.5"
-  refreshed:
-    dependency: "direct main"
-    description:
-      name: refreshed
-      sha256: "2b048e86144c2360d80a8348db9b81dda7d2b19ebfcc3be503f8297f57db30d0"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.2"
   retry:
     dependency: transitive
     description:
@@ -2350,10 +2358,10 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences_android
-      sha256: "3ec7210872c4ba945e3244982918e502fa2bfb5230dff6832459ca0e1879b7ad"
+      sha256: c2c8c46297b5d6a80bed7741ec1f2759742c77d272f1a1698176ae828f8e1a18
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.8"
+    version: "2.4.9"
   shared_preferences_foundation:
     dependency: transitive
     description:

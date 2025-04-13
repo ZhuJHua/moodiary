@@ -5,8 +5,13 @@ class WeatherResponse {
   Now? now;
   Refer? refer;
 
-  WeatherResponse(
-      {this.code, this.updateTime, this.fxLink, this.now, this.refer});
+  WeatherResponse({
+    this.code,
+    this.updateTime,
+    this.fxLink,
+    this.now,
+    this.refer,
+  });
 
   WeatherResponse.fromJson(Map<String, dynamic> json) {
     code = json["code"];
@@ -73,22 +78,23 @@ class Now {
   String? cloud;
   String? dew;
 
-  Now(
-      {this.obsTime,
-      this.temp,
-      this.feelsLike,
-      this.icon,
-      this.text,
-      this.wind360,
-      this.windDir,
-      this.windScale,
-      this.windSpeed,
-      this.humidity,
-      this.precip,
-      this.pressure,
-      this.vis,
-      this.cloud,
-      this.dew});
+  Now({
+    this.obsTime,
+    this.temp,
+    this.feelsLike,
+    this.icon,
+    this.text,
+    this.wind360,
+    this.windDir,
+    this.windScale,
+    this.windSpeed,
+    this.humidity,
+    this.precip,
+    this.pressure,
+    this.vis,
+    this.cloud,
+    this.dew,
+  });
 
   Now.fromJson(Map<String, dynamic> json) {
     obsTime = json["obsTime"];

@@ -2,16 +2,17 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/api/api.dart';
 import 'package:moodiary/common/models/hunyuan.dart';
 import 'package:moodiary/common/values/keyboard_state.dart';
+import 'package:moodiary/components/keyboard_listener/keyboard_listener.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/signature_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'assistant_state.dart';
 
-class AssistantLogic extends GetxController with WidgetsBindingObserver {
+class AssistantLogic extends GetxController {
   final AssistantState state = AssistantState();
 
   //输入框控制器
@@ -22,55 +23,34 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
 
   //聚焦对象
   late FocusNode focusNode = FocusNode();
+  late final KeyboardObserver keyboardObserver;
 
   List<double> heightList = [];
 
   @override
-  void didChangeMetrics() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final height = MediaQuery.viewInsetsOf(Get.context!).bottom;
-      if (heightList.isNotEmpty && height != heightList.last) {
-        if (height > heightList.last &&
-            state.keyboardState != KeyboardState.opening) {
-          state.keyboardState = KeyboardState.opening;
-          //正在打开
-        } else if (height < heightList.last &&
-            state.keyboardState != KeyboardState.closing) {
-          state.keyboardState = KeyboardState.closing;
-          //正在关闭
-          unFocus();
-        }
-      }
-
-      // 只在高度变化时记录高度
-      if (heightList.isEmpty || height != heightList.last) {
-        heightList.add(height);
-      }
-
-      // 当高度为0且键盘经历了开启关闭过程时，认为键盘已完全关闭
-      if (height == 0 && state.keyboardState != KeyboardState.closed) {
-        state.keyboardState = KeyboardState.closed;
-        heightList.clear();
-        //已经关闭
-      }
-    });
-    super.didChangeMetrics();
-  }
-
-  @override
   void onInit() {
+    keyboardObserver = KeyboardObserver(
+      onStateChanged: (state) {
+        switch (state) {
+          case KeyboardState.opening:
+            break;
+          case KeyboardState.closing:
+            unFocus();
+            break;
+          case KeyboardState.closed:
+            break;
+          case KeyboardState.unknown:
+            break;
+        }
+      },
+    );
+    keyboardObserver.start();
     super.onInit();
   }
 
   @override
-  void onReady() {
-    WidgetsBinding.instance.addObserver(this);
-    super.onReady();
-  }
-
-  @override
   void onClose() {
-    WidgetsBinding.instance.removeObserver(this);
+    keyboardObserver.stop();
     textEditingController.dispose();
     scrollController.dispose();
     focusNode.dispose();
@@ -115,8 +95,12 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
       update();
       toBottom();
       //带着上下文请求
-      final stream = await Api.getHunYuan(check['id']!, check['key']!,
-          state.messages.values.toList(), state.modelVersion.value);
+      final stream = await Api.getHunYuan(
+        check['id']!,
+        check['key']!,
+        state.messages.values.toList(),
+        state.modelVersion.value,
+      );
       //如果收到了请求，添加一个回答上下文
       final replyTime = DateTime.now();
       state.messages[replyTime] = Message('assistant', '');
@@ -124,8 +108,9 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
       //接收stream
       stream?.listen((content) {
         if (content != '' && content.contains('data')) {
-          final HunyuanResponse result =
-              HunyuanResponse.fromJson(jsonDecode(content.split('data: ')[1]));
+          final HunyuanResponse result = HunyuanResponse.fromJson(
+            jsonDecode(content.split('data: ')[1]),
+          );
           state.messages[replyTime]!.content +=
               result.choices!.first.delta!.content!;
           HapticFeedback.vibrate();
@@ -149,7 +134,7 @@ class AssistantLogic extends GetxController with WidgetsBindingObserver {
     if (text != '') {
       await getAi(text);
     } else {
-      NoticeUtil.showToast('还没有输入问题');
+      toast.info(message: '还没有输入问题');
     }
   }
 

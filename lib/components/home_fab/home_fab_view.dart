@@ -2,9 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/border.dart';
-import 'package:moodiary/main.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 class HomeFabComponent extends StatelessWidget {
   final Animation<double> animation;
@@ -42,9 +42,6 @@ class HomeFabComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
-
     Widget buildToTopButton() {
       return Obx(() {
         return Visibility(
@@ -56,24 +53,29 @@ class HomeFabComponent extends StatelessWidget {
               onTap: toTop,
               child: Container(
                 decoration: ShapeDecoration(
-                    shape: const RoundedRectangleBorder(
-                        borderRadius: AppBorderRadius.largeBorderRadius),
-                    color: colorScheme.tertiaryContainer,
-                    shadows: [
-                      BoxShadow(
-                          color:
-                              colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
-                          offset: const Offset(0, 2),
-                          blurRadius: 2,
-                          spreadRadius: 2)
-                    ]),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: AppBorderRadius.largeBorderRadius,
+                  ),
+                  color: context.theme.colorScheme.tertiaryContainer,
+                  shadows: [
+                    BoxShadow(
+                      color: context.theme.colorScheme.shadow.withAlpha(
+                        (255 * 0.1).toInt(),
+                      ),
+                      offset: const Offset(0, 2),
+                      blurRadius: 2,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
                 width: 56.0,
                 height: 56.0,
                 child: Center(
-                    child: FaIcon(
-                  FontAwesomeIcons.arrowUp,
-                  color: colorScheme.onTertiaryContainer,
-                )),
+                  child: FaIcon(
+                    FontAwesomeIcons.arrowUp,
+                    color: context.theme.colorScheme.onTertiaryContainer,
+                  ),
+                ),
               ),
             ),
           ),
@@ -104,11 +106,14 @@ class HomeFabComponent extends StatelessWidget {
         Container(
           decoration: ShapeDecoration(
             shape: const RoundedRectangleBorder(
-                borderRadius: AppBorderRadius.smallBorderRadius),
-            color: colorScheme.secondaryContainer,
+              borderRadius: AppBorderRadius.smallBorderRadius,
+            ),
+            color: context.theme.colorScheme.secondaryContainer,
             shadows: [
               BoxShadow(
-                color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                color: context.theme.colorScheme.shadow.withAlpha(
+                  (255 * 0.1).toInt(),
+                ),
                 offset: const Offset(0, 2),
                 blurRadius: 2,
                 spreadRadius: 2,
@@ -118,18 +123,22 @@ class HomeFabComponent extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
           child: Text(
             label,
-            style: textStyle.labelMedium!
-                .copyWith(color: colorScheme.onSecondaryContainer),
+            style: context.textTheme.labelMedium!.copyWith(
+              color: context.theme.colorScheme.onSecondaryContainer,
+            ),
           ),
         ),
         Container(
           decoration: ShapeDecoration(
             shape: const RoundedRectangleBorder(
-                borderRadius: AppBorderRadius.largeBorderRadius),
-            color: colorScheme.primaryContainer,
+              borderRadius: AppBorderRadius.largeBorderRadius,
+            ),
+            color: context.theme.colorScheme.primaryContainer,
             shadows: [
               BoxShadow(
-                color: colorScheme.shadow.withAlpha((255 * 0.1).toInt()),
+                color: context.theme.colorScheme.shadow.withAlpha(
+                  (255 * 0.1).toInt(),
+                ),
                 offset: const Offset(0, 2),
                 blurRadius: 2,
                 spreadRadius: 2,
@@ -141,7 +150,7 @@ class HomeFabComponent extends StatelessWidget {
           alignment: Alignment.center,
           child: FaIcon(
             iconData,
-            color: colorScheme.onPrimaryContainer,
+            color: context.theme.colorScheme.onPrimaryContainer,
           ),
         ),
       ];
@@ -151,15 +160,14 @@ class HomeFabComponent extends StatelessWidget {
           child: AnimatedBuilder(
             animation: animation,
             builder: (context, child) {
-              final verticalTranslation =
-                  calculateVerticalTranslation(index, animation.value);
+              final verticalTranslation = calculateVerticalTranslation(
+                index,
+                animation.value,
+              );
               return Positioned(
                 right: 0,
                 bottom: verticalTranslation,
-                child: Opacity(
-                  opacity: animation.value,
-                  child: child!,
-                ),
+                child: Opacity(opacity: animation.value, child: child!),
               );
             },
             child: GestureDetector(
@@ -179,39 +187,51 @@ class HomeFabComponent extends StatelessWidget {
 
     Widget buildFabButton(bool showShadow) {
       return AnimatedBuilder(
-          animation: animation,
-          builder: (context, child) {
-            return GestureDetector(
-              onTap: isExpanded.value ? closeFab : openFab,
-              child: Container(
-                width: 56.0,
-                height: 56.0,
-                decoration: ShapeDecoration(
-                    shape: const RoundedRectangleBorder(
-                        borderRadius: AppBorderRadius.largeBorderRadius),
-                    color: Color.lerp(colorScheme.primaryContainer,
-                        colorScheme.surfaceContainerHighest, animation.value),
-                    shadows: showShadow
+        animation: animation,
+        builder: (context, child) {
+          return GestureDetector(
+            onTap: isExpanded.value ? closeFab : openFab,
+            child: Container(
+              width: 56.0,
+              height: 56.0,
+              decoration: ShapeDecoration(
+                shape: const RoundedRectangleBorder(
+                  borderRadius: AppBorderRadius.largeBorderRadius,
+                ),
+                color: Color.lerp(
+                  context.theme.colorScheme.primaryContainer,
+                  context.theme.colorScheme.surfaceContainerHighest,
+                  animation.value,
+                ),
+                shadows:
+                    showShadow
                         ? [
-                            BoxShadow(
-                              color: colorScheme.shadow
-                                  .withAlpha((255 * 0.1).toInt()),
-                              offset: const Offset(0, 2),
-                              blurRadius: 2,
-                              spreadRadius: 2,
+                          BoxShadow(
+                            color: context.theme.colorScheme.shadow.withAlpha(
+                              (255 * 0.1).toInt(),
                             ),
-                          ]
-                        : null),
-                child: Transform.rotate(
-                    angle: 3 * pi / 4 * animation.value,
-                    child: Icon(
-                      FontAwesomeIcons.plus,
-                      color: Color.lerp(colorScheme.onPrimaryContainer,
-                          colorScheme.onSurface, animation.value),
-                    )),
+                            offset: const Offset(0, 2),
+                            blurRadius: 2,
+                            spreadRadius: 2,
+                          ),
+                        ]
+                        : null,
               ),
-            );
-          });
+              child: Transform.rotate(
+                angle: 3 * pi / 4 * animation.value,
+                child: Icon(
+                  FontAwesomeIcons.plus,
+                  color: Color.lerp(
+                    context.theme.colorScheme.onPrimaryContainer,
+                    context.theme.colorScheme.onSurface,
+                    animation.value,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
     }
 
     Widget buildDiaryFab(bool showShadow) {
@@ -229,34 +249,39 @@ class HomeFabComponent extends StatelessWidget {
           children: [
             buildToTopButton(),
             buildAnimatedActionButton(
-                label: l10n.homeNewDiaryMarkdown,
-                onTap: toMarkdown,
-                iconData: FontAwesomeIcons.markdown,
-                index: 3),
+              label: context.l10n.homeNewDiaryMarkdown,
+              onTap: toMarkdown,
+              iconData: FontAwesomeIcons.markdown,
+              index: 3,
+            ),
             buildAnimatedActionButton(
-                label: l10n.homeNewDiaryPlainText,
-                onTap: toPlainText,
-                iconData: FontAwesomeIcons.font,
-                index: 2),
+              label: context.l10n.homeNewDiaryPlainText,
+              onTap: toPlainText,
+              iconData: FontAwesomeIcons.font,
+              index: 2,
+            ),
             buildAnimatedActionButton(
-                label: l10n.homeNewDiaryRichText,
-                onTap: toRichText,
-                iconData: FontAwesomeIcons.feather,
-                index: 1),
+              label: context.l10n.homeNewDiaryRichText,
+              onTap: toRichText,
+              iconData: FontAwesomeIcons.feather,
+              index: 1,
+            ),
             buildFabButton(showShadow),
           ],
         ),
       );
     }
 
-    return LayoutBuilder(builder: (context, constraints) {
-      return Obx(() {
-        return Visibility(
-          visible: shouldShow.value && constraints.maxWidth < 600,
-          child: RepaintBoundary(child: buildDiaryFab(showShadow)),
-        );
-      });
-    });
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Obx(() {
+          return Visibility(
+            visible: shouldShow.value && constraints.maxWidth < 600,
+            child: RepaintBoundary(child: buildDiaryFab(showShadow)),
+          );
+        });
+      },
+    );
   }
 }
 
@@ -279,8 +304,6 @@ class DesktopHomeFabComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -291,46 +314,41 @@ class DesktopHomeFabComponent extends StatelessWidget {
             return Visibility(
               visible: isToTopShow.value,
               child: IconButton(
-                  onPressed: toTop,
-                  icon: const Icon(Icons.arrow_upward_rounded)),
+                onPressed: toTop,
+                icon: const Icon(Icons.arrow_upward_rounded),
+              ),
             );
           }),
           IconButton.filled(
             onPressed: toMarkdown,
-            icon: const FaIcon(
-              FontAwesomeIcons.markdown,
-              size: 16,
-            ),
+            icon: const FaIcon(FontAwesomeIcons.markdown, size: 16),
             style: const ButtonStyle(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            tooltip: l10n.homeNewDiaryMarkdown,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            tooltip: context.l10n.homeNewDiaryMarkdown,
           ),
           IconButton.filled(
             onPressed: toPlainText,
-            icon: const FaIcon(
-              FontAwesomeIcons.font,
-              size: 16,
-            ),
+            icon: const FaIcon(FontAwesomeIcons.font, size: 16),
             style: const ButtonStyle(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            tooltip: l10n.homeNewDiaryPlainText,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            tooltip: context.l10n.homeNewDiaryPlainText,
           ),
           IconButton.filled(
             onPressed: toRichText,
-            icon: const FaIcon(
-              FontAwesomeIcons.feather,
-              size: 16,
-            ),
+            icon: const FaIcon(FontAwesomeIcons.feather, size: 16),
             style: const ButtonStyle(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            tooltip: l10n.homeNewDiaryRichText,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            tooltip: context.l10n.homeNewDiaryRichText,
           ),
           Text(
-            l10n.appName,
-            style: textStyle.labelSmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+            context.l10n.appName,
+            style: context.textTheme.labelSmall?.copyWith(
+              color: context.theme.colorScheme.onSurfaceVariant,
             ),
-          )
+          ),
         ],
       ),
     );

@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  refreshed: 3.0.2
+  get: 5.0.0-release-candidate-9.3.2
   dio: 5.8.0+1
   path: 1.9.1
   path_provider: 2.1.5
@@ -20,10 +20,10 @@ dependencies:
   flutter_drawing_board: 0.9.8
   flutter_displaymode: 0.6.0
   fl_chart: 0.70.2
-  file_picker: 10.0.0
+  file_picker: 10.1.2
   local_auth: 2.3.0
   local_auth_android: 1.0.48
-  permission_handler: 12.0.0
+  permission_handler: 12.0.0+1
   image_picker: 1.1.2
   device_info_plus: 11.3.3
   package_info_plus: 8.3.0
@@ -121,6 +121,7 @@ dependencies:
   json_annotation: 4.9.0
   audioplayers_android_exo: 0.1.2
   scrollview_observer: 1.26.0
+  flutter_smart_dialog: 4.9.8+7
 
 dev_dependencies:
   flutter_test:
@@ -182,6 +183,7 @@ flutter:
     - assets/icon/light/
     - assets/lottie/
     - res/sponsor/
+    - assets/tflite/
 
   uses-material-design: true
 

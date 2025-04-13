@@ -14,7 +14,7 @@ import 'package:moodiary/common/values/diary_type.dart';
 import 'package:moodiary/components/quill_embed/audio_embed.dart';
 import 'package:moodiary/components/quill_embed/image_embed.dart';
 import 'package:moodiary/components/quill_embed/video_embed.dart';
-import 'package:moodiary/presentation/pref.dart';
+import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
 import 'package:path/path.dart';

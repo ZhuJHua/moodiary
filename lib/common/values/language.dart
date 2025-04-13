@@ -1,4 +1,5 @@
-import 'package:moodiary/main.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:moodiary/l10n/l10n.dart';
 
 enum Language {
   system('system'),
@@ -11,14 +12,14 @@ enum Language {
 }
 
 extension LanguageExtension on Language {
-  String get l10nText {
+  String l10nText(BuildContext context) {
     switch (this) {
       case Language.system:
-        return l10n.settingLanguageSystem;
+        return context.l10n.settingLanguageSystem;
       case Language.chinese:
-        return l10n.settingLanguageSimpleChinese;
+        return context.l10n.settingLanguageSimpleChinese;
       case Language.english:
-        return l10n.settingLanguageEnglish;
+        return context.l10n.settingLanguageEnglish;
     }
   }
 }

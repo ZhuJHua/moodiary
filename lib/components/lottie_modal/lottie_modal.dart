@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
+import 'package:moodiary/gen/assets.gen.dart';
 
-enum LoadingType {
-  material('assets/lottie/loading_material.json'),
-  fileProcess('assets/lottie/file_process.json'),
-  cat('assets/lottie/loading_cat.json');
-
-  final String value;
-
-  const LoadingType(this.value);
-}
+enum LoadingType { material, fileProcess, cat }
 
 class LottieModal extends StatelessWidget {
   final LoadingType type;
@@ -18,17 +12,20 @@ class LottieModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Stack(
       alignment: Alignment.center,
       children: [
         ModalBarrier(
           barrierSemanticsDismissible: false,
           dismissible: false,
-          color: colorScheme.surface.withAlpha(150),
+          color: context.theme.colorScheme.surface.withAlpha(150),
         ),
         Lottie.asset(
-          type.value,
+          switch (type) {
+            LoadingType.material => Assets.lottie.loadingMaterial,
+            LoadingType.fileProcess => Assets.lottie.fileProcess,
+            LoadingType.cat => Assets.lottie.loadingCat,
+          },
           width: 250,
           height: 250,
           frameRate: FrameRate.max,

@@ -1,13 +1,13 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/diary_card/calendar_diary_card_view.dart';
 import 'package:moodiary/components/time_line/time_line_view.dart';
 import 'package:moodiary/utils/array_util.dart';
-import 'package:refreshed/refreshed.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 import 'calendar_logic.dart';
@@ -61,8 +61,7 @@ class CalendarPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final logic = Get.put(CalendarLogic());
     final state = Bind.find<CalendarLogic>().state;
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
+
     final size = MediaQuery.sizeOf(context);
 
     //生成日历选择器
@@ -85,7 +84,7 @@ class CalendarPage extends StatelessWidget {
       return Stack(
         children: [
           Card.filled(
-            color: colorScheme.surfaceContainerLow,
+            color: context.theme.colorScheme.surfaceContainerLow,
             margin: EdgeInsets.zero,
             child: Obx(() {
               return CalendarDatePicker2(
@@ -109,8 +108,8 @@ class CalendarPage extends StatelessWidget {
                     final bgColor =
                         contains
                             ? Color.lerp(
-                              colorScheme.surfaceContainer,
-                              colorScheme.primary,
+                              context.theme.colorScheme.surfaceContainer,
+                              context.theme.colorScheme.primary,
                               getDayColor(count: dateCountMap[date] ?? 0),
                             )
                             : null;
@@ -165,10 +164,12 @@ class CalendarPage extends StatelessWidget {
             bottom: 4,
             right: 4,
             child: _buildActiveInfo(
-              lessColor: colorScheme.surfaceContainer,
-              moreColor: colorScheme.primary,
-              textStyle: textStyle.labelSmall?.copyWith(
-                color: colorScheme.onSurface.withValues(alpha: 0.8),
+              lessColor: context.theme.colorScheme.surfaceContainer,
+              moreColor: context.theme.colorScheme.primary,
+              textStyle: context.textTheme.labelSmall?.copyWith(
+                color: context.theme.colorScheme.onSurface.withValues(
+                  alpha: 0.8,
+                ),
               ),
             ),
           ),
@@ -226,7 +227,7 @@ class CalendarPage extends StatelessWidget {
                         key: const ValueKey('empty'),
                         child: FaIcon(
                           FontAwesomeIcons.boxOpen,
-                          color: colorScheme.onSurface,
+                          color: context.theme.colorScheme.onSurface,
                           size: 56,
                         ),
                       )),

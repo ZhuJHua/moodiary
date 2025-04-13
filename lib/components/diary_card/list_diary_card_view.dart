@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/border.dart';
@@ -23,8 +24,6 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textStyle = Theme.of(context).textTheme;
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     Widget buildImage() {
       return AspectRatio(
@@ -47,7 +46,7 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
     }
 
     return Card.filled(
-      color: colorScheme.surfaceContainerLow,
+      color: context.theme.colorScheme.surfaceContainerLow,
       margin: EdgeInsets.zero,
       child: InkWell(
         borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -71,8 +70,8 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                       if (diary.title.isNotEmpty) ...[
                         EllipsisText(
                           diary.title.trim(),
-                          style: textStyle.titleMedium?.copyWith(
-                            color: colorScheme.onSurface,
+                          style: context.textTheme.titleMedium?.copyWith(
+                            color: context.theme.colorScheme.onSurface,
                           ),
                           maxLines: 1,
                         ),
@@ -81,8 +80,8 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                         child: EllipsisText(
                           diary.contentText.trim().removeLineBreaks(),
                           maxLines: diary.title.isNotEmpty ? 3 : 4,
-                          style: textStyle.bodyMedium?.copyWith(
-                            color: colorScheme.onSurface,
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: context.theme.colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -93,14 +92,14 @@ class ListDiaryCardComponent extends StatelessWidget with BasicCardLogic {
                             DateFormat.yMMMMEEEEd().add_Hms().format(
                               diary.time,
                             ),
-                            style: textStyle.labelSmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+                            style: context.textTheme.labelSmall?.copyWith(
+                              color: context.theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
                           FaIcon(
                             DiaryType.fromValue(diary.type).icon,
                             size: 10,
-                            color: colorScheme.onSurfaceVariant,
+                            color: context.theme.colorScheme.onSurfaceVariant,
                           ),
                         ],
                       ),

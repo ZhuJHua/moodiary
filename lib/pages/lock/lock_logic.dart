@@ -1,17 +1,20 @@
 import 'package:flutter/animation.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/utils/auth_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'lock_state.dart';
 
 class LockLogic extends GetxController with GetSingleTickerProviderStateMixin {
   final LockState state = LockState();
   late AnimationController animationController = AnimationController(
-      vsync: this, duration: const Duration(milliseconds: 200));
+    vsync: this,
+    duration: const Duration(milliseconds: 200),
+  );
   late Animation<double> animation = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: animationController, curve: Curves.easeInOut));
+    CurvedAnimation(parent: animationController, curve: Curves.easeInOut),
+  );
 
   @override
   void onReady() async {
@@ -40,8 +43,10 @@ class LockLogic extends GetxController with GetSingleTickerProviderStateMixin {
 
   void deletePassword() {
     if (state.password.value.isNotEmpty) {
-      state.password.value =
-          state.password.value.substring(0, state.password.value.length - 1);
+      state.password.value = state.password.value.substring(
+        0,
+        state.password.value.length - 1,
+      );
       HapticFeedback.selectionClick();
     }
   }

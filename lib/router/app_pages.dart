@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/desktop_wrapper/background.dart';
 import 'package:moodiary/components/window_buttons/window_buttons.dart';
 import 'package:moodiary/pages/about/about_logic.dart';
@@ -45,7 +46,6 @@ import 'package:moodiary/pages/start/start_view.dart';
 import 'package:moodiary/pages/user/user_logic.dart';
 import 'package:moodiary/pages/user/user_view.dart';
 import 'package:page_transition/page_transition.dart';
-import 'package:refreshed/refreshed.dart';
 
 import '../pages/sponsor/sponsor_logic.dart';
 import '../pages/web_view/web_view_logic.dart';

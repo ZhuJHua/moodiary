@@ -1,28 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/pages/web_view/web_view_state.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'web_view_logic.dart';
 
 class WebViewPage extends StatelessWidget {
   const WebViewPage({super.key});
 
-  Widget _buildBackToHomeButton(
-      {required Color color, required Brightness brightness}) {
-    final colorScheme =
-        ColorScheme.fromSeed(seedColor: color, brightness: brightness);
+  Widget _buildBackToHomeButton({
+    required Color color,
+    required Brightness brightness,
+  }) {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: color,
+      brightness: brightness,
+    );
     return FilledButton.icon(
       onPressed: Get.back,
-      label: Text(
-        '退出反馈',
-        style: TextStyle(color: colorScheme.onPrimary),
-      ),
-      icon: Icon(
-        Icons.outbound_rounded,
-        color: colorScheme.onPrimary,
-      ),
+      label: Text('退出反馈', style: TextStyle(color: colorScheme.onPrimary)),
+      icon: Icon(Icons.outbound_rounded, color: colorScheme.onPrimary),
       style: ButtonStyle(
         backgroundColor: WidgetStatePropertyAll(colorScheme.primary),
       ),
@@ -49,9 +47,10 @@ class WebViewPage extends StatelessWidget {
                   Obx(() {
                     return Container(
                       height: padding.top,
-                      color: state.progress.value == 1
-                          ? AppColor.answerColor
-                          : null,
+                      color:
+                          state.progress.value == 1
+                              ? AppColor.answerColor
+                              : null,
                     );
                   }),
                   Expanded(
@@ -70,35 +69,33 @@ class WebViewPage extends StatelessWidget {
                 ],
               ),
             ),
-            Obx(
-              () {
-                return Visibility(
-                  visible: state.progress.value == 1,
-                  child: Positioned(
-                    bottom: (state.isTop.value) ? null : 30,
-                    top: (state.isTop.value) ? 30 : null,
-                    right: (state.isRight.value) ? 30 : null,
-                    left: (state.isRight.value) ? null : 30,
-                    child: Draggable(
-                      feedback: _buildBackToHomeButton(
-                          color: AppColor.answerColor,
-                          brightness: Brightness.light),
-                      childWhenDragging: Container(),
-                      onDragEnd: (draggableDetails) {
-                        logic.updatePosition(draggableDetails, context);
-                      },
-                      child: _buildBackToHomeButton(
-                          color: AppColor.answerColor,
-                          brightness: Brightness.light),
+            Obx(() {
+              return Visibility(
+                visible: state.progress.value == 1,
+                child: Positioned(
+                  bottom: (state.isTop.value) ? null : 30,
+                  top: (state.isTop.value) ? 30 : null,
+                  right: (state.isRight.value) ? 30 : null,
+                  left: (state.isRight.value) ? null : 30,
+                  child: Draggable(
+                    feedback: _buildBackToHomeButton(
+                      color: AppColor.answerColor,
+                      brightness: Brightness.light,
+                    ),
+                    childWhenDragging: Container(),
+                    onDragEnd: (draggableDetails) {
+                      logic.updatePosition(draggableDetails, context);
+                    },
+                    child: _buildBackToHomeButton(
+                      color: AppColor.answerColor,
+                      brightness: Brightness.light,
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            }),
             Center(
-              child: CircularProgressIndicator(
-                value: state.progress.value,
-              ),
+              child: CircularProgressIndicator(value: state.progress.value),
             ),
           ],
         ),

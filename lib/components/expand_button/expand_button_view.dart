@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:refreshed/refreshed.dart';
+import 'package:get/get.dart';
 
 import 'expand_button_logic.dart';
 
@@ -8,12 +8,13 @@ class ExpandButtonComponent extends StatelessWidget {
 
   const ExpandButtonComponent({super.key, required this.operatorMap});
 
-  Widget _buildAnimatedIcon(
-      {required Animation<double> animation,
-      required Function() onTap,
-      required IconData icon,
-      required int index,
-      required Color color}) {
+  Widget _buildAnimatedIcon({
+    required Animation<double> animation,
+    required Function() onTap,
+    required IconData icon,
+    required int index,
+    required Color color,
+  }) {
     const double mainButtonHeight = 40.0;
     const double mainButtonSpacing = 8.0;
 
@@ -32,12 +33,10 @@ class ExpandButtonComponent extends StatelessWidget {
       },
       child: IconButton(
         onPressed: onTap,
-        icon: Icon(
-          icon,
-          color: color,
+        icon: Icon(icon, color: color),
+        style: const ButtonStyle(
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        style:
-            const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
       ),
     );
   }
@@ -45,7 +44,6 @@ class ExpandButtonComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ExpandButtonLogic logic = Get.put(ExpandButtonLogic());
-    final colorScheme = Theme.of(context).colorScheme;
 
     return AnimatedBuilder(
       animation: logic.animation,
@@ -58,19 +56,24 @@ class ExpandButtonComponent extends StatelessWidget {
       },
       child: Stack(
         children: [
-          ...operatorMap.entries.map((entry) => _buildAnimatedIcon(
-                animation: logic.animation,
-                onTap: entry.value,
-                icon: entry.key,
-                color: colorScheme.secondary,
-                index: operatorMap.keys.toList().indexOf(entry.key),
-              )),
+          ...operatorMap.entries.map(
+            (entry) => _buildAnimatedIcon(
+              animation: logic.animation,
+              onTap: entry.value,
+              icon: entry.key,
+              color: context.theme.colorScheme.secondary,
+              index: operatorMap.keys.toList().indexOf(entry.key),
+            ),
+          ),
           IconButton.filled(
             onPressed: logic.animatedIcon,
             style: const ButtonStyle(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
             icon: AnimatedIcon(
-                icon: AnimatedIcons.menu_close, progress: logic.animation),
+              icon: AnimatedIcons.menu_close,
+              progress: logic.animation,
+            ),
           ),
         ],
       ),

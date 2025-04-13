@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class Modal extends StatelessWidget {
   final Animation<double> animation;
@@ -8,15 +9,15 @@ class Modal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
         return Visibility(
           visible: animation.value > 0,
           child: ModalBarrier(
-            color: colorScheme.surfaceContainer
-                .withValues(alpha: 0.6 * animation.value),
+            color: context.theme.colorScheme.surfaceContainer.withValues(
+              alpha: 0.6 * animation.value,
+            ),
             barrierSemanticsDismissible: false,
             onDismiss: onTap,
           ),

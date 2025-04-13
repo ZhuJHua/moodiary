@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/image.dart';
-import 'package:moodiary/main.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/pages/video/video_view.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
@@ -19,8 +20,6 @@ class MediaVideoComponent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
     // 将视频路径转换为缩略图路径
     final thumbnailList =
         videoList.map((e) {
@@ -39,14 +38,14 @@ class MediaVideoComponent extends StatelessWidget {
             children: [
               Text(
                 DateFormat.yMMMEd().format(dateTime),
-                style: textStyle.titleSmall?.copyWith(
-                  color: colorScheme.secondary,
+                style: context.textTheme.titleSmall?.copyWith(
+                  color: context.theme.colorScheme.secondary,
                 ),
               ),
               Text(
-                l10n.mediaVideoCount(videoList.length),
-                style: textStyle.labelMedium?.copyWith(
-                  color: colorScheme.tertiary,
+                context.l10n.mediaVideoCount(videoList.length),
+                style: context.textTheme.labelMedium?.copyWith(
+                  color: context.theme.colorScheme.tertiary,
                 ),
               ),
             ],

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:moodiary/components/tile/setting_tile.dart';
-import 'package:moodiary/main.dart';
+import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/utils/file_util.dart';
-import 'package:refreshed/refreshed.dart';
 
 import 'local_send_client_logic.dart';
 import 'local_send_client_state.dart';
@@ -19,20 +19,21 @@ class LocalSendClientComponent extends StatelessWidget {
     Widget buildSend() {
       if (state.isFindingServer) {
         return AdaptiveListTile(
-          title: l10n.lanTransferFindingServer,
+          title: context.l10n.lanTransferFindingServer,
           subtitle: LinearProgressIndicator(
             borderRadius: BorderRadius.circular(2.0),
           ),
         );
       } else if (state.serverIp == null) {
         return AdaptiveListTile(
-          title: l10n.lanTransferCantFindServer,
+          title: context.l10n.lanTransferCantFindServer,
           leading: const FaIcon(FontAwesomeIcons.triangleExclamation),
           trailing: FilledButton(
-              onPressed: () {
-                logic.restartFindServer();
-              },
-              child: const FaIcon(FontAwesomeIcons.repeat)),
+            onPressed: () {
+              logic.restartFindServer();
+            },
+            child: const FaIcon(FontAwesomeIcons.repeat),
+          ),
         );
       } else {
         return AdaptiveListTile(
@@ -52,27 +53,29 @@ class LocalSendClientComponent extends StatelessWidget {
       return Obx(() {
         return state.isSending.value
             ? ListTile(
-                title: Obx(() {
-                  return LinearProgressIndicator(
-                    value: state.progress.value,
-                    borderRadius: BorderRadius.circular(2.0),
-                  );
-                }),
-                subtitle: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Obx(() {
-                      return Text(
-                          '${state.sendCount.value} / ${state.diaryToSend.length}');
-                    }),
-                    Obx(() {
-                      final speed =
-                          FileUtil.bytesToUnits(state.speed.value.toInt());
-                      return Text('${speed['size']}${speed['unit']}/s');
-                    }),
-                  ],
-                ),
-              )
+              title: Obx(() {
+                return LinearProgressIndicator(
+                  value: state.progress.value,
+                  borderRadius: BorderRadius.circular(2.0),
+                );
+              }),
+              subtitle: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Obx(() {
+                    return Text(
+                      '${state.sendCount.value} / ${state.diaryToSend.length}',
+                    );
+                  }),
+                  Obx(() {
+                    final speed = FileUtil.bytesToUnits(
+                      state.speed.value.toInt(),
+                    );
+                    return Text('${speed['size']}${speed['unit']}/s');
+                  }),
+                ],
+              ),
+            )
             : const SizedBox.shrink();
       });
     }
@@ -80,61 +83,72 @@ class LocalSendClientComponent extends StatelessWidget {
     Widget buildSelect() {
       return Obx(() {
         return AdaptiveListTile(
-          title: l10n.lanTransferSelectDiary,
+          title: context.l10n.lanTransferSelectDiary,
           subtitle: Text(
-              '${l10n.lanTransferHasSelected} ${state.diaryToSend.length}'),
+            '${context.l10n.lanTransferHasSelected} ${state.diaryToSend.length}',
+          ),
           trailing: FilledButton(
-              onPressed: () {
-                showModalBottomSheet(
-                    context: context,
-                    showDragHandle: true,
-                    useSafeArea: true,
-                    builder: (context) {
-                      return Padding(
-                        padding: const EdgeInsets.all(32.0),
-                        child: Wrap(
-                          spacing: 8.0,
-                          children: [
-                            ActionChip(
-                              label: const Text('一天内'),
-                              onPressed: () async {
-                                await logic.setDiary(
-                                    const Duration(days: 1), context);
-                              },
-                            ),
-                            ActionChip(
-                              label: const Text('一周内'),
-                              onPressed: () async {
-                                await logic.setDiary(
-                                    const Duration(days: 7), context);
-                              },
-                            ),
-                            ActionChip(
-                              label: const Text('一个月内'),
-                              onPressed: () async {
-                                await logic.setDiary(
-                                    const Duration(days: 31), context);
-                              },
-                            ),
-                            ActionChip(
-                              label: const Text('三个月'),
-                              onPressed: () async {
-                                await logic.setDiary(
-                                    const Duration(days: 31), context);
-                              },
-                            ),
-                            ActionChip(
-                              label: const Text('全部'),
-                              onPressed: () async {
-                                await logic.setAllDiary(context);
-                              },
-                            ),
-                          ],
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                showDragHandle: true,
+                useSafeArea: true,
+                builder: (context) {
+                  return Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Wrap(
+                      spacing: 8.0,
+                      children: [
+                        ActionChip(
+                          label: const Text('一天内'),
+                          onPressed: () async {
+                            await logic.setDiary(
+                              const Duration(days: 1),
+                              context,
+                            );
+                          },
                         ),
-                      );
-                    });
-              },
-              child: const FaIcon(FontAwesomeIcons.fileCirclePlus)),
+                        ActionChip(
+                          label: const Text('一周内'),
+                          onPressed: () async {
+                            await logic.setDiary(
+                              const Duration(days: 7),
+                              context,
+                            );
+                          },
+                        ),
+                        ActionChip(
+                          label: const Text('一个月内'),
+                          onPressed: () async {
+                            await logic.setDiary(
+                              const Duration(days: 31),
+                              context,
+                            );
+                          },
+                        ),
+                        ActionChip(
+                          label: const Text('三个月'),
+                          onPressed: () async {
+                            await logic.setDiary(
+                              const Duration(days: 31),
+                              context,
+                            );
+                          },
+                        ),
+                        ActionChip(
+                          label: const Text('全部'),
+                          onPressed: () async {
+                            await logic.setAllDiary(context);
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+            child: const FaIcon(FontAwesomeIcons.fileCirclePlus),
+          ),
         );
       });
     }
@@ -142,9 +156,7 @@ class LocalSendClientComponent extends StatelessWidget {
     return GetBuilder<LocalSendClientLogic>(
       assignId: true,
       builder: (_) {
-        return Column(
-          children: [buildSelect(), buildSend(), buildProgress()],
-        );
+        return Column(children: [buildSelect(), buildSend(), buildProgress()]);
       },
     );
   }
