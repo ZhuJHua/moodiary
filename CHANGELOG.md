@@ -7,11 +7,16 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - *(zip)* Use rust to increase data export speed
+- *(widget)* Add utility functions to capture widget as image
 
 ### 🐛 Bug Fixes
 
 - *(share)* Fix capture and share methods
 - Remove workspace
+
+### 🚜 Refactor
+
+- Optimize the code structure
 
 ### 📚 Documentation
 
