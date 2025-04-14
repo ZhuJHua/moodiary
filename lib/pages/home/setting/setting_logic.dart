@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dartx/dartx.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:moodiary/components/dashboard/dashboard_logic.dart';
@@ -26,13 +25,12 @@ class SettingLogic extends GetxController {
   @override
   void onReady() {
     unawaited(getDataUsage());
-    unawaited(checkHasUserKey());
+    unawaited(checkUserKey());
     super.onReady();
   }
 
-  Future<void> checkHasUserKey() async {
-    state.hasUserKey.value =
-        (await SecureStorageUtil.getValue('userKey')) != null;
+  Future<void> checkUserKey() async {
+    state.userKey.value = (await SecureStorageUtil.getValue('userKey')) ?? '';
   }
 
   //获取当前占用储存空间
@@ -135,17 +133,23 @@ class SettingLogic extends GetxController {
     Bind.find<DiaryLogic>().updateTitle();
   }
 
-  Future<void> setUserKey({required String key}) async {
-    if (key.isNullOrBlank) {
-      toast.info(message: '密钥不能为空');
-      return;
+  Future<bool> setUserKey({required String key}) async {
+    try {
+      await SecureStorageUtil.setValue('userKey', key);
+      state.userKey.value = key;
+      return true;
+    } catch (e) {
+      return false;
     }
-    await SecureStorageUtil.setValue('userKey', key);
-    state.hasUserKey.value = true;
   }
 
-  Future<void> removeUserKey() async {
-    await SecureStorageUtil.remove('userKey');
-    state.hasUserKey.value = false;
+  Future<bool> removeUserKey() async {
+    try {
+      await SecureStorageUtil.remove('userKey');
+      state.userKey.value = '';
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

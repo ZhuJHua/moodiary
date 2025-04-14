@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/loading.dart';
-import 'package:moodiary/components/tile/setting_tile.dart';
+import 'package:moodiary/components/base/tile/setting_tile.dart';
 import 'package:moodiary/l10n/l10n.dart';
 
 import 'category_manager_logic.dart';

@@ -22,7 +22,7 @@ class SettingState {
 
   RxBool backendPrivacy = PrefUtil.getValue<bool>('backendPrivacy')!.obs;
 
-  RxBool hasUserKey = false.obs;
+  RxString userKey = ''.obs;
 
   Rx<Language> language =
       Language.values

@@ -90,4 +90,9 @@ class AboutLogic extends GetxController with GetSingleTickerProviderStateMixin {
   void toSponsor() {
     Get.toNamed(AppRoutes.sponsorPage);
   }
+
+  Future<void> toIcp() async {
+    final uri = Uri.parse('https://beian.miit.gov.cn/');
+    await launchUrl(uri, mode: LaunchMode.platformDefault);
+  }
 }

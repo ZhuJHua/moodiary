@@ -2,7 +2,7 @@
 // import 'package:flutter/material.dart';
 // import 'package:intl/intl.dart';
 // import 'package:moodiary/common/values/icons.dart';
-// import 'package:moodiary/components/tile/setting_tile.dart';
+// import 'package:moodiary/components/base/tile/setting_tile.dart';
 // import 'package:moodiary/main.dart';
 // import 'package:moodiary/utils/function_extensions.dart';
 // import 'package:get/get.dart';

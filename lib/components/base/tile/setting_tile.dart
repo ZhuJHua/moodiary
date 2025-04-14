@@ -40,6 +40,8 @@ class AdaptiveListTile extends StatelessWidget {
     this.isFirst,
     this.isLast,
     this.contentPadding,
+    this.tileColor,
+    this.shape,
   });
 
   final dynamic title;
@@ -57,6 +59,10 @@ class AdaptiveListTile extends StatelessWidget {
   final bool? isLast;
 
   final EdgeInsets? contentPadding;
+
+  final Color? tileColor;
+
+  final ShapeBorder? shape;
 
   @override
   Widget build(BuildContext context) {
@@ -77,16 +83,19 @@ class AdaptiveListTile extends StatelessWidget {
       realSubtitle = (subtitle as Text).data;
     }
     return ListTile(
+      tileColor: tileColor,
       title:
           (realTitle is String)
               ? AdaptiveText(realTitle, isTileTitle: true)
               : realTitle,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: isFirst == true ? const Radius.circular(12) : Radius.zero,
-          bottom: isLast == true ? const Radius.circular(12) : Radius.zero,
-        ),
-      ),
+      shape:
+          shape ??
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              top: isFirst == true ? const Radius.circular(12) : Radius.zero,
+              bottom: isLast == true ? const Radius.circular(12) : Radius.zero,
+            ),
+          ),
       contentPadding: contentPadding,
       subtitle:
           (realSubtitle is String)

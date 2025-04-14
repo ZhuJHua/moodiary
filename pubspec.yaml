@@ -122,6 +122,11 @@ dependencies:
   audioplayers_android_exo: 0.1.2
   scrollview_observer: 1.26.0
   flutter_smart_dialog: 4.9.8+7
+  substring_highlight: 1.0.33
+  qr_flutter: 4.1.0
+  mobile_scanner: 7.0.0-beta.9
+  throttling: 2.0.1
+  gap: 3.0.1
 
 dev_dependencies:
   flutter_test:

@@ -1753,6 +1753,84 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'加载中'**
   String get toastLoading;
+
+  /// No description provided for @genQrCodeError1.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先配置 {name}'**
+  String genQrCodeError1(Object name);
+
+  /// No description provided for @genQrCodeTooltip.
+  ///
+  /// In zh, this message translates to:
+  /// **'生成二维码'**
+  String get genQrCodeTooltip;
+
+  /// No description provided for @qrCodeInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'二维码无效'**
+  String get qrCodeInvalid;
+
+  /// No description provided for @inputTooltip.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入'**
+  String get inputTooltip;
+
+  /// No description provided for @inputMethodTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入方式'**
+  String get inputMethodTitle;
+
+  /// No description provided for @inputMethodScanQrCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'扫描二维码'**
+  String get inputMethodScanQrCode;
+
+  /// No description provided for @inputMethodHandelInput.
+  ///
+  /// In zh, this message translates to:
+  /// **'手动输入'**
+  String get inputMethodHandelInput;
+
+  /// No description provided for @getKeyFromConsole.
+  ///
+  /// In zh, this message translates to:
+  /// **'请从对应控制台获取密钥'**
+  String get getKeyFromConsole;
+
+  /// No description provided for @hasOption.
+  ///
+  /// In zh, this message translates to:
+  /// **'已配置'**
+  String get hasOption;
+
+  /// No description provided for @noOption.
+  ///
+  /// In zh, this message translates to:
+  /// **'未配置'**
+  String get noOption;
+
+  /// No description provided for @labQweather.
+  ///
+  /// In zh, this message translates to:
+  /// **'和风天气'**
+  String get labQweather;
+
+  /// No description provided for @labTianditu.
+  ///
+  /// In zh, this message translates to:
+  /// **'天地图'**
+  String get labTianditu;
+
+  /// No description provided for @labTencentCloud.
+  ///
+  /// In zh, this message translates to:
+  /// **'腾讯云'**
+  String get labTencentCloud;
 }
 
 class _AppLocalizationsDelegate

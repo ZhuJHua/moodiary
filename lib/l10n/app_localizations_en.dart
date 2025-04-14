@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -885,4 +884,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toastLoading => 'Loading';
+
+  @override
+  String genQrCodeError1(Object name) {
+    return 'Please configure $name first';
+  }
+
+  @override
+  String get genQrCodeTooltip => 'Generate QR code';
+
+  @override
+  String get qrCodeInvalid => 'QR code invalid';
+
+  @override
+  String get inputTooltip => 'Input';
+
+  @override
+  String get inputMethodTitle => 'Input method';
+
+  @override
+  String get inputMethodScanQrCode => 'Scan QR code';
+
+  @override
+  String get inputMethodHandelInput => 'Manual input';
+
+  @override
+  String get getKeyFromConsole =>
+      'Please get the key from the corresponding console';
+
+  @override
+  String get hasOption => 'Configured';
+
+  @override
+  String get noOption => 'Not configured';
+
+  @override
+  String get labQweather => 'Qweather';
+
+  @override
+  String get labTianditu => 'Tianditu';
+
+  @override
+  String get labTencentCloud => 'Tencent Cloud';
 }

@@ -1,7 +1,7 @@
-import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:gap/gap.dart';
 import 'package:get/get.dart';
+import 'package:moodiary/components/base/tile/qr_tile.dart';
 import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/notice_util.dart';
@@ -20,102 +20,71 @@ class LaboratoryPage extends StatelessWidget {
       body: GetBuilder<LaboratoryLogic>(
         builder: (_) {
           return ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
             children: [
-              ListTile(
-                title: const Text('腾讯云密钥'),
-                isThreeLine: true,
-                subtitle: SelectionArea(
-                  child: Text(
-                    'ID:${PrefUtil.getValue<String>('tencentId') ?? ''}\nKey:${PrefUtil.getValue<String>('tencentKey') ?? ''}',
-                  ),
-                ),
-                trailing: IconButton(
-                  onPressed: () async {
-                    final res = await showTextInputDialog(
-                      context: context,
-                      textFields: [
-                        DialogTextField(
-                          hintText: 'ID',
-                          initialText:
-                              PrefUtil.getValue<String>('tencentId') ?? '',
-                        ),
-                        DialogTextField(
-                          hintText: 'KEY',
-                          initialText:
-                              PrefUtil.getValue<String>('tencentKey') ?? '',
-                        ),
-                      ],
-                      title: '腾讯云密钥',
-                      message: '在腾讯云控制台获取密钥',
-                      style: AdaptiveStyle.material,
-                    );
-                    if (res != null) {
-                      logic.setTencentID(id: res[0], key: res[1]);
-                    }
-                  },
-                  icon: const FaIcon(FontAwesomeIcons.wrench),
-                ),
+              QrInputTile(
+                title: '${context.l10n.labTencentCloud} ID',
+                value: PrefUtil.getValue<String>('tencentId') ?? '',
+                prefix: 'tencentId',
+                onValue: (value) async {
+                  final res = await logic.setTencentID(id: value);
+                  if (res) {
+                    toast.success();
+                  } else {
+                    toast.error();
+                  }
+                },
               ),
-              ListTile(
-                title: const Text('和风天气密钥'),
-                subtitle: SelectionArea(
-                  child: Text(PrefUtil.getValue<String>('qweatherKey') ?? ''),
-                ),
-                trailing: IconButton(
-                  onPressed: () async {
-                    final res = await showTextInputDialog(
-                      context: context,
-                      style: AdaptiveStyle.material,
-                      title: '和风天气密钥',
-                      message: '在和风天气控制台获取密钥',
-                      textFields: [
-                        DialogTextField(
-                          hintText: 'KEY',
-                          initialText:
-                              PrefUtil.getValue<String>('qweatherKey') ?? '',
-                        ),
-                      ],
-                    );
-                    if (res != null) {
-                      logic.setQweatherKey(key: res[0]);
-                    }
-                  },
-                  icon: const FaIcon(FontAwesomeIcons.wrench),
-                ),
+              const Gap(12),
+              QrInputTile(
+                title: '${context.l10n.labTencentCloud} Key',
+                value: PrefUtil.getValue<String>('tencentKey') ?? '',
+                prefix: 'tencentKey',
+                onValue: (value) async {
+                  final res = await logic.setTencentKey(key: value);
+                  if (res) {
+                    toast.success();
+                  } else {
+                    toast.error();
+                  }
+                },
               ),
-              ListTile(
-                title: const Text('天地图密钥'),
-                subtitle: SelectionArea(
-                  child: Text(PrefUtil.getValue<String>('tiandituKey') ?? ''),
-                ),
-                trailing: IconButton(
-                  onPressed: () async {
-                    final res = await showTextInputDialog(
-                      context: context,
-                      textFields: [
-                        DialogTextField(
-                          hintText: 'KEY',
-                          initialText:
-                              PrefUtil.getValue<String>('tiandituKey') ?? '',
-                        ),
-                      ],
-                      title: '天地图密钥',
-                      message: '在天地图控制台获取密钥',
-                      style: AdaptiveStyle.material,
-                    );
-                    if (res != null) {
-                      logic.setTiandituKey(key: res[0]);
-                    }
-                  },
-                  icon: const FaIcon(FontAwesomeIcons.wrench),
-                ),
+              const Gap(12),
+              QrInputTile(
+                title: '${context.l10n.labQweather} Key',
+                value: PrefUtil.getValue<String>('qweatherKey') ?? '',
+                prefix: 'qweatherKey',
+                onValue: (value) async {
+                  final res = await logic.setQweatherKey(key: value);
+                  if (res) {
+                    toast.success();
+                  } else {
+                    toast.error();
+                  }
+                },
               ),
+              const Gap(12),
+              QrInputTile(
+                title: '${context.l10n.labTianditu} Key',
+                value: PrefUtil.getValue<String>('tiandituKey') ?? '',
+                prefix: 'tiandituKey',
+                onValue: (value) async {
+                  final res = await logic.setTiandituKey(key: value);
+                  if (res) {
+                    toast.success();
+                  } else {
+                    toast.error();
+                  }
+                },
+              ),
+              const Gap(12),
               ListTile(
-                onTap: () {
+                onTap: () async {
                   logic.exportErrorLog();
                 },
                 title: const Text('导出日志文件'),
               ),
+              const Gap(12),
               ListTile(
                 onTap: () async {
                   final res = await logic.aesTest();

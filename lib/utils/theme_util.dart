@@ -610,3 +610,25 @@ class ThemeUtil {
     );
   }
 }
+
+extension ColorExt on Color {
+  Brightness get brightness {
+    final double relativeLuminance = computeLuminance();
+
+    const double kThreshold = 0.15;
+    if ((relativeLuminance + 0.05) * (relativeLuminance + 0.05) > kThreshold) {
+      return Brightness.light;
+    }
+    return Brightness.dark;
+  }
+}
+
+extension ColorExt2 on BuildContext {
+  Color adaptiveColor(Color color) {
+    if (!isDarkMode) return color;
+
+    final hsl = HSLColor.fromColor(color);
+    final inverted = hsl.withLightness(1.0 - hsl.lightness);
+    return inverted.toColor();
+  }
+}

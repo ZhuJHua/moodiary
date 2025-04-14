@@ -20,6 +20,7 @@ class NoticeUtil {
       usePenetrate: true,
       displayTime: const Duration(seconds: 2),
       backType: SmartBackType.ignore,
+      debounce: true,
       maskColor: Colors.transparent,
       builder: (context) {
         return _build(
@@ -70,6 +71,7 @@ class NoticeUtil {
       maskColor: Colors.transparent,
       backType: SmartBackType.ignore,
       usePenetrate: true,
+      debounce: true,
       builder: (context) {
         return _build(
           context: context,
@@ -93,6 +95,7 @@ class NoticeUtil {
       usePenetrate: true,
       backType: SmartBackType.ignore,
       maskColor: Colors.transparent,
+      debounce: true,
       builder: (context) {
         return _build(
           context: context,

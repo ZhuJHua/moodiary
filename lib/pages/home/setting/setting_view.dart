@@ -1,4 +1,5 @@
 import 'package:adaptive_dialog/adaptive_dialog.dart';
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -8,14 +9,16 @@ import 'package:moodiary/common/values/language.dart';
 import 'package:moodiary/components/base/clipper.dart';
 import 'package:moodiary/components/base/sheet.dart';
 import 'package:moodiary/components/base/text.dart';
+import 'package:moodiary/components/base/tile/qr_tile.dart';
+import 'package:moodiary/components/base/tile/setting_tile.dart';
 import 'package:moodiary/components/color_sheet/color_sheet_view.dart';
 import 'package:moodiary/components/dashboard/dashboard_view.dart';
 import 'package:moodiary/components/language_dialog/language_dialog_view.dart';
 import 'package:moodiary/components/remove_password/remove_password_view.dart';
 import 'package:moodiary/components/set_password/set_password_view.dart';
 import 'package:moodiary/components/theme_mode_dialog/theme_mode_dialog_view.dart';
-import 'package:moodiary/components/tile/setting_tile.dart';
 import 'package:moodiary/l10n/l10n.dart';
+import 'package:moodiary/utils/notice_util.dart';
 
 import 'setting_logic.dart';
 
@@ -339,44 +342,55 @@ class SettingPage extends StatelessWidget {
                     );
                   },
                 ),
-                AdaptiveListTile(
-                  title: context.l10n.settingUserKey,
-                  subtitle: context.l10n.settingUserKeyDes,
-                  onTap: () async {
-                    if (state.hasUserKey.value) {
-                      final res = await showOkCancelAlertDialog(
-                        context: context,
-                        title: context.l10n.settingUserKeyReset,
-                        message: context.l10n.settingUserKeyResetDes,
-                      );
-                      if (res == OkCancelResult.ok) {
-                        logic.removeUserKey();
+                Obx(() {
+                  return QrInputTile(
+                    title: context.l10n.settingUserKey,
+                    value: state.userKey.value,
+                    prefix: 'userKey',
+                    onValue: (value) async {
+                      final res = await logic.setUserKey(key: value);
+                      if (res) {
+                        toast.success();
+                      } else {
+                        toast.error();
                       }
-                      return;
-                    } else {
-                      final res = await showTextInputDialog(
-                        title: context.l10n.settingUserKeySet,
-                        message: context.l10n.settingUserKeySetDes,
-                        context: context,
-                        textFields: [const DialogTextField()],
-                      );
-                      if (res != null) {
-                        logic.setUserKey(key: res.first);
+                    },
+                    onInput: () async {
+                      if (state.userKey.value.isNotNullOrBlank) {
+                        final res = await showOkCancelAlertDialog(
+                          context: context,
+                          title: context.l10n.settingUserKeyReset,
+                          message: context.l10n.settingUserKeyResetDes,
+                        );
+                        if (res == OkCancelResult.ok) {
+                          final res_ = await logic.removeUserKey();
+                          if (res_) {
+                            toast.success();
+                          } else {
+                            toast.error();
+                          }
+                        }
+                        return;
+                      } else {
+                        final res = await showTextInputDialog(
+                          title: context.l10n.settingUserKeySet,
+                          message: context.l10n.settingUserKeySetDes,
+                          context: context,
+                          textFields: [const DialogTextField()],
+                        );
+                        if (res != null) {
+                          final res_ = await logic.setUserKey(key: res.first);
+                          if (res_) {
+                            toast.success();
+                          } else {
+                            toast.error();
+                          }
+                        }
                       }
-                    }
-                  },
-                  trailing: Obx(() {
-                    return Text(
-                      state.hasUserKey.value
-                          ? context.l10n.settingUserKeyHasSet
-                          : context.l10n.settingUserKeyNotSet,
-                      style: context.textTheme.bodySmall!.copyWith(
-                        color: context.theme.colorScheme.primary,
-                      ),
-                    );
-                  }),
-                  leading: const Icon(Icons.key_rounded),
-                ),
+                    },
+                    leading: const Icon(Icons.key_rounded),
+                  );
+                }),
                 GetBuilder<SettingLogic>(
                   id: 'Lock',
                   builder: (_) {

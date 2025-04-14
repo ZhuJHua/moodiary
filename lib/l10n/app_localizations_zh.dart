@@ -852,4 +852,45 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get toastLoading => '加载中';
+
+  @override
+  String genQrCodeError1(Object name) {
+    return '请先配置 $name';
+  }
+
+  @override
+  String get genQrCodeTooltip => '生成二维码';
+
+  @override
+  String get qrCodeInvalid => '二维码无效';
+
+  @override
+  String get inputTooltip => '输入';
+
+  @override
+  String get inputMethodTitle => '输入方式';
+
+  @override
+  String get inputMethodScanQrCode => '扫描二维码';
+
+  @override
+  String get inputMethodHandelInput => '手动输入';
+
+  @override
+  String get getKeyFromConsole => '请从对应控制台获取密钥';
+
+  @override
+  String get hasOption => '已配置';
+
+  @override
+  String get noOption => '未配置';
+
+  @override
+  String get labQweather => '和风天气';
+
+  @override
+  String get labTianditu => '天地图';
+
+  @override
+  String get labTencentCloud => '腾讯云';
 }

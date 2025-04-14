@@ -32,6 +32,7 @@ PODS:
     - Flutter
     - FlutterMacOS
   - geolocator_apple (1.2.0):
+    - Flutter
     - FlutterMacOS
   - isar_flutter_libs (1.0.0):
     - FlutterMacOS
@@ -42,11 +43,10 @@ PODS:
     - FlutterMacOS
   - macos_window_utils (1.0.0):
     - FlutterMacOS
-  - media_kit_libs_macos_video (1.0.4):
-    - FlutterMacOS
-  - media_kit_native_event_loop (1.0.0):
-    - FlutterMacOS
   - media_kit_video (0.0.1):
+    - FlutterMacOS
+  - mobile_scanner (7.0.0):
+    - Flutter
     - FlutterMacOS
   - moodiary_rust (0.0.1):
     - FlutterMacOS
@@ -60,11 +60,7 @@ PODS:
     - FlutterMacOS
   - quill_native_bridge_macos (0.0.1):
     - FlutterMacOS
-  - record_darwin (1.0.0):
-    - FlutterMacOS
-  - rive_common (0.0.1):
-    - FlutterMacOS
-  - screen_brightness_macos (0.1.0):
+  - record_macos (1.0.0):
     - FlutterMacOS
   - share_plus (0.0.1):
     - FlutterMacOS
@@ -80,6 +76,8 @@ PODS:
     - FlutterMacOS
   - video_player_avfoundation (0.0.1):
     - Flutter
+    - FlutterMacOS
+  - volume_controller (0.0.1):
     - FlutterMacOS
   - wakelock_plus (0.0.1):
     - FlutterMacOS
@@ -100,28 +98,26 @@ DEPENDENCIES:
   - flutter_secure_storage_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_macos/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - gal (from `Flutter/ephemeral/.symlinks/plugins/gal/darwin`)
-  - geolocator_apple (from `Flutter/ephemeral/.symlinks/plugins/geolocator_apple/macos`)
+  - geolocator_apple (from `Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin`)
   - isar_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/isar_flutter_libs/macos`)
   - local_auth_darwin (from `Flutter/ephemeral/.symlinks/plugins/local_auth_darwin/darwin`)
   - macos_ui (from `Flutter/ephemeral/.symlinks/plugins/macos_ui/macos`)
   - macos_window_utils (from `Flutter/ephemeral/.symlinks/plugins/macos_window_utils/macos`)
-  - media_kit_libs_macos_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_libs_macos_video/macos`)
-  - media_kit_native_event_loop (from `Flutter/ephemeral/.symlinks/plugins/media_kit_native_event_loop/macos`)
   - media_kit_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos`)
+  - mobile_scanner (from `Flutter/ephemeral/.symlinks/plugins/mobile_scanner/darwin`)
   - moodiary_rust (from `Flutter/ephemeral/.symlinks/plugins/moodiary_rust/macos`)
   - network_info_plus (from `Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
   - quill_native_bridge_macos (from `Flutter/ephemeral/.symlinks/plugins/quill_native_bridge_macos/macos`)
-  - record_darwin (from `Flutter/ephemeral/.symlinks/plugins/record_darwin/macos`)
-  - rive_common (from `Flutter/ephemeral/.symlinks/plugins/rive_common/macos`)
-  - screen_brightness_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_brightness_macos/macos`)
+  - record_macos (from `Flutter/ephemeral/.symlinks/plugins/record_macos/macos`)
   - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin`)
   - tflite_flutter (from `Flutter/ephemeral/.symlinks/plugins/tflite_flutter/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
   - video_player_avfoundation (from `Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin`)
+  - volume_controller (from `Flutter/ephemeral/.symlinks/plugins/volume_controller/macos`)
   - wakelock_plus (from `Flutter/ephemeral/.symlinks/plugins/wakelock_plus/macos`)
 
 SPEC REPOS:
@@ -160,7 +156,7 @@ EXTERNAL SOURCES:
   gal:
     :path: Flutter/ephemeral/.symlinks/plugins/gal/darwin
   geolocator_apple:
-    :path: Flutter/ephemeral/.symlinks/plugins/geolocator_apple/macos
+    :path: Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin
   isar_flutter_libs:
     :path: Flutter/ephemeral/.symlinks/plugins/isar_flutter_libs/macos
   local_auth_darwin:
@@ -169,12 +165,10 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/macos_ui/macos
   macos_window_utils:
     :path: Flutter/ephemeral/.symlinks/plugins/macos_window_utils/macos
-  media_kit_libs_macos_video:
-    :path: Flutter/ephemeral/.symlinks/plugins/media_kit_libs_macos_video/macos
-  media_kit_native_event_loop:
-    :path: Flutter/ephemeral/.symlinks/plugins/media_kit_native_event_loop/macos
   media_kit_video:
     :path: Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos
+  mobile_scanner:
+    :path: Flutter/ephemeral/.symlinks/plugins/mobile_scanner/darwin
   moodiary_rust:
     :path: Flutter/ephemeral/.symlinks/plugins/moodiary_rust/macos
   network_info_plus:
@@ -185,12 +179,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
   quill_native_bridge_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/quill_native_bridge_macos/macos
-  record_darwin:
-    :path: Flutter/ephemeral/.symlinks/plugins/record_darwin/macos
-  rive_common:
-    :path: Flutter/ephemeral/.symlinks/plugins/rive_common/macos
-  screen_brightness_macos:
-    :path: Flutter/ephemeral/.symlinks/plugins/screen_brightness_macos/macos
+  record_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/record_macos/macos
   share_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/share_plus/macos
   shared_preferences_foundation:
@@ -203,6 +193,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
   video_player_avfoundation:
     :path: Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin
+  volume_controller:
+    :path: Flutter/ephemeral/.symlinks/plugins/volume_controller/macos
   wakelock_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/wakelock_plus/macos
 
@@ -222,29 +214,27 @@ SPEC CHECKSUMS:
   flutter_secure_storage_macos: 7f45e30f838cf2659862a4e4e3ee1c347c2b3b54
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   gal: baecd024ebfd13c441269ca7404792a7152fde89
-  geolocator_apple: ccfb79d5250de3a295f5093cd03e76aa8836a416
+  geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
   isar_flutter_libs: a65381780401f81ad6bf3f2e7cd0de5698fb98c4
   local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
   macos_ui: 2047a8e6536a80491ef10684c53ca500e04f1bcf
   macos_window_utils: 3bca8603c2a1cf2257351dfe6bbccc9accf739fd
-  media_kit_libs_macos_video: 85a23e549b5f480e72cae3e5634b5514bc692f65
-  media_kit_native_event_loop: a80d071c835c612fd80173e79390a50ec409f1b1
-  media_kit_video: fa6564e3799a0a28bff39442334817088b7ca758
+  media_kit_video: 28d7d27611c7769a2464eb7621c37386a61dcc9a
+  mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   moodiary_rust: 2f0ea7e60816f68d22e387a10b460860168eced5
   network_info_plus: 21d1cd6a015ccb2fdff06a1fbfa88d54b4e92f61
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
   package_info_plus: f0052d280d17aa382b932f399edf32507174e870
   path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   quill_native_bridge_macos: 2b005cb56902bb740e0cd9620aa399dfac6b4882
-  record_darwin: 30509266ae213af8afdb09a8ae7467cb64c1377e
-  rive_common: ea79040f86acf053a2d5a75a2506175ee39796a5
-  screen_brightness_macos: 2a3ee243f8051c340381e8e51bcedced8360f421
+  record_macos: 295d70bd5fb47145df78df7b80e6697cd18403c0
   share_plus: 510bf0af1a42cd602274b4629920c9649c52f4cc
   shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
   tflite_flutter: d1496f2e968aa5a142fb282da8f5d754fcee5613
   url_launcher_macos: 0fba8ddabfc33ce0a9afe7c5fef5aab3d8d2d673
   video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
+  volume_controller: 5c068e6d085c80dadd33fc2c918d2114b775b3dd
   wakelock_plus: 21ddc249ac4b8d018838dbdabd65c5976c308497
 
 PODFILE CHECKSUM: b5ff078e9cf81bae88fdc8e0ce3668e57b68e9b6

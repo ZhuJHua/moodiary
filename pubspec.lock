@@ -1226,6 +1226,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.1"
+  gap:
+    dependency: "direct main"
+    description:
+      name: gap
+      sha256: f19387d4e32f849394758b91377f9153a1b41d79513ef7668c088c77dbc6955d
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.1"
   geolocator:
     dependency: "direct main"
     description:
@@ -1779,6 +1787,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.5.7"
+  mobile_scanner:
+    dependency: "direct main"
+    description:
+      name: mobile_scanner
+      sha256: "8676156e140c315068cf9b74ceb42b11b239a4895b00914d1d2ca056f70bc917"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.0.0-beta.9"
   modal_bottom_sheet:
     dependency: "direct main"
     description:
@@ -2090,6 +2106,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.0"
+  qr:
+    dependency: transitive
+    description:
+      name: qr
+      sha256: "5a1d2586170e172b8a8c8470bbbffd5eb0cd38a66c0d77155ea138d3af3a4445"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.2"
+  qr_flutter:
+    dependency: "direct main"
+    description:
+      name: qr_flutter
+      sha256: "5095f0fc6e3f71d08adef8feccc8cea4f12eec18a2e31c2e8d82cb6019f4b097"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.1.0"
   quill_native_bridge:
     dependency: transitive
     description:
@@ -2575,6 +2607,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  substring_highlight:
+    dependency: "direct main"
+    description:
+      name: substring_highlight
+      sha256: "96c61e8316098831f6bee87d2386617e4be6aaf87fbc89402dc049d371b67efb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.33"
   supabase:
     dependency: transitive
     description:
@@ -2639,6 +2679,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.11.0"
+  throttling:
+    dependency: "direct main"
+    description:
+      name: throttling
+      sha256: e48a4c681b1838b8bf99c1a4f822efe43bb69132f9a56091cd5b7d931c862255
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   time:
     dependency: transitive
     description:

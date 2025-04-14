@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/webdav.dart';
-import 'package:moodiary/components/tile/setting_tile.dart';
+import 'package:moodiary/components/base/tile/setting_tile.dart';
 import 'package:moodiary/l10n/l10n.dart';
 
 import 'web_dav_logic.dart';
