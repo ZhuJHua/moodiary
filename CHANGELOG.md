@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - *(zip)* Use rust to increase data export speed
 - *(widget)* Add utility functions to capture widget as image
+- Add code scanning to import support
 
 ### 🐛 Bug Fixes
 
