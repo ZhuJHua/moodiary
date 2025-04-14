@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:moodiary/components/base/button.dart';
+import 'package:moodiary/components/base/expand_tap_area.dart';
 import 'package:moodiary/components/base/text.dart';
-import 'package:moodiary/components/tile/setting_tile.dart';
+import 'package:moodiary/components/base/tile/setting_tile.dart';
 import 'package:moodiary/gen/assets.gen.dart';
 import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/utils/update_util.dart';
@@ -91,6 +92,57 @@ class AboutPage extends StatelessWidget {
       );
     }
 
+    Widget buildInfo() {
+      return Column(
+        spacing: 16.0,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: 4.0,
+            children: [
+              const FaIcon(
+                FontAwesomeIcons.flutter,
+                size: 16,
+                color: Colors.lightBlue,
+              ),
+              const SizedBox(height: 12, child: VerticalDivider(thickness: 2)),
+              FaIcon(
+                FontAwesomeIcons.dartLang,
+                size: 16,
+                color: context.theme.colorScheme.onSurface.withValues(
+                  alpha: 0.8,
+                ),
+              ),
+              const SizedBox(height: 12, child: VerticalDivider(thickness: 2)),
+              FaIcon(
+                FontAwesomeIcons.rust,
+                size: 16,
+                color: context.theme.colorScheme.onSurface.withValues(
+                  alpha: 0.8,
+                ),
+              ),
+              const SizedBox(height: 12, child: VerticalDivider(thickness: 2)),
+              const FaIcon(
+                FontAwesomeIcons.solidHeart,
+                size: 16,
+                color: Colors.pinkAccent,
+              ),
+            ],
+          ),
+          ExpandTapWidget(
+            tapPadding: const EdgeInsets.all(4.0),
+            onTap: logic.toIcp,
+            child: Text(
+              '赣ICP备2022010939号-4A',
+              style: context.textTheme.labelMedium?.copyWith(
+                color: context.theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Stack(
       children: [
         Scaffold(
@@ -98,114 +150,76 @@ class AboutPage extends StatelessWidget {
             title: Text(context.l10n.aboutTitle),
             leading: const PageBackButton(),
           ),
-          body: ListView(
-            padding: const EdgeInsets.all(16.0),
-            physics: const ClampingScrollPhysics(),
-            children: [
-              buildLogoTitle(),
-              const SizedBox(height: 16.0),
-              Card.outlined(
-                color: context.theme.colorScheme.surfaceContainerLow,
-                child: Column(
-                  children: [
-                    AdaptiveListTile(
-                      leading: const Icon(Icons.update_rounded),
-                      title: Text(context.l10n.aboutUpdate),
-                      isFirst: true,
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () async {
-                        await UpdateUtil.checkShouldUpdate(
-                          state.appVersion,
-                          handle: true,
-                        );
-                      },
-                    ),
-                    AdaptiveListTile(
-                      leading: const Icon(Icons.source_rounded),
-                      title: Text(context.l10n.aboutSource),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () async {
-                        await logic.toSource();
-                      },
-                    ),
-                    AdaptiveListTile(
-                      leading: const Icon(Icons.file_copy_rounded),
-                      title: Text(context.l10n.aboutUserAgreement),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () {
-                        logic.toAgreement();
-                      },
-                    ),
-                    AdaptiveListTile(
-                      leading: const Icon(Icons.privacy_tip_rounded),
-                      title: Text(context.l10n.aboutPrivacyPolicy),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () {
-                        logic.toPrivacy();
-                      },
-                    ),
-                    AdaptiveListTile(
-                      leading: const Icon(Icons.bug_report_rounded),
-                      title: Text(context.l10n.aboutBugReport),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () async {
-                        await logic.toReportPage();
-                      },
-                    ),
-                    AdaptiveListTile(
-                      leading: const Icon(Icons.attach_money_rounded),
-                      title: Text(context.l10n.aboutDonate),
-                      isLast: true,
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: logic.toSponsor,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: 4.0,
+          body: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                spacing: 32.0,
                 children: [
-                  const FaIcon(
-                    FontAwesomeIcons.flutter,
-                    size: 16,
-                    color: Colors.lightBlue,
-                  ),
-                  const SizedBox(
-                    height: 12,
-                    child: VerticalDivider(thickness: 2),
-                  ),
-                  FaIcon(
-                    FontAwesomeIcons.dartLang,
-                    size: 16,
-                    color: context.theme.colorScheme.onSurface.withValues(
-                      alpha: 0.8,
+                  buildLogoTitle(),
+                  Card.outlined(
+                    color: context.theme.colorScheme.surfaceContainerLow,
+                    child: Column(
+                      children: [
+                        AdaptiveListTile(
+                          leading: const Icon(Icons.update_rounded),
+                          title: Text(context.l10n.aboutUpdate),
+                          isFirst: true,
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () async {
+                            await UpdateUtil.checkShouldUpdate(
+                              state.appVersion,
+                              handle: true,
+                            );
+                          },
+                        ),
+                        AdaptiveListTile(
+                          leading: const Icon(Icons.source_rounded),
+                          title: Text(context.l10n.aboutSource),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () async {
+                            await logic.toSource();
+                          },
+                        ),
+                        AdaptiveListTile(
+                          leading: const Icon(Icons.file_copy_rounded),
+                          title: Text(context.l10n.aboutUserAgreement),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () {
+                            logic.toAgreement();
+                          },
+                        ),
+                        AdaptiveListTile(
+                          leading: const Icon(Icons.privacy_tip_rounded),
+                          title: Text(context.l10n.aboutPrivacyPolicy),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () {
+                            logic.toPrivacy();
+                          },
+                        ),
+                        AdaptiveListTile(
+                          leading: const Icon(Icons.bug_report_rounded),
+                          title: Text(context.l10n.aboutBugReport),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () async {
+                            await logic.toReportPage();
+                          },
+                        ),
+                        AdaptiveListTile(
+                          leading: const Icon(Icons.attach_money_rounded),
+                          title: Text(context.l10n.aboutDonate),
+                          isLast: true,
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: logic.toSponsor,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(
-                    height: 12,
-                    child: VerticalDivider(thickness: 2),
-                  ),
-                  FaIcon(
-                    FontAwesomeIcons.rust,
-                    size: 16,
-                    color: context.theme.colorScheme.onSurface.withValues(
-                      alpha: 0.8,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                    child: VerticalDivider(thickness: 2),
-                  ),
-                  const FaIcon(
-                    FontAwesomeIcons.solidHeart,
-                    size: 16,
-                    color: Colors.pinkAccent,
-                  ),
+                  buildInfo(),
                 ],
               ),
-            ],
+            ),
           ),
         ),
         Align(

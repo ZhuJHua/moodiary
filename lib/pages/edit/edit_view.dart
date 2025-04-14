@@ -15,6 +15,7 @@ import 'package:moodiary/common/values/colors.dart';
 import 'package:moodiary/common/values/diary_type.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/sheet.dart';
+import 'package:moodiary/components/base/tile/setting_tile.dart';
 import 'package:moodiary/components/category_add/category_add_view.dart';
 import 'package:moodiary/components/expand_button/expand_button_view.dart';
 import 'package:moodiary/components/lottie_modal/lottie_modal.dart';
@@ -26,7 +27,6 @@ import 'package:moodiary/components/quill_embed/image_embed.dart';
 import 'package:moodiary/components/quill_embed/text_indent.dart';
 import 'package:moodiary/components/quill_embed/video_embed.dart';
 import 'package:moodiary/components/record_sheet/record_sheet_view.dart';
-import 'package:moodiary/components/tile/setting_tile.dart';
 import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/utils/theme_util.dart';
 

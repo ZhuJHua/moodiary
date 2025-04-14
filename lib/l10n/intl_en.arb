@@ -275,5 +275,18 @@
   "mediaVideoCount": "{count, plural, =1 {# Video} other {# Videos}}",
   "toastSuccess": "Success",
   "toastError": "Error",
-  "toastLoading": "Loading"
+  "toastLoading": "Loading",
+  "genQrCodeError1": "Please configure {name} first",
+  "genQrCodeTooltip": "Generate QR code",
+  "qrCodeInvalid": "QR code invalid",
+  "inputTooltip": "Input",
+  "inputMethodTitle": "Input method",
+  "inputMethodScanQrCode": "Scan QR code",
+  "inputMethodHandelInput": "Manual input",
+  "getKeyFromConsole": "Please get the key from the corresponding console",
+  "hasOption": "Configured",
+  "noOption": "Not configured",
+  "labQweather": "Qweather",
+  "labTianditu": "Tianditu",
+  "labTencentCloud": "Tencent Cloud"
 }

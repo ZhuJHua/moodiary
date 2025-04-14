@@ -6,7 +6,7 @@ import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/components/base/button.dart';
 import 'package:moodiary/components/base/loading.dart';
 import 'package:moodiary/components/base/text.dart';
-import 'package:moodiary/components/tile/setting_tile.dart';
+import 'package:moodiary/components/base/tile/setting_tile.dart';
 import 'package:moodiary/l10n/l10n.dart';
 
 import 'font_logic.dart';

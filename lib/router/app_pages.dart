@@ -207,6 +207,52 @@ class MoodiaryGetPage extends GetPage {
        );
 }
 
+class MoodiaryFadeInPageRoute<T> extends PageRoute<T>
+    with MaterialRouteTransitionMixin<T> {
+  MoodiaryFadeInPageRoute({
+    required this.builder,
+    super.settings,
+    super.requestFocus,
+    this.maintainState = true,
+    super.fullscreenDialog,
+    super.allowSnapshotting = true,
+    super.barrierDismissible = false,
+  }) {
+    assert(opaque);
+  }
+
+  final WidgetBuilder builder;
+
+  @override
+  Widget buildContent(BuildContext context) {
+    final body = PageAdaptiveBackground(
+      isHome: settings.name == AppRoutes.homePage,
+      child: builder(context),
+    );
+    if (Platform.isAndroid || Platform.isIOS) {
+      return body;
+    } else {
+      return Column(children: [const WindowsBar(), Expanded(child: body)]);
+    }
+  }
+
+  @override
+  final bool maintainState;
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return FadeTransition(opacity: animation, child: child);
+  }
+
+  @override
+  String get debugLabel => '${super.debugLabel}(${settings.name})';
+}
+
 class _MoodiaryPageTransition implements CustomTransition {
   final bool? useFade;
 

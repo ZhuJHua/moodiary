@@ -9,20 +9,48 @@ import 'package:moodiary/utils/notice_util.dart';
 import 'package:share_plus/share_plus.dart';
 
 class LaboratoryLogic extends GetxController {
-  Future<void> setTencentID({required String id, required String key}) async {
-    await PrefUtil.setValue<String>('tencentId', id);
-    await PrefUtil.setValue<String>('tencentKey', key);
-    update();
+  Future<bool> setTencentID({required String id}) async {
+    try {
+      await PrefUtil.setValue<String>('tencentId', id);
+      return true;
+    } catch (e) {
+      return false;
+    } finally {
+      update();
+    }
   }
 
-  Future<void> setQweatherKey({required String key}) async {
-    await PrefUtil.setValue<String>('qweatherKey', key);
-    update();
+  Future<bool> setTencentKey({required String key}) async {
+    try {
+      await PrefUtil.setValue<String>('tencentKey', key);
+      return true;
+    } catch (e) {
+      return false;
+    } finally {
+      update();
+    }
   }
 
-  Future<void> setTiandituKey({required String key}) async {
-    await PrefUtil.setValue<String>('tiandituKey', key);
-    update();
+  Future<bool> setQweatherKey({required String key}) async {
+    try {
+      await PrefUtil.setValue<String>('qweatherKey', key);
+      return true;
+    } catch (e) {
+      return false;
+    } finally {
+      update();
+    }
+  }
+
+  Future<bool> setTiandituKey({required String key}) async {
+    try {
+      await PrefUtil.setValue<String>('tiandituKey', key);
+      return true;
+    } catch (e) {
+      return false;
+    } finally {
+      update();
+    }
   }
 
   Future<void> exportErrorLog() async {

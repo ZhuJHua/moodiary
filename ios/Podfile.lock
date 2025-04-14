@@ -95,6 +95,9 @@ PODS:
   - Mantle/extobjc (2.2.0)
   - media_kit_video (0.0.1):
     - Flutter
+  - mobile_scanner (7.0.0):
+    - Flutter
+    - FlutterMacOS
   - moodiary_rust (0.0.1):
     - Flutter
   - network_info_plus (0.0.1):
@@ -178,6 +181,7 @@ DEPENDENCIES:
   - isar_flutter_libs (from `.symlinks/plugins/isar_flutter_libs/ios`)
   - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
   - media_kit_video (from `.symlinks/plugins/media_kit_video/ios`)
+  - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
   - moodiary_rust (from `.symlinks/plugins/moodiary_rust/ios`)
   - network_info_plus (from `.symlinks/plugins/network_info_plus/ios`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
@@ -246,6 +250,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/local_auth_darwin/darwin"
   media_kit_video:
     :path: ".symlinks/plugins/media_kit_video/ios"
+  mobile_scanner:
+    :path: ".symlinks/plugins/mobile_scanner/darwin"
   moodiary_rust:
     :path: ".symlinks/plugins/moodiary_rust/ios"
   network_info_plus:
@@ -301,6 +307,7 @@ SPEC CHECKSUMS:
   local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
   Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
   media_kit_video: f3b0d035d89def15cfbbcf7dc2ae278f201e2f83
+  mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   moodiary_rust: e75b3fb63e53d3ba5cfed0edf0b6df5f98c4c5f1
   network_info_plus: cf61925ab5205dce05a4f0895989afdb6aade5fc
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94

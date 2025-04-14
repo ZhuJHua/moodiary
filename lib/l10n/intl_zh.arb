@@ -275,5 +275,18 @@
   "mediaVideoCount": "{count} 段视频",
   "toastSuccess": "成功",
   "toastError": "出错了",
-  "toastLoading": "加载中"
+  "toastLoading": "加载中",
+  "genQrCodeError1": "请先配置 {name}",
+  "genQrCodeTooltip": "生成二维码",
+  "qrCodeInvalid": "二维码无效",
+  "inputTooltip": "输入",
+  "inputMethodTitle": "输入方式",
+  "inputMethodScanQrCode": "扫描二维码",
+  "inputMethodHandelInput": "手动输入",
+  "getKeyFromConsole": "请从对应控制台获取密钥",
+  "hasOption": "已配置",
+  "noOption": "未配置",
+  "labQweather": "和风天气",
+  "labTianditu": "天地图",
+  "labTencentCloud": "腾讯云"
 }
