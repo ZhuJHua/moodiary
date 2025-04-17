@@ -15,6 +15,12 @@ class ImageLogic extends GetxController {
   @override
   void onInit() {
     pageController = PageController(initialPage: state.imageIndex.value);
+    pageController.addListener(() {
+      final index = pageController.page?.round() ?? 0;
+      if (state.imageIndex.value != index) {
+        state.imageIndex.value = index;
+      }
+    });
     super.onInit();
   }
 

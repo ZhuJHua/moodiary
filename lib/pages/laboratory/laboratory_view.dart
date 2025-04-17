@@ -96,6 +96,18 @@ class LaboratoryPage extends StatelessWidget {
                 },
                 title: const Text('加密测试'),
               ),
+              const Gap(12),
+              ListTile(
+                onTap: () async {
+                  final res = await logic.clearImageThumbnail();
+                  if (res) {
+                    toast.success(message: '清理成功');
+                  } else {
+                    toast.error(message: '清理失败');
+                  }
+                },
+                title: const Text('清理图片缩略图缓存'),
+              ),
             ],
           );
         },

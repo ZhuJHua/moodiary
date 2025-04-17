@@ -1,7 +1,7 @@
 name: moodiary
 description: "A fully open source cross-platform diary app written by flutter and rust."
 publish_to: 'none'
-version: 2.7.3+73
+version: 2.7.3+74
 
 environment:
   sdk: '>=3.7.0'
@@ -19,7 +19,7 @@ dependencies:
   logger: 2.5.0
   flutter_drawing_board: 0.9.8
   flutter_displaymode: 0.6.0
-  fl_chart: 0.70.2
+  fl_chart: 0.71.0
   file_picker: 10.1.2
   local_auth: 2.3.0
   local_auth_android: 1.0.48
@@ -35,14 +35,13 @@ dependencies:
   crypto: 3.0.6
   markdown_widget: 2.3.2+6
   flutter_colorpicker: 1.1.0
-  geolocator: 13.0.4
+  geolocator: 14.0.0
   shared_preferences: 2.5.3
   isar: 4.0.0-dev.14
   isar_flutter_libs:
     git:
       url: https://github.com/ZhuJHua/isar
       path: packages/isar_flutter_libs
-  fluttertoast: 8.2.12
   cached_network_image: 3.4.1
   audioplayers: 6.4.0
   record: 6.0.0
@@ -76,7 +75,7 @@ dependencies:
   encrypt: 5.0.3
   faker: 2.2.0
   flutter_rust_bridge: 2.9.0
-  syncfusion_flutter_sliders: 29.1.37
+  syncfusion_flutter_sliders: 29.1.38
   flutter_quill_extensions: 11.0.0
   connectivity_plus: 6.1.3
   image_picker_android: 0.8.12+22
@@ -99,8 +98,7 @@ dependencies:
   moodiary_rust:
     path: rust_builder
   modal_bottom_sheet: 3.0.0
-  sheet: 1.0.0
-  tutorial_coach_mark: 1.2.13
+  tutorial_coach_mark: 1.3.0
   adaptive_dialog: 2.4.1
   flutter_inappwebview: 6.1.5
   markdown: 7.3.0
@@ -127,6 +125,10 @@ dependencies:
   mobile_scanner: 7.0.0-beta.9
   throttling: 2.0.1
   gap: 3.0.1
+  flutter_cache_manager: 3.4.1
+  hive_ce: 2.10.1
+  hive_ce_flutter: 2.2.0
+  flutter_modular: 6.3.4
 
 dev_dependencies:
   flutter_test:

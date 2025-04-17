@@ -33,7 +33,7 @@ class WebDavUtil {
 
   factory WebDavUtil() => _instance;
 
-  Future<void> initWebDav() async {
+  void initWebDav() {
     final webDavOption = options;
     if (webDavOption.isEmpty) {
       _client = null;
@@ -104,7 +104,7 @@ class WebDavUtil {
     required String password,
   }) async {
     await PrefUtil.setValue('webDavOption', [baseUrl, username, password]);
-    await initWebDav();
+    initWebDav();
   }
 
   Future<void> removeWebDavOption() async {

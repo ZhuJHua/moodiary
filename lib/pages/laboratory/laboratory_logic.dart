@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:get/get.dart';
 import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/aes_util.dart';
+import 'package:moodiary/utils/cache_util.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:share_plus/share_plus.dart';
@@ -74,5 +75,14 @@ class LaboratoryLogic extends GetxController {
     final encrypted = await AesUtil.encrypt(key: key, data: 'Hello World');
     final decrypted = await AesUtil.decrypt(key: key, encryptedData: encrypted);
     return decrypted == 'Hello World';
+  }
+
+  Future<bool> clearImageThumbnail() async {
+    try {
+      await ImageCacheUtil().clearImageCache();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

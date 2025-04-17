@@ -53,7 +53,7 @@ class MediaImageComponent extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           itemBuilder: (context, index) {
-            final image = ThumbnailImage(
+            final image = MoodiaryImage(
               imagePath: imageList[index],
               size: 120,
               heroTag: '$heroPrefix$index',
@@ -66,17 +66,7 @@ class MediaImageComponent extends StatelessWidget {
                 );
               },
             );
-            return GestureDetector(
-              onTap: () async {
-                await showImageView(
-                  context,
-                  imageList,
-                  index,
-                  heroTagPrefix: heroPrefix,
-                );
-              },
-              child: image,
-            );
+            return image;
           },
           itemCount: imageList.length,
         ),

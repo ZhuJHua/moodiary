@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:flutter/material.dart';
@@ -13,12 +14,41 @@ import 'package:moodiary/common/values/media_type.dart';
 import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/src/rust/api/compress.dart';
 import 'package:moodiary/src/rust/api/constants.dart' as r_type;
+import 'package:moodiary/utils/cache_util.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/log_util.dart';
 import 'package:moodiary/utils/lru.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:path/path.dart';
 import 'package:uuid/uuid.dart';
+
+enum ImageFormat {
+  jpeg(extension: '.jpg'),
+  png(extension: '.png'),
+  heic(extension: '.heic'),
+  webp(extension: '.webp');
+
+  final String extension;
+
+  const ImageFormat({required this.extension});
+
+  static ImageFormat getImageFormat(String imagePath) {
+    final mimeType = lookupMimeType(imagePath);
+    if (mimeType == null) return ImageFormat.png;
+    switch (mimeType) {
+      case 'image/jpeg':
+        return ImageFormat.jpeg;
+      case 'image/png':
+        return ImageFormat.png;
+      case 'image/heic':
+        return ImageFormat.heic;
+      case 'image/webp':
+        return ImageFormat.webp;
+      default:
+        return ImageFormat.png;
+    }
+  }
+}
 
 class MediaUtil {
   static final _picker = ImagePicker();
@@ -37,14 +67,6 @@ class MediaUtil {
     }
   }
 
-  // 定义 MIME 类型到扩展名和压缩格式的映射
-  static final _compressConfig = {
-    'image/jpeg': ['.jpg', r_type.CompressFormat.jpeg],
-    'image/png': ['.png', r_type.CompressFormat.png],
-    'image/heic': ['.heic', CompressFormat.heic],
-    'image/webp': ['.webp', r_type.CompressFormat.webP],
-  };
-
   /// 保存图片
   /// 返回值：
   /// key：XFile 文件的临时目录
@@ -59,15 +81,10 @@ class MediaUtil {
           imageNameMap[imageFile.path] = basename(imageFile.path);
           return;
         }
-        final mimeType =
-            lookupMimeType(imageFile.path) ?? 'image/png'; // 默认使用 PNG
-        final config =
-            _compressConfig[mimeType] ?? ['.png', r_type.CompressFormat.png];
-        final extension = config[0] as String;
-        final format = config[1];
-        final imageName = 'image-${const Uuid().v7()}$extension';
+        final imageFormat = ImageFormat.getImageFormat(imageFile.path);
+        final imageName = 'image-${const Uuid().v7()}${imageFormat.extension}';
         final outputPath = FileUtil.getRealPath('image', imageName);
-        await _compressImage(imageFile, outputPath, format);
+        await compressAndSaveImage(imageFile, outputPath, imageFormat);
         imageNameMap[imageFile.path] = imageName;
       }),
     );
@@ -114,19 +131,8 @@ class MediaUtil {
         // 保存视频文件
         await videoFile.saveTo(FileUtil.getRealPath('video', videoName));
         // 获取缩略图
-        final tempThumbnailPath = FileUtil.getCachePath(
-          '${const Uuid().v7()}.jpeg',
-        );
+        final tempThumbnailPath = FileUtil.getRealPath('thumbnail', videoName);
         await _getVideoThumbnail(videoFile, tempThumbnailPath);
-        // 压缩缩略图并保存
-        final compressedPath = FileUtil.getRealPath('thumbnail', videoName);
-        await _compressRust(
-          XFile(tempThumbnailPath),
-          compressedPath,
-          r_type.CompressFormat.jpeg,
-        );
-        // 清理临时文件
-        await File(tempThumbnailPath).delete();
       }),
     );
 
@@ -154,23 +160,8 @@ class MediaUtil {
         logger.d("Thumbnail missing for $videoName. Regenerating...");
 
         try {
-          // 生成临时缩略图路径
-          final tempThumbnailPath = FileUtil.getCachePath(
-            '${const Uuid().v7()}.jpeg',
-          );
-
           // 获取视频缩略图
-          await _getVideoThumbnail(XFile(videoFile.path), tempThumbnailPath);
-
-          // 压缩并保存缩略图
-          await _compressRust(
-            XFile(tempThumbnailPath),
-            thumbnailPath,
-            r_type.CompressFormat.jpeg,
-          );
-
-          // 删除临时文件
-          await File(tempThumbnailPath).delete();
+          await _getVideoThumbnail(XFile(videoFile.path), thumbnailPath);
 
           logger.d("Thumbnail regenerated for $videoName.");
         } catch (e) {
@@ -209,13 +200,24 @@ class MediaUtil {
 
     final completer = Completer<double>();
     final imageStream = imageProvider.resolve(const ImageConfiguration());
+
     imageStream.addListener(
-      ImageStreamListener((ImageInfo info, bool _) async {
-        final aspectRatio = info.image.width / info.image.height;
-        await _imageAspectRatioCache.put(key, aspectRatio);
-        completer.complete(aspectRatio);
-      }),
+      ImageStreamListener(
+        (ImageInfo info, bool _) async {
+          final aspectRatio = info.image.width / info.image.height;
+          await _imageAspectRatioCache.put(key, aspectRatio);
+          if (!completer.isCompleted) {
+            completer.complete(aspectRatio);
+          }
+        },
+        onError: (Object error, StackTrace? stackTrace) {
+          if (!completer.isCompleted) {
+            completer.completeError(error, stackTrace);
+          }
+        },
+      ),
     );
+
     return completer.future;
   }
 
@@ -256,72 +258,144 @@ class MediaUtil {
   }
 
   // 通用压缩逻辑
-  static Future<void> _compressImage(
+  static Future<Uint8List?> compressImageData({
+    required String imagePath,
+    ImageFormat? imageFormat,
+    int? size,
+    double? imageAspectRatio,
+  }) async {
+    final imageFormat_ = imageFormat ?? ImageFormat.getImageFormat(imagePath);
+    return await switch (imageFormat_) {
+      ImageFormat.jpeg => _compressRust(
+        imagePath,
+        r_type.CompressFormat.jpeg,
+        size: size,
+        imageAspectRatio: imageAspectRatio,
+      ),
+      ImageFormat.png => _compressRust(
+        imagePath,
+        r_type.CompressFormat.png,
+        size: size,
+        imageAspectRatio: imageAspectRatio,
+      ),
+      ImageFormat.heic => _compressNative(
+        imagePath,
+        CompressFormat.heic,
+        size: size,
+        imageAspectRatio: imageAspectRatio,
+      ),
+      ImageFormat.webp => _compressRust(
+        imagePath,
+        r_type.CompressFormat.webP,
+        size: size,
+        imageAspectRatio: imageAspectRatio,
+      ),
+    };
+  }
+
+  /// 压缩图片并保存到指定路径
+  static Future<void> compressAndSaveImage(
     XFile imageFile,
     String outputPath,
-    dynamic format,
+    ImageFormat imageFormat,
   ) async {
-    // 如果选择了原图，则直接复制文件
     if (PrefUtil.getValue<int>('quality') == 3) {
       await imageFile.saveTo(outputPath);
       return;
     }
-    if (format == CompressFormat.heic) {
-      await _compressNative(imageFile, outputPath, format);
+    final newImage = await compressImageData(
+      imagePath: imageFile.path,
+      imageFormat: imageFormat,
+    );
+    if (newImage != null) {
+      await File(outputPath).writeAsBytes(newImage);
     } else {
-      await _compressRust(imageFile, outputPath, format);
+      await imageFile.saveTo(outputPath);
     }
   }
 
-  static Future<void> _compressRust(
-    XFile oldImage,
-    String targetPath,
-    r_type.CompressFormat format,
-  ) async {
-    final quality = switch (PrefUtil.getValue<int>('quality')) {
-      0 => 720,
-      1 => 1080,
-      2 => 1440,
-      _ => 1080,
-    };
-    final oldPath = oldImage.path;
-    final newImage = await ImageCompress.contain(
-      filePath: oldPath,
-      maxWidth: quality,
-      maxHeight: quality,
-      compressFormat: format,
-    );
-    await File(targetPath).writeAsBytes(newImage);
+  static Future<Uint8List?> _compressRust(
+    String imagePath,
+    r_type.CompressFormat format, {
+    int? size,
+    double? imageAspectRatio,
+  }) async {
+    final imageSize =
+        size ??
+        switch (PrefUtil.getValue<int>('quality')) {
+          0 => 720,
+          1 => 1080,
+          2 => 1440,
+          _ => 1080,
+        };
+    final oldPath = imagePath;
+    Uint8List? newImage;
+    try {
+      final imageAspect =
+          imageAspectRatio ??
+          await ImageCacheUtil().getImageAspectRatioWithCache(
+            imagePath: imagePath,
+          );
+
+      /// 计算新的宽高
+      /// 对于横图，高度为 size，宽度按比例缩放
+      /// 对于竖图，宽度为 size，高度按比例缩放
+      final width =
+          imageAspect < 1.0 ? imageSize : (imageSize * imageAspect).ceil();
+      final height =
+          imageAspect >= 1.0 ? imageSize : (imageSize / imageAspect).ceil();
+      newImage = await ImageCompress.containWithOptions(
+        filePath: oldPath,
+        targetHeight: height,
+        targetWidth: width,
+        compressFormat: format,
+      );
+    } catch (e) {
+      logger.d('Image compression failed: $e');
+      newImage = null;
+    }
+    return newImage;
   }
 
   //图片压缩
-  static Future<void> _compressNative(
-    XFile oldImage,
-    String targetPath,
-    CompressFormat format,
-  ) async {
+  static Future<Uint8List?> _compressNative(
+    String imagePath,
+    CompressFormat format, {
+    int? size,
+    double? imageAspectRatio,
+  }) async {
     if (Platform.isWindows) {
-      oldImage.saveTo(targetPath);
-      return;
+      return null;
     }
     final quality = PrefUtil.getValue<int>('quality');
-    final height = switch (quality) {
-      0 => 720,
-      1 => 1080,
-      2 => 1440,
-      _ => 1080,
-    };
+    final imageSize =
+        size ??
+        switch (quality) {
+          0 => 720,
+          1 => 1080,
+          2 => 1440,
+          _ => 1080,
+        };
+    final imageAspect =
+        imageAspectRatio ??
+        await ImageCacheUtil().getImageAspectRatioWithCache(
+          imagePath: imagePath,
+        );
+
+    /// 计算新的宽高
+    /// 对于横图，宽度为 size，高度按比例缩放
+    /// 对于竖图，高度为 size，宽度按比例缩放
+    final width =
+        imageAspect < 1.0 ? imageSize : (imageSize * imageAspect).ceil();
+    final height =
+        imageAspect >= 1.0 ? imageSize : (imageSize / imageAspect).ceil();
     final newImage = await FlutterImageCompress.compressWithFile(
-      oldImage.path,
+      imagePath,
       minHeight: height,
-      minWidth: height,
+      minWidth: width,
       format: format,
     );
-    if (newImage == null) {
-      oldImage.saveTo(targetPath);
-      return;
-    }
-    await File(targetPath).writeAsBytes(newImage);
+    return newImage;
   }
 
   //获取视频缩略图

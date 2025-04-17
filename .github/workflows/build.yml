@@ -38,6 +38,13 @@ jobs:
         with:
           flutter-version: ${{ env.flutter-version }}
 
+      - name: Set Up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+
       - name: Install Dependencies
         run: flutter pub get
 

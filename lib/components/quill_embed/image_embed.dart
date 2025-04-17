@@ -1,8 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:moodiary/common/values/border.dart';
+import 'package:moodiary/components/base/image.dart';
 import 'package:moodiary/pages/image/image_view.dart';
 import 'package:moodiary/utils/file_util.dart';
 
@@ -35,31 +34,28 @@ class ImageEmbedBuilder extends EmbedBuilder {
         isEdit
             ? imageEmbed.name
             : FileUtil.getRealPath('image', imageEmbed.name);
+    final image = MoodiaryImage(
+      imagePath: imagePath,
+      size: 300,
+      heroTag: '${imageEmbed.name}0',
+      borderRadius: AppBorderRadius.mediumBorderRadius,
+      showBorder: true,
+      padding: const EdgeInsets.all(8.0),
+      onTap: () {
+        if (!isEdit) {
+          showImageView(
+            context,
+            [imagePath],
+            0,
+            heroTagPrefix: imageEmbed.name,
+          );
+        }
+      },
+    );
     return Center(
-      child: GestureDetector(
-        onTap: () {
-          if (!isEdit) {
-            showImageView(
-              context,
-              [imagePath],
-              0,
-              heroTagPrefix: imageEmbed.name,
-            );
-          }
-        },
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 300),
-          child: Card.outlined(
-            color: Colors.transparent,
-            child: Hero(
-              tag: '${imageEmbed.name}0',
-              child: ClipRRect(
-                borderRadius: AppBorderRadius.mediumBorderRadius,
-                child: Image.file(File(imagePath)),
-              ),
-            ),
-          ),
-        ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 300),
+        child: image,
       ),
     );
   }
