@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - *(zip)* Use rust to increase data export speed
 - *(widget)* Add utility functions to capture widget as image
 - Add code scanning to import support
+- Optimize image processing capabilities
 
 ### 🐛 Bug Fixes
 
@@ -28,6 +29,8 @@ All notable changes to this project will be documented in this file.
 - Fix build
 - *(ci)* Remove redundant dependency installation for Rust builder
 - Remove custom_lint to fix dart analyzer slow
+- Update rust test ci
+- Add test module to lib.rs
 
 ## [2.7.3] - 2025-03-02
 
