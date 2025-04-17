@@ -16,3 +16,7 @@ analyzer:
     - "**/*.gr.dart"
     - "**/*.mocks.dart"
     - "rust_builder/**"
+    - "ios/**"
+    - "android/**"
+    - "windows/**"
+    - "macos/**"
