@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -7,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/diary_type.dart';
+import 'package:moodiary/components/base/image.dart';
 import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/diary_card/basic_card_logic.dart';
 import 'package:moodiary/utils/file_util.dart';
@@ -18,33 +17,23 @@ class CalendarDiaryCardComponent extends StatelessWidget with BasicCardLogic {
 
   @override
   Widget build(BuildContext context) {
-    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
-
     Widget buildImage() {
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          spacing: 4.0,
+          spacing: 8.0,
           children: List.generate(diary.imageName.length, (index) {
             return SizedBox(
-              height: 100,
               width: 100,
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: ResizeImage(
-                      FileImage(
-                        File(
-                          FileUtil.getRealPath('image', diary.imageName[index]),
-                        ),
-                      ),
-                      width: (100 * pixelRatio).toInt(),
-                    ),
-                    fit: BoxFit.cover,
-                  ),
-                  border: Border.all(color: context.theme.colorScheme.outline),
-                  borderRadius: AppBorderRadius.smallBorderRadius,
+              height: 100,
+              child: MoodiaryImage(
+                imagePath: FileUtil.getRealPath(
+                  'image',
+                  diary.imageName[index],
                 ),
+                borderRadius: AppBorderRadius.smallBorderRadius,
+                showBorder: true,
+                size: 100,
               ),
             );
           }),

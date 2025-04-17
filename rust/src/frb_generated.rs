@@ -42,7 +42,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.9.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1427840433;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 199828844;
 
 // Section: executor
 
@@ -230,7 +230,7 @@ fn wire__crate__api__font__FontReader_get_wght_axis_from_vf_font_impl(
         },
     )
 }
-fn wire__crate__api__compress__ImageCompress_contain_impl(
+fn wire__crate__api__compress__ImageCompress_contain_with_options_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -238,7 +238,7 @@ fn wire__crate__api__compress__ImageCompress_contain_impl(
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "ImageCompress_contain",
+            debug_name: "ImageCompress_contain_with_options",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -255,16 +255,24 @@ fn wire__crate__api__compress__ImageCompress_contain_impl(
             let api_file_path = <String>::sse_decode(&mut deserializer);
             let api_compress_format =
                 <Option<crate::api::constants::CompressFormat>>::sse_decode(&mut deserializer);
-            let api_max_width = <Option<i32>>::sse_decode(&mut deserializer);
-            let api_max_height = <Option<i32>>::sse_decode(&mut deserializer);
+            let api_target_width = <Option<u32>>::sse_decode(&mut deserializer);
+            let api_target_height = <Option<u32>>::sse_decode(&mut deserializer);
+            let api_min_width = <Option<u32>>::sse_decode(&mut deserializer);
+            let api_min_height = <Option<u32>>::sse_decode(&mut deserializer);
+            let api_max_width = <Option<u32>>::sse_decode(&mut deserializer);
+            let api_max_height = <Option<u32>>::sse_decode(&mut deserializer);
             let api_quality = <Option<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
-                        let output_ok = crate::api::compress::ImageCompress::contain(
+                        let output_ok = crate::api::compress::ImageCompress::contain_with_options(
                             api_file_path,
                             api_compress_format,
+                            api_target_width,
+                            api_target_height,
+                            api_min_width,
+                            api_min_height,
                             api_max_width,
                             api_max_height,
                             api_quality,
@@ -1013,11 +1021,11 @@ impl SseDecode for Option<crate::api::constants::CompressFormat> {
     }
 }
 
-impl SseDecode for Option<i32> {
+impl SseDecode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
-            return Some(<i32>::sse_decode(deserializer));
+            return Some(<u32>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -1112,7 +1120,7 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        6 => wire__crate__api__compress__ImageCompress_contain_impl(
+        6 => wire__crate__api__compress__ImageCompress_contain_with_options_impl(
             port,
             ptr,
             rust_vec_len,
@@ -1493,12 +1501,12 @@ impl SseEncode for Option<crate::api::constants::CompressFormat> {
     }
 }
 
-impl SseEncode for Option<i32> {
+impl SseEncode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
-            <i32>::sse_encode(value, serializer);
+            <u32>::sse_encode(value, serializer);
         }
     }
 }

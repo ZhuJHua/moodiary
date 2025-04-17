@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -7,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/border.dart';
 import 'package:moodiary/common/values/diary_type.dart';
+import 'package:moodiary/components/base/image.dart';
 import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/diary_card/basic_card_logic.dart';
 import 'package:moodiary/utils/file_util.dart';
@@ -18,22 +17,15 @@ class GirdDiaryCardComponent extends StatelessWidget with BasicCardLogic {
 
   @override
   Widget build(BuildContext context) {
-    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
-
     Widget buildImage() {
-      return Container(
-        height: 154.0,
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: ResizeImage(
-              FileImage(
-                File(FileUtil.getRealPath('image', diary.imageName.first)),
-              ),
-              width: (250 * pixelRatio).toInt(),
-            ),
-            fit: BoxFit.cover,
-          ),
+      return SizedBox(
+        height: 154,
+        child: ClipRRect(
           borderRadius: AppBorderRadius.mediumBorderRadius,
+          child: MoodiaryImage(
+            imagePath: FileUtil.getRealPath('image', diary.imageName.first),
+            size: 250,
+          ),
         ),
       );
     }

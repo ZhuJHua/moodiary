@@ -16,7 +16,7 @@ import 'api/kmp.dart';
 import 'api/zip.dart';
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
-    if (dart.library.js_interop) 'frb_generated.webated.dart';
+if (dart.library.js_interop) 'frb_generated.webated.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -69,7 +69,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.9.0';
 
   @override
-  int get rustContentHash => 1427840433;
+  int get rustContentHash => 199828844;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -103,9 +103,13 @@ abstract class RustLibApi extends BaseApi {
     required String ttfFilePath,
   });
 
-  Future<Uint8List> crateApiCompressImageCompressContain({
+  Future<Uint8List> crateApiCompressImageCompressContainWithOptions({
     required String filePath,
     CompressFormat? compressFormat,
+    int? targetWidth,
+    int? targetHeight,
+    int? minWidth,
+    int? minHeight,
     int? maxWidth,
     int? maxHeight,
     int? quality,
@@ -389,9 +393,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<Uint8List> crateApiCompressImageCompressContain({
+  Future<Uint8List> crateApiCompressImageCompressContainWithOptions({
     required String filePath,
     CompressFormat? compressFormat,
+    int? targetWidth,
+    int? targetHeight,
+    int? minWidth,
+    int? minHeight,
     int? maxWidth,
     int? maxHeight,
     int? quality,
@@ -405,8 +413,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             compressFormat,
             serializer,
           );
-          sse_encode_opt_box_autoadd_i_32(maxWidth, serializer);
-          sse_encode_opt_box_autoadd_i_32(maxHeight, serializer);
+          sse_encode_opt_box_autoadd_u_32(targetWidth, serializer);
+          sse_encode_opt_box_autoadd_u_32(targetHeight, serializer);
+          sse_encode_opt_box_autoadd_u_32(minWidth, serializer);
+          sse_encode_opt_box_autoadd_u_32(minHeight, serializer);
+          sse_encode_opt_box_autoadd_u_32(maxWidth, serializer);
+          sse_encode_opt_box_autoadd_u_32(maxHeight, serializer);
           sse_encode_opt_box_autoadd_u_8(quality, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
@@ -419,19 +431,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_list_prim_u_8_strict,
           decodeErrorData: sse_decode_AnyhowException,
         ),
-        constMeta: kCrateApiCompressImageCompressContainConstMeta,
-        argValues: [filePath, compressFormat, maxWidth, maxHeight, quality],
+        constMeta: kCrateApiCompressImageCompressContainWithOptionsConstMeta,
+        argValues: [
+          filePath,
+          compressFormat,
+          targetWidth,
+          targetHeight,
+          minWidth,
+          minHeight,
+          maxWidth,
+          maxHeight,
+          quality,
+        ],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiCompressImageCompressContainConstMeta =>
+  TaskConstMeta get kCrateApiCompressImageCompressContainWithOptionsConstMeta =>
       const TaskConstMeta(
-        debugName: "ImageCompress_contain",
+        debugName: "ImageCompress_contain_with_options",
         argNames: [
           "filePath",
           "compressFormat",
+          "targetWidth",
+          "targetHeight",
+          "minWidth",
+          "minHeight",
           "maxWidth",
           "maxHeight",
           "quality",
@@ -994,7 +1020,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int dco_decode_box_autoadd_i_32(dynamic raw) {
+  int dco_decode_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
   }
@@ -1078,9 +1104,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int? dco_decode_opt_box_autoadd_i_32(dynamic raw) {
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_box_autoadd_i_32(raw);
+    return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
   }
 
   @protected
@@ -1337,9 +1363,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_box_autoadd_i_32(SseDeserializer deserializer) {
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_i_32(deserializer));
+    return (sse_decode_u_32(deserializer));
   }
 
   @protected
@@ -1465,11 +1491,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer) {
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_i_32(deserializer));
+      return (sse_decode_box_autoadd_u_32(deserializer));
     } else {
       return null;
     }
@@ -1757,9 +1783,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer) {
+  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self, serializer);
+    sse_encode_u_32(self, serializer);
   }
 
   @protected
@@ -1887,12 +1913,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer) {
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     sse_encode_bool(self != null, serializer);
     if (self != null) {
-      sse_encode_box_autoadd_i_32(self, serializer);
+      sse_encode_box_autoadd_u_32(self, serializer);
     }
   }
 

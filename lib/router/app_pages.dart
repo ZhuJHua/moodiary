@@ -213,7 +213,7 @@ class MoodiaryFadeInPageRoute<T> extends PageRoute<T>
     required this.builder,
     super.settings,
     super.requestFocus,
-    this.maintainState = true,
+    this.maintainState = false,
     super.fullscreenDialog,
     super.allowSnapshotting = true,
     super.barrierDismissible = false,

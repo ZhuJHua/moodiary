@@ -9,6 +9,7 @@ import '../frb_generated.dart';
 import 'constants.dart';
 
 // These functions are ignored because they are not marked as `pub`: `calculate_target_dimensions`, `load_image`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ResizeOptions`
 
 Future<Uint8List> compress({
   required DynamicImage img,
@@ -29,15 +30,23 @@ abstract class DynamicImage implements RustOpaqueInterface {}
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompress>>
 abstract class ImageCompress implements RustOpaqueInterface {
-  static Future<Uint8List> contain({
+  static Future<Uint8List> containWithOptions({
     required String filePath,
     CompressFormat? compressFormat,
+    int? targetWidth,
+    int? targetHeight,
+    int? minWidth,
+    int? minHeight,
     int? maxWidth,
     int? maxHeight,
     int? quality,
-  }) => RustLib.instance.api.crateApiCompressImageCompressContain(
+  }) => RustLib.instance.api.crateApiCompressImageCompressContainWithOptions(
     filePath: filePath,
     compressFormat: compressFormat,
+    targetWidth: targetWidth,
+    targetHeight: targetHeight,
+    minWidth: minWidth,
+    minHeight: minHeight,
     maxWidth: maxWidth,
     maxHeight: maxHeight,
     quality: quality,

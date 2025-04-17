@@ -66,7 +66,6 @@ pub fn compress(
         }
     }
 
-    // 返回压缩结果
     Ok(result_buf.into_inner()?)
 }
 
@@ -74,11 +73,15 @@ pub fn compress(
 pub struct ImageCompress;
 
 impl ImageCompress {
-    pub fn contain(
+    pub fn contain_with_options(
         file_path: String,
         compress_format: Option<CompressFormat>,
-        max_width: Option<i32>,
-        max_height: Option<i32>,
+        target_width: Option<u32>,
+        target_height: Option<u32>,
+        min_width: Option<u32>,
+        min_height: Option<u32>,
+        max_width: Option<u32>,
+        max_height: Option<u32>,
         quality: Option<u8>,
     ) -> Result<Vec<u8>> {
         let src_img = Self::load_image(&file_path)?;
@@ -89,11 +92,50 @@ impl ImageCompress {
         let (dst_width, dst_height) = Self::calculate_target_dimensions(
             img_width,
             img_height,
-            max_width.unwrap_or(1024) as u32,
-            max_height.unwrap_or(1024) as u32,
+            &ResizeOptions {
+                target_width,
+                target_height,
+                min_width,
+                min_height,
+                max_width,
+                max_height,
+            },
         );
 
         compress(&src_img, dst_height, dst_width, compress_format, quality)
+    }
+
+    fn calculate_target_dimensions(
+        img_width: u32,
+        img_height: u32,
+        options: &ResizeOptions,
+    ) -> (u32, u32) {
+        if let (Some(w), Some(h)) = (options.target_width, options.target_height) {
+            return (w, h);
+        }
+
+        let aspect_ratio = img_width as f64 / img_height as f64;
+
+        if let Some(min_w) = options.min_width {
+            let ratio = min_w as f64 / img_width as f64;
+            return (min_w, (img_height as f64 * ratio).round() as u32);
+        }
+
+        if let Some(min_h) = options.min_height {
+            let ratio = min_h as f64 / img_height as f64;
+            return ((img_width as f64 * ratio).round() as u32, min_h);
+        }
+
+        let max_width = options.max_width.unwrap_or(1024);
+        let max_height = options.max_height.unwrap_or(1024);
+
+        if aspect_ratio > 1.0 {
+            let ratio = max_height as f64 / img_height as f64;
+            ((img_width as f64 * ratio).round() as u32, max_height)
+        } else {
+            let ratio = max_width as f64 / img_width as f64;
+            (max_width, (img_height as f64 * ratio).round() as u32)
+        }
     }
 
     fn load_image(file_path: &str) -> Result<DynamicImage> {
@@ -102,28 +144,12 @@ impl ImageCompress {
             .decode()
             .map_err(|e| anyhow::anyhow!("Failed to decode image: {}", e))
     }
-
-    fn calculate_target_dimensions(
-        img_width: u32,
-        img_height: u32,
-        max_width: u32,
-        max_height: u32,
-    ) -> (u32, u32) {
-        // 确保浮点计算
-        let aspect_ratio = img_width as f64 / img_height as f64;
-
-        if aspect_ratio > 1.0 {
-            // 横图，根据 max_height 缩放
-            let ratio = max_height as f64 / img_height as f64;
-            let dst_width = (img_width as f64 * ratio).round() as u32;
-            let dst_height = max_height;
-            (dst_width, dst_height)
-        } else {
-            // 竖图，根据 max_width 缩放
-            let ratio = max_width as f64 / img_width as f64;
-            let dst_width = max_width;
-            let dst_height = (img_height as f64 * ratio).round() as u32;
-            (dst_width, dst_height)
-        }
-    }
+}
+pub struct ResizeOptions {
+    pub target_width: Option<u32>,
+    pub target_height: Option<u32>,
+    pub min_width: Option<u32>,
+    pub min_height: Option<u32>,
+    pub max_width: Option<u32>,
+    pub max_height: Option<u32>,
 }

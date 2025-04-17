@@ -18,6 +18,7 @@ import 'package:moodiary/components/window_buttons/window_buttons.dart';
 import 'package:moodiary/config/env.dart';
 import 'package:moodiary/l10n/app_localizations.dart';
 import 'package:moodiary/l10n/l10n.dart';
+import 'package:moodiary/persistence/hive.dart';
 import 'package:moodiary/persistence/isar.dart';
 import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/router/app_pages.dart';
@@ -31,11 +32,12 @@ import 'package:video_player_media_kit/video_player_media_kit.dart';
 
 Future<void> _initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await RustLib.init();
   await PrefUtil.initPref();
   await IsarUtil.initIsar();
-  await ThemeUtil().buildTheme();
-  await WebDavUtil().initWebDav();
+  await HiveUtil().init();
+  unawaited(RustLib.init());
+  unawaited(_platFormOption());
+  WebDavUtil().initWebDav();
   VideoPlayerMediaKit.ensureInitialized(windows: true);
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
@@ -44,7 +46,7 @@ Future<void> _initSystem() async {
       systemNavigationBarContrastEnforced: false,
     ),
   );
-  await _platFormOption();
+  await ThemeUtil().buildTheme();
 }
 
 Future<Locale> _findLanguage() async {

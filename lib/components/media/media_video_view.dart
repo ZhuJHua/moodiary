@@ -61,31 +61,29 @@ class MediaVideoComponent extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () async {
-                await showVideoView(
-                  context,
-                  videoList,
-                  index,
-                  heroTagPrefix: '$heroPrefix$index',
-                );
-              },
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: ThumbnailImage(
-                      imagePath: thumbnailList[index],
-                      heroTag: '$heroPrefix$index',
-                      size: 120,
-                    ),
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: MoodiaryImage(
+                    imagePath: thumbnailList[index],
+                    heroTag: '$heroPrefix$index',
+                    onTap: () async {
+                      await showVideoView(
+                        context,
+                        videoList,
+                        index,
+                        heroTagPrefix: '$heroPrefix$index',
+                      );
+                    },
+                    size: 120,
                   ),
-                  const FrostedGlassButton(
-                    size: 32,
-                    child: Center(child: Icon(Icons.play_arrow_rounded)),
-                  ),
-                ],
-              ),
+                ),
+                const FrostedGlassButton(
+                  size: 32,
+                  child: Center(child: Icon(Icons.play_arrow_rounded)),
+                ),
+              ],
             );
           },
           itemCount: thumbnailList.length,

@@ -19,11 +19,11 @@ class LogUtil {
   );
 
   void e(message, {required Object error, StackTrace? stackTrace}) {
-    _logger.e(message, error: error, stackTrace: stackTrace);
+    if (kDebugMode) _logger.e(message, error: error, stackTrace: stackTrace);
   }
 
   void f(message, {required Object error, StackTrace? stackTrace}) {
-    _logger.f(message, error: error, stackTrace: stackTrace);
+    if (kDebugMode) _logger.f(message, error: error, stackTrace: stackTrace);
   }
 
   void i(message) {
