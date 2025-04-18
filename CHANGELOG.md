@@ -10,11 +10,13 @@ All notable changes to this project will be documented in this file.
 - *(widget)* Add utility functions to capture widget as image
 - Add code scanning to import support
 - Optimize image processing capabilities
+- Integrate Jieba for keyword extraction and search optimization
 
 ### 🐛 Bug Fixes
 
 - *(share)* Fix capture and share methods
 - Remove workspace
+- Qweather api error
 
 ### 🚜 Refactor
 
