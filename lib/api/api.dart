@@ -36,7 +36,7 @@ class Api {
     //请求正文
     final body = {
       'Model': hunyuanModel,
-      'Messages': messages.map((value) => value.toMap()).toList(),
+      'Messages': messages.map((value) => value.toJson()).toList(),
       'Stream': true,
     };
 
@@ -49,15 +49,15 @@ class Api {
     );
     //构造请求头
     final header = PublicHeader(
-      'ChatCompletions',
-      timestamp ~/ 1000,
-      '2023-09-01',
-      authorization,
+      action: 'ChatCompletions',
+      timestamp: timestamp ~/ 1000,
+      version: '2023-09-01',
+      authorization: authorization,
     );
     //发起请求
     return await HttpUtil().postStream(
       'https://hunyuan.tencentcloudapi.com',
-      header: header.toMap(),
+      header: header.toJson(),
       data: body,
     );
   }
@@ -97,7 +97,7 @@ class Api {
         'lang': local,
       };
       final res = await HttpUtil().get(
-        'https://geoapi.qweather.com/v2/city/lookup',
+        'https://${PrefUtil.getValue<String>('qweatherApiHost')}/geo/v2/city/lookup',
         parameters: parameters,
       );
       final geo = await compute(
@@ -131,7 +131,7 @@ class Api {
       'lang': local,
     };
     final res = await HttpUtil().get(
-      'https://devapi.qweather.com/v7/weather/now',
+      'https://${PrefUtil.getValue<String>('qweatherApiHost')}/v7/weather/now',
       parameters: parameters,
     );
     final weather = await compute(
