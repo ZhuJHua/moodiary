@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - *(share)* Fix capture and share methods
 - Remove workspace
 - Qweather api error
+- Qweather api error
 
 ### 🚜 Refactor
 
