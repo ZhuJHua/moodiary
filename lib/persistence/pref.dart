@@ -42,6 +42,8 @@ class PrefUtil {
     'fontTheme',
     //和风key
     'qweatherKey',
+    // 和风apihost,
+    'qweatherApiHost',
     'tencentId',
     'tencentKey',
     'tiandituKey',

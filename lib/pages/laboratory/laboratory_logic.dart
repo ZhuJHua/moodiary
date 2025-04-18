@@ -44,6 +44,17 @@ class LaboratoryLogic extends GetxController {
     }
   }
 
+  Future<bool> setQweatherApiHost({required String host}) async {
+    try {
+      await PrefUtil.setValue<String>('qweatherApiHost', host);
+      return true;
+    } catch (e) {
+      return false;
+    } finally {
+      update();
+    }
+  }
+
   Future<bool> setTiandituKey({required String key}) async {
     try {
       await PrefUtil.setValue<String>('tiandituKey', key);

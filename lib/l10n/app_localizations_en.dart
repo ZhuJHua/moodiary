@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -46,8 +45,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startTitle3 => 'An ad-free, social-free, intimate diary';
 
   @override
-  String get welcome1 =>
-      'Thanks for downloading this product! Before use, we hope you can read and understand our ';
+  String get welcome1 => 'Thanks for downloading this product! Before use, we hope you can read and understand our ';
 
   @override
   String get welcome2 => 'Privacy Policy ';
@@ -59,8 +57,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcome4 => 'User Agreement';
 
   @override
-  String get welcome5 =>
-      '. We always respect and will strictly protect your legitimate rights and interests when using this product from any infringement. If you begin to use this product, you will be deemed to have accepted this Agreement. If you do not accept all the terms of this Agreement, do not begin to use this Product.';
+  String get welcome5 => '. We always respect and will strictly protect your legitimate rights and interests when using this product from any infringement. If you begin to use this product, you will be deemed to have accepted this Agreement. If you do not accept all the terms of this Agreement, do not begin to use this Product.';
 
   @override
   String get startChoice1 => 'Exit';
@@ -72,8 +69,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permission1 => 'Permission grant';
 
   @override
-  String get permission2 =>
-      'In order to better use the experience, we need the following permissions';
+  String get permission2 => 'In order to better use the experience, we need the following permissions';
 
   @override
   String get permission3 => '• Location permission (for getting the weather)';
@@ -118,8 +114,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingExportDialogTitle => 'Data Export';
 
   @override
-  String get settingExportDialogContent =>
-      'After confirmation, the current application\'s data will be exported as a ZIP file, which can be used for intra application import.';
+  String get settingExportDialogContent => 'After confirmation, the current application\'s data will be exported as a ZIP file, which can be used for intra application import.';
 
   @override
   String get settingImport => 'Import';
@@ -128,8 +123,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingImportDialogTitle => 'Data Import';
 
   @override
-  String get settingImportDialogContent =>
-      'Importing data will overwrite the existing data and the original data cannot be restored! Please confirm that the original data has been backed up.';
+  String get settingImportDialogContent => 'Importing data will overwrite the existing data and the original data cannot be restored! Please confirm that the original data has been backed up.';
 
   @override
   String get settingImportSelectFile => 'Select File';
@@ -195,8 +189,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingLockSupportBiometricsDes => 'System supports biometrics';
 
   @override
-  String get settingLockNotSupportBiometricsDes =>
-      'System does not support biometrics';
+  String get settingLockNotSupportBiometricsDes => 'System does not support biometrics';
 
   @override
   String get settingLockOpen => 'Open';
@@ -214,15 +207,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingLockChooseLockType => 'Please select a password type';
 
   @override
-  String get settingLockResetLock =>
-      'Password has been enabled, reset please close first';
+  String get settingLockResetLock => 'Password has been enabled, reset please close first';
 
   @override
   String get settingBackendPrivacyProtection => 'Background Privacy Protection';
 
   @override
-  String get settingBackendPrivacyProtectionDes =>
-      'When the application is in the background, hide the application content';
+  String get settingBackendPrivacyProtectionDes => 'When the application is in the background, hide the application content';
 
   @override
   String get settingUserKey => 'Private Key';
@@ -234,15 +225,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingUserKeySet => 'Setting key';
 
   @override
-  String get settingUserKeySetDes =>
-      '⚠️ The key cannot be obtained after setting it, please keep it properly. If you need to use encrypted data on other devices, please make sure to use the same key.';
+  String get settingUserKeySetDes => '⚠️ The key cannot be obtained after setting it, please keep it properly. If you need to use encrypted data on other devices, please make sure to use the same key.';
 
   @override
   String get settingUserKeyReset => 'Reset key';
 
   @override
-  String get settingUserKeyResetDes =>
-      'Are you sure you want to reset the key?';
+  String get settingUserKeyResetDes => 'Are you sure you want to reset the key?';
 
   @override
   String get settingUserKeyHasSet => 'Set';
@@ -515,19 +504,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lanTransferChangeTransferPort => 'Change transfer port';
 
   @override
-  String get lanTransferChangePortDes =>
-      'Please ensure that the ports of the two devices are consistent. You need to rescan after changing';
+  String get lanTransferChangePortDes => 'Please ensure that the ports of the two devices are consistent. You need to rescan after changing';
 
   @override
-  String get lanTransferChangePortError1 =>
-      'Please enter the temporary port number (49152-65535)';
+  String get lanTransferChangePortError1 => 'Please enter the temporary port number (49152-65535)';
 
   @override
   String get lanTransferChangePortError2 => 'Please enter the port number';
 
   @override
-  String get lanTransferReceiveDes =>
-      'Do not close the application during the receiving process';
+  String get lanTransferReceiveDes => 'Do not close the application during the receiving process';
 
   @override
   String get lanTransferReceiveServerStart => 'The server has started';
@@ -539,22 +525,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webdavSyncWhenStartUp => 'Sync on startup';
 
   @override
-  String get webdavSyncWhenStartUpDes =>
-      'Automatically synchronize when starting the application';
+  String get webdavSyncWhenStartUpDes => 'Automatically synchronize when starting the application';
 
   @override
   String get webdavSyncAfterChange => 'Sync after change';
 
   @override
-  String get webdavSyncAfterChangeDes =>
-      'Automatically synchronize after changing data';
+  String get webdavSyncAfterChangeDes => 'Automatically synchronize after changing data';
 
   @override
   String get webdavSyncEncryption => 'Encryption';
 
   @override
-  String get webdavSyncEncryptionDes =>
-      'Encrypting synchronous data, you need to set a private key';
+  String get webdavSyncEncryptionDes => 'Encrypting synchronous data, you need to set a private key';
 
   @override
   String get webdavOptionServer => 'Server address';
@@ -587,8 +570,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diarySettingRichText => 'Rich text';
 
   @override
-  String get diarySettingRichTextDes =>
-      'Supports more styles and attachments to make content presentation richer';
+  String get diarySettingRichTextDes => 'Supports more styles and attachments to make content presentation richer';
 
   @override
   String get diarySettingShowHeaderImage => 'Diary page display header image';
@@ -597,8 +579,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diarySettingPlainText => 'Plain text';
 
   @override
-  String get diarySettingPlainTextDes =>
-      'Remove redundant styles and enjoy a purer writing experience';
+  String get diarySettingPlainTextDes => 'Remove redundant styles and enjoy a purer writing experience';
 
   @override
   String get diarySettingFirstLineIndent => 'Automatic first line indent';
@@ -657,8 +638,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noticeEnableLocation => 'Please enable location permission';
 
   @override
-  String get noticeEnableLocation2 =>
-      'Please go to settings to enable location permissions';
+  String get noticeEnableLocation2 => 'Please go to settings to enable location permissions';
 
   @override
   String get diarySearch => 'Search';
@@ -910,8 +890,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inputMethodHandelInput => 'Manual input';
 
   @override
-  String get getKeyFromConsole =>
-      'Please get the key from the corresponding console';
+  String get getKeyFromConsole => 'Please get the key from the corresponding console';
 
   @override
   String get hasOption => 'Configured';
