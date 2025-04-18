@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 import 'package:moodiary/common/values/border.dart';
-import 'package:moodiary/components/search_card/search_card_logic.dart';
 import 'package:moodiary/components/search_card/search_card_view.dart';
 import 'package:moodiary/l10n/l10n.dart';
 
@@ -21,12 +22,7 @@ class SearchSheetComponent extends StatelessWidget {
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.only(
-                left: 8.0,
-                right: 8.0,
-                top: 8.0,
-                bottom: 4.0,
-              ),
+              padding: const EdgeInsets.all(8.0),
               child: TextField(
                 maxLines: 1,
                 controller: logic.textEditingController,
@@ -40,8 +36,8 @@ class SearchSheetComponent extends StatelessWidget {
                   filled: true,
                   labelText: context.l10n.diarySearch,
                   suffixIcon: IconButton(
-                    onPressed: () {
-                      logic.search();
+                    onPressed: () async {
+                      await logic.doSearch();
                     },
                     icon: const Icon(Icons.search),
                   ),
@@ -49,32 +45,57 @@ class SearchSheetComponent extends StatelessWidget {
               ),
             ),
             Obx(() {
-              return Expanded(
-                child:
-                    state.isSearching.value
-                        ? const Center(child: CircularProgressIndicator())
-                        : ListView.builder(
-                          itemCount: state.searchList.length,
-                          padding: EdgeInsets.zero,
-                          itemBuilder: (context, index) {
-                            Bind.lazyPut(
-                              () => SearchCardLogic(),
-                              tag: index.toString(),
-                            );
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                left: 8.0,
-                                right: 8.0,
-                                top: 4.0,
-                                bottom: 4.0,
-                              ),
-                              child: SearchCardComponent(
-                                diary: state.searchList[index],
-                                index: index.toString(),
-                              ),
-                            );
-                          },
+              Widget child;
+              if (state.isSearching.value && state.searchList.isEmpty) {
+                child = const Center(
+                  key: ValueKey('loading'),
+                  child: CircularProgressIndicator(),
+                );
+              } else if (state.searchList.isEmpty) {
+                child = Center(
+                  key: const ValueKey('empty'),
+                  child: FaIcon(
+                    FontAwesomeIcons.boxOpen,
+                    color: context.theme.colorScheme.onSurface,
+                    size: 56,
+                  ),
+                );
+              } else {
+                child = Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ListView.separated(
+                        itemCount: state.searchList.length,
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        itemBuilder: (context, index) {
+                          return SearchCardComponent(
+                            diary: state.searchList[index],
+                            queryList: state.queryList,
+                          );
+                        },
+                        separatorBuilder: (_, _) => const Gap(8.0),
+                      ),
+                    ),
+                    if (state.isSearching.value && state.searchList.isNotEmpty)
+                      Positioned.fill(
+                        child: Container(
+                          color: context.theme.colorScheme.surfaceContainer
+                              .withValues(alpha: 0.8),
+                          child: const Center(
+                            key: ValueKey('loading2'),
+                            child: CircularProgressIndicator(),
+                          ),
                         ),
+                      ),
+                  ],
+                );
+              }
+
+              return Expanded(
+                child: AnimatedSwitcher(
+                  duration: Durations.short3,
+                  child: child,
+                ),
               );
             }),
             Padding(

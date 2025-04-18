@@ -13,6 +13,7 @@ import 'package:moodiary/api/api.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/diary_type.dart';
 import 'package:moodiary/common/values/keyboard_state.dart';
+import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/keyboard_listener/keyboard_listener.dart';
 import 'package:moodiary/components/quill_embed/audio_embed.dart';
 import 'package:moodiary/components/quill_embed/image_embed.dart';
@@ -22,6 +23,7 @@ import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/persistence/isar.dart';
 import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/router/app_routes.dart';
+import 'package:moodiary/src/rust/api/jieba.dart';
 import 'package:moodiary/src/rust/api/kmp.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/markdown_util.dart';
@@ -435,14 +437,25 @@ class EditLogic extends GetxController {
       text: originContent,
       replacements: {...imageNameMap, ...videoNameMap, ...audioNameMap},
     );
+    final contentText = _toPlainText().removeLineBreaks();
+    final tokenizer = await JiebaRs.cutAll(text: contentText);
+    final keywords = await JiebaRs.extractKeywordsTfidf(
+      text: contentText,
+      topK: BigInt.from(5),
+      allowedPos: [],
+    );
+    final sortByWeight = keywords..sort((a, b) => b.weight.compareTo(a.weight));
+    final sortedKeywords = sortByWeight.map((e) => e.keyword).toList();
     state.currentDiary
       ..title = titleTextEditingController.text
       ..content = content
       ..type = state.type.value
-      ..contentText = _toPlainText()
+      ..contentText = contentText
       ..audioName = state.audioNameList
       ..imageName = imageNameMap.values.toList()
       ..videoName = videoNameMap.values.toList()
+      ..tokenizer = tokenizer
+      ..keywords = sortedKeywords
       ..imageColor = await getCoverColor()
       ..aspect = await getCoverAspect();
 

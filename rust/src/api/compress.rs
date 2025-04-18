@@ -16,7 +16,7 @@ use image::{
 
 use super::constants::CompressFormat;
 
-pub fn compress(
+fn compress(
     img: &DynamicImage,
     dst_height: u32,
     dst_width: u32,
@@ -84,7 +84,10 @@ impl ImageCompress {
         max_height: Option<u32>,
         quality: Option<u8>,
     ) -> Result<Vec<u8>> {
-        let src_img = Self::load_image(&file_path)?;
+        let src_img = ImageReader::open(file_path)?
+            .with_guessed_format()?
+            .decode()
+            .map_err(|e| anyhow::anyhow!("Failed to decode image: {}", e))?;
         let compress_format = compress_format.unwrap_or(CompressFormat::Jpeg);
         let quality = quality.unwrap_or(80);
 
@@ -136,13 +139,6 @@ impl ImageCompress {
             let ratio = max_width as f64 / img_width as f64;
             (max_width, (img_height as f64 * ratio).round() as u32)
         }
-    }
-
-    fn load_image(file_path: &str) -> Result<DynamicImage> {
-        ImageReader::open(file_path)?
-            .with_guessed_format()?
-            .decode()
-            .map_err(|e| anyhow::anyhow!("Failed to decode image: {}", e))
     }
 }
 pub struct ResizeOptions {

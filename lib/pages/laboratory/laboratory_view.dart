@@ -108,6 +108,18 @@ class LaboratoryPage extends StatelessWidget {
                 },
                 title: const Text('清理图片缩略图缓存'),
               ),
+              const Gap(12),
+              ListTile(
+                onTap: () async {
+                  final res = logic.generateFTSAndKeyword();
+                  if (res) {
+                    toast.success(message: '重新生成成功');
+                  } else {
+                    toast.error(message: '重新生成失败');
+                  }
+                },
+                title: const Text('重新进行全文搜索索引'),
+              ),
             ],
           );
         },

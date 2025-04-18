@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:get/get.dart';
+import 'package:moodiary/persistence/isar.dart';
 import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/aes_util.dart';
 import 'package:moodiary/utils/cache_util.dart';
@@ -80,6 +81,15 @@ class LaboratoryLogic extends GetxController {
   Future<bool> clearImageThumbnail() async {
     try {
       await ImageCacheUtil().clearImageCache();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  bool generateFTSAndKeyword() {
+    try {
+      IsarUtil.mergeToV2_7_4(FileUtil.getRealPath('database', ''));
       return true;
     } catch (e) {
       return false;

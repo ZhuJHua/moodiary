@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:moodiary/utils/cache_util.dart';
-import 'package:moodiary/utils/log_util.dart';
 
 final kTransparentImage = Uint8List.fromList(<int>[
   0x89,
@@ -149,7 +148,7 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
   void _loadImage() async {
     _loadState.value = _ImageLoadState.loading;
     try {
-      logger.d('Image loaded from path: ${widget.imagePath}');
+      //logger.d('Image loaded from path: ${widget.imagePath}');
       final imageAspect = await ImageCacheUtil().getImageAspectRatioWithCache(
         imagePath: widget.imagePath,
       );

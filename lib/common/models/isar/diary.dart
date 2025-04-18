@@ -67,6 +67,12 @@ class Diary {
   // 位置信息
   List<String> position = [];
 
+  // 关键词
+  List<String> keywords = [];
+
+  // 分词
+  List<String> tokenizer = [];
+
   // 类型，富文本还是纯文本，不会为空，延迟加载
   late String type;
 
@@ -97,6 +103,8 @@ class Diary {
           const ListEquality().equals(videoName, other.videoName) &&
           const ListEquality().equals(tags, other.tags) &&
           const ListEquality().equals(position, other.position) &&
+          const ListEquality().equals(keywords, other.keywords) &&
+          const ListEquality().equals(tokenizer, other.tokenizer) &&
           type == other.type &&
           imageColor == other.imageColor &&
           aspect == other.aspect;
@@ -118,6 +126,8 @@ class Diary {
         const ListEquality().hash(videoName) ^
         const ListEquality().hash(tags) ^
         const ListEquality().hash(position) ^
+        const ListEquality().hash(keywords) ^
+        const ListEquality().hash(tokenizer) ^
         type.hashCode ^
         imageColor.hashCode ^
         aspect.hashCode;
@@ -145,6 +155,8 @@ class Diary {
       ..videoName = List<String>.from(videoName)
       ..tags = List<String>.from(tags)
       ..position = List<String>.from(position)
+      ..keywords = List<String>.from(keywords)
+      ..tokenizer = List<String>.from(tokenizer)
       ..type = type
       ..imageColor = imageColor
       ..aspect = aspect;
@@ -168,6 +180,8 @@ class Diary {
       'videoName': videoName,
       'tags': tags,
       'position': position,
+      'keywords': keywords,
+      'tokenizer': tokenizer,
       'type': type,
       'imageColor': imageColor,
       'aspect': aspect,
@@ -191,6 +205,8 @@ class Diary {
       ..videoName = List<String>.from(json['videoName'] as List)
       ..tags = List<String>.from(json['tags'] as List)
       ..position = List<String>.from(json['position'] as List)
+      ..keywords = List<String>.from(json['keywords'] as List)
+      ..tokenizer = List<String>.from(json['tokenizer'] as List)
       ..type = json['type'] as String
       ..imageColor = json['imageColor'] as int?
       ..aspect = (json['aspect'] as num?)?.toDouble();
