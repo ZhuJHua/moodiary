@@ -15,6 +15,9 @@ ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", branch = "fvar" }
 ring = "0.17.14"
 zip = "2.6.1"
 walkdir = "2.5.0"
+jieba-rs = { version = "0.7.2", features = ["default-dict", "tfidf", "textrank"] }
+once_cell = "1.21.3"
+tokio = "1.44.2"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

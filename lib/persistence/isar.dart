@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -11,10 +12,12 @@ import 'package:moodiary/common/models/isar/font.dart';
 import 'package:moodiary/common/models/isar/sync_record.dart';
 import 'package:moodiary/common/models/map.dart';
 import 'package:moodiary/common/values/diary_type.dart';
+import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/quill_embed/audio_embed.dart';
 import 'package:moodiary/components/quill_embed/image_embed.dart';
 import 'package:moodiary/components/quill_embed/video_embed.dart';
 import 'package:moodiary/persistence/pref.dart';
+import 'package:moodiary/src/rust/api/jieba.dart';
 import 'package:moodiary/utils/file_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
 import 'package:path/path.dart';
@@ -201,28 +204,38 @@ class IsarUtil {
     }
   }
 
-  //查询日记
-  static Future<List<Diary>> searchDiaries(String value) async {
-    final contentResults =
-        await _isar.diarys
-            .where()
-            .showEqualTo(true)
-            .contentTextContains(value)
-            .findAllAsync();
-    final titleResults =
-        await _isar.diarys
-            .where()
-            .showEqualTo(true)
-            .titleContains(value)
-            .findAllAsync();
+  static Future<List<Diary>> searchDiaries({
+    required List<String> queryList,
+  }) async {
+    if (queryList.isEmpty) return [];
 
-    // 合并并去重
-    final combinedResults = {...contentResults, ...titleResults}.toList();
+    // 收集所有匹配关键词的内容结果
+    final HashSet<Diary> results = HashSet(
+      equals: (a, b) {
+        return a.isarId == b.isarId;
+      },
+      hashCode: (e) {
+        return e.isarId;
+      },
+    );
 
-    // 按时间排序
-    combinedResults.sort((a, b) => b.time.compareTo(a.time));
+    for (final word in queryList) {
+      final matches =
+          await _isar.diarys
+              .where()
+              .showEqualTo(true)
+              .tokenizerElementMatches(word, caseSensitive: false)
+              .or()
+              .titleContains(word, caseSensitive: false)
+              .findAllAsync();
+      results.addAll(matches);
+    }
 
-    return combinedResults;
+    // 按时间降序排序
+    final List<Diary> sortedResults =
+        results.toList()..sort((a, b) => b.time.compareTo(a.time));
+
+    return sortedResults;
   }
 
   static Future<List<Diary>> searchDiariesByTag(String value) async {
@@ -433,6 +446,37 @@ class IsarUtil {
     }
 
     isar.close();
+  }
+
+  /// 2.7.4 版本变更
+  /// 新增字段
+  /// 1. keywords 关键词
+  /// 2. tokenizer 分词器
+  static Future<void> mergeToV2_7_4(String dir) async {
+    final countDiary = _isar.diarys.where().count();
+    for (var i = 0; i < countDiary; i += 50) {
+      final diaries = await _isar.diarys.where().findAllAsync(
+        offset: i,
+        limit: 50,
+      );
+      for (final diary in diaries) {
+        final newContent = diary.contentText.removeLineBreaks();
+        diary.tokenizer = await JiebaRs.cutAll(text: newContent);
+        final keywords = await JiebaRs.extractKeywordsTfidf(
+          text: newContent,
+          topK: BigInt.from(5),
+          allowedPos: [],
+        );
+        final sortByWeight =
+            keywords..sort((a, b) => b.weight.compareTo(a.weight));
+        final sortedKeywords = sortByWeight.map((e) => e.keyword).toList();
+        diary.keywords = sortedKeywords;
+        diary.contentText = newContent;
+        await _isar.writeAsync((isar) {
+          isar.diarys.put(diary);
+        });
+      }
+    }
   }
 
   /// 2.6.3 修复

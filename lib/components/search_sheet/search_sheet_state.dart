@@ -9,6 +9,10 @@ class SearchSheetState {
 
   late RxInt totalCount;
 
+  RxDouble keyboardHeight = 0.0.obs;
+
+  late List<String> queryList = [];
+
   SearchSheetState() {
     searchList = [];
     isSearching = false.obs;

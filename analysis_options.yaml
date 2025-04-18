@@ -20,3 +20,5 @@ analyzer:
     - "android/**"
     - "windows/**"
     - "macos/**"
+  errors:
+    invalid_annotation_target: ignore

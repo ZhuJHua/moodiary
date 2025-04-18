@@ -17,7 +17,7 @@ class FloatingModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final padding = MediaQuery.viewPaddingOf(context);
+    final padding = MediaQuery.viewInsetsOf(context);
     final size = MediaQuery.sizeOf(context);
     final maxHeight =
         isScrollControlled
@@ -26,12 +26,12 @@ class FloatingModal extends StatelessWidget {
     return Align(
       alignment: Alignment.bottomCenter,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight, maxWidth: 640),
+        constraints: BoxConstraints(maxHeight: maxHeight+padding.bottom, maxWidth: 640),
         child: Padding(
           padding: EdgeInsets.only(
             left: 16,
             right: 16,
-            bottom: max(padding.bottom, 16),
+            bottom: max(padding.bottom + 16, 16),
           ),
           child: Material(
             color: context.theme.colorScheme.surfaceContainerHigh,
