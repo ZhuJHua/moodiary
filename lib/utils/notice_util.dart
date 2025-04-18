@@ -141,7 +141,7 @@ class NoticeUtil {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: context.theme.colorScheme.surfaceContainerHighest.withValues(
+        color: context.theme.colorScheme.surfaceContainerHigh.withValues(
           alpha: 0.9,
         ),
         borderRadius: AppBorderRadius.mediumBorderRadius,

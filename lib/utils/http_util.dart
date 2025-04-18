@@ -19,10 +19,7 @@ class HttpUtil {
         InterceptorsWrapper(
           onError: (error, handler) {
             if (error.type != DioExceptionType.cancel) {
-              toast.error(
-                message:
-                    'Network Error ${error.response?.statusCode} ${error.response?.statusMessage} ${error.message}',
-              );
+              toast.error(message: 'Network Error ${error.error}');
             }
             handler.next(error);
           },
