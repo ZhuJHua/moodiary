@@ -1,139 +1,74 @@
-class PublicHeader {
-  String? action;
-  int? timestamp;
-  String? version;
-  String? authorization;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  Map<String, dynamic> toMap() {
-    return {
-      'X-TC-Action': action,
-      'X-TC-Timestamp': timestamp,
-      'X-TC-Version': version,
-      'Authorization': authorization,
-    };
-  }
+part 'hunyuan.freezed.dart';
+part 'hunyuan.g.dart';
 
-  PublicHeader.fromMap(Map<String, dynamic> map) {
-    action = map['X-TC-Action'];
-    timestamp = map['X-TC-Timestamp'];
-    version = map['X-TC-Version'];
-    authorization = map['Authorization'];
-  }
+@freezed
+abstract class PublicHeader with _$PublicHeader {
+  const factory PublicHeader({
+    @JsonKey(name: 'X-TC-Action') String? action,
+    @JsonKey(name: 'X-TC-Timestamp') int? timestamp,
+    @JsonKey(name: 'X-TC-Version') String? version,
+    @JsonKey(name: 'Authorization') String? authorization,
+  }) = _PublicHeader;
 
-  PublicHeader(this.action, this.timestamp, this.version, this.authorization);
+  factory PublicHeader.fromJson(Map<String, dynamic> json) =>
+      _$PublicHeaderFromJson(json);
 }
 
-class Message {
-  late String role;
-  late String content;
+@freezed
+abstract class Message with _$Message {
+  const factory Message({
+    @JsonKey(name: 'Role') required String role,
+    @JsonKey(name: 'Content') required String content,
+  }) = _Message;
 
-  Message(this.role, this.content);
-
-  Map<String, dynamic> toMap() {
-    return {'Role': role, 'Content': content};
-  }
-
-  Message.fromMap(Map<String, dynamic> map) {
-    role = map['Role'];
-    content = map['Content'];
-  }
+  factory Message.fromJson(Map<String, dynamic> json) =>
+      _$MessageFromJson(json);
 }
 
-class HunyuanResponse {
-  String? note;
-  List<Choices>? choices;
-  int? created;
-  String? id;
-  Usage? usage;
+@freezed
+abstract class HunyuanResponse with _$HunyuanResponse {
+  const factory HunyuanResponse({
+    @JsonKey(name: 'Note') String? note,
+    @JsonKey(name: 'Choices') List<Choices>? choices,
+    @JsonKey(name: 'Created') int? created,
+    @JsonKey(name: 'Id') String? id,
+    @JsonKey(name: 'Usage') Usage? usage,
+  }) = _HunyuanResponse;
 
-  HunyuanResponse({this.note, this.choices, this.created, this.id, this.usage});
-
-  HunyuanResponse.fromJson(Map<String, dynamic> json) {
-    note = json["Note"];
-    choices =
-        json["Choices"] == null
-            ? null
-            : (json["Choices"] as List)
-                .map((e) => Choices.fromJson(e))
-                .toList();
-    created = json["Created"];
-    id = json["Id"];
-    usage = json["Usage"] == null ? null : Usage.fromJson(json["Usage"]);
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data["Note"] = note;
-    if (choices != null) {
-      data["Choices"] = choices?.map((e) => e.toJson()).toList();
-    }
-    data["Created"] = created;
-    data["Id"] = id;
-    if (usage != null) {
-      data["Usage"] = usage?.toJson();
-    }
-    return data;
-  }
+  factory HunyuanResponse.fromJson(Map<String, dynamic> json) =>
+      _$HunyuanResponseFromJson(json);
 }
 
-class Usage {
-  int? promptTokens;
-  int? completionTokens;
-  int? totalTokens;
+@freezed
+abstract class Usage with _$Usage {
+  const factory Usage({
+    @JsonKey(name: 'PromptTokens') int? promptTokens,
+    @JsonKey(name: 'CompletionTokens') int? completionTokens,
+    @JsonKey(name: 'TotalTokens') int? totalTokens,
+  }) = _Usage;
 
-  Usage({this.promptTokens, this.completionTokens, this.totalTokens});
-
-  Usage.fromJson(Map<String, dynamic> json) {
-    promptTokens = json["PromptTokens"];
-    completionTokens = json["CompletionTokens"];
-    totalTokens = json["TotalTokens"];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data["PromptTokens"] = promptTokens;
-    data["CompletionTokens"] = completionTokens;
-    data["TotalTokens"] = totalTokens;
-    return data;
-  }
+  factory Usage.fromJson(Map<String, dynamic> json) => _$UsageFromJson(json);
 }
 
-class Choices {
-  String? finishReason;
-  Delta? delta;
+@freezed
+abstract class Choices with _$Choices {
+  const factory Choices({
+    @JsonKey(name: 'FinishReason') String? finishReason,
+    @JsonKey(name: 'Delta') Delta? delta,
+  }) = _Choices;
 
-  Choices({this.finishReason, this.delta});
-
-  Choices.fromJson(Map<String, dynamic> json) {
-    finishReason = json["FinishReason"];
-    delta = json["Delta"] == null ? null : Delta.fromJson(json["Delta"]);
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data["FinishReason"] = finishReason;
-    if (delta != null) {
-      data["Delta"] = delta?.toJson();
-    }
-    return data;
-  }
+  factory Choices.fromJson(Map<String, dynamic> json) =>
+      _$ChoicesFromJson(json);
 }
 
-class Delta {
-  String? role;
-  String? content;
+@freezed
+abstract class Delta with _$Delta {
+  const factory Delta({
+    @JsonKey(name: 'Role') String? role,
+    @JsonKey(name: 'Content') String? content,
+  }) = _Delta;
 
-  Delta({this.role, this.content});
-
-  Delta.fromJson(Map<String, dynamic> json) {
-    role = json["Role"];
-    content = json["Content"];
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data["Role"] = role;
-    data["Content"] = content;
-    return data;
-  }
+  factory Delta.fromJson(Map<String, dynamic> json) => _$DeltaFromJson(json);
 }

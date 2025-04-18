@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dartx/dartx.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -540,44 +541,51 @@ class EditLogic extends GetxController {
   //获取天气，同时获取定位
   Future<void> getPositionAndWeather({required BuildContext context}) async {
     final key = PrefUtil.getValue<String>('qweatherKey');
-    if (key == null) return;
+    final apiHost = PrefUtil.getValue<String>('qweatherApiHost');
+    if (key.isNullOrBlank || apiHost.isNullOrBlank) return;
 
-    state.isProcessing = true;
-    update(['Weather']);
+    try {
+      state.isProcessing = true;
+      update(['Weather']);
 
-    // 获取定位
-    final position = await Api.updatePosition(context);
-    if (position == null && context.mounted) {
-      _handleError(context.l10n.locationError);
-      return;
+      // 获取定位
+      final position = await Api.updatePosition(context);
+      if (position == null && context.mounted) {
+        _handleError(context, context.l10n.locationError);
+        return;
+      }
+      state.currentDiary.position = position!;
+      if (!context.mounted) return;
+      // 获取天气
+      final weather = await Api.updateWeather(
+        context: context,
+        position: LatLng(double.parse(position[0]), double.parse(position[1])),
+      );
+      if (weather == null && context.mounted) {
+        _handleError(context, context.l10n.weatherError);
+        return;
+      }
+      state.currentDiary.weather = weather!;
+      state.isProcessing = false;
+      if (context.mounted) {
+        toast.success(message: context.l10n.weatherSuccess);
+      }
+      update(['Weather']);
+    } catch (e) {
+      state.isProcessing = false;
+      update(['Weather']);
+      if (context.mounted) {
+        toast.error(message: context.l10n.weatherError);
+      }
     }
-
-    state.currentDiary.position = position!;
-
-    if (!context.mounted) return;
-    // 获取天气
-    final weather = await Api.updateWeather(
-      context: context,
-      position: LatLng(double.parse(position[0]), double.parse(position[1])),
-    );
-
-    if (weather == null && context.mounted) {
-      _handleError(context.l10n.weatherError);
-      return;
-    }
-
-    state.currentDiary.weather = weather!;
-    state.isProcessing = false;
-    if (context.mounted) {
-      toast.success(message: context.l10n.weatherSuccess);
-    }
-    update(['Weather']);
   }
 
-  void _handleError(String message) {
+  void _handleError(BuildContext context, String message) {
     state.isProcessing = false;
-    toast.error(message: message);
     update(['Weather']);
+    if (context.mounted) {
+      toast.error(message: message);
+    }
   }
 
   Future<void> pickAudio(BuildContext context) async {

@@ -91,7 +91,7 @@ class AssistantLogic extends GetxController {
       unFocus();
       //拿到用户提问后，对话上下文中增加一项用户提问
       final askTime = DateTime.now();
-      state.messages[askTime] = Message('user', ask);
+      state.messages[askTime] = Message(role: 'user', content: ask);
       update();
       toBottom();
       //带着上下文请求
@@ -103,7 +103,7 @@ class AssistantLogic extends GetxController {
       );
       //如果收到了请求，添加一个回答上下文
       final replyTime = DateTime.now();
-      state.messages[replyTime] = Message('assistant', '');
+      state.messages[replyTime] = const Message(role: 'assistant', content: '');
       update();
       //接收stream
       stream?.listen((content) {
@@ -111,8 +111,11 @@ class AssistantLogic extends GetxController {
           final HunyuanResponse result = HunyuanResponse.fromJson(
             jsonDecode(content.split('data: ')[1]),
           );
-          state.messages[replyTime]!.content +=
-              result.choices!.first.delta!.content!;
+          final currentMessage = state.messages[replyTime]!;
+          state.messages[replyTime] = currentMessage.copyWith(
+            content:
+                currentMessage.content + result.choices!.first.delta!.content!,
+          );
           HapticFeedback.vibrate();
           update();
           toBottom();

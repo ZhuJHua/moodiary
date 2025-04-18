@@ -65,6 +65,21 @@ class LaboratoryPage extends StatelessWidget {
               ),
               const Gap(12),
               QrInputTile(
+                title: '${context.l10n.labQweather} API Host',
+                value: PrefUtil.getValue<String>('qweatherApiHost') ?? '',
+                prefix: 'qweatherApiHost',
+                onValue: (value) async {
+                  final res = await logic.setQweatherApiHost(host: value);
+                  if (res) {
+                    toast.success();
+                  } else {
+                    toast.error();
+                  }
+                },
+              ),
+
+              const Gap(12),
+              QrInputTile(
                 title: '${context.l10n.labTianditu} Key',
                 value: PrefUtil.getValue<String>('tiandituKey') ?? '',
                 prefix: 'tiandituKey',
