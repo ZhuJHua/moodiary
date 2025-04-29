@@ -47,7 +47,7 @@ dependencies:
   record: 6.0.0
   duration: 4.0.3
   dynamic_color: 1.7.0
-  supabase_flutter: 2.8.4
+  supabase_flutter: 2.9.0
   bitsdojo_window: 0.1.6
   intl: 0.19.0
   collection: 1.19.1
@@ -72,7 +72,7 @@ dependencies:
   encrypt: 5.0.3
   faker: 2.2.0
   flutter_rust_bridge: 2.9.0
-  syncfusion_flutter_sliders: 29.1.39
+  syncfusion_flutter_sliders: 29.1.40
   flutter_quill_extensions: 11.0.0
   connectivity_plus: 6.1.4
   image_picker_android: 0.8.12+23
@@ -119,8 +119,8 @@ dependencies:
   throttling: 2.0.1
   gap: 3.0.1
   flutter_cache_manager: 3.4.1
-  hive_ce: 2.10.1
-  hive_ce_flutter: 2.2.0
+  hive_ce: 2.11.0
+  hive_ce_flutter: 2.3.0
   flutter_modular: 6.3.4
   freezed_annotation: 3.0.0
   json_annotation: 4.9.0
