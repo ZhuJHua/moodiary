@@ -1198,10 +1198,10 @@ packages:
     dependency: transitive
     description:
       name: functions_client
-      sha256: a49876ebae32a50eb62483c5c5ac80ed0d8da34f98ccc23986b03a8d28cee07c
+      sha256: b410e4d609522357396cd84bb9a8f6e3a4561b5f7d3ce82267f6f1c2af42f16b
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.1"
+    version: "2.4.2"
   fvp:
     dependency: "direct main"
     description:
@@ -1302,10 +1302,10 @@ packages:
     dependency: transitive
     description:
       name: gotrue
-      sha256: d6362dff9a54f8c1c372bb137c858b4024c16407324d34e6473e59623c9b9f50
+      sha256: "04a6efacffd42773ed96dc752f19bb20a1fbc383e81ba82659072b775cf62912"
       url: "https://pub.dev"
     source: hosted
-    version: "2.11.1"
+    version: "2.12.0"
   gradient_borders:
     dependency: transitive
     description:
@@ -1350,18 +1350,18 @@ packages:
     dependency: "direct main"
     description:
       name: hive_ce
-      sha256: ac66daee46ad46486a1ed12cf91e9d7479c875fb46889be8d2c96b557406647f
+      sha256: fb6560a993b58921ced4e8afabc6ed4e41ec024d3667f11e12fbd6fbbd4de82a
       url: "https://pub.dev"
     source: hosted
-    version: "2.10.1"
+    version: "2.11.0"
   hive_ce_flutter:
     dependency: "direct main"
     description:
       name: hive_ce_flutter
-      sha256: "74c1d5f10d803446b4e7913bb272137e2724ba8a56465444f9e7713aeb60a877"
+      sha256: "5eaf57a5af980eda63ddaa8c34d618dc446f76fe79410f2a283522744291c05c"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.3.0"
   html:
     dependency: transitive
     description:
@@ -1531,6 +1531,14 @@ packages:
       url: "https://github.com/ZhuJHua/isar"
     source: git
     version: "4.0.0-dev.14"
+  isolate_channel:
+    dependency: transitive
+    description:
+      name: isolate_channel
+      sha256: bafedfbcc1e9796ada179b5dac7043b33eb85d35204b089ca37d480d9c0068df
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.2"
   js:
     dependency: transitive
     description:
@@ -2054,10 +2062,10 @@ packages:
     dependency: transitive
     description:
       name: postgrest
-      sha256: b74dc0f57b5dca5ce9f57a54b08110bf41d6fc8a0483c0fec10c79e9aa0fb2bb
+      sha256: "10b81a23b1c829ccadf68c626b4d66666453a1474d24c563f313f5ca7851d575"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.1"
+    version: "2.4.2"
   proj4dart:
     dependency: transitive
     description:
@@ -2070,10 +2078,10 @@ packages:
     dependency: transitive
     description:
       name: provider
-      sha256: "489024f942069c2920c844ee18bb3d467c69e48955a4f32d1677f71be103e310"
+      sha256: "4abbd070a04e9ddc287673bf5a030c7ca8b685ff70218720abab8b092f53dd84"
       url: "https://pub.dev"
     source: hosted
-    version: "6.1.4"
+    version: "6.1.5"
   pub_semver:
     dependency: transitive
     description:
@@ -2182,10 +2190,10 @@ packages:
     dependency: transitive
     description:
       name: realtime_client
-      sha256: e3089dac2121917cc0c72d42ab056fea0abbaf3c2229048fc50e64bafc731adf
+      sha256: "3a0a99b5bd0fc3b35e8ee846d9a22fa2c2117f7ef1cb73d1e5f08f6c3d09c4e9"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.2"
+    version: "2.5.0"
   record:
     dependency: "direct main"
     description:
@@ -2499,10 +2507,10 @@ packages:
     dependency: transitive
     description:
       name: storage_client
-      sha256: "9f9ed283943313b23a1b27139bb18986e9b152a6d34530232c702c468d98e91a"
+      sha256: "09bac4d75eea58e8113ca928e6655a09cc8059e6d1b472ee801f01fde815bcfc"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.1"
+    version: "2.4.0"
   stream_channel:
     dependency: transitive
     description:
@@ -2539,34 +2547,34 @@ packages:
     dependency: transitive
     description:
       name: supabase
-      sha256: c3ebddba69ddcf16d8b78e8c44c4538b0193d1cf944fde3b72eb5b279892a370
+      sha256: f00172f5f0b2148ea1c573f52862d50cacb6f353f579f741fa35e51704845958
       url: "https://pub.dev"
     source: hosted
-    version: "2.6.3"
+    version: "2.7.0"
   supabase_flutter:
     dependency: "direct main"
     description:
       name: supabase_flutter
-      sha256: "3b5b5b492e342f63f301605d0c66f6528add285b5744f53c9fd9abd5ffdbce5b"
+      sha256: d88eccf9e46e57129725a08e72a3109b6f780921fdc27fe3d7669a11ae80906b
       url: "https://pub.dev"
     source: hosted
-    version: "2.8.4"
+    version: "2.9.0"
   syncfusion_flutter_core:
     dependency: transitive
     description:
       name: syncfusion_flutter_core
-      sha256: "720ea28f0ab8f8c19fc613c20b978e514c7e4e431171fd85ed8da528e01298e0"
+      sha256: "458fb70ad9a6a5fa286a0062ddafa536038d21d6afffe2b0cd057e091108311f"
       url: "https://pub.dev"
     source: hosted
-    version: "29.1.39"
+    version: "29.1.40"
   syncfusion_flutter_sliders:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_sliders
-      sha256: "1d1403755b6a89de780712d026813857fa2d995eb4d9ee953699380d1968d838"
+      sha256: eef97f1fc8e69bf8ec232bae1f62407652d38252839da73014efae41b8df445f
       url: "https://pub.dev"
     source: hosted
-    version: "29.1.39"
+    version: "29.1.40"
   synchronized:
     dependency: "direct main"
     description:
@@ -2940,10 +2948,10 @@ packages:
     dependency: transitive
     description:
       name: yet_another_json_isolate
-      sha256: "56155e9e0002cc51ea7112857bbcdc714d4c35e176d43e4d3ee233009ff410c9"
+      sha256: fe45897501fa156ccefbfb9359c9462ce5dec092f05e8a56109db30be864f01e
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.3"
+    version: "2.1.0"
 sdks:
   dart: ">=3.7.0 <4.0.0"
   flutter: ">=3.29.0"
