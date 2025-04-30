@@ -25,9 +25,14 @@ PODS:
   - flutter_inappwebview_macos (0.0.1):
     - FlutterMacOS
     - OrderedSet (~> 6.0.3)
-  - flutter_secure_storage_macos (6.1.3):
+  - flutter_secure_storage_darwin (10.0.0):
+    - Flutter
     - FlutterMacOS
   - FlutterMacOS (1.0.0)
+  - fvp (0.31.2):
+    - Flutter
+    - FlutterMacOS
+    - mdk (~> 0.32.0)
   - gal (1.0.0):
     - Flutter
     - FlutterMacOS
@@ -43,8 +48,7 @@ PODS:
     - FlutterMacOS
   - macos_window_utils (1.0.0):
     - FlutterMacOS
-  - media_kit_video (0.0.1):
-    - FlutterMacOS
+  - mdk (0.32.0)
   - mobile_scanner (7.0.0):
     - Flutter
     - FlutterMacOS
@@ -77,8 +81,6 @@ PODS:
   - video_player_avfoundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - volume_controller (0.0.1):
-    - FlutterMacOS
   - wakelock_plus (0.0.1):
     - FlutterMacOS
 
@@ -95,15 +97,15 @@ DEPENDENCIES:
   - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - flutter_image_compress_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_image_compress_macos/macos`)
   - flutter_inappwebview_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos`)
-  - flutter_secure_storage_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_macos/macos`)
+  - flutter_secure_storage_darwin (from `Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
   - FlutterMacOS (from `Flutter/ephemeral`)
+  - fvp (from `Flutter/ephemeral/.symlinks/plugins/fvp/darwin`)
   - gal (from `Flutter/ephemeral/.symlinks/plugins/gal/darwin`)
   - geolocator_apple (from `Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin`)
   - isar_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/isar_flutter_libs/macos`)
   - local_auth_darwin (from `Flutter/ephemeral/.symlinks/plugins/local_auth_darwin/darwin`)
   - macos_ui (from `Flutter/ephemeral/.symlinks/plugins/macos_ui/macos`)
   - macos_window_utils (from `Flutter/ephemeral/.symlinks/plugins/macos_window_utils/macos`)
-  - media_kit_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos`)
   - mobile_scanner (from `Flutter/ephemeral/.symlinks/plugins/mobile_scanner/darwin`)
   - moodiary_rust (from `Flutter/ephemeral/.symlinks/plugins/moodiary_rust/macos`)
   - network_info_plus (from `Flutter/ephemeral/.symlinks/plugins/network_info_plus/macos`)
@@ -117,11 +119,11 @@ DEPENDENCIES:
   - tflite_flutter (from `Flutter/ephemeral/.symlinks/plugins/tflite_flutter/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
   - video_player_avfoundation (from `Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin`)
-  - volume_controller (from `Flutter/ephemeral/.symlinks/plugins/volume_controller/macos`)
   - wakelock_plus (from `Flutter/ephemeral/.symlinks/plugins/wakelock_plus/macos`)
 
 SPEC REPOS:
   trunk:
+    - mdk
     - OrderedSet
 
 EXTERNAL SOURCES:
@@ -149,10 +151,12 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_image_compress_macos/macos
   flutter_inappwebview_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_inappwebview_macos/macos
-  flutter_secure_storage_macos:
-    :path: Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_macos/macos
+  flutter_secure_storage_darwin:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_darwin/darwin
   FlutterMacOS:
     :path: Flutter/ephemeral
+  fvp:
+    :path: Flutter/ephemeral/.symlinks/plugins/fvp/darwin
   gal:
     :path: Flutter/ephemeral/.symlinks/plugins/gal/darwin
   geolocator_apple:
@@ -165,8 +169,6 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/macos_ui/macos
   macos_window_utils:
     :path: Flutter/ephemeral/.symlinks/plugins/macos_window_utils/macos
-  media_kit_video:
-    :path: Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos
   mobile_scanner:
     :path: Flutter/ephemeral/.symlinks/plugins/mobile_scanner/darwin
   moodiary_rust:
@@ -193,8 +195,6 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
   video_player_avfoundation:
     :path: Flutter/ephemeral/.symlinks/plugins/video_player_avfoundation/darwin
-  volume_controller:
-    :path: Flutter/ephemeral/.symlinks/plugins/volume_controller/macos
   wakelock_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/wakelock_plus/macos
 
@@ -211,15 +211,16 @@ SPEC CHECKSUMS:
   file_selector_macos: 6280b52b459ae6c590af5d78fc35c7267a3c4b31
   flutter_image_compress_macos: e68daf54bb4bf2144c580fd4d151c949cbf492f0
   flutter_inappwebview_macos: c2d68649f9f8f1831bfcd98d73fd6256366d9d1d
-  flutter_secure_storage_macos: 7f45e30f838cf2659862a4e4e3ee1c347c2b3b54
+  flutter_secure_storage_darwin: ce237a8775b39723566dc72571190a3769d70468
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
+  fvp: 89275776efede62b7fde1762afa518974e6d6750
   gal: baecd024ebfd13c441269ca7404792a7152fde89
   geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
   isar_flutter_libs: a65381780401f81ad6bf3f2e7cd0de5698fb98c4
   local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
   macos_ui: 2047a8e6536a80491ef10684c53ca500e04f1bcf
   macos_window_utils: 3bca8603c2a1cf2257351dfe6bbccc9accf739fd
-  media_kit_video: 28d7d27611c7769a2464eb7621c37386a61dcc9a
+  mdk: a726c85fd49c002b83d586b278d452f387750889
   mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   moodiary_rust: 2f0ea7e60816f68d22e387a10b460860168eced5
   network_info_plus: 21d1cd6a015ccb2fdff06a1fbfa88d54b4e92f61
@@ -234,9 +235,8 @@ SPEC CHECKSUMS:
   tflite_flutter: d1496f2e968aa5a142fb282da8f5d754fcee5613
   url_launcher_macos: 0fba8ddabfc33ce0a9afe7c5fef5aab3d8d2d673
   video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
-  volume_controller: 5c068e6d085c80dadd33fc2c918d2114b775b3dd
   wakelock_plus: 21ddc249ac4b8d018838dbdabd65c5976c308497
 
-PODFILE CHECKSUM: b5ff078e9cf81bae88fdc8e0ce3668e57b68e9b6
+PODFILE CHECKSUM: ee954fade8f3b11c1f8b26bea93380ea85316f08
 
 COCOAPODS: 1.16.2
