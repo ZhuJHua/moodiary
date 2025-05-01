@@ -1166,10 +1166,10 @@ packages:
     dependency: "direct main"
     description:
       name: fpdart
-      sha256: "9c82219bf8f7ab481c1d6c76e85c62e36aeb00429758100e1655b7cf5e22d055"
+      sha256: "1b84ce64453974159f08046f5d05592020d1fcb2099d7fe6ec58da0e7337af77"
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.0-dev.3"
+    version: "1.1.1"
   freezed:
     dependency: "direct dev"
     description:
