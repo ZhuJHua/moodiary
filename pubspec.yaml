@@ -115,11 +115,11 @@ dependencies:
   flutter_smart_dialog: 4.9.8+7
   substring_highlight: 1.0.33
   qr_flutter: 4.1.0
-  mobile_scanner: 7.0.0-rc.2
+  mobile_scanner: 7.0.0
   throttling: 2.0.1
   gap: 3.0.1
   flutter_cache_manager: 3.4.1
-  hive_ce: 2.11.0
+  hive_ce: 2.11.1
   hive_ce_flutter: 2.3.0
   flutter_modular: 6.3.4
   freezed_annotation: 3.0.0

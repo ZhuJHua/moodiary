@@ -1350,10 +1350,10 @@ packages:
     dependency: "direct main"
     description:
       name: hive_ce
-      sha256: fb6560a993b58921ced4e8afabc6ed4e41ec024d3667f11e12fbd6fbbd4de82a
+      sha256: fdc19336f03ecd01dbc1d1afe69d87ed9336bdf996c5374a25f9c21ef5f2989e
       url: "https://pub.dev"
     source: hosted
-    version: "2.11.0"
+    version: "2.11.1"
   hive_ce_flutter:
     dependency: "direct main"
     description:
@@ -1775,10 +1775,10 @@ packages:
     dependency: "direct main"
     description:
       name: mobile_scanner
-      sha256: "4ef3eb574f9370212e5741b862b6da5d7f7df036d5a347ac11b38c5455441c59"
+      sha256: "72f06a071aa8b14acea3ab43ea7949eefe4a2469731ae210e006ba330a033a8c"
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.0-rc.2"
+    version: "7.0.0"
   modal_bottom_sheet:
     dependency: "direct main"
     description:
