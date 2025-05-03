@@ -751,10 +751,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_adaptive_scaffold
-      sha256: "7279d74da2f2531a16d21c2ec327308778c3aedd672dfe4eaf3bf416463501f8"
+      sha256: a63571eed99772fc1017a7c3b37954b9d11faef5012ba1090bbcfd046cbf2b86
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.2"
+    version: "0.3.3"
   flutter_cache_manager:
     dependency: "direct main"
     description:
