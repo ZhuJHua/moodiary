@@ -5,3 +5,4 @@ pub mod font;
 pub mod aes;
 pub mod zip;
 pub mod jieba;
+pub mod argon2;
