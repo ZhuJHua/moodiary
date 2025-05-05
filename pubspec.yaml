@@ -130,6 +130,7 @@ dependencies:
       url: https://github.com/RGLie/word_cloud.git
       path: word_cloud
   get_it: any
+  meta: 1.16.0
 
 dev_dependencies:
   flutter_test:
