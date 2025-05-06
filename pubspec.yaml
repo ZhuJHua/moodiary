@@ -72,7 +72,7 @@ dependencies:
   encrypt: 5.0.3
   faker: 2.2.0
   flutter_rust_bridge: 2.9.0
-  syncfusion_flutter_sliders: 29.1.40
+  syncfusion_flutter_sliders: 29.1.41
   flutter_quill_extensions: 11.0.0
   connectivity_plus: 6.1.4
   image_picker_android: 0.8.12+23
