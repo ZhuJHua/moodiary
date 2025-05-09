@@ -19,8 +19,8 @@ dependencies:
   logger: 2.5.0
   flutter_drawing_board: 0.9.8
   flutter_displaymode: 0.6.0
-  fl_chart: 0.71.0
-  file_picker: 10.1.5
+  fl_chart: 1.0.0
+  file_picker: 10.1.7
   local_auth: 2.3.0
   local_auth_android: 1.0.49
   permission_handler: 12.0.0+1
@@ -56,7 +56,7 @@ dependencies:
   tflite_flutter: 0.11.0
   sliver_tools: 0.2.12
   lottie: 3.3.1
-  flutter_adaptive_scaffold: ^0.3.3+1
+  flutter_adaptive_scaffold: 0.3.3+1
   cross_file: 0.3.4+2
   fc_native_video_thumbnail: 0.17.2
   flutter_map: 7.0.2
@@ -79,7 +79,7 @@ dependencies:
   fvp: 0.31.2
   video_player: 2.9.5
   chewie: 1.11.3
-  flutter_markdown: ^0.7.7+1
+  flutter_markdown: 0.7.7+1
   image_picker_platform_interface: 2.10.1
   flutter_image_compress: 2.4.0
   mime: 2.0.0
