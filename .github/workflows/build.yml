@@ -65,11 +65,64 @@ jobs:
         with:
           name: android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
+  build-windows:
+    runs-on: windows-latest
+    name: Build Windows
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Read Flutter Version
+        id: flutter_version
+        run: |
+          if (Test-Path .fvmrc) {
+            $FLUTTER_VERSION = (Get-Content .fvmrc | ConvertFrom-Json).flutter
+            echo "Flutter version detected: $FLUTTER_VERSION"
+            echo "flutter-version=$FLUTTER_VERSION" >> $env:GITHUB_ENV
+          } else {
+            echo ".fvmrc not found. Defaulting to latest Flutter version."
+            echo "flutter-version=stable" >> $env:GITHUB_ENV
+          }
+
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.flutter-version }}
+
+      - name: Set Up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Windows
+        run: flutter build windows --release
+
+      - name: Create ZIP Archive
+        run: |
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath build\windows\moodiary-windows.zip
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-app
+          path: build\windows\moodiary-windows.zip
 
   release:
     runs-on: ubuntu-latest
     name: Publish Release
-    needs: [ build-apk ]
+    needs: [ build-apk, build-windows ]
 
     steps:
       - name: Checkout Repository
@@ -80,6 +133,12 @@ jobs:
         with:
           name: android-apk
           path: artifacts/android
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-app
+          path: artifacts/windows
 
       - name: Get Latest Tag
         id: latest_tag
@@ -99,6 +158,7 @@ jobs:
         run: |
           mkdir -p renamed-artifacts
           mv artifacts/android/app-release.apk renamed-artifacts/moodiary-${{ env.VERSION }}-android-arm64.apk
+          mv artifacts/windows/moodiary-windows.zip renamed-artifacts/moodiary-${{ env.VERSION }}-windows-x64.zip
 
       - name: Generate Release Notes
         id: release_notes
