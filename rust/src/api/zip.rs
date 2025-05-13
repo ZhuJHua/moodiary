@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use flutter_rust_bridge::frb;
 use std::fs::File;
 use std::io::{Read, Write};
+#[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use walkdir::WalkDir;
