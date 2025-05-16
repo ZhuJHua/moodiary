@@ -15,7 +15,7 @@ pub struct JiebaRs {
 
 #[derive(Debug, Clone)]
 #[frb(opaque)]
-pub struct Keyword {
+pub struct JiebaKeyword {
     pub keyword: String,
     pub weight: f64,
 }
@@ -88,7 +88,7 @@ impl JiebaRs {
         text: String,
         top_k: usize,
         allowed_pos: Vec<String>,
-    ) -> Result<Vec<Keyword>> {
+    ) -> Result<Vec<JiebaKeyword>> {
         let jieba = Self::get_instance()?;
         let tfidf = jieba
             .tfidf
@@ -103,7 +103,7 @@ impl JiebaRs {
         text: String,
         top_k: usize,
         allowed_pos: Vec<String>,
-    ) -> Result<Vec<Keyword>> {
+    ) -> Result<Vec<JiebaKeyword>> {
         let jieba = Self::get_instance()?;
         let text_rank = jieba
             .text_rank
@@ -114,10 +114,10 @@ impl JiebaRs {
         Ok(Self::convert_keywords(keywords))
     }
 
-    fn convert_keywords(keywords: Vec<jieba_rs::Keyword>) -> Vec<Keyword> {
+    fn convert_keywords(keywords: Vec<jieba_rs::Keyword>) -> Vec<JiebaKeyword> {
         keywords
             .into_iter()
-            .map(|k| Keyword {
+            .map(|k| JiebaKeyword {
                 keyword: k.keyword,
                 weight: k.weight,
             })
