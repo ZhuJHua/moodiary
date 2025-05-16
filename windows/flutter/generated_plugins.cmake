@@ -12,17 +12,15 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
   flutter_inappwebview_windows
   flutter_secure_storage_windows
+  fvp
   gal
   geolocator_windows
   isar_flutter_libs
   local_auth_windows
-  media_kit_libs_windows_video
-  media_kit_video
   permission_handler_windows
   record_windows
   share_plus
   url_launcher_windows
-  volume_controller
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
