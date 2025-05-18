@@ -105,7 +105,9 @@ class MultiFabLayoutDelegate extends MultiChildLayoutDelegate {
 class PageBackButton extends StatelessWidget {
   final Function()? onBack;
 
-  const PageBackButton({super.key, this.onBack});
+  final Color? color;
+
+  const PageBackButton({super.key, this.onBack, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +115,7 @@ class PageBackButton extends StatelessWidget {
       child: IconButton(
         onPressed: onBack ?? Get.back,
         icon: const Icon(Icons.arrow_back_rounded),
-        color: context.theme.colorScheme.onSurface,
+        color: color ?? context.theme.colorScheme.onSurface,
         tooltip: context.l10n.back,
       ),
     );
