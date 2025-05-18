@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:fvp/fvp.dart' as fvp;
 import 'package:get/get.dart';
 import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
@@ -28,7 +29,6 @@ import 'package:moodiary/utils/log_util.dart';
 import 'package:moodiary/utils/media_util.dart';
 import 'package:moodiary/utils/theme_util.dart';
 import 'package:moodiary/utils/webdav_util.dart';
-import 'package:video_player_media_kit/video_player_media_kit.dart';
 
 Future<void> _initSystem() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +38,8 @@ Future<void> _initSystem() async {
   unawaited(RustLib.init());
   unawaited(_platFormOption());
   WebDavUtil().initWebDav();
-  VideoPlayerMediaKit.ensureInitialized(windows: true);
+  await ThemeUtil().buildTheme();
+  fvp.registerWith();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -46,7 +47,6 @@ Future<void> _initSystem() async {
       systemNavigationBarContrastEnforced: false,
     ),
   );
-  await ThemeUtil().buildTheme();
 }
 
 Future<Locale> _findLanguage() async {
@@ -116,7 +116,7 @@ class Moodiary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeData = ThemeUtil().getThemeData();
+    final theme = ThemeUtil().getThemeData();
     return GetMaterialApp.router(
       routeInformationParser: GetInformationParser.createInformationParser(
         initialRoute: _getInitialRoute(),
@@ -150,8 +150,8 @@ class Moodiary extends StatelessWidget {
         );
         return smartDialog(context, home);
       },
-      theme: themeData.$1,
-      darkTheme: themeData.$2,
+      theme: theme.$1,
+      darkTheme: theme.$2,
       locale: locale,
       themeMode: ThemeMode.values[PrefUtil.getValue<int>('themeMode')!],
       getPages: AppPages.routes,
