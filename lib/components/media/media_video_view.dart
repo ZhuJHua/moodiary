@@ -69,19 +69,16 @@ class MediaVideoComponent extends StatelessWidget {
                     imagePath: thumbnailList[index],
                     heroTag: '$heroPrefix$index',
                     onTap: () async {
-                      await showVideoView(
-                        context,
-                        videoList,
-                        index,
-                        heroTagPrefix: '$heroPrefix$index',
-                      );
+                      await showVideoView(context, videoList, index);
                     },
                     size: 120,
                   ),
                 ),
-                const FrostedGlassButton(
-                  size: 32,
-                  child: Center(child: Icon(Icons.play_arrow_rounded)),
+                const IgnorePointer(
+                  child: FrostedGlassButton(
+                    size: 32,
+                    child: Center(child: Icon(Icons.play_arrow_rounded)),
+                  ),
                 ),
               ],
             );

@@ -61,10 +61,13 @@ PODS:
     - Flutter
   - flutter_native_splash (2.4.3):
     - Flutter
-  - flutter_secure_storage (6.0.0):
+  - flutter_secure_storage_darwin (10.0.0):
     - Flutter
-  - fluttertoast (0.0.2):
+    - FlutterMacOS
+  - fvp (0.31.2):
     - Flutter
+    - FlutterMacOS
+    - mdk (~> 0.32.0)
   - gal (1.0.0):
     - Flutter
     - FlutterMacOS
@@ -93,8 +96,7 @@ PODS:
   - Mantle (2.2.0):
     - Mantle/extobjc (= 2.2.0)
   - Mantle/extobjc (2.2.0)
-  - media_kit_video (0.0.1):
-    - Flutter
+  - mdk (0.32.0)
   - mobile_scanner (7.0.0):
     - Flutter
     - FlutterMacOS
@@ -156,8 +158,6 @@ PODS:
   - video_player_avfoundation (0.0.1):
     - Flutter
     - FlutterMacOS
-  - volume_controller (0.0.1):
-    - Flutter
   - wakelock_plus (0.0.1):
     - Flutter
 
@@ -173,14 +173,13 @@ DEPENDENCIES:
   - flutter_inappwebview_ios (from `.symlinks/plugins/flutter_inappwebview_ios/ios`)
   - flutter_keyboard_visibility_temp_fork (from `.symlinks/plugins/flutter_keyboard_visibility_temp_fork/ios`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
-  - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
-  - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
+  - flutter_secure_storage_darwin (from `.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
+  - fvp (from `.symlinks/plugins/fvp/darwin`)
   - gal (from `.symlinks/plugins/gal/darwin`)
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/darwin`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - isar_flutter_libs (from `.symlinks/plugins/isar_flutter_libs/ios`)
   - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
-  - media_kit_video (from `.symlinks/plugins/media_kit_video/ios`)
   - mobile_scanner (from `.symlinks/plugins/mobile_scanner/darwin`)
   - moodiary_rust (from `.symlinks/plugins/moodiary_rust/ios`)
   - network_info_plus (from `.symlinks/plugins/network_info_plus/ios`)
@@ -195,7 +194,6 @@ DEPENDENCIES:
   - tflite_flutter (from `.symlinks/plugins/tflite_flutter/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
   - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
-  - volume_controller (from `.symlinks/plugins/volume_controller/ios`)
   - wakelock_plus (from `.symlinks/plugins/wakelock_plus/ios`)
 
 SPEC REPOS:
@@ -204,6 +202,7 @@ SPEC REPOS:
     - DKPhotoGallery
     - libwebp
     - Mantle
+    - mdk
     - OrderedSet
     - SDWebImage
     - SDWebImageWebPCoder
@@ -234,10 +233,10 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_keyboard_visibility_temp_fork/ios"
   flutter_native_splash:
     :path: ".symlinks/plugins/flutter_native_splash/ios"
-  flutter_secure_storage:
-    :path: ".symlinks/plugins/flutter_secure_storage/ios"
-  fluttertoast:
-    :path: ".symlinks/plugins/fluttertoast/ios"
+  flutter_secure_storage_darwin:
+    :path: ".symlinks/plugins/flutter_secure_storage_darwin/darwin"
+  fvp:
+    :path: ".symlinks/plugins/fvp/darwin"
   gal:
     :path: ".symlinks/plugins/gal/darwin"
   geolocator_apple:
@@ -248,8 +247,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/isar_flutter_libs/ios"
   local_auth_darwin:
     :path: ".symlinks/plugins/local_auth_darwin/darwin"
-  media_kit_video:
-    :path: ".symlinks/plugins/media_kit_video/ios"
   mobile_scanner:
     :path: ".symlinks/plugins/mobile_scanner/darwin"
   moodiary_rust:
@@ -278,8 +275,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
   video_player_avfoundation:
     :path: ".symlinks/plugins/video_player_avfoundation/darwin"
-  volume_controller:
-    :path: ".symlinks/plugins/volume_controller/ios"
   wakelock_plus:
     :path: ".symlinks/plugins/wakelock_plus/ios"
 
@@ -297,8 +292,8 @@ SPEC CHECKSUMS:
   flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
   flutter_keyboard_visibility_temp_fork: 95b2d534bacf6ac62e7fcbe5c2a9e2c2a17ce06f
   flutter_native_splash: c32d145d68aeda5502d5f543ee38c192065986cf
-  flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
-  fluttertoast: 2c67e14dce98bbdb200df9e1acf610d7a6264ea1
+  flutter_secure_storage_darwin: ce237a8775b39723566dc72571190a3769d70468
+  fvp: 89275776efede62b7fde1762afa518974e6d6750
   gal: baecd024ebfd13c441269ca7404792a7152fde89
   geolocator_apple: ab36aa0e8b7d7a2d7639b3b4e48308394e8cef5e
   image_picker_ios: 7fe1ff8e34c1790d6fff70a32484959f563a928a
@@ -306,7 +301,7 @@ SPEC CHECKSUMS:
   libwebp: 1786c9f4ff8a279e4dac1e8f385004d5fc253009
   local_auth_darwin: 553ce4f9b16d3fdfeafce9cf042e7c9f77c1c391
   Mantle: c5aa8794a29a022dfbbfc9799af95f477a69b62d
-  media_kit_video: f3b0d035d89def15cfbbcf7dc2ae278f201e2f83
+  mdk: a726c85fd49c002b83d586b278d452f387750889
   mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   moodiary_rust: e75b3fb63e53d3ba5cfed0edf0b6df5f98c4c5f1
   network_info_plus: cf61925ab5205dce05a4f0895989afdb6aade5fc
@@ -327,9 +322,8 @@ SPEC CHECKSUMS:
   tflite_flutter: 64b192e11352fe36943ab6656e1d49207f1a5595
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
   video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
-  volume_controller: 3657a1f65bedb98fa41ff7dc5793537919f31b12
-  wakelock_plus: 04623e3f525556020ebd4034310f20fe7fda8b49
+  wakelock_plus: e29112ab3ef0b318e58cfa5c32326458be66b556
 
-PODFILE CHECKSUM: 9752b5340b4d3f9618318fcd530d907790e2a9f5
+PODFILE CHECKSUM: ed22e19af5eb4a72710862041c4be54584bcf797
 
 COCOAPODS: 1.16.2
