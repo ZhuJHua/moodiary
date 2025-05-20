@@ -71,7 +71,7 @@ dependencies:
   unicons: 3.0.0
   encrypt: 5.0.3
   faker: 2.2.0
-  flutter_rust_bridge: 2.9.0
+  flutter_rust_bridge: 2.10.0
   syncfusion_flutter_sliders: 29.2.4
   flutter_quill_extensions: 11.0.0
   connectivity_plus: 6.1.4
