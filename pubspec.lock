@@ -1084,10 +1084,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_rust_bridge
-      sha256: "5a5c7a5deeef2cc2ffe6076a33b0429f4a20ceac22a397297aed2b1eb067e611"
+      sha256: b416ff56002789e636244fb4cc449f587656eff995e5a7169457eb0593fcaddb
       url: "https://pub.dev"
     source: hosted
-    version: "2.9.0"
+    version: "2.10.0"
   flutter_secure_storage:
     dependency: "direct main"
     description:
@@ -2254,10 +2254,10 @@ packages:
     dependency: transitive
     description:
       name: record_windows
-      sha256: "26bfebc8899f4fa5b6b044089887dc42115820cd6a907bdf40c16e909e87de0a"
+      sha256: "85a22fc97f6d73ecd67c8ba5f2f472b74ef1d906f795b7970f771a0914167e99"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.5"
+    version: "1.0.6"
   result_dart:
     dependency: transitive
     description:
@@ -2302,10 +2302,10 @@ packages:
     dependency: "direct main"
     description:
       name: scrollview_observer
-      sha256: "437c930927c5a3240ed2d40398f99d96eaca58f861817ff44f6d0c60113bcf9d"
+      sha256: "174d4efe7b79459a07662175c4db42c9862dcf78d3978e6e9c2d6c0d8137f4ca"
       url: "https://pub.dev"
     source: hosted
-    version: "1.26.0"
+    version: "1.26.1"
   share_plus:
     dependency: "direct main"
     description:
@@ -2779,10 +2779,10 @@ packages:
     dependency: transitive
     description:
       name: video_player_android
-      sha256: "1f4e8e0e02403452d699ef7cf73fe9936fac8f6f0605303d111d71acb375d1bc"
+      sha256: "28dcc4122079f40f93a0965b3679aff1a5f4251cf79611bd8011f937eb6b69de"
       url: "https://pub.dev"
     source: hosted
-    version: "2.8.3"
+    version: "2.8.4"
   video_player_avfoundation:
     dependency: transitive
     description:

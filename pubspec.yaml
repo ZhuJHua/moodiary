@@ -71,7 +71,7 @@ dependencies:
   unicons: 3.0.0
   encrypt: 5.0.3
   faker: 2.2.0
-  flutter_rust_bridge: 2.9.0
+  flutter_rust_bridge: 2.10.0
   syncfusion_flutter_sliders: 29.2.4
   flutter_quill_extensions: 11.0.0
   connectivity_plus: 6.1.4
@@ -111,7 +111,7 @@ dependencies:
   dartx: 1.2.0
   material_color_utilities: 0.11.1
   audioplayers_android_exo: 0.1.2
-  scrollview_observer: 1.26.0
+  scrollview_observer: 1.26.1
   flutter_smart_dialog: 4.9.8+7
   substring_highlight: 1.0.33
   qr_flutter: 4.1.0
