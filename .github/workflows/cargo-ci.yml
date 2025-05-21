@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - master
+      - develop
 
 jobs:
   test:
@@ -16,7 +17,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: stable
           override: true
 
       - name: Run cargo test
