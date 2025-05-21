@@ -38,6 +38,8 @@ All notable changes to this project will be documented in this file.
 - Add test module to lib.rs
 - Github actions for windows
 - Update CI configuration (#243)
+- Update changelog on develop
+- Bump Flutter version to 3.32.0 (#245)
 
 ## [2.7.3] - 2025-03-02
 
