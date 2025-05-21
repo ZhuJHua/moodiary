@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Add code scanning to import support
 - Optimize image processing capabilities
 - Integrate Jieba for keyword extraction and search optimization
+- *(video)* Use ffmpeg as video backend (#241)
 
 ### 🐛 Bug Fixes
 
@@ -18,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Remove workspace
 - Qweather api error
 - Qweather api error
+- *(rust)* New zip, use `std::os::unix` only in unix
 
 ### 🚜 Refactor
 
@@ -34,6 +36,8 @@ All notable changes to this project will be documented in this file.
 - Remove custom_lint to fix dart analyzer slow
 - Update rust test ci
 - Add test module to lib.rs
+- Github actions for windows
+- Update CI configuration (#243)
 
 ## [2.7.3] - 2025-03-02
 
