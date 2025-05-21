@@ -34,6 +34,8 @@ class ShareLogic extends GetxController {
     await File(
       FileUtil.getCachePath(name),
     ).writeAsBytes(await _captureWidget(context));
-    await Share.shareXFiles([XFile(FileUtil.getCachePath(name))]);
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(FileUtil.getCachePath(name))]),
+    );
   }
 }

@@ -13,7 +13,9 @@ class BackupSyncLogic extends GetxController {
     final zipPath = FileUtil.getCachePath('');
     final isolateParams = {'zipPath': zipPath, 'dataPath': dataPath};
     final path = await FileUtil.zipFileUseRust(isolateParams);
-    final res = await Share.shareXFiles([XFile(path)]);
+    final res = await SharePlus.instance.share(
+      ShareParams(files: [XFile(path)]),
+    );
     if (res.status == ShareResultStatus.success) {
       await File(path).delete();
     }
