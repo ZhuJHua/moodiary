@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Qweather api error
 - Qweather api error
 - *(rust)* New zip, use `std::os::unix` only in unix
+- Changelog update messages in CI configuration (#247)
 
 ### 🚜 Refactor
 
@@ -40,6 +41,7 @@ All notable changes to this project will be documented in this file.
 - Update CI configuration (#243)
 - Update changelog on develop
 - Bump Flutter version to 3.32.0 (#245)
+- Update changelog on develop
 
 ## [2.7.3] - 2025-03-02
 
