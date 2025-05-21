@@ -16,13 +16,9 @@ class CalendarLogic extends GetxController {
   late final ScrollOffsetListener scrollOffsetListener =
       ScrollOffsetListener.create();
 
-  late final ExpansionTileController expansionTileController =
-      ExpansionTileController();
-
   @override
   void onReady() async {
     await getMonthDiary(state.currentMonth.value);
-
     super.onReady();
   }
 
@@ -61,7 +57,7 @@ class CalendarLogic extends GetxController {
   void onVerticalDragEnd(DragEndDetails details) {
     final double velocity = details.velocity.pixelsPerSecond.dy;
     if (velocity > state.velocityThreshold) {
-      open(state.isUp);
+      //open(state.isUp);
     }
   }
 
@@ -71,20 +67,19 @@ class CalendarLogic extends GetxController {
   //   await getDiary();
   // }
 
-  void open(value) {
-    if (value && !expansionTileController.isExpanded) {
-      expansionTileController.expand();
-    } else if (!value && expansionTileController.isExpanded) {
-      expansionTileController.collapse();
-    }
-  }
+  // void open(value) {
+  //   if (value && !expansibleController.isExpanded) {
+  //     expansibleController.expand();
+  //   } else if (!value && expansibleController.isExpanded) {
+  //     expansibleController.collapse();
+  //   }
+  // }
 
   DateTime? findLatestDateInMonth(List<DateTime> dates, int year, int month) {
     // 过滤出符合条件的日期
-    final List<DateTime> filteredDates =
-        dates.where((date) {
-          return date.year == year && date.month == month;
-        }).toList();
+    final List<DateTime> filteredDates = dates.where((date) {
+      return date.year == year && date.month == month;
+    }).toList();
 
     // 如果没有符合条件的日期，返回 null
     if (filteredDates.isEmpty) {

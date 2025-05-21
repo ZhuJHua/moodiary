@@ -4,8 +4,8 @@ publish_to: 'none'
 version: 2.7.3+90
 
 environment:
-  sdk: '>=3.7.0'
-  flutter: '>=3.29.0'
+  sdk: '>=3.8.0'
+  flutter: '>=3.32.0'
 
 dependencies:
   flutter:
@@ -49,7 +49,7 @@ dependencies:
   dynamic_color: 1.7.0
   supabase_flutter: 2.9.0
   bitsdojo_window: 0.1.6
-  intl: 0.19.0
+  intl: 0.20.2
   collection: 1.19.1
   cupertino_icons: 1.0.8
   font_awesome_flutter: 10.8.0
@@ -111,7 +111,7 @@ dependencies:
   dartx: 1.2.0
   material_color_utilities: 0.11.1
   audioplayers_android_exo: 0.1.2
-  scrollview_observer: 1.26.0
+  scrollview_observer: 1.26.1
   flutter_smart_dialog: 4.9.8+7
   substring_highlight: 1.0.33
   qr_flutter: 4.1.0
