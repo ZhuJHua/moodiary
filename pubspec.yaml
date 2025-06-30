@@ -15,17 +15,17 @@ dependencies:
   dio: 5.8.0+1
   path: 1.9.1
   path_provider: 2.1.5
-  calendar_date_picker2: 2.0.0
-  logger: 2.5.0
+  calendar_date_picker2: 2.0.1
+  logger: 2.6.0
   flutter_drawing_board: 0.9.8
   flutter_displaymode: 0.6.0
   fl_chart: 1.0.0
-  file_picker: 10.1.9
+  file_picker: 10.2.0
   local_auth: 2.3.0
   local_auth_android: 1.0.49
   permission_handler: 12.0.0+1
   image_picker: 1.1.2
-  device_info_plus: 11.4.0
+  device_info_plus: 11.5.0
   package_info_plus: 8.3.0
   uuid: 4.5.1
   flutter_quill: 11.4.1
@@ -35,19 +35,16 @@ dependencies:
   crypto: 3.0.6
   markdown_widget: 2.3.2+8
   flutter_colorpicker: 1.1.0
-  geolocator: 14.0.0
+  geolocator: 14.0.1
   shared_preferences: 2.5.3
-  isar: 4.0.0-dev.14
-  isar_flutter_libs:
-    git:
-      url: https://github.com/ZhuJHua/isar
-      path: packages/isar_flutter_libs
+  isar: any
+  isar_flutter_libs: any
   cached_network_image: 3.4.1
-  audioplayers: 6.4.0
+  audioplayers: 6.5.0
   record: 6.0.0
   duration: 4.0.3
   dynamic_color: 1.7.0
-  supabase_flutter: 2.9.0
+  supabase_flutter: 2.9.1
   bitsdojo_window: 0.1.6
   intl: 0.20.2
   collection: 1.19.1
@@ -72,14 +69,12 @@ dependencies:
   encrypt: 5.0.3
   faker: 2.2.0
   flutter_rust_bridge: 2.10.0
-  syncfusion_flutter_sliders: 29.2.4
+  syncfusion_flutter_sliders: 30.1.37
   flutter_quill_extensions: 11.0.0
   connectivity_plus: 6.1.4
   image_picker_android: 0.8.12+23
-  fvp: 0.31.2
-  video_player: 2.9.5
+  video_player: 2.10.0
   chewie: 1.11.3
-  flutter_markdown: 0.7.7+1
   image_picker_platform_interface: 2.10.1
   flutter_image_compress: 2.4.0
   mime: 2.0.0
@@ -96,11 +91,11 @@ dependencies:
     path: rust_builder
   modal_bottom_sheet: 3.0.0
   tutorial_coach_mark: 1.3.0
-  adaptive_dialog: 2.4.1
+  adaptive_dialog: 2.4.2
   flutter_inappwebview: 6.2.0-beta.2
   markdown: 7.3.0
   flutter_highlight: 0.7.0
-  synchronized: 3.3.1
+  synchronized: 3.4.0
   flutter_secure_storage: 10.0.0-beta.4
   fpdart: 1.1.1
   rxdart: 0.28.0
@@ -110,18 +105,17 @@ dependencies:
   photo_view: 0.15.0
   dartx: 1.2.0
   material_color_utilities: 0.11.1
-  audioplayers_android_exo: 0.1.2
+  audioplayers_android_exo: 0.1.2+1
   scrollview_observer: 1.26.1
-  flutter_smart_dialog: 4.9.8+7
+  flutter_smart_dialog: 4.9.8+8
   substring_highlight: 1.0.33
   qr_flutter: 4.1.0
-  mobile_scanner: 7.0.0
+  mobile_scanner: 7.0.1
   throttling: 2.0.1
   gap: 3.0.1
   flutter_cache_manager: 3.4.1
-  hive_ce: 2.11.2
+  hive_ce: 2.11.3
   hive_ce_flutter: 2.3.1
-  flutter_modular: 6.3.4
   freezed_annotation: 3.0.0
   json_annotation: 4.9.0
   wakelock_plus: 1.3.2
@@ -129,25 +123,38 @@ dependencies:
     git:
       url: https://github.com/RGLie/word_cloud.git
       path: word_cloud
-  get_it: any
+  get_it: 8.0.3
   meta: 1.16.0
+  schedulers: 1.0.1
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: 2.4.15
-  flutter_launcher_icons: 0.14.3
+  build_runner: 2.5.4
+  flutter_launcher_icons: 0.14.4
   msix: 3.16.9
-  flutter_lints: 5.0.0
+  flutter_lints: 6.0.0
   flutter_gen: 5.10.0
   flutter_gen_runner: 5.10.0
   freezed: 3.0.6
   json_serializable: 6.9.5
+  hive_ce_generator: 1.9.2
 
 
 dependency_overrides:
-  source_gen: 2.0.0
   get_it: 8.0.3
+  isar:
+    git:
+      url: https://github.com/ZhuJHua/isar
+      ref: 8a2d6396cd49785ae4c1fdc7505b8dff7d74abe0
+      path: packages/isar
+  isar_flutter_libs:
+    git:
+      url: https://github.com/ZhuJHua/isar
+      ref: 8a2d6396cd49785ae4c1fdc7505b8dff7d74abe0
+      path: packages/isar_flutter_libs
+
 
 
 flutter_launcher_icons:
