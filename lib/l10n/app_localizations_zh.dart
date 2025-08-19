@@ -544,7 +544,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get webdavSyncEncryptionDes => '加密同步数据，需要设置私有密钥';
 
   @override
-  String get webdavOptionServer => '服务器地址';
+  String get webdavOptionServer => '服务器地址(http完整url)';
 
   @override
   String get webdavOptionServerDes => '请填写服务器地址';
