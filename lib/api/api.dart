@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary/common/models/geo.dart';
@@ -13,6 +14,7 @@ import 'package:moodiary/common/models/image.dart';
 import 'package:moodiary/common/models/weather.dart';
 import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/persistence/pref.dart';
+import 'package:moodiary/utils/geo_format_util.dart';
 import 'package:moodiary/utils/http_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
 import 'package:moodiary/utils/signature_util.dart';
@@ -67,7 +69,6 @@ class Api {
   }
 
   static Future<List<String>?> updatePosition(BuildContext context) async {
-    Position? position;
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -80,43 +81,45 @@ class Api {
         return null;
       }
     }
-    if (await Geolocator.isLocationServiceEnabled()) {
-      position = await Geolocator.getLastKnownPosition(
-        forceAndroidLocationManager: true,
-      );
+    if (!await Geolocator.isLocationServiceEnabled()) return null;
+
+    Position? position = await Geolocator.getLastKnownPosition(
+      forceAndroidLocationManager: true,
+    );
+    try {
       position ??= await Geolocator.getCurrentPosition(
-        locationSettings: AndroidSettings(forceLocationManager: true),
+        locationSettings: AndroidSettings(
+          forceLocationManager: true,
+          timeLimit: const Duration(seconds: 8),
+        ),
       );
-    }
-    if (position != null && context.mounted) {
-      final local = Localizations.localeOf(context);
-      final parameters = {
-        'location':
-            '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.latitude.toStringAsFixed(2))}',
-        'key': PrefUtil.getValue<String>('qweatherKey'),
-        'lang': local,
-      };
-      final res = await HttpUtil().get(
-        'https://${PrefUtil.getValue<String>('qweatherApiHost')}/geo/v2/city/lookup',
-        parameters: parameters,
-      );
-      final geo = await compute(
-        GeoResponse.fromJson,
-        res.data as Map<String, dynamic>,
-      );
-      if (geo.location != null && geo.location!.isNotEmpty) {
-        final city = geo.location!.first;
-        return [
-          position.latitude.toString(),
-          position.longitude.toString(),
-          '${city.adm2} ${city.name}',
-        ];
-      } else {
-        return null;
-      }
-    } else {
+    } on TimeoutException {
       return null;
     }
+    if (position == null) return null;
+
+    String displayName = formatCoords(position.latitude, position.longitude);
+    try {
+      final local = context.mounted ? Localizations.localeOf(context) : null;
+      if (local != null) {
+        await setLocaleIdentifier(local.toLanguageTag());
+      }
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      ).timeout(const Duration(seconds: 4));
+      if (placemarks.isNotEmpty) {
+        displayName = composePlacemark(placemarks.first, local) ?? displayName;
+      }
+    } catch (_) {
+      // silent fallback to coordinates
+    }
+
+    return [
+      position.latitude.toString(),
+      position.longitude.toString(),
+      displayName,
+    ];
   }
 
   static Future<List<String>?> updateWeather({
