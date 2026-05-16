@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary/common/values/icons.dart';
 import 'package:moodiary/common/values/weather_presets.dart';
+import 'package:moodiary/l10n/app_localizations.dart';
 
 void main() {
   group('kWeatherPresets', () {
@@ -30,4 +32,30 @@ void main() {
       expect(codes.toSet().length, codes.length);
     });
   });
+
+  testWidgets('WeatherPresetL10n.label resolves every nameKey', (tester) async {
+    await tester.pumpWidget(const _LabelHarness());
+    final BuildContext context = tester.element(find.byType(SizedBox));
+
+    for (final preset in kWeatherPresets) {
+      final label = preset.label(context);
+      expect(label.isNotEmpty, true,
+          reason: '${preset.nameKey} returned empty label');
+      expect(label, isNot(equals(preset.nameKey)),
+          reason: '${preset.nameKey} fell through to default branch');
+    }
+  });
+}
+
+class _LabelHarness extends StatelessWidget {
+  const _LabelHarness();
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: Locale('zh'),
+      home: SizedBox(),
+    );
+  }
 }
