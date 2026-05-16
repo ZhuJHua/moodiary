@@ -9,20 +9,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:moodiary/api/api.dart';
 import 'package:moodiary/common/models/isar/diary.dart';
 import 'package:moodiary/common/values/diary_type.dart';
 import 'package:moodiary/common/values/keyboard_state.dart';
+import 'package:moodiary/common/values/weather_presets.dart';
 import 'package:moodiary/components/base/text.dart';
 import 'package:moodiary/components/keyboard_listener/keyboard_listener.dart';
 import 'package:moodiary/components/quill_embed/audio_embed.dart';
 import 'package:moodiary/components/quill_embed/image_embed.dart';
 import 'package:moodiary/components/quill_embed/text_indent.dart';
 import 'package:moodiary/components/quill_embed/video_embed.dart';
+import 'package:moodiary/components/weather_picker_sheet.dart';
 import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/persistence/isar.dart';
-import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/router/app_routes.dart';
 import 'package:moodiary/src/rust/api/jieba.dart';
 import 'package:moodiary/src/rust/api/kmp.dart';
@@ -540,52 +540,66 @@ class EditLogic extends GetxController {
 
   //获取天气，同时获取定位
   Future<void> getPositionAndWeather({required BuildContext context}) async {
-    final key = PrefUtil.getValue<String>('qweatherKey');
-    final apiHost = PrefUtil.getValue<String>('qweatherApiHost');
-    if (key.isNullOrBlank || apiHost.isNullOrBlank) return;
+    state.isProcessing = true;
+    update(['Weather']);
+
+    final positionFuture = Api.updatePosition(context);
+    final initialPreset = _resolveCurrentPreset();
+    final initialTemp = _resolveCurrentTemp();
+
+    if (!context.mounted) return;
+    final result = await showWeatherPickerSheet(
+      context: context,
+      initialPreset: initialPreset,
+      initialTemp: initialTemp,
+    );
+
+    if (result == null) {
+      state.isProcessing = false;
+      update(['Weather']);
+      // positionFuture still completes in background; its result is discarded
+      return;
+    }
+
+    if (!context.mounted) return;
+    state.currentDiary.weather = [
+      result.preset.code,
+      result.temp.toString(),
+      result.preset.label(context),
+    ];
 
     try {
-      state.isProcessing = true;
-      update(['Weather']);
-
-      // 获取定位
-      final position = await Api.updatePosition(context);
-      if (position == null && context.mounted) {
-        _handleError(context, context.l10n.locationError);
-        return;
-      }
-      state.currentDiary.position = position!;
-      if (!context.mounted) return;
-      // 获取天气
-      final weather = await Api.updateWeather(
-        context: context,
-        position: LatLng(double.parse(position[0]), double.parse(position[1])),
-      );
-      if (weather == null && context.mounted) {
-        _handleError(context, context.l10n.weatherError);
-        return;
-      }
-      state.currentDiary.weather = weather!;
-      state.isProcessing = false;
-      if (context.mounted) {
-        toast.success(message: context.l10n.weatherSuccess);
-      }
-      update(['Weather']);
-    } catch (e) {
-      state.isProcessing = false;
-      update(['Weather']);
-      if (context.mounted) {
-        toast.error(message: context.l10n.weatherError);
-      }
+      final position = await positionFuture;
+      if (position != null) state.currentDiary.position = position;
+    } catch (_) {
+      // location failures already toasted inside Api.updatePosition
     }
-  }
 
-  void _handleError(BuildContext context, String message) {
     state.isProcessing = false;
     update(['Weather']);
     if (context.mounted) {
-      toast.error(message: message);
+      toast.success(message: context.l10n.weatherSuccess);
     }
+  }
+
+  WeatherPreset _resolveCurrentPreset() {
+    final w = state.currentDiary.weather;
+    if (w.isNotEmpty) {
+      final code = w[0];
+      for (final p in kWeatherPresets) {
+        if (p.code == code) return p;
+      }
+    }
+    return kWeatherPresets.first;
+  }
+
+  int _resolveCurrentTemp() {
+    final w = state.currentDiary.weather;
+    if (w.length >= 2) {
+      final parsed = int.tryParse(w[1]);
+      if (parsed != null) return parsed;
+    }
+    return 20;
   }
 
   Future<void> pickAudio(BuildContext context) async {
