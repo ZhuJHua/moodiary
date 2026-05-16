@@ -5,15 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:moodiary/common/models/geo.dart';
 import 'package:moodiary/common/models/github.dart';
 import 'package:moodiary/common/models/hitokoto.dart';
 import 'package:moodiary/common/models/hunyuan.dart';
 import 'package:moodiary/common/models/image.dart';
-import 'package:moodiary/common/models/weather.dart';
 import 'package:moodiary/l10n/l10n.dart';
-import 'package:moodiary/persistence/pref.dart';
 import 'package:moodiary/utils/geo_format_util.dart';
 import 'package:moodiary/utils/http_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
@@ -96,7 +92,6 @@ class Api {
     } on TimeoutException {
       return null;
     }
-    if (position == null) return null;
 
     String displayName = formatCoords(position.latitude, position.longitude);
     try {
@@ -120,32 +115,6 @@ class Api {
       position.longitude.toString(),
       displayName,
     ];
-  }
-
-  static Future<List<String>?> updateWeather({
-    required BuildContext context,
-    required LatLng position,
-  }) async {
-    final local = Localizations.localeOf(context);
-    final parameters = {
-      'location':
-          '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.latitude.toStringAsFixed(2))}',
-      'key': PrefUtil.getValue<String>('qweatherKey'),
-      'lang': local,
-    };
-    final res = await HttpUtil().get(
-      'https://${PrefUtil.getValue<String>('qweatherApiHost')}/v7/weather/now',
-      parameters: parameters,
-    );
-    final weather = await compute(
-      WeatherResponse.fromJson,
-      res.data as Map<String, dynamic>,
-    );
-    if (weather.now != null) {
-      return [weather.now!.icon!, weather.now!.temp!, weather.now!.text!];
-    } else {
-      return null;
-    }
   }
 
   static Future<GithubRelease?> getGithubRelease() async {
