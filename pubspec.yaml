@@ -36,6 +36,7 @@ dependencies:
   markdown_widget: 2.3.2+8
   flutter_colorpicker: 1.1.0
   geolocator: 14.0.0
+  geocoding: ^3.0.0
   shared_preferences: 2.5.3
   isar: 4.0.0-dev.14
   isar_flutter_libs:
