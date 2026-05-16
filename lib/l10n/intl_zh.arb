@@ -288,5 +288,22 @@
   "noOption": "未配置",
   "labQweather": "和风天气",
   "labTianditu": "天地图",
-  "labTencentCloud": "腾讯云"
+  "labTencentCloud": "腾讯云",
+  "weatherSunny": "晴",
+  "weatherCloudy": "多云",
+  "weatherOvercast": "阴",
+  "weatherShowerRain": "阵雨",
+  "weatherLightRain": "小雨",
+  "weatherModerateRain": "中雨",
+  "weatherHeavyRain": "大雨",
+  "weatherThunder": "雷阵雨",
+  "weatherLightSnow": "小雪",
+  "weatherModerateSnow": "中雪",
+  "weatherHeavySnow": "大雪",
+  "weatherFog": "雾",
+  "weatherHaze": "霾",
+  "weatherSandstorm": "沙尘暴",
+  "weatherPickerTitle": "选择天气",
+  "weatherPickerConfirm": "确认",
+  "weatherPickerCancel": "取消"
 }

@@ -288,5 +288,22 @@
   "noOption": "Not configured",
   "labQweather": "Qweather",
   "labTianditu": "Tianditu",
-  "labTencentCloud": "Tencent Cloud"
+  "labTencentCloud": "Tencent Cloud",
+  "weatherSunny": "Sunny",
+  "weatherCloudy": "Cloudy",
+  "weatherOvercast": "Overcast",
+  "weatherShowerRain": "Shower Rain",
+  "weatherLightRain": "Light Rain",
+  "weatherModerateRain": "Moderate Rain",
+  "weatherHeavyRain": "Heavy Rain",
+  "weatherThunder": "Thundershower",
+  "weatherLightSnow": "Light Snow",
+  "weatherModerateSnow": "Moderate Snow",
+  "weatherHeavySnow": "Heavy Snow",
+  "weatherFog": "Foggy",
+  "weatherHaze": "Haze",
+  "weatherSandstorm": "Sandstorm",
+  "weatherPickerTitle": "Pick Weather",
+  "weatherPickerConfirm": "Confirm",
+  "weatherPickerCancel": "Cancel"
 }

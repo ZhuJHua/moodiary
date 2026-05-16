@@ -892,4 +892,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get labTencentCloud => '腾讯云';
+
+  @override
+  String get weatherSunny => '晴';
+
+  @override
+  String get weatherCloudy => '多云';
+
+  @override
+  String get weatherOvercast => '阴';
+
+  @override
+  String get weatherShowerRain => '阵雨';
+
+  @override
+  String get weatherLightRain => '小雨';
+
+  @override
+  String get weatherModerateRain => '中雨';
+
+  @override
+  String get weatherHeavyRain => '大雨';
+
+  @override
+  String get weatherThunder => '雷阵雨';
+
+  @override
+  String get weatherLightSnow => '小雪';
+
+  @override
+  String get weatherModerateSnow => '中雪';
+
+  @override
+  String get weatherHeavySnow => '大雪';
+
+  @override
+  String get weatherFog => '雾';
+
+  @override
+  String get weatherHaze => '霾';
+
+  @override
+  String get weatherSandstorm => '沙尘暴';
+
+  @override
+  String get weatherPickerTitle => '选择天气';
+
+  @override
+  String get weatherPickerConfirm => '确认';
+
+  @override
+  String get weatherPickerCancel => '取消';
 }

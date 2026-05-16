@@ -926,4 +926,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labTencentCloud => 'Tencent Cloud';
+
+  @override
+  String get weatherSunny => 'Sunny';
+
+  @override
+  String get weatherCloudy => 'Cloudy';
+
+  @override
+  String get weatherOvercast => 'Overcast';
+
+  @override
+  String get weatherShowerRain => 'Shower Rain';
+
+  @override
+  String get weatherLightRain => 'Light Rain';
+
+  @override
+  String get weatherModerateRain => 'Moderate Rain';
+
+  @override
+  String get weatherHeavyRain => 'Heavy Rain';
+
+  @override
+  String get weatherThunder => 'Thundershower';
+
+  @override
+  String get weatherLightSnow => 'Light Snow';
+
+  @override
+  String get weatherModerateSnow => 'Moderate Snow';
+
+  @override
+  String get weatherHeavySnow => 'Heavy Snow';
+
+  @override
+  String get weatherFog => 'Foggy';
+
+  @override
+  String get weatherHaze => 'Haze';
+
+  @override
+  String get weatherSandstorm => 'Sandstorm';
+
+  @override
+  String get weatherPickerTitle => 'Pick Weather';
+
+  @override
+  String get weatherPickerConfirm => 'Confirm';
+
+  @override
+  String get weatherPickerCancel => 'Cancel';
 }

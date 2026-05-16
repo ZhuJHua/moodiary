@@ -1831,6 +1831,108 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'腾讯云'**
   String get labTencentCloud;
+
+  /// No description provided for @weatherSunny.
+  ///
+  /// In zh, this message translates to:
+  /// **'晴'**
+  String get weatherSunny;
+
+  /// No description provided for @weatherCloudy.
+  ///
+  /// In zh, this message translates to:
+  /// **'多云'**
+  String get weatherCloudy;
+
+  /// No description provided for @weatherOvercast.
+  ///
+  /// In zh, this message translates to:
+  /// **'阴'**
+  String get weatherOvercast;
+
+  /// No description provided for @weatherShowerRain.
+  ///
+  /// In zh, this message translates to:
+  /// **'阵雨'**
+  String get weatherShowerRain;
+
+  /// No description provided for @weatherLightRain.
+  ///
+  /// In zh, this message translates to:
+  /// **'小雨'**
+  String get weatherLightRain;
+
+  /// No description provided for @weatherModerateRain.
+  ///
+  /// In zh, this message translates to:
+  /// **'中雨'**
+  String get weatherModerateRain;
+
+  /// No description provided for @weatherHeavyRain.
+  ///
+  /// In zh, this message translates to:
+  /// **'大雨'**
+  String get weatherHeavyRain;
+
+  /// No description provided for @weatherThunder.
+  ///
+  /// In zh, this message translates to:
+  /// **'雷阵雨'**
+  String get weatherThunder;
+
+  /// No description provided for @weatherLightSnow.
+  ///
+  /// In zh, this message translates to:
+  /// **'小雪'**
+  String get weatherLightSnow;
+
+  /// No description provided for @weatherModerateSnow.
+  ///
+  /// In zh, this message translates to:
+  /// **'中雪'**
+  String get weatherModerateSnow;
+
+  /// No description provided for @weatherHeavySnow.
+  ///
+  /// In zh, this message translates to:
+  /// **'大雪'**
+  String get weatherHeavySnow;
+
+  /// No description provided for @weatherFog.
+  ///
+  /// In zh, this message translates to:
+  /// **'雾'**
+  String get weatherFog;
+
+  /// No description provided for @weatherHaze.
+  ///
+  /// In zh, this message translates to:
+  /// **'霾'**
+  String get weatherHaze;
+
+  /// No description provided for @weatherSandstorm.
+  ///
+  /// In zh, this message translates to:
+  /// **'沙尘暴'**
+  String get weatherSandstorm;
+
+  /// No description provided for @weatherPickerTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择天气'**
+  String get weatherPickerTitle;
+
+  /// No description provided for @weatherPickerConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认'**
+  String get weatherPickerConfirm;
+
+  /// No description provided for @weatherPickerCancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get weatherPickerCancel;
 }
 
 class _AppLocalizationsDelegate
