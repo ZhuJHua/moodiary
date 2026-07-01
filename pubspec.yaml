@@ -1,217 +1,74 @@
-name: moodiary
-description: "A fully open source cross-platform diary app written by flutter and rust."
-publish_to: 'none'
-version: 2.7.3+90
+name: moodiary_workspace
+description: "Moodiary monorepo root — pub workspace + Melos coordinator (no app code lives here; the Flutter app is in mobile/)."
+publish_to: "none"
 
 environment:
-  sdk: '>=3.8.0'
-  flutter: '>=3.32.0'
+  sdk: ">=3.12.0"
 
-dependencies:
-  flutter:
-    sdk: flutter
+# Pub workspace members. One shared resolution + one pubspec.lock at this root.
+workspace:
+  - mobile
+  - desktop
+  - packages/infra/moodiary_lint
+  - packages/foundation/moodiary_l10n
+  - packages/foundation/moodiary_rust
+  - packages/foundation/moodiary_utils
+  - packages/foundation/moodiary_models
+  - packages/infra/moodiary_core
+  - packages/infra/moodiary_data
+  - packages/product/moodiary_ui
+  - packages/product/moodiary_editor
 
-  get: 5.0.0-release-candidate-9.3.2
-  dio: 5.8.0+1
-  path: 1.9.1
-  path_provider: 2.1.5
-  calendar_date_picker2: 2.0.1
-  logger: 2.6.0
-  flutter_drawing_board: 0.9.8
-  flutter_displaymode: 0.6.0
-  fl_chart: 1.0.0
-  file_picker: 10.2.0
-  local_auth: 2.3.0
-  local_auth_android: 1.0.49
-  permission_handler: 12.0.0+1
-  image_picker: 1.1.2
-  device_info_plus: 11.5.0
-  package_info_plus: 8.3.0
-  uuid: 4.5.1
-  flutter_quill: 11.4.1
-  share_plus: 11.0.0
-  url_launcher: 6.3.1
-  archive: 4.0.7
-  crypto: 3.0.6
-  markdown_widget: 2.3.2+8
-  flutter_colorpicker: 1.1.0
-  geolocator: 14.0.1
-  shared_preferences: 2.5.3
-  isar: any
-  isar_flutter_libs: any
-  cached_network_image: 3.4.1
-  audioplayers: 6.5.0
-  record: 6.0.0
-  duration: 4.0.3
-  dynamic_color: 1.7.0
-  supabase_flutter: 2.9.1
-  bitsdojo_window: 0.1.6
-  intl: 0.20.2
-  collection: 1.19.1
-  cupertino_icons: 1.0.8
-  font_awesome_flutter: 10.8.0
-  tflite_flutter: 0.11.0
-  sliver_tools: 0.2.12
-  lottie: 3.3.1
-  flutter_adaptive_scaffold: 0.3.3+1
-  cross_file: 0.3.4+2
-  fc_native_video_thumbnail: 0.17.2
-  flutter_map: 7.0.2
-  flutter_map_cache: 2.0.0+1
-  flutter_map_marker_cluster: 1.4.0
-  http_cache_hive_store: 5.0.1
-  latlong2: 0.9.1
-  shelf: 1.4.2
-  shelf_multipart: 2.0.1
-  waterfall_flow: 3.1.1
-  smooth_page_indicator: 1.2.1
-  unicons: 3.0.0
-  encrypt: 5.0.3
-  faker: 2.2.0
-  flutter_rust_bridge: 2.10.0
-  syncfusion_flutter_sliders: 30.1.37
-  flutter_quill_extensions: 11.0.0
-  connectivity_plus: 6.1.4
-  image_picker_android: 0.8.12+23
-  video_player: 2.10.0
-  chewie: 1.11.3
-  image_picker_platform_interface: 2.10.1
-  flutter_image_compress: 2.4.0
-  mime: 2.0.0
-  auto_size_text_field: 2.2.4
-  webdav_client: 1.2.2
-  confetti: 0.8.0
-  flutter_native_splash: 2.4.6
-  gal: 2.3.1
-  network_info_plus: 6.1.4
-  scrollable_positioned_list: 0.3.8
-  flutter_localizations:
-    sdk: flutter
-  moodiary_rust:
-    path: rust_builder
-  modal_bottom_sheet: 3.0.0
-  tutorial_coach_mark: 1.3.0
-  adaptive_dialog: 2.4.2
-  flutter_inappwebview: 6.2.0-beta.2
-  markdown: 7.3.0
-  flutter_highlight: 0.7.0
-  synchronized: 3.4.0
-  flutter_secure_storage: 10.0.0-beta.4
-  fpdart: 1.1.1
-  rxdart: 0.28.0
-  minio: 3.5.7
-  page_transition: 2.2.1
-  dismissible_page: 1.0.2
-  photo_view: 0.15.0
-  dartx: 1.2.0
-  material_color_utilities: 0.11.1
-  audioplayers_android_exo: 0.1.2+1
-  scrollview_observer: 1.26.1
-  flutter_smart_dialog: 4.9.8+8
-  substring_highlight: 1.0.33
-  qr_flutter: 4.1.0
-  mobile_scanner: 7.0.1
-  throttling: 2.0.1
-  gap: 3.0.1
-  flutter_cache_manager: 3.4.1
-  hive_ce: 2.11.3
-  hive_ce_flutter: 2.3.1
-  freezed_annotation: 3.0.0
-  json_annotation: 4.9.0
-  wakelock_plus: 1.3.2
-  word_cloud:
-    git:
-      url: https://github.com/RGLie/word_cloud.git
-      path: word_cloud
-  get_it: 8.0.3
-  meta: 1.16.0
-  schedulers: 1.0.1
-
+melos:
+  # 包分层（仅用于命令过滤/分组，不强制依赖方向——方向由 pub 无环依赖图保证）。
+  # 目录亦按此分层组织：packages/{tooling,foundation,infra,product}/。
+  # 上层依赖下层：tooling（独立）；foundation ← infra ← product ← apps。
+  categories:
+    foundation:
+      - packages/foundation/moodiary_l10n
+      - packages/foundation/moodiary_rust
+      - packages/foundation/moodiary_utils
+      - packages/foundation/moodiary_models
+    infra:
+      - packages/infra/moodiary_lint
+      - packages/infra/moodiary_core
+      - packages/infra/moodiary_data
+    product:
+      - packages/product/moodiary_ui
+      - packages/product/moodiary_editor
+  command:
+    bootstrap:
+      # bootstrap 完成（pub get 之后）自动重新生成 Rust 绑定 + 构建编辑器资源。
+      hooks:
+        post: fvm dart tool/task.dart gen
+  scripts:
+    analyze:
+      run: fvm dart tool/task.dart analyze
+      description: 分层检查 + flutter analyze
+    test:
+      run: fvm dart tool/task.dart test
+      description: 运行全部测试
+    gen:
+      run: fvm dart tool/task.dart gen
+      description: 重新生成 Rust 绑定 + 编辑器资源
+    gen-rust:
+      run: fvm dart tool/task.dart gen-rust
+      description: 重新生成 Rust FFI 绑定
+    gen-editor:
+      run: fvm dart tool/task.dart editor
+      description: 构建编辑器单文件资源
 
 dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  build_runner: 2.5.4
-  flutter_launcher_icons: 0.14.4
-  msix: 3.16.9
-  flutter_lints: 6.0.0
-  flutter_gen: 5.10.0
-  flutter_gen_runner: 5.10.0
-  freezed: 3.0.6
-  json_serializable: 6.9.5
-  hive_ce_generator: 1.9.2
+  # Melos is a root-only tooling dep (not a workspace member dependency): its
+  # cli_util ^0.5.0 clashes with flutter_launcher_icons' ^0.4.1, resolved by the
+  # cli_util override below (cli_util is tooling-only, not in the app runtime).
+  melos: 8.0.0
 
-
+# dependency_overrides only take effect in the workspace root pubspec.
 dependency_overrides:
-  get_it: 8.0.3
-  isar:
+  quill_native_bridge_windows:
     git:
-      url: https://github.com/ZhuJHua/isar
-      ref: 8a2d6396cd49785ae4c1fdc7505b8dff7d74abe0
-      path: packages/isar
-  isar_flutter_libs:
-    git:
-      url: https://github.com/ZhuJHua/isar
-      ref: 8a2d6396cd49785ae4c1fdc7505b8dff7d74abe0
-      path: packages/isar_flutter_libs
-
-
-
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  adaptive_icon_background: "#ffffff"
-  adaptive_icon_foreground: "assets/icon/light/light_foreground.png"
-  adaptive_icon_monochrome: "assets/icon/light/light_foreground.png"
-  image_path_ios_dark_transparent: "assets/icon/dark/dark_foreground.png"
-  image_path_ios_tinted_grayscale: "assets/icon/light/light_foreground.png"
-  desaturate_tinted_to_grayscale_ios: true
-  image_path: "assets/icon/light/light_icon.png"
-  remove_alpha_ios: true
-  min_sdk_android: 26
-  windows:
-    generate: true
-    image_path: "assets/icon/light/light_icon_desktop.png"
-    icon_size: 256
-  macos:
-    generate: true
-    image_path: "assets/icon/light/light_icon_desktop.png"
-
-flutter_native_splash:
-  color: "#ffffff"
-  image: assets/icon/light/light_splash_icon.png
-  color_dark: "#000000"
-  image_dark: assets/icon/dark/dark_splash_icon.png
-
-  android_12:
-    image: assets/icon/light/light_splash_icon.png
-    color: "#ffffff"
-    image_dark: assets/icon/dark/dark_splash_icon.png
-    color_dark: "#000000"
-  fullscreen: true
-  web: false
-
-flutter:
-  generate: true
-  fonts:
-    - family: qweather
-      fonts:
-        - asset: assets/fonts/qweather-icons.ttf
-
-  assets:
-    - assets/icon/dark/
-    - assets/icon/light/
-    - assets/lottie/
-    - res/sponsor/
-    - assets/tflite/
-
-  uses-material-design: true
-
-msix_config:
-  display_name: Moodiary
-  identity_name: JHZhu.Moodiary
-  publisher: CN=8FC154B5-951B-4B96-B1CA-5A8A86B49C11
-  publisher_display_name: JH Zhu
-  capabilities: internetClient, location, microphone
-  logo_path: assets/icon/light/light_icon_desktop.png
-  store: true
+      url: https://github.com/Vito0912/quill-native-bridge.git
+      ref: 8c043047e2c34af3879471b19e44119f0ef6ded8
+      path: quill_native_bridge_windows
+  cli_util: 0.5.0

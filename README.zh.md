@@ -19,7 +19,7 @@
 
 ## ✨ 功能特性
 
-- **跨平台支持**：🌍 兼容 Android、iOS、Windows、MacOS、Linux\*。
+- **跨平台支持**：🌍 兼容 Android、iOS、Windows 和 macOS。
 - **Material Design**：🎨 界面直观且用户友好，遵循 Material Design 设计规范。
 - **多种编辑器**：📝 支持 Markdown 、纯文本、富文本等多种形式的文本编辑。
 - **多媒体附件**：📷 可以为你的日记添加图片、音频、视频甚至画一张画。
@@ -39,7 +39,7 @@
 
 - [Flutter](https://github.com/flutter/flutter)（跨平台 UI 框架）
 - [Isar](https://github.com/isar/isar)（高性能本地数据库）
-- [GetX](https://github.com/jonataslaw/getx)（状态管理框架）
+- [Riverpod](https://github.com/rrousselGit/riverpod)（状态管理框架）
 
 ## 📸 应用截图
 
@@ -91,7 +91,7 @@
 
 - Flutter SDK (>= 3.29.0 Stable)（建议使用 fvm 来管理 flutter 版本）
 - Dart (>= 3.7.0)
-- Rust 工具链（Nightly）
+- Rust 工具链（Stable）
 - Clang/LLVM
 - 兼容的 IDE（如 Android Studio、Visual Studio Code）
 

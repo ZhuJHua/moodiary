@@ -1,0 +1,671 @@
+/*
+ * MoodiaryEditor 生产样式 = Tailwind v4 + daisyUI（编辑器外观）+ TipTap/ProseMirror 正文排版 +
+ * 由种子色生成的 --app-* token 映射。
+ *
+ * 配色单一真源：Flutter 下发种子色 → bridge/theme.ts 在 :root 重算整套 --app-* token（明暗各一套）。
+ * daisyUI 主题（下方 light/dark）只把 --color-* 指向 var(--app-*)，故 daisyUI 组件（按钮/表面）与
+ * 正文、音视频控件全部跟随同一套配色、明暗自动切换。daisyUI v5 允许主题色直接引用外部 var()
+ * （color-mix 在 var()→hex 上工作、无构建期转换），前提是显式给齐所有 -content token（下方已给）。
+ * 代码高亮 token（.hljs-*）另用 github / github-dark，经 [data-theme='dark'] 切换。
+ */
+
+@import 'tailwindcss';
+
+/* 关掉 daisyUI 内置主题，只用下方两套指向 --app-* 的自定义主题。 */
+@plugin "daisyui" {
+  themes: false;
+}
+
+/* 浅色主题（默认）：所有 --color-* 指向 --app-*（运行期由 theme.ts 按种子色重算）。 */
+@plugin "daisyui/theme" {
+  name: 'light';
+  default: true;
+  color-scheme: light;
+  --color-base-100: var(--app-background);
+  --color-base-200: var(--app-surface);
+  --color-base-300: var(--app-hover);
+  --color-base-content: var(--app-on-background);
+  --color-primary: var(--app-primary);
+  --color-primary-content: var(--app-on-primary);
+  --color-secondary: var(--app-secondary);
+  --color-secondary-content: var(--app-on-secondary);
+  --color-accent: var(--app-primary);
+  --color-accent-content: var(--app-on-primary);
+  --color-neutral: var(--app-inverse);
+  --color-neutral-content: var(--app-on-inverse);
+  --color-error: var(--app-error);
+  --color-error-content: var(--app-background);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* 深色主题：仅 color-scheme 不同；色值同样指向 --app-*（theme.ts 已把它们重算为暗色）。 */
+@plugin "daisyui/theme" {
+  name: 'dark';
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: var(--app-background);
+  --color-base-200: var(--app-surface);
+  --color-base-300: var(--app-hover);
+  --color-base-content: var(--app-on-background);
+  --color-primary: var(--app-primary);
+  --color-primary-content: var(--app-on-primary);
+  --color-secondary: var(--app-secondary);
+  --color-secondary-content: var(--app-on-secondary);
+  --color-accent: var(--app-primary);
+  --color-accent-content: var(--app-on-primary);
+  --color-neutral: var(--app-inverse);
+  --color-neutral-content: var(--app-on-inverse);
+  --color-error: var(--app-error);
+  --color-error-content: var(--app-background);
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* —— --app-* 兜底值：仅首帧生效，applyTheme 用 inline style 注入后即被覆盖（优先级更高） —— */
+:root {
+  --app-background: #fffdfb;
+  --app-on-background: #1f1b16;
+  --app-surface: #fff8f4;
+  --app-surface-low: #fff1e5;
+  --app-on-surface: #201b13;
+  --app-on-surface-variant: #4f4539;
+  --app-outline: #817567;
+  --app-primary: #805610;
+  --app-on-primary: #ffffff;
+  --app-secondary: #fbdebc;
+  --app-on-secondary: #271904;
+  --app-inverse: #362f27;
+  --app-on-inverse: #fcefe2;
+  --app-inline-code: #ba1a1a;
+  --app-error: #ba1a1a;
+  --app-hover: #f9ecdf;
+  --app-selected: #ede0d4;
+  --app-inline-area: #e4d8cc;
+  --app-text-selection: #8056104d; /* primary @ ~30% */
+  --app-scrollbar: #4f453966; /* on-surface-variant @ ~40% */
+  --app-scrollbar-hover: #4f453999; /* on-surface-variant @ ~60% */
+
+  --app-font-sans:
+    -apple-system, 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC', Roboto,
+    sans-serif;
+  --app-font-mono:
+    ui-monospace, 'Cascadia Code', 'JetBrains Mono', 'Roboto Mono', Menlo,
+    monospace;
+
+  caret-color: var(--app-primary);
+}
+
+/* —— 布局：编辑器填满 webview，正文在内部滚动 —— */
+html,
+body {
+  background: var(--app-background);
+  color: var(--app-on-background);
+}
+.editor-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.moodiary-editor-root {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.moodiary-editor-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  /* 作为字数计数浮层的定位上下文（计数固定在编辑器视口右下，不随正文滚动）。 */
+  position: relative;
+}
+/* 右下角状态条：同步气泡 + 字数小药丸，仅编辑态显示，不拦截点击。 */
+.moodiary-statusbar {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  user-select: none;
+}
+.moodiary-wordcount {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--app-surface);
+  color: var(--app-on-surface-variant);
+  font-size: 11px;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+/* 自动保存气泡：保存中 / 已保存 / 保存失败（idle 不显示）。与字数同款底色，文字色随状态。 */
+.moodiary-savestatus {
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: var(--app-surface);
+  font-size: 11px;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+.moodiary-savestatus[data-state='saving'] {
+  color: var(--app-on-surface-variant);
+}
+.moodiary-savestatus[data-state='saved'] {
+  color: var(--app-primary);
+}
+.moodiary-savestatus[data-state='failed'] {
+  color: var(--app-error);
+}
+.moodiary-editor {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* 工具栏（EditorToolbar，daisyUI 按钮）横向滚动条隐藏的小工具类。 */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* —— ProseMirror 基础（取自 prosemirror-view / gapcursor；TipTap headless 不自带视觉样式） —— */
+.ProseMirror {
+  position: relative;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  font-variant-ligatures: none;
+  -webkit-font-variant-ligatures: none;
+}
+.ProseMirror pre {
+  white-space: pre-wrap;
+}
+.ProseMirror li {
+  position: relative;
+}
+.ProseMirror [draggable][contenteditable='false'] {
+  user-select: none;
+}
+.ProseMirror:focus {
+  outline: none;
+}
+.ProseMirror-hideselection *::selection {
+  background: transparent;
+}
+.ProseMirror-hideselection {
+  caret-color: transparent;
+}
+.ProseMirror-gapcursor {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+}
+.ProseMirror-gapcursor::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: -2px;
+  width: 20px;
+  border-top: 1px solid var(--app-on-background);
+  animation: ProseMirror-cursor-blink 1.1s steps(2, start) infinite;
+}
+@keyframes ProseMirror-cursor-blink {
+  to {
+    visibility: hidden;
+  }
+}
+.ProseMirror-focused .ProseMirror-gapcursor {
+  display: block;
+}
+
+/* —— 编辑区：填满剩余高度并在内部滚动；透明背景透出 Flutter 容器 —— */
+.moodiary-editor .ProseMirror {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  background: transparent;
+  color: var(--app-on-background);
+  font-family: var(--app-font-sans);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+/* placeholder：Placeholder 扩展给空首段加 .is-editor-empty + data-placeholder。 */
+.moodiary-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--app-on-surface-variant);
+}
+
+/* —— 正文排版 —— */
+.moodiary-editor .ProseMirror > :first-child {
+  margin-top: 0;
+}
+.moodiary-editor .ProseMirror p {
+  margin: 0.6em 0;
+}
+.moodiary-editor .ProseMirror h1,
+.moodiary-editor .ProseMirror h2,
+.moodiary-editor .ProseMirror h3,
+.moodiary-editor .ProseMirror h4,
+.moodiary-editor .ProseMirror h5,
+.moodiary-editor .ProseMirror h6 {
+  margin: 1.4em 0 0.6em;
+  line-height: 1.3;
+  font-weight: 600;
+  color: var(--app-on-background);
+}
+.moodiary-editor .ProseMirror h1 {
+  font-size: 1.7em;
+}
+.moodiary-editor .ProseMirror h2 {
+  font-size: 1.45em;
+}
+.moodiary-editor .ProseMirror h3 {
+  font-size: 1.25em;
+}
+.moodiary-editor .ProseMirror h4 {
+  font-size: 1.1em;
+}
+.moodiary-editor .ProseMirror h5,
+.moodiary-editor .ProseMirror h6 {
+  font-size: 1em;
+}
+.moodiary-editor .ProseMirror a {
+  color: var(--app-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+/* 双链 chip（diaryLink 节点；App.vue 监听点击发 linkTap → Flutter 跳转目标日记）。 */
+.moodiary-editor .ProseMirror .moodiary-link {
+  color: var(--app-primary);
+  background: var(--app-selected);
+  border-radius: 4px;
+  padding: 0 4px;
+  white-space: nowrap;
+  cursor: pointer;
+  font-weight: 500;
+}
+@media (hover: hover) and (pointer: fine) {
+  .moodiary-editor .ProseMirror .moodiary-link:hover {
+    background: var(--app-hover);
+  }
+}
+/* 编辑器内查找匹配高亮（prosemirror-search 装饰）：全部匹配 + 当前匹配。 */
+.moodiary-editor .ProseMirror .ProseMirror-search-match {
+  background: var(--app-selected);
+  border-radius: 2px;
+}
+.moodiary-editor .ProseMirror .ProseMirror-active-search-match {
+  background: var(--app-primary);
+  color: var(--app-on-primary);
+  border-radius: 2px;
+}
+.moodiary-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0.4em 0;
+  border-radius: 8px;
+}
+
+/* —— 音频 / 视频：webview 内原生 <audio>/<video> + daisyUI 自绘控件（components/nodes/*）。
+   控件外观全部用 daisyUI（btn / range）+ Tailwind 工具类,见组件模板;这里只留外边距与选中描边。 —— */
+.moodiary-media {
+  margin: 0.8em 0;
+}
+/* 选中（NodeSelection）描边，复刻旧节点视图观感。 */
+.moodiary-media.is-selected {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-box, 0.75rem);
+}
+
+/* —— 表格（@tiptap/extension-table / prosemirror-tables）：边框/表头/选中单元格/列宽拖拽手柄，配色走 --app-* —— */
+.moodiary-editor .ProseMirror .tableWrapper {
+  margin: 0.8em 0;
+  overflow-x: auto;
+}
+.moodiary-editor .ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed; /* prosemirror-tables 用 colgroup 控列宽 */
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+.moodiary-editor .ProseMirror td,
+.moodiary-editor .ProseMirror th {
+  position: relative;
+  min-width: 3em;
+  padding: 6px 10px;
+  border: 1px solid var(--app-outline);
+  vertical-align: top;
+  box-sizing: border-box;
+}
+.moodiary-editor .ProseMirror th {
+  background: var(--app-surface);
+  font-weight: 600;
+  text-align: left;
+}
+/* 单元格内段落不再额外撑高 */
+.moodiary-editor .ProseMirror td > *,
+.moodiary-editor .ProseMirror th > * {
+  margin: 0;
+}
+/* 选中单元格高亮（prosemirror-tables 给 .selectedCell 加叠加层） */
+.moodiary-editor .ProseMirror .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--app-text-selection);
+  pointer-events: none;
+}
+/* 列宽拖拽手柄 */
+.moodiary-editor .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background: var(--app-primary);
+  pointer-events: none;
+}
+.moodiary-editor .ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+.moodiary-editor .ProseMirror blockquote {
+  margin: 0.8em 0;
+  padding: 0.2em 0 0.2em 1em;
+  border-left: 3px solid var(--app-outline);
+  color: var(--app-on-surface-variant);
+}
+/* Tailwind preflight 会清掉 ul/ol 的 list-style，这里显式恢复标记。 */
+.moodiary-editor .ProseMirror ul,
+.moodiary-editor .ProseMirror ol {
+  padding-left: 1.6em;
+  margin: 0.6em 0;
+}
+.moodiary-editor .ProseMirror ul {
+  list-style: disc;
+}
+.moodiary-editor .ProseMirror ol {
+  list-style: decimal;
+}
+.moodiary-editor .ProseMirror li > p {
+  margin: 0.2em 0;
+}
+/* —— 任务列表（TaskList/TaskItem）：去掉项目符号，复选框 + 内容并排，复选框配色走 --app-* —— */
+.moodiary-editor .ProseMirror ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.6em 0;
+}
+.moodiary-editor .ProseMirror ul[data-type='taskList'] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.moodiary-editor .ProseMirror ul[data-type='taskList'] li > label {
+  flex: none;
+  margin-top: 0.28em; /* 对齐首行文字 */
+  user-select: none;
+}
+.moodiary-editor .ProseMirror ul[data-type='taskList'] li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.moodiary-editor .ProseMirror ul[data-type='taskList'] li > div > p {
+  margin: 0;
+}
+.moodiary-editor .ProseMirror ul[data-type='taskList'] input[type='checkbox'] {
+  width: 1.05em;
+  height: 1.05em;
+  accent-color: var(--app-primary);
+  cursor: pointer;
+}
+/* 已勾选项：文字弱化 + 删除线 */
+.moodiary-editor .ProseMirror ul[data-type='taskList'] li[data-checked='true'] > div {
+  color: var(--app-on-surface-variant);
+  text-decoration: line-through;
+}
+/* 嵌套子任务缩进 */
+.moodiary-editor .ProseMirror ul[data-type='taskList'] ul[data-type='taskList'] {
+  margin: 0.2em 0 0;
+  padding-left: 1.2em;
+}
+.moodiary-editor .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--app-outline);
+  margin: 1.2em 0;
+}
+.moodiary-editor .ProseMirror strong {
+  font-weight: 600;
+}
+/* 行内代码 */
+.moodiary-editor .ProseMirror code {
+  font-family: var(--app-font-mono);
+  font-size: 0.9em;
+  color: var(--app-inline-code);
+  background: var(--app-inline-area);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+/* —— 代码块（CodeBlockNodeView：头部语言选择 + 复制，下方高亮代码）。配色走 --app-*；
+   高亮 token 见下方 .hljs-* —— */
+.moodiary-editor .ProseMirror .moodiary-code-block {
+  margin: 0.8em 0;
+  border: 1px solid var(--app-outline);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--app-surface);
+}
+.moodiary-code-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 8px 3px 10px;
+  border-bottom: 1px solid var(--app-outline);
+  background: var(--app-surface-low);
+  user-select: none;
+}
+.moodiary-code-block__lang {
+  font-family: var(--app-font-mono);
+  font-size: 12px;
+  color: var(--app-on-surface-variant);
+  user-select: none;
+}
+.moodiary-code-block__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--app-font-sans);
+  font-size: 12px;
+  color: var(--app-on-surface-variant);
+  background: transparent;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+@media (hover: hover) and (pointer: fine) {
+  .moodiary-code-block__copy:hover {
+    background: var(--app-hover);
+    color: var(--app-on-surface);
+  }
+}
+.moodiary-editor .ProseMirror .moodiary-code-block pre {
+  margin: 0;
+  padding: 12px 14px;
+  background: transparent;
+  overflow-x: auto;
+}
+.moodiary-editor .ProseMirror .moodiary-code-block pre code {
+  font-family: var(--app-font-mono);
+  background: none;
+  color: var(--app-on-surface);
+  padding: 0;
+  font-size: 0.88em;
+}
+
+/* —— 代码高亮 token（lowlight / highlight.js 输出 .hljs-* span）。亮色用 github,暗色用 github-dark
+   （[data-theme='dark'] 切换）。未列出的 token 用代码块默认正文色。 —— */
+.moodiary-editor .hljs-comment,
+.moodiary-editor .hljs-quote {
+  color: #6a737d;
+  font-style: italic;
+}
+.moodiary-editor .hljs-keyword,
+.moodiary-editor .hljs-selector-tag,
+.moodiary-editor .hljs-literal,
+.moodiary-editor .hljs-doctag,
+.moodiary-editor .hljs-formula {
+  color: #d73a49;
+}
+.moodiary-editor .hljs-string,
+.moodiary-editor .hljs-regexp,
+.moodiary-editor .hljs-meta .hljs-string {
+  color: #032f62;
+}
+.moodiary-editor .hljs-title,
+.moodiary-editor .hljs-section,
+.moodiary-editor .hljs-title.function_ {
+  color: #6f42c1;
+}
+.moodiary-editor .hljs-name,
+.moodiary-editor .hljs-selector-id,
+.moodiary-editor .hljs-selector-class,
+.moodiary-editor .hljs-tag,
+.moodiary-editor .hljs-addition {
+  color: #22863a;
+}
+.moodiary-editor .hljs-type,
+.moodiary-editor .hljs-built_in,
+.moodiary-editor .hljs-builtin-name {
+  color: #e36209;
+}
+.moodiary-editor .hljs-attr,
+.moodiary-editor .hljs-attribute,
+.moodiary-editor .hljs-variable,
+.moodiary-editor .hljs-template-variable,
+.moodiary-editor .hljs-number,
+.moodiary-editor .hljs-symbol,
+.moodiary-editor .hljs-bullet,
+.moodiary-editor .hljs-link,
+.moodiary-editor .hljs-meta {
+  color: #005cc5;
+}
+.moodiary-editor .hljs-deletion {
+  color: #b31d28;
+}
+.moodiary-editor .hljs-emphasis {
+  font-style: italic;
+}
+.moodiary-editor .hljs-strong {
+  font-weight: 600;
+}
+
+/* github-dark */
+[data-theme='dark'] .moodiary-editor .hljs-comment,
+[data-theme='dark'] .moodiary-editor .hljs-quote {
+  color: #8b949e;
+}
+[data-theme='dark'] .moodiary-editor .hljs-keyword,
+[data-theme='dark'] .moodiary-editor .hljs-selector-tag,
+[data-theme='dark'] .moodiary-editor .hljs-literal,
+[data-theme='dark'] .moodiary-editor .hljs-doctag,
+[data-theme='dark'] .moodiary-editor .hljs-formula {
+  color: #ff7b72;
+}
+[data-theme='dark'] .moodiary-editor .hljs-string,
+[data-theme='dark'] .moodiary-editor .hljs-regexp,
+[data-theme='dark'] .moodiary-editor .hljs-meta .hljs-string {
+  color: #a5d6ff;
+}
+[data-theme='dark'] .moodiary-editor .hljs-title,
+[data-theme='dark'] .moodiary-editor .hljs-section,
+[data-theme='dark'] .moodiary-editor .hljs-title.function_ {
+  color: #d2a8ff;
+}
+[data-theme='dark'] .moodiary-editor .hljs-name,
+[data-theme='dark'] .moodiary-editor .hljs-selector-id,
+[data-theme='dark'] .moodiary-editor .hljs-selector-class,
+[data-theme='dark'] .moodiary-editor .hljs-tag,
+[data-theme='dark'] .moodiary-editor .hljs-addition {
+  color: #7ee787;
+}
+[data-theme='dark'] .moodiary-editor .hljs-type,
+[data-theme='dark'] .moodiary-editor .hljs-built_in,
+[data-theme='dark'] .moodiary-editor .hljs-builtin-name {
+  color: #ffa657;
+}
+[data-theme='dark'] .moodiary-editor .hljs-attr,
+[data-theme='dark'] .moodiary-editor .hljs-attribute,
+[data-theme='dark'] .moodiary-editor .hljs-variable,
+[data-theme='dark'] .moodiary-editor .hljs-template-variable,
+[data-theme='dark'] .moodiary-editor .hljs-number,
+[data-theme='dark'] .moodiary-editor .hljs-symbol,
+[data-theme='dark'] .moodiary-editor .hljs-bullet,
+[data-theme='dark'] .moodiary-editor .hljs-link,
+[data-theme='dark'] .moodiary-editor .hljs-meta {
+  color: #79c0ff;
+}
+[data-theme='dark'] .moodiary-editor .hljs-deletion {
+  color: #ffa198;
+}
+
+/*
+ * 选区底色 / 光标颜色，与 Flutter 的 TextSelectionTheme 观感一致。
+ * 移动端「选区拖拽手柄」（grabber）是 OS 原生控件，CSS 无法着色，需在原生层处理。
+ */
+::selection {
+  background-color: var(--app-text-selection);
+}
+
+/*
+ * Flutter 风格常驻滚动条——仅桌面（media query 限定）。移动端沿用系统自动隐藏的覆盖式滚动条。
+ */
+@media (hover: hover) and (pointer: fine) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--app-scrollbar) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--app-scrollbar);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--app-scrollbar-hover);
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "moodiary-editor-web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "packageManager": "pnpm@11.6.0+sha512.9a36518224080c6fe5165afdcfe79bfa118c29be703f3f462b1e32efe1e98e47e8750b148e08286250aad4113cc7993ca413c4e2cd447752708c2ee5751bc95f",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0",
+    "pnpm": ">=11.3.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "harness": "vite --open /dev.html",
+    "build": "vue-tsc --noEmit && vite build",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@material/material-color-utilities": "0.4.0",
+    "@tiptap/core": "3.26.1",
+    "@tiptap/extension-code-block-lowlight": "3.26.1",
+    "@tiptap/extension-image": "3.26.1",
+    "@tiptap/extension-mention": "3.26.1",
+    "@tiptap/extension-table": "3.26.1",
+    "@tiptap/extension-task-item": "3.26.1",
+    "@tiptap/extension-task-list": "3.26.1",
+    "@tiptap/extensions": "3.26.1",
+    "@tiptap/pm": "3.26.1",
+    "@tiptap/starter-kit": "3.26.1",
+    "@tiptap/suggestion": "3.26.1",
+    "@tiptap/vue-3": "3.26.1",
+    "lowlight": "3.3.0",
+    "prosemirror-search": "1.1.1",
+    "tiptap-markdown": "0.9.0",
+    "vue": "3.5.38"
+  },
+  "devDependencies": {
+    "@iconify-json/material-symbols": "1.2.79",
+    "@tailwindcss/vite": "4.3.1",
+    "@vitejs/plugin-vue": "6.0.7",
+    "daisyui": "5.5.23",
+    "tailwindcss": "4.3.1",
+    "typescript": "6.0.3",
+    "unplugin-icons": "23.0.1",
+    "vite": "8.0.16",
+    "vite-plugin-singlefile": "2.3.3",
+    "vue-tsc": "3.3.5"
+  }
+}

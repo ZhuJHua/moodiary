@@ -1,0 +1,24 @@
+name: moodiary_desktop
+description: "Moodiary desktop app (Windows / macOS). Skeleton — shell & pages to be rebuilt; shared logic comes from the workspace packages."
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.12.0"
+  flutter: ">=3.44.0"
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # 共享包（foundation/infra/product）随桌面端实现逐步接入。骨架阶段先不依赖 Native 较重的
+  # moodiary_rust / moodiary_editor / isar，保证开箱即可构建运行。
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+
+flutter:
+  uses-material-design: true

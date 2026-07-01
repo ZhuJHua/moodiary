@@ -1,0 +1,25 @@
+name: moodiary_l10n
+description: "Moodiary localization (foundation) — gen-l10n AppLocalizations + the BuildContext.l10n helper."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.12.0"
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: 0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+
+flutter:
+  generate: true

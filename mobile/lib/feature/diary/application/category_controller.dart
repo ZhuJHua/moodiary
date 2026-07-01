@@ -1,0 +1,77 @@
+import 'package:collection/collection.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'category_controller.g.dart';
+
+/// 把单条 [CategoryEvent] 原地并入列表（按 id 升序）。`deleted == true`（UI 软删 /
+/// 同步 tombstone）一律移除。
+List<Category> _applyEvent(List<Category> list, CategoryEvent event) {
+  switch (event) {
+    case CategoryDeleted(:final id):
+      if (!list.any((c) => c.id == id)) return list;
+      return list.where((c) => c.id != id).toList();
+    case CategoryUpserted(:final category):
+      final index = list.indexWhere((c) => c.id == category.id);
+      if (category.deleted) {
+        if (index == -1) return list;
+        return list.where((c) => c.id != category.id).toList();
+      }
+      final updated = [...list];
+      if (index == -1) {
+        updated.add(category);
+      } else {
+        updated[index] = category;
+      }
+      updated.sort((a, b) => a.id.compareTo(b.id));
+      return updated;
+  }
+}
+
+/// 订阅 [CategoryRepository.categoryEvents]，按事件原地增量更新，无需重查库。
+@riverpod
+class CategoryController extends _$CategoryController {
+  late final CategoryRepository _repository = CategoryRepository.get();
+
+  @override
+  FutureOr<List<Category>> build() async {
+    final sub = _repository.categoryEvents.listen(_applyChange);
+    ref.onDispose(sub.cancel);
+    final either = await _repository.getAllCategories().run();
+    return either.getOrElse((_) => <Category>[]);
+  }
+
+  void _applyChange(CategoryEvent event) {
+    final list = state.value;
+    if (list == null) return;
+    state = AsyncValue.data(_applyEvent(list, event));
+  }
+
+  Future<bool> upsertCategory(Category category) async {
+    final either = await _repository.insertACategory(category).run();
+    return either.isRight();
+  }
+
+  /// 软删除分类，仅当其下没有日记时成功。
+  Future<bool> deleteCategory(String id) async {
+    final either = await _repository.deleteACategory(id).run();
+    return either.getOrElse((_) => false);
+  }
+}
+
+@riverpod
+Future<Category?> getCategory(Ref ref, {required String id}) async {
+  final allCategory = await ref.watch(categoryControllerProvider.future);
+  return allCategory.firstWhereOrNull((category) => category.id == id);
+}
+
+@riverpod
+Category? categoryById(Ref ref, String? id) {
+  if (id == null) return null;
+  final cats = ref.watch(categoryControllerProvider).value ?? const [];
+  for (final c in cats) {
+    if (c.id == id) return c;
+  }
+  return null;
+}

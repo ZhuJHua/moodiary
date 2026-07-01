@@ -1,0 +1,44 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary/feature/diary/presentation/category/category_manager_page.dart';
+import 'package:moodiary/feature/diary/presentation/widget/category_color.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
+
+void main() {
+  testWidgets('editor returns entered name and picked color', (t) async {
+    CategoryDraft? result;
+    await t.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () async {
+                  result = await showCategoryEditor(
+                    context,
+                    initialName: '',
+                    initialColor: null,
+                  );
+                },
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await t.tap(find.text('open'));
+    await t.pumpAndSettle();
+    await t.enterText(find.byType(TextField), 'travel');
+    await t.tap(
+      find.byKey(ValueKey('category-swatch-${kCategoryPalette[2].toARGB32()}')),
+    );
+    await t.tap(find.widgetWithText(TextButton, '确认'));
+    await t.pumpAndSettle();
+    expect(result?.name, 'travel');
+    expect(result?.color, kCategoryPalette[2].toARGB32());
+  });
+}

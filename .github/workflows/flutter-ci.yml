@@ -36,12 +36,18 @@ jobs:
           flutter-version: ${{ env.flutter-version }}
 
       - name: Install Dependencies
+        working-directory: mobile
         run: flutter pub get
 
       - name: Run Flutter Analyze
+        working-directory: mobile
         run: flutter analyze
 
+      - name: Check Layer Dependencies
+        run: dart tool/check_layers.dart
+
       - name: Run Flutter Tests
+        working-directory: mobile
         run: flutter test
 
       - name: Fail on Errors

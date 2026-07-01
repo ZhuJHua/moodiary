@@ -1,0 +1,25 @@
+# Moodiary workspace 共享 lint / 分析配置。
+# 引用方：`include: package:moodiary_lint/analysis_options.yaml`
+# 需在引用方 dev_dependencies 加 `moodiary_lint`（带入 flutter_lints 传递依赖）。
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    prefer_const_declarations: true
+    prefer_final_in_for_each: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.gr.dart"
+    - "**/*.mocks.dart"
+    - "build/**"
+  errors:
+    # Isar @Id/@Index/@Collection 与 Freezed json @JsonKey 标注在工厂构造器参数上，
+    # 分析器误报为 invalid_annotation_target。
+    invalid_annotation_target: ignore

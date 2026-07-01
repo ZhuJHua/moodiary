@@ -1,0 +1,18 @@
+# Flutter app build artifacts (platform-specific ignores live in
+# android/.gitignore, ios/.gitignore, macos/.gitignore, windows/.gitignore).
+
+**/doc/api/
+ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+/build/
+
+# Native build output dirs (kept out of the per-platform .gitignore files)
+/ios/build/
+/android/build/
+
+# Obfuscation symbol maps (flutter build --split-debug-info=splitMap)
+app.*.symbols
+app.*.map.json
+/splitMap/

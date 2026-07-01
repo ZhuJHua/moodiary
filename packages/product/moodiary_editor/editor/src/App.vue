@@ -1,0 +1,60 @@
+<script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import MoodiaryEditor from './components/MoodiaryEditor.vue'
+import DiaryLinkSuggestion from './components/DiaryLinkSuggestion.vue'
+import { installBridge } from './bridge'
+import { readBoot } from './bridge/boot'
+import { applyTheme } from './bridge/theme'
+import { setSaveStatus } from './bridge/save-status'
+import { post } from './bridge/post'
+import { setMediaPrefix, unproxyMedia } from './editor/media'
+
+// Flutter 把引导数据挂在页面 URL 的 ?boot= 上（readBoot 同步解析，先于编辑器构建）。
+// 初始内容不走 boot：ready 后由 Flutter setContent（见 moodiary_editor.dart）。
+const boot = readBoot()
+if (boot.mediaBase) setMediaPrefix(boot.mediaBase)
+const initialEditable = boot.editable ?? true
+const placeholder = boot.placeholder ?? ''
+// 决定工具栏位置（桌面置顶 / 移动置底）。Flutter 始终下发 platform；缺省按桌面（顶部工具栏到处都合理）。
+const platform = boot.platform ?? 'desktop'
+
+installBridge()
+if (boot.theme) applyTheme(boot.theme)
+if (boot.saveStatus) setSaveStatus(boot.saveStatus)
+
+const shell = ref<HTMLElement>()
+
+// 点击：① 双链 chip → 上报 linkTap（Flutter 跳转目标日记）；② 正文图片 → imageTap（反解文件名）。
+function onClick(e: MouseEvent): void {
+  const target = e.target as HTMLElement | null
+  const link = target?.closest('[data-type="diaryLink"]') as HTMLElement | null
+  if (link) {
+    const id = link.getAttribute('data-id')
+    if (id) {
+      e.preventDefault()
+      post('linkTap', { id })
+    }
+    return
+  }
+  const img = target?.closest('img')
+  if (!img) return
+  const src = (img as HTMLImageElement).getAttribute('src')
+  if (!src) return
+  e.preventDefault()
+  post('imageTap', { src: unproxyMedia(src) })
+}
+
+onMounted(() => shell.value?.addEventListener('click', onClick))
+onBeforeUnmount(() => shell.value?.removeEventListener('click', onClick))
+</script>
+
+<template>
+  <div ref="shell" class="editor-shell">
+    <MoodiaryEditor
+      :editable="initialEditable"
+      :placeholder="placeholder"
+      :platform="platform"
+    />
+    <DiaryLinkSuggestion />
+  </div>
+</template>

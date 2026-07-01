@@ -1,0 +1,38 @@
+# 分层依赖检查 baseline（存量违规，逐步清零；只许变短不许变长）。
+# 由 `dart run tool/check_layers.dart --update-baseline` 生成。
+# 格式：<相对 lib/ 的源文件> -> <目标模块>
+
+feature/assistant/presentation/assistant_page.dart -> app
+feature/calendar/presentation/calendar_page.dart -> feature/diary
+feature/diary/presentation/detail/diary_page.dart -> app
+feature/diary/presentation/detail/diary_page.dart -> feature/edit
+feature/diary/presentation/diary_page.dart -> app
+feature/diary/presentation/diary_page.dart -> feature/calendar
+feature/diary/presentation/diary_page.dart -> feature/edit
+feature/diary/presentation/diary_page.dart -> feature/sync
+feature/diary/presentation/map/map_page.dart -> app
+feature/diary/presentation/search/search_result_card.dart -> app
+feature/diary/presentation/widget/diary_card.dart -> app
+feature/diary/presentation/widget/listview.dart -> feature/sync
+feature/diary/presentation/widget/waterfall_view.dart -> feature/sync
+feature/edit/application/edit_controller.dart -> feature/diary
+feature/edit/presentation/widget/category_picker_sheet.dart -> feature/diary
+feature/edit/presentation/widget/draft_prompt.dart -> app
+feature/lock/presentation/lock_page.dart -> app
+feature/lock/presentation/start_page.dart -> app
+feature/lock/presentation/widget/app_lock_observer.dart -> app
+feature/setting/presentation/about_page.dart -> app
+feature/setting/presentation/assistant_provider_edit_page.dart -> feature/assistant
+feature/setting/presentation/assistant_provider_list_page.dart -> app
+feature/setting/presentation/assistant_provider_picker_page.dart -> app
+feature/setting/presentation/assistant_provider_picker_page.dart -> feature/assistant
+feature/setting/presentation/assistant_setting_page.dart -> app
+feature/setting/presentation/assistant_setting_page.dart -> feature/assistant
+feature/setting/presentation/services_page.dart -> app
+feature/setting/presentation/setting_page.dart -> app
+feature/setting/presentation/setting_page.dart -> feature/lock
+feature/setting/presentation/widget/migration_compare_page.dart -> feature/edit
+feature/share/presentation/share_page.dart -> feature/diary
+feature/sync/presentation/backup_sync_page.dart -> app
+feature/sync/presentation/widget/sync_status_sheet.dart -> app
+feature/user/presentation/user_page.dart -> app

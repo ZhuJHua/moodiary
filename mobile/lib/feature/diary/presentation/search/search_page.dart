@@ -1,0 +1,425 @@
+import 'dart:async';
+
+import 'package:collection/collection.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary/feature/diary/application/category_controller.dart';
+import 'package:moodiary/feature/diary/application/search_controller.dart';
+import 'package:moodiary/feature/diary/presentation/search/search_result_card.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
+
+/// 日记搜索页：AppBar 内嵌搜索框，下方筛选栏（时间 / 分类 / 排序）；空查询时展示搜索历史。
+class DiarySearchPage extends ConsumerStatefulWidget {
+  const DiarySearchPage({super.key});
+
+  @override
+  ConsumerState<DiarySearchPage> createState() => _DiarySearchPageState();
+}
+
+class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
+  final _textController = TextEditingController();
+  final _focusNode = FocusNode();
+  Timer? _debounce;
+
+  DiarySearchController get _controller =>
+      ref.read(diarySearchControllerProvider.notifier);
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String text) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      _controller.search(text);
+    });
+  }
+
+  void _searchNow() {
+    _debounce?.cancel();
+    _controller
+      ..search(_textController.text)
+      ..recordHistory();
+  }
+
+  void _useHistory(String q) {
+    _textController.text = q;
+    _textController.selection = TextSelection.collapsed(offset: q.length);
+    _controller
+      ..search(q)
+      ..recordHistory();
+  }
+
+  void _clearInput() {
+    _textController.clear();
+    _controller.search('');
+    _focusNode.requestFocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(diarySearchControllerProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        titleSpacing: 0,
+        title: TextField(
+          maxLines: 1,
+          autofocus: true,
+          controller: _textController,
+          focusNode: _focusNode,
+          textInputAction: TextInputAction.search,
+          onChanged: _onChanged,
+          onSubmitted: (_) => _searchNow(),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            hintText: context.l10n.diarySearch,
+            suffixIcon: ValueListenableBuilder(
+              valueListenable: _textController,
+              builder: (context, value, _) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: _clearInput,
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            _buildFilterBar(context, state),
+            const Divider(height: 1),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: Durations.short3,
+                child: _buildBody(context, state),
+              ),
+            ),
+            if (state.query.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(context.l10n.diarySearchResult(state.totalCount)),
+                    if (state.elapsed != null)
+                      Text(
+                        ' · ${context.l10n.diarySearchTime(state.elapsed!.inMilliseconds)}',
+                        style: context.textTheme.bodySmall?.copyWith(
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── 筛选栏 ────────────────────────────────────────────────────────────────
+
+  Widget _buildFilterBar(BuildContext context, DiarySearchState state) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          _dateChip(context, state),
+          const SizedBox(width: 8),
+          _categoryChip(context, state),
+          const SizedBox(width: 8),
+          _sortChip(context, state),
+        ],
+      ),
+    );
+  }
+
+  Widget _dateChip(BuildContext context, DiarySearchState state) {
+    return PopupMenuButton<DateRangePreset>(
+      onSelected: (preset) async {
+        if (preset == DateRangePreset.custom) {
+          final now = DateTime.now();
+          final range = await showDateRangePicker(
+            context: context,
+            firstDate: DateTime(2015),
+            lastDate: now,
+            initialDateRange:
+                (state.customStart != null && state.customEnd != null)
+                ? DateTimeRange(start: state.customStart!, end: state.customEnd!)
+                : null,
+          );
+          if (range != null) _controller.setCustomRange(range.start, range.end);
+        } else {
+          _controller.setDatePreset(preset);
+        }
+      },
+      itemBuilder: (_) => [
+        for (final p in DateRangePreset.values)
+          PopupMenuItem(value: p, child: Text(_dateLabel(context, p))),
+      ],
+      child: _FilterChip(
+        icon: Icons.calendar_today_rounded,
+        label: _dateChipLabel(context, state),
+        active: state.datePreset != DateRangePreset.all,
+      ),
+    );
+  }
+
+  Widget _categoryChip(BuildContext context, DiarySearchState state) {
+    final categories = ref
+        .watch(categoryControllerProvider)
+        .when(
+          data: (d) => d,
+          loading: () => const <Category>[],
+          error: (_, _) => const <Category>[],
+        );
+    final label = state.categoryId == null
+        ? context.l10n.searchCategoryAll
+        : (categories
+                  .firstWhereOrNull((c) => c.id == state.categoryId)
+                  ?.categoryName ??
+              context.l10n.searchCategoryAll);
+    return PopupMenuButton<String>(
+      // 空串 = 全部分类（PopupMenuButton 把 null 当作「取消」，故不能用 null 值）。
+      onSelected: (id) => _controller.setCategory(id.isEmpty ? null : id),
+      itemBuilder: (_) => [
+        PopupMenuItem(value: '', child: Text(context.l10n.searchCategoryAll)),
+        for (final c in categories)
+          PopupMenuItem(value: c.id, child: Text(c.categoryName)),
+      ],
+      child: _FilterChip(
+        icon: Icons.label_outline_rounded,
+        label: label,
+        active: state.categoryId != null,
+      ),
+    );
+  }
+
+  Widget _sortChip(BuildContext context, DiarySearchState state) {
+    return PopupMenuButton<SearchSort>(
+      onSelected: _controller.setSort,
+      itemBuilder: (_) => [
+        for (final s in SearchSort.values)
+          PopupMenuItem(value: s, child: Text(_sortLabel(context, s))),
+      ],
+      child: _FilterChip(
+        icon: Icons.sort_rounded,
+        label: _sortLabel(context, state.sort),
+        active: state.sort != SearchSort.relevance,
+      ),
+    );
+  }
+
+  String _dateLabel(BuildContext context, DateRangePreset p) => switch (p) {
+    DateRangePreset.all => context.l10n.searchRangeAll,
+    DateRangePreset.last7Days => context.l10n.searchRange7d,
+    DateRangePreset.last30Days => context.l10n.searchRange30d,
+    DateRangePreset.thisYear => context.l10n.searchRangeYear,
+    DateRangePreset.custom => context.l10n.searchRangeCustom,
+  };
+
+  String _dateChipLabel(BuildContext context, DiarySearchState state) {
+    if (state.datePreset == DateRangePreset.custom &&
+        state.customStart != null &&
+        state.customEnd != null) {
+      final f = DateFormat.Md();
+      return '${f.format(state.customStart!)} – ${f.format(state.customEnd!)}';
+    }
+    return _dateLabel(context, state.datePreset);
+  }
+
+  String _sortLabel(BuildContext context, SearchSort s) => switch (s) {
+    SearchSort.relevance => context.l10n.searchSortRelevance,
+    SearchSort.timeDesc => context.l10n.searchSortNewest,
+    SearchSort.timeAsc => context.l10n.searchSortOldest,
+  };
+
+  // ── 主体（历史 / 结果 / 空 / 加载） ──────────────────────────────────────
+
+  Widget _buildBody(BuildContext context, DiarySearchState state) {
+    if (state.isSearching && state.results.isEmpty) {
+      return const Center(
+        key: ValueKey('loading'),
+        child: CircularProgressIndicator(),
+      );
+    }
+    if (state.results.isNotEmpty) {
+      return Stack(
+        key: const ValueKey('list'),
+        children: [
+          Positioned.fill(
+            child: ListView.separated(
+              itemCount: state.results.length,
+              padding: const EdgeInsets.all(12),
+              itemBuilder: (context, index) => SearchResultCard(
+                diary: state.results[index],
+                queryList: state.queryList,
+                onTap: _controller.recordHistory,
+              ),
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+            ),
+          ),
+          if (state.isSearching)
+            Positioned.fill(
+              child: ColoredBox(
+                color: context.colorScheme.surfaceContainer.withValues(
+                  alpha: 0.8,
+                ),
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+            ),
+        ],
+      );
+    }
+    if (state.query.isEmpty) return _historyView(context);
+    return _placeholder(
+      context,
+      key: 'empty',
+      icon: Icons.search_off_rounded,
+      text: context.l10n.searchNoResult,
+    );
+  }
+
+  Widget _historyView(BuildContext context) {
+    return ValueListenableBuilder<List<String>>(
+      key: const ValueKey('history'),
+      valueListenable: MoodiaryKVs.searchHistory.getNotifierOr(
+        const <String>[],
+      ),
+      builder: (context, history, _) {
+        if (history.isEmpty) {
+          return _placeholder(
+            context,
+            key: 'history-empty',
+            icon: Icons.history_rounded,
+            text: context.l10n.searchHistoryEmpty,
+          );
+        }
+        final scheme = context.colorScheme;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    context.l10n.searchHistory,
+                    style: context.textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: _controller.clearHistory,
+                    icon: const Icon(Icons.delete_sweep_outlined, size: 18),
+                    label: Text(context.l10n.searchHistoryClear),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final q in history)
+                    InputChip(
+                      avatar: const Icon(Icons.history_rounded, size: 18),
+                      // 限宽 + 省略，避免超长查询（粘贴串 / 长 URL）撑破胶囊。
+                      label: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 200),
+                        child: Text(
+                          q,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      onPressed: () => _useHistory(q),
+                      onDeleted: () => _controller.removeHistory(q),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _placeholder(
+    BuildContext context, {
+    required String key,
+    required IconData icon,
+    required String text,
+  }) {
+    final scheme = context.colorScheme;
+    return Center(
+      key: ValueKey(key),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 56, color: scheme.onSurfaceVariant),
+          const SizedBox(height: 12),
+          Text(
+            text,
+            style: context.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 筛选栏上的下拉胶囊（选中态填充次级容器色）。
+class _FilterChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool active;
+
+  const _FilterChip({
+    required this.icon,
+    required this.label,
+    required this.active,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final fg = active ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 7, 8, 7),
+      decoration: ShapeDecoration(
+        color: active ? scheme.secondaryContainer : null,
+        shape: StadiumBorder(
+          side: BorderSide(
+            color: active ? Colors.transparent : scheme.outlineVariant,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: fg),
+          const SizedBox(width: 6),
+          Text(label, style: context.textTheme.labelLarge?.copyWith(color: fg)),
+          Icon(Icons.arrow_drop_down_rounded, size: 18, color: fg),
+        ],
+      ),
+    );
+  }
+}

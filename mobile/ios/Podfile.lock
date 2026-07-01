@@ -1,0 +1,22 @@
+PODS:
+  - Flutter (1.0.0)
+  - moodiary_rust (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - moodiary_rust (from `.symlinks/plugins/moodiary_rust/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  moodiary_rust:
+    :path: ".symlinks/plugins/moodiary_rust/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  moodiary_rust: 92280f561dcf7f29d78455df3175948ce7db965e
+
+PODFILE CHECKSUM: ed22e19af5eb4a72710862041c4be54584bcf797
+
+COCOAPODS: 1.15.2

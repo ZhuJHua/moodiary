@@ -1,0 +1,69 @@
+import 'package:flutter/material.dart';
+import 'package:moodiary_core/moodiary_core.dart';
+
+class EmotionCurvePainter extends CustomPainter {
+  final double value;
+  final double strokeWidth;
+
+  EmotionCurvePainter(this.value, {required this.strokeWidth});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint =
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = strokeWidth;
+
+    final Path path = Path();
+
+    final double centerX = size.width / 2;
+    final double centerY = size.height / 2;
+    final double controlPointY =
+        centerY + (value - 0.5) * size.height;
+
+    path.moveTo(centerX + strokeWidth / 2 - size.width / 2, centerY);
+
+    path.quadraticBezierTo(
+      centerX,
+      controlPointY,
+      centerX - strokeWidth / 2 + size.width / 2,
+      centerY,
+    );
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
+  }
+}
+
+class MoodIconComponent extends StatelessWidget {
+  const MoodIconComponent({super.key, this.width = 32.0, required this.value});
+
+  final double value;
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Color.lerp(
+          const Color(0xFFFA4659),
+          const Color(0xFF2EB872),
+          value,
+        ),
+        borderRadius: AppBorderRadius.smallBorderRadius,
+      ),
+      padding: const EdgeInsets.all(4.0),
+      child: CustomPaint(
+        size: Size(width - 8.0, width - 8.0),
+        painter: EmotionCurvePainter(value, strokeWidth: 4.0),
+      ),
+    );
+  }
+}

@@ -1,0 +1,33 @@
+name: moodiary_utils
+description: "Moodiary foundation utilities — leaf Dart/Flutter helpers, enums and text converters with no upward (data/feature/app) dependencies."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.12.0"
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 下层 foundation 包（qr_crypto 走 Rust 加解密）。
+  moodiary_rust: 0.0.1
+
+  # 叶子工具各自的外部依赖（与 app 共用 workspace 解析，钉版无 ^）。
+  synchronized: 3.4.1
+  image_size_getter: 2.4.1
+  connectivity_plus: 7.2.0
+  network_info_plus: 8.2.0
+  device_info_plus: 13.2.0
+  package_info_plus: 10.2.0
+  dartx: 1.2.0
+  markdown: 7.3.1
+  local_auth: 3.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

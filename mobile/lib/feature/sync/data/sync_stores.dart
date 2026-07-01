@@ -1,0 +1,147 @@
+import 'dart:typed_data';
+
+import 'package:file/file.dart';
+import 'package:file/local.dart';
+import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:path/path.dart' as p;
+
+/// 引擎对本地存储的最小依赖面，抽成端口以便单测注入内存假实现 —— 生产实现
+/// （[RepoSyncDiaryStore] / [RepoSyncCategoryStore] / [DiskSyncMediaFiles]）只是
+/// 转发到现有 repository / FileUtil，行为与重构前完全一致。
+abstract interface class SyncDiaryStore {
+  Future<List<Diary>> getAllDiaries();
+  Future<Diary?> getDiaryByBusinessId(String id);
+  Future<void> insertADiary(Diary diary);
+  Future<void> updateADiary(Diary newDiary);
+  Future<void> deleteDiariesByIsarIds(List<int> isarIds);
+}
+
+abstract interface class SyncCategoryStore {
+  /// 含软删的全量分类快照（同步用）。
+  Future<List<Category>> getAllCategoriesForSync();
+  Future<Category?> getCategoryById(String id);
+
+  /// 写入成功返回 `true`。
+  Future<bool> insertACategory(Category category);
+}
+
+/// 本地媒体文件读写（按 `type`/`filename` 寻址，[type] 为 image/audio/video）。
+abstract interface class SyncMediaFiles {
+  Future<bool> exists(String type, String filename);
+  Future<Uint8List> read(String type, String filename);
+  Future<void> write(String type, String filename, Uint8List bytes);
+  Future<void> delete(String type, String filename);
+
+  /// 用新日记替换旧日记后，删除不再被引用的旧媒体（含视频缩略图）。
+  Future<void> cleanUpReplaced(Diary oldDiary, Diary newDiary);
+}
+
+class RepoSyncDiaryStore implements SyncDiaryStore {
+  final DiaryRepository _repo = DiaryRepository.get();
+
+  @override
+  Future<List<Diary>> getAllDiaries() => _repo.getAllDiaries();
+
+  @override
+  Future<Diary?> getDiaryByBusinessId(String id) =>
+      _repo.getDiaryByBusinessId(id);
+
+  @override
+  Future<void> insertADiary(Diary diary) => _repo.insertADiary(diary);
+
+  @override
+  Future<void> updateADiary(Diary newDiary) =>
+      _repo.updateADiary(newDiary: newDiary);
+
+  @override
+  Future<void> deleteDiariesByIsarIds(List<int> isarIds) =>
+      _repo.deleteDiariesByIsarIds(isarIds);
+}
+
+class RepoSyncCategoryStore implements SyncCategoryStore {
+  final CategoryRepository _repo = CategoryRepository.get();
+
+  @override
+  Future<List<Category>> getAllCategoriesForSync() async {
+    final result = await _repo.getAllCategoriesForSync().run();
+    return result.getOrElse((_) => const <Category>[]);
+  }
+
+  @override
+  Future<Category?> getCategoryById(String id) => _repo.getCategoryById(id);
+
+  @override
+  Future<bool> insertACategory(Category category) async {
+    final result = await _repo.insertACategory(category).run();
+    return result.isRight();
+  }
+}
+
+/// 生产媒体实现：默认 [LocalFileSystem]（行为同 `dart:io`），布局
+/// `<baseDir>/<type>/<filename>`，与 `FileUtil.getRealPath` 一致。注入
+/// `package:file` 的 `MemoryFileSystem` + 自定义 [baseDir] 即可纯内存单测。
+class DiskSyncMediaFiles implements SyncMediaFiles {
+  DiskSyncMediaFiles({FileSystem? fileSystem, String? baseDir})
+    : _fs = fileSystem ?? const LocalFileSystem(),
+      _baseDir = baseDir ?? PlatformService.get().applicationSupportPath;
+
+  final FileSystem _fs;
+  final String _baseDir;
+
+  File _file(String type, String filename) =>
+      _fs.file(p.join(_baseDir, type, filename));
+
+  @override
+  Future<bool> exists(String type, String filename) =>
+      _file(type, filename).exists();
+
+  @override
+  Future<Uint8List> read(String type, String filename) =>
+      _file(type, filename).readAsBytes();
+
+  @override
+  Future<void> write(String type, String filename, Uint8List bytes) async {
+    final file = _file(type, filename);
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes(bytes);
+  }
+
+  @override
+  Future<void> delete(String type, String filename) async {
+    final file = _file(type, filename);
+    if (await file.exists()) await file.delete();
+  }
+
+  @override
+  Future<void> cleanUpReplaced(Diary oldDiary, Diary newDiary) async {
+    Future<void> drop(
+      List<String> oldNames,
+      List<String> newNames,
+      String type,
+    ) async {
+      for (final name in oldNames) {
+        if (!newNames.contains(name)) await delete(type, name);
+      }
+    }
+
+    await drop(oldDiary.imageName, newDiary.imageName, 'image');
+    await drop(oldDiary.audioName, newDiary.audioName, 'audio');
+    await drop(oldDiary.videoName, newDiary.videoName, 'video');
+    // 被移除的视频连带删其缩略图（与视频同目录）。
+    for (final name in oldDiary.videoName) {
+      if (newDiary.videoName.contains(name)) continue;
+      final thumb = _thumbnailName(name);
+      if (thumb != null) await delete('video', thumb);
+    }
+  }
+
+  /// `video-<uuid>.mp4` → `thumbnail-<uuid>.jpeg`。
+  static String? _thumbnailName(String videoName) {
+    if (!videoName.startsWith('video-')) return null;
+    final dotIdx = videoName.lastIndexOf('.');
+    if (dotIdx <= 6) return null;
+    return 'thumbnail-${videoName.substring(6, dotIdx)}.jpeg';
+  }
+}

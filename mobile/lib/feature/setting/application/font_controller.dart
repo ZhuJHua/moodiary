@@ -1,0 +1,66 @@
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary/feature/setting/application/app_settings_controller.dart';
+import 'package:path/path.dart' as p;
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'font_controller.g.dart';
+
+@riverpod
+class FontController extends _$FontController {
+  @override
+  Future<List<Font>> build() async {
+    final list = await IsarDatabase.get().getAllFonts();
+    await Future.wait([
+      for (final f in list)
+        FontUtil.loadFont(
+          fontName: f.fontFamily,
+          fontPath: FileUtil.getRealPath('font', f.fontFileName),
+        ),
+    ]);
+    return list;
+  }
+
+  /// 返回 `null`=用户取消、非空错误 message=失败、空字符串=成功。
+  Future<String?> addFont() async {
+    final xFile = await FontUtil.pickFont();
+    if (xFile == null) return null;
+    final fontName = await FontUtil.getFontName(filePath: xFile.path);
+    if (fontName == null || fontName.isEmpty) return '字体名称获取失败';
+    final current = state.value ?? const <Font>[];
+    if (current.any((e) => e.fontFamily == fontName)) {
+      return '字体已存在';
+    }
+    final fontFileName = '$fontName${p.extension(xFile.path)}';
+    final newPath = FileUtil.getRealPath('font', fontFileName);
+    final newFont = Font(
+      fontFileName: fontFileName,
+      fontWghtAxisMap: await FontUtil.getFontWghtAxis(filePath: xFile.path),
+    );
+    await xFile.saveTo(newPath);
+    await IsarDatabase.get().insertFont(newFont);
+    await FontUtil.loadFont(fontName: newFont.fontFamily, fontPath: newPath);
+    state = AsyncValue.data([...current, newFont]);
+    return '';
+  }
+
+  /// 若正在使用，先切回系统字体再删，避免引用已删除文件。
+  Future<void> removeFont(Font font) async {
+    if (MoodiaryKVs.customFont.get() == font.fontFamily) {
+      await setActive(null);
+    }
+    await IsarDatabase.get().deleteFontById(font.id);
+    await FileUtil.deleteFile(
+      FileUtil.getRealPath('font', font.fontFileName),
+    );
+    final next = (state.value ?? const <Font>[])
+        .where((e) => e.fontFamily != font.fontFamily)
+        .toList();
+    state = AsyncValue.data(next);
+  }
+
+  Future<void> setActive(Font? font) async {
+    await MoodiaryKVs.customFont.set(font?.fontFamily ?? '');
+    await ref.read(appSettingsControllerProvider.notifier).bumpTheme();
+  }
+}

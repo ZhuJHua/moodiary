@@ -41,6 +41,17 @@ jobs:
         with:
           flutter-version: ${{ env.flutter-version }}
 
+      - name: Set Up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Editor
+        run: |
+          corepack enable
+          corepack pnpm -C packages/product/moodiary_editor/editor install
+          corepack pnpm -C packages/product/moodiary_editor/editor build
+
       - name: Set Up Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -49,25 +60,27 @@ jobs:
           override: true
 
       - name: Install Dependencies
+        working-directory: mobile
         run: flutter pub get
 
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.ANDROID_KJS }}" | base64 --decode > android/app/key.jks
+          echo "${{ secrets.ANDROID_KJS }}" | base64 --decode > mobile/android/app/key.jks
 
       - name: Create local.properties
         run: |
-          echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" > android/local.properties
-          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/local.properties
+          echo "storePassword=${{ secrets.ANDROID_STORE_PASSWORD }}" > mobile/android/local.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> mobile/android/local.properties
 
       - name: Build APK
+        working-directory: mobile
         run: flutter build apk --release --obfuscate --split-debug-info=splitMap
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
   build-windows:
     runs-on: windows-latest
     name: Build Windows
@@ -99,6 +112,17 @@ jobs:
         with:
           flutter-version: ${{ env.flutter-version }}
 
+      - name: Set Up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Editor
+        run: |
+          corepack enable
+          corepack pnpm -C packages/product/moodiary_editor/editor install
+          corepack pnpm -C packages/product/moodiary_editor/editor build
+
       - name: Set Up Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -107,20 +131,22 @@ jobs:
           override: true
 
       - name: Install Dependencies
+        working-directory: mobile
         run: flutter pub get
 
       - name: Build Windows
+        working-directory: mobile
         run: flutter build windows --release
 
       - name: Create ZIP Archive
         run: |
-          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath build\windows\moodiary-windows.zip
+          Compress-Archive -Path mobile\build\windows\x64\runner\Release\* -DestinationPath mobile\build\windows\moodiary-windows.zip
 
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-app
-          path: build\windows\moodiary-windows.zip
+          path: mobile\build\windows\moodiary-windows.zip
 
   release:
     runs-on: ubuntu-latest

@@ -18,7 +18,7 @@
 
 ## ✨ Feature
 
-- **Cross-platform support**: 🌍 Compatible with Android, iOS, Windows, MacOS, Linux\*.
+- **Cross-platform support**: 🌍 Compatible with Android, iOS, Windows, and macOS.
 - **Material Design**: 🎨 The interface is intuitive and user-friendly, and follows the Material Design specifications.
 - **Multiple editors**: 📝 supports markdown, plain text, rich text and other forms of text editing.
 - **Multimedia accessories**: 📷 You can add pictures, audio, video or even draw a picture to your diary.
@@ -38,7 +38,7 @@
 
 - [Flutter](https://github.com/flutter/flutter) ( Cross-platform UI framework )
 - [Isar](https://github.com/isar/isar) ( High performance local database )
-- [GetX](https://github.com/jonataslaw/getx) ( State management framework )
+- [Riverpod](https://github.com/rrousselGit/riverpod) ( State management framework )
 
 ## 📸 Application screenshot
 
@@ -90,7 +90,7 @@ Use it by downloading the compiled installation package in Release, or manually 
 
 - Flutter SDK (>= 3.29.0 Stable) (It is recommended to use FVM to manage the Flutter version)
 - Dart (>= 3.7.0)
-- Rust Toolchain (Nightly)
+- Rust Toolchain (Stable)
 - Clang/LLVM
 - Compatible IDE (e.g. Android Studio, Visual Studio Code)
 
