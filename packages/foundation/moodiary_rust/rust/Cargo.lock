@@ -2360,10 +2360,12 @@ dependencies = [
  "jieba-rs",
  "minio",
  "once_cell",
+ "reqwest 0.13.4",
  "reqwest_dav",
  "rig-core",
  "ring",
  "rust-stemmers",
+ "rustls",
  "serde",
  "serde_json",
  "tokio",
@@ -2371,6 +2373,7 @@ dependencies = [
  "unicode-segmentation",
  "uuid",
  "walkdir",
+ "webpki-roots 1.0.8",
  "zip",
 ]
 
@@ -3372,6 +3375,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6b92b125634d9b795e7beca796cc790df15a7fb38323bf3196fda83292d06b1f"
 dependencies = [
  "aws-lc-rs",
+ "log",
  "once_cell",
  "ring",
  "rustls-pki-types",
