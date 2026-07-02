@@ -59,8 +59,8 @@ Future<void> _editor() async {
     exit(1);
   }
   await _run('corepack', ['enable']);
-  await _run('corepack', ['pnpm', 'install'], cwd: 'packages/product/moodiary_editor/editor');
-  await _run('corepack', ['pnpm', 'build'], cwd: 'packages/product/moodiary_editor/editor');
+  await _run('corepack', ['pnpm', 'install'], cwd: 'packages/feature/moodiary_editor/editor');
+  await _run('corepack', ['pnpm', 'build'], cwd: 'packages/feature/moodiary_editor/editor');
 }
 
 /// 重新生成 Rust FFI 绑定（从包内运行；codegen CLI 版本须与库版本一致）。
@@ -111,12 +111,12 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
     await _editor();
   },
   'clean': (_) async {
-    final dir = Directory('packages/product/moodiary_editor/assets/editor');
+    final dir = Directory('packages/feature/moodiary_editor/assets/editor');
     if (dir.existsSync()) {
       dir.deleteSync(recursive: true);
-      stdout.writeln('已删除 packages/product/moodiary_editor/assets/editor/');
+      stdout.writeln('已删除 packages/feature/moodiary_editor/assets/editor/');
     } else {
-      stdout.writeln('packages/product/moodiary_editor/assets/editor/ 不存在，跳过。');
+      stdout.writeln('packages/feature/moodiary_editor/assets/editor/ 不存在，跳过。');
     }
   },
 };

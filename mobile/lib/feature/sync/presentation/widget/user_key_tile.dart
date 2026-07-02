@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_scan/moodiary_scan.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary/feature/sync/application/user_key_controller.dart';
 import 'package:moodiary/feature/sync/presentation/widget/user_key_change_flow.dart';

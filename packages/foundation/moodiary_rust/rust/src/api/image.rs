@@ -22,6 +22,17 @@ pub enum CompressFormat {
     Png,
 }
 
+pub struct CompressSpec {
+    pub compress_format: Option<CompressFormat>,
+    pub target_width: Option<u32>,
+    pub target_height: Option<u32>,
+    pub min_width: Option<u32>,
+    pub min_height: Option<u32>,
+    pub max_width: Option<u32>,
+    pub max_height: Option<u32>,
+    pub quality: Option<u8>,
+}
+
 fn compress<W: Write>(
     img: &DynamicImage,
     dst_height: u32,
@@ -73,35 +84,18 @@ fn compress<W: Write>(
 pub struct ImageCompressor {}
 
 impl ImageCompressor {
-    /// 直接把压缩结果写入 output_path，避免 `Vec<u8>` 经 FFI 拷贝回 Dart。
     pub fn contain_to_file(
         file_path: String,
         output_path: String,
-        compress_format: Option<CompressFormat>,
-        target_width: Option<u32>,
-        target_height: Option<u32>,
-        min_width: Option<u32>,
-        min_height: Option<u32>,
-        max_width: Option<u32>,
-        max_height: Option<u32>,
-        quality: Option<u8>,
+        spec: CompressSpec,
     ) -> Result<()> {
-        let (src_img, dst_width, dst_height, format, quality) = Self::prepare(
-            file_path,
-            compress_format,
-            target_width,
-            target_height,
-            min_width,
-            min_height,
-            max_width,
-            max_height,
-            quality,
-        )?;
+        let (src_img, dst_width, dst_height, format, quality) =
+            Self::prepare(file_path, spec)?;
 
-        if let Some(parent) = std::path::Path::new(&output_path).parent() {
-            if !parent.as_os_str().is_empty() {
-                fs::create_dir_all(parent)?;
-            }
+        if let Some(parent) = std::path::Path::new(&output_path).parent()
+            && !parent.as_os_str().is_empty()
+        {
+            fs::create_dir_all(parent)?;
         }
 
         let mut writer = BufWriter::new(File::create(&output_path)?);
@@ -112,33 +106,26 @@ impl ImageCompressor {
 
     fn prepare(
         file_path: String,
-        compress_format: Option<CompressFormat>,
-        target_width: Option<u32>,
-        target_height: Option<u32>,
-        min_width: Option<u32>,
-        min_height: Option<u32>,
-        max_width: Option<u32>,
-        max_height: Option<u32>,
-        quality: Option<u8>,
+        spec: CompressSpec,
     ) -> Result<(DynamicImage, u32, u32, CompressFormat, u8)> {
         let src_img = ImageReader::open(file_path)?
             .with_guessed_format()?
             .decode()
             .map_err(|e| anyhow::anyhow!("Failed to decode image: {}", e))?;
-        let format = compress_format.unwrap_or(CompressFormat::Jpeg);
-        let quality = quality.unwrap_or(80);
+        let format = spec.compress_format.unwrap_or(CompressFormat::Jpeg);
+        let quality = spec.quality.unwrap_or(80);
 
         let (img_width, img_height) = src_img.dimensions();
         let (dst_width, dst_height) = Self::calculate_target_dimensions(
             img_width,
             img_height,
             &ResizeOptions {
-                target_width,
-                target_height,
-                min_width,
-                min_height,
-                max_width,
-                max_height,
+                target_width: spec.target_width,
+                target_height: spec.target_height,
+                min_width: spec.min_width,
+                min_height: spec.min_height,
+                max_width: spec.max_width,
+                max_height: spec.max_height,
             },
         );
 

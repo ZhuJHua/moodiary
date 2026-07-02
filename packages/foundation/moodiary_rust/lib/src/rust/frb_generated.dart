@@ -165,14 +165,7 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiImageImageCompressorContainToFile({
     required String filePath,
     required String outputPath,
-    CompressFormat? compressFormat,
-    int? targetWidth,
-    int? targetHeight,
-    int? minWidth,
-    int? minHeight,
-    int? maxWidth,
-    int? maxHeight,
-    int? quality,
+    required CompressSpec spec,
   });
 
   String crateApiTextJiebaKeywordAutoAccessorGetKeyword({
@@ -955,14 +948,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<void> crateApiImageImageCompressorContainToFile({
     required String filePath,
     required String outputPath,
-    CompressFormat? compressFormat,
-    int? targetWidth,
-    int? targetHeight,
-    int? minWidth,
-    int? minHeight,
-    int? maxWidth,
-    int? maxHeight,
-    int? quality,
+    required CompressSpec spec,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -970,17 +956,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(filePath, serializer);
           sse_encode_String(outputPath, serializer);
-          sse_encode_opt_box_autoadd_compress_format(
-            compressFormat,
-            serializer,
-          );
-          sse_encode_opt_box_autoadd_u_32(targetWidth, serializer);
-          sse_encode_opt_box_autoadd_u_32(targetHeight, serializer);
-          sse_encode_opt_box_autoadd_u_32(minWidth, serializer);
-          sse_encode_opt_box_autoadd_u_32(minHeight, serializer);
-          sse_encode_opt_box_autoadd_u_32(maxWidth, serializer);
-          sse_encode_opt_box_autoadd_u_32(maxHeight, serializer);
-          sse_encode_opt_box_autoadd_u_8(quality, serializer);
+          sse_encode_box_autoadd_compress_spec(spec, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -993,18 +969,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateApiImageImageCompressorContainToFileConstMeta,
-        argValues: [
-          filePath,
-          outputPath,
-          compressFormat,
-          targetWidth,
-          targetHeight,
-          minWidth,
-          minHeight,
-          maxWidth,
-          maxHeight,
-          quality,
-        ],
+        argValues: [filePath, outputPath, spec],
         apiImpl: this,
       ),
     );
@@ -1013,18 +978,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiImageImageCompressorContainToFileConstMeta =>
       const TaskConstMeta(
         debugName: "ImageCompressor_contain_to_file",
-        argNames: [
-          "filePath",
-          "outputPath",
-          "compressFormat",
-          "targetWidth",
-          "targetHeight",
-          "minWidth",
-          "minHeight",
-          "maxWidth",
-          "maxHeight",
-          "quality",
-        ],
+        argNames: ["filePath", "outputPath", "spec"],
       );
 
   @override
@@ -2369,6 +2323,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CompressSpec dco_decode_box_autoadd_compress_spec(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_compress_spec(raw);
+  }
+
+  @protected
   RigProviderConfig dco_decode_box_autoadd_rig_provider_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_rig_provider_config(raw);
@@ -2390,6 +2350,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   CompressFormat dco_decode_compress_format(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return CompressFormat.values[raw as int];
+  }
+
+  @protected
+  CompressSpec dco_decode_compress_spec(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return CompressSpec(
+      compressFormat: dco_decode_opt_box_autoadd_compress_format(arr[0]),
+      targetWidth: dco_decode_opt_box_autoadd_u_32(arr[1]),
+      targetHeight: dco_decode_opt_box_autoadd_u_32(arr[2]),
+      minWidth: dco_decode_opt_box_autoadd_u_32(arr[3]),
+      minHeight: dco_decode_opt_box_autoadd_u_32(arr[4]),
+      maxWidth: dco_decode_opt_box_autoadd_u_32(arr[5]),
+      maxHeight: dco_decode_opt_box_autoadd_u_32(arr[6]),
+      quality: dco_decode_opt_box_autoadd_u_8(arr[7]),
+    );
   }
 
   @protected
@@ -2985,6 +2963,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CompressSpec sse_decode_box_autoadd_compress_spec(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_compress_spec(deserializer));
+  }
+
+  @protected
   RigProviderConfig sse_decode_box_autoadd_rig_provider_config(
     SseDeserializer deserializer,
   ) {
@@ -3009,6 +2995,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_i_32(deserializer);
     return CompressFormat.values[inner];
+  }
+
+  @protected
+  CompressSpec sse_decode_compress_spec(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_compressFormat = sse_decode_opt_box_autoadd_compress_format(
+      deserializer,
+    );
+    var var_targetWidth = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_targetHeight = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_minWidth = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_minHeight = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_maxWidth = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_maxHeight = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_quality = sse_decode_opt_box_autoadd_u_8(deserializer);
+    return CompressSpec(
+      compressFormat: var_compressFormat,
+      targetWidth: var_targetWidth,
+      targetHeight: var_targetHeight,
+      minWidth: var_minWidth,
+      minHeight: var_minHeight,
+      maxWidth: var_maxWidth,
+      maxHeight: var_maxHeight,
+      quality: var_quality,
+    );
   }
 
   @protected
@@ -3732,6 +3743,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_compress_spec(
+    CompressSpec self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_compress_spec(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_rig_provider_config(
     RigProviderConfig self,
     SseSerializer serializer,
@@ -3759,6 +3779,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_compress_spec(CompressSpec self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_opt_box_autoadd_compress_format(self.compressFormat, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.targetWidth, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.targetHeight, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.minWidth, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.minHeight, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.maxWidth, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.maxHeight, serializer);
+    sse_encode_opt_box_autoadd_u_8(self.quality, serializer);
   }
 
   @protected

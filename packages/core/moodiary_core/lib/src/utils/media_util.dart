@@ -324,9 +324,11 @@ class MediaUtil {
       await rust.ImageCompressor.containToFile(
         filePath: imagePath,
         outputPath: outputPath,
-        targetHeight: height,
-        targetWidth: width,
-        compressFormat: format,
+        spec: rust.CompressSpec(
+          targetHeight: height,
+          targetWidth: width,
+          compressFormat: format,
+        ),
       );
       return true;
     } catch (e) {

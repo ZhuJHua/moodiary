@@ -249,6 +249,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CompressFormat dco_decode_box_autoadd_compress_format(dynamic raw);
 
   @protected
+  CompressSpec dco_decode_box_autoadd_compress_spec(dynamic raw);
+
+  @protected
   RigProviderConfig dco_decode_box_autoadd_rig_provider_config(dynamic raw);
 
   @protected
@@ -259,6 +262,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CompressFormat dco_decode_compress_format(dynamic raw);
+
+  @protected
+  CompressSpec dco_decode_compress_spec(dynamic raw);
 
   @protected
   double dco_decode_f_32(dynamic raw);
@@ -536,6 +542,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CompressSpec sse_decode_box_autoadd_compress_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RigProviderConfig sse_decode_box_autoadd_rig_provider_config(
     SseDeserializer deserializer,
   );
@@ -548,6 +559,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CompressFormat sse_decode_compress_format(SseDeserializer deserializer);
+
+  @protected
+  CompressSpec sse_decode_compress_spec(SseDeserializer deserializer);
 
   @protected
   double sse_decode_f_32(SseDeserializer deserializer);
@@ -880,6 +894,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_compress_spec(
+    CompressSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_rig_provider_config(
     RigProviderConfig self,
     SseSerializer serializer,
@@ -896,6 +916,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     CompressFormat self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_compress_spec(CompressSpec self, SseSerializer serializer);
 
   @protected
   void sse_encode_f_32(double self, SseSerializer serializer);

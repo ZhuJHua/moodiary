@@ -1,7 +1,6 @@
 /// Moodiary foundation 工具包：无上行依赖的叶子工具、枚举与文本转换器。
 ///
-/// 仅依赖 dart/flutter SDK、外部 pub 包与更低的 foundation 包（[moodiary_rust]），
-/// 不依赖 data/component/feature/app 任何一层。宿主通过本 barrel 统一引入。
+/// 纯叶子：仅依赖 dart/flutter SDK 与外部 pub 包，无任何 workspace 上/下层依赖。
 library;
 
 export 'src/array_util.dart';
@@ -15,7 +14,6 @@ export 'src/markdown_util.dart';
 export 'src/network_util.dart';
 export 'src/package_util.dart';
 export 'src/password_util.dart';
-export 'src/qr_crypto.dart';
 export 'src/quill_to_tiptap.dart';
 export 'src/send_util.dart';
 export 'src/tiptap_content.dart';

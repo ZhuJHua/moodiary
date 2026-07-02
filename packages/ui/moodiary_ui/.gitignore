@@ -1,0 +1,4 @@
+# Dart / Flutter generated artifacts (this package)
+.dart_tool/
+build/
+doc/api/

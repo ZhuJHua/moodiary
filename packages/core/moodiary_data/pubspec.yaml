@@ -13,7 +13,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # 下层包：基建 + 模型 + foundation。
   moodiary_core: 0.0.1
   moodiary_models: 0.0.1
   moodiary_rust: 0.0.1
@@ -21,7 +20,6 @@ dependencies:
 
   isar_plus: 1.3.7
   fpdart: 1.2.0
-  # diary_content_util 读旧 richText（flutter_quill Delta）派生纯文本。
   flutter_quill: 11.5.1
 
 dev_dependencies:

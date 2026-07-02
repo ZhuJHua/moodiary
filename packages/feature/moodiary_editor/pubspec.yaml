@@ -12,16 +12,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # 编辑器 webview：Android/iOS/macOS 用 webview_flutter（联邦实现显式钉版，无 ^）。
   webview_flutter: 4.14.0
   webview_flutter_android: 4.13.0
   webview_flutter_wkwebview: 3.26.0
-  # Windows：webview_flutter 无 Windows 实现，单独用 flutter_inappwebview 的 Windows 联邦包
-  # （WebView2，中文输入法候选窗定位正确——见调研）。其 plugin 块仅声明 platforms: windows，
-  # 不污染 Android/iOS/macOS 构建；不挂 umbrella（会拉全平台并硬耦合 iOS Dart）。
   flutter_inappwebview_windows: 0.7.0-beta.3
   flutter_inappwebview_platform_interface: 1.4.0-beta.3
-  # 编辑器页面 + 媒体回环服务（替代 InAppLocalhostServer）。
   shelf: 1.4.2
 
 dev_dependencies:
@@ -31,5 +26,4 @@ dev_dependencies:
 
 flutter:
   assets:
-    # 编辑器单文件页面（dart tool/task.dart editor 构建期生成，gitignored）。
     - assets/editor/

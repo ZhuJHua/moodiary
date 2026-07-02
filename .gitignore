@@ -55,9 +55,6 @@ build/
 # FVM Version Cache
 .fvm/
 
-# Editor build output (built from packages/product/moodiary_editor/editor/ source, not tracked in git)
-packages/product/moodiary_editor/assets/editor/
-
 # ============================================
 # Rust
 # ============================================

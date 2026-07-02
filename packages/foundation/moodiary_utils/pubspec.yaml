@@ -13,9 +13,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # 下层 foundation 包（qr_crypto 走 Rust 加解密）。
-  moodiary_rust: 0.0.1
-
   # 叶子工具各自的外部依赖（与 app 共用 workspace 解析，钉版无 ^）。
   synchronized: 3.4.1
   image_size_getter: 2.4.1

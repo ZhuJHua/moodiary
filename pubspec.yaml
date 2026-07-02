@@ -5,40 +5,23 @@ publish_to: "none"
 environment:
   sdk: ">=3.12.0"
 
-# Pub workspace members. One shared resolution + one pubspec.lock at this root.
 workspace:
   - mobile
   - desktop
-  - packages/infra/moodiary_lint
-  - packages/foundation/moodiary_l10n
-  - packages/foundation/moodiary_rust
-  - packages/foundation/moodiary_utils
-  - packages/foundation/moodiary_models
-  - packages/infra/moodiary_core
-  - packages/infra/moodiary_data
-  - packages/product/moodiary_ui
-  - packages/product/moodiary_editor
+  - packages/*/*
 
 melos:
-  # 包分层（仅用于命令过滤/分组，不强制依赖方向——方向由 pub 无环依赖图保证）。
-  # 目录亦按此分层组织：packages/{tooling,foundation,infra,product}/。
-  # 上层依赖下层：tooling（独立）；foundation ← infra ← product ← apps。
   categories:
     foundation:
-      - packages/foundation/moodiary_l10n
-      - packages/foundation/moodiary_rust
-      - packages/foundation/moodiary_utils
-      - packages/foundation/moodiary_models
-    infra:
-      - packages/infra/moodiary_lint
-      - packages/infra/moodiary_core
-      - packages/infra/moodiary_data
-    product:
-      - packages/product/moodiary_ui
-      - packages/product/moodiary_editor
+      - packages/foundation/*
+    core:
+      - packages/core/*
+    ui:
+      - packages/ui/*
+    feature:
+      - packages/feature/*
   command:
     bootstrap:
-      # bootstrap 完成（pub get 之后）自动重新生成 Rust 绑定 + 构建编辑器资源。
       hooks:
         post: fvm dart tool/task.dart gen
   scripts:
@@ -59,16 +42,8 @@ melos:
       description: 构建编辑器单文件资源
 
 dev_dependencies:
-  # Melos is a root-only tooling dep (not a workspace member dependency): its
-  # cli_util ^0.5.0 clashes with flutter_launcher_icons' ^0.4.1, resolved by the
-  # cli_util override below (cli_util is tooling-only, not in the app runtime).
   melos: 8.0.0
 
-# dependency_overrides only take effect in the workspace root pubspec.
 dependency_overrides:
-  quill_native_bridge_windows:
-    git:
-      url: https://github.com/Vito0912/quill-native-bridge.git
-      ref: 8c043047e2c34af3879471b19e44119f0ef6ded8
-      path: quill_native_bridge_windows
+  quill_native_bridge_windows: 0.1.0-beta.1
   cli_util: 0.5.0

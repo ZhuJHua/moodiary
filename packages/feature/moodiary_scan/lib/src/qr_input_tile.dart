@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_ui/src/basic/popup.dart';
-import 'package:moodiary_ui/src/common/qr/encrypt_qr_code.dart';
-import 'package:moodiary_ui/src/common/setting_tile.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+
+import 'encrypt_qr_code.dart';
 
 /// 生成二维码 / 输入两键的 ListTile。[prefix] 用于扫码端校验，避免误扫到其他场景的二维码。
 class QrInputTile extends StatelessWidget {

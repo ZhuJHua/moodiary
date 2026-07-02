@@ -850,15 +850,7 @@ fn wire__crate__api__image__ImageCompressor_contain_to_file_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_file_path = <String>::sse_decode(&mut deserializer);
             let api_output_path = <String>::sse_decode(&mut deserializer);
-            let api_compress_format =
-                <Option<crate::api::image::CompressFormat>>::sse_decode(&mut deserializer);
-            let api_target_width = <Option<u32>>::sse_decode(&mut deserializer);
-            let api_target_height = <Option<u32>>::sse_decode(&mut deserializer);
-            let api_min_width = <Option<u32>>::sse_decode(&mut deserializer);
-            let api_min_height = <Option<u32>>::sse_decode(&mut deserializer);
-            let api_max_width = <Option<u32>>::sse_decode(&mut deserializer);
-            let api_max_height = <Option<u32>>::sse_decode(&mut deserializer);
-            let api_quality = <Option<u8>>::sse_decode(&mut deserializer);
+            let api_spec = <crate::api::image::CompressSpec>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
@@ -866,14 +858,7 @@ fn wire__crate__api__image__ImageCompressor_contain_to_file_impl(
                         let output_ok = crate::api::image::ImageCompressor::contain_to_file(
                             api_file_path,
                             api_output_path,
-                            api_compress_format,
-                            api_target_width,
-                            api_target_height,
-                            api_min_width,
-                            api_min_height,
-                            api_max_width,
-                            api_max_height,
-                            api_quality,
+                            api_spec,
                         )?;
                         Ok(output_ok)
                     })(),
@@ -2468,6 +2453,31 @@ impl SseDecode for crate::api::image::CompressFormat {
     }
 }
 
+impl SseDecode for crate::api::image::CompressSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_compressFormat =
+            <Option<crate::api::image::CompressFormat>>::sse_decode(deserializer);
+        let mut var_targetWidth = <Option<u32>>::sse_decode(deserializer);
+        let mut var_targetHeight = <Option<u32>>::sse_decode(deserializer);
+        let mut var_minWidth = <Option<u32>>::sse_decode(deserializer);
+        let mut var_minHeight = <Option<u32>>::sse_decode(deserializer);
+        let mut var_maxWidth = <Option<u32>>::sse_decode(deserializer);
+        let mut var_maxHeight = <Option<u32>>::sse_decode(deserializer);
+        let mut var_quality = <Option<u8>>::sse_decode(deserializer);
+        return crate::api::image::CompressSpec {
+            compress_format: var_compressFormat,
+            target_width: var_targetWidth,
+            target_height: var_targetHeight,
+            min_width: var_minWidth,
+            min_height: var_minHeight,
+            max_width: var_maxWidth,
+            max_height: var_maxHeight,
+            quality: var_quality,
+        };
+    }
+}
+
 impl SseDecode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3103,6 +3113,33 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::image::CompressFormat>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::image::CompressSpec {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.compress_format.into_into_dart().into_dart(),
+            self.target_width.into_into_dart().into_dart(),
+            self.target_height.into_into_dart().into_dart(),
+            self.min_width.into_into_dart().into_dart(),
+            self.min_height.into_into_dart().into_dart(),
+            self.max_width.into_into_dart().into_dart(),
+            self.max_height.into_into_dart().into_dart(),
+            self.quality.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::image::CompressSpec
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::image::CompressSpec>
+    for crate::api::image::CompressSpec
+{
+    fn into_into_dart(self) -> crate::api::image::CompressSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigChatMessage {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -3490,6 +3527,20 @@ impl SseEncode for crate::api::image::CompressFormat {
             },
             serializer,
         );
+    }
+}
+
+impl SseEncode for crate::api::image::CompressSpec {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Option<crate::api::image::CompressFormat>>::sse_encode(self.compress_format, serializer);
+        <Option<u32>>::sse_encode(self.target_width, serializer);
+        <Option<u32>>::sse_encode(self.target_height, serializer);
+        <Option<u32>>::sse_encode(self.min_width, serializer);
+        <Option<u32>>::sse_encode(self.min_height, serializer);
+        <Option<u32>>::sse_encode(self.max_width, serializer);
+        <Option<u32>>::sse_encode(self.max_height, serializer);
+        <Option<u8>>::sse_encode(self.quality, serializer);
     }
 }
 

@@ -1,0 +1,118 @@
+name: Quality & Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master, develop ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dart:
+    name: Dart · analyze + test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read Flutter version
+        id: fv
+        run: echo "version=$(jq -r '.flutter' .fvmrc)" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fv.outputs.version }}
+          cache: true
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: mobile
+        run: flutter analyze
+
+      - name: Check layer dependencies
+        run: dart tool/check_layers.dart
+
+      - name: Test (mobile app)
+        working-directory: mobile
+        run: flutter test
+
+      - name: Test (packages)
+        run: |
+          pkgs=$(find packages -path '*/test/*_test.dart' | sed -E 's#/test/.*##' | sort -u)
+          for dir in $pkgs; do
+            echo "::group::flutter test $dir"
+            ( cd "$dir" && flutter test )
+            echo "::endgroup::"
+          done
+
+  rust:
+    name: Rust · clippy + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/foundation/moodiary_rust/rust
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache cargo build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: packages/foundation/moodiary_rust/rust
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test
+
+  editor:
+    name: Editor · type-check (Vue/TS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/feature/moodiary_editor/editor
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Resolve pnpm store path
+        id: pnpm
+        run: echo "store=$(corepack pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm.outputs.store }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('packages/feature/moodiary_editor/editor/pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - name: Install
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Type-check
+        run: corepack pnpm type-check

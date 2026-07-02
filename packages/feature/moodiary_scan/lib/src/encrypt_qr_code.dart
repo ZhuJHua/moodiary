@@ -3,9 +3,10 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
+import 'qr_crypto.dart';
 
 /// 加密二维码组件。[prefix] 会在加密前拼到 [data] 前，供扫码端识别用途、避免误扫到别处的二维码。
 class EncryptQrCode extends StatefulWidget {

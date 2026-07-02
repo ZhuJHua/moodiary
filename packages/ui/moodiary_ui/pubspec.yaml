@@ -13,7 +13,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # 下层包。
   moodiary_core: 0.0.1
   moodiary_l10n: 0.0.1
   moodiary_utils: 0.0.1
@@ -25,13 +24,9 @@ dependencies:
   easy_refresh: 3.5.1
   path: 1.9.1
 
-  # 媒体播放
   video_player: 2.11.1
   chewie: 1.14.1
   audioplayers: 6.8.1
-
-  # 二维码（仅生成 / 显示，相机扫码已移除）
-  qr_flutter: 4.1.0
 
 dev_dependencies:
   flutter_test:

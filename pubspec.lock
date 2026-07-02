@@ -413,10 +413,10 @@ packages:
     dependency: transitive
     description:
       name: cross_file
-      sha256: d687bec93342bf6a764a116d15c8694ebeff10e633dc28a39dd3144f7195024e
+      sha256: "92c9c43c383bfa1c32079d3bc492d55d6d4318044b7b47edaff8971cbb555c51"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.5+3"
+    version: "0.3.5+4"
   crypto:
     dependency: transitive
     description:
@@ -1951,12 +1951,11 @@ packages:
   quill_native_bridge_windows:
     dependency: "direct overridden"
     description:
-      path: quill_native_bridge_windows
-      ref: "8c043047e2c34af3879471b19e44119f0ef6ded8"
-      resolved-ref: "8c043047e2c34af3879471b19e44119f0ef6ded8"
-      url: "https://github.com/Vito0912/quill-native-bridge.git"
-    source: git
-    version: "0.0.2"
+      name: quill_native_bridge_windows
+      sha256: "7045d4a48c85246a15563f33956d6f857dca1b75e5fe23b474c277f064ff6a71"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0-beta.1"
   quiver:
     dependency: transitive
     description:
@@ -2041,10 +2040,10 @@ packages:
     dependency: transitive
     description:
       name: record_windows
-      sha256: "4a8fc03f1e1a688aa07e087db19f1e3cd96c3ad6bbbc467cee703e4df92d7826"
+      sha256: "9cedfacee553a02b48977a5e1d74bf08a36cc5647eba56fb83e57da20552f443"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.1"
+    version: "2.2.2"
   riverpod:
     dependency: transitive
     description:

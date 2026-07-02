@@ -16,26 +16,60 @@ abstract class ImageCompressor implements RustOpaqueInterface {
   static Future<void> containToFile({
     required String filePath,
     required String outputPath,
-    CompressFormat? compressFormat,
-    int? targetWidth,
-    int? targetHeight,
-    int? minWidth,
-    int? minHeight,
-    int? maxWidth,
-    int? maxHeight,
-    int? quality,
+    required CompressSpec spec,
   }) => RustLib.instance.api.crateApiImageImageCompressorContainToFile(
     filePath: filePath,
     outputPath: outputPath,
-    compressFormat: compressFormat,
-    targetWidth: targetWidth,
-    targetHeight: targetHeight,
-    minWidth: minWidth,
-    minHeight: minHeight,
-    maxWidth: maxWidth,
-    maxHeight: maxHeight,
-    quality: quality,
+    spec: spec,
   );
 }
 
 enum CompressFormat { jpeg, webP, png }
+
+/// 压缩/缩放参数集合（分组避免过长参数列表；经 FFI 传入）。
+class CompressSpec {
+  final CompressFormat? compressFormat;
+  final int? targetWidth;
+  final int? targetHeight;
+  final int? minWidth;
+  final int? minHeight;
+  final int? maxWidth;
+  final int? maxHeight;
+  final int? quality;
+
+  const CompressSpec({
+    this.compressFormat,
+    this.targetWidth,
+    this.targetHeight,
+    this.minWidth,
+    this.minHeight,
+    this.maxWidth,
+    this.maxHeight,
+    this.quality,
+  });
+
+  @override
+  int get hashCode =>
+      compressFormat.hashCode ^
+      targetWidth.hashCode ^
+      targetHeight.hashCode ^
+      minWidth.hashCode ^
+      minHeight.hashCode ^
+      maxWidth.hashCode ^
+      maxHeight.hashCode ^
+      quality.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CompressSpec &&
+          runtimeType == other.runtimeType &&
+          compressFormat == other.compressFormat &&
+          targetWidth == other.targetWidth &&
+          targetHeight == other.targetHeight &&
+          minWidth == other.minWidth &&
+          minHeight == other.minHeight &&
+          maxWidth == other.maxWidth &&
+          maxHeight == other.maxHeight &&
+          quality == other.quality;
+}
