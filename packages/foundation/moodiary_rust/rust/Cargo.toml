@@ -10,7 +10,7 @@ crate-type = ["cdylib", "staticlib"]
 flutter_rust_bridge = "=2.13.0-beta.4"
 image = "0.25.10"
 fast_image_resize = { version = "6.0.0", features = ["image"] }
-anyhow = "1.0.102"
+anyhow = "1.0.103"
 ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3" }
 ring = "0.17.14"
 zip = { version = "8.6.0", default-features = false, features = ["aes-crypto", "deflate", "zstd", "time"] }
@@ -19,7 +19,7 @@ jieba-rs = { version = "0.10.1", features = ["default-dict", "tfidf", "textrank"
 once_cell = "1.21.4"
 tokio = "1.52.3"
 unicode-segmentation = "1.13.3"
-uuid = { version = "1.23.3", features = ["v4", "v7"] }
+uuid = { version = "1.23.4", features = ["v4", "v7"] }
 rust-stemmers = "1.2.0"
 argon2 = { version = "0.6.0-rc.8", features = ["default", "rand_core"] }
 minio = { version = "0.4.0", default-features = false, features = ["rustls-tls", "default-crypto"] }
@@ -29,7 +29,7 @@ futures = "0.3"
 # AI 助手底层 agent 框架（pure Rust）。默认特性含 reqwest + derive + rustls，
 # 与既有 minio / reqwest_dav 的 rustls-tls 一致，不引入 native-tls / openssl。
 # 以 `rig` 为 crate 名引入（rig-core 的 lib 名为 rig_core，官方文档 / 示例统一用 `rig`）。
-rig = { package = "rig-core", version = "0.38", default-features = false, features = ["reqwest", "derive", "rustls"] }
+rig = { package = "rig-core", version = "0.39", default-features = false, features = ["reqwest", "derive", "rustls"] }
 serde_json = "1"
 # rig 的 reqwest 客户端在 reqwest 0.13 下默认用 rustls-platform-verifier 校验证书，
 # 该校验器在 Android 上需平台上下文初始化、否则首个 TLS 连接即 panic。直接依赖
