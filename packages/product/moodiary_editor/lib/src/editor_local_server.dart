@@ -38,6 +38,11 @@ class EditorLocalServer {
   /// 无头转换（仅 markdown→JSON，不加载媒体）可不设。
   MediaResolver? mediaResolver;
 
+  /// 当前自定义字体 → 家族名 + 磁盘路径的解析器（由宿主 app 注入）。返回 null（或未设置）
+  /// 表示系统字体，字体请求一律 404。web 侧用 @font-face 加载该文件，使编辑器正文与 App 同字体。
+  /// 每次请求都实时调用，故切换字体后无需重启服务。
+  ({String family, String path})? Function()? fontResolver;
+
   static String _randomToken() {
     final rng = Random.secure();
     return List.generate(
@@ -94,6 +99,22 @@ class EditorLocalServer {
         } catch (e) {
           _log(
             'media request failed: ${request.url.path}',
+            error: e,
+            level: 1000,
+          );
+          return Response.internalServerError();
+        }
+      }
+      // `/<token>/font`：供当前激活的自定义字体文件（web 侧 @font-face 的 src，查询串
+      // `?v=<family>` 仅用于换字体时破缓存，服务端忽略）。系统字体时 resolver 回 null → 404。
+      if (seg.length == 2 && seg[0] == _token && seg[1] == 'font') {
+        try {
+          final font = fontResolver?.call();
+          if (font == null) return Response.notFound(null);
+          return await _serveFile(request, font.path, _fontMime(font.path));
+        } catch (e) {
+          _log(
+            'font request failed: ${request.url.path}',
             error: e,
             level: 1000,
           );
@@ -212,9 +233,22 @@ class EditorLocalServer {
     return false;
   }
 
+  /// 按后缀推断字体 MIME（web 侧 @font-face 加载据此选解析器）。
+  static String _fontMime(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.otf')) return 'font/otf';
+    if (lower.endsWith('.woff2')) return 'font/woff2';
+    if (lower.endsWith('.woff')) return 'font/woff';
+    return 'font/ttf';
+  }
+
   /// 媒体 URL 前缀（注入 boot.mediaBase，web 侧 linkBase 用它拼显示 URL）。
   /// 仅在 [ensureStarted] 完成后可用。
   String get mediaBase => 'http://localhost:$_port/$_token/media/';
+
+  /// 字体文件 URL（注入 boot.fontBase，web 侧用它作 @font-face 的 src）。
+  /// 仅在 [ensureStarted] 完成后可用。
+  String get fontBase => 'http://localhost:$_port/$_token/font';
 
   /// 编辑器页面 URL，boot 数据经 base64url 挂在 query 上。仅在 [ensureStarted] 完成后可用。
   Uri pageUri(Map<String, dynamic> boot) {

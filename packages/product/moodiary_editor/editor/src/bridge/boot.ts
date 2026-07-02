@@ -10,6 +10,8 @@ export interface EditorBoot {
   saveStatus?: string
   /** 本地媒体服务 URL 前缀（随机端口 + token，每次启动不同），如 `http://127.0.0.1:PORT/<token>/media/`。 */
   mediaBase?: string
+  /** 自定义字体文件 URL（同一本地服务），作 @font-face 的 src；随主题里的 font 家族名一起用。 */
+  fontBase?: string
 }
 
 let cached: EditorBoot | null = null

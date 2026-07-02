@@ -39,6 +39,9 @@ class ThemeUtil {
 
   String? fontFamily;
 
+  /// 当前激活自定义字体的落库文件名（含后缀）；供 [editorFont] 拼磁盘路径给 webview 编辑器。
+  String? _activeFontFileName;
+
   Map<String, double> _unifyFontWeights(Map<String, double> fontWeights) {
     final regular = fontWeights['default'] ?? 400;
     const Map<String, String> nameMapping = {
@@ -200,6 +203,12 @@ class ThemeUtil {
         ? darkDynamic!
         : buildColorScheme(normalColor, Brightness.dark, color);
 
+    // 每次重建先归零字体状态：从自定义字体切回「系统」时才能立即生效（否则残留旧家族，
+    // 须重启才恢复系统字体）。
+    fontFamily = null;
+    _activeFontFileName = null;
+    wghtAxisMap = {};
+
     final customFont = MoodiaryKVs.customFont.get();
 
     if (customFont.isNotNullOrBlank) {
@@ -210,6 +219,7 @@ class ThemeUtil {
           fontPath: FileUtil.getRealPath('font', font.fontFileName),
         );
         fontFamily = font.fontFamily;
+        _activeFontFileName = font.fontFileName;
         wghtAxisMap = _unifyFontWeights(
           font.fontWghtAxisMap.cast<String, double>(),
         );
@@ -273,6 +283,15 @@ class ThemeUtil {
       seed: AppColor.themeColorList[index],
       variant: color == 0 ? 'monochrome' : 'tonalSpot',
     );
+  }
+
+  /// 当前激活的自定义字体（家族名 + 字体文件磁盘路径），供 webview 编辑器用 @font-face 加载
+  /// 同一字体；未设置自定义字体（系统字体）时返回 null。依赖 [buildTheme] 已解析当前字体。
+  ({String family, String path})? get editorFont {
+    final family = fontFamily;
+    final fileName = _activeFontFileName;
+    if (family == null || fileName == null) return null;
+    return (family: family, path: FileUtil.getRealPath('font', fileName));
   }
 
   Typography buildTypography(ColorScheme colorScheme) {

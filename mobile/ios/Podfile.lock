@@ -1,21 +1,27 @@
 PODS:
+  - chat_bottom_container (0.0.1):
+    - Flutter
   - Flutter (1.0.0)
   - moodiary_rust (0.0.1):
     - Flutter
 
 DEPENDENCIES:
+  - chat_bottom_container (from `.symlinks/plugins/chat_bottom_container/ios`)
   - Flutter (from `Flutter`)
   - moodiary_rust (from `.symlinks/plugins/moodiary_rust/ios`)
 
 EXTERNAL SOURCES:
+  chat_bottom_container:
+    :path: ".symlinks/plugins/chat_bottom_container/ios"
   Flutter:
     :path: Flutter
   moodiary_rust:
     :path: ".symlinks/plugins/moodiary_rust/ios"
 
 SPEC CHECKSUMS:
+  chat_bottom_container: d8b077152c91b0ab90001e900748ea50353a5520
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  moodiary_rust: 92280f561dcf7f29d78455df3175948ce7db965e
+  moodiary_rust: a689badc22000c4ac9043b6ce44eddc83ee25986
 
 PODFILE CHECKSUM: ed22e19af5eb4a72710862041c4be54584bcf797
 

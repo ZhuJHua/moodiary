@@ -26,9 +26,48 @@ export interface SeedTheme {
   variant?: 'tonalSpot' | 'monochrome'
   /** -1..1，对应 material-color-utilities 的 contrastLevel（默认 0）。 */
   contrast?: number
+  /** App 当前自定义字体家族名；缺省 / 空表示系统字体（用 CSS 兜底字体栈）。 */
+  font?: string
 }
 
 export let isDark = false
+
+/** 字体文件 URL（boot.fontBase，随机端口 + token），作 @font-face 的 src；boot 时经 [setFontBase] 注入。 */
+let fontBase = ''
+
+export function setFontBase(url: string): void {
+  fontBase = url
+}
+
+// 与 moodiary-editor.css `:root` 的 --app-font-sans 兜底一致：自定义字体缺字时回退到系统字体栈。
+const DEFAULT_SANS =
+  "-apple-system, 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC', Roboto, sans-serif"
+
+let fontStyleEl: HTMLStyleElement | null = null
+
+/**
+ * 应用 App 自定义字体：家族名有值且 fontBase 就绪时，注入一段 @font-face（src 指向本地服务的
+ * 字体文件，`?v=<family>` 换字体时破缓存）并把 --app-font-sans 置为「自定义字体, 系统兜底栈」；
+ * 否则清空 @font-face 并移除内联 --app-font-sans，回落到 :root 的系统字体栈。
+ * 不声明 font-weight，静态 / 可变字体的加粗都交给浏览器合成，避免可变字体单一 face 吃掉粗体。
+ */
+function applyFont(family?: string): void {
+  const root = document.documentElement
+  if (!fontStyleEl) {
+    fontStyleEl = document.createElement('style')
+    fontStyleEl.id = 'app-font-face'
+    document.head.appendChild(fontStyleEl)
+  }
+  if (family && fontBase) {
+    const esc = family.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+    const url = `${fontBase}?v=${encodeURIComponent(family)}`
+    fontStyleEl.textContent = `@font-face{font-family:'${esc}';src:url('${url}');font-display:swap;}`
+    root.style.setProperty('--app-font-sans', `'${esc}', ${DEFAULT_SANS}`)
+  } else {
+    fontStyleEl.textContent = ''
+    root.style.removeProperty('--app-font-sans')
+  }
+}
 
 export function applyTheme(theme: SeedTheme): void {
   if (!theme?.seed) return
@@ -38,6 +77,7 @@ export function applyTheme(theme: SeedTheme): void {
   for (const [key, value] of Object.entries(appVars(rolesOf(scheme)))) {
     root.style.setProperty(key, value)
   }
+  applyFont(theme.font)
   isDark = theme.dark
   root.setAttribute('data-theme', isDark ? 'dark' : 'light')
   // 让原生表单控件 / 滚动条跟随明暗。

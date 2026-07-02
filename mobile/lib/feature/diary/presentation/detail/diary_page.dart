@@ -7,6 +7,9 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:moodiary_editor/moodiary_editor.dart'
+    show MoodiaryEditorController;
 import 'package:moodiary/feature/diary/application/category_controller.dart';
 import 'package:moodiary/feature/edit/application/edit_controller.dart';
 import 'package:moodiary/feature/edit/presentation/widget/category_picker_sheet.dart';
@@ -52,6 +55,27 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   /// 缓存 notifier：Riverpod 3.x 禁止在 dispose 里碰 ref。
   late final EditController _notifier;
 
+  // —— 目录（TOC）——
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  /// 编辑器命令句柄：目录点击 → scrollToHeading 反向驱动 webview 滚动。
+  final _editorController = MoodiaryEditorController();
+
+  /// 当前顶部可见标题下标（webview 滚动联动回传）；ValueNotifier 只重建目录高亮，不重建整页。
+  final ValueNotifier<int> _activeHeading = ValueNotifier<int>(-1);
+
+  // 大纲按 content 串缓存，避免每次 build（每次输入都会重建）重复解析。
+  String? _headingsContent;
+  List<({int level, String text})> _headings = const [];
+
+  List<({int level, String text})> _headingsOf(String content) {
+    if (content != _headingsContent) {
+      _headingsContent = content;
+      _headings = TiptapContent.headings(content);
+    }
+    return _headings;
+  }
+
   EditControllerProvider get _provider =>
       editControllerProvider(widget.diaryId, defaultType: widget.initialType);
 
@@ -77,6 +101,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     // 领域事件，此时已非「打开中」→ 自然触发去抖 push；无改动则由下一轮 poll 收敛。
     final id = widget.diaryId;
     if (id != null) OpenDiaryRegistry.instance.close(id);
+    _activeHeading.dispose();
     _autoSaveTimer?.cancel();
     // 离开时 flush 一次自动保存。只读快照 + get_it 仓储、写 state 前用 `ref.mounted`
     // 守卫，不会触碰已 autoDispose 的 ref。
@@ -102,6 +127,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   void _onContentChanged(String content, String plain) {
     ref.read(_provider.notifier).changeContent(content, contentText: plain);
+    _dirty = true;
+    _scheduleAutoSave();
+  }
+
+  void _onTitleChanged(String value) {
+    ref.read(_provider.notifier).changeTitle(value);
     _dirty = true;
     _scheduleAutoSave();
   }
@@ -247,9 +278,34 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   @override
   Widget build(BuildContext context) {
     final editAsync = ref.watch(_provider);
+    final diary = editAsync.value;
+    // 大纲来自当前正文（tiptap JSON）；空则不显示目录按钮 / 抽屉。
+    final headings = diary == null
+        ? const <({int level, String text})>[]
+        : _headingsOf(diary.content);
     return Scaffold(
-      // 仅一个返回键（无标题 / 动作）。
-      appBar: AppBar(),
+      key: _scaffoldKey,
+      // 返回键 +（有标题时）右侧目录按钮。
+      appBar: AppBar(
+        actions: [
+          if (headings.isNotEmpty)
+            IconButton(
+              tooltip: '目录',
+              icon: const Icon(Icons.toc_rounded),
+              onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+            ),
+        ],
+      ),
+      endDrawer: headings.isEmpty
+          ? null
+          : _TocDrawer(
+              headings: headings,
+              activeHeading: _activeHeading,
+              onTap: (i) {
+                _editorController.scrollToHeading(i);
+                _scaffoldKey.currentState?.closeEndDrawer();
+              },
+            ),
       body: editAsync.buildLoading(
         // 不显示转圈，避免和编辑器 webview 加载遮罩形成「两次 loading」。
         loading: () => const SizedBox.shrink(),
@@ -278,11 +334,16 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             key: const ValueKey('diary-editor'),
             type: DiaryType.fromValue(diary.type),
             initialContent: diary.content,
+            // 标题在 webview 编辑器顶部（映射 Diary.title，不进正文）。
+            initialTitle: diary.title,
             editable: isEdit,
             // 自动保存状态推给编辑器右下角气泡；_flushAutoSave 的 setState 重建即透传
             //（同 key，webview 不重建）。
             saveStatus: _saveStatus,
             onChanged: _onContentChanged,
+            onTitleChanged: _onTitleChanged,
+            editorController: _editorController,
+            onActiveHeadingChanged: (i) => _activeHeading.value = i,
             onShowDetails: () => _showDetails(diary),
             onOpenDiaryLink: _openLinkedDiary,
           ),
@@ -384,6 +445,153 @@ class _MoodChip extends StatelessWidget {
           const SizedBox(width: 4),
           Text('${(value * 100).toStringAsFixed(0)}%'),
         ],
+      ),
+    );
+  }
+}
+
+/// 目录（TOC）右侧抽屉：按级别缩进列出正文标题，点击跳到对应标题，当前标题高亮。
+/// 标题来自 [TiptapContent.headings]（文档序），下标即 `scrollToHeading(index)` 的 index。
+class _TocDrawer extends StatelessWidget {
+  final List<({int level, String text})> headings;
+  final ValueNotifier<int> activeHeading;
+  final ValueChanged<int> onTap;
+
+  const _TocDrawer({
+    required this.headings,
+    required this.activeHeading,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Row(
+                children: [
+                  Icon(Icons.toc_rounded, size: 20, color: scheme.primary),
+                  const SizedBox(width: 10),
+                  Text(
+                    '目录',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '${headings.length}',
+                      style: textTheme.labelSmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ValueListenableBuilder<int>(
+                valueListenable: activeHeading,
+                builder: (context, active, _) {
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(8, 4, 8, 16),
+                    itemCount: headings.length,
+                    itemBuilder: (context, i) {
+                      final h = headings[i];
+                      final isActive = active == i;
+                      final label = h.text.trim().isEmpty
+                          ? '(无标题)'
+                          : h.text;
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          left: (h.level - 1) * 14.0,
+                          top: 1,
+                          bottom: 1,
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => onTap(i),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              curve: Curves.easeOut,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? scheme.secondaryContainer
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  if (h.level > 1) ...[
+                                    Container(
+                                      width: 5,
+                                      height: 5,
+                                      margin: const EdgeInsets.only(right: 10),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isActive
+                                            ? scheme.onSecondaryContainer
+                                            : scheme.onSurfaceVariant
+                                                  .withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                  Expanded(
+                                    child: Text(
+                                      label,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          (h.level <= 1
+                                                  ? textTheme.bodyMedium
+                                                  : textTheme.bodySmall)
+                                              ?.copyWith(
+                                                color: isActive
+                                                    ? scheme
+                                                          .onSecondaryContainer
+                                                    : scheme.onSurface,
+                                                fontWeight:
+                                                    isActive || h.level <= 1
+                                                    ? FontWeight.w600
+                                                    : FontWeight.w400,
+                                                height: 1.3,
+                                              ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

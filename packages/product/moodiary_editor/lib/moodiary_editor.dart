@@ -5,7 +5,12 @@
 library;
 
 export 'src/moodiary_editor.dart'
-    show MoodiaryEditor, MoodiaryEditorController, EditorSeed, DiaryLinkCandidate;
+    show
+        MoodiaryEditor,
+        MoodiaryEditorController,
+        EditorSeed,
+        EditorFont,
+        DiaryLinkCandidate;
 export 'src/editor_local_server.dart' show EditorLocalServer;
 export 'src/media.dart'
     show MediaResolver, imageMimeOf, audioMimeOf, videoMimeOf;

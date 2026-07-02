@@ -5,9 +5,9 @@ import 'dart:io';
 import 'package:cross_file/cross_file.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_core/src/utils/file_util.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:path/path.dart';
 
 class FontUtil {
@@ -45,10 +45,14 @@ class FontUtil {
   static Future<Map<String, dynamic>> getFontWghtAxis({
     required String filePath,
   }) async {
-    final axis = await rust.FontReader.getWghtAxisFromVfFont(
-      ttfFilePath: filePath,
-    );
-    return Map<String, dynamic>.from(axis);
+    try {
+      final axis = await rust.FontReader.getWghtAxisFromVfFont(
+        ttfFilePath: filePath,
+      );
+      return Map<String, dynamic>.from(axis);
+    } catch (_) {
+      return {};
+    }
   }
 
   static Future<XFile?> pickFont() async {

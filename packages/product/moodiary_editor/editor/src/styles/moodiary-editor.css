@@ -129,8 +129,42 @@ body {
   flex: 1 1 0;
   min-height: 0;
   display: flex;
-  /* 作为字数计数浮层的定位上下文（计数固定在编辑器视口右下，不随正文滚动）。 */
+  flex-direction: column;
+  /* 作为字数计数浮层的定位上下文（计数固定在编辑器视口右下，不随正文滚动）。本身不滚动，
+     滚动交给内部的 .moodiary-editor-viewport（标题 + 正文一起滚）。 */
   position: relative;
+}
+/* 滚动视口：标题区 + 正文同处一个滚动容器，故标题随内容一起滚（不吸顶）。字数浮层在其外，保持固定。 */
+.moodiary-editor-viewport {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+/* 顶部标题输入区：不进正文文档，样式与正文同字体、加粗放大；只读态无占位、空标题隐藏。 */
+.moodiary-title {
+  flex: 0 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--app-on-background);
+  font-family: var(--app-font-sans);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 16px 16px 2px;
+}
+.moodiary-title::placeholder {
+  color: var(--app-on-surface-variant);
+  opacity: 0.6;
+  font-weight: 700;
 }
 /* 右下角状态条：同步气泡 + 字数小药丸，仅编辑态显示，不拦截点击。 */
 .moodiary-statusbar {
@@ -171,7 +205,8 @@ body {
   color: var(--app-error);
 }
 .moodiary-editor {
-  flex: 1;
+  /* 视口内：短文时长满剩余高度（提供点击聚焦区），长文时随内容撑高、由视口滚动。 */
+  flex: 1 0 auto;
   min-height: 0;
   display: flex;
 }
@@ -233,12 +268,10 @@ body {
   display: block;
 }
 
-/* —— 编辑区：填满剩余高度并在内部滚动；透明背景透出 Flutter 容器 —— */
+/* —— 编辑区：填满 .moodiary-editor（本身不再滚动，滚动交给外层 viewport，标题随正文一起滚） —— */
 .moodiary-editor .ProseMirror {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   padding: 16px;
   background: transparent;
   color: var(--app-on-background);

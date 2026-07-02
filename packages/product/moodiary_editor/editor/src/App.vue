@@ -4,7 +4,7 @@ import MoodiaryEditor from './components/MoodiaryEditor.vue'
 import DiaryLinkSuggestion from './components/DiaryLinkSuggestion.vue'
 import { installBridge } from './bridge'
 import { readBoot } from './bridge/boot'
-import { applyTheme } from './bridge/theme'
+import { applyTheme, setFontBase } from './bridge/theme'
 import { setSaveStatus } from './bridge/save-status'
 import { post } from './bridge/post'
 import { setMediaPrefix, unproxyMedia } from './editor/media'
@@ -13,6 +13,8 @@ import { setMediaPrefix, unproxyMedia } from './editor/media'
 // 初始内容不走 boot：ready 后由 Flutter setContent（见 moodiary_editor.dart）。
 const boot = readBoot()
 if (boot.mediaBase) setMediaPrefix(boot.mediaBase)
+// 字体文件基址须先于 applyTheme 注入：applyTheme 里用它拼 @font-face 的 src。
+if (boot.fontBase) setFontBase(boot.fontBase)
 const initialEditable = boot.editable ?? true
 const placeholder = boot.placeholder ?? ''
 // 决定工具栏位置（桌面置顶 / 移动置底）。Flutter 始终下发 platform；缺省按桌面（顶部工具栏到处都合理）。

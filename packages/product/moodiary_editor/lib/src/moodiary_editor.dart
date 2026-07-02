@@ -13,6 +13,10 @@ import 'transport/editor_transport.dart';
 /// 编辑器主题种子：种子色 + Material 3 变体名（由宿主 app 注入，见 [MoodiaryEditor.seedResolver]）。
 typedef EditorSeed = ({Color seed, String variant});
 
+/// 当前激活的自定义字体：家族名 + 字体文件磁盘路径（由宿主 app 注入，见 [MoodiaryEditor.fontResolver]）。
+/// webview 经本地服务按需读该字体文件，用 @font-face 加载，使编辑器正文与 App 同字体。
+typedef EditorFont = ({String family, String path});
+
 /// 双链 `[[` 候选：目标日记业务 id + 显示标签（标题或日期）。宿主从仓库提供，见
 /// [MoodiaryEditor.onRequestLinkCandidates]。
 typedef DiaryLinkCandidate = ({String id, String label});
@@ -45,9 +49,18 @@ class MoodiaryEditor extends StatefulWidget {
   /// 初始内容：TipTap 文档 JSON 串（tiptap 日记）或旧 markdown 文本（只读查看，编辑器自动识别）。
   final String initialContent;
 
+  /// 初始标题（日记标题）；ready 后经 setTitle 推给 webview 顶部标题区。不进正文文档。
+  final String initialTitle;
+
   final bool readOnly;
 
   final ValueChanged<String>? onChanged;
+
+  /// 顶部标题区输入回调：入参为当前标题串。宿主据此写入 Diary.title（不进正文、不进 content JSON）。
+  final ValueChanged<String>? onTitleChanged;
+
+  /// 滚动时「当前顶部可见标题」下标变化回调（文档序，-1 表示无）；供目录（TOC）高亮当前项。
+  final ValueChanged<int>? onActiveHeadingChanged;
 
   final VoidCallback? onReady;
 
@@ -83,6 +96,10 @@ class MoodiaryEditor extends StatefulWidget {
   /// 明暗由 `Theme.of(context)` 推断。不传则用 Material 默认主色。
   final EditorSeed Function()? seedResolver;
 
+  /// 当前自定义字体解析器（宿主 app 提供）：每次下发主题时实时读取当前激活字体（家族 + 磁盘路径）；
+  /// 返回 null 表示用系统字体。用于把 App 的自定义字体带进 webview 编辑器正文。
+  final EditorFont? Function()? fontResolver;
+
   /// 正文媒体磁盘解析器（宿主 app 提供）：注入给 [EditorLocalServer] 按需读盘供图。
   final MediaResolver? mediaResolver;
 
@@ -93,8 +110,11 @@ class MoodiaryEditor extends StatefulWidget {
     super.key,
     this.controller,
     this.initialContent = '',
+    this.initialTitle = '',
     this.readOnly = false,
     this.onChanged,
+    this.onTitleChanged,
+    this.onActiveHeadingChanged,
     this.onReady,
     this.onImageTap,
     this.onPickImage,
@@ -106,6 +126,7 @@ class MoodiaryEditor extends StatefulWidget {
     this.onOpenDetails,
     this.saveStatus = 'idle',
     this.seedResolver,
+    this.fontResolver,
     this.mediaResolver,
     this.loadingBuilder,
   });
@@ -199,6 +220,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     };
     final server = EditorLocalServer.instance;
     server.mediaResolver ??= widget.mediaResolver;
+    server.fontResolver ??= widget.fontResolver;
     try {
       await server.ensureStarted();
     } catch (e, s) {
@@ -209,6 +231,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     }
     if (!mounted) return;
     boot['mediaBase'] = server.mediaBase;
+    boot['fontBase'] = server.fontBase;
     try {
       await _buildController(server.pageUri(boot));
     } catch (e, s) {
@@ -276,6 +299,15 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
         final content = payload is String ? payload : '';
         _lastContent = content;
         widget.onChanged?.call(content);
+        return;
+      case 'titleChange':
+        widget.onTitleChanged?.call(payload is String ? payload : '');
+        return;
+      case 'activeHeading':
+        final index = payload is int
+            ? payload
+            : (payload is num ? payload.toInt() : -1);
+        widget.onActiveHeadingChanged?.call(index);
         return;
       case 'error':
         _log('JS error: $payload', level: 1000);
@@ -365,6 +397,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   Future<void> _activate() async {
     if (_activated) return;
     await _setContent(widget.initialContent);
+    await _setTitle(widget.initialTitle);
     // boot 在 _prepare 时捕获了 editable / theme 快照；加载窗口内若 readOnly / 主题变了，
     // didUpdateWidget / didChangeDependencies 因 _activated 尚未置位而跳过，故在此用当前
     // widget 值对齐（幂等，开销可忽略）。
@@ -383,7 +416,15 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     final seed = resolved?.seed ?? Theme.of(context).colorScheme.primary;
     final variant = resolved?.variant ?? 'tonalSpot';
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return {'seed': _hex(seed), 'dark': dark, 'variant': variant};
+    // 字体家族随主题一起下发：web 侧据此拼 @font-face（src 用 boot.fontBase），
+    // 缺省（系统字体）不带该字段。字体文件由本地服务经 fontResolver 供给。
+    final font = widget.fontResolver?.call();
+    return {
+      'seed': _hex(seed),
+      'dark': dark,
+      'variant': variant,
+      if (font != null) 'font': font.family,
+    };
   }
 
   static String _hex(Color c) {
@@ -412,6 +453,14 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     await _run(
       'window.MoodiaryBridge.setContent(${jsonEncode(content)})',
     );
+  }
+
+  Future<void> _setTitle(String title) async {
+    await _run('window.MoodiaryBridge.setTitle(${jsonEncode(title)})');
+  }
+
+  Future<void> _scrollToHeading(int index) async {
+    await _run('window.MoodiaryBridge.scrollToHeading($index)');
   }
 
   Future<void> _focus() async {
@@ -512,5 +561,10 @@ class MoodiaryEditorController {
 
   Future<void> insertVideo(String name) async {
     await _state?._insertVideo(name);
+  }
+
+  /// 目录跳转：滚动到第 [index] 个 heading（文档序，与 `DiaryContentUtil` / `TiptapContent.headings` 一致）。
+  Future<void> scrollToHeading(int index) async {
+    await _state?._scrollToHeading(index);
   }
 }

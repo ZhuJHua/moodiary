@@ -23,6 +23,16 @@ class MoodiaryEditorView extends StatefulWidget {
   final String initialContent;
   final ValueChanged<String> onChanged;
 
+  /// 初始标题 + 标题变更回调（webview 顶部标题区，映射 Diary.title）。
+  final String initialTitle;
+  final ValueChanged<String>? onTitleChanged;
+
+  /// 命令式句柄（宿主传入以驱动目录跳转 scrollToHeading）；不传则内部自建。
+  final MoodiaryEditorController? controller;
+
+  /// 当前顶部可见标题下标变化（目录高亮）。
+  final ValueChanged<int>? onActiveHeadingChanged;
+
   final bool editable;
 
   /// 本篇自动保存状态，透传给编辑器内右下角气泡：saving / saved / failed。
@@ -38,6 +48,10 @@ class MoodiaryEditorView extends StatefulWidget {
     super.key,
     required this.initialContent,
     required this.onChanged,
+    this.initialTitle = '',
+    this.onTitleChanged,
+    this.controller,
+    this.onActiveHeadingChanged,
     this.editable = true,
     this.saveStatus = 'idle',
     this.onOpenDiaryLink,
@@ -49,7 +63,7 @@ class MoodiaryEditorView extends StatefulWidget {
 }
 
 class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
-  final _controller = MoodiaryEditorController();
+  late final _controller = widget.controller ?? MoodiaryEditorController();
 
   void _showImageDialog() {
     showDialog<void>(
@@ -257,7 +271,10 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       controller: _controller,
       readOnly: !widget.editable,
       initialContent: widget.initialContent,
+      initialTitle: widget.initialTitle,
       onChanged: widget.onChanged,
+      onTitleChanged: widget.onTitleChanged,
+      onActiveHeadingChanged: widget.onActiveHeadingChanged,
       onPickImage: _showImageDialog,
       onPickAudio: _showAudioDialog,
       onPickVideo: _showVideoDialog,
@@ -269,6 +286,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onOpenDetails: widget.onOpenDetails,
       saveStatus: widget.saveStatus,
       seedResolver: () => ThemeUtil().editorSeed,
+      fontResolver: () => ThemeUtil().editorFont,
       mediaResolver: appMediaResolver,
       loadingBuilder: (_) => const MoodiaryLoading(),
     );

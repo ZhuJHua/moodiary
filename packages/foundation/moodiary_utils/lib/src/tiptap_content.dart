@@ -140,4 +140,50 @@ class TiptapContent {
     walk(doc);
     return ids.toList();
   }
+
+  /// 文档大纲：按出现顺序的 heading 节点（级别 1-6 + 标题纯文本）。非 tiptap JSON 返回空
+  /// （旧 markdown / richText 不解析）。供目录（TOC）用；顺序与编辑器侧 heading 顺序一致，
+  /// 故列表下标即 `scrollToHeading(index)` 的 index。
+  static List<({int level, String text})> headings(String content) {
+    final doc = tryDoc(content);
+    if (doc == null) return const [];
+    final out = <({int level, String text})>[];
+    void walk(dynamic node) {
+      if (node is! Map) return;
+      if (node['type'] == 'heading') {
+        final attrs = node['attrs'];
+        final raw = (attrs is Map) ? attrs['level'] : null;
+        final level = (raw is int) ? (raw < 1 ? 1 : (raw > 6 ? 6 : raw)) : 1;
+        final buf = StringBuffer();
+        _collectInline(node['content'], buf);
+        out.add((level: level, text: buf.toString().trim()));
+      }
+      final content = node['content'];
+      if (content is List) {
+        for (final child in content) {
+          walk(child);
+        }
+      }
+    }
+
+    walk(doc);
+    return out;
+  }
+
+  /// 收集一个块内的内联文本（不补块级换行，供标题文本用）。
+  static void _collectInline(dynamic content, StringBuffer buf) {
+    if (content is! List) return;
+    for (final node in content) {
+      if (node is! Map) continue;
+      final text = node['text'];
+      if (text is String) buf.write(text);
+      if (node['type'] == 'diaryLink') {
+        final attrs = node['attrs'];
+        if (attrs is Map && attrs['label'] is String) {
+          buf.write(attrs['label'] as String);
+        }
+      }
+      _collectInline(node['content'], buf);
+    }
+  }
 }

@@ -46,6 +46,8 @@ export interface EditorApi {
   resolveUpload(id: string, name: string): void
   /** Flutter 回传 `[[` 双链候选（reqId 对应一次 requestLinkCandidates 请求；json 为 [{id,label}] 串）。 */
   resolveLinkCandidates(reqId: string, json: string): void
+  /** 滚动到第 index 个 heading（文档序，与 Dart TiptapContent.headings 一致）；供目录跳转。不聚焦（不弹键盘）。 */
+  scrollToHeading(index: number): void
 }
 
 export interface EditorKitOptions {
@@ -215,6 +217,19 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       }
     },
     resolveLinkCandidates: (reqId, json) => applyLinkCandidates(reqId, json),
+    scrollToHeading: (index) => {
+      const ed = editor
+      if (!ed) return
+      const positions: number[] = []
+      ed.state.doc.descendants((node, pos) => {
+        if (node.type.name === 'heading') positions.push(pos)
+        return true
+      })
+      const pos = positions[index]
+      if (pos == null) return
+      const dom = ed.view.nodeDOM(pos) as HTMLElement | null
+      dom?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+    },
   }
 
   return {

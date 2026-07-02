@@ -17,6 +17,8 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary/feature/edit/presentation/widget/editor_toolbar.dart';
 import 'package:moodiary/feature/edit/presentation/widget/moodiary_editor_view.dart';
 import 'package:moodiary/feature/edit/presentation/widget/record_sheet.dart';
+import 'package:moodiary_editor/moodiary_editor.dart'
+    show MoodiaryEditorController;
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:path/path.dart' as p;
 
@@ -25,6 +27,14 @@ import 'package:path/path.dart' as p;
 class EditorBody extends StatefulWidget {
   final DiaryType type;
   final String initialContent;
+
+  /// 初始标题 + 标题变更回调（仅 tiptap/markdown 的 webview 编辑器用；richText 无标题）。
+  final String initialTitle;
+  final ValueChanged<String>? onTitleChanged;
+
+  /// 目录跳转句柄 + 当前标题下标变化（仅 webview 编辑器；richText 无目录）。
+  final MoodiaryEditorController? editorController;
+  final ValueChanged<int>? onActiveHeadingChanged;
 
   final bool editable;
 
@@ -46,6 +56,10 @@ class EditorBody extends StatefulWidget {
     required this.type,
     required this.initialContent,
     required this.onChanged,
+    this.initialTitle = '',
+    this.onTitleChanged,
+    this.editorController,
+    this.onActiveHeadingChanged,
     this.editable = true,
     this.onShowDetails,
     this.onOpenDiaryLink,
@@ -315,6 +329,10 @@ class _EditorBodyState extends State<EditorBody> {
   Widget _buildMoodiaryEditor(BuildContext context) {
     return MoodiaryEditorView(
       initialContent: widget.initialContent,
+      initialTitle: widget.initialTitle,
+      onTitleChanged: widget.onTitleChanged,
+      controller: widget.editorController,
+      onActiveHeadingChanged: widget.onActiveHeadingChanged,
       // 仅 tiptap 可编辑；旧 markdown 只读查看。
       editable: widget.editable && widget.type.isEditable,
       saveStatus: widget.saveStatus,

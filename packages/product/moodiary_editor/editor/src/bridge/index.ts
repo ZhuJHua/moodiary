@@ -4,6 +4,7 @@
 import { applyTheme, type SeedTheme } from './theme'
 import { post } from './post'
 import { setSaveStatus } from './save-status'
+import { setTitle } from './title'
 import type { EditorApi } from '../editor/tiptap'
 
 let api: EditorApi | null = null
@@ -29,6 +30,7 @@ export function installBridge(): void {
     getContent: () => api?.getContent() ?? '',
     setTheme: (theme: SeedTheme) => applyTheme(theme),
     setSaveStatus: (status: string) => setSaveStatus(status),
+    setTitle: (t: string) => setTitle(t ?? ''),
     focus: () => api?.focus(),
     setEditable: (value: boolean) => api?.setEditable(value),
     reset: () => api?.reset(),
@@ -40,5 +42,7 @@ export function installBridge(): void {
     // `[[` 双链：Flutter 回传候选日记列表（JSON 串），兑现 ensureCandidates 的 Promise。
     resolveLinkCandidates: (reqId: string, json: string) =>
       api?.resolveLinkCandidates(reqId, json),
+    // 目录跳转：滚动到第 index 个 heading。
+    scrollToHeading: (index: number) => api?.scrollToHeading(index),
   }
 }
