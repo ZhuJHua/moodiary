@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:unicons/unicons.dart';
-import 'package:moodiary/feature/assistant/presentation/assistant_page.dart'
+import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantSessionListPage;
 import 'package:moodiary/feature/diary/presentation/diary_page.dart'
     show DiaryListPageMobile;
@@ -35,9 +35,6 @@ List<NavigationDestination> _navDestinations(BuildContext context) {
   ];
 }
 
-/// 移动端外层 Shell：单 `/` 路由下的 4 个 Tab，由本地 index 驱动一个 IndexedStack
-/// （各 Tab 保活，切换不丢滚动/表单状态）。详情路由作顶层兄弟 push 到 root navigator，
-/// 全屏盖过本层，底栏自动隐藏。
 class MobileRootShell extends StatefulWidget {
   const MobileRootShell({super.key});
 

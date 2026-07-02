@@ -18,7 +18,8 @@ mixin _$LlmProvider {
 @Id() String get id; String get name;/// 协议类型 id，取值见 [AssistantProviderType.id]（'openai' / 'anthropic'）。
  String get type;/// 自定义 baseUrl，留空表示使用该协议官方端点。
  String get baseUrl; String get model; DateTime get createdAt;/// 列表排序用，越小越靠前。
- int get sortOrder;
+ int get sortOrder;/// 来源 models.dev 供应商 id（自定义新建为空串），用于展示 logo。
+ String get providerId;
 /// Create a copy of LlmProvider
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,16 +32,16 @@ $LlmProviderCopyWith<LlmProvider> get copyWith => _$LlmProviderCopyWithImpl<LlmP
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.providerId, providerId) || other.providerId == providerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,type,baseUrl,model,createdAt,sortOrder);
+int get hashCode => Object.hash(runtimeType,id,name,type,baseUrl,model,createdAt,sortOrder,providerId);
 
 @override
 String toString() {
-  return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, model: $model, createdAt: $createdAt, sortOrder: $sortOrder)';
+  return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, model: $model, createdAt: $createdAt, sortOrder: $sortOrder, providerId: $providerId)';
 }
 
 
@@ -51,7 +52,7 @@ abstract mixin class $LlmProviderCopyWith<$Res>  {
   factory $LlmProviderCopyWith(LlmProvider value, $Res Function(LlmProvider) _then) = _$LlmProviderCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id, String name, String type, String baseUrl, String model, DateTime createdAt, int sortOrder
+@Id() String id, String name, String type, String baseUrl, String model, DateTime createdAt, int sortOrder, String providerId
 });
 
 
@@ -68,7 +69,7 @@ class _$LlmProviderCopyWithImpl<$Res>
 
 /// Create a copy of LlmProvider
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? type = null,Object? baseUrl = null,Object? model = null,Object? createdAt = null,Object? sortOrder = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? type = null,Object? baseUrl = null,Object? model = null,Object? createdAt = null,Object? sortOrder = null,Object? providerId = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -77,7 +78,8 @@ as String,baseUrl: null == baseUrl ? _self.baseUrl : baseUrl // ignore: cast_nul
 as String,model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
-as int,
+as int,providerId: null == providerId ? _self.providerId : providerId // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -162,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder,  String providerId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LlmProvider() when $default != null:
-return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder);case _:
+return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder,_that.providerId);case _:
   return orElse();
 
 }
@@ -183,10 +185,10 @@ return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder,  String providerId)  $default,) {final _that = this;
 switch (_that) {
 case _LlmProvider():
-return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder);case _:
+return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder,_that.providerId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +205,10 @@ return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.c
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder,  String providerId)?  $default,) {final _that = this;
 switch (_that) {
 case _LlmProvider() when $default != null:
-return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder);case _:
+return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder,_that.providerId);case _:
   return null;
 
 }
@@ -218,7 +220,7 @@ return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.c
 @JsonSerializable()
 
 class _LlmProvider implements LlmProvider {
-  const _LlmProvider({@Id() required this.id, required this.name, required this.type, required this.baseUrl, required this.model, required this.createdAt, required this.sortOrder});
+  const _LlmProvider({@Id() required this.id, required this.name, required this.type, required this.baseUrl, required this.model, required this.createdAt, required this.sortOrder, this.providerId = ''});
   factory _LlmProvider.fromJson(Map<String, dynamic> json) => _$LlmProviderFromJson(json);
 
 @override@Id() final  String id;
@@ -231,6 +233,8 @@ class _LlmProvider implements LlmProvider {
 @override final  DateTime createdAt;
 /// 列表排序用，越小越靠前。
 @override final  int sortOrder;
+/// 来源 models.dev 供应商 id（自定义新建为空串），用于展示 logo。
+@override@JsonKey() final  String providerId;
 
 /// Create a copy of LlmProvider
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +249,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.providerId, providerId) || other.providerId == providerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,type,baseUrl,model,createdAt,sortOrder);
+int get hashCode => Object.hash(runtimeType,id,name,type,baseUrl,model,createdAt,sortOrder,providerId);
 
 @override
 String toString() {
-  return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, model: $model, createdAt: $createdAt, sortOrder: $sortOrder)';
+  return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, model: $model, createdAt: $createdAt, sortOrder: $sortOrder, providerId: $providerId)';
 }
 
 
@@ -265,7 +269,7 @@ abstract mixin class _$LlmProviderCopyWith<$Res> implements $LlmProviderCopyWith
   factory _$LlmProviderCopyWith(_LlmProvider value, $Res Function(_LlmProvider) _then) = __$LlmProviderCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id, String name, String type, String baseUrl, String model, DateTime createdAt, int sortOrder
+@Id() String id, String name, String type, String baseUrl, String model, DateTime createdAt, int sortOrder, String providerId
 });
 
 
@@ -282,7 +286,7 @@ class __$LlmProviderCopyWithImpl<$Res>
 
 /// Create a copy of LlmProvider
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? type = null,Object? baseUrl = null,Object? model = null,Object? createdAt = null,Object? sortOrder = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? type = null,Object? baseUrl = null,Object? model = null,Object? createdAt = null,Object? sortOrder = null,Object? providerId = null,}) {
   return _then(_LlmProvider(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -291,7 +295,8 @@ as String,baseUrl: null == baseUrl ? _self.baseUrl : baseUrl // ignore: cast_nul
 as String,model: null == model ? _self.model : model // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
-as int,
+as int,providerId: null == providerId ? _self.providerId : providerId // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

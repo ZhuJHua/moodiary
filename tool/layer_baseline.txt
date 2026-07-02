@@ -2,7 +2,6 @@
 # 由 `dart run tool/check_layers.dart --update-baseline` 生成。
 # 格式：<相对 lib/ 的源文件> -> <目标模块>
 
-feature/assistant/presentation/assistant_page.dart -> app
 feature/calendar/presentation/calendar_page.dart -> feature/diary
 feature/diary/presentation/detail/diary_page.dart -> app
 feature/diary/presentation/detail/diary_page.dart -> feature/edit
@@ -22,12 +21,6 @@ feature/lock/presentation/lock_page.dart -> app
 feature/lock/presentation/start_page.dart -> app
 feature/lock/presentation/widget/app_lock_observer.dart -> app
 feature/setting/presentation/about_page.dart -> app
-feature/setting/presentation/assistant_provider_edit_page.dart -> feature/assistant
-feature/setting/presentation/assistant_provider_list_page.dart -> app
-feature/setting/presentation/assistant_provider_picker_page.dart -> app
-feature/setting/presentation/assistant_provider_picker_page.dart -> feature/assistant
-feature/setting/presentation/assistant_setting_page.dart -> app
-feature/setting/presentation/assistant_setting_page.dart -> feature/assistant
 feature/setting/presentation/services_page.dart -> app
 feature/setting/presentation/setting_page.dart -> app
 feature/setting/presentation/setting_page.dart -> feature/lock

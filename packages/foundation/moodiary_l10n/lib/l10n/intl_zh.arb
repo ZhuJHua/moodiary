@@ -391,6 +391,15 @@
   "llmPickerModelCount": "{count} 个模型",
   "llmPickerUpdatedAt": "更新于 {time}",
   "llmPickerEmpty": "暂无可用的预设供应商",
+  "llmPickerDataSource": "数据来自 models.dev",
+  "llmPickerSearchHint": "搜索供应商",
+  "modelProviderPickModel": "选择模型",
+  "modelProviderShowAll": "显示全部",
+  "modelProviderShowToolOnly": "仅工具可用",
+  "modelProviderBadgeTools": "工具",
+  "modelProviderBadgeReasoning": "推理",
+  "modelProviderSearchModelHint": "搜索模型",
+  "modelProviderNoModelMatch": "无匹配模型",
   "diaryLinkNotFound": "日记不存在或已删除",
   "backlinks": "反向链接"
 }

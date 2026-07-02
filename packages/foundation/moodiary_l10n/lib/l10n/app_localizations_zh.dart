@@ -1214,6 +1214,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get llmPickerEmpty => '暂无可用的预设供应商';
 
   @override
+  String get llmPickerDataSource => '数据来自 models.dev';
+
+  @override
+  String get llmPickerSearchHint => '搜索供应商';
+
+  @override
+  String get modelProviderPickModel => '选择模型';
+
+  @override
+  String get modelProviderShowAll => '显示全部';
+
+  @override
+  String get modelProviderShowToolOnly => '仅工具可用';
+
+  @override
+  String get modelProviderBadgeTools => '工具';
+
+  @override
+  String get modelProviderBadgeReasoning => '推理';
+
+  @override
+  String get modelProviderSearchModelHint => '搜索模型';
+
+  @override
+  String get modelProviderNoModelMatch => '无匹配模型';
+
+  @override
   String get diaryLinkNotFound => '日记不存在或已删除';
 
   @override

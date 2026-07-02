@@ -24,6 +24,9 @@ dependencies:
   easy_refresh: 3.5.1
   path: 1.9.1
 
+  cached_network_image_ce: 4.9.0
+  flutter_svg: 2.3.0
+
   video_player: 2.11.1
   chewie: 1.14.1
   audioplayers: 6.8.1

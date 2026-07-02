@@ -1,32 +1,25 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary/app/router/router.dart';
 
 void main() {
   group('route tree config', () {
-    // GoRouter 构造时会做配置校验（path 唯一性、shell/branch navigatorKey 合法性
-    // 等），路由树能正常构造即代表结构有效。不 pump，不触发页面 build。
     testWidgets('mobile tree builds a valid GoRouter', (tester) async {
       expect(
-        () => GoRouter(
-          routes: buildMobileRoutes(),
-          initialLocation: '/',
-        ),
+        () => GoRouter(routes: buildMobileRoutes(), initialLocation: '/'),
         returnsNormally,
       );
     });
   });
 
-  // 这些断言锁定旧 go_router_builder 的 location 编码契约（kebab query key、
-  // DiaryType→markdown/rich-text、可选项省略规则），保证深链/参数行为不变。
   group('location encoding contract', () {
     test('DiaryRoute', () {
       expect(
         const DiaryRoute(type: DiaryType.markdown, diaryId: 'abc').location,
         '/diary/abc?type=markdown',
       );
-      // edit 默认 false 时省略；为 true 才写入 edit=true（统一页进入编辑态）。
       expect(
         const DiaryRoute(
           type: DiaryType.richText,
@@ -79,7 +72,6 @@ void main() {
     });
 
     test('AssistantConversationRoute', () {
-      // 无 sessionId = 新对话，省略 query。
       expect(
         const AssistantConversationRoute().location,
         '/assistant/conversation',

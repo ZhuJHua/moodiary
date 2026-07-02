@@ -1,4 +1,3 @@
-/// Moodiary 共享 UI 套件（product）：业务无关的可复用组件（basic + common），两端 app 共用。
 library;
 
 export 'src/basic/bubble.dart';
@@ -13,6 +12,7 @@ export 'src/basic/keyboard_listener.dart';
 export 'src/basic/loading.dart';
 export 'src/basic/marquee.dart';
 export 'src/basic/modal.dart';
+export 'src/basic/network_image.dart';
 export 'src/basic/popup.dart';
 export 'src/basic/pull_to_refresh.dart';
 export 'src/basic/sheet.dart';

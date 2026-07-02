@@ -1,0 +1,20 @@
+name: moodiary_router
+description: "Moodiary routing primitives — MoodiaryRouteBase + typed nav helpers over go_router; lets feature packages define type-safe routes without depending on the app."
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.12.0"
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  go_router: 17.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

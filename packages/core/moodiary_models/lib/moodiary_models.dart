@@ -1,8 +1,3 @@
-/// Moodiary 领域模型包：Isar `@Collection` 实体、Freezed DTO、领域事件，
-/// 以及作为模型字段类型的领域枚举（[DiaryType]、[AssistantProviderType]）。
-///
-/// 仅依赖更低的 foundation 包（moodiary_rust / moodiary_utils）与持久化/序列化注解，
-/// 不依赖 core/data/feature/app。
 library;
 
 export 'src/diary_type.dart';
@@ -17,6 +12,7 @@ export 'src/diary_event.dart';
 export 'src/diary_link_index.dart';
 export 'src/diary_search_index.dart';
 export 'src/font.dart';
+export 'src/llm_model_preset.dart';
 export 'src/llm_provider.dart';
 export 'src/llm_provider_preset.dart';
 export 'src/reindex_queue.dart';

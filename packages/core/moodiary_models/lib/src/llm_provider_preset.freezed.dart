@@ -11,31 +11,38 @@ part of 'llm_provider_preset.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$LlmProviderPreset {
 
- String get id; AssistantProviderType get protocol;/// localeCode -> 展示名，必含 `default`。
- Map<String, String> get name; String get baseUrl; List<String> get models; String? get apiKeyUrl; String? get icon;
+ String get id; String get name;/// 映射到 rig 协议（openai / anthropic）。
+ AssistantProviderType get protocol;/// 官方端点为空串（rig 侧留空即用协议官方端点），来自 models.dev `api`。
+ String get baseUrl; List<LlmModelPreset> get models;/// 文档 / 定价页链接，来自 `doc`，兼作「获取 API Key」入口。
+ String? get docUrl;/// API Key 的环境变量名（如 `ANTHROPIC_API_KEY`），来自 `env`，作提示用。
+ List<String> get env;/// 供应商 logo（`https://models.dev/logos/<id>.svg`）。
+ String? get logoUrl;
 /// Create a copy of LlmProviderPreset
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $LlmProviderPresetCopyWith<LlmProviderPreset> get copyWith => _$LlmProviderPresetCopyWithImpl<LlmProviderPreset>(this as LlmProviderPreset, _$identity);
 
+  /// Serializes this LlmProviderPreset to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProviderPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.protocol, protocol) || other.protocol == protocol)&&const DeepCollectionEquality().equals(other.name, name)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&const DeepCollectionEquality().equals(other.models, models)&&(identical(other.apiKeyUrl, apiKeyUrl) || other.apiKeyUrl == apiKeyUrl)&&(identical(other.icon, icon) || other.icon == icon));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProviderPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.protocol, protocol) || other.protocol == protocol)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&const DeepCollectionEquality().equals(other.models, models)&&(identical(other.docUrl, docUrl) || other.docUrl == docUrl)&&const DeepCollectionEquality().equals(other.env, env)&&(identical(other.logoUrl, logoUrl) || other.logoUrl == logoUrl));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,protocol,const DeepCollectionEquality().hash(name),baseUrl,const DeepCollectionEquality().hash(models),apiKeyUrl,icon);
+int get hashCode => Object.hash(runtimeType,id,name,protocol,baseUrl,const DeepCollectionEquality().hash(models),docUrl,const DeepCollectionEquality().hash(env),logoUrl);
 
 @override
 String toString() {
-  return 'LlmProviderPreset(id: $id, protocol: $protocol, name: $name, baseUrl: $baseUrl, models: $models, apiKeyUrl: $apiKeyUrl, icon: $icon)';
+  return 'LlmProviderPreset(id: $id, name: $name, protocol: $protocol, baseUrl: $baseUrl, models: $models, docUrl: $docUrl, env: $env, logoUrl: $logoUrl)';
 }
 
 
@@ -46,7 +53,7 @@ abstract mixin class $LlmProviderPresetCopyWith<$Res>  {
   factory $LlmProviderPresetCopyWith(LlmProviderPreset value, $Res Function(LlmProviderPreset) _then) = _$LlmProviderPresetCopyWithImpl;
 @useResult
 $Res call({
- String id, AssistantProviderType protocol, Map<String, String> name, String baseUrl, List<String> models, String? apiKeyUrl, String? icon
+ String id, String name, AssistantProviderType protocol, String baseUrl, List<LlmModelPreset> models, String? docUrl, List<String> env, String? logoUrl
 });
 
 
@@ -63,15 +70,16 @@ class _$LlmProviderPresetCopyWithImpl<$Res>
 
 /// Create a copy of LlmProviderPreset
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? protocol = null,Object? name = null,Object? baseUrl = null,Object? models = null,Object? apiKeyUrl = freezed,Object? icon = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? protocol = null,Object? baseUrl = null,Object? models = null,Object? docUrl = freezed,Object? env = null,Object? logoUrl = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,protocol: null == protocol ? _self.protocol : protocol // ignore: cast_nullable_to_non_nullable
-as AssistantProviderType,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as Map<String, String>,baseUrl: null == baseUrl ? _self.baseUrl : baseUrl // ignore: cast_nullable_to_non_nullable
+as AssistantProviderType,baseUrl: null == baseUrl ? _self.baseUrl : baseUrl // ignore: cast_nullable_to_non_nullable
 as String,models: null == models ? _self.models : models // ignore: cast_nullable_to_non_nullable
-as List<String>,apiKeyUrl: freezed == apiKeyUrl ? _self.apiKeyUrl : apiKeyUrl // ignore: cast_nullable_to_non_nullable
-as String?,icon: freezed == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+as List<LlmModelPreset>,docUrl: freezed == docUrl ? _self.docUrl : docUrl // ignore: cast_nullable_to_non_nullable
+as String?,env: null == env ? _self.env : env // ignore: cast_nullable_to_non_nullable
+as List<String>,logoUrl: freezed == logoUrl ? _self.logoUrl : logoUrl // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -157,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  AssistantProviderType protocol,  Map<String, String> name,  String baseUrl,  List<String> models,  String? apiKeyUrl,  String? icon)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  AssistantProviderType protocol,  String baseUrl,  List<LlmModelPreset> models,  String? docUrl,  List<String> env,  String? logoUrl)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LlmProviderPreset() when $default != null:
-return $default(_that.id,_that.protocol,_that.name,_that.baseUrl,_that.models,_that.apiKeyUrl,_that.icon);case _:
+return $default(_that.id,_that.name,_that.protocol,_that.baseUrl,_that.models,_that.docUrl,_that.env,_that.logoUrl);case _:
   return orElse();
 
 }
@@ -178,10 +186,10 @@ return $default(_that.id,_that.protocol,_that.name,_that.baseUrl,_that.models,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  AssistantProviderType protocol,  Map<String, String> name,  String baseUrl,  List<String> models,  String? apiKeyUrl,  String? icon)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  AssistantProviderType protocol,  String baseUrl,  List<LlmModelPreset> models,  String? docUrl,  List<String> env,  String? logoUrl)  $default,) {final _that = this;
 switch (_that) {
 case _LlmProviderPreset():
-return $default(_that.id,_that.protocol,_that.name,_that.baseUrl,_that.models,_that.apiKeyUrl,_that.icon);case _:
+return $default(_that.id,_that.name,_that.protocol,_that.baseUrl,_that.models,_that.docUrl,_that.env,_that.logoUrl);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +206,10 @@ return $default(_that.id,_that.protocol,_that.name,_that.baseUrl,_that.models,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  AssistantProviderType protocol,  Map<String, String> name,  String baseUrl,  List<String> models,  String? apiKeyUrl,  String? icon)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  AssistantProviderType protocol,  String baseUrl,  List<LlmModelPreset> models,  String? docUrl,  List<String> env,  String? logoUrl)?  $default,) {final _that = this;
 switch (_that) {
 case _LlmProviderPreset() when $default != null:
-return $default(_that.id,_that.protocol,_that.name,_that.baseUrl,_that.models,_that.apiKeyUrl,_that.icon);case _:
+return $default(_that.id,_that.name,_that.protocol,_that.baseUrl,_that.models,_that.docUrl,_that.env,_that.logoUrl);case _:
   return null;
 
 }
@@ -210,33 +218,38 @@ return $default(_that.id,_that.protocol,_that.name,_that.baseUrl,_that.models,_t
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _LlmProviderPreset extends LlmProviderPreset {
-  const _LlmProviderPreset({required this.id, required this.protocol, required final  Map<String, String> name, required this.baseUrl, required final  List<String> models, this.apiKeyUrl, this.icon}): _name = name,_models = models,super._();
-  
+  const _LlmProviderPreset({required this.id, required this.name, required this.protocol, required this.baseUrl, required final  List<LlmModelPreset> models, this.docUrl, final  List<String> env = const <String>[], this.logoUrl}): _models = models,_env = env,super._();
+  factory _LlmProviderPreset.fromJson(Map<String, dynamic> json) => _$LlmProviderPresetFromJson(json);
 
 @override final  String id;
+@override final  String name;
+/// 映射到 rig 协议（openai / anthropic）。
 @override final  AssistantProviderType protocol;
-/// localeCode -> 展示名，必含 `default`。
- final  Map<String, String> _name;
-/// localeCode -> 展示名，必含 `default`。
-@override Map<String, String> get name {
-  if (_name is EqualUnmodifiableMapView) return _name;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableMapView(_name);
-}
-
+/// 官方端点为空串（rig 侧留空即用协议官方端点），来自 models.dev `api`。
 @override final  String baseUrl;
- final  List<String> _models;
-@override List<String> get models {
+ final  List<LlmModelPreset> _models;
+@override List<LlmModelPreset> get models {
   if (_models is EqualUnmodifiableListView) return _models;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_models);
 }
 
-@override final  String? apiKeyUrl;
-@override final  String? icon;
+/// 文档 / 定价页链接，来自 `doc`，兼作「获取 API Key」入口。
+@override final  String? docUrl;
+/// API Key 的环境变量名（如 `ANTHROPIC_API_KEY`），来自 `env`，作提示用。
+ final  List<String> _env;
+/// API Key 的环境变量名（如 `ANTHROPIC_API_KEY`），来自 `env`，作提示用。
+@override@JsonKey() List<String> get env {
+  if (_env is EqualUnmodifiableListView) return _env;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_env);
+}
+
+/// 供应商 logo（`https://models.dev/logos/<id>.svg`）。
+@override final  String? logoUrl;
 
 /// Create a copy of LlmProviderPreset
 /// with the given fields replaced by the non-null parameter values.
@@ -244,20 +257,23 @@ class _LlmProviderPreset extends LlmProviderPreset {
 @pragma('vm:prefer-inline')
 _$LlmProviderPresetCopyWith<_LlmProviderPreset> get copyWith => __$LlmProviderPresetCopyWithImpl<_LlmProviderPreset>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$LlmProviderPresetToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProviderPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.protocol, protocol) || other.protocol == protocol)&&const DeepCollectionEquality().equals(other._name, _name)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&const DeepCollectionEquality().equals(other._models, _models)&&(identical(other.apiKeyUrl, apiKeyUrl) || other.apiKeyUrl == apiKeyUrl)&&(identical(other.icon, icon) || other.icon == icon));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProviderPreset&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.protocol, protocol) || other.protocol == protocol)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&const DeepCollectionEquality().equals(other._models, _models)&&(identical(other.docUrl, docUrl) || other.docUrl == docUrl)&&const DeepCollectionEquality().equals(other._env, _env)&&(identical(other.logoUrl, logoUrl) || other.logoUrl == logoUrl));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,protocol,const DeepCollectionEquality().hash(_name),baseUrl,const DeepCollectionEquality().hash(_models),apiKeyUrl,icon);
+int get hashCode => Object.hash(runtimeType,id,name,protocol,baseUrl,const DeepCollectionEquality().hash(_models),docUrl,const DeepCollectionEquality().hash(_env),logoUrl);
 
 @override
 String toString() {
-  return 'LlmProviderPreset(id: $id, protocol: $protocol, name: $name, baseUrl: $baseUrl, models: $models, apiKeyUrl: $apiKeyUrl, icon: $icon)';
+  return 'LlmProviderPreset(id: $id, name: $name, protocol: $protocol, baseUrl: $baseUrl, models: $models, docUrl: $docUrl, env: $env, logoUrl: $logoUrl)';
 }
 
 
@@ -268,7 +284,7 @@ abstract mixin class _$LlmProviderPresetCopyWith<$Res> implements $LlmProviderPr
   factory _$LlmProviderPresetCopyWith(_LlmProviderPreset value, $Res Function(_LlmProviderPreset) _then) = __$LlmProviderPresetCopyWithImpl;
 @override @useResult
 $Res call({
- String id, AssistantProviderType protocol, Map<String, String> name, String baseUrl, List<String> models, String? apiKeyUrl, String? icon
+ String id, String name, AssistantProviderType protocol, String baseUrl, List<LlmModelPreset> models, String? docUrl, List<String> env, String? logoUrl
 });
 
 
@@ -285,15 +301,16 @@ class __$LlmProviderPresetCopyWithImpl<$Res>
 
 /// Create a copy of LlmProviderPreset
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? protocol = null,Object? name = null,Object? baseUrl = null,Object? models = null,Object? apiKeyUrl = freezed,Object? icon = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? protocol = null,Object? baseUrl = null,Object? models = null,Object? docUrl = freezed,Object? env = null,Object? logoUrl = freezed,}) {
   return _then(_LlmProviderPreset(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,protocol: null == protocol ? _self.protocol : protocol // ignore: cast_nullable_to_non_nullable
-as AssistantProviderType,name: null == name ? _self._name : name // ignore: cast_nullable_to_non_nullable
-as Map<String, String>,baseUrl: null == baseUrl ? _self.baseUrl : baseUrl // ignore: cast_nullable_to_non_nullable
+as AssistantProviderType,baseUrl: null == baseUrl ? _self.baseUrl : baseUrl // ignore: cast_nullable_to_non_nullable
 as String,models: null == models ? _self._models : models // ignore: cast_nullable_to_non_nullable
-as List<String>,apiKeyUrl: freezed == apiKeyUrl ? _self.apiKeyUrl : apiKeyUrl // ignore: cast_nullable_to_non_nullable
-as String?,icon: freezed == icon ? _self.icon : icon // ignore: cast_nullable_to_non_nullable
+as List<LlmModelPreset>,docUrl: freezed == docUrl ? _self.docUrl : docUrl // ignore: cast_nullable_to_non_nullable
+as String?,env: null == env ? _self._env : env // ignore: cast_nullable_to_non_nullable
+as List<String>,logoUrl: freezed == logoUrl ? _self.logoUrl : logoUrl // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

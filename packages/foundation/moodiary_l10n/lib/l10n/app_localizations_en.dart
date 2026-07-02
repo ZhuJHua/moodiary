@@ -1262,6 +1262,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get llmPickerEmpty => 'No preset providers available';
 
   @override
+  String get llmPickerDataSource => 'Data from models.dev';
+
+  @override
+  String get llmPickerSearchHint => 'Search providers';
+
+  @override
+  String get modelProviderPickModel => 'Choose a model';
+
+  @override
+  String get modelProviderShowAll => 'Show all';
+
+  @override
+  String get modelProviderShowToolOnly => 'Tool-capable only';
+
+  @override
+  String get modelProviderBadgeTools => 'Tools';
+
+  @override
+  String get modelProviderBadgeReasoning => 'Reasoning';
+
+  @override
+  String get modelProviderSearchModelHint => 'Search models';
+
+  @override
+  String get modelProviderNoModelMatch => 'No matching models';
+
+  @override
   String get diaryLinkNotFound => 'Diary not found or deleted';
 
   @override

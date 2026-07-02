@@ -1,58 +1,78 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'assistant_provider_type.dart';
+import 'llm_model_preset.dart';
 
 part 'llm_provider_preset.freezed.dart';
+part 'llm_provider_preset.g.dart';
 
-/// 远端预定义供应商（来自 `moodiary-llm-provider` 仓库的 index.json）。
-/// 只读「模板」，用于「选择供应商」页预填编辑表单；与用户保存的 [LlmProvider] 无关。
 @freezed
 abstract class LlmProviderPreset with _$LlmProviderPreset {
   const factory LlmProviderPreset({
     required String id,
+    required String name,
+
     required AssistantProviderType protocol,
 
-    /// localeCode -> 展示名，必含 `default`。
-    required Map<String, String> name,
     required String baseUrl,
-    required List<String> models,
-    String? apiKeyUrl,
-    String? icon,
+    required List<LlmModelPreset> models,
+
+    String? docUrl,
+
+    @Default(<String>[]) List<String> env,
+
+    String? logoUrl,
   }) = _LlmProviderPreset;
 
   const LlmProviderPreset._();
 
-  /// 按界面语言取名，回退到 `default` / 任意一项 / id。
-  String localizedName(String langCode) {
-    return name[langCode] ??
-        name['default'] ??
-        (name.isNotEmpty ? name.values.first : id);
-  }
+  factory LlmProviderPreset.fromJson(Map<String, dynamic> json) =>
+      _$LlmProviderPresetFromJson(json);
 
-  /// 缺 id / models 视为非法返回 null（调用方跳过）。
-  static LlmProviderPreset? fromJson(Map<String, dynamic> json) {
-    final id = (json['id'] as String?)?.trim() ?? '';
-    final models =
-        (json['models'] as List?)?.whereType<String>().toList() ?? const [];
-    if (id.isEmpty || models.isEmpty) return null;
+  static LlmProviderPreset? fromModelsDev(
+    String id,
+    Map<String, dynamic> json,
+  ) {
+    final pid = (json['id'] as String?)?.trim().isNotEmpty == true
+        ? (json['id'] as String).trim()
+        : id.trim();
+    if (pid.isEmpty) return null;
 
-    final name = <String, String>{};
-    final rawName = json['name'];
-    if (rawName is Map) {
-      rawName.forEach((k, v) {
-        if (k is String && v is String) name[k] = v;
+    final protocol = AssistantProviderType.fromNpm(json['npm'] as String?);
+    if (protocol == null) return null;
+
+    final rawModels = json['models'];
+    final models = <LlmModelPreset>[];
+    if (rawModels is Map) {
+      rawModels.forEach((k, v) {
+        if (k is String && v is Map) {
+          final m = LlmModelPreset.fromModelsDev(k, v.cast<String, dynamic>());
+          if (m != null) models.add(m);
+        }
       });
-    } else if (rawName is String) {
-      name['default'] = rawName;
     }
-    if ((name['default'] ?? '').isEmpty) name['default'] = id;
+    if (models.isEmpty) return null;
+
+    models.sort((a, b) {
+      if (a.toolCall != b.toolCall) return a.toolCall ? -1 : 1;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+
+    final env = <String>[];
+    final rawEnv = json['env'];
+    if (rawEnv is List) {
+      env.addAll(rawEnv.whereType<String>());
+    }
 
     return LlmProviderPreset(
-      id: id,
-      protocol: AssistantProviderType.fromId(json['protocol'] as String?),
-      name: name,
-      baseUrl: (json['baseUrl'] as String?)?.trim() ?? '',
-      apiKeyUrl: _trimToNull(json['apiKeyUrl']),
-      icon: _trimToNull(json['icon']),
+      id: pid,
+      name: (json['name'] as String?)?.trim().isNotEmpty == true
+          ? (json['name'] as String).trim()
+          : pid,
+      protocol: protocol,
+      baseUrl: (json['api'] as String?)?.trim() ?? '',
+      docUrl: _trimToNull(json['doc']),
+      env: env,
+      logoUrl: 'https://models.dev/logos/$pid.svg',
       models: models,
     );
   }

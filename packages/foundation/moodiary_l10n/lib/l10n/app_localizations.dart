@@ -2444,6 +2444,60 @@ abstract class AppLocalizations {
   /// **'暂无可用的预设供应商'**
   String get llmPickerEmpty;
 
+  /// No description provided for @llmPickerDataSource.
+  ///
+  /// In zh, this message translates to:
+  /// **'数据来自 models.dev'**
+  String get llmPickerDataSource;
+
+  /// No description provided for @llmPickerSearchHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索供应商'**
+  String get llmPickerSearchHint;
+
+  /// No description provided for @modelProviderPickModel.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择模型'**
+  String get modelProviderPickModel;
+
+  /// No description provided for @modelProviderShowAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示全部'**
+  String get modelProviderShowAll;
+
+  /// No description provided for @modelProviderShowToolOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅工具可用'**
+  String get modelProviderShowToolOnly;
+
+  /// No description provided for @modelProviderBadgeTools.
+  ///
+  /// In zh, this message translates to:
+  /// **'工具'**
+  String get modelProviderBadgeTools;
+
+  /// No description provided for @modelProviderBadgeReasoning.
+  ///
+  /// In zh, this message translates to:
+  /// **'推理'**
+  String get modelProviderBadgeReasoning;
+
+  /// No description provided for @modelProviderSearchModelHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索模型'**
+  String get modelProviderSearchModelHint;
+
+  /// No description provided for @modelProviderNoModelMatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'无匹配模型'**
+  String get modelProviderNoModelMatch;
+
   /// No description provided for @diaryLinkNotFound.
   ///
   /// In zh, this message translates to:

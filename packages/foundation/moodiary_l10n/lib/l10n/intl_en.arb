@@ -391,6 +391,15 @@
   "llmPickerModelCount": "{count} models",
   "llmPickerUpdatedAt": "Updated {time}",
   "llmPickerEmpty": "No preset providers available",
+  "llmPickerDataSource": "Data from models.dev",
+  "llmPickerSearchHint": "Search providers",
+  "modelProviderPickModel": "Choose a model",
+  "modelProviderShowAll": "Show all",
+  "modelProviderShowToolOnly": "Tool-capable only",
+  "modelProviderBadgeTools": "Tools",
+  "modelProviderBadgeReasoning": "Reasoning",
+  "modelProviderSearchModelHint": "Search models",
+  "modelProviderNoModelMatch": "No matching models",
   "diaryLinkNotFound": "Diary not found or deleted",
   "backlinks": "Backlinks"
 }
