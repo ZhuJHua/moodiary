@@ -44,13 +44,13 @@ jobs:
       - name: Set Up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Build Editor
         run: |
           corepack enable
-          corepack pnpm -C packages/product/moodiary_editor/editor install
-          corepack pnpm -C packages/product/moodiary_editor/editor build
+          corepack pnpm -C packages/feature/moodiary_editor/editor install --frozen-lockfile
+          corepack pnpm -C packages/feature/moodiary_editor/editor build
 
       - name: Set Up Rust
         uses: actions-rs/toolchain@v1
@@ -115,13 +115,13 @@ jobs:
       - name: Set Up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Build Editor
         run: |
           corepack enable
-          corepack pnpm -C packages/product/moodiary_editor/editor install
-          corepack pnpm -C packages/product/moodiary_editor/editor build
+          corepack pnpm -C packages/feature/moodiary_editor/editor install --frozen-lockfile
+          corepack pnpm -C packages/feature/moodiary_editor/editor build
 
       - name: Set Up Rust
         uses: actions-rs/toolchain@v1

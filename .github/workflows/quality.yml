@@ -95,14 +95,17 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Enable Corepack
         run: corepack enable
 
       - name: Resolve pnpm store path
         id: pnpm
-        run: echo "store=$(corepack pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+        run: |
+          store="$(corepack pnpm store path --silent)"
+          test -n "$store"
+          echo "store=$store" >> "$GITHUB_OUTPUT"
 
       - name: Cache pnpm store
         uses: actions/cache@v4
