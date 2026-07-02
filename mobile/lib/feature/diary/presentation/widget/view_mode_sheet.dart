@@ -41,23 +41,19 @@ class ViewModeSheet extends StatelessWidget {
               builder: (context, mode, _) {
                 final current = ViewModeType.getType(mode);
                 return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: .start,
+                  spacing: 12,
                   children: [
                     for (final type in ViewModeType.values)
                       Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            right: type == ViewModeType.values.last ? 0 : 12,
-                          ),
-                          child: _ViewModeOption(
-                            type: type,
-                            label: _label(context, type),
-                            selected: type == current,
-                            onTap: () async {
-                              await MoodiaryKVs.homeViewMode.set(type.number);
-                              if (context.mounted) Navigator.of(context).pop();
-                            },
-                          ),
+                        child: _ViewModeOption(
+                          type: type,
+                          label: _label(context, type),
+                          selected: type == current,
+                          onTap: () async {
+                            await MoodiaryKVs.homeViewMode.set(type.number);
+                            if (context.mounted) Navigator.of(context).pop();
+                          },
                         ),
                       ),
                   ],
@@ -166,35 +162,59 @@ class _ViewModePreview extends StatelessWidget {
   }
 
   Widget _grid(Color block) {
-    Widget row() => Expanded(
-      child: Row(
+    Widget column(List<int> flexes) => Expanded(
+      child: Column(
+        crossAxisAlignment: .stretch,
         children: [
-          Expanded(child: _cell(block)),
-          const SizedBox(width: 8),
-          Expanded(child: _cell(block)),
+          for (var i = 0; i < flexes.length; i++) ...[
+            if (i > 0) const SizedBox(height: 8),
+            Expanded(flex: flexes[i], child: _cell(block)),
+          ],
         ],
       ),
     );
-    return Column(
-      children: [row(), const SizedBox(height: 8), row()],
+    return Row(
+      crossAxisAlignment: .stretch,
+      children: [
+        column(const [3, 2]),
+        const SizedBox(width: 8),
+        column(const [2, 3]),
+      ],
     );
   }
 
   Widget _calendar(Color block) {
     const filled = {2, 3, 9, 14, 15, 20, 27, 31};
-    return GridView.count(
-      crossAxisCount: 7,
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      mainAxisSpacing: 3,
-      crossAxisSpacing: 3,
-      children: [
-        for (var i = 0; i < 35; i++)
-          _cell(
-            filled.contains(i) ? block : block.withValues(alpha: 0.22),
-            radius: 2,
-          ),
-      ],
+    const rows = 5, cols = 7;
+    return Center(
+      child: AspectRatio(
+        aspectRatio: cols / rows,
+        child: Column(
+          children: [
+            for (var r = 0; r < rows; r++) ...[
+              if (r > 0) const SizedBox(height: 3),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: .stretch,
+                  children: [
+                    for (var c = 0; c < cols; c++) ...[
+                      if (c > 0) const SizedBox(width: 3),
+                      Expanded(
+                        child: _cell(
+                          filled.contains(r * cols + c)
+                              ? block
+                              : block.withValues(alpha: 0.22),
+                          radius: 2,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

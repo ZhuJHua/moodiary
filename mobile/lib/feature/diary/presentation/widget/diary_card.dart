@@ -225,7 +225,7 @@ class DiaryGridTile extends StatelessWidget {
       category: category,
       showCategoryLabel: showCategoryLabel,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (diary.imageName.isNotEmpty)
             SizedBox(
