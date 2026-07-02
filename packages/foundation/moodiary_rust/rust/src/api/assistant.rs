@@ -143,7 +143,7 @@ pub async fn rig_chat_stream(
     let dispatch: ToolDispatch = Arc::new(tool_dispatch);
     let boxed_tools = build_tools(tools, &dispatch);
     let (prompt, prior) = split_history(history)?;
-    let http_client = crate::http_client::webpki_client()?;
+    let http_client = crate::http_client::platform_http_client()?;
 
     match config.protocol.as_str() {
         "anthropic" => {

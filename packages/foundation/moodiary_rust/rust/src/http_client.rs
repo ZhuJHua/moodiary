@@ -1,14 +1,25 @@
-//! 共享 HTTP 客户端。reqwest 0.13 默认用 rustls-platform-verifier 校验证书，该校验器在
-//! Android 上需平台上下文初始化、否则首个 TLS 连接即 panic。这里改用内置 webpki 根证书
-//! 自建 rustls 配置绕开它，assistant（rig）与 webdav（reqwest_dav）复用同一个客户端。
-//! minio 走的是 reqwest 0.12（默认即 webpki 根），不受影响、无需注入。
+//! 共享 HTTP 客户端。reqwest 0.13（rig / reqwest_dav 用）默认用 rustls-platform-verifier
+//! 校验证书；该校验器**只有 Android** 需要用平台 Context 初始化，未初始化时首个 TLS 连接
+//! 即 panic。iOS/macOS/Windows/Linux 的平台校验器开箱即用，且能认系统信任库里的自签 /
+//! 企业 CA（自建 NAS、公司代理等），所以**只在 Android** 改用内置 webpki 根证书绕开，其余
+//! 平台保持默认（等价于不注入）。minio 走 reqwest 0.12（默认即 webpki），不受影响。
 
 use std::sync::{Arc, OnceLock};
 
 use anyhow::Result;
 
-/// 走内置 webpki 根证书的 reqwest 客户端，只构造一次并复用连接池。
-pub(crate) fn webpki_client() -> Result<reqwest::Client> {
+/// 供 assistant（rig）/ webdav（reqwest_dav）注入的 HTTP 客户端。
+/// Android 走内置 webpki 根证书；其余平台返回默认客户端（== 二者内部默认，行为不变）。
+pub(crate) fn platform_http_client() -> Result<reqwest::Client> {
+    if cfg!(target_os = "android") {
+        webpki_client()
+    } else {
+        Ok(reqwest::Client::default())
+    }
+}
+
+/// 走内置 webpki 根证书、绕开平台校验器的 reqwest 客户端，只构造一次并复用连接池。
+fn webpki_client() -> Result<reqwest::Client> {
     static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
     if let Some(client) = CLIENT.get() {
         return Ok(client.clone());
