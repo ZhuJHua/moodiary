@@ -131,8 +131,9 @@ class _AssistantProviderEditPageState
     final key = _apiKey.text.trim();
 
     final String id;
+    final LlmProvider toSave;
     if (_isNew) {
-      final provider = LlmProvider.create(
+      toSave = LlmProvider.create(
         name: name,
         type: _type,
         baseUrl: baseUrl,
@@ -140,12 +141,7 @@ class _AssistantProviderEditPageState
         sortOrder: await _repo.nextSortOrder(),
         providerId: _providerId,
       );
-      id = provider.id;
-      await _repo.upsertProvider(provider);
-      final activeId = MoodiaryKVs.assistantActiveProviderId.get() ?? '';
-      if (activeId.isEmpty) {
-        await MoodiaryKVs.assistantActiveProviderId.set(id);
-      }
+      id = toSave.id;
     } else {
       final existing = await _repo.getProvider(widget.id!);
       if (existing == null) {
@@ -153,18 +149,25 @@ class _AssistantProviderEditPageState
         return;
       }
       id = existing.id;
-      await _repo.upsertProvider(
-        existing.copyWith(
-          name: name,
-          type: _type.id,
-          baseUrl: baseUrl,
-          model: model,
-        ),
+      toSave = existing.copyWith(
+        name: name,
+        type: _type.id,
+        baseUrl: baseUrl,
+        model: model,
       );
     }
 
+    // 先写 key 再 upsert：upsert 会广播刷新事件，此时 key 已就位，
+    // 否则列表/配置页会残留「没有 key」直到重启（setKey 在 upsert 之后且不发事件）。
     if (key.isNotEmpty) {
       await _repo.setKey(id, key);
+    }
+    await _repo.upsertProvider(toSave);
+    if (_isNew) {
+      final activeId = MoodiaryKVs.assistantActiveProviderId.get() ?? '';
+      if (activeId.isEmpty) {
+        await MoodiaryKVs.assistantActiveProviderId.set(id);
+      }
     }
 
     if (mounted) {
@@ -297,6 +300,7 @@ class _AssistantProviderEditPageState
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final locked = _providerId.isNotEmpty;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -325,87 +329,97 @@ class _AssistantProviderEditPageState
       ),
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _LabeledField(
-                    label: l10n.modelProviderName,
-                    child: TextFormField(
-                      controller: _name,
-                      textInputAction: TextInputAction.next,
-                      decoration: _fieldDecoration(
-                        hint: l10n.modelProviderNameHint,
-                        icon: Icons.badge_outlined,
+          : GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _LabeledField(
+                      label: l10n.modelProviderName,
+                      child: TextFormField(
+                        controller: _name,
+                        textInputAction: TextInputAction.next,
+                        decoration: _fieldDecoration(
+                          hint: l10n.modelProviderNameHint,
+                          icon: Icons.badge_outlined,
+                        ),
+                        validator: (v) => (v ?? '').trim().isEmpty
+                            ? l10n.modelProviderNeedName
+                            : null,
                       ),
-                      validator: (v) => (v ?? '').trim().isEmpty
-                          ? l10n.modelProviderNeedName
-                          : null,
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  _LabeledField(
-                    label: l10n.modelProviderApiKey,
-                    child: TextFormField(
-                      controller: _apiKey,
-                      obscureText: _obscureKey,
-                      decoration: _fieldDecoration(
-                        hint: _keyConfigured
-                            ? l10n.modelProviderApiKeyHintSet
-                            : l10n.modelProviderApiKeyHintUnset,
-                        icon: Icons.key_rounded,
-                        suffixIcon: IconButton(
-                          onPressed: () =>
-                              setState(() => _obscureKey = !_obscureKey),
-                          icon: Icon(
-                            _obscureKey
-                                ? Icons.visibility_rounded
-                                : Icons.visibility_off_rounded,
+                    const SizedBox(height: 18),
+                    _LabeledField(
+                      label: l10n.modelProviderBaseUrl,
+                      child: IgnorePointer(
+                        ignoring: locked,
+                        child: TextFormField(
+                          controller: _baseUrl,
+                          keyboardType: TextInputType.url,
+                          readOnly: locked,
+                          enableInteractiveSelection: !locked,
+                          decoration: _fieldDecoration(
+                            hint: l10n.modelProviderBaseUrlHint,
+                            icon: Icons.link_rounded,
+                            suffixIcon: locked
+                                ? const Icon(Icons.lock_outline_rounded, size: 18)
+                                : null,
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  if (_apiKeyUrl != null)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed: _openApiKeyUrl,
-                        icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                        label: Text(l10n.modelProviderGetApiKey),
+                    const SizedBox(height: 18),
+                    _LabeledField(
+                      label: l10n.modelProviderApiKey,
+                      child: TextFormField(
+                        controller: _apiKey,
+                        obscureText: _obscureKey,
+                        decoration: _fieldDecoration(
+                          hint: _keyConfigured
+                              ? l10n.modelProviderApiKeyHintSet
+                              : l10n.modelProviderApiKeyHintUnset,
+                          icon: Icons.key_rounded,
+                          suffixIcon: IconButton(
+                            onPressed: () =>
+                                setState(() => _obscureKey = !_obscureKey),
+                            icon: Icon(
+                              _obscureKey
+                                  ? Icons.visibility_rounded
+                                  : Icons.visibility_off_rounded,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  const SizedBox(height: 18),
-                  _LabeledField(
-                    label: l10n.modelProviderModel,
-                    child: TextFormField(
-                      controller: _model,
-                      decoration: _fieldDecoration(icon: Icons.memory_rounded),
-                      validator: (v) => (v ?? '').trim().isEmpty
-                          ? l10n.modelProviderNeedModel
-                          : null,
-                    ),
-                  ),
-                  _buildModelSelector(l10n),
-                  const SizedBox(height: 18),
-                  _LabeledField(
-                    label: l10n.modelProviderBaseUrl,
-                    child: TextFormField(
-                      controller: _baseUrl,
-                      keyboardType: TextInputType.url,
-                      readOnly: _providerId.isNotEmpty,
-                      decoration: _fieldDecoration(
-                        hint: l10n.modelProviderBaseUrlHint,
-                        icon: Icons.link_rounded,
-                        suffixIcon: _providerId.isNotEmpty
-                            ? const Icon(Icons.lock_outline_rounded, size: 18)
+                    if (_apiKeyUrl != null)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _openApiKeyUrl,
+                          icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                          label: Text(l10n.modelProviderGetApiKey),
+                        ),
+                      ),
+                    const SizedBox(height: 18),
+                    _LabeledField(
+                      label: l10n.modelProviderModel,
+                      child: TextFormField(
+                        controller: _model,
+                        decoration: _fieldDecoration(
+                          icon: Icons.memory_rounded,
+                        ),
+                        validator: (v) => (v ?? '').trim().isEmpty
+                            ? l10n.modelProviderNeedModel
                             : null,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    _buildModelSelector(l10n),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
     );
