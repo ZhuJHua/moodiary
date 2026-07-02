@@ -2366,7 +2366,6 @@ dependencies = [
  "ring",
  "rust-stemmers",
  "rustls",
- "serde",
  "serde_json",
  "tokio",
  "ttf-parser",
