@@ -1011,6 +1011,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get assistantStop => 'Stop generating';
 
   @override
+  String get assistantRegenerate => 'Regenerate';
+
+  @override
   String get assistantSectionTool => 'Tools';
 
   @override

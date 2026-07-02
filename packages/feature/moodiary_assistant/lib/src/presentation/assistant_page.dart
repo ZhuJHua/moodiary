@@ -44,6 +44,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   TextMessage? _streamingMessage;
 
+  /// 重新生成时被移除的旧回复 id：等新回复成功落库后才真正删除（兜底防丢）。
+  List<String> _staleReplyIds = [];
+
   int _generation = 0;
 
   bool _sending = false;
@@ -130,6 +133,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _streamSub = null;
     _permissions.reset();
     _streamingMessage = null;
+    _staleReplyIds = [];
     await _chat.loadSession(session.id);
     if (!mounted) return;
     setState(() {
@@ -241,6 +245,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         final settled = _chat.settled(streaming);
         await _chat.updateMessage(streaming, settled);
         await _chat.persist(settled);
+        _purgeStaleReplies();
       }
       await _chat.insertMessage(card);
       final next = _chat.assistantMessage('', streaming: true);
@@ -252,11 +257,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   Future<void> _submit(String text) async {
     text = text.trim();
     if (text.isEmpty || _sending || !_disclaimerAccepted) return;
-    final l10n = context.l10n;
-    final systemPrompt = buildAssistantSystemPrompt(
-      Localizations.localeOf(context).toLanguageTag(),
-    );
     final gen = ++_generation;
+    // 用户开启了新一轮对话：放弃上一次失败重生成遗留的旧回复（保留在库里，不删）。
+    _staleReplyIds = [];
 
     if (_panelController.currentPanelType == ChatBottomPanelType.other) {
       _panelController.updatePanelType(ChatBottomPanelType.none);
@@ -264,16 +267,76 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
     final base = DateTime.timestamp();
     final userMsg = _chat.userMessage(text, createdAt: base);
+    await _chat.insertMessage(userMsg);
+    _inputController.clear();
+    setState(() => _sending = true);
+
+    await _generate(
+      gen: gen,
+      sessionSeedText: text,
+      userMessage: userMsg,
+      placeholderAt: base.add(const Duration(milliseconds: 1)),
+    );
+  }
+
+  /// 重新回答：删掉最后一条用户消息之后的所有内容（AI 回复、权限卡片、报错文本），
+  /// 再基于同一条用户消息重新跑一次生成。停止/报错后也可用它重试。
+  Future<void> _regenerate() async {
+    if (_sending || !_disclaimerAccepted) return;
+    final gen = ++_generation;
+    _streamSub?.cancel();
+    _streamSub = null;
+    _permissions.reset();
+    _streamingMessage = null;
+
+    final msgs = _chat.messages;
+    var lastUserIdx = -1;
+    for (var i = msgs.length - 1; i >= 0; i--) {
+      final m = msgs[i];
+      if (m is TextMessage && m.authorId == kAssistantUserId) {
+        lastUserIdx = i;
+        break;
+      }
+    }
+    if (lastUserIdx == -1) return;
+    final userMsg = msgs[lastUserIdx] as TextMessage;
+
+    setState(() => _sending = true);
+    // 旧回复只从内存移除；真正的落库删除推迟到新回复成功落库后（_purgeStaleReplies），
+    // 这样重新生成失败（网络错误 / 供应商被移除）不会连旧答案一起丢掉。
+    final trailing = msgs.sublist(lastUserIdx + 1).toList();
+    for (final m in trailing) {
+      await _chat.removeMessage(m);
+      if (m is TextMessage) _staleReplyIds.add(m.id);
+    }
+    if (!mounted || gen != _generation) return;
+
+    await _generate(
+      gen: gen,
+      sessionSeedText: userMsg.text,
+      userMessage: userMsg,
+      placeholderAt: DateTime.timestamp(),
+    );
+  }
+
+  Future<void> _generate({
+    required int gen,
+    required String sessionSeedText,
+    required TextMessage userMessage,
+    required DateTime placeholderAt,
+  }) async {
+    final l10n = context.l10n;
+    final systemPrompt = buildAssistantSystemPrompt(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
+
     final placeholder = _chat.assistantMessage(
       '',
       streaming: true,
-      createdAt: base.add(const Duration(milliseconds: 1)),
+      createdAt: placeholderAt,
     );
-    await _chat.insertMessage(userMsg);
     await _chat.insertMessage(placeholder);
     _streamingMessage = placeholder;
-    _inputController.clear();
-    setState(() => _sending = true);
 
     final history = _buildHistory();
 
@@ -287,13 +350,14 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       return;
     }
 
-    final session = await _ensureSession(text);
+    final session = await _ensureSession(sessionSeedText);
     if (!mounted || gen != _generation) return;
     if (session != null) {
-      await _chat.persist(userMsg);
+      await _chat.persist(userMessage);
       if (!mounted || gen != _generation) return;
     }
 
+    final needApiKeyText = l10n.assistantNeedApiKey;
     try {
       _streamSub = AssistantService.get()
           .chat(request)
@@ -306,7 +370,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               if (gen != _generation) return;
               _permissions.cancelPending();
               if (e is AssistantNotConfiguredException) {
-                _appendDelta(l10n.assistantNeedApiKey);
+                _appendDelta(needApiKeyText);
                 _refreshReady();
               } else {
                 _appendDelta('\n（出错：$e）');
@@ -365,7 +429,21 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     } else {
       final settled = _chat.settled(cur);
       _chat.updateMessage(cur, settled);
-      if (persist) _chat.persist(settled);
+      if (persist) {
+        _chat.persist(settled);
+        _purgeStaleReplies();
+      }
+    }
+  }
+
+  /// 新回复已成功落库后，才删除被它替换掉的旧回复；在此之前旧回复一直留在库里兜底。
+  void _purgeStaleReplies() {
+    if (_staleReplyIds.isEmpty) return;
+    final ids = _staleReplyIds;
+    _staleReplyIds = [];
+    final repo = ChatRepository.get();
+    for (final id in ids) {
+      unawaited(repo.deleteMessage(id));
     }
   }
 
@@ -418,6 +496,14 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     return '${l10n.assistantSendDiaryLead}\n\n【$header】\n$body';
   }
 
+  /// 点击消息列表时收起键盘与工具面板（焦点从输入框移开）。
+  void _dismissComposer() {
+    if (_panelController.currentPanelType == ChatBottomPanelType.other) {
+      _panelController.updatePanelType(ChatBottomPanelType.none);
+    }
+    if (_inputFocusNode.hasFocus) _inputFocusNode.unfocus();
+  }
+
   Widget _buildChat() {
     return Chat(
       chatController: _chat,
@@ -447,10 +533,22 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     required bool isSentByMe,
     MessageGroupStatus? groupStatus,
   }) {
-    if (isSentByMe) return _UserBubble(text: message.text);
+    final isLast =
+        _chat.messages.isNotEmpty && _chat.messages.last.id == message.id;
+    if (isSentByMe) {
+      // 用户消息落在末尾（首个 token 前被停止 / 本轮未产出回复）时也给出重试入口。
+      return _UserBubble(
+        text: message.text,
+        onRetry: (!_sending && isLast) ? _regenerate : null,
+      );
+    }
+    final hasUserTurn = _chat.messages.any(
+      (m) => m is TextMessage && m.authorId == kAssistantUserId,
+    );
     return _AssistantBubble(
       text: message.text,
       streaming: IsarChatController.isStreaming(message),
+      onRegenerate: (!_sending && isLast && hasUserTurn) ? _regenerate : null,
     );
   }
 
@@ -491,7 +589,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     return Column(
       children: [
         if (!_ready) _NotConfiguredBanner(onTap: _openSettings),
-        Expanded(child: _buildChat()),
+        Expanded(
+          child: Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (_) => _dismissComposer(),
+            child: _buildChat(),
+          ),
+        ),
         composer,
         ChatBottomPanelContainer<_ToolPanel>(
           controller: _panelController,
@@ -640,70 +744,73 @@ class _AssistantComposer extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final l10n = context.l10n;
-    return SafeArea(
-      top: false,
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 12, 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            IconButton(
-              tooltip: toolTooltip,
-              onPressed: sending ? null : onTool,
-              icon: Icon(toolIcon),
-              color: scheme.onSurfaceVariant,
-            ),
-            Expanded(
-              child: Container(
-                decoration: ShapeDecoration(
-                  color: scheme.surfaceContainerHigh,
-                  shape: const StadiumBorder(),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: controller,
-                        focusNode: focusNode,
-                        enabled: !sending,
-                        minLines: 1,
-                        maxLines: 6,
-                        textInputAction: TextInputAction.send,
-                        decoration: InputDecoration(
-                          hintText: l10n.assistantInputHint,
-                          border: InputBorder.none,
-                          isCollapsed: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
+    return Material(
+      color: scheme.surfaceContainer,
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 12, 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              IconButton(
+                tooltip: toolTooltip,
+                onPressed: sending ? null : onTool,
+                icon: Icon(toolIcon),
+                color: scheme.onSurfaceVariant,
+              ),
+              Expanded(
+                child: Container(
+                  decoration: ShapeDecoration(
+                    color: scheme.surfaceContainerHigh,
+                    shape: const StadiumBorder(),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          enabled: !sending,
+                          minLines: 1,
+                          maxLines: 6,
+                          textInputAction: TextInputAction.send,
+                          decoration: InputDecoration(
+                            hintText: l10n.assistantInputHint,
+                            border: InputBorder.none,
+                            isCollapsed: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
                           ),
+                          onSubmitted: (_) => onSend(),
                         ),
-                        onSubmitted: (_) => onSend(),
                       ),
-                    ),
-                    ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: controller,
-                      builder: (context, value, _) {
-                        if (sending) {
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: controller,
+                        builder: (context, value, _) {
+                          if (sending) {
+                            return IconButton.filled(
+                              tooltip: l10n.assistantStop,
+                              onPressed: onStop,
+                              icon: const Icon(Icons.stop_rounded),
+                            );
+                          }
+                          final canSend = value.text.trim().isNotEmpty;
                           return IconButton.filled(
-                            tooltip: l10n.assistantStop,
-                            onPressed: onStop,
-                            icon: const Icon(Icons.stop_rounded),
+                            onPressed: canSend ? onSend : null,
+                            icon: const Icon(Icons.arrow_upward_rounded),
                           );
-                        }
-                        final canSend = value.text.trim().isNotEmpty;
-                        return IconButton.filled(
-                          onPressed: canSend ? onSend : null,
-                          icon: const Icon(Icons.arrow_upward_rounded),
-                        );
-                      },
-                    ),
-                  ],
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -760,13 +867,14 @@ class _ToolPanelItem extends StatelessWidget {
 
 class _UserBubble extends StatelessWidget {
   final String text;
+  final VoidCallback? onRetry;
 
-  const _UserBubble({required this.text});
+  const _UserBubble({required this.text, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    return Container(
+    final bubble = Container(
       constraints: BoxConstraints(
         maxWidth: MediaQuery.sizeOf(context).width * 0.82,
       ),
@@ -785,18 +893,37 @@ class _UserBubble extends StatelessWidget {
         style: TextStyle(color: scheme.onPrimaryContainer),
       ),
     );
+    if (onRetry == null) return bubble;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        bubble,
+        _BubbleActionButton(
+          icon: Icons.refresh_rounded,
+          label: context.l10n.assistantRegenerate,
+          onTap: onRetry!,
+        ),
+      ],
+    );
   }
 }
 
 class _AssistantBubble extends StatelessWidget {
   final String text;
   final bool streaming;
+  final VoidCallback? onRegenerate;
 
-  const _AssistantBubble({required this.text, required this.streaming});
+  const _AssistantBubble({
+    required this.text,
+    required this.streaming,
+    this.onRegenerate,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
+    final l10n = context.l10n;
     final bubble = Container(
       constraints: BoxConstraints(
         maxWidth: MediaQuery.sizeOf(context).width * 0.82,
@@ -831,36 +958,56 @@ class _AssistantBubble extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         bubble,
-        _CopyButton(text: text),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _BubbleActionButton(
+              icon: Icons.copy_rounded,
+              label: l10n.assistantCopyTooltip,
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: text));
+                toast.success(message: l10n.assistantCopied);
+              },
+            ),
+            if (onRegenerate != null)
+              _BubbleActionButton(
+                icon: Icons.refresh_rounded,
+                label: l10n.assistantRegenerate,
+                onTap: onRegenerate!,
+              ),
+          ],
+        ),
       ],
     );
   }
 }
 
-class _CopyButton extends StatelessWidget {
-  final String text;
+class _BubbleActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
-  const _CopyButton({required this.text});
+  const _BubbleActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final l10n = context.l10n;
     return InkWell(
       borderRadius: BorderRadius.circular(8),
-      onTap: () async {
-        await Clipboard.setData(ClipboardData(text: text));
-        toast.success(message: l10n.assistantCopied);
-      },
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.copy_rounded, size: 14, color: scheme.onSurfaceVariant),
+            Icon(icon, size: 14, color: scheme.onSurfaceVariant),
             const SizedBox(width: 4),
             Text(
-              l10n.assistantCopyTooltip,
+              label,
               style: context.textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),

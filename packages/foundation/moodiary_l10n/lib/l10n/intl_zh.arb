@@ -314,6 +314,7 @@
   "assistantHistoryEmpty": "还没有历史会话",
   "assistantSessionDelete": "删除",
   "assistantStop": "停止生成",
+  "assistantRegenerate": "重新回答",
   "assistantSectionTool": "工具",
   "assistantToolSectionNote": "助手会根据对话内容自动调用下列工具，无需手动开启。",
   "assistantToolSearchTitle": "日记检索",

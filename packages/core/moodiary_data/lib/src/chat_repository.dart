@@ -50,6 +50,13 @@ class ChatRepository {
     _events.add(null);
   }
 
+  /// 删除单条消息（用于重新生成时清理最后一轮回复）。
+  Future<void> deleteMessage(String id) async {
+    await _isar.writeAsync((isar) {
+      isar.chatMessages.delete(id);
+    });
+  }
+
   Future<List<ChatMessage>> getMessages(String sessionId) {
     return _isar.chatMessages
         .where()
@@ -64,7 +71,11 @@ class ChatRepository {
       isar.chatMessages.put(message);
       final session = isar.chatSessions.get(message.sessionId);
       if (session != null) {
-        isar.chatSessions.put(session.copyWith(updatedAt: message.createdAt));
+        // 活跃时间只向前推进：重新生成会重存较早的用户消息，避免把会话时间倒退。
+        final updatedAt = message.createdAt.isAfter(session.updatedAt)
+            ? message.createdAt
+            : session.updatedAt;
+        isar.chatSessions.put(session.copyWith(updatedAt: updatedAt));
       }
     });
     _events.add(null);

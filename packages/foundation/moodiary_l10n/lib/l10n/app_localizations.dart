@@ -1982,6 +1982,12 @@ abstract class AppLocalizations {
   /// **'停止生成'**
   String get assistantStop;
 
+  /// No description provided for @assistantRegenerate.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新回答'**
+  String get assistantRegenerate;
+
   /// No description provided for @assistantSectionTool.
   ///
   /// In zh, this message translates to:

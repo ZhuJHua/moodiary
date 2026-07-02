@@ -314,6 +314,7 @@
   "assistantHistoryEmpty": "No chat history yet",
   "assistantSessionDelete": "Delete",
   "assistantStop": "Stop generating",
+  "assistantRegenerate": "Regenerate",
   "assistantSectionTool": "Tools",
   "assistantToolSectionNote": "The assistant automatically uses the tools below based on the conversation — no setup needed.",
   "assistantToolSearchTitle": "Diary search",

@@ -976,6 +976,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistantStop => '停止生成';
 
   @override
+  String get assistantRegenerate => '重新回答';
+
+  @override
   String get assistantSectionTool => '工具';
 
   @override
