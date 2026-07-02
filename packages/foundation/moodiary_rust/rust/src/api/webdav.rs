@@ -43,7 +43,10 @@ impl DavClient {
         username: String,
         password: String,
     ) -> Result<DavClient> {
+        // 注入走内置 webpki 根证书的客户端：reqwest_dav 默认 agent 用 reqwest 0.13 的
+        // rustls-platform-verifier，在 Android 上未初始化会 panic（同 assistant）。
         let client = ClientBuilder::new()
+            .set_agent(crate::http_client::webpki_client()?)
             .set_host(base_url)
             .set_auth(Auth::Basic(username, password))
             .build()

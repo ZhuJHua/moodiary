@@ -3,7 +3,7 @@
 //! 本模块只构造 provider 客户端、挂载代理工具、跑 rig 多轮流式工具循环，文本增量经
 //! [StreamSink] 回传 Flutter。新增 / 修改工具无需动 Rust。
 
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use anyhow::Result;
 use flutter_rust_bridge::DartFnFuture;
@@ -129,30 +129,6 @@ fn split_history(history: Vec<RigChatMessage>) -> Result<(Message, Vec<Message>)
     Ok((prompt, msgs))
 }
 
-/// 共享的 HTTP 客户端：改用内置 webpki 根证书自建 rustls 配置，绕开 reqwest 0.13 默认的
-/// rustls-platform-verifier（Android 上未初始化会 panic）。只构造一次并复用连接池。
-fn assistant_http_client() -> Result<reqwest::Client> {
-    static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
-    if let Some(client) = CLIENT.get() {
-        return Ok(client.clone());
-    }
-    let mut roots = rustls::RootCertStore::empty();
-    roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    let tls = rustls::ClientConfig::builder_with_provider(Arc::new(
-        rustls::crypto::aws_lc_rs::default_provider(),
-    ))
-    .with_safe_default_protocol_versions()
-    .map_err(|e| anyhow::anyhow!("failed to init rustls config: {e}"))?
-    .with_root_certificates(roots)
-    .with_no_client_auth();
-    let client = reqwest::Client::builder()
-        .use_preconfigured_tls(tls)
-        .build()
-        .map_err(|e| anyhow::anyhow!("failed to build http client: {e}"))?;
-    let _ = CLIENT.set(client.clone());
-    Ok(client)
-}
-
 /// 流式对话 + 多轮工具调用。Dart 取消订阅会令 `sink.add` 失败，循环随即中断（取消在途
 /// 请求）。硬性失败（构造客户端 / 流错误）以 `Err` 形式让 Dart 流报错。
 pub async fn rig_chat_stream(
@@ -167,7 +143,7 @@ pub async fn rig_chat_stream(
     let dispatch: ToolDispatch = Arc::new(tool_dispatch);
     let boxed_tools = build_tools(tools, &dispatch);
     let (prompt, prior) = split_history(history)?;
-    let http_client = assistant_http_client()?;
+    let http_client = crate::http_client::webpki_client()?;
 
     match config.protocol.as_str() {
         "anthropic" => {
