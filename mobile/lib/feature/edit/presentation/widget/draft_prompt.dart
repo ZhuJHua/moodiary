@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary/app/router/router.dart';
 
-/// FAB「新建日记」入口。创建即落盘：先插入一条空日记拿到真实 id，再打开编辑器。
-/// 没写内容就退出也会留下一条记录——刻意淡化保存动作，让记录更自然。
-Future<void> openNewDiaryEditor(BuildContext context, DiaryType type) async {
-  final diary = Diary.empty(type: type);
-  await DiaryRepository.get().insertADiary(diary);
-  if (!context.mounted) return;
-  _openDiary(context, type, diary.id);
-}
+/// 连点 FAB 会压入两个无 id 的 `/diary-new`，它们归一到同一个 EditController、串写同一条
+/// 草稿而错乱；用此闸门保证同一时刻只有一个新建页在途。
+bool _openingNewDiary = false;
 
-void _openDiary(BuildContext context, DiaryType type, String id) {
-  final route = DiaryRoute(type: type, diaryId: id, edit: true);
-  route.push(context);
+/// FAB「新建日记」入口。延迟落库：不预先插入空日记，有内容才由 [EditController] 落库。
+Future<void> openNewDiaryEditor(BuildContext context, DiaryType type) async {
+  if (_openingNewDiary) return;
+  _openingNewDiary = true;
+  try {
+    await NewDiaryRoute(type: type).push(context);
+  } finally {
+    _openingNewDiary = false;
+  }
 }

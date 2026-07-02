@@ -64,6 +64,7 @@ GoRoute _leafRoute(
 ) => GoRoute(path: path, builder: builder);
 
 List<RouteBase> _diaryLeafRoutes() => [
+  _leafRoute(NewDiaryRoute.path, (context, state) => NewDiaryRoute.fromState(state).build()),
   _leafRoute(DiaryRoute.path, (context, state) => DiaryRoute.fromState(state).build()),
   _leafRoute(ShareRoute.path, (context, state) => ShareRoute.fromState(state).build()),
 ];
@@ -200,6 +201,27 @@ class DiaryRoute extends MoodiaryRouteBase {
 
   Widget build() =>
       DiaryPage(diaryId: diaryId, initialType: type, startInEdit: edit);
+}
+
+/// 「新建日记」：无 diaryId 进入编辑态，不预先落库（空白退出不留记录）。
+class NewDiaryRoute extends MoodiaryRouteBase {
+  static const String path = '/diary-new';
+
+  final DiaryType type;
+
+  const NewDiaryRoute({required this.type});
+
+  @override
+  String get location =>
+      buildLocation('/diary-new', {'type': _diaryTypeToQuery[type]});
+
+  static NewDiaryRoute fromState(GoRouterState state) => NewDiaryRoute(
+    type:
+        diaryTypeFromQueryOrNull(state.uri.queryParameters['type']) ??
+        DiaryType.tiptap,
+  );
+
+  Widget build() => DiaryPage(initialType: type, startInEdit: true);
 }
 
 class ShareRoute extends MoodiaryRouteBase {

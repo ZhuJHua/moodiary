@@ -11,14 +11,17 @@ part 'edit_controller.g.dart';
 
 enum DraftSaveResult { saved, failed }
 
-/// 编辑页状态机。`changeXxx` 仅改本地 `state`；落库统一走 [autoSave]（新建 insert、
-/// 其余 update）。无手动保存、无草稿概念——创建即落盘。
+/// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
+/// 空白不创建，有内容才 insert，写了又清空则丢弃。
 @riverpod
 class EditController extends _$EditController {
   DiaryRepository get _repository => DiaryRepository.get();
 
   /// 是否已落库：false → 首次保存走 insert，之后 update。
   bool _persisted = false;
+
+  /// 仅新建（无 id）打开的日记允许空白丢弃；既有日记清空只 update，不删。
+  bool _wasNewDraft = false;
 
   /// 搜索/链接索引已反映（或已入队）的 contentText 快照。打开时 = 当前内容（索引此刻正确）；
   /// 自动保存时与之比较：相同 → skip（仅元数据变，免重索引）；不同 → defer 入队。
@@ -30,14 +33,17 @@ class EditController extends _$EditController {
   /// `ref.mounted` 守卫。
   Diary? _latest;
 
+  /// 进行中的保存，用于串行化——见 [autoSave]。
+  Future<DraftSaveResult>? _inFlight;
+
   @override
   FutureOr<Diary> build(String? diaryId, {DiaryType? defaultType}) async {
     final diary = await ref.watch(
       getDiaryProvider(id: diaryId, defaultType: defaultType).future,
     );
     if (diary == null) throw Exception('Diary not found: $diaryId');
-    // 新建（创建即落盘）带真实 id 打开，有 id 即已落库；空 id 兜底走首次 insert。
     _persisted = !(diaryId == null || diaryId.isEmpty);
+    _wasNewDraft = !_persisted;
     _latest = diary;
     _indexedContent = diary.contentText;
     listenSelf((_, next) {
@@ -151,9 +157,22 @@ class EditController extends _$EditController {
     }
   }
 
-  /// 原地自动保存：新建（无 id 兜底）走 insert，其余 update。抽取媒体名、刷新
-  /// lastModified，不弹 toast、不导航——供统一编辑页的防抖自动保存调用。
+  /// 自动保存：新建走 insert，其余 update。串行化——并发调用（去抖 / 生命周期 / dispose
+  /// flush 可能重叠）若都读到未落库会各 insert 一次，导致倒排索引出现重复行。
   Future<DraftSaveResult> autoSave() async {
+    while (_inFlight != null) {
+      await _inFlight;
+    }
+    final future = _doAutoSave();
+    _inFlight = future;
+    try {
+      return await future;
+    } finally {
+      if (identical(_inFlight, future)) _inFlight = null;
+    }
+  }
+
+  Future<DraftSaveResult> _doAutoSave() async {
     final current = _latest;
     if (current == null) return DraftSaveResult.saved;
     final media = DiaryContentUtil.extractMedia(current);
@@ -163,6 +182,23 @@ class EditController extends _$EditController {
       videoName: media.videos,
       audioName: media.audios,
     );
+    // 新建且空白：从没写过则不创建；写了又清空则硬删丢弃。既有日记清空不走此路。
+    if (_wasNewDraft && _isBlank(next)) {
+      try {
+        if (_persisted) {
+          await _repository.hardDeleteDiary(next.isarId);
+          _persisted = false;
+        }
+        _indexedContent = next.contentText;
+        _latest = next;
+        if (ref.mounted) {
+          state = AsyncValue.data(next);
+        }
+        return DraftSaveResult.saved;
+      } catch (_) {
+        return DraftSaveResult.failed;
+      }
+    }
     // 内容未变（仅元数据/媒体）→ skip：倒排索引仍有效，连入队都免；内容变了 → defer：
     // 只写行 + 入队，分词/倒排推迟到关闭/启动排空。新建首存走 insert（inline 立即建索引）。
     final indexMode = next.contentText == _indexedContent
@@ -186,4 +222,12 @@ class EditController extends _$EditController {
       return DraftSaveResult.failed;
     }
   }
+
+  /// 空白 = 无标题、无正文、无媒体（元数据不算，故只改心情/标签的新建不会落库）。
+  bool _isBlank(Diary d) =>
+      d.title.trim().isEmpty &&
+      d.contentText.trim().isEmpty &&
+      d.imageName.isEmpty &&
+      d.audioName.isEmpty &&
+      d.videoName.isEmpty;
 }

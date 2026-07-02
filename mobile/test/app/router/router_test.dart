@@ -37,6 +37,17 @@ void main() {
       );
     });
 
+    test('NewDiaryRoute', () {
+      expect(
+        const NewDiaryRoute(type: DiaryType.tiptap).location,
+        '/diary-new?type=tiptap',
+      );
+      expect(
+        const NewDiaryRoute(type: DiaryType.markdown).location,
+        '/diary-new?type=markdown',
+      );
+    });
+
     test('ShareRoute', () {
       expect(const ShareRoute().location, '/share');
       expect(const ShareRoute(diaryId: 'd2').location, '/share?diary-id=d2');

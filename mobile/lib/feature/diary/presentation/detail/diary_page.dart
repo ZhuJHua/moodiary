@@ -55,6 +55,11 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   /// 缓存 notifier：Riverpod 3.x 禁止在 dispose 里碰 ref。
   late final EditController _notifier;
 
+  /// 已登记「打开中」的业务 id（新建日记打开后才解析出）。
+  String? _guardId;
+
+  ProviderSubscription<AsyncValue<Diary>>? _guardSub;
+
   // —— 目录（TOC）——
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -84,33 +89,47 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _notifier = ref.read(_provider.notifier);
-    // 可编辑类型（tiptap）直接进编辑态——无独立「保存」、创建即落盘，编辑即默认态；
-    // 旧格式（markdown / richText）只读，仍进 read。
+    // 可编辑类型（tiptap）直接进编辑态——无独立「保存」，编辑即默认态；旧格式
+    // （markdown / richText）只读，仍进 read。
     _mode = (widget.startInEdit || widget.initialType.isEditable)
         ? _Mode.edit
         : _Mode.read;
-    // 标记「打开中」：同步层据此跳过本篇，编辑期不上传半成品（关闭后由 poll 收敛）。
+    // 登记「打开中」，同步层据此跳过本篇（编辑期不上传半成品）。新建打开时尚无 id，
+    // 待空模板解析出稳定 id 再登记。
     final id = widget.diaryId;
-    if (id != null) OpenDiaryRegistry.instance.open(id);
+    if (id != null) {
+      _guardId = id;
+      OpenDiaryRegistry.instance.open(id);
+    } else {
+      _guardSub = ref.listenManual(_provider, (_, next) {
+        final diary = next.value;
+        if (diary != null && _guardId == null) {
+          _guardId = diary.id;
+          OpenDiaryRegistry.instance.open(diary.id);
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // 关闭即解除「打开中」标记（不主动 kick 同步）。随后的 flush 若有改动会发出
-    // 领域事件，此时已非「打开中」→ 自然触发去抖 push；无改动则由下一轮 poll 收敛。
-    final id = widget.diaryId;
-    if (id != null) OpenDiaryRegistry.instance.close(id);
     _activeHeading.dispose();
     _autoSaveTimer?.cancel();
-    // 离开时 flush 一次自动保存。只读快照 + get_it 仓储、写 state 前用 `ref.mounted`
-    // 守卫，不会触碰已 autoDispose 的 ref。
+    final guardSub = _guardSub;
+    final guardId = _guardId;
+    // 离开时 flush 自动保存 + 排空重索引队列（fire-and-forget，残留靠启动恢复兜底）。
+    // 「打开中」标记保持到 flush 之后再解除：否则空白丢弃的无墓碑硬删可能被并发 push
+    // 抢先上传，pull 时复活。
     // ignore: discarded_futures
     () async {
-      if (_dirty) await _notifier.autoSave();
-      // 关闭即排空「待重索引」队列：把编辑期推迟的分词/倒排建好。崩溃/被杀时残留由启动
-      // 恢复兜底，故 fire-and-forget 即可。
-      await DiaryRepository.get().drainReindexQueue();
+      try {
+        if (_dirty) await _notifier.autoSave();
+        await DiaryRepository.get().drainReindexQueue();
+      } finally {
+        guardSub?.close();
+        if (guardId != null) OpenDiaryRegistry.instance.close(guardId);
+      }
     }();
     super.dispose();
   }
@@ -226,6 +245,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _scheduleAutoSave();
   }
 
+  void _onChangeMood(double mood) {
+    ref.read(_provider.notifier).changeMood(mood);
+    _dirty = true;
+    _scheduleAutoSave();
+  }
+
   Future<void> _onFetchWeather() async {
     final notifier = ref.read(_provider.notifier);
     final result = await notifier.fetchWeather(context);
@@ -249,7 +274,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       isScrollControlled: true,
       builder: (_) => _DetailSheet(
         diary: diary,
-        diaryId: widget.diaryId,
+        provider: _provider,
+        onChangeMood: _onChangeMood,
         onPickDate: () {
           Navigator.of(context).pop();
           _onPickDate(diary);
@@ -767,7 +793,10 @@ class _BacklinkTile extends StatelessWidget {
 
 class _DetailSheet extends ConsumerWidget {
   final Diary diary;
-  final String? diaryId;
+
+  /// 复用编辑页的同一 provider——另起实例会拿不到本页状态，且新建（无 id）时会抛错。
+  final EditControllerProvider provider;
+  final ValueChanged<double> onChangeMood;
   final VoidCallback onPickDate;
   final VoidCallback onPickTime;
   final VoidCallback onPickCategory;
@@ -777,7 +806,8 @@ class _DetailSheet extends ConsumerWidget {
 
   const _DetailSheet({
     required this.diary,
-    required this.diaryId,
+    required this.provider,
+    required this.onChangeMood,
     required this.onPickDate,
     required this.onPickTime,
     required this.onPickCategory,
@@ -867,7 +897,7 @@ class _DetailSheet extends ConsumerWidget {
         SettingListTile(
           isLast: true,
           title: '心情',
-          subtitle: _MoodSlider(diaryId: diaryId),
+          subtitle: _MoodSlider(provider: provider, onChanged: onChangeMood),
         ),
       ],
     );
@@ -875,13 +905,13 @@ class _DetailSheet extends ConsumerWidget {
 }
 
 class _MoodSlider extends ConsumerWidget {
-  final String? diaryId;
+  final EditControllerProvider provider;
+  final ValueChanged<double> onChanged;
 
-  const _MoodSlider({required this.diaryId});
+  const _MoodSlider({required this.provider, required this.onChanged});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final provider = editControllerProvider(diaryId);
     final mood = ref.watch(
       provider.select((value) => value.value?.mood ?? 0.5),
     );
@@ -898,7 +928,7 @@ class _MoodSlider extends ConsumerWidget {
               const Color(0xFF2EB872),
               mood,
             ),
-            onChanged: (v) => ref.read(provider.notifier).changeMood(v),
+            onChanged: onChanged,
           ),
         ),
       ],
