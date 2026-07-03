@@ -4,33 +4,38 @@ import 'package:moodiary_models/moodiary_models.dart';
 
 import 'share_card_template.dart';
 
-/// 「便签纸感」模版：暖色纸底 + 顶部胶带 + 淡淡的横向格线 + 暖墨字，像一张手写便签。
-/// 底色固定（暖纸色），强调（胶带）取主题种子色，不随 app 亮/暗切换。
+/// 「便签纸感」模版：纸底 + 顶部胶带 + 淡横向格线 + 暖墨字，像一张手写便签。
+/// 随传入的 [brightness] 切浅色暖纸 / 深色暖炭底；胶带取主题种子色。
 class NoteShareCard extends StatelessWidget {
   final Diary diary;
+  final Brightness brightness;
 
-  const NoteShareCard({super.key, required this.diary});
-
-  static const _paper = Color(0xFFFBF3DE);
-  static const _ink = Color(0xFF4A4034);
-  static const _inkSoft = Color(0xFF9B8E76);
+  const NoteShareCard({
+    super.key,
+    required this.diary,
+    required this.brightness,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final dark = brightness == Brightness.dark;
     final tape = Theme.of(context).colorScheme.primary;
+    final paper = dark ? const Color(0xFF2A2621) : const Color(0xFFFBF3DE);
+    final ink = dark ? const Color(0xFFE9E0CB) : const Color(0xFF4A4034);
+    final inkSoft = dark ? const Color(0xFFA1957C) : const Color(0xFF9B8E76);
+    final line = dark ? const Color(0x14E9E0CB) : const Color(0x0F4A4034);
     return Container(
       width: kShareCardWidth,
       decoration: BoxDecoration(
-        color: _paper,
+        color: paper,
         borderRadius: BorderRadius.circular(6),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(6),
         child: Stack(
           children: [
-            // 淡横线格纹铺底。
             Positioned.fill(
-              child: CustomPaint(painter: _RuledLinesPainter()),
+              child: CustomPaint(painter: _RuledLinesPainter(line)),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(28, 34, 28, 24),
@@ -40,50 +45,42 @@ class NoteShareCard extends StatelessWidget {
                 children: [
                   Text(
                     DateFormat.yMMMMEEEEd().format(diary.time),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: _inkSoft,
+                      color: inkSoft,
                       letterSpacing: 0.3,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     diary.title.isEmpty ? '(无标题)' : diary.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 21,
                       fontWeight: FontWeight.w700,
-                      color: _ink,
+                      color: ink,
                       height: 1.35,
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     diary.contentText,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      height: 1.85,
-                      color: _ink,
-                    ),
+                    style: TextStyle(fontSize: 15, height: 1.85, color: ink),
                   ),
                   const SizedBox(height: 22),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.favorite_rounded,
-                        size: 13,
-                        color: _inkSoft,
-                      ),
+                      Icon(Icons.favorite_rounded, size: 13, color: inkSoft),
                       const SizedBox(width: 5),
                       Text(
                         '心情 ${(diary.mood * 100).toStringAsFixed(0)}%',
-                        style: const TextStyle(fontSize: 12, color: _inkSoft),
+                        style: TextStyle(fontSize: 12, color: inkSoft),
                       ),
                       const Spacer(),
-                      const Text(
+                      Text(
                         'Moodiary',
                         style: TextStyle(
                           fontSize: 12,
-                          color: _inkSoft,
+                          color: inkSoft,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
                         ),
@@ -93,7 +90,6 @@ class NoteShareCard extends StatelessWidget {
                 ],
               ),
             ),
-            // 顶部居中的「胶带」。
             Positioned(
               top: -10,
               left: kShareCardWidth / 2 - 34,
@@ -102,7 +98,7 @@ class NoteShareCard extends StatelessWidget {
                 child: Container(
                   width: 68,
                   height: 24,
-                  color: tape.withValues(alpha: 0.30),
+                  color: tape.withValues(alpha: dark ? 0.42 : 0.30),
                 ),
               ),
             ),
@@ -113,12 +109,16 @@ class NoteShareCard extends StatelessWidget {
   }
 }
 
-/// 暖纸底上的淡横线格纹。
+/// 纸底上的淡横线格纹。
 class _RuledLinesPainter extends CustomPainter {
+  final Color color;
+
+  const _RuledLinesPainter(this.color);
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0x0F4A4034)
+      ..color = color
       ..strokeWidth = 1;
     const gap = 30.0;
     for (double y = gap; y < size.height; y += gap) {
@@ -127,5 +127,6 @@ class _RuledLinesPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RuledLinesPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _RuledLinesPainter oldDelegate) =>
+      oldDelegate.color != color;
 }

@@ -24,7 +24,7 @@ final _shareDiaryProvider = FutureProvider.family<Diary?, String?>((
   return DiaryRepository.get().getDiaryByBusinessId(id);
 });
 
-/// 分享页：选一个卡片模版 → 实时预览 → 复制文本 / 导出图片。
+/// 分享页：选模版 + 明暗主题 → 实时预览浮起卡片 → 复制文本 / 导出图片。
 /// 模版见 [kShareTemplates]；新增风格只需往那个列表里加一项。
 class SharePage extends ConsumerStatefulWidget {
   final String? diaryId;
@@ -39,6 +39,9 @@ class _SharePageState extends ConsumerState<SharePage> {
   final _boundaryKey = GlobalKey();
   bool _exporting = false;
   int _selected = 0;
+
+  /// 卡片明暗，null = 跟随 app 当前主题（首次进入的默认值）。
+  Brightness? _brightness;
 
   Future<void> _copy(Diary d) async {
     final text = [
@@ -88,17 +91,18 @@ class _SharePageState extends ConsumerState<SharePage> {
   Widget build(BuildContext context) {
     final diaryAsync = ref.watch(_shareDiaryProvider(widget.diaryId));
     return Scaffold(
-      appBar: AppBar(title: const Text('分享')),
+      appBar: AppBar(title: const Text('分享'), scrolledUnderElevation: 0),
       body: diaryAsync.buildLoading(
         data: (diary) {
           if (diary == null) {
             return const Center(child: Text('没有可分享的日记'));
           }
+          final brightness = _brightness ?? Theme.of(context).brightness;
           return SafeArea(
             child: Column(
               children: [
-                Expanded(child: _preview(diary)),
-                _templatePicker(),
+                Expanded(child: _preview(diary, brightness)),
+                _controls(),
                 _actions(diary),
               ],
             ),
@@ -108,71 +112,127 @@ class _SharePageState extends ConsumerState<SharePage> {
     );
   }
 
-  Widget _preview(Diary diary) {
-    return Container(
-      width: double.infinity,
-      color: context.colorScheme.surfaceContainerHighest,
+  Widget _preview(Diary diary, Brightness brightness) {
+    final scheme = context.colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [scheme.surfaceContainerHigh, scheme.surfaceContainerLow],
+        ),
+      ),
       child: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: RepaintBoundary(
-            key: _boundaryKey,
-            child: kShareTemplates[_selected].builder(diary),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          // 阴影包在 RepaintBoundary 外层 —— 只让卡片本体入图，阴影/背景不导出。
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.18),
+                  blurRadius: 32,
+                  offset: const Offset(0, 14),
+                ),
+              ],
+            ),
+            child: RepaintBoundary(
+              key: _boundaryKey,
+              child: kShareTemplates[_selected].builder(diary, brightness),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _templatePicker() {
-    return SizedBox(
-      height: 60,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        itemCount: kShareTemplates.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, i) {
-          final t = kShareTemplates[i];
-          return ChoiceChip(
-            label: Text(t.name),
-            selected: _selected == i,
-            onSelected: (_) => setState(() => _selected = i),
-          );
-        },
+  Widget _controls() {
+    final brightness = _brightness ?? Theme.of(context).brightness;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: kShareTemplates.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, i) => ChoiceChip(
+                  label: Text(kShareTemplates[i].name),
+                  selected: _selected == i,
+                  onSelected: (_) => setState(() => _selected = i),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          SegmentedButton<Brightness>(
+            showSelectedIcon: false,
+            style: SegmentedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            segments: const [
+              ButtonSegment(
+                value: Brightness.light,
+                icon: Icon(Icons.light_mode_rounded),
+              ),
+              ButtonSegment(
+                value: Brightness.dark,
+                icon: Icon(Icons.dark_mode_rounded),
+              ),
+            ],
+            selected: {brightness},
+            onSelectionChanged: (s) => setState(() => _brightness = s.first),
+          ),
+        ],
       ),
     );
   }
 
   Widget _actions(Diary diary) {
+    ButtonStyle shape() => FilledButton.styleFrom(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    );
     return Padding(
       padding: EdgeInsets.fromLTRB(
         16,
-        4,
+        8,
         16,
         12 + MediaQuery.paddingOf(context).bottom,
       ),
       child: Row(
         children: [
           Expanded(
-            child: FilledButton.tonalIcon(
-              onPressed: () => _copy(diary),
-              icon: const Icon(Icons.copy),
-              label: const Text('复制文本'),
+            child: SizedBox(
+              height: 50,
+              child: FilledButton.tonalIcon(
+                onPressed: () => _copy(diary),
+                style: shape(),
+                icon: const Icon(Icons.copy_rounded),
+                label: const Text('复制文本'),
+              ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: FilledButton.icon(
-              onPressed: _exporting ? null : _exportImage,
-              icon: _exporting
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.image_outlined),
-              label: const Text('导出图片'),
+            child: SizedBox(
+              height: 50,
+              child: FilledButton.icon(
+                onPressed: _exporting ? null : _exportImage,
+                style: shape(),
+                icon: _exporting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.ios_share_rounded),
+                label: const Text('导出图片'),
+              ),
             ),
           ),
         ],
