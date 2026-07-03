@@ -99,7 +99,12 @@ class DiaryRepository {
       isar.diarys.put(diary);
       if (result != null) {
         _writeIndexEntries(isar, diary.isarId, result.cut, TokenSource.cut);
-        _writeIndexEntries(isar, diary.isarId, result.cutForSearch, TokenSource.cutForSearch);
+        _writeIndexEntries(
+          isar,
+          diary.isarId,
+          result.cutForSearch,
+          TokenSource.cutForSearch,
+        );
       }
       _writeLinkEntries(isar, diary.isarId, links);
     });
@@ -133,7 +138,12 @@ class DiaryRepository {
       _removeIndexEntries(isar, newDiary.isarId);
       if (result != null) {
         _writeIndexEntries(isar, newDiary.isarId, result.cut, TokenSource.cut);
-        _writeIndexEntries(isar, newDiary.isarId, result.cutForSearch, TokenSource.cutForSearch);
+        _writeIndexEntries(
+          isar,
+          newDiary.isarId,
+          result.cutForSearch,
+          TokenSource.cutForSearch,
+        );
       }
       _removeLinkEntries(isar, newDiary.isarId);
       _writeLinkEntries(isar, newDiary.isarId, links);
@@ -154,7 +164,12 @@ class DiaryRepository {
       _removeIndexEntries(isar, diaryIsarId);
       if (result != null) {
         _writeIndexEntries(isar, diaryIsarId, result.cut, TokenSource.cut);
-        _writeIndexEntries(isar, diaryIsarId, result.cutForSearch, TokenSource.cutForSearch);
+        _writeIndexEntries(
+          isar,
+          diaryIsarId,
+          result.cutForSearch,
+          TokenSource.cutForSearch,
+        );
       }
       _removeLinkEntries(isar, diaryIsarId);
       _writeLinkEntries(isar, diaryIsarId, links);
@@ -179,12 +194,16 @@ class DiaryRepository {
     if (categoryId == null) {
       return await _isar.diarys
           .where()
-          .showEqualTo(true)          .sortByTimeDesc()
+          .showEqualTo(true)
+          .deletedEqualTo(false)
+          .sortByTimeDesc()
           .findAllAsync(offset: offset, limit: limit);
     } else {
       return await _isar.diarys
           .where()
-          .showEqualTo(true)          .categoryIdEqualTo(categoryId)
+          .showEqualTo(true)
+          .deletedEqualTo(false)
+          .categoryIdEqualTo(categoryId)
           .sortByTimeDesc()
           .findAllAsync(offset: offset, limit: limit);
     }
@@ -196,6 +215,7 @@ class DiaryRepository {
     final ids = await _isar.diarys
         .where()
         .showEqualTo(true)
+        .deletedEqualTo(false)
         .categoryIdProperty()
         .findAllAsync();
     final counts = <String, int>{};
@@ -210,7 +230,9 @@ class DiaryRepository {
   Future<List<Diary>> getDiaryByMonth(int year, int month) async {
     return await _isar.diarys
         .where()
-        .showEqualTo(true)        .yMEqualTo('$year/$month')
+        .showEqualTo(true)
+        .deletedEqualTo(false)
+        .yMEqualTo('$year/$month')
         .sortByTimeDesc()
         .findAllAsync();
   }
@@ -231,19 +253,22 @@ class DiaryRepository {
     return await _isar.diarys
         .where()
         .timeBetween(start, end)
-        .showEqualTo(all)        .findAllAsync();
+        .showEqualTo(all)
+        .deletedEqualTo(false)
+        .findAllAsync();
   }
 
   /// 含回收站的全量日记（同步快照 / dashboard 统计用）。
   Future<List<Diary>> getAllDiaries() async {
-    return await _isar.diarys
-        .where()        .findAllAsync();
+    return await _isar.diarys.where().findAllAsync();
   }
 
   Future<List<Diary>> getAllDiariesSorted() async {
     return _isar.diarys
         .where()
-        .showEqualTo(true)        .sortByTimeDesc()
+        .showEqualTo(true)
+        .deletedEqualTo(false)
+        .sortByTimeDesc()
         .findAllAsync();
   }
 
@@ -252,11 +277,13 @@ class DiaryRepository {
     final diary = await _isar.diarys.getAsync(isarId);
     if (diary == null) return false;
     await _isar.writeAsync((isar) {
-      isar.diarys.put(diary.copyWith(
-        deleted: true,
-        show: true,
-        lastModified: DateTime.timestamp(),
-      ));
+      isar.diarys.put(
+        diary.copyWith(
+          deleted: true,
+          show: true,
+          lastModified: DateTime.timestamp(),
+        ),
+      );
       _removeIndexEntries(isar, isarId);
       _removeLinkEntries(isar, isarId);
     });
@@ -311,7 +338,9 @@ class DiaryRepository {
   Future<List<Diary>> getRecycleBinDiaries() async {
     return await _isar.diarys
         .where()
-        .showEqualTo(false)        .sortByTimeDesc()
+        .showEqualTo(false)
+        .deletedEqualTo(false)
+        .sortByTimeDesc()
         .findAllAsync();
   }
 
@@ -321,17 +350,13 @@ class DiaryRepository {
     int? offset,
     int? limit,
   }) async {
-    final base = _isar.diarys
-        .where()
-        .showEqualTo(true)        .deletedEqualTo(false);
+    final base = _isar.diarys.where().showEqualTo(true).deletedEqualTo(false);
     final filtered = switch (type) {
       MediaType.image => base.imageNameIsNotEmpty(),
       MediaType.audio => base.audioNameIsNotEmpty(),
       MediaType.video => base.videoNameIsNotEmpty(),
     };
-    return filtered
-        .sortByTimeDesc()
-        .findAllAsync(offset: offset, limit: limit);
+    return filtered.sortByTimeDesc().findAllAsync(offset: offset, limit: limit);
   }
 
   /// 汇全集引用的媒体文件名（含回收站/草稿/墓碑），供孤儿清理用。
@@ -402,7 +427,9 @@ class DiaryRepository {
     for (final word in allQueryWords) {
       final titleMatches = await _isar.diarys
           .where()
-          .showEqualTo(true)          .titleContains(word, caseSensitive: false)
+          .showEqualTo(true)
+          .deletedEqualTo(false)
+          .titleContains(word, caseSensitive: false)
           .findAllAsync();
       for (final d in titleMatches) {
         if (diaryIdSet.add(d.isarId)) {
@@ -494,7 +521,12 @@ class DiaryRepository {
       isar.diarySearchIndexs.clear();
       for (final entry in tokenized.entries) {
         _writeIndexEntries(isar, entry.key, entry.value.cut, TokenSource.cut);
-        _writeIndexEntries(isar, entry.key, entry.value.cutForSearch, TokenSource.cutForSearch);
+        _writeIndexEntries(
+          isar,
+          entry.key,
+          entry.value.cutForSearch,
+          TokenSource.cutForSearch,
+        );
       }
     });
     return diaries.length;
