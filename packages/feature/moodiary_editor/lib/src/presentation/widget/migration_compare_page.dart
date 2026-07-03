@@ -3,7 +3,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_editor/moodiary_editor.dart';
-import 'package:moodiary/feature/setting/data/editor_migration_service.dart';
+import 'package:moodiary_editor/src/data/editor_migration_service.dart';
 
 /// 迁移「左右对比」预览：左侧是原始渲染（richText→只读 Quill，markdown→只读 TipTap 读 markdown），
 /// 右侧是**新编辑器（TipTap）只读渲染**转换后的内容 —— 即迁移后的真实样子。

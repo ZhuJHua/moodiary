@@ -1,12 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_scan/moodiary_scan.dart';
-import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 
 class ServicesPage extends ConsumerWidget {
@@ -77,73 +73,10 @@ class _AiSection extends StatelessWidget {
           margin: EdgeInsets.zero,
           child: ValueListenableBuilder<String>(
             valueListenable: MoodiaryKVs.assistantActiveProviderId.getNotifier(),
-            builder: (context, _, _) => const _AiSummaryTile(),
+            builder: (context, _, _) => const AssistantSummaryTile(),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _AiSummaryTile extends StatefulWidget {
-  const _AiSummaryTile();
-
-  @override
-  State<_AiSummaryTile> createState() => _AiSummaryTileState();
-}
-
-class _AiSummaryTileState extends State<_AiSummaryTile> {
-  LlmProvider? _active;
-  bool _keyConfigured = false;
-  bool _loaded = false;
-  StreamSubscription<void>? _sub;
-
-  LlmProviderRepository get _repo => LlmProviderRepository.get();
-
-  @override
-  void initState() {
-    super.initState();
-    _sub = _repo.providerEvents.listen((_) => _load());
-    _load();
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _load() async {
-    final active = await _repo.getActiveProvider();
-    final key = active == null ? null : await _repo.getKey(active.id);
-    if (!mounted) return;
-    setState(() {
-      _active = active;
-      _keyConfigured = key != null && key.isNotEmpty;
-      _loaded = true;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final active = _active;
-    final subtitle = !_loaded
-        ? '加载中…'
-        : active == null
-        ? '未配置模型供应商'
-        : '${active.name} · ${active.model} · '
-              '${_keyConfigured ? 'Key 已配置' : 'Key 未配置'}';
-    return SettingListTile(
-      isFirst: true,
-      isLast: true,
-      title: 'AI 助手配置',
-      subtitle: subtitle,
-      leading: const Icon(Icons.smart_toy_rounded),
-      trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: () async {
-        await const AssistantSettingRoute().push(context);
-        await _load();
-      },
     );
   }
 }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary/feature/setting/data/editor_migration_service.dart';
-import 'package:moodiary/feature/setting/presentation/widget/migration_compare_page.dart';
+import 'package:moodiary_editor/src/data/editor_migration_service.dart';
+import 'package:moodiary_editor/src/presentation/widget/migration_compare_page.dart';
 
 /// 可视化「迁移到新编辑器」工具：把旧的 richText(Quill) 日记转换为 TipTap/markdown。
 /// 列出待迁移日记（可逐条预览转换结果、单篇或全部迁移），并列出已迁移项支持回退

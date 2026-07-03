@@ -1,0 +1,74 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+
+import '../routes.dart';
+
+/// 设置页可嵌入的「AI 助手配置」摘要磁贴：展示当前供应商 / 模型 / Key 状态，点击进入
+/// 助手设置页。自监听 [LlmProviderRepository.providerEvents]，由 app 侧 `const
+/// AssistantSummaryTile()` 组合进设置页。
+class AssistantSummaryTile extends StatefulWidget {
+  const AssistantSummaryTile({super.key});
+
+  @override
+  State<AssistantSummaryTile> createState() => _AssistantSummaryTileState();
+}
+
+class _AssistantSummaryTileState extends State<AssistantSummaryTile> {
+  LlmProvider? _active;
+  bool _keyConfigured = false;
+  bool _loaded = false;
+  StreamSubscription<void>? _sub;
+
+  LlmProviderRepository get _repo => LlmProviderRepository.get();
+
+  @override
+  void initState() {
+    super.initState();
+    _sub = _repo.providerEvents.listen((_) => _load());
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final active = await _repo.getActiveProvider();
+    final key = active == null ? null : await _repo.getKey(active.id);
+    if (!mounted) return;
+    setState(() {
+      _active = active;
+      _keyConfigured = key != null && key.isNotEmpty;
+      _loaded = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = _active;
+    final subtitle = !_loaded
+        ? '加载中…'
+        : active == null
+        ? '未配置模型供应商'
+        : '${active.name} · ${active.model} · '
+              '${_keyConfigured ? 'Key 已配置' : 'Key 未配置'}';
+    return SettingListTile(
+      isFirst: true,
+      isLast: true,
+      title: 'AI 助手配置',
+      subtitle: subtitle,
+      leading: const Icon(Icons.smart_toy_rounded),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () async {
+        await const AssistantSettingRoute().push(context);
+        await _load();
+      },
+    );
+  }
+}

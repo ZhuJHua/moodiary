@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary/feature/setting/application/dashboard_controller.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 
 class DashboardSection extends ConsumerWidget {
   const DashboardSection({super.key});
