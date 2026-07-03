@@ -30,5 +30,6 @@ export 'src/values/language.dart';
 export 'src/values/media_type.dart';
 export 'src/values/open_diary_registry.dart';
 export 'src/values/search.dart';
+export 'src/values/sync_pending.dart';
 export 'src/values/size.dart';
 export 'src/values/view_mode.dart';

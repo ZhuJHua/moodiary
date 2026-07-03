@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary/feature/lock/presentation/widget/lock_pin_pad.dart';
 
 /// 设置页应用锁管理（开关 + 改密 + 生物识别开关）；解锁时机由 `/lock` 负责，此处只管开关与凭据。
 class AppLockTile extends StatefulWidget {

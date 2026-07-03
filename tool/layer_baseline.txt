@@ -7,8 +7,6 @@ feature/diary/presentation/detail/diary_page.dart -> feature/edit
 feature/diary/presentation/diary_page.dart -> feature/calendar
 feature/diary/presentation/diary_page.dart -> feature/edit
 feature/diary/presentation/diary_page.dart -> feature/sync
-feature/diary/presentation/widget/listview.dart -> feature/sync
-feature/diary/presentation/widget/waterfall_view.dart -> feature/sync
 feature/edit/application/edit_controller.dart -> feature/diary
 feature/edit/presentation/widget/category_picker_sheet.dart -> feature/diary
 feature/setting/presentation/setting_page.dart -> feature/lock

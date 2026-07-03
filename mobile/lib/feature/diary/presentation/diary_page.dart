@@ -7,7 +7,6 @@ import 'package:moodiary/feature/calendar/presentation/calendar_page.dart';
 import 'package:moodiary/feature/diary/application/category_controller.dart';
 import 'package:moodiary/feature/diary/presentation/widget/sync_pending_indicator.dart';
 import 'package:moodiary/feature/sync/application/sync_controller.dart';
-import 'package:moodiary/feature/sync/data/sync_pending.dart';
 import 'package:moodiary/feature/sync/presentation/widget/sync_status_sheet.dart';
 import 'package:moodiary/feature/diary/presentation/widget/listview.dart';
 import 'package:moodiary/feature/diary/presentation/widget/view_mode_sheet.dart';

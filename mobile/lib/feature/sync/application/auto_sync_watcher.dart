@@ -4,7 +4,6 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary/feature/sync/data/sync.dart';
-import 'package:moodiary/feature/sync/data/sync_pending.dart';
 import 'package:moodiary/feature/sync/data/model/sync_event.dart';
 import 'package:moodiary/feature/sync/data/sync_logger.dart';
 

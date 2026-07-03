@@ -16,4 +16,5 @@ export 'src/package_util.dart';
 export 'src/password_util.dart';
 export 'src/quill_to_tiptap.dart';
 export 'src/send_util.dart';
+export 'src/text_util.dart';
 export 'src/tiptap_content.dart';

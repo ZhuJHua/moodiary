@@ -11,7 +11,6 @@ import 'package:moodiary/feature/sync/data/model/sync_provider.dart';
 import 'package:moodiary/feature/sync/data/remote_lease.dart';
 import 'package:moodiary/feature/sync/data/sync_cancellation.dart';
 import 'package:moodiary/feature/sync/data/sync_logger.dart';
-import 'package:moodiary/feature/sync/data/sync_pending.dart';
 import 'package:moodiary/feature/sync/data/sync_registry.dart';
 import 'package:moodiary/feature/sync/data/sync_stores.dart';
 import 'package:moodiary/feature/sync/data/tombstone_tracker.dart';

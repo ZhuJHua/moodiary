@@ -3,6 +3,9 @@ import 'package:flutter/foundation.dart';
 /// pull 预扫描得出的「即将从远端到达」清单。引擎读完 manifest 后用快照 LWW 一次
 /// 算出，首页据此**立即**渲染占位卡/角标，不必等每条落库；逐条下载完成时消除。
 /// 占位只是 UI 预告，最终以逐条阶段「写入前重读」的精确 LWW 落库事件为准。
+///
+/// 归属 core（values）：进程级 UI 视图态，引擎（moodiary_sync 未来包）写、首页读，
+/// 与 [OpenDiaryRegistry] 同为跨模块共享的瞬态单例，故置于基建层供两端复用。
 class SyncPendingState {
   /// 远端有、本地无 → 列表头部渲染占位卡。
   final Set<String> newDiaryIds;

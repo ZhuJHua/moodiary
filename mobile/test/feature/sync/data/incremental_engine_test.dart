@@ -11,7 +11,6 @@ import 'package:moodiary/feature/sync/data/model/sync_provider.dart';
 import 'package:moodiary/feature/sync/data/sync.dart';
 import 'package:moodiary/feature/sync/data/sync_cancellation.dart';
 import 'package:moodiary/feature/sync/data/sync_logger.dart';
-import 'package:moodiary/feature/sync/data/sync_pending.dart';
 
 import '../sync_test_harness.dart';
 

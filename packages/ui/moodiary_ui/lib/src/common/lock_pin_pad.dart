@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 
-/// 密码长度 —— 与启动解锁页 [LockPage] 对齐。
+/// 密码长度 —— 与启动解锁页对齐。
 const int kPinLength = 4;
 
 /// 命令式句柄：外层驱动键盘清空 / 抖动。
