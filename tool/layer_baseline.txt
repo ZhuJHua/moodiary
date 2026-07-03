@@ -2,13 +2,10 @@
 # 由 `dart run tool/check_layers.dart --update-baseline` 生成。
 # 格式：<相对 lib/ 的源文件> -> <目标模块>
 
-feature/calendar/presentation/calendar_page.dart -> feature/diary
 feature/diary/presentation/detail/diary_page.dart -> feature/edit
-feature/diary/presentation/diary_page.dart -> feature/calendar
 feature/diary/presentation/diary_page.dart -> feature/edit
 feature/diary/presentation/diary_page.dart -> feature/sync
 feature/edit/application/edit_controller.dart -> feature/diary
 feature/edit/presentation/widget/category_picker_sheet.dart -> feature/diary
 feature/setting/presentation/setting_page.dart -> feature/lock
 feature/setting/presentation/widget/migration_compare_page.dart -> feature/edit
-feature/share/presentation/share_page.dart -> feature/diary

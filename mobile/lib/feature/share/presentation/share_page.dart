@@ -8,10 +8,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary/feature/diary/application/diary_controller.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
+
+/// 分享页只需一次性快照（导出用），直接从仓库取，不依赖 diary 特性的流式 provider。
+final _shareDiaryProvider = FutureProvider.family<Diary?, String?>((
+  ref,
+  id,
+) async {
+  if (id == null || id.isEmpty) return null;
+  return DiaryRepository.get().getDiaryByBusinessId(id);
+});
 
 class SharePage extends ConsumerStatefulWidget {
   final String? diaryId;
@@ -72,7 +81,7 @@ class _SharePageState extends ConsumerState<SharePage> {
 
   @override
   Widget build(BuildContext context) {
-    final diaryAsync = ref.watch(getDiaryProvider(id: widget.diaryId));
+    final diaryAsync = ref.watch(_shareDiaryProvider(widget.diaryId));
     return Scaffold(
       appBar: AppBar(title: const Text('分享')),
       body: diaryAsync.buildLoading(

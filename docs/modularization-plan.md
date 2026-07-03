@@ -175,7 +175,8 @@ List<RouteBase> _mobileRoutes() => [
 > - **Phase 1（导航缝合）✅** — 契约下沉 `moodiary_router`（String 编码 + `moodiary_models` 的 `.routeQuery` 编解码，保 foundation 纯叶子）；7 个 feature 各带 `xRoutes()`；`router.dart` 缩为聚合器；`app_lock_observer` 迁 `app/lifecycle/`。**baseline 27→12**，`router_test` location 逐字节不变。
 > - **Phase 2（安全叶子下沉）✅** — `SyncPendingTracker`/`SyncDirtyTracker`/`SyncPendingState` → `moodiary_core`（`src/values/sync_pending.dart`）；`LockPinPad` → `moodiary_ui`（`src/common/`）；`getHighlightedExcerpt` → `moodiary_utils`（`src/text_util.dart`）。纯搬无行为/schema 变；额外清掉 `listview`/`waterfall_view -> feature/sync` 两条边。**baseline 12→10**。
 > - **Phase 3（共享 widget 下沉，keep-ui-pure 变体）✅** — 用户定选「保持 moodiary_ui 业务无关」：只下沉真正通用的 `category_color` + 同步角标（`SyncPendingBadge`/`DirtyBadge`/`SummaryCard`）→ `moodiary_ui/src/common/`（`category_color_test` 一并迁入 ui 包）；`diary_card` 导航改注入 `onTap`（新 `diary_nav.dart` 集中路由，卡片去 router 依赖）但**暂留 diary feature**；`ShareCard` 及 `diary_card` 搬包**延后**到桌面 UI 定稿。baseline 仍 10（剩余是 provider 边，归 Phase 4/5）。
-> - 三阶段合计 `flutter analyze` 全绿、mobile 148 + ui 2 测试通过。Phase 0（删死代码）与 Phase 4+ 未动。
+> - **Phase 4（折叠消环）✅** — 把 `feature/calendar` 折进 `feature/diary`（它是首页「全部」段的日历子视图，非独立特性；`calendar_controller`+`.g.dart` 连同 part 文件整体 `git mv`，`monthDiariesProvider` 身份不变、无需 build_runner）；`share_page` 改用 `moodiary_data` 仓库一次性取快照（导出页无需流式），去掉对 diary 的依赖。清掉 `calendar↔diary` 环 + `share→diary` 共 3 条边，**baseline 10→7**。
+> - 四阶段合计 `flutter analyze` 全绿、mobile 148 + ui 2 测试通过。前三阶段已分 3 个 commit 提交（`0834e76`/`702d75b`/`b1a28a7`）。Phase 0（删死代码）与 Phase 5+ 未动。
 
 | 阶段 | 做什么 | 解锁什么 | 风险 |
 |---|---|---|---|
