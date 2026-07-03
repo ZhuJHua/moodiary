@@ -9,7 +9,7 @@ import 'package:moodiary/feature/diary/diary_routes.dart';
 import 'package:moodiary/feature/diary/presentation/diary_select_page.dart';
 import 'package:moodiary/feature/lock/lock_routes.dart';
 import 'package:moodiary/feature/setting/setting_routes.dart';
-import 'package:moodiary/feature/share/share_routes.dart';
+import 'package:moodiary_share/moodiary_share.dart';
 import 'package:moodiary/feature/sync/sync_routes.dart';
 
 export 'package:moodiary_router/moodiary_router.dart';

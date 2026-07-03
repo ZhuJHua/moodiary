@@ -311,6 +311,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       // 返回键 +（有标题时）右侧目录按钮。
       appBar: AppBar(
         actions: [
+          if (diary != null)
+            IconButton(
+              tooltip: '分享',
+              icon: const Icon(Icons.ios_share_rounded),
+              onPressed: () => ShareRoute(diaryId: diary.id).push(context),
+            ),
           if (headings.isNotEmpty)
             IconButton(
               tooltip: '目录',

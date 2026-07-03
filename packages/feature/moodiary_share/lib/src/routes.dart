@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
-import 'package:moodiary/feature/share/presentation/share_page.dart';
+import 'presentation/share_page.dart';
 
 List<RouteBase> shareRoutes() => [
   GoRoute(

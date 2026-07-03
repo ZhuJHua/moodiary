@@ -1,0 +1,31 @@
+name: moodiary_share
+description: "Moodiary 分享：日记导出为图片 / 复制文本（两端可复用的 feature 包）。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.12.0"
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_core: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_data: 0.0.1
+  moodiary_ui: 0.0.1
+  moodiary_router: 0.0.1
+
+  flutter_riverpod: 3.3.2
+  go_router: 17.3.0
+  intl: 0.20.2
+  path: 1.9.1
+  share_plus: 13.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
