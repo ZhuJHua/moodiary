@@ -12,7 +12,6 @@ import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { createEditorKit } from '../editor/tiptap'
 import { bindApi, emitChange, markReady } from '../bridge'
 import { post } from '../bridge/post'
-import { saveStatus } from '../bridge/save-status'
 import { title } from '../bridge/title'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorSearchBar from './EditorSearchBar.vue'
@@ -25,7 +24,6 @@ const props = defineProps<{
 }>()
 
 const editable = ref(props.editable)
-const charCount = ref(0)
 
 const kit = createEditorKit({
   editable: props.editable,
@@ -42,14 +40,8 @@ const editor = useEditor({
     kit.attach(instance)
     bindApi(kit.api)
     markReady()
-    // 字数：transaction 即更新（含 setContent 这类 emitUpdate:false 的程序化加载也会触发 transaction）。
-    const updateCount = (): void => {
-      charCount.value = instance.storage.characterCount?.characters?.() ?? 0
-    }
-    instance.on('transaction', updateCount)
     // 内容变化可能增删标题 → 重算当前标题（rAF 合并）。
     instance.on('transaction', onViewportScroll)
-    updateCount()
   },
 })
 
@@ -124,21 +116,6 @@ function onViewportScroll(): void {
   cancelAnimationFrame(spyRaf)
   spyRaf = requestAnimationFrame(computeActiveHeading)
 }
-
-// 右下角自动保存气泡：仅 saving/saved/failed 显示文案，其它（idle 等）不显示。状态由 Flutter
-// 经 bridge setSaveStatus 推入（见 ../bridge/save-status）。
-const saveLabel = computed(() => {
-  switch (saveStatus.value) {
-    case 'saving':
-      return '保存中…'
-    case 'saved':
-      return '已保存'
-    case 'failed':
-      return '保存失败'
-    default:
-      return ''
-  }
-})
 
 // 工具栏媒体按钮 → 通知 Flutter 弹原生选取（存盘后经 insertMedia/insertAudio/insertVideo 回插）。
 function onPickImage(): void {
@@ -216,15 +193,6 @@ onBeforeUnmount(() => {
           @keydown="onTitleKeydown"
         ></textarea>
         <EditorContent :editor="editor" class="moodiary-editor" />
-      </div>
-      <div v-if="editable" class="moodiary-statusbar">
-        <span
-          v-if="saveLabel"
-          class="moodiary-savestatus"
-          :data-state="saveStatus"
-          >{{ saveLabel }}</span
-        >
-        <span class="moodiary-wordcount">{{ charCount }} 字</span>
       </div>
     </div>
     <!-- 移动：查找条置于工具栏上方 -->
