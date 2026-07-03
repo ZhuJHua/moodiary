@@ -12,7 +12,7 @@ import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
-import 'package:moodiary/feature/setting/application/app_settings_controller.dart';
+import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary/merge/merge.dart';
 import 'package:moodiary/app/router/router.dart';

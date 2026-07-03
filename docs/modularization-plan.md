@@ -176,7 +176,9 @@ List<RouteBase> _mobileRoutes() => [
 > - **Phase 2（安全叶子下沉）✅** — `SyncPendingTracker`/`SyncDirtyTracker`/`SyncPendingState` → `moodiary_core`（`src/values/sync_pending.dart`）；`LockPinPad` → `moodiary_ui`（`src/common/`）；`getHighlightedExcerpt` → `moodiary_utils`（`src/text_util.dart`）。纯搬无行为/schema 变；额外清掉 `listview`/`waterfall_view -> feature/sync` 两条边。**baseline 12→10**。
 > - **Phase 3（共享 widget 下沉，keep-ui-pure 变体）✅** — 用户定选「保持 moodiary_ui 业务无关」：只下沉真正通用的 `category_color` + 同步角标（`SyncPendingBadge`/`DirtyBadge`/`SummaryCard`）→ `moodiary_ui/src/common/`（`category_color_test` 一并迁入 ui 包）；`diary_card` 导航改注入 `onTap`（新 `diary_nav.dart` 集中路由，卡片去 router 依赖）但**暂留 diary feature**；`ShareCard` 及 `diary_card` 搬包**延后**到桌面 UI 定稿。baseline 仍 10（剩余是 provider 边，归 Phase 4/5）。
 > - **Phase 4（折叠消环）✅** — 把 `feature/calendar` 折进 `feature/diary`（它是首页「全部」段的日历子视图，非独立特性；`calendar_controller`+`.g.dart` 连同 part 文件整体 `git mv`，`monthDiariesProvider` 身份不变、无需 build_runner）；`share_page` 改用 `moodiary_data` 仓库一次性取快照（导出页无需流式），去掉对 diary 的依赖。清掉 `calendar↔diary` 环 + `share→diary` 共 3 条边，**baseline 10→7**。
-> - 四阶段合计 `flutter analyze` 全绿、mobile 148 + ui 2 测试通过。前三阶段已分 3 个 commit 提交（`0834e76`/`702d75b`/`b1a28a7`）。Phase 0（删死代码）与 Phase 5+ 未动。
+> - **Phase 5a（settings state → 新包）✅** — 抽出 **`moodiary_preferences`**（core 层）：`AppSettings`(freezed)+`AppSettingsController`+`appInitialLocaleProvider`、`FontController`、`CacheController`+`CacheUsage` 连同生成文件**整体 git mv**（生成文件自包含、无 `package:moodiary` 路径，故**免 build_runner**，同 models 抽取先例）；7 个消费者（setting 页 + `main.dart`）改依赖包 barrel。deps 已在 workspace lock 内→`flutter pub get` 零冲突。桌面端可据此从共享 settings 建 `MaterialApp`。baseline 仍 7（settings 非跨特性边）。
+>   - **Phase 5 待续**（更高触面、需 build_runner regen）：`getDiaryProvider`+category 读 provider → `moodiary_data`（软化 edit⇄diary，清 2 条边）；`EditorMigrationService`/`DashboardStats`/geo-weather → `moodiary_data`。
+> - 至此 `flutter analyze` 全绿、mobile 148 + ui 2 测试通过。前四阶段已 4 个 commit（`0834e76`/`702d75b`/`b1a28a7`/`0e24156`）。Phase 0（删死代码）未动。
 
 | 阶段 | 做什么 | 解锁什么 | 风险 |
 |---|---|---|---|

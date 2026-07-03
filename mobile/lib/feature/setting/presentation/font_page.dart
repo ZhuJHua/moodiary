@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary/feature/setting/application/font_controller.dart';
+import 'package:moodiary_preferences/moodiary_preferences.dart';
 
 class FontPage extends ConsumerWidget {
   const FontPage({super.key});

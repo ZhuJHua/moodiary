@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary/feature/setting/application/app_settings_controller.dart';
+import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 
 class ColorSheet extends ConsumerWidget {

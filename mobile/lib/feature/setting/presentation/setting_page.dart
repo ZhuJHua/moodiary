@@ -5,7 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary/feature/lock/presentation/widget/app_lock_tile.dart';
-import 'package:moodiary/feature/setting/application/app_settings_controller.dart';
+import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary/feature/setting/presentation/widget/cache_usage_tile.dart';
 import 'package:moodiary/feature/setting/presentation/widget/data_repair_tile.dart';
 import 'package:moodiary/feature/setting/presentation/widget/rebuild_index_tile.dart';

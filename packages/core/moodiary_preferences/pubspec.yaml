@@ -1,0 +1,31 @@
+name: moodiary_preferences
+description: "Moodiary 应用级偏好设置状态：主题 / locale / 字体 / 缓存控制器（app-global settings），两端复用。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.12.0"
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_core: 0.0.1
+  moodiary_models: 0.0.1
+
+  flutter_riverpod: 3.3.2
+  riverpod_annotation: 4.0.3
+  freezed_annotation: 3.1.0
+  intl: 0.20.2
+  path: 1.9.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  build_runner: 2.15.0
+  riverpod_generator: 4.0.4
+  freezed: 3.2.6-dev.1
