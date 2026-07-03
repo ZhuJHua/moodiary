@@ -3,4 +3,3 @@
 # 格式：<相对 lib/ 的源文件> -> <目标模块>
 
 feature/diary/presentation/diary_page.dart -> feature/sync
-feature/setting/presentation/setting_page.dart -> feature/lock

@@ -7,7 +7,7 @@ import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary/app/shell/root_shell.dart' show MobileRootShell;
 import 'package:moodiary/feature/diary/diary_routes.dart';
 import 'package:moodiary/feature/diary/presentation/diary_select_page.dart';
-import 'package:moodiary/feature/lock/lock_routes.dart';
+import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary/feature/setting/setting_routes.dart';
 import 'package:moodiary_share/moodiary_share.dart';
 import 'package:moodiary/feature/sync/sync_routes.dart';

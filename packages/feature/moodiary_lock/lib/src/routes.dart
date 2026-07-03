@@ -1,8 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
-import 'package:moodiary/feature/lock/presentation/lock_page.dart';
-import 'package:moodiary/feature/lock/presentation/start_page.dart';
+import 'presentation/lock_page.dart';
+import 'presentation/start_page.dart';
 
 List<RouteBase> lockRoutes() => [
   GoRoute(

@@ -20,6 +20,7 @@ dependencies:
   moodiary_assistant: 0.0.1
   moodiary_editor: 0.0.1
   moodiary_editor_host: 0.0.1
+  moodiary_lock: 0.0.1
   moodiary_media: 0.0.1
   moodiary_share: 0.0.1
   moodiary_utils: 0.0.1
