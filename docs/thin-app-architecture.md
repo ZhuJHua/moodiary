@@ -1,5 +1,7 @@
 # Moodiary — Thin Composition App Design
 
+> **STATUS: ✅ EXECUTED (all phases 0–7 shipped).** `mobile/lib` now has zero `feature/` slice; `moodiary_diary`/`moodiary_sync`/`moodiary_lock`/`moodiary_share` extracted, `moodiary_editor_host` merged into `moodiary_editor`, `user`/`web_view` deleted; the settings hub relocated to `app/settings` and the diary home to `app/home`; `tool/layer_baseline.txt` is empty (0 violations). This doc is kept as the design record; the numbered roadmap in §6 is history.
+
 **Goal:** `mobile/lib` retains *no* `feature/` slice. It becomes a composition root plus the two app-owned presentation surfaces the vision explicitly permits (导航布局 + 设置页). Every self-contained capability sinks into a package; both apps assemble the *same* packages into their own shells.
 
 **Taxonomy rule (settled):** **one feature = one self-contained package** — engine / logic / UI all inside. A package may hold multiple or adaptive UIs; we do **not** split a package merely because desktop rebuilds its UI (YAGNI — desktop is still a skeleton). We only keep the headless engine code **widget-free inside** its package (`src/data`+`src/application`), so a future engine-only split for desktop stays a trivial `git mv`.
