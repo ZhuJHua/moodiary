@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary/feature/diary/presentation/widget/category_color.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 
 void main() {
   test('uses explicit color when set', () {
-    expect(categoryColorOf(colorValue: 0xFF42A5F5, id: 'x'), const Color(0xFF42A5F5));
+    expect(
+      categoryColorOf(colorValue: 0xFF42A5F5, id: 'x'),
+      const Color(0xFF42A5F5),
+    );
   });
 
   test('derives a stable palette color when unset', () {

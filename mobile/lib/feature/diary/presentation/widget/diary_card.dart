@@ -5,21 +5,15 @@ import 'package:intl/intl.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary/feature/diary/presentation/widget/category_color.dart';
-import 'package:moodiary_router/moodiary_router.dart';
 
 const double _kAccentWidth = 4.0;
-
-void _openDetail(BuildContext context, Diary diary) {
-  DiaryRoute(type: DiaryType.fromValue(diary.type).routeQuery, diaryId: diary.id)
-      .push(context);
-}
 
 Widget _cardShell({
   required BuildContext context,
   required Diary diary,
   required Category? category,
   required bool showCategoryLabel,
+  required VoidCallback? onTap,
   required Widget child,
 }) {
   final scheme = context.colorScheme;
@@ -31,7 +25,7 @@ Widget _cardShell({
     margin: EdgeInsets.zero,
     clipBehavior: Clip.antiAlias,
     child: InkWell(
-      onTap: () => _openDetail(context, diary),
+      onTap: onTap,
       child: accent == null
           ? child
           : Stack(
@@ -145,12 +139,14 @@ class DiaryListTile extends StatelessWidget {
   final Diary diary;
   final Category? category;
   final bool showCategoryLabel;
+  final VoidCallback? onTap;
 
   const DiaryListTile({
     super.key,
     required this.diary,
     this.category,
     this.showCategoryLabel = true,
+    this.onTap,
   });
 
   @override
@@ -161,6 +157,7 @@ class DiaryListTile extends StatelessWidget {
       diary: diary,
       category: category,
       showCategoryLabel: showCategoryLabel,
+      onTap: onTap,
       child: SizedBox(
         height: 132.0,
         child: Row(
@@ -208,12 +205,14 @@ class DiaryGridTile extends StatelessWidget {
   final Diary diary;
   final Category? category;
   final bool showCategoryLabel;
+  final VoidCallback? onTap;
 
   const DiaryGridTile({
     super.key,
     required this.diary,
     this.category,
     this.showCategoryLabel = true,
+    this.onTap,
   });
 
   @override
@@ -224,6 +223,7 @@ class DiaryGridTile extends StatelessWidget {
       diary: diary,
       category: category,
       showCategoryLabel: showCategoryLabel,
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -264,12 +264,14 @@ class CalendarDiaryCard extends StatelessWidget {
   final Diary diary;
   final Category? category;
   final bool showCategoryLabel;
+  final VoidCallback? onTap;
 
   const CalendarDiaryCard({
     super.key,
     required this.diary,
     this.category,
     this.showCategoryLabel = true,
+    this.onTap,
   });
 
   @override
@@ -281,6 +283,7 @@ class CalendarDiaryCard extends StatelessWidget {
       diary: diary,
       category: category,
       showCategoryLabel: showCategoryLabel,
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(

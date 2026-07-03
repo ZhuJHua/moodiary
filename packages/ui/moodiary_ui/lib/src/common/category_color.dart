@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// 分类色板 —— 无显式配色时按 id 稳定取色。业务无关，供列表卡片 / 分类管理复用。
 const List<Color> kCategoryPalette = [
   Color(0xFFEF5350),
   Color(0xFFEC407A),

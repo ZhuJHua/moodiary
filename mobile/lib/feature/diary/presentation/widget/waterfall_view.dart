@@ -4,7 +4,7 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary/feature/diary/application/category_controller.dart';
 import 'package:moodiary/feature/diary/application/diary_controller.dart';
 import 'package:moodiary/feature/diary/presentation/widget/diary_card.dart';
-import 'package:moodiary/feature/diary/presentation/widget/sync_pending_indicator.dart';
+import 'package:moodiary/feature/diary/presentation/widget/diary_nav.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:waterfall_flow/waterfall_flow.dart';
@@ -60,6 +60,7 @@ class DiaryWaterFallView extends ConsumerWidget {
                           diary: diary,
                           category: category,
                           showCategoryLabel: categoryId == null,
+                          onTap: () => openDiaryDetail(context, diary),
                         );
                       },
                     );

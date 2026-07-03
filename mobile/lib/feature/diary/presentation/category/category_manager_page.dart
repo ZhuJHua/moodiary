@@ -5,7 +5,6 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary/feature/diary/application/category_controller.dart';
-import 'package:moodiary/feature/diary/presentation/widget/category_color.dart';
 
 class CategoryManagerPage extends ConsumerWidget {
   const CategoryManagerPage({super.key});

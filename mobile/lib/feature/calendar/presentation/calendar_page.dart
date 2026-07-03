@@ -9,6 +9,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary/feature/calendar/application/calendar_controller.dart';
 import 'package:moodiary/feature/diary/application/category_controller.dart';
 import 'package:moodiary/feature/diary/presentation/widget/diary_card.dart';
+import 'package:moodiary/feature/diary/presentation/widget/diary_nav.dart';
 
 /// 日记页「全部」分段下的日历视图（与列表 / 网格并列），非独立页面。
 class CalendarView extends ConsumerStatefulWidget {
@@ -77,7 +78,11 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
                       final category = ref.watch(
                         categoryByIdProvider(d.categoryId),
                       );
-                      return CalendarDiaryCard(diary: d, category: category);
+                      return CalendarDiaryCard(
+                        diary: d,
+                        category: category,
+                        onTap: () => openDiaryDetail(context, d),
+                      );
                     },
                   ),
                 ),

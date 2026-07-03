@@ -5,7 +5,6 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary/feature/calendar/presentation/calendar_page.dart';
 import 'package:moodiary/feature/diary/application/category_controller.dart';
-import 'package:moodiary/feature/diary/presentation/widget/sync_pending_indicator.dart';
 import 'package:moodiary/feature/sync/application/sync_controller.dart';
 import 'package:moodiary/feature/sync/presentation/widget/sync_status_sheet.dart';
 import 'package:moodiary/feature/diary/presentation/widget/listview.dart';
