@@ -44,8 +44,13 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   Timer? _autoSaveTimer;
 
-  /// 自动保存状态（驱动编辑器右下角气泡）：idle（不显示）/ saving / saved / failed。
+  /// 自动保存状态（驱动 AppBar 胶囊里的状态段）：idle / saving / saved / failed。
   String _saveStatus = 'idle';
+
+  /// 写作计时（秒）：编辑器打开即开始。用 ValueNotifier 让胶囊里的时间段每秒单独刷新，
+  /// 不触发整页（含 webview）重建。
+  final ValueNotifier<int> _elapsed = ValueNotifier<int>(0);
+  Timer? _writingTimer;
 
   /// 缓存 notifier：Riverpod 3.x 禁止在 dispose 里碰 ref。
   late final EditController _notifier;
@@ -83,6 +88,11 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // 从打开编辑器起计时（秒）。
+    _writingTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _elapsed.value++,
+    );
     _notifier = ref.read(_provider.notifier);
     // 既有日记默认只读预览，点击 AppBar 的编辑按钮才进编辑；仅新建 / 显式编辑入口
     // （startInEdit）直接进编辑态。旧格式（markdown / richText）不可编辑，恒为只读。
@@ -109,6 +119,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     WidgetsBinding.instance.removeObserver(this);
     _activeHeading.dispose();
     _autoSaveTimer?.cancel();
+    _writingTimer?.cancel();
+    _elapsed.dispose();
     final guardSub = _guardSub;
     final guardId = _guardId;
     // 离开时 flush 自动保存 + 排空重索引队列（fire-and-forget，残留靠启动恢复兜底）。
@@ -304,22 +316,28 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         : _headingsOf(diary.content);
     return Scaffold(
       key: _scaffoldKey,
-      // 返回键 +（有标题时）右侧目录按钮。
+      // 返回键 + 居中写作胶囊（编辑态）+ 右侧动作。
       appBar: AppBar(
+        centerTitle: true,
+        title: (_mode == _Mode.edit && diary != null)
+            ? _writingPill(diary)
+            : null,
         actions: [
-          // 既有的可编辑日记（tiptap）才提供「预览 ↔ 编辑」切换；新建日记（diaryId 为空）
-          // 恒为编辑态，不显示切换。旧格式不可编辑，也不显示。
+          // 编辑态：✓ 保存并退回只读预览（自动保存仍在，这个是显式入口）。
+          if (diary != null && _mode == _Mode.edit)
+            IconButton(
+              tooltip: '保存',
+              icon: const Icon(Icons.check_rounded),
+              onPressed: _saveAndExit,
+            ),
+          // 只读态 + 可编辑（tiptap）：✏️ 进入编辑。旧格式不可编辑，不显示。
           if (diary != null &&
-              widget.diaryId != null &&
+              _mode == _Mode.read &&
               DiaryType.fromValue(diary.type).isEditable)
             IconButton(
-              tooltip: _mode == _Mode.edit ? '完成' : '编辑',
-              icon: Icon(
-                _mode == _Mode.edit
-                    ? Icons.check_rounded
-                    : Icons.edit_outlined,
-              ),
-              onPressed: _toggleMode,
+              tooltip: '编辑',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: _enterEdit,
             ),
           // 分享仅在只读预览态显示（编辑态不出现）。
           if (diary != null && _mode == _Mode.read)
@@ -354,19 +372,133 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     );
   }
 
-  /// 预览 ↔ 编辑切换（复用同一编辑器实例，见 [_buildBody] 的稳定 key）。
-  void _toggleMode() {
-    if (_mode == _Mode.edit) {
-      // 退出编辑：flush 未决自动保存，回到只读预览。
-      if (_dirty) _flushAutoSave();
-      setState(() => _mode = _Mode.read);
-    } else {
-      setState(() => _mode = _Mode.edit);
-      // 进入编辑后聚焦编辑器，弹出软键盘。
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _editorController.focus(),
-      );
+  static String _fmtDuration(int totalSec) {
+    final h = totalSec ~/ 3600;
+    final m = (totalSec % 3600) ~/ 60;
+    final s = totalSec % 60;
+    return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  /// AppBar 居中小胶囊：字数（可关）· 写作时长（可关）· 自动保存状态（常显不可关）。
+  /// 前两项由日记偏好 [MoodiaryKVs.showWordCount] / [MoodiaryKVs.showWritingTime] 控制。
+  Widget _writingPill(Diary diary) {
+    final scheme = context.colorScheme;
+    final showWords = MoodiaryKVs.showWordCount.get() ?? true;
+    final showTime = MoodiaryKVs.showWritingTime.get() ?? true;
+    final segs = <Widget>[
+      if (showWords)
+        _pillSeg(
+          Icons.notes_rounded,
+          '${diary.contentText.runes.length} 字',
+          scheme.onSurfaceVariant,
+        ),
+      if (showTime)
+        ValueListenableBuilder<int>(
+          valueListenable: _elapsed,
+          builder: (_, sec, _) => _pillSeg(
+            Icons.timer_outlined,
+            _fmtDuration(sec),
+            scheme.onSurfaceVariant,
+          ),
+        ),
+      _saveSeg(scheme),
+    ];
+    final children = <Widget>[];
+    for (var i = 0; i < segs.length; i++) {
+      if (i > 0) {
+        children.add(
+          Text(
+            ' · ',
+            style: TextStyle(color: scheme.outlineVariant, fontSize: 12),
+          ),
+        );
+      }
+      children.add(segs[i]);
     }
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: children),
+      ),
+    );
+  }
+
+  Widget _pillSeg(IconData icon, String text, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 3),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 12,
+            color: color,
+            // 等宽数字：秒数跳动 / 字数增减时宽度不抖。
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _saveSeg(ColorScheme scheme) {
+    switch (_saveStatus) {
+      case 'saving':
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 11,
+              height: 11,
+              child: CircularProgressIndicator(strokeWidth: 1.6),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '保存中',
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+            ),
+          ],
+        );
+      case 'saved':
+        return _pillSeg(Icons.check_circle_rounded, '已保存', scheme.primary);
+      case 'failed':
+        return _pillSeg(Icons.error_rounded, '未保存', scheme.error);
+      default:
+        return _pillSeg(
+          Icons.cloud_done_rounded,
+          '自动保存',
+          scheme.onSurfaceVariant,
+        );
+    }
+  }
+
+  /// 进入编辑并聚焦编辑器（弹软键盘）。复用同一编辑器实例，见 [_buildBody] 的稳定 key。
+  void _enterEdit() {
+    setState(() => _mode = _Mode.edit);
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _editorController.focus(),
+    );
+  }
+
+  /// 保存并退回只读预览：有未存改动则先 flush；保存失败留在编辑态便于重试，成功/无改动则切 read。
+  Future<void> _saveAndExit() async {
+    if (_dirty) {
+      await _flushAutoSave();
+      if (!mounted) return;
+      if (_saveStatus != 'saved') {
+        toast.error(message: '保存失败');
+        return;
+      }
+      toast.success(message: '已保存');
+    }
+    if (!mounted) return;
+    setState(() => _mode = _Mode.read);
   }
 
   /// [EditorBody] 务必保持 Column 同一位置且 key 稳定，否则切换模式时编辑器实例
