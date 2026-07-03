@@ -1,13 +1,13 @@
 import 'package:go_router/go_router.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
-import 'package:moodiary/feature/setting/presentation/about_page.dart';
-import 'package:moodiary/feature/setting/presentation/agreement_page.dart';
-import 'package:moodiary/feature/setting/presentation/diary_setting_page.dart';
-import 'package:moodiary/feature/setting/presentation/font_page.dart';
-import 'package:moodiary/feature/setting/presentation/privacy_page.dart';
-import 'package:moodiary/feature/setting/presentation/services_page.dart';
-import 'package:moodiary/feature/setting/presentation/sponsor_page.dart';
+import 'package:moodiary/app/settings/presentation/about_page.dart';
+import 'package:moodiary/app/settings/presentation/agreement_page.dart';
+import 'package:moodiary/app/settings/presentation/diary_setting_page.dart';
+import 'package:moodiary/app/settings/presentation/font_page.dart';
+import 'package:moodiary/app/settings/presentation/privacy_page.dart';
+import 'package:moodiary/app/settings/presentation/services_page.dart';
+import 'package:moodiary/app/settings/presentation/sponsor_page.dart';
 
 List<RouteBase> settingRoutes() => [
   GoRoute(

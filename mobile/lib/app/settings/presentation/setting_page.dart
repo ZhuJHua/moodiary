@@ -6,14 +6,14 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
-import 'package:moodiary/feature/setting/presentation/widget/cache_usage_tile.dart';
-import 'package:moodiary/feature/setting/presentation/widget/data_repair_tile.dart';
-import 'package:moodiary/feature/setting/presentation/widget/rebuild_index_tile.dart';
-import 'package:moodiary/feature/setting/presentation/widget/reset_data_tile.dart';
-import 'package:moodiary/feature/setting/presentation/widget/color_sheet.dart';
-import 'package:moodiary/feature/setting/presentation/widget/dashboard_section.dart';
-import 'package:moodiary/feature/setting/presentation/widget/language_dialog.dart';
-import 'package:moodiary/feature/setting/presentation/widget/theme_mode_dialog.dart';
+import 'package:moodiary/app/settings/presentation/widget/cache_usage_tile.dart';
+import 'package:moodiary/app/settings/presentation/widget/data_repair_tile.dart';
+import 'package:moodiary/app/settings/presentation/widget/rebuild_index_tile.dart';
+import 'package:moodiary/app/settings/presentation/widget/reset_data_tile.dart';
+import 'package:moodiary/app/settings/presentation/widget/color_sheet.dart';
+import 'package:moodiary/app/settings/presentation/widget/dashboard_section.dart';
+import 'package:moodiary/app/settings/presentation/widget/language_dialog.dart';
+import 'package:moodiary/app/settings/presentation/widget/theme_mode_dialog.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
 /// 一级菜单项跳转：全屏 `push` 落 root navigator。

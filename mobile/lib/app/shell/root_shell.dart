@@ -5,7 +5,7 @@ import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantSessionListPage;
 import 'package:moodiary/app/home/diary_home_page.dart' show DiaryHomePage;
 import 'package:moodiary_media/moodiary_media.dart';
-import 'package:moodiary/feature/setting/presentation/setting_page.dart'
+import 'package:moodiary/app/settings/presentation/setting_page.dart'
     show SettingListPageMobile;
 
 List<NavigationDestination> _navDestinations(BuildContext context) {
