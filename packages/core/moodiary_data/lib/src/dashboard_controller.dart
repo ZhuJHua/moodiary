@@ -9,6 +9,17 @@ part 'dashboard_controller.g.dart';
 class DashboardController extends _$DashboardController {
   @override
   Future<DashboardStats> build() async {
+    // 日记 / 分类变更即失效重算，保持看板实时（新增/删除日记后数量、字数等随之更新）。
+    // 本 provider autoDispose，仅设置页可见时存活，故重算开销可控。
+    final diarySub = DiaryRepository.get().diaryEvents.listen(
+      (_) => ref.invalidateSelf(),
+    );
+    final catSub = CategoryRepository.get().categoryEvents.listen(
+      (_) => ref.invalidateSelf(),
+    );
+    ref.onDispose(diarySub.cancel);
+    ref.onDispose(catSub.cancel);
+
     final diaries = await DiaryRepository.get().getAllDiaries();
     final cats =
         (await CategoryRepository.get().getAllCategoriesForSync().run())
