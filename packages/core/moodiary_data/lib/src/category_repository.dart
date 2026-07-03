@@ -46,28 +46,41 @@ class CategoryRepository {
   }
 
   TaskEither<DatabaseException, void> insertACategory(Category category) {
-    return TaskEither.tryCatch(() async {
-      await _isar.writeAsync((isar) {
-        isar.categorys.put(category);
-      });
-      _events.add(CategoryUpserted(category));
-    }, (e, _) => DatabaseException('Failed to insert category: $e'));
+    return TaskEither.tryCatch(
+      () => _putCategory(category),
+      (e, _) => DatabaseException('Failed to insert category: $e'),
+    );
   }
 
   TaskEither<DatabaseException, bool> deleteACategory(String id) {
-    return TaskEither.tryCatch(() async {
-      final deleted = await _isar.writeAsync((isar) {
-        final hasDiary = !isar.diarys.where().categoryIdEqualTo(id).isEmpty();
-        if (hasDiary) return false;
-        final existing = isar.categorys.get(id);
-        if (existing == null || existing.deleted) return false;
-        isar.categorys.put(
-          existing.copyWith(deleted: true, lastModified: DateTime.timestamp()),
-        );
-        return true;
-      });
-      if (deleted) _events.add(CategoryDeleted(id));
-      return deleted;
-    }, (e, _) => DatabaseException('Failed to delete category: $e'));
+    return TaskEither.tryCatch(
+      () => _softDeleteCategory(id),
+      (e, _) => DatabaseException('Failed to delete category: $e'),
+    );
+  }
+
+  // 写操作抽成独立方法（而非直接放进 TaskEither 的闭包里）：`_isar.writeAsync` 的回调会被
+  // 送进后台 isolate 执行（Isar.run），若回调嵌在会捕获 `this` 的闭包里，就会连带捕获不可
+  // 发送的 `_isar`，抛「object is unsendable」。独立方法里的回调只捕获数据参数（可发送）。
+  Future<void> _putCategory(Category category) async {
+    await _isar.writeAsync((isar) {
+      isar.categorys.put(category);
+    });
+    _events.add(CategoryUpserted(category));
+  }
+
+  Future<bool> _softDeleteCategory(String id) async {
+    final deleted = await _isar.writeAsync((isar) {
+      final hasDiary = !isar.diarys.where().categoryIdEqualTo(id).isEmpty();
+      if (hasDiary) return false;
+      final existing = isar.categorys.get(id);
+      if (existing == null || existing.deleted) return false;
+      isar.categorys.put(
+        existing.copyWith(deleted: true, lastModified: DateTime.timestamp()),
+      );
+      return true;
+    });
+    if (deleted) _events.add(CategoryDeleted(id));
+    return deleted;
   }
 }
