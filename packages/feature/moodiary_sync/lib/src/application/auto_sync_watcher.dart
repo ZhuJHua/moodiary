@@ -4,6 +4,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_registry.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 
@@ -53,7 +54,10 @@ class AutoSyncWatcher {
       switch (event) {
         case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
           // 本地有改动 → 标记卡片「待同步」（软删 / tombstone 不标，将离开列表）。
-          if (!diary.deleted) SyncDirtyTracker.instance.markDirty(diary.id);
+          // 仅在配置了云后端时才追踪：没配同步就没有「待同步」概念，避免误导角标。
+          if (!diary.deleted && configuredCloudBackendIds().isNotEmpty) {
+            SyncDirtyTracker.instance.markDirty(diary.id);
+          }
           // 打开中的日记不触发同步（编辑期不上传半成品）。这是廉价前置闸门；权威跳过
           // 在引擎 push 快照里（poll / syncAll 绕过本闸门）。
           if (!OpenDiaryRegistry.instance.contains(diary.id)) _onLocalChange();
