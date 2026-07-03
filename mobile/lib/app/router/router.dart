@@ -5,8 +5,7 @@ import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 
 import 'package:moodiary/app/shell/root_shell.dart' show MobileRootShell;
-import 'package:moodiary/feature/diary/diary_routes.dart';
-import 'package:moodiary/feature/diary/presentation/diary_select_page.dart';
+import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary/feature/setting/setting_routes.dart';
 import 'package:moodiary_share/moodiary_share.dart';

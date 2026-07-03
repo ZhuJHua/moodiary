@@ -7,8 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary/feature/diary/application/search_controller.dart';
-import 'package:moodiary/feature/diary/presentation/search/search_result_card.dart';
+import 'package:moodiary_diary/src/application/search_controller.dart';
+import 'package:moodiary_diary/src/presentation/search/search_result_card.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 
 /// 日记搜索页：AppBar 内嵌搜索框，下方筛选栏（时间 / 分类 / 排序）；空查询时展示搜索历史。

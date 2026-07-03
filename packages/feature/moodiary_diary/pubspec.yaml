@@ -1,0 +1,46 @@
+name: moodiary_diary
+description: "Moodiary 日记：详情/编辑页、搜索/分类/统计/地图/回收站/管理、列表/瀑布/日历视图、日记卡片与选择器（两端可复用的 feature 包）。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.12.0"
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_core: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_data: 0.0.1
+  moodiary_ui: 0.0.1
+  moodiary_utils: 0.0.1
+  moodiary_l10n: 0.0.1
+  moodiary_router: 0.0.1
+  moodiary_rust: 0.0.1
+  moodiary_editor: 0.0.1
+
+  flutter_riverpod: 3.3.2
+  riverpod_annotation: 4.0.3
+  freezed_annotation: 3.1.0
+  go_router: 17.3.0
+  intl: 0.20.2
+  calendar_date_picker2: 3.0.0
+  collection: 1.19.1
+  dartx: 1.2.0
+  font_awesome_flutter: 11.0.0
+  flutter_map: 8.3.1
+  latlong2: 0.9.1
+  substring_highlight: 1.0.33
+  waterfall_flow: 3.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  build_runner: 2.15.0
+  freezed: 3.2.6-dev.1
+  riverpod_generator: 4.0.4

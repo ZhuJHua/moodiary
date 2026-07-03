@@ -3,8 +3,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:unicons/unicons.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantSessionListPage;
-import 'package:moodiary/feature/diary/presentation/diary_page.dart'
-    show DiaryListPageMobile;
+import 'package:moodiary/app/home/diary_home_page.dart' show DiaryHomePage;
 import 'package:moodiary_media/moodiary_media.dart';
 import 'package:moodiary/feature/setting/presentation/setting_page.dart'
     show SettingListPageMobile;
@@ -46,7 +45,7 @@ class _MobileRootShellState extends State<MobileRootShell> {
   int _index = 0;
 
   static const _pages = [
-    DiaryListPageMobile(),
+    DiaryHomePage(),
     MediaPage(),
     AssistantSessionListPage(),
     SettingListPageMobile(),

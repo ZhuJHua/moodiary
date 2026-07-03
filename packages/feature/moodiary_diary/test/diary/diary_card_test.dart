@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary/feature/diary/presentation/widget/diary_card.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_card.dart';
 
 // `Diary.empty()`/`Category.create()` call `uuidV7()` (Rust FFI), which
 // throws in host unit tests — build literals directly instead (pattern from

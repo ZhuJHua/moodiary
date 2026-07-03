@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary/feature/diary/presentation/category/category_manager_page.dart';
+import 'package:moodiary_diary/src/presentation/category/category_manager_page.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 

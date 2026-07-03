@@ -2,14 +2,14 @@ import 'package:go_router/go_router.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
-import 'package:moodiary/feature/diary/presentation/analyse/analyse_page.dart';
-import 'package:moodiary/feature/diary/presentation/category/category_manager_page.dart';
-import 'package:moodiary/feature/diary/presentation/detail/diary_page.dart'
+import 'package:moodiary_diary/src/presentation/analyse/analyse_page.dart';
+import 'package:moodiary_diary/src/presentation/category/category_manager_page.dart';
+import 'package:moodiary_diary/src/presentation/detail/diary_page.dart'
     show DiaryPage;
-import 'package:moodiary/feature/diary/presentation/manager/diary_manager_page.dart';
-import 'package:moodiary/feature/diary/presentation/map/map_page.dart';
-import 'package:moodiary/feature/diary/presentation/recycle/recycle_page.dart';
-import 'package:moodiary/feature/diary/presentation/search/search_page.dart';
+import 'package:moodiary_diary/src/presentation/manager/diary_manager_page.dart';
+import 'package:moodiary_diary/src/presentation/map/map_page.dart';
+import 'package:moodiary_diary/src/presentation/recycle/recycle_page.dart';
+import 'package:moodiary_diary/src/presentation/search/search_page.dart';
 
 List<RouteBase> diaryRoutes() => [
   GoRoute(

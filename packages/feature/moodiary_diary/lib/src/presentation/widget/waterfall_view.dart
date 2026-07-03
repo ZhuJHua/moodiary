@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary/feature/diary/presentation/widget/diary_card.dart';
-import 'package:moodiary/feature/diary/presentation/widget/diary_nav.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_card.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:waterfall_flow/waterfall_flow.dart';
 
-class DiaryListView extends ConsumerWidget {
+class DiaryWaterFallView extends ConsumerWidget {
   final String? categoryId;
 
-  const DiaryListView({super.key, required this.categoryId});
+  const DiaryWaterFallView({super.key, this.categoryId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,13 +35,19 @@ class DiaryListView extends ConsumerWidget {
               body = MoodiaryRefresh(
                 onLoading: () => ref.read(provider.notifier).loadMore(),
                 onRefresh: () => ref.read(provider.notifier).refresh(),
-                child: ListView.separated(
+                child: WaterfallFlow.builder(
                   padding: EdgeInsets.fromLTRB(
                     12,
                     12,
                     12,
                     12 + MediaQuery.paddingOf(context).bottom,
                   ),
+                  gridDelegate:
+                      const SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 250,
+                        mainAxisSpacing: 8.0,
+                        crossAxisSpacing: 8.0,
+                      ),
                   itemBuilder: (context, index) {
                     final diary = diaries[index];
                     final tile = Consumer(
@@ -48,7 +55,7 @@ class DiaryListView extends ConsumerWidget {
                         final category = ref.watch(
                           categoryByIdProvider(diary.categoryId),
                         );
-                        return DiaryListTile(
+                        return DiaryGridTile(
                           diary: diary,
                           category: category,
                           showCategoryLabel: categoryId == null,
@@ -72,7 +79,6 @@ class DiaryListView extends ConsumerWidget {
                       ],
                     );
                   },
-                  separatorBuilder: (_, _) => const SizedBox(height: 8.0),
                   itemCount: diaries.length,
                 ),
               );
