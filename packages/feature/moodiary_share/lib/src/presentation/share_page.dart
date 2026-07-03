@@ -13,6 +13,8 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
+import 'templates/share_card_template.dart';
+
 /// 分享页只需一次性快照（导出用），直接从仓库取，不依赖 diary 特性的流式 provider。
 final _shareDiaryProvider = FutureProvider.family<Diary?, String?>((
   ref,
@@ -22,6 +24,8 @@ final _shareDiaryProvider = FutureProvider.family<Diary?, String?>((
   return DiaryRepository.get().getDiaryByBusinessId(id);
 });
 
+/// 分享页：选一个卡片模版 → 实时预览 → 复制文本 / 导出图片。
+/// 模版见 [kShareTemplates]；新增风格只需往那个列表里加一项。
 class SharePage extends ConsumerStatefulWidget {
   final String? diaryId;
 
@@ -34,6 +38,7 @@ class SharePage extends ConsumerStatefulWidget {
 class _SharePageState extends ConsumerState<SharePage> {
   final _boundaryKey = GlobalKey();
   bool _exporting = false;
+  int _selected = 0;
 
   Future<void> _copy(Diary d) async {
     final text = [
@@ -46,7 +51,7 @@ class _SharePageState extends ConsumerState<SharePage> {
     toast.success(message: '已复制到剪贴板');
   }
 
-  Future<void> _exportImage(Diary d) async {
+  Future<void> _exportImage() async {
     if (_exporting) return;
     setState(() => _exporting = true);
     try {
@@ -90,100 +95,87 @@ class _SharePageState extends ConsumerState<SharePage> {
             return const Center(child: Text('没有可分享的日记'));
           }
           return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: RepaintBoundary(
-                        key: _boundaryKey,
-                        child: _Card(diary: diary),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () => _copy(diary),
-                          icon: const Icon(Icons.copy),
-                          label: const Text('复制文本'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton.tonalIcon(
-                          onPressed:
-                              _exporting ? null : () => _exportImage(diary),
-                          icon: _exporting
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.image_outlined),
-                          label: const Text('导出图片'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            child: Column(
+              children: [
+                Expanded(child: _preview(diary)),
+                _templatePicker(),
+                _actions(diary),
+              ],
             ),
           );
         },
       ),
     );
   }
-}
 
-class _Card extends StatelessWidget {
-  final Diary diary;
-  const _Card({required this.diary});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Material(
-      color: theme.colorScheme.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              diary.title.isEmpty ? '(无标题)' : diary.title,
-              style: theme.textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              DateFormat.yMMMMd().add_Hm().format(diary.time),
-              style: theme.textTheme.labelSmall,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              diary.contentText,
-              style: theme.textTheme.bodyLarge?.copyWith(height: 1.6),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                'Moodiary · 心情指数 ${(diary.mood * 100).toStringAsFixed(0)}%',
-                style: theme.textTheme.labelSmall,
-              ),
-            ),
-          ],
+  Widget _preview(Diary diary) {
+    return Container(
+      width: double.infinity,
+      color: context.colorScheme.surfaceContainerHighest,
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: RepaintBoundary(
+            key: _boundaryKey,
+            child: kShareTemplates[_selected].builder(diary),
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _templatePicker() {
+    return SizedBox(
+      height: 60,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        itemCount: kShareTemplates.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final t = kShareTemplates[i];
+          return ChoiceChip(
+            label: Text(t.name),
+            selected: _selected == i,
+            onSelected: (_) => setState(() => _selected = i),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _actions(Diary diary) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        4,
+        16,
+        12 + MediaQuery.paddingOf(context).bottom,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: FilledButton.tonalIcon(
+              onPressed: () => _copy(diary),
+              icon: const Icon(Icons.copy),
+              label: const Text('复制文本'),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: _exporting ? null : _exportImage,
+              icon: _exporting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.image_outlined),
+              label: const Text('导出图片'),
+            ),
+          ),
+        ],
       ),
     );
   }

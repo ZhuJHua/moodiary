@@ -84,11 +84,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _notifier = ref.read(_provider.notifier);
-    // 可编辑类型（tiptap）直接进编辑态——无独立「保存」，编辑即默认态；旧格式
-    // （markdown / richText）只读，仍进 read。
-    _mode = (widget.startInEdit || widget.initialType.isEditable)
-        ? _Mode.edit
-        : _Mode.read;
+    // 既有日记默认只读预览，点击 AppBar 的编辑按钮才进编辑；仅新建 / 显式编辑入口
+    // （startInEdit）直接进编辑态。旧格式（markdown / richText）不可编辑，恒为只读。
+    _mode = widget.startInEdit ? _Mode.edit : _Mode.read;
     // 登记「打开中」，同步层据此跳过本篇（编辑期不上传半成品）。新建打开时尚无 id，
     // 待空模板解析出稳定 id 再登记。
     final id = widget.diaryId;
@@ -309,7 +307,22 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       // 返回键 +（有标题时）右侧目录按钮。
       appBar: AppBar(
         actions: [
-          if (diary != null)
+          // 既有的可编辑日记（tiptap）才提供「预览 ↔ 编辑」切换；新建日记（diaryId 为空）
+          // 恒为编辑态，不显示切换。旧格式不可编辑，也不显示。
+          if (diary != null &&
+              widget.diaryId != null &&
+              DiaryType.fromValue(diary.type).isEditable)
+            IconButton(
+              tooltip: _mode == _Mode.edit ? '完成' : '编辑',
+              icon: Icon(
+                _mode == _Mode.edit
+                    ? Icons.check_rounded
+                    : Icons.edit_outlined,
+              ),
+              onPressed: _toggleMode,
+            ),
+          // 分享仅在只读预览态显示（编辑态不出现）。
+          if (diary != null && _mode == _Mode.read)
             IconButton(
               tooltip: '分享',
               icon: const Icon(Icons.ios_share_rounded),
@@ -339,6 +352,21 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         data: (diary) => SafeArea(child: _buildBody(diary)),
       ),
     );
+  }
+
+  /// 预览 ↔ 编辑切换（复用同一编辑器实例，见 [_buildBody] 的稳定 key）。
+  void _toggleMode() {
+    if (_mode == _Mode.edit) {
+      // 退出编辑：flush 未决自动保存，回到只读预览。
+      if (_dirty) _flushAutoSave();
+      setState(() => _mode = _Mode.read);
+    } else {
+      setState(() => _mode = _Mode.edit);
+      // 进入编辑后聚焦编辑器，弹出软键盘。
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _editorController.focus(),
+      );
+    }
   }
 
   /// [EditorBody] 务必保持 Column 同一位置且 key 稳定，否则切换模式时编辑器实例
