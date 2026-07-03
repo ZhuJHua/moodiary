@@ -10,7 +10,7 @@ import 'package:moodiary/feature/sync/presentation/widget/sync_status_sheet.dart
 import 'package:moodiary/feature/diary/presentation/widget/listview.dart';
 import 'package:moodiary/feature/diary/presentation/widget/view_mode_sheet.dart';
 import 'package:moodiary/feature/diary/presentation/widget/waterfall_view.dart';
-import 'package:moodiary_editor_host/moodiary_editor_host.dart';
+import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
