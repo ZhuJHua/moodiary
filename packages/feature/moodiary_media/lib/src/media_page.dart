@@ -6,9 +6,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary/feature/media/application/media_controller.dart';
-import 'package:moodiary/feature/media/presentation/widget/media_image_viewer.dart';
-import 'package:moodiary/feature/media/presentation/widget/media_video_viewer.dart';
+import 'media_controller.dart';
+import 'media_image_viewer.dart';
+import 'media_video_viewer.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 
 /// 媒体库页：按类型（图片 / 音频 / 视频）分类、按日期倒序分段浏览，顶部分段控件切换。
