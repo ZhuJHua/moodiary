@@ -1,0 +1,410 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_sync/src/data/model/manifest.dart';
+import 'package:moodiary_sync/src/data/model/sync_provider.dart';
+import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_sync/src/data/sync_stores.dart';
+
+/// 同步引擎单测脚手架：把引擎对 KV / 后端 / 本地存储 / cipher 的依赖全部替换成
+/// 内存假实现，不触碰 Isar / 文件系统 / Rust FFI / 网络，纯确定性运行。
+
+// ───────────────────────── KV ─────────────────────────
+
+/// 内存 KV，实现 [IKVStorage]。
+final class MemoryKVStorage extends IKVStorage {
+  final Map<String, Object?> data = {};
+
+  @override
+  Future<void> init() async {}
+
+  @override
+  T? get<T extends Object>(String key) => data[key] as T?;
+
+  @override
+  Future<void> set<T extends Object>(String key, T value) async {
+    data[key] = value;
+    await super.set(key, value);
+  }
+
+  @override
+  Future<void> remove(String key) async {
+    data.remove(key);
+    await super.remove(key);
+  }
+
+  @override
+  Future<void> clear() async => data.clear();
+}
+
+/// 内存 SecureKV，实现 [ISecureKVStorage]。
+final class MemorySecureKVStorage implements ISecureKVStorage {
+  final Map<String, String> data = {};
+
+  @override
+  Future<void> init() async {}
+
+  @override
+  Future<String?> get(String key) async => data[key];
+
+  @override
+  Future<void> set(String key, String value) async => data[key] = value;
+
+  @override
+  Future<void> remove(String key) async => data.remove(key);
+
+  @override
+  Future<void> clear() async => data.clear();
+}
+
+// ─────────────────────── remote backend ───────────────────────
+
+/// 内存远端后端，实现 [IRemoteSyncBackend]。支持故障注入（[beforeOp]）与操作记录。
+final class FakeRemoteBackend implements IRemoteSyncBackend {
+  FakeRemoteBackend({
+    this.backendId = 'webdav',
+    Map<String, Uint8List>? objects,
+  }) : objects = objects ?? {};
+
+  final String backendId;
+
+  /// 远端对象表（key 为相对路径，如 `manifest.json` / `diary/x.json` / `media/...`）。
+  final Map<String, Uint8List> objects;
+
+  /// 所有操作的有序记录：`'<op> <key>'`，供断言上传顺序 / 调用次数。
+  final List<String> ops = [];
+
+  /// 每个操作开始时回调；抛异常即模拟该操作失败。op ∈ read/write/create/delete/stat。
+  void Function(String op, String key)? beforeOp;
+
+  /// 固定的 Last-Modified，仅需非空字符串表示「远端存在」。
+  static const String _mtime = '2026-01-01T00:00:00.000Z';
+
+  @override
+  SyncProviderType get type =>
+      backendId == 's3' ? SyncProviderType.s3 : SyncProviderType.webdav;
+
+  @override
+  String? get persistentBackendId => backendId;
+
+  @override
+  String get displayName => 'Fake($backendId)';
+
+  @override
+  bool get isReady => true;
+
+  @override
+  Future<String?> testConnection() async => null;
+
+  @override
+  Future<Uint8List?> readObject(String key) async {
+    ops.add('read $key');
+    beforeOp?.call('read', key);
+    return objects[key];
+  }
+
+  @override
+  Future<void> writeObject(String key, Uint8List bytes) async {
+    ops.add('write $key');
+    beforeOp?.call('write', key);
+    objects[key] = bytes;
+  }
+
+  @override
+  Future<bool> tryCreateExclusive(String key, Uint8List bytes) async {
+    ops.add('create $key');
+    beforeOp?.call('create', key);
+    if (objects.containsKey(key)) return false;
+    objects[key] = bytes;
+    return true;
+  }
+
+  @override
+  Future<void> deleteObject(String key) async {
+    ops.add('delete $key');
+    beforeOp?.call('delete', key);
+    objects.remove(key);
+  }
+
+  @override
+  Future<String> statObject(String key) async {
+    ops.add('stat $key');
+    beforeOp?.call('stat', key);
+    return objects.containsKey(key) ? _mtime : '';
+  }
+
+  @override
+  Future<SyncReport> pushAll() => throw UnimplementedError();
+  @override
+  Future<SyncReport> pullAll() => throw UnimplementedError();
+  @override
+  Future<SyncReport> syncAll() => throw UnimplementedError();
+
+  // ── 测试辅助 ──
+
+  int opCount(String op, [String? keyContains]) => ops
+      .where((o) => o.startsWith('$op ') &&
+          (keyContains == null || o.contains(keyContains)))
+      .length;
+
+  bool hasObject(String key) => objects.containsKey(key);
+
+  /// 解出远端 manifest（明文）；不存在返回 null。
+  SyncManifest? manifest() {
+    final bytes = objects[SyncKeys.manifestPath];
+    if (bytes == null) return null;
+    return SyncManifest.fromJson(jsonDecode(utf8.decode(bytes)));
+  }
+
+  /// 解出远端某 diary JSON（明文）。
+  Map<String, dynamic>? diaryJson(String id) {
+    final bytes = objects[SyncKeys.diaryObjectPath(id)];
+    if (bytes == null) return null;
+    return jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+  }
+}
+
+// ─────────────────────── local stores ───────────────────────
+
+/// 内存日记仓库，实现 [SyncDiaryStore]。`diaries` 以业务 id 为键。
+final class FakeDiaryStore implements SyncDiaryStore {
+  final Map<String, Diary> diaries = {};
+
+  /// 引擎调用记录，供断言（如确认软删走的是 updateADiary、硬删走 deleteDiariesByIsarIds）。
+  final List<String> calls = [];
+
+  FakeDiaryStore([Iterable<Diary> seed = const []]) {
+    for (final d in seed) {
+      diaries[d.id] = d;
+    }
+  }
+
+  @override
+  Future<List<Diary>> getAllDiaries() async {
+    calls.add('getAll');
+    return diaries.values.toList();
+  }
+
+  @override
+  Future<Diary?> getDiaryByBusinessId(String id) async {
+    calls.add('getById $id');
+    return diaries[id];
+  }
+
+  @override
+  Future<void> insertADiary(Diary diary) async {
+    calls.add('insert ${diary.id}');
+    diaries[diary.id] = diary;
+  }
+
+  @override
+  Future<void> updateADiary(Diary newDiary) async {
+    calls.add('update ${newDiary.id}');
+    diaries[newDiary.id] = newDiary;
+  }
+
+  @override
+  Future<void> deleteDiariesByIsarIds(List<int> isarIds) async {
+    final ids = isarIds.toSet();
+    final removed = diaries.values
+        .where((d) => ids.contains(d.isarId))
+        .map((d) => d.id)
+        .toList();
+    for (final id in removed) {
+      calls.add('hardDelete $id');
+      diaries.remove(id);
+    }
+  }
+}
+
+/// 内存分类仓库，实现 [SyncCategoryStore]。
+final class FakeCategoryStore implements SyncCategoryStore {
+  final Map<String, Category> categories = {};
+
+  /// 写入返回 false 用于模拟仓库写失败。
+  bool insertSucceeds = true;
+
+  FakeCategoryStore([Iterable<Category> seed = const []]) {
+    for (final c in seed) {
+      categories[c.id] = c;
+    }
+  }
+
+  @override
+  Future<List<Category>> getAllCategoriesForSync() async =>
+      categories.values.toList();
+
+  @override
+  Future<Category?> getCategoryById(String id) async => categories[id];
+
+  @override
+  Future<bool> insertACategory(Category category) async {
+    if (!insertSucceeds) return false;
+    categories[category.id] = category;
+    return true;
+  }
+}
+
+/// 内存媒体文件，实现 [SyncMediaFiles]。`files` 以 `<type>/<filename>` 为键。
+final class FakeMediaFiles implements SyncMediaFiles {
+  final Map<String, Uint8List> files = {};
+  final List<String> ops = [];
+
+  /// 删除某文件时回调（在实际删除前），用于断言删除发生的时序。
+  void Function(String type, String filename)? onDelete;
+
+  FakeMediaFiles([Map<String, Uint8List>? seed]) {
+    if (seed != null) files.addAll(seed);
+  }
+
+  String _k(String type, String filename) => '$type/$filename';
+
+  void put(String type, String filename, [List<int>? bytes]) {
+    files[_k(type, filename)] = Uint8List.fromList(bytes ?? utf8.encode(filename));
+  }
+
+  @override
+  Future<bool> exists(String type, String filename) async =>
+      files.containsKey(_k(type, filename));
+
+  @override
+  Future<Uint8List> read(String type, String filename) async {
+    ops.add('read ${_k(type, filename)}');
+    final bytes = files[_k(type, filename)];
+    if (bytes == null) throw StateError('missing media ${_k(type, filename)}');
+    return bytes;
+  }
+
+  @override
+  Future<void> write(String type, String filename, Uint8List bytes) async {
+    ops.add('write ${_k(type, filename)}');
+    files[_k(type, filename)] = bytes;
+  }
+
+  @override
+  Future<void> delete(String type, String filename) async {
+    ops.add('delete ${_k(type, filename)}');
+    onDelete?.call(type, filename);
+    files.remove(_k(type, filename));
+  }
+
+  @override
+  Future<void> cleanUpReplaced(Diary oldDiary, Diary newDiary) async {
+    Future<void> drop(List<String> oldNames, List<String> newNames, String t) async {
+      for (final name in oldNames) {
+        if (!newNames.contains(name)) await delete(t, name);
+      }
+    }
+
+    await drop(oldDiary.imageName, newDiary.imageName, 'image');
+    await drop(oldDiary.audioName, newDiary.audioName, 'audio');
+    await drop(oldDiary.videoName, newDiary.videoName, 'video');
+  }
+}
+
+// ─────────────────────── env setup ───────────────────────
+
+/// 注册内存 KV / SecureKV / SyncLogger 到 get_it，预置 deviceId 避免 RemoteLease
+/// 走 uuidV4()（Rust）。每个测试 setUp 调用，tearDown 调 [tearDownSyncEnv]。
+Future<({MemoryKVStorage kv, MemorySecureKVStorage secure, SyncLogger logger})>
+setUpSyncEnv() async {
+  await getIt.reset();
+  final kv = MemoryKVStorage();
+  final secure = MemorySecureKVStorage();
+  getIt.registerSingleton<IKVStorage>(kv);
+  getIt.registerSingleton<ISecureKVStorage>(secure);
+  // SyncLogger.create() 内部访问 PlatformService 失败会降级为纯内存模式，测试安全。
+  final logger = await SyncLogger.create();
+  getIt.registerSingleton<SyncLogger>(logger);
+  // 预置设备 id：RemoteLease 无此值时会调 uuidV4()（Rust），测试环境不可用。
+  await MoodiaryKVs.syncDeviceId.set('test-device');
+  SyncCancellation.instance.reset();
+  SyncPendingTracker.instance.clear();
+  return (kv: kv, secure: secure, logger: logger);
+}
+
+Future<void> tearDownSyncEnv() async {
+  SyncCancellation.instance.reset();
+  SyncPendingTracker.instance.clear();
+  await getIt.reset();
+}
+
+/// 把后端标记为「已配置」，使 [configuredCloudBackendIds] 把它计入。
+Future<void> configureBackend(SyncProviderType type) async {
+  switch (type) {
+    case SyncProviderType.webdav:
+      await MoodiaryKVs.webDavOption.set(['https://dav.example', 'user', 'pass']);
+    case SyncProviderType.s3:
+      await MoodiaryKVs.s3Option.set([
+        'https://s3.example',
+        '',
+        'ak',
+        'sk',
+        'bucket',
+        '1',
+      ]);
+  }
+}
+
+// ─────────────────────── model builders ───────────────────────
+
+/// 固定基准时刻（毫秒），各测试用偏移构造可比较的 lastModified。
+final DateTime kBaseTime = DateTime.utc(2026, 1, 1);
+
+DateTime atMs(int millisOffset) =>
+    kBaseTime.add(Duration(milliseconds: millisOffset));
+
+/// 构造一条 diary（直接给字面 id，避免 uuidV7() 这一 Rust 调用）。
+Diary buildDiary({
+  required String id,
+  int modifiedMs = 0,
+  bool deleted = false,
+  bool show = true,
+  String? categoryId,
+  String title = '',
+  String content = '',
+  List<String> images = const [],
+  List<String> audios = const [],
+  List<String> videos = const [],
+}) {
+  final ts = atMs(modifiedMs);
+  return Diary(
+    id: id,
+    categoryId: categoryId,
+    title: title,
+    content: content,
+    contentText: content,
+    time: ts,
+    lastModified: ts,
+    show: show,
+    deleted: deleted,
+    mood: 0,
+    weather: const [],
+    imageName: images,
+    audioName: audios,
+    videoName: videos,
+    tags: const [],
+    position: const [],
+    type: 'tiptap',
+  );
+}
+
+Category buildCategory({
+  required String id,
+  int modifiedMs = 0,
+  bool deleted = false,
+  String name = 'cat',
+  String? parentId,
+}) {
+  return Category(
+    id: id,
+    categoryName: name,
+    lastModified: atMs(modifiedMs),
+    parentId: parentId,
+    deleted: deleted,
+  );
+}

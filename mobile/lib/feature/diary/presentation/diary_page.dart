@@ -5,8 +5,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary/feature/diary/presentation/calendar/calendar_page.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary/feature/sync/application/sync_controller.dart';
-import 'package:moodiary/feature/sync/presentation/widget/sync_status_sheet.dart';
+import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:moodiary/feature/diary/presentation/widget/listview.dart';
 import 'package:moodiary/feature/diary/presentation/widget/view_mode_sheet.dart';
 import 'package:moodiary/feature/diary/presentation/widget/waterfall_view.dart';
@@ -115,23 +114,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
             icon: const Icon(Icons.search_rounded),
             onPressed: () => const DiarySearchRoute().push(context),
           ),
-          Consumer(
-            builder: (context, ref, _) {
-              final running =
-                  ref.watch(syncControllerProvider) is SyncRunning;
-              return IconButton(
-                tooltip: running ? '正在同步' : '同步状态',
-                icon: running
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.sync_rounded),
-                onPressed: () => showSyncStatusSheet(context),
-              );
-            },
-          ),
+          const SyncStatusButton(),
           ValueListenableBuilder(
             valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
             builder: (context, homeViewMode, _) {

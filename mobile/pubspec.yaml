@@ -22,6 +22,7 @@ dependencies:
   moodiary_lock: 0.0.1
   moodiary_media: 0.0.1
   moodiary_share: 0.0.1
+  moodiary_sync: 0.0.1
   moodiary_utils: 0.0.1
   moodiary_models: 0.0.1
   moodiary_l10n: 0.0.1
