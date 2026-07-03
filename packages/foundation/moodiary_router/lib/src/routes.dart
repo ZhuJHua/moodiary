@@ -64,26 +64,6 @@ class ShareRoute extends MoodiaryRouteBase {
       ShareRoute(diaryId: state.uri.queryParameters['diary-id']);
 }
 
-class WebViewRoute extends MoodiaryRouteBase {
-  static const String path = '/web_view';
-
-  final String url;
-  final String title;
-
-  const WebViewRoute({required this.url, this.title = ''});
-
-  @override
-  String get location => buildLocation('/web_view', {
-    'url': url,
-    'title': title.isEmpty ? null : title,
-  });
-
-  static WebViewRoute fromState(GoRouterState state) => WebViewRoute(
-    url: state.uri.queryParameters['url']!,
-    title: state.uri.queryParameters['title'] ?? '',
-  );
-}
-
 class LockRoute extends MoodiaryRouteBase {
   static const String path = '/lock';
 
@@ -168,13 +148,6 @@ class AgreementRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
-class UserRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/user';
-  const UserRoute();
-  @override
-  String get location => path;
-}
-
 class AboutRoute extends MoodiaryRouteBase {
   static const String path = '/setting/about';
   const AboutRoute();
@@ -213,13 +186,6 @@ class SponsorRoute extends MoodiaryRouteBase {
 class StartRoute extends MoodiaryRouteBase {
   static const String path = '/start';
   const StartRoute();
-  @override
-  String get location => path;
-}
-
-class LoginRoute extends MoodiaryRouteBase {
-  static const String path = '/login';
-  const LoginRoute();
   @override
   String get location => path;
 }

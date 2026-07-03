@@ -11,8 +11,6 @@ import 'package:moodiary/feature/lock/lock_routes.dart';
 import 'package:moodiary/feature/setting/setting_routes.dart';
 import 'package:moodiary/feature/share/share_routes.dart';
 import 'package:moodiary/feature/sync/sync_routes.dart';
-import 'package:moodiary/feature/user/user_routes.dart';
-import 'package:moodiary/feature/web_view/web_view_routes.dart';
 
 export 'package:moodiary_router/moodiary_router.dart';
 export 'package:moodiary_assistant/moodiary_assistant.dart'
@@ -45,9 +43,7 @@ List<RouteBase> _mobileRoutes() => [
   ...settingRoutes(),
   ...syncRoutes(),
   ...lockRoutes(),
-  ...userRoutes(),
   ...shareRoutes(),
-  ...webViewRoutes(),
   ...assistantRoutes(),
   GoRoute(
     path: AssistantDiaryPickerRoute.path,

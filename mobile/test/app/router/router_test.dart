@@ -57,16 +57,6 @@ void main() {
       );
     });
 
-    test('WebViewRoute round-trips url and omits empty title', () {
-      expect(const WebViewRoute(url: 'u').location, '/web_view?url=u');
-      final uri = Uri.parse(
-        const WebViewRoute(url: 'https://a.com/x?q=1', title: 'T').location,
-      );
-      expect(uri.path, '/web_view');
-      expect(uri.queryParameters['url'], 'https://a.com/x?q=1');
-      expect(uri.queryParameters['title'], 'T');
-    });
-
     test('no-param routes expose their path as location', () {
       expect(const DiaryHomeRoute().location, '/');
       expect(const RecycleRoute().location, '/recycle');

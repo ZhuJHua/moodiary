@@ -118,10 +118,7 @@ class _AboutPageState extends State<AboutPage> {
                     leading: const Icon(Icons.bug_report_rounded),
                     title: '反馈 / 答疑',
                     trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => const WebViewRoute(
-                      url: 'https://answer.moodiary.net',
-                      title: '反馈',
-                    ).push(context),
+                    onTap: () => _open('https://answer.moodiary.net'),
                   ),
                   SettingListTile(
                     isLast: true,
