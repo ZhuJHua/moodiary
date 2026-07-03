@@ -190,6 +190,23 @@ class DiaryRepository {
     }
   }
 
+  /// 每个分类下「可见」日记的数量（categoryId -> count），供分类管理页展示。
+  /// 只取 categoryId 属性、在 Dart 侧计数，避免载入整篇。
+  Future<Map<String, int>> diaryCountByCategory() async {
+    final ids = await _isar.diarys
+        .where()
+        .showEqualTo(true)
+        .categoryIdProperty()
+        .findAllAsync();
+    final counts = <String, int>{};
+    for (final id in ids) {
+      if (id != null && id.isNotEmpty) {
+        counts[id] = (counts[id] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }
+
   Future<List<Diary>> getDiaryByMonth(int year, int month) async {
     return await _isar.diarys
         .where()

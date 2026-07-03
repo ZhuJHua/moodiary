@@ -6,42 +6,73 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 
-class CategoryManagerPage extends ConsumerWidget {
+/// 各分类下「可见」日记数量（categoryId -> count）。新增/删除后 invalidate 刷新。
+final categoryDiaryCountsProvider =
+    FutureProvider.autoDispose<Map<String, int>>((ref) async {
+      return DiaryRepository.get().diaryCountByCategory();
+    });
+
+class CategoryManagerPage extends ConsumerStatefulWidget {
   const CategoryManagerPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CategoryManagerPage> createState() =>
+      _CategoryManagerPageState();
+}
+
+class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(categoryControllerProvider);
+    final counts =
+        ref.watch(categoryDiaryCountsProvider).value ?? const <String, int>{};
     return Scaffold(
       appBar: AppBar(title: const Text('分类管理')),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _onAddCategory(context, ref),
+        onPressed: _onAddCategory,
         child: const Icon(Icons.add),
       ),
       body: async.buildLoading(
         data: (categories) {
           if (categories.isEmpty) {
-            return _Empty(onAdd: () => _onAddCategory(context, ref));
+            return _Empty(onAdd: _onAddCategory);
           }
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemBuilder: (context, index) {
-              final c = categories[index];
-              return _CategoryTile(
-                category: c,
-                onRename: () => _onEditCategory(context, ref, c),
-                onDelete: () => _onDelete(context, ref, c),
-              );
-            },
-            separatorBuilder: (_, _) => const Divider(height: 0),
-            itemCount: categories.length,
+          final q = _query.trim().toLowerCase();
+          final filtered = q.isEmpty
+              ? categories
+              : categories
+                    .where((c) => c.categoryName.toLowerCase().contains(q))
+                    .toList();
+          return Column(
+            children: [
+              _SearchField(onChanged: (v) => setState(() => _query = v)),
+              Expanded(
+                child: filtered.isEmpty
+                    ? const _NoMatch()
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 88),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final c = filtered[index];
+                          return _CategoryTile(
+                            category: c,
+                            count: counts[c.id] ?? 0,
+                            onRename: () => _onEditCategory(c),
+                            onDelete: () => _onDelete(c),
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
-  Future<void> _onAddCategory(BuildContext context, WidgetRef ref) async {
+  Future<void> _onAddCategory() async {
     final draft = await showCategoryEditor(
       context,
       initialName: '',
@@ -57,18 +88,16 @@ class CategoryManagerPage extends ConsumerWidget {
             parentId: null,
           ),
         );
+    if (!mounted) return;
     if (ok) {
+      ref.invalidate(categoryDiaryCountsProvider);
       toast.success(message: '已创建「${draft.name}」');
     } else {
       toast.error(message: '创建失败');
     }
   }
 
-  Future<void> _onEditCategory(
-    BuildContext context,
-    WidgetRef ref,
-    Category category,
-  ) async {
+  Future<void> _onEditCategory(Category category) async {
     final draft = await showCategoryEditor(
       context,
       initialName: category.categoryName,
@@ -91,6 +120,7 @@ class CategoryManagerPage extends ConsumerWidget {
             deleted: category.deleted,
           ),
         );
+    if (!mounted) return;
     if (ok) {
       toast.success(message: '已重命名为「${draft.name}」');
     } else {
@@ -98,11 +128,7 @@ class CategoryManagerPage extends ConsumerWidget {
     }
   }
 
-  Future<void> _onDelete(
-    BuildContext context,
-    WidgetRef ref,
-    Category category,
-  ) async {
+  Future<void> _onDelete(Category category) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -127,11 +153,169 @@ class CategoryManagerPage extends ConsumerWidget {
     final ok = await ref
         .read(categoryControllerProvider.notifier)
         .deleteCategory(category.id);
+    if (!mounted) return;
     if (ok) {
+      ref.invalidate(categoryDiaryCountsProvider);
       toast.success(message: '已删除');
     } else {
       toast.error(message: '分类下仍有日记，删除失败');
     }
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  final ValueChanged<String> onChanged;
+
+  const _SearchField({required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+      child: TextField(
+        onChanged: onChanged,
+        textInputAction: TextInputAction.search,
+        decoration: InputDecoration(
+          hintText: '搜索分类',
+          prefixIcon: const Icon(Icons.search_rounded),
+          isDense: true,
+          filled: true,
+          fillColor: scheme.surfaceContainerHighest,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(28),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NoMatch extends StatelessWidget {
+  const _NoMatch();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        '没有匹配的分类',
+        style: context.textTheme.bodyMedium?.copyWith(
+          color: context.colorScheme.onSurfaceVariant,
+        ),
+      ),
+    );
+  }
+}
+
+class _Empty extends StatelessWidget {
+  final VoidCallback onAdd;
+  const _Empty({required this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.label_outline, size: 48),
+          const SizedBox(height: 12),
+          Text('暂无分类', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          FilledButton.icon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add),
+            label: const Text('新建分类'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryTile extends StatelessWidget {
+  final Category category;
+  final int count;
+  final VoidCallback onRename;
+  final VoidCallback onDelete;
+
+  const _CategoryTile({
+    required this.category,
+    required this.count,
+    required this.onRename,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final color = categoryColorOf(colorValue: category.color, id: category.id);
+    final onColor = color.computeLuminance() > 0.5
+        ? Colors.black87
+        : Colors.white;
+    return Card.filled(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      color: scheme.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        onTap: onRename,
+        leading: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Icon(Icons.label_rounded, size: 21, color: onColor),
+        ),
+        title: Text(
+          category.categoryName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.textTheme.titleMedium,
+        ),
+        subtitle: Text(
+          count > 0 ? '$count 篇日记' : '暂无日记',
+          style: context.textTheme.labelSmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: PopupMenuButton<String>(
+          tooltip: '更多',
+          onSelected: (key) {
+            switch (key) {
+              case 'rename':
+                onRename();
+              case 'delete':
+                onDelete();
+            }
+          },
+          itemBuilder: (_) => const [
+            PopupMenuItem(
+              value: 'rename',
+              child: Row(
+                children: [
+                  Icon(Icons.edit_outlined, size: 18),
+                  SizedBox(width: 10),
+                  Text('重命名'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete_outline, size: 18),
+                  SizedBox(width: 10),
+                  Text('删除'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -163,10 +347,7 @@ Future<CategoryDraft?> showCategoryEditor(
               decoration: const InputDecoration(hintText: '分类名称'),
             ),
             const SizedBox(height: 16),
-            Text(
-              ctx.l10n.categoryColorLabel,
-              style: ctx.textTheme.labelMedium,
-            ),
+            Text(ctx.l10n.categoryColorLabel, style: ctx.textTheme.labelMedium),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -204,9 +385,7 @@ Future<CategoryDraft?> showCategoryEditor(
             onPressed: () {
               final name = controller.text.trim();
               if (name.isEmpty) return;
-              Navigator.of(
-                ctx,
-              ).pop(CategoryDraft(name: name, color: selected));
+              Navigator.of(ctx).pop(CategoryDraft(name: name, color: selected));
             },
             child: Text(ctx.l10n.ok),
           ),
@@ -214,65 +393,4 @@ Future<CategoryDraft?> showCategoryEditor(
       ),
     ),
   );
-}
-
-class _Empty extends StatelessWidget {
-  final VoidCallback onAdd;
-  const _Empty({required this.onAdd});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.label_outline, size: 48),
-          const SizedBox(height: 12),
-          Text('暂无分类', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          FilledButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: const Text('新建分类'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CategoryTile extends StatelessWidget {
-  final Category category;
-  final VoidCallback onRename;
-  final VoidCallback onDelete;
-
-  const _CategoryTile({
-    required this.category,
-    required this.onRename,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.label_outline),
-      title: Text(category.categoryName),
-      trailing: PopupMenuButton<String>(
-        onSelected: (key) {
-          switch (key) {
-            case 'rename':
-              onRename();
-              break;
-            case 'delete':
-              onDelete();
-              break;
-          }
-        },
-        itemBuilder: (_) => const [
-          PopupMenuItem(value: 'rename', child: Text('重命名')),
-          PopupMenuItem(value: 'delete', child: Text('删除')),
-        ],
-      ),
-    );
-  }
 }
