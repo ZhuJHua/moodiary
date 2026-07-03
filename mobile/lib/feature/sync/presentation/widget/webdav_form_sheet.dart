@@ -136,12 +136,6 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              '提示：上传 / 下载实际逻辑将在 Milestone G+ 内接入；'
-              '当前可先填好配置，待功能上线后即可一键同步。',
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
           ],
         ),
       ),
