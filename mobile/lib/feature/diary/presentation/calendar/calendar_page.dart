@@ -7,7 +7,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary/feature/diary/application/calendar_controller.dart';
-import 'package:moodiary/feature/diary/application/category_controller.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary/feature/diary/presentation/widget/diary_card.dart';
 import 'package:moodiary/feature/diary/presentation/widget/diary_nav.dart';
 

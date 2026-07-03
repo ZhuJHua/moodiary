@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary/feature/diary/application/category_controller.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary/feature/diary/application/search_controller.dart';
 import 'package:moodiary/feature/diary/presentation/search/search_result_card.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';

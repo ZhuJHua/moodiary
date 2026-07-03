@@ -1,7 +1,8 @@
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_data/moodiary_data.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'diary_repository.dart';
 
 part 'diary_controller.g.dart';
 

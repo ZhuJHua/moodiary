@@ -22,7 +22,12 @@ dependencies:
   fpdart: 1.2.0
   flutter_quill: 11.5.1
 
+  flutter_riverpod: 3.3.2
+  riverpod_annotation: 4.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
+  build_runner: 2.15.0
+  riverpod_generator: 4.0.4

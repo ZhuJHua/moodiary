@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary/feature/diary/application/diary_controller.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 
 class RecyclePage extends ConsumerWidget {
   const RecyclePage({super.key});

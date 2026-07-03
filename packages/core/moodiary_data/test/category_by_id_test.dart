@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary/feature/diary/application/category_controller.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 
 class _StubCategories extends CategoryController {
   _StubCategories(this._cats);

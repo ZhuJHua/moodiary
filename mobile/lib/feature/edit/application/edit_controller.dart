@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary/feature/diary/application/diary_controller.dart';
 import 'package:moodiary/feature/edit/data/geo_repository.dart';
 import 'package:moodiary/feature/edit/data/weather_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

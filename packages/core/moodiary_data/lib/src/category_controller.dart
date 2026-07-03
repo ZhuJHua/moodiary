@@ -1,7 +1,7 @@
-import 'package:collection/collection.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_data/moodiary_data.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'category_repository.dart';
 
 part 'category_controller.g.dart';
 
@@ -63,7 +63,10 @@ class CategoryController extends _$CategoryController {
 @riverpod
 Future<Category?> getCategory(Ref ref, {required String id}) async {
   final allCategory = await ref.watch(categoryControllerProvider.future);
-  return allCategory.firstWhereOrNull((category) => category.id == id);
+  for (final category in allCategory) {
+    if (category.id == id) return category;
+  }
+  return null;
 }
 
 @riverpod
