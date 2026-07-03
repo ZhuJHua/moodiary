@@ -62,6 +62,23 @@ android {
             signingConfig = signingConfigs.getByName("config")
         }
     }
+
+    flavorDimensions += "env"
+
+    productFlavors {
+        // 正式包：cn.yooss.moodiary / Moodiary。
+        create("prod") {
+            dimension = "env"
+            isDefault = true
+        }
+        // 测试包：cn.yooss.moodiary.beta / Moodiary Beta —— 与正式包不同包名，可并存安装。
+        create("beta") {
+            dimension = "env"
+            applicationIdSuffix = ".beta"
+            versionNameSuffix = "-beta"
+            resValue("string", "app_name", "Moodiary Beta")
+        }
+    }
 }
 
 kotlin {

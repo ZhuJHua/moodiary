@@ -2,8 +2,10 @@
 //
 // 用法：dart tool/task.dart <command> [-- extra args...]
 //   dart tool/task.dart setup            # 构建 editor + flutter pub get
-//   dart tool/task.dart run              # 构建 editor + flutter run
+//   dart tool/task.dart run              # 构建 editor + flutter run（默认 --flavor prod）
+//   dart tool/task.dart run-beta         # 同上，跑 Moodiary Beta 测试包（--flavor beta）
 //   dart tool/task.dart build-apk        # 同理 build-ios / build-windows / build-macos
+//   dart tool/task.dart build-apk-beta   # 构建 Moodiary Beta 测试 APK（cn.yooss.moodiary.beta）
 //   dart tool/task.dart analyze          # 分层检查 + flutter analyze
 //   dart tool/task.dart check-layers     # 仅分层依赖检查
 //   dart tool/task.dart build-runner     # 代码生成
@@ -32,6 +34,13 @@ Future<void> _flutter(List<String> args) =>
     _run('fvm', ['flutter', ...args], cwd: 'mobile');
 Future<void> _dartApp(List<String> args) =>
     _run('fvm', ['dart', ...args], cwd: 'mobile');
+
+// Android 有 prod / beta 两个 flavor，构建 Android 必须指定 --flavor；未显式指定时默认
+// 注入给定 flavor，保持既有命令可用。（beta = 「Moodiary Beta」测试包，见 build-apk-beta。）
+List<String> _withFlavor(List<String> rest, String flavor) =>
+    rest.any((a) => a == '--flavor' || a.startsWith('--flavor='))
+        ? rest
+        : ['--flavor', flavor, ...rest];
 
 /// 命令是否在 PATH 上。
 Future<bool> _hasCommand(String cmd) async {
@@ -77,11 +86,19 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   },
   'run': (rest) async {
     await _editor();
-    await _flutter(['run', ...rest]);
+    await _flutter(['run', ..._withFlavor(rest, 'prod')]);
+  },
+  'run-beta': (rest) async {
+    await _editor();
+    await _flutter(['run', ..._withFlavor(rest, 'beta')]);
   },
   'build-apk': (rest) async {
     await _editor();
-    await _flutter(['build', 'apk', ...rest]);
+    await _flutter(['build', 'apk', ..._withFlavor(rest, 'prod')]);
+  },
+  'build-apk-beta': (rest) async {
+    await _editor();
+    await _flutter(['build', 'apk', ..._withFlavor(rest, 'beta')]);
   },
   'build-ios': (rest) async {
     await _editor();
