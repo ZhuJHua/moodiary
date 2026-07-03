@@ -1,0 +1,51 @@
+import 'package:go_router/go_router.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_router/moodiary_router.dart';
+
+import 'package:moodiary/feature/diary/presentation/analyse/analyse_page.dart';
+import 'package:moodiary/feature/diary/presentation/category/category_manager_page.dart';
+import 'package:moodiary/feature/diary/presentation/detail/diary_page.dart'
+    show DiaryPage;
+import 'package:moodiary/feature/diary/presentation/manager/diary_manager_page.dart';
+import 'package:moodiary/feature/diary/presentation/map/map_page.dart';
+import 'package:moodiary/feature/diary/presentation/recycle/recycle_page.dart';
+import 'package:moodiary/feature/diary/presentation/search/search_page.dart';
+
+List<RouteBase> diaryRoutes() => [
+  GoRoute(
+    path: NewDiaryRoute.path,
+    builder: (context, state) {
+      final route = NewDiaryRoute.fromState(state);
+      return DiaryPage(
+        initialType: diaryTypeFromRouteQuery(route.type) ?? DiaryType.tiptap,
+        startInEdit: true,
+      );
+    },
+  ),
+  GoRoute(
+    path: DiaryRoute.path,
+    builder: (context, state) {
+      final route = DiaryRoute.fromState(state);
+      return DiaryPage(
+        diaryId: route.diaryId,
+        initialType: diaryTypeFromRouteQuery(route.type) ?? DiaryType.tiptap,
+        startInEdit: route.edit,
+      );
+    },
+  ),
+  GoRoute(
+    path: DiarySearchRoute.path,
+    builder: (_, _) => const DiarySearchPage(),
+  ),
+  GoRoute(path: RecycleRoute.path, builder: (_, _) => const RecyclePage()),
+  GoRoute(
+    path: CategoryManagerRoute.path,
+    builder: (_, _) => const CategoryManagerPage(),
+  ),
+  GoRoute(path: MapRoute.path, builder: (_, _) => const MapPage()),
+  GoRoute(
+    path: DiaryManagerRoute.path,
+    builder: (_, _) => const DiaryManagerPage(),
+  ),
+  GoRoute(path: AnalyseRoute.path, builder: (_, _) => const AnalysePage()),
+];

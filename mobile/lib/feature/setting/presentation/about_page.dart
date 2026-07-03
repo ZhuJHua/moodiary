@@ -7,7 +7,7 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary/gen/assets.gen.dart';
-import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 

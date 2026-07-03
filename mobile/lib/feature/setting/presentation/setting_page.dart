@@ -14,7 +14,7 @@ import 'package:moodiary/feature/setting/presentation/widget/color_sheet.dart';
 import 'package:moodiary/feature/setting/presentation/widget/dashboard_section.dart';
 import 'package:moodiary/feature/setting/presentation/widget/language_dialog.dart';
 import 'package:moodiary/feature/setting/presentation/widget/theme_mode_dialog.dart';
-import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 
 /// 一级菜单项跳转：全屏 `push` 落 root navigator。
 void _openSetting(BuildContext context, MoodiaryRouteBase route) {

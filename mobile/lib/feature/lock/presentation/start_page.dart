@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 
 class _StartSlide {
   final IconData icon;

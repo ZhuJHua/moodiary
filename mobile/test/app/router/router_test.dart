@@ -17,12 +17,15 @@ void main() {
   group('location encoding contract', () {
     test('DiaryRoute', () {
       expect(
-        const DiaryRoute(type: DiaryType.markdown, diaryId: 'abc').location,
+        DiaryRoute(
+          type: DiaryType.markdown.routeQuery,
+          diaryId: 'abc',
+        ).location,
         '/diary/abc?type=markdown',
       );
       expect(
-        const DiaryRoute(
-          type: DiaryType.richText,
+        DiaryRoute(
+          type: DiaryType.richText.routeQuery,
           diaryId: 'x',
           edit: true,
         ).location,
@@ -32,11 +35,11 @@ void main() {
 
     test('NewDiaryRoute', () {
       expect(
-        const NewDiaryRoute(type: DiaryType.tiptap).location,
+        NewDiaryRoute(type: DiaryType.tiptap.routeQuery).location,
         '/diary-new?type=tiptap',
       );
       expect(
-        const NewDiaryRoute(type: DiaryType.markdown).location,
+        NewDiaryRoute(type: DiaryType.markdown.routeQuery).location,
         '/diary-new?type=markdown',
       );
     });

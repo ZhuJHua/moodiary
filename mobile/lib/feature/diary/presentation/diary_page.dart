@@ -14,7 +14,7 @@ import 'package:moodiary/feature/diary/presentation/widget/view_mode_sheet.dart'
 import 'package:moodiary/feature/diary/presentation/widget/waterfall_view.dart';
 import 'package:moodiary/feature/edit/presentation/widget/draft_prompt.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 
 enum _HomeSection { all, category }
 

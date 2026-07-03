@@ -6,7 +6,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'map_page.g.dart';
@@ -99,7 +99,7 @@ class MapPage extends ConsumerWidget {
 
   void _openDiary(BuildContext context, Diary diary) {
     final route = DiaryRoute(
-      type: DiaryType.fromValue(diary.type),
+      type: DiaryType.fromValue(diary.type).routeQuery,
       diaryId: diary.id,
     );
     // 足迹地图归属 Setting 分支，打开日记需切到 Diary 分支后全屏 push。

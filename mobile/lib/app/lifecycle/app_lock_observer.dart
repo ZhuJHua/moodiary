@@ -6,6 +6,9 @@ import 'package:moodiary/app/router/router.dart';
 ///
 /// 规避误锁：仅 paused/hidden 触发（inactive 不算）；编辑/分享页选图拍照会切后台故跳过；
 /// 已在锁屏页时 [_locking] 为真不重复压栈。
+///
+/// 归属 app 生命周期层（非 feature）：直接读命令式的 `router` 全局；即使日后抽出
+/// `moodiary_lock` 包，本观察器仍留 app 侧，跳过位置届时改为可配置参数。
 class AppLockObserver extends StatefulWidget {
   const AppLockObserver({super.key});
 

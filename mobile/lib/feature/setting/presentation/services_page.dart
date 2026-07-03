@@ -7,7 +7,7 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_scan/moodiary_scan.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_assistant/moodiary_assistant.dart';
 
 class ServicesPage extends ConsumerWidget {
   const ServicesPage({super.key});

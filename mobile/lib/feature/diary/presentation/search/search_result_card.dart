@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:substring_highlight/substring_highlight.dart';
 
 /// 取首个命中关键词前后各 [contextLength] 字的摘要，溢出补省略号；无命中退回前 200 字。
@@ -75,7 +75,7 @@ class SearchResultCard extends StatelessWidget {
         onTap: () {
           onTap?.call();
           DiaryRoute(
-            type: DiaryType.fromValue(diary.type),
+            type: DiaryType.fromValue(diary.type).routeQuery,
             diaryId: diary.id,
           ).push(context);
         },

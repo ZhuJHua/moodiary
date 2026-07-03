@@ -15,7 +15,7 @@ import 'package:moodiary/feature/edit/application/edit_controller.dart';
 import 'package:moodiary/feature/edit/presentation/widget/category_picker_sheet.dart';
 import 'package:moodiary/feature/edit/presentation/widget/editor_body.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 
 enum _Mode { read, edit }
 
@@ -389,7 +389,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       return;
     }
     final route = DiaryRoute(
-      type: DiaryType.fromValue(target.type),
+      type: DiaryType.fromValue(target.type).routeQuery,
       diaryId: target.id,
     );
     route.push(context);

@@ -14,7 +14,7 @@ import 'package:moodiary/feature/sync/data/sync_registry.dart';
 import 'package:moodiary/feature/sync/presentation/widget/s3_form_sheet.dart';
 import 'package:moodiary/feature/sync/presentation/widget/sync_key_guard.dart';
 import 'package:moodiary/feature/sync/presentation/widget/webdav_form_sheet.dart';
-import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 

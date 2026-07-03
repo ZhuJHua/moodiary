@@ -1,6 +1,7 @@
 library;
 
 export 'src/diary_type.dart';
+export 'src/diary_type_route.dart';
 export 'src/assistant_provider_type.dart';
 
 export 'src/category.dart';
