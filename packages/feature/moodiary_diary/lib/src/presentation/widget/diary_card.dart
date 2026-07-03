@@ -8,6 +8,9 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 
 const double _kAccentWidth = 4.0;
 
+/// 卡片同步状态：内联展示在元信息行里（不再用会盖住内容的角标）。
+enum DiaryCardSyncState { none, dirty, syncing }
+
 Widget _cardShell({
   required BuildContext context,
   required Diary diary,
@@ -47,11 +50,13 @@ class _MetaFooter extends StatelessWidget {
   final Diary diary;
   final Category? category;
   final bool showCategoryLabel;
+  final DiaryCardSyncState syncState;
 
   const _MetaFooter({
     required this.diary,
     required this.category,
     required this.showCategoryLabel,
+    this.syncState = DiaryCardSyncState.none,
   });
 
   @override
@@ -93,6 +98,21 @@ class _MetaFooter extends StatelessWidget {
     }
 
     children.add(MoodIconComponent(value: diary.mood, width: 16));
+
+    if (syncState != DiaryCardSyncState.none) {
+      final isSyncing = syncState == DiaryCardSyncState.syncing;
+      final color = scheme.primary;
+      // 纯 icon 表达（不占文字宽度）：待同步=上传云，同步中=转圈。
+      children.add(
+        isSyncing
+            ? SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 1.6, color: color),
+              )
+            : Icon(Icons.cloud_upload_outlined, size: 14, color: color),
+      );
+    }
 
     return Wrap(
       spacing: 8,
@@ -140,6 +160,7 @@ class DiaryListTile extends StatelessWidget {
   final Category? category;
   final bool showCategoryLabel;
   final VoidCallback? onTap;
+  final DiaryCardSyncState syncState;
 
   const DiaryListTile({
     super.key,
@@ -147,6 +168,7 @@ class DiaryListTile extends StatelessWidget {
     this.category,
     this.showCategoryLabel = true,
     this.onTap,
+    this.syncState = DiaryCardSyncState.none,
   });
 
   @override
@@ -180,7 +202,8 @@ class DiaryListTile extends StatelessWidget {
                     _MetaFooter(
                         diary: diary,
                         category: category,
-                        showCategoryLabel: showCategoryLabel),
+                        showCategoryLabel: showCategoryLabel,
+                        syncState: syncState),
                   ],
                 ),
               ),
@@ -206,6 +229,7 @@ class DiaryGridTile extends StatelessWidget {
   final Category? category;
   final bool showCategoryLabel;
   final VoidCallback? onTap;
+  final DiaryCardSyncState syncState;
 
   const DiaryGridTile({
     super.key,
@@ -213,6 +237,7 @@ class DiaryGridTile extends StatelessWidget {
     this.category,
     this.showCategoryLabel = true,
     this.onTap,
+    this.syncState = DiaryCardSyncState.none,
   });
 
   @override
@@ -250,7 +275,8 @@ class DiaryGridTile extends StatelessWidget {
                 _MetaFooter(
                     diary: diary,
                     category: category,
-                    showCategoryLabel: showCategoryLabel),
+                    showCategoryLabel: showCategoryLabel,
+                    syncState: syncState),
               ],
             ),
           ),

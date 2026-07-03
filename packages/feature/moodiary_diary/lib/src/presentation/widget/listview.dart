@@ -43,7 +43,13 @@ class DiaryListView extends ConsumerWidget {
                   ),
                   itemBuilder: (context, index) {
                     final diary = diaries[index];
-                    final tile = Consumer(
+                    final syncing = pending.updateDiaryIds.contains(diary.id);
+                    final syncState = syncing
+                        ? DiaryCardSyncState.syncing
+                        : dirty.contains(diary.id)
+                        ? DiaryCardSyncState.dirty
+                        : DiaryCardSyncState.none;
+                    return Consumer(
                       builder: (context, ref, _) {
                         final category = ref.watch(
                           categoryByIdProvider(diary.categoryId),
@@ -53,23 +59,9 @@ class DiaryListView extends ConsumerWidget {
                           category: category,
                           showCategoryLabel: categoryId == null,
                           onTap: () => openDiaryDetail(context, diary),
+                          syncState: syncState,
                         );
                       },
-                    );
-                    final syncing = pending.updateDiaryIds.contains(diary.id);
-                    final dirtyBadge = !syncing && dirty.contains(diary.id);
-                    if (!syncing && !dirtyBadge) return tile;
-                    return Stack(
-                      children: [
-                        tile,
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: syncing
-                              ? const SyncPendingBadge()
-                              : const SyncDirtyBadge(),
-                        ),
-                      ],
                     );
                   },
                   separatorBuilder: (_, _) => const SizedBox(height: 8.0),
