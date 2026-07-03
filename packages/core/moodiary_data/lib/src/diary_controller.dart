@@ -84,6 +84,16 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
       return false;
     }
   }
+
+  /// 批量软删（首页多选删除）：对当前列表里 id ∈ [ids] 的日记逐一软删，返回成功数。
+  Future<int> softDeleteByIds(Set<String> ids) async {
+    final list = state.value ?? const <Diary>[];
+    var count = 0;
+    for (final diary in list.where((d) => ids.contains(d.id)).toList()) {
+      if (await softDeleteDiary(diary)) count += 1;
+    }
+    return count;
+  }
 }
 
 /// 回收站列表（按时间倒序的所有 `show == false` 的日记）。

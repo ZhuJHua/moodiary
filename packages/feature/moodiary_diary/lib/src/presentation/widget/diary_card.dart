@@ -18,32 +18,75 @@ Widget _cardShell({
   required bool showCategoryLabel,
   required VoidCallback? onTap,
   required Widget child,
+  VoidCallback? onLongPress,
+  bool selecting = false,
+  bool selected = false,
 }) {
   final scheme = context.colorScheme;
   final accent = category == null
       ? null
       : categoryColorOf(colorValue: category.color, id: category.id);
   return Card.filled(
-    color: scheme.surfaceContainerLow,
+    // 选中：主色微染背景（不加边框，避免与分类左侧色条打架）；右上勾选圈另表状态。
+    color: selected
+        ? Color.alphaBlend(
+            scheme.primary.withValues(alpha: 0.14),
+            scheme.surfaceContainerLow,
+          )
+        : scheme.surfaceContainerLow,
     margin: EdgeInsets.zero,
     clipBehavior: Clip.antiAlias,
     child: InkWell(
       onTap: onTap,
-      child: accent == null
-          ? child
-          : Stack(
-              children: [
-                child,
-                PositionedDirectional(
-                  start: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(width: _kAccentWidth, color: accent),
-                ),
-              ],
+      onLongPress: onLongPress,
+      child: Stack(
+        children: [
+          child,
+          if (accent != null)
+            PositionedDirectional(
+              start: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(width: _kAccentWidth, color: accent),
             ),
+          if (selecting)
+            PositionedDirectional(
+              top: 8,
+              end: 8,
+              child: _SelectMark(selected: selected),
+            ),
+        ],
+      ),
     ),
   );
+}
+
+/// 多选态右上角的勾选圈：选中填充主色 + 勾，未选空心圈。
+class _SelectMark extends StatelessWidget {
+  final bool selected;
+  const _SelectMark({required this.selected});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: selected
+            ? scheme.primary
+            : scheme.surface.withValues(alpha: 0.85),
+        border: Border.all(
+          color: selected ? scheme.primary : scheme.outline,
+          width: 2,
+        ),
+      ),
+      child: selected
+          ? Icon(Icons.check_rounded, size: 15, color: scheme.onPrimary)
+          : null,
+    );
+  }
 }
 
 class _MetaFooter extends StatelessWidget {
@@ -161,6 +204,9 @@ class DiaryListTile extends StatelessWidget {
   final bool showCategoryLabel;
   final VoidCallback? onTap;
   final DiaryCardSyncState syncState;
+  final VoidCallback? onLongPress;
+  final bool selecting;
+  final bool selected;
 
   const DiaryListTile({
     super.key,
@@ -169,6 +215,9 @@ class DiaryListTile extends StatelessWidget {
     this.showCategoryLabel = true,
     this.onTap,
     this.syncState = DiaryCardSyncState.none,
+    this.onLongPress,
+    this.selecting = false,
+    this.selected = false,
   });
 
   @override
@@ -180,6 +229,9 @@ class DiaryListTile extends StatelessWidget {
       category: category,
       showCategoryLabel: showCategoryLabel,
       onTap: onTap,
+      onLongPress: onLongPress,
+      selecting: selecting,
+      selected: selected,
       child: SizedBox(
         height: 132.0,
         child: Row(
@@ -230,6 +282,9 @@ class DiaryGridTile extends StatelessWidget {
   final bool showCategoryLabel;
   final VoidCallback? onTap;
   final DiaryCardSyncState syncState;
+  final VoidCallback? onLongPress;
+  final bool selecting;
+  final bool selected;
 
   const DiaryGridTile({
     super.key,
@@ -238,6 +293,9 @@ class DiaryGridTile extends StatelessWidget {
     this.showCategoryLabel = true,
     this.onTap,
     this.syncState = DiaryCardSyncState.none,
+    this.onLongPress,
+    this.selecting = false,
+    this.selected = false,
   });
 
   @override
@@ -249,6 +307,9 @@ class DiaryGridTile extends StatelessWidget {
       category: category,
       showCategoryLabel: showCategoryLabel,
       onTap: onTap,
+      onLongPress: onLongPress,
+      selecting: selecting,
+      selected: selected,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

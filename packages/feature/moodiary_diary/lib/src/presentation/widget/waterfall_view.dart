@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_diary/src/application/diary_selection.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_card.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -17,6 +18,8 @@ class DiaryWaterFallView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final provider = diaryControllerProvider(categoryId: categoryId);
     final diaryAsync = ref.watch(provider);
+    final selection = ref.watch(diarySelectionProvider);
+    final selecting = selection.isNotEmpty;
 
     return diaryAsync.buildLoading(
       data: (diaries) {
@@ -56,6 +59,9 @@ class DiaryWaterFallView extends ConsumerWidget {
                         : dirty.contains(diary.id)
                         ? DiaryCardSyncState.dirty
                         : DiaryCardSyncState.none;
+                    final selNotifier = ref.read(
+                      diarySelectionProvider.notifier,
+                    );
                     return Consumer(
                       builder: (context, ref, _) {
                         final category = ref.watch(
@@ -65,7 +71,14 @@ class DiaryWaterFallView extends ConsumerWidget {
                           diary: diary,
                           category: category,
                           showCategoryLabel: categoryId == null,
-                          onTap: () => openDiaryDetail(context, diary),
+                          onTap: selecting
+                              ? () => selNotifier.toggle(diary.id)
+                              : () => openDiaryDetail(context, diary),
+                          onLongPress: selecting
+                              ? null
+                              : () => selNotifier.enter(diary.id),
+                          selecting: selecting,
+                          selected: selection.contains(diary.id),
                           syncState: syncState,
                         );
                       },

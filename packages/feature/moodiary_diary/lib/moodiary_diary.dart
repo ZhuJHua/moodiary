@@ -6,6 +6,8 @@
 library;
 
 export 'src/routes.dart' show diaryRoutes;
+export 'src/application/diary_selection.dart'
+    show diarySelectionProvider, DiarySelectionNotifier;
 export 'src/presentation/diary_select_page.dart' show DiarySelectPage;
 export 'src/presentation/calendar/calendar_page.dart' show CalendarView;
 export 'src/presentation/widget/listview.dart' show DiaryListView;
