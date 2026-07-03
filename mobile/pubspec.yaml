@@ -19,6 +19,7 @@ dependencies:
   moodiary_router: 0.0.1
   moodiary_assistant: 0.0.1
   moodiary_editor: 0.0.1
+  moodiary_editor_host: 0.0.1
   moodiary_media: 0.0.1
   moodiary_utils: 0.0.1
   moodiary_models: 0.0.1

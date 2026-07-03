@@ -10,9 +10,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show MoodiaryEditorController;
-import 'package:moodiary/feature/edit/application/edit_controller.dart';
-import 'package:moodiary/feature/edit/presentation/widget/category_picker_sheet.dart';
-import 'package:moodiary/feature/edit/presentation/widget/editor_body.dart';
+import 'package:moodiary_editor_host/moodiary_editor_host.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
