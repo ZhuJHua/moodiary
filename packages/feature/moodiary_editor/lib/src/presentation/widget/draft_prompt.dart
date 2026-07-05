@@ -7,11 +7,18 @@ import 'package:moodiary_router/moodiary_router.dart';
 bool _openingNewDiary = false;
 
 /// FAB「新建日记」入口。延迟落库：不预先插入空日记，有内容才由 [EditController] 落库。
-Future<void> openNewDiaryEditor(BuildContext context, DiaryType type) async {
+/// [categoryId] 为新日记预选的分类（首页处于分类筛选态时传入）。
+Future<void> openNewDiaryEditor(
+  BuildContext context,
+  DiaryType type, {
+  String? categoryId,
+}) async {
   if (_openingNewDiary) return;
   _openingNewDiary = true;
   try {
-    await NewDiaryRoute(type: type.routeQuery).push(context);
+    await NewDiaryRoute(type: type.routeQuery, categoryId: categoryId).push(
+      context,
+    );
   } finally {
     _openingNewDiary = false;
   }

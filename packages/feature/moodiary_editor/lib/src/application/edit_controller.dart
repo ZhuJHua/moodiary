@@ -36,9 +36,17 @@ class EditController extends _$EditController {
   Future<DraftSaveResult>? _inFlight;
 
   @override
-  FutureOr<Diary> build(String? diaryId, {DiaryType? defaultType}) async {
+  FutureOr<Diary> build(
+    String? diaryId, {
+    DiaryType? defaultType,
+    String? defaultCategoryId,
+  }) async {
     final diary = await ref.watch(
-      getDiaryProvider(id: diaryId, defaultType: defaultType).future,
+      getDiaryProvider(
+        id: diaryId,
+        defaultType: defaultType,
+        defaultCategoryId: defaultCategoryId,
+      ).future,
     );
     if (diary == null) throw Exception('Diary not found: $diaryId');
     _persisted = !(diaryId == null || diaryId.isEmpty);

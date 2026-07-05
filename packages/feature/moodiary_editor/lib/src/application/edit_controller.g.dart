@@ -8,21 +8,22 @@ part of 'edit_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 编辑页状态机。`changeXxx` 仅改本地 `state`；落库统一走 [autoSave]（新建 insert、
-/// 其余 update）。无手动保存、无草稿概念——创建即落盘。
+/// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
+/// 空白不创建，有内容才 insert，写了又清空则丢弃。
 
 @ProviderFor(EditController)
 final editControllerProvider = EditControllerFamily._();
 
-/// 编辑页状态机。`changeXxx` 仅改本地 `state`；落库统一走 [autoSave]（新建 insert、
-/// 其余 update）。无手动保存、无草稿概念——创建即落盘。
+/// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
+/// 空白不创建，有内容才 insert，写了又清空则丢弃。
 final class EditControllerProvider
     extends $AsyncNotifierProvider<EditController, Diary> {
-  /// 编辑页状态机。`changeXxx` 仅改本地 `state`；落库统一走 [autoSave]（新建 insert、
-  /// 其余 update）。无手动保存、无草稿概念——创建即落盘。
+  /// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
+  /// 空白不创建，有内容才 insert，写了又清空则丢弃。
   EditControllerProvider._({
     required EditControllerFamily super.from,
-    required (String?, {DiaryType? defaultType}) super.argument,
+    required (String?, {DiaryType? defaultType, String? defaultCategoryId})
+    super.argument,
   }) : super(
          retry: null,
          name: r'editControllerProvider',
@@ -56,10 +57,10 @@ final class EditControllerProvider
   }
 }
 
-String _$editControllerHash() => r'4223732a21fa9c12fd2b56eaea6cfa33cd5c3b7e';
+String _$editControllerHash() => r'd0744e5544a96bf2ffdd359c40d621454cc6e13c';
 
-/// 编辑页状态机。`changeXxx` 仅改本地 `state`；落库统一走 [autoSave]（新建 insert、
-/// 其余 update）。无手动保存、无草稿概念——创建即落盘。
+/// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
+/// 空白不创建，有内容才 insert，写了又清空则丢弃。
 
 final class EditControllerFamily extends $Family
     with
@@ -68,7 +69,7 @@ final class EditControllerFamily extends $Family
           AsyncValue<Diary>,
           Diary,
           FutureOr<Diary>,
-          (String?, {DiaryType? defaultType})
+          (String?, {DiaryType? defaultType, String? defaultCategoryId})
         > {
   EditControllerFamily._()
     : super(
@@ -79,28 +80,42 @@ final class EditControllerFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// 编辑页状态机。`changeXxx` 仅改本地 `state`；落库统一走 [autoSave]（新建 insert、
-  /// 其余 update）。无手动保存、无草稿概念——创建即落盘。
+  /// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
+  /// 空白不创建，有内容才 insert，写了又清空则丢弃。
 
-  EditControllerProvider call(String? diaryId, {DiaryType? defaultType}) =>
-      EditControllerProvider._(
-        argument: (diaryId, defaultType: defaultType),
-        from: this,
-      );
+  EditControllerProvider call(
+    String? diaryId, {
+    DiaryType? defaultType,
+    String? defaultCategoryId,
+  }) => EditControllerProvider._(
+    argument: (
+      diaryId,
+      defaultType: defaultType,
+      defaultCategoryId: defaultCategoryId,
+    ),
+    from: this,
+  );
 
   @override
   String toString() => r'editControllerProvider';
 }
 
-/// 编辑页状态机。`changeXxx` 仅改本地 `state`；落库统一走 [autoSave]（新建 insert、
-/// 其余 update）。无手动保存、无草稿概念——创建即落盘。
+/// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
+/// 空白不创建，有内容才 insert，写了又清空则丢弃。
 
 abstract class _$EditController extends $AsyncNotifier<Diary> {
-  late final _$args = ref.$arg as (String?, {DiaryType? defaultType});
+  late final _$args =
+      ref.$arg
+          as (String?, {DiaryType? defaultType, String? defaultCategoryId});
   String? get diaryId => _$args.$1;
   DiaryType? get defaultType => _$args.defaultType;
+  String? get defaultCategoryId => _$args.defaultCategoryId;
 
-  FutureOr<Diary> build(String? diaryId, {DiaryType? defaultType});
+  FutureOr<Diary> build(
+    String? diaryId, {
+    DiaryType? defaultType,
+    String? defaultCategoryId,
+  });
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -115,7 +130,11 @@ abstract class _$EditController extends $AsyncNotifier<Diary> {
             >;
     return element.handleCreate(
       ref,
-      () => build(_$args.$1, defaultType: _$args.defaultType),
+      () => build(
+        _$args.$1,
+        defaultType: _$args.defaultType,
+        defaultCategoryId: _$args.defaultCategoryId,
+      ),
     );
   }
 }

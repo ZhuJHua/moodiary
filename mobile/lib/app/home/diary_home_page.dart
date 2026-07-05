@@ -128,7 +128,12 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
         floatingActionButton: (widget.showFab && !selecting)
             ? FloatingActionButton(
                 tooltip: context.l10n.homePageAddDiaryButton,
-                onPressed: () => openNewDiaryEditor(context, DiaryType.tiptap),
+                // 处于分类筛选态时，新建日记预选当前分类。
+                onPressed: () => openNewDiaryEditor(
+                  context,
+                  DiaryType.tiptap,
+                  categoryId: _selectedCategoryId,
+                ),
                 child: const Icon(Icons.add),
               )
             : null,

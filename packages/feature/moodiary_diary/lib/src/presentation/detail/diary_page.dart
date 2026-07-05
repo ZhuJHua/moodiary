@@ -21,12 +21,16 @@ class DiaryPage extends ConsumerStatefulWidget {
 
   final DiaryType initialType;
 
+  /// 新建时预填的分类（来自首页当前筛选的分类）；已有日记忽略。
+  final String? initialCategoryId;
+
   final bool startInEdit;
 
   const DiaryPage({
     super.key,
     this.diaryId,
     this.initialType = DiaryType.markdown,
+    this.initialCategoryId,
     this.startInEdit = false,
   });
 
@@ -82,7 +86,11 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   EditControllerProvider get _provider =>
-      editControllerProvider(widget.diaryId, defaultType: widget.initialType);
+      editControllerProvider(
+        widget.diaryId,
+        defaultType: widget.initialType,
+        defaultCategoryId: widget.initialCategoryId,
+      );
 
   @override
   void initState() {

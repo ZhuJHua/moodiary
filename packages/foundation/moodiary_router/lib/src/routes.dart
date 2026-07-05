@@ -41,13 +41,21 @@ class NewDiaryRoute extends MoodiaryRouteBase {
 
   final String type;
 
-  const NewDiaryRoute({required this.type});
+  /// 新建日记预选的分类（来自首页当前筛选），可空。
+  final String? categoryId;
+
+  const NewDiaryRoute({required this.type, this.categoryId});
 
   @override
-  String get location => buildLocation('/diary-new', {'type': type});
+  String get location => buildLocation('/diary-new', {
+    'type': type,
+    'category-id': categoryId,
+  });
 
-  static NewDiaryRoute fromState(GoRouterState state) =>
-      NewDiaryRoute(type: state.uri.queryParameters['type'] ?? 'tiptap');
+  static NewDiaryRoute fromState(GoRouterState state) => NewDiaryRoute(
+    type: state.uri.queryParameters['type'] ?? 'tiptap',
+    categoryId: state.uri.queryParameters['category-id'],
+  );
 }
 
 class ShareRoute extends MoodiaryRouteBase {

@@ -18,6 +18,7 @@ List<RouteBase> diaryRoutes() => [
       final route = NewDiaryRoute.fromState(state);
       return DiaryPage(
         initialType: diaryTypeFromRouteQuery(route.type) ?? DiaryType.tiptap,
+        initialCategoryId: route.categoryId,
         startInEdit: true,
       );
     },
