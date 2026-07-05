@@ -180,7 +180,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
 
   Widget _categoryChip(BuildContext context, DiarySearchState state) {
     final categories = ref
-        .watch(categoryControllerProvider)
+        .watch(orderedCategoriesProvider)
         .when(
           data: (d) => d,
           loading: () => const <Category>[],

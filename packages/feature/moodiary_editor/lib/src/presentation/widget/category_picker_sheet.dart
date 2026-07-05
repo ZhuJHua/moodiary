@@ -12,7 +12,7 @@ class CategoryPickerSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(categoryControllerProvider);
+    final async = ref.watch(orderedCategoriesProvider);
     return SafeArea(
       child: async.buildLoading(
         data: (categories) {

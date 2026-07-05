@@ -9,11 +9,11 @@ import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
-/// 移动端首页壳（app 侧组合面）：把 moodiary_diary 的视图主体（全部日记 / 分类分区）
-/// 与 moodiary_sync 的 [SyncStatusButton]、新建日记 FAB 焊到一个分段式 AppBar 里。
-/// 这是 diary↔sync 的唯一相遇处，故留在 app 侧、不入包。
-enum _HomeSection { all, category }
-
+/// 移动端首页壳（app 侧组合面）：分类是同一份日记流的筛选维度，不是并列页——
+/// AppBar 下的 [CategoryFilterBar]（chips）承接高频切换，行尾入口打开
+/// [CategorySwitcherSheet] 承接长尾；三种视图 × 分类全正交。moodiary_diary 的视图
+/// 主体与 moodiary_sync 的 [SyncStatusButton]、新建日记 FAB 在此焊接（diary↔sync
+/// 的唯一相遇处，故留在 app 侧、不入包）。
 class _DiaryListView extends ConsumerStatefulWidget {
   final bool showFab;
 
@@ -24,42 +24,45 @@ class _DiaryListView extends ConsumerStatefulWidget {
 }
 
 class _DiaryListViewState extends ConsumerState<_DiaryListView> {
-  final PageController _pageController = PageController();
-  _HomeSection _section = _HomeSection.all;
+  String? _selectedCategoryId;
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  void _onCategorySelected(String? categoryId) {
+    if (categoryId == _selectedCategoryId) return;
+    setState(() => _selectedCategoryId = categoryId);
   }
 
-  void _onSectionSelected(_HomeSection next) {
-    if (next == _section) return;
-    setState(() => _section = next);
-    _pageController.animateToPage(
-      next.index,
-      duration: Durations.medium2,
-      curve: Curves.easeOutCubic,
+  Future<void> _openSwitcher() async {
+    final result = await CategorySwitcherSheet.show(
+      context,
+      selectedId: _selectedCategoryId,
     );
+    if (result == null || !mounted) return;
+    _onCategorySelected(result.categoryId);
   }
 
-  void _onPageChanged(int index) {
-    final next = _HomeSection.values[index];
-    if (next == _section) return;
-    setState(() => _section = next);
-  }
-
-  Widget _buildAllDiaryView() {
+  Widget _buildDiaryView() {
     return ValueListenableBuilder(
       valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
       builder: (context, viewMode, _) {
-        final viewModeType = ViewModeType.getType(viewMode);
-        return AnimatedSwitcher(
-          duration: Durations.short3,
-          child: switch (viewModeType) {
-            ViewModeType.list => const DiaryListView(categoryId: null),
-            ViewModeType.grid => const DiaryWaterFallView(categoryId: null),
-            ViewModeType.calendar => const CalendarView(),
+        return ValueListenableBuilder(
+          valueListenable: MoodiaryKVs.homeSortMode.getNotifier(),
+          builder: (context, sortMode, _) {
+            final viewModeType = ViewModeType.getType(viewMode);
+            final categoryId = _selectedCategoryId;
+            return AnimatedSwitcher(
+              duration: Durations.short3,
+              // key 含视图/排序/分类：任一变化都淡切重建（切排序顺带回顶）。
+              child: KeyedSubtree(
+                key: ValueKey('$viewMode-$sortMode-$categoryId'),
+                child: switch (viewModeType) {
+                  ViewModeType.list => DiaryListView(categoryId: categoryId),
+                  ViewModeType.grid => DiaryWaterFallView(
+                    categoryId: categoryId,
+                  ),
+                  ViewModeType.calendar => CalendarView(categoryId: categoryId),
+                },
+              ),
+            );
           },
         );
       },
@@ -71,10 +74,36 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
     final selection = ref.watch(diarySelectionProvider);
     final selecting = selection.isNotEmpty;
 
-    Widget body = PageView(
-      controller: _pageController,
-      onPageChanged: _onPageChanged,
-      children: [_buildAllDiaryView(), const DiaryCategorySectionView()],
+    // 选中的分类被删除（本地删 / 远端 tombstone）→ 复位「全部」并显式提示。
+    ref.listen(orderedCategoriesProvider, (_, next) {
+      final id = _selectedCategoryId;
+      final categories = next.value;
+      if (id == null || categories == null) return;
+      if (!categories.any((c) => c.id == id)) {
+        setState(() => _selectedCategoryId = null);
+        // 筛选上下文已变：一并退出多选，否则批删会跑在「全部」的分页列表上漏删。
+        ref.read(diarySelectionProvider.notifier).clear();
+        toast.info(message: '分类已被删除，已切回全部');
+      }
+    });
+
+    Widget body = Column(
+      children: [
+        // 多选态冻结筛选条（不隐藏，避免布局跳动；也防止选择中途切分类）。
+        AnimatedOpacity(
+          opacity: selecting ? 0.4 : 1,
+          duration: Durations.short3,
+          child: IgnorePointer(
+            ignoring: selecting,
+            child: CategoryFilterBar(
+              selectedId: _selectedCategoryId,
+              onSelected: _onCategorySelected,
+              onOpenSwitcher: _openSwitcher,
+            ),
+          ),
+        ),
+        Expanded(child: _buildDiaryView()),
+      ],
     );
     if (widget.showFab) {
       // 为底部 FAB 让出滚动空间：往子树 MediaQuery 注入额外底部留白，列表据此补 padding。
@@ -128,24 +157,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
 
   PreferredSizeWidget _normalAppBar(BuildContext context) {
     return AppBar(
-      titleSpacing: 8,
-      title: SegmentedButton<_HomeSection>(
-        showSelectedIcon: false,
-        style: SegmentedButton.styleFrom(
-          visualDensity: VisualDensity.compact,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          textStyle: Theme.of(context).textTheme.labelLarge,
-        ),
-        segments: [
-          ButtonSegment(
-            value: _HomeSection.all,
-            label: Text(context.l10n.categoryAll),
-          ),
-          const ButtonSegment(value: _HomeSection.category, label: Text('分类')),
-        ],
-        selected: {_section},
-        onSelectionChanged: (selection) => _onSectionSelected(selection.first),
-      ),
+      title: Text(context.l10n.appName),
       actions: [
         IconButton(
           tooltip: context.l10n.diarySearch,
@@ -196,11 +208,13 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       ),
     );
     if (confirmed != true) return;
+    // 必须传当前筛选分类：多选发生在当前列表，写死 null 会读到无人 watch 的
+    // autoDispose 空实例，批删静默失败。
     final n = await ref
-        .read(diaryControllerProvider(categoryId: null).notifier)
+        .read(diaryControllerProvider(categoryId: _selectedCategoryId).notifier)
         .softDeleteByIds(ids);
-    ref.read(diarySelectionProvider.notifier).clear();
     if (!mounted) return;
+    ref.read(diarySelectionProvider.notifier).clear();
     toast.success(message: '已移入回收站（$n 篇）');
   }
 }

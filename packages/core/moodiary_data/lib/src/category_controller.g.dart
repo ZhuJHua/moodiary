@@ -59,6 +59,113 @@ abstract class _$CategoryController extends $AsyncNotifier<List<Category>> {
   }
 }
 
+/// [categoryControllerProvider] 的用户自定义顺序视图（[MoodiaryKVs.categoryOrder]，
+/// 本机偏好）：KV 序优先，KV 外的（新建 / 远端拉下）按 id 序追加尾部。首页筛选条 /
+/// 切换面板 / 分类管理页等展示面消费它；按 id 查询的 provider 不受影响。
+
+@ProviderFor(orderedCategories)
+final orderedCategoriesProvider = OrderedCategoriesProvider._();
+
+/// [categoryControllerProvider] 的用户自定义顺序视图（[MoodiaryKVs.categoryOrder]，
+/// 本机偏好）：KV 序优先，KV 外的（新建 / 远端拉下）按 id 序追加尾部。首页筛选条 /
+/// 切换面板 / 分类管理页等展示面消费它；按 id 查询的 provider 不受影响。
+
+final class OrderedCategoriesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Category>>,
+          AsyncValue<List<Category>>,
+          AsyncValue<List<Category>>
+        >
+    with $Provider<AsyncValue<List<Category>>> {
+  /// [categoryControllerProvider] 的用户自定义顺序视图（[MoodiaryKVs.categoryOrder]，
+  /// 本机偏好）：KV 序优先，KV 外的（新建 / 远端拉下）按 id 序追加尾部。首页筛选条 /
+  /// 切换面板 / 分类管理页等展示面消费它；按 id 查询的 provider 不受影响。
+  OrderedCategoriesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'orderedCategoriesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$orderedCategoriesHash();
+
+  @$internal
+  @override
+  $ProviderElement<AsyncValue<List<Category>>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AsyncValue<List<Category>> create(Ref ref) {
+    return orderedCategories(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<List<Category>> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<List<Category>>>(value),
+    );
+  }
+}
+
+String _$orderedCategoriesHash() => r'8530cfec8547fe7adba9d813b3fc808e7fbc5b25';
+
+/// 各分类下「可见」日记数 + 可见总数（含未分类），供分类管理页 / 切换面板展示。
+/// 订阅日记事件流自失效（debounce 合并连发；分类增删不影响计数，缺项回退 0）。
+
+@ProviderFor(categoryDiaryCounts)
+final categoryDiaryCountsProvider = CategoryDiaryCountsProvider._();
+
+/// 各分类下「可见」日记数 + 可见总数（含未分类），供分类管理页 / 切换面板展示。
+/// 订阅日记事件流自失效（debounce 合并连发；分类增删不影响计数，缺项回退 0）。
+
+final class CategoryDiaryCountsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<({Map<String, int> byCategory, int total})>,
+          ({Map<String, int> byCategory, int total}),
+          FutureOr<({Map<String, int> byCategory, int total})>
+        >
+    with
+        $FutureModifier<({Map<String, int> byCategory, int total})>,
+        $FutureProvider<({Map<String, int> byCategory, int total})> {
+  /// 各分类下「可见」日记数 + 可见总数（含未分类），供分类管理页 / 切换面板展示。
+  /// 订阅日记事件流自失效（debounce 合并连发；分类增删不影响计数，缺项回退 0）。
+  CategoryDiaryCountsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'categoryDiaryCountsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$categoryDiaryCountsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<({Map<String, int> byCategory, int total})>
+  $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<({Map<String, int> byCategory, int total})> create(Ref ref) {
+    return categoryDiaryCounts(ref);
+  }
+}
+
+String _$categoryDiaryCountsHash() =>
+    r'928b55e44ab6f84967d4423aeafcbb7dfa79b1a1';
+
 @ProviderFor(getCategory)
 final getCategoryProvider = GetCategoryFamily._();
 
@@ -113,7 +220,7 @@ final class GetCategoryProvider
   }
 }
 
-String _$getCategoryHash() => r'f1e52390dc0b4576e8a4d68b10db6f7c40b9d8d5';
+String _$getCategoryHash() => r'62406365bf60de3d165fd335cfa21689a01f869d';
 
 final class GetCategoryFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Category?>, String> {

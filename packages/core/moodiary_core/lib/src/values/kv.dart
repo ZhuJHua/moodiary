@@ -39,6 +39,11 @@ enum MoodiaryKVs<T extends Object> {
 
   quality<int>(defaultValue: 2),
   homeViewMode<int>(defaultValue: 1 /* ViewModeType.grid.number */),
+  homeSortMode<int>(defaultValue: 0 /* DiarySort.timeDesc.number */),
+
+  /// 分类的自定义顺序（有序分类 id）。本机偏好、不入同步；不在列表内的分类
+  /// （新建 / 远端拉下）按 id 序追加尾部，陈旧 id 读取时滤除。
+  categoryOrder<List<String>>(),
 
   /// 日记搜索历史（最近在前、去重、截断到上限）。
   searchHistory<List<String>>(),

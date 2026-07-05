@@ -1,7 +1,11 @@
+import 'dart:async';
+
+import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'category_repository.dart';
+import 'diary_repository.dart';
 
 part 'category_controller.g.dart';
 
@@ -58,6 +62,57 @@ class CategoryController extends _$CategoryController {
     final either = await _repository.deleteACategory(id).run();
     return either.getOrElse((_) => false);
   }
+}
+
+/// [categoryControllerProvider] 的用户自定义顺序视图（[MoodiaryKVs.categoryOrder]，
+/// 本机偏好）：KV 序优先，KV 外的（新建 / 远端拉下）按 id 序追加尾部。首页筛选条 /
+/// 切换面板 / 分类管理页等展示面消费它；按 id 查询的 provider 不受影响。
+@riverpod
+AsyncValue<List<Category>> orderedCategories(Ref ref) {
+  final orderNotifier = MoodiaryKVs.categoryOrder.getNotifierOr(
+    const <String>[],
+  );
+  void onOrderChanged() => ref.invalidateSelf();
+  orderNotifier.addListener(onOrderChanged);
+  ref.onDispose(() => orderNotifier.removeListener(onOrderChanged));
+  final async = ref.watch(categoryControllerProvider);
+  return async.whenData(
+    (categories) => applyCategoryOrder(categories, orderNotifier.value),
+  );
+}
+
+/// 纯函数便于单测：按 [order]（有序 id）重排 [categories]，陈旧 id 自然滤除。
+List<Category> applyCategoryOrder(
+  List<Category> categories,
+  List<String> order,
+) {
+  if (order.isEmpty) return categories;
+  final byId = {for (final c in categories) c.id: c};
+  final result = <Category>[];
+  for (final id in order) {
+    final c = byId.remove(id);
+    if (c != null) result.add(c);
+  }
+  result.addAll(byId.values.toList()..sort((a, b) => a.id.compareTo(b.id)));
+  return result;
+}
+
+/// 各分类下「可见」日记数 + 可见总数（含未分类），供分类管理页 / 切换面板展示。
+/// 订阅日记事件流自失效（debounce 合并连发；分类增删不影响计数，缺项回退 0）。
+@riverpod
+Future<({Map<String, int> byCategory, int total})> categoryDiaryCounts(
+  Ref ref,
+) async {
+  Timer? debounce;
+  final sub = DiaryRepository.get().diaryEvents.listen((_) {
+    debounce?.cancel();
+    debounce = Timer(const Duration(milliseconds: 200), ref.invalidateSelf);
+  });
+  ref.onDispose(() {
+    debounce?.cancel();
+    sub.cancel();
+  });
+  return DiaryRepository.get().diaryCountByCategory();
 }
 
 @riverpod

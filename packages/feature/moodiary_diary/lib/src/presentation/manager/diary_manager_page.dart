@@ -21,7 +21,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
   Widget build(BuildContext context) {
     final provider = diaryControllerProvider(categoryId: _categoryFilter);
     final async = ref.watch(provider);
-    final categories = ref.watch(categoryControllerProvider);
+    final categories = ref.watch(orderedCategoriesProvider);
 
     return Scaffold(
       appBar: AppBar(

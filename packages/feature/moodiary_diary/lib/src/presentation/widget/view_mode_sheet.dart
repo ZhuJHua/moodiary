@@ -20,27 +20,39 @@ class ViewModeSheet extends StatelessWidget {
     ViewModeType.calendar => context.l10n.diaryViewModeCalendar,
   };
 
+  String _sortLabel(DiarySort sort) => switch (sort) {
+    DiarySort.timeDesc => '最新在前',
+    DiarySort.timeAsc => '最早在前',
+    DiarySort.lastModifiedDesc => '最近修改在前',
+  };
+
+  IconData _sortIcon(DiarySort sort) => switch (sort) {
+    DiarySort.timeDesc => Icons.south_rounded,
+    DiarySort.timeAsc => Icons.north_rounded,
+    DiarySort.lastModifiedDesc => Icons.edit_calendar_rounded,
+  };
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                context.l10n.diaryPageViewModeButton,
-                style: context.textTheme.titleMedium,
-              ),
-            ),
-            ValueListenableBuilder<int>(
-              valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
-              builder: (context, mode, _) {
-                final current = ViewModeType.getType(mode);
-                return Row(
+        child: ValueListenableBuilder<int>(
+          valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
+          builder: (context, mode, _) {
+            final current = ViewModeType.getType(mode);
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    context.l10n.diaryPageViewModeButton,
+                    style: context.textTheme.titleMedium,
+                  ),
+                ),
+                Row(
                   crossAxisAlignment: .start,
                   spacing: 12,
                   children: [
@@ -57,12 +69,75 @@ class ViewModeSheet extends StatelessWidget {
                         ),
                       ),
                   ],
+                ),
+                const SizedBox(height: 20),
+                _buildSortSection(
+                  context,
+                  disabled: current == ViewModeType.calendar,
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// 排序节：选中即写 KV、不关 sheet（可连着调视图 + 排序）。日历按日期组织、
+  /// 不受排序影响 → 日历态整节置灰禁用。
+  Widget _buildSortSection(BuildContext context, {required bool disabled}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('排序', style: context.textTheme.titleMedium),
+            if (disabled) ...[
+              const SizedBox(width: 8),
+              Text(
+                '日历按日期组织，不受排序影响',
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        AnimatedOpacity(
+          opacity: disabled ? 0.4 : 1,
+          duration: Durations.short3,
+          child: IgnorePointer(
+            ignoring: disabled,
+            child: ValueListenableBuilder<int>(
+              valueListenable: MoodiaryKVs.homeSortMode.getNotifier(),
+              builder: (context, sortMode, _) {
+                return RadioGroup<int>(
+                  groupValue: sortMode,
+                  onChanged: (v) {
+                    if (v != null) MoodiaryKVs.homeSortMode.set(v);
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final sort in DiarySort.values)
+                        RadioListTile<int>(
+                          value: sort.number,
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                          title: Text(_sortLabel(sort)),
+                          secondary: Icon(_sortIcon(sort), size: 20),
+                        ),
+                    ],
+                  ),
                 );
               },
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

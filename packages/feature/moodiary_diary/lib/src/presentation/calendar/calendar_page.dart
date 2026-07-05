@@ -11,9 +11,11 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_card.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 
-/// 日记页「全部」分段下的日历视图（与列表 / 网格并列），非独立页面。
+/// 首页的日历视图（与列表 / 网格并列），非独立页面；可按 [categoryId] 过滤。
 class CalendarView extends ConsumerStatefulWidget {
-  const CalendarView({super.key});
+  final String? categoryId;
+
+  const CalendarView({super.key, this.categoryId});
 
   @override
   ConsumerState<CalendarView> createState() => _CalendarViewState();
@@ -32,7 +34,12 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final scheme = context.colorScheme;
-    final async = ref.watch(monthDiariesProvider(month: _currentMonth));
+    final async = ref.watch(
+      monthDiariesProvider(
+        month: _currentMonth,
+        categoryId: widget.categoryId,
+      ),
+    );
 
     final calendar = async.maybeWhen(
       data: (list) => _buildDatePicker(context, list),

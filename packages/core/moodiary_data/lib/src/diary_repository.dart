@@ -186,32 +186,30 @@ class DiaryRepository {
     return pending.length;
   }
 
+  /// isarId 兜底并列项（time / lastModified 相同）——保证分页边界不重不漏。
   Future<List<Diary>> getDiaryByCategory({
     String? categoryId,
     int? offset,
     int? limit,
+    DiarySort sort = DiarySort.timeDesc,
   }) async {
-    if (categoryId == null) {
-      return await _isar.diarys
-          .where()
-          .showEqualTo(true)
-          .deletedEqualTo(false)
-          .sortByTimeDesc()
-          .findAllAsync(offset: offset, limit: limit);
-    } else {
-      return await _isar.diarys
-          .where()
-          .showEqualTo(true)
-          .deletedEqualTo(false)
-          .categoryIdEqualTo(categoryId)
-          .sortByTimeDesc()
-          .findAllAsync(offset: offset, limit: limit);
-    }
+    final base = _isar.diarys.where().showEqualTo(true).deletedEqualTo(false);
+    final filtered = categoryId == null
+        ? base
+        : base.categoryIdEqualTo(categoryId);
+    final sorted = switch (sort) {
+      DiarySort.timeDesc => filtered.sortByTimeDesc().thenByIsarIdDesc(),
+      DiarySort.timeAsc => filtered.sortByTime().thenByIsarId(),
+      DiarySort.lastModifiedDesc =>
+        filtered.sortByLastModifiedDesc().thenByIsarIdDesc(),
+    };
+    return sorted.findAllAsync(offset: offset, limit: limit);
   }
 
-  /// 每个分类下「可见」日记的数量（categoryId -> count），供分类管理页展示。
-  /// 只取 categoryId 属性、在 Dart 侧计数，避免载入整篇。
-  Future<Map<String, int>> diaryCountByCategory() async {
+  /// 每个分类下「可见」日记的数量（categoryId -> count）与可见总数（含未分类），
+  /// 供分类管理页 / 切换面板展示。只取 categoryId 属性、在 Dart 侧计数，避免载入整篇。
+  Future<({Map<String, int> byCategory, int total})>
+  diaryCountByCategory() async {
     final ids = await _isar.diarys
         .where()
         .showEqualTo(true)
@@ -224,17 +222,7 @@ class DiaryRepository {
         counts[id] = (counts[id] ?? 0) + 1;
       }
     }
-    return counts;
-  }
-
-  Future<List<Diary>> getDiaryByMonth(int year, int month) async {
-    return await _isar.diarys
-        .where()
-        .showEqualTo(true)
-        .deletedEqualTo(false)
-        .yMEqualTo('$year/$month')
-        .sortByTimeDesc()
-        .findAllAsync();
+    return (byCategory: counts, total: ids.length);
   }
 
   Future<Diary?> getDiaryByID(int isarId) async {
@@ -336,11 +324,13 @@ class DiaryRepository {
   }
 
   Future<List<Diary>> getRecycleBinDiaries() async {
+    // isarId 兜底与 _applyEvent 的缺省比较器一致，避免同刻并列项在事件重排后换位。
     return await _isar.diarys
         .where()
         .showEqualTo(false)
         .deletedEqualTo(false)
         .sortByTimeDesc()
+        .thenByIsarIdDesc()
         .findAllAsync();
   }
 

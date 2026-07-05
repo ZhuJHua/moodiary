@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-
-/// 各分类下「可见」日记数量（categoryId -> count）。新增/删除后 invalidate 刷新。
-final categoryDiaryCountsProvider =
-    FutureProvider.autoDispose<Map<String, int>>((ref) async {
-      return DiaryRepository.get().diaryCountByCategory();
-    });
 
 class CategoryManagerPage extends ConsumerStatefulWidget {
   const CategoryManagerPage({super.key});
@@ -25,9 +20,10 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final async = ref.watch(categoryControllerProvider);
+    final async = ref.watch(orderedCategoriesProvider);
     final counts =
-        ref.watch(categoryDiaryCountsProvider).value ?? const <String, int>{};
+        ref.watch(categoryDiaryCountsProvider).value?.byCategory ??
+        const <String, int>{};
     return Scaffold(
       appBar: AppBar(title: const Text('分类管理')),
       floatingActionButton: FloatingActionButton(
@@ -48,28 +44,98 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
           return Column(
             children: [
               _SearchField(onChanged: (v) => setState(() => _query = v)),
-              Expanded(
-                child: filtered.isEmpty
-                    ? const _NoMatch()
-                    : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(12, 4, 12, 88),
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          final c = filtered[index];
-                          return _CategoryTile(
-                            category: c,
-                            count: counts[c.id] ?? 0,
-                            onRename: () => _onEditCategory(c),
-                            onDelete: () => _onDelete(c),
-                          );
-                        },
-                      ),
-              ),
+              Expanded(child: _buildList(filtered, counts, canReorder: q.isEmpty)),
             ],
           );
         },
       ),
     );
+  }
+
+  /// 搜索过滤态禁拖：过滤后的 index 无法映射回全量顺序。
+  Widget _buildList(
+    List<Category> categories,
+    Map<String, int> counts, {
+    required bool canReorder,
+  }) {
+    if (categories.isEmpty) return const _NoMatch();
+    const padding = EdgeInsets.fromLTRB(12, 4, 12, 88);
+    if (!canReorder) {
+      return ListView.builder(
+        padding: padding,
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final c = categories[index];
+          return _CategoryTile(
+            category: c,
+            count: counts[c.id] ?? 0,
+            onRename: () => _onEditCategory(c),
+            onDelete: () => _onDelete(c),
+          );
+        },
+      );
+    }
+    return ReorderableListView.builder(
+      padding: padding,
+      buildDefaultDragHandles: false,
+      // 默认装饰是方形 Material + 投影，与圆角卡片不符：换成跟手放大 + 圆角软投影。
+      proxyDecorator: (child, index, animation) => AnimatedBuilder(
+        animation: animation,
+        builder: (context, _) {
+          final t = Curves.easeOut.transform(animation.value);
+          return Transform.scale(
+            scale: 1 + 0.03 * t,
+            child: Material(
+              color: Colors.transparent,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12 * t),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: child,
+              ),
+            ),
+          );
+        },
+        child: child,
+      ),
+      onReorderItem: (oldIndex, newIndex) =>
+          _onReorder(categories, oldIndex, newIndex),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final c = categories[index];
+        // 长按整行 / 拖行尾把手皆可拖。
+        return ReorderableDelayedDragStartListener(
+          key: ValueKey(c.id),
+          index: index,
+          child: _CategoryTile(
+            category: c,
+            count: counts[c.id] ?? 0,
+            dragIndex: index,
+            onRename: () => _onEditCategory(c),
+            onDelete: () => _onDelete(c),
+          ),
+        );
+      },
+    );
+  }
+
+  // onReorderItem 已修正过 newIndex（移除位之后的落点），无需再自减。
+  void _onReorder(List<Category> ordered, int oldIndex, int newIndex) {
+    if (newIndex == oldIndex) return;
+    final ids = [for (final c in ordered) c.id];
+    ids.insert(newIndex, ids.removeAt(oldIndex));
+    // 先就地推给 notifier（同帧生效，避免落点在平台写入返回前的几帧回跳旧序），
+    // 再异步持久化；同一实例二次写入不会重复通知。
+    MoodiaryKVs.categoryOrder.getNotifierOr(const []).updateFromStorage(ids);
+    MoodiaryKVs.categoryOrder.set(ids);
+    HapticFeedback.mediumImpact();
   }
 
   Future<void> _onAddCategory() async {
@@ -90,7 +156,6 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
         );
     if (!mounted) return;
     if (ok) {
-      ref.invalidate(categoryDiaryCountsProvider);
       toast.success(message: '已创建「${draft.name}」');
     } else {
       toast.error(message: '创建失败');
@@ -155,7 +220,6 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
         .deleteCategory(category.id);
     if (!mounted) return;
     if (ok) {
-      ref.invalidate(categoryDiaryCountsProvider);
       toast.success(message: '已删除');
     } else {
       toast.error(message: '分类下仍有日记，删除失败');
@@ -170,21 +234,19 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
       child: TextField(
         onChanged: onChanged,
         textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
+        // 与 LLM 供应商选择页的搜索框同款：12dp 圆角矩形 + 主题默认填充。
+        decoration: const InputDecoration(
           hintText: '搜索分类',
-          prefixIcon: const Icon(Icons.search_rounded),
-          isDense: true,
+          prefixIcon: Icon(Icons.search_rounded),
           filled: true,
-          fillColor: scheme.surfaceContainerHighest,
-          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          isDense: true,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: AppBorderRadius.mediumBorderRadius,
             borderSide: BorderSide.none,
           ),
         ),
@@ -237,12 +299,14 @@ class _Empty extends StatelessWidget {
 class _CategoryTile extends StatelessWidget {
   final Category category;
   final int count;
+  final int? dragIndex;
   final VoidCallback onRename;
   final VoidCallback onDelete;
 
   const _CategoryTile({
     required this.category,
     required this.count,
+    this.dragIndex,
     required this.onRename,
     required this.onDelete,
   });
@@ -281,37 +345,53 @@ class _CategoryTile extends StatelessWidget {
             color: scheme.onSurfaceVariant,
           ),
         ),
-        trailing: PopupMenuButton<String>(
-          tooltip: '更多',
-          onSelected: (key) {
-            switch (key) {
-              case 'rename':
-                onRename();
-              case 'delete':
-                onDelete();
-            }
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(
-              value: 'rename',
-              child: Row(
-                children: [
-                  Icon(Icons.edit_outlined, size: 18),
-                  SizedBox(width: 10),
-                  Text('重命名'),
-                ],
-              ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PopupMenuButton<String>(
+              tooltip: '更多',
+              onSelected: (key) {
+                switch (key) {
+                  case 'rename':
+                    onRename();
+                  case 'delete':
+                    onDelete();
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: 'rename',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit_outlined, size: 18),
+                      SizedBox(width: 10),
+                      Text('重命名'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, size: 18),
+                      SizedBox(width: 10),
+                      Text('删除'),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete_outline, size: 18),
-                  SizedBox(width: 10),
-                  Text('删除'),
-                ],
+            if (dragIndex != null)
+              ReorderableDragStartListener(
+                index: dragIndex!,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Icon(
+                    Icons.drag_handle_rounded,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ),

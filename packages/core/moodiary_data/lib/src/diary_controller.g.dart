@@ -56,7 +56,7 @@ final class DiaryControllerProvider
   }
 }
 
-String _$diaryControllerHash() => r'39a5b5b60375903d53a0e793dbf17f4c7670d11a';
+String _$diaryControllerHash() => r'5f2386e5eeaf3f2b2adc7cb5b219c2d95b7590de';
 
 /// 按 [categoryId] 维度的日记列表（`categoryId == null` 表示「全部分类」）。
 /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新，无需重查库。
@@ -141,7 +141,7 @@ final class RecycleBinDiariesProvider
   RecycleBinDiaries create() => RecycleBinDiaries();
 }
 
-String _$recycleBinDiariesHash() => r'0d58d9c21578315d46d93fa49bbfdfc223d9ba4d';
+String _$recycleBinDiariesHash() => r'e46b18e3b58dab07047a4687e21936542b972c25';
 
 /// 回收站列表（按时间倒序的所有 `show == false` 的日记）。
 
@@ -182,7 +182,8 @@ final class GetDiaryProvider
   /// richText。
   GetDiaryProvider._({
     required GetDiaryFamily super.from,
-    required ({String? id, DiaryType? defaultType}) super.argument,
+    required ({String? id, DiaryType? defaultType, String? defaultCategoryId})
+    super.argument,
   }) : super(
          retry: null,
          name: r'getDiaryProvider',
@@ -208,8 +209,19 @@ final class GetDiaryProvider
 
   @override
   Stream<Diary?> create(Ref ref) {
-    final argument = this.argument as ({String? id, DiaryType? defaultType});
-    return getDiary(ref, id: argument.id, defaultType: argument.defaultType);
+    final argument =
+        this.argument
+            as ({
+              String? id,
+              DiaryType? defaultType,
+              String? defaultCategoryId,
+            });
+    return getDiary(
+      ref,
+      id: argument.id,
+      defaultType: argument.defaultType,
+      defaultCategoryId: argument.defaultCategoryId,
+    );
   }
 
   @override
@@ -223,7 +235,7 @@ final class GetDiaryProvider
   }
 }
 
-String _$getDiaryHash() => r'f07f6905057b4a20c96fbc4e6680b3c417392c87';
+String _$getDiaryHash() => r'de135055669617d1afc970274b85806e5acd4117';
 
 /// 取单条日记的「活动流」：实时跟随 [DiaryRepository.watchDiary]，彻底删除时发出 `null`。
 /// id 为空发出空模板用于「新建」，此时务必显式传 [defaultType]，否则无法确定 markdown /
@@ -233,7 +245,7 @@ final class GetDiaryFamily extends $Family
     with
         $FunctionalFamilyOverride<
           Stream<Diary?>,
-          ({String? id, DiaryType? defaultType})
+          ({String? id, DiaryType? defaultType, String? defaultCategoryId})
         > {
   GetDiaryFamily._()
     : super(
@@ -248,11 +260,18 @@ final class GetDiaryFamily extends $Family
   /// id 为空发出空模板用于「新建」，此时务必显式传 [defaultType]，否则无法确定 markdown /
   /// richText。
 
-  GetDiaryProvider call({String? id, DiaryType? defaultType}) =>
-      GetDiaryProvider._(
-        argument: (id: id, defaultType: defaultType),
-        from: this,
-      );
+  GetDiaryProvider call({
+    String? id,
+    DiaryType? defaultType,
+    String? defaultCategoryId,
+  }) => GetDiaryProvider._(
+    argument: (
+      id: id,
+      defaultType: defaultType,
+      defaultCategoryId: defaultCategoryId,
+    ),
+    from: this,
+  );
 
   @override
   String toString() => r'getDiaryProvider';

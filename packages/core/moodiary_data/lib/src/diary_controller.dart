@@ -6,33 +6,51 @@ import 'diary_repository.dart';
 
 part 'diary_controller.g.dart';
 
-/// 把单条 [DiaryEvent] 原地并入已加载列表（按时间倒序）。[belongs] 判定日记是否属于
-/// 当前视图：增 / 改时属于则 upsert + 重排，不属于则移除（处理软删 / 还原导致的迁出）。
+/// 与 [DiaryRepository.getDiaryByCategory] 的库内排序逐字段一致（含 isarId 兜底），
+/// 否则增量事件会把列表重排回另一种顺序、分页 offset 失准。
+Comparator<Diary> diarySortComparator(DiarySort sort) => switch (sort) {
+  DiarySort.timeDesc => (a, b) {
+    final c = b.time.compareTo(a.time);
+    return c != 0 ? c : b.isarId.compareTo(a.isarId);
+  },
+  DiarySort.timeAsc => (a, b) {
+    final c = a.time.compareTo(b.time);
+    return c != 0 ? c : a.isarId.compareTo(b.isarId);
+  },
+  DiarySort.lastModifiedDesc => (a, b) {
+    final c = b.lastModified.compareTo(a.lastModified);
+    return c != 0 ? c : b.isarId.compareTo(a.isarId);
+  },
+};
+
+/// 把单条 [DiaryEvent] 原地并入已加载列表（排序由 [compare] 决定，缺省时间倒序）。
+/// [belongs] 判定日记是否属于当前视图：增 / 改时属于则 upsert + 重排，不属于则移除
+/// （处理软删 / 还原导致的迁出）。
 ///
 /// 内存增量与库内增量逐条一致，故分页 offset（= 已加载条数）始终与库对齐，无需重查。
+/// 该不变量要求「列表 == 库内同序前缀」——排位落在已加载窗口之外的 upsert（如
+/// timeAsc 下新建的日记属于库尾）在 [mayHaveMore] 时不得并入，交给分页取到，
+/// 否则 offset 失准会跳读 / 重复。
 List<Diary> _applyEvent(
   List<Diary> list,
   DiaryEvent event, {
   required bool Function(Diary) belongs,
+  Comparator<Diary>? compare,
+  bool mayHaveMore = false,
 }) {
+  final cmp = compare ?? diarySortComparator(DiarySort.timeDesc);
   switch (event) {
     case DiaryDeleted(:final isarId):
       if (!list.any((d) => d.isarId == isarId)) return list;
       return list.where((d) => d.isarId != isarId).toList();
     case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
-      final index = list.indexWhere((d) => d.isarId == diary.isarId);
-      if (!belongs(diary)) {
-        if (index == -1) return list;
-        return list.where((d) => d.isarId != diary.isarId).toList();
+      final without = list.where((d) => d.isarId != diary.isarId).toList();
+      final removed = without.length != list.length;
+      if (!belongs(diary)) return removed ? without : list;
+      if (mayHaveMore && without.isNotEmpty && cmp(diary, without.last) > 0) {
+        return removed ? without : list;
       }
-      final updated = [...list];
-      if (index == -1) {
-        updated.add(diary);
-      } else {
-        updated[index] = diary;
-      }
-      updated.sort((a, b) => b.time.compareTo(a.time));
-      return updated;
+      return [...without, diary]..sort(cmp);
   }
 }
 
@@ -42,10 +60,17 @@ List<Diary> _applyEvent(
 class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   late final DiaryRepository _repository = DiaryRepository.get();
 
+  DiarySort get _sort => DiarySort.getType(MoodiaryKVs.homeSortMode.get()!);
+
   @override
   FutureOr<List<Diary>> build({String? categoryId}) async {
     final sub = _repository.diaryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
+    // 排序偏好变更 → 重查首页（offset 语义随排序变化，不能原地重排已加载分页）。
+    final sortNotifier = MoodiaryKVs.homeSortMode.getNotifier();
+    void onSortChanged() => refresh();
+    sortNotifier.addListener(onSortChanged);
+    ref.onDispose(() => sortNotifier.removeListener(onSortChanged));
     return init();
   }
 
@@ -55,6 +80,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
       categoryId: categoryId,
       limit: limit,
       offset: offset,
+      sort: _sort,
     );
   }
 
@@ -70,6 +96,8 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
             d.show &&
             !d.deleted &&
             (categoryId == null || d.categoryId == categoryId),
+        compare: diarySortComparator(_sort),
+        mayHaveMore: !noMore,
       ),
     );
   }
@@ -157,14 +185,22 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
 /// id 为空发出空模板用于「新建」，此时务必显式传 [defaultType]，否则无法确定 markdown /
 /// richText。
 @riverpod
-Stream<Diary?> getDiary(Ref ref, {String? id, DiaryType? defaultType}) async* {
+Stream<Diary?> getDiary(
+  Ref ref, {
+  String? id,
+  DiaryType? defaultType,
+  String? defaultCategoryId,
+}) async* {
   if (id == null || id.isEmpty) {
     if (defaultType == null) {
       throw ArgumentError(
         'getDiary: 新建空白日记必须显式提供 defaultType（id 为空时）',
       );
     }
-    yield Diary.empty(type: defaultType);
+    final empty = Diary.empty(type: defaultType);
+    yield defaultCategoryId == null
+        ? empty
+        : empty.copyWith(categoryId: defaultCategoryId);
     return;
   }
   final repository = DiaryRepository.get();
