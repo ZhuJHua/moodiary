@@ -9,11 +9,9 @@ import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
-/// 移动端首页壳（app 侧组合面）：分类是同一份日记流的筛选维度，不是并列页——
-/// AppBar 下的 [CategoryFilterBar]（chips）承接高频切换，行尾入口打开
-/// [CategorySwitcherSheet] 承接长尾；三种视图 × 分类全正交。moodiary_diary 的视图
-/// 主体与 moodiary_sync 的 [SyncStatusButton]、新建日记 FAB 在此焊接（diary↔sync
-/// 的唯一相遇处，故留在 app 侧、不入包）。
+/// 移动端首页壳（app 侧组合面）：把 moodiary_diary 的视图主体与 moodiary_sync 的
+/// [SyncStatusButton]、新建日记 FAB 焊到一起。这是 diary↔sync 的唯一相遇处，故留在
+/// app 侧、不入包。
 class _DiaryListView extends ConsumerStatefulWidget {
   final bool showFab;
 
@@ -51,7 +49,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
             final categoryId = _selectedCategoryId;
             return AnimatedSwitcher(
               duration: Durations.short3,
-              // key 含视图/排序/分类：任一变化都淡切重建（切排序顺带回顶）。
               child: KeyedSubtree(
                 key: ValueKey('$viewMode-$sortMode-$categoryId'),
                 child: switch (viewModeType) {
@@ -74,22 +71,19 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
     final selection = ref.watch(diarySelectionProvider);
     final selecting = selection.isNotEmpty;
 
-    // 选中的分类被删除（本地删 / 远端 tombstone）→ 复位「全部」并显式提示。
     ref.listen(orderedCategoriesProvider, (_, next) {
       final id = _selectedCategoryId;
       final categories = next.value;
       if (id == null || categories == null) return;
       if (!categories.any((c) => c.id == id)) {
         setState(() => _selectedCategoryId = null);
-        // 筛选上下文已变：一并退出多选，否则批删会跑在「全部」的分页列表上漏删。
         ref.read(diarySelectionProvider.notifier).clear();
-        toast.info(message: '分类已被删除，已切回全部');
+        toast.info(message: context.l10n.categoryDeletedReset);
       }
     });
 
     Widget body = Column(
       children: [
-        // 多选态冻结筛选条（不隐藏，避免布局跳动；也防止选择中途切分类）。
         AnimatedOpacity(
           opacity: selecting ? 0.4 : 1,
           duration: Durations.short3,
@@ -128,7 +122,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
         floatingActionButton: (widget.showFab && !selecting)
             ? FloatingActionButton(
                 tooltip: context.l10n.homePageAddDiaryButton,
-                // 处于分类筛选态时，新建日记预选当前分类。
                 onPressed: () => openNewDiaryEditor(
                   context,
                   DiaryType.tiptap,
@@ -213,8 +206,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       ),
     );
     if (confirmed != true) return;
-    // 必须传当前筛选分类：多选发生在当前列表，写死 null 会读到无人 watch 的
-    // autoDispose 空实例，批删静默失败。
     final n = await ref
         .read(diaryControllerProvider(categoryId: _selectedCategoryId).notifier)
         .softDeleteByIds(ids);

@@ -52,7 +52,6 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
     );
   }
 
-  /// 搜索过滤态禁拖：过滤后的 index 无法映射回全量顺序。
   Widget _buildList(
     List<Category> categories,
     Map<String, int> counts, {
@@ -78,7 +77,6 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
     return ReorderableListView.builder(
       padding: padding,
       buildDefaultDragHandles: false,
-      // 默认装饰是方形 Material + 投影，与圆角卡片不符：换成跟手放大 + 圆角软投影。
       proxyDecorator: (child, index, animation) => AnimatedBuilder(
         animation: animation,
         builder: (context, _) {
@@ -110,7 +108,6 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final c = categories[index];
-        // 长按整行 / 拖行尾把手皆可拖。
         return ReorderableDelayedDragStartListener(
           key: ValueKey(c.id),
           index: index,
@@ -126,13 +123,10 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
     );
   }
 
-  // onReorderItem 已修正过 newIndex（移除位之后的落点），无需再自减。
   void _onReorder(List<Category> ordered, int oldIndex, int newIndex) {
     if (newIndex == oldIndex) return;
     final ids = [for (final c in ordered) c.id];
     ids.insert(newIndex, ids.removeAt(oldIndex));
-    // 先就地推给 notifier（同帧生效，避免落点在平台写入返回前的几帧回跳旧序），
-    // 再异步持久化；同一实例二次写入不会重复通知。
     MoodiaryKVs.categoryOrder.getNotifierOr(const []).updateFromStorage(ids);
     MoodiaryKVs.categoryOrder.set(ids);
     HapticFeedback.mediumImpact();
@@ -239,13 +233,12 @@ class _SearchField extends StatelessWidget {
       child: TextField(
         onChanged: onChanged,
         textInputAction: TextInputAction.search,
-        // 与 LLM 供应商选择页的搜索框同款：12dp 圆角矩形 + 主题默认填充。
-        decoration: const InputDecoration(
-          hintText: '搜索分类',
-          prefixIcon: Icon(Icons.search_rounded),
+        decoration: InputDecoration(
+          hintText: context.l10n.categorySearchHint,
+          prefixIcon: const Icon(Icons.search_rounded),
           filled: true,
           isDense: true,
-          border: OutlineInputBorder(
+          border: const OutlineInputBorder(
             borderRadius: AppBorderRadius.mediumBorderRadius,
             borderSide: BorderSide.none,
           ),
@@ -262,7 +255,7 @@ class _NoMatch extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(
-        '没有匹配的分类',
+        context.l10n.categoryNoMatch,
         style: context.textTheme.bodyMedium?.copyWith(
           color: context.colorScheme.onSurfaceVariant,
         ),

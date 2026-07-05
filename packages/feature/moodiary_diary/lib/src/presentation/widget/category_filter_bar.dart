@@ -7,10 +7,6 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 
-/// 首页分类筛选条：可横滚的无边框 stadium 胶囊行（首个 =「全部」，分类胶囊带色点，
-/// 选中态用分类色淡染底色），行尾固定的切换面板入口（有新分类正在同步时挂 Badge）。
-/// 顺序消费 [orderedCategoriesProvider]（顺序即置顶）。无分类且无在途同步时整条隐藏；
-/// 加载中渲染骨架胶囊。
 class CategoryFilterBar extends ConsumerStatefulWidget {
   final String? selectedId;
   final ValueChanged<String?> onSelected;
@@ -33,7 +29,6 @@ class _CategoryFilterBarState extends ConsumerState<CategoryFilterBar> {
   @override
   void didUpdateWidget(covariant CategoryFilterBar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 覆盖面板返回等外部选中来源：把选中胶囊滚入视野。
     if (oldWidget.selectedId != widget.selectedId) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _revealSelected());
     }
@@ -63,8 +58,6 @@ class _CategoryFilterBarState extends ConsumerState<CategoryFilterBar> {
     return ValueListenableBuilder(
       valueListenable: SyncPendingTracker.instance.listenable,
       builder: (context, pending, _) {
-        // 无分类且无在途新分类 → 整条隐藏；有在途 → 保留入口（Badge），
-        // 首次同步 / 换机恢复时首页仍能感知并打开面板看占位。
         if (categories.isEmpty && pending.newCategoryIds.isEmpty) {
           return const SizedBox.shrink();
         }
@@ -107,7 +100,6 @@ class _CategoryFilterBarState extends ConsumerState<CategoryFilterBar> {
                   const SizedBox(width: 4),
                 ],
               ),
-              // 右缘渐隐，暗示可横滚。
               Positioned(
                 right: 0,
                 top: 0,
@@ -129,7 +121,7 @@ class _CategoryFilterBarState extends ConsumerState<CategoryFilterBar> {
         Padding(
           padding: const EdgeInsets.only(right: 12),
           child: IconButton(
-            tooltip: '全部分类',
+            tooltip: context.l10n.categoryAllCategory,
             onPressed: widget.onOpenSwitcher,
             style: IconButton.styleFrom(
               backgroundColor: scheme.surfaceContainerHigh,
@@ -149,8 +141,6 @@ class _CategoryFilterBarState extends ConsumerState<CategoryFilterBar> {
     );
   }
 
-  /// 无边框 stadium 胶囊。未选中 = 软灰底 + 色点；选中 = 分类色淡染底 + 同色文字
-  /// （「全部」无色点，选中走 secondaryContainer）。选中态不打勾，由填充色表达。
   Widget _chip(BuildContext context, String? id, String label, {Color? color}) {
     final key = _chipKeys.putIfAbsent(id, GlobalKey.new);
     final scheme = context.colorScheme;

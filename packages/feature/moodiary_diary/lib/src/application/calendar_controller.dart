@@ -12,7 +12,6 @@ Future<List<Diary>> monthDiaries(
   String? categoryId,
 }) async {
   final repository = DiaryRepository.get();
-  // 首页常驻（IndexedStack）时编辑器写库不会重建本 provider：订阅事件流自失效。
   final sub = repository.diaryEvents.listen((_) => ref.invalidateSelf());
   ref.onDispose(sub.cancel);
   final start = DateTime(month.year, month.month, 1);

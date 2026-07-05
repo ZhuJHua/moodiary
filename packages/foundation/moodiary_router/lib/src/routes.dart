@@ -41,7 +41,6 @@ class NewDiaryRoute extends MoodiaryRouteBase {
 
   final String type;
 
-  /// 新建日记预选的分类（来自首页当前筛选），可空。
   final String? categoryId;
 
   const NewDiaryRoute({required this.type, this.categoryId});

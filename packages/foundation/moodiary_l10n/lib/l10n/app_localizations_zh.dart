@@ -1248,4 +1248,42 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get backlinks => '反向链接';
+
+  @override
+  String categorySwitcherCount(Object count) {
+    return '$count 个分类';
+  }
+
+  @override
+  String get categorySearchHint => '搜索分类';
+
+  @override
+  String get categoryAllDiary => '全部日记';
+
+  @override
+  String get categoryNoMatch => '没有匹配的分类';
+
+  @override
+  String get categorySyncingPlaceholder => '正在同步分类…';
+
+  @override
+  String get categoryManageEntry => '管理分类';
+
+  @override
+  String get diarySortTitle => '排序';
+
+  @override
+  String get diarySortNewestFirst => '最新在前';
+
+  @override
+  String get diarySortOldestFirst => '最早在前';
+
+  @override
+  String get diarySortModifiedFirst => '最近修改在前';
+
+  @override
+  String get diarySortCalendarHint => '日历按日期组织，不受排序影响';
+
+  @override
+  String get categoryDeletedReset => '分类已被删除，已切回全部';
 }

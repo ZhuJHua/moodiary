@@ -402,5 +402,17 @@
   "modelProviderSearchModelHint": "搜索模型",
   "modelProviderNoModelMatch": "无匹配模型",
   "diaryLinkNotFound": "日记不存在或已删除",
-  "backlinks": "反向链接"
+  "backlinks": "反向链接",
+  "categorySwitcherCount": "{count} 个分类",
+  "categorySearchHint": "搜索分类",
+  "categoryAllDiary": "全部日记",
+  "categoryNoMatch": "没有匹配的分类",
+  "categorySyncingPlaceholder": "正在同步分类…",
+  "categoryManageEntry": "管理分类",
+  "diarySortTitle": "排序",
+  "diarySortNewestFirst": "最新在前",
+  "diarySortOldestFirst": "最早在前",
+  "diarySortModifiedFirst": "最近修改在前",
+  "diarySortCalendarHint": "日历按日期组织，不受排序影响",
+  "categoryDeletedReset": "分类已被删除，已切回全部"
 }

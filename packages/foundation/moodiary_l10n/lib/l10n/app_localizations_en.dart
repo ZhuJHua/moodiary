@@ -1296,4 +1296,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backlinks => 'Backlinks';
+
+  @override
+  String categorySwitcherCount(Object count) {
+    return '$count categories';
+  }
+
+  @override
+  String get categorySearchHint => 'Search categories';
+
+  @override
+  String get categoryAllDiary => 'All diaries';
+
+  @override
+  String get categoryNoMatch => 'No matching categories';
+
+  @override
+  String get categorySyncingPlaceholder => 'Syncing category…';
+
+  @override
+  String get categoryManageEntry => 'Manage categories';
+
+  @override
+  String get diarySortTitle => 'Sort';
+
+  @override
+  String get diarySortNewestFirst => 'Newest first';
+
+  @override
+  String get diarySortOldestFirst => 'Oldest first';
+
+  @override
+  String get diarySortModifiedFirst => 'Recently edited first';
+
+  @override
+  String get diarySortCalendarHint =>
+      'Calendar is organized by date and ignores sorting';
+
+  @override
+  String get categoryDeletedReset => 'Category deleted, showing all diaries';
 }

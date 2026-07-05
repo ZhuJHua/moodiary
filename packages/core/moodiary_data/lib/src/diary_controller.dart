@@ -6,8 +6,6 @@ import 'diary_repository.dart';
 
 part 'diary_controller.g.dart';
 
-/// 与 [DiaryRepository.getDiaryByCategory] 的库内排序逐字段一致（含 isarId 兜底），
-/// 否则增量事件会把列表重排回另一种顺序、分页 offset 失准。
 Comparator<Diary> diarySortComparator(DiarySort sort) => switch (sort) {
   DiarySort.timeDesc => (a, b) {
     final c = b.time.compareTo(a.time);
@@ -23,14 +21,10 @@ Comparator<Diary> diarySortComparator(DiarySort sort) => switch (sort) {
   },
 };
 
-/// 把单条 [DiaryEvent] 原地并入已加载列表（排序由 [compare] 决定，缺省时间倒序）。
-/// [belongs] 判定日记是否属于当前视图：增 / 改时属于则 upsert + 重排，不属于则移除
-/// （处理软删 / 还原导致的迁出）。
+/// 把单条 [DiaryEvent] 原地并入已加载列表。[belongs] 判定日记是否属于当前视图：增 /
+/// 改时属于则 upsert + 重排，不属于则移除（处理软删 / 还原导致的迁出）。
 ///
 /// 内存增量与库内增量逐条一致，故分页 offset（= 已加载条数）始终与库对齐，无需重查。
-/// 该不变量要求「列表 == 库内同序前缀」——排位落在已加载窗口之外的 upsert（如
-/// timeAsc 下新建的日记属于库尾）在 [mayHaveMore] 时不得并入，交给分页取到，
-/// 否则 offset 失准会跳读 / 重复。
 List<Diary> _applyEvent(
   List<Diary> list,
   DiaryEvent event, {
@@ -66,7 +60,6 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   FutureOr<List<Diary>> build({String? categoryId}) async {
     final sub = _repository.diaryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
-    // 排序偏好变更 → 重查首页（offset 语义随排序变化，不能原地重排已加载分页）。
     final sortNotifier = MoodiaryKVs.homeSortMode.getNotifier();
     void onSortChanged() => refresh();
     sortNotifier.addListener(onSortChanged);

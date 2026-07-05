@@ -21,7 +21,6 @@ class DiaryPage extends ConsumerStatefulWidget {
 
   final DiaryType initialType;
 
-  /// 新建时预填的分类（来自首页当前筛选的分类）；已有日记忽略。
   final String? initialCategoryId;
 
   final bool startInEdit;

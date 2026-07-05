@@ -402,5 +402,17 @@
   "modelProviderSearchModelHint": "Search models",
   "modelProviderNoModelMatch": "No matching models",
   "diaryLinkNotFound": "Diary not found or deleted",
-  "backlinks": "Backlinks"
+  "backlinks": "Backlinks",
+  "categorySwitcherCount": "{count} categories",
+  "categorySearchHint": "Search categories",
+  "categoryAllDiary": "All diaries",
+  "categoryNoMatch": "No matching categories",
+  "categorySyncingPlaceholder": "Syncing category…",
+  "categoryManageEntry": "Manage categories",
+  "diarySortTitle": "Sort",
+  "diarySortNewestFirst": "Newest first",
+  "diarySortOldestFirst": "Oldest first",
+  "diarySortModifiedFirst": "Recently edited first",
+  "diarySortCalendarHint": "Calendar is organized by date and ignores sorting",
+  "categoryDeletedReset": "Category deleted, showing all diaries"
 }

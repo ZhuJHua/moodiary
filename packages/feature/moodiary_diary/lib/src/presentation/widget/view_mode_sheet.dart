@@ -20,10 +20,10 @@ class ViewModeSheet extends StatelessWidget {
     ViewModeType.calendar => context.l10n.diaryViewModeCalendar,
   };
 
-  String _sortLabel(DiarySort sort) => switch (sort) {
-    DiarySort.timeDesc => '最新在前',
-    DiarySort.timeAsc => '最早在前',
-    DiarySort.lastModifiedDesc => '最近修改在前',
+  String _sortLabel(BuildContext context, DiarySort sort) => switch (sort) {
+    DiarySort.timeDesc => context.l10n.diarySortNewestFirst,
+    DiarySort.timeAsc => context.l10n.diarySortOldestFirst,
+    DiarySort.lastModifiedDesc => context.l10n.diarySortModifiedFirst,
   };
 
   IconData _sortIcon(DiarySort sort) => switch (sort) {
@@ -83,8 +83,6 @@ class ViewModeSheet extends StatelessWidget {
     );
   }
 
-  /// 排序节：选中即写 KV、不关 sheet（可连着调视图 + 排序）。日历按日期组织、
-  /// 不受排序影响 → 日历态整节置灰禁用。
   Widget _buildSortSection(BuildContext context, {required bool disabled}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -92,11 +90,14 @@ class ViewModeSheet extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text('排序', style: context.textTheme.titleMedium),
+            Text(
+              context.l10n.diarySortTitle,
+              style: context.textTheme.titleMedium,
+            ),
             if (disabled) ...[
               const SizedBox(width: 8),
               Text(
-                '日历按日期组织，不受排序影响',
+                context.l10n.diarySortCalendarHint,
                 style: context.textTheme.labelSmall?.copyWith(
                   color: context.colorScheme.onSurfaceVariant,
                 ),
@@ -127,7 +128,7 @@ class ViewModeSheet extends StatelessWidget {
                           dense: true,
                           contentPadding: EdgeInsets.zero,
                           visualDensity: VisualDensity.compact,
-                          title: Text(_sortLabel(sort)),
+                          title: Text(_sortLabel(context, sort)),
                           secondary: Icon(_sortIcon(sort), size: 20),
                         ),
                     ],

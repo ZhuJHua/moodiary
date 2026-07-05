@@ -4,7 +4,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 
 void main() {
-  // 直接走全量构造：Diary.empty 依赖 Rust 的 uuidV7()，单测环境未初始化 RustLib。
   Diary diary(String id, {required DateTime time, DateTime? modified}) => Diary(
     id: id,
     title: '',
@@ -62,7 +61,6 @@ void main() {
       final y = diary('y', time: t);
       final desc = [x, y]..sort(diarySortComparator(DiarySort.timeDesc));
       final asc = [x, y]..sort(diarySortComparator(DiarySort.timeAsc));
-      // 同刻并列时正倒序互为镜像（与库内 thenByIsarId(Desc) 一致）。
       expect(desc.map((d) => d.id), asc.reversed.map((d) => d.id));
     });
   });

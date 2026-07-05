@@ -64,9 +64,6 @@ class CategoryController extends _$CategoryController {
   }
 }
 
-/// [categoryControllerProvider] 的用户自定义顺序视图（[MoodiaryKVs.categoryOrder]，
-/// 本机偏好）：KV 序优先，KV 外的（新建 / 远端拉下）按 id 序追加尾部。首页筛选条 /
-/// 切换面板 / 分类管理页等展示面消费它；按 id 查询的 provider 不受影响。
 @riverpod
 AsyncValue<List<Category>> orderedCategories(Ref ref) {
   final orderNotifier = MoodiaryKVs.categoryOrder.getNotifierOr(
@@ -81,7 +78,6 @@ AsyncValue<List<Category>> orderedCategories(Ref ref) {
   );
 }
 
-/// 纯函数便于单测：按 [order]（有序 id）重排 [categories]，陈旧 id 自然滤除。
 List<Category> applyCategoryOrder(
   List<Category> categories,
   List<String> order,
@@ -97,8 +93,6 @@ List<Category> applyCategoryOrder(
   return result;
 }
 
-/// 各分类下「可见」日记数 + 可见总数（含未分类），供分类管理页 / 切换面板展示。
-/// 订阅日记事件流自失效（debounce 合并连发；分类增删不影响计数，缺项回退 0）。
 @riverpod
 Future<({Map<String, int> byCategory, int total})> categoryDiaryCounts(
   Ref ref,

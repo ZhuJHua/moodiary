@@ -186,7 +186,6 @@ class DiaryRepository {
     return pending.length;
   }
 
-  /// isarId 兜底并列项（time / lastModified 相同）——保证分页边界不重不漏。
   Future<List<Diary>> getDiaryByCategory({
     String? categoryId,
     int? offset,
@@ -324,7 +323,6 @@ class DiaryRepository {
   }
 
   Future<List<Diary>> getRecycleBinDiaries() async {
-    // isarId 兜底与 _applyEvent 的缺省比较器一致，避免同刻并列项在事件重排后换位。
     return await _isar.diarys
         .where()
         .showEqualTo(false)

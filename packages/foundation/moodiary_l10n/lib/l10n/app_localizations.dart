@@ -2515,6 +2515,78 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'反向链接'**
   String get backlinks;
+
+  /// No description provided for @categorySwitcherCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个分类'**
+  String categorySwitcherCount(Object count);
+
+  /// No description provided for @categorySearchHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索分类'**
+  String get categorySearchHint;
+
+  /// No description provided for @categoryAllDiary.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部日记'**
+  String get categoryAllDiary;
+
+  /// No description provided for @categoryNoMatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有匹配的分类'**
+  String get categoryNoMatch;
+
+  /// No description provided for @categorySyncingPlaceholder.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在同步分类…'**
+  String get categorySyncingPlaceholder;
+
+  /// No description provided for @categoryManageEntry.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理分类'**
+  String get categoryManageEntry;
+
+  /// No description provided for @diarySortTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'排序'**
+  String get diarySortTitle;
+
+  /// No description provided for @diarySortNewestFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'最新在前'**
+  String get diarySortNewestFirst;
+
+  /// No description provided for @diarySortOldestFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'最早在前'**
+  String get diarySortOldestFirst;
+
+  /// No description provided for @diarySortModifiedFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'最近修改在前'**
+  String get diarySortModifiedFirst;
+
+  /// No description provided for @diarySortCalendarHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'日历按日期组织，不受排序影响'**
+  String get diarySortCalendarHint;
+
+  /// No description provided for @categoryDeletedReset.
+  ///
+  /// In zh, this message translates to:
+  /// **'分类已被删除，已切回全部'**
+  String get categoryDeletedReset;
 }
 
 class _AppLocalizationsDelegate

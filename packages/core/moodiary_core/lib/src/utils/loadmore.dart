@@ -4,7 +4,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 mixin LoadMoreMixin<T> on AnyNotifier<AsyncValue<List<T>>, List<T>> {
   bool _noMore = false;
 
-  /// refresh 换代计数：在飞的 loadMore 结果跨代后作废，防止旧序分页拼到新列表上。
   int _epoch = 0;
 
   int get _offset => state.value?.length ?? 0;
