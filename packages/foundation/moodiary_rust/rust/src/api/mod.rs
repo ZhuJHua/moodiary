@@ -1,4 +1,5 @@
 pub mod assistant;
+pub mod audio;
 pub mod crypto;
 pub mod font;
 pub mod image;

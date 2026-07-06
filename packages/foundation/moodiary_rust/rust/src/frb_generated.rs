@@ -46,7 +46,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0-beta.4";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1521817433;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -860567963;
 
 // Section: executor
 
@@ -1952,6 +1952,40 @@ fn wire__crate__api__zip__Zip_new_impl(
         },
     )
 }
+fn wire__crate__api__audio__audio_duration_ms_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "audio_duration_ms",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_path = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok =
+                        Result::<_, ()>::Ok(crate::api::audio::audio_duration_ms(api_path))?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__text__init_tokenizer_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -2499,6 +2533,13 @@ impl SseDecode for i32 {
     }
 }
 
+impl SseDecode for i64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_i64::<NativeEndian>().unwrap()
+    }
+}
+
 impl SseDecode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2626,6 +2667,17 @@ impl SseDecode for Option<crate::api::image::CompressFormat> {
             return Some(<crate::api::image::CompressFormat>::sse_decode(
                 deserializer,
             ));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<i64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<i64>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -2876,8 +2928,9 @@ fn pde_ffi_dispatcher_primary_impl(
         36 => wire__crate__api__zip__Zip_add_file_impl(port, ptr, rust_vec_len, data_len),
         37 => wire__crate__api__zip__Zip_extract_impl(port, ptr, rust_vec_len, data_len),
         38 => wire__crate__api__zip__Zip_finish_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__api__text__init_tokenizer_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__audio__audio_duration_ms_impl(port, ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__text__init_tokenizer_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -2911,8 +2964,8 @@ fn pde_ffi_dispatcher_sync_impl(
             data_len,
         ),
         39 => wire__crate__api__zip__Zip_new_impl(ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__uuid__uuid_v4_impl(ptr, rust_vec_len, data_len),
-        43 => wire__crate__api__uuid__uuid_v7_impl(ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__uuid__uuid_v4_impl(ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__uuid__uuid_v7_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3565,6 +3618,13 @@ impl SseEncode for i32 {
     }
 }
 
+impl SseEncode for i64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_i64::<NativeEndian>(self).unwrap();
+    }
+}
+
 impl SseEncode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -3671,6 +3731,16 @@ impl SseEncode for Option<crate::api::image::CompressFormat> {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <crate::api::image::CompressFormat>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<i64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <i64>::sse_encode(value, serializer);
         }
     }
 }
