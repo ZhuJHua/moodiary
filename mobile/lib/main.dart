@@ -22,7 +22,13 @@ Future<Locale> _initSystem() async {
   final rustInit = RustLib.init();
   await injectBasicService();
   // 版本迁移钩子：在基础存储就位后、主题/服务初始化前运行（旧版内联在 KV.init）。
-  await MergeUtil.runVersionMigration();
+  // 用 try/catch 包裹：迁移抛异常时只记日志、不阻断启动——否则 appVersion 不推进，
+  // 每次启动都在同一步崩，陷入永久崩溃循环把用户锁在数据外。步骤幂等，下次启动重试。
+  try {
+    await MergeUtil.runVersionMigration();
+  } catch (e, s) {
+    logger.e('version migration failed', error: e, stackTrace: s);
+  }
   unawaited(_platFormOption());
   final localeFuture = _findLanguage();
   await Future.wait([

@@ -6,6 +6,10 @@ enum MoodiaryKVs<T extends Object> {
   appVersion<String>(),
   firstStart<bool>(defaultValue: true),
 
+  /// 升级/首启后是否已一次性回填全量搜索 + 双链倒排索引。旧库从未建过倒排索引，若不回填
+  /// 则所有既有日记正文搜不到、双链为空；回填一次后置位，之后靠增量索引维护。
+  searchIndexBackfilled<bool>(defaultValue: false),
+
   /// 自动同步总开关：开启即启用「变更后 push + 定时轮询双向 sync」（见 [AutoSyncWatcher]）。
   autoSync<bool>(defaultValue: false),
   /// 轮询间隔（秒）；过短会频繁抢占远端锁 / 读清单，徒增流量与耗电。

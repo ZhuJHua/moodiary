@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart' hide Category;
@@ -21,6 +22,11 @@ class MergeUtil {
     final appVersion = MoodiaryKVs.appVersion.get();
     if (appVersion != null) {
       await merge(lastAppVersion: appVersion);
+    }
+    // 全文 / 双链倒排索引首次引入于 2.8.0：全新安装（appVersion==null）的新日记走增量索引，
+    // 直接置「已回填」，免搜索页的升级提示；从旧版升级则保持 false，由提示引导用户手动重建一次。
+    if (appVersion == null) {
+      await MoodiaryKVs.searchIndexBackfilled.set(true);
     }
     if (kDebugMode || appVersion == null || appVersion != currentVersion) {
       await MoodiaryKVs.appVersion.set(currentVersion);
@@ -67,11 +73,27 @@ class MergeUtil {
     }
 
     if (below('2.8.0')) {
+      // 跨引擎（isar 4.0.0-dev → isar_plus）迁移前留一份快照，出问题可回滚。
+      await _backupDatabaseOnce();
       await compute(
         _mergeToV2_8_0,
         FileUtil.getRealPath('database', ''),
       );
     }
+  }
+}
+
+/// 2.8.0 迁移前对数据库文件做一次性快照备份（`default.isar.v273bak`）：跨引擎迁移 / 写回
+/// 若出问题可回滚。已存在备份或库文件缺失则跳过；备份失败仅跳过、不阻断迁移。
+Future<void> _backupDatabaseOnce() async {
+  try {
+    final src = File(FileUtil.getRealPath('database', 'default.isar'));
+    final dst = FileUtil.getRealPath('database', 'default.isar.v273bak');
+    if (await src.exists() && !(await File(dst).exists())) {
+      await src.copy(dst);
+    }
+  } catch (_) {
+    // 备份失败不阻断迁移（迁移本身对既有数据幂等）。
   }
 }
 

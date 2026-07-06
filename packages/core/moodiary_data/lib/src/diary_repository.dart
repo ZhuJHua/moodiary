@@ -536,6 +536,14 @@ class DiaryRepository {
     });
   }
 
+  /// 一次性重建搜索 + 双链两套倒排索引（升级后的手动回填入口：设置里的「重建索引」按钮与
+  /// 搜索页的升级提示都走这里）。返回处理篇数。幂等，均由 `content` 重算、不改 `lastModified`。
+  Future<int> rebuildAllIndexes() async {
+    final count = await rebuildSearchIndex();
+    await rebuildLinkIndex();
+    return count;
+  }
+
   /// 全量数据修复：按 `content` 重推 `contentText` / 媒体引用、清失效 `categoryId`，
   /// 重建搜索索引。幂等，可反复执行。
   /// 不更新 `lastModified`——均为可由 `content` 重算的本地衍生数据，避免误触发同步层

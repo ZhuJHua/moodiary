@@ -43,7 +43,9 @@ class _RebuildIndexTileState extends ConsumerState<RebuildIndexTile> {
     setState(() => _rebuilding = true);
     toast.loading(message: '正在重建索引...');
     try {
-      final count = await DiaryRepository.get().rebuildSearchIndex();
+      final count = await DiaryRepository.get().rebuildAllIndexes();
+      // 手动重建即完成升级后的一次性回填，置位后搜索页不再提示。
+      await MoodiaryKVs.searchIndexBackfilled.set(true);
       await toast.dismiss();
       toast.success(message: '索引重建完成，共处理 $count 篇日记');
     } catch (e) {

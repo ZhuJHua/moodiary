@@ -98,6 +98,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
         top: false,
         child: Column(
           children: [
+            const _SearchIndexBanner(),
             _buildFilterBar(context, state),
             const Divider(height: 1),
             Expanded(
@@ -381,6 +382,83 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 升级提示卡片：全文 / 双链倒排索引 2.8.0 才引入，旧库既有日记未建索引 → 正文搜不到、双链为空。
+/// 点「重建」一次即可（[DiaryRepository.rebuildAllIndexes]）；完成后置 [MoodiaryKVs.searchIndexBackfilled]，
+/// 本卡片经 notifier 自动收起。全新安装在迁移钩子里已置位，不会显示。
+class _SearchIndexBanner extends StatefulWidget {
+  const _SearchIndexBanner();
+
+  @override
+  State<_SearchIndexBanner> createState() => _SearchIndexBannerState();
+}
+
+class _SearchIndexBannerState extends State<_SearchIndexBanner> {
+  bool _rebuilding = false;
+
+  Future<void> _rebuild() async {
+    setState(() => _rebuilding = true);
+    try {
+      await DiaryRepository.get().rebuildAllIndexes();
+      // flag 置 true 后，外层 ValueListenableBuilder 收起本卡片，无需再 setState。
+      await MoodiaryKVs.searchIndexBackfilled.set(true);
+    } catch (e, s) {
+      logger.e('搜索索引重建失败', error: e, stackTrace: s);
+      if (mounted) setState(() => _rebuilding = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: MoodiaryKVs.searchIndexBackfilled.getNotifier(),
+      builder: (context, done, _) {
+        if (done) return const SizedBox.shrink();
+        final scheme = context.colorScheme;
+        return Container(
+          margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+          padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+          decoration: ShapeDecoration(
+            color: scheme.secondaryContainer,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.manage_search_rounded,
+                size: 20,
+                color: scheme.onSecondaryContainer,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  '升级后需重建索引，旧日记正文才能被搜索到',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSecondaryContainer,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (_rebuilding)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              else
+                TextButton(onPressed: _rebuild, child: const Text('重建')),
+            ],
+          ),
+        );
+      },
     );
   }
 }
