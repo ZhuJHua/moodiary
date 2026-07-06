@@ -344,7 +344,12 @@ class DiaryRepository {
       MediaType.audio => base.audioNameIsNotEmpty(),
       MediaType.video => base.videoNameIsNotEmpty(),
     };
-    return filtered.sortByTimeDesc().findAllAsync(offset: offset, limit: limit);
+    // thenByIsarIdDesc 与 diarySortComparator(timeDesc) 的次序一致，保证媒体库事件
+    // 增量（applyDiaryEvent + 分页 offset）与库内顺序对齐，同 time 的日记不丢不重。
+    return filtered
+        .sortByTimeDesc()
+        .thenByIsarIdDesc()
+        .findAllAsync(offset: offset, limit: limit);
   }
 
   /// 汇全集引用的媒体文件名（含回收站/草稿/墓碑），供孤儿清理用。

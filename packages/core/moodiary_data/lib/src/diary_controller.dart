@@ -25,7 +25,7 @@ Comparator<Diary> diarySortComparator(DiarySort sort) => switch (sort) {
 /// 改时属于则 upsert + 重排，不属于则移除（处理软删 / 还原导致的迁出）。
 ///
 /// 内存增量与库内增量逐条一致，故分页 offset（= 已加载条数）始终与库对齐，无需重查。
-List<Diary> _applyEvent(
+List<Diary> applyDiaryEvent(
   List<Diary> list,
   DiaryEvent event, {
   required bool Function(Diary) belongs,
@@ -81,7 +81,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
     final list = state.value;
     if (list == null) return;
     state = AsyncValue.data(
-      _applyEvent(
+      applyDiaryEvent(
         list,
         event,
         // deleted=true 是同步 tombstone（永久删除后保留待推送），本地一律不可见。
@@ -136,7 +136,7 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
     final list = state.value;
     if (list == null) return;
     state = AsyncValue.data(
-      _applyEvent(list, event, belongs: (d) => !d.show && !d.deleted),
+      applyDiaryEvent(list, event, belongs: (d) => !d.show && !d.deleted),
     );
   }
 

@@ -8,10 +8,17 @@ part 'media_controller.g.dart';
 /// 媒体库分页数据源：按 [MediaType] 加载含该类型媒体的在册日记（时间倒序）。
 /// 每类一个 family 实例，各自维护 offset / noMore，互不干扰。展示用的按日期分组
 /// 由纯函数 [buildMediaGroup] 派生，不落 state。
+///
+/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新（复用 [applyDiaryEvent]），
+/// 使新增 / 编辑 / 删除日记后媒体库即时刷新，无需重查库。
 @riverpod
 class MediaDiaries extends _$MediaDiaries with LoadMoreMixin<Diary> {
   @override
-  FutureOr<List<Diary>> build({required MediaType type}) async => init();
+  FutureOr<List<Diary>> build({required MediaType type}) async {
+    final sub = DiaryRepository.get().diaryEvents.listen(_applyChange);
+    ref.onDispose(sub.cancel);
+    return init();
+  }
 
   @override
   Future<Iterable<Diary>?> load({required int limit, required int offset}) {
@@ -19,6 +26,26 @@ class MediaDiaries extends _$MediaDiaries with LoadMoreMixin<Diary> {
       type: type,
       offset: offset,
       limit: limit,
+    );
+  }
+
+  bool _hasMedia(Diary d) => switch (type) {
+    MediaType.image => d.imageName.isNotEmpty,
+    MediaType.audio => d.audioName.isNotEmpty,
+    MediaType.video => d.videoName.isNotEmpty,
+  };
+
+  void _applyChange(DiaryEvent event) {
+    final list = state.value;
+    if (list == null) return;
+    state = AsyncValue.data(
+      applyDiaryEvent(
+        list,
+        event,
+        belongs: (d) => d.show && !d.deleted && _hasMedia(d),
+        compare: diarySortComparator(DiarySort.timeDesc),
+        mayHaveMore: !noMore,
+      ),
     );
   }
 }
