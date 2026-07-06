@@ -63,13 +63,16 @@ class MediaUtil {
         }
         var workingFile = imageFile;
         var imageFormat = ImageFormat.getImageFormat(imageFile.path);
-        // HEIC 在 Rust 侧无法解码，先转 JPEG 再按 JPEG 压缩存储。
+        // HEIC 在 Rust 侧无法解码，先转 PNG 临时文件；据是否含 alpha 通道选最终格式：
+        // 含 → PNG（保留透明），不含 → JPEG（省体积）。Rust 会解码该 PNG 再按选定格式编码。
         String? heicTempPath;
         if (imageFormat == ImageFormat.heic) {
-          heicTempPath = await _convertHeicToJpeg(imageFile.path);
+          heicTempPath = await _convertHeicToPng(imageFile.path);
           if (heicTempPath != null) {
             workingFile = XFile(heicTempPath);
-            imageFormat = ImageFormat.jpeg;
+            imageFormat = await _pngHasAlphaChannel(heicTempPath)
+                ? ImageFormat.png
+                : ImageFormat.jpeg;
           }
         }
         try {
@@ -88,6 +91,102 @@ class MediaUtil {
     );
 
     return imageNameMap;
+  }
+
+  /// 乐观插入用：把选中原图快速落到 image 目录并返回文件名，供 UI 立即显示——**不做重压缩**，
+  /// 只做「让它能显示」的最小工作。HEIC 无法在 webview 直接渲染，先原生解码为 PNG，据其色彩类型
+  /// 判断是否含透明通道：含 → 存 PNG（保留 alpha）；不含（普通不透明照片）→ 再原生解码为 JPEG
+  /// 并弃掉 PNG（省体积）。两步均为原生解码，仍很快。其余格式直接拷贝原字节。随后由
+  /// [compressInPlace] 后台就地压缩、无感替换。已是 image- 命名的（重复插入）直接复用。失败返回 null。
+  static Future<String?> materializeOriginal(XFile imageFile) async {
+    final srcName = basename(imageFile.path);
+    if (srcName.startsWith('image-')) return srcName;
+    final format = ImageFormat.getImageFormat(imageFile.path);
+    if (format == ImageFormat.heic) {
+      final uuid = uuidV7();
+      final pngName = 'image-$uuid.png';
+      final pngPath = FileUtil.getRealPath('image', pngName);
+      try {
+        final out = await HeifConverter.convert(
+          imageFile.path,
+          output: pngPath,
+          format: 'png',
+        );
+        if (out == null) return null;
+      } catch (e) {
+        logger.d('materializeOriginal HEIC -> PNG failed: $e');
+        return null;
+      }
+      // 含 alpha 通道 → 保留 PNG。
+      if (await _pngHasAlphaChannel(pngPath)) return pngName;
+      // 不透明 → 转 JPEG 省体积；转换失败则退回已生成的 PNG。
+      final jpgName = 'image-$uuid.jpg';
+      try {
+        final out = await HeifConverter.convert(
+          imageFile.path,
+          output: FileUtil.getRealPath('image', jpgName),
+          format: 'jpg',
+        );
+        if (out == null) return pngName;
+        try {
+          await File(pngPath).delete();
+        } catch (_) {}
+        return jpgName;
+      } catch (e) {
+        logger.d('materializeOriginal HEIC -> JPEG failed: $e');
+        return pngName;
+      }
+    }
+    final name = 'image-${uuidV7()}${format.extension}';
+    await File(imageFile.path).copy(FileUtil.getRealPath('image', name));
+    return name;
+  }
+
+  /// 读 PNG 文件头判断是否含 alpha 通道（IHDR 第 25 字节的 color type：4=灰度+alpha、
+  /// 6=真彩+alpha）。只读头 26 字节，无需解码整图。非 PNG / 读失败按「无 alpha」处理。
+  static Future<bool> _pngHasAlphaChannel(String path) async {
+    RandomAccessFile? raf;
+    try {
+      raf = await File(path).open();
+      final header = await raf.read(26);
+      if (header.length < 26) return false;
+      final colorType = header[25];
+      return colorType == 4 || colorType == 6;
+    } catch (_) {
+      return false;
+    } finally {
+      await raf?.close();
+    }
+  }
+
+  /// [materializeOriginal] 的后台步骤：把已落库的 image- 文件就地压到目标尺寸。
+  /// 压到临时文件再原子重命名替换——避免与 webview 读取竞态、中断也不损坏原文件。
+  /// quality=原图 或压缩失败时保留原文件（仍是有效图，仅体积偏大）。fire-and-forget，
+  /// 与任何 widget 生命周期无关。
+  static Future<void> compressInPlace(String imageName) async {
+    if (MoodiaryKVs.quality.get() == 3) return;
+    final path = FileUtil.getRealPath('image', imageName);
+    final format = ImageFormat.getImageFormat(path);
+    if (format == ImageFormat.heic) return; // image 目录内不应出现 heic
+    final tmpPath = '$path.tmp';
+    final ok = await compressImageToFile(
+      imagePath: path,
+      outputPath: tmpPath,
+      imageFormat: format,
+    );
+    if (!ok) {
+      try {
+        await File(tmpPath).delete();
+      } catch (_) {}
+      return;
+    }
+    try {
+      await File(tmpPath).rename(path);
+    } catch (_) {
+      try {
+        await File(tmpPath).delete();
+      } catch (_) {}
+    }
   }
 
   /// 返回 map：key=缓存路径，value=实际文件名
@@ -255,20 +354,21 @@ class MediaUtil {
     }
   }
 
-  /// HEIC 不能被 Rust 直接解码，先转 JPEG 临时文件再压缩，最后清理。
+  /// HEIC 不能被 Rust 直接解码，先转 PNG 临时文件再压缩，最后清理。转 PNG（而非 JPEG）
+  /// 以保留可能存在的透明像素（HEIC 可含 alpha，JPEG 会丢失）。
   static Future<bool> _compressHeicToFile(
     String imagePath,
     String outputPath, {
     int? size,
     double? imageAspectRatio,
   }) async {
-    final tempPath = await _convertHeicToJpeg(imagePath);
+    final tempPath = await _convertHeicToPng(imagePath);
     if (tempPath == null) return false;
     try {
       return await _compressRustToFile(
         tempPath,
         outputPath,
-        rust.CompressFormat.jpeg,
+        rust.CompressFormat.png,
         size: size,
         imageAspectRatio: imageAspectRatio,
       );
@@ -279,18 +379,18 @@ class MediaUtil {
     }
   }
 
-  /// 转 JPEG 临时文件，调用方负责清理。
-  static Future<String?> _convertHeicToJpeg(String heicPath) async {
+  /// 转 PNG 临时文件（保留 alpha），调用方负责清理。heif_converter 的 Android 实现按输出路径
+  /// 后缀选编码器（非 .jpg/.jpeg 即 PNG，`Bitmap.compress(PNG, 100)` 无损含 alpha）。
+  static Future<String?> _convertHeicToPng(String heicPath) async {
     try {
-      final tempJpegPath =
-          '${Directory.systemTemp.path}/heic_${uuidV7()}.jpg';
+      final tempPngPath = '${Directory.systemTemp.path}/heic_${uuidV7()}.png';
       return await HeifConverter.convert(
         heicPath,
-        output: tempJpegPath,
-        format: 'jpg',
+        output: tempPngPath,
+        format: 'png',
       );
     } catch (e) {
-      logger.d('HEIC -> JPEG conversion failed: $e');
+      logger.d('HEIC -> PNG conversion failed: $e');
       return null;
     }
   }

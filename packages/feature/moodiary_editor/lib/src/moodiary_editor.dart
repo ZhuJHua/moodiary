@@ -54,6 +54,10 @@ class MoodiaryEditor extends StatefulWidget {
 
   final bool readOnly;
 
+  /// 正文空文档时的占位提示（对应 title 的「标题」占位）；仅可编辑态显示（web 侧
+  /// Placeholder 扩展 showOnlyWhenEditable 默认 true）。经 boot.placeholder 下发。
+  final String placeholder;
+
   final ValueChanged<String>? onChanged;
 
   /// 顶部标题区输入回调：入参为当前标题串。宿主据此写入 Diary.title（不进正文、不进 content JSON）。
@@ -116,6 +120,7 @@ class MoodiaryEditor extends StatefulWidget {
     this.initialContent = '',
     this.initialTitle = '',
     this.readOnly = false,
+    this.placeholder = '',
     this.onChanged,
     this.onTitleChanged,
     this.onActiveHeadingChanged,
@@ -222,7 +227,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     final boot = <String, dynamic>{
       'platform': (Platform.isAndroid || Platform.isIOS) ? 'mobile' : 'desktop',
       'editable': !widget.readOnly,
-      'placeholder': '',
+      'placeholder': widget.placeholder,
       'saveStatus': widget.saveStatus,
       // 首帧即用正确配色：web 侧据此用 material-color-utilities 生成整套配色。
       'theme': _seedTheme(),

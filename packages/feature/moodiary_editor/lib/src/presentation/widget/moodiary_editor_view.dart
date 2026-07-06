@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -112,11 +113,14 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     await _insertPicked([file]);
   }
 
+  /// 乐观插入：选图后立即把原图落到 image 目录并插入显示（快），压缩挪到后台就地进行、
+  /// 完成后无感替换同名文件（见 [MediaUtil.materializeOriginal] / [MediaUtil.compressInPlace]）。
   Future<void> _insertPicked(List<XFile> files) async {
-    final saved = await MediaUtil.saveImages(imageFileList: files);
     for (final file in files) {
-      final name = saved[file.path];
-      if (name != null) await _controller.insertMedia(name);
+      final name = await MediaUtil.materializeOriginal(file);
+      if (name == null) continue;
+      await _controller.insertMedia(name);
+      unawaited(MediaUtil.compressInPlace(name));
     }
   }
 
@@ -274,6 +278,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     return MoodiaryEditor(
       controller: _controller,
       readOnly: !widget.editable,
+      placeholder: context.l10n.editContent,
       initialContent: widget.initialContent,
       initialTitle: widget.initialTitle,
       onChanged: widget.onChanged,
