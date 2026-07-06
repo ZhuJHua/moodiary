@@ -14,6 +14,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_assistant/src/application/isar_chat_controller.dart';
 import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
@@ -1030,23 +1031,24 @@ class AssistantSessionListPage extends StatelessWidget {
         title: Text(l10n.settingFunctionAIAssistant),
         actions: [
           IconButton(
-            tooltip: l10n.assistantNewChat,
-            icon: const Icon(Icons.add_comment_outlined),
-            onPressed: () => const AssistantConversationRoute().push(context),
-          ),
-          IconButton(
             tooltip: l10n.assistantConfigTooltip,
             icon: const Icon(Icons.settings_outlined),
             onPressed: () => const AssistantSettingRoute().push(context),
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => const AssistantConversationRoute().push(context),
+        icon: const Icon(Icons.add_comment_rounded),
+        label: Text(l10n.assistantNewChat),
+      ),
       body: _SessionListView(
         currentId: null,
         onSelect: (session) =>
             AssistantConversationRoute(sessionId: session.id).push(context),
         onDelete: (session) => ChatRepository.get().deleteSession(session.id),
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        // 底部留白，避免 FAB 遮住最后一条会话。
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 88),
       ),
     );
   }
@@ -1096,82 +1098,160 @@ class _SessionListViewState extends State<_SessionListView> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final scheme = context.colorScheme;
-    final textTheme = context.textTheme;
     final sessions = _sessions;
     return switch (sessions) {
       null => const Center(child: CircularProgressIndicator()),
-      [] => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            l10n.assistantHistoryEmpty,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: scheme.onSurfaceVariant),
-          ),
-        ),
-      ),
+      [] => _EmptySessions(),
       final list => ListView.builder(
         padding: widget.padding,
         itemCount: list.length,
         itemBuilder: (context, index) {
           final session = list[index];
-          final selected = session.id == widget.currentId;
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Material(
-              color: selected ? scheme.secondaryContainer : Colors.transparent,
-              shape: const StadiumBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () => widget.onSelect(session),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 16, right: 4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        selected
-                            ? Icons.chat_rounded
-                            : Icons.chat_bubble_outline_rounded,
-                        size: 20,
-                        color: selected
-                            ? scheme.onSecondaryContainer
-                            : scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: Text(
-                            session.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: selected
-                                  ? scheme.onSecondaryContainer
-                                  : scheme.onSurface,
-                            ),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: l10n.assistantSessionDelete,
-                        iconSize: 18,
-                        color: selected
-                            ? scheme.onSecondaryContainer
-                            : scheme.onSurfaceVariant,
-                        icon: const Icon(Icons.delete_outline_rounded),
-                        onPressed: () => widget.onDelete(session),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          return _SessionCard(
+            session: session,
+            selected: session.id == widget.currentId,
+            onTap: () => widget.onSelect(session),
+            onDelete: () => widget.onDelete(session),
           );
         },
       ),
     };
+  }
+}
+
+class _EmptySessions extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.forum_outlined,
+            size: 56,
+            color: scheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.assistantHistoryEmpty,
+            style: context.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SessionCard extends StatelessWidget {
+  final ChatSession session;
+  final bool selected;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  const _SessionCard({
+    required this.session,
+    required this.selected,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  static String _relativeTime(BuildContext context, DateTime utc) {
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final t = utc.toLocal();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final that = DateTime(t.year, t.month, t.day);
+    if (that == today) return DateFormat.Hm(locale).format(t);
+    if (t.year == now.year) return DateFormat.MMMd(locale).format(t);
+    return DateFormat.yMMMd(locale).format(t);
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.assistantSessionDelete),
+        content: Text(session.title),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.assistantSessionDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) onDelete();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final l10n = context.l10n;
+    final onColor = selected ? scheme.onSecondaryContainer : scheme.onSurface;
+    return Card.filled(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      color: selected ? scheme.secondaryContainer : scheme.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: selected
+                ? scheme.onSecondaryContainer.withValues(alpha: 0.12)
+                : scheme.primaryContainer,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.forum_rounded,
+            size: 22,
+            color: selected ? scheme.onSecondaryContainer : scheme.primary,
+          ),
+        ),
+        title: Text(
+          session.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.textTheme.titleSmall?.copyWith(color: onColor),
+        ),
+        subtitle: Text(
+          _relativeTime(context, session.updatedAt),
+          style: context.textTheme.labelSmall?.copyWith(
+            color: selected
+                ? scheme.onSecondaryContainer.withValues(alpha: 0.8)
+                : scheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: MoodiaryMenuButton<String>(
+          tooltip: l10n.more,
+          onSelected: (_) => _confirmDelete(context),
+          entries: [
+            MoodiaryMenuEntry(
+              value: 'delete',
+              label: l10n.assistantSessionDelete,
+              icon: Icons.delete_outline_rounded,
+              isDestructive: true,
+            ),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Icon(Icons.more_vert_rounded, color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ),
+    );
   }
 }
