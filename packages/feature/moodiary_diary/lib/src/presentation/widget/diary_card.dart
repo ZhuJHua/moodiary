@@ -6,16 +6,11 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 
-const double _kAccentWidth = 4.0;
-
 /// 卡片同步状态：内联展示在元信息行里（不再用会盖住内容的角标）。
 enum DiaryCardSyncState { none, dirty, syncing }
 
 Widget _cardShell({
   required BuildContext context,
-  required Diary diary,
-  required Category? category,
-  required bool showCategoryLabel,
   required VoidCallback? onTap,
   required Widget child,
   VoidCallback? onLongPress,
@@ -23,32 +18,23 @@ Widget _cardShell({
   bool selected = false,
 }) {
   final scheme = context.colorScheme;
-  final accent = category == null
-      ? null
-      : categoryColorOf(colorValue: category.color, id: category.id);
   return Card.filled(
-    // 选中：主色微染背景（不加边框，避免与分类左侧色条打架）；右上勾选圈另表状态。
-    color: selected
-        ? Color.alphaBlend(
-            scheme.primary.withValues(alpha: 0.14),
-            scheme.surfaceContainerLow,
-          )
-        : scheme.surfaceContainerLow,
+    color: scheme.surfaceContainerLow,
     margin: EdgeInsets.zero,
     clipBehavior: Clip.antiAlias,
+    // 选中：主色描边（不再微染背景）；右上勾选圈另表状态。
+    shape: RoundedRectangleBorder(
+      borderRadius: AppBorderRadius.mediumBorderRadius,
+      side: selected
+          ? BorderSide(color: scheme.primary, width: 2)
+          : BorderSide.none,
+    ),
     child: InkWell(
       onTap: onTap,
       onLongPress: onLongPress,
       child: Stack(
         children: [
           child,
-          if (accent != null)
-            PositionedDirectional(
-              start: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(width: _kAccentWidth, color: accent),
-            ),
           if (selecting)
             PositionedDirectional(
               top: 8,
@@ -140,7 +126,7 @@ class _MetaFooter extends StatelessWidget {
       ));
     }
 
-    children.add(MoodIconComponent(value: diary.mood, width: 16));
+    // 心情标识暂时移除，待样式优化后再加回。
 
     if (syncState != DiaryCardSyncState.none) {
       final isSyncing = syncState == DiaryCardSyncState.syncing;
@@ -225,9 +211,6 @@ class DiaryListTile extends StatelessWidget {
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     return _cardShell(
       context: context,
-      diary: diary,
-      category: category,
-      showCategoryLabel: showCategoryLabel,
       onTap: onTap,
       onLongPress: onLongPress,
       selecting: selecting,
@@ -303,9 +286,6 @@ class DiaryGridTile extends StatelessWidget {
     final pixelRatio = MediaQuery.devicePixelRatioOf(context);
     return _cardShell(
       context: context,
-      diary: diary,
-      category: category,
-      showCategoryLabel: showCategoryLabel,
       onTap: onTap,
       onLongPress: onLongPress,
       selecting: selecting,
@@ -367,9 +347,6 @@ class CalendarDiaryCard extends StatelessWidget {
     final scheme = context.colorScheme;
     return _cardShell(
       context: context,
-      diary: diary,
-      category: category,
-      showCategoryLabel: showCategoryLabel,
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.all(12.0),

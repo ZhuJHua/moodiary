@@ -46,9 +46,9 @@ void main() {
     expect(find.text('work'), findsNothing);
   });
 
-  testWidgets('always renders a mood glyph', (t) async {
+  testWidgets('mood glyph is temporarily removed from cards', (t) async {
     await t.pumpWidget(wrap(DiaryListTile(diary: diary(mood: 0.5))));
-    expect(find.byType(MoodIconComponent), findsOneWidget);
+    expect(find.byType(MoodIconComponent), findsNothing);
   });
 
   testWidgets('shows weather when weather has 3 parts', (t) async {
