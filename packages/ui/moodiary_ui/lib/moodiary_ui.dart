@@ -11,6 +11,7 @@ export 'src/basic/keepalive.dart';
 export 'src/basic/keyboard_listener.dart';
 export 'src/basic/loading.dart';
 export 'src/basic/marquee.dart';
+export 'src/basic/menu.dart';
 export 'src/basic/modal.dart';
 export 'src/basic/network_image.dart';
 export 'src/basic/popup.dart';
