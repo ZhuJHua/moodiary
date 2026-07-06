@@ -103,6 +103,7 @@ dependencies:
   unicons: 3.0.0
   dynamic_color: 1.8.1
   material_color_utilities: 0.13.0
+  flutter_markdown_plus: 1.0.9
 
   flutter_displaymode: 0.7.0
   device_info_plus: 13.2.0
