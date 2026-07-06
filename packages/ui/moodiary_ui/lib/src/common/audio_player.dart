@@ -3,7 +3,226 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 
+/// 音频时长缓存：用 Rust（lofty）只读文件头拿时长，不建播放器实例；结果按路径记忆，
+/// 待命卡片据此显示时长。同一路径的并发请求合流。
+class _AudioDurationCache {
+  static final Map<String, Duration> _cache = {};
+  static final Map<String, Future<Duration?>> _inflight = {};
+
+  static Duration? cached(String path) => _cache[path];
+
+  static Future<Duration?> resolve(String path) {
+    final hit = _cache[path];
+    if (hit != null) return Future.value(hit);
+    return _inflight.putIfAbsent(path, () async {
+      try {
+        final ms = await rust.audioDurationMs(path: path);
+        final d = (ms != null && ms > 0)
+            ? Duration(milliseconds: ms.toInt())
+            : null;
+        if (d != null) _cache[path] = d;
+        return d;
+      } catch (e, s) {
+        logger.e('[audio] duration failed path=$path', error: e, stackTrace: s);
+        return null;
+      } finally {
+        _inflight.remove(path);
+      }
+    });
+  }
+}
+
+/// 播放进度快照（活动音轨用）。
+class AudioProgress {
+  final Duration position;
+  final Duration duration;
+  final bool playing;
+  final bool muted;
+
+  const AudioProgress({
+    required this.position,
+    required this.duration,
+    required this.playing,
+    required this.muted,
+  });
+
+  static const zero = AudioProgress(
+    position: Duration.zero,
+    duration: Duration.zero,
+    playing: false,
+    muted: false,
+  );
+}
+
+/// 单实例音频控制器：全程只持有一个 [AudioPlayer]，同一时刻只播一条；原生解码器在首次
+/// 播放时才真正初始化（点了再建）。媒体库整页共享一个实例，从而把「一屏 N 个播放器」降为
+/// 一个。Quill 音频嵌入各自持有一个（一篇日记内音频不多）。
+class AudioPlaybackController {
+  final _player = AudioPlayer();
+
+  /// 当前（或最近）播放的文件路径；null = 空闲。切换即停上一条。
+  final ValueNotifier<String?> activePath = ValueNotifier(null);
+
+  /// 活动音轨的进度快照（非活动 tile 不订阅它，故进度 tick 只重建活动那一条）。
+  final ValueNotifier<AudioProgress> progress = ValueNotifier(
+    AudioProgress.zero,
+  );
+
+  late final StreamSubscription<Duration> _posSub;
+  late final StreamSubscription<Duration> _durSub;
+  late final StreamSubscription<PlayerState> _stateSub;
+  late final StreamSubscription<void> _completeSub;
+
+  Duration _position = Duration.zero;
+  Duration _duration = Duration.zero;
+  bool _playing = false;
+  bool _muted = false;
+  bool _completed = false;
+
+  // seek 抑制：seek 后 ExoPlayer 会瞬时回报 0/旧位置；先按目标显示，待流回报追上目标再跟随，
+  // 否则松手后进度条会闪回 0（看起来像从头重播）。设一个兜底定时器防止永久卡住。
+  Duration? _pendingSeek;
+  Timer? _seekGuard;
+
+  AudioPlaybackController() {
+    _posSub = _player.onPositionChanged.listen((d) {
+      final pending = _pendingSeek;
+      if (pending != null) {
+        if ((d - pending).abs() > const Duration(seconds: 1)) return;
+        _pendingSeek = null;
+      }
+      _emit(position: d);
+    });
+    _durSub = _player.onDurationChanged.listen((d) => _emit(duration: d));
+    _stateSub = _player.onPlayerStateChanged.listen(
+      (s) => _emit(playing: s == PlayerState.playing),
+    );
+    _completeSub = _player.onPlayerComplete.listen((_) {
+      _completed = true;
+      _emit(position: Duration.zero, playing: false);
+    });
+  }
+
+  void _emit({
+    Duration? position,
+    Duration? duration,
+    bool? playing,
+    bool? muted,
+  }) {
+    _position = position ?? _position;
+    _duration = duration ?? _duration;
+    _playing = playing ?? _playing;
+    _muted = muted ?? _muted;
+    progress.value = AudioProgress(
+      position: _position,
+      duration: _duration,
+      playing: _playing,
+      muted: _muted,
+    );
+  }
+
+  Future<void> toggle(String path) async {
+    try {
+      if (activePath.value == path) {
+        if (_playing) {
+          await _player.pause();
+        } else if (_completed) {
+          _completed = false;
+          await _player.play(DeviceFileSource(path));
+        } else {
+          await _player.resume();
+        }
+      } else {
+        // 切换音轨：重置进度并以文件源一步播放（设源+预备+播放，最可靠）。
+        activePath.value = path;
+        _completed = false;
+        _pendingSeek = null;
+        _position = Duration.zero;
+        _duration = Duration.zero;
+        _emit();
+        await _player.play(DeviceFileSource(path));
+      }
+    } catch (e, s) {
+      logger.e('[audio] play failed', error: e, stackTrace: s);
+    }
+  }
+
+  Future<void> seek(double fraction) async {
+    if (_duration.inMilliseconds <= 0) return;
+    final target = Duration(
+      milliseconds: (fraction * _duration.inMilliseconds).round(),
+    );
+    _pendingSeek = target;
+    _emit(position: target);
+    _seekGuard?.cancel();
+    _seekGuard = Timer(
+      const Duration(milliseconds: 600),
+      () => _pendingSeek = null,
+    );
+    try {
+      await _player.seek(target);
+    } catch (_) {}
+  }
+
+  Future<void> toggleMute() async {
+    final next = !_muted;
+    _emit(muted: next);
+    await _player.setVolume(next ? 0 : 1);
+  }
+
+  void dispose() {
+    _seekGuard?.cancel();
+    _posSub.cancel();
+    _durSub.cancel();
+    _stateSub.cancel();
+    _completeSub.cancel();
+    _player.dispose();
+    activePath.dispose();
+    progress.dispose();
+  }
+}
+
+/// 绑定到 [AudioPlaybackController] 的一条音频卡片：仅当自己是活动音轨时才订阅进度并显示
+/// 播放态，否则是待命态（点了才成为活动音轨、才初始化播放器）。
+class AudioTile extends StatelessWidget {
+  final AudioPlaybackController controller;
+  final String path;
+
+  const AudioTile({super.key, required this.controller, required this.path});
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String?>(
+      valueListenable: controller.activePath,
+      builder: (context, active, _) {
+        if (active != path) {
+          return _IdleAudioBar(
+            path: path,
+            onToggle: () => controller.toggle(path),
+            onToggleMute: controller.toggleMute,
+          );
+        }
+        return ValueListenableBuilder<AudioProgress>(
+          valueListenable: controller.progress,
+          builder: (context, p, _) => AudioBar(
+            playing: p.playing,
+            position: p.position,
+            duration: p.duration,
+            muted: p.muted,
+            onToggle: () => controller.toggle(path),
+            onSeek: controller.seek,
+            onToggleMute: controller.toggleMute,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 单条音频播放条（自持一个 [AudioPlaybackController]）。适合只有一条音频的场景，如 Quill
+/// 富文本嵌入。样式与状态复用共享的 [AudioTile] / [AudioBar]。
 class AudioPlayerComponent extends StatefulWidget {
   final String path;
 
@@ -14,163 +233,211 @@ class AudioPlayerComponent extends StatefulWidget {
 }
 
 class _AudioPlayerComponentState extends State<AudioPlayerComponent> {
-  final _player = AudioPlayer();
-  late String _currentPath;
-
-  Duration _total = Duration.zero;
-  Duration _position = Duration.zero;
-  bool _playing = false;
-  // 用户按住滑块时禁用流式更新，避免拖拽指与流值打架。
-  bool _dragging = false;
-  double _dragValue = 0.0;
-
-  StreamSubscription<Duration>? _posSub;
-  StreamSubscription<Duration>? _durSub;
-  StreamSubscription<void>? _completeSub;
-  StreamSubscription<PlayerState>? _stateSub;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentPath = widget.path;
-    _bindStreams();
-    _loadSource();
-  }
-
-  @override
-  void didUpdateWidget(covariant AudioPlayerComponent oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.path != widget.path) {
-      _currentPath = widget.path;
-      _loadSource();
-    }
-  }
-
-  void _bindStreams() {
-    _posSub = _player.onPositionChanged.listen((d) {
-      if (!mounted || _dragging) return;
-      setState(() => _position = d);
-    });
-    _durSub = _player.onDurationChanged.listen((d) {
-      if (!mounted) return;
-      setState(() => _total = d);
-    });
-    _completeSub = _player.onPlayerComplete.listen((_) {
-      if (!mounted) return;
-      setState(() {
-        _playing = false;
-        _position = Duration.zero;
-      });
-    });
-    _stateSub = _player.onPlayerStateChanged.listen((state) {
-      if (!mounted) return;
-      setState(() => _playing = state == PlayerState.playing);
-    });
-  }
-
-  Future<void> _loadSource() async {
-    try {
-      await _player.setSourceDeviceFile(_currentPath);
-    } catch (_) {
-      // 加载失败保留默认状态；UI 会显示 0:00 / 0:00 的禁用条。
-    }
-  }
-
-  Future<void> _toggle() async {
-    if (_playing) {
-      await _player.pause();
-    } else {
-      await _player.resume();
-    }
-  }
+  late final AudioPlaybackController _controller = AudioPlaybackController();
 
   @override
   void dispose() {
-    _posSub?.cancel();
-    _durSub?.cancel();
-    _completeSub?.cancel();
-    _stateSub?.cancel();
-    _player.dispose();
+    _controller.dispose();
     super.dispose();
-  }
-
-  String _fmt(Duration d) {
-    final mm = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final ss = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return '$mm:$ss';
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colorScheme;
-    final hasDuration = _total.inMilliseconds > 0;
+    return AudioTile(controller: _controller, path: widget.path);
+  }
+}
+
+/// 待命态音频卡片：不建播放器，只经 [_AudioDurationCache]（Rust 读头）拿时长并显示 `0:00 /
+/// 时长`，进度条不可拖。点播放键即成为活动音轨。
+class _IdleAudioBar extends StatefulWidget {
+  final String path;
+  final VoidCallback onToggle;
+  final VoidCallback onToggleMute;
+
+  const _IdleAudioBar({
+    required this.path,
+    required this.onToggle,
+    required this.onToggleMute,
+  });
+
+  @override
+  State<_IdleAudioBar> createState() => _IdleAudioBarState();
+}
+
+class _IdleAudioBarState extends State<_IdleAudioBar> {
+  Duration _duration = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDuration();
+  }
+
+  void _loadDuration() {
+    final cached = _AudioDurationCache.cached(widget.path);
+    if (cached != null) {
+      _duration = cached;
+      return;
+    }
+    _AudioDurationCache.resolve(widget.path).then((d) {
+      if (mounted && d != null) setState(() => _duration = d);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AudioBar(
+      playing: false,
+      position: Duration.zero,
+      duration: _duration,
+      muted: false,
+      enabled: false,
+      onToggle: widget.onToggle,
+      onSeek: (_) {},
+      onToggleMute: widget.onToggleMute,
+    );
+  }
+}
+
+/// 音频播放条的纯视觉（样式对齐 TipTap 编辑器内音频节点：圆角描边容器 + 圆形主色播放键 +
+/// 细主色进度条 + 时间 + 幽灵静音键）。进度拖拽状态本地维护，松手回调 [onSeek]（0..1）。
+class AudioBar extends StatefulWidget {
+  final bool playing;
+  final Duration position;
+  final Duration duration;
+  final bool muted;
+
+  /// 进度条是否可拖拽定位。待命卡片显示时长但不可拖（无正在播放的音轨可定位）。
+  final bool enabled;
+  final VoidCallback onToggle;
+  final ValueChanged<double> onSeek;
+  final VoidCallback onToggleMute;
+
+  const AudioBar({
+    super.key,
+    required this.playing,
+    required this.position,
+    required this.duration,
+    required this.muted,
+    required this.onToggle,
+    required this.onSeek,
+    required this.onToggleMute,
+    this.enabled = true,
+  });
+
+  @override
+  State<AudioBar> createState() => _AudioBarState();
+}
+
+class _AudioBarState extends State<AudioBar> {
+  bool _dragging = false;
+  double _dragValue = 0.0;
+
+  /// 秒 → m:ss（超过 1 小时则 h:mm:ss），与编辑器内 formatTime 一致（分钟不补零）。
+  String _fmt(Duration d) {
+    final total = d.inSeconds < 0 ? 0 : d.inSeconds;
+    final h = total ~/ 3600;
+    final m = (total % 3600) ~/ 60;
+    final s = total % 60;
+    final ss = s.toString().padLeft(2, '0');
+    if (h > 0) return '$h:${m.toString().padLeft(2, '0')}:$ss';
+    return '$m:$ss';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final hasDuration = widget.duration.inMilliseconds > 0;
+    final canSeek = widget.enabled && hasDuration;
     final progress = _dragging
         ? _dragValue
         : (hasDuration
-              ? (_position.inMilliseconds / _total.inMilliseconds).clamp(
-                  0.0,
-                  1.0,
-                )
+              ? (widget.position.inMilliseconds /
+                        widget.duration.inMilliseconds)
+                    .clamp(0.0, 1.0)
               : 0.0);
-    return Card.filled(
-      color: scheme.secondaryContainer,
-      margin: EdgeInsets.zero,
+
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: scheme.surfaceContainer,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppBorderRadius.largeBorderRadius,
+          side: BorderSide(color: scheme.outlineVariant),
+        ),
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         child: Row(
           children: [
             IconButton.filled(
-              onPressed: hasDuration ? _toggle : null,
+              onPressed: widget.onToggle,
+              iconSize: 22,
               icon: Icon(
-                _playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                widget.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
               ),
               style: IconButton.styleFrom(
+                minimumSize: const Size(40, 40),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: EdgeInsets.zero,
               ),
             ),
+            const SizedBox(width: 10),
             Expanded(
               child: SliderTheme(
                 data: SliderTheme.of(context).copyWith(
+                  trackHeight: 3,
+                  activeTrackColor: scheme.primary,
+                  inactiveTrackColor: scheme.primary.withValues(alpha: 0.2),
+                  thumbColor: scheme.primary,
                   overlayShape: SliderComponentShape.noOverlay,
                   thumbShape: const RoundSliderThumbShape(
                     enabledThumbRadius: 6,
                   ),
-                  trackHeight: 3,
                 ),
                 child: Slider(
                   value: progress,
-                  onChangeStart: hasDuration
+                  onChangeStart: canSeek
                       ? (v) {
                           _dragging = true;
-                          _dragValue = v;
-                        }
-                      : null,
-                  onChanged: hasDuration
-                      ? (v) {
                           setState(() => _dragValue = v);
                         }
                       : null,
-                  onChangeEnd: hasDuration
-                      ? (v) async {
-                          _dragging = false;
-                          final ms = (v * _total.inMilliseconds).round();
-                          await _player.seek(Duration(milliseconds: ms));
-                          if (mounted) {
-                            setState(() => _position = Duration(milliseconds: ms));
-                          }
+                  onChanged: canSeek
+                      ? (v) => setState(() => _dragValue = v)
+                      : null,
+                  onChangeEnd: canSeek
+                      ? (v) {
+                          setState(() => _dragging = false);
+                          widget.onSeek(v);
                         }
                       : null,
                 ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
-              '${_fmt(_position)} / ${_fmt(_total)}',
+              '${_fmt(widget.position)} / ${_fmt(widget.duration)}',
               style: context.textTheme.labelSmall?.copyWith(
-                color: scheme.onSecondaryContainer,
+                color: scheme.onSurfaceVariant,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 2),
+            IconButton(
+              onPressed: widget.onToggleMute,
+              iconSize: 20,
+              color: scheme.onSurfaceVariant,
+              icon: Icon(
+                widget.muted
+                    ? Icons.volume_off_rounded
+                    : Icons.volume_up_rounded,
+              ),
+              style: IconButton.styleFrom(
+                minimumSize: const Size(32, 32),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: EdgeInsets.zero,
+              ),
+            ),
           ],
         ),
       ),
