@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_diary/src/application/search_controller.dart';
 import 'package:moodiary_diary/src/presentation/search/search_result_card.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
@@ -100,7 +101,6 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           children: [
             const _SearchIndexBanner(),
             _buildFilterBar(context, state),
-            const Divider(height: 1),
             Expanded(
               child: AnimatedSwitcher(
                 duration: Durations.short3,
@@ -135,7 +135,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   Widget _buildFilterBar(BuildContext context, DiarySearchState state) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       child: Row(
         children: [
           _dateChip(context, state),
@@ -149,7 +149,8 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 
   Widget _dateChip(BuildContext context, DiarySearchState state) {
-    return PopupMenuButton<DateRangePreset>(
+    return MoodiaryMenuButton<DateRangePreset>(
+      selected: state.datePreset,
       onSelected: (preset) async {
         if (preset == DateRangePreset.custom) {
           final now = DateTime.now();
@@ -167,9 +168,9 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           _controller.setDatePreset(preset);
         }
       },
-      itemBuilder: (_) => [
+      entries: [
         for (final p in DateRangePreset.values)
-          PopupMenuItem(value: p, child: Text(_dateLabel(context, p))),
+          MoodiaryMenuEntry(value: p, label: _dateLabel(context, p)),
       ],
       child: _FilterChip(
         icon: Icons.calendar_today_rounded,
@@ -193,13 +194,14 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                   .firstWhereOrNull((c) => c.id == state.categoryId)
                   ?.categoryName ??
               context.l10n.searchCategoryAll);
-    return PopupMenuButton<String>(
-      // 空串 = 全部分类（PopupMenuButton 把 null 当作「取消」，故不能用 null 值）。
+    return MoodiaryMenuButton<String>(
+      // 空串 = 全部分类（null 语义留给「未选择」，故用空串表达「全部」）。
+      selected: state.categoryId ?? '',
       onSelected: (id) => _controller.setCategory(id.isEmpty ? null : id),
-      itemBuilder: (_) => [
-        PopupMenuItem(value: '', child: Text(context.l10n.searchCategoryAll)),
+      entries: [
+        MoodiaryMenuEntry(value: '', label: context.l10n.searchCategoryAll),
         for (final c in categories)
-          PopupMenuItem(value: c.id, child: Text(c.categoryName)),
+          MoodiaryMenuEntry(value: c.id, label: c.categoryName),
       ],
       child: _FilterChip(
         icon: Icons.label_outline_rounded,
@@ -210,11 +212,12 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 
   Widget _sortChip(BuildContext context, DiarySearchState state) {
-    return PopupMenuButton<SearchSort>(
+    return MoodiaryMenuButton<SearchSort>(
+      selected: state.sort,
       onSelected: _controller.setSort,
-      itemBuilder: (_) => [
+      entries: [
         for (final s in SearchSort.values)
-          PopupMenuItem(value: s, child: Text(_sortLabel(context, s))),
+          MoodiaryMenuEntry(value: s, label: _sortLabel(context, s)),
       ],
       child: _FilterChip(
         icon: Icons.sort_rounded,
@@ -463,7 +466,7 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
   }
 }
 
-/// 筛选栏上的下拉胶囊（选中态填充次级容器色）。
+/// 筛选栏上的下拉胶囊：填充式软色调，选中态用次级容器色高亮。
 class _FilterChip extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -478,24 +481,27 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
+    final bg = active ? scheme.secondaryContainer : scheme.surfaceContainerHighest;
     final fg = active ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 7, 8, 7),
-      decoration: ShapeDecoration(
-        color: active ? scheme.secondaryContainer : null,
-        shape: StadiumBorder(
-          side: BorderSide(
-            color: active ? Colors.transparent : scheme.outlineVariant,
-          ),
-        ),
-      ),
+    return AnimatedContainer(
+      duration: Durations.short3,
+      curve: Curves.easeOut,
+      padding: const EdgeInsets.fromLTRB(14, 9, 10, 9),
+      decoration: ShapeDecoration(color: bg, shape: const StadiumBorder()),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: fg),
+          Icon(icon, size: 18, color: fg),
           const SizedBox(width: 6),
-          Text(label, style: context.textTheme.labelLarge?.copyWith(color: fg)),
-          Icon(Icons.arrow_drop_down_rounded, size: 18, color: fg),
+          Text(
+            label,
+            style: context.textTheme.labelLarge?.copyWith(
+              color: fg,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 1),
+          Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: fg),
         ],
       ),
     );
