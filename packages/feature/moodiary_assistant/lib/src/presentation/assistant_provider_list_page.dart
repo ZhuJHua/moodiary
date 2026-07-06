@@ -6,6 +6,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_assistant/src/presentation/provider_logo.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 
@@ -226,15 +227,29 @@ class _ProviderCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                PopupMenuButton<String>(
+                MoodiaryMenuButton<String>(
+                  tooltip: l10n.more,
                   onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
-                  itemBuilder: (_) => [
-                    PopupMenuItem(value: 'edit', child: Text(l10n.diaryEdit)),
-                    PopupMenuItem(
+                  entries: [
+                    MoodiaryMenuEntry(
+                      value: 'edit',
+                      label: l10n.diaryEdit,
+                      icon: Icons.edit_outlined,
+                    ),
+                    MoodiaryMenuEntry(
                       value: 'delete',
-                      child: Text(l10n.diaryDelete),
+                      label: l10n.diaryDelete,
+                      icon: Icons.delete_outline,
+                      isDestructive: true,
                     ),
                   ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Icon(
+                      Icons.more_vert_rounded,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ],
             ),

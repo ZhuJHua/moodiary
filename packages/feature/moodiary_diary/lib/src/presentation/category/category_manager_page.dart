@@ -341,8 +341,8 @@ class _CategoryTile extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            PopupMenuButton<String>(
-              tooltip: '更多',
+            MoodiaryMenuButton<String>(
+              tooltip: context.l10n.more,
               onSelected: (key) {
                 switch (key) {
                   case 'rename':
@@ -351,28 +351,26 @@ class _CategoryTile extends StatelessWidget {
                     onDelete();
                 }
               },
-              itemBuilder: (_) => const [
-                PopupMenuItem(
+              entries: const [
+                MoodiaryMenuEntry(
                   value: 'rename',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit_outlined, size: 18),
-                      SizedBox(width: 10),
-                      Text('重命名'),
-                    ],
-                  ),
+                  label: '重命名',
+                  icon: Icons.edit_outlined,
                 ),
-                PopupMenuItem(
+                MoodiaryMenuEntry(
                   value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete_outline, size: 18),
-                      SizedBox(width: 10),
-                      Text('删除'),
-                    ],
-                  ),
+                  label: '删除',
+                  icon: Icons.delete_outline,
+                  isDestructive: true,
                 ),
               ],
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(
+                  Icons.more_vert_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
             ),
             if (dragIndex != null)
               ReorderableDragStartListener(
