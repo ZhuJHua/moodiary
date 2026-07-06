@@ -16,19 +16,19 @@ class _StartSlide {
 
 const _slides = <_StartSlide>[
   _StartSlide(
-    icon: Icons.book_outlined,
+    icon: Icons.auto_stories_outlined,
     title: '欢迎使用 Moodiary',
-    body: '一款离线优先的心情日记，所有数据默认保存在本机。',
+    body: '一本离线优先的私密日记，数据默认只留在你的设备上。',
   ),
   _StartSlide(
-    icon: Icons.palette_outlined,
+    icon: Icons.sentiment_satisfied_outlined,
     title: '记录每一种情绪',
-    body: '心情滑块 + 分类 + 标签 + 字数与写作计时，按你需要的维度组织内容。',
+    body: '心情、分类、标签随心组织，写作时长与字数实时可见。',
   ),
   _StartSlide(
-    icon: Icons.cloud_sync_outlined,
-    title: '数据归你掌控',
-    body: '随时导出 JSON 备份；按需启用 WebDAV / LocalSend 同步，端到端加密可选。',
+    icon: Icons.cloud_done_outlined,
+    title: '数据始终归你掌控',
+    body: '一键导出 JSON 备份，也可开启 WebDAV / S3 云同步，端到端加密可选。',
   ),
 ];
 
@@ -49,6 +49,15 @@ class _StartPageState extends ConsumerState<StartPage> {
     super.dispose();
   }
 
+  /// 当前页相对 [index] 的位移（-1~1 区间做淡入淡出）。首帧未布局时退回整数页。
+  double _offsetFor(int index) {
+    if (!_pageController.hasClients ||
+        !_pageController.position.haveDimensions) {
+      return (_page - index).toDouble();
+    }
+    return (_pageController.page ?? _page.toDouble()) - index;
+  }
+
   Future<void> _enter() async {
     await MoodiaryKVs.firstStart.set(false);
     if (!mounted) return;
@@ -60,7 +69,7 @@ class _StartPageState extends ConsumerState<StartPage> {
       _enter();
     } else {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 280),
+        duration: const Duration(milliseconds: 320),
         curve: Curves.easeOutCubic,
       );
     }
@@ -69,16 +78,33 @@ class _StartPageState extends ConsumerState<StartPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final isLast = _page == _slides.length - 1;
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: TextButton(
-                onPressed: isLast ? null : _enter,
-                child: const Text('跳过'),
+            SizedBox(
+              height: 52,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: AnimatedOpacity(
+                  opacity: isLast ? 0 : 1,
+                  duration: const Duration(milliseconds: 200),
+                  child: IgnorePointer(
+                    ignoring: isLast,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: TextButton(
+                        onPressed: _enter,
+                        style: TextButton.styleFrom(
+                          foregroundColor: scheme.onSurfaceVariant,
+                        ),
+                        child: const Text('跳过'),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
             Expanded(
@@ -87,76 +113,59 @@ class _StartPageState extends ConsumerState<StartPage> {
                 onPageChanged: (i) => setState(() => _page = i),
                 itemCount: _slides.length,
                 itemBuilder: (context, index) {
-                  final s = _slides[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          radius: 48,
-                          backgroundColor: theme.colorScheme.primaryContainer,
-                          child: Icon(s.icon, size: 56),
+                  return AnimatedBuilder(
+                    animation: _pageController,
+                    builder: (context, child) {
+                      final t = _offsetFor(index).abs().clamp(0.0, 1.0);
+                      return Opacity(
+                        opacity: 1 - t,
+                        child: Transform.translate(
+                          offset: Offset(0, t * 24),
+                          child: child,
                         ),
-                        const SizedBox(height: 24),
-                        Text(
-                          s.title,
-                          style: theme.textTheme.headlineMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          s.body,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
+                      );
+                    },
+                    child: _SlideView(slide: _slides[index]),
                   );
                 },
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_slides.length, (i) {
-                final selected = i == _page;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: selected ? 20 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                );
-              }),
-            ),
+            _Dots(count: _slides.length, page: _page),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-              child: FilledButton.icon(
-                onPressed: _next,
-                icon: Icon(isLast ? Icons.check : Icons.arrow_forward),
-                label: Text(isLast ? '开始记录' : '下一步'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+              child: SizedBox(
+                height: 54,
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: _next,
+                  style: FilledButton.styleFrom(
+                    shape: const StadiumBorder(),
+                    textStyle: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  child: Text(isLast ? '开始记录' : '下一步'),
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   TextButton(
                     onPressed: () => const AgreementRoute().push(context),
+                    style: TextButton.styleFrom(
+                      foregroundColor: scheme.onSurfaceVariant,
+                    ),
                     child: const Text('用户协议'),
                   ),
-                  const SizedBox(width: 16),
+                  Text('·', style: TextStyle(color: scheme.outline)),
                   TextButton(
                     onPressed: () => const PrivacyRoute().push(context),
+                    style: TextButton.styleFrom(
+                      foregroundColor: scheme.onSurfaceVariant,
+                    ),
                     child: const Text('隐私政策'),
                   ),
                 ],
@@ -165,6 +174,97 @@ class _StartPageState extends ConsumerState<StartPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SlideView extends StatelessWidget {
+  final _StartSlide slide;
+  const _SlideView({required this.slide});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 132,
+            height: 132,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  scheme.primaryContainer,
+                  Color.alphaBlend(
+                    scheme.primary.withValues(alpha: 0.16),
+                    scheme.primaryContainer,
+                  ),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(36),
+              boxShadow: [
+                BoxShadow(
+                  color: scheme.primary.withValues(alpha: 0.18),
+                  blurRadius: 28,
+                  offset: const Offset(0, 14),
+                ),
+              ],
+            ),
+            child: Icon(slide.icon, size: 60, color: scheme.onPrimaryContainer),
+          ),
+          const SizedBox(height: 40),
+          Text(
+            slide.title,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              height: 1.15,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            slide.body,
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: scheme.onSurfaceVariant,
+              height: 1.55,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Dots extends StatelessWidget {
+  final int count;
+  final int page;
+  const _Dots({required this.count, required this.page});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (i) {
+        final selected = i == page;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: selected ? 22 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: selected ? color : color.withValues(alpha: 0.22),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+      }),
     );
   }
 }
