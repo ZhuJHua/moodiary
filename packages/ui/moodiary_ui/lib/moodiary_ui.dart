@@ -21,6 +21,7 @@ export 'src/basic/text.dart';
 export 'src/common/async_value.dart';
 export 'src/common/audio_player.dart';
 export 'src/common/category_color.dart';
+export 'src/common/chip_bar.dart';
 export 'src/common/env_badge.dart';
 export 'src/common/expand_button.dart';
 export 'src/common/frosted_glass_overlay.dart';
