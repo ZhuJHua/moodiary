@@ -251,4 +251,53 @@ void main() {
       ]);
     });
   });
+
+  group('QuillDeltaToTiptap — 旧首行缩进 embed', () {
+    test('text_indent 占位被丢弃，段落文字保留（不崩、不留空节点）', () {
+      // 旧「首行缩进」日记：每段行首一个 {"insert":{"text_indent":"2"}}，与段落文字同一行。
+      // 迁移到 tiptap 后首行缩进改由全局 CSS 实现，故此占位应被静默丢弃、文字原样保留。
+      expect(content([
+        {
+          'insert': {'text_indent': '2'},
+        },
+        {'insert': '缩进段落'},
+        {'insert': '\n'},
+      ]), [
+        {
+          'type': 'paragraph',
+          'content': [
+            {'type': 'text', 'text': '缩进段落'},
+          ],
+        },
+      ]);
+    });
+
+    test('多段均带 text_indent：逐段丢占位、保留文字', () {
+      expect(content([
+        {
+          'insert': {'text_indent': '2'},
+        },
+        {'insert': '第一段'},
+        {'insert': '\n'},
+        {
+          'insert': {'text_indent': '2'},
+        },
+        {'insert': '第二段'},
+        {'insert': '\n'},
+      ]), [
+        {
+          'type': 'paragraph',
+          'content': [
+            {'type': 'text', 'text': '第一段'},
+          ],
+        },
+        {
+          'type': 'paragraph',
+          'content': [
+            {'type': 'text', 'text': '第二段'},
+          ],
+        },
+      ]);
+    });
+  });
 }

@@ -97,6 +97,8 @@
   --app-text-selection: #8056104d; /* primary @ ~30% */
   --app-scrollbar: #4f453966; /* on-surface-variant @ ~40% */
   --app-scrollbar-hover: #4f453999; /* on-surface-variant @ ~60% */
+  /* 首行缩进量：默认 0（关闭）；开启时 applyTheme 用 inline style 置为 2em。 */
+  --app-text-indent: 0;
 
   --app-font-sans:
     -apple-system, 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC', Roboto,
@@ -287,6 +289,8 @@ body {
   height: 0;
   pointer-events: none;
   color: var(--app-on-surface-variant);
+  /* 首行缩进开启时，占位符（左浮动，不受 text-indent 影响）跟随缩进对齐光标。 */
+  margin-left: var(--app-text-indent, 0);
 }
 
 /* —— 正文排版 —— */
@@ -295,6 +299,11 @@ body {
 }
 .moodiary-editor .ProseMirror p {
   margin: 0.6em 0;
+}
+/* 首行缩进：仅作用于顶层正文段落（`> p`），不波及列表 / 任务 / 表格 / 引用内的段落。
+   缩进量由 --app-text-indent 驱动（applyTheme 依「首行缩进」偏好置 0 或 2em）。 */
+.moodiary-editor .ProseMirror > p {
+  text-indent: var(--app-text-indent, 0);
 }
 .moodiary-editor .ProseMirror h1,
 .moodiary-editor .ProseMirror h2,

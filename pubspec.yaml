@@ -42,7 +42,7 @@ melos:
       description: 构建编辑器单文件资源
 
 dev_dependencies:
-  melos: 8.0.0
+  melos: ^8.1.0
 
 dependency_overrides:
   quill_native_bridge_windows: 0.1.0-beta.1

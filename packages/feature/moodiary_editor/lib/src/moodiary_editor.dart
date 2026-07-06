@@ -92,6 +92,10 @@ class MoodiaryEditor extends StatefulWidget {
   /// 自动保存状态，透传给编辑器右下角气泡：'saving' / 'saved' / 'failed' / 其它（不显示）。
   final String saveStatus;
 
+  /// 全局「首行缩进」开关：随主题一起下发（见 [_seedTheme]），web 侧据此对正文段落切 CSS
+  /// `text-indent`。变更时经 [didUpdateWidget] 实时推给已打开的编辑器。
+  final bool firstLineIndent;
+
   /// 主题种子解析器（宿主 app 提供）：每次需要下发主题时实时读取当前种子色 + 变体；
   /// 明暗由 `Theme.of(context)` 推断。不传则用 Material 默认主色。
   final EditorSeed Function()? seedResolver;
@@ -125,6 +129,7 @@ class MoodiaryEditor extends StatefulWidget {
     this.onOpenDiaryLink,
     this.onOpenDetails,
     this.saveStatus = 'idle',
+    this.firstLineIndent = false,
     this.seedResolver,
     this.fontResolver,
     this.mediaResolver,
@@ -168,6 +173,10 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     }
     if (oldWidget.saveStatus != widget.saveStatus && _activated) {
       _setSaveStatus();
+    }
+    // 首行缩进开关变化：随主题通道即时下发（复用 setTheme，不重建 webview）。
+    if (oldWidget.firstLineIndent != widget.firstLineIndent && _activated) {
+      _setTheme();
     }
   }
 
@@ -424,6 +433,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       'dark': dark,
       'variant': variant,
       if (font != null) 'font': font.family,
+      'firstLineIndent': widget.firstLineIndent,
     };
   }
 

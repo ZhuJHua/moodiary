@@ -12,7 +12,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>
 abstract class ImageCompressor implements RustOpaqueInterface {
-  /// 直接把压缩结果写入 output_path，避免 `Vec<u8>` 经 FFI 拷贝回 Dart。
   static Future<void> containToFile({
     required String filePath,
     required String outputPath,
@@ -26,7 +25,6 @@ abstract class ImageCompressor implements RustOpaqueInterface {
 
 enum CompressFormat { jpeg, webP, png }
 
-/// 压缩/缩放参数集合（分组避免过长参数列表；经 FFI 传入）。
 class CompressSpec {
   final CompressFormat? compressFormat;
   final int? targetWidth;

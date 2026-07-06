@@ -28,6 +28,8 @@ export interface SeedTheme {
   contrast?: number
   /** App 当前自定义字体家族名；缺省 / 空表示系统字体（用 CSS 兜底字体栈）。 */
   font?: string
+  /** 全局「首行缩进」：true 时正文段落首行缩进 2 字符（经 --app-text-indent 驱动 CSS）。 */
+  firstLineIndent?: boolean
 }
 
 export let isDark = false
@@ -78,6 +80,9 @@ export function applyTheme(theme: SeedTheme): void {
     root.style.setProperty(key, value)
   }
   applyFont(theme.font)
+  // 首行缩进：置 --app-text-indent（moodiary-editor.css 里顶层段落 `> p` 读它）。2em ≈ 2 字符，
+  // 与旧版 Quill text_indent 值 "2" 对齐；关闭时置 0。
+  root.style.setProperty('--app-text-indent', theme.firstLineIndent ? '2em' : '0')
   isDark = theme.dark
   root.setAttribute('data-theme', isDark ? 'dark' : 'light')
   // 让原生表单控件 / 滚动条跟随明暗。

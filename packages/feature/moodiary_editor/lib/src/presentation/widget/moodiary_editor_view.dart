@@ -34,6 +34,10 @@ class MoodiaryEditorView extends StatefulWidget {
 
   final bool editable;
 
+  /// 全局「首行缩进」偏好（[MoodiaryKVs.firstLineIndent]）。透传给 [MoodiaryEditor]，
+  /// 经主题通道下发到 webview，由 CSS `text-indent` 对正文段落生效。
+  final bool firstLineIndent;
+
   /// 本篇自动保存状态，透传给编辑器内右下角气泡：saving / saved / failed。
   final String saveStatus;
 
@@ -52,6 +56,7 @@ class MoodiaryEditorView extends StatefulWidget {
     this.controller,
     this.onActiveHeadingChanged,
     this.editable = true,
+    this.firstLineIndent = false,
     this.saveStatus = 'idle',
     this.onOpenDiaryLink,
     this.onOpenDetails,
@@ -284,6 +289,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onOpenDiaryLink: widget.onOpenDiaryLink,
       onOpenDetails: widget.onOpenDetails,
       saveStatus: widget.saveStatus,
+      firstLineIndent: widget.firstLineIndent,
       seedResolver: () => ThemeUtil().editorSeed,
       fontResolver: () => ThemeUtil().editorFont,
       mediaResolver: appMediaResolver,

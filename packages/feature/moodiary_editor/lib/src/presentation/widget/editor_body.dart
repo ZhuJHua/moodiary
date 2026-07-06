@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_editor/src/quill_embed/audio_embed.dart';
 import 'package:moodiary_editor/src/quill_embed/image_embed.dart';
+import 'package:moodiary_editor/src/quill_embed/text_indent_embed.dart';
 import 'package:moodiary_editor/src/quill_embed/video_embed.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -327,20 +328,26 @@ class _EditorBodyState extends State<EditorBody> {
   }
 
   Widget _buildMoodiaryEditor(BuildContext context) {
-    return MoodiaryEditorView(
-      initialContent: widget.initialContent,
-      initialTitle: widget.initialTitle,
-      onTitleChanged: widget.onTitleChanged,
-      controller: widget.editorController,
-      onActiveHeadingChanged: widget.onActiveHeadingChanged,
-      // 仅 tiptap 可编辑；旧 markdown 只读查看。
-      editable: widget.editable && widget.type.isEditable,
-      saveStatus: widget.saveStatus,
-      // content 为 TipTap 文档 JSON；contentText 走 JSON 解析得纯文本（旧 markdown 自动兼容）。
-      onChanged: (content) =>
-          widget.onChanged(content, TiptapContent.plainText(content)),
-      onOpenDiaryLink: widget.onOpenDiaryLink,
-      onOpenDetails: widget.onShowDetails,
+    // 全局「首行缩进」偏好：监听 KV，开关变更即重建并透传给 webview（走主题通道下发，
+    // web 侧据此切 CSS text-indent）。boot 首帧与运行时实时切换共用同一路径。
+    return ValueListenableBuilder<bool>(
+      valueListenable: MoodiaryKVs.firstLineIndent.getNotifier(),
+      builder: (context, firstLineIndent, _) => MoodiaryEditorView(
+        initialContent: widget.initialContent,
+        initialTitle: widget.initialTitle,
+        onTitleChanged: widget.onTitleChanged,
+        controller: widget.editorController,
+        onActiveHeadingChanged: widget.onActiveHeadingChanged,
+        // 仅 tiptap 可编辑；旧 markdown 只读查看。
+        editable: widget.editable && widget.type.isEditable,
+        saveStatus: widget.saveStatus,
+        firstLineIndent: firstLineIndent,
+        // content 为 TipTap 文档 JSON；contentText 走 JSON 解析得纯文本（旧 markdown 自动兼容）。
+        onChanged: (content) =>
+            widget.onChanged(content, TiptapContent.plainText(content)),
+        onOpenDiaryLink: widget.onOpenDiaryLink,
+        onOpenDetails: widget.onShowDetails,
+      ),
     );
   }
 
@@ -372,7 +379,11 @@ class _EditorBodyState extends State<EditorBody> {
                 ImageEmbedBuilder(),
                 VideoEmbedBuilder(isEdit: widget.editable),
                 AudioEmbedBuilder(),
+                // 旧「首行缩进」日记（≤2.7.3）正文里的 text_indent 占位：渲染成等宽留白。
+                TextIndentEmbedBuilder(),
               ],
+              // 其它历史未知 embed 一律降级为零尺寸空白，杜绝 UnimplementedError 崩渲染。
+              unknownEmbedBuilder: UnknownEmbedBuilder(),
             ),
           ),
         ),

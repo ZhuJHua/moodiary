@@ -30,7 +30,7 @@ dependencies:
   json_schema_builder: 0.1.5
   flutter_chat_ui: 2.11.1
   flutter_chat_core: 2.9.0
-  chat_bottom_container: 0.5.0
+  chat_bottom_container: ^0.5.1
   url_launcher: 6.3.2
   intl: 0.20.2
   meta: 1.18.0
