@@ -121,6 +121,9 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
             : _normalAppBar(context),
         floatingActionButton: (widget.showFab && !selecting)
             ? FloatingActionButton(
+                // 唯一 heroTag：底部导航 IndexedStack 里本页与助手页 FAB 同时存活，
+                // 默认 tag 相同会触发「multiple heroes share the same tag」。
+                heroTag: 'diaryHomeFab',
                 tooltip: context.l10n.homePageAddDiaryButton,
                 onPressed: () => openNewDiaryEditor(
                   context,

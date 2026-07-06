@@ -1038,6 +1038,8 @@ class AssistantSessionListPage extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        // 唯一 heroTag：本页作为底部导航 tab 与首页 FAB 在 IndexedStack 中同时存活。
+        heroTag: 'assistantSessionFab',
         onPressed: () => const AssistantConversationRoute().push(context),
         icon: const Icon(Icons.add_comment_rounded),
         label: Text(l10n.assistantNewChat),

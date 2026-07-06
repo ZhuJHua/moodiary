@@ -92,6 +92,7 @@ class _AssistantProviderListPageState
     return Scaffold(
       appBar: AppBar(title: Text(l10n.modelProviderTitle)),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'assistantProviderFab',
         onPressed: () => const AssistantProviderPickerRoute().push(context),
         icon: const Icon(Icons.add_rounded),
         label: Text(l10n.modelProviderAdd),

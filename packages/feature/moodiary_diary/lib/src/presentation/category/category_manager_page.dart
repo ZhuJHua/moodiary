@@ -27,6 +27,7 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('分类管理')),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'categoryManagerFab',
         onPressed: _onAddCategory,
         child: const Icon(Icons.add),
       ),
