@@ -409,6 +409,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aboutDonate => '捐助我们';
 
   @override
+  String get mediaTitle => '媒体库';
+
+  @override
   String get mediaTypeImage => '图片';
 
   @override

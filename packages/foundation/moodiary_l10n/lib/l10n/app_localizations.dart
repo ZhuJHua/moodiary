@@ -890,6 +890,12 @@ abstract class AppLocalizations {
   /// **'捐助我们'**
   String get aboutDonate;
 
+  /// No description provided for @mediaTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'媒体库'**
+  String get mediaTitle;
+
   /// No description provided for @mediaTypeImage.
   ///
   /// In zh, this message translates to:

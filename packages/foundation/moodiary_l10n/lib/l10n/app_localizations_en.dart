@@ -415,6 +415,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutDonate => 'Donate';
 
   @override
+  String get mediaTitle => 'Media';
+
+  @override
   String get mediaTypeImage => 'Image';
 
   @override

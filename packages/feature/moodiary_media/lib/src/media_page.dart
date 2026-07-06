@@ -11,8 +11,9 @@ import 'media_image_viewer.dart';
 import 'media_video_viewer.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 
-/// 媒体库页：按类型（图片 / 音频 / 视频）分类、按日期倒序分段浏览，顶部分段控件切换。
-/// AppBar「清理无用文件」删孤儿媒体。
+/// 媒体库页：顶部「媒体库」标题 + 圆角胶囊筛选条（图片 / 音频 / 视频），按日期倒序
+/// 分段浏览。AppBar「清理无用文件」删孤儿媒体。列表用 sliver 懒加载、缩略图按需
+/// 降采样，滚动更顺滑。
 class MediaPage extends StatelessWidget {
   const MediaPage({super.key});
 
@@ -34,6 +35,12 @@ IconData _typeIcon(MediaType t) => switch (t) {
   MediaType.video => Icons.movie_rounded,
 };
 
+String _countLabel(BuildContext c, MediaType t, int n) => switch (t) {
+  MediaType.image => c.l10n.mediaImageCount(n),
+  MediaType.audio => c.l10n.mediaAudioCount(n),
+  MediaType.video => c.l10n.mediaVideoCount(n),
+};
+
 class _MobileMediaPage extends ConsumerStatefulWidget {
   const _MobileMediaPage();
 
@@ -42,66 +49,51 @@ class _MobileMediaPage extends ConsumerStatefulWidget {
 }
 
 class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
-  final PageController _pageController = PageController();
   MediaType _type = MediaType.image;
+
+  // 整页共享一个播放器实例：媒体库任一时刻只播一条音频，避免一屏 N 个播放器。
+  late final AudioPlaybackController _audio = AudioPlaybackController();
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _audio.dispose();
     super.dispose();
-  }
-
-  void _onTypeSelected(MediaType next) {
-    if (next == _type) return;
-    setState(() => _type = next);
-    _pageController.animateToPage(
-      next.index,
-      duration: Durations.medium2,
-      curve: Curves.easeOutCubic,
-    );
-  }
-
-  void _onPageChanged(int index) {
-    final next = MediaType.values[index];
-    if (next == _type) return;
-    setState(() => _type = next);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 8,
+        title: Text(context.l10n.mediaTitle),
         actions: [_CleanupButton()],
-        // FittedBox 兜底：窄屏 / 大字号下 3 段图标+文字过宽时整体缩放，避免溢出。
-        title: FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: AlignmentDirectional.centerStart,
-          child: SegmentedButton<MediaType>(
-            showSelectedIcon: false,
-            style: SegmentedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              textStyle: context.textTheme.labelLarge,
-            ),
-            segments: [
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 4),
+          MoodiaryChipBar<MediaType>(
+            selected: _type,
+            onSelected: (t) => setState(() => _type = t),
+            items: [
               for (final t in MediaType.values)
-                ButtonSegment(
+                MoodiaryChipData(
                   value: t,
-                  icon: Icon(_typeIcon(t)),
-                  label: Text(_typeLabel(context, t)),
+                  label: _typeLabel(context, t),
+                  icon: _typeIcon(t),
                 ),
             ],
-            selected: {_type},
-            onSelectionChanged: (selection) =>
-                _onTypeSelected(selection.first),
           ),
-        ),
-      ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
-        children: [for (final t in MediaType.values) _MediaBody(type: t)],
+          const SizedBox(height: 4),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: Durations.short3,
+              child: _MediaBody(
+                key: ValueKey(_type),
+                type: _type,
+                audioController: _audio,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -118,7 +110,7 @@ class _CleanupButton extends ConsumerWidget {
   }
 }
 
-/// 清理无用（孤儿）媒体文件：扫描 → 确认 → 删除。桌面端 AppBar 与移动端玻璃底栏共用。
+/// 清理无用（孤儿）媒体文件：扫描 → 确认 → 删除。
 Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
   final l10n = context.l10n;
   final notifier = ref.read(mediaCleanupControllerProvider.notifier);
@@ -178,10 +170,30 @@ Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
   toast.success(message: l10n.mediaCleanupDone(report.count));
 }
 
+/// 3 列网格的常量（内边距 / 间距 / 列数），用于按屏宽算出缩略图降采样宽度。
+const double _kGridPadding = 12;
+const double _kGridSpacing = 4;
+const int _kGridColumns = 3;
+
 class _MediaBody extends ConsumerWidget {
   final MediaType type;
+  final AudioPlaybackController audioController;
 
-  const _MediaBody({required this.type});
+  const _MediaBody({
+    super.key,
+    required this.type,
+    required this.audioController,
+  });
+
+  /// 按实际单元格宽度算出缩略图解码宽度（像素），避免整图解码——大图列表卡顿主因。
+  int _thumbCacheWidth(BuildContext context) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final cell =
+        (width - _kGridPadding * 2 - _kGridSpacing * (_kGridColumns - 1)) /
+        _kGridColumns;
+    return (cell * dpr).round();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -191,23 +203,232 @@ class _MediaBody extends ConsumerWidget {
       data: (diaries) {
         final group = buildMediaGroup(diaries, type);
         if (group.isEmpty) return _Empty();
+        final cacheWidth = _thumbCacheWidth(context);
         return MoodiaryRefresh(
           onLoading: () => ref.read(provider.notifier).loadMore(),
           onRefresh: () => ref.read(provider.notifier).refresh(),
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-            itemCount: group.dates.length,
-            itemBuilder: (context, i) {
-              final date = group.dates[i];
-              return _SectionByDate(
-                date: date,
-                type: type,
-                names: group.groups[date]!,
-              );
-            },
+          child: CustomScrollView(
+            slivers: [
+              const SliverToBoxAdapter(child: SizedBox(height: 4)),
+              for (final date in group.dates) ...[
+                SliverToBoxAdapter(
+                  child: _SectionHeader(
+                    date: date,
+                    count: group.groups[date]!.length,
+                    type: type,
+                  ),
+                ),
+                _MediaSliver(
+                  type: type,
+                  names: group.groups[date]!,
+                  cacheWidth: cacheWidth,
+                  audioController: audioController,
+                ),
+              ],
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            ],
           ),
         );
       },
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final DateTime date;
+  final int count;
+  final MediaType type;
+
+  const _SectionHeader({
+    required this.date,
+    required this.count,
+    required this.type,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(_kGridPadding, 10, _kGridPadding, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              DateFormat.yMMMMEEEEd().format(date),
+              style: context.textTheme.titleSmall?.copyWith(
+                color: scheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            _countLabel(context, type, count),
+            style: context.textTheme.labelSmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 单个日期分段的媒体：图片 / 视频用 [SliverGrid]（cell 级懒加载），音频用 [SliverList]。
+class _MediaSliver extends StatelessWidget {
+  final MediaType type;
+  final List<String> names;
+  final int cacheWidth;
+  final AudioPlaybackController audioController;
+
+  const _MediaSliver({
+    required this.type,
+    required this.names,
+    required this.cacheWidth,
+    required this.audioController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (type == MediaType.audio) {
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: _kGridPadding),
+        sliver: SliverList.separated(
+          itemCount: names.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 8),
+          // 按文件名 key，实时插入/重排时移动元素而非改数据（不错位）；卡片仅绑定共享控制器。
+          itemBuilder: (context, i) => AudioTile(
+            key: ValueKey(names[i]),
+            controller: audioController,
+            path: FileUtil.getRealPath('audio', names[i]),
+          ),
+        ),
+      );
+    }
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: _kGridPadding),
+      sliver: SliverGrid.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: _kGridColumns,
+          mainAxisSpacing: _kGridSpacing,
+          crossAxisSpacing: _kGridSpacing,
+        ),
+        itemCount: names.length,
+        // 按文件名 key：实时插入/重排时移动已解码的缩略图，避免闪成邻格旧图。
+        itemBuilder: (context, i) => switch (type) {
+          MediaType.image => _ImageTile(
+            key: ValueKey(names[i]),
+            names: names,
+            index: i,
+            cacheWidth: cacheWidth,
+          ),
+          MediaType.video => _VideoTile(
+            key: ValueKey(names[i]),
+            name: names[i],
+            cacheWidth: cacheWidth,
+          ),
+          MediaType.audio => const SizedBox.shrink(),
+        },
+      ),
+    );
+  }
+}
+
+/// 缩略图基座：圆角 + 占位底色 + 解码后淡入，减少滚动时的「弹出」突兀感。
+class _Thumb extends StatelessWidget {
+  final ImageProvider image;
+  final Widget? overlay;
+
+  const _Thumb({required this.image, this.overlay});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: AppBorderRadius.smallBorderRadius,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ColoredBox(color: context.colorScheme.surfaceContainerHighest),
+          Image(
+            image: image,
+            fit: BoxFit.cover,
+            gaplessPlayback: true,
+            frameBuilder: (context, child, frame, wasSync) {
+              if (wasSync) return child;
+              return AnimatedOpacity(
+                opacity: frame == null ? 0 : 1,
+                duration: Durations.short2,
+                child: child,
+              );
+            },
+            errorBuilder: (context, _, _) => Icon(
+              Icons.broken_image_outlined,
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          ?overlay,
+        ],
+      ),
+    );
+  }
+}
+
+class _ImageTile extends StatelessWidget {
+  final List<String> names;
+  final int index;
+  final int cacheWidth;
+
+  const _ImageTile({
+    super.key,
+    required this.names,
+    required this.index,
+    required this.cacheWidth,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () =>
+          MediaImageViewer.show(context, names: names, initialIndex: index),
+      child: _Thumb(
+        image: ResizeImage(
+          FileImage(File(FileUtil.getRealPath('image', names[index]))),
+          width: cacheWidth,
+        ),
+      ),
+    );
+  }
+}
+
+class _VideoTile extends StatelessWidget {
+  final String name;
+  final int cacheWidth;
+
+  const _VideoTile({super.key, required this.name, required this.cacheWidth});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => MediaVideoViewer.show(context, name: name),
+      child: _Thumb(
+        image: ResizeImage(
+          FileImage(File(FileUtil.getRealPath('thumbnail', name))),
+          width: cacheWidth,
+        ),
+        overlay: const Stack(
+          fit: StackFit.expand,
+          children: [
+            DecoratedBox(decoration: BoxDecoration(color: Colors.black26)),
+            Center(
+              child: Icon(
+                Icons.play_circle_fill_rounded,
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -234,165 +455,6 @@ class _Empty extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _SectionByDate extends StatelessWidget {
-  final DateTime date;
-  final MediaType type;
-  final List<String> names;
-
-  const _SectionByDate({
-    required this.date,
-    required this.type,
-    required this.names,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Text(
-              DateFormat.yMMMMEEEEd().format(date),
-              style: context.textTheme.titleSmall?.copyWith(
-                color: scheme.primary,
-              ),
-            ),
-          ),
-          switch (type) {
-            MediaType.image => _ImageGrid(names: names),
-            MediaType.video => _VideoGrid(names: names),
-            MediaType.audio => _AudioList(names: names),
-          },
-        ],
-      ),
-    );
-  }
-}
-
-class _ImageGrid extends StatelessWidget {
-  final List<String> names;
-
-  const _ImageGrid({required this.names});
-
-  @override
-  Widget build(BuildContext context) {
-    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 4,
-        crossAxisSpacing: 4,
-      ),
-      itemCount: names.length,
-      itemBuilder: (context, i) {
-        return GestureDetector(
-          onTap: () => MediaImageViewer.show(
-            context,
-            names: names,
-            initialIndex: i,
-          ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: ResizeImage(
-                  FileImage(File(FileUtil.getRealPath('image', names[i]))),
-                  width: (160 * pixelRatio).toInt(),
-                ),
-                fit: BoxFit.cover,
-              ),
-              borderRadius: AppBorderRadius.smallBorderRadius,
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _VideoGrid extends StatelessWidget {
-  final List<String> names;
-
-  const _VideoGrid({required this.names});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 4,
-        crossAxisSpacing: 4,
-      ),
-      itemCount: names.length,
-      itemBuilder: (context, i) {
-        final thumbPath = FileUtil.getRealPath('thumbnail', names[i]);
-        return GestureDetector(
-          onTap: () => MediaVideoViewer.show(context, name: names[i]),
-          child: ClipRRect(
-            borderRadius: AppBorderRadius.smallBorderRadius,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.file(
-                  File(thumbPath),
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => ColoredBox(
-                    color: scheme.surfaceContainerHighest,
-                    child: Icon(
-                      Icons.movie_rounded,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                const DecoratedBox(
-                  decoration: BoxDecoration(color: Colors.black26),
-                ),
-                const Center(
-                  child: Icon(
-                    Icons.play_circle_fill_rounded,
-                    color: Colors.white,
-                    size: 36,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _AudioList extends StatelessWidget {
-  final List<String> names;
-
-  const _AudioList({required this.names});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var i = 0; i < names.length; i++)
-          Padding(
-            padding: EdgeInsets.only(bottom: i == names.length - 1 ? 0 : 8),
-            child: AudioPlayerComponent(
-              path: FileUtil.getRealPath('audio', names[i]),
-            ),
-          ),
-      ],
     );
   }
 }
