@@ -16,7 +16,9 @@ T _$identity<T>(T value) => value;
 mixin _$ChatMessage {
 
 @Id() String get id;@Index() String get sessionId;/// `"user"` 或 `"assistant"`。
- String get role; String get content; DateTime get createdAt;
+ String get role; String get content; DateTime get createdAt;/// assistant 回复的思考 / 推理过程（思考模式开启时才有）。null 表示非思考回复。
+ String? get reasoning;/// 思考耗时（毫秒）。null 表示无思考过程。
+ int? get thinkingMillis;
 /// Create a copy of ChatMessage
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +31,16 @@ $ChatMessageCopyWith<ChatMessage> get copyWith => _$ChatMessageCopyWithImpl<Chat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.thinkingMillis, thinkingMillis) || other.thinkingMillis == thinkingMillis));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,sessionId,role,content,createdAt);
+int get hashCode => Object.hash(runtimeType,id,sessionId,role,content,createdAt,reasoning,thinkingMillis);
 
 @override
 String toString() {
-  return 'ChatMessage(id: $id, sessionId: $sessionId, role: $role, content: $content, createdAt: $createdAt)';
+  return 'ChatMessage(id: $id, sessionId: $sessionId, role: $role, content: $content, createdAt: $createdAt, reasoning: $reasoning, thinkingMillis: $thinkingMillis)';
 }
 
 
@@ -49,7 +51,7 @@ abstract mixin class $ChatMessageCopyWith<$Res>  {
   factory $ChatMessageCopyWith(ChatMessage value, $Res Function(ChatMessage) _then) = _$ChatMessageCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id,@Index() String sessionId, String role, String content, DateTime createdAt
+@Id() String id,@Index() String sessionId, String role, String content, DateTime createdAt, String? reasoning, int? thinkingMillis
 });
 
 
@@ -66,14 +68,16 @@ class _$ChatMessageCopyWithImpl<$Res>
 
 /// Create a copy of ChatMessage
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sessionId = null,Object? role = null,Object? content = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sessionId = null,Object? role = null,Object? content = null,Object? createdAt = null,Object? reasoning = freezed,Object? thinkingMillis = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,reasoning: freezed == reasoning ? _self.reasoning : reasoning // ignore: cast_nullable_to_non_nullable
+as String?,thinkingMillis: freezed == thinkingMillis ? _self.thinkingMillis : thinkingMillis // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -158,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id, @Index()  String sessionId,  String role,  String content,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id, @Index()  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChatMessage() when $default != null:
-return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt);case _:
+return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis);case _:
   return orElse();
 
 }
@@ -179,10 +183,10 @@ return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdA
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id, @Index()  String sessionId,  String role,  String content,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id, @Index()  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis)  $default,) {final _that = this;
 switch (_that) {
 case _ChatMessage():
-return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt);case _:
+return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +203,10 @@ return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdA
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id, @Index()  String sessionId,  String role,  String content,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id, @Index()  String sessionId,  String role,  String content,  DateTime createdAt,  String? reasoning,  int? thinkingMillis)?  $default,) {final _that = this;
 switch (_that) {
 case _ChatMessage() when $default != null:
-return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt);case _:
+return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdAt,_that.reasoning,_that.thinkingMillis);case _:
   return null;
 
 }
@@ -214,7 +218,7 @@ return $default(_that.id,_that.sessionId,_that.role,_that.content,_that.createdA
 @JsonSerializable()
 
 class _ChatMessage implements ChatMessage {
-  const _ChatMessage({@Id() required this.id, @Index() required this.sessionId, required this.role, required this.content, required this.createdAt});
+  const _ChatMessage({@Id() required this.id, @Index() required this.sessionId, required this.role, required this.content, required this.createdAt, this.reasoning, this.thinkingMillis});
   factory _ChatMessage.fromJson(Map<String, dynamic> json) => _$ChatMessageFromJson(json);
 
 @override@Id() final  String id;
@@ -223,6 +227,10 @@ class _ChatMessage implements ChatMessage {
 @override final  String role;
 @override final  String content;
 @override final  DateTime createdAt;
+/// assistant 回复的思考 / 推理过程（思考模式开启时才有）。null 表示非思考回复。
+@override final  String? reasoning;
+/// 思考耗时（毫秒）。null 表示无思考过程。
+@override final  int? thinkingMillis;
 
 /// Create a copy of ChatMessage
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +245,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatMessage&&(identical(other.id, id) || other.id == id)&&(identical(other.sessionId, sessionId) || other.sessionId == sessionId)&&(identical(other.role, role) || other.role == role)&&(identical(other.content, content) || other.content == content)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.thinkingMillis, thinkingMillis) || other.thinkingMillis == thinkingMillis));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,sessionId,role,content,createdAt);
+int get hashCode => Object.hash(runtimeType,id,sessionId,role,content,createdAt,reasoning,thinkingMillis);
 
 @override
 String toString() {
-  return 'ChatMessage(id: $id, sessionId: $sessionId, role: $role, content: $content, createdAt: $createdAt)';
+  return 'ChatMessage(id: $id, sessionId: $sessionId, role: $role, content: $content, createdAt: $createdAt, reasoning: $reasoning, thinkingMillis: $thinkingMillis)';
 }
 
 
@@ -257,7 +265,7 @@ abstract mixin class _$ChatMessageCopyWith<$Res> implements $ChatMessageCopyWith
   factory _$ChatMessageCopyWith(_ChatMessage value, $Res Function(_ChatMessage) _then) = __$ChatMessageCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id,@Index() String sessionId, String role, String content, DateTime createdAt
+@Id() String id,@Index() String sessionId, String role, String content, DateTime createdAt, String? reasoning, int? thinkingMillis
 });
 
 
@@ -274,14 +282,16 @@ class __$ChatMessageCopyWithImpl<$Res>
 
 /// Create a copy of ChatMessage
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sessionId = null,Object? role = null,Object? content = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sessionId = null,Object? role = null,Object? content = null,Object? createdAt = null,Object? reasoning = freezed,Object? thinkingMillis = freezed,}) {
   return _then(_ChatMessage(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,sessionId: null == sessionId ? _self.sessionId : sessionId // ignore: cast_nullable_to_non_nullable
 as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,reasoning: freezed == reasoning ? _self.reasoning : reasoning // ignore: cast_nullable_to_non_nullable
+as String?,thinkingMillis: freezed == thinkingMillis ? _self.thinkingMillis : thinkingMillis // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

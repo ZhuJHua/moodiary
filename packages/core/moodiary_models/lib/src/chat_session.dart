@@ -25,12 +25,16 @@ abstract class ChatSession with _$ChatSession {
 
     /// 最后一条消息的时间，列表按此倒序。
     required DateTime updatedAt,
+
+    /// 本会话是否开启思考模式（新建时取自全局默认 assistantThinkingEnabled）。
+    @Default(false) bool thinking,
   }) = _ChatSession;
 
   factory ChatSession.create({
     required String title,
     required String providerId,
     required String model,
+    bool thinking = false,
   }) {
     final now = DateTime.timestamp();
     return ChatSession(
@@ -40,6 +44,7 @@ abstract class ChatSession with _$ChatSession {
       model: model,
       createdAt: now,
       updatedAt: now,
+      thinking: thinking,
     );
   }
 

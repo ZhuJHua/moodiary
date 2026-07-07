@@ -982,6 +982,17 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistantRegenerate => '重新回答';
 
   @override
+  String get assistantThinkingToggle => '深度思考';
+
+  @override
+  String get assistantThinking => '思考中…';
+
+  @override
+  String assistantThoughtFor(Object duration) {
+    return '已深度思考 $duration 秒';
+  }
+
+  @override
   String get assistantSectionTool => '工具';
 
   @override

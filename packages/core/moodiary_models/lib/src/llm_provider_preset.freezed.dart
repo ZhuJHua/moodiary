@@ -15,12 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LlmProviderPreset {
 
- String get id; String get name;/// 映射到 rig 协议（openai / anthropic）。
- AssistantProviderType get protocol;/// 官方端点为空串（rig 侧留空即用协议官方端点），来自 models.dev `api`。
- String get baseUrl; List<LlmModelPreset> get models;/// 文档 / 定价页链接，来自 `doc`，兼作「获取 API Key」入口。
- String? get docUrl;/// API Key 的环境变量名（如 `ANTHROPIC_API_KEY`），来自 `env`，作提示用。
- List<String> get env;/// 供应商 logo（`https://models.dev/logos/<id>.svg`）。
- String? get logoUrl;
+ String get id; String get name; AssistantProviderType get protocol; String get baseUrl; List<LlmModelPreset> get models; String? get docUrl; List<String> get env; String? get logoUrl;
 /// Create a copy of LlmProviderPreset
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -226,9 +221,7 @@ class _LlmProviderPreset extends LlmProviderPreset {
 
 @override final  String id;
 @override final  String name;
-/// 映射到 rig 协议（openai / anthropic）。
 @override final  AssistantProviderType protocol;
-/// 官方端点为空串（rig 侧留空即用协议官方端点），来自 models.dev `api`。
 @override final  String baseUrl;
  final  List<LlmModelPreset> _models;
 @override List<LlmModelPreset> get models {
@@ -237,18 +230,14 @@ class _LlmProviderPreset extends LlmProviderPreset {
   return EqualUnmodifiableListView(_models);
 }
 
-/// 文档 / 定价页链接，来自 `doc`，兼作「获取 API Key」入口。
 @override final  String? docUrl;
-/// API Key 的环境变量名（如 `ANTHROPIC_API_KEY`），来自 `env`，作提示用。
  final  List<String> _env;
-/// API Key 的环境变量名（如 `ANTHROPIC_API_KEY`），来自 `env`，作提示用。
 @override@JsonKey() List<String> get env {
   if (_env is EqualUnmodifiableListView) return _env;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_env);
 }
 
-/// 供应商 logo（`https://models.dev/logos/<id>.svg`）。
 @override final  String? logoUrl;
 
 /// Create a copy of LlmProviderPreset

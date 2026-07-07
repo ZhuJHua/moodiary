@@ -15,12 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LlmModelPreset {
 
- String get id; String get name; bool get toolCall; bool get reasoning; bool get attachment;/// 上下文窗口（token），来自 models.dev `limit.context`。
- int? get contextLimit;/// 单次最大输出（token），来自 `limit.output`。
- int? get outputLimit;/// 每百万 token 输入价（USD），来自 `cost.input`。
- num? get inputCost;/// 每百万 token 输出价（USD），来自 `cost.output`。
- num? get outputCost;/// 发布日期字符串（YYYY-MM-DD），来自 `release_date`，用于排序/展示。
- String? get releaseDate;
+ String get id; String get name; bool get toolCall; bool get reasoning; bool get attachment; int? get contextLimit; int? get outputLimit; num? get inputCost; num? get outputCost; String? get releaseDate;
 /// Create a copy of LlmModelPreset
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -231,15 +226,10 @@ class _LlmModelPreset extends LlmModelPreset {
 @override@JsonKey() final  bool toolCall;
 @override@JsonKey() final  bool reasoning;
 @override@JsonKey() final  bool attachment;
-/// 上下文窗口（token），来自 models.dev `limit.context`。
 @override final  int? contextLimit;
-/// 单次最大输出（token），来自 `limit.output`。
 @override final  int? outputLimit;
-/// 每百万 token 输入价（USD），来自 `cost.input`。
 @override final  num? inputCost;
-/// 每百万 token 输出价（USD），来自 `cost.output`。
 @override final  num? outputCost;
-/// 发布日期字符串（YYYY-MM-DD），来自 `release_date`，用于排序/展示。
 @override final  String? releaseDate;
 
 /// Create a copy of LlmModelPreset

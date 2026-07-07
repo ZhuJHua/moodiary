@@ -41,9 +41,15 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   final _panelController = ChatBottomPanelContainerController<_ToolPanel>();
 
-  StreamSubscription<String>? _streamSub;
+  StreamSubscription<AssistantStreamEvent>? _streamSub;
 
   TextMessage? _streamingMessage;
+
+  /// 思考模式流式状态（每轮生成开始时由 [_resetThinkingState] 重置）。
+  DateTime? _reasoningStart;
+  String _streamingReasoning = '';
+  int _thinkingMillis = 0;
+  bool _thinkingActive = false;
 
   /// 重新生成时被移除的旧回复 id：等新回复成功落库后才真正删除（兜底防丢）。
   List<String> _staleReplyIds = [];
@@ -53,6 +59,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   bool _sending = false;
   bool _ready = true;
   bool _initialized = false;
+  bool _thinking = false;
 
   late final ToolPermissionCoordinator _permissions;
   late final ToolPermissionActionDelegate _permissionDelegate;
@@ -74,6 +81,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     );
     _disclaimerAccepted =
         MoodiaryKVs.assistantDisclaimerAccepted.get() ?? false;
+    _thinking = MoodiaryKVs.assistantThinkingEnabled.get() ?? false;
     _refreshReady();
     if (!_disclaimerAccepted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -139,6 +147,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (!mounted) return;
     setState(() {
       _session = session;
+      _thinking = session.thinking; // 恢复该会话自己的思考模式
       _sending = false;
     });
     _jumpToBottomSoon();
@@ -156,6 +165,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       title: title,
       providerId: provider.id,
       model: provider.model,
+      thinking: _thinking, // 定格当前（来自全局默认或用户在新会话里的选择）
     );
     await ChatRepository.get().upsertSession(session);
     _chat.sessionId = session.id;
@@ -215,8 +225,29 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       systemPrompt: systemPrompt,
       maxTokens: assistantMaxTokens,
       history: history,
+      thinking: _thinking,
       onToolPermission: _requestToolPermission,
     );
+  }
+
+  void _toggleThinking() {
+    final next = !_thinking;
+    setState(() {
+      _thinking = next;
+      final s = _session;
+      if (s != null) _session = s.copyWith(thinking: next);
+    });
+    // 更新「新会话默认」（最后一次用的）；已存在的会话则把模式落到会话本身。
+    unawaited(MoodiaryKVs.assistantThinkingEnabled.set(next));
+    final s = _session;
+    if (s != null) unawaited(ChatRepository.get().upsertSession(s));
+  }
+
+  void _resetThinkingState() {
+    _reasoningStart = null;
+    _streamingReasoning = '';
+    _thinkingMillis = 0;
+    _thinkingActive = false;
   }
 
   Future<bool> _requestToolPermission(AssistantTool tool) async {
@@ -252,6 +283,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       final next = _chat.assistantMessage('', streaming: true);
       await _chat.insertMessage(next);
       _streamingMessage = next;
+      // 已定稿上一段回复，新气泡的思考从零计（避免把上一段的思考挪到新气泡）。
+      _resetThinkingState();
     }
   }
 
@@ -331,6 +364,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       Localizations.localeOf(context).toLanguageTag(),
     );
 
+    _resetThinkingState();
     final placeholder = _chat.assistantMessage(
       '',
       streaming: true,
@@ -363,9 +397,17 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       _streamSub = AssistantService.get()
           .chat(request)
           .listen(
-            (delta) {
+            (event) {
               if (gen != _generation) return;
-              _appendDelta(delta);
+              switch (event.kind) {
+                case AssistantStreamKind.text:
+                  _appendDelta(event.text);
+                case AssistantStreamKind.reasoning:
+                  _appendReasoning(event.text);
+                case AssistantStreamKind.tool:
+                  // 模型开始调用工具 → 思考阶段结束，冻结计时（不计入工具执行 / 授权等待）。
+                  _freezeThinkingOnTool();
+              }
             },
             onError: (Object e) {
               if (gen != _generation) return;
@@ -449,9 +491,67 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   }
 
   void _appendDelta(String delta) {
+    if (delta.isEmpty) return;
+    // 首个正文 token 到来即结束思考阶段（不计入后续正文时间）。
+    _freezeThinkingTimer();
     final cur = _streamingMessage;
-    if (cur == null || delta.isEmpty) return;
-    final next = cur.copyWith(text: cur.text + delta);
+    if (cur == null) return;
+    _syncReasoning(cur.copyWith(text: cur.text + delta));
+  }
+
+  void _appendReasoning(String delta) {
+    if (delta.isEmpty) return;
+    final cur = _streamingMessage;
+    if (cur == null) return;
+    // 开启（或在工具调用后重新开启）一个思考分段；耗时按分段累加，排除工具等待间隙。
+    _reasoningStart ??= DateTime.timestamp();
+    _thinkingActive = true;
+    _streamingReasoning += delta;
+    _syncReasoning(cur);
+  }
+
+  /// 模型转入工具调用：冻结思考计时并把「已思考」态写回当前流式消息。
+  void _freezeThinkingOnTool() {
+    if (!_thinkingActive) return;
+    _freezeThinkingTimer();
+    final cur = _streamingMessage;
+    if (cur != null) _syncReasoning(cur);
+  }
+
+  /// 结束当前思考分段：把已过去的时间累加进 [_thinkingMillis]，停表。幂等。
+  void _freezeThinkingTimer() {
+    if (!_thinkingActive) return;
+    _thinkingActive = false;
+    final start = _reasoningStart;
+    if (start != null) {
+      _thinkingMillis += DateTime.timestamp().difference(start).inMilliseconds;
+      _reasoningStart = null;
+    }
+  }
+
+  /// 累计思考耗时（已冻结分段之和 + 当前分段进行中的时长）。
+  int _liveThinkingMillis() {
+    final start = _reasoningStart;
+    if (_thinkingActive && start != null) {
+      return _thinkingMillis +
+          DateTime.timestamp().difference(start).inMilliseconds;
+    }
+    return _thinkingMillis;
+  }
+
+  /// 把当前思考状态（正文 + 思考正文 / 时长 / 是否进行中）刷进流式消息并更新引用。
+  void _syncReasoning(TextMessage message) {
+    var next = message;
+    if (_streamingReasoning.isNotEmpty) {
+      next = _chat.applyReasoning(
+        next,
+        reasoning: _streamingReasoning,
+        thinkingMillis: _liveThinkingMillis(),
+        active: _thinkingActive,
+      );
+    }
+    final cur = _streamingMessage;
+    if (cur == null) return;
     _chat.updateMessage(cur, next);
     _streamingMessage = next;
   }
@@ -548,6 +648,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     );
     return _AssistantBubble(
       text: message.text,
+      reasoning: IsarChatController.reasoningOf(message),
+      thinkingMillis: IsarChatController.thinkingMillisOf(message),
+      thinkingActive: IsarChatController.isThinking(message),
       streaming: IsarChatController.isStreaming(message),
       onRegenerate: (!_sending && isLast && hasUserTurn) ? _regenerate : null,
     );
@@ -585,6 +688,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       onTool: _toggleToolPanel,
       toolIcon: Icons.add_rounded,
       toolTooltip: context.l10n.assistantToolPanelTitle,
+      thinking: _thinking,
+      onToggleThinking: _toggleThinking,
     );
 
     return Column(
@@ -729,6 +834,8 @@ class _AssistantComposer extends StatelessWidget {
   final VoidCallback onTool;
   final IconData toolIcon;
   final String toolTooltip;
+  final bool thinking;
+  final VoidCallback onToggleThinking;
 
   const _AssistantComposer({
     required this.controller,
@@ -739,6 +846,8 @@ class _AssistantComposer extends StatelessWidget {
     required this.onTool,
     required this.toolIcon,
     required this.toolTooltip,
+    required this.thinking,
+    required this.onToggleThinking,
   });
 
   @override
@@ -751,63 +860,122 @@ class _AssistantComposer extends StatelessWidget {
         top: false,
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 4, 12, 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              IconButton(
-                tooltip: toolTooltip,
-                onPressed: sending ? null : onTool,
-                icon: Icon(toolIcon),
-                color: scheme.onSurfaceVariant,
-              ),
-              Expanded(
-                child: Container(
-                  decoration: ShapeDecoration(
-                    color: scheme.surfaceContainerHigh,
-                    shape: const StadiumBorder(),
+          padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 文字输入区：独占上方，向上增高。
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
+                  child: TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    enabled: !sending,
+                    minLines: 1,
+                    maxLines: 6,
+                    textInputAction: TextInputAction.send,
+                    decoration: InputDecoration(
+                      hintText: l10n.assistantInputHint,
+                      border: InputBorder.none,
+                      isCollapsed: true,
+                    ),
+                    onSubmitted: (_) => onSend(),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          enabled: !sending,
-                          minLines: 1,
-                          maxLines: 6,
-                          textInputAction: TextInputAction.send,
-                          decoration: InputDecoration(
-                            hintText: l10n.assistantInputHint,
-                            border: InputBorder.none,
-                            isCollapsed: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                          ),
-                          onSubmitted: (_) => onSend(),
-                        ),
+                ),
+                // 底部控制条：左「+」「深度思考」对齐，右发送 / 停止。
+                Row(
+                  children: [
+                    IconButton(
+                      tooltip: toolTooltip,
+                      onPressed: sending ? null : onTool,
+                      icon: Icon(toolIcon),
+                      color: scheme.onSurfaceVariant,
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(
+                        minWidth: 38,
+                        minHeight: 38,
                       ),
-                      ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: controller,
-                        builder: (context, value, _) {
-                          if (sending) {
-                            return IconButton.filled(
-                              tooltip: l10n.assistantStop,
-                              onPressed: onStop,
-                              icon: const Icon(Icons.stop_rounded),
-                            );
-                          }
-                          final canSend = value.text.trim().isNotEmpty;
+                      padding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(width: 6),
+                    _ThinkingToggle(enabled: thinking, onTap: onToggleThinking),
+                    const Spacer(),
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: controller,
+                      builder: (context, value, _) {
+                        if (sending) {
                           return IconButton.filled(
-                            onPressed: canSend ? onSend : null,
-                            icon: const Icon(Icons.arrow_upward_rounded),
+                            tooltip: l10n.assistantStop,
+                            onPressed: onStop,
+                            icon: const Icon(Icons.stop_rounded),
+                            visualDensity: VisualDensity.compact,
+                            constraints: const BoxConstraints(
+                              minWidth: 40,
+                              minHeight: 40,
+                            ),
+                            padding: EdgeInsets.zero,
                           );
-                        },
-                      ),
-                    ],
-                  ),
+                        }
+                        final canSend = value.text.trim().isNotEmpty;
+                        return IconButton.filled(
+                          onPressed: canSend ? onSend : null,
+                          icon: const Icon(Icons.arrow_upward_rounded),
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints(
+                            minWidth: 40,
+                            minHeight: 40,
+                          ),
+                          padding: EdgeInsets.zero,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThinkingToggle extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _ThinkingToggle({required this.enabled, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final l10n = context.l10n;
+    final fg = enabled ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
+    return Material(
+      color: enabled ? scheme.secondaryContainer : scheme.surfaceContainerHigh,
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.psychology_rounded, size: 16, color: fg),
+              const SizedBox(width: 6),
+              Text(
+                l10n.assistantThinkingToggle,
+                style: context.textTheme.labelMedium?.copyWith(
+                  color: fg,
+                  fontWeight: enabled ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ],
@@ -912,11 +1080,17 @@ class _UserBubble extends StatelessWidget {
 
 class _AssistantBubble extends StatelessWidget {
   final String text;
+  final String reasoning;
+  final int thinkingMillis;
+  final bool thinkingActive;
   final bool streaming;
   final VoidCallback? onRegenerate;
 
   const _AssistantBubble({
     required this.text,
+    required this.reasoning,
+    required this.thinkingMillis,
+    required this.thinkingActive,
     required this.streaming,
     this.onRegenerate,
   });
@@ -925,40 +1099,72 @@ class _AssistantBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final l10n = context.l10n;
-    final bubble = Container(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.sizeOf(context).width * 0.82,
+
+    final hasText = text.isNotEmpty;
+    final showThinking = thinkingActive || reasoning.isNotEmpty;
+
+    final decoration = BoxDecoration(
+      color: scheme.surfaceContainerHighest,
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(16),
+        topRight: Radius.circular(16),
+        bottomLeft: Radius.circular(4),
+        bottomRight: Radius.circular(16),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-          bottomLeft: Radius.circular(4),
-          bottomRight: Radius.circular(16),
-        ),
-      ),
-      child: text.isEmpty
-          ? const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : SelectionArea(
-              child: GptMarkdown(
-                text,
-                style: TextStyle(color: scheme.onSurface),
-              ),
-            ),
+    );
+    final constraints = BoxConstraints(
+      maxWidth: MediaQuery.sizeOf(context).width * 0.82,
     );
 
-    if (text.isEmpty || streaming) return bubble;
+    // 有正文 → 正文气泡；无正文且未在思考 → 初始转圈气泡；
+    // 无正文但正在 / 已思考 → 不显示气泡，交给上方思考块。
+    Widget? bubble;
+    if (hasText) {
+      bubble = Container(
+        constraints: constraints,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: decoration,
+        child: SelectionArea(
+          child: GptMarkdown(text, style: TextStyle(color: scheme.onSurface)),
+        ),
+      );
+    } else if (!showThinking) {
+      bubble = Container(
+        constraints: constraints,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: decoration,
+        child: const SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    final stacked = <Widget>[
+      if (showThinking)
+        _ThinkingBlock(
+          reasoning: reasoning,
+          thinkingMillis: thinkingMillis,
+          active: thinkingActive,
+        ),
+      ?bubble,
+    ];
+
+    // 流式中或还没有正文：只堆叠思考块 + 气泡，不显示操作按钮。
+    if (!hasText || streaming) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: stacked,
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        bubble,
+        ...stacked,
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -979,6 +1185,121 @@ class _AssistantBubble extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// AI 回复上方的思考块：默认折叠，显示思考时长，点击展开思考正文（Markdown）。
+class _ThinkingBlock extends StatefulWidget {
+  final String reasoning;
+  final int thinkingMillis;
+  final bool active;
+
+  const _ThinkingBlock({
+    required this.reasoning,
+    required this.thinkingMillis,
+    required this.active,
+  });
+
+  @override
+  State<_ThinkingBlock> createState() => _ThinkingBlockState();
+}
+
+class _ThinkingBlockState extends State<_ThinkingBlock> {
+  bool _expanded = false;
+
+  String _durationText() {
+    final secs = widget.thinkingMillis / 1000;
+    if (secs >= 10) return secs.toStringAsFixed(0);
+    return (secs < 0.1 ? 0.1 : secs).toStringAsFixed(1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final l10n = context.l10n;
+    final hasReasoning = widget.reasoning.isNotEmpty;
+    final label = widget.active
+        ? l10n.assistantThinking
+        : l10n.assistantThoughtFor(_durationText());
+
+    final header = InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: hasReasoning ? () => setState(() => _expanded = !_expanded) : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.active)
+              SizedBox(
+                width: 13,
+                height: 13,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: scheme.onSurfaceVariant,
+                ),
+              )
+            else
+              Icon(
+                Icons.psychology_rounded,
+                size: 16,
+                color: scheme.onSurfaceVariant,
+              ),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            if (hasReasoning) ...[
+              const SizedBox(width: 2),
+              Icon(
+                _expanded
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+                size: 18,
+                color: scheme.onSurfaceVariant,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.sizeOf(context).width * 0.82,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          header,
+          if (_expanded && hasReasoning)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: SelectionArea(
+                child: GptMarkdown(
+                  widget.reasoning,
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

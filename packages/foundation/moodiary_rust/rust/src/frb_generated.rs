@@ -2742,7 +2742,8 @@ impl SseDecode for crate::api::assistant::RigEventKind {
         let mut inner = <i32>::sse_decode(deserializer);
         return match inner {
             0 => crate::api::assistant::RigEventKind::TextDelta,
-            1 => crate::api::assistant::RigEventKind::ToolCall,
+            1 => crate::api::assistant::RigEventKind::ReasoningDelta,
+            2 => crate::api::assistant::RigEventKind::ToolCall,
             _ => unreachable!("Invalid variant for RigEventKind: {}", inner),
         };
     }
@@ -2756,12 +2757,14 @@ impl SseDecode for crate::api::assistant::RigProviderConfig {
         let mut var_baseUrl = <String>::sse_decode(deserializer);
         let mut var_model = <String>::sse_decode(deserializer);
         let mut var_maxTokens = <u32>::sse_decode(deserializer);
+        let mut var_thinking = <bool>::sse_decode(deserializer);
         return crate::api::assistant::RigProviderConfig {
             protocol: var_protocol,
             api_key: var_apiKey,
             base_url: var_baseUrl,
             model: var_model,
             max_tokens: var_maxTokens,
+            thinking: var_thinking,
         };
     }
 }
@@ -3218,7 +3221,8 @@ impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigEventKind {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
             Self::TextDelta => 0.into_dart(),
-            Self::ToolCall => 1.into_dart(),
+            Self::ReasoningDelta => 1.into_dart(),
+            Self::ToolCall => 2.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -3243,6 +3247,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigProviderConfig 
             self.base_url.into_into_dart().into_dart(),
             self.model.into_into_dart().into_dart(),
             self.max_tokens.into_into_dart().into_dart(),
+            self.thinking.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -3795,7 +3800,8 @@ impl SseEncode for crate::api::assistant::RigEventKind {
         <i32>::sse_encode(
             match self {
                 crate::api::assistant::RigEventKind::TextDelta => 0,
-                crate::api::assistant::RigEventKind::ToolCall => 1,
+                crate::api::assistant::RigEventKind::ReasoningDelta => 1,
+                crate::api::assistant::RigEventKind::ToolCall => 2,
                 _ => {
                     unimplemented!("");
                 }
@@ -3813,6 +3819,7 @@ impl SseEncode for crate::api::assistant::RigProviderConfig {
         <String>::sse_encode(self.base_url, serializer);
         <String>::sse_encode(self.model, serializer);
         <u32>::sse_encode(self.max_tokens, serializer);
+        <bool>::sse_encode(self.thinking, serializer);
     }
 }
 

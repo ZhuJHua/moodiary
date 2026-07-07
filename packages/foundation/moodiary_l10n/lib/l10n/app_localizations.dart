@@ -1994,6 +1994,24 @@ abstract class AppLocalizations {
   /// **'重新回答'**
   String get assistantRegenerate;
 
+  /// No description provided for @assistantThinkingToggle.
+  ///
+  /// In zh, this message translates to:
+  /// **'深度思考'**
+  String get assistantThinkingToggle;
+
+  /// No description provided for @assistantThinking.
+  ///
+  /// In zh, this message translates to:
+  /// **'思考中…'**
+  String get assistantThinking;
+
+  /// No description provided for @assistantThoughtFor.
+  ///
+  /// In zh, this message translates to:
+  /// **'已深度思考 {duration} 秒'**
+  String assistantThoughtFor(Object duration);
+
   /// No description provided for @assistantSectionTool.
   ///
   /// In zh, this message translates to:

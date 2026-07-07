@@ -4,6 +4,24 @@ import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 
 enum AssistantRole { user, assistant }
 
+/// 流式回调事件类别：正文文本增量、思考 / 推理增量，或一次工具调用（[text] 为工具名）。
+enum AssistantStreamKind { text, reasoning, tool }
+
+/// 一次流式回复中的单个增量。思考模式下 [reasoning] 与 [text] 交织到来。
+class AssistantStreamEvent {
+  final AssistantStreamKind kind;
+  final String text;
+
+  const AssistantStreamEvent(this.kind, this.text);
+
+  const AssistantStreamEvent.text(this.text) : kind = AssistantStreamKind.text;
+
+  const AssistantStreamEvent.reasoning(this.text)
+    : kind = AssistantStreamKind.reasoning;
+
+  const AssistantStreamEvent.tool(this.text) : kind = AssistantStreamKind.tool;
+}
+
 typedef ToolPermissionRequester = Future<bool> Function(AssistantTool tool);
 
 class AssistantMessage {
@@ -40,6 +58,9 @@ class AssistantChatRequest {
 
   final List<AssistantMessage> history;
 
+  /// 是否开启思考（reasoning）模式。开启后按协议注入思考参数并回传思考增量。
+  final bool thinking;
+
   final ToolPermissionRequester? onToolPermission;
 
   const AssistantChatRequest({
@@ -50,6 +71,7 @@ class AssistantChatRequest {
     required this.systemPrompt,
     required this.maxTokens,
     required this.history,
+    this.thinking = false,
     this.onToolPermission,
   });
 }
@@ -57,5 +79,5 @@ class AssistantChatRequest {
 abstract class AssistantService {
   factory AssistantService.get() => getIt.get<AssistantService>();
 
-  Stream<String> chat(AssistantChatRequest request);
+  Stream<AssistantStreamEvent> chat(AssistantChatRequest request);
 }

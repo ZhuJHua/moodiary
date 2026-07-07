@@ -15,11 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LlmProvider {
 
-@Id() String get id; String get name;/// 协议类型 id，取值见 [AssistantProviderType.id]（'openai' / 'anthropic'）。
- String get type;/// 自定义 baseUrl，留空表示使用该协议官方端点。
- String get baseUrl; String get model; DateTime get createdAt;/// 列表排序用，越小越靠前。
- int get sortOrder;/// 来源 models.dev 供应商 id（自定义新建为空串），用于展示 logo。
- String get providerId;
+@Id() String get id; String get name; String get type; String get baseUrl; String get model; DateTime get createdAt; int get sortOrder; String get providerId;
 /// Create a copy of LlmProvider
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -225,15 +221,11 @@ class _LlmProvider implements LlmProvider {
 
 @override@Id() final  String id;
 @override final  String name;
-/// 协议类型 id，取值见 [AssistantProviderType.id]（'openai' / 'anthropic'）。
 @override final  String type;
-/// 自定义 baseUrl，留空表示使用该协议官方端点。
 @override final  String baseUrl;
 @override final  String model;
 @override final  DateTime createdAt;
-/// 列表排序用，越小越靠前。
 @override final  int sortOrder;
-/// 来源 models.dev 供应商 id（自定义新建为空串），用于展示 logo。
 @override@JsonKey() final  String providerId;
 
 /// Create a copy of LlmProvider

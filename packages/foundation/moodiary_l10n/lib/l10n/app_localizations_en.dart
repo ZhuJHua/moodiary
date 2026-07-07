@@ -1017,6 +1017,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get assistantRegenerate => 'Regenerate';
 
   @override
+  String get assistantThinkingToggle => 'Thinking';
+
+  @override
+  String get assistantThinking => 'Thinking…';
+
+  @override
+  String assistantThoughtFor(Object duration) {
+    return 'Thought for ${duration}s';
+  }
+
+  @override
   String get assistantSectionTool => 'Tools';
 
   @override

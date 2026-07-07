@@ -10,6 +10,15 @@ const String kAssistantBotId = 'assistant';
 
 const String _kStreamingFlag = 'streaming';
 
+/// assistant 回复的思考 / 推理正文（Markdown）。
+const String _kReasoningKey = 'reasoning';
+
+/// 思考耗时（毫秒）。
+const String _kThinkingMillisKey = 'thinkingMillis';
+
+/// 是否仍在思考阶段（首个正文 token 到来前为 true，用于展示「思考中…」）。
+const String _kThinkingActiveKey = 'thinkingActive';
+
 const String kPermissionSurfaceKey = 'surfaceId';
 
 class IsarChatController implements ChatController {
@@ -111,7 +120,28 @@ class IsarChatController implements ChatController {
         role: message.authorId == kAssistantUserId ? 'user' : 'assistant',
         content: message.text,
         createdAt: message.createdAt ?? DateTime.timestamp(),
+        reasoning: reasoningOf(message).isEmpty ? null : reasoningOf(message),
+        thinkingMillis: thinkingMillisOf(message) == 0
+            ? null
+            : thinkingMillisOf(message),
       ),
+    );
+  }
+
+  /// 把思考增量写进流式消息的 metadata（保留 streaming 标记）。[active] 为思考阶段是否进行中。
+  TextMessage applyReasoning(
+    TextMessage message, {
+    required String reasoning,
+    required int thinkingMillis,
+    required bool active,
+  }) {
+    return message.copyWith(
+      metadata: {
+        ...?message.metadata,
+        _kReasoningKey: reasoning,
+        _kThinkingMillisKey: thinkingMillis,
+        _kThinkingActiveKey: active,
+      },
     );
   }
 
@@ -134,8 +164,16 @@ class IsarChatController implements ChatController {
     metadata: streaming ? const {_kStreamingFlag: true} : null,
   );
 
-  TextMessage settled(TextMessage message) =>
-      message.copyWith(metadata: const <String, dynamic>{});
+  /// 定稿：清掉 streaming / thinkingActive 标记，但保留思考正文与耗时（供落库与回看）。
+  TextMessage settled(TextMessage message) {
+    final reasoning = reasoningOf(message);
+    final millis = thinkingMillisOf(message);
+    final meta = <String, dynamic>{
+      if (reasoning.isNotEmpty) _kReasoningKey: reasoning,
+      if (millis > 0) _kThinkingMillisKey: millis,
+    };
+    return message.copyWith(metadata: meta);
+  }
 
   CustomMessage permissionCard(String surfaceId) => CustomMessage(
     id: surfaceId,
@@ -147,10 +185,30 @@ class IsarChatController implements ChatController {
   static bool isStreaming(Message message) =>
       message.metadata?[_kStreamingFlag] == true;
 
-  TextMessage _toMessage(ChatMessage m) => TextMessage(
-    id: m.id,
-    authorId: m.role == 'user' ? kAssistantUserId : kAssistantBotId,
-    text: m.content,
-    createdAt: m.createdAt,
-  );
+  static bool isThinking(Message message) =>
+      message.metadata?[_kThinkingActiveKey] == true;
+
+  static String reasoningOf(Message message) {
+    final v = message.metadata?[_kReasoningKey];
+    return v is String ? v : '';
+  }
+
+  static int thinkingMillisOf(Message message) {
+    final v = message.metadata?[_kThinkingMillisKey];
+    return v is int ? v : 0;
+  }
+
+  TextMessage _toMessage(ChatMessage m) {
+    final reasoning = m.reasoning ?? '';
+    final millis = m.thinkingMillis ?? 0;
+    return TextMessage(
+      id: m.id,
+      authorId: m.role == 'user' ? kAssistantUserId : kAssistantBotId,
+      text: m.content,
+      createdAt: m.createdAt,
+      metadata: (reasoning.isNotEmpty || millis > 0)
+          ? {_kReasoningKey: reasoning, _kThinkingMillisKey: millis}
+          : null,
+    );
+  }
 }

@@ -28,6 +28,10 @@ pub struct RigProviderConfig {
     pub model: String,
     /// 单次回复最大 token 数（Anthropic 协议必传）。
     pub max_tokens: u32,
+    /// 是否开启思考（reasoning）模式。开启后由 Rust 按协议注入思考参数（用默认强度）：
+    /// Anthropic 走 extended thinking（预算按 max_tokens 取默认值），
+    /// OpenAI 兼容走 `reasoning_effort: "medium"`。rig 不会自动开启，必须显式注入。
+    pub thinking: bool,
 }
 
 pub struct RigChatMessage {
@@ -49,6 +53,8 @@ pub struct RigToolDef {
 /// 类 / 枚举，避开它对 `freezed`（项目当前钉在 pre-release 版）的版本门槛。
 pub enum RigEventKind {
     TextDelta,
+    /// 思考 / 推理增量（Anthropic thinking、OpenAI 兼容 `reasoning_content`）。
+    ReasoningDelta,
     ToolCall,
 }
 
@@ -155,13 +161,21 @@ pub async fn rig_chat_stream(
                 .http_client(http_client)
                 .build()
                 .map_err(|e| anyhow::anyhow!("failed to build anthropic client: {e}"))?;
-            let agent = client
+            let mut ab = client
                 .agent(&config.model)
                 .preamble(&system_prompt)
                 .max_tokens(config.max_tokens as u64)
-                .tools(boxed_tools)
-                .build();
-            drive(agent, prompt, prior, &sink, max_turns).await
+                .tools(boxed_tools);
+            if config.thinking {
+                // Anthropic extended thinking：必须显式给出 budget_tokens。
+                ab = ab.additional_params(serde_json::json!({
+                    "thinking": {
+                        "type": "enabled",
+                        "budget_tokens": anthropic_thinking_budget(config.max_tokens),
+                    }
+                }));
+            }
+            drive(ab.build(), prompt, prior, &sink, max_turns).await
         }
         // 其余一律按 OpenAI 兼容处理（自定义端点通用性最好）。
         _ => {
@@ -173,14 +187,28 @@ pub async fn rig_chat_stream(
                 .http_client(http_client)
                 .build()
                 .map_err(|e| anyhow::anyhow!("failed to build openai client: {e}"))?;
-            let agent = client
+            let mut ab = client
                 .agent(&config.model)
                 .preamble(&system_prompt)
                 .max_tokens(config.max_tokens as u64)
-                .tools(boxed_tools)
-                .build();
-            drive(agent, prompt, prior, &sink, max_turns).await
+                .tools(boxed_tools);
+            if config.thinking {
+                // OpenAI o 系列 / gpt-5 的标准参数；DeepSeek-reasoner 等无视它也照常回传推理。
+                ab = ab.additional_params(serde_json::json!({ "reasoning_effort": "medium" }));
+            }
+            drive(ab.build(), prompt, prior, &sink, max_turns).await
         }
+    }
+}
+
+/// Anthropic 扩展思考要求 `budget_tokens ∈ [1024, max_tokens)`。取 max_tokens 的一半并夹到该区间，
+/// 再保证严格小于 max_tokens（否则 API 报错）。
+fn anthropic_thinking_budget(max_tokens: u32) -> u32 {
+    let budget = (max_tokens / 2).clamp(1024, 2048);
+    if budget >= max_tokens {
+        max_tokens.saturating_sub(1)
+    } else {
+        budget
     }
 }
 
@@ -213,6 +241,19 @@ where
                     break; // Dart 已取消订阅 → 中断在途请求
                 }
             }
+            Ok(MultiTurnStreamItem::StreamAssistantItem(
+                StreamedAssistantContent::ReasoningDelta { reasoning, .. },
+            )) => {
+                if sink
+                    .add(RigStreamEvent {
+                        kind: RigEventKind::ReasoningDelta,
+                        text: reasoning,
+                    })
+                    .is_err()
+                {
+                    break;
+                }
+            }
             Ok(MultiTurnStreamItem::StreamAssistantItem(StreamedAssistantContent::ToolCall {
                 tool_call,
                 ..
@@ -228,7 +269,7 @@ where
                 }
             }
             Ok(MultiTurnStreamItem::FinalResponse(_)) => break,
-            Ok(_) => {} // reasoning 增量 / 工具结果 / usage 等当前不透传
+            Ok(_) => {} // 完整 reasoning 块 / 工具结果 / usage 等当前不透传
             Err(e) => return Err(anyhow::anyhow!("rig stream error: {e}")),
         }
     }

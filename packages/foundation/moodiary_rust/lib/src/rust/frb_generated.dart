@@ -2570,14 +2570,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RigProviderConfig dco_decode_rig_provider_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return RigProviderConfig(
       protocol: dco_decode_String(arr[0]),
       apiKey: dco_decode_String(arr[1]),
       baseUrl: dco_decode_String(arr[2]),
       model: dco_decode_String(arr[3]),
       maxTokens: dco_decode_u_32(arr[4]),
+      thinking: dco_decode_bool(arr[5]),
     );
   }
 
@@ -3320,12 +3321,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_baseUrl = sse_decode_String(deserializer);
     var var_model = sse_decode_String(deserializer);
     var var_maxTokens = sse_decode_u_32(deserializer);
+    var var_thinking = sse_decode_bool(deserializer);
     return RigProviderConfig(
       protocol: var_protocol,
       apiKey: var_apiKey,
       baseUrl: var_baseUrl,
       model: var_model,
       maxTokens: var_maxTokens,
+      thinking: var_thinking,
     );
   }
 
@@ -4115,6 +4118,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.baseUrl, serializer);
     sse_encode_String(self.model, serializer);
     sse_encode_u_32(self.maxTokens, serializer);
+    sse_encode_bool(self.thinking, serializer);
   }
 
   @protected

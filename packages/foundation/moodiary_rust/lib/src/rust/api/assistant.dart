@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `build_tools`, `drive`, `split_history`
+// These functions are ignored because they are not marked as `pub`: `anthropic_thinking_budget`, `build_tools`, `drive`, `split_history`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ProxyTool`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `call`, `definition`, `name`
 
@@ -49,7 +49,13 @@ class RigChatMessage {
 
 /// 用「plain enum + 载荷字段」而非带数据的枚举变体，是为了让 FRB 生成普通 Dart
 /// 类 / 枚举，避开它对 `freezed`（项目当前钉在 pre-release 版）的版本门槛。
-enum RigEventKind { textDelta, toolCall }
+enum RigEventKind {
+  textDelta,
+
+  /// 思考 / 推理增量（Anthropic thinking、OpenAI 兼容 `reasoning_content`）。
+  reasoningDelta,
+  toolCall,
+}
 
 /// 一次对话的 provider 连接配置。每次调用由 Dart 组装传入，Rust 不持有任何状态。
 class RigProviderConfig {
@@ -64,12 +70,18 @@ class RigProviderConfig {
   /// 单次回复最大 token 数（Anthropic 协议必传）。
   final int maxTokens;
 
+  /// 是否开启思考（reasoning）模式。开启后由 Rust 按协议注入思考参数（用默认强度）：
+  /// Anthropic 走 extended thinking（预算按 max_tokens 取默认值），
+  /// OpenAI 兼容走 `reasoning_effort: "medium"`。rig 不会自动开启，必须显式注入。
+  final bool thinking;
+
   const RigProviderConfig({
     required this.protocol,
     required this.apiKey,
     required this.baseUrl,
     required this.model,
     required this.maxTokens,
+    required this.thinking,
   });
 
   @override
@@ -78,7 +90,8 @@ class RigProviderConfig {
       apiKey.hashCode ^
       baseUrl.hashCode ^
       model.hashCode ^
-      maxTokens.hashCode;
+      maxTokens.hashCode ^
+      thinking.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -89,7 +102,8 @@ class RigProviderConfig {
           apiKey == other.apiKey &&
           baseUrl == other.baseUrl &&
           model == other.model &&
-          maxTokens == other.maxTokens;
+          maxTokens == other.maxTokens &&
+          thinking == other.thinking;
 }
 
 class RigStreamEvent {

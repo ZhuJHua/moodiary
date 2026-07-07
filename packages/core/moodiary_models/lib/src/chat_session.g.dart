@@ -26,6 +26,7 @@ final ChatSessionSchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'model', type: IsarType.string),
       IsarPropertySchema(name: 'createdAt', type: IsarType.dateTime),
       IsarPropertySchema(name: 'updatedAt', type: IsarType.dateTime),
+      IsarPropertySchema(name: 'thinking', type: IsarType.bool),
     ],
     indexes: [],
   ),
@@ -53,6 +54,7 @@ int serializeChatSession(IsarWriter writer, ChatSession object) {
     6,
     object.updatedAt.toUtc().microsecondsSinceEpoch,
   );
+  IsarCore.writeBool(writer, 7, value: object.thinking);
   return Isar.fastHash(object.id);
 }
 
@@ -96,6 +98,8 @@ ChatSession deserializeChatSession(IsarReader reader) {
       ).toLocal();
     }
   }
+  final bool _thinking;
+  _thinking = IsarCore.readBool(reader, 7);
   final object = ChatSession(
     id: _id,
     title: _title,
@@ -103,6 +107,7 @@ ChatSession deserializeChatSession(IsarReader reader) {
     model: _model,
     createdAt: _createdAt,
     updatedAt: _updatedAt,
+    thinking: _thinking,
   );
   return object;
 }
@@ -142,6 +147,8 @@ dynamic deserializeChatSessionProp(IsarReader reader, int property) {
           ).toLocal();
         }
       }
+    case 7:
+      return IsarCore.readBool(reader, 7);
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -155,6 +162,7 @@ sealed class _ChatSessionUpdate {
     String? model,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? thinking,
   });
 }
 
@@ -171,6 +179,7 @@ class _ChatSessionUpdateImpl implements _ChatSessionUpdate {
     Object? model = ignore,
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
+    Object? thinking = ignore,
   }) {
     return collection.updateProperties(
           [id],
@@ -180,6 +189,7 @@ class _ChatSessionUpdateImpl implements _ChatSessionUpdate {
             if (model != ignore) 4: model as String?,
             if (createdAt != ignore) 5: createdAt as DateTime?,
             if (updatedAt != ignore) 6: updatedAt as DateTime?,
+            if (thinking != ignore) 7: thinking as bool?,
           },
         ) >
         0;
@@ -194,6 +204,7 @@ sealed class _ChatSessionUpdateAll {
     String? model,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? thinking,
   });
 }
 
@@ -210,6 +221,7 @@ class _ChatSessionUpdateAllImpl implements _ChatSessionUpdateAll {
     Object? model = ignore,
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
+    Object? thinking = ignore,
   }) {
     return collection.updateProperties(id, {
       if (title != ignore) 2: title as String?,
@@ -217,6 +229,7 @@ class _ChatSessionUpdateAllImpl implements _ChatSessionUpdateAll {
       if (model != ignore) 4: model as String?,
       if (createdAt != ignore) 5: createdAt as DateTime?,
       if (updatedAt != ignore) 6: updatedAt as DateTime?,
+      if (thinking != ignore) 7: thinking as bool?,
     });
   }
 }
@@ -234,6 +247,7 @@ sealed class _ChatSessionQueryUpdate {
     String? model,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? thinking,
   });
 }
 
@@ -250,6 +264,7 @@ class _ChatSessionQueryUpdateImpl implements _ChatSessionQueryUpdate {
     Object? model = ignore,
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
+    Object? thinking = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (title != ignore) 2: title as String?,
@@ -257,6 +272,7 @@ class _ChatSessionQueryUpdateImpl implements _ChatSessionQueryUpdate {
       if (model != ignore) 4: model as String?,
       if (createdAt != ignore) 5: createdAt as DateTime?,
       if (updatedAt != ignore) 6: updatedAt as DateTime?,
+      if (thinking != ignore) 7: thinking as bool?,
     });
   }
 }
@@ -281,6 +297,7 @@ class _ChatSessionQueryBuilderUpdateImpl implements _ChatSessionQueryUpdate {
     Object? model = ignore,
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
+    Object? thinking = ignore,
   }) {
     final q = query.build();
     try {
@@ -290,6 +307,7 @@ class _ChatSessionQueryBuilderUpdateImpl implements _ChatSessionQueryUpdate {
         if (model != ignore) 4: model as String?,
         if (createdAt != ignore) 5: createdAt as DateTime?,
         if (updatedAt != ignore) 6: updatedAt as DateTime?,
+        if (thinking != ignore) 7: thinking as bool?,
       });
     } finally {
       q.close();
@@ -1018,6 +1036,16 @@ extension ChatSessionQueryFilter
       );
     });
   }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition> thinkingEqualTo(
+    bool value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 7, value: value),
+      );
+    });
+  }
 }
 
 extension ChatSessionQueryObject
@@ -1112,6 +1140,18 @@ extension ChatSessionQuerySortBy
       return query.addSortBy(6, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByThinking() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(7);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByThinkingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(7, sort: Sort.desc);
+    });
+  }
 }
 
 extension ChatSessionQuerySortThenBy
@@ -1203,6 +1243,18 @@ extension ChatSessionQuerySortThenBy
       return query.addSortBy(6, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByThinking() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(7);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByThinkingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(7, sort: Sort.desc);
+    });
+  }
 }
 
 extension ChatSessionQueryWhereDistinct
@@ -1240,6 +1292,12 @@ extension ChatSessionQueryWhereDistinct
   QueryBuilder<ChatSession, ChatSession, QAfterDistinct> distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(6);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterDistinct> distinctByThinking() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(7);
     });
   }
 }
@@ -1281,6 +1339,12 @@ extension ChatSessionQueryProperty1
       return query.addProperty(6);
     });
   }
+
+  QueryBuilder<ChatSession, bool, QAfterProperty> thinkingProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
+    });
+  }
 }
 
 extension ChatSessionQueryProperty2<R>
@@ -1318,6 +1382,12 @@ extension ChatSessionQueryProperty2<R>
   QueryBuilder<ChatSession, (R, DateTime), QAfterProperty> updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(6);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R, bool), QAfterProperty> thinkingProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
     });
   }
 }
@@ -1362,6 +1432,12 @@ extension ChatSessionQueryProperty3<R1, R2>
       return query.addProperty(6);
     });
   }
+
+  QueryBuilder<ChatSession, (R1, R2, bool), QOperations> thinkingProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
+    });
+  }
 }
 
 // **************************************************************************
@@ -1375,6 +1451,7 @@ _ChatSession _$ChatSessionFromJson(Map<String, dynamic> json) => _ChatSession(
   model: json['model'] as String,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
+  thinking: json['thinking'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
@@ -1385,4 +1462,5 @@ Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
       'model': instance.model,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
+      'thinking': instance.thinking,
     };

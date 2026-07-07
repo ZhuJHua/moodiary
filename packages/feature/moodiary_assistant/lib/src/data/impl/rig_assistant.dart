@@ -8,7 +8,7 @@ import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 
 class RigAssistantService implements AssistantService {
   @override
-  Stream<String> chat(AssistantChatRequest request) async* {
+  Stream<AssistantStreamEvent> chat(AssistantChatRequest request) async* {
     if (request.apiKey.isEmpty) {
       throw const AssistantNotConfiguredException();
     }
@@ -34,6 +34,7 @@ class RigAssistantService implements AssistantService {
       baseUrl: request.baseUrl,
       model: request.model,
       maxTokens: request.maxTokens,
+      thinking: request.thinking,
     );
 
     final stream = rust.rigChatStream(
@@ -46,8 +47,14 @@ class RigAssistantService implements AssistantService {
     );
 
     await for (final event in stream) {
-      if (event.kind == rust.RigEventKind.textDelta) {
-        yield event.text;
+      switch (event.kind) {
+        case rust.RigEventKind.textDelta:
+          yield AssistantStreamEvent.text(event.text);
+        case rust.RigEventKind.reasoningDelta:
+          yield AssistantStreamEvent.reasoning(event.text);
+        case rust.RigEventKind.toolCall:
+          // 不在气泡里展示，但用作「思考阶段结束」的信号（冻结思考计时）。
+          yield AssistantStreamEvent.tool(event.text);
       }
     }
   }

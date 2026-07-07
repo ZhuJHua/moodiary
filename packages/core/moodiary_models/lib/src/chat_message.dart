@@ -21,6 +21,12 @@ abstract class ChatMessage with _$ChatMessage {
     required String content,
 
     required DateTime createdAt,
+
+    /// assistant 回复的思考 / 推理过程（思考模式开启时才有）。null 表示非思考回复。
+    String? reasoning,
+
+    /// 思考耗时（毫秒）。null 表示无思考过程。
+    int? thinkingMillis,
   }) = _ChatMessage;
 
   factory ChatMessage.create({
