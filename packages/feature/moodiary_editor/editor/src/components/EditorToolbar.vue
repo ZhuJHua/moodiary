@@ -23,8 +23,14 @@ import IconTable from '~icons/material-symbols/border-all-rounded'
 import IconLink from '~icons/material-symbols/add-link-rounded'
 import IconSearch from '~icons/material-symbols/search-rounded'
 import IconTune from '~icons/material-symbols/tune-rounded'
+import IconParagraph from '~icons/material-symbols/format-paragraph-rounded'
+import IconH1 from '~icons/material-symbols/format-h1-rounded'
+import IconH2 from '~icons/material-symbols/format-h2-rounded'
+import IconH3 from '~icons/material-symbols/format-h3-rounded'
 import { openSearch } from '../editor/search'
 import TableGridPicker from './TableGridPicker.vue'
+import PopupMenu from './PopupMenu.vue'
+import type { PopupMenuItem } from './PopupMenu.vue'
 
 const props = defineProps<{
   editor: Editor
@@ -84,9 +90,6 @@ const tools: Tool[] = [
   { key: 'underline', title: '下划线', icon: IconUnderline, run: () => chain().toggleUnderline().run(), active: () => isActive('underline') },
   { key: 'strike', title: '删除线', icon: IconStrike, run: () => chain().toggleStrike().run(), active: () => isActive('strike') },
   { key: 'code', title: '行内代码', icon: IconCode, run: () => chain().toggleCode().run(), active: () => isActive('code') },
-  { key: 'h1', title: '一级标题', label: 'H1', run: () => chain().toggleHeading({ level: 1 }).run(), active: () => isActive('heading', { level: 1 }) },
-  { key: 'h2', title: '二级标题', label: 'H2', run: () => chain().toggleHeading({ level: 2 }).run(), active: () => isActive('heading', { level: 2 }) },
-  { key: 'h3', title: '三级标题', label: 'H3', run: () => chain().toggleHeading({ level: 3 }).run(), active: () => isActive('heading', { level: 3 }) },
   { key: 'bullet', title: '无序列表', icon: IconBullet, run: () => chain().toggleBulletList().run(), active: () => isActive('bulletList') },
   { key: 'ordered', title: '有序列表', icon: IconOrdered, run: () => chain().toggleOrderedList().run(), active: () => isActive('orderedList') },
   { key: 'task', title: '任务列表', icon: IconChecklist, run: () => chain().toggleTaskList().run(), active: () => isActive('taskList') },
@@ -127,6 +130,34 @@ const tableOps: { key: string; label: string; title: string; run: () => void }[]
   { key: 'delCol', label: '−列', title: '删除当前列', run: () => chain().deleteColumn().run() },
   { key: 'delTable', label: '删表', title: '删除表格', run: () => chain().deleteTable().run() },
 ]
+
+// —— 标题下拉菜单 ——
+const headingMenuOpen = ref(false)
+const headingItems = computed<PopupMenuItem[]>(() => [
+  { key: 'paragraph', label: '正文', icon: IconParagraph, active: !isActive('heading') },
+  { key: 'h1', label: '一级标题', icon: IconH1, active: isActive('heading', { level: 1 }) },
+  { key: 'h2', label: '二级标题', icon: IconH2, active: isActive('heading', { level: 2 }) },
+  { key: 'h3', label: '三级标题', icon: IconH3, active: isActive('heading', { level: 3 }) },
+])
+function onHeadingSelect(key: string): void {
+  if (key === 'paragraph') {
+    // toggleHeading 同 level 会关掉标题 → 切回正文。
+    const level = isActive('heading', { level: 1 })
+      ? 1
+      : isActive('heading', { level: 2 })
+        ? 2
+        : isActive('heading', { level: 3 })
+          ? 3
+          : 1
+    chain().toggleHeading({ level }).run()
+  } else if (key === 'h1') {
+    chain().toggleHeading({ level: 1 }).run()
+  } else if (key === 'h2') {
+    chain().toggleHeading({ level: 2 }).run()
+  } else if (key === 'h3') {
+    chain().toggleHeading({ level: 3 }).run()
+  }
+}
 </script>
 
 <template>
@@ -154,6 +185,26 @@ const tableOps: { key: string; label: string; title: string; run: () => void }[]
       <IconLink class="size-5" />
     </button>
     <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
+    <!-- 标题下拉：H1/H2/H3 收进一个按钮，图标随当前级别切换，激活时高亮 -->
+    <PopupMenu v-model="headingMenuOpen" :items="headingItems" @select="onHeadingSelect">
+      <template #trigger>
+        <button
+          :class="[
+            btnClass,
+            'btn-square',
+            isActive('heading') ? 'btn-active text-primary' : '',
+          ]"
+          type="button"
+          title="标题"
+          @mousedown.prevent
+        >
+          <IconH1 v-if="isActive('heading', { level: 1 })" class="size-5" />
+          <IconH2 v-else-if="isActive('heading', { level: 2 })" class="size-5" />
+          <IconH3 v-else-if="isActive('heading', { level: 3 })" class="size-5" />
+          <IconParagraph v-else class="size-5" />
+        </button>
+      </template>
+    </PopupMenu>
     <button
       v-for="t in tools"
       :key="t.key"
