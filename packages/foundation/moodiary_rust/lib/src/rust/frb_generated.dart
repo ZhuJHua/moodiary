@@ -2552,11 +2552,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RigChatMessage dco_decode_rig_chat_message(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return RigChatMessage(
       role: dco_decode_String(arr[0]),
       content: dco_decode_String(arr[1]),
+      imageBase64: dco_decode_String(arr[2]),
+      imageMime: dco_decode_String(arr[3]),
     );
   }
 
@@ -3301,7 +3303,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_role = sse_decode_String(deserializer);
     var var_content = sse_decode_String(deserializer);
-    return RigChatMessage(role: var_role, content: var_content);
+    var var_imageBase64 = sse_decode_String(deserializer);
+    var var_imageMime = sse_decode_String(deserializer);
+    return RigChatMessage(
+      role: var_role,
+      content: var_content,
+      imageBase64: var_imageBase64,
+      imageMime: var_imageMime,
+    );
   }
 
   @protected
@@ -4099,6 +4108,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.role, serializer);
     sse_encode_String(self.content, serializer);
+    sse_encode_String(self.imageBase64, serializer);
+    sse_encode_String(self.imageMime, serializer);
   }
 
   @protected

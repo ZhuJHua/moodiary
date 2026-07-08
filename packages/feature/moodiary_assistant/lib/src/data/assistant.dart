@@ -28,12 +28,17 @@ class AssistantMessage {
   final AssistantRole role;
   final String content;
 
-  const AssistantMessage(this.role, this.content);
+  /// 随 user 消息发送的图片绝对路径。null 表示无图。
+  final String? imagePath;
 
-  const AssistantMessage.user(this.content) : role = AssistantRole.user;
+  const AssistantMessage(this.role, this.content, {this.imagePath});
+
+  const AssistantMessage.user(this.content, {this.imagePath})
+    : role = AssistantRole.user;
 
   const AssistantMessage.assistant(this.content)
-    : role = AssistantRole.assistant;
+    : role = AssistantRole.assistant,
+      imagePath = null;
 }
 
 class AssistantNotConfiguredException implements Exception {
@@ -61,6 +66,9 @@ class AssistantChatRequest {
   /// 是否开启思考（reasoning）模式。开启后按协议注入思考参数并回传思考增量。
   final bool thinking;
 
+  /// 是否给模型挂载工具。模型不支持工具调用时应为 false（否则可能被供应商拒）。
+  final bool tools;
+
   final ToolPermissionRequester? onToolPermission;
 
   const AssistantChatRequest({
@@ -72,6 +80,7 @@ class AssistantChatRequest {
     required this.maxTokens,
     required this.history,
     this.thinking = false,
+    this.tools = true,
     this.onToolPermission,
   });
 }

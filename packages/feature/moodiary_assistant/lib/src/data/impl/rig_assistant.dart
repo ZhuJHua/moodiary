@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:meta/meta.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
@@ -13,21 +14,37 @@ class RigAssistantService implements AssistantService {
       throw const AssistantNotConfiguredException();
     }
 
-    final tools = [
-      for (final spec in AssistantToolRegistry.specs)
-        rust.RigToolDef(
-          name: spec.id,
-          description: spec.description,
-          parametersJson: jsonEncode(spec.jsonSchema),
-        ),
+    final tools = <rust.RigToolDef>[
+      if (request.tools)
+        for (final spec in AssistantToolRegistry.specs)
+          rust.RigToolDef(
+            name: spec.id,
+            description: spec.description,
+            parametersJson: jsonEncode(spec.jsonSchema),
+          ),
     ];
-    final history = [
-      for (final m in request.history)
+    final history = <rust.RigChatMessage>[];
+    for (final m in request.history) {
+      var imageBase64 = '';
+      var imageMime = '';
+      final path = m.imagePath;
+      if (path != null && path.isNotEmpty) {
+        final file = File(path);
+        if (await file.exists()) {
+          final bytes = await file.readAsBytes();
+          imageBase64 = base64Encode(bytes);
+          imageMime = _imageMime(bytes, path);
+        }
+      }
+      history.add(
         rust.RigChatMessage(
           role: m.role == AssistantRole.user ? 'user' : 'assistant',
           content: m.content,
+          imageBase64: imageBase64,
+          imageMime: imageMime,
         ),
-    ];
+      );
+    }
     final config = rust.RigProviderConfig(
       protocol: request.type.id,
       apiKey: request.apiKey,
@@ -57,6 +74,41 @@ class RigAssistantService implements AssistantService {
           yield AssistantStreamEvent.tool(event.text);
       }
     }
+  }
+
+  /// 按文件**内容**（magic number）判定 MIME —— 「原图」质量下 saveImages 只拷字节不重编码，
+  /// 扩展名可能与真实内容不符（如 PNG 落进 .jpg），据此发给 Anthropic 会因 media_type 不符被拒。
+  /// 识别不出再按扩展名兜底。
+  String _imageMime(List<int> b, String path) {
+    if (b.length >= 4 &&
+        b[0] == 0x89 &&
+        b[1] == 0x50 &&
+        b[2] == 0x4E &&
+        b[3] == 0x47) {
+      return 'image/png';
+    }
+    if (b.length >= 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF) {
+      return 'image/jpeg';
+    }
+    if (b.length >= 12 &&
+        b[0] == 0x52 &&
+        b[1] == 0x49 &&
+        b[2] == 0x46 &&
+        b[3] == 0x46 &&
+        b[8] == 0x57 &&
+        b[9] == 0x45 &&
+        b[10] == 0x42 &&
+        b[11] == 0x50) {
+      return 'image/webp';
+    }
+    if (b.length >= 3 && b[0] == 0x47 && b[1] == 0x49 && b[2] == 0x46) {
+      return 'image/gif';
+    }
+    final p = path.toLowerCase();
+    if (p.endsWith('.png')) return 'image/png';
+    if (p.endsWith('.webp')) return 'image/webp';
+    if (p.endsWith('.gif')) return 'image/gif';
+    return 'image/jpeg';
   }
 
   Future<String> _dispatch(

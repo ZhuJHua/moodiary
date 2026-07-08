@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `anthropic_thinking_budget`, `build_tools`, `drive`, `split_history`
+// These functions are ignored because they are not marked as `pub`: `anthropic_thinking_budget`, `build_tools`, `drive`, `split_history`, `to_message`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ProxyTool`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `call`, `definition`, `name`
 
@@ -33,10 +33,25 @@ class RigChatMessage {
   final String role;
   final String content;
 
-  const RigChatMessage({required this.role, required this.content});
+  /// 可选图片（base64 编码，不含 data URL 前缀）。空表示无图；仅 user 消息使用。
+  final String imageBase64;
+
+  /// 图片 MIME（如 `image/jpeg`）。`image_base64` 非空时应给出，否则无法确定媒体类型。
+  final String imageMime;
+
+  const RigChatMessage({
+    required this.role,
+    required this.content,
+    required this.imageBase64,
+    required this.imageMime,
+  });
 
   @override
-  int get hashCode => role.hashCode ^ content.hashCode;
+  int get hashCode =>
+      role.hashCode ^
+      content.hashCode ^
+      imageBase64.hashCode ^
+      imageMime.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -44,7 +59,9 @@ class RigChatMessage {
       other is RigChatMessage &&
           runtimeType == other.runtimeType &&
           role == other.role &&
-          content == other.content;
+          content == other.content &&
+          imageBase64 == other.imageBase64 &&
+          imageMime == other.imageMime;
 }
 
 /// 用「plain enum + 载荷字段」而非带数据的枚举变体，是为了让 FRB 生成普通 Dart

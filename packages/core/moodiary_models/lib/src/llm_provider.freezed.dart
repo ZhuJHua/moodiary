@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LlmProvider {
 
-@Id() String get id; String get name; String get type; String get baseUrl; String get model; DateTime get createdAt; int get sortOrder; String get providerId;
+@Id() String get id; String get name; String get type; String get baseUrl; String get model; DateTime get createdAt; int get sortOrder; String get providerId;/// 模型能力标记。preset 供应商以在线目录为准，这里仅对**自定义**供应商生效。
+/// 三者都默认 false（opt-in），由用户按模型实际能力逐个开启。
+ bool get toolCall; bool get reasoning; bool get attachment;
 /// Create a copy of LlmProvider
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +30,16 @@ $LlmProviderCopyWith<LlmProvider> get copyWith => _$LlmProviderCopyWithImpl<LlmP
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.providerId, providerId) || other.providerId == providerId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.providerId, providerId) || other.providerId == providerId)&&(identical(other.toolCall, toolCall) || other.toolCall == toolCall)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.attachment, attachment) || other.attachment == attachment));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,type,baseUrl,model,createdAt,sortOrder,providerId);
+int get hashCode => Object.hash(runtimeType,id,name,type,baseUrl,model,createdAt,sortOrder,providerId,toolCall,reasoning,attachment);
 
 @override
 String toString() {
-  return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, model: $model, createdAt: $createdAt, sortOrder: $sortOrder, providerId: $providerId)';
+  return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, model: $model, createdAt: $createdAt, sortOrder: $sortOrder, providerId: $providerId, toolCall: $toolCall, reasoning: $reasoning, attachment: $attachment)';
 }
 
 
@@ -48,7 +50,7 @@ abstract mixin class $LlmProviderCopyWith<$Res>  {
   factory $LlmProviderCopyWith(LlmProvider value, $Res Function(LlmProvider) _then) = _$LlmProviderCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id, String name, String type, String baseUrl, String model, DateTime createdAt, int sortOrder, String providerId
+@Id() String id, String name, String type, String baseUrl, String model, DateTime createdAt, int sortOrder, String providerId, bool toolCall, bool reasoning, bool attachment
 });
 
 
@@ -65,7 +67,7 @@ class _$LlmProviderCopyWithImpl<$Res>
 
 /// Create a copy of LlmProvider
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? type = null,Object? baseUrl = null,Object? model = null,Object? createdAt = null,Object? sortOrder = null,Object? providerId = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? type = null,Object? baseUrl = null,Object? model = null,Object? createdAt = null,Object? sortOrder = null,Object? providerId = null,Object? toolCall = null,Object? reasoning = null,Object? attachment = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -75,7 +77,10 @@ as String,model: null == model ? _self.model : model // ignore: cast_nullable_to
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
 as int,providerId: null == providerId ? _self.providerId : providerId // ignore: cast_nullable_to_non_nullable
-as String,
+as String,toolCall: null == toolCall ? _self.toolCall : toolCall // ignore: cast_nullable_to_non_nullable
+as bool,reasoning: null == reasoning ? _self.reasoning : reasoning // ignore: cast_nullable_to_non_nullable
+as bool,attachment: null == attachment ? _self.attachment : attachment // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -160,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder,  String providerId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder,  String providerId,  bool toolCall,  bool reasoning,  bool attachment)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LlmProvider() when $default != null:
-return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder,_that.providerId);case _:
+return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder,_that.providerId,_that.toolCall,_that.reasoning,_that.attachment);case _:
   return orElse();
 
 }
@@ -181,10 +186,10 @@ return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder,  String providerId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder,  String providerId,  bool toolCall,  bool reasoning,  bool attachment)  $default,) {final _that = this;
 switch (_that) {
 case _LlmProvider():
-return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder,_that.providerId);case _:
+return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder,_that.providerId,_that.toolCall,_that.reasoning,_that.attachment);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +206,10 @@ return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.c
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder,  String providerId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String name,  String type,  String baseUrl,  String model,  DateTime createdAt,  int sortOrder,  String providerId,  bool toolCall,  bool reasoning,  bool attachment)?  $default,) {final _that = this;
 switch (_that) {
 case _LlmProvider() when $default != null:
-return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder,_that.providerId);case _:
+return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.createdAt,_that.sortOrder,_that.providerId,_that.toolCall,_that.reasoning,_that.attachment);case _:
   return null;
 
 }
@@ -216,7 +221,7 @@ return $default(_that.id,_that.name,_that.type,_that.baseUrl,_that.model,_that.c
 @JsonSerializable()
 
 class _LlmProvider implements LlmProvider {
-  const _LlmProvider({@Id() required this.id, required this.name, required this.type, required this.baseUrl, required this.model, required this.createdAt, required this.sortOrder, this.providerId = ''});
+  const _LlmProvider({@Id() required this.id, required this.name, required this.type, required this.baseUrl, required this.model, required this.createdAt, required this.sortOrder, this.providerId = '', this.toolCall = false, this.reasoning = false, this.attachment = false});
   factory _LlmProvider.fromJson(Map<String, dynamic> json) => _$LlmProviderFromJson(json);
 
 @override@Id() final  String id;
@@ -227,6 +232,11 @@ class _LlmProvider implements LlmProvider {
 @override final  DateTime createdAt;
 @override final  int sortOrder;
 @override@JsonKey() final  String providerId;
+/// 模型能力标记。preset 供应商以在线目录为准，这里仅对**自定义**供应商生效。
+/// 三者都默认 false（opt-in），由用户按模型实际能力逐个开启。
+@override@JsonKey() final  bool toolCall;
+@override@JsonKey() final  bool reasoning;
+@override@JsonKey() final  bool attachment;
 
 /// Create a copy of LlmProvider
 /// with the given fields replaced by the non-null parameter values.
@@ -241,16 +251,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.providerId, providerId) || other.providerId == providerId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LlmProvider&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.type, type) || other.type == type)&&(identical(other.baseUrl, baseUrl) || other.baseUrl == baseUrl)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.providerId, providerId) || other.providerId == providerId)&&(identical(other.toolCall, toolCall) || other.toolCall == toolCall)&&(identical(other.reasoning, reasoning) || other.reasoning == reasoning)&&(identical(other.attachment, attachment) || other.attachment == attachment));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,type,baseUrl,model,createdAt,sortOrder,providerId);
+int get hashCode => Object.hash(runtimeType,id,name,type,baseUrl,model,createdAt,sortOrder,providerId,toolCall,reasoning,attachment);
 
 @override
 String toString() {
-  return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, model: $model, createdAt: $createdAt, sortOrder: $sortOrder, providerId: $providerId)';
+  return 'LlmProvider(id: $id, name: $name, type: $type, baseUrl: $baseUrl, model: $model, createdAt: $createdAt, sortOrder: $sortOrder, providerId: $providerId, toolCall: $toolCall, reasoning: $reasoning, attachment: $attachment)';
 }
 
 
@@ -261,7 +271,7 @@ abstract mixin class _$LlmProviderCopyWith<$Res> implements $LlmProviderCopyWith
   factory _$LlmProviderCopyWith(_LlmProvider value, $Res Function(_LlmProvider) _then) = __$LlmProviderCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id, String name, String type, String baseUrl, String model, DateTime createdAt, int sortOrder, String providerId
+@Id() String id, String name, String type, String baseUrl, String model, DateTime createdAt, int sortOrder, String providerId, bool toolCall, bool reasoning, bool attachment
 });
 
 
@@ -278,7 +288,7 @@ class __$LlmProviderCopyWithImpl<$Res>
 
 /// Create a copy of LlmProvider
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? type = null,Object? baseUrl = null,Object? model = null,Object? createdAt = null,Object? sortOrder = null,Object? providerId = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? type = null,Object? baseUrl = null,Object? model = null,Object? createdAt = null,Object? sortOrder = null,Object? providerId = null,Object? toolCall = null,Object? reasoning = null,Object? attachment = null,}) {
   return _then(_LlmProvider(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -288,7 +298,10 @@ as String,model: null == model ? _self.model : model // ignore: cast_nullable_to
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
 as int,providerId: null == providerId ? _self.providerId : providerId // ignore: cast_nullable_to_non_nullable
-as String,
+as String,toolCall: null == toolCall ? _self.toolCall : toolCall // ignore: cast_nullable_to_non_nullable
+as bool,reasoning: null == reasoning ? _self.reasoning : reasoning // ignore: cast_nullable_to_non_nullable
+as bool,attachment: null == attachment ? _self.attachment : attachment // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

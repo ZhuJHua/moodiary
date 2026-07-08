@@ -19,6 +19,9 @@ const String _kThinkingMillisKey = 'thinkingMillis';
 /// 是否仍在思考阶段（首个正文 token 到来前为 true，用于展示「思考中…」）。
 const String _kThinkingActiveKey = 'thinkingActive';
 
+/// 随消息发送的图片文件名（image 目录内，用 FileUtil.getRealPath 解析）。
+const String _kImageNameKey = 'imageName';
+
 const String kPermissionSurfaceKey = 'surfaceId';
 
 class IsarChatController implements ChatController {
@@ -112,7 +115,10 @@ class IsarChatController implements ChatController {
   Future<void> persist(Message message) async {
     final sid = sessionId;
     if (sid == null) return;
-    if (message is! TextMessage || message.text.isEmpty) return;
+    if (message is! TextMessage) return;
+    final imageName = imageNameOf(message);
+    // 纯图片消息（正文为空但带图）也要落库。
+    if (message.text.isEmpty && imageName.isEmpty) return;
     await _repo.addMessage(
       ChatMessage(
         id: message.id,
@@ -124,6 +130,7 @@ class IsarChatController implements ChatController {
         thinkingMillis: thinkingMillisOf(message) == 0
             ? null
             : thinkingMillisOf(message),
+        imageName: imageName.isEmpty ? null : imageName,
       ),
     );
   }
@@ -145,11 +152,18 @@ class IsarChatController implements ChatController {
     );
   }
 
-  TextMessage userMessage(String text, {DateTime? createdAt}) => TextMessage(
+  TextMessage userMessage(
+    String text, {
+    DateTime? createdAt,
+    String? imageName,
+  }) => TextMessage(
     id: uuidV7(),
     authorId: kAssistantUserId,
     text: text,
     createdAt: createdAt ?? DateTime.timestamp(),
+    metadata: (imageName != null && imageName.isNotEmpty)
+        ? {_kImageNameKey: imageName}
+        : null,
   );
 
   TextMessage assistantMessage(
@@ -198,17 +212,26 @@ class IsarChatController implements ChatController {
     return v is int ? v : 0;
   }
 
+  static String imageNameOf(Message message) {
+    final v = message.metadata?[_kImageNameKey];
+    return v is String ? v : '';
+  }
+
   TextMessage _toMessage(ChatMessage m) {
     final reasoning = m.reasoning ?? '';
     final millis = m.thinkingMillis ?? 0;
+    final imageName = m.imageName ?? '';
+    final meta = <String, dynamic>{
+      if (reasoning.isNotEmpty) _kReasoningKey: reasoning,
+      if (millis > 0) _kThinkingMillisKey: millis,
+      if (imageName.isNotEmpty) _kImageNameKey: imageName,
+    };
     return TextMessage(
       id: m.id,
       authorId: m.role == 'user' ? kAssistantUserId : kAssistantBotId,
       text: m.content,
       createdAt: m.createdAt,
-      metadata: (reasoning.isNotEmpty || millis > 0)
-          ? {_kReasoningKey: reasoning, _kThinkingMillisKey: millis}
-          : null,
+      metadata: meta.isEmpty ? null : meta,
     );
   }
 }

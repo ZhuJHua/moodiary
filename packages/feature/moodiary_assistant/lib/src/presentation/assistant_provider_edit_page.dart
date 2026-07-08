@@ -39,6 +39,11 @@ class _AssistantProviderEditPageState
   bool _showAllModels = false;
   String _modelQuery = '';
 
+  // 自定义供应商的用户声明能力（preset 供应商以在线目录为准，不用这几个）。都默认 false，按需开启。
+  bool _toolCall = false;
+  bool _reasoning = false;
+  bool _attachment = false;
+
   bool get _isNew => widget.id == null;
 
   @override
@@ -78,6 +83,9 @@ class _AssistantProviderEditPageState
         _presetModels = preset?.models ?? const [];
         _apiKeyUrl = preset?.docUrl;
         _keyConfigured = key != null && key.isNotEmpty;
+        _toolCall = provider.toolCall;
+        _reasoning = provider.reasoning;
+        _attachment = provider.attachment;
         _loaded = true;
       });
       return;
@@ -140,6 +148,9 @@ class _AssistantProviderEditPageState
         model: model,
         sortOrder: await _repo.nextSortOrder(),
         providerId: _providerId,
+        toolCall: _toolCall,
+        reasoning: _reasoning,
+        attachment: _attachment,
       );
       id = toSave.id;
     } else {
@@ -154,6 +165,9 @@ class _AssistantProviderEditPageState
         type: _type.id,
         baseUrl: baseUrl,
         model: model,
+        toolCall: _toolCall,
+        reasoning: _reasoning,
+        attachment: _attachment,
       );
     }
 
@@ -297,6 +311,44 @@ class _AssistantProviderEditPageState
     );
   }
 
+  Widget _buildCapabilities(AppLocalizations l10n) {
+    final scheme = context.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 18),
+        _SectionLabel(text: l10n.modelProviderCapabilities),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, top: 2, bottom: 2),
+          child: Text(
+            l10n.modelProviderCapabilitiesHint,
+            style: context.textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        _CapabilitySwitch(
+          icon: Icons.build_rounded,
+          label: l10n.modelProviderBadgeTools,
+          value: _toolCall,
+          onChanged: (v) => setState(() => _toolCall = v),
+        ),
+        _CapabilitySwitch(
+          icon: Icons.psychology_rounded,
+          label: l10n.modelProviderBadgeReasoning,
+          value: _reasoning,
+          onChanged: (v) => setState(() => _reasoning = v),
+        ),
+        _CapabilitySwitch(
+          icon: Icons.image_rounded,
+          label: l10n.modelProviderBadgeVision,
+          value: _attachment,
+          onChanged: (v) => setState(() => _attachment = v),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -365,7 +417,10 @@ class _AssistantProviderEditPageState
                             hint: l10n.modelProviderBaseUrlHint,
                             icon: Icons.link_rounded,
                             suffixIcon: locked
-                                ? const Icon(Icons.lock_outline_rounded, size: 18)
+                                ? const Icon(
+                                    Icons.lock_outline_rounded,
+                                    size: 18,
+                                  )
                                 : null,
                           ),
                         ),
@@ -417,6 +472,9 @@ class _AssistantProviderEditPageState
                       ),
                     ),
                     _buildModelSelector(l10n),
+                    // preset 供应商能力以在线目录为准（模型卡上有徽章）；自定义供应商无目录可查，
+                    // 让用户自行声明，用于决定是否启用工具 / 思考 / 发图。
+                    if (_providerId.isEmpty) _buildCapabilities(l10n),
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -491,6 +549,8 @@ class _ModelTile extends StatelessWidget {
           icon: Icons.psychology_rounded,
           text: l10n.modelProviderBadgeReasoning,
         ),
+      if (model.attachment)
+        _Badge(icon: Icons.image_rounded, text: l10n.modelProviderBadgeVision),
       if (_formatContext(model.contextLimit) case final ctx?)
         _Badge(icon: Icons.unfold_more_rounded, text: ctx),
       if (_formatPrice(model.inputCost, model.outputCost) case final price?)
@@ -505,15 +565,30 @@ class _ModelTile extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                Expanded(
+          child: Stack(
+            children: [
+              // Stack 会缩到非定位子节点的尺寸；用满宽 SizedBox 撑开，卡片才占满整行宽度。
+              SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(model.name, style: context.textTheme.titleSmall),
+                      Padding(
+                        // 常驻右侧留白（不随选中变化），给右上角选中标腾位，
+                        // 避免选中后可用宽度变窄导致徽章从一行挤成两行。
+                        padding: const EdgeInsets.only(right: 22),
+                        child: Text(
+                          model.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.titleSmall,
+                        ),
+                      ),
                       if (badges.isNotEmpty) ...[
                         const SizedBox(height: 6),
                         Wrap(spacing: 6, runSpacing: 4, children: badges),
@@ -521,17 +596,48 @@ class _ModelTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (selected)
-                  Icon(
+              ),
+              if (selected)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Icon(
                     Icons.check_circle_rounded,
                     color: scheme.primary,
                     size: 20,
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _CapabilitySwitch extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _CapabilitySwitch({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return SwitchListTile.adaptive(
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      secondary: Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+      title: Text(label, style: context.textTheme.bodyMedium),
+      value: value,
+      onChanged: onChanged,
     );
   }
 }

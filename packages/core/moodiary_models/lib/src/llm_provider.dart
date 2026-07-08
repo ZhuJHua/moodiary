@@ -25,6 +25,14 @@ abstract class LlmProvider with _$LlmProvider {
     required int sortOrder,
 
     @Default('') String providerId,
+
+    /// 模型能力标记。preset 供应商以在线目录为准，这里仅对**自定义**供应商生效。
+    /// 三者都默认 false（opt-in），由用户按模型实际能力逐个开启。
+    @Default(false) bool toolCall,
+
+    @Default(false) bool reasoning,
+
+    @Default(false) bool attachment,
   }) = _LlmProvider;
 
   factory LlmProvider.create({
@@ -34,6 +42,9 @@ abstract class LlmProvider with _$LlmProvider {
     required String model,
     required int sortOrder,
     String providerId = '',
+    bool toolCall = false,
+    bool reasoning = false,
+    bool attachment = false,
   }) {
     return LlmProvider(
       id: uuidV7(),
@@ -44,6 +55,9 @@ abstract class LlmProvider with _$LlmProvider {
       createdAt: DateTime.timestamp(),
       sortOrder: sortOrder,
       providerId: providerId,
+      toolCall: toolCall,
+      reasoning: reasoning,
+      attachment: attachment,
     );
   }
 

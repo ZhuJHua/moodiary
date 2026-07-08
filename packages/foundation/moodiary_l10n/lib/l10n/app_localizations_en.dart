@@ -1152,6 +1152,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get assistantToolSendDiary => 'Send a diary';
 
   @override
+  String get assistantToolSendImage => 'Send an image';
+
+  @override
+  String get assistantImageMessageLabel => '[Image]';
+
+  @override
   String get assistantSelectDiaryTitle => 'Select a diary';
 
   @override
@@ -1298,6 +1304,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get modelProviderBadgeReasoning => 'Reasoning';
+
+  @override
+  String get modelProviderBadgeVision => 'Vision';
+
+  @override
+  String get modelProviderCapabilities => 'Model capabilities';
+
+  @override
+  String get modelProviderCapabilitiesHint =>
+      'Enable what this model supports — controls tools, thinking, and image sending.';
 
   @override
   String get modelProviderSearchModelHint => 'Search models';

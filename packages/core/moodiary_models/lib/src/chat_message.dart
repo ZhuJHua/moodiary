@@ -27,6 +27,9 @@ abstract class ChatMessage with _$ChatMessage {
 
     /// 思考耗时（毫秒）。null 表示无思考过程。
     int? thinkingMillis,
+
+    /// 随消息发送的图片文件名（存于 image 目录，用 FileUtil.getRealPath 解析）。null 表示无图。
+    String? imageName,
   }) = _ChatMessage;
 
   factory ChatMessage.create({

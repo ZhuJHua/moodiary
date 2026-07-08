@@ -31,6 +31,17 @@ class LlmPresetRepository {
     return refresh();
   }
 
+  /// 只读本地缓存、绝不联网。缓存缺失或解码失败均返回空列表。
+  List<LlmProviderPreset> cachedPresets() {
+    final cached = MoodiaryKVs.llmPresetCache.get() ?? '';
+    if (cached.isEmpty) return const [];
+    try {
+      return _decodeCache(cached);
+    } catch (_) {
+      return const [];
+    }
+  }
+
   Future<List<LlmProviderPreset>> refresh() async {
     try {
       final body = await _fetchBody();

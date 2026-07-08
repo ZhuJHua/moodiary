@@ -27,6 +27,7 @@ final ChatMessageSchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'createdAt', type: IsarType.dateTime),
       IsarPropertySchema(name: 'reasoning', type: IsarType.string),
       IsarPropertySchema(name: 'thinkingMillis', type: IsarType.long),
+      IsarPropertySchema(name: 'imageName', type: IsarType.string),
     ],
     indexes: [
       IsarIndexSchema(
@@ -65,6 +66,14 @@ int serializeChatMessage(IsarWriter writer, ChatMessage object) {
     }
   }
   IsarCore.writeLong(writer, 7, object.thinkingMillis ?? -9223372036854775808);
+  {
+    final value = object.imageName;
+    if (value == null) {
+      IsarCore.writeNull(writer, 8);
+    } else {
+      IsarCore.writeString(writer, 8, value);
+    }
+  }
   return Isar.fastHash(object.id);
 }
 
@@ -104,6 +113,8 @@ ChatMessage deserializeChatMessage(IsarReader reader) {
       _thinkingMillis = value;
     }
   }
+  final String? _imageName;
+  _imageName = IsarCore.readString(reader, 8);
   final object = ChatMessage(
     id: _id,
     sessionId: _sessionId,
@@ -112,6 +123,7 @@ ChatMessage deserializeChatMessage(IsarReader reader) {
     createdAt: _createdAt,
     reasoning: _reasoning,
     thinkingMillis: _thinkingMillis,
+    imageName: _imageName,
   );
   return object;
 }
@@ -150,6 +162,8 @@ dynamic deserializeChatMessageProp(IsarReader reader, int property) {
           return value;
         }
       }
+    case 8:
+      return IsarCore.readString(reader, 8);
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -164,6 +178,7 @@ sealed class _ChatMessageUpdate {
     DateTime? createdAt,
     String? reasoning,
     int? thinkingMillis,
+    String? imageName,
   });
 }
 
@@ -181,6 +196,7 @@ class _ChatMessageUpdateImpl implements _ChatMessageUpdate {
     Object? createdAt = ignore,
     Object? reasoning = ignore,
     Object? thinkingMillis = ignore,
+    Object? imageName = ignore,
   }) {
     return collection.updateProperties(
           [id],
@@ -191,6 +207,7 @@ class _ChatMessageUpdateImpl implements _ChatMessageUpdate {
             if (createdAt != ignore) 5: createdAt as DateTime?,
             if (reasoning != ignore) 6: reasoning as String?,
             if (thinkingMillis != ignore) 7: thinkingMillis as int?,
+            if (imageName != ignore) 8: imageName as String?,
           },
         ) >
         0;
@@ -206,6 +223,7 @@ sealed class _ChatMessageUpdateAll {
     DateTime? createdAt,
     String? reasoning,
     int? thinkingMillis,
+    String? imageName,
   });
 }
 
@@ -223,6 +241,7 @@ class _ChatMessageUpdateAllImpl implements _ChatMessageUpdateAll {
     Object? createdAt = ignore,
     Object? reasoning = ignore,
     Object? thinkingMillis = ignore,
+    Object? imageName = ignore,
   }) {
     return collection.updateProperties(id, {
       if (sessionId != ignore) 2: sessionId as String?,
@@ -231,6 +250,7 @@ class _ChatMessageUpdateAllImpl implements _ChatMessageUpdateAll {
       if (createdAt != ignore) 5: createdAt as DateTime?,
       if (reasoning != ignore) 6: reasoning as String?,
       if (thinkingMillis != ignore) 7: thinkingMillis as int?,
+      if (imageName != ignore) 8: imageName as String?,
     });
   }
 }
@@ -249,6 +269,7 @@ sealed class _ChatMessageQueryUpdate {
     DateTime? createdAt,
     String? reasoning,
     int? thinkingMillis,
+    String? imageName,
   });
 }
 
@@ -266,6 +287,7 @@ class _ChatMessageQueryUpdateImpl implements _ChatMessageQueryUpdate {
     Object? createdAt = ignore,
     Object? reasoning = ignore,
     Object? thinkingMillis = ignore,
+    Object? imageName = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (sessionId != ignore) 2: sessionId as String?,
@@ -274,6 +296,7 @@ class _ChatMessageQueryUpdateImpl implements _ChatMessageQueryUpdate {
       if (createdAt != ignore) 5: createdAt as DateTime?,
       if (reasoning != ignore) 6: reasoning as String?,
       if (thinkingMillis != ignore) 7: thinkingMillis as int?,
+      if (imageName != ignore) 8: imageName as String?,
     });
   }
 }
@@ -299,6 +322,7 @@ class _ChatMessageQueryBuilderUpdateImpl implements _ChatMessageQueryUpdate {
     Object? createdAt = ignore,
     Object? reasoning = ignore,
     Object? thinkingMillis = ignore,
+    Object? imageName = ignore,
   }) {
     final q = query.build();
     try {
@@ -309,6 +333,7 @@ class _ChatMessageQueryBuilderUpdateImpl implements _ChatMessageQueryUpdate {
         if (createdAt != ignore) 5: createdAt as DateTime?,
         if (reasoning != ignore) 6: reasoning as String?,
         if (thinkingMillis != ignore) 7: thinkingMillis as int?,
+        if (imageName != ignore) 8: imageName as String?,
       });
     } finally {
       q.close();
@@ -1207,6 +1232,161 @@ extension ChatMessageQueryFilter
       );
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 8));
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 8));
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 8, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameGreaterThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameGreaterThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameLessThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 8, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameLessThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameBetween(String? lower, String? upper, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 8,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 8,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 8, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  imageNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 8, value: ''),
+      );
+    });
+  }
 }
 
 extension ChatMessageQueryObject
@@ -1318,6 +1498,22 @@ extension ChatMessageQuerySortBy
       return query.addSortBy(7, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> sortByImageName({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> sortByImageNameDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension ChatMessageQuerySortThenBy
@@ -1426,6 +1622,22 @@ extension ChatMessageQuerySortThenBy
       return query.addSortBy(7, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> thenByImageName({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> thenByImageNameDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension ChatMessageQueryWhereDistinct
@@ -1474,6 +1686,14 @@ extension ChatMessageQueryWhereDistinct
       return query.addDistinctBy(7);
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterDistinct> distinctByImageName({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(8, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension ChatMessageQueryProperty1
@@ -1517,6 +1737,12 @@ extension ChatMessageQueryProperty1
   QueryBuilder<ChatMessage, int?, QAfterProperty> thinkingMillisProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(7);
+    });
+  }
+
+  QueryBuilder<ChatMessage, String?, QAfterProperty> imageNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
     });
   }
 }
@@ -1563,6 +1789,12 @@ extension ChatMessageQueryProperty2<R>
   thinkingMillisProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(7);
+    });
+  }
+
+  QueryBuilder<ChatMessage, (R, String?), QAfterProperty> imageNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
     });
   }
 }
@@ -1613,6 +1845,13 @@ extension ChatMessageQueryProperty3<R1, R2>
       return query.addProperty(7);
     });
   }
+
+  QueryBuilder<ChatMessage, (R1, R2, String?), QOperations>
+  imageNameProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
+    });
+  }
 }
 
 // **************************************************************************
@@ -1627,6 +1866,7 @@ _ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => _ChatMessage(
   createdAt: DateTime.parse(json['createdAt'] as String),
   reasoning: json['reasoning'] as String?,
   thinkingMillis: (json['thinkingMillis'] as num?)?.toInt(),
+  imageName: json['imageName'] as String?,
 );
 
 Map<String, dynamic> _$ChatMessageToJson(_ChatMessage instance) =>
@@ -1638,4 +1878,5 @@ Map<String, dynamic> _$ChatMessageToJson(_ChatMessage instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'reasoning': instance.reasoning,
       'thinkingMillis': instance.thinkingMillis,
+      'imageName': instance.imageName,
     };

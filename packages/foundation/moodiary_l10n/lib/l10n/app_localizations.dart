@@ -2240,6 +2240,18 @@ abstract class AppLocalizations {
   /// **'发送日记'**
   String get assistantToolSendDiary;
 
+  /// No description provided for @assistantToolSendImage.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送图片'**
+  String get assistantToolSendImage;
+
+  /// No description provided for @assistantImageMessageLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'[图片]'**
+  String get assistantImageMessageLabel;
+
   /// No description provided for @assistantSelectDiaryTitle.
   ///
   /// In zh, this message translates to:
@@ -2515,6 +2527,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'推理'**
   String get modelProviderBadgeReasoning;
+
+  /// No description provided for @modelProviderBadgeVision.
+  ///
+  /// In zh, this message translates to:
+  /// **'视觉'**
+  String get modelProviderBadgeVision;
+
+  /// No description provided for @modelProviderCapabilities.
+  ///
+  /// In zh, this message translates to:
+  /// **'模型能力'**
+  String get modelProviderCapabilities;
+
+  /// No description provided for @modelProviderCapabilitiesHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'按模型实际能力开启，决定是否启用工具、深度思考、发送图片。'**
+  String get modelProviderCapabilitiesHint;
 
   /// No description provided for @modelProviderSearchModelHint.
   ///

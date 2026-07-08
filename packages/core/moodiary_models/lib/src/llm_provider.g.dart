@@ -28,6 +28,9 @@ final LlmProviderSchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'createdAt', type: IsarType.dateTime),
       IsarPropertySchema(name: 'sortOrder', type: IsarType.long),
       IsarPropertySchema(name: 'providerId', type: IsarType.string),
+      IsarPropertySchema(name: 'toolCall', type: IsarType.bool),
+      IsarPropertySchema(name: 'reasoning', type: IsarType.bool),
+      IsarPropertySchema(name: 'attachment', type: IsarType.bool),
     ],
     indexes: [],
   ),
@@ -53,6 +56,9 @@ int serializeLlmProvider(IsarWriter writer, LlmProvider object) {
   );
   IsarCore.writeLong(writer, 7, object.sortOrder);
   IsarCore.writeString(writer, 8, object.providerId);
+  IsarCore.writeBool(writer, 9, value: object.toolCall);
+  IsarCore.writeBool(writer, 10, value: object.reasoning);
+  IsarCore.writeBool(writer, 11, value: object.attachment);
   return Isar.fastHash(object.id);
 }
 
@@ -87,6 +93,12 @@ LlmProvider deserializeLlmProvider(IsarReader reader) {
   _sortOrder = IsarCore.readLong(reader, 7);
   final String _providerId;
   _providerId = IsarCore.readString(reader, 8) ?? '';
+  final bool _toolCall;
+  _toolCall = IsarCore.readBool(reader, 9);
+  final bool _reasoning;
+  _reasoning = IsarCore.readBool(reader, 10);
+  final bool _attachment;
+  _attachment = IsarCore.readBool(reader, 11);
   final object = LlmProvider(
     id: _id,
     name: _name,
@@ -96,6 +108,9 @@ LlmProvider deserializeLlmProvider(IsarReader reader) {
     createdAt: _createdAt,
     sortOrder: _sortOrder,
     providerId: _providerId,
+    toolCall: _toolCall,
+    reasoning: _reasoning,
+    attachment: _attachment,
   );
   return object;
 }
@@ -129,6 +144,12 @@ dynamic deserializeLlmProviderProp(IsarReader reader, int property) {
       return IsarCore.readLong(reader, 7);
     case 8:
       return IsarCore.readString(reader, 8) ?? '';
+    case 9:
+      return IsarCore.readBool(reader, 9);
+    case 10:
+      return IsarCore.readBool(reader, 10);
+    case 11:
+      return IsarCore.readBool(reader, 11);
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -144,6 +165,9 @@ sealed class _LlmProviderUpdate {
     DateTime? createdAt,
     int? sortOrder,
     String? providerId,
+    bool? toolCall,
+    bool? reasoning,
+    bool? attachment,
   });
 }
 
@@ -162,6 +186,9 @@ class _LlmProviderUpdateImpl implements _LlmProviderUpdate {
     Object? createdAt = ignore,
     Object? sortOrder = ignore,
     Object? providerId = ignore,
+    Object? toolCall = ignore,
+    Object? reasoning = ignore,
+    Object? attachment = ignore,
   }) {
     return collection.updateProperties(
           [id],
@@ -173,6 +200,9 @@ class _LlmProviderUpdateImpl implements _LlmProviderUpdate {
             if (createdAt != ignore) 6: createdAt as DateTime?,
             if (sortOrder != ignore) 7: sortOrder as int?,
             if (providerId != ignore) 8: providerId as String?,
+            if (toolCall != ignore) 9: toolCall as bool?,
+            if (reasoning != ignore) 10: reasoning as bool?,
+            if (attachment != ignore) 11: attachment as bool?,
           },
         ) >
         0;
@@ -189,6 +219,9 @@ sealed class _LlmProviderUpdateAll {
     DateTime? createdAt,
     int? sortOrder,
     String? providerId,
+    bool? toolCall,
+    bool? reasoning,
+    bool? attachment,
   });
 }
 
@@ -207,6 +240,9 @@ class _LlmProviderUpdateAllImpl implements _LlmProviderUpdateAll {
     Object? createdAt = ignore,
     Object? sortOrder = ignore,
     Object? providerId = ignore,
+    Object? toolCall = ignore,
+    Object? reasoning = ignore,
+    Object? attachment = ignore,
   }) {
     return collection.updateProperties(id, {
       if (name != ignore) 2: name as String?,
@@ -216,6 +252,9 @@ class _LlmProviderUpdateAllImpl implements _LlmProviderUpdateAll {
       if (createdAt != ignore) 6: createdAt as DateTime?,
       if (sortOrder != ignore) 7: sortOrder as int?,
       if (providerId != ignore) 8: providerId as String?,
+      if (toolCall != ignore) 9: toolCall as bool?,
+      if (reasoning != ignore) 10: reasoning as bool?,
+      if (attachment != ignore) 11: attachment as bool?,
     });
   }
 }
@@ -235,6 +274,9 @@ sealed class _LlmProviderQueryUpdate {
     DateTime? createdAt,
     int? sortOrder,
     String? providerId,
+    bool? toolCall,
+    bool? reasoning,
+    bool? attachment,
   });
 }
 
@@ -253,6 +295,9 @@ class _LlmProviderQueryUpdateImpl implements _LlmProviderQueryUpdate {
     Object? createdAt = ignore,
     Object? sortOrder = ignore,
     Object? providerId = ignore,
+    Object? toolCall = ignore,
+    Object? reasoning = ignore,
+    Object? attachment = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (name != ignore) 2: name as String?,
@@ -262,6 +307,9 @@ class _LlmProviderQueryUpdateImpl implements _LlmProviderQueryUpdate {
       if (createdAt != ignore) 6: createdAt as DateTime?,
       if (sortOrder != ignore) 7: sortOrder as int?,
       if (providerId != ignore) 8: providerId as String?,
+      if (toolCall != ignore) 9: toolCall as bool?,
+      if (reasoning != ignore) 10: reasoning as bool?,
+      if (attachment != ignore) 11: attachment as bool?,
     });
   }
 }
@@ -288,6 +336,9 @@ class _LlmProviderQueryBuilderUpdateImpl implements _LlmProviderQueryUpdate {
     Object? createdAt = ignore,
     Object? sortOrder = ignore,
     Object? providerId = ignore,
+    Object? toolCall = ignore,
+    Object? reasoning = ignore,
+    Object? attachment = ignore,
   }) {
     final q = query.build();
     try {
@@ -299,6 +350,9 @@ class _LlmProviderQueryBuilderUpdateImpl implements _LlmProviderQueryUpdate {
         if (createdAt != ignore) 6: createdAt as DateTime?,
         if (sortOrder != ignore) 7: sortOrder as int?,
         if (providerId != ignore) 8: providerId as String?,
+        if (toolCall != ignore) 9: toolCall as bool?,
+        if (reasoning != ignore) 10: reasoning as bool?,
+        if (attachment != ignore) 11: attachment as bool?,
       });
     } finally {
       q.close();
@@ -1340,6 +1394,34 @@ extension LlmProviderQueryFilter
       );
     });
   }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> toolCallEqualTo(
+    bool value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 9, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  reasoningEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  attachmentEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 11, value: value),
+      );
+    });
+  }
 }
 
 extension LlmProviderQueryObject
@@ -1466,6 +1548,42 @@ extension LlmProviderQuerySortBy
       return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByToolCall() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByToolCallDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByReasoning() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByReasoningDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByAttachment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByAttachmentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11, sort: Sort.desc);
+    });
+  }
 }
 
 extension LlmProviderQuerySortThenBy
@@ -1589,6 +1707,42 @@ extension LlmProviderQuerySortThenBy
       return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByToolCall() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByToolCallDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByReasoning() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByReasoningDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByAttachment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByAttachmentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11, sort: Sort.desc);
+    });
+  }
 }
 
 extension LlmProviderQueryWhereDistinct
@@ -1644,6 +1798,25 @@ extension LlmProviderQueryWhereDistinct
       return query.addDistinctBy(8, caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByToolCall() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(9);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByReasoning() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(10);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct>
+  distinctByAttachment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(11);
+    });
+  }
 }
 
 extension LlmProviderQueryProperty1
@@ -1695,6 +1868,24 @@ extension LlmProviderQueryProperty1
       return query.addProperty(8);
     });
   }
+
+  QueryBuilder<LlmProvider, bool, QAfterProperty> toolCallProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
+    });
+  }
+
+  QueryBuilder<LlmProvider, bool, QAfterProperty> reasoningProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(10);
+    });
+  }
+
+  QueryBuilder<LlmProvider, bool, QAfterProperty> attachmentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
+    });
+  }
 }
 
 extension LlmProviderQueryProperty2<R>
@@ -1744,6 +1935,24 @@ extension LlmProviderQueryProperty2<R>
   QueryBuilder<LlmProvider, (R, String), QAfterProperty> providerIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(8);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R, bool), QAfterProperty> toolCallProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R, bool), QAfterProperty> reasoningProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(10);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R, bool), QAfterProperty> attachmentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
     });
   }
 }
@@ -1799,6 +2008,24 @@ extension LlmProviderQueryProperty3<R1, R2>
       return query.addProperty(8);
     });
   }
+
+  QueryBuilder<LlmProvider, (R1, R2, bool), QOperations> toolCallProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R1, R2, bool), QOperations> reasoningProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(10);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R1, R2, bool), QOperations> attachmentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
+    });
+  }
 }
 
 // **************************************************************************
@@ -1814,6 +2041,9 @@ _LlmProvider _$LlmProviderFromJson(Map<String, dynamic> json) => _LlmProvider(
   createdAt: DateTime.parse(json['createdAt'] as String),
   sortOrder: (json['sortOrder'] as num).toInt(),
   providerId: json['providerId'] as String? ?? '',
+  toolCall: json['toolCall'] as bool? ?? false,
+  reasoning: json['reasoning'] as bool? ?? false,
+  attachment: json['attachment'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$LlmProviderToJson(_LlmProvider instance) =>
@@ -1826,4 +2056,7 @@ Map<String, dynamic> _$LlmProviderToJson(_LlmProvider instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'sortOrder': instance.sortOrder,
       'providerId': instance.providerId,
+      'toolCall': instance.toolCall,
+      'reasoning': instance.reasoning,
+      'attachment': instance.attachment,
     };

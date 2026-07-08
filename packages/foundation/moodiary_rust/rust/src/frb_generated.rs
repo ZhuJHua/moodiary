@@ -2729,9 +2729,13 @@ impl SseDecode for crate::api::assistant::RigChatMessage {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_role = <String>::sse_decode(deserializer);
         let mut var_content = <String>::sse_decode(deserializer);
+        let mut var_imageBase64 = <String>::sse_decode(deserializer);
+        let mut var_imageMime = <String>::sse_decode(deserializer);
         return crate::api::assistant::RigChatMessage {
             role: var_role,
             content: var_content,
+            image_base64: var_imageBase64,
+            image_mime: var_imageMime,
         };
     }
 }
@@ -3201,6 +3205,8 @@ impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigChatMessage {
         [
             self.role.into_into_dart().into_dart(),
             self.content.into_into_dart().into_dart(),
+            self.image_base64.into_into_dart().into_dart(),
+            self.image_mime.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -3791,6 +3797,8 @@ impl SseEncode for crate::api::assistant::RigChatMessage {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.role, serializer);
         <String>::sse_encode(self.content, serializer);
+        <String>::sse_encode(self.image_base64, serializer);
+        <String>::sse_encode(self.image_mime, serializer);
     }
 }
 

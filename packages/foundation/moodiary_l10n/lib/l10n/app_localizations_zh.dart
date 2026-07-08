@@ -1108,6 +1108,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistantToolSendDiary => '发送日记';
 
   @override
+  String get assistantToolSendImage => '发送图片';
+
+  @override
+  String get assistantImageMessageLabel => '[图片]';
+
+  @override
   String get assistantSelectDiaryTitle => '选择日记';
 
   @override
@@ -1250,6 +1256,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get modelProviderBadgeReasoning => '推理';
+
+  @override
+  String get modelProviderBadgeVision => '视觉';
+
+  @override
+  String get modelProviderCapabilities => '模型能力';
+
+  @override
+  String get modelProviderCapabilitiesHint => '按模型实际能力开启，决定是否启用工具、深度思考、发送图片。';
 
   @override
   String get modelProviderSearchModelHint => '搜索模型';

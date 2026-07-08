@@ -8,8 +8,10 @@ use std::sync::Arc;
 use anyhow::Result;
 use flutter_rust_bridge::DartFnFuture;
 use futures::StreamExt;
+use rig::OneOrMany;
 use rig::agent::{Agent, MultiTurnStreamItem, PromptHook};
 use rig::client::completion::CompletionClient;
+use rig::completion::message::{ImageMediaType, MimeType, UserContent};
 use rig::completion::{CompletionModel, GetTokenUsage, Message, ToolDefinition};
 use rig::providers::{anthropic, openai};
 use rig::streaming::{StreamedAssistantContent, StreamingChat};
@@ -38,6 +40,10 @@ pub struct RigChatMessage {
     /// `"user"` 或 `"assistant"`。
     pub role: String,
     pub content: String,
+    /// 可选图片（base64 编码，不含 data URL 前缀）。空表示无图；仅 user 消息使用。
+    pub image_base64: String,
+    /// 图片 MIME（如 `image/jpeg`）。`image_base64` 非空时应给出，否则无法确定媒体类型。
+    pub image_mime: String,
 }
 
 /// 工具定义（数据驱动，对应 Dart 的 `AssistantTool`）。
@@ -121,18 +127,34 @@ fn split_history(history: Vec<RigChatMessage>) -> Result<(Message, Vec<Message>)
     if history.is_empty() {
         anyhow::bail!("chat history is empty");
     }
-    let mut msgs: Vec<Message> = history
-        .into_iter()
-        .map(|m| {
-            if m.role == "user" {
-                Message::user(m.content)
-            } else {
-                Message::assistant(m.content)
-            }
-        })
-        .collect();
+    let mut msgs: Vec<Message> = history.into_iter().map(to_message).collect();
     let prompt = msgs.pop().expect("history checked non-empty");
     Ok((prompt, msgs))
+}
+
+/// 把一条 Dart 消息转成 rig `Message`。user 且带图时构造「文字 + 图片」多模态消息。
+fn to_message(m: RigChatMessage) -> Message {
+    if m.role != "user" {
+        return Message::assistant(m.content);
+    }
+    if m.image_base64.is_empty() {
+        return Message::user(m.content);
+    }
+    let media_type = if m.image_mime.is_empty() {
+        None
+    } else {
+        ImageMediaType::from_mime_type(&m.image_mime)
+    };
+    let mut parts: Vec<UserContent> = Vec::new();
+    if !m.content.is_empty() {
+        parts.push(UserContent::text(m.content));
+    }
+    parts.push(UserContent::image_base64(m.image_base64, media_type, None));
+    match OneOrMany::many(parts) {
+        Ok(content) => Message::User { content },
+        // parts 至少含图片一项，理论不可达；兜底回退纯文本。
+        Err(_) => Message::user(String::new()),
+    }
 }
 
 /// 流式对话 + 多轮工具调用。Dart 取消订阅会令 `sink.add` 失败，循环随即中断（取消在途

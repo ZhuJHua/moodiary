@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:chat_bottom_container/chat_bottom_container.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_assistant/src/application/isar_chat_controller.dart';
 import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
+import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/presentation/tool_permission_card.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 
@@ -60,6 +62,18 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   bool _ready = true;
   bool _initialized = false;
   bool _thinking = false;
+
+  /// 当前模型是否支持图片附件（决定是否显示「发送图片」入口）。
+  bool _canSendImage = false;
+
+  /// 当前模型是否支持推理（决定是否显示「深度思考」开关）。
+  bool _canThink = false;
+
+  /// 当前模型是否支持工具调用（不支持则本轮不挂载工具）。
+  bool _canUseTools = true;
+
+  /// 已选、待随下一条消息发送的图片文件名（image 目录内）。null 表示无待发图片。
+  String? _pendingImageName;
 
   late final ToolPermissionCoordinator _permissions;
   late final ToolPermissionActionDelegate _permissionDelegate;
@@ -123,7 +137,46 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         ? null
         : await LlmProviderRepository.get().getKey(provider.id);
     final ready = provider != null && key != null && key.isNotEmpty;
-    if (mounted) setState(() => _ready = ready);
+    final caps = provider == null
+        ? const (tools: true, reasoning: false, attachment: false)
+        : _capabilities(provider);
+    if (mounted) {
+      setState(() {
+        _ready = ready;
+        _canThink = caps.reasoning;
+        _canSendImage = caps.attachment;
+        _canUseTools = caps.tools;
+        // 切到不支持附件的模型：丢弃已选但还没发出的图片，避免发出去被供应商拒。
+        if (!caps.attachment) _pendingImageName = null;
+      });
+    }
+  }
+
+  /// 解析当前激活供应商的模型能力。preset 供应商查本地目录缓存（绝不联网；未命中 / 缓存缺失时
+  /// 工具放行、推理与图片保守关闭）；自定义供应商用用户在编辑页声明的标记。
+  ({bool tools, bool reasoning, bool attachment}) _capabilities(
+    LlmProvider provider,
+  ) {
+    if (provider.providerId.isNotEmpty) {
+      for (final preset in LlmPresetRepository.get().cachedPresets()) {
+        if (preset.id != provider.providerId) continue;
+        for (final model in preset.models) {
+          if (model.id == provider.model) {
+            return (
+              tools: model.toolCall,
+              reasoning: model.reasoning,
+              attachment: model.attachment,
+            );
+          }
+        }
+      }
+      return const (tools: true, reasoning: false, attachment: false);
+    }
+    return (
+      tools: provider.toolCall,
+      reasoning: provider.reasoning,
+      attachment: provider.attachment,
+    );
   }
 
   Future<void> _loadSessionById(String id) async {
@@ -148,6 +201,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     setState(() {
       _session = session;
       _thinking = session.thinking; // 恢复该会话自己的思考模式
+      _pendingImageName = null;
       _sending = false;
     });
     _jumpToBottomSoon();
@@ -225,7 +279,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       systemPrompt: systemPrompt,
       maxTokens: assistantMaxTokens,
       history: history,
-      thinking: _thinking,
+      thinking: _thinking && _canThink,
+      tools: _canUseTools,
       onToolPermission: _requestToolPermission,
     );
   }
@@ -290,7 +345,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   Future<void> _submit(String text) async {
     text = text.trim();
-    if (text.isEmpty || _sending || !_disclaimerAccepted) return;
+    final imageName = _pendingImageName;
+    if ((text.isEmpty && imageName == null) || _sending || !_disclaimerAccepted) {
+      return;
+    }
+    final imageLabel = context.l10n.assistantImageMessageLabel;
     final gen = ++_generation;
     // 用户开启了新一轮对话：放弃上一次失败重生成遗留的旧回复（保留在库里，不删）。
     _staleReplyIds = [];
@@ -300,14 +359,21 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     }
 
     final base = DateTime.timestamp();
-    final userMsg = _chat.userMessage(text, createdAt: base);
+    final userMsg = _chat.userMessage(
+      text,
+      imageName: imageName,
+      createdAt: base,
+    );
     await _chat.insertMessage(userMsg);
     _inputController.clear();
-    setState(() => _sending = true);
+    setState(() {
+      _sending = true;
+      _pendingImageName = null;
+    });
 
     await _generate(
       gen: gen,
-      sessionSeedText: text,
+      sessionSeedText: text.isEmpty ? imageLabel : text,
       userMessage: userMsg,
       placeholderAt: base.add(const Duration(milliseconds: 1)),
     );
@@ -437,17 +503,27 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   List<AssistantMessage> _buildHistory() {
     final result = <AssistantMessage>[];
     for (final m in _chat.messages) {
-      if (m is! TextMessage || m.text.isEmpty) continue;
+      if (m is! TextMessage) continue;
+      final imageName = IsarChatController.imageNameOf(m);
+      final hasImage = imageName.isNotEmpty;
+      if (m.text.isEmpty && !hasImage) continue;
       final role = m.authorId == kAssistantUserId
           ? AssistantRole.user
           : AssistantRole.assistant;
-      if (result.isNotEmpty && result.last.role == role) {
+      final imagePath = hasImage
+          ? FileUtil.getRealPath('image', imageName)
+          : null;
+      // 含图片的消息独立成条，不与相邻同角色文本合并（避免图片被并进别的气泡）。
+      if (!hasImage &&
+          result.isNotEmpty &&
+          result.last.role == role &&
+          result.last.imagePath == null) {
         result.last = AssistantMessage(
           role,
           '${result.last.content}\n\n${m.text}',
         );
       } else {
-        result.add(AssistantMessage(role, m.text));
+        result.add(AssistantMessage(role, m.text, imagePath: imagePath));
       }
     }
     return result;
@@ -588,6 +664,24 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     await _submit(_formatDiaryMessage(diary));
   }
 
+  /// 相册选一张图，经 MediaUtil 转码/压缩存进 image 目录，挂到输入框待发（可再配文字）。
+  Future<void> _pickImage() async {
+    if (_sending) return;
+    _panelController.updatePanelType(ChatBottomPanelType.none);
+    _inputFocusNode.unfocus();
+    final files = await MediaUtil.pickMultiPhoto(1);
+    if (files.isEmpty || !mounted) return;
+    final first = files.first; // limit 只是提示，只取并保存第一张，避免多余落盘
+    final saved = await MediaUtil.saveImages(imageFileList: [first]);
+    final name = saved[first.path];
+    if (name == null || !mounted) return;
+    setState(() => _pendingImageName = name);
+  }
+
+  void _removePendingImage() {
+    setState(() => _pendingImageName = null);
+  }
+
   String _formatDiaryMessage(Diary diary) {
     final l10n = context.l10n;
     final date = DateFormat.yMMMMEEEEd().format(diary.time);
@@ -640,6 +734,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       // 用户消息落在末尾（首个 token 前被停止 / 本轮未产出回复）时也给出重试入口。
       return _UserBubble(
         text: message.text,
+        imageName: IsarChatController.imageNameOf(message),
         onRetry: (!_sending && isLast) ? _regenerate : null,
       );
     }
@@ -689,7 +784,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       toolIcon: Icons.add_rounded,
       toolTooltip: context.l10n.assistantToolPanelTitle,
       thinking: _thinking,
+      showThinking: _canThink,
       onToggleThinking: _toggleThinking,
+      pendingImageName: _pendingImageName,
+      onRemoveImage: _removePendingImage,
     );
 
     return Column(
@@ -734,6 +832,12 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                   label: l10n.assistantToolSendDiary,
                   onTap: _pickAndSendDiary,
                 ),
+                if (_canSendImage)
+                  _ToolPanelItem(
+                    icon: Icons.image_rounded,
+                    label: l10n.assistantToolSendImage,
+                    onTap: _pickImage,
+                  ),
               ],
             ),
           ),
@@ -835,7 +939,10 @@ class _AssistantComposer extends StatelessWidget {
   final IconData toolIcon;
   final String toolTooltip;
   final bool thinking;
+  final bool showThinking;
   final VoidCallback onToggleThinking;
+  final String? pendingImageName;
+  final VoidCallback onRemoveImage;
 
   const _AssistantComposer({
     required this.controller,
@@ -847,7 +954,10 @@ class _AssistantComposer extends StatelessWidget {
     required this.toolIcon,
     required this.toolTooltip,
     required this.thinking,
+    required this.showThinking,
     required this.onToggleThinking,
+    required this.pendingImageName,
+    required this.onRemoveImage,
   });
 
   @override
@@ -871,6 +981,11 @@ class _AssistantComposer extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (pendingImageName != null)
+                  _ComposerImagePreview(
+                    imageName: pendingImageName!,
+                    onRemove: onRemoveImage,
+                  ),
                 // 文字输入区：独占上方，向上增高。
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
@@ -889,9 +1004,15 @@ class _AssistantComposer extends StatelessWidget {
                     onSubmitted: (_) => onSend(),
                   ),
                 ),
-                // 底部控制条：左「+」「深度思考」对齐，右发送 / 停止。
+                // 底部控制条：左「深度思考」（模型支持推理才显示），右「+」与发送 / 停止一组。
                 Row(
                   children: [
+                    if (showThinking)
+                      _ThinkingToggle(
+                        enabled: thinking,
+                        onTap: onToggleThinking,
+                      ),
+                    const Spacer(),
                     IconButton(
                       tooltip: toolTooltip,
                       onPressed: sending ? null : onTool,
@@ -904,9 +1025,7 @@ class _AssistantComposer extends StatelessWidget {
                       ),
                       padding: EdgeInsets.zero,
                     ),
-                    const SizedBox(width: 6),
-                    _ThinkingToggle(enabled: thinking, onTap: onToggleThinking),
-                    const Spacer(),
+                    const SizedBox(width: 4),
                     ValueListenableBuilder<TextEditingValue>(
                       valueListenable: controller,
                       builder: (context, value, _) {
@@ -923,7 +1042,9 @@ class _AssistantComposer extends StatelessWidget {
                             padding: EdgeInsets.zero,
                           );
                         }
-                        final canSend = value.text.trim().isNotEmpty;
+                        final canSend =
+                            value.text.trim().isNotEmpty ||
+                            pendingImageName != null;
                         return IconButton.filled(
                           onPressed: canSend ? onSend : null,
                           icon: const Icon(Icons.arrow_upward_rounded),
@@ -1034,40 +1155,135 @@ class _ToolPanelItem extends StatelessWidget {
   }
 }
 
-class _UserBubble extends StatelessWidget {
-  final String text;
-  final VoidCallback? onRetry;
+/// 输入框上方的待发图片预览（缩略图 + 右上角移除）。
+class _ComposerImagePreview extends StatelessWidget {
+  final String imageName;
+  final VoidCallback onRemove;
 
-  const _UserBubble({required this.text, this.onRetry});
+  const _ComposerImagePreview({
+    required this.imageName,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final bubble = Container(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.sizeOf(context).width * 0.82,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: scheme.primaryContainer,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-          bottomLeft: Radius.circular(16),
-          bottomRight: Radius.circular(4),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 2),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.file(
+                File(FileUtil.getRealPath('image', imageName)),
+                width: 72,
+                height: 72,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => _brokenImage(scheme, 72),
+              ),
+            ),
+            Positioned(
+              top: -6,
+              right: -6,
+              child: GestureDetector(
+                onTap: onRemove,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: scheme.surfaceContainer, width: 2),
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 15,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      child: SelectableText(
-        text,
-        style: TextStyle(color: scheme.onPrimaryContainer),
-      ),
     );
-    if (onRetry == null) return bubble;
+  }
+}
+
+Widget _brokenImage(ColorScheme scheme, double size) => Container(
+  width: size,
+  height: size,
+  color: scheme.surfaceContainerHighest,
+  child: Icon(Icons.broken_image_outlined, color: scheme.onSurfaceVariant),
+);
+
+class _UserBubble extends StatelessWidget {
+  final String text;
+  final String imageName;
+  final VoidCallback? onRetry;
+
+  const _UserBubble({required this.text, this.imageName = '', this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final maxWidth = MediaQuery.sizeOf(context).width * 0.82;
+    final hasImage = imageName.isNotEmpty;
+    final hasText = text.isNotEmpty;
+
+    final parts = <Widget>[];
+    if (hasImage) {
+      parts.add(
+        ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: 260),
+            child: Image.file(
+              File(FileUtil.getRealPath('image', imageName)),
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _brokenImage(scheme, 120),
+            ),
+          ),
+        ),
+      );
+    }
+    if (hasText) {
+      if (hasImage) parts.add(const SizedBox(height: 6));
+      parts.add(
+        Container(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: scheme.primaryContainer,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(16),
+              topRight: Radius.circular(16),
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(4),
+            ),
+          ),
+          child: SelectableText(
+            text,
+            style: TextStyle(color: scheme.onPrimaryContainer),
+          ),
+        ),
+      );
+    }
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: parts,
+    );
+
+    if (onRetry == null) return content;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: [
-        bubble,
+        content,
         _BubbleActionButton(
           icon: Icons.refresh_rounded,
           label: context.l10n.assistantRegenerate,
