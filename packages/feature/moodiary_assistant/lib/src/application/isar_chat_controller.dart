@@ -22,6 +22,10 @@ const String _kThinkingActiveKey = 'thinkingActive';
 /// 随消息发送的图片文件名（image 目录内，用 FileUtil.getRealPath 解析）。
 const String _kImageNameKey = 'imageName';
 
+/// 本轮 assistant 回复的输入 / 输出 token 用量。
+const String _kInputTokensKey = 'inputTokens';
+const String _kOutputTokensKey = 'outputTokens';
+
 const String kPermissionSurfaceKey = 'surfaceId';
 
 class IsarChatController implements ChatController {
@@ -131,7 +135,28 @@ class IsarChatController implements ChatController {
             ? null
             : thinkingMillisOf(message),
         imageName: imageName.isEmpty ? null : imageName,
+        inputTokens: inputTokensOf(message) == 0
+            ? null
+            : inputTokensOf(message),
+        outputTokens: outputTokensOf(message) == 0
+            ? null
+            : outputTokensOf(message),
       ),
+    );
+  }
+
+  /// 把本轮 token 用量写进流式消息的 metadata（保留其余标记）。
+  TextMessage applyUsage(
+    TextMessage message, {
+    required int inputTokens,
+    required int outputTokens,
+  }) {
+    return message.copyWith(
+      metadata: {
+        ...?message.metadata,
+        _kInputTokensKey: inputTokens,
+        _kOutputTokensKey: outputTokens,
+      },
     );
   }
 
@@ -178,13 +203,17 @@ class IsarChatController implements ChatController {
     metadata: streaming ? const {_kStreamingFlag: true} : null,
   );
 
-  /// 定稿：清掉 streaming / thinkingActive 标记，但保留思考正文与耗时（供落库与回看）。
+  /// 定稿：清掉 streaming / thinkingActive 标记，但保留思考正文、耗时与 token 用量（供落库与回看）。
   TextMessage settled(TextMessage message) {
     final reasoning = reasoningOf(message);
     final millis = thinkingMillisOf(message);
+    final input = inputTokensOf(message);
+    final output = outputTokensOf(message);
     final meta = <String, dynamic>{
       if (reasoning.isNotEmpty) _kReasoningKey: reasoning,
       if (millis > 0) _kThinkingMillisKey: millis,
+      if (input > 0) _kInputTokensKey: input,
+      if (output > 0) _kOutputTokensKey: output,
     };
     return message.copyWith(metadata: meta);
   }
@@ -217,14 +246,28 @@ class IsarChatController implements ChatController {
     return v is String ? v : '';
   }
 
+  static int inputTokensOf(Message message) {
+    final v = message.metadata?[_kInputTokensKey];
+    return v is int ? v : 0;
+  }
+
+  static int outputTokensOf(Message message) {
+    final v = message.metadata?[_kOutputTokensKey];
+    return v is int ? v : 0;
+  }
+
   TextMessage _toMessage(ChatMessage m) {
     final reasoning = m.reasoning ?? '';
     final millis = m.thinkingMillis ?? 0;
     final imageName = m.imageName ?? '';
+    final input = m.inputTokens ?? 0;
+    final output = m.outputTokens ?? 0;
     final meta = <String, dynamic>{
       if (reasoning.isNotEmpty) _kReasoningKey: reasoning,
       if (millis > 0) _kThinkingMillisKey: millis,
       if (imageName.isNotEmpty) _kImageNameKey: imageName,
+      if (input > 0) _kInputTokensKey: input,
+      if (output > 0) _kOutputTokensKey: output,
     };
     return TextMessage(
       id: m.id,

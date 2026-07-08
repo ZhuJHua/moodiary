@@ -72,6 +72,9 @@ enum RigEventKind {
   /// 思考 / 推理增量（Anthropic thinking、OpenAI 兼容 `reasoning_content`）。
   reasoningDelta,
   toolCall,
+
+  /// 本轮结束时的 token 用量（已聚合内部多轮工具调用）。
+  usage,
 }
 
 /// 一次对话的 provider 连接配置。每次调用由 Dart 组装传入，Rust 不持有任何状态。
@@ -127,10 +130,23 @@ class RigStreamEvent {
   final RigEventKind kind;
   final String text;
 
-  const RigStreamEvent({required this.kind, required this.text});
+  /// 仅 [RigEventKind::Usage] 事件有意义：本轮聚合的输入 / 输出 token 数；其余事件为 0。
+  final int inputTokens;
+  final int outputTokens;
+
+  const RigStreamEvent({
+    required this.kind,
+    required this.text,
+    required this.inputTokens,
+    required this.outputTokens,
+  });
 
   @override
-  int get hashCode => kind.hashCode ^ text.hashCode;
+  int get hashCode =>
+      kind.hashCode ^
+      text.hashCode ^
+      inputTokens.hashCode ^
+      outputTokens.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -138,7 +154,9 @@ class RigStreamEvent {
       other is RigStreamEvent &&
           runtimeType == other.runtimeType &&
           kind == other.kind &&
-          text == other.text;
+          text == other.text &&
+          inputTokens == other.inputTokens &&
+          outputTokens == other.outputTokens;
 }
 
 /// 工具定义（数据驱动，对应 Dart 的 `AssistantTool`）。

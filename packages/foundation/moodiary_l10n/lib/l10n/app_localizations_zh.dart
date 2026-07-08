@@ -993,6 +993,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String assistantTokenUsage(Object input, Object output) {
+    return '输入 $input · 输出 $output tokens';
+  }
+
+  @override
   String get assistantSectionTool => '工具';
 
   @override

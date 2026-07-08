@@ -319,6 +319,7 @@
   "assistantThinkingToggle": "Thinking",
   "assistantThinking": "Thinking…",
   "assistantThoughtFor": "Thought for {duration}s",
+  "assistantTokenUsage": "In {input} · Out {output} tokens",
   "assistantSectionTool": "Tools",
   "assistantToolSectionNote": "The assistant automatically uses the tools below based on the conversation — no setup needed.",
   "assistantToolSearchTitle": "Diary search",

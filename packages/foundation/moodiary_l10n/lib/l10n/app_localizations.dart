@@ -2012,6 +2012,12 @@ abstract class AppLocalizations {
   /// **'已深度思考 {duration} 秒'**
   String assistantThoughtFor(Object duration);
 
+  /// No description provided for @assistantTokenUsage.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入 {input} · 输出 {output} tokens'**
+  String assistantTokenUsage(Object input, Object output);
+
   /// No description provided for @assistantSectionTool.
   ///
   /// In zh, this message translates to:

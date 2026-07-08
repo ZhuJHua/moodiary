@@ -319,6 +319,7 @@
   "assistantThinkingToggle": "深度思考",
   "assistantThinking": "思考中…",
   "assistantThoughtFor": "已深度思考 {duration} 秒",
+  "assistantTokenUsage": "输入 {input} · 输出 {output} tokens",
   "assistantSectionTool": "工具",
   "assistantToolSectionNote": "助手会根据对话内容自动调用下列工具，无需手动开启。",
   "assistantToolSearchTitle": "日记检索",

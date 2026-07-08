@@ -28,6 +28,8 @@ final ChatMessageSchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'reasoning', type: IsarType.string),
       IsarPropertySchema(name: 'thinkingMillis', type: IsarType.long),
       IsarPropertySchema(name: 'imageName', type: IsarType.string),
+      IsarPropertySchema(name: 'inputTokens', type: IsarType.long),
+      IsarPropertySchema(name: 'outputTokens', type: IsarType.long),
     ],
     indexes: [
       IsarIndexSchema(
@@ -74,6 +76,8 @@ int serializeChatMessage(IsarWriter writer, ChatMessage object) {
       IsarCore.writeString(writer, 8, value);
     }
   }
+  IsarCore.writeLong(writer, 9, object.inputTokens ?? -9223372036854775808);
+  IsarCore.writeLong(writer, 10, object.outputTokens ?? -9223372036854775808);
   return Isar.fastHash(object.id);
 }
 
@@ -115,6 +119,24 @@ ChatMessage deserializeChatMessage(IsarReader reader) {
   }
   final String? _imageName;
   _imageName = IsarCore.readString(reader, 8);
+  final int? _inputTokens;
+  {
+    final value = IsarCore.readLong(reader, 9);
+    if (value == -9223372036854775808) {
+      _inputTokens = null;
+    } else {
+      _inputTokens = value;
+    }
+  }
+  final int? _outputTokens;
+  {
+    final value = IsarCore.readLong(reader, 10);
+    if (value == -9223372036854775808) {
+      _outputTokens = null;
+    } else {
+      _outputTokens = value;
+    }
+  }
   final object = ChatMessage(
     id: _id,
     sessionId: _sessionId,
@@ -124,6 +146,8 @@ ChatMessage deserializeChatMessage(IsarReader reader) {
     reasoning: _reasoning,
     thinkingMillis: _thinkingMillis,
     imageName: _imageName,
+    inputTokens: _inputTokens,
+    outputTokens: _outputTokens,
   );
   return object;
 }
@@ -164,6 +188,24 @@ dynamic deserializeChatMessageProp(IsarReader reader, int property) {
       }
     case 8:
       return IsarCore.readString(reader, 8);
+    case 9:
+      {
+        final value = IsarCore.readLong(reader, 9);
+        if (value == -9223372036854775808) {
+          return null;
+        } else {
+          return value;
+        }
+      }
+    case 10:
+      {
+        final value = IsarCore.readLong(reader, 10);
+        if (value == -9223372036854775808) {
+          return null;
+        } else {
+          return value;
+        }
+      }
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -179,6 +221,8 @@ sealed class _ChatMessageUpdate {
     String? reasoning,
     int? thinkingMillis,
     String? imageName,
+    int? inputTokens,
+    int? outputTokens,
   });
 }
 
@@ -197,6 +241,8 @@ class _ChatMessageUpdateImpl implements _ChatMessageUpdate {
     Object? reasoning = ignore,
     Object? thinkingMillis = ignore,
     Object? imageName = ignore,
+    Object? inputTokens = ignore,
+    Object? outputTokens = ignore,
   }) {
     return collection.updateProperties(
           [id],
@@ -208,6 +254,8 @@ class _ChatMessageUpdateImpl implements _ChatMessageUpdate {
             if (reasoning != ignore) 6: reasoning as String?,
             if (thinkingMillis != ignore) 7: thinkingMillis as int?,
             if (imageName != ignore) 8: imageName as String?,
+            if (inputTokens != ignore) 9: inputTokens as int?,
+            if (outputTokens != ignore) 10: outputTokens as int?,
           },
         ) >
         0;
@@ -224,6 +272,8 @@ sealed class _ChatMessageUpdateAll {
     String? reasoning,
     int? thinkingMillis,
     String? imageName,
+    int? inputTokens,
+    int? outputTokens,
   });
 }
 
@@ -242,6 +292,8 @@ class _ChatMessageUpdateAllImpl implements _ChatMessageUpdateAll {
     Object? reasoning = ignore,
     Object? thinkingMillis = ignore,
     Object? imageName = ignore,
+    Object? inputTokens = ignore,
+    Object? outputTokens = ignore,
   }) {
     return collection.updateProperties(id, {
       if (sessionId != ignore) 2: sessionId as String?,
@@ -251,6 +303,8 @@ class _ChatMessageUpdateAllImpl implements _ChatMessageUpdateAll {
       if (reasoning != ignore) 6: reasoning as String?,
       if (thinkingMillis != ignore) 7: thinkingMillis as int?,
       if (imageName != ignore) 8: imageName as String?,
+      if (inputTokens != ignore) 9: inputTokens as int?,
+      if (outputTokens != ignore) 10: outputTokens as int?,
     });
   }
 }
@@ -270,6 +324,8 @@ sealed class _ChatMessageQueryUpdate {
     String? reasoning,
     int? thinkingMillis,
     String? imageName,
+    int? inputTokens,
+    int? outputTokens,
   });
 }
 
@@ -288,6 +344,8 @@ class _ChatMessageQueryUpdateImpl implements _ChatMessageQueryUpdate {
     Object? reasoning = ignore,
     Object? thinkingMillis = ignore,
     Object? imageName = ignore,
+    Object? inputTokens = ignore,
+    Object? outputTokens = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (sessionId != ignore) 2: sessionId as String?,
@@ -297,6 +355,8 @@ class _ChatMessageQueryUpdateImpl implements _ChatMessageQueryUpdate {
       if (reasoning != ignore) 6: reasoning as String?,
       if (thinkingMillis != ignore) 7: thinkingMillis as int?,
       if (imageName != ignore) 8: imageName as String?,
+      if (inputTokens != ignore) 9: inputTokens as int?,
+      if (outputTokens != ignore) 10: outputTokens as int?,
     });
   }
 }
@@ -323,6 +383,8 @@ class _ChatMessageQueryBuilderUpdateImpl implements _ChatMessageQueryUpdate {
     Object? reasoning = ignore,
     Object? thinkingMillis = ignore,
     Object? imageName = ignore,
+    Object? inputTokens = ignore,
+    Object? outputTokens = ignore,
   }) {
     final q = query.build();
     try {
@@ -334,6 +396,8 @@ class _ChatMessageQueryBuilderUpdateImpl implements _ChatMessageQueryUpdate {
         if (reasoning != ignore) 6: reasoning as String?,
         if (thinkingMillis != ignore) 7: thinkingMillis as int?,
         if (imageName != ignore) 8: imageName as String?,
+        if (inputTokens != ignore) 9: inputTokens as int?,
+        if (outputTokens != ignore) 10: outputTokens as int?,
       });
     } finally {
       q.close();
@@ -1387,6 +1451,140 @@ extension ChatMessageQueryFilter
       );
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  inputTokensIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 9));
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  inputTokensIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 9));
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  inputTokensEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 9, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  inputTokensGreaterThan(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(property: 9, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  inputTokensGreaterThanOrEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(property: 9, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  inputTokensLessThan(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(LessCondition(property: 9, value: value));
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  inputTokensLessThanOrEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(property: 9, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  inputTokensBetween(int? lower, int? upper) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(property: 9, lower: lower, upper: upper),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  outputTokensIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 10));
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  outputTokensIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 10));
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  outputTokensEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  outputTokensGreaterThan(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  outputTokensGreaterThanOrEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  outputTokensLessThan(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  outputTokensLessThanOrEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  outputTokensBetween(int? lower, int? upper) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(property: 10, lower: lower, upper: upper),
+      );
+    });
+  }
 }
 
 extension ChatMessageQueryObject
@@ -1514,6 +1712,31 @@ extension ChatMessageQuerySortBy
       return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> sortByInputTokens() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> sortByInputTokensDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> sortByOutputTokens() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy>
+  sortByOutputTokensDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10, sort: Sort.desc);
+    });
+  }
 }
 
 extension ChatMessageQuerySortThenBy
@@ -1638,6 +1861,31 @@ extension ChatMessageQuerySortThenBy
       return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> thenByInputTokens() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> thenByInputTokensDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> thenByOutputTokens() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy>
+  thenByOutputTokensDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10, sort: Sort.desc);
+    });
+  }
 }
 
 extension ChatMessageQueryWhereDistinct
@@ -1694,6 +1942,20 @@ extension ChatMessageQueryWhereDistinct
       return query.addDistinctBy(8, caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterDistinct>
+  distinctByInputTokens() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(9);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterDistinct>
+  distinctByOutputTokens() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(10);
+    });
+  }
 }
 
 extension ChatMessageQueryProperty1
@@ -1743,6 +2005,18 @@ extension ChatMessageQueryProperty1
   QueryBuilder<ChatMessage, String?, QAfterProperty> imageNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(8);
+    });
+  }
+
+  QueryBuilder<ChatMessage, int?, QAfterProperty> inputTokensProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
+    });
+  }
+
+  QueryBuilder<ChatMessage, int?, QAfterProperty> outputTokensProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(10);
     });
   }
 }
@@ -1795,6 +2069,18 @@ extension ChatMessageQueryProperty2<R>
   QueryBuilder<ChatMessage, (R, String?), QAfterProperty> imageNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(8);
+    });
+  }
+
+  QueryBuilder<ChatMessage, (R, int?), QAfterProperty> inputTokensProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
+    });
+  }
+
+  QueryBuilder<ChatMessage, (R, int?), QAfterProperty> outputTokensProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(10);
     });
   }
 }
@@ -1852,6 +2138,19 @@ extension ChatMessageQueryProperty3<R1, R2>
       return query.addProperty(8);
     });
   }
+
+  QueryBuilder<ChatMessage, (R1, R2, int?), QOperations> inputTokensProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
+    });
+  }
+
+  QueryBuilder<ChatMessage, (R1, R2, int?), QOperations>
+  outputTokensProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(10);
+    });
+  }
 }
 
 // **************************************************************************
@@ -1867,6 +2166,8 @@ _ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => _ChatMessage(
   reasoning: json['reasoning'] as String?,
   thinkingMillis: (json['thinkingMillis'] as num?)?.toInt(),
   imageName: json['imageName'] as String?,
+  inputTokens: (json['inputTokens'] as num?)?.toInt(),
+  outputTokens: (json['outputTokens'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$ChatMessageToJson(_ChatMessage instance) =>
@@ -1879,4 +2180,6 @@ Map<String, dynamic> _$ChatMessageToJson(_ChatMessage instance) =>
       'reasoning': instance.reasoning,
       'thinkingMillis': instance.thinkingMillis,
       'imageName': instance.imageName,
+      'inputTokens': instance.inputTokens,
+      'outputTokens': instance.outputTokens,
     };

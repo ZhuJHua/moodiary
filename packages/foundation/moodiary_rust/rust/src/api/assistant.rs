@@ -62,11 +62,16 @@ pub enum RigEventKind {
     /// 思考 / 推理增量（Anthropic thinking、OpenAI 兼容 `reasoning_content`）。
     ReasoningDelta,
     ToolCall,
+    /// 本轮结束时的 token 用量（已聚合内部多轮工具调用）。
+    Usage,
 }
 
 pub struct RigStreamEvent {
     pub kind: RigEventKind,
     pub text: String,
+    /// 仅 [RigEventKind::Usage] 事件有意义：本轮聚合的输入 / 输出 token 数；其余事件为 0。
+    pub input_tokens: u32,
+    pub output_tokens: u32,
 }
 
 /// Dart 工具分发回调：入参 `(tool_name, args_json)`，返回工具结果字符串。
@@ -258,6 +263,8 @@ where
                 let event = RigStreamEvent {
                     kind: RigEventKind::TextDelta,
                     text: text.text,
+                    input_tokens: 0,
+                    output_tokens: 0,
                 };
                 if sink.add(event).is_err() {
                     break; // Dart 已取消订阅 → 中断在途请求
@@ -270,6 +277,8 @@ where
                     .add(RigStreamEvent {
                         kind: RigEventKind::ReasoningDelta,
                         text: reasoning,
+                        input_tokens: 0,
+                        output_tokens: 0,
                     })
                     .is_err()
                 {
@@ -284,14 +293,26 @@ where
                     .add(RigStreamEvent {
                         kind: RigEventKind::ToolCall,
                         text: tool_call.function.name,
+                        input_tokens: 0,
+                        output_tokens: 0,
                     })
                     .is_err()
                 {
                     break;
                 }
             }
-            Ok(MultiTurnStreamItem::FinalResponse(_)) => break,
-            Ok(_) => {} // 完整 reasoning 块 / 工具结果 / usage 等当前不透传
+            Ok(MultiTurnStreamItem::FinalResponse(final_resp)) => {
+                // 本轮聚合用量（含内部工具轮次）。供应商未上报时为全 0。
+                let usage = final_resp.usage();
+                let _ = sink.add(RigStreamEvent {
+                    kind: RigEventKind::Usage,
+                    text: String::new(),
+                    input_tokens: usage.input_tokens as u32,
+                    output_tokens: usage.output_tokens as u32,
+                });
+                break;
+            }
+            Ok(_) => {} // 完整 reasoning 块 / 工具结果等当前不透传
             Err(e) => return Err(anyhow::anyhow!("rig stream error: {e}")),
         }
     }

@@ -1028,6 +1028,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String assistantTokenUsage(Object input, Object output) {
+    return 'In $input · Out $output tokens';
+  }
+
+  @override
   String get assistantSectionTool => 'Tools';
 
   @override

@@ -72,6 +72,11 @@ class RigAssistantService implements AssistantService {
         case rust.RigEventKind.toolCall:
           // 不在气泡里展示，但用作「思考阶段结束」的信号（冻结思考计时）。
           yield AssistantStreamEvent.tool(event.text);
+        case rust.RigEventKind.usage:
+          yield AssistantStreamEvent.usage(
+            event.inputTokens,
+            event.outputTokens,
+          );
       }
     }
   }

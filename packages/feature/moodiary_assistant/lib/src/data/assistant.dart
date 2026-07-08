@@ -4,22 +4,42 @@ import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 
 enum AssistantRole { user, assistant }
 
-/// 流式回调事件类别：正文文本增量、思考 / 推理增量，或一次工具调用（[text] 为工具名）。
-enum AssistantStreamKind { text, reasoning, tool }
+/// 流式回调事件类别：正文文本增量、思考 / 推理增量、一次工具调用（[text] 为工具名），
+/// 或本轮结束时的 token 用量（[inputTokens] / [outputTokens]）。
+enum AssistantStreamKind { text, reasoning, tool, usage }
 
 /// 一次流式回复中的单个增量。思考模式下 [reasoning] 与 [text] 交织到来。
 class AssistantStreamEvent {
   final AssistantStreamKind kind;
   final String text;
+  final int inputTokens;
+  final int outputTokens;
 
-  const AssistantStreamEvent(this.kind, this.text);
+  const AssistantStreamEvent(
+    this.kind,
+    this.text, {
+    this.inputTokens = 0,
+    this.outputTokens = 0,
+  });
 
-  const AssistantStreamEvent.text(this.text) : kind = AssistantStreamKind.text;
+  const AssistantStreamEvent.text(this.text)
+    : kind = AssistantStreamKind.text,
+      inputTokens = 0,
+      outputTokens = 0;
 
   const AssistantStreamEvent.reasoning(this.text)
-    : kind = AssistantStreamKind.reasoning;
+    : kind = AssistantStreamKind.reasoning,
+      inputTokens = 0,
+      outputTokens = 0;
 
-  const AssistantStreamEvent.tool(this.text) : kind = AssistantStreamKind.tool;
+  const AssistantStreamEvent.tool(this.text)
+    : kind = AssistantStreamKind.tool,
+      inputTokens = 0,
+      outputTokens = 0;
+
+  const AssistantStreamEvent.usage(this.inputTokens, this.outputTokens)
+    : kind = AssistantStreamKind.usage,
+      text = '';
 }
 
 typedef ToolPermissionRequester = Future<bool> Function(AssistantTool tool);

@@ -30,6 +30,12 @@ abstract class ChatMessage with _$ChatMessage {
 
     /// 随消息发送的图片文件名（存于 image 目录，用 FileUtil.getRealPath 解析）。null 表示无图。
     String? imageName,
+
+    /// 本轮（assistant 回复）消耗的输入 token 数。null 表示无用量数据。
+    int? inputTokens,
+
+    /// 本轮（assistant 回复）产生的输出 token 数。null 表示无用量数据。
+    int? outputTokens,
   }) = _ChatMessage;
 
   factory ChatMessage.create({

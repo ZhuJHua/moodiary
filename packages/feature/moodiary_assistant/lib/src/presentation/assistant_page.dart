@@ -473,6 +473,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                 case AssistantStreamKind.tool:
                   // 模型开始调用工具 → 思考阶段结束，冻结计时（不计入工具执行 / 授权等待）。
                   _freezeThinkingOnTool();
+                case AssistantStreamKind.usage:
+                  _applyUsage(event.inputTokens, event.outputTokens);
               }
             },
             onError: (Object e) {
@@ -584,6 +586,19 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _thinkingActive = true;
     _streamingReasoning += delta;
     _syncReasoning(cur);
+  }
+
+  /// 本轮结束的 token 用量：写回当前流式消息（随后 settled 保留、落库）。
+  void _applyUsage(int inputTokens, int outputTokens) {
+    final cur = _streamingMessage;
+    if (cur == null || (inputTokens <= 0 && outputTokens <= 0)) return;
+    final next = _chat.applyUsage(
+      cur,
+      inputTokens: inputTokens,
+      outputTokens: outputTokens,
+    );
+    _chat.updateMessage(cur, next);
+    _streamingMessage = next;
   }
 
   /// 模型转入工具调用：冻结思考计时并把「已思考」态写回当前流式消息。
@@ -746,6 +761,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       reasoning: IsarChatController.reasoningOf(message),
       thinkingMillis: IsarChatController.thinkingMillisOf(message),
       thinkingActive: IsarChatController.isThinking(message),
+      inputTokens: IsarChatController.inputTokensOf(message),
+      outputTokens: IsarChatController.outputTokensOf(message),
       streaming: IsarChatController.isStreaming(message),
       onRegenerate: (!_sending && isLast && hasUserTurn) ? _regenerate : null,
     );
@@ -1294,11 +1311,20 @@ class _UserBubble extends StatelessWidget {
   }
 }
 
+/// token 数紧凑显示：≥100 万用 M、≥1000 用 K，均保留一位小数；千以内直接显示原值。
+String _compactTokens(int n) {
+  if (n < 1000) return '$n';
+  if (n < 1000000) return '${(n / 1000).toStringAsFixed(1)}K';
+  return '${(n / 1000000).toStringAsFixed(1)}M';
+}
+
 class _AssistantBubble extends StatelessWidget {
   final String text;
   final String reasoning;
   final int thinkingMillis;
   final bool thinkingActive;
+  final int inputTokens;
+  final int outputTokens;
   final bool streaming;
   final VoidCallback? onRegenerate;
 
@@ -1307,6 +1333,8 @@ class _AssistantBubble extends StatelessWidget {
     required this.reasoning,
     required this.thinkingMillis,
     required this.thinkingActive,
+    required this.inputTokens,
+    required this.outputTokens,
     required this.streaming,
     this.onRegenerate,
   });
@@ -1376,13 +1404,15 @@ class _AssistantBubble extends StatelessWidget {
       );
     }
 
+    final hasTokens = inputTokens > 0 || outputTokens > 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         ...stacked,
-        Row(
-          mainAxisSize: MainAxisSize.min,
+        // 复制 / 重新回答，token 用量紧跟其右；用 Wrap，窄屏放不下时自动换行不溢出。
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             _BubbleActionButton(
               icon: Icons.copy_rounded,
@@ -1397,6 +1427,35 @@ class _AssistantBubble extends StatelessWidget {
                 icon: Icons.refresh_rounded,
                 label: l10n.assistantRegenerate,
                 onTap: onRegenerate!,
+              ),
+            if (hasTokens)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                child: DefaultTextStyle.merge(
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.arrow_upward_rounded,
+                        size: 13,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(_compactTokens(inputTokens)),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_downward_rounded,
+                        size: 13,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(_compactTokens(outputTokens)),
+                    ],
+                  ),
+                ),
               ),
           ],
         ),

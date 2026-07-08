@@ -2748,6 +2748,7 @@ impl SseDecode for crate::api::assistant::RigEventKind {
             0 => crate::api::assistant::RigEventKind::TextDelta,
             1 => crate::api::assistant::RigEventKind::ReasoningDelta,
             2 => crate::api::assistant::RigEventKind::ToolCall,
+            3 => crate::api::assistant::RigEventKind::Usage,
             _ => unreachable!("Invalid variant for RigEventKind: {}", inner),
         };
     }
@@ -2778,9 +2779,13 @@ impl SseDecode for crate::api::assistant::RigStreamEvent {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_kind = <crate::api::assistant::RigEventKind>::sse_decode(deserializer);
         let mut var_text = <String>::sse_decode(deserializer);
+        let mut var_inputTokens = <u32>::sse_decode(deserializer);
+        let mut var_outputTokens = <u32>::sse_decode(deserializer);
         return crate::api::assistant::RigStreamEvent {
             kind: var_kind,
             text: var_text,
+            input_tokens: var_inputTokens,
+            output_tokens: var_outputTokens,
         };
     }
 }
@@ -3229,6 +3234,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigEventKind {
             Self::TextDelta => 0.into_dart(),
             Self::ReasoningDelta => 1.into_dart(),
             Self::ToolCall => 2.into_dart(),
+            Self::Usage => 3.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -3275,6 +3281,8 @@ impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigStreamEvent {
         [
             self.kind.into_into_dart().into_dart(),
             self.text.into_into_dart().into_dart(),
+            self.input_tokens.into_into_dart().into_dart(),
+            self.output_tokens.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -3810,6 +3818,7 @@ impl SseEncode for crate::api::assistant::RigEventKind {
                 crate::api::assistant::RigEventKind::TextDelta => 0,
                 crate::api::assistant::RigEventKind::ReasoningDelta => 1,
                 crate::api::assistant::RigEventKind::ToolCall => 2,
+                crate::api::assistant::RigEventKind::Usage => 3,
                 _ => {
                     unimplemented!("");
                 }
@@ -3836,6 +3845,8 @@ impl SseEncode for crate::api::assistant::RigStreamEvent {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <crate::api::assistant::RigEventKind>::sse_encode(self.kind, serializer);
         <String>::sse_encode(self.text, serializer);
+        <u32>::sse_encode(self.input_tokens, serializer);
+        <u32>::sse_encode(self.output_tokens, serializer);
     }
 }
 

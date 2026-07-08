@@ -2588,11 +2588,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RigStreamEvent dco_decode_rig_stream_event(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return RigStreamEvent(
       kind: dco_decode_rig_event_kind(arr[0]),
       text: dco_decode_String(arr[1]),
+      inputTokens: dco_decode_u_32(arr[2]),
+      outputTokens: dco_decode_u_32(arr[3]),
     );
   }
 
@@ -3346,7 +3348,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_kind = sse_decode_rig_event_kind(deserializer);
     var var_text = sse_decode_String(deserializer);
-    return RigStreamEvent(kind: var_kind, text: var_text);
+    var var_inputTokens = sse_decode_u_32(deserializer);
+    var var_outputTokens = sse_decode_u_32(deserializer);
+    return RigStreamEvent(
+      kind: var_kind,
+      text: var_text,
+      inputTokens: var_inputTokens,
+      outputTokens: var_outputTokens,
+    );
   }
 
   @protected
@@ -4140,6 +4149,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_rig_event_kind(self.kind, serializer);
     sse_encode_String(self.text, serializer);
+    sse_encode_u_32(self.inputTokens, serializer);
+    sse_encode_u_32(self.outputTokens, serializer);
   }
 
   @protected
