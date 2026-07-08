@@ -156,67 +156,63 @@ class _ProviderCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: AppBorderRadius.mediumBorderRadius,
               border: Border.all(
+                // 边框宽度恒定（不随选中变化），只变色，避免选中后卡片尺寸抖动。
                 color: isActive ? scheme.primary : scheme.outlineVariant,
-                width: isActive ? 1.5 : 1,
+                width: 1,
               ),
             ),
             padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Padding(
                   padding: const EdgeInsets.only(right: 12),
-                  child: ProviderLogo(
-                    logoUrl: ProviderLogo.urlOf(provider.providerId),
-                    name: provider.name,
+                  // 选中态用 logo 角标表达（Stack 叠加，不占布局）→ 选中不改卡片尺寸。
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      ProviderLogo(
+                        logoUrl: ProviderLogo.urlOf(provider.providerId),
+                        name: provider.name,
+                      ),
+                      if (isActive)
+                        Positioned(
+                          right: -3,
+                          bottom: -3,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: scheme.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: scheme.primaryContainer,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.check_rounded,
+                              size: 11,
+                              color: scheme.onPrimary,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          if (isActive) ...[
-                            Icon(
-                              Icons.check_circle_rounded,
-                              size: 18,
-                              color: scheme.primary,
-                            ),
-                            const SizedBox(width: 6),
-                          ],
-                          Flexible(
-                            child: Text(
-                              provider.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: context.textTheme.titleMedium?.copyWith(
-                                color: scheme.onSurface,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (isActive || !hasKey) ...[
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: [
-                            if (isActive)
-                              _Badge(
-                                text: l10n.modelProviderActive,
-                                color: scheme.primaryContainer,
-                              ),
-                            if (!hasKey)
-                              _Badge(
-                                text: l10n.modelProviderNoKey,
-                                color: scheme.errorContainer,
-                              ),
-                          ],
+                      Text(
+                        provider.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.titleMedium?.copyWith(
+                          color: scheme.onSurface,
                         ),
-                      ],
-                      const SizedBox(height: 8),
+                      ),
+                      const SizedBox(height: 4),
                       Text(
                         provider.model,
                         maxLines: 1,
@@ -225,6 +221,14 @@ class _ProviderCard extends StatelessWidget {
                           color: scheme.onSurfaceVariant,
                         ),
                       ),
+                      // 只与「是否配置密钥」有关（和选中无关）→ 不影响选中时的尺寸。
+                      if (!hasKey) ...[
+                        const SizedBox(height: 8),
+                        _Badge(
+                          text: l10n.modelProviderNoKey,
+                          color: scheme.errorContainer,
+                        ),
+                      ],
                     ],
                   ),
                 ),
