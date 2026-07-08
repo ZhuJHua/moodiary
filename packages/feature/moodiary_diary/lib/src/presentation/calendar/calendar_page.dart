@@ -100,26 +100,26 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
       ),
     );
 
+    // 不包 SafeArea：底部安全区 + FAB 让位空间由外层注入到 MediaQuery.padding.bottom，
+    // 由日记列表（唯一贴底的可滚动元素）作为滚动内边距吸收，内容从 FAB 下方滚过。
+    // 若在此消费该 padding 会把整个视图顶起、留出只放 FAB 的死区，挤压日历列表高度。
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: SafeArea(
-        top: false,
-        child: size.width >= 600
-            ? Row(
-                children: [
-                  Expanded(child: diaryBody),
-                  const SizedBox(width: 8),
-                  SizedBox(width: 320, child: calendar),
-                ],
-              )
-            : Column(
-                children: [
-                  calendar,
-                  const SizedBox(height: 8),
-                  Expanded(child: diaryBody),
-                ],
-              ),
-      ),
+      child: size.width >= 600
+          ? Row(
+              children: [
+                Expanded(child: diaryBody),
+                const SizedBox(width: 8),
+                SizedBox(width: 320, child: calendar),
+              ],
+            )
+          : Column(
+              children: [
+                calendar,
+                const SizedBox(height: 8),
+                Expanded(child: diaryBody),
+              ],
+            ),
     );
   }
 
