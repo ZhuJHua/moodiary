@@ -22,7 +22,7 @@ dependencies:
   moodiary_rust: 0.0.1
   moodiary_utils: 0.0.1
 
-  webview_flutter: 4.14.0
+  webview_flutter: 4.14.1
   webview_flutter_android: 4.13.0
   webview_flutter_wkwebview: 3.26.0
   flutter_inappwebview_windows: 0.7.0-beta.3

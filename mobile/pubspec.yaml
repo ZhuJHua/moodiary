@@ -97,13 +97,13 @@ dependencies:
   dismissible_page: 1.0.2
   confetti: 0.8.0
   gap: 3.0.1
-  lottie: 3.4.0
+  lottie: 3.5.0
 
   font_awesome_flutter: 11.0.0
   unicons: 3.0.0
   dynamic_color: 1.8.1
   material_color_utilities: 0.13.0
-  flutter_markdown_plus: 1.0.9
+  flutter_markdown_plus: 1.0.11
 
   flutter_displaymode: 0.7.0
   device_info_plus: 13.2.0
