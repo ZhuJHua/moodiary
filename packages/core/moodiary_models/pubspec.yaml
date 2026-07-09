@@ -25,6 +25,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  build_runner: 2.15.0
+  build_runner: 2.15.1
   freezed: 3.2.6-dev.1
   json_serializable: 6.14.0
