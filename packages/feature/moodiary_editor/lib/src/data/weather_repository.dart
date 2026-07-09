@@ -29,7 +29,7 @@ class WeatherRepository {
     };
     final res = await _http.get(
       'https://${MoodiaryKVs.qweatherApiHost.get()}/v7/weather/now',
-      parameters: parameters,
+      query: parameters,
     );
     final weather = await compute(
       WeatherResponse.fromJson,

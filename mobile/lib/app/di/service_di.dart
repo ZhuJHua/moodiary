@@ -7,7 +7,7 @@ import 'package:moodiary_assistant/moodiary_assistant.dart';
 
 Future<void> registerService() async {
   getIt.registerSingleton<IHttpClient>(
-    DioHttpClient(onError: (message) => toast.error(message: message)),
+    RustHttpClient(onError: (message) => toast.error(message: message)),
   );
   getIt.registerSingleton<AssistantService>(RigAssistantService());
   getIt.registerSingleton<SyncLogger>(await SyncLogger.create());

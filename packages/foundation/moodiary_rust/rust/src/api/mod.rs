@@ -2,6 +2,7 @@ pub mod assistant;
 pub mod audio;
 pub mod crypto;
 pub mod font;
+pub mod http;
 pub mod image;
 pub mod s3;
 pub mod text;

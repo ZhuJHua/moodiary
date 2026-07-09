@@ -47,7 +47,7 @@ class GeoRepository {
       };
       final res = await _http.get(
         'https://${MoodiaryKVs.qweatherApiHost.get()}/geo/v2/city/lookup',
-        parameters: parameters,
+        query: parameters,
       );
       final geo = await compute(
         GeoResponse.fromJson,

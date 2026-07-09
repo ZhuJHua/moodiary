@@ -5,7 +5,7 @@ library;
 export 'src/di.dart';
 export 'src/init.dart';
 export 'src/network/http_client.dart';
-export 'src/network/impl/dio_http_client.dart';
+export 'src/network/impl/rust_http_client.dart';
 export 'src/platform_service.dart';
 export 'src/storage.dart';
 export 'src/storage/database/isar.dart';

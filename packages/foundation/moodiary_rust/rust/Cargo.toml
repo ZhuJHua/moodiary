@@ -34,7 +34,14 @@ serde_json = "1"
 # rig 的 reqwest 客户端在 reqwest 0.13 下默认用 rustls-platform-verifier 校验证书，
 # 该校验器在 Android 上需平台上下文初始化、否则首个 TLS 连接即 panic。直接依赖
 # reqwest/rustls/webpki-roots，自建走内置 webpki 根证书的客户端注入给 rig（见 assistant.rs）。
-reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
+# gzip/brotli/deflate：api::http::HttpClient 用它自动协商 Accept-Encoding 并解压响应，
+# 对齐旧 Dio(dart:io autoUncompress) 行为——部分服务端（如和风天气）会无条件返回 gzip。
+reqwest = { version = "0.13", default-features = false, features = [
+    "rustls",
+    "gzip",
+    "brotli",
+    "deflate",
+] }
 rustls = "0.23"
 webpki-roots = "1"
 lofty = "0.24.0"

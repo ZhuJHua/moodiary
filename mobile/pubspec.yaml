@@ -39,7 +39,6 @@ dependencies:
   riverpod_annotation: 4.0.3
   get_it: 9.2.1
 
-  dio: 5.10.0
   connectivity_plus: 7.2.0
   network_info_plus: 8.2.0
 

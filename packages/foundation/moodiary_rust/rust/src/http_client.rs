@@ -18,23 +18,45 @@ pub(crate) fn platform_http_client() -> Result<reqwest::Client> {
     }
 }
 
-/// 走内置 webpki 根证书、绕开平台校验器的 reqwest 客户端，只构造一次并复用连接池。
-fn webpki_client() -> Result<reqwest::Client> {
-    static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
-    if let Some(client) = CLIENT.get() {
-        return Ok(client.clone());
+/// 自定义 client（超时 / 重定向 / UA 等）的基础 builder（供 api::http::HttpClient 用）。
+/// 与 [platform_http_client] 同源：Android 预置内置 webpki 根的 TLS，其余平台用 reqwest
+/// 默认 TLS。
+pub(crate) fn platform_client_builder() -> Result<reqwest::ClientBuilder> {
+    let builder = reqwest::Client::builder();
+    if cfg!(target_os = "android") {
+        Ok(builder.use_preconfigured_tls(android_tls_config()?.clone()))
+    } else {
+        Ok(builder)
+    }
+}
+
+/// 走内置 webpki 根证书、绕开平台校验器的 rustls 配置，只构造一次。
+fn android_tls_config() -> Result<&'static rustls::ClientConfig> {
+    static CONFIG: OnceLock<rustls::ClientConfig> = OnceLock::new();
+    if let Some(config) = CONFIG.get() {
+        return Ok(config);
     }
     let mut roots = rustls::RootCertStore::empty();
     roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    let tls = rustls::ClientConfig::builder_with_provider(Arc::new(
+    let config = rustls::ClientConfig::builder_with_provider(Arc::new(
         rustls::crypto::aws_lc_rs::default_provider(),
     ))
     .with_safe_default_protocol_versions()
     .map_err(|e| anyhow::anyhow!("failed to init rustls config: {e}"))?
     .with_root_certificates(roots)
     .with_no_client_auth();
+    let _ = CONFIG.set(config);
+    Ok(CONFIG.get().unwrap())
+}
+
+/// 走内置 webpki 根证书的 reqwest 客户端，只构造一次并复用连接池。
+fn webpki_client() -> Result<reqwest::Client> {
+    static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
+    if let Some(client) = CLIENT.get() {
+        return Ok(client.clone());
+    }
     let client = reqwest::Client::builder()
-        .use_preconfigured_tls(tls)
+        .use_preconfigured_tls(android_tls_config()?.clone())
         .build()
         .map_err(|e| anyhow::anyhow!("failed to build http client: {e}"))?;
     let _ = CLIENT.set(client.clone());

@@ -1,0 +1,150 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:moodiary_core/src/network/http_client.dart';
+import 'package:moodiary_core/src/utils/log_util.dart';
+import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+
+/// [IHttpClient] 的 Rust(reqwest) 实现。opaque `HttpClient` 内含 reqwest 连接池，
+/// 作为全局单例常驻、跨请求复用连接。
+class RustHttpClient extends IHttpClient {
+  RustHttpClient({this.onError})
+    : _client = rust.HttpClient.newInstance(
+        settings: const rust.ClientSettings(
+          connectTimeoutMs: 5000,
+          throwOnStatus: true,
+        ),
+      );
+
+  /// 非 silent 请求失败时的回调（用于弹 toast）。
+  final void Function(String message)? onError;
+
+  /// 建 client 是异步的（frb 未标 sync）；只建一次，后续请求 await 已完成的 future。
+  final Future<rust.HttpClient> _client;
+
+  static const bool _enableLogging = kDebugMode;
+
+  @override
+  Future<HttpResponse<T>> request<T>(
+    HttpMethod method,
+    String url, {
+    Map<String, dynamic>? query,
+    Map<String, dynamic>? headers,
+    HttpBody? body,
+    Duration? timeout,
+    bool silent = false,
+    bool plainText = false,
+  }) async {
+    if (_enableLogging) {
+      logger.i('Request: ${method.name} $url');
+    }
+    try {
+      // 建 client 也在 try 内：一旦（Android TLS 初始化等）建失败，rust.HttpError
+      // 会被下面统一捕获并上报，而非以裸异常逃逸。
+      final client = await _client;
+      final response = await client.request(
+        method: _method(method),
+        url: url,
+        query: _pairs(query),
+        headers: _headers(headers, body),
+        body: body?.bytes,
+        timeoutMs: timeout?.inMilliseconds,
+      );
+      if (_enableLogging) {
+        logger.i('Response ${response.status}');
+      }
+      final T? data;
+      try {
+        data = _decode<T>(response.body, plainText);
+      } catch (error) {
+        // 解码失败（非法 JSON / 类型不符）不是 rust.HttpError，需单独兜住，
+        // 否则会绕过下面的 catch、既不上报也不转成 HttpException。
+        throw _report(
+          HttpException(
+            HttpErrorType.decode,
+            'decode failed: $error',
+            statusCode: response.status,
+          ),
+          silent: silent,
+        );
+      }
+      return HttpResponse<T>(
+        statusCode: response.status,
+        data: data,
+        headers: _headerMap(response.headers),
+      );
+    } on rust.HttpError catch (error) {
+      throw _report(_exception(error), silent: silent);
+    }
+  }
+
+  /// 非 silent 时上报错误（弹 toast），再返回原异常供调用方 `throw`。
+  HttpException _report(HttpException exception, {required bool silent}) {
+    if (!silent) {
+      onError?.call(
+        'Network Error ${exception.statusCode ?? ''} ${exception.message}'
+            .trim(),
+      );
+    }
+    return exception;
+  }
+
+  rust.HttpMethod _method(HttpMethod method) => switch (method) {
+    HttpMethod.get => rust.HttpMethod.get_,
+    HttpMethod.post => rust.HttpMethod.post,
+    HttpMethod.put => rust.HttpMethod.put,
+    HttpMethod.delete => rust.HttpMethod.delete,
+    HttpMethod.patch => rust.HttpMethod.patch,
+    HttpMethod.head => rust.HttpMethod.head,
+    HttpMethod.options => rust.HttpMethod.options,
+  };
+
+  List<rust.KeyValue> _pairs(Map<String, dynamic>? map) {
+    final pairs = <rust.KeyValue>[];
+    map?.forEach((key, value) {
+      if (value != null) {
+        pairs.add(rust.KeyValue(key: key, value: '$value'));
+      }
+    });
+    return pairs;
+  }
+
+  /// 合并调用方 headers 与请求体的 content-type（仅在调用方未显式给出时补上）。
+  List<rust.KeyValue> _headers(Map<String, dynamic>? map, HttpBody? body) {
+    final pairs = _pairs(map);
+    final contentType = body?.contentType;
+    if (contentType != null &&
+        !pairs.any((kv) => kv.key.toLowerCase() == 'content-type')) {
+      pairs.add(rust.KeyValue(key: 'content-type', value: contentType));
+    }
+    return pairs;
+  }
+
+  T? _decode<T>(Uint8List body, bool plainText) {
+    if (body.isEmpty) return null;
+    final text = utf8.decode(body, allowMalformed: true);
+    if (plainText) return text as T;
+    return jsonDecode(text) as T;
+  }
+
+  Map<String, String> _headerMap(List<rust.KeyValue> headers) {
+    final map = <String, String>{};
+    for (final kv in headers) {
+      map[kv.key.toLowerCase()] = kv.value;
+    }
+    return map;
+  }
+
+  HttpException _exception(rust.HttpError error) {
+    final type = switch (error.kind) {
+      rust.HttpErrorKind.timeout => HttpErrorType.timeout,
+      rust.HttpErrorKind.connect => HttpErrorType.connection,
+      rust.HttpErrorKind.request => HttpErrorType.request,
+      rust.HttpErrorKind.redirect => HttpErrorType.redirect,
+      rust.HttpErrorKind.decode => HttpErrorType.decode,
+      rust.HttpErrorKind.status => HttpErrorType.statusCode,
+      rust.HttpErrorKind.unknown => HttpErrorType.unknown,
+    };
+    return HttpException(type, error.message, statusCode: error.status);
+  }
+}
