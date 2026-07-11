@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:moodiary/common/values/keyboard_state.dart';
 import 'package:moodiary/components/keyboard_listener/keyboard_listener.dart';
 import 'package:moodiary/persistence/isar.dart';
-import 'package:moodiary/src/rust/api/jieba.dart';
 import 'package:throttling/throttling.dart';
 
 import 'search_sheet_state.dart';
@@ -55,16 +54,10 @@ class SearchSheetLogic extends GetxController {
       });
     });
 
+    // 兜底轮询：捕捉被节流（仅前沿触发）丢弃的尾部输入。
+    // doSearch 内部会对比 _lastText 自行去重，文本未变时是空操作。
     _timer = Timer.periodic(const Duration(milliseconds: 500), (_) async {
-      final currentText = textEditingController.text.trim();
-      if (currentText != _lastText) {
-        _lastText = currentText;
-        if (currentText.isNotBlank) {
-          await doSearch();
-        } else {
-          clear();
-        }
-      }
+      await doSearch();
     });
     super.onInit();
   }
@@ -98,15 +91,21 @@ class SearchSheetLogic extends GetxController {
       return;
     }
     if (currentText.isBlank) {
+      _lastText = currentText;
       clear();
       return;
     }
     state.isSearching.value = true;
     _lastText = currentText;
-    final queryList = await JiebaRs.cutForSearch(text: _lastText, hmm: true);
-    state.searchList = await IsarUtil.searchDiaries(queryList: queryList);
-    state.totalCount.value = state.searchList.length;
-    state.queryList = queryList;
-    state.isSearching.value = false;
+    try {
+      // 纯 Dart 分词：按空白切分为多个关键词，中文整串作为一个关键词直接子串匹配
+      final queryList =
+          currentText.split(RegExp(r'\s+')).where((e) => e.isNotEmpty).toList();
+      state.searchList = await IsarUtil.searchDiaries(queryList: queryList);
+      state.totalCount.value = state.searchList.length;
+      state.queryList = queryList;
+    } finally {
+      state.isSearching.value = false;
+    }
   }
 }

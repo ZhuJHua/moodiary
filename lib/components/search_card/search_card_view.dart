@@ -13,11 +13,17 @@ String getHighlightedExcerpt(
   List<String> keywords, {
   int contextLength = 50,
 }) {
+  // 与数据库查询保持一致：大小写不敏感定位关键词。
+  // 极少数字符 toLowerCase 会改变字符串长度，此时退回原文匹配以保证索引安全。
+  final lowerContent = content.toLowerCase();
+  final canLower = lowerContent.length == content.length;
+  final haystack = canLower ? lowerContent : content;
   for (final word in keywords) {
-    final index = content.indexOf(word);
+    final needle = canLower ? word.toLowerCase() : word;
+    final index = haystack.indexOf(needle);
     if (index != -1) {
       final wordStart = index;
-      final wordEnd = index + word.length;
+      final wordEnd = index + needle.length;
 
       int start = wordStart - contextLength;
       int end = wordEnd + contextLength;

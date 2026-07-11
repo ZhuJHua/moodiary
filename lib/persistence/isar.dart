@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -209,33 +208,23 @@ class IsarUtil {
   }) async {
     if (queryList.isEmpty) return [];
 
-    // 收集所有匹配关键词的内容结果
-    final HashSet<Diary> results = HashSet(
-      equals: (a, b) {
-        return a.isarId == b.isarId;
-      },
-      hashCode: (e) {
-        return e.isarId;
-      },
-    );
-
-    for (final word in queryList) {
-      final matches =
-          await _isar.diarys
-              .where()
-              .showEqualTo(true)
-              .tokenizerElementMatches(word, caseSensitive: false)
-              .or()
-              .titleContains(word, caseSensitive: false)
-              .findAllAsync();
-      results.addAll(matches);
-    }
+    // 单次查询：每个关键词都须命中（内容或标题任一），且只搜未进回收站的日记
+    final results = await _isar.diarys
+        .where()
+        .showEqualTo(true)
+        .allOf(
+          queryList,
+          (q, String word) => q.group(
+            (q) => q
+                .contentTextContains(word, caseSensitive: false)
+                .or()
+                .titleContains(word, caseSensitive: false),
+          ),
+        )
+        .findAllAsync();
 
     // 按时间降序排序
-    final List<Diary> sortedResults =
-        results.toList()..sort((a, b) => b.time.compareTo(a.time));
-
-    return sortedResults;
+    return results..sort((a, b) => b.time.compareTo(a.time));
   }
 
   static Future<List<Diary>> searchDiariesByTag(String value) async {

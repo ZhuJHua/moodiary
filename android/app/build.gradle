@@ -63,6 +63,8 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.config
+            applicationIdSuffix ".loongs"
+            resValue "string", "app_name", "Loongs Diary"
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'

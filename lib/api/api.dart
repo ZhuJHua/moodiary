@@ -64,18 +64,27 @@ class Api {
     return (await HttpUtil().get(url, type: ResponseType.bytes)).data;
   }
 
-  static Future<List<String>?> updatePosition(BuildContext context) async {
+  /// [silentTips] 为 true 时（如打开日记页的自动定位），权限被拒不弹 toast，
+  /// 避免每次新建日记都提示「请开启定位」。
+  static Future<List<String>?> updatePosition(
+    BuildContext context, {
+    bool silentTips = false,
+  }) async {
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied && context.mounted) {
+    }
+    if (permission == LocationPermission.denied) {
+      if (!silentTips && context.mounted) {
         toast.info(message: context.l10n.noticeEnableLocation);
-        return null;
       }
-      if (permission == LocationPermission.deniedForever && context.mounted) {
+      return null;
+    }
+    if (permission == LocationPermission.deniedForever) {
+      if (!silentTips && context.mounted) {
         toast.info(message: context.l10n.noticeEnableLocation2);
-        return null;
       }
+      return null;
     }
     if (!await Geolocator.isLocationServiceEnabled()) return null;
 

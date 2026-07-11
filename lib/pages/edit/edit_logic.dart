@@ -24,9 +24,10 @@ import 'package:moodiary/components/weather_picker_sheet.dart';
 import 'package:moodiary/l10n/l10n.dart';
 import 'package:moodiary/persistence/isar.dart';
 import 'package:moodiary/router/app_routes.dart';
-import 'package:moodiary/src/rust/api/jieba.dart';
-import 'package:moodiary/src/rust/api/kmp.dart';
+import 'package:moodiary/src/rust/api/jieba.dart'; // ignore: unused_import
+import 'package:moodiary/src/rust/api/kmp.dart'; // ignore: unused_import
 import 'package:moodiary/utils/file_util.dart';
+import 'package:moodiary/utils/log_util.dart';
 import 'package:moodiary/utils/markdown_util.dart';
 import 'package:moodiary/utils/media_util.dart';
 import 'package:moodiary/utils/notice_util.dart';
@@ -123,7 +124,9 @@ class EditLogic extends GetxController {
       state.currentDiary = Diary();
       if (state.firstLineIndent) insertNewLine();
       if (state.autoWeather) {
-        unawaited(getPositionAndWeather(context: Get.context!));
+        unawaited(
+          getPositionAndWeather(context: Get.context!, userInitiated: false),
+        );
       }
       if (state.autoCategory) selectCategory(Get.arguments[1] as String?);
     } else {
@@ -136,10 +139,9 @@ class EditLogic extends GetxController {
       state.currentDiary = state.originalDiary!.clone();
       // 获取分类名称
       if (state.originalDiary!.categoryId != null) {
-        state.categoryName =
-            IsarUtil.getCategoryName(
-              state.originalDiary!.categoryId!,
-            )!.categoryName;
+        state.categoryName = IsarUtil.getCategoryName(
+          state.originalDiary!.categoryId!,
+        )!.categoryName;
       }
       // 初始化标题控制器
       titleTextEditingController.text = state.originalDiary!.title;
@@ -172,20 +174,18 @@ class EditLogic extends GetxController {
           quillController = QuillController(
             document: Document.fromJson(
               jsonDecode(
-                await Kmp.replaceWithKmp(
-                  text: state.originalDiary!.content,
-                  replacements: replaceMap,
-                ),
+                // TEMP_PATCH_RUST: Kmp.replaceWithKmp → pure-Dart replaceAll loop
+                _patchReplaceAll(state.originalDiary!.content, replaceMap),
+                // END TEMP_PATCH_RUST
               ),
             ),
             selection: const TextSelection.collapsed(offset: 0),
           );
         case DiaryType.markdown:
           markdownTextEditingController = TextEditingController(
-            text: await Kmp.replaceWithKmp(
-              text: state.originalDiary!.content,
-              replacements: replaceMap,
-            ),
+            // TEMP_PATCH_RUST: Kmp.replaceWithKmp → pure-Dart replaceAll loop
+            text: _patchReplaceAll(state.originalDiary!.content, replaceMap),
+            // END TEMP_PATCH_RUST
           );
       }
       state.totalCount.value = _toPlainText().length;
@@ -210,12 +210,22 @@ class EditLogic extends GetxController {
     return state.type == DiaryType.markdown
         ? _markdownToPlainText(markdownTextEditingController!.text)
         : quillController!.document.toPlainText([
-          ImageEmbedBuilder(isEdit: true),
-          VideoEmbedBuilder(isEdit: true),
-          AudioEmbedBuilder(isEdit: true),
-          TextIndentEmbedBuilder(isEdit: true),
-        ]).trim();
+            ImageEmbedBuilder(isEdit: true),
+            VideoEmbedBuilder(isEdit: true),
+            AudioEmbedBuilder(isEdit: true),
+            TextIndentEmbedBuilder(isEdit: true),
+          ]).trim();
   }
+
+  // TEMP_PATCH_RUST: pure-Dart fallback for Kmp.replaceWithKmp
+  String _patchReplaceAll(String text, Map<String, String> replacements) {
+    var result = text;
+    for (final entry in replacements.entries) {
+      result = result.replaceAll(entry.key, entry.value);
+    }
+    return result;
+  }
+  // END TEMP_PATCH_RUST
 
   String _markdownToPlainText(String markdown) {
     if (markdown.isEmpty) return '';
@@ -405,22 +415,20 @@ class EditLogic extends GetxController {
     state.isSaving = true;
     update(['modal']);
     // 根据文本中的实际内容移除不需要的资源
-    final originContent =
-        state.type == DiaryType.markdown
-            ? markdownTextEditingController!.text.trim()
-            : jsonEncode(quillController!.document.toDelta().toJson());
-    final needImage = await Kmp.findMatches(
-      text: originContent,
-      patterns: state.imagePathList,
-    );
-    final needVideo = await Kmp.findMatches(
-      text: originContent,
-      patterns: state.videoPathList,
-    );
-    final needAudio = await Kmp.findMatches(
-      text: originContent,
-      patterns: state.audioNameList,
-    );
+    final originContent = state.type == DiaryType.markdown
+        ? markdownTextEditingController!.text.trim()
+        : jsonEncode(quillController!.document.toDelta().toJson());
+    // TEMP_PATCH_RUST: replace Rust Kmp.findMatches with pure-Dart equivalents
+    final needImage = state.imagePathList
+        .where((p) => originContent.contains(p))
+        .toList();
+    final needVideo = state.videoPathList
+        .where((p) => originContent.contains(p))
+        .toList();
+    final needAudio = state.audioNameList
+        .where((p) => originContent.contains(p))
+        .toList();
+    // END TEMP_PATCH_RUST
     state.imageFileList.removeWhere((file) => !needImage.contains(file.path));
     state.videoFileList.removeWhere((file) => !needVideo.contains(file.path));
     state.audioNameList.removeWhere((name) => !needAudio.contains(name));
@@ -434,19 +442,16 @@ class EditLogic extends GetxController {
     );
     //保存录音
     final audioNameMap = await MediaUtil.saveAudio(state.audioNameList);
-    final content = await Kmp.replaceWithKmp(
-      text: originContent,
-      replacements: {...imageNameMap, ...videoNameMap, ...audioNameMap},
-    );
+    // TEMP_PATCH_RUST: replace Rust Kmp.replaceWithKmp + Jieba with pure-Dart
+    final content = _patchReplaceAll(originContent, {
+      ...imageNameMap,
+      ...videoNameMap,
+      ...audioNameMap,
+    });
     final contentText = _toPlainText().removeLineBreaks();
-    final tokenizer = await JiebaRs.cutAll(text: contentText);
-    final keywords = await JiebaRs.extractKeywordsTfidf(
-      text: contentText,
-      topK: BigInt.from(5),
-      allowedPos: [],
-    );
-    final sortByWeight = keywords..sort((a, b) => b.weight.compareTo(a.weight));
-    final sortedKeywords = sortByWeight.map((e) => e.keyword).toList();
+    final tokenizer = <String>[];
+    final sortedKeywords = <String>[];
+    // END TEMP_PATCH_RUST
     state.currentDiary
       ..title = titleTextEditingController.text
       ..content = content
@@ -469,10 +474,9 @@ class EditLogic extends GetxController {
         : Get.back(result: 'changed');
     if (!context.mounted) return;
     toast.success(
-      message:
-          state.isNew
-              ? context.l10n.editSaveSuccess
-              : context.l10n.editChangeSuccess,
+      message: state.isNew
+          ? context.l10n.editSaveSuccess
+          : context.l10n.editChangeSuccess,
     );
   }
 
@@ -539,41 +543,48 @@ class EditLogic extends GetxController {
   }
 
   //获取天气，同时获取定位
-  Future<void> getPositionAndWeather({required BuildContext context}) async {
+  /// [userInitiated] 为 false 时（打开日记页的自动定位），权限提示保持静默。
+  Future<void> getPositionAndWeather({
+    required BuildContext context,
+    bool userInitiated = true,
+  }) async {
     state.isProcessing = true;
     update(['Weather']);
 
-    final positionFuture = Api.updatePosition(context);
+    // 定位在后台进行；提前捕获异常，避免取消选择后 future 无人 await 导致未处理错误
+    final positionFuture = Api.updatePosition(
+      context,
+      silentTips: !userInitiated,
+    ).catchError((Object e, StackTrace s) {
+      logger.e('updatePosition failed', error: e, stackTrace: s);
+      return null;
+    });
     final initialPreset = _resolveCurrentPreset();
     final initialTemp = _resolveCurrentTemp();
 
-    if (!context.mounted) return;
-    final result = await showWeatherPickerSheet(
-      context: context,
-      initialPreset: initialPreset,
-      initialTemp: initialTemp,
-    );
+    WeatherPickerResult? result;
+    if (context.mounted) {
+      result = await showWeatherPickerSheet(
+        context: context,
+        initialPreset: initialPreset,
+        initialTemp: initialTemp,
+      );
+    }
 
-    if (result == null) {
+    if (result == null || !context.mounted) {
       state.isProcessing = false;
       update(['Weather']);
-      // positionFuture still completes in background; its result is discarded
       return;
     }
 
-    if (!context.mounted) return;
     state.currentDiary.weather = [
       result.preset.code,
       result.temp.toString(),
       result.preset.label(context),
     ];
 
-    try {
-      final position = await positionFuture;
-      if (position != null) state.currentDiary.position = position;
-    } catch (_) {
-      // location failures already toasted inside Api.updatePosition
-    }
+    final position = await positionFuture;
+    if (position != null) state.currentDiary.position = position;
 
     state.isProcessing = false;
     update(['Weather']);

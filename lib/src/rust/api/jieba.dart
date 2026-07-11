@@ -9,6 +9,17 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // These functions are ignored because they are not marked as `pub`: `convert_keywords`, `get_instance`, `init_global`, `new`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
 
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>>
+abstract class JiebaKeyword implements RustOpaqueInterface {
+  String get keyword;
+
+  double get weight;
+
+  set keyword(String keyword);
+
+  set weight(double weight);
+}
+
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaRs>>
 abstract class JiebaRs implements RustOpaqueInterface {
   static Future<List<String>> cut({required String text, required bool hmm}) =>
@@ -25,7 +36,7 @@ abstract class JiebaRs implements RustOpaqueInterface {
     hmm: hmm,
   );
 
-  static Future<List<Keyword>> extractKeywordsTextRank({
+  static Future<List<JiebaKeyword>> extractKeywordsTextRank({
     required String text,
     required BigInt topK,
     required List<String> allowedPos,
@@ -35,7 +46,7 @@ abstract class JiebaRs implements RustOpaqueInterface {
     allowedPos: allowedPos,
   );
 
-  static Future<List<Keyword>> extractKeywordsTfidf({
+  static Future<List<JiebaKeyword>> extractKeywordsTfidf({
     required String text,
     required BigInt topK,
     required List<String> allowedPos,
@@ -44,15 +55,4 @@ abstract class JiebaRs implements RustOpaqueInterface {
     topK: topK,
     allowedPos: allowedPos,
   );
-}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Keyword>>
-abstract class Keyword implements RustOpaqueInterface {
-  String get keyword;
-
-  double get weight;
-
-  set keyword(String keyword);
-
-  set weight(double weight);
 }

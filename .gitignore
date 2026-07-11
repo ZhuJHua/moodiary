@@ -47,3 +47,7 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+
+# 本机专用的 Rust 交叉编译工具链配置与脚本（含绝对路径/用户名/代理，不入库）
+/rust/.cargo/
+/rust/build-android.sh

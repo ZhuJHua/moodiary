@@ -147,23 +147,31 @@ class FileUtil {
       '心绪日记${datetime.toString().split(' ')[0]}备份.zip',
     );
     final zip = Zip(filePath: filePath);
-    await Future.wait([
-      zip.addDir(dirPath: join(dataPath, 'image'), basePath: 'image'),
-      zip.addDir(dirPath: join(dataPath, 'audio'), basePath: 'audio'),
-      zip.addDir(dirPath: join(dataPath, 'video'), basePath: 'video'),
-      zip.addDir(dirPath: join(dataPath, 'font'), basePath: 'font'),
-      IsarUtil.exportIsar(
-        dataPath,
-        zipPath,
-        '${datetime.millisecondsSinceEpoch}.isar',
-      ),
-      zip.addFile(
-        filePath: join(zipPath, '${datetime.millisecondsSinceEpoch}.isar'),
-        zipPath: '${datetime.millisecondsSinceEpoch}.isar',
-      ),
-    ]);
-    await zip.finish();
-    zip.dispose();
+    try {
+      await Future.wait([
+        zip.addDir(dirPath: join(dataPath, 'image'), basePath: 'image'),
+        zip.addDir(dirPath: join(dataPath, 'audio'), basePath: 'audio'),
+        zip.addDir(dirPath: join(dataPath, 'video'), basePath: 'video'),
+        zip.addDir(dirPath: join(dataPath, 'font'), basePath: 'font'),
+        IsarUtil.exportIsar(
+          dataPath,
+          zipPath,
+          '${datetime.millisecondsSinceEpoch}.isar',
+        ),
+        zip.addFile(
+          filePath: join(zipPath, '${datetime.millisecondsSinceEpoch}.isar'),
+          zipPath: '${datetime.millisecondsSinceEpoch}.isar',
+        ),
+      ]);
+      await zip.finish();
+    } catch (_) {
+      // 打包失败时清理残缺的 zip 文件，避免占用缓存空间
+      final partial = File(filePath);
+      if (await partial.exists()) await partial.delete();
+      rethrow;
+    } finally {
+      zip.dispose();
+    }
     return filePath;
   }
 

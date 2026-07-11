@@ -35,7 +35,12 @@ Future<void> _initSystem() async {
   await PrefUtil.initPref();
   await IsarUtil.initIsar();
   await HiveUtil().init();
-  unawaited(RustLib.init());
+  unawaited(
+    // Rust 库加载失败不阻塞启动，但必须记录——否则所有 Rust 功能会"静默失效"
+    RustLib.init().catchError((Object e, StackTrace s) {
+      logger.f('RustLib init failed', error: e, stackTrace: s);
+    }),
+  );
   unawaited(_platFormOption());
   WebDavUtil().initWebDav();
   await ThemeUtil().buildTheme();

@@ -39,76 +39,88 @@ class DiaryDetailsPage extends StatelessWidget {
     final dateTime = DateFormat.yMMMd().add_Hms().format(diary.time).split(' ');
     final date = dateTime.first;
     final time = dateTime.last;
-    return Wrap(
-      spacing: 8.0,
-      children: [
-        buildAChip(
-          context: context,
-          MoodIconComponent(value: diary.mood),
-          null,
-        ),
-        buildAChip(
-          context: context,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                date,
-                style: context.textTheme.labelSmall!.copyWith(
-                  color: context.theme.colorScheme.onSurface,
-                ),
-              ),
-              Text(
-                time,
-                style: context.textTheme.labelSmall!.copyWith(
-                  color: context.theme.colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-          const Icon(Icons.access_time_outlined),
-        ),
-        if (diary.position.isNotEmpty) ...[
-          buildAChip(
-            context: context,
-            Text(diary.position[2]),
-            const Icon(Icons.location_city_rounded),
-          ),
-        ],
-        if (diary.weather.isNotEmpty) ...[
-          buildAChip(
-            context: context,
+    final primary = <Widget>[
+      buildAChip(
+        context: context,
+        MoodIconComponent(value: diary.mood),
+        null,
+      ),
+      buildAChip(
+        context: context,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              '${diary.weather[2]} ${diary.weather[1]}°C',
-              style: context.textTheme.labelLarge!.copyWith(
+              date,
+              style: context.textTheme.labelSmall!.copyWith(
                 color: context.theme.colorScheme.onSurface,
               ),
             ),
-            Icon(WeatherIcon.map[diary.weather[0]]),
-          ),
-        ],
+            Text(
+              time,
+              style: context.textTheme.labelSmall!.copyWith(
+                color: context.theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+        const Icon(Icons.access_time_outlined),
+      ),
+      if (diary.position.isNotEmpty)
+        buildAChip(
+          context: context,
+          Text(diary.position[2]),
+          const Icon(Icons.location_city_rounded),
+        ),
+    ];
+    final secondary = <Widget>[
+      if (diary.weather.isNotEmpty)
         buildAChip(
           context: context,
           Text(
-            context.l10n.diaryCount(diary.contentText.length),
+            '${diary.weather[2]} ${diary.weather[1]}°C',
             style: context.textTheme.labelLarge!.copyWith(
               color: context.theme.colorScheme.onSurface,
             ),
           ),
-          const Icon(Icons.text_fields_outlined),
+          Icon(WeatherIcon.map[diary.weather[0]]),
         ),
-        ...List.generate(diary.tags.length, (index) {
-          return buildAChip(
-            context: context,
-            Text(
-              diary.tags[index],
-              style: context.textTheme.labelLarge!.copyWith(
-                color: context.theme.colorScheme.onSurface,
-              ),
+      buildAChip(
+        context: context,
+        Text(
+          context.l10n.diaryCount(diary.contentText.length),
+          style: context.textTheme.labelLarge!.copyWith(
+            color: context.theme.colorScheme.onSurface,
+          ),
+        ),
+        const Icon(Icons.text_fields_outlined),
+      ),
+      ...List.generate(diary.tags.length, (index) {
+        return buildAChip(
+          context: context,
+          Text(
+            diary.tags[index],
+            style: context.textTheme.labelLarge!.copyWith(
+              color: context.theme.colorScheme.onSurface,
             ),
-            const Icon(Icons.tag_outlined),
-          );
-        }),
+          ),
+          const Icon(Icons.tag_outlined),
+        );
+      }),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Wrap(spacing: 8.0, runSpacing: 4.0, children: primary),
+        Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: Wrap(
+            spacing: 8.0,
+            runSpacing: 4.0,
+            alignment: WrapAlignment.end,
+            children: secondary,
+          ),
+        ),
       ],
     );
   }
@@ -240,12 +252,9 @@ class DiaryDetailsPage extends StatelessWidget {
                         children: [
                           Padding(
                             padding: const EdgeInsets.all(4.0),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: buildChipList(
-                                context: context,
-                                diary: state.diary,
-                              ),
+                            child: buildChipList(
+                              context: context,
+                              diary: state.diary,
                             ),
                           ),
                           Card.filled(
