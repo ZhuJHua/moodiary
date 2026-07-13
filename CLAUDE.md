@@ -85,13 +85,3 @@ Cross-package DAG is strictly upper → lower: `foundation → core → ui → f
 
 In-app layering within `mobile/lib` (`tool/check_layers.dart`): `gen → core → data → component,merge → feature/<x> → app → main.dart`. Baseline is **zero violations**.
 
-### Feature Package Pattern
-
-Each feature package exposes a uniform barrel: entry widget(s) + `xRoutes()` + `registerX()`. Internal structure:
-```
-lib/src/
-  application/   # Riverpod controllers (@riverpod) — keep widget-free
-  data/          # data/engine/repos — keep widget-free
-  presentation/  # pages and widgets
-```
-
