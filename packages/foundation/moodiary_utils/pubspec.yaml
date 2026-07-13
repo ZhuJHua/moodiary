@@ -20,9 +20,8 @@ dependencies:
   network_info_plus: 8.2.0
   device_info_plus: 13.2.0
   package_info_plus: 10.2.0
-  dartx: 1.2.0
   markdown: 7.3.1
-  local_auth: 3.0.1
+  local_auth: 3.0.2
 
 dev_dependencies:
   flutter_test:

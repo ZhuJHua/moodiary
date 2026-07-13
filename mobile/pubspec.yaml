@@ -12,8 +12,6 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
 
   moodiary_rust: 0.0.1
   moodiary_router: 0.0.1
@@ -34,101 +32,30 @@ dependencies:
   moodiary_scan: 0.0.1
 
   go_router: 17.3.0
-  riverpod: 3.3.2
   flutter_riverpod: 3.3.2
-  riverpod_annotation: 4.0.3
-  get_it: 9.2.1
 
-  connectivity_plus: 7.2.0
-  network_info_plus: 8.2.0
-
-  shared_preferences: 2.5.5
-  flutter_secure_storage: 10.3.1
   isar_plus: 1.3.7
+  # 原生库 / 平台实现：无 Dart import，但必须留在 app 依赖里才会被打包与注册。
   isar_plus_flutter_libs: 1.3.7
-
-  shelf: 1.4.2
-  shelf_multipart: 2.0.1
-
-  path: 1.9.1
-  file: 7.0.1
-  path_provider: 2.1.6
-  file_picker: 12.0.0-beta.7
-  cross_file: 0.3.5+4
-  mime: 2.0.0
-  gal: 2.3.2
-
-  image_picker: 1.2.3
-  heif_converter: 1.0.6
-  image_size_getter: 2.4.1
-  photo_view: 0.15.0
-  fc_native_video_thumbnail: 3.0.1
-  audioplayers: 6.8.1
   audioplayers_android_exo: 0.1.4
-  record: 7.1.1
-  chewie: 1.14.1
-  video_player: 2.11.1
 
   flutter_quill: 11.5.1
-  flutter_quill_extensions: 11.0.0
-  substring_highlight: 1.0.33
-  auto_size_text_field: 2.3.0
 
-  flutter_map: 8.3.1
-  flutter_map_cache: 2.1.0
-  flutter_map_marker_cluster: 8.2.2
-  latlong2: 0.9.1
-  geolocator:
-    git:
-      url: https://github.com/ZhuJHua/flutter-geolocator.git
-      path: geolocator
-      ref: 96718c1ac20e3fb3d5fd9518b74ed6613000a7e6
-
-  calendar_date_picker2: 3.0.0
-  modal_bottom_sheet: 3.0.0
   flutter_smart_dialog: 5.1.0
-  smooth_page_indicator: 2.0.1
-  waterfall_flow: 3.1.1
-  sliver_tools: 0.2.12
-  scrollable_positioned_list: 0.3.8
-  scrollview_observer: 1.27.0
-  easy_refresh: 3.5.1
-  dismissible_page: 1.0.2
-  confetti: 0.8.0
   gap: 3.0.1
-  lottie: 3.5.1
 
   font_awesome_flutter: 11.0.0
   unicons: 3.0.0
-  dynamic_color: 1.8.1
-  material_color_utilities: 0.13.0
-  flutter_markdown_plus: 1.0.11
+  flutter_markdown_plus: 1.0.12
 
   flutter_displaymode: 0.7.0
   device_info_plus: 13.2.0
   package_info_plus: 10.2.0
-  local_auth: 3.0.1
-  share_plus: 13.2.0
   url_launcher: 6.3.2
 
-  qr_flutter: 4.1.0
-
-  flutter_native_splash: 2.4.8
-
-  logger: 2.7.0
   intl: 0.20.2
-  collection: 1.19.1
-  markdown: 7.3.1
-  meta: 1.18.0
-  dartx: 1.2.0
   fpdart: 1.2.0
-  synchronized: 3.4.1
-  pool: 1.5.2
-  duration: 4.0.3
   pub_semver: 2.2.0
-
-  freezed_annotation: 3.1.0
-  json_annotation: 4.12.0
 
 dev_dependencies:
   flutter_test:
@@ -136,15 +63,10 @@ dev_dependencies:
   flutter_driver:
     sdk: flutter
 
-  fake_async: 1.3.3
-
   build_runner: 2.15.1
-  freezed: 3.2.6-dev.1
-  json_serializable: 6.14.0
-  riverpod_generator: 4.0.4
-  flutter_gen: 5.14.1
   flutter_gen_runner: 5.14.1
 
+  flutter_native_splash: 2.4.8
   flutter_launcher_icons: 0.14.4
   msix: 3.18.0
 
