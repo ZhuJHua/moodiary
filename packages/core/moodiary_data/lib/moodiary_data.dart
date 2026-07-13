@@ -8,4 +8,5 @@ export 'src/dashboard_controller.dart';
 export 'src/diary_content_util.dart';
 export 'src/diary_controller.dart';
 export 'src/diary_repository.dart';
+export 'src/font_repository.dart';
 export 'src/llm_provider_repository.dart';

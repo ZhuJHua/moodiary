@@ -4,6 +4,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_settings_controller.freezed.dart';
@@ -34,7 +35,9 @@ class AppSettingsController extends _$AppSettingsController {
   }
 
   Future<void> bumpTheme() async {
-    await ThemeUtil().buildTheme();
+    await ThemeUtil().buildTheme(
+      customFont: await FontRepository.get().getActiveFont(),
+    );
     final (lightTheme, darkTheme) = ThemeUtil().getThemeData();
     state = state.copyWith(
       lightTheme: lightTheme,

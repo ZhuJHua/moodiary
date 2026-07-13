@@ -1,11 +1,10 @@
-﻿import 'package:dartx/dartx.dart';
-import 'package:dynamic_color/dynamic_color.dart';
+﻿import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/src/values/colors.dart';
-import 'package:moodiary_core/src/storage/database/isar.dart';
 import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_core/src/utils/file_util.dart';
 import 'package:moodiary_core/src/utils/font_util.dart';
@@ -171,7 +170,8 @@ class ThemeUtil {
     );
   }
 
-  Future<void> buildTheme() async {
+  /// [customFont] 为当前激活的自定义字体，由调用方（FontRepository.getActiveFont）解析注入。
+  Future<void> buildTheme({Font? customFont}) async {
     await findDynamicColor();
 
     var color = MoodiaryKVs.color.get();
@@ -209,21 +209,16 @@ class ThemeUtil {
     _activeFontFileName = null;
     wghtAxisMap = {};
 
-    final customFont = MoodiaryKVs.customFont.get();
-
-    if (customFont.isNotNullOrBlank) {
-      final font = await IsarDatabase.get().getFontByFontFamily(customFont!);
-      if (font != null) {
-        await FontUtil.loadFont(
-          fontName: font.fontFamily,
-          fontPath: FileUtil.getRealPath('font', font.fontFileName),
-        );
-        fontFamily = font.fontFamily;
-        _activeFontFileName = font.fontFileName;
-        wghtAxisMap = _unifyFontWeights(
-          font.fontWghtAxisMap.cast<String, double>(),
-        );
-      }
+    if (customFont != null) {
+      await FontUtil.loadFont(
+        fontName: customFont.fontFamily,
+        fontPath: FileUtil.getRealPath('font', customFont.fontFileName),
+      );
+      fontFamily = customFont.fontFamily;
+      _activeFontFileName = customFont.fontFileName;
+      wghtAxisMap = _unifyFontWeights(
+        customFont.fontWghtAxisMap.cast<String, double>(),
+      );
     }
 
     final lightTextTheme = buildTextTheme(lightColorScheme);

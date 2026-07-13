@@ -11,6 +11,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
@@ -32,7 +33,9 @@ Future<Locale> _initSystem() async {
   unawaited(_platFormOption());
   final localeFuture = _findLanguage();
   await Future.wait([
-    ThemeUtil().buildTheme(),
+    FontRepository.get().getActiveFont().then(
+      (font) => ThemeUtil().buildTheme(customFont: font),
+    ),
     registerService(),
     localeFuture,
     rustInit,

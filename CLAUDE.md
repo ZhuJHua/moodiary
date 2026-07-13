@@ -59,7 +59,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_l10n/         #   localization (ARB + gen-l10n)
       moodiary_rust/         #   Rust FFI package (crate in rust/, built by hook/build.dart)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
-    core/                    # → foundation; internal order models → core → data
+    core/                    # → foundation; internal order models → core → data → preferences
       moodiary_models/       #   domain: Isar @Collection + Freezed DTOs
       moodiary_core/         #   infra: Isar/KV/SecureKV + theme + exceptions
       moodiary_data/         #   repositories + controllers
