@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +5,6 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
 import 'package:moodiary_sync/src/application/sync_controller.dart';
-import 'package:moodiary_sync/src/data/impl/json_file_sync.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
@@ -15,8 +13,6 @@ import 'package:moodiary_sync/src/presentation/widget/s3_form_sheet.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
 import 'package:moodiary_sync/src/presentation/widget/webdav_form_sheet.dart';
 import 'package:moodiary_router/moodiary_router.dart';
-import 'package:path/path.dart' as p;
-import 'package:share_plus/share_plus.dart';
 
 class BackupSyncPage extends ConsumerWidget {
   const BackupSyncPage({super.key});
@@ -47,8 +43,6 @@ class BackupSyncPage extends ConsumerWidget {
           _AutoSyncSection(),
           SizedBox(height: 4),
           _NetworkSection(),
-          SizedBox(height: 4),
-          _LocalSection(),
           SizedBox(height: 16),
         ],
       ),
@@ -470,72 +464,3 @@ class _NetworkSection extends StatelessWidget {
   }
 }
 
-class _LocalSection extends ConsumerWidget {
-  const _LocalSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = context.colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SettingTitleTile(title: '本地备份'),
-        Card.filled(
-          color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
-          child: Column(
-            children: [
-              SettingListTile(
-                isFirst: true,
-                title: '导出 JSON 备份',
-                subtitle: '全部日记 / 分类 → JSON 文件',
-                leading: const Icon(Icons.file_download_outlined),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => _exportJson(context, ref),
-              ),
-              SettingListTile(
-                isLast: true,
-                title: '从 JSON 导入',
-                subtitle: '选取备份文件合并到本地',
-                leading: const Icon(Icons.file_upload_outlined),
-                trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: () => _importJson(context, ref),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _exportJson(BuildContext context, WidgetRef ref) async {
-    final cacheDir = PlatformService.get().applicationCachePath;
-    final name =
-        'moodiary_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.json';
-    final path = p.join(cacheDir, name);
-    await ref
-        .read(syncControllerProvider.notifier)
-        .push(JsonFileSyncBackend(filePath: path));
-    try {
-      await SharePlus.instance.share(
-        ShareParams(files: [XFile(path)], text: 'Moodiary 备份 $name'),
-      );
-    } catch (_) {}
-  }
-
-  Future<void> _importJson(BuildContext context, WidgetRef ref) async {
-    final picked = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['json'],
-    );
-    final filePath = picked?.files.firstOrNull?.path;
-    if (filePath == null) return;
-    await ref
-        .read(syncControllerProvider.notifier)
-        .pull(JsonFileSyncBackend(filePath: filePath));
-  }
-}
-
-extension _ListFirstOrNull<T> on List<T> {
-  T? get firstOrNull => isEmpty ? null : first;
-}
