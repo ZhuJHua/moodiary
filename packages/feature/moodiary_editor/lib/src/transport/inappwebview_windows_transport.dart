@@ -83,6 +83,15 @@ class WindowsInAppWebViewTransport extends EditorTransport {
   }
 
   @override
+  Future<Object?> runForResult(String source) async {
+    try {
+      return await _controller?.evaluateJavascript(source: source);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
   Widget buildView() {
     final widget = _widget;
     // PlatformInAppWebViewWidget.build 需要 context；用 Builder 取一个。

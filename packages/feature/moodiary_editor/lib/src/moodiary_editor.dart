@@ -46,6 +46,7 @@ void _log(String msg, {Object? error, StackTrace? stack, int level = 0}) {
 /// `<audio>`/`<video>` 在 webview 内内联播放，视频海报用同名 `?poster=1` 取缩略图）—— 懒加载、二进制、省内存。
 class MoodiaryEditor extends StatefulWidget {
   final MoodiaryEditorController? controller;
+
   /// 初始内容：TipTap 文档 JSON 串（tiptap 日记）或旧 markdown 文本（只读查看，编辑器自动识别）。
   final String initialContent;
 
@@ -458,16 +459,12 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   Future<void> _setTheme() async {
-    await _run(
-      'window.MoodiaryBridge.setTheme(${jsonEncode(_seedTheme())})',
-    );
+    await _run('window.MoodiaryBridge.setTheme(${jsonEncode(_seedTheme())})');
   }
 
   Future<void> _setContent(String content) async {
     _lastContent = content;
-    await _run(
-      'window.MoodiaryBridge.setContent(${jsonEncode(content)})',
-    );
+    await _run('window.MoodiaryBridge.setContent(${jsonEncode(content)})');
   }
 
   Future<void> _setTitle(String title) async {
@@ -476,6 +473,27 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
 
   Future<void> _scrollToHeading(int index) async {
     await _run('window.MoodiaryBridge.scrollToHeading($index)');
+  }
+
+  Future<double> _getScrollY() async {
+    final raw = await _transport?.runForResult(
+      'window.MoodiaryBridge.getScrollY()',
+    );
+    if (raw is num) return raw.toDouble();
+    if (raw is String) return double.tryParse(raw) ?? 0;
+    return 0;
+  }
+
+  /// 页内双链跳转：同一 webview 原地换文档（正文 + 标题 + 滚动位置），不重建。
+  /// undo 栈由 web 侧随 setContent 重置；可编辑性走 readOnly prop（didUpdateWidget）。
+  Future<void> _swapDocument({
+    required String content,
+    required String title,
+    double scrollY = 0,
+  }) async {
+    await _setContent(content);
+    await _setTitle(title);
+    await _run('window.MoodiaryBridge.setScrollY($scrollY)');
   }
 
   Future<void> _focus() async {
@@ -581,5 +599,23 @@ class MoodiaryEditorController {
   /// 目录跳转：滚动到第 [index] 个 heading（文档序，与 `DiaryContentUtil` / `TiptapContent.headings` 一致）。
   Future<void> scrollToHeading(int index) async {
     await _state?._scrollToHeading(index);
+  }
+
+  /// 当前滚动位置（webview 视口 scrollTop）；未挂载 / 未就绪返回 0。
+  Future<double> getScrollY() async {
+    return (await _state?._getScrollY()) ?? 0;
+  }
+
+  /// 页内双链跳转：原地换文档（见 [_MoodiaryEditorState._swapDocument]）。
+  Future<void> swapDocument({
+    required String content,
+    required String title,
+    double scrollY = 0,
+  }) async {
+    await _state?._swapDocument(
+      content: content,
+      title: title,
+      scrollY: scrollY,
+    );
   }
 }

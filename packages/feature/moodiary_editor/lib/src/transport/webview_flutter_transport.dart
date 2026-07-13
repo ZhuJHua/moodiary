@@ -66,6 +66,15 @@ class WebViewFlutterTransport extends EditorTransport {
   }
 
   @override
+  Future<Object?> runForResult(String source) async {
+    try {
+      return await _web?.runJavaScriptReturningResult(source);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
   Widget buildView() {
     final web = _web;
     return web == null

@@ -12,6 +12,7 @@ import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { createEditorKit } from '../editor/tiptap'
 import { bindApi, emitChange, markReady } from '../bridge'
 import { post } from '../bridge/post'
+import { bindScrollViewport } from '../bridge/scroll'
 import { title } from '../bridge/title'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorSearchBar from './EditorSearchBar.vue'
@@ -152,11 +153,13 @@ function onKeydown(e: KeyboardEvent): void {
 }
 onMounted(() => {
   nextTick(autoGrowTitle)
+  bindScrollViewport(viewportEl.value ?? null)
   viewportEl.value?.addEventListener('scroll', onViewportScroll, { passive: true })
   if (props.platform === 'mobile') window.addEventListener('resize', onViewportResize)
   window.addEventListener('keydown', onKeydown)
 })
 onBeforeUnmount(() => {
+  bindScrollViewport(null)
   viewportEl.value?.removeEventListener('scroll', onViewportScroll)
   window.removeEventListener('resize', onViewportResize)
   window.removeEventListener('keydown', onKeydown)

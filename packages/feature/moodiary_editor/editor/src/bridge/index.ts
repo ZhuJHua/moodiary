@@ -4,6 +4,7 @@
 import { applyTheme, type SeedTheme } from './theme'
 import { post } from './post'
 import { setSaveStatus } from './save-status'
+import { getScrollY, setScrollY } from './scroll'
 import { setTitle } from './title'
 import type { EditorApi } from '../editor/tiptap'
 
@@ -44,5 +45,8 @@ export function installBridge(): void {
       api?.resolveLinkCandidates(reqId, json),
     // 目录跳转：滚动到第 index 个 heading。
     scrollToHeading: (index: number) => api?.scrollToHeading(index),
+    // 页内双链跳转的滚动位置保存 / 恢复。
+    getScrollY: () => getScrollY(),
+    setScrollY: (y: number) => setScrollY(y),
   }
 }

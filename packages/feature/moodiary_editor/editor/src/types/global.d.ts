@@ -32,6 +32,9 @@ declare global {
       resolveLinkCandidates: (reqId: string, json: string) => void
       /** 目录跳转：滚动到第 index 个 heading（文档序）。 */
       scrollToHeading: (index: number) => void
+      /** 页内双链跳转的滚动位置保存 / 恢复（视口 scrollTop）。 */
+      getScrollY: () => number
+      setScrollY: (y: number) => void
     }
     /** 旧注入通道（DOCUMENT_START UserScript），仅作 readBoot 的兜底。 */
     __BOOT__?: EditorBoot

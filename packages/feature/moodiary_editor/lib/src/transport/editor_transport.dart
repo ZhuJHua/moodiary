@@ -35,6 +35,10 @@ abstract class EditorTransport {
   /// PlatformException 抛出，按「JS 异常不上抛」契约处理，避免打断 10s 就绪超时兜底。
   Future<void> run(String source);
 
+  /// 执行 JS 并取返回值。返回值的具体类型随平台而异（Android 常回 JSON 字符串，
+  /// iOS/macOS 回原始 num/bool/String），调用方自行归一；异常吞掉返回 null。
+  Future<Object?> runForResult(String source);
+
   /// 承载 webview 的 widget；prepare 完成并 setState 后挂载。
   Widget buildView();
 

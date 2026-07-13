@@ -12,6 +12,7 @@
 
 import { mergeAttributes } from '@tiptap/core'
 import type { Editor, EditorOptions, JSONContent } from '@tiptap/core'
+import { EditorState } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import { Placeholder, CharacterCount } from '@tiptap/extensions'
@@ -141,6 +142,11 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       } else {
         ed.commands.setContent(stripMediaPrefix(content), { emitUpdate: false })
       }
+      // 重建 EditorState 清空 undo 栈：灌入即新文档的起点，undo 不能穿越回上一篇
+      //（页内双链跳转换日记）或空文档（首次打开）。
+      ed.view.updateState(
+        EditorState.create({ doc: ed.state.doc, plugins: ed.state.plugins }),
+      )
     })
   }
 
