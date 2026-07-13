@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'diary_content_util.dart';
 
 /// 倒排 / 链接索引的建立时机：[inline] 立即建（默认，非编辑器调用方）；[defer] 只写行 +
@@ -11,16 +13,34 @@ import 'diary_content_util.dart';
 /// 数据，内容未变、索引仍有效）。
 enum IndexMode { inline, defer, skip }
 
+typedef _IndexEntry = ({
+  int diaryIsarId,
+  TokenizeResult? tokens,
+  List<String> links,
+});
+
 class DiaryRepository {
-  DiaryRepository._(this._isar);
+  DiaryRepository._(this._isar) : _rawTokenize = _defaultTokenize;
 
   factory DiaryRepository.get() => _instance;
+
+  /// 测试用：注入独立 Isar 与替身分词器（宿主测试环境无 Rust FFI）。
+  @visibleForTesting
+  DiaryRepository.forTesting(
+    this._isar, {
+    Future<TokenizeResult> Function(String text)? tokenizer,
+  }) : _rawTokenize = tokenizer ?? _defaultTokenize;
 
   static final DiaryRepository _instance = DiaryRepository._(
     IsarDatabase.get().isar,
   );
 
   final Isar _isar;
+
+  final Future<TokenizeResult> Function(String text) _rawTokenize;
+
+  static Future<TokenizeResult> _defaultTokenize(String text) =>
+      Tokenizer.tokenize(text: text);
 
   final StreamController<DiaryEvent> _events =
       StreamController<DiaryEvent>.broadcast();
@@ -29,90 +49,228 @@ class DiaryRepository {
 
   Stream<Diary?> watchDiary(int isarId) => _isar.diarys.watchObject(isarId);
 
-  static void _writeIndexEntries(
+  // —— 倒排维护：posting-list（主键 get）+ 快照 diff。isar_plus 读查询不用二级索
+  // 引（全表扫描），只有 @Id 主键是 O(1)，故 token/链接目标均以 fastHash 作主键组
+  // 织；改动只触碰 diff 出的 posting 行，幂等（同内容重复应用不产生重复计权）。—— //
+
+  static int _searchKey(TokenSource source, String token) =>
+      fastHash('${source.name}:$token');
+
+  static int _linkKey(String toId) => fastHash(toId);
+
+  /// 对一组 posting 键做集合增删（同一键整批只读写一次），保持元素唯一；行空则删。
+  static void _mutateSearchPostings(
+    Isar isar, {
+    required Map<int, Set<int>> adds,
+    required Map<int, Set<int>> removes,
+  }) {
+    final keys = {...adds.keys, ...removes.keys}.toList();
+    if (keys.isEmpty) return;
+    final col = isar.searchPostings;
+    final existing = col.getAll(keys);
+    final toPut = <SearchPosting>[];
+    final toDelete = <int>[];
+    for (var i = 0; i < keys.length; i++) {
+      final key = keys[i];
+      final current = existing[i]?.diaryIsarIds ?? const <int>[];
+      final removeSet = removes[key] ?? const <int>{};
+      final addSet = adds[key] ?? const <int>{};
+      final changed =
+          current.any(removeSet.contains) ||
+          addSet.any((id) => !current.contains(id));
+      if (!changed) continue;
+      final next = <int>[
+        for (final id in current)
+          if (!removeSet.contains(id) && !addSet.contains(id)) id,
+        ...addSet,
+      ];
+      if (next.isEmpty) {
+        toDelete.add(key);
+      } else {
+        toPut.add(SearchPosting(key: key, diaryIsarIds: next));
+      }
+    }
+    col.putAll(toPut);
+    col.deleteAll(toDelete);
+  }
+
+  static void _mutateLinkPostings(
+    Isar isar, {
+    required Map<int, Set<int>> adds,
+    required Map<int, Set<int>> removes,
+  }) {
+    final keys = {...adds.keys, ...removes.keys}.toList();
+    if (keys.isEmpty) return;
+    final col = isar.linkPostings;
+    final existing = col.getAll(keys);
+    final toPut = <LinkPosting>[];
+    final toDelete = <int>[];
+    for (var i = 0; i < keys.length; i++) {
+      final key = keys[i];
+      final current = existing[i]?.fromIsarIds ?? const <int>[];
+      final removeSet = removes[key] ?? const <int>{};
+      final addSet = adds[key] ?? const <int>{};
+      final changed =
+          current.any(removeSet.contains) ||
+          addSet.any((id) => !current.contains(id));
+      if (!changed) continue;
+      final next = <int>[
+        for (final id in current)
+          if (!removeSet.contains(id) && !addSet.contains(id)) id,
+        ...addSet,
+      ];
+      if (next.isEmpty) {
+        toDelete.add(key);
+      } else {
+        toPut.add(LinkPosting(key: key, fromIsarIds: next));
+      }
+    }
+    col.putAll(toPut);
+    col.deleteAll(toDelete);
+  }
+
+  /// 按快照 diff 批量把日记的全文分词与双链目标写入倒排。tokens 为 null 视作无内容。
+  /// 批内同 id 只保留最后一条（与顺序单篇应用等价），posting 聚合后每键只读写一次——
+  /// 高频词的 posting 行不随批大小重复整行重写。
+  static void _applyIndexesBatch(Isar isar, List<_IndexEntry> entries) {
+    if (entries.isEmpty) return;
+    final byId = <int, _IndexEntry>{
+      for (final e in entries) e.diaryIsarId: e,
+    };
+    final ids = byId.keys.toList();
+    final olds = isar.diaryIndexSnapshots.getAll(ids);
+
+    final searchAdds = <int, Set<int>>{};
+    final searchRemoves = <int, Set<int>>{};
+    final linkAdds = <int, Set<int>>{};
+    final linkRemoves = <int, Set<int>>{};
+    final snapshots = <DiaryIndexSnapshot>[];
+
+    for (var i = 0; i < ids.length; i++) {
+      final e = byId[ids[i]]!;
+      final old = olds[i];
+      final oldSearchKeys = <int>{
+        for (final t in old?.cutTokens ?? const <String>[])
+          _searchKey(TokenSource.cut, t),
+        for (final t in old?.cutForSearchTokens ?? const <String>[])
+          _searchKey(TokenSource.cutForSearch, t),
+      };
+      final cut = e.tokens?.cut ?? const <String>[];
+      final cutForSearch = e.tokens?.cutForSearch ?? const <String>[];
+      final newSearchKeys = <int>{
+        for (final t in cut) _searchKey(TokenSource.cut, t),
+        for (final t in cutForSearch) _searchKey(TokenSource.cutForSearch, t),
+      };
+      for (final key in newSearchKeys.difference(oldSearchKeys)) {
+        searchAdds.putIfAbsent(key, () => {}).add(e.diaryIsarId);
+      }
+      for (final key in oldSearchKeys.difference(newSearchKeys)) {
+        searchRemoves.putIfAbsent(key, () => {}).add(e.diaryIsarId);
+      }
+
+      final oldLinkKeys = <int>{
+        for (final id in old?.linkToIds ?? const <String>[]) _linkKey(id),
+      };
+      final newLinkKeys = <int>{for (final id in e.links) _linkKey(id)};
+      for (final key in newLinkKeys.difference(oldLinkKeys)) {
+        linkAdds.putIfAbsent(key, () => {}).add(e.diaryIsarId);
+      }
+      for (final key in oldLinkKeys.difference(newLinkKeys)) {
+        linkRemoves.putIfAbsent(key, () => {}).add(e.diaryIsarId);
+      }
+
+      snapshots.add(
+        DiaryIndexSnapshot(
+          diaryIsarId: e.diaryIsarId,
+          cutTokens: cut,
+          cutForSearchTokens: cutForSearch,
+          linkToIds: e.links,
+        ),
+      );
+    }
+
+    _mutateSearchPostings(isar, adds: searchAdds, removes: searchRemoves);
+    _mutateLinkPostings(isar, adds: linkAdds, removes: linkRemoves);
+    isar.diaryIndexSnapshots.putAll(snapshots);
+  }
+
+  static void _applyIndexes(
     Isar isar,
-    int diaryIsarId,
-    List<String> tokens,
-    TokenSource source,
-  ) {
-    final collection = isar.diarySearchIndexs;
-    final entries = tokens
-        .map(
-          (token) => DiarySearchIndex(
-            id: collection.autoIncrement(),
-            token: token,
-            diaryIsarId: diaryIsarId,
-            source: source,
-          ),
-        )
-        .toList();
-    collection.putAll(entries);
+    int diaryIsarId, {
+    required TokenizeResult? tokens,
+    required List<String> links,
+  }) {
+    _applyIndexesBatch(isar, [
+      (diaryIsarId: diaryIsarId, tokens: tokens, links: links),
+    ]);
   }
 
-  static void _removeIndexEntries(Isar isar, int diaryIsarId) {
-    final ids = isar.diarySearchIndexs
-        .where()
-        .diaryIsarIdEqualTo(diaryIsarId)
-        .idProperty()
-        .findAll();
-    isar.diarySearchIndexs.deleteAll(ids);
+  /// 把一批日记从全部倒排中摘除并删快照（软删/硬删共用），同键聚合只读写一次。
+  static void _clearIndexesBatch(Isar isar, List<int> diaryIsarIds) {
+    if (diaryIsarIds.isEmpty) return;
+    final olds = isar.diaryIndexSnapshots.getAll(diaryIsarIds);
+    final searchRemoves = <int, Set<int>>{};
+    final linkRemoves = <int, Set<int>>{};
+    for (var i = 0; i < diaryIsarIds.length; i++) {
+      final old = olds[i];
+      if (old == null) continue;
+      final id = diaryIsarIds[i];
+      for (final t in old.cutTokens) {
+        searchRemoves
+            .putIfAbsent(_searchKey(TokenSource.cut, t), () => {})
+            .add(id);
+      }
+      for (final t in old.cutForSearchTokens) {
+        searchRemoves
+            .putIfAbsent(_searchKey(TokenSource.cutForSearch, t), () => {})
+            .add(id);
+      }
+      for (final toId in old.linkToIds) {
+        linkRemoves.putIfAbsent(_linkKey(toId), () => {}).add(id);
+      }
+    }
+    _mutateSearchPostings(isar, adds: const {}, removes: searchRemoves);
+    _mutateLinkPostings(isar, adds: const {}, removes: linkRemoves);
+    isar.diaryIndexSnapshots.deleteAll(diaryIsarIds);
   }
 
-  // —— 双链反向索引（DiaryLinkIndex）：与搜索倒排索引同范式维护 —— //
-  static void _writeLinkEntries(Isar isar, int fromIsarId, List<String> toIds) {
-    if (toIds.isEmpty) return;
-    final collection = isar.diaryLinkIndexs;
-    final entries = toIds
-        .map(
-          (toId) => DiaryLinkIndex(
-            id: collection.autoIncrement(),
-            toId: toId,
-            fromIsarId: fromIsarId,
-          ),
-        )
-        .toList();
-    collection.putAll(entries);
-  }
-
-  static void _removeLinkEntries(Isar isar, int fromIsarId) {
-    final ids = isar.diaryLinkIndexs
-        .where()
-        .fromIsarIdEqualTo(fromIsarId)
-        .idProperty()
-        .findAll();
-    isar.diaryLinkIndexs.deleteAll(ids);
-  }
+  static void _clearIndexes(Isar isar, int diaryIsarId) =>
+      _clearIndexesBatch(isar, [diaryIsarId]);
 
   Future<TokenizeResult?> _tokenize(String text) async {
     if (text.isEmpty) return null;
     try {
-      return await Tokenizer.tokenize(text: text);
+      return await _rawTokenize(text);
     } catch (_) {
       return null;
     }
   }
 
-  Future<void> insertADiary(Diary diary) async {
-    final result = await _tokenize(diary.contentText.trim());
-    final links = DiaryContentUtil.extractLinks(diary);
+  Future<void> insertADiary(Diary diary) => insertDiaries([diary]);
+
+  /// 批量插入（云 pull / JSON 导入等本地批处理入口）。posting 变更整批聚合、单事务
+  /// 落库：高频词的 posting 行每批只重写一次，而逐篇 insert 会让该行随已插入篇数
+  /// 线性变长地反复整行重写（O(N²)）。
+  Future<void> insertDiaries(List<Diary> diaries) async {
+    if (diaries.isEmpty) return;
+    final entries = <_IndexEntry>[];
+    for (final diary in diaries) {
+      entries.add((
+        diaryIsarId: diary.isarId,
+        tokens: await _tokenize(diary.contentText.trim()),
+        links: DiaryContentUtil.extractLinks(diary),
+      ));
+    }
     await _isar.writeAsync((isar) {
-      isar.diarys.put(diary);
-      if (result != null) {
-        _writeIndexEntries(isar, diary.isarId, result.cut, TokenSource.cut);
-        _writeIndexEntries(
-          isar,
-          diary.isarId,
-          result.cutForSearch,
-          TokenSource.cutForSearch,
-        );
-      }
-      _writeLinkEntries(isar, diary.isarId, links);
+      isar.diarys.putAll(diaries);
+      _applyIndexesBatch(isar, entries);
     });
-    _events.add(DiaryCreated(diary));
+    for (final diary in diaries) {
+      _events.add(DiaryCreated(diary));
+    }
   }
 
   Future<void> updateADiary({
-    Diary? oldDiary,
     required Diary newDiary,
     IndexMode index = IndexMode.inline,
   }) async {
@@ -135,44 +293,25 @@ class DiaryRepository {
     final result = await _tokenize(newDiary.contentText.trim());
     final links = DiaryContentUtil.extractLinks(newDiary);
     await _isar.writeAsync((isar) {
-      _removeIndexEntries(isar, newDiary.isarId);
-      if (result != null) {
-        _writeIndexEntries(isar, newDiary.isarId, result.cut, TokenSource.cut);
-        _writeIndexEntries(
-          isar,
-          newDiary.isarId,
-          result.cutForSearch,
-          TokenSource.cutForSearch,
-        );
-      }
-      _removeLinkEntries(isar, newDiary.isarId);
-      _writeLinkEntries(isar, newDiary.isarId, links);
+      _applyIndexes(isar, newDiary.isarId, tokens: result, links: links);
     });
   }
 
   /// 重建单篇日记的搜索 / 链接索引（队列排空时调用），完成后在同一事务出队。幂等：可重复
-  /// 调用、可与另一次排空并发（最多多做一遍）；日记已硬删则只出队。
+  /// 调用、可与另一次排空并发（最多多做一遍）；日记已硬删则清残留倒排后出队。
   Future<void> reindexDiary(int diaryIsarId) async {
     final diary = await _isar.diarys.getAsync(diaryIsarId);
     if (diary == null) {
-      await _isar.writeAsync((isar) => isar.reindexQueues.delete(diaryIsarId));
+      await _isar.writeAsync((isar) {
+        _clearIndexes(isar, diaryIsarId);
+        isar.reindexQueues.delete(diaryIsarId);
+      });
       return;
     }
     final result = await _tokenize(diary.contentText.trim());
     final links = DiaryContentUtil.extractLinks(diary);
     await _isar.writeAsync((isar) {
-      _removeIndexEntries(isar, diaryIsarId);
-      if (result != null) {
-        _writeIndexEntries(isar, diaryIsarId, result.cut, TokenSource.cut);
-        _writeIndexEntries(
-          isar,
-          diaryIsarId,
-          result.cutForSearch,
-          TokenSource.cutForSearch,
-        );
-      }
-      _removeLinkEntries(isar, diaryIsarId);
-      _writeLinkEntries(isar, diaryIsarId, links);
+      _applyIndexes(isar, diaryIsarId, tokens: result, links: links);
       isar.reindexQueues.delete(diaryIsarId);
     });
   }
@@ -229,7 +368,8 @@ class DiaryRepository {
   }
 
   Future<Diary?> getDiaryByBusinessId(String id) async {
-    return await _isar.diarys.where().idEqualTo(id).findFirstAsync();
+    // isarId 即 fastHash(id)，主键 get O(1)；idEqualTo 会整表扫描（引擎不用二级索引）。
+    return await _isar.diarys.getAsync(fastHash(id));
   }
 
   Future<List<Diary>> getDiariesByDateRange(
@@ -271,8 +411,7 @@ class DiaryRepository {
           lastModified: DateTime.timestamp(),
         ),
       );
-      _removeIndexEntries(isar, isarId);
-      _removeLinkEntries(isar, isarId);
+      _clearIndexes(isar, isarId);
     });
     _events.add(DiaryUpdated(diary.copyWith(deleted: true, show: true)));
     await _cleanLocalMedia(diary);
@@ -283,10 +422,7 @@ class DiaryRepository {
   Future<void> deleteDiariesByIsarIds(List<int> isarIds) async {
     await _isar.writeAsync((isar) {
       isar.diarys.deleteAll(isarIds);
-      for (final id in isarIds) {
-        _removeIndexEntries(isar, id);
-        _removeLinkEntries(isar, id);
-      }
+      _clearIndexesBatch(isar, isarIds);
     });
     for (final id in isarIds) {
       _events.add(DiaryDeleted(id));
@@ -391,26 +527,20 @@ class DiaryRepository {
     final diaryIdSet = <int>{};
 
     for (final word in cutTokens) {
-      final ids = await _isar.diarySearchIndexs
-          .where()
-          .tokenEqualTo(word)
-          .sourceEqualTo(TokenSource.cut)
-          .diaryIsarIdProperty()
-          .findAllAsync();
-      for (final id in ids) {
+      final posting = await _isar.searchPostings.getAsync(
+        _searchKey(TokenSource.cut, word),
+      );
+      for (final id in posting?.diaryIsarIds ?? const <int>[]) {
         scores[id] = (scores[id] ?? 0) + 1.0;
         diaryIdSet.add(id);
       }
     }
 
     for (final word in cutForSearchTokens) {
-      final ids = await _isar.diarySearchIndexs
-          .where()
-          .tokenEqualTo(word)
-          .sourceEqualTo(TokenSource.cutForSearch)
-          .diaryIsarIdProperty()
-          .findAllAsync();
-      for (final id in ids) {
+      final posting = await _isar.searchPostings.getAsync(
+        _searchKey(TokenSource.cutForSearch, word),
+      );
+      for (final id in posting?.diaryIsarIds ?? const <int>[]) {
         scores[id] = (scores[id] ?? 0) + 0.5;
         diaryIdSet.add(id);
       }
@@ -481,12 +611,8 @@ class DiaryRepository {
   /// 反向链接：返回正文里双链指向 [toId] 的源日记（按时间倒序，排除草稿 / 回收站 / 已删）。
   Future<List<Diary>> getBacklinks(String toId) async {
     if (toId.isEmpty) return [];
-    final fromIds = await _isar.diaryLinkIndexs
-        .where()
-        .toIdEqualTo(toId)
-        .fromIsarIdProperty()
-        .findAllAsync();
-    final unique = fromIds.toSet().toList();
+    final posting = await _isar.linkPostings.getAsync(_linkKey(toId));
+    final unique = posting?.fromIsarIds ?? const <int>[];
     if (unique.isEmpty) return [];
     final diaries = await _isar.diarys.getAllAsync(unique);
     final valid = diaries
@@ -497,56 +623,65 @@ class DiaryRepository {
     return valid;
   }
 
-  /// 清空并重建全部倒排索引。
-  Future<int> rebuildSearchIndex() async {
+  /// 清空并重建全部倒排（全文 posting + 双链 posting + 快照），升级后的手动回填入口：
+  /// 设置里的「重建索引」按钮与搜索页的升级提示都走这里。全量在内存聚合、单事务替换，
+  /// 避免逐篇 diff 的重复读写。返回处理篇数。幂等，均由 `content` 重算、不改 `lastModified`。
+  Future<int> rebuildAllIndexes() async {
     final diaries = await getAllDiaries();
-    final tokenized = <int, TokenizeResult>{};
+    final searchPostings = <int, List<int>>{};
+    final linkPostings = <int, List<int>>{};
+    final snapshots = <DiaryIndexSnapshot>[];
+
     for (final diary in diaries) {
       final text = diary.contentText.trim();
-      if (text.isNotEmpty) {
-        final result = await _tokenize(text);
-        if (result != null) {
-          tokenized[diary.isarId] = result;
-        }
+      final tokens = text.isEmpty ? null : await _tokenize(text);
+      final links = DiaryContentUtil.extractLinks(diary);
+      final cut = tokens?.cut ?? const <String>[];
+      final cutForSearch = tokens?.cutForSearch ?? const <String>[];
+      if (cut.isEmpty && cutForSearch.isEmpty && links.isEmpty) continue;
+
+      for (final t in cut) {
+        searchPostings
+            .putIfAbsent(_searchKey(TokenSource.cut, t), () => [])
+            .add(diary.isarId);
       }
+      for (final t in cutForSearch) {
+        searchPostings
+            .putIfAbsent(_searchKey(TokenSource.cutForSearch, t), () => [])
+            .add(diary.isarId);
+      }
+      for (final toId in links) {
+        linkPostings.putIfAbsent(_linkKey(toId), () => []).add(diary.isarId);
+      }
+      snapshots.add(
+        DiaryIndexSnapshot(
+          diaryIsarId: diary.isarId,
+          cutTokens: cut,
+          cutForSearchTokens: cutForSearch,
+          linkToIds: links,
+        ),
+      );
     }
+
+    final searchRows = [
+      for (final e in searchPostings.entries)
+        SearchPosting(key: e.key, diaryIsarIds: e.value),
+    ];
+    final linkRows = [
+      for (final e in linkPostings.entries)
+        LinkPosting(key: e.key, fromIsarIds: e.value),
+    ];
     await _isar.writeAsync((isar) {
-      isar.diarySearchIndexs.clear();
-      for (final entry in tokenized.entries) {
-        _writeIndexEntries(isar, entry.key, entry.value.cut, TokenSource.cut);
-        _writeIndexEntries(
-          isar,
-          entry.key,
-          entry.value.cutForSearch,
-          TokenSource.cutForSearch,
-        );
-      }
+      isar.searchPostings.clear();
+      isar.linkPostings.clear();
+      isar.diaryIndexSnapshots.clear();
+      isar.searchPostings.putAll(searchRows);
+      isar.linkPostings.putAll(linkRows);
+      isar.diaryIndexSnapshots.putAll(snapshots);
     });
+    // 任何一次全量重建都完成了升级后的一次性回填（搜索页提示据此收起）。
+    await MoodiaryKVs.searchIndexBackfilled.set(true);
     return diaries.length;
-  }
-
-  /// 清空并重建全部双链反向索引（按 `content` 重抽 diaryLink 目标 id）。幂等。
-  Future<void> rebuildLinkIndex() async {
-    final diaries = await getAllDiaries();
-    final links = <int, List<String>>{};
-    for (final diary in diaries) {
-      final l = DiaryContentUtil.extractLinks(diary);
-      if (l.isNotEmpty) links[diary.isarId] = l;
-    }
-    await _isar.writeAsync((isar) {
-      isar.diaryLinkIndexs.clear();
-      for (final entry in links.entries) {
-        _writeLinkEntries(isar, entry.key, entry.value);
-      }
-    });
-  }
-
-  /// 一次性重建搜索 + 双链两套倒排索引（升级后的手动回填入口：设置里的「重建索引」按钮与
-  /// 搜索页的升级提示都走这里）。返回处理篇数。幂等，均由 `content` 重算、不改 `lastModified`。
-  Future<int> rebuildAllIndexes() async {
-    final count = await rebuildSearchIndex();
-    await rebuildLinkIndex();
-    return count;
   }
 
   /// 全量数据修复：按 `content` 重推 `contentText` / 媒体引用、清失效 `categoryId`，
@@ -609,8 +744,7 @@ class DiaryRepository {
       }
     }
 
-    final reindexed = await rebuildSearchIndex();
-    await rebuildLinkIndex();
+    final reindexed = await rebuildAllIndexes();
     return DiaryRepairReport(
       scanned: diaries.length,
       changed: updates.length,

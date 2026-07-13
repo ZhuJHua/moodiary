@@ -19,8 +19,9 @@ final class IsarDatabase {
     DiarySchema,
     CategorySchema,
     FontSchema,
-    DiarySearchIndexSchema,
-    DiaryLinkIndexSchema,
+    SearchPostingSchema,
+    LinkPostingSchema,
+    DiaryIndexSnapshotSchema,
     ReindexQueueSchema,
     LlmProviderSchema,
     ChatSessionSchema,
@@ -31,6 +32,9 @@ final class IsarDatabase {
     _isar = await Isar.openAsync(
       schemas: _schemas,
       directory: FileUtil.getRealPath('database', ''),
+      // 默认 128MiB 是 mdbx 硬上限（写满直接抛错）。此值只是虚拟映射上限，不预分配
+      // 磁盘；全平台均为 64 位目标，放大无代价。4GiB ≈ 十万篇量级的 2000 字日记。
+      maxSizeMiB: 4096,
     );
   }
 

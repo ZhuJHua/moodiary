@@ -39,13 +39,6 @@ abstract class Diary with _$Diary {
   @Id()
   int get isarId => fastHash(this.id);
 
-  @Index()
-  String get yM => '${time.year.toString()}/${time.month.toString()}';
-
-  @Index()
-  String get yMd =>
-      '${time.year.toString()}/${time.month.toString()}/${time.day.toString()}';
-
   factory Diary.create({
     String? categoryId,
     required String title,

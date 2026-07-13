@@ -88,14 +88,24 @@ class JsonFileSyncBackend implements SyncBackend {
     final diaryRepo = DiaryRepository.get();
     final categoryRepo = CategoryRepository.get();
 
-    int diaryCount = 0;
+    // 解析容错逐条，落库走批量：逐篇 insert 会对高频词 posting 行产生 O(N²) 重写，
+    // 几千篇的恢复从几十秒降到秒级。分块以限制分词结果的内存峰值。
+    final diaries = <Diary>[];
     for (final raw in diaryJsonList) {
       if (raw is! Map<String, dynamic>) continue;
       try {
-        final diary = Diary.fromJson(raw);
-        await diaryRepo.insertADiary(diary);
-        diaryCount += 1;
+        diaries.add(Diary.fromJson(raw));
       } catch (_) {}
+    }
+    int diaryCount = 0;
+    const chunkSize = 500;
+    for (var i = 0; i < diaries.length; i += chunkSize) {
+      final chunk = diaries.sublist(
+        i,
+        (i + chunkSize).clamp(0, diaries.length),
+      );
+      await diaryRepo.insertDiaries(chunk);
+      diaryCount += chunk.length;
     }
 
     int categoryCount = 0;

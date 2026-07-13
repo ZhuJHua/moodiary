@@ -102,7 +102,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
         show: false,
         lastModified: DateTime.timestamp(),
       );
-      await _repository.updateADiary(oldDiary: diary, newDiary: next);
+      await _repository.updateADiary(newDiary: next);
       return true;
     } catch (_) {
       return false;
@@ -147,7 +147,7 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
         show: true,
         lastModified: DateTime.timestamp(),
       );
-      await _repository.updateADiary(oldDiary: diary, newDiary: next);
+      await _repository.updateADiary(newDiary: next);
       return true;
     } catch (_) {
       return false;

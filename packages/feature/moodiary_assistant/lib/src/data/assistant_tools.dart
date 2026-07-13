@@ -282,7 +282,7 @@ abstract final class AssistantToolRegistry {
     }
     updated = updated.copyWith(lastModified: DateTime.timestamp());
 
-    await repo.updateADiary(oldDiary: existing, newDiary: updated);
+    await repo.updateADiary(newDiary: updated);
     final shown = updated.title.trim().isEmpty ? '(无标题)' : updated.title.trim();
     return '已更新日记「$shown」（id=$id）。';
   }
