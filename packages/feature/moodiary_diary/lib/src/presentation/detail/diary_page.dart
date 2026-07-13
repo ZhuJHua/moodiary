@@ -12,6 +12,8 @@ import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
+import 'hop_history.dart';
+
 enum _Mode { read, edit }
 
 /// 统一日记页：合并只读详情与编辑，支持原地编辑。阅读 ↔ 编辑复用同一 [EditorBody]
@@ -55,13 +57,26 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   final ValueNotifier<int> _elapsed = ValueNotifier<int>(0);
   Timer? _writingTimer;
 
-  /// 缓存 notifier：Riverpod 3.x 禁止在 dispose 里碰 ref。
-  late final EditController _notifier;
+  /// 缓存 notifier：Riverpod 3.x 禁止在 dispose 里碰 ref；页内跳转换日记时随之刷新。
+  late EditController _notifier;
 
   /// 已登记「打开中」的业务 id（新建日记打开后才解析出）。
   String? _guardId;
 
   ProviderSubscription<AsyncValue<Diary>>? _guardSub;
+
+  // —— 页内双链跳转历史（浏览器语义：单页原地换日记 + 换 URL，返回键先走历史）——
+  final HopHistory _hops = HopHistory();
+
+  /// 防跳转双击 / 回退连按。
+  bool _hopping = false;
+
+  /// didUpdateWidget 区分自发 replace（页内跳转，内容已 swap）与外部导航。
+  bool _selfReplace = false;
+
+  /// provider 家族切换的加载间隙用于渲染的目标日记（跳转时已从仓库取到），
+  /// 避免 body 短暂塌空导致 webview 被卸载重建。
+  Diary? _hopTarget;
 
   // —— 目录（TOC）——
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -84,12 +99,11 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     return _headings;
   }
 
-  EditControllerProvider get _provider =>
-      editControllerProvider(
-        widget.diaryId,
-        defaultType: widget.initialType,
-        defaultCategoryId: widget.initialCategoryId,
-      );
+  EditControllerProvider get _provider => editControllerProvider(
+    widget.diaryId,
+    defaultType: widget.initialType,
+    defaultCategoryId: widget.initialCategoryId,
+  );
 
   @override
   void initState() {
@@ -110,6 +124,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     if (id != null) {
       _guardId = id;
       OpenDiaryRegistry.instance.open(id);
+      _hops.reset(id);
     } else {
       _guardSub = ref.listenManual(_provider, (_, next) {
         final diary = next.value;
@@ -119,6 +134,54 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         }
       });
     }
+  }
+
+  @override
+  void didUpdateWidget(covariant DiaryPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.diaryId == widget.diaryId) return;
+    final self = _selfReplace;
+    _selfReplace = false;
+    final newId = widget.diaryId;
+    if (newId == null) return;
+    // 外部 replace（非页内跳转发起）：历史重置为单条，内容异步补换。
+    if (!self) {
+      _hops.reset(newId);
+      unawaited(_applyExternalSwap(newId));
+    }
+    _onDiaryChanged(newId);
+  }
+
+  /// 换日记（页内跳转或外部 replace）后的 per-diary 状态重置；内容 swap 由跳转方处理。
+  /// didUpdateWidget 期间本就要重建，字段直接赋值，不 setState。
+  void _onDiaryChanged(String newId) {
+    final oldId = _guardId;
+    _guardSub?.close();
+    _guardSub = null;
+    if (oldId != null && oldId != newId) {
+      OpenDiaryRegistry.instance.close(oldId);
+    }
+    _guardId = newId;
+    if (oldId != newId) OpenDiaryRegistry.instance.open(newId);
+    _notifier = ref.read(_provider.notifier);
+    _mode = widget.startInEdit ? _Mode.edit : _Mode.read;
+    _dirty = false;
+    _saveStatus = 'idle';
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = null;
+    _elapsed.value = 0;
+    _activeHeading.value = -1;
+  }
+
+  /// 外部 replace 到另一篇日记（当前无此入口，防御性兜底）：取库换文档。
+  Future<void> _applyExternalSwap(String id) async {
+    final target = await DiaryRepository.get().getDiaryByBusinessId(id);
+    if (!mounted || target == null) return;
+    setState(() => _hopTarget = target);
+    await _editorController.swapDocument(
+      content: target.content,
+      title: target.title,
+    );
   }
 
   @override
@@ -316,65 +379,106 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   @override
   Widget build(BuildContext context) {
     final editAsync = ref.watch(_provider);
-    final diary = editAsync.value;
+    // 目标日记的 provider 已就绪即撤兜底（页内跳转的 URL replace 落地后家族才切过来，
+    // 之前 hasValue 属于旧日记，不能撤）。
+    if (editAsync.hasValue && _hopTarget?.id == widget.diaryId) {
+      _hopTarget = null;
+    }
+    final diary = editAsync.value ?? _hopTarget;
     // 大纲来自当前正文（tiptap JSON）；空则不显示目录按钮 / 抽屉。
     final headings = diary == null
         ? const <({int level, String text})>[]
         : _headingsOf(diary.content);
-    return Scaffold(
-      key: _scaffoldKey,
-      // 返回键 + 居中写作胶囊（编辑态）+ 右侧动作。
-      appBar: AppBar(
-        centerTitle: true,
-        title: (_mode == _Mode.edit && diary != null)
-            ? _writingPill(diary)
-            : null,
-        actions: [
-          // 编辑态：✓ 保存并退回只读预览（自动保存仍在，这个是显式入口）。
-          if (diary != null && _mode == _Mode.edit)
-            IconButton(
-              tooltip: '保存',
-              icon: const Icon(Icons.check_rounded),
-              onPressed: _saveAndExit,
-            ),
-          // 只读态 + 可编辑（tiptap）：✏️ 进入编辑。旧格式不可编辑，不显示。
-          if (diary != null &&
-              _mode == _Mode.read &&
-              DiaryType.fromValue(diary.type).isEditable)
-            IconButton(
-              tooltip: '编辑',
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: _enterEdit,
-            ),
-          // 分享仅在只读预览态显示（编辑态不出现）。
-          if (diary != null && _mode == _Mode.read)
-            IconButton(
-              tooltip: '分享',
-              icon: const Icon(Icons.ios_share_rounded),
-              onPressed: () => ShareRoute(diaryId: diary.id).push(context),
-            ),
-          if (headings.isNotEmpty)
-            IconButton(
-              tooltip: '目录',
-              icon: const Icon(Icons.toc_rounded),
-              onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-            ),
-        ],
-      ),
-      endDrawer: headings.isEmpty
-          ? null
-          : _TocDrawer(
-              headings: headings,
-              activeHeading: _activeHeading,
-              onTap: (i) {
-                _editorController.scrollToHeading(i);
-                _scaffoldKey.currentState?.closeEndDrawer();
-              },
-            ),
-      body: editAsync.buildLoading(
-        // 不显示转圈，避免和编辑器 webview 加载遮罩形成「两次 loading」。
-        loading: () => const SizedBox.shrink(),
-        data: (diary) => SafeArea(child: _buildBody(diary)),
+    return PopScope(
+      canPop: _hops.atRoot,
+      // 返回键 / 预测性返回：跳转历史未走完先回退一步，走完才真正退出页面。
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _goHistory(-1);
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        // 返回键 + 居中写作胶囊（编辑态）+ 右侧动作。
+        appBar: AppBar(
+          centerTitle: true,
+          // 发生过页内跳转（历史 >1 条）时换成浏览器式导航簇：主页 / 后退 / 前进。
+          // 普通打开保持默认返回箭头；不可用方向置灰不隐藏，按钮不跳位。
+          // 主页 = 绕过历史直接退出（Navigator.pop 不走 PopScope）；系统返回语义不变。
+          leadingWidth: _hops.length > 1 ? 144 : null,
+          leading: _hops.length > 1
+              ? Row(
+                  children: [
+                    IconButton(
+                      tooltip: '主页',
+                      icon: const Icon(Icons.home_rounded),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    IconButton(
+                      tooltip: '后退',
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      onPressed: _hops.atRoot ? null : () => _goHistory(-1),
+                    ),
+                    IconButton(
+                      tooltip: '前进',
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                      onPressed: _hops.peek(1) == null
+                          ? null
+                          : () => _goHistory(1),
+                    ),
+                  ],
+                )
+              : null,
+          title: (_mode == _Mode.edit && diary != null)
+              ? _writingPill(diary)
+              : null,
+          actions: [
+            // 编辑态：✓ 保存并退回只读预览（自动保存仍在，这个是显式入口）。
+            if (diary != null && _mode == _Mode.edit)
+              IconButton(
+                tooltip: '保存',
+                icon: const Icon(Icons.check_rounded),
+                onPressed: _saveAndExit,
+              ),
+            // 只读态 + 可编辑（tiptap）：✏️ 进入编辑。旧格式不可编辑，不显示。
+            if (diary != null &&
+                _mode == _Mode.read &&
+                DiaryType.fromValue(diary.type).isEditable)
+              IconButton(
+                tooltip: '编辑',
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: _enterEdit,
+              ),
+            // 分享仅在只读预览态显示（编辑态不出现）。
+            if (diary != null && _mode == _Mode.read)
+              IconButton(
+                tooltip: '分享',
+                icon: const Icon(Icons.ios_share_rounded),
+                onPressed: () => ShareRoute(diaryId: diary.id).push(context),
+              ),
+            if (headings.isNotEmpty)
+              IconButton(
+                tooltip: '目录',
+                icon: const Icon(Icons.toc_rounded),
+                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+              ),
+          ],
+        ),
+        endDrawer: headings.isEmpty
+            ? null
+            : _TocDrawer(
+                headings: headings,
+                activeHeading: _activeHeading,
+                onTap: (i) {
+                  _editorController.scrollToHeading(i);
+                  _scaffoldKey.currentState?.closeEndDrawer();
+                },
+              ),
+        body: diary != null
+            ? SafeArea(child: _buildBody(diary))
+            : editAsync.buildLoading(
+                // 不显示转圈，避免和编辑器 webview 加载遮罩形成「两次 loading」。
+                loading: () => const SizedBox.shrink(),
+                data: (d) => SafeArea(child: _buildBody(d)),
+              ),
       ),
     );
   }
@@ -548,19 +652,97 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     );
   }
 
-  /// 点击双链 chip：按业务 id 解析目标日记，再按其类型导航（不存在则提示）。
+  /// 点击双链 chip / 反链条目：按业务 id 解析目标日记，页内原地跳转（不存在则提示）。
   Future<void> _openLinkedDiary(String id) async {
-    final target = await DiaryRepository.get().getDiaryByBusinessId(id);
-    if (!mounted) return;
-    if (target == null) {
-      toast.error(message: context.l10n.diaryLinkNotFound);
-      return;
+    if (_hopping) return;
+    if (id == _guardId) return; // 自链不跳
+    _hopping = true;
+    try {
+      final target = await DiaryRepository.get().getDiaryByBusinessId(id);
+      if (!mounted) return;
+      if (target == null) {
+        toast.error(message: context.l10n.diaryLinkNotFound);
+        return;
+      }
+      await _hopTo(target);
+    } finally {
+      _hopping = false;
     }
-    final route = DiaryRoute(
+  }
+
+  /// 前向跳转（浏览器语义）：截断前进分支后追加，落到目标顶部。
+  Future<void> _hopTo(Diary target) async {
+    if (!await _flushBeforeHop()) return;
+    // 新建页首跳：首存后才有稳定 id 可入历史（有链接可点 ⇒ 非空白 ⇒ 上面已落库）。
+    if (_hops.isEmpty) {
+      final seedId = _guardId;
+      if (seedId == null) return;
+      _hops.reset(seedId);
+    }
+    _hops.current?.scrollY = await _editorController.getScrollY();
+    if (!mounted) return;
+    _hops.push(target.id);
+    await _showEntry(target, scrollY: 0);
+  }
+
+  /// 历史走一步（delta ±1）；途中已被删除的日记（回收 / 同步硬删）从历史剔除跳过。
+  Future<void> _goHistory(int delta) async {
+    if (_hopping) return;
+    _hopping = true;
+    try {
+      if (!await _flushBeforeHop()) return;
+      _hops.current?.scrollY = await _editorController.getScrollY();
+      if (!mounted) return;
+      while (true) {
+        final entry = _hops.peek(delta);
+        if (entry == null) return;
+        final target = await DiaryRepository.get().getDiaryByBusinessId(
+          entry.diaryId,
+        );
+        if (!mounted) return;
+        if (target == null) {
+          _hops.dropNext(delta);
+          continue;
+        }
+        _hops.move(delta);
+        await _showEntry(target, scrollY: entry.scrollY);
+        return;
+      }
+    } finally {
+      _hopping = false;
+    }
+  }
+
+  /// 编辑态先落库再走，保存失败不跳（防丢字）。
+  Future<bool> _flushBeforeHop() async {
+    if (!_dirty) return true;
+    await _flushAutoSave();
+    if (!mounted) return false;
+    if (_saveStatus == 'failed') {
+      toast.error(message: '保存失败');
+      return false;
+    }
+    return true;
+  }
+
+  /// 把页面切到 [target]：先退回只读（rebuild 把 setEditable(false) 排进 JS 队列），
+  /// swap 文档，最后 replace URL 对齐真相源（didUpdateWidget 收尾 per-diary 状态重置）。
+  Future<void> _showEntry(Diary target, {required double scrollY}) async {
+    setState(() {
+      _mode = _Mode.read;
+      _hopTarget = target;
+    });
+    await _editorController.swapDocument(
+      content: target.content,
+      title: target.title,
+      scrollY: scrollY,
+    );
+    if (!mounted) return;
+    _selfReplace = true;
+    DiaryRoute(
       type: DiaryType.fromValue(target.type).routeQuery,
       diaryId: target.id,
-    );
-    route.push(context);
+    ).replace(context);
   }
 
   List<Widget> _meta(BuildContext context, Diary diary) {
@@ -616,7 +798,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       ],
     ];
   }
-
 }
 
 class _MoodChip extends StatelessWidget {
@@ -708,9 +889,7 @@ class _TocDrawer extends StatelessWidget {
                     itemBuilder: (context, i) {
                       final h = headings[i];
                       final isActive = active == i;
-                      final label = h.text.trim().isEmpty
-                          ? '(无标题)'
-                          : h.text;
+                      final label = h.text.trim().isEmpty ? '(无标题)' : h.text;
                       return Padding(
                         padding: EdgeInsets.only(
                           left: (h.level - 1) * 14.0,
@@ -852,11 +1031,16 @@ class _BacklinksPanelState extends State<_BacklinksPanel> {
                 const SizedBox(width: 8),
                 Text(
                   context.l10n.backlinks,
-                  style: textTheme.titleSmall?.copyWith(color: scheme.onSurface),
+                  style: textTheme.titleSmall?.copyWith(
+                    color: scheme.onSurface,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: scheme.secondaryContainer,
                     borderRadius: BorderRadius.circular(999),
