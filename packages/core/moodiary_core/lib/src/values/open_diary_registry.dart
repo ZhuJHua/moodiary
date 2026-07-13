@@ -3,25 +3,32 @@
 /// 持久化（崩溃 / 重启即清空，靠周期 poll 兜底）。
 ///
 /// 放在 core 是因为 moodiary_sync 与 diary 同为 feature 层、不能互相 import，二者都需
-/// 访问它，故下沉到两者都可合法依赖的 core。用 [Set] 支持桌面 / 链接跳转时多篇同开。
+/// 访问它，故下沉到两者都可合法依赖的 core。引用计数支持同一篇多处同开（桌面多窗 /
+/// 路由夹层导致的重复实例）：open/close 成对抵扣，减到零才视为关闭。
 class OpenDiaryRegistry {
   OpenDiaryRegistry._();
 
   static final OpenDiaryRegistry instance = OpenDiaryRegistry._();
 
-  final Set<String> _open = <String>{};
+  final Map<String, int> _open = <String, int>{};
 
   void open(String id) {
     if (id.isEmpty) return;
-    _open.add(id);
+    _open[id] = (_open[id] ?? 0) + 1;
   }
 
   void close(String id) {
-    _open.remove(id);
+    final count = _open[id];
+    if (count == null) return;
+    if (count <= 1) {
+      _open.remove(id);
+    } else {
+      _open[id] = count - 1;
+    }
   }
 
-  bool contains(String id) => _open.contains(id);
+  bool contains(String id) => _open.containsKey(id);
 
   /// push 前冻结一份快照，避免「边 push 边有日记开 / 关」导致快照半包含。
-  Set<String> snapshot() => Set<String>.unmodifiable(_open);
+  Set<String> snapshot() => Set<String>.unmodifiable(_open.keys);
 }
