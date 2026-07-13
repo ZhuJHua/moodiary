@@ -405,9 +405,8 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
   Future<void> _rebuild() async {
     setState(() => _rebuilding = true);
     try {
+      // 重建完成即置位 searchIndexBackfilled，外层 ValueListenableBuilder 收起本卡片。
       await DiaryRepository.get().rebuildAllIndexes();
-      // flag 置 true 后，外层 ValueListenableBuilder 收起本卡片，无需再 setState。
-      await MoodiaryKVs.searchIndexBackfilled.set(true);
     } catch (e, s) {
       logger.e('搜索索引重建失败', error: e, stackTrace: s);
       if (mounted) setState(() => _rebuilding = false);

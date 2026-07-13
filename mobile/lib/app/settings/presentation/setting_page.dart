@@ -8,7 +8,6 @@ import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary/app/settings/presentation/widget/cache_usage_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/data_repair_tile.dart';
-import 'package:moodiary/app/settings/presentation/widget/rebuild_index_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/reset_data_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/color_sheet.dart';
 import 'package:moodiary/app/settings/presentation/widget/dashboard_section.dart';
@@ -100,7 +99,6 @@ class _DataSection extends StatelessWidget {
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => _openSetting(context, const EditorMigrationRoute()),
               ),
-              const RebuildIndexTile(),
               const DataRepairTile(),
               const CacheUsageTile(),
               const ResetDataTile(isLast: true),
