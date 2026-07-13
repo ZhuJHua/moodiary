@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SearchPosting {
 
-@Id() int get key; List<int> get diaryIsarIds;
+@Id() int get key; List<int> get diaryIsarIds; List<int> get termFreqs;
 /// Create a copy of SearchPosting
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $SearchPostingCopyWith<SearchPosting> get copyWith => _$SearchPostingCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchPosting&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other.diaryIsarIds, diaryIsarIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SearchPosting&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other.diaryIsarIds, diaryIsarIds)&&const DeepCollectionEquality().equals(other.termFreqs, termFreqs));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,key,const DeepCollectionEquality().hash(diaryIsarIds));
+int get hashCode => Object.hash(runtimeType,key,const DeepCollectionEquality().hash(diaryIsarIds),const DeepCollectionEquality().hash(termFreqs));
 
 @override
 String toString() {
-  return 'SearchPosting(key: $key, diaryIsarIds: $diaryIsarIds)';
+  return 'SearchPosting(key: $key, diaryIsarIds: $diaryIsarIds, termFreqs: $termFreqs)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $SearchPostingCopyWith<$Res>  {
   factory $SearchPostingCopyWith(SearchPosting value, $Res Function(SearchPosting) _then) = _$SearchPostingCopyWithImpl;
 @useResult
 $Res call({
-@Id() int key, List<int> diaryIsarIds
+@Id() int key, List<int> diaryIsarIds, List<int> termFreqs
 });
 
 
@@ -62,10 +62,11 @@ class _$SearchPostingCopyWithImpl<$Res>
 
 /// Create a copy of SearchPosting
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? diaryIsarIds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? diaryIsarIds = null,Object? termFreqs = null,}) {
   return _then(_self.copyWith(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as int,diaryIsarIds: null == diaryIsarIds ? _self.diaryIsarIds : diaryIsarIds // ignore: cast_nullable_to_non_nullable
+as List<int>,termFreqs: null == termFreqs ? _self.termFreqs : termFreqs // ignore: cast_nullable_to_non_nullable
 as List<int>,
   ));
 }
@@ -151,10 +152,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  int key,  List<int> diaryIsarIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  int key,  List<int> diaryIsarIds,  List<int> termFreqs)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchPosting() when $default != null:
-return $default(_that.key,_that.diaryIsarIds);case _:
+return $default(_that.key,_that.diaryIsarIds,_that.termFreqs);case _:
   return orElse();
 
 }
@@ -172,10 +173,10 @@ return $default(_that.key,_that.diaryIsarIds);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  int key,  List<int> diaryIsarIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  int key,  List<int> diaryIsarIds,  List<int> termFreqs)  $default,) {final _that = this;
 switch (_that) {
 case _SearchPosting():
-return $default(_that.key,_that.diaryIsarIds);case _:
+return $default(_that.key,_that.diaryIsarIds,_that.termFreqs);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -192,10 +193,10 @@ return $default(_that.key,_that.diaryIsarIds);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  int key,  List<int> diaryIsarIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  int key,  List<int> diaryIsarIds,  List<int> termFreqs)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchPosting() when $default != null:
-return $default(_that.key,_that.diaryIsarIds);case _:
+return $default(_that.key,_that.diaryIsarIds,_that.termFreqs);case _:
   return null;
 
 }
@@ -207,7 +208,7 @@ return $default(_that.key,_that.diaryIsarIds);case _:
 
 
 class _SearchPosting extends SearchPosting {
-  const _SearchPosting({@Id() required this.key, required final  List<int> diaryIsarIds}): _diaryIsarIds = diaryIsarIds,super._();
+  const _SearchPosting({@Id() required this.key, required final  List<int> diaryIsarIds, required final  List<int> termFreqs}): _diaryIsarIds = diaryIsarIds,_termFreqs = termFreqs,super._();
   
 
 @override@Id() final  int key;
@@ -216,6 +217,13 @@ class _SearchPosting extends SearchPosting {
   if (_diaryIsarIds is EqualUnmodifiableListView) return _diaryIsarIds;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_diaryIsarIds);
+}
+
+ final  List<int> _termFreqs;
+@override List<int> get termFreqs {
+  if (_termFreqs is EqualUnmodifiableListView) return _termFreqs;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_termFreqs);
 }
 
 
@@ -229,16 +237,16 @@ _$SearchPostingCopyWith<_SearchPosting> get copyWith => __$SearchPostingCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchPosting&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other._diaryIsarIds, _diaryIsarIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SearchPosting&&(identical(other.key, key) || other.key == key)&&const DeepCollectionEquality().equals(other._diaryIsarIds, _diaryIsarIds)&&const DeepCollectionEquality().equals(other._termFreqs, _termFreqs));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,key,const DeepCollectionEquality().hash(_diaryIsarIds));
+int get hashCode => Object.hash(runtimeType,key,const DeepCollectionEquality().hash(_diaryIsarIds),const DeepCollectionEquality().hash(_termFreqs));
 
 @override
 String toString() {
-  return 'SearchPosting(key: $key, diaryIsarIds: $diaryIsarIds)';
+  return 'SearchPosting(key: $key, diaryIsarIds: $diaryIsarIds, termFreqs: $termFreqs)';
 }
 
 
@@ -249,7 +257,7 @@ abstract mixin class _$SearchPostingCopyWith<$Res> implements $SearchPostingCopy
   factory _$SearchPostingCopyWith(_SearchPosting value, $Res Function(_SearchPosting) _then) = __$SearchPostingCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() int key, List<int> diaryIsarIds
+@Id() int key, List<int> diaryIsarIds, List<int> termFreqs
 });
 
 
@@ -266,10 +274,11 @@ class __$SearchPostingCopyWithImpl<$Res>
 
 /// Create a copy of SearchPosting
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? diaryIsarIds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? diaryIsarIds = null,Object? termFreqs = null,}) {
   return _then(_SearchPosting(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as int,diaryIsarIds: null == diaryIsarIds ? _self._diaryIsarIds : diaryIsarIds // ignore: cast_nullable_to_non_nullable
+as List<int>,termFreqs: null == termFreqs ? _self._termFreqs : termFreqs // ignore: cast_nullable_to_non_nullable
 as List<int>,
   ));
 }

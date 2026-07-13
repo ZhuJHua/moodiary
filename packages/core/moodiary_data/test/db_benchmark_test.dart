@@ -149,6 +149,7 @@ void main() {
         schemas: [
           DiarySchema,
           SearchPostingSchema,
+          SearchStatsSchema,
           LinkPostingSchema,
           DiaryIndexSnapshotSchema,
           ReindexQueueSchema,

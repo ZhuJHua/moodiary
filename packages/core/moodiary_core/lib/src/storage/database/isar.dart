@@ -20,6 +20,7 @@ final class IsarDatabase {
     CategorySchema,
     FontSchema,
     SearchPostingSchema,
+    SearchStatsSchema,
     LinkPostingSchema,
     DiaryIndexSnapshotSchema,
     ReindexQueueSchema,

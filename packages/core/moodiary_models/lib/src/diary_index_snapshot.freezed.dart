@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DiaryIndexSnapshot {
 
-@Id() int get diaryIsarId; List<String> get cutTokens; List<String> get cutForSearchTokens; List<String> get linkToIds;
+@Id() int get diaryIsarId; List<String> get cutTokens; List<int> get cutFreqs; List<String> get cutForSearchTokens; List<int> get cutForSearchFreqs; List<String> get titleTokens; List<int> get titleFreqs; List<String> get linkToIds; int get contentChars;
 /// Create a copy of DiaryIndexSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $DiaryIndexSnapshotCopyWith<DiaryIndexSnapshot> get copyWith => _$DiaryIndexSnap
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryIndexSnapshot&&(identical(other.diaryIsarId, diaryIsarId) || other.diaryIsarId == diaryIsarId)&&const DeepCollectionEquality().equals(other.cutTokens, cutTokens)&&const DeepCollectionEquality().equals(other.cutForSearchTokens, cutForSearchTokens)&&const DeepCollectionEquality().equals(other.linkToIds, linkToIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DiaryIndexSnapshot&&(identical(other.diaryIsarId, diaryIsarId) || other.diaryIsarId == diaryIsarId)&&const DeepCollectionEquality().equals(other.cutTokens, cutTokens)&&const DeepCollectionEquality().equals(other.cutFreqs, cutFreqs)&&const DeepCollectionEquality().equals(other.cutForSearchTokens, cutForSearchTokens)&&const DeepCollectionEquality().equals(other.cutForSearchFreqs, cutForSearchFreqs)&&const DeepCollectionEquality().equals(other.titleTokens, titleTokens)&&const DeepCollectionEquality().equals(other.titleFreqs, titleFreqs)&&const DeepCollectionEquality().equals(other.linkToIds, linkToIds)&&(identical(other.contentChars, contentChars) || other.contentChars == contentChars));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,diaryIsarId,const DeepCollectionEquality().hash(cutTokens),const DeepCollectionEquality().hash(cutForSearchTokens),const DeepCollectionEquality().hash(linkToIds));
+int get hashCode => Object.hash(runtimeType,diaryIsarId,const DeepCollectionEquality().hash(cutTokens),const DeepCollectionEquality().hash(cutFreqs),const DeepCollectionEquality().hash(cutForSearchTokens),const DeepCollectionEquality().hash(cutForSearchFreqs),const DeepCollectionEquality().hash(titleTokens),const DeepCollectionEquality().hash(titleFreqs),const DeepCollectionEquality().hash(linkToIds),contentChars);
 
 @override
 String toString() {
-  return 'DiaryIndexSnapshot(diaryIsarId: $diaryIsarId, cutTokens: $cutTokens, cutForSearchTokens: $cutForSearchTokens, linkToIds: $linkToIds)';
+  return 'DiaryIndexSnapshot(diaryIsarId: $diaryIsarId, cutTokens: $cutTokens, cutFreqs: $cutFreqs, cutForSearchTokens: $cutForSearchTokens, cutForSearchFreqs: $cutForSearchFreqs, titleTokens: $titleTokens, titleFreqs: $titleFreqs, linkToIds: $linkToIds, contentChars: $contentChars)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $DiaryIndexSnapshotCopyWith<$Res>  {
   factory $DiaryIndexSnapshotCopyWith(DiaryIndexSnapshot value, $Res Function(DiaryIndexSnapshot) _then) = _$DiaryIndexSnapshotCopyWithImpl;
 @useResult
 $Res call({
-@Id() int diaryIsarId, List<String> cutTokens, List<String> cutForSearchTokens, List<String> linkToIds
+@Id() int diaryIsarId, List<String> cutTokens, List<int> cutFreqs, List<String> cutForSearchTokens, List<int> cutForSearchFreqs, List<String> titleTokens, List<int> titleFreqs, List<String> linkToIds, int contentChars
 });
 
 
@@ -62,13 +62,18 @@ class _$DiaryIndexSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of DiaryIndexSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? diaryIsarId = null,Object? cutTokens = null,Object? cutForSearchTokens = null,Object? linkToIds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? diaryIsarId = null,Object? cutTokens = null,Object? cutFreqs = null,Object? cutForSearchTokens = null,Object? cutForSearchFreqs = null,Object? titleTokens = null,Object? titleFreqs = null,Object? linkToIds = null,Object? contentChars = null,}) {
   return _then(_self.copyWith(
 diaryIsarId: null == diaryIsarId ? _self.diaryIsarId : diaryIsarId // ignore: cast_nullable_to_non_nullable
 as int,cutTokens: null == cutTokens ? _self.cutTokens : cutTokens // ignore: cast_nullable_to_non_nullable
-as List<String>,cutForSearchTokens: null == cutForSearchTokens ? _self.cutForSearchTokens : cutForSearchTokens // ignore: cast_nullable_to_non_nullable
-as List<String>,linkToIds: null == linkToIds ? _self.linkToIds : linkToIds // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,cutFreqs: null == cutFreqs ? _self.cutFreqs : cutFreqs // ignore: cast_nullable_to_non_nullable
+as List<int>,cutForSearchTokens: null == cutForSearchTokens ? _self.cutForSearchTokens : cutForSearchTokens // ignore: cast_nullable_to_non_nullable
+as List<String>,cutForSearchFreqs: null == cutForSearchFreqs ? _self.cutForSearchFreqs : cutForSearchFreqs // ignore: cast_nullable_to_non_nullable
+as List<int>,titleTokens: null == titleTokens ? _self.titleTokens : titleTokens // ignore: cast_nullable_to_non_nullable
+as List<String>,titleFreqs: null == titleFreqs ? _self.titleFreqs : titleFreqs // ignore: cast_nullable_to_non_nullable
+as List<int>,linkToIds: null == linkToIds ? _self.linkToIds : linkToIds // ignore: cast_nullable_to_non_nullable
+as List<String>,contentChars: null == contentChars ? _self.contentChars : contentChars // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -153,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  int diaryIsarId,  List<String> cutTokens,  List<String> cutForSearchTokens,  List<String> linkToIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  int diaryIsarId,  List<String> cutTokens,  List<int> cutFreqs,  List<String> cutForSearchTokens,  List<int> cutForSearchFreqs,  List<String> titleTokens,  List<int> titleFreqs,  List<String> linkToIds,  int contentChars)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DiaryIndexSnapshot() when $default != null:
-return $default(_that.diaryIsarId,_that.cutTokens,_that.cutForSearchTokens,_that.linkToIds);case _:
+return $default(_that.diaryIsarId,_that.cutTokens,_that.cutFreqs,_that.cutForSearchTokens,_that.cutForSearchFreqs,_that.titleTokens,_that.titleFreqs,_that.linkToIds,_that.contentChars);case _:
   return orElse();
 
 }
@@ -174,10 +179,10 @@ return $default(_that.diaryIsarId,_that.cutTokens,_that.cutForSearchTokens,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  int diaryIsarId,  List<String> cutTokens,  List<String> cutForSearchTokens,  List<String> linkToIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  int diaryIsarId,  List<String> cutTokens,  List<int> cutFreqs,  List<String> cutForSearchTokens,  List<int> cutForSearchFreqs,  List<String> titleTokens,  List<int> titleFreqs,  List<String> linkToIds,  int contentChars)  $default,) {final _that = this;
 switch (_that) {
 case _DiaryIndexSnapshot():
-return $default(_that.diaryIsarId,_that.cutTokens,_that.cutForSearchTokens,_that.linkToIds);case _:
+return $default(_that.diaryIsarId,_that.cutTokens,_that.cutFreqs,_that.cutForSearchTokens,_that.cutForSearchFreqs,_that.titleTokens,_that.titleFreqs,_that.linkToIds,_that.contentChars);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +199,10 @@ return $default(_that.diaryIsarId,_that.cutTokens,_that.cutForSearchTokens,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  int diaryIsarId,  List<String> cutTokens,  List<String> cutForSearchTokens,  List<String> linkToIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  int diaryIsarId,  List<String> cutTokens,  List<int> cutFreqs,  List<String> cutForSearchTokens,  List<int> cutForSearchFreqs,  List<String> titleTokens,  List<int> titleFreqs,  List<String> linkToIds,  int contentChars)?  $default,) {final _that = this;
 switch (_that) {
 case _DiaryIndexSnapshot() when $default != null:
-return $default(_that.diaryIsarId,_that.cutTokens,_that.cutForSearchTokens,_that.linkToIds);case _:
+return $default(_that.diaryIsarId,_that.cutTokens,_that.cutFreqs,_that.cutForSearchTokens,_that.cutForSearchFreqs,_that.titleTokens,_that.titleFreqs,_that.linkToIds,_that.contentChars);case _:
   return null;
 
 }
@@ -209,7 +214,7 @@ return $default(_that.diaryIsarId,_that.cutTokens,_that.cutForSearchTokens,_that
 
 
 class _DiaryIndexSnapshot extends DiaryIndexSnapshot {
-  const _DiaryIndexSnapshot({@Id() required this.diaryIsarId, required final  List<String> cutTokens, required final  List<String> cutForSearchTokens, required final  List<String> linkToIds}): _cutTokens = cutTokens,_cutForSearchTokens = cutForSearchTokens,_linkToIds = linkToIds,super._();
+  const _DiaryIndexSnapshot({@Id() required this.diaryIsarId, required final  List<String> cutTokens, required final  List<int> cutFreqs, required final  List<String> cutForSearchTokens, required final  List<int> cutForSearchFreqs, required final  List<String> titleTokens, required final  List<int> titleFreqs, required final  List<String> linkToIds, required this.contentChars}): _cutTokens = cutTokens,_cutFreqs = cutFreqs,_cutForSearchTokens = cutForSearchTokens,_cutForSearchFreqs = cutForSearchFreqs,_titleTokens = titleTokens,_titleFreqs = titleFreqs,_linkToIds = linkToIds,super._();
   
 
 @override@Id() final  int diaryIsarId;
@@ -220,11 +225,39 @@ class _DiaryIndexSnapshot extends DiaryIndexSnapshot {
   return EqualUnmodifiableListView(_cutTokens);
 }
 
+ final  List<int> _cutFreqs;
+@override List<int> get cutFreqs {
+  if (_cutFreqs is EqualUnmodifiableListView) return _cutFreqs;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_cutFreqs);
+}
+
  final  List<String> _cutForSearchTokens;
 @override List<String> get cutForSearchTokens {
   if (_cutForSearchTokens is EqualUnmodifiableListView) return _cutForSearchTokens;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_cutForSearchTokens);
+}
+
+ final  List<int> _cutForSearchFreqs;
+@override List<int> get cutForSearchFreqs {
+  if (_cutForSearchFreqs is EqualUnmodifiableListView) return _cutForSearchFreqs;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_cutForSearchFreqs);
+}
+
+ final  List<String> _titleTokens;
+@override List<String> get titleTokens {
+  if (_titleTokens is EqualUnmodifiableListView) return _titleTokens;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_titleTokens);
+}
+
+ final  List<int> _titleFreqs;
+@override List<int> get titleFreqs {
+  if (_titleFreqs is EqualUnmodifiableListView) return _titleFreqs;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_titleFreqs);
 }
 
  final  List<String> _linkToIds;
@@ -234,6 +267,7 @@ class _DiaryIndexSnapshot extends DiaryIndexSnapshot {
   return EqualUnmodifiableListView(_linkToIds);
 }
 
+@override final  int contentChars;
 
 /// Create a copy of DiaryIndexSnapshot
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +279,16 @@ _$DiaryIndexSnapshotCopyWith<_DiaryIndexSnapshot> get copyWith => __$DiaryIndexS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiaryIndexSnapshot&&(identical(other.diaryIsarId, diaryIsarId) || other.diaryIsarId == diaryIsarId)&&const DeepCollectionEquality().equals(other._cutTokens, _cutTokens)&&const DeepCollectionEquality().equals(other._cutForSearchTokens, _cutForSearchTokens)&&const DeepCollectionEquality().equals(other._linkToIds, _linkToIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DiaryIndexSnapshot&&(identical(other.diaryIsarId, diaryIsarId) || other.diaryIsarId == diaryIsarId)&&const DeepCollectionEquality().equals(other._cutTokens, _cutTokens)&&const DeepCollectionEquality().equals(other._cutFreqs, _cutFreqs)&&const DeepCollectionEquality().equals(other._cutForSearchTokens, _cutForSearchTokens)&&const DeepCollectionEquality().equals(other._cutForSearchFreqs, _cutForSearchFreqs)&&const DeepCollectionEquality().equals(other._titleTokens, _titleTokens)&&const DeepCollectionEquality().equals(other._titleFreqs, _titleFreqs)&&const DeepCollectionEquality().equals(other._linkToIds, _linkToIds)&&(identical(other.contentChars, contentChars) || other.contentChars == contentChars));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,diaryIsarId,const DeepCollectionEquality().hash(_cutTokens),const DeepCollectionEquality().hash(_cutForSearchTokens),const DeepCollectionEquality().hash(_linkToIds));
+int get hashCode => Object.hash(runtimeType,diaryIsarId,const DeepCollectionEquality().hash(_cutTokens),const DeepCollectionEquality().hash(_cutFreqs),const DeepCollectionEquality().hash(_cutForSearchTokens),const DeepCollectionEquality().hash(_cutForSearchFreqs),const DeepCollectionEquality().hash(_titleTokens),const DeepCollectionEquality().hash(_titleFreqs),const DeepCollectionEquality().hash(_linkToIds),contentChars);
 
 @override
 String toString() {
-  return 'DiaryIndexSnapshot(diaryIsarId: $diaryIsarId, cutTokens: $cutTokens, cutForSearchTokens: $cutForSearchTokens, linkToIds: $linkToIds)';
+  return 'DiaryIndexSnapshot(diaryIsarId: $diaryIsarId, cutTokens: $cutTokens, cutFreqs: $cutFreqs, cutForSearchTokens: $cutForSearchTokens, cutForSearchFreqs: $cutForSearchFreqs, titleTokens: $titleTokens, titleFreqs: $titleFreqs, linkToIds: $linkToIds, contentChars: $contentChars)';
 }
 
 
@@ -265,7 +299,7 @@ abstract mixin class _$DiaryIndexSnapshotCopyWith<$Res> implements $DiaryIndexSn
   factory _$DiaryIndexSnapshotCopyWith(_DiaryIndexSnapshot value, $Res Function(_DiaryIndexSnapshot) _then) = __$DiaryIndexSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() int diaryIsarId, List<String> cutTokens, List<String> cutForSearchTokens, List<String> linkToIds
+@Id() int diaryIsarId, List<String> cutTokens, List<int> cutFreqs, List<String> cutForSearchTokens, List<int> cutForSearchFreqs, List<String> titleTokens, List<int> titleFreqs, List<String> linkToIds, int contentChars
 });
 
 
@@ -282,13 +316,18 @@ class __$DiaryIndexSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of DiaryIndexSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? diaryIsarId = null,Object? cutTokens = null,Object? cutForSearchTokens = null,Object? linkToIds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? diaryIsarId = null,Object? cutTokens = null,Object? cutFreqs = null,Object? cutForSearchTokens = null,Object? cutForSearchFreqs = null,Object? titleTokens = null,Object? titleFreqs = null,Object? linkToIds = null,Object? contentChars = null,}) {
   return _then(_DiaryIndexSnapshot(
 diaryIsarId: null == diaryIsarId ? _self.diaryIsarId : diaryIsarId // ignore: cast_nullable_to_non_nullable
 as int,cutTokens: null == cutTokens ? _self._cutTokens : cutTokens // ignore: cast_nullable_to_non_nullable
-as List<String>,cutForSearchTokens: null == cutForSearchTokens ? _self._cutForSearchTokens : cutForSearchTokens // ignore: cast_nullable_to_non_nullable
-as List<String>,linkToIds: null == linkToIds ? _self._linkToIds : linkToIds // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<String>,cutFreqs: null == cutFreqs ? _self._cutFreqs : cutFreqs // ignore: cast_nullable_to_non_nullable
+as List<int>,cutForSearchTokens: null == cutForSearchTokens ? _self._cutForSearchTokens : cutForSearchTokens // ignore: cast_nullable_to_non_nullable
+as List<String>,cutForSearchFreqs: null == cutForSearchFreqs ? _self._cutForSearchFreqs : cutForSearchFreqs // ignore: cast_nullable_to_non_nullable
+as List<int>,titleTokens: null == titleTokens ? _self._titleTokens : titleTokens // ignore: cast_nullable_to_non_nullable
+as List<String>,titleFreqs: null == titleFreqs ? _self._titleFreqs : titleFreqs // ignore: cast_nullable_to_non_nullable
+as List<int>,linkToIds: null == linkToIds ? _self._linkToIds : linkToIds // ignore: cast_nullable_to_non_nullable
+as List<String>,contentChars: null == contentChars ? _self.contentChars : contentChars // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

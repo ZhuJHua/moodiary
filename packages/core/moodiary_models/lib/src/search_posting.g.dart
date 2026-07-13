@@ -21,6 +21,7 @@ final SearchPostingSchema = IsarGeneratedSchema(
     embedded: false,
     properties: [
       IsarPropertySchema(name: 'diaryIsarIds', type: IsarType.longList),
+      IsarPropertySchema(name: 'termFreqs', type: IsarType.longList),
     ],
     indexes: [],
   ),
@@ -37,6 +38,14 @@ int serializeSearchPosting(IsarWriter writer, SearchPosting object) {
   {
     final list = object.diaryIsarIds;
     final listWriter = IsarCore.beginList(writer, 1, list.length);
+    for (var i = 0; i < list.length; i++) {
+      IsarCore.writeLong(listWriter, i, list[i]);
+    }
+    IsarCore.endList(writer, listWriter);
+  }
+  {
+    final list = object.termFreqs;
+    final listWriter = IsarCore.beginList(writer, 2, list.length);
     for (var i = 0; i < list.length; i++) {
       IsarCore.writeLong(listWriter, i, list[i]);
     }
@@ -70,7 +79,32 @@ SearchPosting deserializeSearchPosting(IsarReader reader) {
       }
     }
   }
-  final object = SearchPosting(key: _key, diaryIsarIds: _diaryIsarIds);
+  final List<int> _termFreqs;
+  {
+    final length = IsarCore.readList(reader, 2, IsarCore.readerPtrPtr);
+    {
+      final reader = IsarCore.readerPtr;
+      if (reader.isNull) {
+        _termFreqs = const <int>[];
+      } else {
+        final list = List<int>.filled(
+          length,
+          -9223372036854775808,
+          growable: true,
+        );
+        for (var i = 0; i < length; i++) {
+          list[i] = IsarCore.readLong(reader, i);
+        }
+        IsarCore.freeReader(reader);
+        _termFreqs = list;
+      }
+    }
+  }
+  final object = SearchPosting(
+    key: _key,
+    diaryIsarIds: _diaryIsarIds,
+    termFreqs: _termFreqs,
+  );
   return object;
 }
 
@@ -82,6 +116,27 @@ dynamic deserializeSearchPostingProp(IsarReader reader, int property) {
     case 1:
       {
         final length = IsarCore.readList(reader, 1, IsarCore.readerPtrPtr);
+        {
+          final reader = IsarCore.readerPtr;
+          if (reader.isNull) {
+            return const <int>[];
+          } else {
+            final list = List<int>.filled(
+              length,
+              -9223372036854775808,
+              growable: true,
+            );
+            for (var i = 0; i < length; i++) {
+              list[i] = IsarCore.readLong(reader, i);
+            }
+            IsarCore.freeReader(reader);
+            return list;
+          }
+        }
+      }
+    case 2:
+      {
+        final length = IsarCore.readList(reader, 2, IsarCore.readerPtrPtr);
         {
           final reader = IsarCore.readerPtr;
           if (reader.isNull) {
@@ -228,6 +283,72 @@ extension SearchPostingQueryFilter
       );
     });
   }
+
+  QueryBuilder<SearchPosting, SearchPosting, QAfterFilterCondition>
+  termFreqsElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 2, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SearchPosting, SearchPosting, QAfterFilterCondition>
+  termFreqsElementGreaterThan(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(property: 2, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SearchPosting, SearchPosting, QAfterFilterCondition>
+  termFreqsElementGreaterThanOrEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(property: 2, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SearchPosting, SearchPosting, QAfterFilterCondition>
+  termFreqsElementLessThan(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(LessCondition(property: 2, value: value));
+    });
+  }
+
+  QueryBuilder<SearchPosting, SearchPosting, QAfterFilterCondition>
+  termFreqsElementLessThanOrEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(property: 2, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<SearchPosting, SearchPosting, QAfterFilterCondition>
+  termFreqsElementBetween(int lower, int upper) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(property: 2, lower: lower, upper: upper),
+      );
+    });
+  }
+
+  QueryBuilder<SearchPosting, SearchPosting, QAfterFilterCondition>
+  termFreqsIsEmpty() {
+    return not().termFreqsIsNotEmpty();
+  }
+
+  QueryBuilder<SearchPosting, SearchPosting, QAfterFilterCondition>
+  termFreqsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterOrEqualCondition(property: 2, value: null),
+      );
+    });
+  }
 }
 
 extension SearchPostingQueryObject
@@ -271,6 +392,13 @@ extension SearchPostingQueryWhereDistinct
       return query.addDistinctBy(1);
     });
   }
+
+  QueryBuilder<SearchPosting, SearchPosting, QAfterDistinct>
+  distinctByTermFreqs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(2);
+    });
+  }
 }
 
 extension SearchPostingQueryProperty1
@@ -285,6 +413,12 @@ extension SearchPostingQueryProperty1
   diaryIsarIdsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(1);
+    });
+  }
+
+  QueryBuilder<SearchPosting, List<int>, QAfterProperty> termFreqsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(2);
     });
   }
 }
@@ -303,6 +437,13 @@ extension SearchPostingQueryProperty2<R>
       return query.addProperty(1);
     });
   }
+
+  QueryBuilder<SearchPosting, (R, List<int>), QAfterProperty>
+  termFreqsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(2);
+    });
+  }
 }
 
 extension SearchPostingQueryProperty3<R1, R2>
@@ -317,6 +458,13 @@ extension SearchPostingQueryProperty3<R1, R2>
   diaryIsarIdsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(1);
+    });
+  }
+
+  QueryBuilder<SearchPosting, (R1, R2, List<int>), QOperations>
+  termFreqsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(2);
     });
   }
 }

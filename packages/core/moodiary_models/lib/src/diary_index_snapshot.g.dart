@@ -22,8 +22,13 @@ final DiaryIndexSnapshotSchema = IsarGeneratedSchema(
     embedded: false,
     properties: [
       IsarPropertySchema(name: 'cutTokens', type: IsarType.stringList),
+      IsarPropertySchema(name: 'cutFreqs', type: IsarType.longList),
       IsarPropertySchema(name: 'cutForSearchTokens', type: IsarType.stringList),
+      IsarPropertySchema(name: 'cutForSearchFreqs', type: IsarType.longList),
+      IsarPropertySchema(name: 'titleTokens', type: IsarType.stringList),
+      IsarPropertySchema(name: 'titleFreqs', type: IsarType.longList),
       IsarPropertySchema(name: 'linkToIds', type: IsarType.stringList),
+      IsarPropertySchema(name: 'contentChars', type: IsarType.long),
     ],
     indexes: [],
   ),
@@ -46,21 +51,54 @@ int serializeDiaryIndexSnapshot(IsarWriter writer, DiaryIndexSnapshot object) {
     IsarCore.endList(writer, listWriter);
   }
   {
-    final list = object.cutForSearchTokens;
+    final list = object.cutFreqs;
     final listWriter = IsarCore.beginList(writer, 2, list.length);
     for (var i = 0; i < list.length; i++) {
-      IsarCore.writeString(listWriter, i, list[i]);
+      IsarCore.writeLong(listWriter, i, list[i]);
     }
     IsarCore.endList(writer, listWriter);
   }
   {
-    final list = object.linkToIds;
+    final list = object.cutForSearchTokens;
     final listWriter = IsarCore.beginList(writer, 3, list.length);
     for (var i = 0; i < list.length; i++) {
       IsarCore.writeString(listWriter, i, list[i]);
     }
     IsarCore.endList(writer, listWriter);
   }
+  {
+    final list = object.cutForSearchFreqs;
+    final listWriter = IsarCore.beginList(writer, 4, list.length);
+    for (var i = 0; i < list.length; i++) {
+      IsarCore.writeLong(listWriter, i, list[i]);
+    }
+    IsarCore.endList(writer, listWriter);
+  }
+  {
+    final list = object.titleTokens;
+    final listWriter = IsarCore.beginList(writer, 5, list.length);
+    for (var i = 0; i < list.length; i++) {
+      IsarCore.writeString(listWriter, i, list[i]);
+    }
+    IsarCore.endList(writer, listWriter);
+  }
+  {
+    final list = object.titleFreqs;
+    final listWriter = IsarCore.beginList(writer, 6, list.length);
+    for (var i = 0; i < list.length; i++) {
+      IsarCore.writeLong(listWriter, i, list[i]);
+    }
+    IsarCore.endList(writer, listWriter);
+  }
+  {
+    final list = object.linkToIds;
+    final listWriter = IsarCore.beginList(writer, 7, list.length);
+    for (var i = 0; i < list.length; i++) {
+      IsarCore.writeString(listWriter, i, list[i]);
+    }
+    IsarCore.endList(writer, listWriter);
+  }
+  IsarCore.writeLong(writer, 8, object.contentChars);
   return object.diaryIsarId;
 }
 
@@ -85,9 +123,30 @@ DiaryIndexSnapshot deserializeDiaryIndexSnapshot(IsarReader reader) {
       }
     }
   }
-  final List<String> _cutForSearchTokens;
+  final List<int> _cutFreqs;
   {
     final length = IsarCore.readList(reader, 2, IsarCore.readerPtrPtr);
+    {
+      final reader = IsarCore.readerPtr;
+      if (reader.isNull) {
+        _cutFreqs = const <int>[];
+      } else {
+        final list = List<int>.filled(
+          length,
+          -9223372036854775808,
+          growable: true,
+        );
+        for (var i = 0; i < length; i++) {
+          list[i] = IsarCore.readLong(reader, i);
+        }
+        IsarCore.freeReader(reader);
+        _cutFreqs = list;
+      }
+    }
+  }
+  final List<String> _cutForSearchTokens;
+  {
+    final length = IsarCore.readList(reader, 3, IsarCore.readerPtrPtr);
     {
       final reader = IsarCore.readerPtr;
       if (reader.isNull) {
@@ -102,9 +161,68 @@ DiaryIndexSnapshot deserializeDiaryIndexSnapshot(IsarReader reader) {
       }
     }
   }
+  final List<int> _cutForSearchFreqs;
+  {
+    final length = IsarCore.readList(reader, 4, IsarCore.readerPtrPtr);
+    {
+      final reader = IsarCore.readerPtr;
+      if (reader.isNull) {
+        _cutForSearchFreqs = const <int>[];
+      } else {
+        final list = List<int>.filled(
+          length,
+          -9223372036854775808,
+          growable: true,
+        );
+        for (var i = 0; i < length; i++) {
+          list[i] = IsarCore.readLong(reader, i);
+        }
+        IsarCore.freeReader(reader);
+        _cutForSearchFreqs = list;
+      }
+    }
+  }
+  final List<String> _titleTokens;
+  {
+    final length = IsarCore.readList(reader, 5, IsarCore.readerPtrPtr);
+    {
+      final reader = IsarCore.readerPtr;
+      if (reader.isNull) {
+        _titleTokens = const <String>[];
+      } else {
+        final list = List<String>.filled(length, '', growable: true);
+        for (var i = 0; i < length; i++) {
+          list[i] = IsarCore.readString(reader, i) ?? '';
+        }
+        IsarCore.freeReader(reader);
+        _titleTokens = list;
+      }
+    }
+  }
+  final List<int> _titleFreqs;
+  {
+    final length = IsarCore.readList(reader, 6, IsarCore.readerPtrPtr);
+    {
+      final reader = IsarCore.readerPtr;
+      if (reader.isNull) {
+        _titleFreqs = const <int>[];
+      } else {
+        final list = List<int>.filled(
+          length,
+          -9223372036854775808,
+          growable: true,
+        );
+        for (var i = 0; i < length; i++) {
+          list[i] = IsarCore.readLong(reader, i);
+        }
+        IsarCore.freeReader(reader);
+        _titleFreqs = list;
+      }
+    }
+  }
   final List<String> _linkToIds;
   {
-    final length = IsarCore.readList(reader, 3, IsarCore.readerPtrPtr);
+    final length = IsarCore.readList(reader, 7, IsarCore.readerPtrPtr);
     {
       final reader = IsarCore.readerPtr;
       if (reader.isNull) {
@@ -119,11 +237,18 @@ DiaryIndexSnapshot deserializeDiaryIndexSnapshot(IsarReader reader) {
       }
     }
   }
+  final int _contentChars;
+  _contentChars = IsarCore.readLong(reader, 8);
   final object = DiaryIndexSnapshot(
     diaryIsarId: _diaryIsarId,
     cutTokens: _cutTokens,
+    cutFreqs: _cutFreqs,
     cutForSearchTokens: _cutForSearchTokens,
+    cutForSearchFreqs: _cutForSearchFreqs,
+    titleTokens: _titleTokens,
+    titleFreqs: _titleFreqs,
     linkToIds: _linkToIds,
+    contentChars: _contentChars,
   );
   return object;
 }
@@ -156,11 +281,15 @@ dynamic deserializeDiaryIndexSnapshotProp(IsarReader reader, int property) {
         {
           final reader = IsarCore.readerPtr;
           if (reader.isNull) {
-            return const <String>[];
+            return const <int>[];
           } else {
-            final list = List<String>.filled(length, '', growable: true);
+            final list = List<int>.filled(
+              length,
+              -9223372036854775808,
+              growable: true,
+            );
             for (var i = 0; i < length; i++) {
-              list[i] = IsarCore.readString(reader, i) ?? '';
+              list[i] = IsarCore.readLong(reader, i);
             }
             IsarCore.freeReader(reader);
             return list;
@@ -184,9 +313,186 @@ dynamic deserializeDiaryIndexSnapshotProp(IsarReader reader, int property) {
           }
         }
       }
+    case 4:
+      {
+        final length = IsarCore.readList(reader, 4, IsarCore.readerPtrPtr);
+        {
+          final reader = IsarCore.readerPtr;
+          if (reader.isNull) {
+            return const <int>[];
+          } else {
+            final list = List<int>.filled(
+              length,
+              -9223372036854775808,
+              growable: true,
+            );
+            for (var i = 0; i < length; i++) {
+              list[i] = IsarCore.readLong(reader, i);
+            }
+            IsarCore.freeReader(reader);
+            return list;
+          }
+        }
+      }
+    case 5:
+      {
+        final length = IsarCore.readList(reader, 5, IsarCore.readerPtrPtr);
+        {
+          final reader = IsarCore.readerPtr;
+          if (reader.isNull) {
+            return const <String>[];
+          } else {
+            final list = List<String>.filled(length, '', growable: true);
+            for (var i = 0; i < length; i++) {
+              list[i] = IsarCore.readString(reader, i) ?? '';
+            }
+            IsarCore.freeReader(reader);
+            return list;
+          }
+        }
+      }
+    case 6:
+      {
+        final length = IsarCore.readList(reader, 6, IsarCore.readerPtrPtr);
+        {
+          final reader = IsarCore.readerPtr;
+          if (reader.isNull) {
+            return const <int>[];
+          } else {
+            final list = List<int>.filled(
+              length,
+              -9223372036854775808,
+              growable: true,
+            );
+            for (var i = 0; i < length; i++) {
+              list[i] = IsarCore.readLong(reader, i);
+            }
+            IsarCore.freeReader(reader);
+            return list;
+          }
+        }
+      }
+    case 7:
+      {
+        final length = IsarCore.readList(reader, 7, IsarCore.readerPtrPtr);
+        {
+          final reader = IsarCore.readerPtr;
+          if (reader.isNull) {
+            return const <String>[];
+          } else {
+            final list = List<String>.filled(length, '', growable: true);
+            for (var i = 0; i < length; i++) {
+              list[i] = IsarCore.readString(reader, i) ?? '';
+            }
+            IsarCore.freeReader(reader);
+            return list;
+          }
+        }
+      }
+    case 8:
+      return IsarCore.readLong(reader, 8);
     default:
       throw ArgumentError('Unknown property: $property');
   }
+}
+
+sealed class _DiaryIndexSnapshotUpdate {
+  bool call({required int diaryIsarId, int? contentChars});
+}
+
+class _DiaryIndexSnapshotUpdateImpl implements _DiaryIndexSnapshotUpdate {
+  const _DiaryIndexSnapshotUpdateImpl(this.collection);
+
+  final IsarCollection<int, DiaryIndexSnapshot> collection;
+
+  @override
+  bool call({required int diaryIsarId, Object? contentChars = ignore}) {
+    return collection.updateProperties(
+          [diaryIsarId],
+          {if (contentChars != ignore) 8: contentChars as int?},
+        ) >
+        0;
+  }
+}
+
+sealed class _DiaryIndexSnapshotUpdateAll {
+  int call({required List<int> diaryIsarId, int? contentChars});
+}
+
+class _DiaryIndexSnapshotUpdateAllImpl implements _DiaryIndexSnapshotUpdateAll {
+  const _DiaryIndexSnapshotUpdateAllImpl(this.collection);
+
+  final IsarCollection<int, DiaryIndexSnapshot> collection;
+
+  @override
+  int call({required List<int> diaryIsarId, Object? contentChars = ignore}) {
+    return collection.updateProperties(diaryIsarId, {
+      if (contentChars != ignore) 8: contentChars as int?,
+    });
+  }
+}
+
+extension DiaryIndexSnapshotUpdate on IsarCollection<int, DiaryIndexSnapshot> {
+  _DiaryIndexSnapshotUpdate get update => _DiaryIndexSnapshotUpdateImpl(this);
+
+  _DiaryIndexSnapshotUpdateAll get updateAll =>
+      _DiaryIndexSnapshotUpdateAllImpl(this);
+}
+
+sealed class _DiaryIndexSnapshotQueryUpdate {
+  int call({int? contentChars});
+}
+
+class _DiaryIndexSnapshotQueryUpdateImpl
+    implements _DiaryIndexSnapshotQueryUpdate {
+  const _DiaryIndexSnapshotQueryUpdateImpl(this.query, {this.limit});
+
+  final IsarQuery<DiaryIndexSnapshot> query;
+  final int? limit;
+
+  @override
+  int call({Object? contentChars = ignore}) {
+    return query.updateProperties(limit: limit, {
+      if (contentChars != ignore) 8: contentChars as int?,
+    });
+  }
+}
+
+extension DiaryIndexSnapshotQueryUpdate on IsarQuery<DiaryIndexSnapshot> {
+  _DiaryIndexSnapshotQueryUpdate get updateFirst =>
+      _DiaryIndexSnapshotQueryUpdateImpl(this, limit: 1);
+
+  _DiaryIndexSnapshotQueryUpdate get updateAll =>
+      _DiaryIndexSnapshotQueryUpdateImpl(this);
+}
+
+class _DiaryIndexSnapshotQueryBuilderUpdateImpl
+    implements _DiaryIndexSnapshotQueryUpdate {
+  const _DiaryIndexSnapshotQueryBuilderUpdateImpl(this.query, {this.limit});
+
+  final QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QOperations> query;
+  final int? limit;
+
+  @override
+  int call({Object? contentChars = ignore}) {
+    final q = query.build();
+    try {
+      return q.updateProperties(limit: limit, {
+        if (contentChars != ignore) 8: contentChars as int?,
+      });
+    } finally {
+      q.close();
+    }
+  }
+}
+
+extension DiaryIndexSnapshotQueryBuilderUpdate
+    on QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QOperations> {
+  _DiaryIndexSnapshotQueryUpdate get updateFirst =>
+      _DiaryIndexSnapshotQueryBuilderUpdateImpl(this, limit: 1);
+
+  _DiaryIndexSnapshotQueryUpdate get updateAll =>
+      _DiaryIndexSnapshotQueryBuilderUpdateImpl(this);
 }
 
 extension DiaryIndexSnapshotQueryFilter
@@ -406,10 +712,76 @@ extension DiaryIndexSnapshotQueryFilter
   }
 
   QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutFreqsElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 2, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutFreqsElementGreaterThan(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(property: 2, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutFreqsElementGreaterThanOrEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(property: 2, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutFreqsElementLessThan(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(LessCondition(property: 2, value: value));
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutFreqsElementLessThanOrEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(property: 2, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutFreqsElementBetween(int lower, int upper) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(property: 2, lower: lower, upper: upper),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutFreqsIsEmpty() {
+    return not().cutFreqsIsNotEmpty();
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutFreqsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterOrEqualCondition(property: 2, value: null),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
   cutForSearchTokensElementEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 2, value: value, caseSensitive: caseSensitive),
+        EqualCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -422,7 +794,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 2,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -438,7 +810,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 2,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -450,7 +822,7 @@ extension DiaryIndexSnapshotQueryFilter
   cutForSearchTokensElementLessThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 2, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -463,7 +835,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 2,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -480,7 +852,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 2,
+          property: 3,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -497,7 +869,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 2,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -510,7 +882,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 2,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -523,7 +895,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 2,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -539,7 +911,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 2,
+          property: 3,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -551,7 +923,7 @@ extension DiaryIndexSnapshotQueryFilter
   cutForSearchTokensElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 2, value: ''),
+        const EqualCondition(property: 3, value: ''),
       );
     });
   }
@@ -560,7 +932,7 @@ extension DiaryIndexSnapshotQueryFilter
   cutForSearchTokensElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 2, value: ''),
+        const GreaterCondition(property: 3, value: ''),
       );
     });
   }
@@ -574,7 +946,304 @@ extension DiaryIndexSnapshotQueryFilter
   cutForSearchTokensIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterOrEqualCondition(property: 2, value: null),
+        const GreaterOrEqualCondition(property: 3, value: null),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutForSearchFreqsElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 4, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutForSearchFreqsElementGreaterThan(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(property: 4, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutForSearchFreqsElementGreaterThanOrEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(property: 4, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutForSearchFreqsElementLessThan(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(LessCondition(property: 4, value: value));
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutForSearchFreqsElementLessThanOrEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(property: 4, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutForSearchFreqsElementBetween(int lower, int upper) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(property: 4, lower: lower, upper: upper),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutForSearchFreqsIsEmpty() {
+    return not().cutForSearchFreqsIsNotEmpty();
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  cutForSearchFreqsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterOrEqualCondition(property: 4, value: null),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 5, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementGreaterThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 5,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementGreaterThanOrEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 5,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementLessThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 5, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementLessThanOrEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 5,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementBetween(
+    String lower,
+    String upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 5,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 5,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 5,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 5,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 5,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 5, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 5, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensIsEmpty() {
+    return not().titleTokensIsNotEmpty();
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleTokensIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterOrEqualCondition(property: 5, value: null),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleFreqsElementEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 6, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleFreqsElementGreaterThan(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(property: 6, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleFreqsElementGreaterThanOrEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(property: 6, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleFreqsElementLessThan(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(LessCondition(property: 6, value: value));
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleFreqsElementLessThanOrEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(property: 6, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleFreqsElementBetween(int lower, int upper) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(property: 6, lower: lower, upper: upper),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleFreqsIsEmpty() {
+    return not().titleFreqsIsNotEmpty();
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  titleFreqsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterOrEqualCondition(property: 6, value: null),
       );
     });
   }
@@ -583,7 +1252,7 @@ extension DiaryIndexSnapshotQueryFilter
   linkToIdsElementEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 3, value: value, caseSensitive: caseSensitive),
+        EqualCondition(property: 7, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -593,7 +1262,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 3,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -609,7 +1278,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 3,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -621,7 +1290,7 @@ extension DiaryIndexSnapshotQueryFilter
   linkToIdsElementLessThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 3, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 7, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -631,7 +1300,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 3,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -648,7 +1317,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 3,
+          property: 7,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -662,7 +1331,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 3,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -675,7 +1344,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 3,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -688,7 +1357,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 3,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -701,7 +1370,7 @@ extension DiaryIndexSnapshotQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 3,
+          property: 7,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -713,7 +1382,7 @@ extension DiaryIndexSnapshotQueryFilter
   linkToIdsElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 3, value: ''),
+        const EqualCondition(property: 7, value: ''),
       );
     });
   }
@@ -722,7 +1391,7 @@ extension DiaryIndexSnapshotQueryFilter
   linkToIdsElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 3, value: ''),
+        const GreaterCondition(property: 7, value: ''),
       );
     });
   }
@@ -736,7 +1405,59 @@ extension DiaryIndexSnapshotQueryFilter
   linkToIdsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterOrEqualCondition(property: 3, value: null),
+        const GreaterOrEqualCondition(property: 7, value: null),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  contentCharsEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 8, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  contentCharsGreaterThan(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(property: 8, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  contentCharsGreaterThanOrEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(property: 8, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  contentCharsLessThan(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(LessCondition(property: 8, value: value));
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  contentCharsLessThanOrEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(property: 8, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterFilterCondition>
+  contentCharsBetween(int lower, int upper) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(property: 8, lower: lower, upper: upper),
       );
     });
   }
@@ -760,6 +1481,20 @@ extension DiaryIndexSnapshotQuerySortBy
       return query.addSortBy(0, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterSortBy>
+  sortByContentChars() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterSortBy>
+  sortByContentCharsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, sort: Sort.desc);
+    });
+  }
 }
 
 extension DiaryIndexSnapshotQuerySortThenBy
@@ -777,6 +1512,20 @@ extension DiaryIndexSnapshotQuerySortThenBy
       return query.addSortBy(0, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterSortBy>
+  thenByContentChars() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterSortBy>
+  thenByContentCharsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, sort: Sort.desc);
+    });
+  }
 }
 
 extension DiaryIndexSnapshotQueryWhereDistinct
@@ -789,16 +1538,51 @@ extension DiaryIndexSnapshotQueryWhereDistinct
   }
 
   QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterDistinct>
-  distinctByCutForSearchTokens() {
+  distinctByCutFreqs() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(2);
     });
   }
 
   QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterDistinct>
-  distinctByLinkToIds() {
+  distinctByCutForSearchTokens() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(3);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterDistinct>
+  distinctByCutForSearchFreqs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(4);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterDistinct>
+  distinctByTitleTokens() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(5);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterDistinct>
+  distinctByTitleFreqs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(6);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterDistinct>
+  distinctByLinkToIds() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(7);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, DiaryIndexSnapshot, QAfterDistinct>
+  distinctByContentChars() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(8);
     });
   }
 }
@@ -818,17 +1602,51 @@ extension DiaryIndexSnapshotQueryProperty1
     });
   }
 
-  QueryBuilder<DiaryIndexSnapshot, List<String>, QAfterProperty>
-  cutForSearchTokensProperty() {
+  QueryBuilder<DiaryIndexSnapshot, List<int>, QAfterProperty>
+  cutFreqsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });
   }
 
   QueryBuilder<DiaryIndexSnapshot, List<String>, QAfterProperty>
-  linkToIdsProperty() {
+  cutForSearchTokensProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(3);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, List<int>, QAfterProperty>
+  cutForSearchFreqsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(4);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, List<String>, QAfterProperty>
+  titleTokensProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(5);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, List<int>, QAfterProperty>
+  titleFreqsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(6);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, List<String>, QAfterProperty>
+  linkToIdsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, int, QAfterProperty> contentCharsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
     });
   }
 }
@@ -849,17 +1667,52 @@ extension DiaryIndexSnapshotQueryProperty2<R>
     });
   }
 
-  QueryBuilder<DiaryIndexSnapshot, (R, List<String>), QAfterProperty>
-  cutForSearchTokensProperty() {
+  QueryBuilder<DiaryIndexSnapshot, (R, List<int>), QAfterProperty>
+  cutFreqsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });
   }
 
   QueryBuilder<DiaryIndexSnapshot, (R, List<String>), QAfterProperty>
-  linkToIdsProperty() {
+  cutForSearchTokensProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(3);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, (R, List<int>), QAfterProperty>
+  cutForSearchFreqsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(4);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, (R, List<String>), QAfterProperty>
+  titleTokensProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(5);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, (R, List<int>), QAfterProperty>
+  titleFreqsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(6);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, (R, List<String>), QAfterProperty>
+  linkToIdsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, (R, int), QAfterProperty>
+  contentCharsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
     });
   }
 }
@@ -880,17 +1733,52 @@ extension DiaryIndexSnapshotQueryProperty3<R1, R2>
     });
   }
 
-  QueryBuilder<DiaryIndexSnapshot, (R1, R2, List<String>), QOperations>
-  cutForSearchTokensProperty() {
+  QueryBuilder<DiaryIndexSnapshot, (R1, R2, List<int>), QOperations>
+  cutFreqsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });
   }
 
   QueryBuilder<DiaryIndexSnapshot, (R1, R2, List<String>), QOperations>
-  linkToIdsProperty() {
+  cutForSearchTokensProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(3);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, (R1, R2, List<int>), QOperations>
+  cutForSearchFreqsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(4);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, (R1, R2, List<String>), QOperations>
+  titleTokensProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(5);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, (R1, R2, List<int>), QOperations>
+  titleFreqsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(6);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, (R1, R2, List<String>), QOperations>
+  linkToIdsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
+    });
+  }
+
+  QueryBuilder<DiaryIndexSnapshot, (R1, R2, int), QOperations>
+  contentCharsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
     });
   }
 }

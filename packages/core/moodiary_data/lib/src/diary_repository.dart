@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
@@ -16,8 +17,22 @@ enum IndexMode { inline, defer, skip }
 typedef _IndexEntry = ({
   int diaryIsarId,
   TokenizeResult? tokens,
+  List<String> titleTokens,
   List<String> links,
+  int contentChars,
 });
+
+/// 原始分词列表（含重复）→ 词 → 出现次数（BM25 的 TF）。
+Map<String, int> _countTokens(List<String> raw) {
+  final counts = <String, int>{};
+  for (final t in raw) {
+    counts[t] = (counts[t] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/// 平行词频数组的容错读取：旧行缺该数组时按 1 处理（升级期自愈）。
+int _freqAt(List<int> freqs, int i) => i < freqs.length ? freqs[i] : 1;
 
 class DiaryRepository {
   DiaryRepository._(this._isar) : _rawTokenize = _defaultTokenize;
@@ -58,13 +73,14 @@ class DiaryRepository {
 
   static int _linkKey(String toId) => fastHash(toId);
 
-  /// 对一组 posting 键做集合增删（同一键整批只读写一次），保持元素唯一；行空则删。
+  /// 对一组 posting 键做 upsert（含词频）/ 删除，同一键整批只读写一次；行空则删。
+  /// [upserts]:键 → (diaryIsarId → tf)，已存在且 tf 相同则跳过。
   static void _mutateSearchPostings(
     Isar isar, {
-    required Map<int, Set<int>> adds,
+    required Map<int, Map<int, int>> upserts,
     required Map<int, Set<int>> removes,
   }) {
-    final keys = {...adds.keys, ...removes.keys}.toList();
+    final keys = {...upserts.keys, ...removes.keys}.toList();
     if (keys.isEmpty) return;
     final col = isar.searchPostings;
     final existing = col.getAll(keys);
@@ -72,22 +88,39 @@ class DiaryRepository {
     final toDelete = <int>[];
     for (var i = 0; i < keys.length; i++) {
       final key = keys[i];
-      final current = existing[i]?.diaryIsarIds ?? const <int>[];
+      final currentIds = existing[i]?.diaryIsarIds ?? const <int>[];
+      final currentFreqs = existing[i]?.termFreqs ?? const <int>[];
       final removeSet = removes[key] ?? const <int>{};
-      final addSet = adds[key] ?? const <int>{};
-      final changed =
-          current.any(removeSet.contains) ||
-          addSet.any((id) => !current.contains(id));
+      final upsertMap = upserts[key] ?? const <int, int>{};
+
+      var changed = currentIds.any(removeSet.contains);
+      if (!changed) {
+        for (final e in upsertMap.entries) {
+          final idx = currentIds.indexOf(e.key);
+          if (idx < 0 || _freqAt(currentFreqs, idx) != e.value) {
+            changed = true;
+            break;
+          }
+        }
+      }
       if (!changed) continue;
-      final next = <int>[
-        for (final id in current)
-          if (!removeSet.contains(id) && !addSet.contains(id)) id,
-        ...addSet,
-      ];
-      if (next.isEmpty) {
+
+      final ids = <int>[];
+      final freqs = <int>[];
+      for (var j = 0; j < currentIds.length; j++) {
+        final id = currentIds[j];
+        if (removeSet.contains(id) || upsertMap.containsKey(id)) continue;
+        ids.add(id);
+        freqs.add(_freqAt(currentFreqs, j));
+      }
+      upsertMap.forEach((id, tf) {
+        ids.add(id);
+        freqs.add(tf);
+      });
+      if (ids.isEmpty) {
         toDelete.add(key);
       } else {
-        toPut.add(SearchPosting(key: key, diaryIsarIds: next));
+        toPut.add(SearchPosting(key: key, diaryIsarIds: ids, termFreqs: freqs));
       }
     }
     col.putAll(toPut);
@@ -129,9 +162,29 @@ class DiaryRepository {
     col.deleteAll(toDelete);
   }
 
-  /// 按快照 diff 批量把日记的全文分词与双链目标写入倒排。tokens 为 null 视作无内容。
-  /// 批内同 id 只保留最后一条（与顺序单篇应用等价），posting 聚合后每键只读写一次——
-  /// 高频词的 posting 行不随批大小重复整行重写。
+  /// 旧快照 → (posting 键 → tf) 映射；freq 数组缺失时按 1 容错。
+  static Map<int, int> _snapshotSearchTf(DiaryIndexSnapshot? old) {
+    if (old == null) return const {};
+    final map = <int, int>{};
+    for (var i = 0; i < old.cutTokens.length; i++) {
+      map[_searchKey(TokenSource.cut, old.cutTokens[i])] =
+          _freqAt(old.cutFreqs, i);
+    }
+    for (var i = 0; i < old.cutForSearchTokens.length; i++) {
+      map[_searchKey(TokenSource.cutForSearch, old.cutForSearchTokens[i])] =
+          _freqAt(old.cutForSearchFreqs, i);
+    }
+    for (var i = 0; i < old.titleTokens.length; i++) {
+      map[_searchKey(TokenSource.title, old.titleTokens[i])] =
+          _freqAt(old.titleFreqs, i);
+    }
+    return map;
+  }
+
+  /// 按快照 diff 批量把日记的分词（正文双源 + 标题，含词频）与双链目标写入倒排,
+  /// 并增量维护 [SearchStats]。tokens 为 null 视作无内容。批内同 id 只保留最后一条
+  /// （与顺序单篇应用等价），posting 聚合后每键只读写一次——高频词的 posting 行
+  /// 不随批大小重复整行重写。词频变化视为变更（BM25 的 TF 必须跟随内容）。
   static void _applyIndexesBatch(Isar isar, List<_IndexEntry> entries) {
     if (entries.isEmpty) return;
     final byId = <int, _IndexEntry>{
@@ -140,32 +193,41 @@ class DiaryRepository {
     final ids = byId.keys.toList();
     final olds = isar.diaryIndexSnapshots.getAll(ids);
 
-    final searchAdds = <int, Set<int>>{};
+    final searchUpserts = <int, Map<int, int>>{};
     final searchRemoves = <int, Set<int>>{};
     final linkAdds = <int, Set<int>>{};
     final linkRemoves = <int, Set<int>>{};
     final snapshots = <DiaryIndexSnapshot>[];
+    var docDelta = 0;
+    var contentDocDelta = 0;
+    var charDelta = 0;
 
     for (var i = 0; i < ids.length; i++) {
       final e = byId[ids[i]]!;
       final old = olds[i];
-      final oldSearchKeys = <int>{
-        for (final t in old?.cutTokens ?? const <String>[])
-          _searchKey(TokenSource.cut, t),
-        for (final t in old?.cutForSearchTokens ?? const <String>[])
-          _searchKey(TokenSource.cutForSearch, t),
+
+      final cutCounts = _countTokens(e.tokens?.cut ?? const []);
+      final cfsCounts = _countTokens(e.tokens?.cutForSearch ?? const []);
+      final titleCounts = _countTokens(e.titleTokens);
+      final newSearchTf = <int, int>{
+        for (final t in cutCounts.entries)
+          _searchKey(TokenSource.cut, t.key): t.value,
+        for (final t in cfsCounts.entries)
+          _searchKey(TokenSource.cutForSearch, t.key): t.value,
+        for (final t in titleCounts.entries)
+          _searchKey(TokenSource.title, t.key): t.value,
       };
-      final cut = e.tokens?.cut ?? const <String>[];
-      final cutForSearch = e.tokens?.cutForSearch ?? const <String>[];
-      final newSearchKeys = <int>{
-        for (final t in cut) _searchKey(TokenSource.cut, t),
-        for (final t in cutForSearch) _searchKey(TokenSource.cutForSearch, t),
-      };
-      for (final key in newSearchKeys.difference(oldSearchKeys)) {
-        searchAdds.putIfAbsent(key, () => {}).add(e.diaryIsarId);
-      }
-      for (final key in oldSearchKeys.difference(newSearchKeys)) {
-        searchRemoves.putIfAbsent(key, () => {}).add(e.diaryIsarId);
+      final oldSearchTf = _snapshotSearchTf(old);
+
+      newSearchTf.forEach((key, tf) {
+        if (oldSearchTf[key] != tf) {
+          searchUpserts.putIfAbsent(key, () => {})[e.diaryIsarId] = tf;
+        }
+      });
+      for (final key in oldSearchTf.keys) {
+        if (!newSearchTf.containsKey(key)) {
+          searchRemoves.putIfAbsent(key, () => {}).add(e.diaryIsarId);
+        }
       }
 
       final oldLinkKeys = <int>{
@@ -179,30 +241,59 @@ class DiaryRepository {
         linkRemoves.putIfAbsent(key, () => {}).add(e.diaryIsarId);
       }
 
+      if (old == null) {
+        docDelta += 1;
+        charDelta += e.contentChars;
+        if (e.contentChars > 0) contentDocDelta += 1;
+      } else {
+        charDelta += e.contentChars - old.contentChars;
+        contentDocDelta +=
+            (e.contentChars > 0 ? 1 : 0) - (old.contentChars > 0 ? 1 : 0);
+      }
+
       snapshots.add(
         DiaryIndexSnapshot(
           diaryIsarId: e.diaryIsarId,
-          cutTokens: cut,
-          cutForSearchTokens: cutForSearch,
+          cutTokens: cutCounts.keys.toList(),
+          cutFreqs: cutCounts.values.toList(),
+          cutForSearchTokens: cfsCounts.keys.toList(),
+          cutForSearchFreqs: cfsCounts.values.toList(),
+          titleTokens: titleCounts.keys.toList(),
+          titleFreqs: titleCounts.values.toList(),
           linkToIds: e.links,
+          contentChars: e.contentChars,
         ),
       );
     }
 
-    _mutateSearchPostings(isar, adds: searchAdds, removes: searchRemoves);
+    _mutateSearchPostings(isar, upserts: searchUpserts, removes: searchRemoves);
     _mutateLinkPostings(isar, adds: linkAdds, removes: linkRemoves);
     isar.diaryIndexSnapshots.putAll(snapshots);
+    _bumpStats(
+      isar,
+      docDelta: docDelta,
+      contentDocDelta: contentDocDelta,
+      charDelta: charDelta,
+    );
   }
 
-  static void _applyIndexes(
-    Isar isar,
-    int diaryIsarId, {
-    required TokenizeResult? tokens,
-    required List<String> links,
+  /// 增量维护搜索统计单例（与倒排同事务，保证一致）。
+  static void _bumpStats(
+    Isar isar, {
+    required int docDelta,
+    required int contentDocDelta,
+    required int charDelta,
   }) {
-    _applyIndexesBatch(isar, [
-      (diaryIsarId: diaryIsarId, tokens: tokens, links: links),
-    ]);
+    if (docDelta == 0 && contentDocDelta == 0 && charDelta == 0) return;
+    final stats = isar.searchStats.get(0);
+    isar.searchStats.put(
+      SearchStats(
+        id: 0,
+        docCount: (stats?.docCount ?? 0) + docDelta,
+        contentDocCount: (stats?.contentDocCount ?? 0) + contentDocDelta,
+        totalContentChars: (stats?.totalContentChars ?? 0) + charDelta,
+      ),
+    );
   }
 
   /// 把一批日记从全部倒排中摘除并删快照（软删/硬删共用），同键聚合只读写一次。
@@ -211,27 +302,32 @@ class DiaryRepository {
     final olds = isar.diaryIndexSnapshots.getAll(diaryIsarIds);
     final searchRemoves = <int, Set<int>>{};
     final linkRemoves = <int, Set<int>>{};
+    var docDelta = 0;
+    var contentDocDelta = 0;
+    var charDelta = 0;
     for (var i = 0; i < diaryIsarIds.length; i++) {
       final old = olds[i];
       if (old == null) continue;
       final id = diaryIsarIds[i];
-      for (final t in old.cutTokens) {
-        searchRemoves
-            .putIfAbsent(_searchKey(TokenSource.cut, t), () => {})
-            .add(id);
-      }
-      for (final t in old.cutForSearchTokens) {
-        searchRemoves
-            .putIfAbsent(_searchKey(TokenSource.cutForSearch, t), () => {})
-            .add(id);
+      for (final key in _snapshotSearchTf(old).keys) {
+        searchRemoves.putIfAbsent(key, () => {}).add(id);
       }
       for (final toId in old.linkToIds) {
         linkRemoves.putIfAbsent(_linkKey(toId), () => {}).add(id);
       }
+      docDelta -= 1;
+      if (old.contentChars > 0) contentDocDelta -= 1;
+      charDelta -= old.contentChars;
     }
-    _mutateSearchPostings(isar, adds: const {}, removes: searchRemoves);
+    _mutateSearchPostings(isar, upserts: const {}, removes: searchRemoves);
     _mutateLinkPostings(isar, adds: const {}, removes: linkRemoves);
     isar.diaryIndexSnapshots.deleteAll(diaryIsarIds);
+    _bumpStats(
+      isar,
+      docDelta: docDelta,
+      contentDocDelta: contentDocDelta,
+      charDelta: charDelta,
+    );
   }
 
   static void _clearIndexes(Isar isar, int diaryIsarId) =>
@@ -246,6 +342,19 @@ class DiaryRepository {
     }
   }
 
+  /// 正文 + 标题双分词构建索引条目。标题取细粒度分词（cutForSearch），召回更好。
+  Future<_IndexEntry> _buildEntry(Diary diary) async {
+    final tokens = await _tokenize(diary.contentText.trim());
+    final title = await _tokenize(diary.title.trim());
+    return (
+      diaryIsarId: diary.isarId,
+      tokens: tokens,
+      titleTokens: title?.cutForSearch ?? const [],
+      links: DiaryContentUtil.extractLinks(diary),
+      contentChars: diary.contentText.length,
+    );
+  }
+
   Future<void> insertADiary(Diary diary) => insertDiaries([diary]);
 
   /// 批量插入（云 pull / JSON 导入等本地批处理入口）。posting 变更整批聚合、单事务
@@ -253,17 +362,19 @@ class DiaryRepository {
   /// 线性变长地反复整行重写（O(N²)）。
   Future<void> insertDiaries(List<Diary> diaries) async {
     if (diaries.isEmpty) return;
-    final entries = <_IndexEntry>[];
-    for (final diary in diaries) {
-      entries.add((
-        diaryIsarId: diary.isarId,
-        tokens: await _tokenize(diary.contentText.trim()),
-        links: DiaryContentUtil.extractLinks(diary),
-      ));
-    }
+    // 墓碑（备份里的已删日记）只落行、清倒排，不建索引。
+    final entries = <_IndexEntry>[
+      for (final diary in diaries)
+        if (!diary.deleted) await _buildEntry(diary),
+    ];
+    final tombstoneIds = [
+      for (final diary in diaries)
+        if (diary.deleted) diary.isarId,
+    ];
     await _isar.writeAsync((isar) {
       isar.diarys.putAll(diaries);
       _applyIndexesBatch(isar, entries);
+      _clearIndexesBatch(isar, tombstoneIds);
     });
     for (final diary in diaries) {
       _events.add(DiaryCreated(diary));
@@ -274,6 +385,16 @@ class DiaryRepository {
     required Diary newDiary,
     IndexMode index = IndexMode.inline,
   }) async {
+    // 墓碑不入倒排：与 deleteADiary / rebuildAllIndexes 保持同一不变量
+    // （已索引 ⇔ 日记存在且未删）。同步引擎写 tombstone 走的就是本方法。
+    if (newDiary.deleted) {
+      await _isar.writeAsync((isar) {
+        isar.diarys.put(newDiary);
+        _clearIndexesBatch(isar, [newDiary.isarId]);
+      });
+      _events.add(DiaryUpdated(newDiary));
+      return;
+    }
     if (index != IndexMode.inline) {
       // 编辑期：只写日记行（defer 时一并入队），分词/倒排推迟到关闭/启动排空；skip 连
       // 入队都免（内容未变，索引仍有效）。同一次 writeAsync 落盘，少一次提交。
@@ -290,10 +411,9 @@ class DiaryRepository {
       isar.diarys.put(newDiary);
     });
     _events.add(DiaryUpdated(newDiary));
-    final result = await _tokenize(newDiary.contentText.trim());
-    final links = DiaryContentUtil.extractLinks(newDiary);
+    final entry = await _buildEntry(newDiary);
     await _isar.writeAsync((isar) {
-      _applyIndexes(isar, newDiary.isarId, tokens: result, links: links);
+      _applyIndexesBatch(isar, [entry]);
     });
   }
 
@@ -301,17 +421,17 @@ class DiaryRepository {
   /// 调用、可与另一次排空并发（最多多做一遍）；日记已硬删则清残留倒排后出队。
   Future<void> reindexDiary(int diaryIsarId) async {
     final diary = await _isar.diarys.getAsync(diaryIsarId);
-    if (diary == null) {
+    // 已硬删或已成墓碑：清残留倒排后出队（入队后可能被同步 tombstone）。
+    if (diary == null || diary.deleted) {
       await _isar.writeAsync((isar) {
         _clearIndexes(isar, diaryIsarId);
         isar.reindexQueues.delete(diaryIsarId);
       });
       return;
     }
-    final result = await _tokenize(diary.contentText.trim());
-    final links = DiaryContentUtil.extractLinks(diary);
+    final entry = await _buildEntry(diary);
     await _isar.writeAsync((isar) {
-      _applyIndexes(isar, diaryIsarId, tokens: result, links: links);
+      _applyIndexesBatch(isar, [entry]);
       isar.reindexQueues.delete(diaryIsarId);
     });
   }
@@ -512,7 +632,14 @@ class DiaryRepository {
     return 'thumbnail-${videoName.substring(6, 42)}.jpeg';
   }
 
-  /// 双倒排表加权搜索：cut 命中 +1.0，cutForSearch 命中 +0.5，标题 +0.3。
+  /// BM25 字段加权。IDF/TF/DF 来自 posting（词频平行数组、行长），N 与 avgdl 来自
+  /// [SearchStats]；正文源按 contentText 字符数做长度归一，标题源不归一（标题天然短）。
+  static const _bm25K1 = 1.2;
+  static const _bm25B = 0.4;
+  static const _weightCut = 1.0;
+  static const _weightCutForSearch = 0.5;
+  static const _weightTitle = 1.5;
+
   Future<List<Diary>> searchDiaries({
     required List<String> cutTokens,
     required List<String> cutForSearchTokens,
@@ -523,49 +650,59 @@ class DiaryRepository {
   }) async {
     if (cutTokens.isEmpty && cutForSearchTokens.isEmpty) return [];
 
-    final scores = <int, double>{};
-    final diaryIdSet = <int>{};
+    final stats = await _isar.searchStats.getAsync(0);
+    final n = stats?.docCount ?? 0;
+    // avgdl 只对正文非空的日记平均，纯媒体日记不摊薄均长。
+    final avgChars = (stats == null || stats.contentDocCount <= 0)
+        ? 1.0
+        : stats.totalContentChars / stats.contentDocCount;
 
-    for (final word in cutTokens) {
-      final posting = await _isar.searchPostings.getAsync(
-        _searchKey(TokenSource.cut, word),
-      );
-      for (final id in posting?.diaryIsarIds ?? const <int>[]) {
-        scores[id] = (scores[id] ?? 0) + 1.0;
-        diaryIdSet.add(id);
-      }
-    }
+    // 候选 → 每个命中词的 (idf × 源权重, tf, 是否长度归一)。查询词先去重，避免重复计分。
+    final hits = <int, List<(double, int, bool)>>{};
 
-    for (final word in cutForSearchTokens) {
-      final posting = await _isar.searchPostings.getAsync(
-        _searchKey(TokenSource.cutForSearch, word),
-      );
-      for (final id in posting?.diaryIsarIds ?? const <int>[]) {
-        scores[id] = (scores[id] ?? 0) + 0.5;
-        diaryIdSet.add(id);
-      }
-    }
-
-    final allQueryWords = {...cutTokens, ...cutForSearchTokens};
-    for (final word in allQueryWords) {
-      final titleMatches = await _isar.diarys
-          .where()
-          .showEqualTo(true)
-          .deletedEqualTo(false)
-          .titleContains(word, caseSensitive: false)
-          .findAllAsync();
-      for (final d in titleMatches) {
-        if (diaryIdSet.add(d.isarId)) {
-          scores[d.isarId] = 0.3;
-        } else {
-          scores[d.isarId] = (scores[d.isarId] ?? 0) + 0.3;
+    Future<void> probe(
+      TokenSource source,
+      Iterable<String> words,
+      double weight, {
+      required bool lengthNorm,
+    }) async {
+      for (final word in words) {
+        final posting = await _isar.searchPostings.getAsync(
+          _searchKey(source, word),
+        );
+        if (posting == null) continue;
+        final df = posting.diaryIsarIds.length;
+        final idf = log(1 + (max(n, df) - df + 0.5) / (df + 0.5));
+        for (var i = 0; i < posting.diaryIsarIds.length; i++) {
+          hits.putIfAbsent(posting.diaryIsarIds[i], () => []).add((
+            idf * weight,
+            _freqAt(posting.termFreqs, i),
+            lengthNorm,
+          ));
         }
       }
     }
 
-    if (diaryIdSet.isEmpty) return [];
+    final cutSet = cutTokens.toSet();
+    final cfsSet = cutForSearchTokens.toSet();
+    await probe(TokenSource.cut, cutSet, _weightCut, lengthNorm: true);
+    await probe(
+      TokenSource.cutForSearch,
+      cfsSet,
+      _weightCutForSearch,
+      lengthNorm: true,
+    );
+    // 标题索引本身是细粒度分词，用查询的全部词形探测。
+    await probe(
+      TokenSource.title,
+      {...cutSet, ...cfsSet},
+      _weightTitle,
+      lengthNorm: false,
+    );
 
-    final allDiaries = await _isar.diarys.getAllAsync(diaryIdSet.toList());
+    if (hits.isEmpty) return [];
+
+    final allDiaries = await _isar.diarys.getAllAsync(hits.keys.toList());
     final validDiaries = allDiaries
         .whereType<Diary>()
         .where((d) => d.show && !d.deleted)
@@ -573,6 +710,19 @@ class DiaryRepository {
         .where((d) => start == null || !d.time.isBefore(start))
         .where((d) => end == null || d.time.isBefore(end))
         .toList();
+
+    final scores = <int, double>{};
+    for (final d in validDiaries) {
+      final lenNorm =
+          1 - _bm25B + _bm25B * (d.contentText.length / avgChars);
+      var score = 0.0;
+      for (final (idfW, tf, norm) in hits[d.isarId]!) {
+        score += idfW *
+            (tf * (_bm25K1 + 1)) /
+            (tf + _bm25K1 * (norm ? lenNorm : 1.0));
+      }
+      scores[d.isarId] = score;
+    }
 
     validDiaries.sort((a, b) {
       switch (sort) {
@@ -628,60 +778,83 @@ class DiaryRepository {
   /// 避免逐篇 diff 的重复读写。返回处理篇数。幂等，均由 `content` 重算、不改 `lastModified`。
   Future<int> rebuildAllIndexes() async {
     final diaries = await getAllDiaries();
-    final searchPostings = <int, List<int>>{};
+    final postingIds = <int, List<int>>{};
+    final postingTfs = <int, List<int>>{};
     final linkPostings = <int, List<int>>{};
     final snapshots = <DiaryIndexSnapshot>[];
+    var totalChars = 0;
+    var contentDocCount = 0;
 
     for (final diary in diaries) {
-      final text = diary.contentText.trim();
-      final tokens = text.isEmpty ? null : await _tokenize(text);
-      final links = DiaryContentUtil.extractLinks(diary);
-      final cut = tokens?.cut ?? const <String>[];
-      final cutForSearch = tokens?.cutForSearch ?? const <String>[];
-      if (cut.isEmpty && cutForSearch.isEmpty && links.isEmpty) continue;
+      // 墓碑不入倒排（与增量路径同一不变量）。
+      if (diary.deleted) continue;
+      final entry = await _buildEntry(diary);
+      final cutCounts = _countTokens(entry.tokens?.cut ?? const []);
+      final cfsCounts = _countTokens(entry.tokens?.cutForSearch ?? const []);
+      final titleCounts = _countTokens(entry.titleTokens);
 
-      for (final t in cut) {
-        searchPostings
-            .putIfAbsent(_searchKey(TokenSource.cut, t), () => [])
-            .add(diary.isarId);
+      void addSource(TokenSource source, Map<String, int> counts) {
+        counts.forEach((t, tf) {
+          final key = _searchKey(source, t);
+          postingIds.putIfAbsent(key, () => []).add(diary.isarId);
+          postingTfs.putIfAbsent(key, () => []).add(tf);
+        });
       }
-      for (final t in cutForSearch) {
-        searchPostings
-            .putIfAbsent(_searchKey(TokenSource.cutForSearch, t), () => [])
-            .add(diary.isarId);
-      }
-      for (final toId in links) {
+
+      addSource(TokenSource.cut, cutCounts);
+      addSource(TokenSource.cutForSearch, cfsCounts);
+      addSource(TokenSource.title, titleCounts);
+      for (final toId in entry.links) {
         linkPostings.putIfAbsent(_linkKey(toId), () => []).add(diary.isarId);
       }
+      totalChars += entry.contentChars;
+      if (entry.contentChars > 0) contentDocCount += 1;
       snapshots.add(
         DiaryIndexSnapshot(
           diaryIsarId: diary.isarId,
-          cutTokens: cut,
-          cutForSearchTokens: cutForSearch,
-          linkToIds: links,
+          cutTokens: cutCounts.keys.toList(),
+          cutFreqs: cutCounts.values.toList(),
+          cutForSearchTokens: cfsCounts.keys.toList(),
+          cutForSearchFreqs: cfsCounts.values.toList(),
+          titleTokens: titleCounts.keys.toList(),
+          titleFreqs: titleCounts.values.toList(),
+          linkToIds: entry.links,
+          contentChars: entry.contentChars,
         ),
       );
     }
 
     final searchRows = [
-      for (final e in searchPostings.entries)
-        SearchPosting(key: e.key, diaryIsarIds: e.value),
+      for (final e in postingIds.entries)
+        SearchPosting(
+          key: e.key,
+          diaryIsarIds: e.value,
+          termFreqs: postingTfs[e.key]!,
+        ),
     ];
     final linkRows = [
       for (final e in linkPostings.entries)
         LinkPosting(key: e.key, fromIsarIds: e.value),
     ];
+    final statsRow = SearchStats(
+      id: 0,
+      docCount: snapshots.length,
+      contentDocCount: contentDocCount,
+      totalContentChars: totalChars,
+    );
     await _isar.writeAsync((isar) {
       isar.searchPostings.clear();
       isar.linkPostings.clear();
       isar.diaryIndexSnapshots.clear();
+      isar.searchStats.clear();
       isar.searchPostings.putAll(searchRows);
       isar.linkPostings.putAll(linkRows);
       isar.diaryIndexSnapshots.putAll(snapshots);
+      isar.searchStats.put(statsRow);
     });
     // 任何一次全量重建都完成了升级后的一次性回填（搜索页提示据此收起）。
     await MoodiaryKVs.searchIndexBackfilled.set(true);
-    return diaries.length;
+    return snapshots.length;
   }
 
   /// 全量数据修复：按 `content` 重推 `contentText` / 媒体引用、清失效 `categoryId`，

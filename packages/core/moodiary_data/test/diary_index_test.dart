@@ -17,13 +17,11 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' show TokenizeResult;
 import 'package:moodiary_utils/moodiary_utils.dart';
 
-/// 替身分词:cut = 空白切词去重,cutForSearch = 同词表(宿主测试无 Rust FFI)。
+/// 替身分词:cut = 空白切词(保留重复,词频=出现次数),cutForSearch = 同词表
+/// (宿主测试无 Rust FFI)。
 Future<TokenizeResult> fakeTokenize(String text) async {
-  final words = text
-      .split(RegExp(r'\s+'))
-      .where((w) => w.isNotEmpty)
-      .toSet()
-      .toList();
+  final words =
+      text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
   return TokenizeResult(cut: words, cutForSearch: words);
 }
 
@@ -56,6 +54,7 @@ Diary makeDiary(
   String id,
   String text, {
   String? content,
+  String? title,
   List<String> linkTo = const [],
 }) {
   final doc = content ??
@@ -80,7 +79,7 @@ Diary makeDiary(
       });
   return Diary(
     id: id,
-    title: 'title-$id',
+    title: title ?? 'title-$id',
     content: doc,
     contentText: text,
     time: DateTime(2026, 1, 1),
@@ -127,6 +126,7 @@ void main() {
       schemas: [
         DiarySchema,
         SearchPostingSchema,
+        SearchStatsSchema,
         LinkPostingSchema,
         DiaryIndexSnapshotSchema,
         ReindexQueueSchema,
@@ -256,7 +256,7 @@ void main() {
   });
 
   test('rebuildAllIndexes 全量重建幂等,并置位回填标记', () async {
-    await repo.insertADiary(makeDiary('d1', '苹果 香蕉'));
+    await repo.insertADiary(makeDiary('d1', '苹果 香蕉', title: '重建标题'));
     await repo.insertADiary(makeDiary('d2', '苹果', linkTo: ['d1']));
 
     // 人为破坏倒排,验证重建可恢复
@@ -270,6 +270,14 @@ void main() {
     expect(await repo.rebuildAllIndexes(), 2);
     expect((await search('苹果')).map((d) => d.id), containsAll(['d1', 'd2']));
     expect((await repo.getBacklinks('d1')).map((d) => d.id), ['d2']);
+    // 重建路径的标题也进倒排
+    expect(
+      (await repo.searchDiaries(
+        cutTokens: const [],
+        cutForSearchTokens: ['重建标题'],
+      )).map((d) => d.id),
+      ['d1'],
+    );
     expect(MoodiaryKVs.searchIndexBackfilled.get(), isTrue);
 
     // 重复重建不累积
@@ -281,12 +289,21 @@ void main() {
 
   test('insertDiaries 批量:共享词聚合、批内同 id 取末条、与逐篇结果等价', () async {
     await repo.insertDiaries([
-      makeDiary('d1', '苹果 香蕉'),
+      makeDiary('d1', '苹果 香蕉', title: '批量标题'),
       makeDiary('d2', '苹果 橘子', linkTo: ['d1']),
       makeDiary('d3', '苹果'),
       // 批内同 id 重复:以最后一条为准
       makeDiary('d3', '梨'),
     ]);
+
+    // 批量路径的标题也进倒排
+    expect(
+      (await repo.searchDiaries(
+        cutTokens: const [],
+        cutForSearchTokens: ['批量标题'],
+      )).map((d) => d.id),
+      ['d1'],
+    );
 
     final apple =
         await isar.searchPostings.getAsync(searchKey(TokenSource.cut, '苹果'));
@@ -302,6 +319,133 @@ void main() {
     await repo.insertADiary(makeDiary('d2', '香蕉'));
     expect((await search('苹果')).map((d) => d.id), ['d1']);
     expect(await repo.getBacklinks('d1'), isEmpty);
+  });
+
+  test('BM25:词频饱和加分——同词出现多次排前,但有界', () async {
+    await repo.insertADiary(makeDiary('d1', '苹果 香蕉 桃子 梨'));
+    await repo.insertADiary(makeDiary('d3', '苹果 苹果 苹果 桃子'));
+
+    final hits = await search('苹果');
+    expect(hits.map((d) => d.id), ['d3', 'd1']);
+  });
+
+  test('BM25:IDF——命中罕见词的日记排在只命中常见词的前面', () async {
+    for (var i = 0; i < 6; i++) {
+      await repo.insertADiary(makeDiary('common-$i', '常见 内容 $i'));
+    }
+    await repo.insertADiary(makeDiary('rare', '罕见 内容'));
+
+    final hits = await repo.searchDiaries(
+      cutTokens: ['常见', '罕见'],
+      cutForSearchTokens: const [],
+    );
+    expect(hits.first.id, 'rare');
+  });
+
+  test('标题进倒排:标题命中可搜且权重高于正文命中', () async {
+    await repo.insertADiary(makeDiary('body', '苹果 内容 其他'));
+    await repo.insertADiary(makeDiary('titled', '别的 内容', title: '苹果'));
+
+    final hits = await repo.searchDiaries(
+      cutTokens: ['苹果'],
+      cutForSearchTokens: ['苹果'],
+    );
+    expect(hits.map((d) => d.id), ['titled', 'body']);
+  });
+
+  test('标题变更走 defer,drain 后新标题可搜、旧标题摘除', () async {
+    await repo.insertADiary(makeDiary('d1', '正文', title: '旧标题'));
+    await repo.updateADiary(
+      newDiary: makeDiary('d1', '正文', title: '新标题'),
+      index: IndexMode.defer,
+    );
+    await repo.drainReindexQueue();
+
+    Future<List<Diary>> byTitle(String w) =>
+        repo.searchDiaries(cutTokens: const [], cutForSearchTokens: [w]);
+    expect((await byTitle('新标题')).map((d) => d.id), ['d1']);
+    expect(await byTitle('旧标题'), isEmpty);
+  });
+
+  test('BM25:长度归一——同词频下短文排前', () async {
+    final filler = List.generate(120, (i) => '填充$i').join(' ');
+    await repo.insertADiary(makeDiary('long', '苹果 $filler'));
+    await repo.insertADiary(makeDiary('short', '苹果 一点 内容'));
+
+    final hits = await search('苹果');
+    expect(hits.map((d) => d.id), ['short', 'long']);
+  });
+
+  test('墓碑不入倒排:updateADiary 写 tombstone 清索引,重建跳过墓碑', () async {
+    final d1 = makeDiary('d1', '苹果', title: '标题一');
+    await repo.insertADiary(d1);
+    // 同步引擎的 tombstone 路径:updateADiary 收到 deleted=true
+    await repo.updateADiary(
+      newDiary: Diary(
+        id: 'd1',
+        title: '',
+        content: '',
+        contentText: '',
+        time: d1.time,
+        lastModified: DateTime(2026, 2, 1),
+        show: true,
+        deleted: true,
+        mood: 0.5,
+        weather: const [],
+        imageName: const [],
+        audioName: const [],
+        videoName: const [],
+        tags: const [],
+        position: const [],
+        type: 'tiptap',
+      ),
+    );
+    expect(await search('苹果'), isEmpty);
+    expect(await isar.diaryIndexSnapshots.getAsync(d1.isarId), isNull);
+    expect((await isar.searchStats.getAsync(0))?.docCount, 0);
+
+    // 重建也不会把墓碑捞回来
+    await repo.insertADiary(makeDiary('d2', '香蕉'));
+    expect(await repo.rebuildAllIndexes(), 1);
+    expect(await search('苹果'), isEmpty);
+    expect((await isar.searchStats.getAsync(0))?.docCount, 1);
+  });
+
+  test('SearchStats 随增删改与重建保持一致', () async {
+    final a = makeDiary('a', '一二三');
+    final b = makeDiary('b', '四五六七');
+    // 纯媒体日记(正文为空,只有标题):计入 docCount,不计入 avgdl 分母
+    final m = makeDiary('m', '', title: '只有标题');
+    await repo.insertDiaries([a, b, m]);
+    var stats = await isar.searchStats.getAsync(0);
+    expect(stats?.docCount, 3);
+    expect(stats?.contentDocCount, 2);
+    expect(
+      stats?.totalContentChars,
+      a.contentText.length + b.contentText.length,
+    );
+
+    final a2 = makeDiary('a', '一二三四五六');
+    await repo.updateADiary(newDiary: a2);
+    stats = await isar.searchStats.getAsync(0);
+    expect(stats?.docCount, 3);
+    expect(stats?.contentDocCount, 2);
+    expect(
+      stats?.totalContentChars,
+      a2.contentText.length + b.contentText.length,
+    );
+
+    await repo.deleteDiariesByIsarIds([a2.isarId]);
+    stats = await isar.searchStats.getAsync(0);
+    expect(stats?.docCount, 2);
+    expect(stats?.contentDocCount, 1);
+    expect(stats?.totalContentChars, b.contentText.length);
+
+    await repo.rebuildAllIndexes();
+    stats = await isar.searchStats.getAsync(0);
+    expect(stats?.docCount, 2);
+    expect(stats?.contentDocCount, 1);
+    expect(stats?.totalContentChars, b.contentText.length);
   });
 
   test('getDiaryByBusinessId 走 fastHash 主键', () async {

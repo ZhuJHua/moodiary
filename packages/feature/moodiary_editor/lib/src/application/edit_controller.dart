@@ -22,9 +22,12 @@ class EditController extends _$EditController {
   /// 仅新建（无 id）打开的日记允许空白丢弃；既有日记清空只 update，不删。
   bool _wasNewDraft = false;
 
-  /// 搜索/链接索引已反映（或已入队）的 contentText 快照。打开时 = 当前内容（索引此刻正确）；
-  /// 自动保存时与之比较：相同 → skip（仅元数据变，免重索引）；不同 → defer 入队。
+  /// 搜索/链接索引已反映（或已入队）的 contentText / title 快照。打开时 = 当前值
+  /// （索引此刻正确）；自动保存时与之比较：都相同 → skip（仅元数据变，免重索引）；
+  /// 任一变化 → defer 入队（标题也进倒排，标题变更同样需要重索引）。
   String? _indexedContent;
+
+  String? _indexedTitle;
 
   /// 最近一次有效 state 快照。dispose 后异步收尾时 provider 已销毁，读
   /// `state`/`ref` 会抛 "Cannot use Ref after dispose"；落库/清理统一走此缓存
@@ -53,6 +56,7 @@ class EditController extends _$EditController {
     _wasNewDraft = !_persisted;
     _latest = diary;
     _indexedContent = diary.contentText;
+    _indexedTitle = diary.title;
     listenSelf((_, next) {
       final value = next.value;
       if (value != null) _latest = value;
@@ -197,6 +201,7 @@ class EditController extends _$EditController {
           _persisted = false;
         }
         _indexedContent = next.contentText;
+        _indexedTitle = next.title;
         _latest = next;
         if (ref.mounted) {
           state = AsyncValue.data(next);
@@ -206,9 +211,11 @@ class EditController extends _$EditController {
         return DraftSaveResult.failed;
       }
     }
-    // 内容未变（仅元数据/媒体）→ skip：倒排索引仍有效，连入队都免；内容变了 → defer：
-    // 只写行 + 入队，分词/倒排推迟到关闭/启动排空。新建首存走 insert（inline 立即建索引）。
-    final indexMode = next.contentText == _indexedContent
+    // 内容与标题都未变（仅元数据/媒体）→ skip：倒排索引仍有效，连入队都免；
+    // 任一变了 → defer：只写行 + 入队，分词/倒排推迟到关闭/启动排空。
+    // 新建首存走 insert（inline 立即建索引）。
+    final indexMode =
+        next.contentText == _indexedContent && next.title == _indexedTitle
         ? IndexMode.skip
         : IndexMode.defer;
     try {
@@ -219,6 +226,7 @@ class EditController extends _$EditController {
         _persisted = true;
       }
       _indexedContent = next.contentText;
+      _indexedTitle = next.title;
       _latest = next;
       // dispose 后 notifier 已销毁，set state 会抛 "use notifier after dispose"。
       if (ref.mounted) {
