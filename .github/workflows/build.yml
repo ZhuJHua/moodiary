@@ -53,11 +53,8 @@ jobs:
           corepack pnpm -C packages/feature/moodiary_editor/editor build
 
       - name: Set Up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+        working-directory: packages/foundation/moodiary_rust/rust
+        run: rustup show active-toolchain
 
       - name: Install Dependencies
         working-directory: mobile
@@ -124,11 +121,8 @@ jobs:
           corepack pnpm -C packages/feature/moodiary_editor/editor build
 
       - name: Set Up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+        working-directory: packages/foundation/moodiary_rust/rust
+        run: rustup show active-toolchain
 
       - name: Install Dependencies
         working-directory: mobile

@@ -7,7 +7,7 @@ edition = "2024"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-flutter_rust_bridge = "=2.13.0-beta.4"
+flutter_rust_bridge = "=2.13.0-beta.5"
 image = "0.25.10"
 fast_image_resize = { version = "6.0.0", features = ["image"] }
 anyhow = "1.0.103"

@@ -7,7 +7,7 @@ Moodiary — a Flutter + Rust diary app (Android, iOS, Windows, macOS). **Layere
 ## Tech Stack
 
 - **Flutter 3.44.0** (FVM, `.fvmrc`)
-- **Rust** stable, `flutter_rust_bridge` 2.13.0-beta.4
+- **Rust** (pinned in `packages/foundation/moodiary_rust/rust/rust-toolchain.toml`), `flutter_rust_bridge` 2.13.0-beta.5 — native lib built & bundled via Native Assets build hooks (`rustup` required)
 - **Riverpod** (dev) + code gen, **go_router**, **get_it**, **Isar**, **Freezed** + **json_serializable**
 
 ## Commands
@@ -57,7 +57,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
     foundation/              # leaf layer — no internal deps
       moodiary_lint/         #   shared analyzer options
       moodiary_l10n/         #   localization (ARB + gen-l10n)
-      moodiary_rust/         #   Rust FFI plugin
+      moodiary_rust/         #   Rust FFI package (crate in rust/, built by hook/build.dart)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
     core/                    # → foundation; internal order models → core → data
       moodiary_models/       #   domain: Isar @Collection + Freezed DTOs
