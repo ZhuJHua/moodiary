@@ -36,7 +36,7 @@ dart tool/task.dart analyze        # layer check + flutter analyze
 fvm flutter test
 ```
 
-**Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files; its post hook runs `gen`. `melos list` / `melos run <script> --category <layer>` filter by layer. Melos CLI is a root dev_dependency (version conflict with `cli_util` requires `dependency_overrides: cli_util: 0.5.0`). The editor build needs `corepack` on PATH (`npm i -g corepack` / `brew install corepack`).
+**Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files (pure — no codegen; run `melos gen` / `dart tool/task.dart gen` separately for Rust bindings + editor asset). `melos list` / `melos run <script> --category <layer>` filter by layer. Melos CLI is a root dev_dependency (version conflict with `cli_util` requires `dependency_overrides: cli_util: 0.5.0`). The editor build needs `corepack` on PATH (`npm i -g corepack` / `brew install corepack`).
 
 ## Architecture
 

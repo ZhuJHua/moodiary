@@ -115,7 +115,7 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   // 分层依赖检查（上层依赖下层，同层不互引）+ flutter analyze
   'analyze': (_) async {
     await _checkLayers();
-    await _flutter(['analyze']);
+    await _run('fvm', ['flutter', 'analyze']);
   },
   'check-layers': (_) => _checkLayers(),
   'test': (rest) => _flutter(['test', ...rest]),

@@ -20,10 +20,6 @@ melos:
       - packages/ui/*
     feature:
       - packages/feature/*
-  command:
-    bootstrap:
-      hooks:
-        post: fvm dart tool/task.dart gen
   scripts:
     analyze:
       run: fvm dart tool/task.dart analyze
