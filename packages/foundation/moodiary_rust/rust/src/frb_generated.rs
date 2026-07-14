@@ -47,7 +47,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0-beta.5";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -615251300;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 748589914;
 
 // Section: executor
 
@@ -963,6 +963,47 @@ fn wire__crate__api__image__ImageCompressor_contain_to_file_impl(
                             api_file_path,
                             api_output_path,
                             api_spec,
+                        )?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__image__ImageCompressor_optimize_to_file_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "ImageCompressor_optimize_to_file",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_file_path = <String>::sse_decode(&mut deserializer);
+            let api_output_path = <String>::sse_decode(&mut deserializer);
+            let api_quality = <Option<u8>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::image::ImageCompressor::optimize_to_file(
+                            api_file_path,
+                            api_output_path,
+                            api_quality,
                         )?;
                         Ok(output_ok)
                     })(),
@@ -3173,40 +3214,46 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        24 => wire__crate__api__text__Kmp_find_all_impl(port, ptr, rust_vec_len, data_len),
-        25 => wire__crate__api__text__Kmp_replace_impl(port, ptr, rust_vec_len, data_len),
-        26 => {
+        20 => wire__crate__api__image__ImageCompressor_optimize_to_file_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        25 => wire__crate__api__text__Kmp_find_all_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__text__Kmp_replace_impl(port, ptr, rust_vec_len, data_len),
+        27 => {
             wire__crate__api__s3__S3Client_create_exclusive_impl(port, ptr, rust_vec_len, data_len)
         }
-        27 => wire__crate__api__s3__S3Client_delete_object_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__s3__S3Client_ensure_bucket_impl(port, ptr, rust_vec_len, data_len),
-        29 => wire__crate__api__s3__S3Client_new_impl(port, ptr, rust_vec_len, data_len),
-        30 => wire__crate__api__s3__S3Client_read_object_impl(port, ptr, rust_vec_len, data_len),
-        31 => wire__crate__api__s3__S3Client_stat_object_impl(port, ptr, rust_vec_len, data_len),
-        32 => {
+        28 => wire__crate__api__s3__S3Client_delete_object_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__api__s3__S3Client_ensure_bucket_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__s3__S3Client_new_impl(port, ptr, rust_vec_len, data_len),
+        31 => wire__crate__api__s3__S3Client_read_object_impl(port, ptr, rust_vec_len, data_len),
+        32 => wire__crate__api__s3__S3Client_stat_object_impl(port, ptr, rust_vec_len, data_len),
+        33 => {
             wire__crate__api__s3__S3Client_test_connection_impl(port, ptr, rust_vec_len, data_len)
         }
-        33 => wire__crate__api__s3__S3Client_write_object_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__api__text__Tokenizer_extract_keywords_text_rank_impl(
+        34 => wire__crate__api__s3__S3Client_write_object_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__api__text__Tokenizer_extract_keywords_text_rank_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        35 => wire__crate__api__text__Tokenizer_extract_keywords_tfidf_impl(
+        36 => wire__crate__api__text__Tokenizer_extract_keywords_tfidf_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        36 => wire__crate__api__text__Tokenizer_tokenize_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__zip__Zip_add_dir_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__zip__Zip_add_file_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__api__zip__Zip_extract_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__api__zip__Zip_finish_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__audio__audio_duration_ms_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__api__text__init_tokenizer_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__api__text__Tokenizer_tokenize_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__zip__Zip_add_dir_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__zip__Zip_add_file_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__zip__Zip_extract_impl(port, ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__zip__Zip_finish_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__audio__audio_duration_ms_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__text__init_tokenizer_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3219,29 +3266,29 @@ fn pde_ffi_dispatcher_sync_impl(
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        20 => wire__crate__api__text__JiebaKeyword_auto_accessor_get_keyword_impl(
+        21 => wire__crate__api__text__JiebaKeyword_auto_accessor_get_keyword_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        21 => wire__crate__api__text__JiebaKeyword_auto_accessor_get_weight_impl(
+        22 => wire__crate__api__text__JiebaKeyword_auto_accessor_get_weight_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        22 => wire__crate__api__text__JiebaKeyword_auto_accessor_set_keyword_impl(
+        23 => wire__crate__api__text__JiebaKeyword_auto_accessor_set_keyword_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        23 => wire__crate__api__text__JiebaKeyword_auto_accessor_set_weight_impl(
+        24 => wire__crate__api__text__JiebaKeyword_auto_accessor_set_weight_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        41 => wire__crate__api__zip__Zip_new_impl(ptr, rust_vec_len, data_len),
-        45 => wire__crate__api__uuid__uuid_v4_impl(ptr, rust_vec_len, data_len),
-        46 => wire__crate__api__uuid__uuid_v7_impl(ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__zip__Zip_new_impl(ptr, rust_vec_len, data_len),
+        46 => wire__crate__api__uuid__uuid_v4_impl(ptr, rust_vec_len, data_len),
+        47 => wire__crate__api__uuid__uuid_v7_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }

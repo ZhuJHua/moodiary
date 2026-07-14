@@ -41,7 +41,8 @@ enum MoodiaryKVs<T extends Object> {
   fontScale<double>(defaultValue: 1.0),
   customFont<String>(defaultValue: ''),
 
-  quality<int>(defaultValue: 2),
+  /// 图片优化：存储时按 1280 规则压缩 + 统一转 WebP；关闭则保存原图（HEIC 仍转码）。
+  imageOptimize<bool>(defaultValue: true),
   homeViewMode<int>(defaultValue: 1 /* ViewModeType.grid.number */),
   homeSortMode<int>(defaultValue: 0 /* DiarySort.timeDesc.number */),
 

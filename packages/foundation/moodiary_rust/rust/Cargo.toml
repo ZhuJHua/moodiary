@@ -9,6 +9,8 @@ crate-type = ["cdylib", "staticlib"]
 [dependencies]
 flutter_rust_bridge = "=2.13.0-beta.5"
 image = "0.25.10"
+# 有损 WebP 编码（libwebp 绑定）；image crate 的 WebPEncoder 仅无损，照片场景不可用。
+webp = "0.3.1"
 fast_image_resize = { version = "6.0.0", features = ["image"] }
 anyhow = "1.0.103"
 ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3" }

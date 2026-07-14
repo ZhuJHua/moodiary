@@ -48,6 +48,10 @@ enum ImageFormat {
 class MediaUtil {
   static final _thumbnail = FcNativeVideoThumbnail();
 
+  /// 图片优化开关：开 = 1280 规则压缩 + 统一 WebP（Rust optimizeToFile）；
+  /// 关 = 原图直存（HEIC 例外，平台兼容性必须转码）。
+  static bool get _optimizeEnabled => MoodiaryKVs.imageOptimize.get() ?? true;
+
   /// 返回 map：key=XFile 临时路径，value=实际文件名
   static Future<Map<String, String>> saveImages({
     required List<XFile> imageFileList,
@@ -61,22 +65,27 @@ class MediaUtil {
         }
         var workingFile = imageFile;
         var imageFormat = ImageFormat.getImageFormat(imageFile.path);
-        // HEIC 在 Rust 侧无法解码，先转 PNG 临时文件；据是否含 alpha 通道选最终格式：
-        // 含 → PNG（保留透明），不含 → JPEG（省体积）。Rust 会解码该 PNG 再按选定格式编码。
+        // HEIC 在 Rust 侧无法解码且平台兼容性差，必须转码（与优化开关无关）：
+        // 先转 PNG 临时文件；优化开启时最终格式统一 WebP（自带 alpha，无需探测），
+        // 关闭时按是否含 alpha 选 PNG（保透明）/ JPEG（省体积）。
         String? heicTempPath;
         if (imageFormat == ImageFormat.heic) {
           heicTempPath = await _convertHeicToPng(imageFile.path);
           if (heicTempPath != null) {
             workingFile = XFile(heicTempPath);
-            imageFormat = await _pngHasAlphaChannel(heicTempPath)
-                ? ImageFormat.png
-                : ImageFormat.jpeg;
+            imageFormat = _optimizeEnabled
+                ? ImageFormat.webp
+                : (await _pngHasAlphaChannel(heicTempPath)
+                      ? ImageFormat.png
+                      : ImageFormat.jpeg);
           }
+        } else if (_optimizeEnabled) {
+          imageFormat = ImageFormat.webp;
         }
         try {
           final imageName = 'image-${uuidV7()}${imageFormat.extension}';
           final outputPath = FileUtil.getRealPath('image', imageName);
-          await compressAndSaveImage(workingFile, outputPath, imageFormat);
+          await compressAndSaveImage(workingFile, outputPath);
           imageNameMap[imageFile.path] = imageName;
         } finally {
           if (heicTempPath != null) {
@@ -102,6 +111,24 @@ class MediaUtil {
     final format = ImageFormat.getImageFormat(imageFile.path);
     if (format == ImageFormat.heic) {
       final uuid = uuidV7();
+      if (_optimizeEnabled) {
+        // 转 PNG 字节直接落 .webp 名（HeifConverter 按输出后缀选编码器，非 .jpg
+        // 即 PNG；webview 按内容嗅探可显示），后台 compressInPlace 就地转真 WebP
+        // （WebP 自带 alpha，无需探测）。
+        final name = 'image-$uuid.webp';
+        try {
+          final out = await HeifConverter.convert(
+            imageFile.path,
+            output: FileUtil.getRealPath('image', name),
+            format: 'png',
+          );
+          return out == null ? null : name;
+        } catch (e) {
+          logger.d('materializeOriginal HEIC -> PNG failed: $e');
+          return null;
+        }
+      }
+      // 优化关闭：转码即定稿（无后台压缩），按 alpha 选 PNG / JPEG。
       final pngName = 'image-$uuid.png';
       final pngPath = FileUtil.getRealPath('image', pngName);
       try {
@@ -135,7 +162,11 @@ class MediaUtil {
         return pngName;
       }
     }
-    final name = 'image-${uuidV7()}${format.extension}';
+    // 开优化：原字节先落 .webp 名快速显示（内容后缀暂不符，靠嗅探），后台就地转真 WebP；
+    // 关优化：按源格式原样落盘即定稿。
+    final name = _optimizeEnabled
+        ? 'image-${uuidV7()}.webp'
+        : 'image-${uuidV7()}${format.extension}';
     await File(imageFile.path).copy(FileUtil.getRealPath('image', name));
     return name;
   }
@@ -157,21 +188,15 @@ class MediaUtil {
     }
   }
 
-  /// [materializeOriginal] 的后台步骤：把已落库的 image- 文件就地压到目标尺寸。
-  /// 压到临时文件再原子重命名替换——避免与 webview 读取竞态、中断也不损坏原文件。
-  /// quality=原图 或压缩失败时保留原文件（仍是有效图，仅体积偏大）。fire-and-forget，
+  /// [materializeOriginal] 的后台步骤：把已落库的 image- 文件就地统一优化
+  /// （1280 规则 + WebP）。压到临时文件再原子重命名替换——避免与 webview 读取竞态、
+  /// 中断也不损坏原文件。优化关闭（原图直存）或失败时保留原文件。fire-and-forget，
   /// 与任何 widget 生命周期无关。
   static Future<void> compressInPlace(String imageName) async {
-    if (MoodiaryKVs.quality.get() == 3) return;
+    if (!_optimizeEnabled) return;
     final path = FileUtil.getRealPath('image', imageName);
-    final format = ImageFormat.getImageFormat(path);
-    if (format == ImageFormat.heic) return; // image 目录内不应出现 heic
     final tmpPath = '$path.tmp';
-    final ok = await compressImageToFile(
-      imagePath: path,
-      outputPath: tmpPath,
-      imageFormat: format,
-    );
+    final ok = await _optimizeRustToFile(path, tmpPath);
     if (!ok) {
       try {
         await File(tmpPath).delete();
@@ -285,8 +310,8 @@ class MediaUtil {
   static Future<bool> compressImageToFile({
     required String imagePath,
     required String outputPath,
+    required int size,
     ImageFormat? imageFormat,
-    int? size,
     double? imageAspectRatio,
   }) async {
     final imageFormat_ = imageFormat ?? ImageFormat.getImageFormat(imagePath);
@@ -321,22 +346,35 @@ class MediaUtil {
     };
   }
 
+  /// 开优化：Rust 统一优化（1280 规则 + WebP）；关：原样落盘（HEIC 已在上游转码）。
+  /// 优化失败兜底存原字节——文件名后缀可能与内容不符，webview 按内容嗅探仍可显示。
   static Future<void> compressAndSaveImage(
     XFile imageFile,
     String outputPath,
-    ImageFormat imageFormat,
   ) async {
-    if (MoodiaryKVs.quality.get() == 3) {
+    if (!_optimizeEnabled) {
       await imageFile.saveTo(outputPath);
       return;
     }
-    final ok = await compressImageToFile(
-      imagePath: imageFile.path,
-      outputPath: outputPath,
-      imageFormat: imageFormat,
-    );
+    final ok = await _optimizeRustToFile(imageFile.path, outputPath);
     if (!ok) {
       await imageFile.saveTo(outputPath);
+    }
+  }
+
+  static Future<bool> _optimizeRustToFile(
+    String imagePath,
+    String outputPath,
+  ) async {
+    try {
+      await rust.ImageCompressor.optimizeToFile(
+        filePath: imagePath,
+        outputPath: outputPath,
+      );
+      return true;
+    } catch (e) {
+      logger.d('Image optimize failed: $e');
+      return false;
     }
   }
 
@@ -345,7 +383,7 @@ class MediaUtil {
   static Future<bool> _compressHeicToFile(
     String imagePath,
     String outputPath, {
-    int? size,
+    required int size,
     double? imageAspectRatio,
   }) async {
     final tempPath = await _convertHeicToPng(imagePath);
@@ -385,28 +423,17 @@ class MediaUtil {
     String imagePath,
     String outputPath,
     rust.CompressFormat format, {
-    int? size,
+    required int size,
     double? imageAspectRatio,
   }) async {
-    final imageSize =
-        size ??
-        switch (MoodiaryKVs.quality.get()) {
-          0 => 720,
-          1 => 1080,
-          2 => 1440,
-          _ => 1080,
-        };
     try {
       final imageAspect =
-          imageAspectRatio ?? ImageSizeManager().getAspectRatio(imagePath);
+          imageAspectRatio ??
+          await ImageSizeManager().getAspectRatioAsync(imagePath);
 
       // 横图：高度为 size，宽度按比例缩放；竖图反之。
-      final width = imageAspect < 1.0
-          ? imageSize
-          : (imageSize * imageAspect).ceil();
-      final height = imageAspect >= 1.0
-          ? imageSize
-          : (imageSize / imageAspect).ceil();
+      final width = imageAspect < 1.0 ? size : (size * imageAspect).ceil();
+      final height = imageAspect >= 1.0 ? size : (size / imageAspect).ceil();
       await rust.ImageCompressor.containToFile(
         filePath: imagePath,
         outputPath: outputPath,
@@ -424,18 +451,13 @@ class MediaUtil {
   }
 
   static Future<bool> _getVideoThumbnail(XFile xFile, destPath) async {
-    final quality = MoodiaryKVs.quality.get();
-    final height = switch (quality) {
-      0 => 720,
-      1 => 1080,
-      2 => 1440,
-      _ => 1080,
-    };
+    // 与图片优化的尺寸上限一致（封面仅用于列表/网格展示）。
+    const size = 1280;
     return await _thumbnail.saveThumbnailToFile(
       srcFile: xFile.path,
       destFile: destPath,
-      width: height,
-      height: height,
+      width: size,
+      height: size,
       format: 'jpeg',
       quality: 90,
     );

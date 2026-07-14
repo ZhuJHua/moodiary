@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `calculate_target_dimensions`, `compress`, `prepare`
+// These functions are ignored because they are not marked as `pub`: `calculate_target_dimensions`, `compress`, `optimize_dimensions`, `prepare`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ResizeOptions`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `eq`
 
@@ -20,6 +20,17 @@ abstract class ImageCompressor implements RustOpaqueInterface {
     filePath: filePath,
     outputPath: outputPath,
     spec: spec,
+  );
+
+  /// 统一图片优化：按 1280 尺寸规则缩放 + 有损 WebP 编码（默认 q80）。
+  static Future<void> optimizeToFile({
+    required String filePath,
+    required String outputPath,
+    int? quality,
+  }) => RustLib.instance.api.crateApiImageImageCompressorOptimizeToFile(
+    filePath: filePath,
+    outputPath: outputPath,
+    quality: quality,
   );
 }
 

@@ -10,7 +10,6 @@ use image::{
     codecs::{
         jpeg::JpegEncoder,
         png::{CompressionType, FilterType, PngEncoder},
-        webp::WebPEncoder,
     },
     DynamicImage, GenericImageView, ImageEncoder, ImageReader,
 };
@@ -50,13 +49,17 @@ fn compress<W: Write>(
     resizer.resize(img, &mut dst_image, None)?;
 
     match compress_format {
+        // 有损 WebP（libwebp）。image crate 的 WebPEncoder 仅无损，照片会比 JPEG 还大。
+        // prepare 已把 WebP 目标的源图归一为 RGB8/RGBA8，这里只需两分支。
         CompressFormat::WebP => {
-            WebPEncoder::new_lossless(writer).write_image(
-                dst_image.buffer(),
-                dst_width,
-                dst_height,
-                img.color().into(),
-            )?;
+            let mem = if img.color().has_alpha() {
+                webp::Encoder::from_rgba(dst_image.buffer(), dst_width, dst_height)
+                    .encode(quality as f32)
+            } else {
+                webp::Encoder::from_rgb(dst_image.buffer(), dst_width, dst_height)
+                    .encode(quality as f32)
+            };
+            writer.write_all(&mem)?;
         }
         CompressFormat::Png => {
             PngEncoder::new_with_quality(writer, CompressionType::Fast, FilterType::Adaptive)
@@ -80,10 +83,72 @@ fn compress<W: Write>(
     Ok(())
 }
 
+/// 统一压缩尺寸规则（上限 1280）：
+/// - 宽高均 ≤ 1280：不变（含宽高比 > 2 的小长图——不做放大）
+/// - 任一边 > 1280 且 宽高比 ≤ 2：长边压到 1280，短边等比
+/// - 仅一边 > 1280 且 宽高比 > 2：不变（长图）
+/// - 两边均 > 1280 且 宽高比 > 2：短边压到 1280，长边等比
+fn optimize_dimensions(width: u32, height: u32) -> (u32, u32) {
+    const LIMIT: f64 = 1280.0;
+    let (w, h) = (width as f64, height as f64);
+    let (long, short) = if w >= h { (w, h) } else { (h, w) };
+    if long <= LIMIT {
+        return (width, height);
+    }
+    let scale = if long / short <= 2.0 {
+        LIMIT / long
+    } else if short > LIMIT {
+        LIMIT / short
+    } else {
+        return (width, height);
+    };
+    (
+        (w * scale).round().max(1.0) as u32,
+        (h * scale).round().max(1.0) as u32,
+    )
+}
+
 #[frb(opaque)]
 pub struct ImageCompressor {}
 
 impl ImageCompressor {
+    /// 统一图片优化：按 1280 尺寸规则缩放 + 有损 WebP 编码（默认 q80）。
+    pub fn optimize_to_file(
+        file_path: String,
+        output_path: String,
+        quality: Option<u8>,
+    ) -> Result<()> {
+        let src_img = ImageReader::open(file_path)?
+            .with_guessed_format()?
+            .decode()
+            .map_err(|e| anyhow::anyhow!("Failed to decode image: {}", e))?;
+        // libwebp 只吃 RGB8/RGBA8。
+        let src_img = if src_img.color().has_alpha() {
+            DynamicImage::ImageRgba8(src_img.to_rgba8())
+        } else {
+            DynamicImage::ImageRgb8(src_img.to_rgb8())
+        };
+        let (width, height) = src_img.dimensions();
+        let (dst_width, dst_height) = optimize_dimensions(width, height);
+
+        if let Some(parent) = std::path::Path::new(&output_path).parent()
+            && !parent.as_os_str().is_empty()
+        {
+            fs::create_dir_all(parent)?;
+        }
+        let mut writer = BufWriter::new(File::create(&output_path)?);
+        compress(
+            &src_img,
+            dst_height,
+            dst_width,
+            CompressFormat::WebP,
+            quality.unwrap_or(80),
+            &mut writer,
+        )?;
+        writer.flush()?;
+        Ok(())
+    }
+
     pub fn contain_to_file(
         file_path: String,
         output_path: String,
@@ -108,12 +173,21 @@ impl ImageCompressor {
         file_path: String,
         spec: CompressSpec,
     ) -> Result<(DynamicImage, u32, u32, CompressFormat, u8)> {
-        let src_img = ImageReader::open(file_path)?
+        let mut src_img = ImageReader::open(file_path)?
             .with_guessed_format()?
             .decode()
             .map_err(|e| anyhow::anyhow!("Failed to decode image: {}", e))?;
         let format = spec.compress_format.unwrap_or(CompressFormat::Jpeg);
         let quality = spec.quality.unwrap_or(80);
+
+        // libwebp 只吃 RGB8/RGBA8；灰度 / 16 位等色型先归一，其余格式不动。
+        if format == CompressFormat::WebP {
+            src_img = if src_img.color().has_alpha() {
+                DynamicImage::ImageRgba8(src_img.to_rgba8())
+            } else {
+                DynamicImage::ImageRgb8(src_img.to_rgb8())
+            };
+        }
 
         let (img_width, img_height) = src_img.dimensions();
         let (dst_width, dst_height) = Self::calculate_target_dimensions(
@@ -173,4 +247,28 @@ struct ResizeOptions {
     min_height: Option<u32>,
     max_width: Option<u32>,
     max_height: Option<u32>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::optimize_dimensions;
+
+    #[test]
+    fn optimize_dimension_rules() {
+        // 宽高均 ≤ 1280：不变（含小长图，不放大）。
+        assert_eq!(optimize_dimensions(1000, 800), (1000, 800));
+        assert_eq!(optimize_dimensions(1200, 300), (1200, 300));
+        // 任一边 > 1280 且比 ≤ 2：长边 1280。
+        assert_eq!(optimize_dimensions(2560, 1920), (1280, 960));
+        assert_eq!(optimize_dimensions(1920, 2560), (960, 1280));
+        assert_eq!(optimize_dimensions(4000, 2000), (1280, 640));
+        // 仅一边 > 1280 且比 > 2（长图）：不变。
+        assert_eq!(optimize_dimensions(800, 6000), (800, 6000));
+        assert_eq!(optimize_dimensions(3000, 900), (3000, 900));
+        // 两边均 > 1280 且比 > 2：短边 1280。
+        assert_eq!(optimize_dimensions(3000, 9000), (1280, 3840));
+        assert_eq!(optimize_dimensions(9000, 3000), (3840, 1280));
+        // 边界：恰好 1280 不动。
+        assert_eq!(optimize_dimensions(1280, 1280), (1280, 1280));
+    }
 }
