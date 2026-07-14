@@ -9,7 +9,7 @@ import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genui/genui.dart' as genui;
 import 'package:gpt_markdown/gpt_markdown.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
@@ -699,7 +699,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   String _formatDiaryMessage(Diary diary) {
     final l10n = context.l10n;
-    final date = DateFormat.yMMMMEEEEd().format(diary.time);
+    final date = TimeUtil.fullDate(diary.time);
     final title = diary.title.trim();
     final header = title.isEmpty ? date : '$date · $title';
     final body = diary.contentText.trim();
@@ -1756,17 +1756,6 @@ class _SessionCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  static String _relativeTime(BuildContext context, DateTime utc) {
-    final locale = Localizations.localeOf(context).toLanguageTag();
-    final t = utc.toLocal();
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final that = DateTime(t.year, t.month, t.day);
-    if (that == today) return DateFormat.Hm(locale).format(t);
-    if (t.year == now.year) return DateFormat.MMMd(locale).format(t);
-    return DateFormat.yMMMd(locale).format(t);
-  }
-
   Future<void> _confirmDelete(BuildContext context) async {
     final l10n = context.l10n;
     final ok = await showDialog<bool>(
@@ -1826,7 +1815,7 @@ class _SessionCard extends StatelessWidget {
           style: context.textTheme.titleSmall?.copyWith(color: onColor),
         ),
         subtitle: Text(
-          _relativeTime(context, session.updatedAt),
+          TimeUtil.relative(session.updatedAt),
           style: context.textTheme.labelSmall?.copyWith(
             color: selected
                 ? scheme.onSecondaryContainer.withValues(alpha: 0.8)

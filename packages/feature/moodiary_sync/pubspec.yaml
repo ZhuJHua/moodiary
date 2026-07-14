@@ -20,12 +20,12 @@ dependencies:
   moodiary_router: 0.0.1
   moodiary_rust: 0.0.1
   moodiary_scan: 0.0.1
+  moodiary_utils: 0.0.1
 
   flutter_riverpod: 3.3.2
   riverpod_annotation: 4.0.3
   go_router: 17.3.0
   file: 7.0.1
-  intl: 0.20.2
   path: 1.9.1
   pool: 1.5.2
   synchronized: 3.4.1

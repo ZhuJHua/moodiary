@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
@@ -113,7 +113,7 @@ class _MetaFooter extends StatelessWidget {
       ));
     }
 
-    children.add(Text(DateFormat.MMMEd().format(diary.time), style: labelStyle));
+    children.add(Text(TimeUtil.cardDate(diary.time), style: labelStyle));
 
     if (diary.weather.length >= 3) {
       children.add(Row(

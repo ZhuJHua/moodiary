@@ -1,6 +1,5 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -88,7 +87,7 @@ class SearchResultCard extends StatelessWidget {
                   Icon(Icons.schedule_rounded, size: 13, color: scheme.outline),
                   const SizedBox(width: 4),
                   Text(
-                    DateFormat.yMMMd().format(diary.time),
+                    TimeUtil.mediumDate(diary.time),
                     style: textTheme.bodySmall?.copyWith(color: scheme.outline),
                   ),
                 ],

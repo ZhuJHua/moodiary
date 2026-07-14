@@ -39,7 +39,6 @@ dependencies:
   record: 7.1.1
   flutter_quill: 11.5.1
   latlong2: 0.9.1
-  intl: 0.20.2
   path: 1.9.1
   geolocator:
     git:

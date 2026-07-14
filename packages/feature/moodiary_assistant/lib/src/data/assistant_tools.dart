@@ -190,7 +190,7 @@ abstract final class AssistantToolRegistry {
     final buffer = StringBuffer();
     for (final diary in diaries.take(_maxDiaryHits)) {
       final title = diary.title.trim().isEmpty ? '(无标题)' : diary.title.trim();
-      buffer.writeln('id=${diary.id} 【${_fmtDate(diary.time)}】$title');
+      buffer.writeln('id=${diary.id} 【${TimeUtil.isoDate(diary.time)}】$title');
       final text = diary.contentText.trim();
       if (text.isNotEmpty) {
         buffer.writeln(
@@ -230,7 +230,7 @@ abstract final class AssistantToolRegistry {
       aspect: null,
     );
     await DiaryRepository.get().insertADiary(diary);
-    return '已创建日记「${title.isEmpty ? '(无标题)' : title}」（${_fmtDate(diary.time)}），id=${diary.id}。';
+    return '已创建日记「${title.isEmpty ? '(无标题)' : title}」（${TimeUtil.isoDate(diary.time)}），id=${diary.id}。';
   }
 
   static ({String content, String contentText, DiaryType type}) _toTiptap(
@@ -359,7 +359,4 @@ abstract final class AssistantToolRegistry {
   static double? _parseMood(Object? raw) =>
       raw is num ? raw.toDouble().clamp(0.0, 1.0).toDouble() : null;
 
-  static String _fmtDate(DateTime t) =>
-      '${t.year}-${t.month.toString().padLeft(2, '0')}-'
-      '${t.day.toString().padLeft(2, '0')}';
 }

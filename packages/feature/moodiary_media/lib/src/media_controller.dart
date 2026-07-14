@@ -62,7 +62,8 @@ MediaGroup buildMediaGroup(List<Diary> diaries, MediaType type) {
       MediaType.video => d.videoName,
     };
     if (names.isEmpty) continue;
-    final key = DateTime(d.time.year, d.time.month, d.time.day);
+    final t = d.time.toLocal();
+    final key = DateTime(t.year, t.month, t.day);
     map.putIfAbsent(key, () {
       order.add(key);
       return <String>[];

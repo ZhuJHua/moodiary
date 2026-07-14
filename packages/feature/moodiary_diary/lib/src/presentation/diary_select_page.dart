@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -203,7 +203,7 @@ class _DiarySelectTile extends StatelessWidget {
               ],
               const SizedBox(height: 6),
               Text(
-                DateFormat.yMMMMEEEEd().add_Hm().format(diary.time),
+                TimeUtil.fullDateTime(diary.time),
                 style: context.textTheme.labelSmall?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),

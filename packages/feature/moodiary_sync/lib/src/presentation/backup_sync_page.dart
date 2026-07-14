@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
@@ -172,7 +172,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                   return SettingListTile(
                     title: '立即同步',
                     subtitle: millis > 0
-                        ? '上次同步：${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.fromMillisecondsSinceEpoch(millis))}'
+                        ? '上次同步：${TimeUtil.listDateTime(DateTime.fromMillisecondsSinceEpoch(millis))}'
                         : '尚未同步',
                     leading: const Icon(Icons.sync_rounded),
                     trailing: const Icon(Icons.chevron_right_rounded),

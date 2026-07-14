@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -46,7 +46,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   Future<void> _copy(Diary d) async {
     final text = [
       d.title,
-      DateFormat.yMMMMd().add_Hm().format(d.time),
+      TimeUtil.longDateTime(d.time),
       '',
       d.contentText,
     ].join('\n');

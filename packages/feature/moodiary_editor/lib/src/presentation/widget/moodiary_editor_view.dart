@@ -11,7 +11,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_editor/src/data/markdown_media.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:path/path.dart' as p;
@@ -266,7 +266,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   String _candidateLabel(Diary d) {
     final title = d.title.trim();
     if (title.isNotEmpty) return title;
-    final date = DateFormat('yyyy-MM-dd').format(d.time);
+    final date = TimeUtil.isoDate(d.time);
     final snippet = d.contentText.trim().replaceAll(RegExp(r'\s+'), ' ');
     if (snippet.isEmpty) return date;
     final clipped = snippet.length > 16 ? '${snippet.substring(0, 16)}…' : snippet;

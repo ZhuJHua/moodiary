@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
@@ -97,7 +97,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
                       : Icons.calendar_month_rounded,
                 ),
                 title: Text(
-                  DateFormat('yyyy-MM-dd').format(day) +
+                  TimeUtil.isoDate(day) +
                       (_sameDay(day, today) ? '（今天）' : ''),
                 ),
                 trailing: _sameDay(day, _selectedDay)
@@ -169,7 +169,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
                 Text(
                   _viewingToday
                       ? '今天'
-                      : DateFormat('yyyy-MM-dd').format(_selectedDay),
+                      : TimeUtil.isoDate(_selectedDay),
                   style: context.textTheme.labelLarge?.copyWith(
                     color: context.colorScheme.onSurfaceVariant,
                   ),
@@ -295,12 +295,6 @@ const _kindLabel = <SyncEventKind, String>{
   SyncEventKind.error: '错误',
 };
 
-String _formatEventTime(DateTime t) {
-  final local = t.toLocal();
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${two(local.hour)}:${two(local.minute)}:${two(local.second)}';
-}
-
 class _EventGroupTile extends StatelessWidget {
   /// 同 kind 的连续事件，最新在前。
   final List<SyncEvent> events;
@@ -319,7 +313,7 @@ class _EventGroupTile extends StatelessWidget {
         ? scheme.tertiary
         : scheme.onSurfaceVariant;
     final range =
-        '${_formatEventTime(events.last.at)} – ${_formatEventTime(events.first.at)}';
+        '${TimeUtil.timeHms(events.last.at)} – ${TimeUtil.timeHms(events.first.at)}';
 
     return ExpansionTile(
       // 用组内最旧事件做 key：列表实时增长时最旧端不变，新事件插入不会让
@@ -399,7 +393,7 @@ class _EventTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      _formatEventTime(event.at),
+                      TimeUtil.timeHms(event.at),
                       style: context.textTheme.bodySmall?.copyWith(
                         color: scheme.outline,
                         fontFeatures: const [FontFeature.tabularFigures()],

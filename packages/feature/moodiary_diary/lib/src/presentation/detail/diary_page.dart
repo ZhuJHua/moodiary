@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -251,7 +250,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   Future<void> _onPickDate(Diary current) async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: current.time,
+      initialDate: current.time.toLocal(),
       firstDate: DateTime(1949, 10, 1),
       lastDate: DateTime.now(),
     );
@@ -264,7 +263,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   Future<void> _onPickTime(Diary current) async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(current.time),
+      initialTime: TimeOfDay.fromDateTime(current.time.toLocal()),
     );
     if (picked == null || !mounted) return;
     ref.read(_provider.notifier).changeTime(picked);
@@ -757,7 +756,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
           ),
           const SizedBox(width: 6),
           Text(
-            DateFormat.yMMMMEEEEd().add_Hm().format(diary.time),
+            TimeUtil.fullDateTime(diary.time),
             style: theme.textTheme.labelMedium,
           ),
           const Spacer(),
@@ -1091,11 +1090,11 @@ class _BacklinkTile extends StatelessWidget {
     final hasTitle = diary.title.trim().isNotEmpty;
     final title = hasTitle
         ? diary.title.trim()
-        : DateFormat.yMMMMd().format(diary.time);
+        : TimeUtil.longDate(diary.time);
     final snippet = diary.contentText.trim().replaceAll(RegExp(r'\s+'), ' ');
     // 有标题时副标题给「日期 · 片段」；无标题时标题已是日期，副标题只放片段。
     final subtitle = hasTitle && snippet.isNotEmpty
-        ? '${DateFormat.yMMMMd().format(diary.time)} · $snippet'
+        ? '${TimeUtil.longDate(diary.time)} · $snippet'
         : snippet;
     return ListTile(
       onTap: onTap,
@@ -1170,7 +1169,7 @@ class _DetailSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dateLabel = DateFormat.yMd().add_Hm().format(diary.time);
+    final dateLabel = TimeUtil.fullDateTime(diary.time);
     final hasWeather = diary.weather.length >= 3;
     final categoryAsync = ref.watch(
       getCategoryProvider(id: diary.categoryId ?? ''),

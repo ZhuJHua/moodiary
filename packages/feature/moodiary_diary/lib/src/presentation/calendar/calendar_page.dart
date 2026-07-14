@@ -128,7 +128,8 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
     final allDate = <DateTime>[];
     final dateWithDiary = <DateTime>{};
     for (final d in diaries) {
-      final t = DateTime(d.time.year, d.time.month, d.time.day);
+      final lt = d.time.toLocal();
+      final t = DateTime(lt.year, lt.month, lt.day);
       allDate.add(t);
       dateWithDiary.add(t);
     }

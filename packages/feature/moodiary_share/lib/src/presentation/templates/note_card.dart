@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'share_card_template.dart';
@@ -44,7 +44,7 @@ class NoteShareCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    DateFormat.yMMMMEEEEd().format(diary.time),
+                    TimeUtil.fullDate(diary.time),
                     style: TextStyle(
                       fontSize: 12,
                       color: inkSoft,

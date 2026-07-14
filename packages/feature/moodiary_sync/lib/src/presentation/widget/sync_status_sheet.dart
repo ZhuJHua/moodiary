@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/application/sync_stats_controller.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
@@ -347,7 +347,7 @@ class _StateSection extends StatelessWidget {
           icon: Icons.schedule_rounded,
           iconColor: scheme.onSurfaceVariant,
           text: millis > 0
-              ? '上次同步：${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.fromMillisecondsSinceEpoch(millis))}'
+              ? '上次同步：${TimeUtil.listDateTime(DateTime.fromMillisecondsSinceEpoch(millis))}'
               : '尚未同步',
         ),
       ),

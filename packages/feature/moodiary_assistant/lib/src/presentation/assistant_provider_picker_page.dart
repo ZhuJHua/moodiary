@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_assistant/src/application/llm_provider_preset_controller.dart';
@@ -246,9 +246,7 @@ class _UpdatedFooter extends StatelessWidget {
     final l10n = context.l10n;
     final parts = <String>[l10n.llmPickerDataSource];
     if (at > 0) {
-      final time = DateFormat.yMd().add_Hm().format(
-        DateTime.fromMillisecondsSinceEpoch(at),
-      );
+      final time = TimeUtil.listDateTime(DateTime.fromMillisecondsSinceEpoch(at));
       parts.add(l10n.llmPickerUpdatedAt(time));
     }
     return Padding(

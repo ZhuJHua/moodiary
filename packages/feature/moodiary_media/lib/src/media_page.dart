@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'media_controller.dart';
@@ -254,7 +254,7 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              DateFormat.yMMMMEEEEd().format(date),
+              TimeUtil.fullDate(date),
               style: context.textTheme.titleSmall?.copyWith(
                 color: scheme.primary,
                 fontWeight: FontWeight.w600,

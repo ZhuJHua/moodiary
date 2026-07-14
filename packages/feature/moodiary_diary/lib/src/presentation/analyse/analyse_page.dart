@@ -38,7 +38,7 @@ class _AnalyseBody extends StatelessWidget {
     }
     final now = DateTime.now();
     final thisMonth = diaries
-        .where((d) => d.time.year == now.year && d.time.month == now.month)
+        .where((d) => _sameMonth(d.time.toLocal(), now))
         .length;
     final moodSum = diaries.fold<double>(0, (acc, d) => acc + d.mood);
     final moodAvg = moodSum / diaries.length;
@@ -74,17 +74,19 @@ class _AnalyseBody extends StatelessWidget {
       for (final m in months)
         (
           '${m.month}月',
-          diaries
-              .where((d) => d.time.year == m.year && d.time.month == m.month)
-              .length,
+          diaries.where((d) => _sameMonth(d.time.toLocal(), m)).length,
         ),
     ];
   }
 
+  static bool _sameMonth(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month;
+
   int _continuousDays(List<Diary> diaries) {
     final days = <String>{};
     for (final d in diaries) {
-      days.add('${d.time.year}-${d.time.month}-${d.time.day}');
+      final t = d.time.toLocal();
+      days.add('${t.year}-${t.month}-${t.day}');
     }
     int count = 0;
     var cursor = DateTime.now();

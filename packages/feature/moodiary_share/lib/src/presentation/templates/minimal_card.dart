@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'share_card_template.dart';
@@ -49,7 +49,7 @@ class MinimalShareCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            DateFormat.yMMMMd().add_Hm().format(diary.time),
+            TimeUtil.longDateTime(diary.time),
             style: TextStyle(fontSize: 12, color: metaColor),
           ),
           const SizedBox(height: 20),

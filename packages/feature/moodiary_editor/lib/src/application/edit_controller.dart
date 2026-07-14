@@ -64,9 +64,10 @@ class EditController extends _$EditController {
     return diary;
   }
 
+  // time 是绝对时刻（新建为 UTC、库读为本地），取墙钟分量前必须 toLocal。
   void changeDate(DateTime date) {
     state = state.whenData((current) {
-      final t = current.time;
+      final t = current.time.toLocal();
       return current.copyWith(
         time: DateTime(
           date.year,
@@ -84,7 +85,7 @@ class EditController extends _$EditController {
 
   void changeTime(TimeOfDay time) {
     state = state.whenData((current) {
-      final t = current.time;
+      final t = current.time.toLocal();
       return current.copyWith(
         time: DateTime(t.year, t.month, t.day, time.hour, time.minute),
       );
