@@ -2,9 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -98,17 +97,15 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   }
 
   Future<void> _pickFromGallery(BuildContext sheetContext) async {
-    final files = await MediaUtil.pickMultiPhoto(10);
-    if (!sheetContext.mounted) return;
     Navigator.of(sheetContext).pop();
+    final files = await IFilePicker.get().pickImages(context, maxAssets: 10);
     if (files.isEmpty) return;
     await _insertPicked(files);
   }
 
   Future<void> _pickFromCamera(BuildContext sheetContext) async {
-    final file = await MediaUtil.pickPhoto(ImageSource.camera);
-    if (!sheetContext.mounted) return;
     Navigator.of(sheetContext).pop();
+    final file = await IFilePicker.get().takePhoto(context);
     if (file == null) return;
     await _insertPicked([file]);
   }
@@ -164,14 +161,14 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
           title: Text(context.l10n.editPickVideo),
           children: [
             SimpleDialogOption(
-              onPressed: () => _pickVideo(sheetContext, ImageSource.gallery),
+              onPressed: () => _pickVideo(sheetContext, fromCamera: false),
               child: _DialogRow(
                 icon: Icons.photo_library_outlined,
                 label: context.l10n.editPickVideoFromGallery,
               ),
             ),
             SimpleDialogOption(
-              onPressed: () => _pickVideo(sheetContext, ImageSource.camera),
+              onPressed: () => _pickVideo(sheetContext, fromCamera: true),
               child: _DialogRow(
                 icon: Icons.camera_alt_outlined,
                 label: context.l10n.editPickVideoFromCamera,
@@ -183,10 +180,14 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     );
   }
 
-  Future<void> _pickVideo(BuildContext sheetContext, ImageSource source) async {
-    final file = await MediaUtil.pickVideo(source);
-    if (!sheetContext.mounted) return;
+  Future<void> _pickVideo(
+    BuildContext sheetContext, {
+    required bool fromCamera,
+  }) async {
     Navigator.of(sheetContext).pop();
+    final file = fromCamera
+        ? await IFilePicker.get().recordVideo(context)
+        : await IFilePicker.get().pickVideo(context);
     if (file == null) return;
     final saved = await MediaUtil.saveVideo(videoFileList: [file]);
     final name = saved[file.path];
@@ -223,20 +224,13 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
 
   /// 复制原文件到 audio 目录、命名 `audio-uuid.ext` 直接落库，不压缩 / 转码。
   Future<void> _pickAudioFile(BuildContext sheetContext) async {
+    Navigator.of(sheetContext).pop();
     try {
-      final result = await FilePicker.pickFiles(type: FileType.audio);
-      if (!sheetContext.mounted) return;
-      Navigator.of(sheetContext).pop();
-      if (result == null || result.files.isEmpty) return;
-      final picked = result.files.single;
-      final src = picked.path;
-      if (src == null) {
-        if (mounted) toast.error(message: context.l10n.audioFileError);
-        return;
-      }
-      final ext = p.extension(picked.name);
+      final file = await IFilePicker.get().pickAudio();
+      if (file == null) return;
+      final ext = p.extension(file.path);
       final name = 'audio-${uuidV7()}$ext';
-      await File(src).copy(FileUtil.getRealPath('audio', name));
+      await File(file.path).copy(FileUtil.getRealPath('audio', name));
       await _controller.insertAudio(name);
     } catch (_) {
       if (mounted) toast.error(message: context.l10n.audioFileError);

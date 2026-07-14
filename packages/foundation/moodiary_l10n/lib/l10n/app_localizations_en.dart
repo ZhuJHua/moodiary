@@ -637,6 +637,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Please go to settings to enable location permissions';
 
   @override
+  String get noticeEnablePhotoPermission =>
+      'Please go to settings to enable photo library permissions';
+
+  @override
+  String get noticeEnableCameraPermission =>
+      'Please go to settings to enable camera permissions';
+
+  @override
+  String get pickerRecentAlbum => 'Recent';
+
+  @override
   String get diarySearch => 'Search';
 
   @override

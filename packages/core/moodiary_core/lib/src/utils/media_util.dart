@@ -1,11 +1,11 @@
 ﻿import 'dart:async';
 import 'dart:io';
 
+import 'package:cross_file/cross_file.dart';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
 import 'package:heif_converter/heif_converter.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_rust/moodiary_rust.dart';
@@ -46,8 +46,6 @@ enum ImageFormat {
 }
 
 class MediaUtil {
-  static final _picker = ImagePicker();
-
   static final _thumbnail = FcNativeVideoThumbnail();
 
   /// 返回 map：key=XFile 临时路径，value=实际文件名
@@ -272,14 +270,6 @@ class MediaUtil {
     return completer.future;
   }
 
-  static Future<XFile?> pickPhoto(ImageSource imageSource) async {
-    return await _picker.pickImage(source: imageSource);
-  }
-
-  static Future<XFile?> pickVideo(ImageSource imageSource) async {
-    return await _picker.pickVideo(source: imageSource);
-  }
-
   static Future<int> getColorScheme(ImageProvider imageProvider) async {
     final color = (await ColorScheme.fromImageProvider(
       provider: imageProvider,
@@ -288,10 +278,6 @@ class MediaUtil {
         ((color.r * 255).toInt() << 16) |
         ((color.g * 255).toInt() << 8) |
         (color.b * 255).toInt();
-  }
-
-  static Future<List<XFile>> pickMultiPhoto(int? limit) async {
-    return await _picker.pickMultiImage(limit: limit);
   }
 
   /// Rust 解码+缩放后直接写 outputPath，像素不经 FFI 拷贝到 Dart 堆。

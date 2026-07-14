@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_editor/src/quill_embed/audio_embed.dart';
 import 'package:moodiary_editor/src/quill_embed/image_embed.dart';
@@ -156,9 +154,8 @@ class _EditorBodyState extends State<EditorBody> {
   }
 
   Future<void> _pickImageFromGallery({required BuildContext sheetContext}) async {
-    final files = await MediaUtil.pickMultiPhoto(10);
-    if (!sheetContext.mounted) return;
     Navigator.of(sheetContext).pop();
+    final files = await IFilePicker.get().pickImages(context, maxAssets: 10);
     if (files.isEmpty) return;
     final saved = await MediaUtil.saveImages(imageFileList: files);
     // saveImages 返回 {tempPath: finalName}；按用户挑选顺序插入。
@@ -169,9 +166,8 @@ class _EditorBodyState extends State<EditorBody> {
   }
 
   Future<void> _pickImageFromCamera({required BuildContext sheetContext}) async {
-    final file = await MediaUtil.pickPhoto(ImageSource.camera);
-    if (!sheetContext.mounted) return;
     Navigator.of(sheetContext).pop();
+    final file = await IFilePicker.get().takePhoto(context);
     if (file == null) return;
     final saved = await MediaUtil.saveImages(imageFileList: [file]);
     final name = saved[file.path];
@@ -179,9 +175,8 @@ class _EditorBodyState extends State<EditorBody> {
   }
 
   Future<void> _pickVideoFromGallery({required BuildContext sheetContext}) async {
-    final file = await MediaUtil.pickVideo(ImageSource.gallery);
-    if (!sheetContext.mounted) return;
     Navigator.of(sheetContext).pop();
+    final file = await IFilePicker.get().pickVideo(context);
     if (file == null) return;
     final saved = await MediaUtil.saveVideo(videoFileList: [file]);
     final name = saved[file.path];
@@ -189,9 +184,8 @@ class _EditorBodyState extends State<EditorBody> {
   }
 
   Future<void> _pickVideoFromCamera({required BuildContext sheetContext}) async {
-    final file = await MediaUtil.pickVideo(ImageSource.camera);
-    if (!sheetContext.mounted) return;
     Navigator.of(sheetContext).pop();
+    final file = await IFilePicker.get().recordVideo(context);
     if (file == null) return;
     final saved = await MediaUtil.saveVideo(videoFileList: [file]);
     final name = saved[file.path];
@@ -200,21 +194,14 @@ class _EditorBodyState extends State<EditorBody> {
 
   /// 复制原文件到 audio 目录、命名 `audio-uuid.ext` 直接落库，不走压缩 / 转码。
   Future<void> _pickAudioFile({required BuildContext sheetContext}) async {
+    Navigator.of(sheetContext).pop();
     try {
-      final result = await FilePicker.pickFiles(type: FileType.audio);
-      if (!sheetContext.mounted) return;
-      Navigator.of(sheetContext).pop();
-      if (result == null || result.files.isEmpty) return;
-      final picked = result.files.single;
-      final src = picked.path;
-      if (src == null) {
-        if (mounted) toast.error(message: context.l10n.audioFileError);
-        return;
-      }
-      final ext = p.extension(picked.name);
+      final file = await IFilePicker.get().pickAudio();
+      if (file == null) return;
+      final ext = p.extension(file.path);
       final name = 'audio-${uuidV7()}$ext';
       final dst = FileUtil.getRealPath('audio', name);
-      await File(src).copy(dst);
+      await File(file.path).copy(dst);
       _insertEmbed(AudioBlockEmbed.fromName(name));
     } catch (_) {
       if (mounted) toast.error(message: context.l10n.audioFileError);

@@ -47,6 +47,8 @@
 	<string>应用需要您的同意，才能访问照片</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>应用需要您的同意，才能访问照片</string>
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

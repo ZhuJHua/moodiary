@@ -625,6 +625,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noticeEnableLocation2 => '请前往设置中开启定位权限';
 
   @override
+  String get noticeEnablePhotoPermission => '请前往设置中开启相册权限';
+
+  @override
+  String get noticeEnableCameraPermission => '请前往设置中开启相机权限';
+
+  @override
+  String get pickerRecentAlbum => '最近';
+
+  @override
   String get diarySearch => '搜索';
 
   @override

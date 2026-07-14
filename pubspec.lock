@@ -225,6 +225,46 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  camera:
+    dependency: transitive
+    description:
+      name: camera
+      sha256: "558230d6ce6ccea856b32d390db7e7b557adf4d9320aa614481bd3f2f608953f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.12.0+2"
+  camera_android_camerax:
+    dependency: transitive
+    description:
+      name: camera_android_camerax
+      sha256: cf6c248ef3d3c4846e99e488de9487d95927437e083c396e5fed2c1ece7f93a7
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.4+1"
+  camera_avfoundation:
+    dependency: transitive
+    description:
+      name: camera_avfoundation
+      sha256: "866e9cd8370f8055d005c0413937a52dc1d7a472687f0ee3ce02392955aababa"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.2"
+  camera_platform_interface:
+    dependency: transitive
+    description:
+      name: camera_platform_interface
+      sha256: "4524ca6eb4176b066864036ad4fe02c3e4863e63b77eadc21a5bf56824f43498"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.13.1"
+  camera_web:
+    dependency: transitive
+    description:
+      name: camera_web
+      sha256: "1245a480a113437f8d46d19c0fb90cea9db921436d9cf2ba5fb11854a1312693"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.5+4"
   characters:
     dependency: transitive
     description:
@@ -345,14 +385,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
-  console:
-    dependency: transitive
-    description:
-      name: console
-      sha256: e04e7824384c5b39389acdd6dc7d33f3efe6b232f6f16d7626f194f6a01ad69a
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.1.0"
   conventional_commit:
     dependency: transitive
     description:
@@ -545,6 +577,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  extended_image:
+    dependency: transitive
+    description:
+      name: extended_image
+      sha256: e81d801cd692921f152834e01f39bba8b3d6302c48ad420d499c6062a7e24737
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.1.0"
+  extended_image_library:
+    dependency: transitive
+    description:
+      name: extended_image_library
+      sha256: "1f9a24d3a00c2633891c6a7b5cab2807999eb2d5b597e5133b63f49d113811fe"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.1"
   extended_list_library:
     dependency: transitive
     description:
@@ -601,22 +649,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "12.0.0-beta.7"
-  file_selector_linux:
-    dependency: transitive
-    description:
-      name: file_selector_linux
-      sha256: "2567f398e06ac72dcf2e98a0c95df2a9edd03c2c2e0cacd4780f20cdf56263a0"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.9.4"
-  file_selector_macos:
-    dependency: transitive
-    description:
-      name: file_selector_macos
-      sha256: "5e0bbe9c312416f1787a68259ea1505b52f258c587f12920422671807c4d618a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.9.5"
   file_selector_platform_interface:
     dependency: transitive
     description:
@@ -1182,6 +1214,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.6.0"
+  http_client_helper:
+    dependency: transitive
+    description:
+      name: http_client_helper
+      sha256: "8a9127650734da86b5c73760de2b404494c968a3fd55602045ffec789dac3cb1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   http_multi_server:
     dependency: transitive
     description:
@@ -1214,70 +1254,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.8.0"
-  image_picker:
-    dependency: transitive
-    description:
-      name: image_picker
-      sha256: d8402284df184bc05f4a2210c6c23983b0720f4cd87cbd05c5390a78af602667
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.2.3"
-  image_picker_android:
-    dependency: transitive
-    description:
-      name: image_picker_android
-      sha256: "6f3a1995eafb000333174fae92202622033b0ee7fd917a6cd3730295264df84a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.13+19"
-  image_picker_for_web:
-    dependency: transitive
-    description:
-      name: image_picker_for_web
-      sha256: "66257a3191ab360d23a55c8241c91a6e329d31e94efa7be9cf7a212e65850214"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.1.1"
-  image_picker_ios:
-    dependency: transitive
-    description:
-      name: image_picker_ios
-      sha256: b9c4a438a9ff4f60808c9cf0039b93a42bb6c2211ef6ebb647394b2b3fa84588
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.13+6"
-  image_picker_linux:
-    dependency: transitive
-    description:
-      name: image_picker_linux
-      sha256: "1f81c5f2046b9ab724f85523e4af65be1d47b038160a8c8deed909762c308ed4"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.2"
-  image_picker_macos:
-    dependency: transitive
-    description:
-      name: image_picker_macos
-      sha256: "86f0f15a309de7e1a552c12df9ce5b59fe927e71385329355aec4776c6a8ec91"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.2+1"
-  image_picker_platform_interface:
-    dependency: transitive
-    description:
-      name: image_picker_platform_interface
-      sha256: "567e056716333a1647c64bb6bd873cff7622233a5c3f694be28a583d4715690c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.11.1"
-  image_picker_windows:
-    dependency: transitive
-    description:
-      name: image_picker_windows
-      sha256: d248c86554a72b5495a31c56f060cf73a41c7ff541689327b1a7dbccc33adfae
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.2"
   image_size_getter:
     dependency: transitive
     description:
@@ -1342,6 +1318,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  js:
+    dependency: transitive
+    description:
+      name: js
+      sha256: "53385261521cc4a0c4658fd0ad07a7d14591cf8fc33abbceae306ddb974888dc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.2"
   json_annotation:
     dependency: transitive
     description:
@@ -1534,14 +1518,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
-  msix:
-    dependency: transitive
-    description:
-      name: msix
-      sha256: "61415c352e8aea084332b8a5514e6408c961c8cdeca202804fff1040eb555ac7"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.18.0"
   mustache_template:
     dependency: transitive
     description:
@@ -1718,6 +1694,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.2"
+  photo_manager:
+    dependency: transitive
+    description:
+      name: photo_manager
+      sha256: bf840253a7a5a48774f3a23b042a673614785e9874e0c86e2837681d576ef252
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.10.0"
+  photo_manager_image_provider:
+    dependency: transitive
+    description:
+      name: photo_manager_image_provider
+      sha256: b6015b67b32f345f57cf32c126f871bced2501236c405aafaefa885f7c821e4f
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   photo_view:
     dependency: transitive
     description:
@@ -2022,6 +2014,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.8.9+1"
+  sensors_plus:
+    dependency: transitive
+    description:
+      name: sensors_plus
+      sha256: "31182c626623de79d3f7e1f9b43028f940821ee012c092f68f165fe55b867822"
+      url: "https://pub.dev"
+    source: hosted
+    version: "7.1.0"
+  sensors_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: sensors_plus_platform_interface
+      sha256: "9e12a92569bf14ae04b2f086c3e087177a47e527b7666ae1bbe5f70f8450ab19"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.2"
   share_plus:
     dependency: transitive
     description:
@@ -2483,6 +2491,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.2"
+  visibility_detector:
+    dependency: transitive
+    description:
+      name: visibility_detector
+      sha256: dd5cc11e13494f432d15939c3aa8ae76844c42b723398643ce9addb88a5ed420
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0+2"
   vm_service:
     dependency: transitive
     description:
@@ -2595,6 +2611,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.26.0"
+  wechat_assets_picker:
+    dependency: transitive
+    description:
+      name: wechat_assets_picker
+      sha256: e2e447c12a6254e523b83415deb0b77953a96eafcb4586901b7d93039d2ca9d6
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.1.2"
+  wechat_camera_picker:
+    dependency: transitive
+    description:
+      name: wechat_camera_picker
+      sha256: f406a53404fadb3fe4c9698cdcc3cafaad68f5aadcc5623510f3500e2b183967
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.5.0"
+  wechat_picker_library:
+    dependency: transitive
+    description:
+      name: wechat_picker_library
+      sha256: "5cb61b9aa935b60da5b043f8446fbb9c5077419f20ccc4856bf444aec4f44bc1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.7"
   win32:
     dependency: transitive
     description:

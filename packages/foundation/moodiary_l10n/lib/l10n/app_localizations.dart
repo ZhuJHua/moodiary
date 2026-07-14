@@ -1310,6 +1310,24 @@ abstract class AppLocalizations {
   /// **'请前往设置中开启定位权限'**
   String get noticeEnableLocation2;
 
+  /// No description provided for @noticeEnablePhotoPermission.
+  ///
+  /// In zh, this message translates to:
+  /// **'请前往设置中开启相册权限'**
+  String get noticeEnablePhotoPermission;
+
+  /// No description provided for @noticeEnableCameraPermission.
+  ///
+  /// In zh, this message translates to:
+  /// **'请前往设置中开启相机权限'**
+  String get noticeEnableCameraPermission;
+
+  /// No description provided for @pickerRecentAlbum.
+  ///
+  /// In zh, this message translates to:
+  /// **'最近'**
+  String get pickerRecentAlbum;
+
   /// No description provided for @diarySearch.
   ///
   /// In zh, this message translates to:

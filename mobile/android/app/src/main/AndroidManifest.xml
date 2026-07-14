@@ -9,7 +9,7 @@
     <!-- 生物识别：应用锁 -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
-    <!-- 相机：拍照 / 录像 / 扫码（image_picker + mobile_scanner） -->
+    <!-- 相机：拍照 / 录像 / 扫码（wechat_camera_picker + mobile_scanner） -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- 麦克风：录音 -->
@@ -20,7 +20,13 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-    <!-- 相册：选图走系统相册选择器(Photo Picker)/SAF，无需读权限；保存到相册仅 Android 9 及以下需写入 -->
+    <!-- 相册：选图/视频走应用内选择器(wechat_assets_picker/photo_manager)，直接读媒体库。
+         API 33+ 用细分媒体权限（读图/读视频两条都必须），14+ 受限访问再加 VISUAL_USER_SELECTED；
+         32 及以下用旧读权限。保存到相册仅 Android 9 及以下需写入 -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
     <queries>

@@ -684,9 +684,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (_sending) return;
     _panelController.updatePanelType(ChatBottomPanelType.none);
     _inputFocusNode.unfocus();
-    final files = await MediaUtil.pickMultiPhoto(1);
+    final files = await IFilePicker.get().pickImages(context, maxAssets: 1);
     if (files.isEmpty || !mounted) return;
-    final first = files.first; // limit 只是提示，只取并保存第一张，避免多余落盘
+    final first = files.first;
     final saved = await MediaUtil.saveImages(imageFileList: [first]);
     final name = saved[first.path];
     if (name == null || !mounted) return;

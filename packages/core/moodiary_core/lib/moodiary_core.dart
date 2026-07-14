@@ -3,6 +3,7 @@
 library;
 
 export 'src/di.dart';
+export 'src/file_picker.dart';
 export 'src/init.dart';
 export 'src/network/http_client.dart';
 export 'src/network/impl/rust_http_client.dart';
