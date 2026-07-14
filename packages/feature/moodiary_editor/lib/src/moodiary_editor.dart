@@ -160,6 +160,9 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   /// 最近一次内容（来自 change 事件 / setContent），TipTap 文档 JSON 串。getContent 直接返回，免 JS 回程。
   late String _lastContent = widget.initialContent;
 
+  /// webview 内焦点位置（focusChange 事件维护）。
+  EditorFocusTarget _focusTarget = EditorFocusTarget.none;
+
   @override
   void initState() {
     super.initState();
@@ -317,6 +320,13 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
         return;
       case 'titleChange':
         widget.onTitleChanged?.call(payload is String ? payload : '');
+        return;
+      case 'focusChange':
+        _focusTarget = switch (payload) {
+          'editor' => EditorFocusTarget.editor,
+          'title' => EditorFocusTarget.title,
+          _ => EditorFocusTarget.none,
+        };
         return;
       case 'activeHeading':
         final index = payload is int
@@ -500,6 +510,14 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     await _run('window.MoodiaryBridge.focus()');
   }
 
+  Future<void> _blur() async {
+    await _run('window.MoodiaryBridge.blur()');
+  }
+
+  Future<void> _focusTitle() async {
+    await _run('window.MoodiaryBridge.focusTitle()');
+  }
+
   Future<void> _insertMedia(String name, [String alt = '']) async {
     await _run(
       'window.MoodiaryBridge.insertMedia('
@@ -559,6 +577,9 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 }
 
+/// webview 内焦点位置（web 侧 focusChange 事件回传）。
+enum EditorFocusTarget { none, editor, title }
+
 /// [MoodiaryEditor] 的命令式句柄。
 class MoodiaryEditorController {
   _MoodiaryEditorState? _state;
@@ -583,6 +604,22 @@ class MoodiaryEditorController {
   Future<void> focus() async {
     await _state?._focus();
   }
+
+  /// 取消 webview 内一切焦点（正文 + 标题），软键盘随之收起。
+  Future<void> blur() async {
+    await _state?._blur();
+  }
+
+  /// 恢复标题输入框焦点。
+  Future<void> focusTitle() async {
+    await _state?._focusTitle();
+  }
+
+  /// 当前 webview 内焦点位置。由 web 侧 focusChange 事件维护，读取无 JS 回程。
+  EditorFocusTarget get focusTarget =>
+      _state?._focusTarget ?? EditorFocusTarget.none;
+
+  bool get hasFocus => focusTarget != EditorFocusTarget.none;
 
   Future<void> insertMedia(String name, {String alt = ''}) async {
     await _state?._insertMedia(name, alt);

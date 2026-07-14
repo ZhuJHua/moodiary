@@ -9,3 +9,14 @@ export const title = ref('')
 export function setTitle(value: string): void {
   title.value = value ?? ''
 }
+
+// 标题聚焦句柄：textarea 在组件内，挂载时注册，bridge.focusTitle 经此恢复标题焦点。
+let focusHandler: (() => void) | null = null
+
+export function registerTitleFocus(handler: (() => void) | null): void {
+  focusHandler = handler
+}
+
+export function focusTitle(): void {
+  focusHandler?.()
+}

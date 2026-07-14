@@ -39,8 +39,11 @@ class DiaryPage extends ConsumerStatefulWidget {
 }
 
 class _DiaryPageState extends ConsumerState<DiaryPage>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, RouteAware {
   static const _autoSaveDebounce = Duration(seconds: 2);
+
+  /// 压栈离页时记录的 webview 焦点位置，返回本页时按此恢复；none 表示离页时无焦点、不恢复。
+  EditorFocusTarget _restoreFocusTarget = EditorFocusTarget.none;
 
   _Mode _mode = _Mode.read;
 
@@ -136,6 +139,42 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) moodiaryRouteObserver.subscribe(this, route);
+  }
+
+  // —— 路由级焦点联动：压栈离页收键盘（记住焦点位置），返回时恢复，弹出本页放焦点 ——
+
+  @override
+  void didPushNext() {
+    _restoreFocusTarget = _mode == _Mode.edit
+        ? _editorController.focusTarget
+        : EditorFocusTarget.none;
+    unawaited(_editorController.blur());
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
+  @override
+  void didPopNext() {
+    final target = _restoreFocusTarget;
+    _restoreFocusTarget = EditorFocusTarget.none;
+    if (target == EditorFocusTarget.none || _mode != _Mode.edit) return;
+    unawaited(
+      target == EditorFocusTarget.title
+          ? _editorController.focusTitle()
+          : _editorController.focus(),
+    );
+  }
+
+  @override
+  void didPop() {
+    unawaited(_editorController.blur());
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
+  @override
   void didUpdateWidget(covariant DiaryPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.diaryId == widget.diaryId) return;
@@ -185,6 +224,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   @override
   void dispose() {
+    moodiaryRouteObserver.unsubscribe(this);
     WidgetsBinding.instance.removeObserver(this);
     _activeHeading.dispose();
     _autoSaveTimer?.cancel();

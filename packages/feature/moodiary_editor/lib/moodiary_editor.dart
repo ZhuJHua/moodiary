@@ -10,6 +10,7 @@ export 'src/moodiary_editor.dart'
     show
         MoodiaryEditor,
         MoodiaryEditorController,
+        EditorFocusTarget,
         EditorSeed,
         EditorFont,
         DiaryLinkCandidate;

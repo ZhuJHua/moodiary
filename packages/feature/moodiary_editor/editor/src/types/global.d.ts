@@ -22,6 +22,10 @@ declare global {
       /** 日记标题初值（打开日记时推入；用户改动经 titleChange 事件回传）。 */
       setTitle: (title: string) => void
       focus: () => void
+      /** 取消 webview 内一切焦点（正文 + 标题），软键盘随之收起。 */
+      blur: () => void
+      /** 恢复标题输入框焦点（路由返回按记录的焦点位置恢复）。 */
+      focusTitle: () => void
       setEditable: (value: boolean) => void
       reset: () => void
       insertMedia: (name: string, alt?: string) => void

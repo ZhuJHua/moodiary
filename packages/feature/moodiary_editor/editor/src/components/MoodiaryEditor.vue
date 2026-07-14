@@ -13,7 +13,7 @@ import { createEditorKit } from '../editor/tiptap'
 import { bindApi, emitChange, markReady } from '../bridge'
 import { post } from '../bridge/post'
 import { bindScrollViewport } from '../bridge/scroll'
-import { title } from '../bridge/title'
+import { registerTitleFocus, title } from '../bridge/title'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorSearchBar from './EditorSearchBar.vue'
 import { openSearch } from '../editor/search'
@@ -91,6 +91,13 @@ function onTitleKeydown(e: KeyboardEvent): void {
   e.preventDefault()
   editor.value?.commands.focus('start')
 }
+// 标题焦点变化上报（'title' / ''），与正文的 onFocus/onBlur 共用 focusChange 事件。
+function onTitleFocus(): void {
+  post('focusChange', 'title')
+}
+function onTitleBlur(): void {
+  post('focusChange', '')
+}
 
 // —— 目录（TOC）滚动联动 ——
 // 视口滚动 / 内容变化时算出「当前顶部可见的最后一个标题」下标（文档序，与 Dart TiptapContent.headings
@@ -153,12 +160,14 @@ function onKeydown(e: KeyboardEvent): void {
 }
 onMounted(() => {
   nextTick(autoGrowTitle)
+  registerTitleFocus(() => titleEl.value?.focus())
   bindScrollViewport(viewportEl.value ?? null)
   viewportEl.value?.addEventListener('scroll', onViewportScroll, { passive: true })
   if (props.platform === 'mobile') window.addEventListener('resize', onViewportResize)
   window.addEventListener('keydown', onKeydown)
 })
 onBeforeUnmount(() => {
+  registerTitleFocus(null)
   bindScrollViewport(null)
   viewportEl.value?.removeEventListener('scroll', onViewportScroll)
   window.removeEventListener('resize', onViewportResize)
@@ -194,6 +203,8 @@ onBeforeUnmount(() => {
           @compositionstart="onTitleCompositionStart"
           @compositionend="onTitleCompositionEnd"
           @keydown="onTitleKeydown"
+          @focus="onTitleFocus"
+          @blur="onTitleBlur"
         ></textarea>
         <EditorContent :editor="editor" class="moodiary-editor" />
       </div>

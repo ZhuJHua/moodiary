@@ -5,7 +5,7 @@ import { applyTheme, type SeedTheme } from './theme'
 import { post } from './post'
 import { setSaveStatus } from './save-status'
 import { getScrollY, setScrollY } from './scroll'
-import { setTitle } from './title'
+import { focusTitle, setTitle } from './title'
 import type { EditorApi } from '../editor/tiptap'
 
 let api: EditorApi | null = null
@@ -33,6 +33,13 @@ export function installBridge(): void {
     setSaveStatus: (status: string) => setSaveStatus(status),
     setTitle: (t: string) => setTitle(t ?? ''),
     focus: () => api?.focus(),
+    // 取消 webview 内一切焦点（正文 + 标题），软键盘随之收起。
+    blur: () => {
+      api?.blur()
+      const el = document.activeElement
+      if (el instanceof HTMLElement) el.blur()
+    },
+    focusTitle: () => focusTitle(),
     setEditable: (value: boolean) => api?.setEditable(value),
     reset: () => api?.reset(),
     insertMedia: (name: string, alt?: string) => api?.insertMedia(name, alt),

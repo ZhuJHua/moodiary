@@ -25,7 +25,7 @@ void buildRouter({String initialLocation = '/'}) {
     routes: _mobileRoutes(),
     initialLocation: initialLocation,
     navigatorKey: moodiaryNavigationKey,
-    observers: [FlutterSmartDialog.observer],
+    observers: [FlutterSmartDialog.observer, moodiaryRouteObserver],
   );
 }
 

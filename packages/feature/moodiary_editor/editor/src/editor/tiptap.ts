@@ -12,7 +12,7 @@
 
 import { mergeAttributes } from '@tiptap/core'
 import type { Editor, EditorOptions, JSONContent } from '@tiptap/core'
-import { EditorState } from '@tiptap/pm/state'
+import { EditorState, NodeSelection } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import { Placeholder, CharacterCount } from '@tiptap/extensions'
@@ -40,6 +40,7 @@ export interface EditorApi {
   getContent(): string
   setEditable(value: boolean): void
   focus(): void
+  blur(): void
   reset(): void
   insertMedia(name: string, alt?: string): void
   insertAudio(name: string): void
@@ -102,8 +103,23 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
   const pendingUploads = new Map<string, (name: string) => void>()
   let uploadSeq = 0
 
+  // 块级媒体统一入口。atom 节点插入后选区落成该节点的 NodeSelection，直接再 insertContent
+  // 会把它替换掉（多选图片连插只剩最后一张），故 NodeSelection 时改在节点之后插入。
+  const insertBlock = (content: JSONContent): void => {
+    const ed = editor
+    if (!ed) return
+    const { selection } = ed.state
+    const chain = ed.chain().focus()
+    if (selection instanceof NodeSelection) {
+      chain.insertContentAt(selection.to, content)
+    } else {
+      chain.insertContent(content)
+    }
+    chain.run()
+  }
+
   const insertImage = (name: string, alt?: string): void => {
-    editor?.chain().focus().setImage({ src: name, alt }).run()
+    insertBlock({ type: 'image', attrs: { src: name, alt } })
   }
 
   const handleFiles = (files: FileList | null | undefined): boolean => {
@@ -190,6 +206,9 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     onUpdate: ({ editor }) => {
       if (!suppress) onChange(JSON.stringify(editor.getJSON()))
     },
+    // 正文焦点变化上报（'editor' / ''），Flutter 据此做路由级焦点保存/恢复。
+    onFocus: () => post('focusChange', 'editor'),
+    onBlur: () => post('focusChange', ''),
   }
 
   const api: EditorApi = {
@@ -203,18 +222,17 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     focus: () => {
       editor?.commands.focus()
     },
+    blur: () => {
+      editor?.commands.blur()
+    },
     reset: () => {
       const ed = editor
       if (!ed) return
       withoutEmit(() => ed.commands.setContent('', { emitUpdate: false }))
     },
     insertMedia: (name, alt) => insertImage(name, alt),
-    insertAudio: (name) => {
-      editor?.chain().focus().insertContent({ type: 'audio', attrs: { filename: name } }).run()
-    },
-    insertVideo: (name) => {
-      editor?.chain().focus().insertContent({ type: 'video', attrs: { filename: name } }).run()
-    },
+    insertAudio: (name) => insertBlock({ type: 'audio', attrs: { filename: name } }),
+    insertVideo: (name) => insertBlock({ type: 'video', attrs: { filename: name } }),
     resolveUpload: (id, name) => {
       const resolver = pendingUploads.get(id)
       if (resolver) {
