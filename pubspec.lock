@@ -687,18 +687,18 @@ packages:
     dependency: transitive
     description:
       name: flutter_gen_core
-      sha256: "1413fbd0b67f76ac17800989013438caec3b64564c9ffd1eea6cd7e170d9b0e5"
+      sha256: "8ccb1f809642b34eb4857d8d7c4e5b41430a8cba8206177aae2ffe9d72b5eef3"
       url: "https://pub.dev"
     source: hosted
-    version: "5.14.1"
+    version: "5.15.0"
   flutter_gen_runner:
     dependency: transitive
     description:
       name: flutter_gen_runner
-      sha256: db00922dd5f4c1aa33aeab7f74117f1cd224e7a1e8bea1e312b8d09b8101a909
+      sha256: "2b0fff517a75a14ed2eff749c1da2d6b8b568e542ad2b1c967356669a4c29bb2"
       url: "https://pub.dev"
     source: hosted
-    version: "5.14.1"
+    version: "5.15.0"
   flutter_inappwebview_internal_annotations:
     dependency: transitive
     description:
@@ -1370,10 +1370,10 @@ packages:
     dependency: transitive
     description:
       name: latlong2
-      sha256: "98227922caf49e6056f91b6c56945ea1c7b166f28ffcd5fb8e72fc0b453cc8fe"
+      sha256: "84b776b100a84a684a0aaa3fa4dc2c9b1931c658de533701ee4e09bfa991f8dc"
       url: "https://pub.dev"
     source: hosted
-    version: "0.9.1"
+    version: "0.10.1"
   leak_tracker:
     dependency: transitive
     description:
@@ -1490,10 +1490,10 @@ packages:
     dependency: "direct dev"
     description:
       name: melos
-      sha256: cc3b029d507d0edc5b80728cbba893715cb7802e1e12b7eea8dca386d49bf7fb
+      sha256: "2d588cd21b34ea4cadf5a20542bcd5042a60833aa3eae09ecdc319291cd06f69"
       url: "https://pub.dev"
     source: hosted
-    version: "8.2.1"
+    version: "8.2.2"
   meta:
     dependency: transitive
     description:
@@ -2050,10 +2050,10 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences_android
-      sha256: "93ae5884a9df5d3bb696825bceb3a17590754548b5d740eba51500afc8d088f5"
+      sha256: "0634e64bd719f89c012f392938e173521f535d3ecaf66558fa94a056d22b5cc7"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.26"
+    version: "2.4.27"
   shared_preferences_foundation:
     dependency: transitive
     description:
@@ -2439,10 +2439,10 @@ packages:
     dependency: transitive
     description:
       name: video_player
-      sha256: "0431179e1a7a2234a1148f64dde63c73167ca23829815169b24cc0bc6b9444a3"
+      sha256: "20ef311160e2ced020a62f38e4cc399a1bf289e722fc5fe37c9d7b18e44c9e8d"
       url: "https://pub.dev"
     source: hosted
-    version: "2.12.0"
+    version: "2.13.0"
   video_player_android:
     dependency: transitive
     description:

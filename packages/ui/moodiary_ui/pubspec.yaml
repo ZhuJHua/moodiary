@@ -28,7 +28,7 @@ dependencies:
   cached_network_image_ce: 4.9.0
   flutter_svg: 2.3.0
 
-  video_player: 2.12.0
+  video_player: 2.13.0
   chewie: 1.14.1
   audioplayers: 6.8.1
 

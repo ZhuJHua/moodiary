@@ -38,7 +38,7 @@ dependencies:
   image_picker: 1.2.3
   record: 7.1.1
   flutter_quill: 11.5.1
-  latlong2: 0.9.1
+  latlong2: 0.10.1
   path: 1.9.1
   geolocator:
     git:

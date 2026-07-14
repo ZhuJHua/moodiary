@@ -33,7 +33,7 @@ dependencies:
   dartx: 1.2.0
   font_awesome_flutter: 11.0.0
   flutter_map: 8.3.1
-  latlong2: 0.9.1
+  latlong2: 0.10.1
   substring_highlight: 1.0.33
   waterfall_flow: 3.1.1
 
