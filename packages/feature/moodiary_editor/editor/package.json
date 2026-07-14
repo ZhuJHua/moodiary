@@ -12,7 +12,8 @@
     "dev": "vite",
     "harness": "vite --open /dev.html",
     "build": "vue-tsc --noEmit && vite build",
-    "type-check": "vue-tsc --noEmit"
+    "type-check": "vue-tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@material/material-color-utilities": "0.4.0",
@@ -37,12 +38,15 @@
     "@iconify-json/material-symbols": "1.2.79",
     "@tailwindcss/vite": "4.3.1",
     "@vitejs/plugin-vue": "6.0.7",
+    "@vue/test-utils": "2.4.11",
     "daisyui": "5.5.23",
+    "jsdom": "29.1.1",
     "tailwindcss": "4.3.1",
     "typescript": "6.0.3",
     "unplugin-icons": "23.0.1",
     "vite": "8.0.16",
     "vite-plugin-singlefile": "2.3.3",
+    "vitest": "4.1.10",
     "vue-tsc": "3.3.5"
   }
 }

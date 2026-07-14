@@ -91,3 +91,6 @@ jobs:
 
       - name: Type-check
         run: corepack pnpm type-check
+
+      - name: Test
+        run: corepack pnpm test
