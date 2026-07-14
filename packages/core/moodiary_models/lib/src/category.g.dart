@@ -1497,7 +1497,9 @@ extension CategoryQueryProperty3<R1, R2>
 _Category _$CategoryFromJson(Map<String, dynamic> json) => _Category(
   id: json['id'] as String,
   categoryName: json['categoryName'] as String,
-  lastModified: DateTime.parse(json['lastModified'] as String),
+  lastModified: const UtcDateTimeConverter().fromJson(
+    json['lastModified'] as String,
+  ),
   parentId: json['parentId'] as String?,
   color: (json['color'] as num?)?.toInt(),
   deleted: json['deleted'] as bool,
@@ -1506,7 +1508,7 @@ _Category _$CategoryFromJson(Map<String, dynamic> json) => _Category(
 Map<String, dynamic> _$CategoryToJson(_Category instance) => <String, dynamic>{
   'id': instance.id,
   'categoryName': instance.categoryName,
-  'lastModified': instance.lastModified.toIso8601String(),
+  'lastModified': const UtcDateTimeConverter().toJson(instance.lastModified),
   'parentId': instance.parentId,
   'color': instance.color,
   'deleted': instance.deleted,

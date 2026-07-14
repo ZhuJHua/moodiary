@@ -3,6 +3,7 @@ import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'diary_type.dart';
+import 'utc_date_time_converter.dart';
 
 part 'diary.freezed.dart';
 part 'diary.g.dart';
@@ -16,8 +17,8 @@ abstract class Diary with _$Diary {
     required String title,
     required String content,
     required String contentText,
-    @Index() required DateTime time,
-    required DateTime lastModified,
+    @Index() @UtcDateTimeConverter() required DateTime time,
+    @UtcDateTimeConverter() required DateTime lastModified,
     @Index() required bool show,
     @Index() required bool deleted,
     required double mood,

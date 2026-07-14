@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Category {
 
-@Id() String get id; String get categoryName; DateTime get lastModified; String? get parentId;/// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
+@Id() String get id; String get categoryName;@UtcDateTimeConverter() DateTime get lastModified; String? get parentId;/// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
  int? get color;/// 软删除标记（仅用于同步传播；本地 UI 经 `getAllCategories()` 过滤）。
 /// 无 model 级默认值：旧库（<2.8.0）的回填由 [MergeUtil] 迁移显式写入。
 @Index() bool get deleted;
@@ -51,7 +51,7 @@ abstract mixin class $CategoryCopyWith<$Res>  {
   factory $CategoryCopyWith(Category value, $Res Function(Category) _then) = _$CategoryCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id, String categoryName, DateTime lastModified, String? parentId, int? color,@Index() bool deleted
+@Id() String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color,@Index() bool deleted
 });
 
 
@@ -161,7 +161,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String categoryName,  DateTime lastModified,  String? parentId,  int? color, @Index()  bool deleted)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color, @Index()  bool deleted)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Category() when $default != null:
 return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color,_that.deleted);case _:
@@ -182,7 +182,7 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String categoryName,  DateTime lastModified,  String? parentId,  int? color, @Index()  bool deleted)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color, @Index()  bool deleted)  $default,) {final _that = this;
 switch (_that) {
 case _Category():
 return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color,_that.deleted);case _:
@@ -202,7 +202,7 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String categoryName,  DateTime lastModified,  String? parentId,  int? color, @Index()  bool deleted)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color, @Index()  bool deleted)?  $default,) {final _that = this;
 switch (_that) {
 case _Category() when $default != null:
 return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color,_that.deleted);case _:
@@ -217,12 +217,12 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 @JsonSerializable()
 
 class _Category extends Category {
-  const _Category({@Id() required this.id, required this.categoryName, required this.lastModified, this.parentId, this.color, @Index() required this.deleted}): super._();
+  const _Category({@Id() required this.id, required this.categoryName, @UtcDateTimeConverter() required this.lastModified, this.parentId, this.color, @Index() required this.deleted}): super._();
   factory _Category.fromJson(Map<String, dynamic> json) => _$CategoryFromJson(json);
 
 @override@Id() final  String id;
 @override final  String categoryName;
-@override final  DateTime lastModified;
+@override@UtcDateTimeConverter() final  DateTime lastModified;
 @override final  String? parentId;
 /// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
 @override final  int? color;
@@ -263,7 +263,7 @@ abstract mixin class _$CategoryCopyWith<$Res> implements $CategoryCopyWith<$Res>
   factory _$CategoryCopyWith(_Category value, $Res Function(_Category) _then) = __$CategoryCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id, String categoryName, DateTime lastModified, String? parentId, int? color,@Index() bool deleted
+@Id() String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color,@Index() bool deleted
 });
 
 
