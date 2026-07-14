@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart' as fp;
 import 'package:flutter/material.dart';
 import 'package:moodiary/app/picker/moodiary_picker_delegate.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_rust/moodiary_rust.dart' show uuidV7;
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 
@@ -167,12 +170,44 @@ class MobileFilePicker implements IFilePicker {
     return file == null ? null : XFile(file.path);
   }
 
+  /// 并行取文件（Future.wait 保序），失败的静默剔除。
   Future<List<XFile>> _toXFiles(List<AssetEntity> assets) async {
-    final files = <XFile>[];
-    for (final asset in assets) {
-      final file = await asset.originFile;
-      if (file != null) files.add(XFile(file.path));
+    final files = await Future.wait(assets.map(_assetToXFile));
+    return files.whereType<XFile>().toList();
+  }
+
+  /// HEIF 图片不取 originFile：heif_converter 的 Android 实现在主线程同步解码 +
+  /// 编码（整 app 冻住），这里改让 photo_manager 在原生后台线程按原始尺寸转出
+  /// JPEG（q95，照片无 alpha 顾虑），下游管线从此见不到 HEIC。转换失败回落
+  /// originFile（走 MediaUtil 的旧 HEIC 兜底路径）。
+  Future<XFile?> _assetToXFile(AssetEntity asset) async {
+    if (asset.type == AssetType.image && await _isHeif(asset)) {
+      final converted = await _heifToJpeg(asset);
+      if (converted != null) return converted;
     }
-    return files;
+    final file = await asset.originFile;
+    return file == null ? null : XFile(file.path);
+  }
+
+  Future<bool> _isHeif(AssetEntity asset) async {
+    final mime = asset.mimeType ?? await asset.mimeTypeAsync;
+    return mime == 'image/heic' || mime == 'image/heif';
+  }
+
+  Future<XFile?> _heifToJpeg(AssetEntity asset) async {
+    if (asset.width <= 0 || asset.height <= 0) return null;
+    try {
+      final data = await asset.thumbnailDataWithSize(
+        ThumbnailSize(asset.width, asset.height),
+        quality: 95,
+      );
+      if (data == null) return null;
+      final path = FileUtil.getCachePath('picked-${uuidV7()}.jpg');
+      await File(path).writeAsBytes(data);
+      return XFile(path);
+    } catch (e) {
+      logger.d('HEIF -> JPEG via photo_manager failed: $e');
+      return null;
+    }
   }
 }

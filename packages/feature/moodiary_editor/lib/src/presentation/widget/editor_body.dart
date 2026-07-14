@@ -155,7 +155,7 @@ class _EditorBodyState extends State<EditorBody> {
 
   Future<void> _pickImageFromGallery({required BuildContext sheetContext}) async {
     Navigator.of(sheetContext).pop();
-    final files = await IFilePicker.get().pickImages(context, maxAssets: 10);
+    final files = await IFilePicker.get().pickImages(context);
     if (files.isEmpty) return;
     final saved = await MediaUtil.saveImages(imageFileList: files);
     // saveImages 返回 {tempPath: finalName}；按用户挑选顺序插入。

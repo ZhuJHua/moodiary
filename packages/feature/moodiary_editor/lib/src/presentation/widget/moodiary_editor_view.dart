@@ -98,7 +98,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
 
   Future<void> _pickFromGallery(BuildContext sheetContext) async {
     Navigator.of(sheetContext).pop();
-    final files = await IFilePicker.get().pickImages(context, maxAssets: 10);
+    final files = await IFilePicker.get().pickImages(context);
     if (files.isEmpty) return;
     await _insertPicked(files);
   }
