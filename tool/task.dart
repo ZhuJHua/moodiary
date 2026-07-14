@@ -4,7 +4,7 @@
 //   dart tool/task.dart setup            # 构建 editor + flutter pub get
 //   dart tool/task.dart run              # 构建 editor + flutter run（默认 --flavor prod）
 //   dart tool/task.dart run-beta         # 同上，跑 Moodiary Beta 测试包（--flavor beta）
-//   dart tool/task.dart build-apk        # 同理 build-ios / build-windows / build-macos
+//   dart tool/task.dart build-apk        # 同理 build-ios（桌面端构建后续在 desktop/ 内提供）
 //   dart tool/task.dart build-apk-beta   # 构建 Moodiary Beta 测试 APK（cn.yooss.moodiary.beta）
 //   dart tool/task.dart analyze          # 分层检查 + flutter analyze
 //   dart tool/task.dart check-layers     # 仅分层依赖检查
@@ -103,14 +103,6 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   'build-ios': (rest) async {
     await _editor();
     await _flutter(['build', 'ios', ...rest]);
-  },
-  'build-windows': (rest) async {
-    await _editor();
-    await _flutter(['build', 'windows', ...rest]);
-  },
-  'build-macos': (rest) async {
-    await _editor();
-    await _flutter(['build', 'macos', ...rest]);
   },
   // 分层依赖检查（上层依赖下层，同层不互引）+ flutter analyze
   'analyze': (_) async {

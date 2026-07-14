@@ -19,7 +19,7 @@ dart tool/task.dart setup          # flutter pub get + build editor
 
 # Run & Build (targets mobile app)
 dart tool/task.dart run            # build editor + flutter run
-dart tool/task.dart build-apk / build-ios / build-windows / build-macos
+dart tool/task.dart build-apk / build-ios  # mobile 已移除桌面平台，桌面构建后续由 desktop/ 提供
 # Pass extra flutter flags after --:  dart tool/task.dart run -- --release
 # Desktop app (not yet wired into task.dart): cd desktop && fvm flutter run -d macos
 
