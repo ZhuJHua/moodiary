@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   dart:
-    name: Dart · analyze + test
+    name: Dart
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -48,7 +48,7 @@ jobs:
         run: melos exec --dir-exists=test --fail-fast -c 1 -- flutter test
 
   rust:
-    name: Rust · clippy + test
+    name: Rust
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -69,7 +69,7 @@ jobs:
         run: cargo test
 
   editor:
-    name: Editor · type-check (Vue/TS)
+    name: Editor
     runs-on: ubuntu-latest
     defaults:
       run:
