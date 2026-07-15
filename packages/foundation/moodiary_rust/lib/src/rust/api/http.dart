@@ -6,8 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `err`, `map_reqwest_err`, `resolve_url`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`
+// These functions are ignored because they are not marked as `pub`: `collect_response`, `err`, `map_reqwest_err`, `resolve_url`, `upload_file_inner`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `from`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpClient>>
 abstract class HttpClient implements RustOpaqueInterface {
@@ -15,6 +15,7 @@ abstract class HttpClient implements RustOpaqueInterface {
   static Future<HttpClient> newInstance({required ClientSettings settings}) =>
       RustLib.instance.api.crateApiHttpHttpClientNew(settings: settings);
 
+  /// [throw_on_status] 覆盖 client 级设置；None 沿用。
   Future<HttpResponse> request({
     required HttpMethod method,
     required String url,
@@ -22,6 +23,18 @@ abstract class HttpClient implements RustOpaqueInterface {
     required List<KeyValue> headers,
     Uint8List? body,
     int? timeoutMs,
+    bool? throwOnStatus,
+  });
+
+  /// 流式上传本地文件（不整块进内存）。进度经 [sink] 回报（`response` 为 None），
+  /// 最后一条事件携带最终响应。
+  Stream<UploadEvent> uploadFile({
+    required HttpMethod method,
+    required String url,
+    required List<KeyValue> headers,
+    required String filePath,
+    int? timeoutMs,
+    bool? throwOnStatus,
   });
 }
 
@@ -72,7 +85,6 @@ class ClientSettings {
           throwOnStatus == other.throwOnStatus;
 }
 
-/// 跨 FFI 的错误对象。作为 `Result` 的 Err 分支返回，Dart 侧 catch 后转 HttpException。
 class HttpError implements FrbException {
   final HttpErrorKind kind;
 
@@ -165,4 +177,25 @@ class KeyValue {
           runtimeType == other.runtimeType &&
           key == other.key &&
           value == other.value;
+}
+
+/// 文件上传过程事件：进度事件 [response] 为 None，最后一条携带最终响应。
+class UploadEvent {
+  final PlatformInt64 sent;
+  final PlatformInt64 total;
+  final HttpResponse? response;
+
+  const UploadEvent({required this.sent, required this.total, this.response});
+
+  @override
+  int get hashCode => sent.hashCode ^ total.hashCode ^ response.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UploadEvent &&
+          runtimeType == other.runtimeType &&
+          sent == other.sent &&
+          total == other.total &&
+          response == other.response;
 }

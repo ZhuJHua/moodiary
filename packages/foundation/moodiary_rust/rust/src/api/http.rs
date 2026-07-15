@@ -7,7 +7,9 @@
 use std::time::Duration;
 
 use flutter_rust_bridge::frb;
+use futures::StreamExt;
 
+use crate::frb_generated::StreamSink;
 use crate::http_client::platform_client_builder;
 
 /// HTTP 方法。跨 FFI 的枚举，映射到 reqwest::Method。
@@ -37,6 +39,7 @@ impl From<HttpMethod> for reqwest::Method {
 
 /// 有序键值对，用于 query / 请求头 / 响应头。用结构体而非 map 以保留顺序与重复键
 /// （响应头如 set-cookie 可重复）。
+#[derive(Clone)]
 pub struct KeyValue {
     pub key: String,
     pub value: String,
@@ -57,6 +60,7 @@ pub struct ClientSettings {
 }
 
 /// 一次响应。body 为原始字节，解码交给 Dart。
+#[derive(Clone)]
 pub struct HttpResponse {
     pub status: u16,
     pub headers: Vec<KeyValue>,
@@ -64,6 +68,7 @@ pub struct HttpResponse {
 }
 
 /// 错误类别，供 Dart 侧映射成 typed 异常（对齐 rhttp 的异常分型）。
+#[derive(Debug)]
 pub enum HttpErrorKind {
     /// 连接或读取超时。
     Timeout,
@@ -81,7 +86,7 @@ pub enum HttpErrorKind {
     Unknown,
 }
 
-/// 跨 FFI 的错误对象。作为 `Result` 的 Err 分支返回，Dart 侧 catch 后转 HttpException。
+#[derive(Debug)]
 pub struct HttpError {
     pub kind: HttpErrorKind,
     /// 有 HTTP 响应时的状态码。
@@ -167,6 +172,7 @@ impl HttpClient {
         }
     }
 
+    /// [throw_on_status] 覆盖 client 级设置；None 沿用。
     pub async fn request(
         &self,
         method: HttpMethod,
@@ -175,6 +181,7 @@ impl HttpClient {
         headers: Vec<KeyValue>,
         body: Option<Vec<u8>>,
         timeout_ms: Option<u32>,
+        throw_on_status: Option<bool>,
     ) -> Result<HttpResponse, HttpError> {
         let mut full_url = self.resolve_url(&url)?;
         if !query.is_empty() {
@@ -197,6 +204,105 @@ impl HttpClient {
         }
 
         let resp = req.send().await.map_err(map_reqwest_err)?;
+        self.collect_response(resp, throw_on_status).await
+    }
+
+    /// 流式上传本地文件（不整块进内存）。进度经 [sink] 回报（`response` 为 None），
+    /// 最后一条事件携带最终响应。
+    pub async fn upload_file(
+        &self,
+        sink: StreamSink<UploadEvent>,
+        method: HttpMethod,
+        url: String,
+        headers: Vec<KeyValue>,
+        file_path: String,
+        timeout_ms: Option<u32>,
+        throw_on_status: Option<bool>,
+    ) -> Result<(), HttpError> {
+        let progress = sink.clone();
+        let (response, total) = self
+            .upload_file_inner(
+                method,
+                url,
+                headers,
+                file_path,
+                timeout_ms,
+                throw_on_status,
+                move |sent, total| {
+                    let _ = progress.add(UploadEvent {
+                        sent,
+                        total,
+                        response: None,
+                    });
+                },
+            )
+            .await?;
+        let _ = sink.add(UploadEvent {
+            sent: total,
+            total,
+            response: Some(response),
+        });
+        Ok(())
+    }
+
+    pub(crate) async fn upload_file_inner(
+        &self,
+        method: HttpMethod,
+        url: String,
+        headers: Vec<KeyValue>,
+        file_path: String,
+        timeout_ms: Option<u32>,
+        throw_on_status: Option<bool>,
+        on_progress: impl Fn(i64, i64) + Send + Sync + 'static,
+    ) -> Result<(HttpResponse, i64), HttpError> {
+        const PROGRESS_STEP: i64 = 512 * 1024;
+
+        let full_url = self.resolve_url(&url)?;
+        let file = tokio::fs::File::open(&file_path)
+            .await
+            .map_err(|e| err(HttpErrorKind::Request, format!("open file failed: {e}")))?;
+        let total = file
+            .metadata()
+            .await
+            .map_err(|e| err(HttpErrorKind::Request, format!("stat file failed: {e}")))?
+            .len() as i64;
+
+        let mut sent: i64 = 0;
+        let mut last_report: i64 = 0;
+        let stream = tokio_util::io::ReaderStream::new(file).map(move |chunk| {
+            if let Ok(bytes) = &chunk {
+                sent += bytes.len() as i64;
+                if sent - last_report >= PROGRESS_STEP || sent == total {
+                    last_report = sent;
+                    on_progress(sent, total);
+                }
+            }
+            chunk
+        });
+
+        // 显式 content-length：hyper 对带该头的流式 body 走定长编码，接收端才有确定进度。
+        let mut req = self
+            .inner
+            .request(method.into(), full_url)
+            .header(reqwest::header::CONTENT_LENGTH, total)
+            .body(reqwest::Body::wrap_stream(stream));
+        for h in headers {
+            req = req.header(h.key, h.value);
+        }
+        if let Some(ms) = timeout_ms {
+            req = req.timeout(Duration::from_millis(ms as u64));
+        }
+
+        let resp = req.send().await.map_err(map_reqwest_err)?;
+        let response = self.collect_response(resp, throw_on_status).await?;
+        Ok((response, total))
+    }
+
+    async fn collect_response(
+        &self,
+        resp: reqwest::Response,
+        throw_on_status: Option<bool>,
+    ) -> Result<HttpResponse, HttpError> {
         let status = resp.status();
         let headers = resp
             .headers()
@@ -207,7 +313,7 @@ impl HttpClient {
             })
             .collect();
 
-        if self.throw_on_status && !status.is_success() {
+        if throw_on_status.unwrap_or(self.throw_on_status) && !status.is_success() {
             return Err(HttpError {
                 kind: HttpErrorKind::Status,
                 status: Some(status.as_u16()),
@@ -222,4 +328,12 @@ impl HttpClient {
             body,
         })
     }
+}
+
+/// 文件上传过程事件：进度事件 [response] 为 None，最后一条携带最终响应。
+#[derive(Clone)]
+pub struct UploadEvent {
+    pub sent: i64,
+    pub total: i64,
+    pub response: Option<HttpResponse>,
 }

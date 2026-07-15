@@ -6,20 +6,27 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `read_file_to_vec`
-
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Zip>>
 abstract class Zip implements RustOpaqueInterface {
+  /// 内存字节直接写入条目，免落地临时文件。
+  Future<void> addBytes({
+    required String zipPath,
+    required List<int> data,
+    String? password,
+  });
+
   Future<void> addDir({
     required String dirPath,
     required String basePath,
     String? password,
   });
 
+  /// [stored] 为 true 时不压缩直接存储（媒体等已压缩格式），并允许单文件 >= 4GiB。
   Future<void> addFile({
     required String filePath,
     required String zipPath,
     String? password,
+    bool? stored,
   });
 
   static Future<void> extract({

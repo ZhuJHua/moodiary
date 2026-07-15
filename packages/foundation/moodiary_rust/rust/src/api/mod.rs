@@ -3,6 +3,7 @@ pub mod audio;
 pub mod crypto;
 pub mod font;
 pub mod http;
+pub mod http_server;
 pub mod image;
 pub mod s3;
 pub mod text;

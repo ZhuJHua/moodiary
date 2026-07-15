@@ -19,7 +19,14 @@ zip = { version = "8.6.0", default-features = false, features = ["aes-crypto", "
 walkdir = "2.5.0"
 jieba-rs = { version = "0.10.1", features = ["default-dict", "tfidf", "textrank"] }
 once_cell = "1.21.4"
-tokio = "1.52.3"
+# net + fs：api::http_server 的监听/落盘、api::http 的流式文件上传。
+tokio = { version = "1.52.3", features = ["net", "fs", "io-util", "sync", "macros"] }
+tokio-util = { version = "0.7", features = ["io"] }
+# 应用内 HTTP 服务（api::http_server）。hyper 栈已由 reqwest 引入，仅增开 server 特性。
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+http-body-util = "0.1"
+url = "2"
 unicode-segmentation = "1.13.3"
 uuid = { version = "1.23.4", features = ["v4", "v7"] }
 rust-stemmers = "1.2.0"
@@ -43,6 +50,8 @@ reqwest = { version = "0.13", default-features = false, features = [
     "gzip",
     "brotli",
     "deflate",
+    # 流式请求体（Body::wrap_stream，api::http 文件上传）。
+    "stream",
 ] }
 rustls = "0.23"
 webpki-roots = "1"
