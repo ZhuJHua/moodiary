@@ -375,8 +375,8 @@ body {
 .moodiary-media {
   margin: 0.8em 0;
 }
-/* 选中（NodeSelection）描边，复刻旧节点视图观感。 */
-.moodiary-media.is-selected {
+/* 选中（NodeSelection）描边，复刻旧节点视图观感；仅编辑态（阅读态 contenteditable=false 不描边）。 */
+.moodiary-editor .ProseMirror[contenteditable='true'] .moodiary-media.is-selected {
   outline: 2px solid var(--app-primary);
   outline-offset: 2px;
   border-radius: var(--radius-box, 0.75rem);

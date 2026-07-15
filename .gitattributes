@@ -1,6 +1,10 @@
-*.tflite filter=lfs diff=lfs merge=lfs -text
 * text=auto eol=lf
-mobile/res/**/*.webp filter=lfs diff=lfs merge=lfs -text
-mobile/res/**/*.jpg filter=lfs diff=lfs merge=lfs -text
-mobile/res/**/*.jpeg filter=lfs diff=lfs merge=lfs -text
-mobile/res/**/*.png filter=lfs diff=lfs merge=lfs -text
+
+# Binary image assets tracked via Git LFS (by extension, any path)
+*.webp filter=lfs diff=lfs merge=lfs -text
+*.jpg  filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
+*.png  filter=lfs diff=lfs merge=lfs -text
+
+# Committed editor build artifact (brotli binary) — no diff/eol munging, exclude from GitHub language stats
+packages/feature/moodiary_editor/assets/editor/** binary linguist-generated

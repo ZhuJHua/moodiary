@@ -34,8 +34,8 @@ void _log(String msg, {Object? error, StackTrace? stack, int level = 0}) {
 /// 基于 TipTap 的编辑器（嵌入式，仅渲染正文；AppBar / 阅读态元信息由 Flutter 原生承载）。
 /// webview 经 [EditorTransport] 抽象：Android/iOS/macOS 走 webview_flutter，Windows 走
 /// flutter_inappwebview（WebView2，中文输入法候选窗定位正确）；Linux 暂不支持。
-/// 页面（assets/editor/index.html，TipTap + 样式全部内联进单文件，无运行时同级资源）与正文
-/// 媒体统一由 [EditorLocalServer]（基于 shelf，127.0.0.1 随机端口 + 随机 token）供给。
+/// 页面（assets/editor/ 多文件产物）与正文媒体统一由 [EditorLocalServer]（静态服务，基于
+/// Rust(hyper) [IHttpServer]，127.0.0.1 随机端口 + 随机 token）供给。
 ///
 /// Bridge：Flutter → JS 走 [EditorTransport.run] 调 `window.MoodiaryBridge.*`（[_run]）；
 /// JS → Flutter 走 [kEditorChannel]（webview_flutter 命名 channel / inappwebview callHandler，

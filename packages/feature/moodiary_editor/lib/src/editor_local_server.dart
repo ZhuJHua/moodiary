@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'dart:io' show gzip;
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:moodiary_core/moodiary_core.dart';
@@ -11,8 +13,7 @@ import 'media.dart';
 /// 编辑器页面与本地媒体服务，基于统一 [IHttpServer]（127.0.0.1 回环，进程内懒启动
 /// 单例，与 webview 插件解耦，四端同一管线）。
 ///
-/// 编辑器单文件页面（index.html，无运行时同级资源）由 [_serveIndex] 从 Flutter assets
-/// （rootBundle，键 [_indexAssetKey]）直接读出；磁盘媒体经 handler 拦截
+/// 编辑器多文件产物（平铺，`.gz` 预压缩）由 [_serveAsset] 静态服务；磁盘媒体经 handler 拦截
 /// `/<token>/media/<name>` 按文件路径响应（视频取缩略图，见 [MediaResolver]）——
 /// 文件流式发送与 HTTP Range（WKWebView 的 `<video>` 必须有 206 才能播放）由
 /// 服务器层统一处理。boot 数据经 base64url 挂在页面 URL 的 `?boot=` 上（web 侧
@@ -26,8 +27,7 @@ class EditorLocalServer {
 
   static final EditorLocalServer instance = EditorLocalServer._();
 
-  static const _indexAssetKey =
-      'packages/moodiary_editor/assets/editor/index.html';
+  static const _assetBase = 'packages/moodiary_editor/assets/editor';
 
   final String _token = _randomToken();
   IHttpServer? _server;
@@ -114,21 +114,62 @@ class EditorLocalServer {
         return HttpServerResponse.text(500, 'font request failed');
       }
     }
-    return _serveIndex();
+    return _serveAsset(request.path);
   }
 
-  /// 单文件页面：直接从 rootBundle 读 index.html 字节返回。该目录只有一个 index.html
-  /// （单文件构建，无运行时同级资源），故无需目录式服务；将来若变多文件再扩展。
-  Future<HttpServerResponse> _serveIndex() async {
-    final data = await rootBundle.load(_indexAssetKey);
-    final bytes = data.buffer.asUint8List(
-      data.offsetInBytes,
-      data.lengthInBytes,
-    );
-    return HttpServerResponse.ok(
-      bytes,
-      contentType: 'text/html; charset=utf-8',
-    );
+  /// 请求路径映射到 rootBundle 资产键（基 [_assetBase]），取 `.gz` 解压后发明文，缺则回退原文件、
+  /// 无则 404；拒 `..`/反斜杠防越权。产物平铺无子目录（Flutter assets 非递归，子目录不打包）。
+  Future<HttpServerResponse> _serveAsset(String path) async {
+    var rel = path.startsWith('/') ? path.substring(1) : path;
+    if (rel.isEmpty) rel = 'index.html';
+    if (rel.contains('..') || rel.contains('\\')) {
+      return HttpServerResponse.notFound();
+    }
+    final contentType = _assetContentType(rel);
+    final compressed = await _tryLoadAsset('$_assetBase/$rel.gz');
+    if (compressed != null) {
+      return HttpServerResponse(
+        200,
+        headers: {'content-type': contentType},
+        body: Uint8List.fromList(gzip.decode(compressed)),
+      );
+    }
+    final raw = await _tryLoadAsset('$_assetBase/$rel');
+    if (raw != null) {
+      return HttpServerResponse(
+        200,
+        headers: {'content-type': contentType},
+        body: raw,
+      );
+    }
+    return HttpServerResponse.notFound();
+  }
+
+  /// rootBundle.load 包装：资产不存在（或读失败）返回 null，供 `.gz` → 原文件回退。
+  static Future<Uint8List?> _tryLoadAsset(String key) async {
+    try {
+      final data = await rootBundle.load(key);
+      return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 按扩展名推断 content-type。
+  static String _assetContentType(String name) {
+    final lower = name.toLowerCase();
+    if (lower.endsWith('.html')) return 'text/html; charset=utf-8';
+    if (lower.endsWith('.js') || lower.endsWith('.mjs')) {
+      return 'text/javascript; charset=utf-8';
+    }
+    if (lower.endsWith('.css')) return 'text/css; charset=utf-8';
+    if (lower.endsWith('.svg')) return 'image/svg+xml';
+    if (lower.endsWith('.json') || lower.endsWith('.map')) {
+      return 'application/json; charset=utf-8';
+    }
+    if (lower.endsWith('.woff2')) return 'font/woff2';
+    if (lower.endsWith('.wasm')) return 'application/wasm';
+    return 'application/octet-stream';
   }
 
   /// 媒体名必须是 `image-` / `audio-` / `video-` 前缀的裸文件名：拒绝路径分隔（含反斜杠）、
