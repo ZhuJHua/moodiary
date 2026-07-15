@@ -33,6 +33,9 @@ enum MoodiaryKVs<T extends Object> {
   /// 重启 / 崩溃后能识别并接管自己残留的锁。
   syncDeviceId<String>(defaultValue: ''),
 
+  /// 局域网发送页上次输入的目标地址（`ip` 或 `ip:端口`），便于重复发送。
+  lanSendTarget<String>(defaultValue: ''),
+
   color<int>(),
   colorType<int>(defaultValue: 0 /* AppColorType.common.value */),
   themeMode<int>(defaultValue: 0),

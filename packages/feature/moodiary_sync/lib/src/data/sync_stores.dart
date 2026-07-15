@@ -5,6 +5,7 @@ import 'package:file/local.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:path/path.dart' as p;
 
 /// 引擎对本地存储的最小依赖面，抽成端口以便单测注入内存假实现 —— 生产实现
@@ -132,16 +133,8 @@ class DiskSyncMediaFiles implements SyncMediaFiles {
     // 被移除的视频连带删其缩略图（与视频同目录）。
     for (final name in oldDiary.videoName) {
       if (newDiary.videoName.contains(name)) continue;
-      final thumb = _thumbnailName(name);
+      final thumb = videoThumbnailName(name);
       if (thumb != null) await delete('video', thumb);
     }
-  }
-
-  /// `video-<uuid>.mp4` → `thumbnail-<uuid>.jpeg`。
-  static String? _thumbnailName(String videoName) {
-    if (!videoName.startsWith('video-')) return null;
-    final dotIdx = videoName.lastIndexOf('.');
-    if (dotIdx <= 6) return null;
-    return 'thumbnail-${videoName.substring(6, dotIdx)}.jpeg';
   }
 }

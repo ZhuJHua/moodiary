@@ -5,7 +5,9 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
 import 'package:moodiary_sync/src/application/sync_controller.dart';
+import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
@@ -37,6 +39,10 @@ class BackupSyncPage extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         children: const [
           _RemoteSection(),
+          SizedBox(height: 4),
+          _LanSection(),
+          SizedBox(height: 4),
+          _LocalBackupSection(),
           SizedBox(height: 4),
           _EncryptionSection(),
           SizedBox(height: 4),
@@ -232,6 +238,144 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
     );
     if (picked == null || picked == current) return;
     await _switchProvider(picked);
+  }
+}
+
+class _LanSection extends StatelessWidget {
+  const _LanSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SettingTitleTile(title: '局域网同步'),
+        Card.filled(
+          color: scheme.surfaceContainerLow,
+          margin: EdgeInsets.zero,
+          child: Column(
+            children: [
+              SettingListTile(
+                isFirst: true,
+                title: '发送',
+                subtitle: '发送日记到同一 Wi-Fi 下的设备',
+                leading: const Icon(Icons.wifi_tethering_rounded),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => const LanSendRoute().push(context),
+              ),
+              SettingListTile(
+                isLast: true,
+                title: '接收',
+                subtitle: '等待其它设备发送到本机',
+                leading: const Icon(Icons.wifi_rounded),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => const LanReceiveRoute().push(context),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LocalBackupSection extends StatelessWidget {
+  const _LocalBackupSection();
+
+  Future<void> _export(BuildContext context) async {
+    toast.loading(message: '正在导出备份...');
+    final String zipPath;
+    try {
+      zipPath = await LocalArchive.export();
+      await toast.dismiss();
+    } catch (e) {
+      await toast.dismiss();
+      toast.error(message: '导出失败：$e');
+      return;
+    }
+    try {
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(zipPath, mimeType: 'application/zip')]),
+      );
+    } catch (_) {
+      toast.info(message: '备份已生成：$zipPath');
+    }
+  }
+
+  Future<void> _import(BuildContext context) async {
+    final file = await IFilePicker.get().pickFile(allowedExtensions: ['zip']);
+    if (file == null || !context.mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('导入本地备份'),
+        content: const Text(
+          '将按「最后修改时间」与本地数据合并（规则与云同步一致）：\n\n'
+          '· 备份中较新的条目覆盖本地版本\n'
+          '· 本地较新的条目保留不变\n'
+          '· 备份中已删除的条目，若删除时间更晚，本地对应条目也会被删除',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('导入'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    toast.loading(message: '正在导入备份...');
+    try {
+      final report = await LocalArchive.import(file.path);
+      await toast.dismiss();
+      toast.success(message: '导入完成：$report');
+    } on SyncException catch (e) {
+      await toast.dismiss();
+      toast.error(message: '导入失败：${e.message}');
+    } catch (e) {
+      await toast.dismiss();
+      toast.error(message: '导入失败：$e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SettingTitleTile(title: '本地备份'),
+        Card.filled(
+          color: scheme.surfaceContainerLow,
+          margin: EdgeInsets.zero,
+          child: Column(
+            children: [
+              SettingListTile(
+                isFirst: true,
+                title: '导出备份',
+                subtitle: '打包全部日记与媒体为 zip 文件',
+                leading: const Icon(Icons.archive_outlined),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => _export(context),
+              ),
+              SettingListTile(
+                isLast: true,
+                title: '导入备份',
+                subtitle: '从 zip 备份恢复，按最后修改时间合并',
+                leading: const Icon(Icons.unarchive_outlined),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => _import(context),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 

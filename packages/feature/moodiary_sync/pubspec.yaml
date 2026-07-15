@@ -26,8 +26,10 @@ dependencies:
   riverpod_annotation: 4.0.3
   go_router: 17.3.0
   file: 7.0.1
+  nsd: 5.0.1
   path: 1.9.1
   pool: 1.5.2
+  share_plus: 13.2.0
   synchronized: 3.4.1
 
 dev_dependencies:

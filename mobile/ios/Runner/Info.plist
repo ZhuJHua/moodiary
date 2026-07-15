@@ -35,6 +35,10 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>应用需要您的同意，才能访问相机</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_moodiary._tcp</string>
+	</array>
 	<key>NSFaceIDUsageDescription</key>
 	<string>应用需要您的同意，才能使用人脸识别</string>
 	<key>NSLocalNetworkUsageDescription</key>

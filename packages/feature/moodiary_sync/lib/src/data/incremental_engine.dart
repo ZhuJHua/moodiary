@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
+import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
@@ -159,9 +160,12 @@ class IncrementalSyncEngine {
     );
   }
 
-  Future<SyncReport> pull() async {
+  /// [markSynced] 为 false 时不推进「上次同步时间」（本地备份导入等非云端场景）。
+  Future<SyncReport> pull({bool markSynced = true}) async {
     final report = await _exclusive(_pull);
-    if (report.failed == 0 && !report.cancelled) await _markSynced();
+    if (markSynced && report.failed == 0 && !report.cancelled) {
+      await _markSynced();
+    }
     return report;
   }
 
@@ -885,34 +889,9 @@ class IncrementalSyncEngine {
     return local.copyWith(deleted: true, lastModified: DateTime.timestamp());
   }
 
-  /// 视频文件名 `video-<uuid>.mp4` → 缩略图名 `thumbnail-<uuid>.jpeg`。
-  static String? _thumbnailName(String videoName) {
-    if (!videoName.startsWith('video-')) return null;
-    final dotIdx = videoName.lastIndexOf('.');
-    if (dotIdx <= 6) return null;
-    final uuid = videoName.substring(6, dotIdx);
-    return 'thumbnail-$uuid.jpeg';
-  }
-
-  /// 收集日记引用的全部媒体文件条目 (type, filename)，含视频缩略图。
-  List<(String, String)> _collectMediaEntries(Diary diary) {
-    final entries = <(String, String)>[];
-    for (final name in diary.imageName) {
-      entries.add(('image', name));
-    }
-    for (final name in diary.audioName) {
-      entries.add(('audio', name));
-    }
-    for (final name in diary.videoName) {
-      entries.add(('video', name));
-      final thumb = _thumbnailName(name);
-      if (thumb != null) entries.add(('video', thumb));
-    }
-    return entries;
-  }
-
   List<String> _mediaRefs(Diary diary) => [
-    for (final e in _collectMediaEntries(diary)) SyncKeys.mediaRef(e.$1, e.$2),
+    for (final e in collectDiaryMediaEntries(diary))
+      SyncKeys.mediaRef(e.$1, e.$2),
   ];
 
   /// push：并发上传远端尚不存在的媒体。返回**确认存在于远端**的引用列表（集合/
@@ -924,7 +903,7 @@ class IncrementalSyncEngine {
     Diary diary,
     Set<String> remoteMedia,
   ) async {
-    final entries = _collectMediaEntries(diary);
+    final entries = collectDiaryMediaEntries(diary);
     final results = await Future.wait(
       entries.map((e) => _uploadMediaIfNeeded(e.$1, e.$2, remoteMedia)),
       eagerError: false,
@@ -1043,7 +1022,7 @@ class IncrementalSyncEngine {
   }
 
   Future<void> _pullDiaryMedia(Diary diary) async {
-    final entries = _collectMediaEntries(diary);
+    final entries = collectDiaryMediaEntries(diary);
     await Future.wait(
       entries.map((e) => _downloadMediaIfNeeded(e.$1, e.$2)),
       eagerError: false,
@@ -1103,7 +1082,7 @@ class IncrementalSyncEngine {
   }
 
   Future<void> _deleteLocalMedia(Diary diary) async {
-    final entries = _collectMediaEntries(diary);
+    final entries = collectDiaryMediaEntries(diary);
     await Future.wait(
       entries.map((e) async {
         try {

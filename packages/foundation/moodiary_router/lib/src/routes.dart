@@ -203,3 +203,17 @@ class SyncLogRoute extends MoodiaryRouteBase {
   @override
   String get location => path;
 }
+
+class LanSendRoute extends MoodiaryRouteBase {
+  static const String path = '/lan/send';
+  const LanSendRoute();
+  @override
+  String get location => path;
+}
+
+class LanReceiveRoute extends MoodiaryRouteBase {
+  static const String path = '/lan/receive';
+  const LanReceiveRoute();
+  @override
+  String get location => path;
+}
