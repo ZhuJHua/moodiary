@@ -128,4 +128,30 @@ abstract class IHttpClient {
     silent: silent,
     plainText: plainText,
   );
+
+  /// 原始字节请求：响应体不做任何解码。[throwOnStatus] 为 false 时非 2xx 不抛
+  /// [HttpException]，由调用方读 statusCode 自行分支；null 沿用实现默认（抛）。
+  Future<HttpResponse<Uint8List>> requestBytes(
+    HttpMethod method,
+    String url, {
+    Map<String, dynamic>? query,
+    Map<String, dynamic>? headers,
+    HttpBody? body,
+    Duration? timeout,
+    bool silent = false,
+    bool? throwOnStatus,
+  });
+
+  /// 流式上传本地文件（不整块进内存），[onProgress] 以 (已发送, 总字节) 回报。
+  /// 响应体以原始字节返回。
+  Future<HttpResponse<Uint8List>> uploadFile(
+    String url, {
+    required String filePath,
+    HttpMethod method = HttpMethod.post,
+    Map<String, dynamic>? headers,
+    void Function(int sent, int total)? onProgress,
+    Duration? timeout,
+    bool silent = false,
+    bool? throwOnStatus,
+  });
 }

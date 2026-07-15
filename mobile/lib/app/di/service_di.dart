@@ -10,6 +10,8 @@ Future<void> registerService() async {
   getIt.registerSingleton<IHttpClient>(
     RustHttpClient(onError: (message) => toast.error(message: message)),
   );
+  // 服务器是「按会话起停」的对象（编辑器 / 局域网接收各一），每次 create 新实例。
+  getIt.registerFactory<IHttpServer>(RustHttpServer.new);
   getIt.registerSingleton<IFilePicker>(MobileFilePicker());
   getIt.registerSingleton<AssistantService>(RigAssistantService());
   getIt.registerSingleton<SyncLogger>(await SyncLogger.create());

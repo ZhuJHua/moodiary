@@ -27,4 +27,18 @@ class PackageUtil {
     }
     return await deviceInfoPlugin.deviceInfo;
   }
+
+  /// 面向用户展示的设备名（局域网发现等场景）。iOS 16+ 无特殊授权时返回通用
+  /// 名称（如「iPhone」），可接受。
+  static Future<String> getDeviceName() async {
+    final plugin = DeviceInfoPlugin();
+    try {
+      if (Platform.isAndroid) return (await plugin.androidInfo).model;
+      if (Platform.isIOS) return (await plugin.iosInfo).name;
+      if (Platform.isMacOS) return (await plugin.macOsInfo).computerName;
+      if (Platform.isWindows) return (await plugin.windowsInfo).computerName;
+      if (Platform.isLinux) return (await plugin.linuxInfo).name;
+    } catch (_) {}
+    return 'Moodiary';
+  }
 }

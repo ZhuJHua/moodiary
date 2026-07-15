@@ -35,6 +35,68 @@ class RustHttpClient extends IHttpClient {
     bool silent = false,
     bool plainText = false,
   }) async {
+    final raw = await _requestRaw(
+      method,
+      url,
+      query: query,
+      headers: headers,
+      body: body,
+      timeout: timeout,
+      silent: silent,
+    );
+    final T? data;
+    try {
+      data = _decode<T>(raw.data!, plainText);
+    } catch (error) {
+      // 解码失败（非法 JSON / 类型不符）不是 rust.HttpError，需单独兜住，
+      // 否则会绕过统一 catch、既不上报也不转成 HttpException。
+      throw _report(
+        HttpException(
+          HttpErrorType.decode,
+          'decode failed: $error',
+          statusCode: raw.statusCode,
+        ),
+        silent: silent,
+      );
+    }
+    return HttpResponse<T>(
+      statusCode: raw.statusCode,
+      data: data,
+      headers: raw.headers,
+    );
+  }
+
+  @override
+  Future<HttpResponse<Uint8List>> requestBytes(
+    HttpMethod method,
+    String url, {
+    Map<String, dynamic>? query,
+    Map<String, dynamic>? headers,
+    HttpBody? body,
+    Duration? timeout,
+    bool silent = false,
+    bool? throwOnStatus,
+  }) => _requestRaw(
+    method,
+    url,
+    query: query,
+    headers: headers,
+    body: body,
+    timeout: timeout,
+    silent: silent,
+    throwOnStatus: throwOnStatus,
+  );
+
+  Future<HttpResponse<Uint8List>> _requestRaw(
+    HttpMethod method,
+    String url, {
+    Map<String, dynamic>? query,
+    Map<String, dynamic>? headers,
+    HttpBody? body,
+    Duration? timeout,
+    bool silent = false,
+    bool? throwOnStatus,
+  }) async {
     if (_enableLogging) {
       logger.i('Request: ${method.name} $url');
     }
@@ -49,30 +111,61 @@ class RustHttpClient extends IHttpClient {
         headers: _headers(headers, body),
         body: body?.bytes,
         timeoutMs: timeout?.inMilliseconds,
+        throwOnStatus: throwOnStatus,
       );
       if (_enableLogging) {
         logger.i('Response ${response.status}');
       }
-      final T? data;
-      try {
-        data = _decode<T>(response.body, plainText);
-      } catch (error) {
-        // 解码失败（非法 JSON / 类型不符）不是 rust.HttpError，需单独兜住，
-        // 否则会绕过下面的 catch、既不上报也不转成 HttpException。
-        throw _report(
-          HttpException(
-            HttpErrorType.decode,
-            'decode failed: $error',
-            statusCode: response.status,
-          ),
-          silent: silent,
-        );
-      }
-      return HttpResponse<T>(
+      return HttpResponse<Uint8List>(
         statusCode: response.status,
-        data: data,
+        data: response.body,
         headers: _headerMap(response.headers),
       );
+    } on rust.HttpError catch (error) {
+      throw _report(_exception(error), silent: silent);
+    }
+  }
+
+  @override
+  Future<HttpResponse<Uint8List>> uploadFile(
+    String url, {
+    required String filePath,
+    HttpMethod method = HttpMethod.post,
+    Map<String, dynamic>? headers,
+    void Function(int sent, int total)? onProgress,
+    Duration? timeout,
+    bool silent = false,
+    bool? throwOnStatus,
+  }) async {
+    if (_enableLogging) {
+      logger.i('Upload: ${method.name} $url ($filePath)');
+    }
+    try {
+      final client = await _client;
+      // 事件流：progress 事件 response 为 null，末条携带最终响应。
+      await for (final event in client.uploadFile(
+        method: _method(method),
+        url: url,
+        headers: _pairs(headers),
+        filePath: filePath,
+        timeoutMs: timeout?.inMilliseconds,
+        throwOnStatus: throwOnStatus,
+      )) {
+        final response = event.response;
+        if (response == null) {
+          onProgress?.call(event.sent, event.total);
+          continue;
+        }
+        if (_enableLogging) {
+          logger.i('Response ${response.status}');
+        }
+        return HttpResponse<Uint8List>(
+          statusCode: response.status,
+          data: response.body,
+          headers: _headerMap(response.headers),
+        );
+      }
+      throw const HttpException(HttpErrorType.unknown, 'upload ended without response');
     } on rust.HttpError catch (error) {
       throw _report(_exception(error), silent: silent);
     }

@@ -14,22 +14,30 @@ class NetworkUtil {
     return !connectivityResult.contains(ConnectivityResult.none);
   }
 
+  /// 本机所有非回环 IPv4（Wi-Fi / 以太网等）。
+  static Future<List<String>> getLocalIPv4s() async {
+    final interfaces = await NetworkInterface.list(
+      type: InternetAddressType.IPv4,
+    );
+    return [
+      for (final interface in interfaces)
+        for (final address in interface.addresses) address.address,
+    ];
+  }
+
   static Future<String?> getDeviceIP() async {
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult.isNotEmpty) {
-      if (connectivityResult.contains(ConnectivityResult.wifi)) {
-        final info = NetworkInfo();
-        return info.getWifiIP();
-      } else {
-        for (final interface in await NetworkInterface.list()) {
-          for (final address in interface.addresses) {
-            if (address.type == InternetAddressType.IPv4) {
-              return address.address;
-            }
-          }
-        }
-      }
+    if (connectivityResult.isEmpty ||
+        connectivityResult.contains(ConnectivityResult.none)) {
+      return null;
     }
-    return null;
+    if (connectivityResult.contains(ConnectivityResult.wifi)) {
+      // Android 13+ 底层 WifiManager.getConnectionInfo() 被权限拦截返回 null，
+      // 回落到接口枚举。
+      final ip = await NetworkInfo().getWifiIP();
+      if (ip != null && ip.isNotEmpty) return ip;
+    }
+    final ips = await getLocalIPv4s();
+    return ips.isEmpty ? null : ips.first;
   }
 }

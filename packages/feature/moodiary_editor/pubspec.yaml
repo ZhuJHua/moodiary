@@ -27,7 +27,6 @@ dependencies:
   webview_flutter_wkwebview: 3.26.0
   flutter_inappwebview_windows: 0.7.0-beta.3
   flutter_inappwebview_platform_interface: 1.4.0-beta.3
-  shelf: 1.4.2
 
   flutter_riverpod: 3.3.2
   riverpod_annotation: 4.0.3
