@@ -886,13 +886,8 @@ fn wire__crate__api__http__HttpClient_request_impl(
             let api_that = <RustOpaqueMoi<
                 flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpClient>,
             >>::sse_decode(&mut deserializer);
-            let api_method = <crate::api::http::HttpMethod>::sse_decode(&mut deserializer);
-            let api_url = <String>::sse_decode(&mut deserializer);
-            let api_query = <Vec<crate::api::http::KeyValue>>::sse_decode(&mut deserializer);
-            let api_headers = <Vec<crate::api::http::KeyValue>>::sse_decode(&mut deserializer);
+            let api_options = <crate::api::http::RequestOptions>::sse_decode(&mut deserializer);
             let api_body = <Option<Vec<u8>>>::sse_decode(&mut deserializer);
-            let api_timeout_ms = <Option<u32>>::sse_decode(&mut deserializer);
-            let api_throw_on_status = <Option<bool>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, crate::api::http::HttpError>(
@@ -916,13 +911,8 @@ fn wire__crate__api__http__HttpClient_request_impl(
                         let api_that_guard = api_that_guard.unwrap();
                         let output_ok = crate::api::http::HttpClient::request(
                             &*api_that_guard,
-                            api_method,
-                            api_url,
-                            api_query,
-                            api_headers,
+                            api_options,
                             api_body,
-                            api_timeout_ms,
-                            api_throw_on_status,
                         )
                         .await?;
                         Ok(output_ok)
@@ -962,12 +952,8 @@ fn wire__crate__api__http__HttpClient_upload_file_impl(
                 crate::api::http::UploadEvent,
                 flutter_rust_bridge::for_generated::SseCodec,
             >>::sse_decode(&mut deserializer);
-            let api_method = <crate::api::http::HttpMethod>::sse_decode(&mut deserializer);
-            let api_url = <String>::sse_decode(&mut deserializer);
-            let api_headers = <Vec<crate::api::http::KeyValue>>::sse_decode(&mut deserializer);
+            let api_options = <crate::api::http::RequestOptions>::sse_decode(&mut deserializer);
             let api_file_path = <String>::sse_decode(&mut deserializer);
-            let api_timeout_ms = <Option<u32>>::sse_decode(&mut deserializer);
-            let api_throw_on_status = <Option<bool>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, crate::api::http::HttpError>(
@@ -992,12 +978,8 @@ fn wire__crate__api__http__HttpClient_upload_file_impl(
                         let output_ok = crate::api::http::HttpClient::upload_file(
                             &*api_that_guard,
                             api_sink,
-                            api_method,
-                            api_url,
-                            api_headers,
+                            api_options,
                             api_file_path,
-                            api_timeout_ms,
-                            api_throw_on_status,
                         )
                         .await?;
                         Ok(output_ok)
@@ -3440,6 +3422,26 @@ impl SseDecode for (String, String) {
     }
 }
 
+impl SseDecode for crate::api::http::RequestOptions {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_method = <crate::api::http::HttpMethod>::sse_decode(deserializer);
+        let mut var_url = <String>::sse_decode(deserializer);
+        let mut var_query = <Vec<crate::api::http::KeyValue>>::sse_decode(deserializer);
+        let mut var_headers = <Vec<crate::api::http::KeyValue>>::sse_decode(deserializer);
+        let mut var_timeoutMs = <Option<u32>>::sse_decode(deserializer);
+        let mut var_throwOnStatus = <Option<bool>>::sse_decode(deserializer);
+        return crate::api::http::RequestOptions {
+            method: var_method,
+            url: var_url,
+            query: var_query,
+            headers: var_headers,
+            timeout_ms: var_timeoutMs,
+            throw_on_status: var_throwOnStatus,
+        };
+    }
+}
+
 impl SseDecode for crate::api::assistant::RigChatMessage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -4164,6 +4166,31 @@ impl flutter_rust_bridge::IntoDart for crate::api::http::KeyValue {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::http::KeyValue {}
 impl flutter_rust_bridge::IntoIntoDart<crate::api::http::KeyValue> for crate::api::http::KeyValue {
     fn into_into_dart(self) -> crate::api::http::KeyValue {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::http::RequestOptions {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.method.into_into_dart().into_dart(),
+            self.url.into_into_dart().into_dart(),
+            self.query.into_into_dart().into_dart(),
+            self.headers.into_into_dart().into_dart(),
+            self.timeout_ms.into_into_dart().into_dart(),
+            self.throw_on_status.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::http::RequestOptions
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::http::RequestOptions>
+    for crate::api::http::RequestOptions
+{
+    fn into_into_dart(self) -> crate::api::http::RequestOptions {
         self
     }
 }
@@ -4976,6 +5003,18 @@ impl SseEncode for (String, String) {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.0, serializer);
         <String>::sse_encode(self.1, serializer);
+    }
+}
+
+impl SseEncode for crate::api::http::RequestOptions {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::api::http::HttpMethod>::sse_encode(self.method, serializer);
+        <String>::sse_encode(self.url, serializer);
+        <Vec<crate::api::http::KeyValue>>::sse_encode(self.query, serializer);
+        <Vec<crate::api::http::KeyValue>>::sse_encode(self.headers, serializer);
+        <Option<u32>>::sse_encode(self.timeout_ms, serializer);
+        <Option<bool>>::sse_encode(self.throw_on_status, serializer);
     }
 }
 

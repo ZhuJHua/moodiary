@@ -105,13 +105,15 @@ class RustHttpClient extends IHttpClient {
       // 会被下面统一捕获并上报，而非以裸异常逃逸。
       final client = await _client;
       final response = await client.request(
-        method: _method(method),
-        url: url,
-        query: _pairs(query),
-        headers: _headers(headers, body),
+        options: rust.RequestOptions(
+          method: _method(method),
+          url: url,
+          query: _pairs(query),
+          headers: _headers(headers, body),
+          timeoutMs: timeout?.inMilliseconds,
+          throwOnStatus: throwOnStatus,
+        ),
         body: body?.bytes,
-        timeoutMs: timeout?.inMilliseconds,
-        throwOnStatus: throwOnStatus,
       );
       if (_enableLogging) {
         logger.i('Response ${response.status}');
@@ -144,12 +146,15 @@ class RustHttpClient extends IHttpClient {
       final client = await _client;
       // 事件流：progress 事件 response 为 null，末条携带最终响应。
       await for (final event in client.uploadFile(
-        method: _method(method),
-        url: url,
-        headers: _pairs(headers),
+        options: rust.RequestOptions(
+          method: _method(method),
+          url: url,
+          query: const [],
+          headers: _pairs(headers),
+          timeoutMs: timeout?.inMilliseconds,
+          throwOnStatus: throwOnStatus,
+        ),
         filePath: filePath,
-        timeoutMs: timeout?.inMilliseconds,
-        throwOnStatus: throwOnStatus,
       )) {
         final response = event.response;
         if (response == null) {

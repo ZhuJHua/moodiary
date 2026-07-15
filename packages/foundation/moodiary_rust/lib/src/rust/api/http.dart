@@ -6,8 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `collect_response`, `err`, `map_reqwest_err`, `resolve_url`, `upload_file_inner`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `from`
+// These functions are ignored because they are not marked as `pub`: `builder`, `collect_response`, `err`, `map_reqwest_err`, `resolve_url`, `upload_file_inner`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `from`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpClient>>
 abstract class HttpClient implements RustOpaqueInterface {
@@ -15,26 +15,16 @@ abstract class HttpClient implements RustOpaqueInterface {
   static Future<HttpClient> newInstance({required ClientSettings settings}) =>
       RustLib.instance.api.crateApiHttpHttpClientNew(settings: settings);
 
-  /// [throw_on_status] 覆盖 client 级设置；None 沿用。
   Future<HttpResponse> request({
-    required HttpMethod method,
-    required String url,
-    required List<KeyValue> query,
-    required List<KeyValue> headers,
+    required RequestOptions options,
     Uint8List? body,
-    int? timeoutMs,
-    bool? throwOnStatus,
   });
 
   /// 流式上传本地文件（不整块进内存）。进度经 [sink] 回报（`response` 为 None），
   /// 最后一条事件携带最终响应。
   Stream<UploadEvent> uploadFile({
-    required HttpMethod method,
-    required String url,
-    required List<KeyValue> headers,
+    required RequestOptions options,
     required String filePath,
-    int? timeoutMs,
-    bool? throwOnStatus,
   });
 }
 
@@ -177,6 +167,48 @@ class KeyValue {
           runtimeType == other.runtimeType &&
           key == other.key &&
           value == other.value;
+}
+
+/// 一次请求的公共参数（body 之外），收拢成结构体保持 FFI 面稳定。
+class RequestOptions {
+  final HttpMethod method;
+  final String url;
+  final List<KeyValue> query;
+  final List<KeyValue> headers;
+  final int? timeoutMs;
+
+  /// 覆盖 client 级 throw_on_status；None 沿用。
+  final bool? throwOnStatus;
+
+  const RequestOptions({
+    required this.method,
+    required this.url,
+    required this.query,
+    required this.headers,
+    this.timeoutMs,
+    this.throwOnStatus,
+  });
+
+  @override
+  int get hashCode =>
+      method.hashCode ^
+      url.hashCode ^
+      query.hashCode ^
+      headers.hashCode ^
+      timeoutMs.hashCode ^
+      throwOnStatus.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RequestOptions &&
+          runtimeType == other.runtimeType &&
+          method == other.method &&
+          url == other.url &&
+          query == other.query &&
+          headers == other.headers &&
+          timeoutMs == other.timeoutMs &&
+          throwOnStatus == other.throwOnStatus;
 }
 
 /// 文件上传过程事件：进度事件 [response] 为 None，最后一条携带最终响应。

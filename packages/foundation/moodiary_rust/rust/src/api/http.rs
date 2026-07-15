@@ -13,6 +13,7 @@ use crate::frb_generated::StreamSink;
 use crate::http_client::platform_client_builder;
 
 /// HTTP 方法。跨 FFI 的枚举，映射到 reqwest::Method。
+#[derive(Clone, Copy)]
 pub enum HttpMethod {
     Get,
     Post,
@@ -57,6 +58,17 @@ pub struct ClientSettings {
     pub max_redirects: Option<u32>,
     /// 为 true 时非 2xx 响应抛 [HttpErrorKind::Status]（对齐旧 Dio 行为）。
     pub throw_on_status: bool,
+}
+
+/// 一次请求的公共参数（body 之外），收拢成结构体保持 FFI 面稳定。
+pub struct RequestOptions {
+    pub method: HttpMethod,
+    pub url: String,
+    pub query: Vec<KeyValue>,
+    pub headers: Vec<KeyValue>,
+    pub timeout_ms: Option<u32>,
+    /// 覆盖 client 级 throw_on_status；None 沿用。
+    pub throw_on_status: Option<bool>,
 }
 
 /// 一次响应。body 为原始字节，解码交给 Dart。
@@ -172,39 +184,38 @@ impl HttpClient {
         }
     }
 
-    /// [throw_on_status] 覆盖 client 级设置；None 沿用。
-    pub async fn request(
-        &self,
-        method: HttpMethod,
-        url: String,
-        query: Vec<KeyValue>,
-        headers: Vec<KeyValue>,
-        body: Option<Vec<u8>>,
-        timeout_ms: Option<u32>,
-        throw_on_status: Option<bool>,
-    ) -> Result<HttpResponse, HttpError> {
-        let mut full_url = self.resolve_url(&url)?;
-        if !query.is_empty() {
+    /// 按 [RequestOptions] 组装 RequestBuilder（url 解析、query 追加、headers、超时）。
+    fn builder(&self, options: &RequestOptions) -> Result<reqwest::RequestBuilder, HttpError> {
+        let mut full_url = self.resolve_url(&options.url)?;
+        if !options.query.is_empty() {
             // reqwest 关了默认特性，RequestBuilder::query 不可用；直接往 Url 追加
             // query（application/x-www-form-urlencoded，语义一致）。
             let mut pairs = full_url.query_pairs_mut();
-            for kv in &query {
+            for kv in &options.query {
                 pairs.append_pair(&kv.key, &kv.value);
             }
         }
-        let mut req = self.inner.request(method.into(), full_url);
-        for h in headers {
-            req = req.header(h.key, h.value);
+        let mut req = self.inner.request(options.method.into(), full_url);
+        for h in &options.headers {
+            req = req.header(&h.key, &h.value);
         }
-        if let Some(ms) = timeout_ms {
+        if let Some(ms) = options.timeout_ms {
             req = req.timeout(Duration::from_millis(ms as u64));
         }
+        Ok(req)
+    }
+
+    pub async fn request(
+        &self,
+        options: RequestOptions,
+        body: Option<Vec<u8>>,
+    ) -> Result<HttpResponse, HttpError> {
+        let mut req = self.builder(&options)?;
         if let Some(b) = body {
             req = req.body(b);
         }
-
         let resp = req.send().await.map_err(map_reqwest_err)?;
-        self.collect_response(resp, throw_on_status).await
+        self.collect_response(resp, options.throw_on_status).await
     }
 
     /// 流式上传本地文件（不整块进内存）。进度经 [sink] 回报（`response` 为 None），
@@ -212,30 +223,18 @@ impl HttpClient {
     pub async fn upload_file(
         &self,
         sink: StreamSink<UploadEvent>,
-        method: HttpMethod,
-        url: String,
-        headers: Vec<KeyValue>,
+        options: RequestOptions,
         file_path: String,
-        timeout_ms: Option<u32>,
-        throw_on_status: Option<bool>,
     ) -> Result<(), HttpError> {
         let progress = sink.clone();
         let (response, total) = self
-            .upload_file_inner(
-                method,
-                url,
-                headers,
-                file_path,
-                timeout_ms,
-                throw_on_status,
-                move |sent, total| {
-                    let _ = progress.add(UploadEvent {
-                        sent,
-                        total,
-                        response: None,
-                    });
-                },
-            )
+            .upload_file_inner(options, file_path, move |sent, total| {
+                let _ = progress.add(UploadEvent {
+                    sent,
+                    total,
+                    response: None,
+                });
+            })
             .await?;
         let _ = sink.add(UploadEvent {
             sent: total,
@@ -247,17 +246,12 @@ impl HttpClient {
 
     pub(crate) async fn upload_file_inner(
         &self,
-        method: HttpMethod,
-        url: String,
-        headers: Vec<KeyValue>,
+        options: RequestOptions,
         file_path: String,
-        timeout_ms: Option<u32>,
-        throw_on_status: Option<bool>,
         on_progress: impl Fn(i64, i64) + Send + Sync + 'static,
     ) -> Result<(HttpResponse, i64), HttpError> {
         const PROGRESS_STEP: i64 = 512 * 1024;
 
-        let full_url = self.resolve_url(&url)?;
         let file = tokio::fs::File::open(&file_path)
             .await
             .map_err(|e| err(HttpErrorKind::Request, format!("open file failed: {e}")))?;
@@ -281,20 +275,13 @@ impl HttpClient {
         });
 
         // 显式 content-length：hyper 对带该头的流式 body 走定长编码，接收端才有确定进度。
-        let mut req = self
-            .inner
-            .request(method.into(), full_url)
+        let req = self
+            .builder(&options)?
             .header(reqwest::header::CONTENT_LENGTH, total)
             .body(reqwest::Body::wrap_stream(stream));
-        for h in headers {
-            req = req.header(h.key, h.value);
-        }
-        if let Some(ms) = timeout_ms {
-            req = req.timeout(Duration::from_millis(ms as u64));
-        }
 
         let resp = req.send().await.map_err(map_reqwest_err)?;
-        let response = self.collect_response(resp, throw_on_status).await?;
+        let response = self.collect_response(resp, options.throw_on_status).await?;
         Ok((response, total))
     }
 

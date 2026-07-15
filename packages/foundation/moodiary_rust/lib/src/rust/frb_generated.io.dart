@@ -332,6 +332,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
 
   @protected
+  RequestOptions dco_decode_box_autoadd_request_options(dynamic raw);
+
+  @protected
   RigProviderConfig dco_decode_box_autoadd_rig_provider_config(dynamic raw);
 
   @protected
@@ -453,6 +456,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   (String, String) dco_decode_record_string_string(dynamic raw);
+
+  @protected
+  RequestOptions dco_decode_request_options(dynamic raw);
 
   @protected
   RigChatMessage dco_decode_rig_chat_message(dynamic raw);
@@ -744,6 +750,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
+  RequestOptions sse_decode_box_autoadd_request_options(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RigProviderConfig sse_decode_box_autoadd_rig_provider_config(
     SseDeserializer deserializer,
   );
@@ -885,6 +896,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   (String, String) sse_decode_record_string_string(
     SseDeserializer deserializer,
   );
+
+  @protected
+  RequestOptions sse_decode_request_options(SseDeserializer deserializer);
 
   @protected
   RigChatMessage sse_decode_rig_chat_message(SseDeserializer deserializer);
@@ -1246,6 +1260,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_request_options(
+    RequestOptions self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_rig_provider_config(
     RigProviderConfig self,
     SseSerializer serializer,
@@ -1417,6 +1437,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_record_string_string(
     (String, String) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_request_options(
+    RequestOptions self,
     SseSerializer serializer,
   );
 

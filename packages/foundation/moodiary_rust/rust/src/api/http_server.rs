@@ -666,12 +666,15 @@ mod tests {
         let sent_in_progress = sent.clone();
         let (response, total) = client
             .upload_file_inner(
-                HttpMethod::Post,
-                format!("http://127.0.0.1:{}/upload", server.port()),
-                vec![],
+                crate::api::http::RequestOptions {
+                    method: HttpMethod::Post,
+                    url: format!("http://127.0.0.1:{}/upload", server.port()),
+                    query: vec![],
+                    headers: vec![],
+                    timeout_ms: None,
+                    throw_on_status: None,
+                },
                 dir.join("src.bin").to_string_lossy().into_owned(),
-                None,
-                None,
                 move |s, t| sent_in_progress.lock().unwrap().push((s, t)),
             )
             .await

@@ -171,23 +171,14 @@ abstract class RustLibApi extends BaseApi {
 
   Future<HttpResponse> crateApiHttpHttpClientRequest({
     required HttpClient that,
-    required HttpMethod method,
-    required String url,
-    required List<KeyValue> query,
-    required List<KeyValue> headers,
+    required RequestOptions options,
     Uint8List? body,
-    int? timeoutMs,
-    bool? throwOnStatus,
   });
 
   Stream<UploadEvent> crateApiHttpHttpClientUploadFile({
     required HttpClient that,
-    required HttpMethod method,
-    required String url,
-    required List<KeyValue> headers,
+    required RequestOptions options,
     required String filePath,
-    int? timeoutMs,
-    bool? throwOnStatus,
   });
 
   int crateApiHttpServerHttpServerPort({required HttpServer that});
@@ -1051,13 +1042,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<HttpResponse> crateApiHttpHttpClientRequest({
     required HttpClient that,
-    required HttpMethod method,
-    required String url,
-    required List<KeyValue> query,
-    required List<KeyValue> headers,
+    required RequestOptions options,
     Uint8List? body,
-    int? timeoutMs,
-    bool? throwOnStatus,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -1067,13 +1053,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          sse_encode_http_method(method, serializer);
-          sse_encode_String(url, serializer);
-          sse_encode_list_key_value(query, serializer);
-          sse_encode_list_key_value(headers, serializer);
+          sse_encode_box_autoadd_request_options(options, serializer);
           sse_encode_opt_list_prim_u_8_strict(body, serializer);
-          sse_encode_opt_box_autoadd_u_32(timeoutMs, serializer);
-          sse_encode_opt_box_autoadd_bool(throwOnStatus, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -1086,16 +1067,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_http_error,
         ),
         constMeta: kCrateApiHttpHttpClientRequestConstMeta,
-        argValues: [
-          that,
-          method,
-          url,
-          query,
-          headers,
-          body,
-          timeoutMs,
-          throwOnStatus,
-        ],
+        argValues: [that, options, body],
         apiImpl: this,
       ),
     );
@@ -1104,27 +1076,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiHttpHttpClientRequestConstMeta =>
       const TaskConstMeta(
         debugName: "HttpClient_request",
-        argNames: [
-          "that",
-          "method",
-          "url",
-          "query",
-          "headers",
-          "body",
-          "timeoutMs",
-          "throwOnStatus",
-        ],
+        argNames: ["that", "options", "body"],
       );
 
   @override
   Stream<UploadEvent> crateApiHttpHttpClientUploadFile({
     required HttpClient that,
-    required HttpMethod method,
-    required String url,
-    required List<KeyValue> headers,
+    required RequestOptions options,
     required String filePath,
-    int? timeoutMs,
-    bool? throwOnStatus,
   }) {
     final sink = RustStreamSink<UploadEvent>();
     unawaited(
@@ -1137,12 +1096,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               serializer,
             );
             sse_encode_StreamSink_upload_event_Sse(sink, serializer);
-            sse_encode_http_method(method, serializer);
-            sse_encode_String(url, serializer);
-            sse_encode_list_key_value(headers, serializer);
+            sse_encode_box_autoadd_request_options(options, serializer);
             sse_encode_String(filePath, serializer);
-            sse_encode_opt_box_autoadd_u_32(timeoutMs, serializer);
-            sse_encode_opt_box_autoadd_bool(throwOnStatus, serializer);
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
@@ -1155,16 +1110,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             decodeErrorData: sse_decode_http_error,
           ),
           constMeta: kCrateApiHttpHttpClientUploadFileConstMeta,
-          argValues: [
-            that,
-            sink,
-            method,
-            url,
-            headers,
-            filePath,
-            timeoutMs,
-            throwOnStatus,
-          ],
+          argValues: [that, sink, options, filePath],
           apiImpl: this,
         ),
       ),
@@ -1175,16 +1121,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiHttpHttpClientUploadFileConstMeta =>
       const TaskConstMeta(
         debugName: "HttpClient_upload_file",
-        argNames: [
-          "that",
-          "sink",
-          "method",
-          "url",
-          "headers",
-          "filePath",
-          "timeoutMs",
-          "throwOnStatus",
-        ],
+        argNames: ["that", "sink", "options", "filePath"],
       );
 
   @override
@@ -2991,6 +2928,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RequestOptions dco_decode_box_autoadd_request_options(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_request_options(raw);
+  }
+
+  @protected
   RigProviderConfig dco_decode_box_autoadd_rig_provider_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_rig_provider_config(raw);
@@ -3303,6 +3246,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       throw Exception('Expected 2 elements, got ${arr.length}');
     }
     return (dco_decode_String(arr[0]), dco_decode_String(arr[1]));
+  }
+
+  @protected
+  RequestOptions dco_decode_request_options(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return RequestOptions(
+      method: dco_decode_http_method(arr[0]),
+      url: dco_decode_String(arr[1]),
+      query: dco_decode_list_key_value(arr[2]),
+      headers: dco_decode_list_key_value(arr[3]),
+      timeoutMs: dco_decode_opt_box_autoadd_u_32(arr[4]),
+      throwOnStatus: dco_decode_opt_box_autoadd_bool(arr[5]),
+    );
   }
 
   @protected
@@ -3921,6 +3880,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RequestOptions sse_decode_box_autoadd_request_options(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_request_options(deserializer));
+  }
+
+  @protected
   RigProviderConfig sse_decode_box_autoadd_rig_provider_config(
     SseDeserializer deserializer,
   ) {
@@ -4353,6 +4320,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_field0 = sse_decode_String(deserializer);
     var var_field1 = sse_decode_String(deserializer);
     return (var_field0, var_field1);
+  }
+
+  @protected
+  RequestOptions sse_decode_request_options(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_method = sse_decode_http_method(deserializer);
+    var var_url = sse_decode_String(deserializer);
+    var var_query = sse_decode_list_key_value(deserializer);
+    var var_headers = sse_decode_list_key_value(deserializer);
+    var var_timeoutMs = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_throwOnStatus = sse_decode_opt_box_autoadd_bool(deserializer);
+    return RequestOptions(
+      method: var_method,
+      url: var_url,
+      query: var_query,
+      headers: var_headers,
+      timeoutMs: var_timeoutMs,
+      throwOnStatus: var_throwOnStatus,
+    );
   }
 
   @protected
@@ -5087,6 +5073,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_request_options(
+    RequestOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_request_options(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_rig_provider_config(
     RigProviderConfig self,
     SseSerializer serializer,
@@ -5485,6 +5480,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_request_options(
+    RequestOptions self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_http_method(self.method, serializer);
+    sse_encode_String(self.url, serializer);
+    sse_encode_list_key_value(self.query, serializer);
+    sse_encode_list_key_value(self.headers, serializer);
+    sse_encode_opt_box_autoadd_u_32(self.timeoutMs, serializer);
+    sse_encode_opt_box_autoadd_bool(self.throwOnStatus, serializer);
+  }
+
+  @protected
   void sse_encode_rig_chat_message(
     RigChatMessage self,
     SseSerializer serializer,
@@ -5731,43 +5740,24 @@ class HttpClientImpl extends RustOpaque implements HttpClient {
         RustLib.instance.api.rust_arc_decrement_strong_count_HttpClientPtr,
   );
 
-  /// [throw_on_status] 覆盖 client 级设置；None 沿用。
   Future<HttpResponse> request({
-    required HttpMethod method,
-    required String url,
-    required List<KeyValue> query,
-    required List<KeyValue> headers,
+    required RequestOptions options,
     Uint8List? body,
-    int? timeoutMs,
-    bool? throwOnStatus,
   }) => RustLib.instance.api.crateApiHttpHttpClientRequest(
     that: this,
-    method: method,
-    url: url,
-    query: query,
-    headers: headers,
+    options: options,
     body: body,
-    timeoutMs: timeoutMs,
-    throwOnStatus: throwOnStatus,
   );
 
   /// 流式上传本地文件（不整块进内存）。进度经 [sink] 回报（`response` 为 None），
   /// 最后一条事件携带最终响应。
   Stream<UploadEvent> uploadFile({
-    required HttpMethod method,
-    required String url,
-    required List<KeyValue> headers,
+    required RequestOptions options,
     required String filePath,
-    int? timeoutMs,
-    bool? throwOnStatus,
   }) => RustLib.instance.api.crateApiHttpHttpClientUploadFile(
     that: this,
-    method: method,
-    url: url,
-    headers: headers,
+    options: options,
     filePath: filePath,
-    timeoutMs: timeoutMs,
-    throwOnStatus: throwOnStatus,
   );
 }
 
