@@ -1010,13 +1010,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistantSectionTool => '工具';
 
   @override
-  String get assistantToolSectionNote => '助手会根据对话内容自动调用下列工具，无需手动开启。';
+  String get assistantToolSectionNote =>
+      '助手会根据对话内容自动调用下列工具。只读工具直接执行；涉及写入或删除的工具会先请你确认。';
 
   @override
-  String get assistantToolSearchTitle => '日记检索';
+  String get assistantToolQueryTitle => '查询日记';
 
   @override
-  String get assistantToolSearchDes => '按关键词检索你的本地日记，用于回答涉及过往经历、情绪记录的问题。';
+  String get assistantToolQueryDes =>
+      '按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。';
+
+  @override
+  String get assistantToolGetTitle => '读取日记全文';
+
+  @override
+  String get assistantToolGetDes => '按 id 读取某篇日记的完整内容。';
+
+  @override
+  String get assistantToolOverviewTitle => '日记概览';
+
+  @override
+  String get assistantToolOverviewDes => '统计日记总数、各分类篇数与时间跨度。';
 
   @override
   String get assistantToolCreateTitle => '创建日记';
@@ -1062,6 +1076,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get assistantToolDangerBadge => '危险';
+
+  @override
+  String get assistantToolReadOnlyBadge => '只读';
 
   @override
   String get assistantToolPermissionTitle => '助手请求执行操作';

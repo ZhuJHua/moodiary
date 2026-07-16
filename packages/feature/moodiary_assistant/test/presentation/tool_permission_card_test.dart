@@ -36,7 +36,7 @@ void main() {
 
   testWidgets('允许一次：Future 得 allowOnce，卡片原地更新为结果态', (tester) async {
     final (coordinator, surfaceId, decision) = createCard(
-      AssistantTool.searchDiaries,
+      AssistantTool.createDiary,
     );
 
     await tester.pumpWidget(host(coordinator, surfaceId));

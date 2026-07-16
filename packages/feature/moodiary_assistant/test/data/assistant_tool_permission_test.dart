@@ -11,6 +11,23 @@ void main() {
     run: (input) async => 'ran:${input['x']}',
   );
 
+  final readOnlyProbe = AssistantToolSpec(
+    tool: AssistantTool.queryDiaries,
+    description: 'probe',
+    jsonSchema: const {'type': 'object', 'properties': {}},
+    run: (input) async => 'ran:${input['x']}',
+  );
+
+  test('read-only tool → runs without asking, ignores denial', () async {
+    final result = await dispatchAssistantTool(
+      spec: readOnlyProbe,
+      toolName: readOnlyProbe.id,
+      requester: (AssistantTool _) async => false,
+      argsJson: '{"x":9}',
+    );
+    expect(result, 'ran:9');
+  });
+
   test('unknown tool → returns explanation, does not run', () async {
     final result = await dispatchAssistantTool(
       spec: null,

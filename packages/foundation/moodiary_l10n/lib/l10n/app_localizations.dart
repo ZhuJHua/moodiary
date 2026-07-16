@@ -2045,20 +2045,44 @@ abstract class AppLocalizations {
   /// No description provided for @assistantToolSectionNote.
   ///
   /// In zh, this message translates to:
-  /// **'助手会根据对话内容自动调用下列工具，无需手动开启。'**
+  /// **'助手会根据对话内容自动调用下列工具。只读工具直接执行；涉及写入或删除的工具会先请你确认。'**
   String get assistantToolSectionNote;
 
-  /// No description provided for @assistantToolSearchTitle.
+  /// No description provided for @assistantToolQueryTitle.
   ///
   /// In zh, this message translates to:
-  /// **'日记检索'**
-  String get assistantToolSearchTitle;
+  /// **'查询日记'**
+  String get assistantToolQueryTitle;
 
-  /// No description provided for @assistantToolSearchDes.
+  /// No description provided for @assistantToolQueryDes.
   ///
   /// In zh, this message translates to:
-  /// **'按关键词检索你的本地日记，用于回答涉及过往经历、情绪记录的问题。'**
-  String get assistantToolSearchDes;
+  /// **'按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。'**
+  String get assistantToolQueryDes;
+
+  /// No description provided for @assistantToolGetTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'读取日记全文'**
+  String get assistantToolGetTitle;
+
+  /// No description provided for @assistantToolGetDes.
+  ///
+  /// In zh, this message translates to:
+  /// **'按 id 读取某篇日记的完整内容。'**
+  String get assistantToolGetDes;
+
+  /// No description provided for @assistantToolOverviewTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'日记概览'**
+  String get assistantToolOverviewTitle;
+
+  /// No description provided for @assistantToolOverviewDes.
+  ///
+  /// In zh, this message translates to:
+  /// **'统计日记总数、各分类篇数与时间跨度。'**
+  String get assistantToolOverviewDes;
 
   /// No description provided for @assistantToolCreateTitle.
   ///
@@ -2149,6 +2173,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'危险'**
   String get assistantToolDangerBadge;
+
+  /// No description provided for @assistantToolReadOnlyBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'只读'**
+  String get assistantToolReadOnlyBadge;
 
   /// No description provided for @assistantToolPermissionTitle.
   ///

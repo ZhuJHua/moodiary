@@ -1,3 +1,4 @@
+import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -22,24 +23,82 @@ class AssistantToolSpec {
 }
 
 abstract final class AssistantToolRegistry {
-  static const _maxDiaryHits = 8;
+  static const _defaultQueryLimit = 8;
+
+  static const _maxQueryLimit = 20;
 
   static const _maxExcerptLength = 200;
 
+  static const _maxFullContentLength = 4000;
+
   static const List<AssistantToolSpec> specs = [
     AssistantToolSpec(
-      tool: AssistantTool.searchDiaries,
+      tool: AssistantTool.queryDiaries,
       description:
-          '按关键词检索用户的本地日记，返回最相关的若干条日记摘要（含 id、日期、标题、正文片段）。'
-          '当用户的问题涉及他们写过的日记、过往经历、情绪记录，或在修改 / 删除日记前需先定位目标时调用。',
+          '查询 / 浏览用户的本地日记，所有参数均为可选过滤条件：关键词、分类、起止日期、排序、条数。'
+          '提供关键词时按相关度检索；留空则按时间 / 分类浏览。'
+          '每条结果含 id、日期、心情与正文摘要。当问题涉及用户写过的日记、过往经历、情绪记录，'
+          '或在修改 / 删除日记前需先定位目标时调用。',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'query': {'type': 'string', 'description': '空格分隔的检索关键词，例如 "旅行 海边"。'},
+          'keywords': {
+            'type': 'string',
+            'description': '空格分隔的检索关键词，例如 "旅行 海边"。留空则不按关键词、改为按下列条件浏览。',
+          },
+          'categoryId': {
+            'type': 'string',
+            'description': '仅返回该分类下的日记（分类 id 取自 listCategories）。可留空。',
+          },
+          'startDate': {
+            'type': 'string',
+            'description': '起始日期（含），格式 YYYY-MM-DD，按用户本地时区。可留空。',
+          },
+          'endDate': {
+            'type': 'string',
+            'description': '结束日期（含），格式 YYYY-MM-DD，按用户本地时区。可留空。',
+          },
+          'sort': {
+            'type': 'string',
+            'enum': ['newest', 'oldest', 'modified', 'relevance'],
+            'description':
+                '排序方式：newest 最新优先（默认）、oldest 最早优先、'
+                'modified 最近修改优先、relevance 相关度（仅在提供关键词时有效）。',
+          },
+          'limit': {
+            'type': 'integer',
+            'description': '最多返回条数，默认 8，最大 20。',
+            'minimum': 1,
+            'maximum': 20,
+          },
         },
-        'required': ['query'],
       },
-      run: _searchDiaries,
+      run: _queryDiaries,
+    ),
+    AssistantToolSpec(
+      tool: AssistantTool.getDiary,
+      description:
+          '按 id 读取单篇日记的完整内容（queryDiaries 只返回摘要）。'
+          '当需要日记全文来总结、引用或回答细节时调用。',
+      jsonSchema: {
+        'type': 'object',
+        'properties': {
+          'id': {
+            'type': 'string',
+            'description': '目标日记的 id（来自 queryDiaries）。',
+          },
+        },
+        'required': ['id'],
+      },
+      run: _getDiary,
+    ),
+    AssistantToolSpec(
+      tool: AssistantTool.diaryOverview,
+      description:
+          '返回日记的总体概况：总篇数、各分类的篇数、以及最早 / 最新日记的日期跨度。'
+          '当用户询问「一共写了多少篇」「哪个分类最多」「从什么时候开始记」等统计类问题时调用。',
+      jsonSchema: {'type': 'object', 'properties': {}},
+      run: _diaryOverview,
     ),
     AssistantToolSpec(
       tool: AssistantTool.createDiary,
@@ -70,13 +129,13 @@ abstract final class AssistantToolRegistry {
       tool: AssistantTool.updateDiary,
       description:
           '按 id 修改一篇已有日记。只更新提供的字段（title / content / mood / categoryId），'
-          '未提供的保持不变。调用前请先用 searchDiaries 拿到目标日记的 id。',
+          '未提供的保持不变。调用前请先用 queryDiaries 拿到目标日记的 id。',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'id': {
             'type': 'string',
-            'description': '目标日记的 id（来自 searchDiaries）。',
+            'description': '目标日记的 id（来自 queryDiaries）。',
           },
           'title': {'type': 'string', 'description': '新的标题，可选。'},
           'content': {'type': 'string', 'description': '新的正文（Markdown），可选。'},
@@ -96,13 +155,13 @@ abstract final class AssistantToolRegistry {
       tool: AssistantTool.deleteDiary,
       description:
           '按 id 把一篇日记移入回收站（软删除，可在回收站恢复）。'
-          '调用前请先用 searchDiaries 确认目标日记的 id。',
+          '调用前请先用 queryDiaries 确认目标日记的 id。',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'id': {
             'type': 'string',
-            'description': '目标日记的 id（来自 searchDiaries）。',
+            'description': '目标日记的 id（来自 queryDiaries）。',
           },
         },
         'required': ['id'],
@@ -171,36 +230,127 @@ abstract final class AssistantToolRegistry {
     return null;
   }
 
-  static Future<String> _searchDiaries(Map<String, dynamic> input) async {
-    final query = (input['query'] as String?)?.trim() ?? '';
-    final keywords = query
+  static Future<String> _queryDiaries(Map<String, dynamic> input) async {
+    final keywords = ((input['keywords'] as String?) ?? '')
         .split(RegExp(r'\s+'))
         .where((e) => e.isNotEmpty)
         .toList();
-    if (keywords.isEmpty) return '没有提供检索关键词。';
+    final categoryId = _trimToNull(input['categoryId']);
+    final sortName = (input['sort'] as String?)?.trim();
+    final limit = _parseLimit(input['limit']);
+    // 起止日期按本地日历解释；结束日以次日零点作排他上界，从而包含整个结束日。
+    final start = _parseDate(input['startDate']);
+    final endExclusive = _parseDate(
+      input['endDate'],
+    )?.add(const Duration(days: 1));
 
-    final diaries = await DiaryRepository.get().searchDiaries(
-      cutTokens: keywords,
-      cutForSearchTokens: keywords,
+    final repo = DiaryRepository.get();
+    List<Diary> results;
+    if (keywords.isNotEmpty) {
+      results = await repo.searchDiaries(
+        cutTokens: keywords,
+        cutForSearchTokens: keywords,
+        categoryId: categoryId,
+        start: start,
+        end: endExclusive,
+        sort: _toSearchSort(sortName),
+      );
+    } else if (start != null || endExclusive != null) {
+      final ranged = await repo.getDiariesByDateRange(
+        start ?? DateTime.fromMillisecondsSinceEpoch(0),
+        endExclusive ?? DateTime.now().add(const Duration(days: 1)),
+      );
+      results =
+          ranged
+              .where((d) => categoryId == null || d.categoryId == categoryId)
+              .where((d) => _inRange(d.time, start, endExclusive))
+              .toList()
+            ..sort(_diaryComparator(sortName));
+    } else {
+      results = await repo.getDiaryByCategory(
+        categoryId: categoryId,
+        sort: _toDiarySort(sortName),
+        limit: limit,
+      );
+    }
+
+    if (results.isEmpty) {
+      return _emptyQueryMessage(keywords, categoryId, start, endExclusive);
+    }
+    return _formatDiaryList(results.take(limit));
+  }
+
+  static Future<String> _getDiary(Map<String, dynamic> input) async {
+    final id = _trimToNull(input['id']);
+    if (id == null) return '读取失败：缺少日记 id。';
+
+    final diary = await DiaryRepository.get().getDiaryByBusinessId(id);
+    if (diary == null || diary.deleted) {
+      return '读取失败：未找到 id=$id 的日记。';
+    }
+    final title = diary.title.trim().isEmpty ? '(无标题)' : diary.title.trim();
+    final buffer = StringBuffer()
+      ..writeln('id=${diary.id}')
+      ..writeln('日期=${TimeUtil.isoDate(diary.time)}')
+      ..writeln('标题=$title')
+      ..writeln('心情=${diary.mood.toStringAsFixed(2)}');
+    if (diary.categoryId != null && diary.categoryId!.isNotEmpty) {
+      buffer.writeln('分类id=${diary.categoryId}');
+    }
+    if (diary.tags.isNotEmpty) {
+      buffer.writeln('标签=${diary.tags.join('、')}');
+    }
+    final text = diary.contentText.trim();
+    buffer
+      ..writeln('正文:')
+      ..writeln(
+        text.isEmpty
+            ? '(空)'
+            : (text.length > _maxFullContentLength
+                  ? '${text.substring(0, _maxFullContentLength)}…'
+                  : text),
+      );
+    return buffer.toString().trim();
+  }
+
+  static Future<String> _diaryOverview(Map<String, dynamic> input) async {
+    final repo = DiaryRepository.get();
+    final counts = await repo.diaryCountByCategory();
+    if (counts.total == 0) return '目前还没有任何日记。';
+
+    final cats = (await CategoryRepository.get().getAllCategories().run())
+        .getOrElse((_) => const <Category>[]);
+    final nameById = {for (final c in cats) c.id: c.categoryName};
+    final newest = await repo.getDiaryByCategory(
+      sort: DiarySort.timeDesc,
+      limit: 1,
     );
-    if (diaries.isEmpty) {
-      return '没有找到与「${keywords.join(' ')}」相关的日记。';
-    }
+    final oldest = await repo.getDiaryByCategory(
+      sort: DiarySort.timeAsc,
+      limit: 1,
+    );
 
-    final buffer = StringBuffer();
-    for (final diary in diaries.take(_maxDiaryHits)) {
-      final title = diary.title.trim().isEmpty ? '(无标题)' : diary.title.trim();
-      buffer.writeln('id=${diary.id} 【${TimeUtil.isoDate(diary.time)}】$title');
-      final text = diary.contentText.trim();
-      if (text.isNotEmpty) {
-        buffer.writeln(
-          text.length > _maxExcerptLength
-              ? '${text.substring(0, _maxExcerptLength)}…'
-              : text,
-        );
-      }
-      buffer.writeln();
+    final buffer = StringBuffer()..writeln('日记总数=${counts.total}');
+    if (newest.isNotEmpty && oldest.isNotEmpty) {
+      buffer.writeln(
+        '时间跨度=${TimeUtil.isoDate(oldest.first.time)} ~ '
+        '${TimeUtil.isoDate(newest.first.time)}',
+      );
     }
+    final categorized = counts.byCategory.values.fold<int>(0, (a, b) => a + b);
+    final uncategorized = counts.total - categorized;
+    buffer.writeln('分类统计:');
+    if (counts.byCategory.isEmpty) {
+      buffer.writeln('- （全部未分类）');
+    } else {
+      final entries = counts.byCategory.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      for (final e in entries) {
+        final name = nameById[e.key] ?? '(已删除分类)';
+        buffer.writeln('- $name（id=${e.key}）：${e.value} 篇');
+      }
+    }
+    if (uncategorized > 0) buffer.writeln('- 未分类：$uncategorized 篇');
     return buffer.toString().trim();
   }
 
@@ -359,4 +509,90 @@ abstract final class AssistantToolRegistry {
   static double? _parseMood(Object? raw) =>
       raw is num ? raw.toDouble().clamp(0.0, 1.0).toDouble() : null;
 
+  static String? _trimToNull(Object? raw) {
+    final s = (raw as String?)?.trim();
+    return (s == null || s.isEmpty) ? null : s;
+  }
+
+  static int _parseLimit(Object? raw) {
+    final n = raw is num ? raw.toInt() : int.tryParse('${raw ?? ''}'.trim());
+    if (n == null) return _defaultQueryLimit;
+    return n.clamp(1, _maxQueryLimit);
+  }
+
+  /// 解析 `YYYY-MM-DD` 为本地日历日的零点。无法解析返回 null。
+  static DateTime? _parseDate(Object? raw) {
+    final s = (raw as String?)?.trim();
+    if (s == null || s.isEmpty) return null;
+    final parsed = DateTime.tryParse(s);
+    if (parsed == null) return null;
+    return DateTime(parsed.year, parsed.month, parsed.day);
+  }
+
+  /// [start] 含、[endExclusive] 排他，按绝对时刻比较（`time` 为 UTC，本地边界仍按瞬时可比）。
+  static bool _inRange(DateTime time, DateTime? start, DateTime? endExclusive) {
+    if (start != null && time.isBefore(start)) return false;
+    if (endExclusive != null && !time.isBefore(endExclusive)) return false;
+    return true;
+  }
+
+  static SearchSort _toSearchSort(String? name) => switch (name) {
+    'newest' => SearchSort.timeDesc,
+    'oldest' => SearchSort.timeAsc,
+    _ => SearchSort.relevance,
+  };
+
+  static DiarySort _toDiarySort(String? name) => switch (name) {
+    'oldest' => DiarySort.timeAsc,
+    'modified' => DiarySort.lastModifiedDesc,
+    _ => DiarySort.timeDesc,
+  };
+
+  static int Function(Diary, Diary) _diaryComparator(String? name) =>
+      switch (name) {
+        'oldest' => (a, b) => a.time.compareTo(b.time),
+        'modified' => (a, b) => b.lastModified.compareTo(a.lastModified),
+        _ => (a, b) => b.time.compareTo(a.time),
+      };
+
+  static String _formatDiaryList(Iterable<Diary> diaries) {
+    final buffer = StringBuffer();
+    for (final diary in diaries) {
+      final title = diary.title.trim().isEmpty ? '(无标题)' : diary.title.trim();
+      final cat = diary.categoryId;
+      final catPart = (cat != null && cat.isNotEmpty) ? ' 分类id=$cat' : '';
+      buffer.writeln(
+        'id=${diary.id} 【${TimeUtil.isoDate(diary.time)}】$title '
+        '心情=${diary.mood.toStringAsFixed(2)}$catPart',
+      );
+      final text = diary.contentText.trim();
+      if (text.isNotEmpty) {
+        buffer.writeln(
+          text.length > _maxExcerptLength
+              ? '${text.substring(0, _maxExcerptLength)}…'
+              : text,
+        );
+      }
+      buffer.writeln();
+    }
+    return buffer.toString().trim();
+  }
+
+  static String _emptyQueryMessage(
+    List<String> keywords,
+    String? categoryId,
+    DateTime? start,
+    DateTime? endExclusive,
+  ) {
+    final conds = <String>[
+      if (keywords.isNotEmpty) '关键词「${keywords.join(' ')}」',
+      if (categoryId != null) '分类 $categoryId',
+      if (start != null) '起 ${TimeUtil.isoDate(start)}',
+      if (endExclusive != null)
+        '止 ${TimeUtil.isoDate(endExclusive.subtract(const Duration(days: 1)))}',
+    ];
+    return conds.isEmpty
+        ? '还没有任何日记。'
+        : '没有找到符合条件（${conds.join('，')}）的日记。';
+  }
 }

@@ -8,10 +8,20 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 ) {
   final l10n = context.l10n;
   return switch (tool) {
-    AssistantTool.searchDiaries => (
-      icon: Icons.travel_explore_rounded,
-      title: l10n.assistantToolSearchTitle,
-      description: l10n.assistantToolSearchDes,
+    AssistantTool.queryDiaries => (
+      icon: Icons.manage_search_rounded,
+      title: l10n.assistantToolQueryTitle,
+      description: l10n.assistantToolQueryDes,
+    ),
+    AssistantTool.getDiary => (
+      icon: Icons.article_outlined,
+      title: l10n.assistantToolGetTitle,
+      description: l10n.assistantToolGetDes,
+    ),
+    AssistantTool.diaryOverview => (
+      icon: Icons.insights_rounded,
+      title: l10n.assistantToolOverviewTitle,
+      description: l10n.assistantToolOverviewDes,
     ),
     AssistantTool.createDiary => (
       icon: Icons.note_add_rounded,

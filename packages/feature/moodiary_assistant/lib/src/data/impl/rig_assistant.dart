@@ -139,7 +139,10 @@ Future<String> dispatchAssistantTool({
 }) async {
   if (spec == null) return '未知工具：$toolName。';
 
-  if (requester != null && !await requester(spec.tool)) {
+  // 只读工具直接执行；写入 / 破坏性工具先请用户确认。
+  if (spec.tool.needsApproval &&
+      requester != null &&
+      !await requester(spec.tool)) {
     return '用户拒绝了执行「$toolName」操作。请不要重试，可换一种方式继续对话。';
   }
 

@@ -1048,14 +1048,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assistantToolSectionNote =>
-      'The assistant automatically uses the tools below based on the conversation — no setup needed.';
+      'The assistant uses the tools below automatically based on the conversation. Read-only tools run right away; tools that write or delete ask for your confirmation first.';
 
   @override
-  String get assistantToolSearchTitle => 'Diary search';
+  String get assistantToolQueryTitle => 'Query diaries';
 
   @override
-  String get assistantToolSearchDes =>
-      'Searches your local diaries by keyword to answer questions about past experiences and moods.';
+  String get assistantToolQueryDes =>
+      'Finds your local diaries by keyword, date range, or category to answer questions about past experiences and moods.';
+
+  @override
+  String get assistantToolGetTitle => 'Read full diary';
+
+  @override
+  String get assistantToolGetDes =>
+      'Reads the full content of a diary by its id.';
+
+  @override
+  String get assistantToolOverviewTitle => 'Diary overview';
+
+  @override
+  String get assistantToolOverviewDes =>
+      'Counts your diaries in total and per category, and their date span.';
 
   @override
   String get assistantToolCreateTitle => 'Create diary';
@@ -1106,6 +1120,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assistantToolDangerBadge => 'Risky';
+
+  @override
+  String get assistantToolReadOnlyBadge => 'Read-only';
 
   @override
   String get assistantToolPermissionTitle => 'Tool permission requested';

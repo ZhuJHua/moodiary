@@ -218,7 +218,8 @@ class _ToolSectionState extends State<_ToolSection> {
   }) {
     final scheme = context.colorScheme;
     final display = assistantToolDisplay(context, tool);
-    final hasTrailing = alwaysAllowed || tool.dangerous;
+    final readOnly = !tool.needsApproval;
+    final hasTrailing = readOnly || alwaysAllowed || tool.dangerous;
     return SettingListTile(
       isFirst: isFirst,
       isLast: isLast,
@@ -230,6 +231,7 @@ class _ToolSectionState extends State<_ToolSection> {
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (readOnly) const _ReadOnlyBadge(),
                 if (alwaysAllowed)
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
@@ -245,6 +247,28 @@ class _ToolSectionState extends State<_ToolSection> {
                 if (tool.dangerous) const _DangerBadge(),
               ],
             ),
+    );
+  }
+}
+
+class _ReadOnlyBadge extends StatelessWidget {
+  const _ReadOnlyBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: scheme.secondaryContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        context.l10n.assistantToolReadOnlyBadge,
+        style: context.textTheme.labelSmall?.copyWith(
+          color: scheme.onSecondaryContainer,
+        ),
+      ),
     );
   }
 }
