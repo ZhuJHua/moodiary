@@ -17,8 +17,10 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_assistant/src/application/isar_chat_controller.dart';
+import 'package:moodiary_assistant/src/application/context_compaction_controller.dart';
 import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
+import 'package:moodiary_assistant/src/data/soul_repository.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/presentation/tool_permission_card.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
@@ -77,6 +79,17 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   late final ToolPermissionCoordinator _permissions;
   late final ToolPermissionActionDelegate _permissionDelegate;
+
+  final ContextCompactionController _compaction = ContextCompactionController();
+
+  /// 最近一轮 provider 上报的输入 token 数（压缩触发判据）。0 表示尚无用量数据。
+  int _lastTurnInputTokens = 0;
+
+  /// 当前激活模型的上下文窗口（用于上下文占用指示与压缩阈值）。随 provider 变化刷新。
+  int _contextLimit = assistantDefaultContextBudget;
+
+  /// 「立即压缩」进行中，避免重复触发。
+  bool _compacting = false;
 
   ChatSession? _session;
 
@@ -140,20 +153,23 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final caps = provider == null
         ? const (tools: true, reasoning: false, attachment: false)
         : _capabilities(provider);
+    final contextLimit = provider == null
+        ? assistantDefaultContextBudget
+        : _contextLimitFor(provider);
     if (mounted) {
       setState(() {
         _ready = ready;
         _canThink = caps.reasoning;
         _canSendImage = caps.attachment;
         _canUseTools = caps.tools;
+        _contextLimit = contextLimit;
         // 切到不支持附件的模型：丢弃已选但还没发出的图片，避免发出去被供应商拒。
         if (!caps.attachment) _pendingImageName = null;
       });
     }
   }
 
-  /// 解析当前激活供应商的模型能力。preset 供应商查本地目录缓存（绝不联网；未命中 / 缓存缺失时
-  /// 工具放行、推理与图片保守关闭）；自定义供应商用用户在编辑页声明的标记。
+  /// 解析当前供应商模型能力：preset 查本地缓存（绝不联网，未命中则保守关闭），自定义供应商用用户声明的标记。
   ({bool tools, bool reasoning, bool attachment}) _capabilities(
     LlmProvider provider,
   ) {
@@ -204,6 +220,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       _pendingImageName = null;
       _sending = false;
     });
+    // 会话若已压缩，按水位重新合成压缩提示 chip（完整消息仍在库里、照常展示）。
+    _syncCompactionNotice();
     _jumpToBottomSoon();
   }
 
@@ -266,6 +284,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   Future<AssistantChatRequest?> _buildRequest(
     List<AssistantMessage> history, {
     required String systemPrompt,
+    required String volatilePrefix,
   }) async {
     final repo = LlmProviderRepository.get();
     final LlmProvider? provider = await repo.getActiveProvider();
@@ -277,6 +296,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       apiKey: key,
       model: provider.model,
       systemPrompt: systemPrompt,
+      volatilePrefix: volatilePrefix,
       maxTokens: assistantMaxTokens,
       history: history,
       thinking: _thinking && _canThink,
@@ -379,8 +399,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     );
   }
 
-  /// 重新回答：删掉最后一条用户消息之后的所有内容（AI 回复、权限卡片、报错文本），
-  /// 再基于同一条用户消息重新跑一次生成。停止/报错后也可用它重试。
+  /// 重新回答：删掉最后一条用户消息之后的全部内容，基于同一条用户消息重新生成；也用于停止/报错后重试。
   Future<void> _regenerate() async {
     if (_sending || !_disclaimerAccepted) return;
     final gen = ++_generation;
@@ -402,8 +421,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final userMsg = msgs[lastUserIdx] as TextMessage;
 
     setState(() => _sending = true);
-    // 旧回复只从内存移除；真正的落库删除推迟到新回复成功落库后（_purgeStaleReplies），
-    // 这样重新生成失败（网络错误 / 供应商被移除）不会连旧答案一起丢掉。
+    // 旧回复先只从内存移除，落库删除推迟到新回复落库后（_purgeStaleReplies），避免重新生成失败时连旧答案一起丢掉。
     final trailing = msgs.sublist(lastUserIdx + 1).toList();
     for (final m in trailing) {
       await _chat.removeMessage(m);
@@ -426,8 +444,19 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     required DateTime placeholderAt,
   }) async {
     final l10n = context.l10n;
-    final systemPrompt = buildAssistantSystemPrompt(
-      Localizations.localeOf(context).toLanguageTag(),
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
+    // 稳定前缀（身份/护栏/SOUL/工具目录）逐轮字节一致以命中缓存；易变文本另拼到外发消息。
+    final soul = await SoulRepository.get().read();
+    final memories = await MemoryRepository.get().getRecent(memoryInjectionLimit);
+    if (!mounted || gen != _generation) return;
+    final systemPrompt = buildStableSystemPrompt(
+      soul: soul,
+      toolsEnabled: _canUseTools,
+    );
+    final volatilePrefix = buildVolatilePrompt(
+      localeTag: localeTag,
+      nowLocal: DateTime.now(),
+      memories: [for (final m in memories) '(${m.category}) ${m.text}'],
     );
 
     _resetThinkingState();
@@ -441,7 +470,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
     final history = _buildHistory();
 
-    final request = await _buildRequest(history, systemPrompt: systemPrompt);
+    final request = await _buildRequest(
+      history,
+      systemPrompt: systemPrompt,
+      volatilePrefix: volatilePrefix,
+    );
     if (!mounted || gen != _generation) return;
     if (request == null) {
       _appendDelta(l10n.assistantNeedProvider);
@@ -493,6 +526,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               if (gen != _generation) return;
               _finalizeStreaming(persist: true);
               if (mounted) setState(() => _sending = false);
+              // 本轮已落库、拿到 provider 上报的输入 token 后，按阈值尝试压缩上下文。
+              unawaited(_maybeCompact());
             },
           );
     } catch (e) {
@@ -503,32 +538,166 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   }
 
   List<AssistantMessage> _buildHistory() {
-    final result = <AssistantMessage>[];
+    // 1. 收集逐字文本消息（带 id，供压缩水位定位）。
+    final raw =
+        <({String id, AssistantRole role, String content, String? imagePath})>[];
     for (final m in _chat.messages) {
       if (m is! TextMessage) continue;
       final imageName = IsarChatController.imageNameOf(m);
       final hasImage = imageName.isNotEmpty;
       if (m.text.isEmpty && !hasImage) continue;
-      final role = m.authorId == kAssistantUserId
-          ? AssistantRole.user
-          : AssistantRole.assistant;
-      final imagePath = hasImage
-          ? FileUtil.getRealPath('image', imageName)
-          : null;
-      // 含图片的消息独立成条，不与相邻同角色文本合并（避免图片被并进别的气泡）。
-      if (!hasImage &&
+      raw.add((
+        id: m.id,
+        role: m.authorId == kAssistantUserId
+            ? AssistantRole.user
+            : AssistantRole.assistant,
+        content: m.text,
+        imagePath: hasImage ? FileUtil.getRealPath('image', imageName) : null,
+      ));
+    }
+
+    // 2. 应用压缩水位：丢弃水位（含）之前的逐字内容，改由摘要代表。
+    final session = _session;
+    final summary = session?.compactedSummary;
+    final watermark = session?.compactedUpToMessageId;
+    var start = 0;
+    if (summary != null && summary.isNotEmpty && watermark != null) {
+      final at = raw.indexWhere((e) => e.id == watermark);
+      if (at >= 0) start = at + 1;
+    }
+    final kept = raw.sublist(start);
+
+    // 3. 压缩过则先放一对合成的「摘要」问答；放历史里、不进 system，保持缓存前缀稳定。
+    final result = <AssistantMessage>[];
+    if (start > 0 && summary != null && summary.isNotEmpty) {
+      result
+        ..add(
+          AssistantMessage.user('[Summary of earlier conversation]\n$summary'),
+        )
+        ..add(
+          const AssistantMessage.assistant(
+            'Understood — I have the earlier context.',
+          ),
+        );
+    }
+
+    // 4. 合并相邻同角色纯文本；含图片的独立成条（避免图片被并进别的气泡）。
+    for (final e in kept) {
+      if (e.imagePath == null &&
           result.isNotEmpty &&
-          result.last.role == role &&
+          result.last.role == e.role &&
           result.last.imagePath == null) {
         result.last = AssistantMessage(
-          role,
-          '${result.last.content}\n\n${m.text}',
+          e.role,
+          '${result.last.content}\n\n${e.content}',
         );
       } else {
-        result.add(AssistantMessage(role, m.text, imagePath: imagePath));
+        result.add(AssistantMessage(e.role, e.content, imagePath: e.imagePath));
       }
     }
     return result;
+  }
+
+  /// 每轮结束后按 token 阈值自动尝试压缩。
+  Future<void> _maybeCompact() => _runCompaction(force: false);
+
+  /// 「立即压缩」手动触发：跳过阈值，给出结果提示。
+  Future<void> _compactNow() async {
+    if (_compacting) return;
+    setState(() => _compacting = true);
+    final l10n = context.l10n;
+    final updated = await _runCompaction(force: true);
+    if (!mounted) return;
+    setState(() => _compacting = false);
+    if (updated != null) {
+      toast.success(message: l10n.assistantCompactionDone);
+    } else {
+      toast.info(message: l10n.assistantCompactionNothing);
+    }
+  }
+
+  Future<ChatSession?> _runCompaction({required bool force}) async {
+    final session = _session;
+    if (session == null || (!force && _lastTurnInputTokens <= 0)) return null;
+    final repo = LlmProviderRepository.get();
+    final provider = await repo.getActiveProvider();
+    if (provider == null) return null;
+    final key = await repo.getKey(provider.id);
+    if (key == null || key.isEmpty) return null;
+    if (!mounted || _session?.id != session.id) return null;
+
+    final ordered = <CompactionMessage>[
+      for (final m in _chat.messages)
+        if (m is TextMessage &&
+            (m.text.isNotEmpty || IsarChatController.imageNameOf(m).isNotEmpty))
+          (
+            id: m.id,
+            fromUser: m.authorId == kAssistantUserId,
+            text: m.text.isEmpty ? '[图片]' : m.text,
+          ),
+    ];
+
+    final updated = await _compaction.maybeCompact(
+      session: session,
+      orderedMessages: ordered,
+      lastInputTokens: _lastTurnInputTokens,
+      contextLimit: _contextLimitFor(provider),
+      provider: provider,
+      apiKey: key,
+      force: force,
+    );
+    if (updated == null || !mounted || _session?.id != session.id) return null;
+    await ChatRepository.get().upsertSession(updated);
+    if (!mounted || _session?.id != session.id) return null;
+    setState(() => _session = updated);
+    _syncCompactionNotice();
+    return updated;
+  }
+
+  /// 解析激活模型的上下文窗口；preset 供应商查本地缓存，自定义 / 未命中用兜底预算。
+  int _contextLimitFor(LlmProvider provider) {
+    if (provider.providerId.isNotEmpty) {
+      for (final preset in LlmPresetRepository.get().cachedPresets()) {
+        if (preset.id != provider.providerId) continue;
+        for (final model in preset.models) {
+          if (model.id == provider.model) {
+            return model.contextLimit ?? assistantDefaultContextBudget;
+          }
+        }
+      }
+    }
+    return assistantDefaultContextBudget;
+  }
+
+  /// 按当前会话压缩水位，把提示 chip 对齐到边界：移除旧的、在水位消息后插入新的。
+  void _syncCompactionNotice() {
+    for (final m in List<Message>.of(_chat.messages)) {
+      if (m is CustomMessage && m.metadata?[kCompactionNoticeKey] == true) {
+        _chat.removeMessage(m);
+      }
+    }
+    final session = _session;
+    final watermark = session?.compactedUpToMessageId;
+    if (session?.compactedSummary == null || watermark == null) return;
+    final idx = _chat.messages.indexWhere((m) => m.id == watermark);
+    if (idx < 0) return;
+    _chat.insertMessage(_chat.compactionNotice(watermark), index: idx + 1);
+  }
+
+  /// 撤销压缩：清空会话的摘要 / 水位（Isar 消息未动，整段历史恢复逐字发送）。
+  Future<void> _restoreFullHistory() async {
+    final session = _session;
+    if (session == null || session.compactedSummary == null) return;
+    final restored = session.copyWith(
+      compactedSummary: null,
+      compactedUpToMessageId: null,
+      compactedAt: null,
+      compactedInputTokensAtTrigger: null,
+    );
+    await ChatRepository.get().upsertSession(restored);
+    if (!mounted) return;
+    setState(() => _session = restored);
+    _syncCompactionNotice();
   }
 
   void _stop() {
@@ -590,6 +759,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   /// 本轮结束的 token 用量：写回当前流式消息（随后 settled 保留、落库）。
   void _applyUsage(int inputTokens, int outputTokens) {
+    if (inputTokens > 0) _lastTurnInputTokens = inputTokens;
     final cur = _streamingMessage;
     if (cur == null || (inputTokens <= 0 && outputTokens <= 0)) return;
     final next = _chat.applyUsage(
@@ -775,6 +945,12 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     required bool isSentByMe,
     MessageGroupStatus? groupStatus,
   }) {
+    if (message.metadata?[kCompactionNoticeKey] == true) {
+      return _CompactionNoticeChip(
+        summary: _session?.compactedSummary ?? '',
+        onRestore: _restoreFullHistory,
+      );
+    }
     final surfaceId = message.metadata?[kPermissionSurfaceKey] as String?;
     if (surfaceId == null ||
         !_permissions.surfaces.activeSurfaceIds.contains(surfaceId)) {
@@ -873,8 +1049,182 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(title: Text(_session?.title ?? l10n.assistantNewChat)),
+      appBar: AppBar(
+        title: Text(_session?.title ?? l10n.assistantNewChat),
+        actions: [
+          if (_lastTurnInputTokens > 0 && _contextLimit > 0)
+            _ContextUsagePill(
+              usedTokens: _lastTurnInputTokens,
+              contextLimit: _contextLimit,
+            ),
+          MoodiaryMenuButton<String>(
+            tooltip: l10n.assistantMenuTooltip,
+            entries: [
+              MoodiaryMenuEntry(
+                value: 'compact',
+                label: l10n.assistantCompactNow,
+                icon: Icons.compress_rounded,
+                enabled: _session != null && !_compacting && !_sending,
+              ),
+            ],
+            onSelected: (value) {
+              if (value == 'compact') unawaited(_compactNow());
+            },
+            child: const Padding(
+              padding: EdgeInsets.all(12),
+              child: Icon(Icons.more_vert_rounded),
+            ),
+          ),
+        ],
+      ),
       body: chatArea,
+    );
+  }
+}
+
+/// AppBar 上下文占用指示：输入 token 占模型窗口百分比，接近/达到压缩阈值时变黄/变红。
+class _ContextUsagePill extends StatelessWidget {
+  final int usedTokens;
+  final int contextLimit;
+
+  const _ContextUsagePill({
+    required this.usedTokens,
+    required this.contextLimit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final ratio = contextLimit <= 0 ? 0.0 : usedTokens / contextLimit;
+    final percent = (ratio * 100).clamp(0, 999).round();
+    final Color color;
+    if (ratio >= assistantCompactionTriggerRatio) {
+      color = scheme.error;
+    } else if (ratio >= assistantCompactionTriggerRatio * 0.8) {
+      color = scheme.tertiary;
+    } else {
+      color = scheme.onSurfaceVariant;
+    }
+    return Tooltip(
+      message:
+          '${context.l10n.assistantContextUsageLabel} $percent% · '
+          '$usedTokens / $contextLimit',
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.only(right: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '$percent%',
+            style: context.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 上下文压缩提示：居中的低调 chip，点开可看摘要并「恢复完整历史」。
+class _CompactionNoticeChip extends StatelessWidget {
+  final String summary;
+  final VoidCallback onRestore;
+
+  const _CompactionNoticeChip({required this.summary, required this.onRestore});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => _showSheet(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.compress_rounded,
+                  size: 16,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    context.l10n.assistantCompactionNotice,
+                    style: context.textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final l10n = sheetContext.l10n;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.assistantCompactionSheetTitle,
+                  style: sheetContext.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.assistantCompactionSheetNote,
+                  style: sheetContext.textTheme.bodySmall?.copyWith(
+                    color: sheetContext.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Text(
+                      summary.isEmpty ? '—' : summary,
+                      style: sheetContext.textTheme.bodyMedium,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FilledButton.tonalIcon(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    onRestore();
+                  },
+                  icon: const Icon(Icons.unfold_more_rounded),
+                  label: Text(l10n.assistantCompactionRestore),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -1360,8 +1710,7 @@ class _AssistantBubble extends StatelessWidget {
       maxWidth: MediaQuery.sizeOf(context).width * 0.82,
     );
 
-    // 有正文 → 正文气泡；无正文且未在思考 → 初始转圈气泡；
-    // 无正文但正在 / 已思考 → 不显示气泡，交给上方思考块。
+    // 有正文→正文气泡；无正文未思考→转圈气泡；无正文但思考中/已思考→不显示气泡，交给思考块。
     Widget? bubble;
     if (hasText) {
       bubble = Container(

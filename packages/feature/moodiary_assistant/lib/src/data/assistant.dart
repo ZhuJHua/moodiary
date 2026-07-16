@@ -4,8 +4,7 @@ import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 
 enum AssistantRole { user, assistant }
 
-/// 流式回调事件类别：正文文本增量、思考 / 推理增量、一次工具调用（[text] 为工具名），
-/// 或本轮结束时的 token 用量（[inputTokens] / [outputTokens]）。
+/// 流式事件类别：text=正文增量，reasoning=思考增量，tool=工具调用（[text] 为工具名），usage=token 用量。
 enum AssistantStreamKind { text, reasoning, tool, usage }
 
 /// 一次流式回复中的单个增量。思考模式下 [reasoning] 与 [text] 交织到来。
@@ -77,7 +76,11 @@ class AssistantChatRequest {
 
   final String model;
 
+  /// 稳定 system prompt（缓存前缀）。仅含身份 / 护栏 / SOUL / 工具目录，每轮字节一致。
   final String systemPrompt;
+
+  /// 易变前缀：拼到本轮外发消息上、不进 system（避免污染缓存前缀）。见 [buildVolatilePrompt]。
+  final String volatilePrefix;
 
   final int maxTokens;
 
@@ -97,6 +100,7 @@ class AssistantChatRequest {
     required this.apiKey,
     required this.model,
     required this.systemPrompt,
+    this.volatilePrefix = '',
     required this.maxTokens,
     required this.history,
     this.thinking = false,

@@ -7,6 +7,7 @@ import 'presentation/assistant_provider_edit_page.dart';
 import 'presentation/assistant_provider_list_page.dart';
 import 'presentation/assistant_provider_picker_page.dart';
 import 'presentation/assistant_setting_page.dart';
+import 'presentation/soul_settings_page.dart';
 
 export 'package:moodiary_router/moodiary_router.dart'
     show MoodiaryRouteBase, MoodiaryRouteNav;
@@ -15,6 +16,10 @@ List<RouteBase> assistantRoutes() => [
   GoRoute(
     path: AssistantSettingRoute.path,
     builder: (_, _) => const AssistantSettingPage(),
+  ),
+  GoRoute(
+    path: AssistantSoulRoute.path,
+    builder: (_, _) => const AssistantSoulPage(),
   ),
   GoRoute(
     path: AssistantProvidersRoute.path,
@@ -41,6 +46,13 @@ List<RouteBase> assistantRoutes() => [
 class AssistantSettingRoute extends MoodiaryRouteBase {
   static const String path = '/setting/assistant_setting';
   const AssistantSettingRoute();
+  @override
+  String get location => path;
+}
+
+class AssistantSoulRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/assistant/soul';
+  const AssistantSoulRoute();
   @override
   String get location => path;
 }

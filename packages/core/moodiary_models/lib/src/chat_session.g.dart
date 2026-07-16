@@ -27,6 +27,13 @@ final ChatSessionSchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'createdAt', type: IsarType.dateTime),
       IsarPropertySchema(name: 'updatedAt', type: IsarType.dateTime),
       IsarPropertySchema(name: 'thinking', type: IsarType.bool),
+      IsarPropertySchema(name: 'compactedSummary', type: IsarType.string),
+      IsarPropertySchema(name: 'compactedUpToMessageId', type: IsarType.string),
+      IsarPropertySchema(name: 'compactedAt', type: IsarType.dateTime),
+      IsarPropertySchema(
+        name: 'compactedInputTokensAtTrigger',
+        type: IsarType.long,
+      ),
     ],
     indexes: [],
   ),
@@ -55,6 +62,32 @@ int serializeChatSession(IsarWriter writer, ChatSession object) {
     object.updatedAt.toUtc().microsecondsSinceEpoch,
   );
   IsarCore.writeBool(writer, 7, value: object.thinking);
+  {
+    final value = object.compactedSummary;
+    if (value == null) {
+      IsarCore.writeNull(writer, 8);
+    } else {
+      IsarCore.writeString(writer, 8, value);
+    }
+  }
+  {
+    final value = object.compactedUpToMessageId;
+    if (value == null) {
+      IsarCore.writeNull(writer, 9);
+    } else {
+      IsarCore.writeString(writer, 9, value);
+    }
+  }
+  IsarCore.writeLong(
+    writer,
+    10,
+    object.compactedAt?.toUtc().microsecondsSinceEpoch ?? -9223372036854775808,
+  );
+  IsarCore.writeLong(
+    writer,
+    11,
+    object.compactedInputTokensAtTrigger ?? -9223372036854775808,
+  );
   return Isar.fastHash(object.id);
 }
 
@@ -100,6 +133,31 @@ ChatSession deserializeChatSession(IsarReader reader) {
   }
   final bool _thinking;
   _thinking = IsarCore.readBool(reader, 7);
+  final String? _compactedSummary;
+  _compactedSummary = IsarCore.readString(reader, 8);
+  final String? _compactedUpToMessageId;
+  _compactedUpToMessageId = IsarCore.readString(reader, 9);
+  final DateTime? _compactedAt;
+  {
+    final value = IsarCore.readLong(reader, 10);
+    if (value == -9223372036854775808) {
+      _compactedAt = null;
+    } else {
+      _compactedAt = DateTime.fromMicrosecondsSinceEpoch(
+        value,
+        isUtc: true,
+      ).toLocal();
+    }
+  }
+  final int? _compactedInputTokensAtTrigger;
+  {
+    final value = IsarCore.readLong(reader, 11);
+    if (value == -9223372036854775808) {
+      _compactedInputTokensAtTrigger = null;
+    } else {
+      _compactedInputTokensAtTrigger = value;
+    }
+  }
   final object = ChatSession(
     id: _id,
     title: _title,
@@ -108,6 +166,10 @@ ChatSession deserializeChatSession(IsarReader reader) {
     createdAt: _createdAt,
     updatedAt: _updatedAt,
     thinking: _thinking,
+    compactedSummary: _compactedSummary,
+    compactedUpToMessageId: _compactedUpToMessageId,
+    compactedAt: _compactedAt,
+    compactedInputTokensAtTrigger: _compactedInputTokensAtTrigger,
   );
   return object;
 }
@@ -149,6 +211,31 @@ dynamic deserializeChatSessionProp(IsarReader reader, int property) {
       }
     case 7:
       return IsarCore.readBool(reader, 7);
+    case 8:
+      return IsarCore.readString(reader, 8);
+    case 9:
+      return IsarCore.readString(reader, 9);
+    case 10:
+      {
+        final value = IsarCore.readLong(reader, 10);
+        if (value == -9223372036854775808) {
+          return null;
+        } else {
+          return DateTime.fromMicrosecondsSinceEpoch(
+            value,
+            isUtc: true,
+          ).toLocal();
+        }
+      }
+    case 11:
+      {
+        final value = IsarCore.readLong(reader, 11);
+        if (value == -9223372036854775808) {
+          return null;
+        } else {
+          return value;
+        }
+      }
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -163,6 +250,10 @@ sealed class _ChatSessionUpdate {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? thinking,
+    String? compactedSummary,
+    String? compactedUpToMessageId,
+    DateTime? compactedAt,
+    int? compactedInputTokensAtTrigger,
   });
 }
 
@@ -180,6 +271,10 @@ class _ChatSessionUpdateImpl implements _ChatSessionUpdate {
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
     Object? thinking = ignore,
+    Object? compactedSummary = ignore,
+    Object? compactedUpToMessageId = ignore,
+    Object? compactedAt = ignore,
+    Object? compactedInputTokensAtTrigger = ignore,
   }) {
     return collection.updateProperties(
           [id],
@@ -190,6 +285,12 @@ class _ChatSessionUpdateImpl implements _ChatSessionUpdate {
             if (createdAt != ignore) 5: createdAt as DateTime?,
             if (updatedAt != ignore) 6: updatedAt as DateTime?,
             if (thinking != ignore) 7: thinking as bool?,
+            if (compactedSummary != ignore) 8: compactedSummary as String?,
+            if (compactedUpToMessageId != ignore)
+              9: compactedUpToMessageId as String?,
+            if (compactedAt != ignore) 10: compactedAt as DateTime?,
+            if (compactedInputTokensAtTrigger != ignore)
+              11: compactedInputTokensAtTrigger as int?,
           },
         ) >
         0;
@@ -205,6 +306,10 @@ sealed class _ChatSessionUpdateAll {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? thinking,
+    String? compactedSummary,
+    String? compactedUpToMessageId,
+    DateTime? compactedAt,
+    int? compactedInputTokensAtTrigger,
   });
 }
 
@@ -222,6 +327,10 @@ class _ChatSessionUpdateAllImpl implements _ChatSessionUpdateAll {
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
     Object? thinking = ignore,
+    Object? compactedSummary = ignore,
+    Object? compactedUpToMessageId = ignore,
+    Object? compactedAt = ignore,
+    Object? compactedInputTokensAtTrigger = ignore,
   }) {
     return collection.updateProperties(id, {
       if (title != ignore) 2: title as String?,
@@ -230,6 +339,12 @@ class _ChatSessionUpdateAllImpl implements _ChatSessionUpdateAll {
       if (createdAt != ignore) 5: createdAt as DateTime?,
       if (updatedAt != ignore) 6: updatedAt as DateTime?,
       if (thinking != ignore) 7: thinking as bool?,
+      if (compactedSummary != ignore) 8: compactedSummary as String?,
+      if (compactedUpToMessageId != ignore)
+        9: compactedUpToMessageId as String?,
+      if (compactedAt != ignore) 10: compactedAt as DateTime?,
+      if (compactedInputTokensAtTrigger != ignore)
+        11: compactedInputTokensAtTrigger as int?,
     });
   }
 }
@@ -248,6 +363,10 @@ sealed class _ChatSessionQueryUpdate {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? thinking,
+    String? compactedSummary,
+    String? compactedUpToMessageId,
+    DateTime? compactedAt,
+    int? compactedInputTokensAtTrigger,
   });
 }
 
@@ -265,6 +384,10 @@ class _ChatSessionQueryUpdateImpl implements _ChatSessionQueryUpdate {
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
     Object? thinking = ignore,
+    Object? compactedSummary = ignore,
+    Object? compactedUpToMessageId = ignore,
+    Object? compactedAt = ignore,
+    Object? compactedInputTokensAtTrigger = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (title != ignore) 2: title as String?,
@@ -273,6 +396,12 @@ class _ChatSessionQueryUpdateImpl implements _ChatSessionQueryUpdate {
       if (createdAt != ignore) 5: createdAt as DateTime?,
       if (updatedAt != ignore) 6: updatedAt as DateTime?,
       if (thinking != ignore) 7: thinking as bool?,
+      if (compactedSummary != ignore) 8: compactedSummary as String?,
+      if (compactedUpToMessageId != ignore)
+        9: compactedUpToMessageId as String?,
+      if (compactedAt != ignore) 10: compactedAt as DateTime?,
+      if (compactedInputTokensAtTrigger != ignore)
+        11: compactedInputTokensAtTrigger as int?,
     });
   }
 }
@@ -298,6 +427,10 @@ class _ChatSessionQueryBuilderUpdateImpl implements _ChatSessionQueryUpdate {
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
     Object? thinking = ignore,
+    Object? compactedSummary = ignore,
+    Object? compactedUpToMessageId = ignore,
+    Object? compactedAt = ignore,
+    Object? compactedInputTokensAtTrigger = ignore,
   }) {
     final q = query.build();
     try {
@@ -308,6 +441,12 @@ class _ChatSessionQueryBuilderUpdateImpl implements _ChatSessionQueryUpdate {
         if (createdAt != ignore) 5: createdAt as DateTime?,
         if (updatedAt != ignore) 6: updatedAt as DateTime?,
         if (thinking != ignore) 7: thinking as bool?,
+        if (compactedSummary != ignore) 8: compactedSummary as String?,
+        if (compactedUpToMessageId != ignore)
+          9: compactedUpToMessageId as String?,
+        if (compactedAt != ignore) 10: compactedAt as DateTime?,
+        if (compactedInputTokensAtTrigger != ignore)
+          11: compactedInputTokensAtTrigger as int?,
       });
     } finally {
       q.close();
@@ -1046,6 +1185,475 @@ extension ChatSessionQueryFilter
       );
     });
   }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 8));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 8));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 8, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryGreaterThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryGreaterThanOrEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryLessThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 8, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryLessThanOrEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryBetween(
+    String? lower,
+    String? upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 8,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 8,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 8,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 8, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedSummaryIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 8, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 9));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 9));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 9, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdGreaterThan(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdGreaterThanOrEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdLessThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 9, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdLessThanOrEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdBetween(
+    String? lower,
+    String? upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 9,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 9,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 9,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 9, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedUpToMessageIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 9, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 10));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedAtIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 10));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedAtGreaterThan(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedAtGreaterThanOrEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedAtLessThan(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedAtLessThanOrEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(property: 10, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedAtBetween(DateTime? lower, DateTime? upper) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(property: 10, lower: lower, upper: upper),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedInputTokensAtTriggerIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 11));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedInputTokensAtTriggerIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 11));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedInputTokensAtTriggerEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 11, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedInputTokensAtTriggerGreaterThan(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(property: 11, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedInputTokensAtTriggerGreaterThanOrEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(property: 11, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedInputTokensAtTriggerLessThan(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 11, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedInputTokensAtTriggerLessThanOrEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(property: 11, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  compactedInputTokensAtTriggerBetween(int? lower, int? upper) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(property: 11, lower: lower, upper: upper),
+      );
+    });
+  }
 }
 
 extension ChatSessionQueryObject
@@ -1152,6 +1760,61 @@ extension ChatSessionQuerySortBy
       return query.addSortBy(7, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByCompactedSummary({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  sortByCompactedSummaryDesc({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  sortByCompactedUpToMessageId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  sortByCompactedUpToMessageIdDesc({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByCompactedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByCompactedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  sortByCompactedInputTokensAtTrigger() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  sortByCompactedInputTokensAtTriggerDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11, sort: Sort.desc);
+    });
+  }
 }
 
 extension ChatSessionQuerySortThenBy
@@ -1255,6 +1918,61 @@ extension ChatSessionQuerySortThenBy
       return query.addSortBy(7, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByCompactedSummary({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  thenByCompactedSummaryDesc({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  thenByCompactedUpToMessageId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  thenByCompactedUpToMessageIdDesc({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(9, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByCompactedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByCompactedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(10, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  thenByCompactedInputTokensAtTrigger() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  thenByCompactedInputTokensAtTriggerDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11, sort: Sort.desc);
+    });
+  }
 }
 
 extension ChatSessionQueryWhereDistinct
@@ -1298,6 +2016,34 @@ extension ChatSessionQueryWhereDistinct
   QueryBuilder<ChatSession, ChatSession, QAfterDistinct> distinctByThinking() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(7);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterDistinct>
+  distinctByCompactedSummary({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(8, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterDistinct>
+  distinctByCompactedUpToMessageId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(9, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterDistinct>
+  distinctByCompactedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(10);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterDistinct>
+  distinctByCompactedInputTokensAtTrigger() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(11);
     });
   }
 }
@@ -1345,6 +2091,33 @@ extension ChatSessionQueryProperty1
       return query.addProperty(7);
     });
   }
+
+  QueryBuilder<ChatSession, String?, QAfterProperty>
+  compactedSummaryProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
+    });
+  }
+
+  QueryBuilder<ChatSession, String?, QAfterProperty>
+  compactedUpToMessageIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
+    });
+  }
+
+  QueryBuilder<ChatSession, DateTime?, QAfterProperty> compactedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(10);
+    });
+  }
+
+  QueryBuilder<ChatSession, int?, QAfterProperty>
+  compactedInputTokensAtTriggerProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
+    });
+  }
 }
 
 extension ChatSessionQueryProperty2<R>
@@ -1388,6 +2161,34 @@ extension ChatSessionQueryProperty2<R>
   QueryBuilder<ChatSession, (R, bool), QAfterProperty> thinkingProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(7);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R, String?), QAfterProperty>
+  compactedSummaryProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R, String?), QAfterProperty>
+  compactedUpToMessageIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R, DateTime?), QAfterProperty>
+  compactedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(10);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R, int?), QAfterProperty>
+  compactedInputTokensAtTriggerProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
     });
   }
 }
@@ -1438,6 +2239,34 @@ extension ChatSessionQueryProperty3<R1, R2>
       return query.addProperty(7);
     });
   }
+
+  QueryBuilder<ChatSession, (R1, R2, String?), QOperations>
+  compactedSummaryProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(8);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R1, R2, String?), QOperations>
+  compactedUpToMessageIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(9);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R1, R2, DateTime?), QOperations>
+  compactedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(10);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R1, R2, int?), QOperations>
+  compactedInputTokensAtTriggerProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
+    });
+  }
 }
 
 // **************************************************************************
@@ -1452,6 +2281,13 @@ _ChatSession _$ChatSessionFromJson(Map<String, dynamic> json) => _ChatSession(
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
   thinking: json['thinking'] as bool? ?? false,
+  compactedSummary: json['compactedSummary'] as String?,
+  compactedUpToMessageId: json['compactedUpToMessageId'] as String?,
+  compactedAt: json['compactedAt'] == null
+      ? null
+      : DateTime.parse(json['compactedAt'] as String),
+  compactedInputTokensAtTrigger: (json['compactedInputTokensAtTrigger'] as num?)
+      ?.toInt(),
 );
 
 Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
@@ -1463,4 +2299,8 @@ Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
       'thinking': instance.thinking,
+      'compactedSummary': instance.compactedSummary,
+      'compactedUpToMessageId': instance.compactedUpToMessageId,
+      'compactedAt': instance.compactedAt?.toIso8601String(),
+      'compactedInputTokensAtTrigger': instance.compactedInputTokensAtTrigger,
     };

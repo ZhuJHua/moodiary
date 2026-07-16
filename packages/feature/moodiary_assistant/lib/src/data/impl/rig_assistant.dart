@@ -45,6 +45,18 @@ class RigAssistantService implements AssistantService {
         ),
       );
     }
+    // 易变前缀拼到本轮外发消息上（不进 system，不污染缓存前缀）；history 是临时发送副本，不落库。
+    if (request.volatilePrefix.isNotEmpty && history.isNotEmpty) {
+      final last = history.last;
+      history[history.length - 1] = rust.RigChatMessage(
+        role: last.role,
+        content: last.content.isEmpty
+            ? request.volatilePrefix
+            : '${request.volatilePrefix}\n\n${last.content}',
+        imageBase64: last.imageBase64,
+        imageMime: last.imageMime,
+      );
+    }
     final config = rust.RigProviderConfig(
       protocol: request.type.id,
       apiKey: request.apiKey,
@@ -81,9 +93,8 @@ class RigAssistantService implements AssistantService {
     }
   }
 
-  /// 按文件**内容**（magic number）判定 MIME —— 「原图」质量下 saveImages 只拷字节不重编码，
-  /// 扩展名可能与真实内容不符（如 PNG 落进 .jpg），据此发给 Anthropic 会因 media_type 不符被拒。
-  /// 识别不出再按扩展名兜底。
+  /// 按文件内容（magic number）判定 MIME——扩展名可能与实际内容不符（原图质量不重编码），
+  /// 否则会因 media_type 不符被供应商拒；识别不出再按扩展名兜底。
   String _imageMime(List<int> b, String path) {
     if (b.length >= 4 &&
         b[0] == 0x89 &&

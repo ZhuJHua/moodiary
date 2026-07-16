@@ -58,5 +58,25 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
       title: l10n.assistantToolDeleteCategoryTitle,
       description: l10n.assistantToolDeleteCategoryDes,
     ),
+    AssistantTool.listMemories => (
+      icon: Icons.psychology_outlined,
+      title: l10n.assistantToolListMemoriesTitle,
+      description: l10n.assistantToolListMemoriesDes,
+    ),
+    AssistantTool.rememberFact => (
+      icon: Icons.bookmark_add_outlined,
+      title: l10n.assistantToolRememberTitle,
+      description: l10n.assistantToolRememberDes,
+    ),
+    AssistantTool.updateMemory => (
+      icon: Icons.edit_note_outlined,
+      title: l10n.assistantToolUpdateMemoryTitle,
+      description: l10n.assistantToolUpdateMemoryDes,
+    ),
+    AssistantTool.forgetFact => (
+      icon: Icons.delete_sweep_outlined,
+      title: l10n.assistantToolForgetTitle,
+      description: l10n.assistantToolForgetDes,
+    ),
   };
 }

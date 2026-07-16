@@ -1946,6 +1946,72 @@ abstract class AppLocalizations {
   /// **'助手基于 rig 构建。在「模型供应商」里自定义任意数量的服务商（OpenAI / Anthropic 兼容端点），自由切换激活项。API Key 仅保存在本机安全存储。'**
   String get assistantSettingNote;
 
+  /// No description provided for @assistantSectionSoul.
+  ///
+  /// In zh, this message translates to:
+  /// **'人格'**
+  String get assistantSectionSoul;
+
+  /// No description provided for @assistantSoulTileTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义人格（SOUL）'**
+  String get assistantSoulTileTitle;
+
+  /// No description provided for @assistantSoulTileSubtitleDefault.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用默认人格'**
+  String get assistantSoulTileSubtitleDefault;
+
+  /// No description provided for @assistantSoulTileSubtitleCustom.
+  ///
+  /// In zh, this message translates to:
+  /// **'已自定义'**
+  String get assistantSoulTileSubtitleCustom;
+
+  /// No description provided for @assistantSoulPageTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义人格'**
+  String get assistantSoulPageTitle;
+
+  /// No description provided for @assistantSoulNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'这段文字只影响助手的语气与风格，会叠加在内置的安全与工具规则之上，不能改变助手被允许做的事。留空即恢复默认人格。'**
+  String get assistantSoulNote;
+
+  /// No description provided for @assistantSoulEditorHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'用 Markdown 描述你想要的助手人格：语气、说话方式、关注点……'**
+  String get assistantSoulEditorHint;
+
+  /// No description provided for @assistantSoulSave.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存'**
+  String get assistantSoulSave;
+
+  /// No description provided for @assistantSoulSaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存人格'**
+  String get assistantSoulSaved;
+
+  /// No description provided for @assistantSoulReset.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置为默认'**
+  String get assistantSoulReset;
+
+  /// No description provided for @assistantSoulResetDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'已重置为默认人格'**
+  String get assistantSoulResetDone;
+
   /// No description provided for @assistantProviderEntryLoading.
   ///
   /// In zh, this message translates to:
@@ -2167,6 +2233,108 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'删除一个分类（仅当其下没有日记时）。'**
   String get assistantToolDeleteCategoryDes;
+
+  /// No description provided for @assistantToolListMemoriesTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看记忆'**
+  String get assistantToolListMemoriesTitle;
+
+  /// No description provided for @assistantToolListMemoriesDes.
+  ///
+  /// In zh, this message translates to:
+  /// **'列出助手保存的关于你的长期记忆（偏好、主题、目标等）。'**
+  String get assistantToolListMemoriesDes;
+
+  /// No description provided for @assistantToolRememberTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'记住事实'**
+  String get assistantToolRememberTitle;
+
+  /// No description provided for @assistantToolRememberDes.
+  ///
+  /// In zh, this message translates to:
+  /// **'把关于你的一条长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。'**
+  String get assistantToolRememberDes;
+
+  /// No description provided for @assistantToolUpdateMemoryTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新记忆'**
+  String get assistantToolUpdateMemoryTitle;
+
+  /// No description provided for @assistantToolUpdateMemoryDes.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改某条已保存记忆的内容。'**
+  String get assistantToolUpdateMemoryDes;
+
+  /// No description provided for @assistantToolForgetTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除记忆'**
+  String get assistantToolForgetTitle;
+
+  /// No description provided for @assistantToolForgetDes.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除某条已保存的记忆。'**
+  String get assistantToolForgetDes;
+
+  /// No description provided for @assistantCompactionNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'已折叠较早的消息以节省上下文'**
+  String get assistantCompactionNotice;
+
+  /// No description provided for @assistantCompactionSheetTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'上下文摘要'**
+  String get assistantCompactionSheetTitle;
+
+  /// No description provided for @assistantCompactionSheetNote.
+  ///
+  /// In zh, this message translates to:
+  /// **'为节省上下文，较早的消息已折叠成下面的摘要发送给模型。完整消息仍保留在本会话中，可随时向上翻看。'**
+  String get assistantCompactionSheetNote;
+
+  /// No description provided for @assistantCompactionRestore.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复完整历史'**
+  String get assistantCompactionRestore;
+
+  /// No description provided for @assistantMenuTooltip.
+  ///
+  /// In zh, this message translates to:
+  /// **'更多'**
+  String get assistantMenuTooltip;
+
+  /// No description provided for @assistantCompactNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'立即压缩上下文'**
+  String get assistantCompactNow;
+
+  /// No description provided for @assistantCompactionDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'已压缩较早的对话'**
+  String get assistantCompactionDone;
+
+  /// No description provided for @assistantCompactionNothing.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无可压缩的内容'**
+  String get assistantCompactionNothing;
+
+  /// No description provided for @assistantContextUsageLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'上下文占用'**
+  String get assistantContextUsageLabel;
 
   /// No description provided for @assistantToolDangerBadge.
   ///

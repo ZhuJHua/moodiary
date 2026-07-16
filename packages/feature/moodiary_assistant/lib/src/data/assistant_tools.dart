@@ -1,5 +1,6 @@
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -221,6 +222,69 @@ abstract final class AssistantToolRegistry {
       },
       run: _deleteCategory,
     ),
+    AssistantToolSpec(
+      tool: AssistantTool.listMemories,
+      description:
+          '列出你已保存的关于用户的长期记忆（每条含 id、类别、内容）。'
+          '在修改（updateMemory）或删除（forgetFact）某条记忆前，先用它获取目标 id。',
+      jsonSchema: {'type': 'object', 'properties': {}},
+      run: _listMemories,
+    ),
+    AssistantToolSpec(
+      tool: AssistantTool.rememberFact,
+      description:
+          '保存一条关于用户的长期事实（稳定的偏好、反复出现的主题或持续的目标），以便日后对话中记起。'
+          '仅在确有长期价值时使用，不要保存一次性细节或用户要求勿记的内容。',
+      jsonSchema: {
+        'type': 'object',
+        'properties': {
+          'category': {
+            'type': 'string',
+            'enum': ['preference', 'theme', 'goal', 'fact'],
+            'description': '记忆类别：preference 偏好 | theme 主题 | goal 目标 | fact 事实。',
+          },
+          'text': {'type': 'string', 'description': '要记住的事实，一句话简明陈述。'},
+        },
+        'required': ['category', 'text'],
+      },
+      run: _rememberFact,
+    ),
+    AssistantToolSpec(
+      tool: AssistantTool.updateMemory,
+      description: '按 id 修改一条已保存的记忆内容。调用前请先用 listMemories 获取目标 id。',
+      jsonSchema: {
+        'type': 'object',
+        'properties': {
+          'id': {
+            'type': 'string',
+            'description': '目标记忆的 id（来自 listMemories）。',
+          },
+          'text': {'type': 'string', 'description': '新的记忆内容。'},
+          'category': {
+            'type': 'string',
+            'enum': ['preference', 'theme', 'goal', 'fact'],
+            'description': '可选，更新记忆类别。',
+          },
+        },
+        'required': ['id', 'text'],
+      },
+      run: _updateMemory,
+    ),
+    AssistantToolSpec(
+      tool: AssistantTool.forgetFact,
+      description: '按 id 删除一条已保存的记忆。调用前请先用 listMemories 获取目标 id。',
+      jsonSchema: {
+        'type': 'object',
+        'properties': {
+          'id': {
+            'type': 'string',
+            'description': '目标记忆的 id（来自 listMemories）。',
+          },
+        },
+        'required': ['id'],
+      },
+      run: _forgetFact,
+    ),
   ];
 
   static AssistantToolSpec? byId(String id) {
@@ -231,7 +295,8 @@ abstract final class AssistantToolRegistry {
   }
 
   static Future<String> _queryDiaries(Map<String, dynamic> input) async {
-    final keywords = ((input['keywords'] as String?) ?? '')
+    final rawKeywords = ((input['keywords'] as String?) ?? '').trim();
+    final keywordsForDisplay = rawKeywords
         .split(RegExp(r'\s+'))
         .where((e) => e.isNotEmpty)
         .toList();
@@ -246,10 +311,12 @@ abstract final class AssistantToolRegistry {
 
     final repo = DiaryRepository.get();
     List<Diary> results;
-    if (keywords.isNotEmpty) {
+    if (rawKeywords.isNotEmpty) {
+      // 关键词必须走与建索引同一套 jieba 分词，否则中文按空格硬切、命中率骤降。
+      final tokenized = await Tokenizer.tokenize(text: rawKeywords);
       results = await repo.searchDiaries(
-        cutTokens: keywords,
-        cutForSearchTokens: keywords,
+        cutTokens: tokenized.cut,
+        cutForSearchTokens: tokenized.cutForSearch,
         categoryId: categoryId,
         start: start,
         end: endExclusive,
@@ -275,7 +342,12 @@ abstract final class AssistantToolRegistry {
     }
 
     if (results.isEmpty) {
-      return _emptyQueryMessage(keywords, categoryId, start, endExclusive);
+      return _emptyQueryMessage(
+        keywordsForDisplay,
+        categoryId,
+        start,
+        endExclusive,
+      );
     }
     return _formatDiaryList(results.take(limit));
   }
@@ -285,7 +357,8 @@ abstract final class AssistantToolRegistry {
     if (id == null) return '读取失败：缺少日记 id。';
 
     final diary = await DiaryRepository.get().getDiaryByBusinessId(id);
-    if (diary == null || diary.deleted) {
+    // 排除回收站/墓碑
+    if (diary == null || diary.deleted || !diary.show) {
       return '读取失败：未找到 id=$id 的日记。';
     }
     final title = diary.title.trim().isEmpty ? '(无标题)' : diary.title.trim();
@@ -407,7 +480,7 @@ abstract final class AssistantToolRegistry {
 
     final repo = DiaryRepository.get();
     final existing = await repo.getDiaryByBusinessId(id);
-    if (existing == null || existing.deleted) {
+    if (existing == null || existing.deleted || !existing.show) {
       return '修改失败：未找到 id=$id 的日记。';
     }
 
@@ -422,13 +495,28 @@ abstract final class AssistantToolRegistry {
         contentText: converted.contentText,
         type: converted.type.value,
       );
+      // 内容变更必须重算媒体引用列表，否则媒体库出现幻影条目、废弃媒体永不回收。
+      final media = DiaryContentUtil.extractMedia(updated);
+      updated = updated.copyWith(
+        imageName: media.images,
+        videoName: media.videos,
+        audioName: media.audios,
+      );
     }
     final mood = _parseMood(input['mood']);
     if (mood != null) updated = updated.copyWith(mood: mood);
     if (input.containsKey('categoryId')) {
-      updated = updated.copyWith(
-        categoryId: await _resolveCategoryId(input['categoryId']),
-      );
+      final rawCategory = (input['categoryId'] as String?)?.trim() ?? '';
+      if (rawCategory.isEmpty) {
+        updated = updated.copyWith(categoryId: null); // 显式清除归类
+      } else {
+        final resolved = await _resolveCategoryId(rawCategory);
+        // 传了非空但无效的 id 时报错、保持原归类不变，避免「无效 id 静默清空分类」。
+        if (resolved == null) {
+          return '修改失败：未找到分类 id=$rawCategory（可先用 listCategories 确认）。';
+        }
+        updated = updated.copyWith(categoryId: resolved);
+      }
     }
     updated = updated.copyWith(lastModified: DateTime.timestamp());
 
@@ -446,11 +534,20 @@ abstract final class AssistantToolRegistry {
     if (existing == null || existing.deleted) {
       return '删除失败：未找到 id=$id 的日记。';
     }
-    final ok = await repo.deleteADiary(existing.isarId);
     final title = existing.title.trim().isEmpty
         ? '(无标题)'
         : existing.title.trim();
-    return ok ? '已将日记「$title」（id=$id）移入回收站。' : '删除失败，请稍后再试。';
+    if (!existing.show) {
+      return '日记「$title」（id=$id）已在回收站中。';
+    }
+    // 软删=移入回收站(show=false)；勿用 deleteADiary(那是永久删除+删媒体)。
+    await repo.updateADiary(
+      newDiary: existing.copyWith(
+        show: false,
+        lastModified: DateTime.timestamp(),
+      ),
+    );
+    return '已将日记「$title」（id=$id）移入回收站。';
   }
 
   static Future<String> _listCategories(Map<String, dynamic> input) async {
@@ -497,6 +594,56 @@ abstract final class AssistantToolRegistry {
     final ok = (await CategoryRepository.get().deleteACategory(id).run())
         .getOrElse((_) => false);
     return ok ? '已删除分类（id=$id）。' : '删除失败：分类不存在，或其下仍有日记（请先移除 / 改归类后再删）。';
+  }
+
+  static const _validMemoryCategories = {'preference', 'theme', 'goal', 'fact'};
+
+  static Future<String> _listMemories(Map<String, dynamic> input) async {
+    final memories = await MemoryRepository.get().getAll();
+    if (memories.isEmpty) return '还没有保存任何关于用户的长期记忆。';
+    final buffer = StringBuffer();
+    for (final m in memories) {
+      buffer.writeln('id=${m.id} 类别=${m.category} 内容=${m.text}');
+    }
+    return buffer.toString().trim();
+  }
+
+  static Future<String> _rememberFact(Map<String, dynamic> input) async {
+    final text = (input['text'] as String?)?.trim() ?? '';
+    if (text.isEmpty) return '保存失败：记忆内容不能为空。';
+    final rawCat = (input['category'] as String?)?.trim() ?? 'fact';
+    final category = _validMemoryCategories.contains(rawCat) ? rawCat : 'fact';
+    final entry = MemoryEntry.create(category: category, text: text);
+    await MemoryRepository.get().put(entry);
+    return '已记住（$category）：$text（id=${entry.id}）。';
+  }
+
+  static Future<String> _updateMemory(Map<String, dynamic> input) async {
+    final id = (input['id'] as String?)?.trim() ?? '';
+    final text = (input['text'] as String?)?.trim() ?? '';
+    if (id.isEmpty || text.isEmpty) return '修改失败：缺少记忆 id 或内容。';
+    final repo = MemoryRepository.get();
+    final existing = await repo.get(id);
+    if (existing == null) return '修改失败：未找到 id=$id 的记忆。';
+    final rawCat = (input['category'] as String?)?.trim();
+    final category = (rawCat != null && _validMemoryCategories.contains(rawCat))
+        ? rawCat
+        : existing.category;
+    await repo.put(
+      existing.copyWith(
+        text: text,
+        category: category,
+        updatedAt: DateTime.timestamp(),
+      ),
+    );
+    return '已更新记忆（id=$id）：$text。';
+  }
+
+  static Future<String> _forgetFact(Map<String, dynamic> input) async {
+    final id = (input['id'] as String?)?.trim() ?? '';
+    if (id.isEmpty) return '删除失败：缺少记忆 id。';
+    final ok = await MemoryRepository.get().delete(id);
+    return ok ? '已删除记忆（id=$id）。' : '删除失败：未找到 id=$id 的记忆。';
   }
 
   static Future<String?> _resolveCategoryId(Object? raw) async {

@@ -27,6 +27,7 @@ final class IsarDatabase {
     LlmProviderSchema,
     ChatSessionSchema,
     ChatMessageSchema,
+    MemoryEntrySchema,
   ];
 
   Future<void> init() async {

@@ -16,6 +16,7 @@ export 'src/link_posting.dart';
 export 'src/llm_model_preset.dart';
 export 'src/llm_provider.dart';
 export 'src/llm_provider_preset.dart';
+export 'src/memory_entry.dart';
 export 'src/reindex_queue.dart';
 export 'src/search_posting.dart';
 export 'src/search_stats.dart';

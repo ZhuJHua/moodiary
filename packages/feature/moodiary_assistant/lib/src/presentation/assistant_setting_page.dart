@@ -8,6 +8,7 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
+import 'package:moodiary_assistant/src/data/soul_repository.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 
@@ -24,6 +25,8 @@ class AssistantSettingPage extends ConsumerWidget {
           _Note(),
           SizedBox(height: 4),
           _ProviderSection(),
+          SizedBox(height: 4),
+          _SoulSection(),
           SizedBox(height: 4),
           _ToolSection(),
           SizedBox(height: 16),
@@ -141,6 +144,61 @@ class _ProviderEntryTileState extends State<_ProviderEntryTile> {
       leading: const Icon(Icons.cloud_rounded),
       trailing: const Icon(Icons.chevron_right_rounded),
       onTap: () => const AssistantProvidersRoute().push(context),
+    );
+  }
+}
+
+class _SoulSection extends StatefulWidget {
+  const _SoulSection();
+
+  @override
+  State<_SoulSection> createState() => _SoulSectionState();
+}
+
+class _SoulSectionState extends State<_SoulSection> {
+  bool? _customized;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final customized = await SoulRepository.get().isCustomized();
+    if (mounted) setState(() => _customized = customized);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final l10n = context.l10n;
+    final subtitle = _customized == null
+        ? ''
+        : _customized!
+        ? l10n.assistantSoulTileSubtitleCustom
+        : l10n.assistantSoulTileSubtitleDefault;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SettingTitleTile(title: l10n.assistantSectionSoul),
+        Card.filled(
+          color: scheme.surfaceContainerLow,
+          margin: EdgeInsets.zero,
+          child: SettingListTile(
+            isFirst: true,
+            isLast: true,
+            title: l10n.assistantSoulTileTitle,
+            subtitle: subtitle,
+            leading: const Icon(Icons.favorite_outline),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () async {
+              await const AssistantSoulRoute().push(context);
+              await _load();
+            },
+          ),
+        ),
+      ],
     );
   }
 }

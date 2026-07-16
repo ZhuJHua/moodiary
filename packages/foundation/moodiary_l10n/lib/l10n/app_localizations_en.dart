@@ -995,6 +995,41 @@ class AppLocalizationsEn extends AppLocalizations {
       'The assistant is built on rig. Add any number of providers (OpenAI / Anthropic compatible endpoints) under Model Providers and switch the active one freely. API keys are stored only in local secure storage.';
 
   @override
+  String get assistantSectionSoul => 'Persona';
+
+  @override
+  String get assistantSoulTileTitle => 'Custom persona (SOUL)';
+
+  @override
+  String get assistantSoulTileSubtitleDefault => 'Using the default persona';
+
+  @override
+  String get assistantSoulTileSubtitleCustom => 'Customized';
+
+  @override
+  String get assistantSoulPageTitle => 'Custom persona';
+
+  @override
+  String get assistantSoulNote =>
+      'This text only shapes the assistant\'s tone and style. It layers on top of the built-in safety and tool rules and can\'t change what the assistant is allowed to do. Leave it empty to restore the default persona.';
+
+  @override
+  String get assistantSoulEditorHint =>
+      'Describe the persona you want in Markdown: tone, voice, what it pays attention to…';
+
+  @override
+  String get assistantSoulSave => 'Save';
+
+  @override
+  String get assistantSoulSaved => 'Persona saved';
+
+  @override
+  String get assistantSoulReset => 'Reset to default';
+
+  @override
+  String get assistantSoulResetDone => 'Reset to the default persona';
+
+  @override
   String get assistantProviderEntryLoading => 'Loading…';
 
   @override
@@ -1117,6 +1152,62 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get assistantToolDeleteCategoryDes =>
       'Deletes a category (only when it has no diaries).';
+
+  @override
+  String get assistantToolListMemoriesTitle => 'View memories';
+
+  @override
+  String get assistantToolListMemoriesDes =>
+      'List the long-term facts the assistant has saved about you (preferences, themes, goals).';
+
+  @override
+  String get assistantToolRememberTitle => 'Remember a fact';
+
+  @override
+  String get assistantToolRememberDes =>
+      'Save one long-term fact about you — a stable preference, a recurring theme, or an ongoing goal — to recall in later conversations.';
+
+  @override
+  String get assistantToolUpdateMemoryTitle => 'Update a memory';
+
+  @override
+  String get assistantToolUpdateMemoryDes =>
+      'Revise the content of a saved memory.';
+
+  @override
+  String get assistantToolForgetTitle => 'Forget a memory';
+
+  @override
+  String get assistantToolForgetDes => 'Delete a saved memory.';
+
+  @override
+  String get assistantCompactionNotice =>
+      'Earlier messages summarized to save context';
+
+  @override
+  String get assistantCompactionSheetTitle => 'Context summary';
+
+  @override
+  String get assistantCompactionSheetNote =>
+      'To save context, earlier messages are folded into the summary below before being sent to the model. The full messages are kept in this conversation and you can still scroll back to them.';
+
+  @override
+  String get assistantCompactionRestore => 'Send full history again';
+
+  @override
+  String get assistantMenuTooltip => 'More';
+
+  @override
+  String get assistantCompactNow => 'Compact context now';
+
+  @override
+  String get assistantCompactionDone => 'Earlier messages compacted';
+
+  @override
+  String get assistantCompactionNothing => 'Nothing to compact yet';
+
+  @override
+  String get assistantContextUsageLabel => 'Context used';
 
   @override
   String get assistantToolDangerBadge => 'Risky';

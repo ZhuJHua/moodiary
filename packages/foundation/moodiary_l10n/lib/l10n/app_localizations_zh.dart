@@ -958,6 +958,40 @@ class AppLocalizationsZh extends AppLocalizations {
       '助手基于 rig 构建。在「模型供应商」里自定义任意数量的服务商（OpenAI / Anthropic 兼容端点），自由切换激活项。API Key 仅保存在本机安全存储。';
 
   @override
+  String get assistantSectionSoul => '人格';
+
+  @override
+  String get assistantSoulTileTitle => '自定义人格（SOUL）';
+
+  @override
+  String get assistantSoulTileSubtitleDefault => '使用默认人格';
+
+  @override
+  String get assistantSoulTileSubtitleCustom => '已自定义';
+
+  @override
+  String get assistantSoulPageTitle => '自定义人格';
+
+  @override
+  String get assistantSoulNote =>
+      '这段文字只影响助手的语气与风格，会叠加在内置的安全与工具规则之上，不能改变助手被允许做的事。留空即恢复默认人格。';
+
+  @override
+  String get assistantSoulEditorHint => '用 Markdown 描述你想要的助手人格：语气、说话方式、关注点……';
+
+  @override
+  String get assistantSoulSave => '保存';
+
+  @override
+  String get assistantSoulSaved => '已保存人格';
+
+  @override
+  String get assistantSoulReset => '重置为默认';
+
+  @override
+  String get assistantSoulResetDone => '已重置为默认人格';
+
+  @override
   String get assistantProviderEntryLoading => '加载中…';
 
   @override
@@ -1073,6 +1107,59 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get assistantToolDeleteCategoryDes => '删除一个分类（仅当其下没有日记时）。';
+
+  @override
+  String get assistantToolListMemoriesTitle => '查看记忆';
+
+  @override
+  String get assistantToolListMemoriesDes => '列出助手保存的关于你的长期记忆（偏好、主题、目标等）。';
+
+  @override
+  String get assistantToolRememberTitle => '记住事实';
+
+  @override
+  String get assistantToolRememberDes =>
+      '把关于你的一条长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。';
+
+  @override
+  String get assistantToolUpdateMemoryTitle => '更新记忆';
+
+  @override
+  String get assistantToolUpdateMemoryDes => '修改某条已保存记忆的内容。';
+
+  @override
+  String get assistantToolForgetTitle => '删除记忆';
+
+  @override
+  String get assistantToolForgetDes => '删除某条已保存的记忆。';
+
+  @override
+  String get assistantCompactionNotice => '已折叠较早的消息以节省上下文';
+
+  @override
+  String get assistantCompactionSheetTitle => '上下文摘要';
+
+  @override
+  String get assistantCompactionSheetNote =>
+      '为节省上下文，较早的消息已折叠成下面的摘要发送给模型。完整消息仍保留在本会话中，可随时向上翻看。';
+
+  @override
+  String get assistantCompactionRestore => '恢复完整历史';
+
+  @override
+  String get assistantMenuTooltip => '更多';
+
+  @override
+  String get assistantCompactNow => '立即压缩上下文';
+
+  @override
+  String get assistantCompactionDone => '已压缩较早的对话';
+
+  @override
+  String get assistantCompactionNothing => '暂无可压缩的内容';
+
+  @override
+  String get assistantContextUsageLabel => '上下文占用';
 
   @override
   String get assistantToolDangerBadge => '危险';

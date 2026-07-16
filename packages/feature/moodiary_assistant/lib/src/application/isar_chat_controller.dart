@@ -28,6 +28,9 @@ const String _kOutputTokensKey = 'outputTokens';
 
 const String kPermissionSurfaceKey = 'surfaceId';
 
+/// 上下文压缩提示卡（CustomMessage）的 metadata 标记。
+const String kCompactionNoticeKey = 'compactionNotice';
+
 class IsarChatController implements ChatController {
   IsarChatController();
 
@@ -223,6 +226,14 @@ class IsarChatController implements ChatController {
     authorId: kAssistantBotId,
     createdAt: DateTime.timestamp(),
     metadata: {kPermissionSurfaceKey: surfaceId},
+  );
+
+  /// 上下文压缩提示卡：id 由水位派生（保证 loadSession 重建时幂等），不落库——靠水位重新合成。
+  CustomMessage compactionNotice(String watermarkId) => CustomMessage(
+    id: 'compaction-$watermarkId',
+    authorId: kAssistantBotId,
+    createdAt: DateTime.timestamp(),
+    metadata: {kCompactionNoticeKey: true},
   );
 
   static bool isStreaming(Message message) =>

@@ -4,6 +4,7 @@ library;
 export 'src/category_controller.dart';
 export 'src/category_repository.dart';
 export 'src/chat_repository.dart';
+export 'src/memory_repository.dart';
 export 'src/dashboard_controller.dart';
 export 'src/diary_content_util.dart';
 export 'src/diary_controller.dart';
