@@ -9,10 +9,10 @@ use anyhow::Result;
 use flutter_rust_bridge::DartFnFuture;
 use futures::StreamExt;
 use rig::OneOrMany;
-use rig::agent::{Agent, MultiTurnStreamItem, PromptHook};
+use rig::agent::{Agent, AgentBuilder, MultiTurnStreamItem};
 use rig::client::completion::CompletionClient;
 use rig::completion::message::{ImageMediaType, MimeType, UserContent};
-use rig::completion::{CompletionModel, GetTokenUsage, Message, ToolDefinition};
+use rig::completion::{CompletionModel, GetTokenUsage, Message};
 use rig::providers::{anthropic, openai};
 use rig::streaming::{StreamedAssistantContent, StreamingChat};
 use rig::tool::{ToolDyn, ToolError};
@@ -92,13 +92,12 @@ impl ToolDyn for ProxyTool {
         self.name.clone()
     }
 
-    fn definition(&self, _prompt: String) -> WasmBoxedFuture<'_, ToolDefinition> {
-        let def = ToolDefinition {
-            name: self.name.clone(),
-            description: self.description.clone(),
-            parameters: self.parameters.clone(),
-        };
-        Box::pin(async move { def })
+    fn description(&self) -> String {
+        self.description.clone()
+    }
+
+    fn parameters(&self) -> serde_json::Value {
+        self.parameters.clone()
     }
 
     fn call(&self, args: String) -> WasmBoxedFuture<'_, Result<String, ToolError>> {
@@ -188,8 +187,12 @@ pub async fn rig_chat_stream(
                 .http_client(http_client)
                 .build()
                 .map_err(|e| anyhow::anyhow!("failed to build anthropic client: {e}"))?;
-            let mut ab = client
-                .agent(&config.model)
+            // 缓存命中要求 system prompt 逐轮字节一致：易变文本一律走消息、勿进 system。
+            let model = client
+                .completion_model(&config.model)
+                .with_prompt_caching()
+                .with_automatic_caching();
+            let mut ab = AgentBuilder::new(model)
                 .preamble(&system_prompt)
                 .max_tokens(config.max_tokens as u64)
                 .tools(boxed_tools);
@@ -240,8 +243,8 @@ fn anthropic_thinking_budget(max_tokens: u32) -> u32 {
 }
 
 /// 消费 rig 的多轮流式结果，openai / anthropic 两种 agent 复用同一套逻辑。
-async fn drive<M, P>(
-    agent: Agent<M, P>,
+async fn drive<M>(
+    agent: Agent<M>,
     prompt: Message,
     history: Vec<Message>,
     sink: &StreamSink<RigStreamEvent>,
@@ -250,11 +253,11 @@ async fn drive<M, P>(
 where
     M: CompletionModel + 'static,
     M::StreamingResponse: GetTokenUsage + WasmCompatSend + Clone + Unpin,
-    P: PromptHook<M> + 'static,
 {
+    // max_turns 是「含首个调用在内的模型调用总数」（rig 0.40 语义）。
     let mut stream = agent
         .stream_chat(prompt, history)
-        .multi_turn(max_turns as usize)
+        .max_turns(max_turns as usize)
         .await;
 
     while let Some(item) = stream.next().await {

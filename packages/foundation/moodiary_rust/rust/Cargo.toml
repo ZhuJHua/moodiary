@@ -38,7 +38,7 @@ futures = "0.3"
 # AI 助手底层 agent 框架（pure Rust）。默认特性含 reqwest + derive + rustls，
 # 与既有 minio / reqwest_dav 的 rustls-tls 一致，不引入 native-tls / openssl。
 # 以 `rig` 为 crate 名引入（rig-core 的 lib 名为 rig_core，官方文档 / 示例统一用 `rig`）。
-rig = { package = "rig-core", version = "0.39", default-features = false, features = ["reqwest", "derive", "rustls"] }
+rig = { package = "rig-core", version = "0.40", default-features = false, features = ["reqwest", "derive", "rustls"] }
 serde_json = "1"
 # rig 的 reqwest 客户端在 reqwest 0.13 下默认用 rustls-platform-verifier 校验证书，
 # 该校验器在 Android 上需平台上下文初始化、否则首个 TLS 连接即 panic。直接依赖
