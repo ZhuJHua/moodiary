@@ -56,7 +56,7 @@ dependencies:
 
   flutter_displaymode: 0.7.0
   device_info_plus: 13.2.0
-  package_info_plus: 10.2.0
+  package_info_plus: 10.2.1
   url_launcher: 6.3.2
 
   intl: 0.20.2

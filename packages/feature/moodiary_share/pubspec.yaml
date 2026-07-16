@@ -23,7 +23,7 @@ dependencies:
   flutter_riverpod: 3.3.2
   go_router: 17.3.0
   path: 1.9.1
-  share_plus: 13.2.0
+  share_plus: 13.2.1
 
 dev_dependencies:
   flutter_test:

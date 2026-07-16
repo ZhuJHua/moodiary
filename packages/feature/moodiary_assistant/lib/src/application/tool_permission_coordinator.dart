@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:a2ui_core/a2ui_core.dart' as a2ui;
 import 'package:genui/genui.dart' as genui;
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 
@@ -51,23 +52,21 @@ class ToolPermissionCoordinator {
   Future<ToolPermissionDecision> request(AssistantTool tool) {
     final surfaceId = 'toolPermission#${_surfaceSeq++}';
     surfaces.handleMessage(
-      genui.CreateSurface(
+      a2ui.CreateSurfaceMessage(
         surfaceId: surfaceId,
         catalogId: assistantGenUiCatalogId,
       ),
     );
     surfaces.handleMessage(
-      genui.UpdateComponents(
+      a2ui.UpdateComponentsMessage(
         surfaceId: surfaceId,
         components: [
-          genui.Component(
-            id: 'root',
-            type: toolPermissionCardComponent,
-            properties: {
-              'tool': tool.id,
-              'status': {'path': toolPermissionStatusPath},
-            },
-          ),
+          {
+            'id': 'root',
+            'component': toolPermissionCardComponent,
+            'tool': tool.id,
+            'status': {'path': toolPermissionStatusPath},
+          },
         ],
       ),
     );
@@ -108,7 +107,7 @@ class ToolPermissionCoordinator {
   void reset() {
     cancelPending();
     for (final id in surfaces.activeSurfaceIds.toList()) {
-      surfaces.handleMessage(genui.DeleteSurface(surfaceId: id));
+      surfaces.handleMessage(a2ui.DeleteSurfaceMessage(surfaceId: id));
     }
   }
 
@@ -119,9 +118,9 @@ class ToolPermissionCoordinator {
 
   void _setStatus(String surfaceId, ToolPermissionStatus status) {
     surfaces.handleMessage(
-      genui.UpdateDataModel(
+      a2ui.UpdateDataModelMessage(
         surfaceId: surfaceId,
-        path: genui.DataPath(toolPermissionStatusPath),
+        path: toolPermissionStatusPath,
         value: status.id,
       ),
     );

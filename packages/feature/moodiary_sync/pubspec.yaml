@@ -29,7 +29,7 @@ dependencies:
   nsd: 5.0.1
   path: 1.9.1
   pool: 1.5.2
-  share_plus: 13.2.0
+  share_plus: 13.2.1
   synchronized: 3.4.1
 
 dev_dependencies:

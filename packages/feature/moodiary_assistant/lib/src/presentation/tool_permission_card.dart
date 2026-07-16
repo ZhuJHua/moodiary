@@ -72,6 +72,9 @@ final genui.CatalogItem _toolPermissionCard = genui.CatalogItem(
   },
 );
 
+/// Chat-native permission bubble: shares the assistant bubble's surface color
+/// and asymmetric tail so it reads as part of the conversation rather than a
+/// detached form. A hairline outline is the only cue that it is interactive.
 class _ToolPermissionCardView extends StatelessWidget {
   final AssistantTool tool;
 
@@ -93,111 +96,133 @@ class _ToolPermissionCardView extends StatelessWidget {
     final dangerous = tool.dangerous;
     final pending = status == ToolPermissionStatus.pending;
 
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 0,
-      color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: scheme.outlineVariant),
+    final chipColor = dangerous
+        ? scheme.errorContainer
+        : scheme.primaryContainer;
+    final onChipColor = dangerous
+        ? scheme.onErrorContainer
+        : scheme.onPrimaryContainer;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+          bottomLeft: Radius.circular(4),
+          bottomRight: Radius.circular(16),
+        ),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: dangerous
-                        ? scheme.errorContainer
-                        : scheme.primaryContainer,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    display.icon,
-                    size: 22,
-                    color: dangerous
-                        ? scheme.onErrorContainer
-                        : scheme.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(display.title, style: context.textTheme.titleMedium),
-                      Text(
-                        l10n.assistantToolPermissionTitle,
-                        style: context.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              display.description,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            if (dangerous && pending) ...[
-              const SizedBox(height: 12),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: scheme.errorContainer,
-                  borderRadius: BorderRadius.circular(10),
+                  color: chipColor,
+                  borderRadius: BorderRadius.circular(11),
                 ),
-                child: Row(
+                child: Icon(display.icon, size: 20, color: onChipColor),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.report_gmailerrorred_rounded,
-                      size: 18,
-                      color: scheme.onErrorContainer,
+                    Text(
+                      display.title,
+                      style: context.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        l10n.assistantToolPermissionDangerNote,
-                        style: TextStyle(color: scheme.onErrorContainer),
+                    Text(
+                      l10n.assistantToolPermissionTitle,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            display.description,
+            style: context.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+              height: 1.35,
+            ),
+          ),
+          if (dangerous && pending) ...[
             const SizedBox(height: 12),
-            AnimatedSize(
+            _DangerNote(text: l10n.assistantToolPermissionDangerNote),
+          ],
+          const SizedBox(height: 12),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.centerLeft,
+            child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOut,
-              alignment: Alignment.centerRight,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: pending
-                    ? _PendingActions(
-                        key: const ValueKey('pending'),
-                        dangerous: dangerous,
-                        onAction: onAction,
-                      )
-                    : Align(
-                        key: ValueKey(status),
-                        alignment: Alignment.centerRight,
-                        child: _DecisionBadge(status: status),
-                      ),
+              child: pending
+                  ? _PendingActions(
+                      key: const ValueKey('pending'),
+                      dangerous: dangerous,
+                      onAction: onAction,
+                    )
+                  : Align(
+                      key: ValueKey(status),
+                      alignment: Alignment.centerLeft,
+                      child: _DecisionBadge(status: status),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DangerNote extends StatelessWidget {
+  final String text;
+
+  const _DangerNote({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: scheme.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            size: 18,
+            color: scheme.onErrorContainer,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: scheme.onErrorContainer,
+                height: 1.3,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -226,6 +251,7 @@ class _PendingActions extends StatelessWidget {
       children: [
         TextButton(
           onPressed: () => onAction(toolPermissionActionDeny),
+          style: TextButton.styleFrom(foregroundColor: scheme.onSurfaceVariant),
           child: Text(l10n.assistantToolDeny),
         ),
         TextButton(
@@ -237,6 +263,9 @@ class _PendingActions extends StatelessWidget {
         ),
         FilledButton(
           onPressed: () => onAction(toolPermissionActionAllowOnce),
+          style: FilledButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+          ),
           child: Text(l10n.assistantToolAllowOnce),
         ),
       ],
@@ -274,13 +303,13 @@ class _DecisionBadge extends StatelessWidget {
       ),
       ToolPermissionStatus.canceled || ToolPermissionStatus.pending => (
         Icons.hourglass_disabled_rounded,
-        scheme.surfaceContainerHighest,
+        scheme.surfaceContainerHigh,
         scheme.onSurfaceVariant,
         l10n.assistantToolStatusCanceled,
       ),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: ShapeDecoration(
         color: background,
         shape: const StadiumBorder(),
@@ -288,8 +317,8 @@ class _DecisionBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: foreground),
-          const SizedBox(width: 8),
+          Icon(icon, size: 17, color: foreground),
+          const SizedBox(width: 7),
           Text(
             label,
             style: context.textTheme.labelLarge?.copyWith(color: foreground),
