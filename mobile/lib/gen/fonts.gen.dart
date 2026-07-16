@@ -8,9 +8,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: deprecated_member_use,directives_ordering,implicit_dynamic_list_literal,unnecessary_import
 
-class FontFamily {
-  FontFamily._();
-
+abstract final class FontFamily {
   /// Font family: qweather
   static const String qweather = 'qweather';
 }

@@ -122,9 +122,7 @@ class $AssetsIconLightGen {
   ];
 }
 
-class Assets {
-  const Assets._();
-
+abstract final class Assets {
   static const $AssetsIconGen icon = $AssetsIconGen();
   static const $AssetsLottieGen lottie = $AssetsLottieGen();
   static const $ResGen res = $ResGen();
