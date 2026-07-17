@@ -13,7 +13,9 @@ class WebDavFormSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => Padding(
+      // 必须用 builder 自己的 context 取 viewInsets：外层 context 的 MediaQuery
+      // 变化不会重建 builder，padding 会停在打开时的 0、表单被键盘遮住。
+      builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
@@ -68,7 +70,8 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
+      // 键盘顶起后剩余高度可能装不下整个表单（小屏/横屏），可滚动兜底。
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
