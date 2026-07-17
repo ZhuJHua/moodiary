@@ -20,4 +20,5 @@ export 'src/memory_entry.dart';
 export 'src/reindex_queue.dart';
 export 'src/search_posting.dart';
 export 'src/search_stats.dart';
+export 'src/sync_tombstone.dart';
 export 'src/utc_date_time_converter.dart';

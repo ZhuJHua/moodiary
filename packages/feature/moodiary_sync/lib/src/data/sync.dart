@@ -25,8 +25,8 @@ abstract class IRemoteSyncBackend implements SyncBackend {
   /// 与 KV `syncProvider` 对齐的 provider 类型。
   SyncProviderType get type;
 
-  /// 多后端 tombstone 跟踪用的稳定 ID（[MoodiaryKVs.tombstonePushedBackends]）。
-  /// `null` = 不参与跟踪，引擎 push tombstone 完毕即从 Isar 清除。
+  /// 多后端 tombstone 跟踪用的稳定 ID（记入 `SyncTombstone.pushedBackends`）。
+  /// `null` = 不参与跟踪，引擎 push tombstone 完毕即清除墓碑行。
   String? get persistentBackendId;
 
   /// 探测连通性 / 凭据。失败返回错误信息，成功返回 `null`。

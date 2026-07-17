@@ -24,6 +24,7 @@ final class IsarDatabase {
     LinkPostingSchema,
     DiaryIndexSnapshotSchema,
     ReindexQueueSchema,
+    SyncTombstoneSchema,
     LlmProviderSchema,
     ChatSessionSchema,
     ChatMessageSchema,

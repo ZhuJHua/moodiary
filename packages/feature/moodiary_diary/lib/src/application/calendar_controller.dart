@@ -20,10 +20,7 @@ Future<List<Diary>> monthDiaries(
   final filtered =
       list
           .where(
-            (d) =>
-                !d.deleted &&
-                d.show &&
-                (categoryId == null || d.categoryId == categoryId),
+            (d) => d.show && (categoryId == null || d.categoryId == categoryId),
           )
           .toList()
         ..sort((a, b) => b.time.compareTo(a.time));

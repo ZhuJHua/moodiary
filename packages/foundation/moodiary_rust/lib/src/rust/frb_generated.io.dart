@@ -308,9 +308,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
-  BatchWriteEntry dco_decode_batch_write_entry(dynamic raw);
-
-  @protected
   bool dco_decode_bool(dynamic raw);
 
   @protected
@@ -399,9 +396,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> dco_decode_list_String(dynamic raw);
-
-  @protected
-  List<BatchWriteEntry> dco_decode_list_batch_write_entry(dynamic raw);
 
   @protected
   List<KeyValue> dco_decode_list_key_value(dynamic raw);
@@ -718,9 +712,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
-  BatchWriteEntry sse_decode_batch_write_entry(SseDeserializer deserializer);
-
-  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
@@ -825,11 +816,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
-
-  @protected
-  List<BatchWriteEntry> sse_decode_list_batch_write_entry(
-    SseDeserializer deserializer,
-  );
 
   @protected
   List<KeyValue> sse_decode_list_key_value(SseDeserializer deserializer);
@@ -1218,12 +1204,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
-  void sse_encode_batch_write_entry(
-    BatchWriteEntry self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
@@ -1346,12 +1326,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_list_batch_write_entry(
-    List<BatchWriteEntry> self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_list_key_value(List<KeyValue> self, SseSerializer serializer);

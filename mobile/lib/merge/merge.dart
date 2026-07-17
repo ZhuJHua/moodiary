@@ -173,7 +173,6 @@ void _fixV2_6_3(String dir) {
                   '已修复${Random().nextInt(0x10000).toRadixString(16).padLeft(4, '0')}',
               lastModified: diary.lastModified,
               parentId: null,
-              deleted: false,
             ),
           );
         }
@@ -194,9 +193,7 @@ Future<void> _mergeToV2_7_3(Map<String, dynamic> parma) async {
 }
 
 /// 2.8.0 升级：旧 `type == 'text'`（实为 Quill Delta）并入富文本，仅翻 type，
-/// 解析失败再兜底包装；显式回填新增字段默认值（category `deleted=false`）
-/// ——默认值由本迁移拥有，model 不再带 defaultValue。
-/// 不更新 lastModified，避免误触发同步层的"用户编辑"判断。
+/// 解析失败再兜底包装。不更新 lastModified，避免误触发同步层的"用户编辑"判断。
 void _mergeToV2_8_0(String dir) {
   const legacyTextType = 'text';
   final isar = Isar.open(schemas: _schemas, directory: dir);
@@ -223,17 +220,6 @@ void _mergeToV2_8_0(String dir) {
         isar.diarys.put(
           diary.copyWith(content: content, type: type),
         );
-      }
-    });
-  }
-
-  final countCategory = isar.categorys.where().count();
-  for (var i = 0; i < countCategory; i += 50) {
-    final categories = isar.categorys.where().findAll(offset: i, limit: 50);
-
-    isar.write((isar) {
-      for (final category in categories) {
-        isar.categorys.put(category.copyWith(deleted: false));
       }
     });
   }

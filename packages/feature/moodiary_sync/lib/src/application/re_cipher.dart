@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
@@ -134,7 +136,15 @@ class CloudReCipher {
       final bytes = await backend.readObject(path);
       // manifest 列出但远端缺失：跳过，不计失败。
       if (bytes == null) return null;
-      final decoded = await from.decode(bytes);
+      final Object? decoded;
+      try {
+        decoded = await from.decode(bytes);
+      } on SyncException {
+        // 断点续跑：上次改写中断后重跑，对象可能已是目标编码 —— 能用新 cipher
+        // 解开即跳过；解不开才是真错误（密钥不符 / 损坏），如实上抛计入失败。
+        await to.decode(bytes);
+        return null;
+      }
       if (decoded is! Map<String, dynamic>) {
         _logger.warn(
           SyncEventKind.error,
@@ -203,7 +213,15 @@ class CloudReCipher {
           done++;
           continue;
         }
-        final plain = await from.decryptBytes(bytes);
+        final Uint8List plain;
+        try {
+          plain = await from.decryptBytes(bytes);
+        } on SyncException {
+          // 断点续跑：已是目标编码的媒体校验后跳过（同 reEncodeJson）。
+          await to.decryptBytes(bytes);
+          done++;
+          continue;
+        }
         final newBytes = await to.encryptBytes(plain);
         await backend.writeObject(path, newBytes);
         mediaCount++;

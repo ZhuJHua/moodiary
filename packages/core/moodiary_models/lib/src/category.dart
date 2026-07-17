@@ -18,10 +18,6 @@ abstract class Category with _$Category {
 
     /// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
     int? color,
-
-    /// 软删除标记（仅用于同步传播；本地 UI 经 `getAllCategories()` 过滤）。
-    /// 无 model 级默认值：旧库（<2.8.0）的回填由 [MergeUtil] 迁移显式写入。
-    @Index() required bool deleted,
   }) = _Category;
 
   const Category._();
@@ -37,7 +33,6 @@ abstract class Category with _$Category {
       lastModified: DateTime.timestamp(),
       parentId: parentId,
       color: color,
-      deleted: false,
     );
   }
 

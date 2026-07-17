@@ -6,6 +6,7 @@ import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 
 /// S3 / MinIO 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust minio SDK。
@@ -173,6 +174,10 @@ class S3SyncBackend implements IRemoteSyncBackend {
       bucket.trim(),
       useSSL ? '1' : '0',
     ]);
+    // 同 WebDavSyncBackend.configure：加密已开启时登记 keyfile 待上传。
+    if (await SyncKeyManager.loadDek() != null) {
+      await SyncKeyManager.markPendingUpload([SyncProviderType.s3.value]);
+    }
   }
 
   static bool isConfigured() {

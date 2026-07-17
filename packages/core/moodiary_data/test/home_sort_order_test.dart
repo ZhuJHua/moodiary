@@ -12,7 +12,6 @@ void main() {
     time: time,
     lastModified: modified ?? time,
     show: true,
-    deleted: false,
     mood: 0.5,
     weather: const [],
     imageName: const [],
@@ -27,7 +26,6 @@ void main() {
     id: id,
     categoryName: id,
     lastModified: DateTime(2026),
-    deleted: false,
   );
 
   group('diarySortComparator', () {

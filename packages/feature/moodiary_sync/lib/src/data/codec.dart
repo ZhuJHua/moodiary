@@ -2,36 +2,28 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 
-/// 同步层字节编/解码器。用户密钥即加密开关：配了 [MoodiarySecureKVs.userKey]
-/// → 加密，清空 → 明文。格式 `MD-ENC-V1\n` magic 头 + AES-256-GCM；
+/// 同步层字节编/解码器。持有原始 AES-256 key（数据密钥 DEK）直接加解密——
+/// 密钥的派生 / 包装 / 存取全部在 [SyncKeyManager]（信封加密：随机 DEK 加密
+/// 数据，用户密码只用来包 DEK）。格式 `MD-ENC-V1\n` magic 头 + AES-256-GCM；
 /// 密钥正确性的唯一可信源 = AES-GCM auth tag，密钥错则解密失败抛 [SyncException]。
 /// 不可变实例，构造时绑定一个 key（CloudReCipher 显式构造旧/新两个）。
 class SyncCipher {
   static const String magic = 'MD-ENC-V1\n';
 
-  /// 固定盐值。Argon2id 要求 salt >= 8 字节，且多设备须派生同一 AES key，
-  /// 故 salt 必须全用户确定、不暴露给配置。
-  static const String salt = 'moodiary';
+  /// 原始 32 字节 AES-256 key；`null` = 明文模式。
+  final List<int>? aesKey;
 
-  /// userKey → 派生 key 的进程级缓存。用 Future 让派生期间并发请求复用同一 future。
-  static final Map<String, Future<List<int>>> _keyCache = {};
+  const SyncCipher.withKey(this.aesKey);
 
-  /// `null` / 空字符串 → 明文模式。
-  final String? userKey;
+  static const SyncCipher plaintext = SyncCipher.withKey(null);
 
-  const SyncCipher(this.userKey);
+  /// 当前设备的 cipher：本机 SecureKV 里的 DEK，未配置即明文模式。
+  static Future<SyncCipher> current() => SyncKeyManager.currentCipher();
 
-  static Future<SyncCipher> current() async {
-    final raw = await MoodiarySecureKVs.userKey.get();
-    return SyncCipher((raw == null || raw.isEmpty) ? null : raw);
-  }
-
-  static const SyncCipher plaintext = SyncCipher(null);
-
-  bool get encrypted => userKey != null && userKey!.isNotEmpty;
+  bool get encrypted => aesKey != null;
 
   Future<Uint8List> encode(Object value) async {
     final plain = utf8.encode(jsonEncode(value));
@@ -72,17 +64,8 @@ class SyncCipher {
     return true;
   }
 
-  /// 调用方须先确保 [encrypted] 为真。
-  Future<List<int>> _aesKey() {
-    return _keyCache.putIfAbsent(
-      userKey!,
-      () => rust.Aes.deriveKey(salt: salt, userKey: userKey!),
-    );
-  }
-
   Future<Uint8List> _encrypt(List<int> plain) async {
-    final aesKey = await _aesKey();
-    final cipher = await rust.Aes.encrypt(key: aesKey, data: plain);
+    final cipher = await rust.Aes.encrypt(key: aesKey!, data: plain);
     return Uint8List.fromList(cipher);
   }
 
@@ -91,12 +74,11 @@ class SyncCipher {
     if (!encrypted) {
       throw const SyncException('远端文件已加密，但当前未配置用户密钥');
     }
-    final aesKey = await _aesKey();
     try {
       final magicLen = utf8.encode(magic).length;
       return Uint8List.fromList(
         await rust.Aes.decrypt(
-          key: aesKey,
+          key: aesKey!,
           encryptedData: bytes.sublist(magicLen),
         ),
       );

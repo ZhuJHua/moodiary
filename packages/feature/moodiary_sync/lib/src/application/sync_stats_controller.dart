@@ -9,10 +9,10 @@ part 'sync_stats_controller.g.dart';
 
 /// 同步状态页的「本地 / 远端数据概览」快照。
 class SyncStats {
-  /// 本地活跃日记数（不含草稿、待推 tombstone 的已删日记）。
+  /// 本地活跃日记数（已删日记的行已硬删，墓碑另存 SyncTombstone 表，不计入）。
   final int localDiaries;
 
-  /// 本地活跃分类数（不含已软删）。
+  /// 本地活跃分类数。
   final int localCategories;
 
   /// 远端来自 manifest 非 tombstone 条目计数，媒体为清单并集。
@@ -37,7 +37,7 @@ class SyncStats {
 @riverpod
 Future<SyncStats> syncStats(Ref ref) async {
   final diaries = await DiaryRepository.get().getAllDiaries();
-  final localDiaries = diaries.where((d) => !d.deleted).length;
+  final localDiaries = diaries.length;
   final localCategories =
       (await CategoryRepository.get().getAllCategories().run())
           .getOrElse((_) => const <Category>[])

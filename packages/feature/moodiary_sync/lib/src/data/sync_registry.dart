@@ -1,5 +1,6 @@
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
+import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
@@ -16,6 +17,9 @@ Future<void> registerRemoteSync() async {
     SyncProviderType.s3 => S3SyncBackend(),
   };
   getIt.registerSingleton<IRemoteSyncBackend>(backend);
+  // 后端配置可能换了服务器（backendId 只是 provider 类型）：清掉进程内的
+  // 条件写探测结论，下次抢占重新探测。
+  RemoteLease.resetCasProbeCache();
 }
 
 /// KV 中已完成配置的云后端集合。引擎据此判断 tombstone 是否覆盖所有云后端

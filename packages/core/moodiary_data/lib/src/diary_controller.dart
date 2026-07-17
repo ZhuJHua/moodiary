@@ -84,11 +84,8 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
       applyDiaryEvent(
         list,
         event,
-        // deleted=true 是同步 tombstone（永久删除后保留待推送），本地一律不可见。
         belongs: (d) =>
-            d.show &&
-            !d.deleted &&
-            (categoryId == null || d.categoryId == categoryId),
+            d.show && (categoryId == null || d.categoryId == categoryId),
         compare: diarySortComparator(_sort),
         mayHaveMore: !noMore,
       ),
@@ -136,7 +133,7 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
     final list = state.value;
     if (list == null) return;
     state = AsyncValue.data(
-      applyDiaryEvent(list, event, belongs: (d) => !d.show && !d.deleted),
+      applyDiaryEvent(list, event, belongs: (d) => !d.show),
     );
   }
 

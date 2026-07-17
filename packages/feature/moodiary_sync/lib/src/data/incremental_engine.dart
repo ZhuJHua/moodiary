@@ -12,9 +12,9 @@ import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
-import 'package:moodiary_sync/src/data/tombstone_tracker.dart';
 import 'package:pool/pool.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -23,15 +23,17 @@ import 'package:synchronized/synchronized.dart';
 /// 关键约定：
 /// - 远端布局：`manifest.json` + `diary/<id>.json` + `category/<id>.json` +
 ///   `media/<type>/<filename>`，编解码统一走 [SyncCipher]。
-/// - 差异判定：以 lastModified 毫秒戳为版本（存于 [ManifestEntry]）；
-///   `deleted=true` 写成 tombstone 条目（`d: true`，时间戳即 lastModified，
-///   不上传 body）。pull 按时间戳做 LWW，本地更新晚于 tombstone 则保留本地。
+/// - 差异判定：以 lastModified 毫秒戳为版本（存于 [ManifestEntry]）；本地删除的
+///   行已硬删，事实以 [SyncTombstone] 行承载，写成 tombstone 条目（`d: true`，
+///   时间戳即删除时刻，不上传 body）。pull 按时间戳做 LWW，本地更新晚于
+///   tombstone 则保留本地。
 /// - 媒体清单随 manifest 条目存储（[ManifestEntry.media]）：push 用全体条目并集
 ///   判断「远端已有哪些媒体」，集合外的仍 stat 兜底（中断残留）。
 /// - 上传顺序：媒体优先，全成后才写 diary JSON 和 manifest，防止「远端 JSON
 ///   引用到尚未上传的媒体」。
-/// - 多后端 tombstone 跟踪（[TombstoneTracker]）：tombstone 被所有已配置云后端
-///   接收后，才把记录从 Isar 真正清除。
+/// - 多后端 tombstone 跟踪（[SyncTombstone.pushedBackends]）：tombstone 被所有
+///   已配置云后端接收后，才清除墓碑行；日记复活时行连带清除（复活闸门在仓储
+///   事务内），历史推送记录不会误判下一次删除。
 /// - 密钥正确性交给 AES-GCM auth tag：解 manifest 失败即密钥错。
 class IncrementalSyncEngine {
   /// 已被 [_GatedBackend] 套上并发限流的后端，「在飞的网络请求」全局 <= [concurrency]。
@@ -50,6 +52,7 @@ class IncrementalSyncEngine {
   /// 本地存储端口（生产实现转发到 repository / FileUtil；测试注入内存假实现）。
   final SyncDiaryStore _diaryStore;
   final SyncCategoryStore _categoryStore;
+  final SyncTombstoneStore _tombstoneStore;
   final SyncMediaFiles _mediaFiles;
 
   /// cipher 来源，默认读 secure storage（[SyncCipher.current]）；测试可注入明文。
@@ -75,6 +78,7 @@ class IncrementalSyncEngine {
     SyncLogger? logger,
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
+    SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
     int? concurrency,
@@ -86,6 +90,7 @@ class IncrementalSyncEngine {
       logger ?? SyncLogger.get(),
       diaryStore ?? RepoSyncDiaryStore(),
       categoryStore ?? RepoSyncCategoryStore(),
+      tombstoneStore ?? RepoSyncTombstoneStore(),
       mediaFiles ?? DiskSyncMediaFiles(),
       cipherProvider ?? SyncCipher.current,
     );
@@ -97,6 +102,7 @@ class IncrementalSyncEngine {
     this._logger,
     this._diaryStore,
     this._categoryStore,
+    this._tombstoneStore,
     this._mediaFiles,
     this._cipherProvider,
   ) : _mediaGate = Pool(concurrency);
@@ -169,7 +175,11 @@ class IncrementalSyncEngine {
     return report;
   }
 
-  Future<SyncReport> _pull() async {
+  Future<SyncReport> _pull() async => (await _pullCore()).$1;
+
+  /// 除报告外返回本次读到的远端 manifest 快照，供 [sync] 在空转热路径上复用。
+  Future<(SyncReport, SyncManifest?)> _pullCore() async {
+    await _uploadPendingKeyfile();
     final sw = Stopwatch()..start();
     _logger.info(SyncEventKind.syncStart, '开始 pull', payload: {
       ..._backendPayload(),
@@ -187,11 +197,14 @@ class IncrementalSyncEngine {
         'failed': 0,
         'elapsedMs': sw.elapsedMilliseconds,
       });
-      return SyncReport(
-        diaryCount: 0,
-        categoryCount: 0,
-        elapsed: sw.elapsed,
-        warning: '远端为空（尚未上传任何备份）',
+      return (
+        SyncReport(
+          diaryCount: 0,
+          categoryCount: 0,
+          elapsed: sw.elapsed,
+          warning: '远端为空（尚未上传任何备份）',
+        ),
+        null,
       );
     }
     _logger.info(
@@ -209,6 +222,8 @@ class IncrementalSyncEngine {
     final localCategories = {
       for (final c in await categoryRepo.getAllCategoriesForSync()) c.id: c,
     };
+    // 本地墓碑快照：远端活跃条目 vs 本地删除做 LWW 时要用（删除更晚则不下载）。
+    final tombstones = _TombstoneBatch(await _tombstoneStore.getAll());
 
     // 预扫描：用快照 LWW 先算出「将要新增/更新」的条目并公布，首页立即占位/打标，
     // 不必等每条真正落库（见 [SyncPendingTracker]）。
@@ -224,16 +239,19 @@ class IncrementalSyncEngine {
         if (entry.key.startsWith(SyncKeys.diaryPrefix)) {
           final id = entry.key.substring(SyncKeys.diaryPrefix.length);
           final local = localDiaries[id];
+          final tombMs = tombstones[entry.key]?.timeMs;
           if (local == null) {
-            newDiaries.add(id);
+            // 本地墓碑更晚 = 删除会胜出，不占位。
+            if (tombMs == null || remoteMs > tombMs) newDiaries.add(id);
           } else if (remoteMs > local.lastModified.millisecondsSinceEpoch) {
             updDiaries.add(id);
           }
         } else if (entry.key.startsWith(SyncKeys.categoryPrefix)) {
           final id = entry.key.substring(SyncKeys.categoryPrefix.length);
           final local = localCategories[id];
+          final tombMs = tombstones[entry.key]?.timeMs;
           if (local == null) {
-            newCategories.add(id);
+            if (tombMs == null || remoteMs > tombMs) newCategories.add(id);
           } else if (remoteMs > local.lastModified.millisecondsSinceEpoch) {
             updCategories.add(id);
           }
@@ -247,9 +265,11 @@ class IncrementalSyncEngine {
       );
     }
 
-    // 拉到 tombstone = 当前 backend 已知此删除，记入跟踪表避免下次 push 重复推送。
+    // 拉到 tombstone = 当前 backend 已知此删除，记入墓碑行避免下次 push 重复推送。
     final trackingId = backend.persistentBackendId;
-    final tracker = TombstoneTracker.load();
+    // 云后端 pull 落库的变更远端已持有 → 事件带 fromSync，AutoSyncWatcher 免除
+    // 回声推送；归档导入 / 局域网接收（trackingId==null）仍按本地变更处理。
+    final fromSync = trackingId != null;
 
     int diaryChanged = 0;
     int categoryChanged = 0;
@@ -265,18 +285,14 @@ class IncrementalSyncEngine {
           final id = key.substring(SyncKeys.diaryPrefix.length);
           if (isTombstone) {
             final tombstoneMs = entry.value.timeMs;
-            // 快照可能过期（长 pull 期间用户可能编辑过），写入前重读做 LWW。
+            // 快照可能过期（长 pull 期间用户可能编辑/删除过），写入前重读做 LWW。
             Diary? local = localDiaries[id];
-            if (local != null && !local.deleted) {
-              local = await diaryRepo.getDiaryByBusinessId(id) ?? local;
+            if (local != null) {
+              local = await diaryRepo.getDiaryByBusinessId(id);
             }
             // LWW：本地编辑晚于 tombstone → 本地胜出，跳过（下次 push 覆盖远端）。
             if (local != null &&
-                !local.deleted &&
                 local.lastModified.millisecondsSinceEpoch > tombstoneMs) {
-              // 本地活跃版本胜出 → 清历史 tombstone 推送记录（见下方下载分支），
-              // 避免将来再次删除时被旧记录误判为已覆盖所有后端。
-              tracker.clear([id]);
               _logger.info(
                 SyncEventKind.diarySkip,
                 '本地比远端 tombstone 更新，保留本地：$id',
@@ -288,26 +304,42 @@ class IncrementalSyncEngine {
               );
               return;
             }
-            if (local != null && !local.deleted) {
-              // 先写 tombstone 再删媒体：updateADiary 紧接在上面的 LWW 重读之后、
-              // 中间无 await，故并发编辑无法在「读到旧版本」与「写 tombstone」之间
-              // 插入；媒体删除放到记录已落定之后。走 repo 而非直接写 Isar，以发出
-              // DiaryUpdated 事件、列表原地同步。
-              await diaryRepo.updateADiary(_tombstoneDiary(local));
+            // 打开中的日记不应用远端删除：行硬删会让编辑器脚下抽行（watchDiary
+            // 发 null → 报错丢稿）。跳过本条，关闭后下一轮 pull 再收敛；与 push
+            // 的 open-diary 跳过对称。
+            if (local != null && OpenDiaryRegistry.instance.contains(id)) {
+              _logger.info(
+                SyncEventKind.diarySkip,
+                '日记打开中，跳过应用远端 tombstone：$id',
+                payload: {'diaryId': id},
+              );
+              return;
+            }
+            if (local != null) {
+              // 先落墓碑（行硬删 + 墓碑行同事务）再删媒体：tombstoneDiary 紧接在
+              // 上面的 LWW 重读之后、中间无 await，故并发编辑无法在「读到旧版本」
+              // 与「写 tombstone」之间插入。走 repo 以发出 DiaryDeleted 事件、
+              // 列表原地同步。
+              tombstones.add(
+                await diaryRepo.tombstoneDiary(local, fromSync: fromSync),
+              );
               await _deleteLocalMedia(local);
               diaryChanged++;
               _logger.info(
                 SyncEventKind.diaryTombstonePull,
-                '本地软删日记：$id',
+                '本地删除日记（远端 tombstone）：$id',
                 payload: {'diaryId': id},
               );
             }
-            // 远端已知该删除（不管 local 是否存在）→ 记录当前 backend 已覆盖
-            if (trackingId != null) tracker.markPushed(id, trackingId);
+            // 远端已知该删除 → 记录当前 backend 已覆盖（本地无墓碑行则无需记录）。
+            if (trackingId != null) tombstones.markPushed(key, trackingId);
             return;
           }
           final remoteMs = entry.value.timeMs;
-          final localMs = localDiaries[id]?.lastModified.millisecondsSinceEpoch;
+          // 本地删除（墓碑）也参与 LWW：删除晚于远端活跃条目 → 保留删除。
+          final localMs =
+              localDiaries[id]?.lastModified.millisecondsSinceEpoch ??
+              tombstones[key]?.timeMs;
           if (localMs != null && remoteMs <= localMs) {
             _logger.info(
               SyncEventKind.diarySkip,
@@ -317,8 +349,8 @@ class IncrementalSyncEngine {
             // 顺带补拉本地缺失的媒体：上次 pull 可能媒体下载失败而 JSON 已落库，
             // 之后每次都走到此 skip 分支不再补。[_downloadMediaIfNeeded] 对已存在
             // 的文件只做一次本地 stat，不产生网络请求。
-            final local = localDiaries[id]!;
-            if (!local.deleted) await _pullDiaryMedia(local);
+            final local = localDiaries[id];
+            if (local != null) await _pullDiaryMedia(local);
             return;
           }
           final bytes = await backend.readObject(SyncKeys.diaryObjectPath(id));
@@ -326,10 +358,24 @@ class IncrementalSyncEngine {
           final decoded = await (await _cipher()).decode(bytes);
           if (decoded is! Map<String, dynamic>) return;
           final diary = Diary.fromJson(decoded);
-          // 快照可能过期，写入前重读做最终 LWW，防止远端旧版覆盖刚保存的内容。
+          // 对象身份校验：远端 JSON 的 id 必须与 manifest 键一致，否则损坏 / 被
+          // 篡改的对象会错位覆盖本地。
+          if (diary.id != id) {
+            failed++;
+            _logger.error(
+              SyncEventKind.error,
+              '远端日记对象身份不符，已跳过：$key',
+              payload: {'key': key, 'objectId': diary.id},
+            );
+            return;
+          }
+          // 快照可能过期，写入前重读做最终 LWW（活跃行与墓碑都要看），防止远端
+          // 旧版覆盖刚保存的内容 / 复活刚被永久删除的日记。
           final oldDiary = await diaryRepo.getDiaryByBusinessId(id);
-          if (oldDiary != null &&
-              remoteMs <= oldDiary.lastModified.millisecondsSinceEpoch) {
+          final freshMs =
+              oldDiary?.lastModified.millisecondsSinceEpoch ??
+              (await _tombstoneStore.getByKey(key))?.timeMs;
+          if (freshMs != null && remoteMs <= freshMs) {
             pending.completeDiary(id);
             _logger.info(
               SyncEventKind.diarySkip,
@@ -338,11 +384,11 @@ class IncrementalSyncEngine {
             );
             return;
           }
-          await diaryRepo.insertADiary(diary);
+          // insertADiary 在仓储事务内连带清除同 id 墓碑行（复活闸门）——历史推送
+          // 记录随行消失，将来再次删除不会被误判为「已覆盖所有后端」。
+          await diaryRepo.insertADiary(diary, fromSync: fromSync);
           pending.completeDiary(id);
-          // 该日记重新活跃 → 清历史 tombstone 推送记录，否则将来再次删除会被旧
-          // 记录误判为「已覆盖所有后端」而提前硬删，新 tombstone 推不到的后端会复活它。
-          tracker.clear([id]);
+          tombstones.remove(key);
           await _pullDiaryMedia(diary);
           if (oldDiary != null) {
             await _mediaFiles.cleanUpReplaced(oldDiary, diary);
@@ -362,11 +408,10 @@ class IncrementalSyncEngine {
             final tombstoneMs = entry.value.timeMs;
             // 与日记同理：写入前重读做 LWW（快照可能过期）。
             Category? local = localCategories[id];
-            if (local != null && !local.deleted) {
-              local = await categoryRepo.getCategoryById(id) ?? local;
+            if (local != null) {
+              local = await categoryRepo.getCategoryById(id);
             }
             if (local != null &&
-                !local.deleted &&
                 local.lastModified.millisecondsSinceEpoch > tombstoneMs) {
               _logger.info(
                 SyncEventKind.categorySkip,
@@ -375,25 +420,24 @@ class IncrementalSyncEngine {
               );
               return;
             }
-            if (local != null && !local.deleted) {
-              await categoryRepo.insertACategory(
-                local.copyWith(
-                  deleted: true,
-                  lastModified: DateTime.timestamp(),
-                ),
+            if (local != null) {
+              tombstones.add(
+                await categoryRepo.tombstoneCategory(id, fromSync: fromSync),
               );
               categoryChanged++;
               _logger.info(
                 SyncEventKind.categoryTombstonePull,
-                '本地软删分类：$id',
+                '本地删除分类（远端 tombstone）：$id',
                 payload: {'categoryId': id},
               );
             }
+            if (trackingId != null) tombstones.markPushed(key, trackingId);
             return;
           }
           final remoteMs = entry.value.timeMs;
           final localMs =
-              localCategories[id]?.lastModified.millisecondsSinceEpoch;
+              localCategories[id]?.lastModified.millisecondsSinceEpoch ??
+              tombstones[key]?.timeMs;
           if (localMs != null && remoteMs <= localMs) {
             _logger.info(
               SyncEventKind.categorySkip,
@@ -408,10 +452,12 @@ class IncrementalSyncEngine {
           if (bytes == null) return;
           final decoded = await (await _cipher()).decode(bytes);
           if (decoded is! Map<String, dynamic>) return;
-          // 写入前重读做最终 LWW（快照可能过期）。
+          // 写入前重读做最终 LWW（快照可能过期，活跃行与墓碑都要看）。
           final freshLocal = await categoryRepo.getCategoryById(id);
-          if (freshLocal != null &&
-              remoteMs <= freshLocal.lastModified.millisecondsSinceEpoch) {
+          final freshMs =
+              freshLocal?.lastModified.millisecondsSinceEpoch ??
+              (await _tombstoneStore.getByKey(key))?.timeMs;
+          if (freshMs != null && remoteMs <= freshMs) {
             pending.completeCategory(id);
             _logger.info(
               SyncEventKind.categorySkip,
@@ -420,10 +466,23 @@ class IncrementalSyncEngine {
             );
             return;
           }
+          final category = Category.fromJson(decoded);
+          if (category.id != id) {
+            failed++;
+            _logger.error(
+              SyncEventKind.error,
+              '远端分类对象身份不符，已跳过：$key',
+              payload: {'key': key, 'objectId': category.id},
+            );
+            return;
+          }
+          // insertACategory 在仓储事务内连带清除同 id 墓碑行（复活闸门）。
           final result = await categoryRepo.insertACategory(
-            Category.fromJson(decoded),
+            category,
+            fromSync: fromSync,
           );
           if (result) {
+            tombstones.remove(key);
             pending.completeCategory(id);
             categoryChanged++;
             _logger.info(
@@ -464,7 +523,7 @@ class IncrementalSyncEngine {
       pending.clear();
     }
 
-    await tracker.save();
+    await tombstones.flush(_tombstoneStore);
 
     sw.stop();
     final stopped = SyncCancellation.instance.isRequested;
@@ -482,13 +541,16 @@ class IncrementalSyncEngine {
       if (failed > 0) '$failed 个条目同步失败已跳过',
       if (stopped) '已手动停止，剩余条目将在下次同步继续',
     ].join('\n');
-    return SyncReport(
-      diaryCount: diaryChanged,
-      categoryCount: categoryChanged,
-      elapsed: sw.elapsed,
-      warning: warnings.isEmpty ? null : warnings,
-      failed: failed,
-      cancelled: stopped,
+    return (
+      SyncReport(
+        diaryCount: diaryChanged,
+        categoryCount: categoryChanged,
+        elapsed: sw.elapsed,
+        warning: warnings.isEmpty ? null : warnings,
+        failed: failed,
+        cancelled: stopped,
+      ),
+      manifest,
     );
   }
 
@@ -500,11 +562,11 @@ class IncrementalSyncEngine {
   }
 
   /// 双向同步：**同一把锁内**先 [_pull] 再 [_push]，原子完成、不与其它操作交叠。
-  /// 调私有 [_pull]/[_push]（不再各自抢锁），避免重入。
+  /// 调私有 [_pullCore]/[_push]（不再各自抢锁），避免重入。
   Future<SyncReport> sync() async {
     final report = await _exclusive(() async {
       final sw = Stopwatch()..start();
-      final pulled = await _pull();
+      final (pulled, manifest) = await _pullCore();
       // pull 阶段已被停止 → 不再进入 push。
       if (pulled.cancelled) {
         sw.stop();
@@ -517,7 +579,15 @@ class IncrementalSyncEngine {
           cancelled: true,
         );
       }
-      final pushed = await _push();
+      // 空转热路径：pull 零落库零失败时 manifest 快照仍新鲜（同一把租约内、pull
+      // 不写 manifest），复用给 push 省一次 GET+解密。有实际变更的 pull 可能耗时
+      // 较长，保守起见仍让 push 重读，缩小「读取→写回」的基线窗口。
+      final reuse =
+          manifest != null &&
+          pulled.diaryCount == 0 &&
+          pulled.categoryCount == 0 &&
+          pulled.failed == 0;
+      final pushed = await _push(preloaded: reuse ? manifest : null);
       sw.stop();
       final warnings = [pulled.warning, pushed.warning]
           .whereType<String>()
@@ -549,13 +619,25 @@ class IncrementalSyncEngine {
     return '$id:${DateTime.now().microsecondsSinceEpoch}:${_writeSeq++}';
   }
 
-  Future<SyncReport> _push() async {
+  Future<SyncReport> _push({SyncManifest? preloaded}) async {
+    await _uploadPendingKeyfile();
     final sw = Stopwatch()..start();
     _logger.info(SyncEventKind.syncStart, '开始 push', payload: {
       ..._backendPayload(),
       'direction': 'push',
     });
-    final manifest = (await _readManifest()) ?? SyncManifest.empty();
+    SyncManifest? read = preloaded;
+    var virginRemote = false;
+    if (read == null) {
+      read = await _readManifest();
+      virginRemote = read == null;
+    }
+    final manifest = read ?? SyncManifest.empty();
+    // 兜底不变量：向「空远端」推加密数据前 keys.json 必须先落地 —— 否则该后端上
+    // 只有密文没有信封，换设备后永远解不开。待上传清单是主路径，这里兜漏网。
+    if (virginRemote && (await _cipher()).encrypted) {
+      await _ensureKeyfileOnVirginRemote();
+    }
     _logger.info(
       SyncEventKind.manifestRead,
       '读到远端 manifest（${manifest.entries.length} 条）',
@@ -585,13 +667,12 @@ class IncrementalSyncEngine {
     int categoryChanged = 0;
     int failed = 0;
 
-    // 多后端 tombstone 跟踪：仅当一条日记的「已 push 集合」覆盖所有已配置云后端
-    // 后才从 Isar 清除；trackingId 为 null 则旧行为 push 完即清。
+    // 多后端 tombstone 跟踪：仅当墓碑的「已 push 集合」覆盖所有已配置云后端后才
+    // 清除墓碑行；trackingId 为 null 则旧行为 push 完即清。
     final trackingId = backend.persistentBackendId;
     final configuredBackends = configuredCloudBackendIds();
-    final tracker = TombstoneTracker.load();
-    final tombstonedIsarIds = <int>[];
-    final tombstonedDiaryIds = <String>[];
+    final tombstones = _TombstoneBatch(await _tombstoneStore.getAll());
+    final coveredTombstoneKeys = <String>[];
 
     // 已确认同步的日记 id（上传成功 / LWW 判定本地不旧于远端）→ 提交校验通过后清除
     // 其「待同步」角标。提交前抛错则不清，留待下次 push 自愈。
@@ -599,20 +680,18 @@ class IncrementalSyncEngine {
 
     // 破坏性远端操作一律推迟到 manifest「写入 + 回读校验」成功之后再执行 —— 这样
     // 一旦校验发现被并发设备覆盖（租约被绕过），本次 push 抛错中止时远端对象/媒体
-    // 都还原封不动，本地也不会硬删，绝不丢数据（对抗式审计要求）。
+    // 都还原封不动，本地墓碑也不清，绝不丢数据（对抗式审计要求）。
     final deferredObjectDeletes = <String>[];
     final deferredMediaDeletes = <String>{};
 
-    void scheduleCleanup(Diary diary) {
+    void scheduleCleanup(String key) {
       if (trackingId == null) {
-        tombstonedIsarIds.add(diary.isarId);
-        tombstonedDiaryIds.add(diary.id);
+        coveredTombstoneKeys.add(key);
         return;
       }
-      final pushed = tracker.pushedFor(diary.id);
-      if (pushed.containsAll(configuredBackends)) {
-        tombstonedIsarIds.add(diary.isarId);
-        tombstonedDiaryIds.add(diary.id);
+      final pushed = tombstones[key]?.pushedBackends ?? const <String>[];
+      if (pushed.toSet().containsAll(configuredBackends)) {
+        coveredTombstoneKeys.add(key);
       }
     }
 
@@ -621,57 +700,6 @@ class IncrementalSyncEngine {
       if (SyncCancellation.instance.isRequested) return;
       final key = SyncKeys.diary(diary.id);
       final remoteEntry = manifest.entries[key];
-
-      if (diary.deleted) {
-        // 已是 tombstone 或远端从未同步过 → 当前 backend 视为已覆盖此删除；
-        // remoteEntry==null 不写 tombstone（无数据可指代），已是 tombstone 不重复写。
-        if (remoteEntry == null || remoteEntry.deleted) {
-          if (trackingId != null) tracker.markPushed(diary.id, trackingId);
-          scheduleCleanup(diary);
-          return;
-        }
-        // LWW：远端是普通条目且不旧于本地删除时间 → 远端有更新的编辑（多半来自别的
-        // 设备），本地这条过期删除不得覆盖它，否则会用旧 tombstone 抹掉远端更新内容、
-        // 造成丢数据。与普通更新路径的 LWW 对称。跳过后不标记 pushed / 不安排硬删；
-        // 下次 pull 会按 LWW 把更新的远端版本拉回、本地复活。
-        if (remoteEntry.timeMs >= diary.lastModified.millisecondsSinceEpoch) {
-          _logger.info(
-            SyncEventKind.diarySkip,
-            '远端比本地删除更新，跳过推送 tombstone：${diary.id}',
-            payload: {
-              'diaryId': diary.id,
-              'remoteMs': remoteEntry.timeMs,
-              'localDeleteMs': diary.lastModified.millisecondsSinceEpoch,
-            },
-          );
-          return;
-        }
-        // 远端是普通条目 → 该 backend 真同步过该日记，推 tombstone。
-        // 先写 tombstone 条目（让 stillReferenced 判定不含本条旧引用），删 JSON / 媒体
-        // 都推迟到 manifest 提交校验后执行（manifest 即删除事实的权威记录）。
-        updated.entries[key] = ManifestEntry(
-          timeMs: diary.lastModified.millisecondsSinceEpoch,
-          deleted: true,
-        );
-        deferredObjectDeletes.add(SyncKeys.diaryObjectPath(diary.id));
-        final staleRefs = remoteEntry.media
-            .where((r) => !stillReferenced(r))
-            .toList();
-        deferredMediaDeletes.addAll(staleRefs);
-        remoteMedia.removeAll(staleRefs);
-        if (trackingId != null) tracker.markPushed(diary.id, trackingId);
-        diaryChanged++;
-        _logger.info(
-          SyncEventKind.diaryTombstonePush,
-          '推送日记 tombstone：${diary.id}',
-          payload: {
-            'diaryId': diary.id,
-            'tombstoneAt': diary.lastModified.toIso8601String(),
-          },
-        );
-        scheduleCleanup(diary);
-        return;
-      }
 
       // 普通更新：用远端条目时间戳（含 tombstone 删除时间）做 LWW。
       final remoteMs = remoteEntry?.timeMs;
@@ -735,34 +763,6 @@ class IncrementalSyncEngine {
       if (SyncCancellation.instance.isRequested) return;
       final key = SyncKeys.category(category.id);
       final remoteEntry = manifest.entries[key];
-      if (category.deleted) {
-        // 远端从未同步过 / 已是 tombstone → 无需推送（与日记删除路径对称）。
-        if (remoteEntry == null || remoteEntry.deleted) return;
-        // LWW：远端普通条目且不旧于本地删除 → 远端有更新编辑（多半来自别的设备），
-        // 本地这条过期删除不得覆盖它（契约二，与日记删除路径对称）。
-        if (remoteEntry.timeMs >=
-            category.lastModified.millisecondsSinceEpoch) {
-          _logger.info(
-            SyncEventKind.categorySkip,
-            '远端分类比本地删除更新，跳过推送 tombstone：${category.id}',
-            payload: {'categoryId': category.id},
-          );
-          return;
-        }
-        // JSON 删除推迟到 manifest 提交校验后执行。
-        deferredObjectDeletes.add(SyncKeys.categoryObjectPath(category.id));
-        updated.entries[key] = ManifestEntry(
-          timeMs: category.lastModified.millisecondsSinceEpoch,
-          deleted: true,
-        );
-        categoryChanged++;
-        _logger.info(
-          SyncEventKind.categoryTombstonePush,
-          '推送分类 tombstone：${category.id}',
-          payload: {'categoryId': category.id},
-        );
-        return;
-      }
       final remoteMs = remoteEntry?.timeMs;
       if (remoteMs != null &&
           category.lastModified.millisecondsSinceEpoch <= remoteMs) {
@@ -800,6 +800,70 @@ class IncrementalSyncEngine {
 
     await _runPooled(categories, concurrency, pushOneCategory);
 
+    // 推送墓碑（日记 + 分类）。只改 manifest 快照 / 延迟删除清单 / 内存簿记，无
+    // 逐条网络 I/O，同步执行即可。
+    void pushOneTombstone(SyncTombstone t) {
+      final key = t.key;
+      final remoteEntry = manifest.entries[key];
+      final isDiary = t.isDiary;
+      // 已是 tombstone 或远端从未同步过 → 当前 backend 视为已覆盖此删除；
+      // remoteEntry==null 不写 tombstone（无数据可指代），已是 tombstone 不重复写。
+      if (remoteEntry == null || remoteEntry.deleted) {
+        if (trackingId != null) tombstones.markPushed(key, trackingId);
+        scheduleCleanup(key);
+        return;
+      }
+      // LWW：远端是普通条目且不旧于本地删除时间 → 远端有更新的编辑（多半来自别的
+      // 设备），本地这条过期删除不得覆盖它，否则会用旧 tombstone 抹掉远端更新内容、
+      // 造成丢数据。与普通更新路径的 LWW 对称。跳过后不标记 pushed / 不安排清墓碑；
+      // 下次 pull 会按 LWW 把更新的远端版本拉回、本地复活（复活时墓碑行连带清除）。
+      if (remoteEntry.timeMs >= t.timeMs) {
+        _logger.info(
+          isDiary ? SyncEventKind.diarySkip : SyncEventKind.categorySkip,
+          '远端比本地删除更新，跳过推送 tombstone：${t.entityId}',
+          payload: {
+            isDiary ? 'diaryId' : 'categoryId': t.entityId,
+            'remoteMs': remoteEntry.timeMs,
+            'localDeleteMs': t.timeMs,
+          },
+        );
+        return;
+      }
+      // 远端是普通条目 → 该 backend 真同步过该条目，推 tombstone。
+      // 先写 tombstone 条目（让 stillReferenced 判定不含本条旧引用），删 JSON / 媒体
+      // 都推迟到 manifest 提交校验后执行（manifest 即删除事实的权威记录）。
+      updated.entries[key] = ManifestEntry(timeMs: t.timeMs, deleted: true);
+      if (isDiary) {
+        deferredObjectDeletes.add(SyncKeys.diaryObjectPath(t.entityId));
+        final staleRefs = remoteEntry.media
+            .where((r) => !stillReferenced(r))
+            .toList();
+        deferredMediaDeletes.addAll(staleRefs);
+        remoteMedia.removeAll(staleRefs);
+        diaryChanged++;
+      } else {
+        deferredObjectDeletes.add(SyncKeys.categoryObjectPath(t.entityId));
+        categoryChanged++;
+      }
+      if (trackingId != null) tombstones.markPushed(key, trackingId);
+      _logger.info(
+        isDiary
+            ? SyncEventKind.diaryTombstonePush
+            : SyncEventKind.categoryTombstonePush,
+        '推送 tombstone：${t.entityId}',
+        payload: {
+          isDiary ? 'diaryId' : 'categoryId': t.entityId,
+          'tombstoneMs': t.timeMs,
+        },
+      );
+      scheduleCleanup(key);
+    }
+
+    for (final t in tombstones.snapshot()) {
+      if (SyncCancellation.instance.isRequested) break;
+      pushOneTombstone(t);
+    }
+
     if (diaryChanged > 0 || categoryChanged > 0) {
       // 写入带唯一 token 的 manifest，再回读校验 token 仍是自己写的。token 不一致 =
       // 另一台设备在我们之后又写了 manifest（租约被绕过/网络分区），本次 push 视为
@@ -835,12 +899,11 @@ class IncrementalSyncEngine {
         .where((r) => !stillReferenced(r))
         .toList();
     await _deleteRemoteMediaRefs(mediaToDelete);
-    // ② 硬删「全部云后端均已覆盖」的 tombstone 日记
-    if (tombstonedIsarIds.isNotEmpty) {
-      await _diaryStore.deleteDiariesByIsarIds(tombstonedIsarIds);
-      tracker.clear(tombstonedDiaryIds);
+    // ② 清除「全部已配置云后端均已覆盖」的墓碑行（行本体在删除时已硬删）。
+    for (final key in coveredTombstoneKeys) {
+      tombstones.remove(key);
     }
-    await tracker.save();
+    await tombstones.flush(_tombstoneStore);
     // 提交确认后清除已同步日记的「待同步」角标。
     for (final id in pushedDiaryIds) {
       SyncDirtyTracker.instance.clearDirty(id);
@@ -872,6 +935,41 @@ class IncrementalSyncEngine {
     );
   }
 
+  /// 空远端 + 加密模式的 keyfile 兜底：有本机缓存直接补写；没有（如 DEK 经二维码
+  /// 传入、从未见过 keyfile）则中止本次 push —— 宁可不同步，不产出解不开的远端。
+  Future<void> _ensureKeyfileOnVirginRemote() async {
+    final keyfile = SyncKeyManager.cachedKeyfile();
+    if (keyfile == null) {
+      throw const SyncException(
+        '本机没有密钥文件（keys.json）缓存，无法初始化加密远端。请在密钥管理里重设密码后重试。',
+      );
+    }
+    await SyncKeyManager.writeRemoteKeyfile(backend, keyfile);
+    final backendId = backend.persistentBackendId;
+    if (backendId != null) {
+      await SyncKeyManager.clearPendingUpload(backendId);
+    }
+    _logger.info(
+      SyncEventKind.manifestWrite,
+      '空远端初始化：已写入密钥文件 keys.json',
+      payload: _backendPayload(),
+    );
+  }
+
+  /// keyfile 补传前奏：开启加密 / 改密码时未送达本后端的 keys.json（离线 / 后配 /
+  /// 写失败）在此补传。非 pending 时零成本；失败只记日志不阻塞同步，下次再试。
+  Future<void> _uploadPendingKeyfile() async {
+    try {
+      await SyncKeyManager.uploadPendingKeyfile(backend);
+    } catch (e) {
+      _logger.warn(
+        SyncEventKind.error,
+        'keyfile 补传失败（不阻塞本次同步）',
+        payload: {..._backendPayload(), 'detail': e.toString()},
+      );
+    }
+  }
+
   Future<SyncManifest?> _readManifest() async {
     final bytes = await backend.readObject(SyncKeys.manifestPath);
     if (bytes == null) return null;
@@ -883,10 +981,6 @@ class IncrementalSyncEngine {
       throw const SyncException('远端 manifest 已损坏（非 JSON 对象），已中止同步以防丢失远端条目');
     }
     return SyncManifest.fromJson(decoded);
-  }
-
-  Diary _tombstoneDiary(Diary local) {
-    return local.copyWith(deleted: true, lastModified: DateTime.timestamp());
   }
 
   List<String> _mediaRefs(Diary diary) => [
@@ -1096,6 +1190,55 @@ class IncrementalSyncEngine {
       }),
       eagerError: false,
     );
+  }
+}
+
+/// 一次同步操作内的墓碑行内存簿记：加载全量快照，push 记录 / 新增 / 移除都先改
+/// 内存，结尾 [flush] 一次性落库（与旧 KV 版 TombstoneTracker 同一批处理形态）。
+/// 单 isolate 下修改只在 await 点交错，同步方法天然无竞态。
+class _TombstoneBatch {
+  final Map<String, SyncTombstone> _rows;
+  final Set<String> _dirty = {};
+  final Set<String> _removed = {};
+
+  _TombstoneBatch(List<SyncTombstone> all)
+    : _rows = {for (final t in all) t.key: t};
+
+  SyncTombstone? operator [](String key) => _rows[key];
+
+  /// 迭代用快照（迭代中会调 [markPushed]/[remove] 改底层 map）。
+  List<SyncTombstone> snapshot() => _rows.values.toList();
+
+  /// pull 期间新落的墓碑行（仓储已写库，这里只登记以便 markPushed 找得到）。
+  void add(SyncTombstone row) {
+    _rows[row.key] = row;
+    _removed.remove(row.key);
+  }
+
+  void markPushed(String key, String backendId) {
+    final row = _rows[key];
+    if (row == null || row.pushedBackends.contains(backendId)) return;
+    _rows[key] = SyncTombstone(
+      key: row.key,
+      timeMs: row.timeMs,
+      pushedBackends: [...row.pushedBackends, backendId],
+    );
+    _dirty.add(key);
+  }
+
+  /// 墓碑行已不再需要（已覆盖所有后端 / 该条目已复活且仓储事务已删行）。
+  void remove(String key) {
+    if (_rows.remove(key) != null) {
+      _dirty.remove(key);
+      _removed.add(key);
+    }
+  }
+
+  Future<void> flush(SyncTombstoneStore store) async {
+    await store.putAll([for (final key in _dirty) _rows[key]!]);
+    await store.deleteByKeys(_removed.toList());
+    _dirty.clear();
+    _removed.clear();
   }
 }
 

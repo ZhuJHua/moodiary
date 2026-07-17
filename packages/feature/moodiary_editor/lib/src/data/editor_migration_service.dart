@@ -37,12 +37,12 @@ class EditorMigrationService {
     );
   }
 
-  /// 待迁移：所有非 tiptap 日记（richText + 旧 markdown，含回收站，排除墓碑）。
+  /// 待迁移：所有非 tiptap 日记（richText + 旧 markdown，含回收站）。
   static Future<List<Diary>> pendingDiaries() async {
     final repo = DiaryRepository.get();
-    final all = await repo.getAllDiaries(); // 含回收站 + 墓碑
+    final all = await repo.getAllDiaries(); // 含回收站
     return all
-        .where((d) => !d.deleted && DiaryType.fromValue(d.type) != DiaryType.tiptap)
+        .where((d) => DiaryType.fromValue(d.type) != DiaryType.tiptap)
         .toList();
   }
 

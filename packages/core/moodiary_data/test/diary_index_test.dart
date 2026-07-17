@@ -85,7 +85,6 @@ Diary makeDiary(
     time: DateTime(2026, 1, 1),
     lastModified: DateTime(2026, 1, 1),
     show: true,
-    deleted: false,
     mood: 0.5,
     weather: const [],
     imageName: const [],
@@ -131,6 +130,7 @@ void main() {
         DiaryIndexSnapshotSchema,
         ReindexQueueSchema,
         CategorySchema,
+        SyncTombstoneSchema,
       ],
       directory: dir.path,
       inspector: false,
@@ -376,39 +376,22 @@ void main() {
     expect(hits.map((d) => d.id), ['short', 'long']);
   });
 
-  test('墓碑不入倒排:updateADiary 写 tombstone 清索引,重建跳过墓碑', () async {
+  test('墓碑路径:tombstoneDiaryForSync 删行 + 清索引 + 落墓碑行', () async {
     final d1 = makeDiary('d1', '苹果', title: '标题一');
     await repo.insertADiary(d1);
-    // 同步引擎的 tombstone 路径:updateADiary 收到 deleted=true
-    await repo.updateADiary(
-      newDiary: Diary(
-        id: 'd1',
-        title: '',
-        content: '',
-        contentText: '',
-        time: d1.time,
-        lastModified: DateTime(2026, 2, 1),
-        show: true,
-        deleted: true,
-        mood: 0.5,
-        weather: const [],
-        imageName: const [],
-        audioName: const [],
-        videoName: const [],
-        tags: const [],
-        position: const [],
-        type: 'tiptap',
-      ),
-    );
+    // 同步引擎的 tombstone 路径:行硬删,删除事实落 SyncTombstone 表
+    final tombstone = await repo.tombstoneDiaryForSync(d1);
+    expect(tombstone.key, 'd:d1');
     expect(await search('苹果'), isEmpty);
+    expect(await isar.diarys.getAsync(d1.isarId), isNull);
     expect(await isar.diaryIndexSnapshots.getAsync(d1.isarId), isNull);
     expect((await isar.searchStats.getAsync(0))?.docCount, 0);
+    expect(await isar.syncTombstones.getAsync(tombstone.isarId), isNotNull);
 
-    // 重建也不会把墓碑捞回来
-    await repo.insertADiary(makeDiary('d2', '香蕉'));
-    expect(await repo.rebuildAllIndexes(), 1);
-    expect(await search('苹果'), isEmpty);
-    expect((await isar.searchStats.getAsync(0))?.docCount, 1);
+    // 重新插入同 id(pull 复活)→ 墓碑行连带清除
+    await repo.insertADiary(d1);
+    expect(await isar.syncTombstones.getAsync(tombstone.isarId), isNull);
+    expect((await search('苹果')).map((d) => d.id), ['d1']);
   });
 
   test('SearchStats 随增删改与重建保持一致', () async {

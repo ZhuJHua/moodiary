@@ -16,9 +16,7 @@ T _$identity<T>(T value) => value;
 mixin _$Category {
 
 @Id() String get id; String get categoryName;@UtcDateTimeConverter() DateTime get lastModified; String? get parentId;/// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
- int? get color;/// 软删除标记（仅用于同步传播；本地 UI 经 `getAllCategories()` 过滤）。
-/// 无 model 级默认值：旧库（<2.8.0）的回填由 [MergeUtil] 迁移显式写入。
-@Index() bool get deleted;
+ int? get color;
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,16 +29,16 @@ $CategoryCopyWith<Category> get copyWith => _$CategoryCopyWithImpl<Category>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Category&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.color, color) || other.color == color)&&(identical(other.deleted, deleted) || other.deleted == deleted));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Category&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.color, color) || other.color == color));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryName,lastModified,parentId,color,deleted);
+int get hashCode => Object.hash(runtimeType,id,categoryName,lastModified,parentId,color);
 
 @override
 String toString() {
-  return 'Category(id: $id, categoryName: $categoryName, lastModified: $lastModified, parentId: $parentId, color: $color, deleted: $deleted)';
+  return 'Category(id: $id, categoryName: $categoryName, lastModified: $lastModified, parentId: $parentId, color: $color)';
 }
 
 
@@ -51,7 +49,7 @@ abstract mixin class $CategoryCopyWith<$Res>  {
   factory $CategoryCopyWith(Category value, $Res Function(Category) _then) = _$CategoryCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color,@Index() bool deleted
+@Id() String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color
 });
 
 
@@ -68,15 +66,14 @@ class _$CategoryCopyWithImpl<$Res>
 
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? categoryName = null,Object? lastModified = null,Object? parentId = freezed,Object? color = freezed,Object? deleted = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? categoryName = null,Object? lastModified = null,Object? parentId = freezed,Object? color = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,categoryName: null == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
 as String,lastModified: null == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
 as DateTime,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
 as String?,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
-as int?,deleted: null == deleted ? _self.deleted : deleted // ignore: cast_nullable_to_non_nullable
-as bool,
+as int?,
   ));
 }
 
@@ -161,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color, @Index()  bool deleted)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Category() when $default != null:
-return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color,_that.deleted);case _:
+return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color);case _:
   return orElse();
 
 }
@@ -182,10 +179,10 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color, @Index()  bool deleted)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)  $default,) {final _that = this;
 switch (_that) {
 case _Category():
-return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color,_that.deleted);case _:
+return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +199,10 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color, @Index()  bool deleted)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String categoryName, @UtcDateTimeConverter()  DateTime lastModified,  String? parentId,  int? color)?  $default,) {final _that = this;
 switch (_that) {
 case _Category() when $default != null:
-return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color,_that.deleted);case _:
+return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_that.color);case _:
   return null;
 
 }
@@ -217,7 +214,7 @@ return $default(_that.id,_that.categoryName,_that.lastModified,_that.parentId,_t
 @JsonSerializable()
 
 class _Category extends Category {
-  const _Category({@Id() required this.id, required this.categoryName, @UtcDateTimeConverter() required this.lastModified, this.parentId, this.color, @Index() required this.deleted}): super._();
+  const _Category({@Id() required this.id, required this.categoryName, @UtcDateTimeConverter() required this.lastModified, this.parentId, this.color}): super._();
   factory _Category.fromJson(Map<String, dynamic> json) => _$CategoryFromJson(json);
 
 @override@Id() final  String id;
@@ -226,9 +223,6 @@ class _Category extends Category {
 @override final  String? parentId;
 /// 卡片/标签用的 ARGB 颜色；null = 未设置（由 categoryColorOf 回退到派生色）。
 @override final  int? color;
-/// 软删除标记（仅用于同步传播；本地 UI 经 `getAllCategories()` 过滤）。
-/// 无 model 级默认值：旧库（<2.8.0）的回填由 [MergeUtil] 迁移显式写入。
-@override@Index() final  bool deleted;
 
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
@@ -243,16 +237,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Category&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.color, color) || other.color == color)&&(identical(other.deleted, deleted) || other.deleted == deleted));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Category&&(identical(other.id, id) || other.id == id)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.lastModified, lastModified) || other.lastModified == lastModified)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.color, color) || other.color == color));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,categoryName,lastModified,parentId,color,deleted);
+int get hashCode => Object.hash(runtimeType,id,categoryName,lastModified,parentId,color);
 
 @override
 String toString() {
-  return 'Category(id: $id, categoryName: $categoryName, lastModified: $lastModified, parentId: $parentId, color: $color, deleted: $deleted)';
+  return 'Category(id: $id, categoryName: $categoryName, lastModified: $lastModified, parentId: $parentId, color: $color)';
 }
 
 
@@ -263,7 +257,7 @@ abstract mixin class _$CategoryCopyWith<$Res> implements $CategoryCopyWith<$Res>
   factory _$CategoryCopyWith(_Category value, $Res Function(_Category) _then) = __$CategoryCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color,@Index() bool deleted
+@Id() String id, String categoryName,@UtcDateTimeConverter() DateTime lastModified, String? parentId, int? color
 });
 
 
@@ -280,15 +274,14 @@ class __$CategoryCopyWithImpl<$Res>
 
 /// Create a copy of Category
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? categoryName = null,Object? lastModified = null,Object? parentId = freezed,Object? color = freezed,Object? deleted = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? categoryName = null,Object? lastModified = null,Object? parentId = freezed,Object? color = freezed,}) {
   return _then(_Category(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,categoryName: null == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
 as String,lastModified: null == lastModified ? _self.lastModified : lastModified // ignore: cast_nullable_to_non_nullable
 as DateTime,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
 as String?,color: freezed == color ? _self.color : color // ignore: cast_nullable_to_non_nullable
-as int?,deleted: null == deleted ? _self.deleted : deleted // ignore: cast_nullable_to_non_nullable
-as bool,
+as int?,
   ));
 }
 

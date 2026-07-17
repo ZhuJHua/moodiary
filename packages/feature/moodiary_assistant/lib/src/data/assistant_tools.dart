@@ -357,8 +357,8 @@ abstract final class AssistantToolRegistry {
     if (id == null) return '读取失败：缺少日记 id。';
 
     final diary = await DiaryRepository.get().getDiaryByBusinessId(id);
-    // 排除回收站/墓碑
-    if (diary == null || diary.deleted || !diary.show) {
+    // 排除回收站
+    if (diary == null || !diary.show) {
       return '读取失败：未找到 id=$id 的日记。';
     }
     final title = diary.title.trim().isEmpty ? '(无标题)' : diary.title.trim();
@@ -480,7 +480,7 @@ abstract final class AssistantToolRegistry {
 
     final repo = DiaryRepository.get();
     final existing = await repo.getDiaryByBusinessId(id);
-    if (existing == null || existing.deleted || !existing.show) {
+    if (existing == null || !existing.show) {
       return '修改失败：未找到 id=$id 的日记。';
     }
 
@@ -531,7 +531,7 @@ abstract final class AssistantToolRegistry {
 
     final repo = DiaryRepository.get();
     final existing = await repo.getDiaryByBusinessId(id);
-    if (existing == null || existing.deleted) {
+    if (existing == null) {
       return '删除失败：未找到 id=$id 的日记。';
     }
     final title = existing.title.trim().isEmpty
@@ -577,7 +577,7 @@ abstract final class AssistantToolRegistry {
 
     final repo = CategoryRepository.get();
     final existing = await repo.getCategoryById(id);
-    if (existing == null || existing.deleted) {
+    if (existing == null) {
       return '修改失败：未找到 id=$id 的分类。';
     }
     final updated = existing.copyWith(
@@ -650,7 +650,7 @@ abstract final class AssistantToolRegistry {
     final id = (raw as String?)?.trim();
     if (id == null || id.isEmpty) return null;
     final cat = await CategoryRepository.get().getCategoryById(id);
-    return (cat == null || cat.deleted) ? null : id;
+    return cat == null ? null : id;
   }
 
   static double? _parseMood(Object? raw) =>

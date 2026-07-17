@@ -355,29 +355,30 @@ class DiaryRepository {
     );
   }
 
-  Future<void> insertADiary(Diary diary) => insertDiaries([diary]);
+  /// [fromSync] = 该写入由活跃云后端的 pull 落库（远端已持有），事件携带此标记
+  /// 供 AutoSyncWatcher 免除回声推送；归档导入 / 局域网接收传 false。
+  Future<void> insertADiary(Diary diary, {bool fromSync = false}) =>
+      insertDiaries([diary], fromSync: fromSync);
 
   /// 批量插入（云 pull / JSON 导入等本地批处理入口）。posting 变更整批聚合、单事务
   /// 落库：高频词的 posting 行每批只重写一次，而逐篇 insert 会让该行随已插入篇数
   /// 线性变长地反复整行重写（O(N²)）。
-  Future<void> insertDiaries(List<Diary> diaries) async {
+  Future<void> insertDiaries(List<Diary> diaries, {bool fromSync = false}) async {
     if (diaries.isEmpty) return;
-    // 墓碑（备份里的已删日记）只落行、清倒排，不建索引。
     final entries = <_IndexEntry>[
-      for (final diary in diaries)
-        if (!diary.deleted) await _buildEntry(diary),
+      for (final diary in diaries) await _buildEntry(diary),
     ];
+    // 复活闸门：同 id 的同步墓碑连带清除，历史推送记录不会误判下一次删除。
     final tombstoneIds = [
-      for (final diary in diaries)
-        if (diary.deleted) diary.isarId,
+      for (final diary in diaries) fastHash(SyncTombstone.diaryKey(diary.id)),
     ];
     await _isar.writeAsync((isar) {
       isar.diarys.putAll(diaries);
       _applyIndexesBatch(isar, entries);
-      _clearIndexesBatch(isar, tombstoneIds);
+      isar.syncTombstones.deleteAll(tombstoneIds);
     });
     for (final diary in diaries) {
-      _events.add(DiaryCreated(diary));
+      _events.add(DiaryCreated(diary, fromSync: fromSync));
     }
   }
 
@@ -385,16 +386,6 @@ class DiaryRepository {
     required Diary newDiary,
     IndexMode index = IndexMode.inline,
   }) async {
-    // 墓碑不入倒排：与 deleteADiary / rebuildAllIndexes 保持同一不变量
-    // （已索引 ⇔ 日记存在且未删）。同步引擎写 tombstone 走的就是本方法。
-    if (newDiary.deleted) {
-      await _isar.writeAsync((isar) {
-        isar.diarys.put(newDiary);
-        _clearIndexesBatch(isar, [newDiary.isarId]);
-      });
-      _events.add(DiaryUpdated(newDiary));
-      return;
-    }
     if (index != IndexMode.inline) {
       // 编辑期：只写日记行（defer 时一并入队），分词/倒排推迟到关闭/启动排空；skip 连
       // 入队都免（内容未变，索引仍有效）。同一次 writeAsync 落盘，少一次提交。
@@ -421,8 +412,8 @@ class DiaryRepository {
   /// 调用、可与另一次排空并发（最多多做一遍）；日记已硬删则清残留倒排后出队。
   Future<void> reindexDiary(int diaryIsarId) async {
     final diary = await _isar.diarys.getAsync(diaryIsarId);
-    // 已硬删或已成墓碑：清残留倒排后出队（入队后可能被同步 tombstone）。
-    if (diary == null || diary.deleted) {
+    // 已删除（永久删除 / 同步 tombstone 后行已移除）：清残留倒排后出队。
+    if (diary == null) {
       await _isar.writeAsync((isar) {
         _clearIndexes(isar, diaryIsarId);
         isar.reindexQueues.delete(diaryIsarId);
@@ -451,7 +442,7 @@ class DiaryRepository {
     int? limit,
     DiarySort sort = DiarySort.timeDesc,
   }) async {
-    final base = _isar.diarys.where().showEqualTo(true).deletedEqualTo(false);
+    final base = _isar.diarys.where().showEqualTo(true);
     final filtered = categoryId == null
         ? base
         : base.categoryIdEqualTo(categoryId);
@@ -471,7 +462,6 @@ class DiaryRepository {
     final ids = await _isar.diarys
         .where()
         .showEqualTo(true)
-        .deletedEqualTo(false)
         .categoryIdProperty()
         .findAllAsync();
     final counts = <String, int>{};
@@ -501,7 +491,6 @@ class DiaryRepository {
         .where()
         .timeBetween(start, end)
         .showEqualTo(all)
-        .deletedEqualTo(false)
         .findAllAsync();
   }
 
@@ -514,31 +503,44 @@ class DiaryRepository {
     return _isar.diarys
         .where()
         .showEqualTo(true)
-        .deletedEqualTo(false)
         .sortByTimeDesc()
         .findAllAsync();
   }
 
-  /// 软删除：标记 deleted，清倒排索引，清理本地媒体。
+  /// 永久删除：行硬删 + 写同步墓碑（[SyncTombstone] 表，携带删除时刻做 LWW），
+  /// 清倒排索引与本地媒体。删除事实由墓碑行向同步边界传播。
   Future<bool> deleteADiary(int isarId) async {
     final diary = await _isar.diarys.getAsync(isarId);
     if (diary == null) return false;
-    await _isar.writeAsync((isar) {
-      isar.diarys.put(
-        diary.copyWith(
-          deleted: true,
-          show: true,
-          lastModified: DateTime.timestamp(),
-        ),
-      );
-      _clearIndexes(isar, isarId);
-    });
-    _events.add(DiaryUpdated(diary.copyWith(deleted: true, show: true)));
+    await _tombstoneAndDelete(diary);
     await _cleanLocalMedia(diary);
     return true;
   }
 
-  /// 硬删除（同步引擎推完 tombstone 后调用）。
+  /// 同步 pull 应用远端墓碑：与 [deleteADiary] 同一事务形态，但媒体文件由
+  /// 引擎的媒体端口清理（测试可注入），这里不动文件。返回写入的墓碑行。
+  /// [fromSync] 语义同 [insertADiary]。
+  Future<SyncTombstone> tombstoneDiaryForSync(
+    Diary diary, {
+    bool fromSync = false,
+  }) => _tombstoneAndDelete(diary, fromSync: fromSync);
+
+  Future<SyncTombstone> _tombstoneAndDelete(
+    Diary diary, {
+    bool fromSync = false,
+  }) async {
+    final isarId = diary.isarId;
+    final tombstone = SyncTombstone.forDiary(diary.id, at: DateTime.timestamp());
+    await _isar.writeAsync((isar) {
+      isar.diarys.delete(isarId);
+      _clearIndexes(isar, isarId);
+      isar.syncTombstones.put(tombstone);
+    });
+    _events.add(DiaryDeleted(isarId, fromSync: fromSync));
+    return tombstone;
+  }
+
+  /// 硬删除且不留墓碑（草稿丢弃等本地兜底路径）。
   Future<void> deleteDiariesByIsarIds(List<int> isarIds) async {
     await _isar.writeAsync((isar) {
       isar.diarys.deleteAll(isarIds);
@@ -582,19 +584,18 @@ class DiaryRepository {
     return await _isar.diarys
         .where()
         .showEqualTo(false)
-        .deletedEqualTo(false)
         .sortByTimeDesc()
         .thenByIsarIdDesc()
         .findAllAsync();
   }
 
-  /// 按类型分页取「在册」日记（排除回收站/墓碑）。
+  /// 按类型分页取「在册」日记（排除回收站）。
   Future<List<Diary>> getMediaSourceDiaries({
     required MediaType type,
     int? offset,
     int? limit,
   }) async {
-    final base = _isar.diarys.where().showEqualTo(true).deletedEqualTo(false);
+    final base = _isar.diarys.where().showEqualTo(true);
     final filtered = switch (type) {
       MediaType.image => base.imageNameIsNotEmpty(),
       MediaType.audio => base.audioNameIsNotEmpty(),
@@ -608,7 +609,7 @@ class DiaryRepository {
         .findAllAsync(offset: offset, limit: limit);
   }
 
-  /// 汇全集引用的媒体文件名（含回收站/草稿/墓碑），供孤儿清理用。
+  /// 汇全集引用的媒体文件名（含回收站/草稿），供孤儿清理用。
   Future<({Set<String> images, Set<String> audios, Set<String> videos})>
   collectReferencedMedia() async {
     final diaries = await _isar.diarys.where().findAllAsync();
@@ -705,7 +706,7 @@ class DiaryRepository {
     final allDiaries = await _isar.diarys.getAllAsync(hits.keys.toList());
     final validDiaries = allDiaries
         .whereType<Diary>()
-        .where((d) => d.show && !d.deleted)
+        .where((d) => d.show)
         .where((d) => categoryId == null || d.categoryId == categoryId)
         .where((d) => start == null || !d.time.isBefore(start))
         .where((d) => end == null || d.time.isBefore(end))
@@ -758,7 +759,7 @@ class DiaryRepository {
     return list.length > limit ? list.sublist(0, limit) : list;
   }
 
-  /// 反向链接：返回正文里双链指向 [toId] 的源日记（按时间倒序，排除草稿 / 回收站 / 已删）。
+  /// 反向链接：返回正文里双链指向 [toId] 的源日记（按时间倒序，排除草稿 / 回收站）。
   Future<List<Diary>> getBacklinks(String toId) async {
     if (toId.isEmpty) return [];
     final posting = await _isar.linkPostings.getAsync(_linkKey(toId));
@@ -767,7 +768,7 @@ class DiaryRepository {
     final diaries = await _isar.diarys.getAllAsync(unique);
     final valid = diaries
         .whereType<Diary>()
-        .where((d) => d.show && !d.deleted)
+        .where((d) => d.show)
         .toList();
     valid.sort((a, b) => b.time.compareTo(a.time));
     return valid;
@@ -786,8 +787,6 @@ class DiaryRepository {
     var contentDocCount = 0;
 
     for (final diary in diaries) {
-      // 墓碑不入倒排（与增量路径同一不变量）。
-      if (diary.deleted) continue;
       final entry = await _buildEntry(diary);
       final cutCounts = _countTokens(entry.tokens?.cut ?? const []);
       final cfsCounts = _countTokens(entry.tokens?.cutForSearch ?? const []);

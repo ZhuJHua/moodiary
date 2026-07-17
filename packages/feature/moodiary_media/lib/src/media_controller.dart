@@ -42,7 +42,7 @@ class MediaDiaries extends _$MediaDiaries with LoadMoreMixin<Diary> {
       applyDiaryEvent(
         list,
         event,
-        belongs: (d) => d.show && !d.deleted && _hasMedia(d),
+        belongs: (d) => d.show && _hasMedia(d),
         compare: diarySortComparator(DiarySort.timeDesc),
         mayHaveMore: !noMore,
       ),

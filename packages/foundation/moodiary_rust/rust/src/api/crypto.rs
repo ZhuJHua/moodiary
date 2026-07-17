@@ -13,17 +13,26 @@ use ring::{
 pub struct Aes {}
 
 impl Aes {
-    /// 把 `user_key` 经 Argon2id 派生为 32 字节 AES-256 key。参数取自 OWASP 推荐
-    /// （m=64 MiB, t=3, p=4，PC 上约 100 ms）。同一 (salt, user_key) 输出确定，多设备
-    /// 能派出同一 key；salt 固定 `"moodiary"`（同步要求确定性派生），安全性主要由 user_key 的熵决定。
-    pub fn derive_key(salt: String, user_key: String) -> Result<Vec<u8>> {
-        const M_COST_KIB: u32 = 64 * 1024;
-        const T_COST: u32 = 3;
-        const P_COST: u32 = 4;
+    /// 把 `user_key` 经 Argon2id 派生为 32 字节 key。参数缺省取 OWASP 推荐档
+    /// （m=64 MiB, t=3, p=4，PC 上约 100 ms）；同步层解包 keyfile 时按文件所记
+    /// 参数显式传入，未来升级强度不破坏旧 keyfile。同一 (salt, user_key, 参数)
+    /// 输出确定。
+    pub fn derive_key(
+        salt: String,
+        user_key: String,
+        m_cost_kib: Option<u32>,
+        t_cost: Option<u32>,
+        p_cost: Option<u32>,
+    ) -> Result<Vec<u8>> {
         const OUT_LEN: usize = 32;
 
-        let params = argon2::Params::new(M_COST_KIB, T_COST, P_COST, Some(OUT_LEN))
-            .map_err(|e| anyhow!("Argon2 参数无效: {}", e))?;
+        let params = argon2::Params::new(
+            m_cost_kib.unwrap_or(64 * 1024),
+            t_cost.unwrap_or(3),
+            p_cost.unwrap_or(4),
+            Some(OUT_LEN),
+        )
+        .map_err(|e| anyhow!("Argon2 参数无效: {}", e))?;
         let kdf = argon2::Argon2::new(
             argon2::Algorithm::Argon2id,
             argon2::Version::V0x13,
@@ -107,15 +116,16 @@ mod tests {
     fn aes_derive_key_is_deterministic() {
         let salt = "moodiary".to_string();
         let user_key = "password456".to_string();
-        let key1 = Aes::derive_key(salt.clone(), user_key.clone()).unwrap();
-        let key2 = Aes::derive_key(salt, user_key).unwrap();
+        let key1 = Aes::derive_key(salt.clone(), user_key.clone(), None, None, None).unwrap();
+        let key2 = Aes::derive_key(salt, user_key, None, None, None).unwrap();
         assert_eq!(key1, key2);
         assert_eq!(key1.len(), 32);
     }
 
     #[test]
     fn aes_encrypt_decrypt_roundtrip() {
-        let key = Aes::derive_key("moodiary".into(), "testpassword".into()).unwrap();
+        let key =
+            Aes::derive_key("moodiary".into(), "testpassword".into(), None, None, None).unwrap();
         let original_data = b"Hello Flutter Rust Bridge!".to_vec();
         let encrypted = Aes::encrypt(key.clone(), original_data.clone()).unwrap();
         let decrypted = Aes::decrypt(key, encrypted).unwrap();
@@ -124,7 +134,7 @@ mod tests {
 
     #[test]
     fn aes_derive_key_rejects_short_salt() {
-        let err = Aes::derive_key("short".into(), "any".into()).unwrap_err();
+        let err = Aes::derive_key("short".into(), "any".into(), None, None, None).unwrap_err();
         assert!(err.to_string().contains("salt"));
     }
 

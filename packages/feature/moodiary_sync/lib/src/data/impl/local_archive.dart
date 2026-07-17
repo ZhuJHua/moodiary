@@ -32,6 +32,7 @@ class LocalArchive {
       final diaries = await RepoSyncDiaryStore().getAllDiaries();
       final categories = await RepoSyncCategoryStore()
           .getAllCategoriesForSync();
+      final tombstones = await RepoSyncTombstoneStore().getAll();
       final zipPath = p.join(
         PlatformService.get().applicationCachePath,
         _fileName(DateTime.now()),
@@ -41,6 +42,7 @@ class LocalArchive {
           sink: _RustZipSink(rust.Zip(filePath: zipPath)),
           diaries: diaries,
           categories: categories,
+          tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
         );
       } catch (_) {
@@ -70,6 +72,7 @@ class LocalArchive {
       final diaries = await RepoSyncDiaryStore().getAllDiaries();
       final categories = await RepoSyncCategoryStore()
           .getAllCategoriesForSync();
+      final tombstones = await RepoSyncTombstoneStore().getAll();
       final zipPath = p.join(
         PlatformService.get().applicationCachePath,
         _fileName(DateTime.now()),
@@ -79,6 +82,7 @@ class LocalArchive {
           sink: _RustZipSink(rust.Zip(filePath: zipPath), zipPassword),
           diaries: diaries,
           categories: categories,
+          tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
           remote: remote,
         );
@@ -96,6 +100,7 @@ class LocalArchive {
   static Future<SyncManifest> buildLocalManifest() async => buildManifest(
     diaries: await RepoSyncDiaryStore().getAllDiaries(),
     categories: await RepoSyncCategoryStore().getAllCategoriesForSync(),
+    tombstones: await RepoSyncTombstoneStore().getAll(),
     mediaBaseDir: PlatformService.get().applicationSupportPath,
   );
 
@@ -104,18 +109,18 @@ class LocalArchive {
   static Future<SyncManifest> buildManifest({
     required List<Diary> diaries,
     required List<Category> categories,
+    required List<SyncTombstone> tombstones,
     required String mediaBaseDir,
   }) async {
     final entries = <String, ManifestEntry>{};
+    // 墓碑键（`d:`/`c:` 前缀）与活跃行按不变量互斥，覆盖顺序无关紧要。
+    for (final tombstone in tombstones) {
+      entries[tombstone.key] = ManifestEntry(
+        timeMs: tombstone.timeMs,
+        deleted: true,
+      );
+    }
     for (final diary in diaries) {
-      final timeMs = diary.lastModified.millisecondsSinceEpoch;
-      if (diary.deleted) {
-        entries[SyncKeys.diary(diary.id)] = ManifestEntry(
-          timeMs: timeMs,
-          deleted: true,
-        );
-        continue;
-      }
       final refs = <String>[];
       for (final (type, filename) in collectDiaryMediaEntries(diary)) {
         if (await File(p.join(mediaBaseDir, type, filename)).exists()) {
@@ -123,14 +128,13 @@ class LocalArchive {
         }
       }
       entries[SyncKeys.diary(diary.id)] = ManifestEntry(
-        timeMs: timeMs,
+        timeMs: diary.lastModified.millisecondsSinceEpoch,
         media: refs,
       );
     }
     for (final category in categories) {
       entries[SyncKeys.category(category.id)] = ManifestEntry(
         timeMs: category.lastModified.millisecondsSinceEpoch,
-        deleted: category.deleted,
       );
     }
     return SyncManifest(
@@ -151,6 +155,7 @@ class LocalArchive {
     required ArchiveSink sink,
     required List<Diary> diaries,
     required List<Category> categories,
+    required List<SyncTombstone> tombstones,
     required String mediaBaseDir,
     SyncManifest? remote,
   }) async {
@@ -158,6 +163,7 @@ class LocalArchive {
     final manifest = await buildManifest(
       diaries: diaries,
       categories: categories,
+      tombstones: tombstones,
       mediaBaseDir: mediaBaseDir,
     );
 
@@ -240,6 +246,7 @@ class LocalArchive {
     String dir, {
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
+    SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
     int? concurrency,
@@ -251,6 +258,7 @@ class LocalArchive {
       LocalArchiveBackend(dir),
       diaryStore: diaryStore,
       categoryStore: categoryStore,
+      tombstoneStore: tombstoneStore,
       mediaFiles: mediaFiles,
       cipherProvider: cipherProvider,
       concurrency: concurrency,

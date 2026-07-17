@@ -26,14 +26,14 @@ class DashboardController extends _$DashboardController {
             .getOrElse((_) => const <Category>[]);
 
     final visibleDiaries = diaries
-        .where((d) => !d.deleted && d.show)
+        .where((d) => d.show)
         .toList(growable: false);
 
     return DashboardStats(
       useDays: _useDays(),
       diaryCount: visibleDiaries.length,
       wordCount: _wordCount(visibleDiaries),
-      categoryCount: cats.where((c) => !c.deleted).length,
+      categoryCount: cats.length,
       streakDays: _streakDays(visibleDiaries),
       thisMonthCount: _thisMonthCount(visibleDiaries),
       averageMood: _averageMood(visibleDiaries),

@@ -12,20 +12,36 @@ import 'package:path/path.dart' as p;
 /// （[RepoSyncDiaryStore] / [RepoSyncCategoryStore] / [DiskSyncMediaFiles]）只是
 /// 转发到现有 repository / FileUtil，行为与重构前完全一致。
 abstract interface class SyncDiaryStore {
+  /// 全量活跃日记（含回收站；已删日记的行已硬删、事实在墓碑表）。
   Future<List<Diary>> getAllDiaries();
   Future<Diary?> getDiaryByBusinessId(String id);
-  Future<void> insertADiary(Diary diary);
-  Future<void> updateADiary(Diary newDiary);
-  Future<void> deleteDiariesByIsarIds(List<int> isarIds);
+
+  /// 落库并连带清除同 id 的墓碑行（复活闸门）。[fromSync] = 来源为活跃云后端
+  /// 的 pull（远端已持有），领域事件携带此标记以免除回声推送。
+  Future<void> insertADiary(Diary diary, {bool fromSync = false});
+
+  /// pull 应用远端墓碑：行硬删 + 写墓碑（媒体由引擎媒体端口清理），返回墓碑行。
+  Future<SyncTombstone> tombstoneDiary(Diary diary, {bool fromSync = false});
 }
 
 abstract interface class SyncCategoryStore {
-  /// 含软删的全量分类快照（同步用）。
+  /// 全量分类快照（同步用）。
   Future<List<Category>> getAllCategoriesForSync();
   Future<Category?> getCategoryById(String id);
 
-  /// 写入成功返回 `true`。
-  Future<bool> insertACategory(Category category);
+  /// 写入成功返回 `true`；落库并连带清除同 id 的墓碑行（复活闸门）。
+  Future<bool> insertACategory(Category category, {bool fromSync = false});
+
+  /// pull 应用远端分类墓碑：行硬删 + 写墓碑，返回墓碑行。
+  Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false});
+}
+
+/// 同步墓碑表端口：引擎读取全量、批量回写推送记录、清除已覆盖的行。
+abstract interface class SyncTombstoneStore {
+  Future<List<SyncTombstone>> getAll();
+  Future<SyncTombstone?> getByKey(String key);
+  Future<void> putAll(List<SyncTombstone> rows);
+  Future<void> deleteByKeys(List<String> keys);
 }
 
 /// 本地媒体文件读写（按 `type`/`filename` 寻址，[type] 为 image/audio/video）。
@@ -50,15 +66,12 @@ class RepoSyncDiaryStore implements SyncDiaryStore {
       _repo.getDiaryByBusinessId(id);
 
   @override
-  Future<void> insertADiary(Diary diary) => _repo.insertADiary(diary);
+  Future<void> insertADiary(Diary diary, {bool fromSync = false}) =>
+      _repo.insertADiary(diary, fromSync: fromSync);
 
   @override
-  Future<void> updateADiary(Diary newDiary) =>
-      _repo.updateADiary(newDiary: newDiary);
-
-  @override
-  Future<void> deleteDiariesByIsarIds(List<int> isarIds) =>
-      _repo.deleteDiariesByIsarIds(isarIds);
+  Future<SyncTombstone> tombstoneDiary(Diary diary, {bool fromSync = false}) =>
+      _repo.tombstoneDiaryForSync(diary, fromSync: fromSync);
 }
 
 class RepoSyncCategoryStore implements SyncCategoryStore {
@@ -74,10 +87,30 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   Future<Category?> getCategoryById(String id) => _repo.getCategoryById(id);
 
   @override
-  Future<bool> insertACategory(Category category) async {
-    final result = await _repo.insertACategory(category).run();
+  Future<bool> insertACategory(Category category, {bool fromSync = false}) async {
+    final result = await _repo.insertACategory(category, fromSync: fromSync).run();
     return result.isRight();
   }
+
+  @override
+  Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false}) =>
+      _repo.tombstoneCategoryForSync(id, fromSync: fromSync);
+}
+
+class RepoSyncTombstoneStore implements SyncTombstoneStore {
+  final TombstoneRepository _repo = TombstoneRepository.get();
+
+  @override
+  Future<List<SyncTombstone>> getAll() => _repo.getAll();
+
+  @override
+  Future<SyncTombstone?> getByKey(String key) => _repo.getByKey(key);
+
+  @override
+  Future<void> putAll(List<SyncTombstone> rows) => _repo.putAll(rows);
+
+  @override
+  Future<void> deleteByKeys(List<String> keys) => _repo.deleteByKeys(keys);
 }
 
 /// 生产媒体实现：默认 [LocalFileSystem]（行为同 `dart:io`），布局

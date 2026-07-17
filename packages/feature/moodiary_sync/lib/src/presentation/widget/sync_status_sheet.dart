@@ -99,7 +99,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
     final stats = ref.watch(syncStatsProvider);
     final backend = IRemoteSyncBackend.get();
     final encryption = ref
-        .watch(userKeyControllerProvider)
+        .watch(syncDekControllerProvider)
         .maybeWhen(
           data: (key) => key != null && key.isNotEmpty,
           orElse: () => false,

@@ -6,6 +6,7 @@ import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 
 /// WebDAV 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust reqwest_dav。
@@ -151,6 +152,11 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       username.trim(),
       password,
     ]);
+    // 加密已开启 → 新（重）配置的后端必须拿到 keyfile，登记待上传，下次同步补传。
+    // 否则该后端会收到加密对象而无 keys.json，换设备后永远解不开。
+    if (await SyncKeyManager.loadDek() != null) {
+      await SyncKeyManager.markPendingUpload([SyncProviderType.webdav.value]);
+    }
   }
 
   static bool isConfigured() {

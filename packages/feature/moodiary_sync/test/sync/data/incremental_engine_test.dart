@@ -29,14 +29,19 @@ void main() {
     FakeRemoteBackend backend, {
     FakeDiaryStore? diaries,
     FakeCategoryStore? categories,
+    FakeTombstoneStore? tombstones,
     FakeMediaFiles? media,
     int concurrency = 4,
   }) {
+    // 引擎与日记/分类 store 必须共享同一墓碑表（镜像真实仓储的同库不变量）。
+    final tombstoneStore =
+        tombstones ?? diaries?.tombstones ?? categories?.tombstones ?? FakeTombstoneStore();
     return IncrementalSyncEngine(
       backend,
       logger: logger,
-      diaryStore: diaries ?? FakeDiaryStore(),
-      categoryStore: categories ?? FakeCategoryStore(),
+      diaryStore: diaries ?? FakeDiaryStore(const [], tombstoneStore),
+      categoryStore: categories ?? FakeCategoryStore(const [], tombstoneStore),
+      tombstoneStore: tombstoneStore,
       mediaFiles: media ?? FakeMediaFiles(),
       cipherProvider: () async => SyncCipher.plaintext,
       concurrency: concurrency,
@@ -56,6 +61,7 @@ void main() {
       logger: logger,
       diaryStore: FakeDiaryStore(diaries.cast()),
       categoryStore: FakeCategoryStore(cats.cast()),
+      tombstoneStore: FakeTombstoneStore(),
       mediaFiles: media ?? FakeMediaFiles(),
       cipherProvider: () async => SyncCipher.plaintext,
       concurrency: 4,
@@ -458,7 +464,10 @@ void main() {
 
       final report = await engineOn(backend, diaries: local, media: media).pull();
       expect(report.diaryCount, 1);
-      expect(local.diaries['a']!.deleted, isTrue);
+      expect(local.diaries.containsKey('a'), isFalse,
+          reason: '远端 tombstone → 本地行硬删');
+      expect(local.tombstones.rows.containsKey('d:a'), isTrue,
+          reason: '删除事实落墓碑表');
       expect(await media.exists('image', 'p.jpg'), isFalse);
     });
 
@@ -478,8 +487,9 @@ void main() {
 
       final report = await engineOn(backend, diaries: local).pull();
       expect(report.diaryCount, 0);
-      expect(local.diaries['a']!.deleted, isFalse,
+      expect(local.diaries['a']!.title, 'edited-after-delete',
           reason: '本地比 tombstone 新 → 保留本地活跃版本');
+      expect(local.tombstones.rows, isEmpty);
     });
 
     test('writes the tombstone record BEFORE deleting media (fix [2] ordering)',
@@ -496,15 +506,43 @@ void main() {
         buildDiary(id: 'a', modifiedMs: 1000, images: ['p.jpg']),
       ]);
       final media = FakeMediaFiles()..put('image', 'p.jpg');
-      bool? deletedFlagAtMediaDelete;
+      bool? tombstonedAtMediaDelete;
       media.onDelete = (type, name) {
-        // 媒体删除时，记录必须已经是 tombstone（先落记录再删媒体），
+        // 媒体删除时，记录必须已经落成墓碑（先落记录再删媒体），
         // 否则并发编辑可在「删媒体」与「写 tombstone」之间插入并丢失。
-        deletedFlagAtMediaDelete = local.diaries['a']?.deleted;
+        tombstonedAtMediaDelete = !local.diaries.containsKey('a') &&
+            local.tombstones.rows.containsKey('d:a');
       };
 
       await engineOn(backend, diaries: local, media: media).pull();
-      expect(deletedFlagAtMediaDelete, isTrue);
+      expect(tombstonedAtMediaDelete, isTrue);
+    });
+
+    test('skips a remote tombstone for a diary open in the editor', () async {
+      final backend = FakeRemoteBackend();
+      backend.objects[SyncKeys.manifestPath] = jsonBytes({
+        'version': 4,
+        'updatedAt': 1,
+        'entries': {
+          'd:a': {'t': atMs(2000).millisecondsSinceEpoch, 'd': true},
+        },
+      });
+      final local = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 1000)]);
+      OpenDiaryRegistry.instance.open('a');
+      addTearDown(() => OpenDiaryRegistry.instance.close('a'));
+
+      final report = await engineOn(backend, diaries: local).pull();
+      expect(report.diaryCount, 0);
+      expect(local.diaries.containsKey('a'), isTrue,
+          reason: '打开中的日记不应用远端删除（否则编辑器脚下抽行丢稿）');
+      expect(local.tombstones.rows, isEmpty);
+
+      // 关闭后下一轮 pull 正常收敛。
+      OpenDiaryRegistry.instance.close('a');
+      final second = await engineOn(backend, diaries: local).pull();
+      expect(second.diaryCount, 1);
+      expect(local.diaries.containsKey('a'), isFalse);
+      expect(local.tombstones.rows.containsKey('d:a'), isTrue);
     });
   });
 
@@ -555,21 +593,24 @@ void main() {
       await seedRemote(webdav, diaries: [buildDiary(id: 'a', modifiedMs: 100)]);
       await seedRemote(s3, diaries: [buildDiary(id: 'a', modifiedMs: 100)]);
 
-      // 本地把 a 删除。共享同一个 diaryStore（同一台设备切换后端）。
-      final local = FakeDiaryStore([
-        buildDiary(id: 'a', modifiedMs: 200, deleted: true),
+      // 本地把 a 删除（行已硬删，墓碑行承载删除事实）。共享同一墓碑表
+      // （同一台设备切换后端）。
+      final tombstones = FakeTombstoneStore([
+        buildDiaryTombstone('a', modifiedMs: 200),
       ]);
+      final local = FakeDiaryStore(const [], tombstones);
 
-      // 推到 webdav：仅覆盖 webdav，未覆盖全部 → 不得硬删。
+      // 推到 webdav：仅覆盖 webdav，未覆盖全部 → 墓碑行不得清除。
       await engineOn(webdav, diaries: local).push();
-      expect(local.diaries.containsKey('a'), isTrue,
-          reason: 'tombstone 未覆盖 s3 前不得从本地硬删');
+      expect(tombstones.rows.containsKey('d:a'), isTrue,
+          reason: 'tombstone 未覆盖 s3 前不得清除墓碑行');
+      expect(tombstones.rows['d:a']!.pushedBackends, contains('webdav'));
       expect(webdav.manifest()!.entries['d:a']!.deleted, isTrue);
 
-      // 切到 s3 再推：现在两后端都覆盖 → 硬删。
+      // 切到 s3 再推：现在两后端都覆盖 → 清除墓碑行。
       await engineOn(s3, diaries: local).push();
-      expect(local.diaries.containsKey('a'), isFalse,
-          reason: '所有已配置后端都收到 tombstone 后才硬删');
+      expect(tombstones.rows.containsKey('d:a'), isFalse,
+          reason: '所有已配置后端都收到 tombstone 后才清除墓碑行');
       expect(s3.manifest()!.entries['d:a']!.deleted, isTrue);
     });
   });
@@ -602,10 +643,10 @@ void main() {
       expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isTrue);
 
       // 本地持有一个过期的删除（删除时间早于远端更新）。
-      final local = FakeDiaryStore([
-        buildDiary(id: 'a', modifiedMs: 1000, deleted: true),
+      final tombstones = FakeTombstoneStore([
+        buildDiaryTombstone('a', modifiedMs: 1000),
       ]);
-      final report = await engineOn(backend, diaries: local).push();
+      final report = await engineOn(backend, tombstones: tombstones).push();
 
       expect(report.diaryCount, 0);
       // 远端较新的内容不得被旧 tombstone 删除/覆盖。
@@ -615,8 +656,9 @@ void main() {
         backend.manifest()!.entries['d:a']!.timeMs,
         atMs(2000).millisecondsSinceEpoch,
       );
-      // 未覆盖 → 本地仍保留这条（不硬删）。
-      expect(local.diaries.containsKey('a'), isTrue);
+      // 未推送 → 墓碑行保留（下次 pull 按 LWW 复活时随复活清除）。
+      expect(tombstones.rows.containsKey('d:a'), isTrue);
+      expect(tombstones.rows['d:a']!.pushedBackends, isEmpty);
     });
   });
 
@@ -641,9 +683,9 @@ void main() {
         media: media,
       );
 
-      // 本地删除 a：push 会想删远端 a.json + 媒体 + 硬删本地。
-      final local = FakeDiaryStore([
-        buildDiary(id: 'a', modifiedMs: 200, deleted: true),
+      // 本地删除 a（行已硬删、墓碑承载）：push 会想删远端 a.json + 媒体 + 清墓碑行。
+      final tombstones = FakeTombstoneStore([
+        buildDiaryTombstone('a', modifiedMs: 200),
       ]);
 
       // 注入并发覆盖：我们写完 manifest 后，回读时它已被另一台设备覆盖（不同 token）。
@@ -660,16 +702,19 @@ void main() {
 
       final syncTimeBefore = MoodiaryKVs.lastSyncTime.get();
       await expectLater(
-        engineOn(backend, diaries: local, media: media).push(),
+        engineOn(backend, tombstones: tombstones, media: media).push(),
         throwsA(isA<SyncException>()),
       );
 
-      // 关键不变量：中止后远端对象 / 媒体都没被删，本地也没硬删，零丢数据。
+      // 关键不变量：中止后远端对象 / 媒体都没被删，墓碑行也没清 / 没记推送，
+      // 删除事实零丢失。
       expect(backend.hasObject(SyncKeys.diaryObjectPath('a')), isTrue,
           reason: '回读校验失败 → 推迟的远端删除不得执行');
       expect(backend.hasObject('media/image/p.jpg'), isTrue);
-      expect(local.diaries.containsKey('a'), isTrue,
-          reason: '回读校验失败 → 不得硬删本地');
+      expect(tombstones.rows.containsKey('d:a'), isTrue,
+          reason: '回读校验失败 → 不得清除墓碑行');
+      expect(tombstones.rows['d:a']!.pushedBackends, isEmpty,
+          reason: '回读校验失败 → 推送记录不得落库');
       // 抛错中止 → 不推进上次同步时间。
       expect(MoodiaryKVs.lastSyncTime.get(), syncTimeBefore);
     });
@@ -713,10 +758,10 @@ void main() {
       expect(backend.hasObject(SyncKeys.categoryObjectPath('c1')), isTrue);
 
       // 本地持有过期的分类删除。
-      final cats = FakeCategoryStore([
-        buildCategory(id: 'c1', modifiedMs: 1000, deleted: true),
+      final tombstones = FakeTombstoneStore([
+        buildCategoryTombstone('c1', modifiedMs: 1000),
       ]);
-      final report = await engineOn(backend, categories: cats).push();
+      final report = await engineOn(backend, tombstones: tombstones).push();
 
       expect(report.categoryCount, 0);
       expect(backend.hasObject(SyncKeys.categoryObjectPath('c1')), isTrue,
@@ -774,6 +819,80 @@ void main() {
       expect(kinds, contains(SyncEventKind.syncStart));
       expect(kinds, contains(SyncEventKind.syncEnd),
           reason: '抛错也必须补发 syncEnd，否则 AutoSyncWatcher 卡死');
+    });
+  });
+
+  group('idle-sync 网络成本', () {
+    test('空转 sync 只读一次 manifest（pull 快照复用给 push）', () async {
+      final backend = FakeRemoteBackend();
+      final store = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 100)]);
+      await engineOn(backend, diaries: store).push();
+      backend.ops.clear();
+
+      final report = await engineOn(backend, diaries: store).sync();
+      expect(report.failed, 0);
+      expect(report.diaryCount, 0);
+      expect(backend.opCount('read', SyncKeys.manifestPath), 1,
+          reason: '空转 sync 的 push 应复用 pull 的 manifest 快照');
+    });
+
+    test('pull 有实际落库时 push 仍重读 manifest（保守基线）', () async {
+      final backend = FakeRemoteBackend();
+      await seedRemote(backend, diaries: [buildDiary(id: 'a', modifiedMs: 100)]);
+      backend.ops.clear();
+
+      final local = FakeDiaryStore();
+      await engineOn(backend, diaries: local).sync();
+      expect(local.diaries.containsKey('a'), isTrue);
+      expect(backend.opCount('read', SyncKeys.manifestPath), 2,
+          reason: '有变更的 pull 不复用快照，push 重读');
+    });
+  });
+
+  group('pull — 对象身份校验', () {
+    test('远端 JSON 的 id 与 manifest 键不符 → 计入 failed 且不落库', () async {
+      final backend = FakeRemoteBackend();
+      backend.objects[SyncKeys.manifestPath] = jsonBytes({
+        'version': 4,
+        'updatedAt': 1,
+        'entries': {
+          'd:a': {'t': atMs(1000).millisecondsSinceEpoch},
+        },
+      });
+      backend.objects[SyncKeys.diaryObjectPath('a')] = jsonBytes(
+        buildDiary(id: 'b', modifiedMs: 1000).toJson(),
+      );
+
+      final local = FakeDiaryStore();
+      final report = await engineOn(backend, diaries: local).pull();
+      expect(report.failed, 1, reason: '身份不符按失败计，不推进 lastSyncTime');
+      expect(local.diaries, isEmpty, reason: '错位对象不得落库');
+    });
+  });
+
+  group('事件来源标记（回声推送抑制）', () {
+    test('云后端 pull 下载落库带 fromSync=true', () async {
+      final backend = FakeRemoteBackend();
+      await seedRemote(backend, diaries: [buildDiary(id: 'a', modifiedMs: 100)]);
+
+      final local = FakeDiaryStore();
+      await engineOn(backend, diaries: local).pull();
+      expect(local.writeOrigins['a'], isTrue,
+          reason: '云 pull 的写入远端已持有，事件应带 fromSync');
+    });
+
+    test('云 pull 应用远端墓碑带 fromSync=true', () async {
+      final backend = FakeRemoteBackend();
+      backend.objects[SyncKeys.manifestPath] = jsonBytes({
+        'version': 4,
+        'updatedAt': 1,
+        'entries': {
+          'd:a': {'t': atMs(2000).millisecondsSinceEpoch, 'd': true},
+        },
+      });
+      final local = FakeDiaryStore([buildDiary(id: 'a', modifiedMs: 1000)]);
+      await engineOn(backend, diaries: local).pull();
+      expect(local.writeOrigins['a'], isTrue);
     });
   });
 }

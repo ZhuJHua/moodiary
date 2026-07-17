@@ -28,7 +28,6 @@ final DiarySchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'time', type: IsarType.dateTime),
       IsarPropertySchema(name: 'lastModified', type: IsarType.dateTime),
       IsarPropertySchema(name: 'show', type: IsarType.bool),
-      IsarPropertySchema(name: 'deleted', type: IsarType.bool),
       IsarPropertySchema(name: 'mood', type: IsarType.double),
       IsarPropertySchema(name: 'weather', type: IsarType.stringList),
       IsarPropertySchema(name: 'imageName', type: IsarType.stringList),
@@ -56,12 +55,6 @@ final DiarySchema = IsarGeneratedSchema(
       IsarIndexSchema(
         name: 'show',
         properties: ["show"],
-        unique: false,
-        hash: false,
-      ),
-      IsarIndexSchema(
-        name: 'deleted',
-        properties: ["deleted"],
         unique: false,
         hash: false,
       ),
@@ -96,11 +89,10 @@ int serializeDiary(IsarWriter writer, Diary object) {
     object.lastModified.toUtc().microsecondsSinceEpoch,
   );
   IsarCore.writeBool(writer, 8, value: object.show);
-  IsarCore.writeBool(writer, 9, value: object.deleted);
-  IsarCore.writeDouble(writer, 10, object.mood);
+  IsarCore.writeDouble(writer, 9, object.mood);
   {
     final list = object.weather;
-    final listWriter = IsarCore.beginList(writer, 11, list.length);
+    final listWriter = IsarCore.beginList(writer, 10, list.length);
     for (var i = 0; i < list.length; i++) {
       IsarCore.writeString(listWriter, i, list[i]);
     }
@@ -108,7 +100,7 @@ int serializeDiary(IsarWriter writer, Diary object) {
   }
   {
     final list = object.imageName;
-    final listWriter = IsarCore.beginList(writer, 12, list.length);
+    final listWriter = IsarCore.beginList(writer, 11, list.length);
     for (var i = 0; i < list.length; i++) {
       IsarCore.writeString(listWriter, i, list[i]);
     }
@@ -116,7 +108,7 @@ int serializeDiary(IsarWriter writer, Diary object) {
   }
   {
     final list = object.audioName;
-    final listWriter = IsarCore.beginList(writer, 13, list.length);
+    final listWriter = IsarCore.beginList(writer, 12, list.length);
     for (var i = 0; i < list.length; i++) {
       IsarCore.writeString(listWriter, i, list[i]);
     }
@@ -124,7 +116,7 @@ int serializeDiary(IsarWriter writer, Diary object) {
   }
   {
     final list = object.videoName;
-    final listWriter = IsarCore.beginList(writer, 14, list.length);
+    final listWriter = IsarCore.beginList(writer, 13, list.length);
     for (var i = 0; i < list.length; i++) {
       IsarCore.writeString(listWriter, i, list[i]);
     }
@@ -132,7 +124,7 @@ int serializeDiary(IsarWriter writer, Diary object) {
   }
   {
     final list = object.tags;
-    final listWriter = IsarCore.beginList(writer, 15, list.length);
+    final listWriter = IsarCore.beginList(writer, 14, list.length);
     for (var i = 0; i < list.length; i++) {
       IsarCore.writeString(listWriter, i, list[i]);
     }
@@ -140,15 +132,15 @@ int serializeDiary(IsarWriter writer, Diary object) {
   }
   {
     final list = object.position;
-    final listWriter = IsarCore.beginList(writer, 16, list.length);
+    final listWriter = IsarCore.beginList(writer, 15, list.length);
     for (var i = 0; i < list.length; i++) {
       IsarCore.writeString(listWriter, i, list[i]);
     }
     IsarCore.endList(writer, listWriter);
   }
-  IsarCore.writeString(writer, 17, object.type);
-  IsarCore.writeLong(writer, 18, object.imageColor ?? -9223372036854775808);
-  IsarCore.writeDouble(writer, 19, object.aspect ?? double.nan);
+  IsarCore.writeString(writer, 16, object.type);
+  IsarCore.writeLong(writer, 17, object.imageColor ?? -9223372036854775808);
+  IsarCore.writeDouble(writer, 18, object.aspect ?? double.nan);
   return object.isarId;
 }
 
@@ -190,13 +182,11 @@ Diary deserializeDiary(IsarReader reader) {
   }
   final bool _show;
   _show = IsarCore.readBool(reader, 8);
-  final bool _deleted;
-  _deleted = IsarCore.readBool(reader, 9);
   final double _mood;
-  _mood = IsarCore.readDouble(reader, 10);
+  _mood = IsarCore.readDouble(reader, 9);
   final List<String> _weather;
   {
-    final length = IsarCore.readList(reader, 11, IsarCore.readerPtrPtr);
+    final length = IsarCore.readList(reader, 10, IsarCore.readerPtrPtr);
     {
       final reader = IsarCore.readerPtr;
       if (reader.isNull) {
@@ -213,7 +203,7 @@ Diary deserializeDiary(IsarReader reader) {
   }
   final List<String> _imageName;
   {
-    final length = IsarCore.readList(reader, 12, IsarCore.readerPtrPtr);
+    final length = IsarCore.readList(reader, 11, IsarCore.readerPtrPtr);
     {
       final reader = IsarCore.readerPtr;
       if (reader.isNull) {
@@ -230,7 +220,7 @@ Diary deserializeDiary(IsarReader reader) {
   }
   final List<String> _audioName;
   {
-    final length = IsarCore.readList(reader, 13, IsarCore.readerPtrPtr);
+    final length = IsarCore.readList(reader, 12, IsarCore.readerPtrPtr);
     {
       final reader = IsarCore.readerPtr;
       if (reader.isNull) {
@@ -247,7 +237,7 @@ Diary deserializeDiary(IsarReader reader) {
   }
   final List<String> _videoName;
   {
-    final length = IsarCore.readList(reader, 14, IsarCore.readerPtrPtr);
+    final length = IsarCore.readList(reader, 13, IsarCore.readerPtrPtr);
     {
       final reader = IsarCore.readerPtr;
       if (reader.isNull) {
@@ -264,7 +254,7 @@ Diary deserializeDiary(IsarReader reader) {
   }
   final List<String> _tags;
   {
-    final length = IsarCore.readList(reader, 15, IsarCore.readerPtrPtr);
+    final length = IsarCore.readList(reader, 14, IsarCore.readerPtrPtr);
     {
       final reader = IsarCore.readerPtr;
       if (reader.isNull) {
@@ -281,7 +271,7 @@ Diary deserializeDiary(IsarReader reader) {
   }
   final List<String> _position;
   {
-    final length = IsarCore.readList(reader, 16, IsarCore.readerPtrPtr);
+    final length = IsarCore.readList(reader, 15, IsarCore.readerPtrPtr);
     {
       final reader = IsarCore.readerPtr;
       if (reader.isNull) {
@@ -297,10 +287,10 @@ Diary deserializeDiary(IsarReader reader) {
     }
   }
   final String _type;
-  _type = IsarCore.readString(reader, 17) ?? '';
+  _type = IsarCore.readString(reader, 16) ?? '';
   final int? _imageColor;
   {
-    final value = IsarCore.readLong(reader, 18);
+    final value = IsarCore.readLong(reader, 17);
     if (value == -9223372036854775808) {
       _imageColor = null;
     } else {
@@ -309,7 +299,7 @@ Diary deserializeDiary(IsarReader reader) {
   }
   final double? _aspect;
   {
-    final value = IsarCore.readDouble(reader, 19);
+    final value = IsarCore.readDouble(reader, 18);
     if (value.isNaN) {
       _aspect = null;
     } else {
@@ -325,7 +315,6 @@ Diary deserializeDiary(IsarReader reader) {
     time: _time,
     lastModified: _lastModified,
     show: _show,
-    deleted: _deleted,
     mood: _mood,
     weather: _weather,
     imageName: _imageName,
@@ -382,9 +371,24 @@ dynamic deserializeDiaryProp(IsarReader reader, int property) {
     case 8:
       return IsarCore.readBool(reader, 8);
     case 9:
-      return IsarCore.readBool(reader, 9);
+      return IsarCore.readDouble(reader, 9);
     case 10:
-      return IsarCore.readDouble(reader, 10);
+      {
+        final length = IsarCore.readList(reader, 10, IsarCore.readerPtrPtr);
+        {
+          final reader = IsarCore.readerPtr;
+          if (reader.isNull) {
+            return const <String>[];
+          } else {
+            final list = List<String>.filled(length, '', growable: true);
+            for (var i = 0; i < length; i++) {
+              list[i] = IsarCore.readString(reader, i) ?? '';
+            }
+            IsarCore.freeReader(reader);
+            return list;
+          }
+        }
+      }
     case 11:
       {
         final length = IsarCore.readList(reader, 11, IsarCore.readerPtrPtr);
@@ -471,36 +475,19 @@ dynamic deserializeDiaryProp(IsarReader reader, int property) {
         }
       }
     case 16:
-      {
-        final length = IsarCore.readList(reader, 16, IsarCore.readerPtrPtr);
-        {
-          final reader = IsarCore.readerPtr;
-          if (reader.isNull) {
-            return const <String>[];
-          } else {
-            final list = List<String>.filled(length, '', growable: true);
-            for (var i = 0; i < length; i++) {
-              list[i] = IsarCore.readString(reader, i) ?? '';
-            }
-            IsarCore.freeReader(reader);
-            return list;
-          }
-        }
-      }
+      return IsarCore.readString(reader, 16) ?? '';
     case 17:
-      return IsarCore.readString(reader, 17) ?? '';
-    case 18:
       {
-        final value = IsarCore.readLong(reader, 18);
+        final value = IsarCore.readLong(reader, 17);
         if (value == -9223372036854775808) {
           return null;
         } else {
           return value;
         }
       }
-    case 19:
+    case 18:
       {
-        final value = IsarCore.readDouble(reader, 19);
+        final value = IsarCore.readDouble(reader, 18);
         if (value.isNaN) {
           return null;
         } else {
@@ -523,7 +510,6 @@ sealed class _DiaryUpdate {
     DateTime? time,
     DateTime? lastModified,
     bool? show,
-    bool? deleted,
     double? mood,
     String? type,
     int? imageColor,
@@ -547,7 +533,6 @@ class _DiaryUpdateImpl implements _DiaryUpdate {
     Object? time = ignore,
     Object? lastModified = ignore,
     Object? show = ignore,
-    Object? deleted = ignore,
     Object? mood = ignore,
     Object? type = ignore,
     Object? imageColor = ignore,
@@ -564,11 +549,10 @@ class _DiaryUpdateImpl implements _DiaryUpdate {
             if (time != ignore) 6: time as DateTime?,
             if (lastModified != ignore) 7: lastModified as DateTime?,
             if (show != ignore) 8: show as bool?,
-            if (deleted != ignore) 9: deleted as bool?,
-            if (mood != ignore) 10: mood as double?,
-            if (type != ignore) 17: type as String?,
-            if (imageColor != ignore) 18: imageColor as int?,
-            if (aspect != ignore) 19: aspect as double?,
+            if (mood != ignore) 9: mood as double?,
+            if (type != ignore) 16: type as String?,
+            if (imageColor != ignore) 17: imageColor as int?,
+            if (aspect != ignore) 18: aspect as double?,
           },
         ) >
         0;
@@ -586,7 +570,6 @@ sealed class _DiaryUpdateAll {
     DateTime? time,
     DateTime? lastModified,
     bool? show,
-    bool? deleted,
     double? mood,
     String? type,
     int? imageColor,
@@ -610,7 +593,6 @@ class _DiaryUpdateAllImpl implements _DiaryUpdateAll {
     Object? time = ignore,
     Object? lastModified = ignore,
     Object? show = ignore,
-    Object? deleted = ignore,
     Object? mood = ignore,
     Object? type = ignore,
     Object? imageColor = ignore,
@@ -625,11 +607,10 @@ class _DiaryUpdateAllImpl implements _DiaryUpdateAll {
       if (time != ignore) 6: time as DateTime?,
       if (lastModified != ignore) 7: lastModified as DateTime?,
       if (show != ignore) 8: show as bool?,
-      if (deleted != ignore) 9: deleted as bool?,
-      if (mood != ignore) 10: mood as double?,
-      if (type != ignore) 17: type as String?,
-      if (imageColor != ignore) 18: imageColor as int?,
-      if (aspect != ignore) 19: aspect as double?,
+      if (mood != ignore) 9: mood as double?,
+      if (type != ignore) 16: type as String?,
+      if (imageColor != ignore) 17: imageColor as int?,
+      if (aspect != ignore) 18: aspect as double?,
     });
   }
 }
@@ -650,7 +631,6 @@ sealed class _DiaryQueryUpdate {
     DateTime? time,
     DateTime? lastModified,
     bool? show,
-    bool? deleted,
     double? mood,
     String? type,
     int? imageColor,
@@ -674,7 +654,6 @@ class _DiaryQueryUpdateImpl implements _DiaryQueryUpdate {
     Object? time = ignore,
     Object? lastModified = ignore,
     Object? show = ignore,
-    Object? deleted = ignore,
     Object? mood = ignore,
     Object? type = ignore,
     Object? imageColor = ignore,
@@ -689,11 +668,10 @@ class _DiaryQueryUpdateImpl implements _DiaryQueryUpdate {
       if (time != ignore) 6: time as DateTime?,
       if (lastModified != ignore) 7: lastModified as DateTime?,
       if (show != ignore) 8: show as bool?,
-      if (deleted != ignore) 9: deleted as bool?,
-      if (mood != ignore) 10: mood as double?,
-      if (type != ignore) 17: type as String?,
-      if (imageColor != ignore) 18: imageColor as int?,
-      if (aspect != ignore) 19: aspect as double?,
+      if (mood != ignore) 9: mood as double?,
+      if (type != ignore) 16: type as String?,
+      if (imageColor != ignore) 17: imageColor as int?,
+      if (aspect != ignore) 18: aspect as double?,
     });
   }
 }
@@ -720,7 +698,6 @@ class _DiaryQueryBuilderUpdateImpl implements _DiaryQueryUpdate {
     Object? time = ignore,
     Object? lastModified = ignore,
     Object? show = ignore,
-    Object? deleted = ignore,
     Object? mood = ignore,
     Object? type = ignore,
     Object? imageColor = ignore,
@@ -737,11 +714,10 @@ class _DiaryQueryBuilderUpdateImpl implements _DiaryQueryUpdate {
         if (time != ignore) 6: time as DateTime?,
         if (lastModified != ignore) 7: lastModified as DateTime?,
         if (show != ignore) 8: show as bool?,
-        if (deleted != ignore) 9: deleted as bool?,
-        if (mood != ignore) 10: mood as double?,
-        if (type != ignore) 17: type as String?,
-        if (imageColor != ignore) 18: imageColor as int?,
-        if (aspect != ignore) 19: aspect as double?,
+        if (mood != ignore) 9: mood as double?,
+        if (type != ignore) 16: type as String?,
+        if (imageColor != ignore) 17: imageColor as int?,
+        if (aspect != ignore) 18: aspect as double?,
       });
     } finally {
       q.close();
@@ -1742,21 +1718,13 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> deletedEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        EqualCondition(property: 9, value: value),
-      );
-    });
-  }
-
   QueryBuilder<Diary, Diary, QAfterFilterCondition> moodEqualTo(
     double value, {
     double epsilon = Filter.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 10, value: value, epsilon: epsilon),
+        EqualCondition(property: 9, value: value, epsilon: epsilon),
       );
     });
   }
@@ -1767,7 +1735,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(property: 10, value: value, epsilon: epsilon),
+        GreaterCondition(property: 9, value: value, epsilon: epsilon),
       );
     });
   }
@@ -1778,7 +1746,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(property: 10, value: value, epsilon: epsilon),
+        GreaterOrEqualCondition(property: 9, value: value, epsilon: epsilon),
       );
     });
   }
@@ -1789,7 +1757,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 10, value: value, epsilon: epsilon),
+        LessCondition(property: 9, value: value, epsilon: epsilon),
       );
     });
   }
@@ -1800,7 +1768,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(property: 10, value: value, epsilon: epsilon),
+        LessOrEqualCondition(property: 9, value: value, epsilon: epsilon),
       );
     });
   }
@@ -1813,7 +1781,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 10,
+          property: 9,
           lower: lower,
           upper: upper,
 
@@ -1830,7 +1798,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EqualCondition(
-          property: 11,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1845,7 +1813,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 11,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1861,7 +1829,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 11,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1875,7 +1843,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 11, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 10, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -1885,7 +1853,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 11,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1901,7 +1869,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 11,
+          property: 10,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -1917,7 +1885,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 11,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1932,7 +1900,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 11,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1947,7 +1915,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 11,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1962,7 +1930,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 11,
+          property: 10,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -1973,7 +1941,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> weatherElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 11, value: ''),
+        const EqualCondition(property: 10, value: ''),
       );
     });
   }
@@ -1981,7 +1949,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> weatherElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 11, value: ''),
+        const GreaterCondition(property: 10, value: ''),
       );
     });
   }
@@ -1993,7 +1961,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> weatherIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterOrEqualCondition(property: 11, value: null),
+        const GreaterOrEqualCondition(property: 10, value: null),
       );
     });
   }
@@ -2005,7 +1973,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EqualCondition(
-          property: 12,
+          property: 11,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2020,7 +1988,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 12,
+          property: 11,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2036,7 +2004,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 12,
+          property: 11,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2050,7 +2018,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 12, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 11, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -2060,7 +2028,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 12,
+          property: 11,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2076,7 +2044,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 12,
+          property: 11,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -2092,7 +2060,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 12,
+          property: 11,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2107,7 +2075,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 12,
+          property: 11,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2122,7 +2090,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 12,
+          property: 11,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2137,7 +2105,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 12,
+          property: 11,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -2148,7 +2116,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> imageNameElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 12, value: ''),
+        const EqualCondition(property: 11, value: ''),
       );
     });
   }
@@ -2157,7 +2125,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   imageNameElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 12, value: ''),
+        const GreaterCondition(property: 11, value: ''),
       );
     });
   }
@@ -2169,7 +2137,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> imageNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterOrEqualCondition(property: 12, value: null),
+        const GreaterOrEqualCondition(property: 11, value: null),
       );
     });
   }
@@ -2181,7 +2149,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EqualCondition(
-          property: 13,
+          property: 12,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2196,7 +2164,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 13,
+          property: 12,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2212,7 +2180,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 13,
+          property: 12,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2226,7 +2194,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 13, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 12, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -2236,7 +2204,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 13,
+          property: 12,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2252,7 +2220,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 13,
+          property: 12,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -2268,7 +2236,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 13,
+          property: 12,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2283,7 +2251,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 13,
+          property: 12,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2298,7 +2266,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 13,
+          property: 12,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2313,7 +2281,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 13,
+          property: 12,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -2324,7 +2292,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> audioNameElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 13, value: ''),
+        const EqualCondition(property: 12, value: ''),
       );
     });
   }
@@ -2333,7 +2301,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   audioNameElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 13, value: ''),
+        const GreaterCondition(property: 12, value: ''),
       );
     });
   }
@@ -2345,7 +2313,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> audioNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterOrEqualCondition(property: 13, value: null),
+        const GreaterOrEqualCondition(property: 12, value: null),
       );
     });
   }
@@ -2357,7 +2325,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EqualCondition(
-          property: 14,
+          property: 13,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2372,7 +2340,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 14,
+          property: 13,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2388,7 +2356,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 14,
+          property: 13,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2402,7 +2370,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 14, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 13, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -2412,7 +2380,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 14,
+          property: 13,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2428,7 +2396,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 14,
+          property: 13,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -2444,7 +2412,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 14,
+          property: 13,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2459,7 +2427,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 14,
+          property: 13,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2474,7 +2442,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 14,
+          property: 13,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2489,7 +2457,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 14,
+          property: 13,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -2500,7 +2468,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> videoNameElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 14, value: ''),
+        const EqualCondition(property: 13, value: ''),
       );
     });
   }
@@ -2509,7 +2477,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   videoNameElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 14, value: ''),
+        const GreaterCondition(property: 13, value: ''),
       );
     });
   }
@@ -2521,7 +2489,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> videoNameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterOrEqualCondition(property: 14, value: null),
+        const GreaterOrEqualCondition(property: 13, value: null),
       );
     });
   }
@@ -2533,7 +2501,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EqualCondition(
-          property: 15,
+          property: 14,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2548,7 +2516,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 15,
+          property: 14,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2561,7 +2529,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 15,
+          property: 14,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2575,7 +2543,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 15, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 14, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -2585,7 +2553,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 15,
+          property: 14,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2601,7 +2569,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 15,
+          property: 14,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -2617,7 +2585,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 15,
+          property: 14,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2632,7 +2600,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 15,
+          property: 14,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2647,7 +2615,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 15,
+          property: 14,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2662,7 +2630,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 15,
+          property: 14,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -2673,7 +2641,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> tagsElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 15, value: ''),
+        const EqualCondition(property: 14, value: ''),
       );
     });
   }
@@ -2681,7 +2649,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> tagsElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 15, value: ''),
+        const GreaterCondition(property: 14, value: ''),
       );
     });
   }
@@ -2693,7 +2661,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> tagsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterOrEqualCondition(property: 15, value: null),
+        const GreaterOrEqualCondition(property: 14, value: null),
       );
     });
   }
@@ -2705,7 +2673,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EqualCondition(
-          property: 16,
+          property: 15,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2720,7 +2688,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 16,
+          property: 15,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2736,7 +2704,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 16,
+          property: 15,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2750,7 +2718,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 16, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 15, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -2760,7 +2728,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 16,
+          property: 15,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2776,7 +2744,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 16,
+          property: 15,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -2792,7 +2760,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 16,
+          property: 15,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2807,7 +2775,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 16,
+          property: 15,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2822,7 +2790,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 16,
+          property: 15,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2837,7 +2805,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 16,
+          property: 15,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -2848,7 +2816,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> positionElementIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 16, value: ''),
+        const EqualCondition(property: 15, value: ''),
       );
     });
   }
@@ -2857,7 +2825,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   positionElementIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 16, value: ''),
+        const GreaterCondition(property: 15, value: ''),
       );
     });
   }
@@ -2869,7 +2837,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> positionIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterOrEqualCondition(property: 16, value: null),
+        const GreaterOrEqualCondition(property: 15, value: null),
       );
     });
   }
@@ -2881,7 +2849,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EqualCondition(
-          property: 17,
+          property: 16,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2896,7 +2864,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 17,
+          property: 16,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2911,7 +2879,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 17,
+          property: 16,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2925,7 +2893,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 17, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 16, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -2937,7 +2905,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 17,
+          property: 16,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2953,7 +2921,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 17,
+          property: 16,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -2969,7 +2937,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 17,
+          property: 16,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2984,7 +2952,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 17,
+          property: 16,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -2999,7 +2967,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 17,
+          property: 16,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -3014,7 +2982,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 17,
+          property: 16,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -3025,7 +2993,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> typeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 17, value: ''),
+        const EqualCondition(property: 16, value: ''),
       );
     });
   }
@@ -3033,20 +3001,20 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   QueryBuilder<Diary, Diary, QAfterFilterCondition> typeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 17, value: ''),
+        const GreaterCondition(property: 16, value: ''),
       );
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterFilterCondition> imageColorIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const IsNullCondition(property: 18));
+      return query.addFilterCondition(const IsNullCondition(property: 17));
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterFilterCondition> imageColorIsNotNull() {
     return QueryBuilder.apply(not(), (query) {
-      return query.addFilterCondition(const IsNullCondition(property: 18));
+      return query.addFilterCondition(const IsNullCondition(property: 17));
     });
   }
 
@@ -3055,7 +3023,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 18, value: value),
+        EqualCondition(property: 17, value: value),
       );
     });
   }
@@ -3065,7 +3033,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(property: 18, value: value),
+        GreaterCondition(property: 17, value: value),
       );
     });
   }
@@ -3074,7 +3042,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   imageColorGreaterThanOrEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(property: 18, value: value),
+        GreaterOrEqualCondition(property: 17, value: value),
       );
     });
   }
@@ -3084,7 +3052,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 18, value: value),
+        LessCondition(property: 17, value: value),
       );
     });
   }
@@ -3094,7 +3062,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(property: 18, value: value),
+        LessOrEqualCondition(property: 17, value: value),
       );
     });
   }
@@ -3105,20 +3073,20 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        BetweenCondition(property: 18, lower: lower, upper: upper),
+        BetweenCondition(property: 17, lower: lower, upper: upper),
       );
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterFilterCondition> aspectIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const IsNullCondition(property: 19));
+      return query.addFilterCondition(const IsNullCondition(property: 18));
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterFilterCondition> aspectIsNotNull() {
     return QueryBuilder.apply(not(), (query) {
-      return query.addFilterCondition(const IsNullCondition(property: 19));
+      return query.addFilterCondition(const IsNullCondition(property: 18));
     });
   }
 
@@ -3128,7 +3096,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 19, value: value, epsilon: epsilon),
+        EqualCondition(property: 18, value: value, epsilon: epsilon),
       );
     });
   }
@@ -3139,7 +3107,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(property: 19, value: value, epsilon: epsilon),
+        GreaterCondition(property: 18, value: value, epsilon: epsilon),
       );
     });
   }
@@ -3150,7 +3118,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(property: 19, value: value, epsilon: epsilon),
+        GreaterOrEqualCondition(property: 18, value: value, epsilon: epsilon),
       );
     });
   }
@@ -3161,7 +3129,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 19, value: value, epsilon: epsilon),
+        LessCondition(property: 18, value: value, epsilon: epsilon),
       );
     });
   }
@@ -3172,7 +3140,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(property: 19, value: value, epsilon: epsilon),
+        LessOrEqualCondition(property: 18, value: value, epsilon: epsilon),
       );
     });
   }
@@ -3185,7 +3153,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 19,
+          property: 18,
           lower: lower,
           upper: upper,
 
@@ -3327,27 +3295,15 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByDeleted() {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByMood() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(9);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByDeletedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(9, sort: Sort.desc);
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByMood() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(10);
-    });
-  }
-
   QueryBuilder<Diary, Diary, QAfterSortBy> sortByMoodDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(10, sort: Sort.desc);
+      return query.addSortBy(9, sort: Sort.desc);
     });
   }
 
@@ -3355,7 +3311,7 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(17, caseSensitive: caseSensitive);
+      return query.addSortBy(16, caseSensitive: caseSensitive);
     });
   }
 
@@ -3363,31 +3319,31 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(17, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(16, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterSortBy> sortByImageColor() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(18);
+      return query.addSortBy(17);
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterSortBy> sortByImageColorDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(18, sort: Sort.desc);
+      return query.addSortBy(17, sort: Sort.desc);
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterSortBy> sortByAspect() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(19);
+      return query.addSortBy(18);
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterSortBy> sortByAspectDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(19, sort: Sort.desc);
+      return query.addSortBy(18, sort: Sort.desc);
     });
   }
 }
@@ -3521,27 +3477,15 @@ extension DiaryQuerySortThenBy on QueryBuilder<Diary, Diary, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByDeleted() {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByMood() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(9);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByDeletedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(9, sort: Sort.desc);
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByMood() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(10);
-    });
-  }
-
   QueryBuilder<Diary, Diary, QAfterSortBy> thenByMoodDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(10, sort: Sort.desc);
+      return query.addSortBy(9, sort: Sort.desc);
     });
   }
 
@@ -3549,7 +3493,7 @@ extension DiaryQuerySortThenBy on QueryBuilder<Diary, Diary, QSortThenBy> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(17, caseSensitive: caseSensitive);
+      return query.addSortBy(16, caseSensitive: caseSensitive);
     });
   }
 
@@ -3557,31 +3501,31 @@ extension DiaryQuerySortThenBy on QueryBuilder<Diary, Diary, QSortThenBy> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(17, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(16, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterSortBy> thenByImageColor() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(18);
+      return query.addSortBy(17);
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterSortBy> thenByImageColorDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(18, sort: Sort.desc);
+      return query.addSortBy(17, sort: Sort.desc);
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterSortBy> thenByAspect() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(19);
+      return query.addSortBy(18);
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterSortBy> thenByAspectDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(19, sort: Sort.desc);
+      return query.addSortBy(18, sort: Sort.desc);
     });
   }
 }
@@ -3645,51 +3589,45 @@ extension DiaryQueryWhereDistinct on QueryBuilder<Diary, Diary, QDistinct> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByDeleted() {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByMood() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(9);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByMood() {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByWeather() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(10);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByWeather() {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByImageName() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(11);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByImageName() {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByAudioName() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(12);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByAudioName() {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByVideoName() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(13);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByVideoName() {
+  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByTags() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(14);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByTags() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(15);
-    });
-  }
-
   QueryBuilder<Diary, Diary, QAfterDistinct> distinctByPosition() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(16);
+      return query.addDistinctBy(15);
     });
   }
 
@@ -3697,19 +3635,19 @@ extension DiaryQueryWhereDistinct on QueryBuilder<Diary, Diary, QDistinct> {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(17, caseSensitive: caseSensitive);
+      return query.addDistinctBy(16, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterDistinct> distinctByImageColor() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(18);
+      return query.addDistinctBy(17);
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterDistinct> distinctByAspect() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(19);
+      return query.addDistinctBy(18);
     });
   }
 }
@@ -3769,69 +3707,63 @@ extension DiaryQueryProperty1 on QueryBuilder<Diary, Diary, QProperty> {
     });
   }
 
-  QueryBuilder<Diary, bool, QAfterProperty> deletedProperty() {
+  QueryBuilder<Diary, double, QAfterProperty> moodProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(9);
     });
   }
 
-  QueryBuilder<Diary, double, QAfterProperty> moodProperty() {
+  QueryBuilder<Diary, List<String>, QAfterProperty> weatherProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(10);
     });
   }
 
-  QueryBuilder<Diary, List<String>, QAfterProperty> weatherProperty() {
+  QueryBuilder<Diary, List<String>, QAfterProperty> imageNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(11);
     });
   }
 
-  QueryBuilder<Diary, List<String>, QAfterProperty> imageNameProperty() {
+  QueryBuilder<Diary, List<String>, QAfterProperty> audioNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(12);
     });
   }
 
-  QueryBuilder<Diary, List<String>, QAfterProperty> audioNameProperty() {
+  QueryBuilder<Diary, List<String>, QAfterProperty> videoNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(13);
     });
   }
 
-  QueryBuilder<Diary, List<String>, QAfterProperty> videoNameProperty() {
+  QueryBuilder<Diary, List<String>, QAfterProperty> tagsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(14);
     });
   }
 
-  QueryBuilder<Diary, List<String>, QAfterProperty> tagsProperty() {
+  QueryBuilder<Diary, List<String>, QAfterProperty> positionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(15);
     });
   }
 
-  QueryBuilder<Diary, List<String>, QAfterProperty> positionProperty() {
+  QueryBuilder<Diary, String, QAfterProperty> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(16);
     });
   }
 
-  QueryBuilder<Diary, String, QAfterProperty> typeProperty() {
+  QueryBuilder<Diary, int?, QAfterProperty> imageColorProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(17);
     });
   }
 
-  QueryBuilder<Diary, int?, QAfterProperty> imageColorProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(18);
-    });
-  }
-
   QueryBuilder<Diary, double?, QAfterProperty> aspectProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(19);
+      return query.addProperty(18);
     });
   }
 }
@@ -3891,69 +3823,63 @@ extension DiaryQueryProperty2<R> on QueryBuilder<Diary, R, QAfterProperty> {
     });
   }
 
-  QueryBuilder<Diary, (R, bool), QAfterProperty> deletedProperty() {
+  QueryBuilder<Diary, (R, double), QAfterProperty> moodProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(9);
     });
   }
 
-  QueryBuilder<Diary, (R, double), QAfterProperty> moodProperty() {
+  QueryBuilder<Diary, (R, List<String>), QAfterProperty> weatherProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(10);
     });
   }
 
-  QueryBuilder<Diary, (R, List<String>), QAfterProperty> weatherProperty() {
+  QueryBuilder<Diary, (R, List<String>), QAfterProperty> imageNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(11);
     });
   }
 
-  QueryBuilder<Diary, (R, List<String>), QAfterProperty> imageNameProperty() {
+  QueryBuilder<Diary, (R, List<String>), QAfterProperty> audioNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(12);
     });
   }
 
-  QueryBuilder<Diary, (R, List<String>), QAfterProperty> audioNameProperty() {
+  QueryBuilder<Diary, (R, List<String>), QAfterProperty> videoNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(13);
     });
   }
 
-  QueryBuilder<Diary, (R, List<String>), QAfterProperty> videoNameProperty() {
+  QueryBuilder<Diary, (R, List<String>), QAfterProperty> tagsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(14);
     });
   }
 
-  QueryBuilder<Diary, (R, List<String>), QAfterProperty> tagsProperty() {
+  QueryBuilder<Diary, (R, List<String>), QAfterProperty> positionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(15);
     });
   }
 
-  QueryBuilder<Diary, (R, List<String>), QAfterProperty> positionProperty() {
+  QueryBuilder<Diary, (R, String), QAfterProperty> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(16);
     });
   }
 
-  QueryBuilder<Diary, (R, String), QAfterProperty> typeProperty() {
+  QueryBuilder<Diary, (R, int?), QAfterProperty> imageColorProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(17);
     });
   }
 
-  QueryBuilder<Diary, (R, int?), QAfterProperty> imageColorProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(18);
-    });
-  }
-
   QueryBuilder<Diary, (R, double?), QAfterProperty> aspectProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(19);
+      return query.addProperty(18);
     });
   }
 }
@@ -4014,69 +3940,63 @@ extension DiaryQueryProperty3<R1, R2>
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, bool), QOperations> deletedProperty() {
+  QueryBuilder<Diary, (R1, R2, double), QOperations> moodProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(9);
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, double), QOperations> moodProperty() {
+  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> weatherProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(10);
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> weatherProperty() {
+  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> imageNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(11);
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> imageNameProperty() {
+  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> audioNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(12);
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> audioNameProperty() {
+  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> videoNameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(13);
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> videoNameProperty() {
+  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> tagsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(14);
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> tagsProperty() {
+  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> positionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(15);
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, List<String>), QOperations> positionProperty() {
+  QueryBuilder<Diary, (R1, R2, String), QOperations> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(16);
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, String), QOperations> typeProperty() {
+  QueryBuilder<Diary, (R1, R2, int?), QOperations> imageColorProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(17);
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, int?), QOperations> imageColorProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(18);
-    });
-  }
-
   QueryBuilder<Diary, (R1, R2, double?), QOperations> aspectProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(19);
+      return query.addProperty(18);
     });
   }
 }
@@ -4096,7 +4016,6 @@ _Diary _$DiaryFromJson(Map<String, dynamic> json) => _Diary(
     json['lastModified'] as String,
   ),
   show: json['show'] as bool,
-  deleted: json['deleted'] as bool,
   mood: (json['mood'] as num).toDouble(),
   weather: (json['weather'] as List<dynamic>).map((e) => e as String).toList(),
   imageName: (json['imageName'] as List<dynamic>)
@@ -4126,7 +4045,6 @@ Map<String, dynamic> _$DiaryToJson(_Diary instance) => <String, dynamic>{
   'time': const UtcDateTimeConverter().toJson(instance.time),
   'lastModified': const UtcDateTimeConverter().toJson(instance.lastModified),
   'show': instance.show,
-  'deleted': instance.deleted,
   'mood': instance.mood,
   'weather': instance.weather,
   'imageName': instance.imageName,

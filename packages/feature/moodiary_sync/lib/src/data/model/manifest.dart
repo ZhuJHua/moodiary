@@ -163,6 +163,9 @@ class SyncKeys {
   /// 远端同步锁文件路径（明文租约 JSON，见 `RemoteLease`）。
   static const String lockPath = 'sync.lock';
 
+  /// 密钥文件路径（明文 JSON：盐 + KDF 参数 + 密码包裹的 DEK，见 `SyncKeyfile`）。
+  static const String keysPath = 'keys.json';
+
   static String diaryObjectPath(String id) => 'diary/$id.json';
 
   static String categoryObjectPath(String id) => 'category/$id.json';

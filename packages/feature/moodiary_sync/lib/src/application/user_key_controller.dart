@@ -1,29 +1,19 @@
-import 'package:moodiary_core/moodiary_core.dart';
+import 'dart:convert';
+
+import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'user_key_controller.g.dart';
 
-/// 用户密钥（同步加密用）的 Riverpod 入口 —— 读写 [MoodiarySecureKVs.userKey]。
+/// 同步数据密钥（DEK）的 Riverpod 视图 —— 只读；写入走 [SyncKeyManager]
+/// （开启 / 改密码 / 关闭的编排在 user_key_change_flow），改完 invalidate 本 provider。
 ///
-/// state 为 `null` 表示未设置；非空字符串为已设置的 key。
+/// state 为 `null` 表示未开启加密；非空为 DEK 的 base64（供二维码跨设备传输）。
 @riverpod
-class UserKeyController extends _$UserKeyController {
+class SyncDekController extends _$SyncDekController {
   @override
   Future<String?> build() async {
-    final v = await MoodiarySecureKVs.userKey.get();
-    return (v == null || v.isEmpty) ? null : v;
-  }
-
-  Future<bool> setKey(String key) async {
-    final trimmed = key.trim();
-    if (trimmed.isEmpty) return false;
-    await MoodiarySecureKVs.userKey.set(trimmed);
-    state = AsyncValue.data(trimmed);
-    return true;
-  }
-
-  Future<void> clear() async {
-    await MoodiarySecureKVs.userKey.remove();
-    state = const AsyncValue.data(null);
+    final dek = await SyncKeyManager.loadDek();
+    return dek == null ? null : base64Encode(dek);
   }
 }

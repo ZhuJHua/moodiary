@@ -10,7 +10,6 @@ Category _buildCategory({required String categoryName, int? color}) {
     categoryName: categoryName,
     lastModified: DateTime.timestamp(),
     color: color,
-    deleted: false,
   );
 }
 

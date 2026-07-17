@@ -20,4 +20,6 @@ Future<void> registerService() async {
   autoSync.start();
   getIt.registerSingleton<AutoSyncWatcher>(autoSync);
   unawaited(DiaryRepository.get().drainReindexQueue());
+  // 同步墓碑保留窗 GC（默认 90 天）：零后端用户的墓碑因此有界，不无限累积。
+  unawaited(purgeExpiredTombstones());
 }

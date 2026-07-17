@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `anthropic_thinking_budget`, `build_tools`, `drive`, `split_history`, `to_message`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ProxyTool`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `call`, `definition`, `name`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `call`, `description`, `name`, `parameters`
 
 /// 流式对话 + 多轮工具调用。Dart 取消订阅会令 `sink.add` 失败，循环随即中断（取消在途
 /// 请求）。硬性失败（构造客户端 / 流错误）以 `Err` 形式让 Dart 流报错。

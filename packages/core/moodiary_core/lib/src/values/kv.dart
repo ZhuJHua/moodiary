@@ -14,7 +14,7 @@ enum MoodiaryKVs<T extends Object> {
   autoSync<bool>(defaultValue: false),
   /// 轮询间隔（秒）；过短会频繁抢占远端锁 / 读清单，徒增流量与耗电。
   syncPollInterval<int>(defaultValue: 30),
-  /// 加密由 [MoodiarySecureKVs.userKey] 是否配置驱动，没有独立开关。
+  /// 加密由 [MoodiarySecureKVs.syncDek] 是否配置驱动，没有独立开关。
   syncProvider<String>(defaultValue: 'webdav'),
   webDavOption<List<String>>(),
   s3Option<List<String>>(),
@@ -25,9 +25,22 @@ enum MoodiaryKVs<T extends Object> {
   /// 本机上次同步成功完成的时间（毫秒时间戳）。0 表示从未同步。
   lastSyncTime<int>(defaultValue: 0),
 
-  /// 每条 `deleted=true` 日记被哪些云后端推过 tombstone，JSON 形式 `{"<diaryId>": [...]}`。
-  /// 集合覆盖「当前所有已配置云后端」后引擎才从 Isar 真正清除。
-  tombstonePushedBackends<String>(defaultValue: '{}'),
+  /// 上次成功 syncAll 前观测到的远端 manifest 指纹（`<backendId>|<Last-Modified>`）。
+  /// 轮询 HEAD 比对命中且本地无待推变更时跳过整个同步（空转短路）。
+  syncManifestStat<String>(defaultValue: ''),
+
+  /// 自上次成功同步后本地是否有待推变更（含分类 / 删除；云 pull 落库的不算）。
+  /// 缺省 true（保守：未知即视作有变更，走完整同步）。
+  syncPendingLocal<bool>(defaultValue: true),
+
+  /// 最近一次读到 / 写出的远端 keys.json 原文（明文 JSON，非机密——内容只有
+  /// 盐、KDF 参数和没有密码解不开的密文）。供密钥管理页离线校验当前密码，
+  /// 以及向尚未送达的后端补传（见 syncKeyfilePendingBackends）。
+  syncKeyfileCache<String>(defaultValue: ''),
+
+  /// keyfile 待上传的后端 id 清单：开启加密 / 改密码时写远端失败（或后端离线 /
+  /// 后配）的后端记在这里，该后端下次同步由引擎前奏补传缓存的 keyfile。
+  syncKeyfilePendingBackends<List<String>>(),
 
   /// 本机在远端同步锁（`sync.lock`）中的身份标识。首次生成随机 UUID 后保持不变，
   /// 重启 / 崩溃后能识别并接管自己残留的锁。
@@ -127,7 +140,10 @@ enum MoodiaryKVs<T extends Object> {
 }
 
 enum MoodiarySecureKVs {
-  userKey;
+  /// 同步数据密钥 DEK（base64 的 32 字节随机 key）。所有同步对象用它做
+  /// AES-256-GCM；用户密码只用于解包远端 keys.json 里包着的这把 key，
+  /// 密码原文不落本机。
+  syncDek;
 
   Future<String?> get() => ISecureKVStorage.get().get(name);
 

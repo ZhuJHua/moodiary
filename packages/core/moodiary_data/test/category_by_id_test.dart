@@ -15,7 +15,6 @@ void main() {
         id: id,
         categoryName: name,
         lastModified: DateTime(2026),
-        deleted: false,
       );
 
   ProviderContainer containerWith(List<Category> cats) => ProviderContainer(

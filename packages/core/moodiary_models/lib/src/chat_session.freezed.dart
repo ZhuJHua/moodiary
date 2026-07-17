@@ -17,10 +17,8 @@ mixin _$ChatSession {
 
 @Id() String get id; String get title; String get providerId; String get model; DateTime get createdAt;/// 最后一条消息的时间，列表按此倒序。
  DateTime get updatedAt;/// 本会话是否开启思考模式（新建时取自全局默认 assistantThinkingEnabled）。
- bool get thinking;/// 上下文压缩：已生成的滚动摘要（覆盖至 [compactedUpToMessageId] 为止的历史要点）。
-/// null 表示尚未压缩——此时整段历史逐字发送。
- String? get compactedSummary;/// 压缩水位：摘要覆盖到的最后一条消息 id（[ChatMessage.id]）。发送历史时丢弃此消息
-/// 及其之前的逐字内容、改用摘要；Isar 消息本身永不删除，故压缩可逆。
+ bool get thinking;/// 上下文压缩：滚动摘要（覆盖至 [compactedUpToMessageId] 为止）；null 表示未压缩，整段历史逐字发送。
+ String? get compactedSummary;/// 压缩水位：摘要覆盖到的最后一条消息 id；发送历史时此消息及之前内容改用摘要，Isar 消息永不删除，故可逆。
  String? get compactedUpToMessageId;/// 最近一次压缩的时刻。
  DateTime? get compactedAt;/// 触发压缩时该轮上报的输入 token 数（用于提示 / 调试）。
  int? get compactedInputTokensAtTrigger;
@@ -239,11 +237,9 @@ class _ChatSession implements ChatSession {
 @override final  DateTime updatedAt;
 /// 本会话是否开启思考模式（新建时取自全局默认 assistantThinkingEnabled）。
 @override@JsonKey() final  bool thinking;
-/// 上下文压缩：已生成的滚动摘要（覆盖至 [compactedUpToMessageId] 为止的历史要点）。
-/// null 表示尚未压缩——此时整段历史逐字发送。
+/// 上下文压缩：滚动摘要（覆盖至 [compactedUpToMessageId] 为止）；null 表示未压缩，整段历史逐字发送。
 @override final  String? compactedSummary;
-/// 压缩水位：摘要覆盖到的最后一条消息 id（[ChatMessage.id]）。发送历史时丢弃此消息
-/// 及其之前的逐字内容、改用摘要；Isar 消息本身永不删除，故压缩可逆。
+/// 压缩水位：摘要覆盖到的最后一条消息 id；发送历史时此消息及之前内容改用摘要，Isar 消息永不删除，故可逆。
 @override final  String? compactedUpToMessageId;
 /// 最近一次压缩的时刻。
 @override final  DateTime? compactedAt;

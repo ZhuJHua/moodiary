@@ -103,11 +103,11 @@ void main() {
             audios: ['audio-1.m4a'],
             videos: ['video-abc.mp4'],
           ),
-          buildDiary(id: 'd2', modifiedMs: 200, deleted: true),
         ],
-        categories: [
-          buildCategory(id: 'c1', modifiedMs: 50),
-          buildCategory(id: 'c2', modifiedMs: 60, deleted: true),
+        categories: [buildCategory(id: 'c1', modifiedMs: 50)],
+        tombstones: [
+          buildDiaryTombstone('d2', modifiedMs: 200),
+          buildCategoryTombstone('c2', modifiedMs: 60),
         ],
         mediaBaseDir: mediaSrc(),
       );
@@ -162,6 +162,7 @@ void main() {
           buildDiary(id: 'b', images: ['shared.png']),
         ],
         categories: const [],
+        tombstones: const [],
         mediaBaseDir: mediaSrc(),
       );
       expect(sink.localFiles, hasLength(1));
@@ -195,11 +196,13 @@ void main() {
         diaries: [
           buildDiary(id: 'newer-remote', modifiedMs: 1000),
           buildDiary(id: 'older-remote', modifiedMs: 2000),
-          buildDiary(id: 'alive-remote', modifiedMs: 2000, deleted: true),
-          buildDiary(id: 'unknown-tomb', modifiedMs: 2000, deleted: true),
           buildDiary(id: 'brand-new', modifiedMs: 100),
         ],
         categories: [buildCategory(id: 'cat-old', modifiedMs: 500)],
+        tombstones: [
+          buildDiaryTombstone('alive-remote', modifiedMs: 2000),
+          buildDiaryTombstone('unknown-tomb', modifiedMs: 2000),
+        ],
         mediaBaseDir: mediaSrc(),
         remote: remote,
       );
@@ -249,6 +252,7 @@ void main() {
           ),
         ],
         categories: const [],
+        tombstones: const [],
         mediaBaseDir: mediaSrc(),
         remote: remote,
       );
@@ -274,6 +278,7 @@ void main() {
         sink: sink,
         diaries: [buildDiary(id: 'a', modifiedMs: 1000)],
         categories: const [],
+        tombstones: const [],
         mediaBaseDir: mediaSrc(),
         remote: remote,
       );
@@ -288,12 +293,14 @@ void main() {
     Future<String> buildArchiveDir({
       required List<Diary> diaries,
       List<Category> categories = const [],
+      List<SyncTombstone> tombstones = const [],
     }) async {
       final dir = p.join(tmp.path, 'archive');
       await LocalArchive.writeArchive(
         sink: DirArchiveSink(dir),
         diaries: diaries,
         categories: categories,
+        tombstones: tombstones,
         mediaBaseDir: mediaSrc(),
       );
       return dir;
@@ -323,6 +330,7 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
       );
       expect(report.failed, 0);
@@ -346,12 +354,15 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: categoryStore,
+        tombstoneStore: diaryStore.tombstones,
         mediaFiles: mediaFiles,
       );
       expect(report.failed, 0);
       expect(report.diaryCount, 1);
       expect(report.categoryCount, 1);
       expect(diaryStore.diaries.containsKey('fresh'), isTrue);
+      // 归档导入不是云后端 pull：事件不带 fromSync，仍触发向云端的推送。
+      expect(diaryStore.writeOrigins['fresh'], isFalse);
       expect(categoryStore.categories.containsKey('c1'), isTrue);
       expect(mediaFiles.files.containsKey('image/img-1.png'), isTrue);
       expect(
@@ -360,11 +371,12 @@ void main() {
       );
     });
 
-    test('归档 tombstone 较新 → 软删本地并清媒体；本地较新 → 保留', () async {
+    test('归档 tombstone 较新 → 删本地落墓碑并清媒体；本地较新 → 保留', () async {
       final dir = await buildArchiveDir(
-        diaries: [
-          buildDiary(id: 'dead', modifiedMs: 2000, deleted: true),
-          buildDiary(id: 'alive', modifiedMs: 1000, deleted: true),
+        diaries: const [],
+        tombstones: [
+          buildDiaryTombstone('dead', modifiedMs: 2000),
+          buildDiaryTombstone('alive', modifiedMs: 1000),
         ],
       );
       final diaryStore = FakeDiaryStore([
@@ -376,12 +388,17 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        tombstoneStore: diaryStore.tombstones,
         mediaFiles: mediaFiles,
       );
       expect(report.failed, 0);
-      expect(diaryStore.diaries['dead']!.deleted, isTrue);
+      expect(diaryStore.diaries.containsKey('dead'), isFalse);
+      expect(diaryStore.tombstones.rows.containsKey('d:dead'), isTrue);
+      expect(diaryStore.writeOrigins['dead'], isFalse,
+          reason: '归档导入应用的删除仍需推送到云端');
       expect(mediaFiles.files.containsKey('image/img-1.png'), isFalse);
-      expect(diaryStore.diaries['alive']!.deleted, isFalse);
+      expect(diaryStore.diaries.containsKey('alive'), isTrue,
+          reason: '本地比归档 tombstone 新 → 保留');
     });
 
     test('导入不推进 lastSyncTime', () async {
@@ -392,6 +409,7 @@ void main() {
         dir,
         diaryStore: FakeDiaryStore(),
         categoryStore: FakeCategoryStore(),
+        tombstoneStore: FakeTombstoneStore(),
         mediaFiles: FakeMediaFiles(),
       );
       expect(MoodiaryKVs.lastSyncTime.get(), anyOf(isNull, 0));

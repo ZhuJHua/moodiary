@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
@@ -14,10 +17,15 @@ import 'package:moodiary_sync/src/data/sync_logger.dart';
 ///
 /// 设计要点：
 /// - **数据源**：订阅 [DiaryRepository.diaryEvents] / [CategoryRepository.categoryEvents]
-///   而非 Isar `watchLazy` —— 领域流只在写成功后发出（零误报），且引擎内部走 `merge`
-///   等旁路写入不进领域流，天然避免 pull → push 回环。
+///   而非 Isar `watchLazy` —— 领域流只在写成功后发出（零误报）。云 pull 落库的
+///   事件带 `fromSync` 标记，据此不标脏、不回声推送（远端已持有）；归档导入 /
+///   局域网接收不带标记，照常触发向云端的推送。
 /// - **互斥**：监听 [SyncLogger.events] 的 `syncStart`/`syncEnd`，任何 push/pull 进行中
 ///   都暂停响应，故 sync 内部写入（如 tombstone 清理）不会引发二次同步。
+/// - **空转短路**：轮询先 HEAD 远端 manifest（[MoodiaryKVs.syncManifestStat] 缓存
+///   指纹），未变且本地无待推变更（[MoodiaryKVs.syncPendingLocal]）→ 跳过整个
+///   syncAll，把空转成本从 5 个往返降到 1 个 HEAD。Last-Modified 是秒级粒度，
+///   同秒并发写理论上可漏判，故距上次成功同步超过 10 个轮询周期时强制全量兜底。
 /// - **静默失败**：出错不弹 toast，错误已落进 SyncLogger。
 class AutoSyncWatcher {
   AutoSyncWatcher._();
@@ -51,24 +59,29 @@ class AutoSyncWatcher {
   void start() {
     _started = true;
     _diarySub ??= DiaryRepository.get().diaryEvents.listen((event) {
+      // 云 pull 落库的变更远端已持有：不标脏、不置待推标记、不排推送。
+      if (event.fromSync) return;
+      unawaited(MoodiaryKVs.syncPendingLocal.set(true));
       switch (event) {
         case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
-          // 本地有改动 → 标记卡片「待同步」（软删 / tombstone 不标，将离开列表）。
+          // 本地有改动 → 标记卡片「待同步」。
           // 仅在配置了云后端时才追踪：没配同步就没有「待同步」概念，避免误导角标。
-          if (!diary.deleted && configuredCloudBackendIds().isNotEmpty) {
+          if (configuredCloudBackendIds().isNotEmpty) {
             SyncDirtyTracker.instance.markDirty(diary.id);
           }
           // 打开中的日记不触发同步（编辑期不上传半成品）。这是廉价前置闸门；权威跳过
           // 在引擎 push 快照里（poll / syncAll 绕过本闸门）。
           if (!OpenDiaryRegistry.instance.contains(diary.id)) _onLocalChange();
         case DiaryDeleted():
-          // 只带 isarId、无业务 id：放行触发同步（删除应尽快同步）。
+          // 只带 isarId、无业务 id：放行触发同步（永久删除的墓碑应尽快推送）。
           _onLocalChange();
       }
     });
-    _categorySub ??= CategoryRepository.get().categoryEvents.listen(
-      (_) => _onLocalChange(),
-    );
+    _categorySub ??= CategoryRepository.get().categoryEvents.listen((event) {
+      if (event.fromSync) return;
+      unawaited(MoodiaryKVs.syncPendingLocal.set(true));
+      _onLocalChange();
+    });
     _syncSub ??= SyncLogger.get().events.listen(_onSyncEvent);
     // 改了轮询间隔 → 立即按新值重排（缩短间隔不必等旧定时器走完）。
     MoodiaryKVs.syncPollInterval.getNotifier().addListener(_schedulePoll);
@@ -147,17 +160,74 @@ class AutoSyncWatcher {
     await _runAutoSync((backend) => backend.pushAll());
   }
 
-  /// 周期轮询到点：双向 sync。开关关闭时读 KV 直接空转返回。
+  /// 周期轮询到点：先做空转短路探测，未命中才双向 sync。开关关闭时直接空转返回。
   Future<void> _pollTick() async {
     if (MoodiaryKVs.autoSync.get() != true) return;
-    await _runAutoSync((backend) => backend.syncAll());
+    if (_syncing) return;
+    if (!getIt.isRegistered<IRemoteSyncBackend>()) return;
+    final backend = IRemoteSyncBackend.get();
+    if (!backend.isReady) return;
+
+    String? preStat;
+    final backendId = backend.persistentBackendId;
+    if (backendId != null) {
+      try {
+        final stat = await backend.statObject(SyncKeys.manifestPath);
+        preStat = '$backendId|$stat';
+      } catch (_) {
+        // 远端不可达：完整同步同样会失败，静默等下个周期（省掉整套租约往返）。
+        return;
+      }
+      if (shouldSkipPoll(
+        preStat: preStat,
+        cachedStat: MoodiaryKVs.syncManifestStat.get(),
+        pendingLocal: MoodiaryKVs.syncPendingLocal.get() ?? true,
+        lastSyncMs: MoodiaryKVs.lastSyncTime.get() ?? 0,
+        nowMs: DateTime.now().millisecondsSinceEpoch,
+        pollSeconds: _resolvePollSeconds(),
+      )) {
+        return;
+      }
+    }
+    await _runAutoSync(
+      (backend) => backend.syncAll(),
+      // 缓存的是同步开始前观测的指纹：本机 push 会再改 manifest，使下一轮指纹
+      // 不匹配、多跑一次（随即空转的）全量同步 —— 换取「同步期间他机写入必不被
+      // 漏判」。
+      onSuccess: preStat == null
+          ? null
+          : () => MoodiaryKVs.syncManifestStat.set(preStat!),
+    );
+  }
+
+  /// 空转短路判定（纯函数，便于单测）：远端指纹未变 + 本地无待推变更 + 距上次
+  /// 成功同步不超过兜底窗（10 个轮询周期，上限 30 分钟）。兜底窗保证秒级粒度
+  /// 漏判与「待推标记未落盘就被杀进程」都能在有限时间内收敛，且不随用户把
+  /// 轮询间隔调大而无限放大。
+  @visibleForTesting
+  static bool shouldSkipPoll({
+    required String preStat,
+    required String? cachedStat,
+    required bool pendingLocal,
+    required int lastSyncMs,
+    required int nowMs,
+    required int pollSeconds,
+  }) {
+    if (pendingLocal) return false;
+    if (preStat != cachedStat) return false;
+    if (lastSyncMs <= 0) return false;
+    final beltMs = min(pollSeconds * 10, 1800) * 1000;
+    return nowMs - lastSyncMs <= beltMs;
   }
 
   /// 公共执行体：复查同步状态/后端就绪后跑 [op]，失败静默吞。结束后若同步期间有
-  /// 新变更（[_dirtyDuringSync]）则补排一次去抖 push。
+  /// 新变更（[_dirtyDuringSync]）则补排一次去抖 push。成功（零失败未取消）时清
+  /// 待推标记并执行 [onSuccess]；同步期间的新变更由 [_dirtyDuringSync] 兜底，
+  /// 不清标记。
   Future<void> _runAutoSync(
-    Future<SyncReport> Function(IRemoteSyncBackend) op,
-  ) async {
+    Future<SyncReport> Function(IRemoteSyncBackend) op, {
+    Future<void> Function()? onSuccess,
+  }) async {
     if (_syncing) return;
     if (!getIt.isRegistered<IRemoteSyncBackend>()) return;
     final backend = IRemoteSyncBackend.get();
@@ -165,7 +235,13 @@ class AutoSyncWatcher {
 
     _syncing = true;
     try {
-      await op(backend);
+      final report = await op(backend);
+      if (report.failed == 0 && !report.cancelled) {
+        if (!_dirtyDuringSync) {
+          await MoodiaryKVs.syncPendingLocal.set(false);
+        }
+        await onSuccess?.call();
+      }
     } catch (e, st) {
       logger.e('auto-sync failed', error: e, stackTrace: st);
     } finally {

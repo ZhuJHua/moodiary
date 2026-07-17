@@ -6,7 +6,9 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
+import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
 
@@ -81,6 +83,9 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   /// 每个操作开始时回调；抛异常即模拟该操作失败。op ∈ read/write/create/delete/stat。
   void Function(String op, String key)? beforeOp;
 
+  /// false = 模拟不执行 `If-None-Match:*` 的服务器：已存在也覆盖写并返回 true。
+  bool conditionalPutHonored = true;
+
   /// 固定的 Last-Modified，仅需非空字符串表示「远端存在」。
   static const String _mtime = '2026-01-01T00:00:00.000Z';
 
@@ -118,7 +123,7 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   Future<bool> tryCreateExclusive(String key, Uint8List bytes) async {
     ops.add('create $key');
     beforeOp?.call('create', key);
-    if (objects.containsKey(key)) return false;
+    if (objects.containsKey(key) && conditionalPutHonored) return false;
     objects[key] = bytes;
     return true;
   }
@@ -170,14 +175,53 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
 
 // ─────────────────────── local stores ───────────────────────
 
-/// 内存日记仓库，实现 [SyncDiaryStore]。`diaries` 以业务 id 为键。
-final class FakeDiaryStore implements SyncDiaryStore {
-  final Map<String, Diary> diaries = {};
-
-  /// 引擎调用记录，供断言（如确认软删走的是 updateADiary、硬删走 deleteDiariesByIsarIds）。
+/// 内存墓碑表，实现 [SyncTombstoneStore]。`rows` 以 manifest 键（`d:`/`c:`）为键。
+final class FakeTombstoneStore implements SyncTombstoneStore {
+  final Map<String, SyncTombstone> rows = {};
   final List<String> calls = [];
 
-  FakeDiaryStore([Iterable<Diary> seed = const []]) {
+  FakeTombstoneStore([Iterable<SyncTombstone> seed = const []]) {
+    for (final t in seed) {
+      rows[t.key] = t;
+    }
+  }
+
+  @override
+  Future<List<SyncTombstone>> getAll() async => rows.values.toList();
+
+  @override
+  Future<SyncTombstone?> getByKey(String key) async => rows[key];
+
+  @override
+  Future<void> putAll(List<SyncTombstone> list) async {
+    for (final t in list) {
+      calls.add('put ${t.key}');
+      rows[t.key] = t;
+    }
+  }
+
+  @override
+  Future<void> deleteByKeys(List<String> keys) async {
+    for (final key in keys) {
+      if (rows.remove(key) != null) calls.add('delete $key');
+    }
+  }
+}
+
+/// 内存日记仓库，实现 [SyncDiaryStore]。`diaries` 以业务 id 为键；与
+/// [FakeTombstoneStore] 镜像真实仓储的事务不变量（insert 清墓碑、tombstone
+/// 删行 + 落墓碑）——引擎与 store 须共享同一 tombstones 实例。
+final class FakeDiaryStore implements SyncDiaryStore {
+  final Map<String, Diary> diaries = {};
+  final FakeTombstoneStore tombstones;
+
+  /// 引擎调用记录，供断言（如确认 pull 墓碑走的是 tombstoneDiary）。
+  final List<String> calls = [];
+
+  FakeDiaryStore([
+    Iterable<Diary> seed = const [],
+    FakeTombstoneStore? tombstones,
+  ]) : tombstones = tombstones ?? FakeTombstoneStore() {
     for (final d in seed) {
       diaries[d.id] = d;
     }
@@ -195,40 +239,43 @@ final class FakeDiaryStore implements SyncDiaryStore {
     return diaries[id];
   }
 
+  /// 每次写入携带的 fromSync 标记（断言云 pull 与归档导入的事件来源）。
+  final Map<String, bool> writeOrigins = {};
+
   @override
-  Future<void> insertADiary(Diary diary) async {
+  Future<void> insertADiary(Diary diary, {bool fromSync = false}) async {
     calls.add('insert ${diary.id}');
+    writeOrigins[diary.id] = fromSync;
     diaries[diary.id] = diary;
+    tombstones.rows.remove(SyncTombstone.diaryKey(diary.id));
   }
 
   @override
-  Future<void> updateADiary(Diary newDiary) async {
-    calls.add('update ${newDiary.id}');
-    diaries[newDiary.id] = newDiary;
-  }
-
-  @override
-  Future<void> deleteDiariesByIsarIds(List<int> isarIds) async {
-    final ids = isarIds.toSet();
-    final removed = diaries.values
-        .where((d) => ids.contains(d.isarId))
-        .map((d) => d.id)
-        .toList();
-    for (final id in removed) {
-      calls.add('hardDelete $id');
-      diaries.remove(id);
-    }
+  Future<SyncTombstone> tombstoneDiary(
+    Diary diary, {
+    bool fromSync = false,
+  }) async {
+    calls.add('tombstone ${diary.id}');
+    writeOrigins[diary.id] = fromSync;
+    diaries.remove(diary.id);
+    final row = SyncTombstone.forDiary(diary.id, at: DateTime.timestamp());
+    tombstones.rows[row.key] = row;
+    return row;
   }
 }
 
 /// 内存分类仓库，实现 [SyncCategoryStore]。
 final class FakeCategoryStore implements SyncCategoryStore {
   final Map<String, Category> categories = {};
+  final FakeTombstoneStore tombstones;
 
   /// 写入返回 false 用于模拟仓库写失败。
   bool insertSucceeds = true;
 
-  FakeCategoryStore([Iterable<Category> seed = const []]) {
+  FakeCategoryStore([
+    Iterable<Category> seed = const [],
+    FakeTombstoneStore? tombstones,
+  ]) : tombstones = tombstones ?? FakeTombstoneStore() {
     for (final c in seed) {
       categories[c.id] = c;
     }
@@ -242,10 +289,22 @@ final class FakeCategoryStore implements SyncCategoryStore {
   Future<Category?> getCategoryById(String id) async => categories[id];
 
   @override
-  Future<bool> insertACategory(Category category) async {
+  Future<bool> insertACategory(Category category, {bool fromSync = false}) async {
     if (!insertSucceeds) return false;
     categories[category.id] = category;
+    tombstones.rows.remove(SyncTombstone.categoryKey(category.id));
     return true;
+  }
+
+  @override
+  Future<SyncTombstone> tombstoneCategory(
+    String id, {
+    bool fromSync = false,
+  }) async {
+    categories.remove(id);
+    final row = SyncTombstone.forCategory(id, at: DateTime.timestamp());
+    tombstones.rows[row.key] = row;
+    return row;
   }
 }
 
@@ -324,12 +383,16 @@ setUpSyncEnv() async {
   await MoodiaryKVs.syncDeviceId.set('test-device');
   SyncCancellation.instance.reset();
   SyncPendingTracker.instance.clear();
+  RemoteLease.resetCasProbeCache();
+  SyncKeyManager.resetForTest();
   return (kv: kv, secure: secure, logger: logger);
 }
 
 Future<void> tearDownSyncEnv() async {
   SyncCancellation.instance.reset();
   SyncPendingTracker.instance.clear();
+  RemoteLease.resetCasProbeCache();
+  SyncKeyManager.resetForTest();
   await getIt.reset();
 }
 
@@ -362,7 +425,6 @@ DateTime atMs(int millisOffset) =>
 Diary buildDiary({
   required String id,
   int modifiedMs = 0,
-  bool deleted = false,
   bool show = true,
   String? categoryId,
   String title = '',
@@ -381,7 +443,6 @@ Diary buildDiary({
     time: ts,
     lastModified: ts,
     show: show,
-    deleted: deleted,
     mood: 0,
     weather: const [],
     imageName: images,
@@ -396,7 +457,6 @@ Diary buildDiary({
 Category buildCategory({
   required String id,
   int modifiedMs = 0,
-  bool deleted = false,
   String name = 'cat',
   String? parentId,
 }) {
@@ -405,6 +465,30 @@ Category buildCategory({
     categoryName: name,
     lastModified: atMs(modifiedMs),
     parentId: parentId,
-    deleted: deleted,
+  );
+}
+
+/// 构造一条日记墓碑（删除时刻用 atMs 偏移表示，便于 LWW 断言）。
+SyncTombstone buildDiaryTombstone(
+  String id, {
+  int modifiedMs = 0,
+  List<String> pushed = const [],
+}) {
+  return SyncTombstone(
+    key: SyncTombstone.diaryKey(id),
+    timeMs: atMs(modifiedMs).millisecondsSinceEpoch,
+    pushedBackends: pushed,
+  );
+}
+
+SyncTombstone buildCategoryTombstone(
+  String id, {
+  int modifiedMs = 0,
+  List<String> pushed = const [],
+}) {
+  return SyncTombstone(
+    key: SyncTombstone.categoryKey(id),
+    timeMs: atMs(modifiedMs).millisecondsSinceEpoch,
+    pushedBackends: pushed,
   );
 }

@@ -14,30 +14,61 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CategoryEvent {
 
-
+ bool get fromSync;
+/// Create a copy of CategoryEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$CategoryEventCopyWith<CategoryEvent> get copyWith => _$CategoryEventCopyWithImpl<CategoryEvent>(this as CategoryEvent, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryEvent);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryEvent&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,fromSync);
 
 @override
 String toString() {
-  return 'CategoryEvent()';
+  return 'CategoryEvent(fromSync: $fromSync)';
 }
 
 
 }
 
 /// @nodoc
-class $CategoryEventCopyWith<$Res>  {
-$CategoryEventCopyWith(CategoryEvent _, $Res Function(CategoryEvent) __);
+abstract mixin class $CategoryEventCopyWith<$Res>  {
+  factory $CategoryEventCopyWith(CategoryEvent value, $Res Function(CategoryEvent) _then) = _$CategoryEventCopyWithImpl;
+@useResult
+$Res call({
+ bool fromSync
+});
+
+
+
+
+}
+/// @nodoc
+class _$CategoryEventCopyWithImpl<$Res>
+    implements $CategoryEventCopyWith<$Res> {
+  _$CategoryEventCopyWithImpl(this._self, this._then);
+
+  final CategoryEvent _self;
+  final $Res Function(CategoryEvent) _then;
+
+/// Create a copy of CategoryEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? fromSync = null,}) {
+  return _then(_self.copyWith(
+fromSync: null == fromSync ? _self.fromSync : fromSync // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
 }
 
 
@@ -119,11 +150,11 @@ return deleted(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Category category)?  upserted,TResult Function( String id)?  deleted,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( Category category,  bool fromSync)?  upserted,TResult Function( String id,  bool fromSync)?  deleted,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case CategoryUpserted() when upserted != null:
-return upserted(_that.category);case CategoryDeleted() when deleted != null:
-return deleted(_that.id);case _:
+return upserted(_that.category,_that.fromSync);case CategoryDeleted() when deleted != null:
+return deleted(_that.id,_that.fromSync);case _:
   return orElse();
 
 }
@@ -141,11 +172,11 @@ return deleted(_that.id);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Category category)  upserted,required TResult Function( String id)  deleted,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( Category category,  bool fromSync)  upserted,required TResult Function( String id,  bool fromSync)  deleted,}) {final _that = this;
 switch (_that) {
 case CategoryUpserted():
-return upserted(_that.category);case CategoryDeleted():
-return deleted(_that.id);}
+return upserted(_that.category,_that.fromSync);case CategoryDeleted():
+return deleted(_that.id,_that.fromSync);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -159,11 +190,11 @@ return deleted(_that.id);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Category category)?  upserted,TResult? Function( String id)?  deleted,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( Category category,  bool fromSync)?  upserted,TResult? Function( String id,  bool fromSync)?  deleted,}) {final _that = this;
 switch (_that) {
 case CategoryUpserted() when upserted != null:
-return upserted(_that.category);case CategoryDeleted() when deleted != null:
-return deleted(_that.id);case _:
+return upserted(_that.category,_that.fromSync);case CategoryDeleted() when deleted != null:
+return deleted(_that.id,_that.fromSync);case _:
   return null;
 
 }
@@ -175,14 +206,15 @@ return deleted(_that.id);case _:
 
 
 class CategoryUpserted implements CategoryEvent {
-  const CategoryUpserted(this.category);
+  const CategoryUpserted(this.category, {this.fromSync = false});
   
 
  final  Category category;
+@override@JsonKey() final  bool fromSync;
 
 /// Create a copy of CategoryEvent
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $CategoryUpsertedCopyWith<CategoryUpserted> get copyWith => _$CategoryUpsertedCopyWithImpl<CategoryUpserted>(this, _$identity);
 
@@ -190,16 +222,16 @@ $CategoryUpsertedCopyWith<CategoryUpserted> get copyWith => _$CategoryUpsertedCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryUpserted&&(identical(other.category, category) || other.category == category));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryUpserted&&(identical(other.category, category) || other.category == category)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,category);
+int get hashCode => Object.hash(runtimeType,category,fromSync);
 
 @override
 String toString() {
-  return 'CategoryEvent.upserted(category: $category)';
+  return 'CategoryEvent.upserted(category: $category, fromSync: $fromSync)';
 }
 
 
@@ -208,9 +240,9 @@ String toString() {
 /// @nodoc
 abstract mixin class $CategoryUpsertedCopyWith<$Res> implements $CategoryEventCopyWith<$Res> {
   factory $CategoryUpsertedCopyWith(CategoryUpserted value, $Res Function(CategoryUpserted) _then) = _$CategoryUpsertedCopyWithImpl;
-@useResult
+@override @useResult
 $Res call({
- Category category
+ Category category, bool fromSync
 });
 
 
@@ -227,10 +259,11 @@ class _$CategoryUpsertedCopyWithImpl<$Res>
 
 /// Create a copy of CategoryEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? category = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? category = null,Object? fromSync = null,}) {
   return _then(CategoryUpserted(
 null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as Category,
+as Category,fromSync: null == fromSync ? _self.fromSync : fromSync // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -250,14 +283,15 @@ $CategoryCopyWith<$Res> get category {
 
 
 class CategoryDeleted implements CategoryEvent {
-  const CategoryDeleted(this.id);
+  const CategoryDeleted(this.id, {this.fromSync = false});
   
 
  final  String id;
+@override@JsonKey() final  bool fromSync;
 
 /// Create a copy of CategoryEvent
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $CategoryDeletedCopyWith<CategoryDeleted> get copyWith => _$CategoryDeletedCopyWithImpl<CategoryDeleted>(this, _$identity);
 
@@ -265,16 +299,16 @@ $CategoryDeletedCopyWith<CategoryDeleted> get copyWith => _$CategoryDeletedCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryDeleted&&(identical(other.id, id) || other.id == id));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CategoryDeleted&&(identical(other.id, id) || other.id == id)&&(identical(other.fromSync, fromSync) || other.fromSync == fromSync));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id);
+int get hashCode => Object.hash(runtimeType,id,fromSync);
 
 @override
 String toString() {
-  return 'CategoryEvent.deleted(id: $id)';
+  return 'CategoryEvent.deleted(id: $id, fromSync: $fromSync)';
 }
 
 
@@ -283,9 +317,9 @@ String toString() {
 /// @nodoc
 abstract mixin class $CategoryDeletedCopyWith<$Res> implements $CategoryEventCopyWith<$Res> {
   factory $CategoryDeletedCopyWith(CategoryDeleted value, $Res Function(CategoryDeleted) _then) = _$CategoryDeletedCopyWithImpl;
-@useResult
+@override @useResult
 $Res call({
- String id
+ String id, bool fromSync
 });
 
 
@@ -302,10 +336,11 @@ class _$CategoryDeletedCopyWithImpl<$Res>
 
 /// Create a copy of CategoryEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? id = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? fromSync = null,}) {
   return _then(CategoryDeleted(
 null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,
+as String,fromSync: null == fromSync ? _self.fromSync : fromSync // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

@@ -10,10 +10,9 @@ void main() {
   group('SyncCipher plaintext', () {
     const cipher = SyncCipher.plaintext;
 
-    test('encrypted flag is false for null/empty key', () {
-      expect(const SyncCipher(null).encrypted, isFalse);
-      expect(const SyncCipher('').encrypted, isFalse);
-      expect(const SyncCipher('k').encrypted, isTrue);
+    test('encrypted flag follows the presence of a raw key', () {
+      expect(const SyncCipher.withKey(null).encrypted, isFalse);
+      expect(const SyncCipher.withKey([1, 2, 3]).encrypted, isTrue);
     });
 
     test('encode → decode round-trips a map and is bare utf8 json', () async {

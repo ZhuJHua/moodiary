@@ -9,8 +9,7 @@ import 'diary_repository.dart';
 
 part 'category_controller.g.dart';
 
-/// 把单条 [CategoryEvent] 原地并入列表（按 id 升序）。`deleted == true`（UI 软删 /
-/// 同步 tombstone）一律移除。
+/// 把单条 [CategoryEvent] 原地并入列表（按 id 升序）。
 List<Category> _applyEvent(List<Category> list, CategoryEvent event) {
   switch (event) {
     case CategoryDeleted(:final id):
@@ -18,10 +17,6 @@ List<Category> _applyEvent(List<Category> list, CategoryEvent event) {
       return list.where((c) => c.id != id).toList();
     case CategoryUpserted(:final category):
       final index = list.indexWhere((c) => c.id == category.id);
-      if (category.deleted) {
-        if (index == -1) return list;
-        return list.where((c) => c.id != category.id).toList();
-      }
       final updated = [...list];
       if (index == -1) {
         updated.add(category);
@@ -57,7 +52,7 @@ class CategoryController extends _$CategoryController {
     return either.isRight();
   }
 
-  /// 软删除分类，仅当其下没有日记时成功。
+  /// 删除分类（行硬删 + 同步墓碑），仅当其下没有日记时成功。
   Future<bool> deleteCategory(String id) async {
     final either = await _repository.deleteACategory(id).run();
     return either.getOrElse((_) => false);

@@ -26,18 +26,11 @@ final CategorySchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'lastModified', type: IsarType.dateTime),
       IsarPropertySchema(name: 'parentId', type: IsarType.string),
       IsarPropertySchema(name: 'color', type: IsarType.long),
-      IsarPropertySchema(name: 'deleted', type: IsarType.bool),
     ],
     indexes: [
       IsarIndexSchema(
         name: 'level',
         properties: ["level"],
-        unique: false,
-        hash: false,
-      ),
-      IsarIndexSchema(
-        name: 'deleted',
-        properties: ["deleted"],
         unique: false,
         hash: false,
       ),
@@ -70,7 +63,6 @@ int serializeCategory(IsarWriter writer, Category object) {
     }
   }
   IsarCore.writeLong(writer, 6, object.color ?? -9223372036854775808);
-  IsarCore.writeBool(writer, 7, value: object.deleted);
   return Isar.fastHash(object.id);
 }
 
@@ -106,15 +98,12 @@ Category deserializeCategory(IsarReader reader) {
       _color = value;
     }
   }
-  final bool _deleted;
-  _deleted = IsarCore.readBool(reader, 7);
   final object = Category(
     id: _id,
     categoryName: _categoryName,
     lastModified: _lastModified,
     parentId: _parentId,
     color: _color,
-    deleted: _deleted,
   );
   return object;
 }
@@ -151,8 +140,6 @@ dynamic deserializeCategoryProp(IsarReader reader, int property) {
           return value;
         }
       }
-    case 7:
-      return IsarCore.readBool(reader, 7);
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -166,7 +153,6 @@ sealed class _CategoryUpdate {
     DateTime? lastModified,
     String? parentId,
     int? color,
-    bool? deleted,
   });
 }
 
@@ -183,7 +169,6 @@ class _CategoryUpdateImpl implements _CategoryUpdate {
     Object? lastModified = ignore,
     Object? parentId = ignore,
     Object? color = ignore,
-    Object? deleted = ignore,
   }) {
     return collection.updateProperties(
           [id],
@@ -193,7 +178,6 @@ class _CategoryUpdateImpl implements _CategoryUpdate {
             if (lastModified != ignore) 4: lastModified as DateTime?,
             if (parentId != ignore) 5: parentId as String?,
             if (color != ignore) 6: color as int?,
-            if (deleted != ignore) 7: deleted as bool?,
           },
         ) >
         0;
@@ -208,7 +192,6 @@ sealed class _CategoryUpdateAll {
     DateTime? lastModified,
     String? parentId,
     int? color,
-    bool? deleted,
   });
 }
 
@@ -225,7 +208,6 @@ class _CategoryUpdateAllImpl implements _CategoryUpdateAll {
     Object? lastModified = ignore,
     Object? parentId = ignore,
     Object? color = ignore,
-    Object? deleted = ignore,
   }) {
     return collection.updateProperties(id, {
       if (level != ignore) 1: level as String?,
@@ -233,7 +215,6 @@ class _CategoryUpdateAllImpl implements _CategoryUpdateAll {
       if (lastModified != ignore) 4: lastModified as DateTime?,
       if (parentId != ignore) 5: parentId as String?,
       if (color != ignore) 6: color as int?,
-      if (deleted != ignore) 7: deleted as bool?,
     });
   }
 }
@@ -251,7 +232,6 @@ sealed class _CategoryQueryUpdate {
     DateTime? lastModified,
     String? parentId,
     int? color,
-    bool? deleted,
   });
 }
 
@@ -268,7 +248,6 @@ class _CategoryQueryUpdateImpl implements _CategoryQueryUpdate {
     Object? lastModified = ignore,
     Object? parentId = ignore,
     Object? color = ignore,
-    Object? deleted = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (level != ignore) 1: level as String?,
@@ -276,7 +255,6 @@ class _CategoryQueryUpdateImpl implements _CategoryQueryUpdate {
       if (lastModified != ignore) 4: lastModified as DateTime?,
       if (parentId != ignore) 5: parentId as String?,
       if (color != ignore) 6: color as int?,
-      if (deleted != ignore) 7: deleted as bool?,
     });
   }
 }
@@ -301,7 +279,6 @@ class _CategoryQueryBuilderUpdateImpl implements _CategoryQueryUpdate {
     Object? lastModified = ignore,
     Object? parentId = ignore,
     Object? color = ignore,
-    Object? deleted = ignore,
   }) {
     final q = query.build();
     try {
@@ -311,7 +288,6 @@ class _CategoryQueryBuilderUpdateImpl implements _CategoryQueryUpdate {
         if (lastModified != ignore) 4: lastModified as DateTime?,
         if (parentId != ignore) 5: parentId as String?,
         if (color != ignore) 6: color as int?,
-        if (deleted != ignore) 7: deleted as bool?,
       });
     } finally {
       q.close();
@@ -1089,16 +1065,6 @@ extension CategoryQueryFilter
       );
     });
   }
-
-  QueryBuilder<Category, Category, QAfterFilterCondition> deletedEqualTo(
-    bool value,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        EqualCondition(property: 7, value: value),
-      );
-    });
-  }
 }
 
 extension CategoryQueryObject
@@ -1192,18 +1158,6 @@ extension CategoryQuerySortBy on QueryBuilder<Category, Category, QSortBy> {
       return query.addSortBy(6, sort: Sort.desc);
     });
   }
-
-  QueryBuilder<Category, Category, QAfterSortBy> sortByDeleted() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7);
-    });
-  }
-
-  QueryBuilder<Category, Category, QAfterSortBy> sortByDeletedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7, sort: Sort.desc);
-    });
-  }
 }
 
 extension CategoryQuerySortThenBy
@@ -1295,18 +1249,6 @@ extension CategoryQuerySortThenBy
       return query.addSortBy(6, sort: Sort.desc);
     });
   }
-
-  QueryBuilder<Category, Category, QAfterSortBy> thenByDeleted() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7);
-    });
-  }
-
-  QueryBuilder<Category, Category, QAfterSortBy> thenByDeletedDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7, sort: Sort.desc);
-    });
-  }
 }
 
 extension CategoryQueryWhereDistinct
@@ -1344,12 +1286,6 @@ extension CategoryQueryWhereDistinct
   QueryBuilder<Category, Category, QAfterDistinct> distinctByColor() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(6);
-    });
-  }
-
-  QueryBuilder<Category, Category, QAfterDistinct> distinctByDeleted() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(7);
     });
   }
 }
@@ -1391,12 +1327,6 @@ extension CategoryQueryProperty1
       return query.addProperty(6);
     });
   }
-
-  QueryBuilder<Category, bool, QAfterProperty> deletedProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(7);
-    });
-  }
 }
 
 extension CategoryQueryProperty2<R>
@@ -1434,12 +1364,6 @@ extension CategoryQueryProperty2<R>
   QueryBuilder<Category, (R, int?), QAfterProperty> colorProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(6);
-    });
-  }
-
-  QueryBuilder<Category, (R, bool), QAfterProperty> deletedProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(7);
     });
   }
 }
@@ -1482,12 +1406,6 @@ extension CategoryQueryProperty3<R1, R2>
       return query.addProperty(6);
     });
   }
-
-  QueryBuilder<Category, (R1, R2, bool), QOperations> deletedProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(7);
-    });
-  }
 }
 
 // **************************************************************************
@@ -1502,7 +1420,6 @@ _Category _$CategoryFromJson(Map<String, dynamic> json) => _Category(
   ),
   parentId: json['parentId'] as String?,
   color: (json['color'] as num?)?.toInt(),
-  deleted: json['deleted'] as bool,
 );
 
 Map<String, dynamic> _$CategoryToJson(_Category instance) => <String, dynamic>{
@@ -1511,5 +1428,4 @@ Map<String, dynamic> _$CategoryToJson(_Category instance) => <String, dynamic>{
   'lastModified': const UtcDateTimeConverter().toJson(instance.lastModified),
   'parentId': instance.parentId,
   'color': instance.color,
-  'deleted': instance.deleted,
 };

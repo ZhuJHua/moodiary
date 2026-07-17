@@ -3,11 +3,19 @@ import 'category.dart';
 
 part 'category_event.freezed.dart';
 
-/// 分类没有硬删除：软删（`deleted = true`）与同步 tombstone 都归 [CategoryUpserted]
-/// （列表按 `!deleted` 决定迁入 / 迁出）；[CategoryDeleted] 仅用于 UI 软删后从列表移除。
+/// [CategoryDeleted] 表示行已从表中移除（本地删除与同步 tombstone 皆是，删除事实
+/// 由 SyncTombstone 表承载）；[CategoryUpserted] 为新建 / 改名 / 同步下载等 upsert。
+///
+/// [fromSync] 语义同 DiaryEvent：云 pull 落库的变更不触发回声推送。
 @freezed
 sealed class CategoryEvent with _$CategoryEvent {
-  const factory CategoryEvent.upserted(Category category) = CategoryUpserted;
+  const factory CategoryEvent.upserted(
+    Category category, {
+    @Default(false) bool fromSync,
+  }) = CategoryUpserted;
 
-  const factory CategoryEvent.deleted(String id) = CategoryDeleted;
+  const factory CategoryEvent.deleted(
+    String id, {
+    @Default(false) bool fromSync,
+  }) = CategoryDeleted;
 }

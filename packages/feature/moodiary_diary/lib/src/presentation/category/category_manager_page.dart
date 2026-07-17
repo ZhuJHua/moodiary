@@ -177,7 +177,6 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
             lastModified: DateTime.timestamp(),
             parentId: category.parentId,
             color: draft.color,
-            deleted: category.deleted,
           ),
         );
     if (!mounted) return;

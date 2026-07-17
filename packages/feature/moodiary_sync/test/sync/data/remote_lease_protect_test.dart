@@ -120,4 +120,42 @@ void main() {
       expect(backend.hasObject(SyncKeys.lockPath), isFalse);
     });
   });
+
+  group('conditional-put probe', () {
+    test('探测通过（合规服务器）→ 第二次抢占免回读、不再重复探测', () {
+      fakeAsync((async) {
+        final backend = FakeRemoteBackend();
+        RemoteLease.protect(backend, () async {}, logger: logger);
+        async.elapse(const Duration(seconds: 1));
+        expect(backend.opCount('read', SyncKeys.lockPath), 1,
+            reason: '首次抢占仍做回读校验');
+        expect(backend.opCount('create', SyncKeys.lockPath), 2,
+            reason: '回读通过后追加一次条件写探测');
+
+        RemoteLease.protect(backend, () async {}, logger: logger);
+        async.elapse(const Duration(seconds: 1));
+        expect(backend.opCount('read', SyncKeys.lockPath), 1,
+            reason: '探测通过后免回读');
+        expect(backend.opCount('create', SyncKeys.lockPath), 3,
+            reason: '结论已缓存，不再探测');
+        expect(backend.hasObject(SyncKeys.lockPath), isFalse);
+      });
+    });
+
+    test('不合规服务器（覆盖写）→ 每次抢占保留回读校验', () {
+      fakeAsync((async) {
+        final backend = FakeRemoteBackend()..conditionalPutHonored = false;
+        RemoteLease.protect(backend, () async {}, logger: logger);
+        async.elapse(const Duration(seconds: 1));
+        expect(backend.opCount('read', SyncKeys.lockPath), 1);
+
+        RemoteLease.protect(backend, () async {}, logger: logger);
+        async.elapse(const Duration(seconds: 1));
+        expect(backend.opCount('read', SyncKeys.lockPath), 2,
+            reason: '不合规服务器不得免除回读');
+        expect(backend.hasObject(SyncKeys.lockPath), isFalse,
+            reason: '探测载荷是本机合法租约，释放不受影响');
+      });
+    });
+  });
 }

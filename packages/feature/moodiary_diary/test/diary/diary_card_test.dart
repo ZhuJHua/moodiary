@@ -16,7 +16,6 @@ Diary diary({double mood = 0.5, List<String> weather = const []}) => Diary(
       time: DateTime(2026),
       lastModified: DateTime(2026),
       show: true,
-      deleted: false,
       mood: mood,
       weather: weather,
       imageName: const [],
@@ -28,7 +27,7 @@ Diary diary({double mood = 0.5, List<String> weather = const []}) => Diary(
     );
 
 Category cat() => Category(
-      id: 'a', categoryName: 'work', lastModified: DateTime(2026), deleted: false,
+      id: 'a', categoryName: 'work', lastModified: DateTime(2026),
     );
 
 Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));

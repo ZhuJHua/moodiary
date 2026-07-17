@@ -10,6 +10,7 @@ export 'src/routes.dart' show syncRoutes;
 export 'src/data/sync_registry.dart' show registerRemoteSync;
 export 'src/data/sync_logger.dart' show SyncLogger;
 export 'src/application/auto_sync_watcher.dart' show AutoSyncWatcher;
+export 'src/application/tombstone_gc.dart' show purgeExpiredTombstones;
 export 'src/application/sync_controller.dart'
     show
         SyncController,

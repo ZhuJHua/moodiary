@@ -72,7 +72,10 @@ class LeasePayload {
 /// - **抢占**：[IRemoteSyncBackend.tryCreateExclusive]（`If-None-Match: *`）原子
 ///   创建 `sync.lock`；支持条件 PUT 的服务器上严格原子；
 /// - **回读校验**：兜底不支持条件 PUT 的服务器（覆盖写也报成功）—— 创建后随机抖动
-///   150~400ms 再回读 owner，不是自己即竞争失败；
+///   150~400ms 再回读 owner，不是自己即竞争失败。每进程对每个后端只在首次抢占后
+///   做一次**条件写探测**（锁在手时再次条件创建必须失败）；探测通过的后端此后
+///   免抖动免回读，每次同步省一个往返 + ~300ms（进程内缓存，重启后重新探测，
+///   规避「换服务器但 backendId 未变」的陈旧判定）；
 /// - **接管**：owner 是本机（崩溃/释放失败残留）→ 刷新接管；
 /// - **过期**：`acquiredAt + ttl + 时钟偏差余量` 已过 → 删除后重试，崩溃设备最多
 ///   阻塞他人一个 TTL；
@@ -99,6 +102,14 @@ class RemoteLease {
   static const Duration _retryDelay = Duration(seconds: 3);
 
   static final Random _random = Random();
+
+  /// 进程内的条件写探测结论（backendId → 服务器是否真正执行 If-None-Match:*）。
+  /// 不落 KV：backendId 是 provider 类型而非服务器身份，持久化会在换服务器后
+  /// 留下陈旧的「可信」判定；进程内缓存最多为每次启动多付一次探测。
+  static final Map<String, bool> _casVerified = {};
+
+  /// 清空条件写探测结论（后端重注册 / 测试隔离时调用）。
+  static void resetCasProbeCache() => _casVerified.clear();
 
   /// 本机设备 id（懒生成、持久化）。
   static Future<String> _ensureDeviceId() async {
@@ -184,6 +195,16 @@ class RemoteLease {
         payload.toBytes(),
       );
       if (created) {
+        final backendId = backend.persistentBackendId;
+        if (backendId != null && _casVerified[backendId] == true) {
+          // 条件写已验证：创建成功即严格原子，免抖动免回读。
+          log.info(
+            SyncEventKind.lockAcquire,
+            '获得同步锁（条件写已验证，免回读）',
+            payload: {'owner': owner, 'attempt': attempt},
+          );
+          return;
+        }
         // 回读校验：兜底不支持条件 PUT 的服务器（见类文档）。
         await Future.delayed(
           Duration(milliseconds: 150 + _random.nextInt(250)),
@@ -195,6 +216,9 @@ class RemoteLease {
             '获得同步锁',
             payload: {'owner': owner, 'attempt': attempt},
           );
+          if (backendId != null && !_casVerified.containsKey(backendId)) {
+            await _probeCas(backend, backendId, owner, log);
+          }
           return;
         }
         // 创建后被并发覆盖 → 竞争失败，走等待重试。
@@ -233,5 +257,42 @@ class RemoteLease {
       }
     }
     throw const SyncException('另一台设备正在同步，请稍后再试');
+  }
+
+  /// 条件写探测：锁已在本机手中，再次条件创建**必须**被 412 拒绝，否则服务器
+  /// 不执行 If-None-Match。探测载荷是本机的合法租约 —— 即便被不合规服务器覆盖
+  /// 写入，锁仍归本机、内容有效，无需修复。探测异常不影响本次同步（下次再试）。
+  static Future<void> _probeCas(
+    IRemoteSyncBackend backend,
+    String backendId,
+    String owner,
+    SyncLogger log,
+  ) async {
+    try {
+      final overwrote = await backend.tryCreateExclusive(
+        SyncKeys.lockPath,
+        LeasePayload(
+          owner: owner,
+          acquiredAt: DateTime.timestamp(),
+          ttl: ttl,
+        ).toBytes(),
+      );
+      _casVerified[backendId] = !overwrote;
+      if (overwrote) {
+        log.warn(
+          SyncEventKind.lockAcquire,
+          '服务器不执行条件写，保留锁回读校验',
+          payload: {'backendId': backendId},
+        );
+      } else {
+        log.info(
+          SyncEventKind.lockAcquire,
+          '条件写探测通过，本进程后续免锁回读',
+          payload: {'backendId': backendId},
+        );
+      }
+    } catch (_) {
+      // 网络抖动等：不记录结论，下次抢占再探测。
+    }
   }
 }
