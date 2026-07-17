@@ -18,8 +18,6 @@ abstract class DavClient implements RustOpaqueInterface {
   /// 404（不存在）视为成功；其它错误如实上抛 —— 引擎依赖删除结果决定 tombstone 是否已被远端接收。
   Future<void> deleteObject({required String key});
 
-  Future<void> ensureDir({required String key});
-
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<DavClient> newInstance({
     required String baseUrl,
@@ -41,28 +39,4 @@ abstract class DavClient implements RustOpaqueInterface {
   Future<bool> testConnection();
 
   Future<void> writeObject({required String key, required List<int> data});
-
-  /// 批量写入，最多 [concurrency] 个并发。
-  Future<void> writeObjectsBatch({
-    required List<BatchWriteEntry> entries,
-    required BigInt concurrency,
-  });
-}
-
-class BatchWriteEntry {
-  final String path;
-  final Uint8List data;
-
-  const BatchWriteEntry({required this.path, required this.data});
-
-  @override
-  int get hashCode => path.hashCode ^ data.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BatchWriteEntry &&
-          runtimeType == other.runtimeType &&
-          path == other.path &&
-          data == other.data;
 }

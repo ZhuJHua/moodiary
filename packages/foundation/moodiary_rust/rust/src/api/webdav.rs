@@ -1,15 +1,9 @@
 use anyhow::Result;
 use flutter_rust_bridge::frb;
-use futures::stream::{self, StreamExt};
 use reqwest_dav::{Auth, ClientBuilder, Depth};
 use reqwest_dav::re_exports::reqwest::Method;
 use std::collections::HashSet;
 use std::sync::Mutex;
-
-pub struct BatchWriteEntry {
-    pub path: String,
-    pub data: Vec<u8>,
-}
 
 /// 从 reqwest_dav 错误中提取 HTTP 状态码（提取不到则 None）。
 fn dav_status(e: &reqwest_dav::Error) -> Option<u16> {
@@ -64,8 +58,12 @@ impl DavClient {
     }
 
     /// 逐级确保目录存在（深层目录如 `moodiary/media/image` 需中间层先存在），命中进程内
-    /// 缓存则跳过以省 mkcol 往返。错误（已存在 / 405 / 409 等）一律忽略。
-    async fn ensure_dir_cached(&self, dir: &str) {
+    /// 缓存则跳过以省 mkcol 往返。MKCOL 路径带尾斜杠 —— RFC 4918 两者皆可，但
+    /// nginx dav 等实现要求集合以 `/` 结尾，否则直接 409。「已存在」（405）视作
+    /// 成功；其它失败再用 PROPFIND 复核一次，目录确实不存在则**如实上抛** ——
+    /// 吞掉错误并写入缓存会把一次创建失败固化成该目录后续所有 PUT 的 409
+    /// （比 MKCOL 的原始错误难排查得多）。
+    async fn ensure_dir_cached(&self, dir: &str) -> Result<()> {
         let parts: Vec<&str> = dir.split('/').filter(|s| !s.is_empty()).collect();
         let mut current = String::new();
         for (i, part) in parts.iter().enumerate() {
@@ -78,9 +76,18 @@ impl DavClient {
             if known {
                 continue;
             }
-            let _ = self.client.mkcol(&current).await;
+            if let Err(e) = self.client.mkcol(&format!("{current}/")).await {
+                let exists = dav_status(&e) == Some(405)
+                    || self.client.list(&current, Depth::Number(0)).await.is_ok();
+                if !exists {
+                    return Err(anyhow::anyhow!(
+                        "Failed to create dir {current}: {e}"
+                    ));
+                }
+            }
             self.created_dirs.lock().unwrap().insert(current.clone());
         }
+        Ok(())
     }
 
     pub async fn test_connection(&self) -> Result<bool> {
@@ -95,18 +102,6 @@ impl DavClient {
                 }
             }
         }
-    }
-
-    pub async fn ensure_dir(&self, key: &str) -> Result<()> {
-        let path = self.full_path(key);
-        let parts: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
-        let mut current = String::new();
-        for part in parts {
-            current.push('/');
-            current.push_str(part);
-            let _ = self.client.mkcol(&current).await;
-        }
-        Ok(())
     }
 
     /// 仅 404（不存在）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）必须能区分
@@ -131,7 +126,7 @@ impl DavClient {
     pub async fn create_exclusive(&self, key: String, data: Vec<u8>) -> Result<bool> {
         let path = self.full_path(&key);
         if let Some(pos) = path.rfind('/') {
-            self.ensure_dir_cached(&path[..pos]).await;
+            self.ensure_dir_cached(&path[..pos]).await?;
         }
         let req = self
             .client
@@ -157,12 +152,12 @@ impl DavClient {
     pub async fn write_object(&self, key: String, data: Vec<u8>) -> Result<()> {
         let path = self.full_path(&key);
         if let Some(pos) = path.rfind('/') {
-            self.ensure_dir_cached(&path[..pos]).await;
+            self.ensure_dir_cached(&path[..pos]).await?;
         }
         self.client
             .put(&path, data)
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to write: {e}"))?;
+            .map_err(|e| anyhow::anyhow!("Failed to write {key}: {e}"))?;
         Ok(())
     }
 
@@ -199,36 +194,4 @@ impl DavClient {
             .unwrap_or_default())
     }
 
-    /// 批量写入，最多 [concurrency] 个并发。
-    pub async fn write_objects_batch(
-        &self,
-        entries: Vec<BatchWriteEntry>,
-        concurrency: usize,
-    ) -> Result<()> {
-        // 先把父目录去重、逐级创建，再并发 PUT —— 不在每个 put 前各自 mkcol。
-        let mut dirs: HashSet<String> = HashSet::new();
-        for entry in &entries {
-            let path = self.full_path(&entry.path);
-            if let Some(pos) = path.rfind('/') {
-                dirs.insert(path[..pos].to_string());
-            }
-        }
-        for dir in &dirs {
-            self.ensure_dir_cached(dir).await;
-        }
-
-        let client = &self.client;
-        let root = &self.root;
-
-        stream::iter(entries)
-            .map(|entry| {
-                let path = format!("{}/{}", root, entry.path);
-                async move { client.put(&path, entry.data).await }
-            })
-            .buffer_unordered(concurrency)
-            .collect::<Vec<_>>()
-            .await;
-
-        Ok(())
-    }
 }
