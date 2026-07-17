@@ -1154,10 +1154,10 @@ packages:
     dependency: transitive
     description:
       name: gpt_markdown
-      sha256: c14c2a4599a67df5b6a984808cbb7631b8d15c91984ffdd7998597b93a6ff136
+      sha256: ab6fe339f500104816139a034b8a23a125dadbc1988eda1641c6616562a4962b
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.7"
+    version: "1.1.8"
   graphs:
     dependency: transitive
     description:
