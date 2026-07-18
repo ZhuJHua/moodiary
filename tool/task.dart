@@ -8,6 +8,7 @@
 //   dart tool/task.dart build-apk-beta   # 构建 Moodiary Beta 测试 APK（cn.yooss.moodiary.beta）
 //   dart tool/task.dart analyze          # 分层检查 + flutter analyze
 //   dart tool/task.dart check-layers     # 仅分层依赖检查
+//   dart tool/task.dart deps             # 工作区依赖图（Mermaid；--pub 看第三方声明分布）
 //   dart tool/task.dart build-runner     # 代码生成
 //   dart tool/task.dart clean            # 删除 editor 构建产物
 //
@@ -110,6 +111,7 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
     await _run('fvm', ['flutter', 'analyze']);
   },
   'check-layers': (_) => _checkLayers(),
+  'deps': (rest) => _run('fvm', ['dart', 'tool/dep_graph.dart', ...rest]),
   'test': (rest) => _flutter(['test', ...rest]),
   'build-runner': (_) =>
       _dartApp(['run', 'build_runner', 'build', '--delete-conflicting-outputs']),
