@@ -73,6 +73,9 @@ class MergeUtil {
     }
 
     if (below('2.8.0')) {
+      // 2.7.3 的 autoSync 属旧备份引擎；新引擎启动后 ~30s 即全量推送、且未配 DEK 时为明文，
+      // 不能默认继承——重置为关，由用户在同步页重新确认。服务器配置（webDavOption）保留。
+      await MoodiaryKVs.autoSync.set(false);
       // 跨引擎（isar 4.0.0-dev → isar_plus）迁移前留一份快照，出问题可回滚。
       await _backupDatabaseOnce();
       await compute(
