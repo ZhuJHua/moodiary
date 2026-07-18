@@ -29,7 +29,6 @@ dependencies:
   moodiary_data: 0.0.1
   moodiary_preferences: 0.0.1
   moodiary_ui: 0.0.1
-  moodiary_scan: 0.0.1
 
   flutter_riverpod: 3.3.2
 

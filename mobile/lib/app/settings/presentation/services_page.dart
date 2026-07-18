@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary_scan/moodiary_scan.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 
 class ServicesPage extends ConsumerWidget {
@@ -47,7 +46,7 @@ class _Note extends StatelessWidget {
             Expanded(
               child: Text(
                 '在此填入您自有的第三方服务凭证，启用 AI 助手、天气与地图等能力。'
-                '所有凭证仅保存在本机；API Key 可生成时效二维码在设备间转移。',
+                '所有凭证仅保存在本机。',
                 style: context.textTheme.bodySmall,
               ),
             ),
@@ -96,19 +95,17 @@ class _QweatherSection extends ConsumerWidget {
           margin: EdgeInsets.zero,
           child: const Column(
             children: [
-              _KvQrTile(
+              _KvTile(
                 kv: MoodiaryKVs.qweatherKey,
                 title: 'API Key',
                 leading: Icon(Icons.vpn_key_rounded),
-                prefix: 'qweatherKey:',
                 isFirst: true,
               ),
-              _KvQrTile(
+              _KvTile(
                 kv: MoodiaryKVs.qweatherApiHost,
                 title: 'API Host',
                 subtitleWhenEmpty: 'devapi.qweather.com 或自定义',
                 leading: Icon(Icons.dns_rounded),
-                prefix: 'qweatherHost:',
                 isLast: true,
               ),
             ],
@@ -134,11 +131,10 @@ class _TiandituSection extends ConsumerWidget {
           margin: EdgeInsets.zero,
           child: const Column(
             children: [
-              _KvQrTile(
+              _KvTile(
                 kv: MoodiaryKVs.tiandituKey,
                 title: 'API Key',
                 leading: Icon(Icons.map_rounded),
-                prefix: 'tiandituKey:',
                 isFirst: true,
                 isLast: true,
               ),
@@ -150,20 +146,18 @@ class _TiandituSection extends ConsumerWidget {
   }
 }
 
-class _KvQrTile extends StatelessWidget {
+class _KvTile extends StatelessWidget {
   final MoodiaryKVs<String> kv;
   final String title;
   final Widget? leading;
-  final String? prefix;
   final String? subtitleWhenEmpty;
   final bool isFirst;
   final bool isLast;
 
-  const _KvQrTile({
+  const _KvTile({
     required this.kv,
     required this.title,
     this.leading,
-    this.prefix,
     this.subtitleWhenEmpty,
     this.isFirst = false,
     this.isLast = false,
@@ -174,12 +168,11 @@ class _KvQrTile extends StatelessWidget {
     return ValueListenableBuilder<String>(
       valueListenable: kv.getNotifierOr(''),
       builder: (context, value, _) {
-        return QrInputTile(
+        return SettingInputTile(
           isFirst: isFirst,
           isLast: isLast,
           title: title,
           leading: leading,
-          prefix: prefix,
           value: value,
           subtitle: value.isEmpty ? (subtitleWhenEmpty ?? '未配置') : '已配置',
           onValue: (v) async {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary_scan/moodiary_scan.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
@@ -9,7 +8,7 @@ import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_change_flow.dart';
 
 /// 端到端加密设置项。**加密语义**：设置密码即开启加密（生成随机数据密钥 DEK，
-/// 密码只用来封装它）；清除即关闭加密。二维码导出的是 DEK 本体（设备间免密传输）。
+/// 密码只用来封装它）；清除即关闭加密。
 class UserKeyTile extends ConsumerWidget {
   final bool isFirst;
   final bool isLast;
@@ -29,36 +28,10 @@ class UserKeyTile extends ConsumerWidget {
       title: '端到端加密',
       leading: const Icon(Icons.key_rounded),
       subtitle: hasKey ? '已开启' : '未开启',
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Builder(
-            builder: (btnContext) => IconButton.filledTonal(
-              tooltip: '数据密钥二维码',
-              icon: const Icon(Icons.qr_code_rounded),
-              onPressed: () {
-                if (!hasKey) {
-                  toast.info(message: '加密未开启，无数据密钥可导出');
-                  return;
-                }
-                showPopupWidget(
-                  targetContext: btnContext,
-                  child: EncryptQrCode(
-                    data: dekB64,
-                    prefix: 'syncDek:',
-                    size: 160,
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(width: 4),
-          IconButton.filled(
-            tooltip: '管理加密',
-            icon: Icon(Icons.settings_rounded, color: scheme.onPrimary),
-            onPressed: () => _showKeyManageSheet(context, ref, hasKey),
-          ),
-        ],
+      trailing: IconButton.filled(
+        tooltip: '管理加密',
+        icon: Icon(Icons.settings_rounded, color: scheme.onPrimary),
+        onPressed: () => _showKeyManageSheet(context, ref, hasKey),
       ),
     );
   }

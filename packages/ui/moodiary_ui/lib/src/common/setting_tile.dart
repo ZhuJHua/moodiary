@@ -216,3 +216,85 @@ class SettingSwitchListTile extends StatelessWidget {
     );
   }
 }
+
+/// 弹输入框录入单个字符串值的 ListTile（API Key 等）。
+class SettingInputTile extends StatelessWidget {
+  const SettingInputTile({
+    super.key,
+    required this.title,
+    required this.value,
+    this.subtitle,
+    this.leading,
+    this.onValue,
+    this.isFirst = false,
+    this.isLast = false,
+    this.hintText,
+    this.obscureText = false,
+  });
+
+  final String title;
+
+  final String? subtitle;
+
+  final String value;
+
+  final Widget? leading;
+
+  final bool isFirst;
+
+  final bool isLast;
+
+  final void Function(String value)? onValue;
+
+  final String? hintText;
+
+  final bool obscureText;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasValue = value.trim().isNotEmpty;
+    return SettingListTile(
+      isFirst: isFirst,
+      isLast: isLast,
+      title: title,
+      leading: leading,
+      subtitle: subtitle ?? (hasValue ? '已配置' : '未配置'),
+      trailing: IconButton.filled(
+        tooltip: '输入',
+        icon: Icon(Icons.input_rounded, color: scheme.onPrimary),
+        onPressed: () => _showInputDialog(context),
+      ),
+    );
+  }
+
+  Future<void> _showInputDialog(BuildContext context) async {
+    final controller = TextEditingController(text: value);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          obscureText: obscureText,
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            hintText: hintText,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    );
+    if (result != null && result.isNotEmpty) onValue?.call(result);
+  }
+}

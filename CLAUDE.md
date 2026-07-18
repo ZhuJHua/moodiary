@@ -73,7 +73,6 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_assistant/    #   AI assistant (flutter_chat_ui + rig)
       moodiary_media/        #   media library
       moodiary_lock/         #   app lock
-      moodiary_scan/         #   encrypted QR
       moodiary_share/        #   diary sharing
 ```
 
