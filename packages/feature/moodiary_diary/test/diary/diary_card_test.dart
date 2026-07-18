@@ -4,9 +4,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_card.dart';
 
-// `Diary.empty()`/`Category.create()` call `uuidV7()` (Rust FFI), which
-// throws in host unit tests — build literals directly instead (pattern from
-// packages/feature/moodiary_sync/test/sync/sync_test_harness.dart `buildDiary()`).
 Diary diary({double mood = 0.5, List<String> weather = const []}) => Diary(
       id: 'test',
       categoryId: null,

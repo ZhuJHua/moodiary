@@ -7,6 +7,5 @@ pub mod http_server;
 pub mod image;
 pub mod s3;
 pub mod text;
-pub mod uuid;
 pub mod webdav;
 pub mod zip;

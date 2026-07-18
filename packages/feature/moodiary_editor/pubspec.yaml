@@ -19,7 +19,6 @@ dependencies:
   moodiary_ui: 0.0.1
   moodiary_l10n: 0.0.1
   moodiary_router: 0.0.1
-  moodiary_rust: 0.0.1
   moodiary_utils: 0.0.1
 
   webview_flutter: 4.14.1

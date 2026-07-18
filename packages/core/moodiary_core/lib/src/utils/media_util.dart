@@ -8,7 +8,6 @@ import 'package:gal/gal.dart';
 import 'package:heif_converter/heif_converter.dart';
 import 'package:mime/mime.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
-import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_core/src/utils/file_util.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/src/utils/log_util.dart';

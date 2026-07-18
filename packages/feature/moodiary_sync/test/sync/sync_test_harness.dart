@@ -421,7 +421,7 @@ final DateTime kBaseTime = DateTime.utc(2026, 1, 1);
 DateTime atMs(int millisOffset) =>
     kBaseTime.add(Duration(milliseconds: millisOffset));
 
-/// 构造一条 diary（直接给字面 id，避免 uuidV7() 这一 Rust 调用）。
+/// 构造一条 diary（直接给字面 id，字段全部可控）。
 Diary buildDiary({
   required String id,
   int modifiedMs = 0,

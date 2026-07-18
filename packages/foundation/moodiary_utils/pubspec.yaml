@@ -23,6 +23,7 @@ dependencies:
   package_info_plus: 10.2.1
   markdown: 7.3.1
   local_auth: 3.0.2
+  uuid: 4.6.0
 
 dev_dependencies:
   flutter_test:

@@ -2441,7 +2441,6 @@ dependencies = [
  "ttf-parser",
  "unicode-segmentation",
  "url",
- "uuid",
  "walkdir",
  "webp",
  "webpki-roots 1.0.8",

@@ -22,3 +22,4 @@ export 'src/send_util.dart';
 export 'src/text_util.dart';
 export 'src/time_util.dart';
 export 'src/tiptap_content.dart';
+export 'src/uuid_util.dart';

@@ -28,7 +28,6 @@ hyper-util = { version = "0.1", features = ["tokio"] }
 http-body-util = "0.1"
 url = "2"
 unicode-segmentation = "1.13.3"
-uuid = { version = "1.23.4", features = ["v4", "v7"] }
 rust-stemmers = "1.2.0"
 argon2 = { version = "0.6.0-rc.8", features = ["default", "rand_core"] }
 minio = { version = "0.4.0", default-features = false, features = ["rustls-tls", "default-crypto"] }

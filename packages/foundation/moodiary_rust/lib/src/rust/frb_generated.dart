@@ -12,7 +12,6 @@ import 'api/http_server.dart';
 import 'api/image.dart';
 import 'api/s3.dart';
 import 'api/text.dart';
-import 'api/uuid.dart';
 import 'api/webdav.dart';
 import 'api/zip.dart';
 import 'dart:async';
@@ -77,7 +76,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0-beta.5';
 
   @override
-  int get rustContentHash => -1551614832;
+  int get rustContentHash => 1394357501;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -324,10 +323,6 @@ abstract class RustLibApi extends BaseApi {
     required int maxTurns,
     required FutureOr<String> Function(String, String) toolDispatch,
   });
-
-  String crateApiUuidUuidV4();
-
-  String crateApiUuidUuidV7();
 
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Aes;
 
@@ -2180,50 +2175,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "toolDispatch",
         ],
       );
-
-  @override
-  String crateApiUuidUuidV4() {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 49)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiUuidUuidV4ConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiUuidUuidV4ConstMeta =>
-      const TaskConstMeta(debugName: "uuid_v4", argNames: []);
-
-  @override
-  String crateApiUuidUuidV7() {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 50)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiUuidUuidV7ConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiUuidUuidV7ConstMeta =>
-      const TaskConstMeta(debugName: "uuid_v7", argNames: []);
 
   Future<void> Function(int, dynamic, dynamic)
   encode_DartFn_Inputs_String_String_Output_String_AnyhowException(

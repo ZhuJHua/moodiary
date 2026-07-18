@@ -9,7 +9,6 @@ import 'package:moodiary_editor/src/quill_embed/audio_embed.dart';
 import 'package:moodiary_editor/src/quill_embed/image_embed.dart';
 import 'package:moodiary_editor/src/quill_embed/text_indent_embed.dart';
 import 'package:moodiary_editor/src/quill_embed/video_embed.dart';
-import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_models/moodiary_models.dart';

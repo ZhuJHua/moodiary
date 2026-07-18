@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:moodiary/app/picker/moodiary_picker_delegate.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' show uuidV7;
+import 'package:moodiary_utils/moodiary_utils.dart' show uuidV7;
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 

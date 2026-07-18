@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isar_plus/isar_plus.dart';
-import 'package:moodiary_rust/moodiary_rust.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 part 'memory_entry.freezed.dart';
 part 'memory_entry.g.dart';

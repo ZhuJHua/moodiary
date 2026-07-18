@@ -612,8 +612,8 @@ class IncrementalSyncEngine {
 
   static int _writeSeq = 0;
 
-  /// 生成本次 manifest 写入的唯一 token（设备 id + 微秒 + 进程内序号）。
-  /// 不用 uuidV4（Rust），纯 Dart，足够唯一以支撑写后回读校验。
+  /// 生成本次 manifest 写入的唯一 token（设备 id + 微秒 + 进程内序号），
+  /// 足够唯一以支撑写后回读校验。
   String _newWriteToken() {
     final id = MoodiaryKVs.syncDeviceId.get() ?? '';
     return '$id:${DateTime.now().microsecondsSinceEpoch}:${_writeSeq++}';
