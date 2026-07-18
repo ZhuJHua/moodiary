@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 
 /// 升级保险丝：页内双链跳转依赖 go_router 的一个关键行为——对命令式 push 的路由做
 /// `replace` 时沿用原 pageKey（parser 的 NavigatingType.replace 分支），因此 Navigator

@@ -2,6 +2,10 @@
 /// 全局主题/通知、values 与基建 utils。依赖 foundation 包（l10n/models/rust/utils）。
 library;
 
+export 'package:cross_file/cross_file.dart';
+export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+export 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 export 'src/di.dart';
 export 'src/file_picker.dart';
 export 'src/init.dart';

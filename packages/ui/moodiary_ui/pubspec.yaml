@@ -21,7 +21,6 @@ dependencies:
   flutter_riverpod: 3.3.2
   dartx: 1.2.0
   modal_bottom_sheet: 3.0.0
-  flutter_smart_dialog: 5.1.0
   easy_refresh: 3.5.1
   path: 1.9.1
 

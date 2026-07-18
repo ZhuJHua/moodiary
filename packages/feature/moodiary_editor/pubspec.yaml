@@ -30,10 +30,8 @@ dependencies:
 
   flutter_riverpod: 3.3.2
   riverpod_annotation: 4.0.3
-  go_router: 17.3.0
   freezed_annotation: 3.1.0
   json_annotation: 4.12.0
-  cross_file: 0.3.5+4
   record: 7.1.1
   flutter_quill: 11.5.1
   latlong2: 0.10.1

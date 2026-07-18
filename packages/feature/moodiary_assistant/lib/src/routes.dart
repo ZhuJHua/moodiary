@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:go_router/go_router.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
 import 'presentation/assistant_page.dart';

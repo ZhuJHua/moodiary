@@ -509,10 +509,10 @@ packages:
     dependency: transitive
     description:
       name: decimal
-      sha256: fc706a5618b81e5b367b01dd62621def37abc096f2b46a9bd9068b64c1fa36d0
+      sha256: "4988f89bbbf9de235430300d5ee0e8e87c733a56145dc7d0dd97e6cf90cf809b"
       url: "https://pub.dev"
     source: hosted
-    version: "3.2.4"
+    version: "3.2.5"
   device_info_plus:
     dependency: transitive
     description:
@@ -956,10 +956,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_smart_dialog
-      sha256: "18ee3a53e898e4b0c2898e498bb61ab65cedf56f00fc412ac66d986d33e246bf"
+      sha256: "7dd4078681291402ec39861d768787d27a0a9c4cd0912263a6a327654b96f6c1"
       url: "https://pub.dev"
     source: hosted
-    version: "5.1.0"
+    version: "5.1.1"
   flutter_svg:
     dependency: transitive
     description:
@@ -1186,10 +1186,10 @@ packages:
     dependency: transitive
     description:
       name: heif_converter
-      sha256: b1711482dc4f08c05ba86e251d6331a3b7a6fd01a7514f0491dd0b10fe1712a3
+      sha256: "8d1bfe7bf096d135c8acbbbe68a0ad4bbf49b1c7f0832fa630ff4c3d81f681ae"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.6"
+    version: "1.0.7"
   hive_ce:
     dependency: transitive
     description:

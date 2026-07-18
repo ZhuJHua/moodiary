@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:go_router/go_router.dart';
+import 'package:moodiary_core/moodiary_core.dart' show FlutterSmartDialog;
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 

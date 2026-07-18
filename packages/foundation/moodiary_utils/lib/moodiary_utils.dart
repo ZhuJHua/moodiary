@@ -3,6 +3,9 @@
 /// 纯叶子：仅依赖 dart/flutter SDK 与外部 pub 包，无任何 workspace 上/下层依赖。
 library;
 
+export 'package:device_info_plus/device_info_plus.dart';
+export 'package:package_info_plus/package_info_plus.dart';
+
 export 'src/array_util.dart';
 export 'src/auth_util.dart';
 export 'src/fast_hash.dart';

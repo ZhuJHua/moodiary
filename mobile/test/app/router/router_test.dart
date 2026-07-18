@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary/app/router/router.dart';

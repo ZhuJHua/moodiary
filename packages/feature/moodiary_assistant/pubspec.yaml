@@ -22,7 +22,6 @@ dependencies:
   moodiary_data: 0.0.1
   moodiary_ui: 0.0.1
 
-  go_router: 17.3.0
   flutter_riverpod: 3.3.2
   riverpod_annotation: 4.0.3
   gpt_markdown: 1.1.8
