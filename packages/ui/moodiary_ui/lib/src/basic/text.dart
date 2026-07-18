@@ -1,4 +1,3 @@
-import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary_ui/src/basic/marquee.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -102,7 +101,7 @@ class AnimatedText extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
-      child: text.isBlank
+      child: text.trim().isEmpty
           ? Text(placeholder, key: const ValueKey('empty'), style: style)
           : Text(text, key: const ValueKey('text'), style: style),
     );

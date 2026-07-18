@@ -1,7 +1,5 @@
-import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -48,7 +46,7 @@ class SearchResultCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (title.isNotBlank) ...[
+              if (title.trim().isNotEmpty) ...[
                 SubstringHighlight(
                   text: title,
                   terms: queryList,

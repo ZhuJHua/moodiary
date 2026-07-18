@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/src/values/colors.dart';
 import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_core/src/utils/file_util.dart';
@@ -619,14 +620,3 @@ extension ColorExt2 on BuildContext {
   }
 }
 
-extension ThemeExt on BuildContext {
-  ThemeData get theme => Theme.of(this);
-
-  bool get isDarkMode => theme.brightness == Brightness.dark;
-
-  ColorScheme get colorScheme => theme.colorScheme;
-
-  TextTheme get textTheme => theme.textTheme;
-
-  Typography get typography => theme.typography;
-}

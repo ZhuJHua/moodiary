@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:moodiary_core/src/values/border.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_core/src/utils/theme_util.dart';
 
 /// 轻量提示工具，所有方法 fire-and-forget。[bindPage] 固定 false 让 toast 全局生效，
 /// 避免页面 pop 时被强制收起。

@@ -5,6 +5,14 @@ library;
 export 'package:cross_file/cross_file.dart';
 export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 export 'package:font_awesome_flutter/font_awesome_flutter.dart';
+// 下沉到 utils 的薄 token/工具，经此转发保持既有 import 不变。
+export 'package:moodiary_utils/moodiary_utils.dart'
+    show
+        AppBorderRadius,
+        DeviceOrientationPolicy,
+        KeyboardState,
+        ThemeExt,
+        applyDeviceOrientationLock;
 
 export 'src/di.dart';
 export 'src/file_picker.dart';
@@ -27,12 +35,9 @@ export 'src/utils/media_util.dart';
 export 'src/utils/notice_util.dart';
 export 'src/utils/theme_util.dart';
 export 'src/utils/widget_util.dart';
-export 'src/values/adaptive.dart';
-export 'src/values/border.dart';
 export 'src/values/colors.dart';
 export 'src/values/diary_sort.dart';
 export 'src/values/expection.dart';
-export 'src/values/keyboard_state.dart';
 export 'src/values/kv.dart';
 export 'src/values/language.dart';
 export 'src/values/media_type.dart';
