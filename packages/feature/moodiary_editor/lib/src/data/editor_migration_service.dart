@@ -13,6 +13,8 @@ import 'package:path/path.dart' as p;
 /// - markdown → JSON：[MarkdownToTiptap]（纯 Dart，`markdown` 包 GFM 解析，无需无头 webview）。
 /// - 转换后用 [DiaryContentUtil]（tiptap 分支走 JSON 解析）重算 contentText 与媒体名，再经
 ///   [DiaryRepository.updateADiary] 落库（自动重建搜索索引）。媒体文件本身不动（文件名不变）。
+/// - 迁移是纯本机行为：不 bump lastModified、不推送（多设备各自迁移）；回退则按真实编辑
+///   对待（bump + 推送）。
 /// - 可回退：转换前把原始 content + type 备份成 sidecar JSON（`migration_backup/<id>.json`）。
 class EditorMigrationService {
   const EditorMigrationService._();
@@ -72,10 +74,11 @@ class EditorMigrationService {
       imageName: media.images,
       audioName: media.audios,
       videoName: media.videos,
-      // 内容确实变了：更新修改时间，让增量同步把转换后的正文推送到其他设备。
-      lastModified: DateTime.now(),
     );
-    await DiaryRepository.get().updateADiary(newDiary: newDiary);
+    // 迁移是纯本机的格式转换：不动 lastModified（LWW 两侧都不视为更新，批量迁移不会
+    // 覆盖他端更新的编辑），事件走 fromSync（远端持有同时间戳的等价旧格式副本，不标
+    // 脏、不触发推送）。多设备各自迁移一次；正文首次真实编辑后按普通编辑同步收敛。
+    await DiaryRepository.get().updateADiary(newDiary: newDiary, fromSync: true);
     return true;
   }
 
@@ -157,6 +160,8 @@ class EditorMigrationService {
       imageName: media.images,
       audioName: media.audios,
       videoName: media.videos,
+      // 与迁移不同，回退按真实内容编辑对待（bump + 正常推送）：弹窗已警告「迁移后的
+      // 修改会丢失」。若不 bump，已推送过迁移后编辑的场景会留下同时间戳异内容的永久分歧。
       lastModified: DateTime.now(),
     );
     await DiaryRepository.get().updateADiary(newDiary: newDiary);

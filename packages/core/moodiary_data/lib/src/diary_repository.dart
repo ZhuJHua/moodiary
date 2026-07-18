@@ -382,9 +382,12 @@ class DiaryRepository {
     }
   }
 
+  /// [fromSync] 语义同 [insertADiary]；编辑器迁移等「远端已持有等价内容」的本机改写
+  /// 也走此标记，免得被当作待推变更。
   Future<void> updateADiary({
     required Diary newDiary,
     IndexMode index = IndexMode.inline,
+    bool fromSync = false,
   }) async {
     if (index != IndexMode.inline) {
       // 编辑期：只写日记行（defer 时一并入队），分词/倒排推迟到关闭/启动排空；skip 连
@@ -395,13 +398,13 @@ class DiaryRepository {
           isar.reindexQueues.put(ReindexQueue(diaryIsarId: newDiary.isarId));
         }
       });
-      _events.add(DiaryUpdated(newDiary));
+      _events.add(DiaryUpdated(newDiary, fromSync: fromSync));
       return;
     }
     await _isar.writeAsync((isar) {
       isar.diarys.put(newDiary);
     });
-    _events.add(DiaryUpdated(newDiary));
+    _events.add(DiaryUpdated(newDiary, fromSync: fromSync));
     final entry = await _buildEntry(newDiary);
     await _isar.writeAsync((isar) {
       _applyIndexesBatch(isar, [entry]);

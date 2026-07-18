@@ -5,9 +5,9 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_editor/src/data/editor_migration_service.dart';
 import 'package:moodiary_editor/src/presentation/widget/migration_compare_page.dart';
 
-/// 可视化「迁移到新编辑器」工具：把旧的 richText(Quill) 日记转换为 TipTap/markdown。
+/// 可视化「迁移到新编辑器」工具：把旧的 richText(Quill) / markdown 日记转换为 TipTap。
 /// 列出待迁移日记（可逐条预览转换结果、单篇或全部迁移），并列出已迁移项支持回退
-/// （转换前已备份原始 Delta）。
+/// （转换前已备份原文）。
 class EditorMigrationPage extends StatefulWidget {
   const EditorMigrationPage({super.key});
 
@@ -135,9 +135,10 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       builder: (ctx) => AlertDialog(
         title: const Text('迁移到新编辑器'),
         content: Text(
-          '将 $count 篇旧编辑器日记转换为新编辑器格式（markdown）。'
+          '将 $count 篇旧编辑器日记转换为新编辑器格式。'
           '\n\n· 文字、标题、列表、引用、代码、图片、音频、视频都会保留；'
           '\n· 文字颜色 / 高亮 / 对齐无法在新格式中表示，会被丢弃；'
+          '\n· 迁移只改变本机的存储格式，不会作为编辑同步到其他设备（多设备请分别迁移）；'
           '\n· 转换前会备份原文，可随时回退。',
         ),
         actions: [
