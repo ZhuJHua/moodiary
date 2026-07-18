@@ -108,8 +108,21 @@ class QuillDeltaToTiptap {
       if (isCode) {
         flushList();
         flushQuote();
-        codeLines ??= [];
-        codeLines!.add(line.segs.where((s) => s.embed == null).map((s) => s.text).join());
+        // codeBlock 只能容纳文本：行内 embed 在此切断代码块、以一等媒体节点保留
+        // （丢弃会连带丢文件引用，清理孤儿文件时媒体被永久删除）。
+        final text = line.segs
+            .where((s) => s.embed == null)
+            .map((s) => s.text)
+            .join();
+        final embeds = line.segs.where((s) => s.embed != null);
+        if (text.isNotEmpty || embeds.isEmpty) {
+          codeLines ??= [];
+          codeLines!.add(text);
+        }
+        for (final seg in embeds) {
+          flushCode();
+          blocks.add(_embedNode(seg));
+        }
         continue;
       }
       flushCode();
