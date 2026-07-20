@@ -99,9 +99,12 @@
   --app-scrollbar-hover: #4f453999; /* on-surface-variant @ ~60% */
   /* 首行缩进量：默认 0（关闭）；开启时 applyTheme 用 inline style 置为 2em。 */
   --app-text-indent: 0;
+  /* 全局字号缩放（App「字号」偏好，applyTheme 注入）：正文/标题根字号 calc 读它。 */
+  --app-font-scale: 1;
 
+  /* system-ui 领头以跟随系统当前默认字体（OEM 换字体经它生效）；与 bridge/theme.ts DEFAULT_SANS 一致。 */
   --app-font-sans:
-    -apple-system, 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC', Roboto,
+    system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC',
     sans-serif;
   --app-font-mono:
     ui-monospace, 'Cascadia Code', 'JetBrains Mono', 'Roboto Mono', Menlo,
@@ -141,6 +144,8 @@ body {
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
+  /* 主容器只上下滚；宽内容（表格/代码块）在各自块内横滚（.tableWrapper / pre 的 overflow-x）。 */
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
@@ -158,7 +163,7 @@ body {
   background: transparent;
   color: var(--app-on-background);
   font-family: var(--app-font-sans);
-  font-size: 22px;
+  font-size: calc(22px * var(--app-font-scale, 1));
   font-weight: 700;
   line-height: 1.4;
   padding: 16px 16px 2px;
@@ -274,11 +279,15 @@ body {
 .moodiary-editor .ProseMirror {
   flex: 1;
   min-height: 0;
+  /* flex 子项必须允许收缩到视口宽，否则长连续 ASCII/宽表格把 min-content 撑大，
+     break-word 与块内横滚都不会触发，整个视口被顶出横向滚动。 */
+  min-width: 0;
   padding: 16px;
   background: transparent;
   color: var(--app-on-background);
   font-family: var(--app-font-sans);
-  font-size: 16px;
+  /* 根字号乘全局字号偏好；标题层级 / 行内代码均为 em，自动跟随。 */
+  font-size: calc(16px * var(--app-font-scale, 1));
   line-height: 1.7;
 }
 
@@ -343,7 +352,9 @@ body {
   background: var(--app-selected);
   border-radius: 4px;
   padding: 0 4px;
-  white-space: nowrap;
+  /* 长标题允许换行（viewport 已锁横滚，nowrap 会被裁切）；clone 让每行都保留圆角底色。 */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
   cursor: pointer;
   font-weight: 500;
 }
@@ -561,6 +572,8 @@ body {
   margin: 0;
   padding: 12px 14px;
   background: transparent;
+  /* 长行不折行，在块内横滚（覆盖基础 .ProseMirror pre 的 pre-wrap）。 */
+  white-space: pre;
   overflow-x: auto;
 }
 .moodiary-editor .ProseMirror .moodiary-code-block pre code {

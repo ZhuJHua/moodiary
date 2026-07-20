@@ -101,6 +101,10 @@ class MoodiaryEditor extends StatefulWidget {
   /// `text-indent`。变更时经 [didUpdateWidget] 实时推给已打开的编辑器。
   final bool firstLineIndent;
 
+  /// 全局「字号」缩放（1.0 = 标准）：随主题一起下发，web 侧置 CSS `--app-font-scale`
+  /// 缩放正文与标题根字号（层级/行内代码为 em，自动跟随）。变更同样实时推送。
+  final double fontScale;
+
   /// 主题种子解析器（宿主 app 提供）：每次需要下发主题时实时读取当前种子色 + 变体；
   /// 明暗由 `Theme.of(context)` 推断。不传则用 Material 默认主色。
   final EditorSeed Function()? seedResolver;
@@ -136,6 +140,7 @@ class MoodiaryEditor extends StatefulWidget {
     this.onOpenDetails,
     this.saveStatus = 'idle',
     this.firstLineIndent = false,
+    this.fontScale = 1.0,
     this.seedResolver,
     this.fontResolver,
     this.mediaResolver,
@@ -151,6 +156,9 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   bool _jsReady = false; // JS 端 MoodiaryBridge 已就绪
   bool _activated = false; // 内容已下发完毕，可撤掉遮罩
   Timer? _readyTimeout;
+
+  /// 自定义字体加载完成（web 侧 fontReady 事件）。撤遮罩前等它（带超时），避免字体换脸闪动。
+  final Completer<void> _fontReady = Completer<void>();
 
   bool _prepareStarted = false;
 
@@ -183,8 +191,10 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     if (oldWidget.saveStatus != widget.saveStatus && _activated) {
       _setSaveStatus();
     }
-    // 首行缩进开关变化：随主题通道即时下发（复用 setTheme，不重建 webview）。
-    if (oldWidget.firstLineIndent != widget.firstLineIndent && _activated) {
+    // 首行缩进 / 字号变化：随主题通道即时下发（复用 setTheme，不重建 webview）。
+    if ((oldWidget.firstLineIndent != widget.firstLineIndent ||
+            oldWidget.fontScale != widget.fontScale) &&
+        _activated) {
       _setTheme();
     }
   }
@@ -313,6 +323,9 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
         _readyTimeout?.cancel();
         _activate();
         return;
+      case 'fontReady':
+        if (!_fontReady.isCompleted) _fontReady.complete();
+        return;
       case 'change':
         final content = payload is String ? payload : '';
         _lastContent = content;
@@ -429,6 +442,22 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     await _setEditable(!widget.readOnly);
     await _setTheme();
     await _setSaveStatus();
+    // 有自定义字体时等 web 侧 fontReady（boot 即开始加载）再撤遮罩，字体换脸发生在遮罩后面；
+    // 超时兜底防坏字体文件卡死。仅正常 ready 路径等（ready 超时兜底进来的 webview 已经不健康）。
+    if (_jsReady &&
+        widget.fontResolver?.call() != null &&
+        !_fontReady.isCompleted) {
+      await _fontReady.future.timeout(
+        const Duration(seconds: 2),
+        onTimeout: () {},
+      );
+      if (!mounted) return;
+      // 等待期间（可达 2s）readOnly / 主题等可能已变，而 didUpdateWidget / didChangeDependencies
+      // 因未激活被跳过 —— 用当前 widget 值重推对齐，避免揭幕后停在旧快照。
+      await _setEditable(!widget.readOnly);
+      await _setTheme();
+      await _setSaveStatus();
+    }
     if (!mounted) return;
     setState(() => _activated = true);
     widget.onReady?.call();
@@ -441,7 +470,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     final seed = resolved?.seed ?? Theme.of(context).colorScheme.primary;
     final variant = resolved?.variant ?? 'tonalSpot';
     final dark = Theme.of(context).brightness == Brightness.dark;
-    // 字体家族随主题一起下发：web 侧据此拼 @font-face（src 用 boot.fontBase），
+    // 字体家族随主题一起下发：web 侧据此用 FontFace 加载（src 用 boot.fontBase），
     // 缺省（系统字体）不带该字段。字体文件由本地服务经 fontResolver 供给。
     final font = widget.fontResolver?.call();
     return {
@@ -449,8 +478,21 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       'dark': dark,
       'variant': variant,
       if (font != null) 'font': font.family,
+      if (font != null) 'fontV': _fontVersion(font),
       'firstLineIndent': widget.firstLineIndent,
+      'fontScale': widget.fontScale,
     };
+  }
+
+  /// 字体 URL 破缓存串：family + 文件 mtime。字体响应带长缓存头（见 editor_local_server），
+  /// 重导入同名字体靠 mtime 变化换 URL。
+  static String _fontVersion(EditorFont font) {
+    try {
+      final mtime = File(font.path).statSync().modified.millisecondsSinceEpoch;
+      return '${font.family}-$mtime';
+    } catch (_) {
+      return font.family;
+    }
   }
 
   static String _hex(Color c) {

@@ -36,6 +36,10 @@ class MoodiaryEditorView extends StatefulWidget {
   /// 经主题通道下发到 webview，由 CSS `text-indent` 对正文段落生效。
   final bool firstLineIndent;
 
+  /// 全局「字号」偏好（[MoodiaryKVs.fontScale]）。透传给 [MoodiaryEditor]，经主题通道
+  /// 下发到 webview，由 CSS `--app-font-scale` 缩放正文与标题字号。
+  final double fontScale;
+
   /// 本篇自动保存状态，透传给编辑器内右下角气泡：saving / saved / failed。
   final String saveStatus;
 
@@ -55,6 +59,7 @@ class MoodiaryEditorView extends StatefulWidget {
     this.onActiveHeadingChanged,
     this.editable = true,
     this.firstLineIndent = false,
+    this.fontScale = 1.0,
     this.saveStatus = 'idle',
     this.onOpenDiaryLink,
     this.onOpenDetails,
@@ -287,6 +292,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onOpenDetails: widget.onOpenDetails,
       saveStatus: widget.saveStatus,
       firstLineIndent: widget.firstLineIndent,
+      fontScale: widget.fontScale,
       seedResolver: () => ThemeUtil().editorSeed,
       fontResolver: () => ThemeUtil().editorFont,
       mediaResolver: appMediaResolver,

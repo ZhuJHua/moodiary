@@ -137,6 +137,9 @@ class _MigrationComparePageState extends State<MigrationComparePage> {
       key: ValueKey('migrate-after-${widget.diary.id}'),
       initialContent: _rightContent!,
       editable: false,
+      // 与左侧（EditorBody 供给）同字号/缩进，避免对比双栏排版不一致。
+      firstLineIndent: MoodiaryKVs.firstLineIndent.get() ?? false,
+      fontScale: MoodiaryKVs.fontScale.get() ?? 1.0,
       onChanged: (_) {},
     );
   }

@@ -314,25 +314,29 @@ class _EditorBodyState extends State<EditorBody> {
   }
 
   Widget _buildMoodiaryEditor(BuildContext context) {
-    // 全局「首行缩进」偏好：监听 KV，开关变更即重建并透传给 webview（走主题通道下发，
-    // web 侧据此切 CSS text-indent）。boot 首帧与运行时实时切换共用同一路径。
+    // 全局「首行缩进」「字号」偏好：监听 KV，变更即重建并透传给 webview（走主题通道下发，
+    // web 侧据此切 CSS text-indent / --app-font-scale）。boot 首帧与运行时实时切换共用同一路径。
     return ValueListenableBuilder<bool>(
       valueListenable: MoodiaryKVs.firstLineIndent.getNotifier(),
-      builder: (context, firstLineIndent, _) => MoodiaryEditorView(
-        initialContent: widget.initialContent,
-        initialTitle: widget.initialTitle,
-        onTitleChanged: widget.onTitleChanged,
-        controller: widget.editorController,
-        onActiveHeadingChanged: widget.onActiveHeadingChanged,
-        // 仅 tiptap 可编辑；旧 markdown 只读查看。
-        editable: widget.editable && widget.type.isEditable,
-        saveStatus: widget.saveStatus,
-        firstLineIndent: firstLineIndent,
-        // content 为 TipTap 文档 JSON；contentText 走 JSON 解析得纯文本（旧 markdown 自动兼容）。
-        onChanged: (content) =>
-            widget.onChanged(content, TiptapContent.plainText(content)),
-        onOpenDiaryLink: widget.onOpenDiaryLink,
-        onOpenDetails: widget.onShowDetails,
+      builder: (context, firstLineIndent, _) => ValueListenableBuilder<double>(
+        valueListenable: MoodiaryKVs.fontScale.getNotifier(),
+        builder: (context, fontScale, _) => MoodiaryEditorView(
+          initialContent: widget.initialContent,
+          initialTitle: widget.initialTitle,
+          onTitleChanged: widget.onTitleChanged,
+          controller: widget.editorController,
+          onActiveHeadingChanged: widget.onActiveHeadingChanged,
+          // 仅 tiptap 可编辑；旧 markdown 只读查看。
+          editable: widget.editable && widget.type.isEditable,
+          saveStatus: widget.saveStatus,
+          firstLineIndent: firstLineIndent,
+          fontScale: fontScale,
+          // content 为 TipTap 文档 JSON；contentText 走 JSON 解析得纯文本（旧 markdown 自动兼容）。
+          onChanged: (content) =>
+              widget.onChanged(content, TiptapContent.plainText(content)),
+          onOpenDiaryLink: widget.onOpenDiaryLink,
+          onOpenDetails: widget.onShowDetails,
+        ),
       ),
     );
   }

@@ -16,6 +16,7 @@ import {
   type DynamicColor,
   type DynamicScheme,
 } from '@material/material-color-utilities'
+import { post } from './post'
 
 /** Flutter 下发的配色种子，与 Flutter 端 buildColorScheme 一一对应。 */
 export interface SeedTheme {
@@ -28,8 +29,12 @@ export interface SeedTheme {
   contrast?: number
   /** App 当前自定义字体家族名；缺省 / 空表示系统字体（用 CSS 兜底字体栈）。 */
   font?: string
+  /** 字体文件版本串（family + mtime），作字体 URL 的破缓存参数；缺省退回 family。 */
+  fontV?: string
   /** 全局「首行缩进」：true 时正文段落首行缩进 2 字符（经 --app-text-indent 驱动 CSS）。 */
   firstLineIndent?: boolean
+  /** 全局「字号」缩放（1.0 = 标准），经 --app-font-scale 缩放正文/标题根字号。 */
+  fontScale?: number
 }
 
 export let isDark = false
@@ -41,34 +46,53 @@ export function setFontBase(url: string): void {
   fontBase = url
 }
 
-// 与 moodiary-editor.css `:root` 的 --app-font-sans 兜底一致：自定义字体缺字时回退到系统字体栈。
+// 与 moodiary-editor.css `:root` 的 --app-font-sans 兜底一致：system-ui 领头以跟随系统当前
+// 默认字体（OEM 换字体经它生效），故不显式写 Roboto（sans-serif 已覆盖，写死反而钉在原生 Roboto）。
 const DEFAULT_SANS =
-  "-apple-system, 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC', Roboto, sans-serif"
+  "system-ui, -apple-system, 'Segoe UI', 'Microsoft YaHei UI', 'PingFang SC', sans-serif"
 
-let fontStyleEl: HTMLStyleElement | null = null
+let activeFontKey = ''
+let activeFontFace: FontFace | null = null
 
 /**
- * 应用 App 自定义字体：家族名有值且 fontBase 就绪时，注入一段 @font-face（src 指向本地服务的
- * 字体文件，`?v=<family>` 换字体时破缓存）并把 --app-font-sans 置为「自定义字体, 系统兜底栈」；
- * 否则清空 @font-face 并移除内联 --app-font-sans，回落到 :root 的系统字体栈。
+ * 应用 App 自定义字体：家族名有值且 fontBase 就绪时，用 FontFace API 注册并**立即** load
+ * （@font-face 是惰性加载，要等首个用到该 family 的文本渲染才发请求，抢不回加载窗口），并把
+ * --app-font-sans 置为「自定义字体, 系统兜底栈」；加载成败都 post('fontReady')，Flutter 据此
+ * 在撤加载遮罩前等字体就绪（带超时兜底），避免露出兜底字体后整篇换脸闪动。
+ * 否则移除注册与内联 --app-font-sans，回落到 :root 的系统字体栈。
  * 不声明 font-weight，静态 / 可变字体的加粗都交给浏览器合成，避免可变字体单一 face 吃掉粗体。
  */
-function applyFont(family?: string): void {
+function applyFont(family?: string, version?: string): void {
   const root = document.documentElement
-  if (!fontStyleEl) {
-    fontStyleEl = document.createElement('style')
-    fontStyleEl.id = 'app-font-face'
-    document.head.appendChild(fontStyleEl)
+  const key = family && fontBase ? `${family}@${version ?? ''}` : ''
+  if (key === activeFontKey) return
+  activeFontKey = key
+  if (activeFontFace) {
+    document.fonts.delete(activeFontFace)
+    activeFontFace = null
   }
-  if (family && fontBase) {
-    const esc = family.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
-    const url = `${fontBase}?v=${encodeURIComponent(family)}`
-    fontStyleEl.textContent = `@font-face{font-family:'${esc}';src:url('${url}');font-display:swap;}`
-    root.style.setProperty('--app-font-sans', `'${esc}', ${DEFAULT_SANS}`)
-  } else {
-    fontStyleEl.textContent = ''
+  if (!family || !fontBase) {
     root.style.removeProperty('--app-font-sans')
+    return
   }
+  const url = `${fontBase}?v=${encodeURIComponent(version ?? family)}`
+  const face = new FontFace(family, `url('${url}')`, { display: 'swap' })
+  activeFontFace = face
+  document.fonts.add(face)
+  const esc = family.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+  root.style.setProperty('--app-font-sans', `'${esc}', ${DEFAULT_SANS}`)
+  face.load().then(
+    () => post('fontReady'),
+    () => {
+      // 加载失败：撤注册并清 key，让下一次主题推送重试（否则本 webview 生命周期内永远兜底字体）。
+      if (activeFontFace === face) {
+        document.fonts.delete(face)
+        activeFontFace = null
+        activeFontKey = ''
+      }
+      post('fontReady')
+    },
+  )
 }
 
 export function applyTheme(theme: SeedTheme): void {
@@ -79,10 +103,12 @@ export function applyTheme(theme: SeedTheme): void {
   for (const [key, value] of Object.entries(appVars(rolesOf(scheme)))) {
     root.style.setProperty(key, value)
   }
-  applyFont(theme.font)
+  applyFont(theme.font, theme.fontV)
   // 首行缩进：置 --app-text-indent（moodiary-editor.css 里顶层段落 `> p` 读它）。2em ≈ 2 字符，
   // 与旧版 Quill text_indent 值 "2" 对齐；关闭时置 0。
   root.style.setProperty('--app-text-indent', theme.firstLineIndent ? '2em' : '0')
+  // 字号：置 --app-font-scale（正文/标题根字号 calc 读它，em 层级自动跟随）。
+  root.style.setProperty('--app-font-scale', String(theme.fontScale ?? 1))
   isDark = theme.dark
   root.setAttribute('data-theme', isDark ? 'dark' : 'light')
   // 让原生表单控件 / 滚动条跟随明暗。

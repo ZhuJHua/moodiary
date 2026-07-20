@@ -47,6 +47,13 @@ class AppSettingsController extends _$AppSettingsController {
     );
   }
 
+  /// 字号：即时刷新根 textScaler（无需重建 ThemeData，字号不进 ThemeData），再落 KV。
+  /// 先改 state 后持久化：全局生效不等平台通道写盘。
+  Future<void> setFontScale(double value) async {
+    state = state.copyWith(fontScale: value);
+    await MoodiaryKVs.fontScale.set(value);
+  }
+
   Future<void> bumpLocale() async {
     final lang = MoodiaryKVs.language.get() ?? 'system';
     final String code;

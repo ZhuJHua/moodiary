@@ -56,6 +56,7 @@ onBeforeUnmount(() => clearTimeout(copiedTimer))
         <span>{{ copied ? '已复制' : '复制' }}</span>
       </button>
     </div>
-    <pre><NodeViewContent as="code" /></pre>
+    <!-- NodeViewContent 自带内联 white-space: pre-wrap，经 attrs 透传覆盖成 pre：长行不折行、在 pre 内横滚。 -->
+    <pre><NodeViewContent as="code" style="white-space: pre" /></pre>
   </NodeViewWrapper>
 </template>

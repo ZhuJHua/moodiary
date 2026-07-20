@@ -68,12 +68,15 @@ class HttpServerResponse {
       );
 
   /// 从磁盘流式供给文件（自动支持 Range）。
-  factory HttpServerResponse.file(String path, {required String contentType}) =>
-      HttpServerResponse(
-        200,
-        headers: {'content-type': contentType},
-        bodyFilePath: path,
-      );
+  factory HttpServerResponse.file(
+    String path, {
+    required String contentType,
+    Map<String, String> headers = const {},
+  }) => HttpServerResponse(
+    200,
+    headers: {...headers, 'content-type': contentType},
+    bodyFilePath: path,
+  );
 
   factory HttpServerResponse.notFound() =>
       HttpServerResponse.text(404, 'not found');

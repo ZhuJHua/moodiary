@@ -99,8 +99,8 @@ class EditorLocalServer {
         return HttpServerResponse.text(500, 'media request failed');
       }
     }
-    // `/<token>/font`：供当前激活的自定义字体文件（web 侧 @font-face 的 src，查询串
-    // `?v=<family>` 仅用于换字体时破缓存，服务端忽略）。系统字体时 resolver 回 null → 404。
+    // `/<token>/font`：供当前激活的自定义字体文件（web 侧 FontFace 的 src，查询串
+    // `?v=<family-mtime>` 用于换/重导字体时破缓存，服务端忽略）。系统字体时 resolver 回 null → 404。
     if (seg.length == 2 && seg[0] == _token && seg[1] == 'font') {
       try {
         final font = fontResolver?.call();
@@ -108,6 +108,8 @@ class EditorLocalServer {
         return HttpServerResponse.file(
           font.path,
           contentType: _fontMime(font.path),
+          // URL 破缓存靠 ?v，可长缓存：同一 app 会话内反复开编辑器命中 HTTP 缓存，不重复下载。
+          headers: const {'cache-control': 'max-age=31536000, immutable'},
         );
       } catch (e) {
         _log('font request failed: ${request.path}', error: e, level: 1000);
