@@ -1433,4 +1433,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get categoryDeletedReset => '分类已被删除，已切回全部';
+
+  @override
+  String get imageBrowserSave => '保存到相册';
+
+  @override
+  String get imageBrowserSaved => '已保存到相册';
+
+  @override
+  String get imageBrowserSaveFailed => '保存失败';
+
+  @override
+  String get imageBrowserInfo => '图片信息';
+
+  @override
+  String get imageBrowserInfoName => '文件名';
+
+  @override
+  String get imageBrowserInfoUrl => '链接';
+
+  @override
+  String get imageBrowserInfoResolution => '分辨率';
+
+  @override
+  String get imageBrowserInfoSize => '大小';
+
+  @override
+  String get imageBrowserInfoFormat => '格式';
+
+  @override
+  String get imageBrowserInfoModified => '修改时间';
 }

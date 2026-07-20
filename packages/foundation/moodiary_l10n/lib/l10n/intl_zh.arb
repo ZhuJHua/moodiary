@@ -460,5 +460,15 @@
   "diarySortOldestFirst": "最早在前",
   "diarySortModifiedFirst": "最近修改在前",
   "diarySortCalendarHint": "日历按日期组织，不受排序影响",
-  "categoryDeletedReset": "分类已被删除，已切回全部"
+  "categoryDeletedReset": "分类已被删除，已切回全部",
+  "imageBrowserSave": "保存到相册",
+  "imageBrowserSaved": "已保存到相册",
+  "imageBrowserSaveFailed": "保存失败",
+  "imageBrowserInfo": "图片信息",
+  "imageBrowserInfoName": "文件名",
+  "imageBrowserInfoUrl": "链接",
+  "imageBrowserInfoResolution": "分辨率",
+  "imageBrowserInfoSize": "大小",
+  "imageBrowserInfoFormat": "格式",
+  "imageBrowserInfoModified": "修改时间"
 }

@@ -6,7 +6,6 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'media_controller.dart';
-import 'media_image_viewer.dart';
 import 'media_video_viewer.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 
@@ -372,6 +371,9 @@ class _Thumb extends StatelessWidget {
   }
 }
 
+/// 媒体库图片 Hero tag 前缀（与 [MoodiaryImageBrowser] 的约定：`'$prefix-<路径>'`）。
+const String _kImageHeroPrefix = 'media';
+
 class _ImageTile extends StatelessWidget {
   final List<String> names;
   final int index;
@@ -386,13 +388,22 @@ class _ImageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final path = FileUtil.getRealPath('image', names[index]);
     return GestureDetector(
-      onTap: () =>
-          MediaImageViewer.show(context, names: names, initialIndex: index),
-      child: _Thumb(
-        image: ResizeImage(
-          FileImage(File(FileUtil.getRealPath('image', names[index]))),
-          width: cacheWidth,
+      onTap: () => MoodiaryImageBrowser.show(
+        context,
+        images: [
+          for (final name in names) FileUtil.getRealPath('image', name),
+        ],
+        initialIndex: index,
+        heroPrefix: _kImageHeroPrefix,
+        // 与网格缩略图同解码宽度 → 同缓存键，浏览器加载态直接命中缩略图。
+        placeholderCacheWidth: cacheWidth,
+      ),
+      child: Hero(
+        tag: '$_kImageHeroPrefix-$path',
+        child: _Thumb(
+          image: ResizeImage(FileImage(File(path)), width: cacheWidth),
         ),
       ),
     );

@@ -2863,6 +2863,66 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'分类已被删除，已切回全部'**
   String get categoryDeletedReset;
+
+  /// No description provided for @imageBrowserSave.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存到相册'**
+  String get imageBrowserSave;
+
+  /// No description provided for @imageBrowserSaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存到相册'**
+  String get imageBrowserSaved;
+
+  /// No description provided for @imageBrowserSaveFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存失败'**
+  String get imageBrowserSaveFailed;
+
+  /// No description provided for @imageBrowserInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'图片信息'**
+  String get imageBrowserInfo;
+
+  /// No description provided for @imageBrowserInfoName.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件名'**
+  String get imageBrowserInfoName;
+
+  /// No description provided for @imageBrowserInfoUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'链接'**
+  String get imageBrowserInfoUrl;
+
+  /// No description provided for @imageBrowserInfoResolution.
+  ///
+  /// In zh, this message translates to:
+  /// **'分辨率'**
+  String get imageBrowserInfoResolution;
+
+  /// No description provided for @imageBrowserInfoSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'大小'**
+  String get imageBrowserInfoSize;
+
+  /// No description provided for @imageBrowserInfoFormat.
+  ///
+  /// In zh, this message translates to:
+  /// **'格式'**
+  String get imageBrowserInfoFormat;
+
+  /// No description provided for @imageBrowserInfoModified.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改时间'**
+  String get imageBrowserInfoModified;
 }
 
 class _AppLocalizationsDelegate

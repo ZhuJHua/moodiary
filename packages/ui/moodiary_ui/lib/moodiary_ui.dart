@@ -25,6 +25,7 @@ export 'src/common/chip_bar.dart';
 export 'src/common/env_badge.dart';
 export 'src/common/expand_button.dart';
 export 'src/common/frosted_glass_overlay.dart';
+export 'src/common/image_browser.dart';
 export 'src/common/lock_pin_pad.dart';
 export 'src/common/mood_icon.dart';
 export 'src/common/setting_tile.dart';

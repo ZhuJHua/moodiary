@@ -460,5 +460,15 @@
   "diarySortOldestFirst": "Oldest first",
   "diarySortModifiedFirst": "Recently edited first",
   "diarySortCalendarHint": "Calendar is organized by date and ignores sorting",
-  "categoryDeletedReset": "Category deleted, showing all diaries"
+  "categoryDeletedReset": "Category deleted, showing all diaries",
+  "imageBrowserSave": "Save to gallery",
+  "imageBrowserSaved": "Saved to gallery",
+  "imageBrowserSaveFailed": "Save failed",
+  "imageBrowserInfo": "Image info",
+  "imageBrowserInfoName": "File name",
+  "imageBrowserInfoUrl": "URL",
+  "imageBrowserInfoResolution": "Resolution",
+  "imageBrowserInfoSize": "Size",
+  "imageBrowserInfoFormat": "Format",
+  "imageBrowserInfoModified": "Modified"
 }

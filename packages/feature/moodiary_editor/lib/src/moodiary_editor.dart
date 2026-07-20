@@ -69,8 +69,9 @@ class MoodiaryEditor extends StatefulWidget {
 
   final VoidCallback? onReady;
 
-  /// 点击正文图片回调：入参为存储文件名或外链 URL。预留原生预览，可不传。
-  final ValueChanged<String>? onImageTap;
+  /// 点击正文图片回调：入参为全文图片列表（存储文件名或外链 URL）与被点下标，
+  /// 供宿主开原生画廊左右翻页。可不传（不预览）。
+  final void Function(List<String> images, int index)? onImageTap;
 
   /// 编辑器内触发"插入图片"回调：上层弹原生选图、存盘，再 insertMedia 插入。
   final VoidCallback? onPickImage;
@@ -369,8 +370,18 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
         return;
       case 'imageTap':
         if (payload is Map) {
+          final srcs = [...?(payload['srcs'] as List?)?.whereType<String>()];
+          if (srcs.isNotEmpty) {
+            final index = payload['index'];
+            final i = index is num ? index.toInt() : 0;
+            widget.onImageTap?.call(srcs, i < 0 || i >= srcs.length ? 0 : i);
+            return;
+          }
+          // 旧版页面资源只带单图 src 的兜底。
           final src = payload['src'];
-          if (src is String && src.isNotEmpty) widget.onImageTap?.call(src);
+          if (src is String && src.isNotEmpty) {
+            widget.onImageTap?.call([src], 0);
+          }
         }
         return;
       case 'requestLinkCandidates':

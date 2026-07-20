@@ -41,9 +41,19 @@ function onClick(e: MouseEvent): void {
   const img = target?.closest('img')
   if (!img) return
   const src = (img as HTMLImageElement).getAttribute('src')
-  if (!src) return
+  // data: URI = 拖拽/粘贴上传落盘前的临时预览，落盘后 src 会换成文件名，此时不预览。
+  if (!src || src.startsWith('data:')) return
   e.preventDefault()
-  post('imageTap', { src: unproxyMedia(src) })
+  // 全文图片列表 + 被点下标，供 Flutter 原生画廊左右翻页。
+  const all = (
+    Array.from(shell.value?.querySelectorAll('.ProseMirror img') ?? []) as HTMLImageElement[]
+  ).filter((el) => {
+    const s = el.getAttribute('src')
+    return s && !s.startsWith('data:')
+  })
+  const srcs = all.map((el) => unproxyMedia(el.getAttribute('src') as string))
+  const index = all.indexOf(img as HTMLImageElement)
+  post('imageTap', { src: unproxyMedia(src), srcs, index: index < 0 ? 0 : index })
 }
 
 onMounted(() => shell.value?.addEventListener('click', onClick))

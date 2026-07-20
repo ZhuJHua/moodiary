@@ -251,6 +251,18 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     await _controller.insertAudio(name);
   }
 
+  /// 点击正文图片 → 原生全屏画廊（翻页 / 缩放 / 下拉关闭 / 保存 / 信息）。
+  /// 本地文件名解析成磁盘路径，外链原样交给浏览器加载。
+  void _previewImages(List<String> images, int index) {
+    final resolved = [
+      for (final src in images)
+        src.startsWith('http://') || src.startsWith('https://')
+            ? src
+            : FileUtil.getRealPath('image', src),
+    ];
+    MoodiaryImageBrowser.show(context, images: resolved, initialIndex: index);
+  }
+
   // —— 双链候选 = 搜索：不输入关键词不列任何日记（避免列出全部）；输入后走相关性搜索（限量）。
   // 标签：标题优先，否则「日期 · 片段」。
   Future<List<DiaryLinkCandidate>> _linkCandidates(String query) async {
@@ -285,6 +297,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onPickAudio: _showAudioDialog,
       onPickVideo: _showVideoDialog,
       onSaveImage: _saveDataUriImage,
+      onImageTap: _previewImages,
       // —— 注入宿主依赖（主题种子 / 媒体磁盘解析 / 加载遮罩）——
       // 音视频在 webview 内用原生元素内联播放；双链候选/跳转见下。
       onRequestLinkCandidates: _linkCandidates,

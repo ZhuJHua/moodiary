@@ -1489,4 +1489,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoryDeletedReset => 'Category deleted, showing all diaries';
+
+  @override
+  String get imageBrowserSave => 'Save to gallery';
+
+  @override
+  String get imageBrowserSaved => 'Saved to gallery';
+
+  @override
+  String get imageBrowserSaveFailed => 'Save failed';
+
+  @override
+  String get imageBrowserInfo => 'Image info';
+
+  @override
+  String get imageBrowserInfoName => 'File name';
+
+  @override
+  String get imageBrowserInfoUrl => 'URL';
+
+  @override
+  String get imageBrowserInfoResolution => 'Resolution';
+
+  @override
+  String get imageBrowserInfoSize => 'Size';
+
+  @override
+  String get imageBrowserInfoFormat => 'Format';
+
+  @override
+  String get imageBrowserInfoModified => 'Modified';
 }

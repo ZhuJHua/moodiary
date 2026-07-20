@@ -561,6 +561,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
+  dismissible_page:
+    dependency: transitive
+    description:
+      name: dismissible_page
+      sha256: "5b2316f770fe83583f770df1f6505cb19102081c5971979806e77f2e507a9958"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   dynamic_color:
     dependency: transitive
     description:
@@ -2663,10 +2671,10 @@ packages:
     dependency: transitive
     description:
       name: wechat_assets_picker
-      sha256: e2e447c12a6254e523b83415deb0b77953a96eafcb4586901b7d93039d2ca9d6
+      sha256: ccd92f3e8c968e2cbad939bce82b454e798a7669c1e4ab74e871822ce2440b2d
       url: "https://pub.dev"
     source: hosted
-    version: "10.1.2"
+    version: "10.1.3"
   wechat_camera_picker:
     dependency: transitive
     description:

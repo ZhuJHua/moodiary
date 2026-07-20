@@ -11,7 +11,6 @@ import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_core/src/utils/file_util.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/src/utils/log_util.dart';
-import 'package:moodiary_core/src/utils/notice_util.dart';
 import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_core/src/values/media_type.dart';
 import 'package:path/path.dart';
@@ -462,21 +461,23 @@ class MediaUtil {
     );
   }
 
-  static Future<void> saveToGallery({
+  /// 存入系统相册（Moodiary 相簿）。返回是否成功，提示语由调用方按 l10n 处理。
+  static Future<bool> saveToGallery({
     required String path,
     required MediaType type,
   }) async {
-    final hasAccess = await Gal.hasAccess(toAlbum: true);
-    if (!hasAccess) await Gal.requestAccess(toAlbum: true);
     try {
+      final hasAccess = await Gal.hasAccess(toAlbum: true);
+      if (!hasAccess) await Gal.requestAccess(toAlbum: true);
       if (type == MediaType.video) {
         await Gal.putVideo(path, album: 'Moodiary');
       } else {
         await Gal.putImage(path, album: 'Moodiary');
       }
-      toast.success(message: '已保存到相册');
+      return true;
     } catch (e) {
-      toast.error(message: '保存失败');
+      logger.d('saveToGallery failed: $e');
+      return false;
     }
   }
 
