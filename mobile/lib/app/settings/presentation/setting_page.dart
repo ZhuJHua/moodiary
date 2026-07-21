@@ -9,7 +9,6 @@ import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary/app/settings/presentation/widget/cache_usage_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/data_repair_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/reset_data_tile.dart';
-import 'package:moodiary/app/settings/presentation/widget/stress_test_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/color_sheet.dart';
 import 'package:moodiary/app/settings/presentation/widget/dashboard_section.dart';
 import 'package:moodiary/app/settings/presentation/widget/language_dialog.dart';
@@ -101,7 +100,7 @@ class _DataSection extends StatelessWidget {
                 onTap: () => _openSetting(context, const EditorMigrationRoute()),
               ),
               const DataRepairTile(),
-              const StressTestTile(),
+              // 压测入口随图谱一起暂隐藏(StressTestTile,打磨期再放出)。
               const CacheUsageTile(),
               const ResetDataTile(isLast: true),
             ],

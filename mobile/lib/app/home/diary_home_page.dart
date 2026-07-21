@@ -165,11 +165,8 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           icon: const Icon(Icons.search_rounded),
           onPressed: () => const DiarySearchRoute().push(context),
         ),
-        IconButton(
-          tooltip: context.l10n.knowledgeGraph,
-          icon: const Icon(Icons.hub_rounded),
-          onPressed: () => const DiaryGraphRoute().push(context),
-        ),
+        // 知识图谱入口暂隐藏(功能保留,打磨后再放出):
+        // IconButton(icon: Icon(Icons.hub_rounded)) → DiaryGraphRoute().push
         const SyncStatusButton(),
         ValueListenableBuilder(
           valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
