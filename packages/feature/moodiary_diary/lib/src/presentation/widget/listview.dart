@@ -35,7 +35,7 @@ class DiaryListView extends ConsumerWidget {
               body = Center(child: Text(context.l10n.diaryTabViewEmpty));
             } else {
               body = MoodiaryRefresh(
-                onLoading: () => ref.read(provider.notifier).loadMore(),
+                onLoadMore: () => ref.read(provider.notifier).loadMore(),
                 onRefresh: () => ref.read(provider.notifier).refresh(),
                 child: ListView.separated(
                   padding: EdgeInsets.fromLTRB(

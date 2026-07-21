@@ -203,7 +203,7 @@ class _MediaBody extends ConsumerWidget {
         if (group.isEmpty) return _Empty();
         final cacheWidth = _thumbCacheWidth(context);
         return MoodiaryRefresh(
-          onLoading: () => ref.read(provider.notifier).loadMore(),
+          onLoadMore: () => ref.read(provider.notifier).loadMore(),
           onRefresh: () => ref.read(provider.notifier).refresh(),
           child: CustomScrollView(
             slivers: [

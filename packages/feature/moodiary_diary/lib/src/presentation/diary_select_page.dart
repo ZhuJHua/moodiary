@@ -20,31 +20,15 @@ class DiarySelectPage extends ConsumerStatefulWidget {
 
 class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
   final _searchController = TextEditingController();
-  final _scrollController = ScrollController();
   Timer? _debounce;
   String _query = '';
   Future<List<Diary>>? _searchFuture;
 
   @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
-    _scrollController.dispose();
     super.dispose();
-  }
-
-  void _onScroll() {
-    if (_query.isNotEmpty || !_scrollController.hasClients) return;
-    final pos = _scrollController.position;
-    if (pos.pixels >= pos.maxScrollExtent - 320) {
-      ref.read(diaryControllerProvider(categoryId: null).notifier).loadMore();
-    }
   }
 
   void _onQueryChanged(String value) {
@@ -99,18 +83,21 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
   }
 
   Widget _buildAll() {
-    final async = ref.watch(diaryControllerProvider(categoryId: null));
+    final provider = diaryControllerProvider(categoryId: null);
+    final async = ref.watch(provider);
     return async.buildLoading(
       data: (list) {
         if (list.isEmpty) return _Empty();
-        return ListView.separated(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(12),
-          itemCount: list.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 8),
-          itemBuilder: (context, index) => _DiarySelectTile(
-            diary: list[index],
-            onTap: () => _select(list[index]),
+        return MoodiaryRefresh(
+          onLoadMore: () => ref.read(provider.notifier).loadMore(),
+          child: ListView.separated(
+            padding: const EdgeInsets.all(12),
+            itemCount: list.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) => _DiarySelectTile(
+              diary: list[index],
+              onTap: () => _select(list[index]),
+            ),
           ),
         );
       },

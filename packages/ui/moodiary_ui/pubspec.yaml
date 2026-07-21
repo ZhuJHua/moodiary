@@ -20,7 +20,7 @@ dependencies:
 
   flutter_riverpod: 3.3.2
   modal_bottom_sheet: 3.0.0
-  easy_refresh: 3.5.1
+  expressive_refresh: 0.1.2
   path: 1.9.1
 
   cached_network_image_ce: 4.9.0

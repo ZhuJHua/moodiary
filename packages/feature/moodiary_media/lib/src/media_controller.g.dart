@@ -11,6 +11,9 @@ part of 'media_controller.dart';
 /// 媒体库分页数据源：按 [MediaType] 加载含该类型媒体的在册日记（时间倒序）。
 /// 每类一个 family 实例，各自维护 offset / noMore，互不干扰。展示用的按日期分组
 /// 由纯函数 [buildMediaGroup] 派生，不落 state。
+///
+/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新（复用 [applyDiaryEvent]），
+/// 使新增 / 编辑 / 删除日记后媒体库即时刷新，无需重查库。
 
 @ProviderFor(MediaDiaries)
 final mediaDiariesProvider = MediaDiariesFamily._();
@@ -18,11 +21,17 @@ final mediaDiariesProvider = MediaDiariesFamily._();
 /// 媒体库分页数据源：按 [MediaType] 加载含该类型媒体的在册日记（时间倒序）。
 /// 每类一个 family 实例，各自维护 offset / noMore，互不干扰。展示用的按日期分组
 /// 由纯函数 [buildMediaGroup] 派生，不落 state。
+///
+/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新（复用 [applyDiaryEvent]），
+/// 使新增 / 编辑 / 删除日记后媒体库即时刷新，无需重查库。
 final class MediaDiariesProvider
     extends $AsyncNotifierProvider<MediaDiaries, List<Diary>> {
   /// 媒体库分页数据源：按 [MediaType] 加载含该类型媒体的在册日记（时间倒序）。
   /// 每类一个 family 实例，各自维护 offset / noMore，互不干扰。展示用的按日期分组
   /// 由纯函数 [buildMediaGroup] 派生，不落 state。
+  ///
+  /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新（复用 [applyDiaryEvent]），
+  /// 使新增 / 编辑 / 删除日记后媒体库即时刷新，无需重查库。
   MediaDiariesProvider._({
     required MediaDiariesFamily super.from,
     required MediaType super.argument,
@@ -59,11 +68,14 @@ final class MediaDiariesProvider
   }
 }
 
-String _$mediaDiariesHash() => r'64c404f6678ab815d30896b55020310cd6d08f79';
+String _$mediaDiariesHash() => r'4e0b7e858289a703e9acbc7d6683d665545a689a';
 
 /// 媒体库分页数据源：按 [MediaType] 加载含该类型媒体的在册日记（时间倒序）。
 /// 每类一个 family 实例，各自维护 offset / noMore，互不干扰。展示用的按日期分组
 /// 由纯函数 [buildMediaGroup] 派生，不落 state。
+///
+/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新（复用 [applyDiaryEvent]），
+/// 使新增 / 编辑 / 删除日记后媒体库即时刷新，无需重查库。
 
 final class MediaDiariesFamily extends $Family
     with
@@ -86,6 +98,9 @@ final class MediaDiariesFamily extends $Family
   /// 媒体库分页数据源：按 [MediaType] 加载含该类型媒体的在册日记（时间倒序）。
   /// 每类一个 family 实例，各自维护 offset / noMore，互不干扰。展示用的按日期分组
   /// 由纯函数 [buildMediaGroup] 派生，不落 state。
+  ///
+  /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新（复用 [applyDiaryEvent]），
+  /// 使新增 / 编辑 / 删除日记后媒体库即时刷新，无需重查库。
 
   MediaDiariesProvider call({required MediaType type}) =>
       MediaDiariesProvider._(argument: type, from: this);
@@ -97,6 +112,9 @@ final class MediaDiariesFamily extends $Family
 /// 媒体库分页数据源：按 [MediaType] 加载含该类型媒体的在册日记（时间倒序）。
 /// 每类一个 family 实例，各自维护 offset / noMore，互不干扰。展示用的按日期分组
 /// 由纯函数 [buildMediaGroup] 派生，不落 state。
+///
+/// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新（复用 [applyDiaryEvent]），
+/// 使新增 / 编辑 / 删除日记后媒体库即时刷新，无需重查库。
 
 abstract class _$MediaDiaries extends $AsyncNotifier<List<Diary>> {
   late final _$args = ref.$arg as MediaType;

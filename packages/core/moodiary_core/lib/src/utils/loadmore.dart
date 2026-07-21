@@ -45,13 +45,12 @@ mixin LoadMoreMixin<T> on AnyNotifier<AsyncValue<List<T>>, List<T>> {
     return _load(offset: 0, refresh: true);
   }
 
+  /// 加载下一页，返回是否（可能）还有更多；false 供刷新组件置为「没有更多」。
   Future<bool> loadMore() async {
     if (!_noMore && !state.isLoading) {
       await _load(offset: _offset);
-      return true;
-    } else {
-      return false;
     }
+    return !_noMore;
   }
 
   @visibleForOverriding
