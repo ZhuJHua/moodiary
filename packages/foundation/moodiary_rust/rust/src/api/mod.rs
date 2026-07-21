@@ -2,6 +2,7 @@ pub mod assistant;
 pub mod audio;
 pub mod crypto;
 pub mod font;
+pub mod graph_layout;
 pub mod http;
 pub mod http_server;
 pub mod image;

@@ -2792,6 +2792,90 @@ abstract class AppLocalizations {
   /// **'反向链接'**
   String get backlinks;
 
+  /// No description provided for @knowledgeGraph.
+  ///
+  /// In zh, this message translates to:
+  /// **'知识图谱'**
+  String get knowledgeGraph;
+
+  /// No description provided for @graphEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有双链关系\n在日记里用 [[ 关联另一篇试试'**
+  String get graphEmpty;
+
+  /// No description provided for @graphCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{nodes} 篇 · {edges} 条链接'**
+  String graphCount(Object edges, Object nodes);
+
+  /// No description provided for @graphFilterAllCategories.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部分类'**
+  String get graphFilterAllCategories;
+
+  /// No description provided for @graphTimeAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部时间'**
+  String get graphTimeAll;
+
+  /// No description provided for @graphTimeLast30.
+  ///
+  /// In zh, this message translates to:
+  /// **'近 30 天'**
+  String get graphTimeLast30;
+
+  /// No description provided for @graphTimeThisYear.
+  ///
+  /// In zh, this message translates to:
+  /// **'今年'**
+  String get graphTimeThisYear;
+
+  /// No description provided for @graphTimeLast365.
+  ///
+  /// In zh, this message translates to:
+  /// **'近一年'**
+  String get graphTimeLast365;
+
+  /// No description provided for @graphOpenDiary.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开日记'**
+  String get graphOpenDiary;
+
+  /// No description provided for @graphNodeLinks.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 条链接'**
+  String graphNodeLinks(Object count);
+
+  /// No description provided for @graphStyle.
+  ///
+  /// In zh, this message translates to:
+  /// **'布局风格'**
+  String get graphStyle;
+
+  /// No description provided for @graphStyleSparse.
+  ///
+  /// In zh, this message translates to:
+  /// **'稀疏'**
+  String get graphStyleSparse;
+
+  /// No description provided for @graphStyleNormal.
+  ///
+  /// In zh, this message translates to:
+  /// **'标准'**
+  String get graphStyleNormal;
+
+  /// No description provided for @graphStyleDense.
+  ///
+  /// In zh, this message translates to:
+  /// **'稠密'**
+  String get graphStyleDense;
+
   /// No description provided for @categorySwitcherCount.
   ///
   /// In zh, this message translates to:

@@ -1397,6 +1397,52 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backlinks => '反向链接';
 
   @override
+  String get knowledgeGraph => '知识图谱';
+
+  @override
+  String get graphEmpty => '还没有双链关系\n在日记里用 [[ 关联另一篇试试';
+
+  @override
+  String graphCount(Object edges, Object nodes) {
+    return '$nodes 篇 · $edges 条链接';
+  }
+
+  @override
+  String get graphFilterAllCategories => '全部分类';
+
+  @override
+  String get graphTimeAll => '全部时间';
+
+  @override
+  String get graphTimeLast30 => '近 30 天';
+
+  @override
+  String get graphTimeThisYear => '今年';
+
+  @override
+  String get graphTimeLast365 => '近一年';
+
+  @override
+  String get graphOpenDiary => '打开日记';
+
+  @override
+  String graphNodeLinks(Object count) {
+    return '$count 条链接';
+  }
+
+  @override
+  String get graphStyle => '布局风格';
+
+  @override
+  String get graphStyleSparse => '稀疏';
+
+  @override
+  String get graphStyleNormal => '标准';
+
+  @override
+  String get graphStyleDense => '稠密';
+
+  @override
   String categorySwitcherCount(Object count) {
     return '$count 个分类';
   }

@@ -72,7 +72,7 @@ final class MonthDiariesProvider
   }
 }
 
-String _$monthDiariesHash() => r'3976e741bbae0b74597a9a31acecb6da9895dbc6';
+String _$monthDiariesHash() => r'f583cc111d04aba303414d336ecfece3ad04bed1';
 
 /// 该月可见日记（show=true 且非软删，可按 [categoryId] 过滤），按时间倒序。
 

@@ -1452,6 +1452,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backlinks => 'Backlinks';
 
   @override
+  String get knowledgeGraph => 'Knowledge Graph';
+
+  @override
+  String get graphEmpty => 'No links yet\nUse [[ in a diary to connect another';
+
+  @override
+  String graphCount(Object edges, Object nodes) {
+    return '$nodes notes · $edges links';
+  }
+
+  @override
+  String get graphFilterAllCategories => 'All categories';
+
+  @override
+  String get graphTimeAll => 'All time';
+
+  @override
+  String get graphTimeLast30 => 'Last 30 days';
+
+  @override
+  String get graphTimeThisYear => 'This year';
+
+  @override
+  String get graphTimeLast365 => 'Last 12 months';
+
+  @override
+  String get graphOpenDiary => 'Open diary';
+
+  @override
+  String graphNodeLinks(Object count) {
+    return '$count links';
+  }
+
+  @override
+  String get graphStyle => 'Layout style';
+
+  @override
+  String get graphStyleSparse => 'Sparse';
+
+  @override
+  String get graphStyleNormal => 'Standard';
+
+  @override
+  String get graphStyleDense => 'Dense';
+
+  @override
   String categorySwitcherCount(Object count) {
     return '$count categories';
   }

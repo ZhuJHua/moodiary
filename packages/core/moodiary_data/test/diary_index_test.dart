@@ -437,4 +437,65 @@ void main() {
     expect((await repo.getDiaryByBusinessId('biz-id-001'))?.id, 'biz-id-001');
     expect(await repo.getDiaryByBusinessId('missing'), isNull);
   });
+
+  group('buildLinkGraph', () {
+    test('基本双链构成一条无向边,节点即两端', () async {
+      await repo.insertADiary(makeDiary('d1', '目标'));
+      await repo.insertADiary(makeDiary('d2', '来源', linkTo: ['d1']));
+
+      final g = await repo.buildLinkGraph();
+      expect(g.nodes.map((n) => n.id).toSet(), {'d1', 'd2'});
+      expect(g.edgeCount, 1);
+      final ends = {g.nodes[g.edges[0]].id, g.nodes[g.edges[1]].id};
+      expect(ends, {'d1', 'd2'});
+    });
+
+    test('互链去重为单条无向边', () async {
+      await repo.insertADiary(makeDiary('d1', 'a', linkTo: ['d2']));
+      await repo.insertADiary(makeDiary('d2', 'b', linkTo: ['d1']));
+
+      final g = await repo.buildLinkGraph();
+      expect(g.nodeCount, 2);
+      expect(g.edgeCount, 1);
+    });
+
+    test('孤立(无链接)日记不入图', () async {
+      await repo.insertADiary(makeDiary('d1', '目标'));
+      await repo.insertADiary(makeDiary('d2', '来源', linkTo: ['d1']));
+      await repo.insertADiary(makeDiary('lonely', '无链接'));
+
+      final g = await repo.buildLinkGraph();
+      expect(g.nodeCount, 2);
+      expect(g.nodes.map((n) => n.id), isNot(contains('lonely')));
+    });
+
+    test('悬空边(目标不存在)被丢弃,源也随之出图', () async {
+      await repo.insertADiary(makeDiary('src', '来源', linkTo: ['ghost']));
+
+      final g = await repo.buildLinkGraph();
+      expect(g.isEmpty, isTrue);
+    });
+
+    test('指向回收站(show=false)日记的边被丢弃', () async {
+      final hidden = makeDiary('hidden', '隐藏').copyWith(show: false);
+      await repo.insertADiary(hidden);
+      await repo.insertADiary(makeDiary('src', '来源', linkTo: ['hidden']));
+
+      final g = await repo.buildLinkGraph();
+      expect(g.isEmpty, isTrue);
+    });
+
+    test('自链忽略', () async {
+      await repo.insertADiary(makeDiary('d1', '自引', linkTo: ['d1']));
+
+      final g = await repo.buildLinkGraph();
+      expect(g.isEmpty, isTrue);
+    });
+
+    test('空库返回空图', () async {
+      final g = await repo.buildLinkGraph();
+      expect(g.isEmpty, isTrue);
+      expect(g.edges, isEmpty);
+    });
+  });
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
@@ -775,6 +776,89 @@ class DiaryRepository {
         .toList();
     valid.sort((a, b) => b.time.compareTo(a.time));
     return valid;
+  }
+
+  /// 装配知识图谱数据:从双链快照(`DiaryIndexSnapshot.linkToIds`)直接取边,免解析 content、
+  /// 免加载无链接日记。只含 linked-only 节点(至少一条有效双链);悬空边(指向已删/回收站日记)
+  /// 丢弃。边为**有向**(src→dst,即"src 正文链接到 dst"),供 UI 画箭头;A↔B 互链保留为两条。
+  /// 节点按 time desc(isarId 兜底)稳定排序后分配密集下标——供 Rust 布局与坐标数组一一对应。
+  /// 图谱页从首页打开时编辑器已关、[ReindexQueue] 已排空,快照最新。
+  Future<DiaryGraphData> buildLinkGraph() async {
+    final snapshots = await _isar.diaryIndexSnapshots.where().findAllAsync();
+
+    // 有向候选边(isarId 空间)+ 端点集合。目标业务 id 经 fastHash 直接得 isarId,无需查库。
+    final candidateEdges = <(int, int)>[];
+    final endpoints = <int>{};
+    for (final snap in snapshots) {
+      final src = snap.diaryIsarId;
+      for (final toId in snap.linkToIds) {
+        final dst = fastHash(toId);
+        if (dst == src) continue; // 自链忽略
+        candidateEdges.add((src, dst));
+        endpoints
+          ..add(src)
+          ..add(dst);
+      }
+    }
+    if (candidateEdges.isEmpty) {
+      return DiaryGraphData(nodes: const [], edges: Int32List(0));
+    }
+
+    // 载入端点日记,只留存在且可见的(排除已删除/回收站)。
+    final loaded = await _isar.diarys.getAllAsync(endpoints.toList());
+    final visible = <int, Diary>{};
+    for (final d in loaded) {
+      if (d != null && d.show) visible[d.isarId] = d;
+    }
+
+    // 有效有向边(src→dst):两端都可见即保留。每条 (src,dst) 天然唯一(每篇一份快照、
+    // linkToIds 已去重);A↔B 互链保留为两条,供画双向箭头。
+    final validEdges = <(int, int)>[];
+    for (final (s, d) in candidateEdges) {
+      if (!visible.containsKey(s) || !visible.containsKey(d)) continue;
+      validEdges.add((s, d));
+    }
+    if (validEdges.isEmpty) {
+      return DiaryGraphData(nodes: const [], edges: Int32List(0));
+    }
+
+    // linked-only 节点集 = 有效边端点的并;稳定排序后分配密集下标。
+    final nodeIds = <int>{};
+    for (final (s, d) in validEdges) {
+      nodeIds
+        ..add(s)
+        ..add(d);
+    }
+    final nodesSorted = nodeIds.map((id) => visible[id]!).toList()
+      ..sort((a, b) {
+        final c = b.time.compareTo(a.time);
+        return c != 0 ? c : a.isarId.compareTo(b.isarId);
+      });
+    final indexOf = <int, int>{};
+    final nodes = <DiaryGraphNode>[];
+    for (var i = 0; i < nodesSorted.length; i++) {
+      final d = nodesSorted[i];
+      indexOf[d.isarId] = i;
+      nodes.add(
+        DiaryGraphNode(
+          index: i,
+          id: d.id,
+          isarId: d.isarId,
+          title: d.title,
+          time: d.time,
+          categoryId: d.categoryId,
+        ),
+      );
+    }
+
+    final edges = Int32List(validEdges.length * 2);
+    for (var i = 0; i < validEdges.length; i++) {
+      final (s, d) = validEdges[i];
+      edges[i * 2] = indexOf[s]!;
+      edges[i * 2 + 1] = indexOf[d]!;
+    }
+
+    return DiaryGraphData(nodes: nodes, edges: edges);
   }
 
   /// 清空并重建全部倒排（全文 posting + 双链 posting + 快照），升级后的手动回填入口：

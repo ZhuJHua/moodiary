@@ -48,7 +48,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0-beta.5";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1394357501;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 66263541;
 
 // Section: executor
 
@@ -2291,6 +2291,55 @@ fn wire__crate__api__text__init_tokenizer_impl(
         },
     )
 }
+fn wire__crate__api__graph_layout__layout_graph_stream_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "layout_graph_stream",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_node_count = <u32>::sse_decode(&mut deserializer);
+            let api_edges = <Vec<i32>>::sse_decode(&mut deserializer);
+            let api_initial_positions = <Vec<f32>>::sse_decode(&mut deserializer);
+            let api_params =
+                <crate::api::graph_layout::GraphLayoutParams>::sse_decode(&mut deserializer);
+            let api_sink =
+                <StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::SseCodec>>::sse_decode(
+                    &mut deserializer,
+                );
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::graph_layout::layout_graph_stream(
+                            api_node_count,
+                            api_edges,
+                            api_initial_positions,
+                            api_params,
+                            api_sink,
+                        )?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__assistant__rig_chat_stream_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -2765,6 +2814,14 @@ impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
     }
 }
 
+impl SseDecode for StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::SseCodec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <String>::sse_decode(deserializer);
+        return StreamSink::deserialize(inner);
+    }
+}
+
 impl SseDecode
     for StreamSink<
         crate::api::assistant::RigStreamEvent,
@@ -2872,6 +2929,34 @@ impl SseDecode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f64::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for crate::api::graph_layout::GraphLayoutParams {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_iterations = <u32>::sse_decode(deserializer);
+        let mut var_theta = <f32>::sse_decode(deserializer);
+        let mut var_repulsion = <f32>::sse_decode(deserializer);
+        let mut var_springLength = <f32>::sse_decode(deserializer);
+        let mut var_springStrength = <f32>::sse_decode(deserializer);
+        let mut var_gravity = <f32>::sse_decode(deserializer);
+        let mut var_collideRadius = <f32>::sse_decode(deserializer);
+        let mut var_velocityDecay = <f32>::sse_decode(deserializer);
+        let mut var_emitEvery = <u32>::sse_decode(deserializer);
+        let mut var_frameDelayMs = <u32>::sse_decode(deserializer);
+        return crate::api::graph_layout::GraphLayoutParams {
+            iterations: var_iterations,
+            theta: var_theta,
+            repulsion: var_repulsion,
+            spring_length: var_springLength,
+            spring_strength: var_springStrength,
+            gravity: var_gravity,
+            collide_radius: var_collideRadius,
+            velocity_decay: var_velocityDecay,
+            emit_every: var_emitEvery,
+            frame_delay_ms: var_frameDelayMs,
+        };
     }
 }
 
@@ -3037,6 +3122,30 @@ impl SseDecode for Vec<crate::api::http::KeyValue> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::http::KeyValue>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<f32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<f32>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<i32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<i32>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -3492,7 +3601,13 @@ fn pde_ffi_dispatcher_primary_impl(
         44 => wire__crate__api__zip__Zip_finish_impl(port, ptr, rust_vec_len, data_len),
         46 => wire__crate__api__audio__audio_duration_ms_impl(port, ptr, rust_vec_len, data_len),
         47 => wire__crate__api__text__init_tokenizer_impl(port, ptr, rust_vec_len, data_len),
-        48 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
+        48 => wire__crate__api__graph_layout__layout_graph_stream_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        49 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3785,6 +3900,35 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::image::CompressSpec>
     for crate::api::image::CompressSpec
 {
     fn into_into_dart(self) -> crate::api::image::CompressSpec {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::graph_layout::GraphLayoutParams {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.iterations.into_into_dart().into_dart(),
+            self.theta.into_into_dart().into_dart(),
+            self.repulsion.into_into_dart().into_dart(),
+            self.spring_length.into_into_dart().into_dart(),
+            self.spring_strength.into_into_dart().into_dart(),
+            self.gravity.into_into_dart().into_dart(),
+            self.collide_radius.into_into_dart().into_dart(),
+            self.velocity_decay.into_into_dart().into_dart(),
+            self.emit_every.into_into_dart().into_dart(),
+            self.frame_delay_ms.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::graph_layout::GraphLayoutParams
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::graph_layout::GraphLayoutParams>
+    for crate::api::graph_layout::GraphLayoutParams
+{
+    fn into_into_dart(self) -> crate::api::graph_layout::GraphLayoutParams {
         self
     }
 }
@@ -4369,6 +4513,13 @@ impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpa
     }
 }
 
+impl SseEncode for StreamSink<Vec<f32>, flutter_rust_bridge::for_generated::SseCodec> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        unimplemented!("")
+    }
+}
+
 impl SseEncode
     for StreamSink<
         crate::api::assistant::RigStreamEvent,
@@ -4458,6 +4609,22 @@ impl SseEncode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for crate::api::graph_layout::GraphLayoutParams {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.iterations, serializer);
+        <f32>::sse_encode(self.theta, serializer);
+        <f32>::sse_encode(self.repulsion, serializer);
+        <f32>::sse_encode(self.spring_length, serializer);
+        <f32>::sse_encode(self.spring_strength, serializer);
+        <f32>::sse_encode(self.gravity, serializer);
+        <f32>::sse_encode(self.collide_radius, serializer);
+        <f32>::sse_encode(self.velocity_decay, serializer);
+        <u32>::sse_encode(self.emit_every, serializer);
+        <u32>::sse_encode(self.frame_delay_ms, serializer);
     }
 }
 
@@ -4601,6 +4768,26 @@ impl SseEncode for Vec<crate::api::http::KeyValue> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::http::KeyValue>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<f32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <f32>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<i32> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <i32>::sse_encode(item, serializer);
         }
     }
 }

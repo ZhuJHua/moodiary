@@ -7,6 +7,7 @@ import 'api/assistant.dart';
 import 'api/audio.dart';
 import 'api/crypto.dart';
 import 'api/font.dart';
+import 'api/graph_layout.dart';
 import 'api/http.dart';
 import 'api/http_server.dart';
 import 'api/image.dart';
@@ -294,6 +295,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<Float32List> dco_decode_StreamSink_list_prim_f_32_strict_Sse(
+    dynamic raw,
+  );
+
+  @protected
   RustStreamSink<RigStreamEvent> dco_decode_StreamSink_rig_stream_event_Sse(
     dynamic raw,
   );
@@ -320,6 +326,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CompressSpec dco_decode_box_autoadd_compress_spec(dynamic raw);
+
+  @protected
+  GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw);
 
   @protected
   HttpResponse dco_decode_box_autoadd_http_response(dynamic raw);
@@ -356,6 +365,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double dco_decode_f_64(dynamic raw);
+
+  @protected
+  GraphLayoutParams dco_decode_graph_layout_params(dynamic raw);
 
   @protected
   HttpError dco_decode_http_error(dynamic raw);
@@ -398,6 +410,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<KeyValue> dco_decode_list_key_value(dynamic raw);
+
+  @protected
+  List<double> dco_decode_list_prim_f_32_loose(dynamic raw);
+
+  @protected
+  Float32List dco_decode_list_prim_f_32_strict(dynamic raw);
+
+  @protected
+  List<int> dco_decode_list_prim_i_32_loose(dynamic raw);
+
+  @protected
+  Int32List dco_decode_list_prim_i_32_strict(dynamic raw);
 
   @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
@@ -698,6 +722,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  RustStreamSink<Float32List> sse_decode_StreamSink_list_prim_f_32_strict_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   RustStreamSink<RigStreamEvent> sse_decode_StreamSink_rig_stream_event_Sse(
     SseDeserializer deserializer,
   );
@@ -728,6 +757,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CompressSpec sse_decode_box_autoadd_compress_spec(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  GraphLayoutParams sse_decode_box_autoadd_graph_layout_params(
     SseDeserializer deserializer,
   );
 
@@ -774,6 +808,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double sse_decode_f_64(SseDeserializer deserializer);
 
   @protected
+  GraphLayoutParams sse_decode_graph_layout_params(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   HttpError sse_decode_http_error(SseDeserializer deserializer);
 
   @protected
@@ -818,6 +857,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<KeyValue> sse_decode_list_key_value(SseDeserializer deserializer);
+
+  @protected
+  List<double> sse_decode_list_prim_f_32_loose(SseDeserializer deserializer);
+
+  @protected
+  Float32List sse_decode_list_prim_f_32_strict(SseDeserializer deserializer);
+
+  @protected
+  List<int> sse_decode_list_prim_i_32_loose(SseDeserializer deserializer);
+
+  @protected
+  Int32List sse_decode_list_prim_i_32_strict(SseDeserializer deserializer);
 
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
@@ -1188,6 +1239,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_StreamSink_list_prim_f_32_strict_Sse(
+    RustStreamSink<Float32List> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_StreamSink_rig_stream_event_Sse(
     RustStreamSink<RigStreamEvent> self,
     SseSerializer serializer,
@@ -1223,6 +1280,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_compress_spec(
     CompressSpec self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_graph_layout_params(
+    GraphLayoutParams self,
     SseSerializer serializer,
   );
 
@@ -1281,6 +1344,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_f_64(double self, SseSerializer serializer);
 
   @protected
+  void sse_encode_graph_layout_params(
+    GraphLayoutParams self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_http_error(HttpError self, SseSerializer serializer);
 
   @protected
@@ -1328,6 +1397,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_key_value(List<KeyValue> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_prim_f_32_loose(
+    List<double> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_prim_f_32_strict(
+    Float32List self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_prim_i_32_loose(
+    List<int> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_prim_i_32_strict(
+    Int32List self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);

@@ -127,6 +127,13 @@ class AnalyseRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
+class DiaryGraphRoute extends MoodiaryRouteBase {
+  static const String path = '/graph';
+  const DiaryGraphRoute();
+  @override
+  String get location => path;
+}
+
 class FontRoute extends MoodiaryRouteBase {
   static const String path = '/setting/font';
   const FontRoute();

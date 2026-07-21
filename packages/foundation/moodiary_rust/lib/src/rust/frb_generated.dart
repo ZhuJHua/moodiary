@@ -7,6 +7,7 @@ import 'api/assistant.dart';
 import 'api/audio.dart';
 import 'api/crypto.dart';
 import 'api/font.dart';
+import 'api/graph_layout.dart';
 import 'api/http.dart';
 import 'api/http_server.dart';
 import 'api/image.dart';
@@ -76,7 +77,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0-beta.5';
 
   @override
-  int get rustContentHash => 1394357501;
+  int get rustContentHash => 66263541;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -314,6 +315,13 @@ abstract class RustLibApi extends BaseApi {
   Future<PlatformInt64?> crateApiAudioAudioDurationMs({required String path});
 
   Future<void> crateApiTextInitTokenizer();
+
+  Stream<Float32List> crateApiGraphLayoutLayoutGraphStream({
+    required int nodeCount,
+    required List<int> edges,
+    required List<double> initialPositions,
+    required GraphLayoutParams params,
+  });
 
   Stream<RigStreamEvent> crateApiAssistantRigChatStream({
     required RigProviderConfig config,
@@ -2110,6 +2118,50 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "init_tokenizer", argNames: []);
 
   @override
+  Stream<Float32List> crateApiGraphLayoutLayoutGraphStream({
+    required int nodeCount,
+    required List<int> edges,
+    required List<double> initialPositions,
+    required GraphLayoutParams params,
+  }) {
+    final sink = RustStreamSink<Float32List>();
+    unawaited(
+      handler.executeNormal(
+        NormalTask(
+          callFfi: (port_) {
+            final serializer = SseSerializer(generalizedFrbRustBinding);
+            sse_encode_u_32(nodeCount, serializer);
+            sse_encode_list_prim_i_32_loose(edges, serializer);
+            sse_encode_list_prim_f_32_loose(initialPositions, serializer);
+            sse_encode_box_autoadd_graph_layout_params(params, serializer);
+            sse_encode_StreamSink_list_prim_f_32_strict_Sse(sink, serializer);
+            pdeCallFfi(
+              generalizedFrbRustBinding,
+              serializer,
+              funcId: 48,
+              port: port_,
+            );
+          },
+          codec: SseCodec(
+            decodeSuccessData: sse_decode_unit,
+            decodeErrorData: sse_decode_AnyhowException,
+          ),
+          constMeta: kCrateApiGraphLayoutLayoutGraphStreamConstMeta,
+          argValues: [nodeCount, edges, initialPositions, params, sink],
+          apiImpl: this,
+        ),
+      ),
+    );
+    return sink.stream;
+  }
+
+  TaskConstMeta get kCrateApiGraphLayoutLayoutGraphStreamConstMeta =>
+      const TaskConstMeta(
+        debugName: "layout_graph_stream",
+        argNames: ["nodeCount", "edges", "initialPositions", "params", "sink"],
+      );
+
+  @override
   Stream<RigStreamEvent> crateApiAssistantRigChatStream({
     required RigProviderConfig config,
     required String systemPrompt,
@@ -2137,7 +2189,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 48,
+              funcId: 49,
               port: port_,
             );
           },
@@ -2723,6 +2775,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustStreamSink<Float32List> dco_decode_StreamSink_list_prim_f_32_strict_Sse(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
   RustStreamSink<RigStreamEvent> dco_decode_StreamSink_rig_stream_event_Sse(
     dynamic raw,
   ) {
@@ -2772,6 +2832,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   CompressSpec dco_decode_box_autoadd_compress_spec(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_compress_spec(raw);
+  }
+
+  @protected
+  GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_graph_layout_params(raw);
   }
 
   @protected
@@ -2866,6 +2932,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double dco_decode_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
+  }
+
+  @protected
+  GraphLayoutParams dco_decode_graph_layout_params(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 10)
+      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
+    return GraphLayoutParams(
+      iterations: dco_decode_u_32(arr[0]),
+      theta: dco_decode_f_32(arr[1]),
+      repulsion: dco_decode_f_32(arr[2]),
+      springLength: dco_decode_f_32(arr[3]),
+      springStrength: dco_decode_f_32(arr[4]),
+      gravity: dco_decode_f_32(arr[5]),
+      collideRadius: dco_decode_f_32(arr[6]),
+      velocityDecay: dco_decode_f_32(arr[7]),
+      emitEvery: dco_decode_u_32(arr[8]),
+      frameDelayMs: dco_decode_u_32(arr[9]),
+    );
   }
 
   @protected
@@ -2989,6 +3075,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<KeyValue> dco_decode_list_key_value(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_key_value).toList();
+  }
+
+  @protected
+  List<double> dco_decode_list_prim_f_32_loose(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as List<double>;
+  }
+
+  @protected
+  Float32List dco_decode_list_prim_f_32_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as Float32List;
+  }
+
+  @protected
+  List<int> dco_decode_list_prim_i_32_loose(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as List<int>;
+  }
+
+  @protected
+  Int32List dco_decode_list_prim_i_32_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as Int32List;
   }
 
   @protected
@@ -3652,6 +3762,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  RustStreamSink<Float32List> sse_decode_StreamSink_list_prim_f_32_strict_Sse(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    throw UnimplementedError('Unreachable ()');
+  }
+
+  @protected
   RustStreamSink<RigStreamEvent> sse_decode_StreamSink_rig_stream_event_Sse(
     SseDeserializer deserializer,
   ) {
@@ -3708,6 +3826,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_compress_spec(deserializer));
+  }
+
+  @protected
+  GraphLayoutParams sse_decode_box_autoadd_graph_layout_params(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_graph_layout_params(deserializer));
   }
 
   @protected
@@ -3819,6 +3945,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double sse_decode_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat64();
+  }
+
+  @protected
+  GraphLayoutParams sse_decode_graph_layout_params(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_iterations = sse_decode_u_32(deserializer);
+    var var_theta = sse_decode_f_32(deserializer);
+    var var_repulsion = sse_decode_f_32(deserializer);
+    var var_springLength = sse_decode_f_32(deserializer);
+    var var_springStrength = sse_decode_f_32(deserializer);
+    var var_gravity = sse_decode_f_32(deserializer);
+    var var_collideRadius = sse_decode_f_32(deserializer);
+    var var_velocityDecay = sse_decode_f_32(deserializer);
+    var var_emitEvery = sse_decode_u_32(deserializer);
+    var var_frameDelayMs = sse_decode_u_32(deserializer);
+    return GraphLayoutParams(
+      iterations: var_iterations,
+      theta: var_theta,
+      repulsion: var_repulsion,
+      springLength: var_springLength,
+      springStrength: var_springStrength,
+      gravity: var_gravity,
+      collideRadius: var_collideRadius,
+      velocityDecay: var_velocityDecay,
+      emitEvery: var_emitEvery,
+      frameDelayMs: var_frameDelayMs,
+    );
   }
 
   @protected
@@ -3962,6 +4117,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ans_.add(sse_decode_key_value(deserializer));
     }
     return ans_;
+  }
+
+  @protected
+  List<double> sse_decode_list_prim_f_32_loose(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getFloat32List(len_);
+  }
+
+  @protected
+  Float32List sse_decode_list_prim_f_32_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getFloat32List(len_);
+  }
+
+  @protected
+  List<int> sse_decode_list_prim_i_32_loose(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getInt32List(len_);
+  }
+
+  @protected
+  Int32List sse_decode_list_prim_i_32_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getInt32List(len_);
   }
 
   @protected
@@ -4797,6 +4980,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_StreamSink_list_prim_f_32_strict_Sse(
+    RustStreamSink<Float32List> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(
+      self.setupAndSerialize(
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_f_32_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+      ),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_StreamSink_rig_stream_event_Sse(
     RustStreamSink<RigStreamEvent> self,
     SseSerializer serializer,
@@ -4873,6 +5073,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_compress_spec(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_graph_layout_params(
+    GraphLayoutParams self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_graph_layout_params(self, serializer);
   }
 
   @protected
@@ -4975,6 +5184,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat64(self);
+  }
+
+  @protected
+  void sse_encode_graph_layout_params(
+    GraphLayoutParams self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.iterations, serializer);
+    sse_encode_f_32(self.theta, serializer);
+    sse_encode_f_32(self.repulsion, serializer);
+    sse_encode_f_32(self.springLength, serializer);
+    sse_encode_f_32(self.springStrength, serializer);
+    sse_encode_f_32(self.gravity, serializer);
+    sse_encode_f_32(self.collideRadius, serializer);
+    sse_encode_f_32(self.velocityDecay, serializer);
+    sse_encode_u_32(self.emitEvery, serializer);
+    sse_encode_u_32(self.frameDelayMs, serializer);
   }
 
   @protected
@@ -5094,6 +5321,50 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     for (final item in self) {
       sse_encode_key_value(item, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_list_prim_f_32_loose(
+    List<double> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putFloat32List(
+      self is Float32List ? self : Float32List.fromList(self),
+    );
+  }
+
+  @protected
+  void sse_encode_list_prim_f_32_strict(
+    Float32List self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putFloat32List(self);
+  }
+
+  @protected
+  void sse_encode_list_prim_i_32_loose(
+    List<int> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putInt32List(
+      self is Int32List ? self : Int32List.fromList(self),
+    );
+  }
+
+  @protected
+  void sse_encode_list_prim_i_32_strict(
+    Int32List self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putInt32List(self);
   }
 
   @protected

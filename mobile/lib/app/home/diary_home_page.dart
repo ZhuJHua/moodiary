@@ -165,6 +165,11 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           icon: const Icon(Icons.search_rounded),
           onPressed: () => const DiarySearchRoute().push(context),
         ),
+        IconButton(
+          tooltip: context.l10n.knowledgeGraph,
+          icon: const Icon(Icons.hub_rounded),
+          onPressed: () => const DiaryGraphRoute().push(context),
+        ),
         const SyncStatusButton(),
         ValueListenableBuilder(
           valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),

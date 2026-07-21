@@ -13,6 +13,7 @@ export 'src/rust/api/assistant.dart';
 export 'src/rust/api/audio.dart';
 export 'src/rust/api/crypto.dart';
 export 'src/rust/api/font.dart';
+export 'src/rust/api/graph_layout.dart';
 export 'src/rust/api/http.dart';
 export 'src/rust/api/http_server.dart';
 export 'src/rust/api/image.dart';
