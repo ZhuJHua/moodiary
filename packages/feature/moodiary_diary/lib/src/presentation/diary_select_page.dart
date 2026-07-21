@@ -155,7 +155,7 @@ class _DiarySelectTile extends StatelessWidget {
     final scheme = context.colorScheme;
     final l10n = context.l10n;
     final title = diary.title.trim();
-    final preview = diary.contentText.trim().removeLineBreaks();
+    final preview = diary.contentText.preview();
     return Card.filled(
       color: scheme.surfaceContainerLow,
       margin: EdgeInsets.zero,

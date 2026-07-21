@@ -162,7 +162,7 @@ Widget _title(BuildContext context, String title) => Text(
 
 Widget _content(BuildContext context, String text, {required int maxLines}) =>
     Text(
-      text.trim().removeLineBreaks(),
+      text.preview(),
       maxLines: maxLines,
       overflow: TextOverflow.ellipsis,
       style: context.textTheme.bodyMedium
