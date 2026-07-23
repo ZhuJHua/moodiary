@@ -25,12 +25,12 @@ dependencies:
   flutter_riverpod: 3.3.2
   riverpod_annotation: 4.0.3
   gpt_markdown: 1.1.8
-  genui: 0.10.0
-  a2ui_core: 0.0.1-wip002
+  genui: 0.10.1
+  a2ui_core: 0.1.0
   json_schema_builder: 0.1.6
   flutter_chat_ui: 2.11.1
   flutter_chat_core: 2.9.0
-  chat_bottom_container: 0.5.1
+  chat_bottom_container: 0.5.2
   url_launcher: 6.3.2
   meta: 1.18.0
 

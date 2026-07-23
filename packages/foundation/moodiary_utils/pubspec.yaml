@@ -15,7 +15,7 @@ dependencies:
 
   # 叶子工具各自的外部依赖（与 app 共用 workspace 解析，钉版无 ^）。
   intl: 0.20.2
-  synchronized: 3.4.1
+  synchronized: 3.4.1+1
   image_size_getter: 2.4.1
   connectivity_plus: 7.3.0
   network_info_plus: 8.2.1
