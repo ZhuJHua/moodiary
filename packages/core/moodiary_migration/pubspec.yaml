@@ -1,0 +1,27 @@
+name: moodiary_migration
+description: "Moodiary 一次性历史数据迁移（infra）：按上次运行的版本号逐档跑升级钩子。旧版 Quill Delta 正文是这里唯一的 flutter_quill 持有点，随 2.9.0 清退 quill 时整包退场。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.12.0"
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_core: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_utils: 0.0.1
+
+  isar_plus: 1.3.7
+  flutter_quill: 11.5.1
+  pub_semver: 2.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Moodiary — a Flutter + Rust diary app (Android, iOS, Windows, macOS). **Layered pub-workspace monorepo**: ~18 shared packages under `packages/` across four dependency layers, consumed by two Flutter apps: **`mobile/`** (pure mobile, pub name `moodiary`) and **`desktop/`** (desktop skeleton, pub name `moodiary_desktop`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code).
+Moodiary — a Flutter + Rust diary app (Android, iOS, Windows, macOS). **Layered pub-workspace monorepo**: 18 shared packages under `packages/` across four dependency layers, consumed by two Flutter apps: **`mobile/`** (pure mobile, pub name `moodiary`) and **`desktop/`** (desktop skeleton, pub name `moodiary_desktop`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code).
 
 ## Tech Stack
 
@@ -19,24 +19,25 @@ dart tool/task.dart setup          # flutter pub get + build editor
 
 # Run & Build (targets mobile app)
 dart tool/task.dart run            # build editor + flutter run
-dart tool/task.dart build-apk / build-ios  # mobile 已移除桌面平台，桌面构建后续由 desktop/ 提供
-# Pass extra flutter flags after --:  dart tool/task.dart run -- --release
-# Desktop app (not yet wired into task.dart): cd desktop && fvm flutter run -d macos
+dart tool/task.dart build-apk / build-ios  # mobile 只剩 android/ios，桌面构建后续由 desktop/ 提供
+# Extra flutter flags go after --:  dart tool/task.dart run -- --release
+# Desktop (not yet wired into task.dart): cd desktop && fvm flutter run -d macos
 
 # Code Gen (after model/router/provider changes)
 dart tool/task.dart build-runner   # build_runner build --delete-conflicting-outputs
-dart tool/task.dart gen-rust       # regenerate Rust FFI bindings (cd packages/foundation/moodiary_rust && frb generate)
+dart tool/task.dart gen-rust       # regenerate Rust FFI bindings
 dart tool/task.dart gen            # gen-rust + rebuild editor asset
-
-# Editor rebuild
-dart tool/task.dart editor         # cd packages/feature/moodiary_editor/editor && pnpm install && pnpm build
+dart tool/task.dart editor         # rebuild editor asset only (needs corepack on PATH)
 
 # Lint & Test
 dart tool/task.dart analyze        # layer check + flutter analyze
-fvm flutter test
+dart tool/task.dart test           # mobile/ tests
+fvm flutter test <pkg>/test ...    # package tests (bare `flutter test` at root finds nothing)
 ```
 
-**Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files (pure — no codegen; run `melos gen` / `dart tool/task.dart gen` separately for Rust bindings + editor asset). `melos list` / `melos run <script> --category <layer>` filter by layer. Melos CLI is a root dev_dependency (version conflict with `cli_util` requires `dependency_overrides: cli_util: 0.5.0`). The editor build needs `corepack` on PATH (`npm i -g corepack` / `brew install corepack`).
+**Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files — pure, no codegen; run `dart tool/task.dart gen` separately. `melos list` / `melos run <script> --category <layer>` filter by layer.
+
+**Versions** are exact-pinned everywhere; the root `melos` caret is the only exception.
 
 ## Architecture
 
@@ -50,19 +51,20 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       app/                   # composition layer: di, router, shell, lifecycle
         home/                # home tab (diary_home_page)
         settings/            # settings hub
-      merge/                 # one-shot legacy data migration (flutter_quill holdout)
       main.dart
   desktop/                   # desktop Flutter app skeleton (pub: moodiary_desktop)
   packages/
     foundation/              # leaf layer — no internal deps
       moodiary_lint/         #   shared analyzer options
       moodiary_l10n/         #   localization (ARB + gen-l10n)
+      moodiary_router/       #   typed route primitives over go_router
       moodiary_rust/         #   Rust FFI package (crate in rust/, built by hook/build.dart)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
-    core/                    # → foundation; internal order models → core → data → preferences
+    core/                    # → foundation; internal order models → core → data,migration → preferences
       moodiary_models/       #   domain: Isar @Collection + Freezed DTOs
       moodiary_core/         #   infra: Isar/KV/SecureKV + theme + exceptions
       moodiary_data/         #   repositories + controllers
+      moodiary_migration/    #   one-shot legacy data migration (flutter_quill holdout)
       moodiary_preferences/  #   preference state
     ui/                      # → core/foundation
       moodiary_ui/           #   business-agnostic reusable widgets
@@ -82,5 +84,5 @@ Path convention: unqualified `lib/...` refers to `mobile/lib/...`; `packages/`, 
 
 Cross-package DAG is strictly upper → lower: `foundation → core → ui → feature → apps`. Features never import each other (shared logic sinks to lower layers, cross-feature composition happens in the app layer). Enforced by pub's acyclic graph; Melos `categories:` are filter/grouping only.
 
-In-app layering within `mobile/lib` (`tool/check_layers.dart`): `gen → core → data → component,merge → feature/<x> → app → main.dart`. Baseline is **zero violations**.
+In-app layering within `mobile/lib` (`tool/check_layers.dart`): `gen → core → data → component → feature/<x> → app → main.dart`. Baseline is **zero violations**.
 

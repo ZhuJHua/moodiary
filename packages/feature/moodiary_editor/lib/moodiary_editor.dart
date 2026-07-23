@@ -6,6 +6,10 @@
 /// 供两端 app 直接组合使用。
 library;
 
+/// 旧 richText 日记仍由 [QuillEditor] 渲染，宿主 app 的 MaterialApp 必须挂上它的
+/// localizations delegate；经此转发，app 不必再直接声明 flutter_quill。
+export 'package:flutter_quill/flutter_quill.dart' show FlutterQuillLocalizations;
+
 export 'src/moodiary_editor.dart'
     show
         MoodiaryEditor,

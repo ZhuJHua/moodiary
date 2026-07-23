@@ -14,7 +14,7 @@ const List<List<String>> _layers = [
   ['gen', 'l10n'], // 0 生成产物（叶子）
   ['core'], // 1 基础设施
   ['data'], // 2 model + repository
-  ['component', 'merge'], // 3 业务无关 UI / 一次性迁移工具
+  ['component'], // 3 业务无关 UI
   ['feature'], // 4 各 feature（互为兄弟，禁止互引）
   ['app'], // 5 聚合层：router / shell / di
   ['main.dart'], // 6 入口
