@@ -3,6 +3,8 @@
 library;
 
 export 'package:cross_file/cross_file.dart';
+// 只放出 harmonizeWith：上层要把自定义色（分类色等）向主色靠拢，插件与取色部分不外泄。
+export 'package:dynamic_color/dynamic_color.dart' show ColorHarmonization;
 export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 export 'package:font_awesome_flutter/font_awesome_flutter.dart';
 // 下沉到 utils 的薄 token/工具，经此转发保持既有 import 不变。

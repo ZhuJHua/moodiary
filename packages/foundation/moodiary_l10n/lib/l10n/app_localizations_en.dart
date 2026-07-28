@@ -1455,7 +1455,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get knowledgeGraph => 'Knowledge Graph';
 
   @override
-  String get graphEmpty => 'No links yet\nUse [[ in a diary to connect another';
+  String get graphEmpty => 'No links yet';
 
   @override
   String graphCount(Object edges, Object nodes) {
@@ -1496,6 +1496,93 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get graphStyleDense => 'Dense';
+
+  @override
+  String get graphView => 'View';
+
+  @override
+  String get graphColorBy => 'Color by';
+
+  @override
+  String get graphColorByCategory => 'Category';
+
+  @override
+  String get graphColorByTime => 'Time';
+
+  @override
+  String get graphColorByPlain => 'Plain';
+
+  @override
+  String get graphShowLabels => 'Show titles';
+
+  @override
+  String get graphResetCamera => 'Fit to view';
+
+  @override
+  String get graphEmptyTitle => 'No links yet';
+
+  @override
+  String get graphEmptyDesc =>
+      'Type [[ in a diary to reference another one, and they\'ll show up here';
+
+  @override
+  String get graphEmptyAction => 'Write a diary';
+
+  @override
+  String get graphFilterEmpty => 'No links match these filters';
+
+  @override
+  String get graphClearFilter => 'Clear filters';
+
+  @override
+  String get graphLocal => 'Local graph';
+
+  @override
+  String graphDepthHops(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '# hops',
+      one: '# hop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get graphOutgoing => 'Outgoing';
+
+  @override
+  String get graphIncoming => 'Incoming';
+
+  @override
+  String graphOutgoingCount(Object count) {
+    return '$count outgoing';
+  }
+
+  @override
+  String graphIncomingCount(Object count) {
+    return '$count incoming';
+  }
+
+  @override
+  String get graphSetAsCenter => 'Center on this';
+
+  @override
+  String get graphBackToCenter => 'Recenter';
+
+  @override
+  String graphTruncated(Object count) {
+    return '$count distant nodes hidden';
+  }
+
+  @override
+  String get graphOpenFullGraph => 'Open full graph';
+
+  @override
+  String get graphLinks => 'Links';
+
+  @override
+  String get graphNoLocalLinks => 'This diary has no links yet';
 
   @override
   String categorySwitcherCount(Object count) {

@@ -2801,7 +2801,7 @@ abstract class AppLocalizations {
   /// No description provided for @graphEmpty.
   ///
   /// In zh, this message translates to:
-  /// **'还没有双链关系\n在日记里用 [[ 关联另一篇试试'**
+  /// **'还没有双链关系'**
   String get graphEmpty;
 
   /// No description provided for @graphCount.
@@ -2875,6 +2875,150 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'稠密'**
   String get graphStyleDense;
+
+  /// No description provided for @graphView.
+  ///
+  /// In zh, this message translates to:
+  /// **'视图'**
+  String get graphView;
+
+  /// No description provided for @graphColorBy.
+  ///
+  /// In zh, this message translates to:
+  /// **'着色'**
+  String get graphColorBy;
+
+  /// No description provided for @graphColorByCategory.
+  ///
+  /// In zh, this message translates to:
+  /// **'分类'**
+  String get graphColorByCategory;
+
+  /// No description provided for @graphColorByTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'时间'**
+  String get graphColorByTime;
+
+  /// No description provided for @graphColorByPlain.
+  ///
+  /// In zh, this message translates to:
+  /// **'素色'**
+  String get graphColorByPlain;
+
+  /// No description provided for @graphShowLabels.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示标题'**
+  String get graphShowLabels;
+
+  /// No description provided for @graphResetCamera.
+  ///
+  /// In zh, this message translates to:
+  /// **'回到全景'**
+  String get graphResetCamera;
+
+  /// No description provided for @graphEmptyTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有双链'**
+  String get graphEmptyTitle;
+
+  /// No description provided for @graphEmptyDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'在日记里输入 [[ 引用另一篇日记，它们就会出现在这里'**
+  String get graphEmptyDesc;
+
+  /// No description provided for @graphEmptyAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'写一篇日记'**
+  String get graphEmptyAction;
+
+  /// No description provided for @graphFilterEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前筛选下没有链接'**
+  String get graphFilterEmpty;
+
+  /// No description provided for @graphClearFilter.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除筛选'**
+  String get graphClearFilter;
+
+  /// No description provided for @graphLocal.
+  ///
+  /// In zh, this message translates to:
+  /// **'关系图'**
+  String get graphLocal;
+
+  /// No description provided for @graphDepthHops.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 跳'**
+  String graphDepthHops(num count);
+
+  /// No description provided for @graphOutgoing.
+  ///
+  /// In zh, this message translates to:
+  /// **'出链'**
+  String get graphOutgoing;
+
+  /// No description provided for @graphIncoming.
+  ///
+  /// In zh, this message translates to:
+  /// **'入链'**
+  String get graphIncoming;
+
+  /// No description provided for @graphOutgoingCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 条出链'**
+  String graphOutgoingCount(Object count);
+
+  /// No description provided for @graphIncomingCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 条入链'**
+  String graphIncomingCount(Object count);
+
+  /// No description provided for @graphSetAsCenter.
+  ///
+  /// In zh, this message translates to:
+  /// **'以此为中心'**
+  String get graphSetAsCenter;
+
+  /// No description provided for @graphBackToCenter.
+  ///
+  /// In zh, this message translates to:
+  /// **'回到中心'**
+  String get graphBackToCenter;
+
+  /// No description provided for @graphTruncated.
+  ///
+  /// In zh, this message translates to:
+  /// **'已省略 {count} 个远端节点'**
+  String graphTruncated(Object count);
+
+  /// No description provided for @graphOpenFullGraph.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开总图谱'**
+  String get graphOpenFullGraph;
+
+  /// No description provided for @graphLinks.
+  ///
+  /// In zh, this message translates to:
+  /// **'链接'**
+  String get graphLinks;
+
+  /// No description provided for @graphNoLocalLinks.
+  ///
+  /// In zh, this message translates to:
+  /// **'这篇日记还没有关联'**
+  String get graphNoLocalLinks;
 
   /// No description provided for @categorySwitcherCount.
   ///

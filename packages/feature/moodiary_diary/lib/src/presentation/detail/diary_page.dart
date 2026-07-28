@@ -685,8 +685,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             onOpenDiaryLink: _openLinkedDiary,
           ),
         ),
-        if (!isEdit)
-          _BacklinksPanel(diaryId: diary.id, onOpen: _openLinkedDiary),
+        if (!isEdit) _LinksPanel(diaryId: diary.id, onOpen: _openLinkedDiary),
       ],
     );
   }
@@ -1009,49 +1008,71 @@ class _TocDrawer extends StatelessWidget {
   }
 }
 
-/// 反向链接面板（阅读态）：列出正文双链指向本条的日记，点击跳转。无反链时不占位；
+/// 链接面板（阅读态）：分「出链 / 入链」两段列出与本篇有双链关系的日记，点击页内跳转；
+/// 头部右侧是局部关系图入口。两侧都为空时不占位——也正好等价于「有链接才露出图谱入口」。
 /// 订阅 diaryEvents，任意日记增删改后刷新。
-class _BacklinksPanel extends StatefulWidget {
+class _LinksPanel extends StatefulWidget {
   final String diaryId;
   final ValueChanged<String> onOpen;
 
-  const _BacklinksPanel({required this.diaryId, required this.onOpen});
+  const _LinksPanel({required this.diaryId, required this.onOpen});
 
   @override
-  State<_BacklinksPanel> createState() => _BacklinksPanelState();
+  State<_LinksPanel> createState() => _LinksPanelState();
 }
 
-class _BacklinksPanelState extends State<_BacklinksPanel> {
-  List<Diary> _items = const [];
+class _LinksPanelState extends State<_LinksPanel> {
+  List<Diary> _out = const [];
+  List<Diary> _in = const [];
   StreamSubscription<DiaryEvent>? _sub;
+  Timer? _debounce;
+
+  /// 自增序号：只有最新一次 _load 的结果才允许写回，杜绝日记间快速跳转时旧请求
+  /// 后到覆盖成「别人的链接列表」。
+  int _loadToken = 0;
 
   @override
   void initState() {
     super.initState();
     _load();
-    _sub = DiaryRepository.get().diaryEvents.listen((_) => _load());
+    // 任意日记增删改都会触发；合并突发（如同步批量写）后再刷。
+    _sub = DiaryRepository.get().diaryEvents.listen((_) {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 400), _load);
+    });
   }
 
   @override
-  void didUpdateWidget(covariant _BacklinksPanel oldWidget) {
+  void didUpdateWidget(covariant _LinksPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.diaryId != widget.diaryId) _load();
   }
 
   Future<void> _load() async {
-    final list = await DiaryRepository.get().getBacklinks(widget.diaryId);
-    if (mounted) setState(() => _items = list);
+    final token = ++_loadToken;
+    final id = widget.diaryId;
+    final repo = DiaryRepository.get();
+    final results = await Future.wait([
+      repo.getForwardLinks(id),
+      repo.getBacklinks(id),
+    ]);
+    if (!mounted || token != _loadToken) return; // 过期响应丢弃
+    setState(() {
+      _out = results[0];
+      _in = results[1];
+    });
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _sub?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_items.isEmpty) return const SizedBox.shrink();
+    if (_out.isEmpty && _in.isEmpty) return const SizedBox.shrink();
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     return Card.filled(
@@ -1063,74 +1084,151 @@ class _BacklinksPanelState extends State<_BacklinksPanel> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 头部：图标 + 标题 + 数量胶囊
             Row(
               children: [
                 Icon(Icons.link_rounded, size: 18, color: scheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  context.l10n.backlinks,
+                  context.l10n.graphLinks,
                   style: textTheme.titleSmall?.copyWith(
                     color: scheme.onSurface,
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 1,
+                if (_out.isNotEmpty)
+                  _CountPill(
+                    icon: Icons.north_east_rounded,
+                    count: _out.length,
+                    background: scheme.secondaryContainer,
+                    foreground: scheme.onSecondaryContainer,
                   ),
-                  decoration: BoxDecoration(
-                    color: scheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(999),
+                if (_in.isNotEmpty) ...[
+                  const SizedBox(width: 4),
+                  _CountPill(
+                    icon: Icons.south_west_rounded,
+                    count: _in.length,
+                    background: scheme.tertiaryContainer,
+                    foreground: scheme.onTertiaryContainer,
                   ),
-                  child: Text(
-                    '${_items.length}',
-                    style: textTheme.labelSmall?.copyWith(
-                      color: scheme.onSecondaryContainer,
-                    ),
-                  ),
+                ],
+                const Spacer(),
+                IconButton(
+                  tooltip: context.l10n.graphLocal,
+                  iconSize: 20,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(Icons.hub_rounded, color: scheme.onSurfaceVariant),
+                  onPressed: () =>
+                      DiaryGraphRoute(diaryId: widget.diaryId).push(context),
                 ),
               ],
             ),
             const SizedBox(height: 4),
             ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 264),
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: _items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 2),
-                itemBuilder: (_, i) {
-                  final d = _items[i];
-                  return _BacklinkTile(
-                    diary: d,
-                    onTap: () => widget.onOpen(d.id),
-                  );
-                },
-              ),
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: _buildList(context),
             ),
           ],
         ),
       ),
     );
   }
+
+  /// 出/入链拍平成一维「段头 + 条目」行，走 ListView.builder 懒构建 —— 重链日记下
+  /// 不再每次刷新都全量构建离屏条目。
+  Widget _buildList(BuildContext context) {
+    final theme = Theme.of(context);
+    final rows = <({String? header, Diary? diary, bool outgoing})>[
+      if (_out.isNotEmpty) ...[
+        (header: context.l10n.graphOutgoing, diary: null, outgoing: true),
+        for (final d in _out) (header: null, diary: d, outgoing: true),
+      ],
+      if (_in.isNotEmpty) ...[
+        (header: context.l10n.graphIncoming, diary: null, outgoing: false),
+        for (final d in _in) (header: null, diary: d, outgoing: false),
+      ],
+    ];
+    return ListView.builder(
+      shrinkWrap: true,
+      padding: EdgeInsets.zero,
+      itemCount: rows.length,
+      itemBuilder: (context, i) {
+        final row = rows[i];
+        if (row.diary == null) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(6, 6, 0, 2),
+            child: Text(
+              row.header!,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        }
+        return _LinkTile(
+          diary: row.diary!,
+          outgoing: row.outgoing,
+          onTap: () => widget.onOpen(row.diary!.id),
+        );
+      },
+    );
+  }
 }
 
-class _BacklinkTile extends StatelessWidget {
+class _CountPill extends StatelessWidget {
+  final IconData icon;
+  final int count;
+  final Color background;
+  final Color foreground;
+
+  const _CountPill({
+    required this.icon,
+    required this.count,
+    required this.background,
+    required this.foreground,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: foreground),
+          const SizedBox(width: 3),
+          Text(
+            '$count',
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: foreground),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LinkTile extends StatelessWidget {
   final Diary diary;
+  final bool outgoing;
   final VoidCallback onTap;
 
-  const _BacklinkTile({required this.diary, required this.onTap});
+  const _LinkTile({
+    required this.diary,
+    required this.outgoing,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final hasTitle = diary.title.trim().isNotEmpty;
-    final title = hasTitle
-        ? diary.title.trim()
-        : TimeUtil.longDate(diary.time);
+    final title = hasTitle ? diary.title.trim() : TimeUtil.longDate(diary.time);
     final snippet = diary.contentText.trim().replaceAll(RegExp(r'\s+'), ' ');
     // 有标题时副标题给「日期 · 片段」；无标题时标题已是日期，副标题只放片段。
     final subtitle = hasTitle && snippet.isNotEmpty
@@ -1152,9 +1250,11 @@ class _BacklinkTile extends StatelessWidget {
           borderRadius: AppBorderRadius.smallBorderRadius,
         ),
         child: Icon(
-          Icons.subdirectory_arrow_left_rounded,
+          outgoing
+              ? Icons.north_east_rounded
+              : Icons.subdirectory_arrow_left_rounded,
           size: 18,
-          color: scheme.onSurfaceVariant,
+          color: outgoing ? scheme.primary : scheme.onSurfaceVariant,
         ),
       ),
       title: Text(

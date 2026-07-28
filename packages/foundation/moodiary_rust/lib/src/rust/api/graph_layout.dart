@@ -6,8 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `accumulate_attraction`, `accumulate_gravity`, `accumulate_repulsion`, `build_tree`, `child_cell`, `insert_body`, `integrate_step`, `new`, `node_masses`, `normalized`, `push_leaf`, `quadrant`, `repulsion_on`, `resolve_collisions`, `seed_positions`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Cell`, `Params`, `QuadTree`
+// These functions are ignored because they are not marked as `pub`: `accumulate_attraction`, `accumulate_gravity`, `accumulate_repulsion`, `child_cell`, `empty`, `insert_body`, `integrate_step`, `layout_scale`, `new`, `node_masses`, `normalized`, `push_leaf`, `quadrant`, `repulsion_on`, `reset`, `resolve_collisions`, `run_layout`, `scaled_frame`, `seed_positions`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Bodies`, `Cell`, `Params`, `QuadTree`, `Scratch`
 
 /// 流式布局。`edges` 为 `[src0,dst0,src1,dst1,...]` 密集下标对(无向,建议去重);
 /// `initial_positions` 为空则用黄金角螺旋确定性播种。每帧向 `sink` 推 `[x0,y0,...]`
@@ -59,6 +59,22 @@ class GraphLayoutParams {
   /// 每帧之后 sleep 的毫秒数,保证小图也「看得见」沉降过程。
   final int frameDelayMs;
 
+  /// 起始 alpha(<=0 或 >1 视为 1.0)。增量重布局(数据刷新 / 换筛选)传 0.25~0.35,
+  /// 配合 initial_positions 让图原地微调而不是整体炸开重排。
+  final double initialAlpha;
+
+  /// 收敛提前退出阈值,单位 = spring_length 的倍数(<=0 表示跑满 iterations)。
+  /// 建议 1e-3:连续 5 步最大位移低于它且 alpha 已衰减到 0.05 以下时收尾。
+  final double minStep;
+
+  /// 前 k 个下标的节点钉住不动(0 = 不钉)。ego 图把中心节点排在下标 0。
+  final int pinnedCount;
+
+  /// 是否对**发出的**坐标做尺度归一化:把相连节点距离的中位数缩放到 spring_length。
+  /// 仿真空间不变,只换算发出的副本;碰撞半径与单步位移上限同步按该因子放大,
+  /// 使二者在归一化后的视图里恒等于传入值。
+  final bool normalizeScale;
+
   const GraphLayoutParams({
     required this.iterations,
     required this.theta,
@@ -70,6 +86,10 @@ class GraphLayoutParams {
     required this.velocityDecay,
     required this.emitEvery,
     required this.frameDelayMs,
+    required this.initialAlpha,
+    required this.minStep,
+    required this.pinnedCount,
+    required this.normalizeScale,
   });
 
   @override
@@ -83,7 +103,11 @@ class GraphLayoutParams {
       collideRadius.hashCode ^
       velocityDecay.hashCode ^
       emitEvery.hashCode ^
-      frameDelayMs.hashCode;
+      frameDelayMs.hashCode ^
+      initialAlpha.hashCode ^
+      minStep.hashCode ^
+      pinnedCount.hashCode ^
+      normalizeScale.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -99,5 +123,9 @@ class GraphLayoutParams {
           collideRadius == other.collideRadius &&
           velocityDecay == other.velocityDecay &&
           emitEvery == other.emitEvery &&
-          frameDelayMs == other.frameDelayMs;
+          frameDelayMs == other.frameDelayMs &&
+          initialAlpha == other.initialAlpha &&
+          minStep == other.minStep &&
+          pinnedCount == other.pinnedCount &&
+          normalizeScale == other.normalizeScale;
 }

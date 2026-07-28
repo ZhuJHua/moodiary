@@ -450,13 +450,13 @@ void main() {
       expect(ends, {'d1', 'd2'});
     });
 
-    test('互链去重为单条无向边', () async {
+    test('互链保留为两条有向边', () async {
       await repo.insertADiary(makeDiary('d1', 'a', linkTo: ['d2']));
       await repo.insertADiary(makeDiary('d2', 'b', linkTo: ['d1']));
 
       final g = await repo.buildLinkGraph();
       expect(g.nodeCount, 2);
-      expect(g.edgeCount, 1);
+      expect(g.edgeCount, 2);
     });
 
     test('孤立(无链接)日记不入图', () async {
@@ -496,6 +496,215 @@ void main() {
       final g = await repo.buildLinkGraph();
       expect(g.isEmpty, isTrue);
       expect(g.edges, isEmpty);
+    });
+  });
+
+  group('buildEgoGraph', () {
+    /// 边集合还原成业务 id 对,便于断言。
+    Set<(String, String)> edgePairs(DiaryGraphData g) => {
+          for (var i = 0; i < g.edgeCount; i++)
+            (g.nodes[g.edges[i * 2]].id, g.nodes[g.edges[i * 2 + 1]].id),
+        };
+
+    test('depth=1 只含中心与直接邻居(出链入链都算)', () async {
+      await repo.insertADiary(makeDiary('far', '二跳'));
+      await repo.insertADiary(makeDiary('out', '出链目标', linkTo: ['far']));
+      await repo.insertADiary(makeDiary('center', '中心', linkTo: ['out']));
+      await repo.insertADiary(makeDiary('in', '入链来源', linkTo: ['center']));
+
+      final g = await repo.buildEgoGraph('center');
+      expect(g.nodes.map((n) => n.id).toSet(), {'center', 'out', 'in'});
+      expect(edgePairs(g), {('center', 'out'), ('in', 'center')});
+    });
+
+    test('最外层节点之间的横向边被补全(诱导子图)', () async {
+      await repo.insertADiary(makeDiary('b', 'B', linkTo: ['c']));
+      await repo.insertADiary(makeDiary('c', 'C'));
+      await repo.insertADiary(makeDiary('a', 'A', linkTo: ['b', 'c']));
+
+      final g = await repo.buildEgoGraph('a');
+      expect(g.nodes.map((n) => n.id).toSet(), {'a', 'b', 'c'});
+      expect(edgePairs(g), {('a', 'b'), ('a', 'c'), ('b', 'c')});
+    });
+
+    test('depth=2 扩到二跳,depth 字段与排序正确', () async {
+      await repo.insertADiary(makeDiary('far', '二跳'));
+      await repo.insertADiary(makeDiary('out', '一跳', linkTo: ['far']));
+      await repo.insertADiary(makeDiary('center', '中心', linkTo: ['out']));
+
+      final g = await repo.buildEgoGraph('center', depth: 2);
+      expect(g.nodes.map((n) => n.id).toSet(), {'center', 'out', 'far'});
+      final byId = {for (final n in g.nodes) n.id: n};
+      expect(byId['center']!.depth, 0);
+      expect(byId['out']!.depth, 1);
+      expect(byId['far']!.depth, 2);
+      expect(g.nodes.map((n) => n.depth), [0, 1, 2]);
+      expect(edgePairs(g), {('center', 'out'), ('out', 'far')});
+    });
+
+    test('中心节点恒在下标 0,centerIndex 指向它', () async {
+      // 邻居时间更新,若不按 depth 优先排序会排到中心前面。
+      await repo.insertADiary(
+        makeDiary('newer', '更新的邻居', linkTo: ['center'])
+            .copyWith(time: DateTime(2026, 6, 1)),
+      );
+      await repo.insertADiary(makeDiary('center', '中心'));
+
+      final g = await repo.buildEgoGraph('center');
+      expect(g.centerIndex, 0);
+      expect(g.nodes[g.centerIndex!].id, 'center');
+      expect(g.nodes[0].depth, 0);
+    });
+
+    test('悬空链接(目标不存在)被丢弃', () async {
+      await repo.insertADiary(makeDiary('center', '中心', linkTo: ['ghost']));
+
+      final g = await repo.buildEgoGraph('center');
+      expect(g.nodes.map((n) => n.id), ['center']);
+      expect(g.edgeCount, 0);
+    });
+
+    test('回收站日记既不成节点也不成边', () async {
+      await repo.insertADiary(
+        makeDiary('hidden', '隐藏', linkTo: ['center']).copyWith(show: false),
+      );
+      await repo.insertADiary(makeDiary('ok', '正常'));
+      await repo.insertADiary(
+        makeDiary('center', '中心', linkTo: ['hidden', 'ok']),
+      );
+
+      final g = await repo.buildEgoGraph('center');
+      expect(g.nodes.map((n) => n.id).toSet(), {'center', 'ok'});
+      expect(edgePairs(g), {('center', 'ok')});
+    });
+
+    test('自链忽略(正向与反向两条路径)', () async {
+      await repo.insertADiary(makeDiary('center', '自引', linkTo: ['center']));
+
+      // 反向 posting 行确实存在,证明入链分支也被走到并丢弃。
+      expect(
+        (await isar.linkPostings.getAsync(fastHash('center')))?.fromIsarIds,
+        [fastHash('center')],
+      );
+      final g = await repo.buildEgoGraph('center');
+      expect(g.nodes.map((n) => n.id), ['center']);
+      expect(g.edgeCount, 0);
+    });
+
+    test('孤立日记也返回自己(与 buildLinkGraph 的 linked-only 不同)', () async {
+      await repo.insertADiary(makeDiary('lonely', '无链接'));
+      await repo.insertADiary(makeDiary('d1', '别处', linkTo: ['d2']));
+      await repo.insertADiary(makeDiary('d2', '别处2'));
+
+      final g = await repo.buildEgoGraph('lonely');
+      expect(g.nodes.map((n) => n.id), ['lonely']);
+      expect(g.edgeCount, 0);
+      expect(g.centerIndex, 0);
+    });
+
+    test('中心不存在 / 空串返回空图', () async {
+      await repo.insertADiary(makeDiary('d1', '内容'));
+
+      expect((await repo.buildEgoGraph('missing')).isEmpty, isTrue);
+      final blank = await repo.buildEgoGraph('');
+      expect(blank.isEmpty, isTrue);
+      expect(blank.centerIndex, isNull);
+    });
+
+    test('中心在回收站返回空图', () async {
+      await repo.insertADiary(
+        makeDiary('center', '中心').copyWith(show: false),
+      );
+      await repo.insertADiary(makeDiary('src', '来源', linkTo: ['center']));
+
+      expect((await repo.buildEgoGraph('center')).isEmpty, isTrue);
+    });
+
+    test('maxNodes 截断扩点', () async {
+      final targets = ['n1', 'n2', 'n3', 'n4', 'n5'];
+      for (final t in targets) {
+        await repo.insertADiary(makeDiary(t, '邻居'));
+      }
+      await repo.insertADiary(makeDiary('center', '中心', linkTo: targets));
+
+      final g = await repo.buildEgoGraph('center', maxNodes: 3);
+      expect(g.nodeCount, 3);
+      expect(g.nodes[0].id, 'center');
+      expect(g.edgeCount, 2);
+    });
+
+    test('只经由回收站中间篇可达的深层节点不作为孤岛残留', () async {
+      // center → mid(回收站) → far。depth=2 时 far 会被 BFS 发现，但它唯一的边
+      // (mid→far) 因 mid 不可见被丢弃 → far 应被剪掉，而不是留成孤点。
+      await repo.insertADiary(makeDiary('far', '远端'));
+      await repo.insertADiary(
+        makeDiary('mid', '中间', linkTo: ['far']).copyWith(show: false),
+      );
+      await repo.insertADiary(makeDiary('center', '中心', linkTo: ['mid']));
+
+      final g = await repo.buildEgoGraph('center', depth: 2);
+      expect(g.nodes.map((n) => n.id), ['center']);
+      expect(g.edgeCount, 0);
+    });
+  });
+
+  group('hasAnyLink & getForwardLinks', () {
+    test('只有出链 → true', () async {
+      await repo.insertADiary(makeDiary('t', '目标'));
+      await repo.insertADiary(makeDiary('s', '来源', linkTo: ['t']));
+
+      expect(await repo.hasAnyLink('s'), isTrue);
+    });
+
+    test('只有入链 → true', () async {
+      await repo.insertADiary(makeDiary('t', '目标'));
+      await repo.insertADiary(makeDiary('s', '来源', linkTo: ['t']));
+
+      expect(await repo.hasAnyLink('t'), isTrue);
+    });
+
+    test('无链接 / 不存在 / 空串 → false', () async {
+      await repo.insertADiary(makeDiary('lonely', '无链接'));
+
+      expect(await repo.hasAnyLink('lonely'), isFalse);
+      expect(await repo.hasAnyLink('missing'), isFalse);
+      expect(await repo.hasAnyLink(''), isFalse);
+    });
+
+    test('自链不算有链接', () async {
+      await repo.insertADiary(makeDiary('self', '自引', linkTo: ['self']));
+
+      expect(await repo.hasAnyLink('self'), isFalse);
+    });
+
+    test('getForwardLinks 排除自链（与 hasAnyLink 一致）', () async {
+      await repo.insertADiary(makeDiary('t', '目标'));
+      await repo.insertADiary(
+        makeDiary('self', '自引带外链', linkTo: ['self', 't']),
+      );
+
+      final forward = await repo.getForwardLinks('self');
+      expect(forward.map((d) => d.id), ['t']); // 自己不在里面
+    });
+
+    test('getForwardLinks 按时间倒序,悬空与回收站被过滤', () async {
+      await repo.insertADiary(
+        makeDiary('older', '早').copyWith(time: DateTime(2026, 1, 1)),
+      );
+      await repo.insertADiary(
+        makeDiary('newer', '晚').copyWith(time: DateTime(2026, 3, 1)),
+      );
+      await repo.insertADiary(
+        makeDiary('hidden', '回收站').copyWith(show: false),
+      );
+      await repo.insertADiary(
+        makeDiary('src', '来源', linkTo: ['older', 'newer', 'hidden', 'ghost']),
+      );
+
+      final forward = await repo.getForwardLinks('src');
+      expect(forward.map((d) => d.id), ['newer', 'older']);
+      expect(await repo.getForwardLinks('older'), isEmpty);
+      expect(await repo.getForwardLinks(''), isEmpty);
     });
   });
 }

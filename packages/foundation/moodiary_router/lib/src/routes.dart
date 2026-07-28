@@ -127,11 +127,19 @@ class AnalyseRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
+/// 知识图谱。[diaryId] 为空 = 总图谱；给定则打开以该篇为中心的局部关系图。
 class DiaryGraphRoute extends MoodiaryRouteBase {
   static const String path = '/graph';
-  const DiaryGraphRoute();
+
+  final String? diaryId;
+
+  const DiaryGraphRoute({this.diaryId});
+
   @override
-  String get location => path;
+  String get location => buildLocation(path, {'diary-id': diaryId});
+
+  static DiaryGraphRoute fromState(GoRouterState state) =>
+      DiaryGraphRoute(diaryId: state.uri.queryParameters['diary-id']);
 }
 
 class FontRoute extends MoodiaryRouteBase {

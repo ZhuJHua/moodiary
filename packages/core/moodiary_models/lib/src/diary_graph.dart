@@ -11,6 +11,13 @@ class DiaryGraphNode {
   final DateTime time;
   final String? categoryId;
 
+  /// ego 图专用:到中心节点的 BFS 跳数(0 = 中心)。全图恒 null。
+  final int? depth;
+
+  /// 正文摘要:纯文本折叠空白后的开头一小截(装配时就截断,整篇正文不进内存)。
+  /// 无标题的节点靠它显示标签;正文也为空则为 null。
+  final String? preview;
+
   const DiaryGraphNode({
     required this.index,
     required this.id,
@@ -18,6 +25,8 @@ class DiaryGraphNode {
     required this.title,
     required this.time,
     required this.categoryId,
+    this.depth,
+    this.preview,
   });
 }
 
@@ -28,7 +37,14 @@ class DiaryGraphData {
   final List<DiaryGraphNode> nodes;
   final Int32List edges;
 
-  const DiaryGraphData({required this.nodes, required this.edges});
+  /// ego 图专用:中心节点在 [nodes] 里的下标(排序保证恒为 0)。全图恒 null。
+  final int? centerIndex;
+
+  const DiaryGraphData({
+    required this.nodes,
+    required this.edges,
+    this.centerIndex,
+  });
 
   bool get isEmpty => nodes.isEmpty;
   int get nodeCount => nodes.length;

@@ -2945,6 +2945,10 @@ impl SseDecode for crate::api::graph_layout::GraphLayoutParams {
         let mut var_velocityDecay = <f32>::sse_decode(deserializer);
         let mut var_emitEvery = <u32>::sse_decode(deserializer);
         let mut var_frameDelayMs = <u32>::sse_decode(deserializer);
+        let mut var_initialAlpha = <f32>::sse_decode(deserializer);
+        let mut var_minStep = <f32>::sse_decode(deserializer);
+        let mut var_pinnedCount = <u32>::sse_decode(deserializer);
+        let mut var_normalizeScale = <bool>::sse_decode(deserializer);
         return crate::api::graph_layout::GraphLayoutParams {
             iterations: var_iterations,
             theta: var_theta,
@@ -2956,6 +2960,10 @@ impl SseDecode for crate::api::graph_layout::GraphLayoutParams {
             velocity_decay: var_velocityDecay,
             emit_every: var_emitEvery,
             frame_delay_ms: var_frameDelayMs,
+            initial_alpha: var_initialAlpha,
+            min_step: var_minStep,
+            pinned_count: var_pinnedCount,
+            normalize_scale: var_normalizeScale,
         };
     }
 }
@@ -3917,6 +3925,10 @@ impl flutter_rust_bridge::IntoDart for crate::api::graph_layout::GraphLayoutPara
             self.velocity_decay.into_into_dart().into_dart(),
             self.emit_every.into_into_dart().into_dart(),
             self.frame_delay_ms.into_into_dart().into_dart(),
+            self.initial_alpha.into_into_dart().into_dart(),
+            self.min_step.into_into_dart().into_dart(),
+            self.pinned_count.into_into_dart().into_dart(),
+            self.normalize_scale.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -4625,6 +4637,10 @@ impl SseEncode for crate::api::graph_layout::GraphLayoutParams {
         <f32>::sse_encode(self.velocity_decay, serializer);
         <u32>::sse_encode(self.emit_every, serializer);
         <u32>::sse_encode(self.frame_delay_ms, serializer);
+        <f32>::sse_encode(self.initial_alpha, serializer);
+        <f32>::sse_encode(self.min_step, serializer);
+        <u32>::sse_encode(self.pinned_count, serializer);
+        <bool>::sse_encode(self.normalize_scale, serializer);
     }
 }
 

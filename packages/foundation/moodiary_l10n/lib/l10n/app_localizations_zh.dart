@@ -1400,7 +1400,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get knowledgeGraph => '知识图谱';
 
   @override
-  String get graphEmpty => '还没有双链关系\n在日记里用 [[ 关联另一篇试试';
+  String get graphEmpty => '还没有双链关系';
 
   @override
   String graphCount(Object edges, Object nodes) {
@@ -1441,6 +1441,86 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get graphStyleDense => '稠密';
+
+  @override
+  String get graphView => '视图';
+
+  @override
+  String get graphColorBy => '着色';
+
+  @override
+  String get graphColorByCategory => '分类';
+
+  @override
+  String get graphColorByTime => '时间';
+
+  @override
+  String get graphColorByPlain => '素色';
+
+  @override
+  String get graphShowLabels => '显示标题';
+
+  @override
+  String get graphResetCamera => '回到全景';
+
+  @override
+  String get graphEmptyTitle => '还没有双链';
+
+  @override
+  String get graphEmptyDesc => '在日记里输入 [[ 引用另一篇日记，它们就会出现在这里';
+
+  @override
+  String get graphEmptyAction => '写一篇日记';
+
+  @override
+  String get graphFilterEmpty => '当前筛选下没有链接';
+
+  @override
+  String get graphClearFilter => '清除筛选';
+
+  @override
+  String get graphLocal => '关系图';
+
+  @override
+  String graphDepthHops(num count) {
+    return '$count 跳';
+  }
+
+  @override
+  String get graphOutgoing => '出链';
+
+  @override
+  String get graphIncoming => '入链';
+
+  @override
+  String graphOutgoingCount(Object count) {
+    return '$count 条出链';
+  }
+
+  @override
+  String graphIncomingCount(Object count) {
+    return '$count 条入链';
+  }
+
+  @override
+  String get graphSetAsCenter => '以此为中心';
+
+  @override
+  String get graphBackToCenter => '回到中心';
+
+  @override
+  String graphTruncated(Object count) {
+    return '已省略 $count 个远端节点';
+  }
+
+  @override
+  String get graphOpenFullGraph => '打开总图谱';
+
+  @override
+  String get graphLinks => '链接';
+
+  @override
+  String get graphNoLocalLinks => '这篇日记还没有关联';
 
   @override
   String categorySwitcherCount(Object count) {

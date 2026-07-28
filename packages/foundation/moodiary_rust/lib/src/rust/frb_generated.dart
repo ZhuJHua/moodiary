@@ -2938,8 +2938,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   GraphLayoutParams dco_decode_graph_layout_params(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 10)
-      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
+    if (arr.length != 14)
+      throw Exception('unexpected arr length: expect 14 but see ${arr.length}');
     return GraphLayoutParams(
       iterations: dco_decode_u_32(arr[0]),
       theta: dco_decode_f_32(arr[1]),
@@ -2951,6 +2951,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       velocityDecay: dco_decode_f_32(arr[7]),
       emitEvery: dco_decode_u_32(arr[8]),
       frameDelayMs: dco_decode_u_32(arr[9]),
+      initialAlpha: dco_decode_f_32(arr[10]),
+      minStep: dco_decode_f_32(arr[11]),
+      pinnedCount: dco_decode_u_32(arr[12]),
+      normalizeScale: dco_decode_bool(arr[13]),
     );
   }
 
@@ -3962,6 +3966,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_velocityDecay = sse_decode_f_32(deserializer);
     var var_emitEvery = sse_decode_u_32(deserializer);
     var var_frameDelayMs = sse_decode_u_32(deserializer);
+    var var_initialAlpha = sse_decode_f_32(deserializer);
+    var var_minStep = sse_decode_f_32(deserializer);
+    var var_pinnedCount = sse_decode_u_32(deserializer);
+    var var_normalizeScale = sse_decode_bool(deserializer);
     return GraphLayoutParams(
       iterations: var_iterations,
       theta: var_theta,
@@ -3973,6 +3981,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       velocityDecay: var_velocityDecay,
       emitEvery: var_emitEvery,
       frameDelayMs: var_frameDelayMs,
+      initialAlpha: var_initialAlpha,
+      minStep: var_minStep,
+      pinnedCount: var_pinnedCount,
+      normalizeScale: var_normalizeScale,
     );
   }
 
@@ -5202,6 +5214,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_f_32(self.velocityDecay, serializer);
     sse_encode_u_32(self.emitEvery, serializer);
     sse_encode_u_32(self.frameDelayMs, serializer);
+    sse_encode_f_32(self.initialAlpha, serializer);
+    sse_encode_f_32(self.minStep, serializer);
+    sse_encode_u_32(self.pinnedCount, serializer);
+    sse_encode_bool(self.normalizeScale, serializer);
   }
 
   @protected

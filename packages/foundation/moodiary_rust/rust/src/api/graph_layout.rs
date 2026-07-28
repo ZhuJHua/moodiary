@@ -3,6 +3,8 @@
 //! 边上为线性引力(无自然长,间距由力平衡涌现);两处刻意偏离原版:保留线性向心力(把
 //! 不连通分量收进视野)与 forceCollide 碰撞(硬保不重叠)。积分器为 d3 式平滑退火。
 //! 中间坐标经 [StreamSink] 逐帧回传;下游取消(离页/换筛选)时 `sink.add` 报错,循环即止。
+//! 发帧前可做尺度归一化(见 [GraphLayoutParams::normalize_scale]),让任意规模的图在视图里
+//! 保持同一「相连节点中位距」,避免大图缩到看不见。
 
 use anyhow::{Result, anyhow};
 use std::collections::HashMap;
@@ -36,6 +38,18 @@ pub struct GraphLayoutParams {
     pub emit_every: u32,
     /// 每帧之后 sleep 的毫秒数,保证小图也「看得见」沉降过程。
     pub frame_delay_ms: u32,
+    /// 起始 alpha(<=0 或 >1 视为 1.0)。增量重布局(数据刷新 / 换筛选)传 0.25~0.35,
+    /// 配合 initial_positions 让图原地微调而不是整体炸开重排。
+    pub initial_alpha: f32,
+    /// 收敛提前退出阈值,单位 = spring_length 的倍数(<=0 表示跑满 iterations)。
+    /// 建议 1e-3:连续 5 步最大位移低于它且 alpha 已衰减到 0.05 以下时收尾。
+    pub min_step: f32,
+    /// 前 k 个下标的节点钉住不动(0 = 不钉)。ego 图把中心节点排在下标 0。
+    pub pinned_count: u32,
+    /// 是否对**发出的**坐标做尺度归一化:把相连节点距离的中位数缩放到 spring_length。
+    /// 仿真空间不变,只换算发出的副本;碰撞半径与单步位移上限同步按该因子放大,
+    /// 使二者在归一化后的视图里恒等于传入值。
+    pub normalize_scale: bool,
 }
 
 struct Params {
@@ -50,6 +64,10 @@ struct Params {
     velocity_retain: f32,
     emit_every: u32,
     frame_delay_ms: u32,
+    initial_alpha: f32,
+    min_step: f32,
+    pinned_count: usize,
+    normalize_scale: bool,
 }
 
 impl GraphLayoutParams {
@@ -73,18 +91,31 @@ impl GraphLayoutParams {
             velocity_retain: 1.0 - decay,
             emit_every: if self.emit_every > 0 { self.emit_every } else { 1 },
             frame_delay_ms: self.frame_delay_ms,
+            initial_alpha: if self.initial_alpha > 0.0 && self.initial_alpha <= 1.0 {
+                self.initial_alpha
+            } else {
+                1.0
+            },
+            min_step: self.min_step.max(0.0),
+            pinned_count: self.pinned_count as usize,
+            normalize_scale: self.normalize_scale,
         }
     }
 }
 
 /// 距离过近时的软化项,避免斥力爆炸/除零。
 const SOFTENING: f32 = 0.01;
-/// 四叉树最大深度;坐标重合时防止无限细分。
-const MAX_DEPTH: u32 = 48;
+/// 四叉树最大深度;坐标重合时防止无限细分。再深下去格宽已低于 f32 在该量级的间隔,
+/// 象限判定失效,纯浪费 cell。
+const MAX_DEPTH: u32 = 24;
 /// 退火终点(d3 alphaMin 惯例值):alpha 几何衰减,恰在末次迭代降到此值。
 const ALPHA_MIN: f32 = 0.001;
 /// 播种螺旋的铺展基准(世界单位):半径随 √N 放大。
 const SEED_SPREAD: f32 = 20.0;
+/// 判定「已静止」所需的连续步数。
+const STILL_STEPS: u32 = 5;
+/// 早停只在退火尾段生效,避免高能阶段的瞬时低速误判。
+const STILL_ALPHA: f32 = 0.05;
 
 /// 流式布局。`edges` 为 `[src0,dst0,src1,dst1,...]` 密集下标对(无向,建议去重);
 /// `initial_positions` 为空则用黄金角螺旋确定性播种。每帧向 `sink` 推 `[x0,y0,...]`
@@ -97,7 +128,7 @@ pub fn layout_graph_stream(
     sink: StreamSink<Vec<f32>>,
 ) -> Result<()> {
     let n = node_count as usize;
-    if edges.len() % 2 != 0 {
+    if !edges.len().is_multiple_of(2) {
         return Err(anyhow!("edges 长度必须为偶数(下标对)"));
     }
     for &e in &edges {
@@ -115,38 +146,130 @@ pub fn layout_graph_stream(
     }
 
     let p = params.normalized();
-    let masses = node_masses(n, &edges);
+    run_layout(n, &edges, &mut pos, &p, |frame| sink.add(frame).is_ok());
+    Ok(())
+}
+
+/// 布局内核(生产与测试共用):播种帧 + 退火主循环,每帧调 `emit`(返回 false = 下游
+/// 已取消,立即收尾)。返回实际执行的迭代数(早停时小于 `p.iterations`)。
+fn run_layout(
+    n: usize,
+    edges: &[i32],
+    pos: &mut [f32],
+    p: &Params,
+    mut emit: impl FnMut(Vec<f32>) -> bool,
+) -> u32 {
+    let masses = node_masses(n, edges);
     let mut vel = vec![0.0f32; n * 2];
     let mut force = vec![0.0f32; n * 2];
+    let mut scratch = Scratch::new();
 
-    // 先发一帧种子(散开的初态),动画从这里开始沉降。
-    if sink.add(pos.clone()).is_err() {
-        return Ok(());
+    // 归一化因子 =「相连中位距 / spring_length」的 EMA(逐帧原值会抖)。种子帧先按种子
+    // 自身的尺度换算,免得第一帧与后续帧尺度跳变;关缩放时恒为 1.0,行为与旧版一致。
+    let mut scale_ema = if p.normalize_scale {
+        (layout_scale(pos, edges, n) / p.spring_length).clamp(1e-3, 1e6)
+    } else {
+        1.0
+    };
+
+    if !emit(scaled_frame(pos, scale_ema)) {
+        return 0;
     }
 
-    // d3-force 式退火:alpha 从 1 几何衰减到 ALPHA_MIN(在末次迭代到达),力按 alpha
-    // 缩放、速度每步乘 velocity_retain。平衡点由力自身决定、与 alpha 无关,故只影响动态
-    // (平滑、无过冲),不改最终布局。这是消除「抽搐」的关键。
+    // d3-force 式退火:alpha 从 initial_alpha 几何衰减到 ALPHA_MIN(在末次迭代到达),力按
+    // alpha 缩放、速度每步乘 velocity_retain。平衡点由力自身决定、与 alpha 无关,故只影响
+    // 动态(平滑、无过冲),不改最终布局。这是消除「抽搐」的关键。
     let alpha_decay = 1.0 - ALPHA_MIN.powf(1.0 / p.iterations as f32);
-    let mut alpha = 1.0_f32;
+    let mut alpha = p.initial_alpha;
+    let mut still = 0u32;
 
     for iter in 0..p.iterations {
-        integrate_step(&mut pos, &mut vel, &mut force, &edges, &masses, &p, alpha);
+        let moved = integrate_step(
+            &mut Bodies { pos: &mut *pos, vel: &mut vel, force: &mut force },
+            edges,
+            &masses,
+            p,
+            alpha,
+            scale_ema,
+            &mut scratch,
+        );
         alpha *= 1.0 - alpha_decay;
+        if p.normalize_scale {
+            let raw = layout_scale(pos, edges, n) / p.spring_length;
+            scale_ema = (scale_ema * 0.9 + raw * 0.1).clamp(1e-3, 1e6);
+        }
 
-        let last = iter + 1 == p.iterations;
+        // 阈值随仿真尺度放大:开归一化时仿真空间被撑大 scale_ema 倍,位移绝对值同比变大,
+        // 不换算的话大图永远触不到早停。
+        let settled = p.min_step > 0.0
+            && alpha < STILL_ALPHA
+            && moved < p.min_step * p.spring_length * scale_ema;
+        still = if settled { still + 1 } else { 0 };
+
+        // 早停也走 last 分支,保证最终态一定被补发一帧。
+        let last = still >= STILL_STEPS || iter + 1 == p.iterations;
         if last || iter % p.emit_every == 0 {
-            // add 报错 = 下游已取消订阅,提前收尾。
-            if sink.add(pos.clone()).is_err() {
-                return Ok(());
+            // emit 报错 = 下游已取消订阅,提前收尾。
+            if !emit(scaled_frame(pos, scale_ema)) {
+                return iter + 1;
             }
             if p.frame_delay_ms > 0 && !last {
                 thread::sleep(Duration::from_millis(p.frame_delay_ms as u64));
             }
         }
+        if last {
+            return iter + 1;
+        }
     }
+    p.iterations
+}
 
-    Ok(())
+/// 发帧副本:除以归一化因子,把仿真尺度换算成「相连中位距 ≈ spring_length」的视图。
+fn scaled_frame(pos: &[f32], scale: f32) -> Vec<f32> {
+    if scale == 1.0 {
+        pos.to_vec()
+    } else {
+        pos.iter().map(|v| v / scale).collect()
+    }
+}
+
+/// 当前布局的特征尺度:相连节点对欧氏距离的中位数;无边时退化为包围盒对角线 / (4·√n)。
+fn layout_scale(pos: &[f32], edges: &[i32], n: usize) -> f32 {
+    if n == 0 {
+        return 1.0;
+    }
+    let mut dists: Vec<f32> = Vec::with_capacity(edges.len() / 2);
+    let mut k = 0;
+    while k + 1 < edges.len() {
+        let a = edges[k] as usize;
+        let b = edges[k + 1] as usize;
+        k += 2;
+        if a == b {
+            continue;
+        }
+        let dx = pos[b * 2] - pos[a * 2];
+        let dy = pos[b * 2 + 1] - pos[a * 2 + 1];
+        dists.push((dx * dx + dy * dy).sqrt());
+    }
+    if dists.is_empty() {
+        let mut min_x = f32::MAX;
+        let mut min_y = f32::MAX;
+        let mut max_x = f32::MIN;
+        let mut max_y = f32::MIN;
+        for i in 0..n {
+            min_x = min_x.min(pos[i * 2]);
+            max_x = max_x.max(pos[i * 2]);
+            min_y = min_y.min(pos[i * 2 + 1]);
+            max_y = max_y.max(pos[i * 2 + 1]);
+        }
+        let w = max_x - min_x;
+        let h = max_y - min_y;
+        let diag = (w * w + h * h).sqrt();
+        return (diag / (4.0 * (n as f32).sqrt().max(1.0))).max(1e-6);
+    }
+    let mid = dists.len() / 2;
+    let (_, m, _) = dists.select_nth_unstable_by(mid, f32::total_cmp);
+    (*m).max(1e-6)
 }
 
 /// 黄金角螺旋播种:确定性、可复现、初始不重合。半径随节点数放大以留出铺展空间。
@@ -217,49 +340,69 @@ fn accumulate_gravity(pos: &[f32], n: usize, p: &Params, force: &mut [f32]) {
     }
 }
 
-/// 一步积分(生产循环与测试共用,消除拷贝漂移):清零并累加三种力,按 `alpha` 缩放施力、
-/// `velocity_retain` 衰减速度、`max_step` 限位,原地更新 `pos`/`vel`。调用方管理 alpha 退火。
+/// 一步积分要更新的三组数组(打包传参)。
+struct Bodies<'a> {
+    pos: &'a mut [f32],
+    vel: &'a mut [f32],
+    force: &'a mut [f32],
+}
+
+/// 一步积分:清零并累加三种力,按 `alpha` 缩放施力、`velocity_retain` 衰减速度、`max_step`
+/// 限位,原地更新 `pos`/`vel`。前 `pinned_count` 个节点只受力不动。`scale` 为当前归一化
+/// 因子,碰撞半径与步长上限按它放大,使其在归一化视图里恒等于传入值。
+/// 返回本步的最大节点位移(不含碰撞修正),供调用方判定收敛。
 fn integrate_step(
-    pos: &mut [f32],
-    vel: &mut [f32],
-    force: &mut [f32],
+    b: &mut Bodies<'_>,
     edges: &[i32],
     masses: &[f32],
     p: &Params,
     alpha: f32,
-) {
-    let n = pos.len() / 2;
-    for f in force.iter_mut() {
+    scale: f32,
+    scratch: &mut Scratch,
+) -> f32 {
+    let n = b.pos.len() / 2;
+    for f in b.force.iter_mut() {
         *f = 0.0;
     }
-    accumulate_repulsion(pos, masses, n, p, force);
-    accumulate_attraction(pos, edges, p, force);
-    accumulate_gravity(pos, n, p, force);
+    accumulate_repulsion(b.pos, masses, n, p, b.force, scratch);
+    accumulate_attraction(b.pos, edges, p, b.force);
+    accumulate_gravity(b.pos, n, p, b.force);
 
     // 每步位移设安全上限(约一个理想边长),防重合时的偶发爆炸。
-    let max_step = p.spring_length;
+    let max_step = p.spring_length * scale;
+    let pinned = p.pinned_count.min(n);
+    let mut max_disp = 0.0f32;
     for i in 0..n {
         let ix = i * 2;
         let iy = ix + 1;
-        let mut vx = vel[ix] * p.velocity_retain + force[ix] * alpha;
-        let mut vy = vel[iy] * p.velocity_retain + force[iy] * alpha;
-        let speed = (vx * vx + vy * vy).sqrt();
+        if i < pinned {
+            b.vel[ix] = 0.0;
+            b.vel[iy] = 0.0;
+            continue;
+        }
+        let mut vx = b.vel[ix] * p.velocity_retain + b.force[ix] * alpha;
+        let mut vy = b.vel[iy] * p.velocity_retain + b.force[iy] * alpha;
+        let mut speed = (vx * vx + vy * vy).sqrt();
         if speed > max_step {
             let s = max_step / speed;
             vx *= s;
             vy *= s;
+            speed = max_step;
         }
-        vel[ix] = vx;
-        vel[iy] = vy;
-        pos[ix] += vx;
-        pos[iy] += vy;
+        b.vel[ix] = vx;
+        b.vel[iy] = vy;
+        b.pos[ix] += vx;
+        b.pos[iy] += vy;
+        max_disp = max_disp.max(speed);
     }
-    resolve_collisions(pos, p.collide_radius);
+    resolve_collisions(b.pos, p.collide_radius * scale, pinned);
+    max_disp
 }
 
 /// 碰撞解算(d3 forceCollide 的位置修正式):均匀网格哈希(格宽 = 直径)找近邻,
-/// 圆心距 < 2r 的对各推开一半重叠量。每步一遍,随迭代收敛到最小间距。O(N)。
-fn resolve_collisions(pos: &mut [f32], r: f32) {
+/// 圆心距 < 2r 的对推开重叠量。每步一遍,随迭代收敛到最小间距。O(N)。
+/// 前 `pinned` 个节点不动:一对里只有一个被钉时重叠量全给未钉的那个,两个都钉则跳过。
+fn resolve_collisions(pos: &mut [f32], r: f32, pinned: usize) {
     let n = pos.len() / 2;
     if r <= 0.0 || n < 2 {
         return;
@@ -279,6 +422,12 @@ fn resolve_collisions(pos: &mut [f32], r: f32) {
                     if j <= i {
                         continue;
                     }
+                    let (wi, wj) = match (i < pinned, j < pinned) {
+                        (true, true) => continue,
+                        (true, false) => (0.0, 1.0),
+                        (false, true) => (1.0, 0.0),
+                        (false, false) => (0.5, 0.5),
+                    };
                     let dx = pos[j * 2] - pos[i * 2];
                     let dy = pos[j * 2 + 1] - pos[i * 2 + 1];
                     let dist_sq = dx * dx + dy * dy;
@@ -289,20 +438,18 @@ fn resolve_collisions(pos: &mut [f32], r: f32) {
                         // 完全重合:按下标黄金角确定性推开(无 RNG)。
                         let a = (i as f32) * 2.399_963_2;
                         let (s, c) = a.sin_cos();
-                        pos[i * 2] -= c * r * 0.5;
-                        pos[i * 2 + 1] -= s * r * 0.5;
-                        pos[j * 2] += c * r * 0.5;
-                        pos[j * 2 + 1] += s * r * 0.5;
+                        pos[i * 2] -= c * r * wi;
+                        pos[i * 2 + 1] -= s * r * wi;
+                        pos[j * 2] += c * r * wj;
+                        pos[j * 2 + 1] += s * r * wj;
                         continue;
                     }
                     let dist = dist_sq.sqrt();
-                    let push = (d - dist) * 0.5 / dist;
-                    let px = dx * push;
-                    let py = dy * push;
-                    pos[i * 2] -= px;
-                    pos[i * 2 + 1] -= py;
-                    pos[j * 2] += px;
-                    pos[j * 2 + 1] += py;
+                    let over = (d - dist) / dist;
+                    pos[i * 2] -= dx * over * wi;
+                    pos[i * 2 + 1] -= dy * over * wi;
+                    pos[j * 2] += dx * over * wj;
+                    pos[j * 2 + 1] += dy * over * wj;
                 }
             }
         }
@@ -327,25 +474,43 @@ struct Cell {
     internal: bool,
 }
 
+impl Cell {
+    fn empty(cx: f32, cy: f32, half: f32) -> Self {
+        Cell {
+            cx,
+            cy,
+            half,
+            mass: 0.0,
+            com_x: 0.0,
+            com_y: 0.0,
+            body: -1,
+            children: [-1; 4],
+            internal: false,
+        }
+    }
+}
+
+/// 跨迭代复用的临时缓冲:四叉树 arena 与遍历栈。避免每节点每步一次堆分配。
+struct Scratch {
+    tree: QuadTree,
+    stack: Vec<u32>,
+}
+
+impl Scratch {
+    fn new() -> Self {
+        Scratch { tree: QuadTree { cells: Vec::new() }, stack: Vec::new() }
+    }
+}
+
 struct QuadTree {
     cells: Vec<Cell>,
 }
 
 impl QuadTree {
-    fn new(cx: f32, cy: f32, half: f32) -> Self {
-        QuadTree {
-            cells: vec![Cell {
-                cx,
-                cy,
-                half,
-                mass: 0.0,
-                com_x: 0.0,
-                com_y: 0.0,
-                body: -1,
-                children: [-1; 4],
-                internal: false,
-            }],
-        }
+    /// 清空 arena 并重建根,容量留给下一轮复用。
+    fn reset(&mut self, cx: f32, cy: f32, half: f32) {
+        self.cells.clear();
+        self.cells.push(Cell::empty(cx, cy, half));
     }
 
     fn quadrant(&self, cell: usize, x: f32, y: f32) -> usize {
@@ -369,23 +534,20 @@ impl QuadTree {
             (nx, ny, h)
         };
         let idx = self.cells.len();
-        self.cells.push(Cell {
-            cx,
-            cy,
-            half,
-            mass: 0.0,
-            com_x: 0.0,
-            com_y: 0.0,
-            body: -1,
-            children: [-1; 4],
-            internal: false,
-        });
+        self.cells.push(Cell::empty(cx, cy, half));
         self.cells[cell].children[q] = idx as i32;
         idx
     }
 }
 
-fn accumulate_repulsion(pos: &[f32], masses: &[f32], n: usize, p: &Params, force: &mut [f32]) {
+fn accumulate_repulsion(
+    pos: &[f32],
+    masses: &[f32],
+    n: usize,
+    p: &Params,
+    force: &mut [f32],
+    scratch: &mut Scratch,
+) {
     // 计算包围盒。
     let mut min_x = f32::MAX;
     let mut min_y = f32::MAX;
@@ -401,21 +563,24 @@ fn accumulate_repulsion(pos: &[f32], masses: &[f32], n: usize, p: &Params, force
     let cy = (min_y + max_y) * 0.5;
     let half = ((max_x - min_x).max(max_y - min_y) * 0.5).max(1.0) + 1.0;
 
-    let tree = build_tree(pos, masses, n, cx, cy, half);
+    scratch.tree.reset(cx, cy, half);
+    for i in 0..n {
+        scratch
+            .tree
+            .insert_body(i, pos[i * 2], pos[i * 2 + 1], masses[i], pos, masses);
+    }
 
     for i in 0..n {
-        let (fx, fy) = tree.repulsion_on(pos[i * 2], pos[i * 2 + 1], masses[i], p);
+        let (fx, fy) = scratch.tree.repulsion_on(
+            pos[i * 2],
+            pos[i * 2 + 1],
+            masses[i],
+            p,
+            &mut scratch.stack,
+        );
         force[i * 2] += fx;
         force[i * 2 + 1] += fy;
     }
-}
-
-fn build_tree(pos: &[f32], masses: &[f32], n: usize, cx: f32, cy: f32, half: f32) -> QuadTree {
-    let mut tree = QuadTree::new(cx, cy, half);
-    for i in 0..n {
-        tree.insert_body(i, pos[i * 2], pos[i * 2 + 1], masses[i], pos, masses);
-    }
-    tree
 }
 
 impl QuadTree {
@@ -475,13 +640,20 @@ impl QuadTree {
     }
 
     /// 对质量 own_mass、位于 (x,y) 的体,遍历树累加 FA2 度数加权斥力。显式栈避免递归。
-    fn repulsion_on(&self, x: f32, y: f32, own_mass: f32, p: &Params) -> (f32, f32) {
+    fn repulsion_on(
+        &self,
+        x: f32,
+        y: f32,
+        own_mass: f32,
+        p: &Params,
+        stack: &mut Vec<u32>,
+    ) -> (f32, f32) {
         let mut fx = 0.0f32;
         let mut fy = 0.0f32;
-        let mut stack: Vec<usize> = Vec::with_capacity(64);
+        stack.clear();
         stack.push(0);
         while let Some(idx) = stack.pop() {
-            let c = &self.cells[idx];
+            let c = &self.cells[idx as usize];
             if c.mass == 0.0 {
                 continue;
             }
@@ -502,7 +674,7 @@ impl QuadTree {
             for q in 0..4 {
                 let ch = c.children[q];
                 if ch >= 0 {
-                    stack.push(ch as usize);
+                    stack.push(ch as u32);
                 }
             }
         }
@@ -530,10 +702,15 @@ mod tests {
         out
     }
 
-    fn run(n: u32, edges: Vec<i32>, iters: u32) -> Vec<f32> {
-        // 镜像 layout_graph_stream 的内核(不经 StreamSink):直接跑迭代拿末态。
-        // FA2:kr = ka·(SL/2)²,叶对(度数 1)平衡距即 SL。
-        let params = GraphLayoutParams {
+    fn median(v: &[f32]) -> f32 {
+        let mut s = v.to_vec();
+        s.sort_by(f32::total_cmp);
+        s[s.len() / 2]
+    }
+
+    /// FA2:kr = ka·(SL/2)²,叶对(度数 1)平衡距即 SL。
+    fn base_params(iters: u32) -> GraphLayoutParams {
+        GraphLayoutParams {
             iterations: iters,
             theta: 0.9,
             repulsion: 0.08 * (SL / 2.0) * (SL / 2.0),
@@ -544,20 +721,37 @@ mod tests {
             velocity_decay: 0.4,
             emit_every: 1,
             frame_delay_ms: 0,
-        };
-        let p = params.normalized();
-        let mut pos = seed_positions(n as usize, &[]).unwrap();
-        let nn = n as usize;
-        let masses = node_masses(nn, &edges);
-        let mut vel = vec![0.0f32; nn * 2];
-        let mut force = vec![0.0f32; nn * 2];
-        let alpha_decay = 1.0 - ALPHA_MIN.powf(1.0 / p.iterations as f32);
-        let mut alpha = 1.0_f32;
-        for _ in 0..p.iterations {
-            integrate_step(&mut pos, &mut vel, &mut force, &edges, &masses, &p, alpha);
-            alpha *= 1.0 - alpha_decay;
+            initial_alpha: 1.0,
+            min_step: 0.0,
+            pinned_count: 0,
+            normalize_scale: false,
         }
-        pos
+    }
+
+    /// 直接驱动内核(不经 StreamSink),返回(最后一帧发出的坐标, 实际迭代数)。
+    fn drive(params: GraphLayoutParams, n: u32, edges: &[i32], initial: &[f32]) -> (Vec<f32>, u32) {
+        let p = params.normalized();
+        let mut pos = seed_positions(n as usize, initial).unwrap();
+        let mut last = Vec::new();
+        let iters = run_layout(n as usize, edges, &mut pos, &p, |f| {
+            last = f;
+            true
+        });
+        (last, iters)
+    }
+
+    fn run(n: u32, edges: Vec<i32>, iters: u32) -> Vec<f32> {
+        drive(base_params(iters), n, &edges, &[]).0
+    }
+
+    /// 60 节点的链 + 星混合图(单连通分量)。
+    fn mixed_graph() -> Vec<i32> {
+        let mut edges: Vec<i32> = (0..29).flat_map(|i| [i, i + 1]).collect();
+        edges.extend([29, 30]);
+        for i in 31..60 {
+            edges.extend([30, i]);
+        }
+        edges
     }
 
     #[test]
@@ -608,5 +802,52 @@ mod tests {
             }
         }
         assert!(min_d >= 2.0 * r * 0.8, "min pairwise dist {min_d} < {}", 2.0 * r * 0.8);
+    }
+
+    #[test]
+    fn normalization_pins_median_edge_length() {
+        let edges = mixed_graph();
+
+        // 不归一化:仿真空间的中位边长远大于 spring_length,正是大图「缩到看不见」的根因。
+        let plain = drive(base_params(600), 60, &edges, &[]).0;
+        let raw = median(&linked_dists(&plain, &edges)) / SL;
+        assert!(raw > 2.0, "raw median ratio {raw} should be far above 1");
+
+        let mut params = base_params(600);
+        params.normalize_scale = true;
+        let normed = drive(params, 60, &edges, &[]).0;
+        let ratio = median(&linked_dists(&normed, &edges)) / SL;
+        assert!(
+            (0.6..=1.6).contains(&ratio),
+            "normalized median ratio {ratio} outside [0.6, 1.6]"
+        );
+    }
+
+    #[test]
+    fn pinned_nodes_do_not_move() {
+        let n = 40usize;
+        let edges: Vec<i32> = (1..n as i32).flat_map(|i| [0, i]).collect();
+        // 中心给一个偏离原点的种子:不钉的话会被向心力/斥力推走。
+        let mut initial = seed_positions(n, &[]).unwrap();
+        initial[0] = 17.5;
+        initial[1] = -3.25;
+
+        let mut params = base_params(200);
+        params.pinned_count = 1;
+        let p = params.normalized();
+        let mut pos = initial.clone();
+        run_layout(n, &edges, &mut pos, &p, |_| true);
+
+        assert_eq!(pos[0], initial[0]);
+        assert_eq!(pos[1], initial[1]);
+    }
+
+    #[test]
+    fn early_exit_stops_before_max_iterations() {
+        let edges: Vec<i32> = (0..7).flat_map(|i| [i, i + 1]).collect();
+        let mut params = base_params(1000);
+        params.min_step = 1e-3;
+        let (_, iters) = drive(params, 8, &edges, &[]);
+        assert!(iters < 1000, "expected early exit, ran {iters} iterations");
     }
 }
