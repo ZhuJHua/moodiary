@@ -1,14 +1,14 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="res/banner/dark_zh.svg">
-  <source media="(prefers-color-scheme: light)" srcset="res/banner/light_zh.svg">
-  <img alt="The preview for moodiary." src="res/banner/light_zh.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="mobile/res/banner/dark_zh.svg">
+  <source media="(prefers-color-scheme: light)" srcset="mobile/res/banner/light_zh.svg">
+  <img alt="The preview for moodiary." src="mobile/res/banner/light_zh.svg">
 </picture>
 <p align="center">简体中文 | <a href="README.md">English</a></p>
 
 <p align="center"><a href="https://answer.moodiary.net" target="_blank">官方论坛</a>丨QQ群: <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=xGr0TNp_X1z3XEn09_iE_iGSLolQwl6Y&jump_from=webapi&authKey=ZmSb2oEd94FSXxBXRBq53hgTjjvcfmgkQrduB3uL12XtRylPmRlO2OdFz6R25tIo">760014526</a>丨Telegram: <a target="_blank" href="https://t.me/openmoodiary">openmoodiary</a></p>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.29.2-blue?style=for-the-badge">
+  <img src="https://img.shields.io/badge/Flutter-3.44.6-blue?style=for-the-badge">
   <img src="https://img.shields.io/github/repo-size/ZhuJHua/moodiary?style=for-the-badge&color=ff7070">
   <img src="https://img.shields.io/github/stars/ZhuJHua/moodiary?style=for-the-badge&color=965f8a">
   <img src="https://img.shields.io/github/v/release/ZhuJHua/moodiary?style=for-the-badge&color=4f5e7f">
@@ -19,53 +19,43 @@
 
 ## ✨ 功能特性
 
-- **跨平台支持**：🌍 兼容 Android、iOS、Windows 和 macOS。
+- **移动端优先**：📱 目前支持 Android 与 iOS。
 - **Material Design**：🎨 界面直观且用户友好，遵循 Material Design 设计规范。
-- **多种编辑器**：📝 支持 Markdown 、纯文本、富文本等多种形式的文本编辑。
+- **富文本编辑**：📝 基于 TipTap 的编辑器，旧版 Markdown / 富文本日记可一键迁移。
 - **多媒体附件**：📷 可以为你的日记添加图片、音频、视频甚至画一张画。
 - **搜索和分类**：🔍 轻松通过全文搜索及分类管理你的日记。
 - **自定义主题**：🌈 支持浅色和深色模式，以及多种配色的主题。
 - **自定义字体**：✍️ 支持导入不同的字体，并支持可变字体。
 - **数据安全**：🔒 通过密码来保障你的日记安全，支持通过生物识别解锁。
 - **导出和分享**：🧾 支持所有数据的导入/导出，以及单篇日记的分享。
-- **备份与同步**：☁ 支持局域网同步，快速在设备间同步数据，以及 WebDav 备份。
+- **备份与同步**：☁ 支持 WebDAV、S3 / MinIO 与局域网同步，同步数据可端到端加密。
 - **足迹地图**：🗺️ 在地图上查看你足迹，生活中的每一步都值得被记录。
-- **智能助手**：💬 支持接入第三方大模型，提供问答、情绪分析等功能。
-- **本地自然语言处理（NLP）**：🤖 更安全的智能助手，让你的日记更懂你。
+- **智能助手**：💬 支持接入第三方大模型，提供问答、日记工具调用、情绪分析等功能。
 
-（注：跨平台能力由 Flutter 提供，带 * 号的平台可能需要更多测试）
+（注：桌面端正在基于新架构重写，`desktop/` 目前只是骨架，暂不提供构建产物）
 
 ## 🔧 主要技术栈
 
 - [Flutter](https://github.com/flutter/flutter)（跨平台 UI 框架）
-- [Isar](https://github.com/isar/isar)（高性能本地数据库）
+- [Rust](https://github.com/rust-lang/rust) + [flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge)（图片、音频、加密、网络等原生能力）
+- [Isar Plus](https://pub.dev/packages/isar_plus)（高性能本地数据库）
 - [Riverpod](https://github.com/rrousselGit/riverpod)（状态管理框架）
 
 ## 📸 应用截图
 
 > 应用持续更新中，新版本界面可能稍有变化
 
-### 移动端
-
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/mobile_dark_zh.webp">
-  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/mobile_light_zh.webp">
-  <img alt="The mobile screenshot for moodiary." src="res/screenshot/mobile_light_zh.webp">
-</picture>
-
-### 桌面端
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="res/screenshot/desktop_dark_zh.webp">
-  <source media="(prefers-color-scheme: light)" srcset="res/screenshot/desktop_light_zh.webp">
-  <img alt="The desktop screenshot for moodiary." src="res/screenshot/desktop_light_zh.webp">
+  <source media="(prefers-color-scheme: dark)" srcset="mobile/res/screenshot/mobile_dark_zh.webp">
+  <source media="(prefers-color-scheme: light)" srcset="mobile/res/screenshot/mobile_light_zh.webp">
+  <img alt="The mobile screenshot for moodiary." src="mobile/res/screenshot/mobile_light_zh.webp">
 </picture>
 
 ## 🚀 安装指南
 
 ### 第三方 SDK
 
-某些能力需要自行申请第三方 SDK，下列服务商均提供免费的版本，获取到的 Key 在实验室中配置。
+某些能力需要自行申请第三方 SDK，下列服务商均提供免费的版本，获取到的 Key 在「设置 → 第三方服务」中配置。
 
 #### 天气服务
 
@@ -77,7 +67,7 @@
 
 #### 智能助手
 
-- [腾讯混元大模型](https://cloud.tencent.com/document/product/1729/97731)
+助手基于 [rig](https://github.com/0xPlaygrounds/rig) 构建，在「助手设置 → 模型供应商」中填入任意 OpenAI / Anthropic 兼容服务商的 API Key 即可使用，Key 仅保存在本机安全存储。
 
 ### 直接安装
 
@@ -89,10 +79,11 @@
 
 > 我总是会使用最新的 Flutter 版本（如果可能的话），使用新版本可以带来更多的功能和更好的性能提升，永远不要使用老版本除非你希望代码变成一坨 💩
 
-- Flutter SDK (>= 3.29.0 Stable)（建议使用 fvm 来管理 flutter 版本）
-- Dart (>= 3.7.0)
-- Rust 工具链（Stable）
+- Flutter SDK (>= 3.44.0 Stable)（建议使用 fvm 来管理 flutter 版本）
+- Dart (>= 3.12.0)
+- Rust 工具链（rustup，原生库由构建钩子编译）
 - Clang/LLVM
+- Node + Corepack（编译编辑器 Web 产物）
 - 兼容的 IDE（如 Android Studio、Visual Studio Code）
 
 #### 安装步骤
@@ -109,41 +100,33 @@ cd moodiary
 2. **安装依赖**：
 
 ```bash
-flutter pub get
+fvm use
+dart tool/task.dart setup
 ```
 
 3. **运行应用**：
 
 ```bash
-flutter run
+dart tool/task.dart run
 ```
 
 4. **打包发布**：
 
-- Android: `flutter build apk`
-- iOS: `flutter build ipa`
-- Windows: `flutter build windows`
-- MacOS: `flutter build macos`
+- Android: `dart tool/task.dart build-apk`
+- iOS: `dart tool/task.dart build-ios`
 
-## 📝 更多说明
+> 更多命令用 `dart tool/task.dart` 查看；额外的 flutter 参数写在 `--` 之后，如 `dart tool/task.dart run -- --release`。
 
-### 自然语言处理（NLP）
+## 📦 项目结构
 
-> 处于实验阶段
+仓库是一个 pub workspace 单体仓库，共享能力按 `foundation → core → ui → feature` 分层，上层依赖下层。
 
-如今，越来越多的行业产品开始融入 AI 技术，这无疑极大地提升了我们的使用体验。然而，对于日记应用来说，将数据交给大型模型处理并不可接受，因为无法确定这些数据是否会被用于训练。因此，更好的方法是采用本地模型。虽然由于体积限制，本地模型的能力可能不如大型模型强大，但在一定程度上仍能为我们提供必要的帮助。
-
-目前，我在源码中集成了以下任务：
-
-#### 基于 Bert 预训练模型的 SQuAD 任务
-
-我采用了 MobileBert 来处理 SQuAD 任务，这是一个简单的机器阅读理解任务。你可以向它提出问题，它会返回你需要的答案。模型文件采用 TensorFlow Lite 所需的 `.tflite` 格式，所以你可以添加自己的模型文件到 `assets/tflite` 目录下。
-
-感谢以下开源项目：
-
-- [Chinese MobileBERT](https://github.com/ymcui/Chinese-MobileBERT)
-- [Mobilebert](https://github.com/google-research/google-research/tree/master/mobilebert)
-- [ChineseSquad](https://github.com/junzeng-pluto/ChineseSquad)
+```
+mobile/      移动端应用（Android / iOS）
+desktop/     桌面端骨架（开发中）
+packages/    分层共享包
+tool/        跨平台任务入口（task.dart）
+```
 
 ## 🤝 贡献指南
 
@@ -170,7 +153,7 @@ flutter run
 
 可以给我买一个三明治，让我更有动力继续开发。
 
-<img src="res/sponsor/wechat.jpg" style="width:300px" alt="Sponsor"/>
+<img src="mobile/res/sponsor/wechat.jpg" style="width:300px" alt="Sponsor"/>
 
 ### 捐助者名单
 
