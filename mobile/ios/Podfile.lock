@@ -1,22 +1,16 @@
 PODS:
-  - chat_bottom_container (0.0.1):
-    - Flutter
   - Flutter (1.0.0)
 
 DEPENDENCIES:
-  - chat_bottom_container (from `.symlinks/plugins/chat_bottom_container/ios`)
   - Flutter (from `Flutter`)
 
 EXTERNAL SOURCES:
-  chat_bottom_container:
-    :path: ".symlinks/plugins/chat_bottom_container/ios"
   Flutter:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  chat_bottom_container: d8b077152c91b0ab90001e900748ea50353a5520
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
 
 PODFILE CHECKSUM: ed22e19af5eb4a72710862041c4be54584bcf797
 
-COCOAPODS: 1.15.2
+COCOAPODS: 1.17.0
