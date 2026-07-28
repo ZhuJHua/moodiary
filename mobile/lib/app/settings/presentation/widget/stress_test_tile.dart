@@ -56,6 +56,14 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
 
   Future<void> _openMenu() async {
     final controller = TextEditingController(text: '$_defaultTotal');
+    // 关闭前先收焦点：autofocus 输入框带着活跃的输入法/选区会话被 pop，会在 debug
+    // 构建触发 InheritedElement 拆除顺序断言（_dependents.isEmpty），紧随的批量事件
+    // 会把它放大成红屏。
+    void close(BuildContext ctx, [String? action]) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      Navigator.pop(ctx, action);
+    }
+
     final action = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -79,21 +87,21 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
                 hintText: '$_minTotal–$_maxTotal',
                 border: OutlineInputBorder(),
               ),
-              onSubmitted: (_) => Navigator.pop(ctx, 'gen'),
+              onSubmitted: (_) => close(ctx, 'gen'),
             ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => close(ctx),
             child: const Text('取消'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(ctx, 'clear'),
+            onPressed: () => close(ctx, 'clear'),
             child: const Text('清除压测'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, 'gen'),
+            onPressed: () => close(ctx, 'gen'),
             child: const Text('生成'),
           ),
         ],
