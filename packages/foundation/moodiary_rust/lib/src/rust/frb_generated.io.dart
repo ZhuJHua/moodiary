@@ -56,10 +56,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   get rust_arc_decrement_strong_count_ImageCompressorPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressorPtr;
 
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_JiebaKeywordPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeywordPtr;
-
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_KmpPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmpPtr;
 
@@ -120,12 +116,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  JiebaKeyword
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    dynamic raw,
-  );
-
-  @protected
   Kmp
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
     dynamic raw,
@@ -156,12 +146,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  JiebaKeyword
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    dynamic raw,
-  );
-
-  @protected
   Zip
   dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     dynamic raw,
@@ -182,12 +166,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   HttpServer
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    dynamic raw,
-  );
-
-  @protected
-  JiebaKeyword
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
     dynamic raw,
   );
 
@@ -261,12 +239,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ImageCompressor
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    dynamic raw,
-  );
-
-  @protected
-  JiebaKeyword
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
     dynamic raw,
   );
 
@@ -364,9 +336,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double dco_decode_f_32(dynamic raw);
 
   @protected
-  double dco_decode_f_64(dynamic raw);
-
-  @protected
   GraphLayoutParams dco_decode_graph_layout_params(dynamic raw);
 
   @protected
@@ -398,12 +367,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KeyValue dco_decode_key_value(dynamic raw);
-
-  @protected
-  List<JiebaKeyword>
-  dco_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    dynamic raw,
-  );
 
   @protected
   List<String> dco_decode_list_String(dynamic raw);
@@ -440,6 +403,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<RigToolDef> dco_decode_list_rig_tool_def(dynamic raw);
+
+  @protected
+  List<TokenizeResult> dco_decode_list_tokenize_result(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -559,12 +525,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  JiebaKeyword
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   Kmp
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
     SseDeserializer deserializer,
@@ -595,12 +555,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  JiebaKeyword
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   Zip
   sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     SseDeserializer deserializer,
@@ -621,12 +575,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   HttpServer
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  JiebaKeyword
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
     SseDeserializer deserializer,
   );
 
@@ -688,12 +636,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ImageCompressor
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  JiebaKeyword
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
     SseDeserializer deserializer,
   );
 
@@ -805,9 +747,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double sse_decode_f_32(SseDeserializer deserializer);
 
   @protected
-  double sse_decode_f_64(SseDeserializer deserializer);
-
-  @protected
   GraphLayoutParams sse_decode_graph_layout_params(
     SseDeserializer deserializer,
   );
@@ -845,12 +784,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   KeyValue sse_decode_key_value(SseDeserializer deserializer);
-
-  @protected
-  List<JiebaKeyword>
-  sse_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    SseDeserializer deserializer,
-  );
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
@@ -893,6 +826,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<RigToolDef> sse_decode_list_rig_tool_def(SseDeserializer deserializer);
+
+  @protected
+  List<TokenizeResult> sse_decode_list_tokenize_result(
+    SseDeserializer deserializer,
+  );
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -1031,13 +969,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    JiebaKeyword self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
     Kmp self,
     SseSerializer serializer,
@@ -1073,13 +1004,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    JiebaKeyword self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     Zip self,
     SseSerializer serializer,
@@ -1103,13 +1027,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
     HttpServer self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    JiebaKeyword self,
     SseSerializer serializer,
   );
 
@@ -1200,13 +1117,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
     ImageCompressor self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    JiebaKeyword self,
     SseSerializer serializer,
   );
 
@@ -1341,9 +1251,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_f_32(double self, SseSerializer serializer);
 
   @protected
-  void sse_encode_f_64(double self, SseSerializer serializer);
-
-  @protected
   void sse_encode_graph_layout_params(
     GraphLayoutParams self,
     SseSerializer serializer,
@@ -1384,13 +1291,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_key_value(KeyValue self, SseSerializer serializer);
-
-  @protected
-  void
-  sse_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    List<JiebaKeyword> self,
-    SseSerializer serializer,
-  );
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
@@ -1452,6 +1352,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_rig_tool_def(
     List<RigToolDef> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_tokenize_result(
+    List<TokenizeResult> self,
     SseSerializer serializer,
   );
 
@@ -1811,40 +1717,6 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressorPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeywordPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeywordPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeywordPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeywordPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void

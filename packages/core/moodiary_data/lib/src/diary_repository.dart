@@ -36,16 +36,26 @@ Map<String, int> _countTokens(List<String> raw) {
 int _freqAt(List<int> freqs, int i) => i < freqs.length ? freqs[i] : 1;
 
 class DiaryRepository {
-  DiaryRepository._(this._isar) : _rawTokenize = _defaultTokenize;
+  DiaryRepository._(this._isar)
+    : _rawTokenize = _defaultTokenize,
+      _rawTokenizeBatch = _defaultTokenizeBatch;
 
   factory DiaryRepository.get() => _instance;
 
   /// 测试用：注入独立 Isar 与替身分词器（宿主测试环境无 Rust FFI）。
+  /// 注入替身时批量分词退化为逐篇调用替身，保持与线上路径同构。
   @visibleForTesting
   DiaryRepository.forTesting(
     this._isar, {
     Future<TokenizeResult> Function(String text)? tokenizer,
-  }) : _rawTokenize = tokenizer ?? _defaultTokenize;
+  }) : _rawTokenize = tokenizer ?? _defaultTokenize,
+       _rawTokenizeBatch = tokenizer != null
+           ? _fakeBatch(tokenizer)
+           : _defaultTokenizeBatch;
+
+  static Future<List<TokenizeResult>> Function(List<String>) _fakeBatch(
+    Future<TokenizeResult> Function(String) tokenizer,
+  ) => (texts) async => [for (final t in texts) await tokenizer(t)];
 
   static final DiaryRepository _instance = DiaryRepository._(
     IsarDatabase.get().isar,
@@ -55,8 +65,19 @@ class DiaryRepository {
 
   final Future<TokenizeResult> Function(String text) _rawTokenize;
 
+  final Future<List<TokenizeResult>> Function(List<String> texts)
+  _rawTokenizeBatch;
+
   static Future<TokenizeResult> _defaultTokenize(String text) =>
       Tokenizer.tokenize(text: text);
+
+  static Future<List<TokenizeResult>> _defaultTokenizeBatch(
+    List<String> texts,
+  ) => Tokenizer.tokenizeBatch(texts: texts);
+
+  /// 批量分词每次过桥的条目数上限。分块的目的是限制单次桥载荷与内存峰值——
+  /// 一批 128 篇（正文 + 标题至多 256 条文本）已足够铺满多核，再大只增内存。
+  static const int _tokenizeChunk = 128;
 
   final StreamController<DiaryEvent> _events =
       StreamController<DiaryEvent>.broadcast();
@@ -353,9 +374,74 @@ class DiaryRepository {
       diaryIsarId: diary.isarId,
       tokens: tokens,
       titleTokens: title?.cutForSearch ?? const [],
-      links: DiaryContent.extractLinks(diary),
+      links: DiaryContent.of(diary).links,
       contentChars: diary.contentText.length,
     );
+  }
+
+  /// 批量构建索引条目（[diaries] 应已按 [_tokenizeChunk] 分块）。整批的正文与标题
+  /// 拼成**一次**分词调用，Rust 侧跨篇并行；逐篇调用则是每篇两次 FFI 往返，
+  /// 全量重建 2 万篇即 4 万次过桥且始终单核。
+  ///
+  /// 整批分词失败时退回逐篇（[_buildEntry] 内部 catch 后按 null 容错），保持旧语义：
+  /// 单篇正文异常不应让整批索引落空。
+  Future<List<_IndexEntry>> _buildEntries(List<Diary> diaries) async {
+    if (diaries.length <= 1) {
+      return [for (final diary in diaries) await _buildEntry(diary)];
+    }
+
+    // 只把非空文本送进批次；空串在旧路径上等价于「分词结果为 null」。
+    // slot 编码：偶数 = 该篇正文，奇数 = 该篇标题。
+    final texts = <String>[];
+    final slots = <int>[];
+    for (var i = 0; i < diaries.length; i++) {
+      final content = diaries[i].contentText.trim();
+      if (content.isNotEmpty) {
+        texts.add(content);
+        slots.add(i * 2);
+      }
+      final title = diaries[i].title.trim();
+      if (title.isNotEmpty) {
+        texts.add(title);
+        slots.add(i * 2 + 1);
+      }
+    }
+
+    List<TokenizeResult>? results;
+    if (texts.isNotEmpty) {
+      try {
+        final out = await _rawTokenizeBatch(texts);
+        // 长度不符说明批量实现有问题，宁可退回逐篇也不能错位落库。
+        results = out.length == texts.length ? out : null;
+      } catch (_) {
+        results = null;
+      }
+      if (results == null) {
+        return [for (final diary in diaries) await _buildEntry(diary)];
+      }
+    }
+
+    final contentTokens = List<TokenizeResult?>.filled(diaries.length, null);
+    final titleTokens = List<TokenizeResult?>.filled(diaries.length, null);
+    for (var k = 0; k < slots.length; k++) {
+      final slot = slots[k];
+      if (slot.isEven) {
+        contentTokens[slot ~/ 2] = results![k];
+      } else {
+        titleTokens[slot ~/ 2] = results![k];
+      }
+    }
+
+    return [
+      for (var i = 0; i < diaries.length; i++)
+        (
+          diaryIsarId: diaries[i].isarId,
+          tokens: contentTokens[i],
+          titleTokens: titleTokens[i]?.cutForSearch ?? const <String>[],
+          links: DiaryContent.of(diaries[i]).links,
+          contentChars: diaries[i].contentText.length,
+        ),
+    ];
   }
 
   /// [fromSync] = 该写入由活跃云后端的 pull 落库（远端已持有），事件携带此标记
@@ -371,9 +457,11 @@ class DiaryRepository {
     bool fromSync = false,
   }) async {
     if (diaries.isEmpty) return;
-    final entries = <_IndexEntry>[
-      for (final diary in diaries) await _buildEntry(diary),
-    ];
+    final entries = <_IndexEntry>[];
+    for (var start = 0; start < diaries.length; start += _tokenizeChunk) {
+      final end = min(start + _tokenizeChunk, diaries.length);
+      entries.addAll(await _buildEntries(diaries.sublist(start, end)));
+    }
     // 复活闸门：同 id 的同步墓碑连带清除，历史推送记录不会误判下一次删除。
     final tombstoneIds = [
       for (final diary in diaries) fastHash(SyncTombstone.diaryKey(diary.id)),
@@ -1055,41 +1143,50 @@ class DiaryRepository {
     var totalChars = 0;
     var contentDocCount = 0;
 
-    for (final diary in diaries) {
-      final entry = await _buildEntry(diary);
-      final cutCounts = _countTokens(entry.tokens?.cut ?? const []);
-      final cfsCounts = _countTokens(entry.tokens?.cutForSearch ?? const []);
-      final titleCounts = _countTokens(entry.titleTokens);
+    // 分块批量分词：块内跨篇并行，块外顺序聚合——峰值内存只压一块的分词结果，
+    // 而不是全库的（2 万篇的 token 一次性驻留会是几百 MB）。
+    for (var start = 0; start < diaries.length; start += _tokenizeChunk) {
+      final end = min(start + _tokenizeChunk, diaries.length);
+      final chunk = diaries.sublist(start, end);
+      final chunkEntries = await _buildEntries(chunk);
 
-      void addSource(TokenSource source, Map<String, int> counts) {
-        counts.forEach((t, tf) {
-          final key = _searchKey(source, t);
-          postingIds.putIfAbsent(key, () => []).add(diary.isarId);
-          postingTfs.putIfAbsent(key, () => []).add(tf);
-        });
-      }
+      for (var c = 0; c < chunk.length; c++) {
+        final diary = chunk[c];
+        final entry = chunkEntries[c];
+        final cutCounts = _countTokens(entry.tokens?.cut ?? const []);
+        final cfsCounts = _countTokens(entry.tokens?.cutForSearch ?? const []);
+        final titleCounts = _countTokens(entry.titleTokens);
 
-      addSource(TokenSource.cut, cutCounts);
-      addSource(TokenSource.cutForSearch, cfsCounts);
-      addSource(TokenSource.title, titleCounts);
-      for (final toId in entry.links) {
-        linkPostings.putIfAbsent(_linkKey(toId), () => []).add(diary.isarId);
+        void addSource(TokenSource source, Map<String, int> counts) {
+          counts.forEach((t, tf) {
+            final key = _searchKey(source, t);
+            postingIds.putIfAbsent(key, () => []).add(diary.isarId);
+            postingTfs.putIfAbsent(key, () => []).add(tf);
+          });
+        }
+
+        addSource(TokenSource.cut, cutCounts);
+        addSource(TokenSource.cutForSearch, cfsCounts);
+        addSource(TokenSource.title, titleCounts);
+        for (final toId in entry.links) {
+          linkPostings.putIfAbsent(_linkKey(toId), () => []).add(diary.isarId);
+        }
+        totalChars += entry.contentChars;
+        if (entry.contentChars > 0) contentDocCount += 1;
+        snapshots.add(
+          DiaryIndexSnapshot(
+            diaryIsarId: diary.isarId,
+            cutTokens: cutCounts.keys.toList(),
+            cutFreqs: cutCounts.values.toList(),
+            cutForSearchTokens: cfsCounts.keys.toList(),
+            cutForSearchFreqs: cfsCounts.values.toList(),
+            titleTokens: titleCounts.keys.toList(),
+            titleFreqs: titleCounts.values.toList(),
+            linkToIds: entry.links,
+            contentChars: entry.contentChars,
+          ),
+        );
       }
-      totalChars += entry.contentChars;
-      if (entry.contentChars > 0) contentDocCount += 1;
-      snapshots.add(
-        DiaryIndexSnapshot(
-          diaryIsarId: diary.isarId,
-          cutTokens: cutCounts.keys.toList(),
-          cutFreqs: cutCounts.values.toList(),
-          cutForSearchTokens: cfsCounts.keys.toList(),
-          cutForSearchFreqs: cfsCounts.values.toList(),
-          titleTokens: titleCounts.keys.toList(),
-          titleFreqs: titleCounts.values.toList(),
-          linkToIds: entry.links,
-          contentChars: entry.contentChars,
-        ),
-      );
     }
 
     final searchRows = [
@@ -1144,14 +1241,17 @@ class DiaryRepository {
       var next = diary;
       var changed = false;
 
-      final plain = DiaryContent.derivePlainText(diary);
+      // 一次解析、两项派生：全库遍历，正文只 jsonDecode 一次。
+      final derived = DiaryContent.of(diary);
+
+      final plain = derived.plainText;
       if (plain != diary.contentText) {
         next = next.copyWith(contentText: plain);
         changed = true;
         contentTextFixed++;
       }
 
-      final media = DiaryContent.extractMedia(diary);
+      final media = derived.media;
       if (!_sameNameSet(media.images, diary.imageName) ||
           !_sameNameSet(media.videos, diary.videoName) ||
           !_sameNameSet(media.audios, diary.audioName)) {

@@ -1,7 +1,6 @@
 use anyhow::{Context, Result};
 use flutter_rust_bridge::frb;
-use jieba_rs::{Jieba as JiebaInner, KeywordExtract, TextRank, TfIdf};
-use once_cell::sync::OnceCell;
+use jieba_rs::Jieba as JiebaInner;
 use rust_stemmers::{Algorithm, Stemmer};
 use std::collections::{HashMap, HashSet};
 use tokio::sync::OnceCell as AsyncOnceCell;
@@ -108,13 +107,6 @@ impl Kmp {
     }
 }
 
-#[derive(Debug, Clone)]
-#[frb(opaque)]
-pub struct JiebaKeyword {
-    pub keyword: String,
-    pub weight: f64,
-}
-
 /// `cut`（高精度）和 `cut_for_search`（高召回）两组分词结果。
 pub struct TokenizeResult {
     pub cut: Vec<String>,
@@ -142,8 +134,52 @@ fn has_alphanumeric(s: &str) -> bool {
 pub struct Tokenizer {
     jieba: JiebaInner,
     stemmer: Stemmer,
-    tfidf: OnceCell<TfIdf>,
-    text_rank: OnceCell<TextRank>,
+}
+
+struct Segment {
+    text: String,
+    is_cjk: bool,
+}
+
+/// 按空白与 CJK/非 CJK 边界切段：CJK 段交给 jieba，其余走 unicode 词界 + 英文词干。
+fn segment_text(text: &str) -> Vec<Segment> {
+    let mut segments: Vec<Segment> = Vec::new();
+    let mut current = String::new();
+    let mut current_is_cjk: Option<bool> = None;
+
+    for ch in text.chars() {
+        if ch.is_whitespace() {
+            if !current.is_empty() {
+                segments.push(Segment {
+                    text: current.clone(),
+                    is_cjk: current_is_cjk.unwrap_or(false),
+                });
+                current.clear();
+                current_is_cjk = None;
+            }
+            continue;
+        }
+        let ch_is_cjk = is_cjk(ch);
+        if let Some(prev) = current_is_cjk
+            && ch_is_cjk != prev
+        {
+            segments.push(Segment {
+                text: current.clone(),
+                is_cjk: prev,
+            });
+            current.clear();
+        }
+        current_is_cjk = Some(ch_is_cjk);
+        current.push(ch);
+    }
+    if !current.is_empty() {
+        segments.push(Segment {
+            text: current,
+            is_cjk: current_is_cjk.unwrap_or(false),
+        });
+    }
+
+    segments
 }
 
 static GLOBAL_TOKENIZER: AsyncOnceCell<Tokenizer> = AsyncOnceCell::const_new();
@@ -155,8 +191,6 @@ pub async fn init_tokenizer() {
             tokio::task::spawn_blocking(|| Tokenizer {
                 jieba: JiebaInner::new(),
                 stemmer: Stemmer::create(Algorithm::English),
-                tfidf: OnceCell::new(),
-                text_rank: OnceCell::new(),
             })
             .await
             .expect("Tokenizer init panicked")
@@ -187,53 +221,73 @@ impl Tokenizer {
             .collect()
     }
 
-    /// 同时返回 `cut` 和 `cut_for_search` 两组分词结果。
-    /// CJK 段两种分词并发执行；非 CJK 段两组共享结果。
+    /// 单篇分词（交互路径：编辑保存、搜索框）。CJK 段的 cut 与 cut_for_search 拆两条
+    /// 线程并行，压低单次延迟；批量请走 [`Tokenizer::tokenize_batch`]，它跨篇并行、
+    /// 篇内串行，不会为每篇再起线程。
     pub fn tokenize(text: String) -> Result<TokenizeResult> {
         let tokenizer = Self::get()?;
+        Ok(tokenizer.tokenize_one(&text, true))
+    }
 
-        struct Segment {
-            text: String,
-            is_cjk: bool,
+    /// 批量分词：一次过桥处理整批，跨篇并行铺满多核。全量重建索引 / 批量导入用。
+    ///
+    /// 返回顺序与入参一一对应。线程数取 `available_parallelism`（钳到批大小），
+    /// 按步长分配任务；篇内串行——若篇内再起线程，20k 篇会退化成数万次线程创建，
+    /// 那正是逐篇调用的主要开销来源。
+    pub fn tokenize_batch(texts: Vec<String>) -> Result<Vec<TokenizeResult>> {
+        let tokenizer = Self::get()?;
+        if texts.len() <= 1 {
+            return Ok(texts
+                .iter()
+                .map(|t| tokenizer.tokenize_one(t, true))
+                .collect());
         }
-        let mut segments: Vec<Segment> = Vec::new();
-        let mut current = String::new();
-        let mut current_is_cjk: Option<bool> = None;
 
-        for ch in text.chars() {
-            if ch.is_whitespace() {
-                if !current.is_empty() {
-                    segments.push(Segment {
-                        text: current.clone(),
-                        is_cjk: current_is_cjk.unwrap_or(false),
-                    });
-                    current.clear();
-                    current_is_cjk = None;
+        let workers = std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(1)
+            .min(texts.len());
+
+        if workers <= 1 {
+            return Ok(texts
+                .iter()
+                .map(|t| tokenizer.tokenize_one(t, false))
+                .collect());
+        }
+
+        let texts = &texts;
+        let mut slots: Vec<Option<TokenizeResult>> = (0..texts.len()).map(|_| None).collect();
+
+        std::thread::scope(|scope| {
+            let mut handles = Vec::with_capacity(workers);
+            for w in 0..workers {
+                handles.push(scope.spawn(move || {
+                    let mut out: Vec<(usize, TokenizeResult)> = Vec::new();
+                    let mut i = w;
+                    while i < texts.len() {
+                        out.push((i, tokenizer.tokenize_one(&texts[i], false)));
+                        i += workers;
+                    }
+                    out
+                }));
+            }
+            for handle in handles {
+                for (i, result) in handle.join().expect("tokenize worker panicked") {
+                    slots[i] = Some(result);
                 }
-                continue;
             }
-            let ch_is_cjk = is_cjk(ch);
-            if let Some(prev) = current_is_cjk
-                && ch_is_cjk != prev
-            {
-                segments.push(Segment {
-                    text: current.clone(),
-                    is_cjk: prev,
-                });
-                current.clear();
-            }
-            current_is_cjk = Some(ch_is_cjk);
-            current.push(ch);
-        }
-        if !current.is_empty() {
-            segments.push(Segment {
-                text: current,
-                is_cjk: current_is_cjk.unwrap_or(false),
-            });
-        }
+        });
 
-        let mut all_cut: Vec<String> = Vec::new();
-        let mut all_cfs: Vec<String> = Vec::new();
+        Ok(slots
+            .into_iter()
+            .map(|s| s.expect("every index assigned exactly once"))
+            .collect())
+    }
+
+    /// 分词核心。[`pair_parallel`] 为真时把 CJK 段的两种切分放到两条线程上跑
+    /// （单篇低延迟），为假时串行（批量路径已在更外层并行）。
+    fn tokenize_one(&self, text: &str, pair_parallel: bool) -> TokenizeResult {
+        let segments = segment_text(text);
 
         let cjk_segments: Vec<&str> = segments
             .iter()
@@ -241,34 +295,44 @@ impl Tokenizer {
             .map(|s| s.text.as_str())
             .collect();
 
+        let mut all_cut: Vec<String> = Vec::new();
+        let mut all_cfs: Vec<String> = Vec::new();
+
         if !cjk_segments.is_empty() {
-            let jieba = &tokenizer.jieba;
+            let jieba = &self.jieba;
             let segs = &cjk_segments;
-
-            std::thread::scope(|scope| {
-                let cut_handle = scope.spawn(|| {
-                    let mut tokens = Vec::new();
-                    for seg in segs {
-                        for word in jieba.cut(seg, true) {
-                            tokens.push(word.word.to_string());
-                        }
+            let cut_all = || {
+                let mut tokens = Vec::new();
+                for seg in segs {
+                    for word in jieba.cut(seg, true) {
+                        tokens.push(word.word.to_string());
                     }
-                    tokens
-                });
-
-                let cfs_handle = scope.spawn(|| {
-                    let mut tokens = Vec::new();
-                    for seg in segs {
-                        for word in jieba.cut_for_search(seg, true) {
-                            tokens.push(word.word.to_string());
-                        }
+                }
+                tokens
+            };
+            let cfs_all = || {
+                let mut tokens = Vec::new();
+                for seg in segs {
+                    for word in jieba.cut_for_search(seg, true) {
+                        tokens.push(word.word.to_string());
                     }
-                    tokens
-                });
+                }
+                tokens
+            };
 
-                all_cut.extend(cut_handle.join().expect("cut thread panicked"));
-                all_cfs.extend(cfs_handle.join().expect("cut_for_search thread panicked"));
-            });
+            if pair_parallel {
+                std::thread::scope(|scope| {
+                    let cut_handle = scope.spawn(cut_all);
+                    let cfs_handle = scope.spawn(cfs_all);
+                    all_cut.extend(cut_handle.join().expect("cut thread panicked"));
+                    all_cfs.extend(
+                        cfs_handle.join().expect("cut_for_search thread panicked"),
+                    );
+                });
+            } else {
+                all_cut.extend(cut_all());
+                all_cfs.extend(cfs_all());
+            }
         }
 
         for seg in &segments {
@@ -276,7 +340,7 @@ impl Tokenizer {
                 continue;
             }
             let tokens = if seg.text.is_ascii() {
-                tokenizer.stem_latin_segment(&seg.text)
+                self.stem_latin_segment(&seg.text)
             } else {
                 seg.text
                     .split_word_bounds()
@@ -298,54 +362,99 @@ impl Tokenizer {
             set.into_iter().collect()
         };
 
-        Ok(TokenizeResult {
+        TokenizeResult {
             cut,
             cut_for_search,
-        })
-    }
-
-    pub fn extract_keywords_tfidf(
-        text: String,
-        top_k: usize,
-        allowed_pos: Vec<String>,
-    ) -> Result<Vec<JiebaKeyword>> {
-        let tokenizer = Self::get()?;
-        let tfidf = tokenizer
-            .tfidf
-            .get_or_try_init(|| std::result::Result::<_, anyhow::Error>::Ok(TfIdf::default()))
-            .context("Failed to initialize TF-IDF")?;
-        let keywords = tfidf.extract_keywords(&tokenizer.jieba, &text, top_k, allowed_pos);
-        Ok(Self::convert_keywords(keywords))
-    }
-
-    pub fn extract_keywords_text_rank(
-        text: String,
-        top_k: usize,
-        allowed_pos: Vec<String>,
-    ) -> Result<Vec<JiebaKeyword>> {
-        let tokenizer = Self::get()?;
-        let text_rank = tokenizer
-            .text_rank
-            .get_or_try_init(|| std::result::Result::<_, anyhow::Error>::Ok(TextRank::default()))
-            .context("Failed to initialize TextRank")?;
-        let keywords = text_rank.extract_keywords(&tokenizer.jieba, &text, top_k, allowed_pos);
-        Ok(Self::convert_keywords(keywords))
-    }
-
-    fn convert_keywords(keywords: Vec<jieba_rs::Keyword>) -> Vec<JiebaKeyword> {
-        keywords
-            .into_iter()
-            .map(|k| JiebaKeyword {
-                keyword: k.keyword,
-                weight: k.weight,
-            })
-            .collect()
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// cut / cut_for_search 由 HashSet 收集，顺序本就不保证，比较前排序。
+    fn sorted(r: &TokenizeResult) -> (Vec<String>, Vec<String>) {
+        let mut a = r.cut.clone();
+        let mut b = r.cut_for_search.clone();
+        a.sort();
+        b.sort();
+        (a, b)
+    }
+
+    /// 分词黄金用例：锁住若干典型句子的切分结果。词表或 jieba 版本变动导致切分漂移时，
+    /// 这里先红，而不是等到用户发现旧日记搜不到。
+    #[test]
+    fn segmentation_goldens() {
+        let tk = ensure_tokenizer();
+        const CASES: &[(&str, &str)] = &[
+            ("今天天气很好，我去公园散步了", "今天天气/很/好/，/我/去/公园/散步/了"),
+            ("他说这个方案不太行，我们再想想别的办法", "他/说/这个/方案/不/太行/，/我们/再/想想/别的/办法"),
+            ("北京大学的研究生正在做自然语言处理", "北京大学/的/研究生/正在/做/自然语言/处理"),
+            ("我在上海南京路步行街买了一杯咖啡", "我/在/上海南京路/步行街/买/了/一杯/咖啡"),
+            ("百年孤独是一本很棒的小说", "百年孤独/是/一本/很棒/的/小说"),
+            ("睡不着的夜里我写了一篇日记", "睡不着/的/夜里/我/写/了/一篇/日记"),
+        ];
+        for (text, expected) in CASES {
+            let got: Vec<&str> = tk
+                .jieba
+                .cut(text, true)
+                .into_iter()
+                .map(|w| w.word)
+                .collect();
+            assert_eq!(got.join("/"), *expected, "分词漂移: {text}");
+        }
+    }
+
+    #[test]
+    fn tokenize_batch_matches_single_and_keeps_order() {
+        let tk = ensure_tokenizer();
+        let texts: Vec<String> = vec![
+            "今天天气很好，我去公园散步了".into(),
+            "".into(),
+            "flutter and rust are cool".into(),
+            "混合 mixed 中英文 content 一起".into(),
+            "单字".into(),
+            "重复的句子重复的句子重复的句子".into(),
+            "   ".into(),
+            "标点，。！？符号".into(),
+        ];
+
+        let batch = Tokenizer::tokenize_batch(texts.clone()).expect("batch");
+        assert_eq!(batch.len(), texts.len());
+
+        for (i, text) in texts.iter().enumerate() {
+            let single = tk.tokenize_one(text, true);
+            assert_eq!(
+                sorted(&batch[i]),
+                sorted(&single),
+                "批量第 {i} 篇与逐篇结果不一致: {text:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn tokenize_batch_alignment_is_per_index() {
+        ensure_tokenizer();
+        // 每篇含唯一标记词，确认结果没有串位（步长分配 + 回填的正确性）。
+        let texts: Vec<String> = (0..37)
+            .map(|i| format!("唯一标记 marker{i} 后面是正文内容"))
+            .collect();
+        let batch = Tokenizer::tokenize_batch(texts).expect("batch");
+        for (i, r) in batch.iter().enumerate() {
+            let marker = format!("marker{i}");
+            assert!(
+                r.cut.contains(&marker),
+                "第 {i} 篇缺少自己的标记 {marker}，结果串位了"
+            );
+        }
+    }
+
+    #[test]
+    fn tokenize_batch_empty_input() {
+        ensure_tokenizer();
+        assert!(Tokenizer::tokenize_batch(vec![]).expect("batch").is_empty());
+    }
 
     #[test]
     fn kmp_basic_match() {
@@ -403,11 +512,15 @@ mod tests {
         assert_eq!(result, "keep this");
     }
 
-    fn ensure_tokenizer() {
+    /// 初始化全局分词器并返回它。测试并行执行，故统一走这一条路径——
+    /// `init_tokenizer` 内部是 `get_or_init`，会把并发调用串行化；若另起一条
+    /// 裸 `set` 的路径，两者会互相踩（set 失败 + get 到 None）。
+    fn ensure_tokenizer() -> &'static Tokenizer {
         if GLOBAL_TOKENIZER.get().is_none() {
             let rt = tokio::runtime::Runtime::new().unwrap();
             rt.block_on(init_tokenizer());
         }
+        Tokenizer::get().expect("tokenizer initialized")
     }
 
     #[test]

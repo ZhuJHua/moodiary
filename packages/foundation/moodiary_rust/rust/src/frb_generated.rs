@@ -48,7 +48,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0-beta.5";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 66263541;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -80425007;
 
 // Section: executor
 
@@ -1074,200 +1074,6 @@ fn wire__crate__api__image__ImageCompressor_optimize_to_file_impl(
         },
     )
 }
-fn wire__crate__api__text__JiebaKeyword_auto_accessor_get_keyword_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "JiebaKeyword_auto_accessor_get_keyword",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>,
-            >>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, false,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                        _ => unreachable!(),
-                    }
-                }
-                let api_that_guard = api_that_guard.unwrap();
-                let output_ok = Result::<_, ()>::Ok(api_that_guard.keyword.clone())?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__text__JiebaKeyword_auto_accessor_get_weight_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "JiebaKeyword_auto_accessor_get_weight",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>,
-            >>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, false,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                        _ => unreachable!(),
-                    }
-                }
-                let api_that_guard = api_that_guard.unwrap();
-                let output_ok = Result::<_, ()>::Ok(api_that_guard.weight.clone())?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__text__JiebaKeyword_auto_accessor_set_keyword_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "JiebaKeyword_auto_accessor_set_keyword",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>,
-            >>::sse_decode(&mut deserializer);
-            let api_keyword = <String>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, true,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
-                        _ => unreachable!(),
-                    }
-                }
-                let mut api_that_guard = api_that_guard.unwrap();
-                let output_ok = Result::<_, ()>::Ok({
-                    {
-                        api_that_guard.keyword = api_keyword;
-                    };
-                })?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__text__JiebaKeyword_auto_accessor_set_weight_impl(
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "JiebaKeyword_auto_accessor_set_weight",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>,
-            >>::sse_decode(&mut deserializer);
-            let api_weight = <f64>::sse_decode(&mut deserializer);
-            deserializer.end();
-            transform_result_sse::<_, ()>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, true,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
-                        _ => unreachable!(),
-                    }
-                }
-                let mut api_that_guard = api_that_guard.unwrap();
-                let output_ok = Result::<_, ()>::Ok({
-                    {
-                        api_that_guard.weight = api_weight;
-                    };
-                })?;
-                Ok(output_ok)
-            })())
-        },
-    )
-}
 fn wire__crate__api__text__Kmp_find_all_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1800,88 +1606,6 @@ fn wire__crate__api__s3__S3Client_write_object_impl(
         },
     )
 }
-fn wire__crate__api__text__Tokenizer_extract_keywords_text_rank_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Tokenizer_extract_keywords_text_rank",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_text = <String>::sse_decode(&mut deserializer);
-            let api_top_k = <usize>::sse_decode(&mut deserializer);
-            let api_allowed_pos = <Vec<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::text::Tokenizer::extract_keywords_text_rank(
-                            api_text,
-                            api_top_k,
-                            api_allowed_pos,
-                        )?;
-                        Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__text__Tokenizer_extract_keywords_tfidf_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Tokenizer_extract_keywords_tfidf",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_text = <String>::sse_decode(&mut deserializer);
-            let api_top_k = <usize>::sse_decode(&mut deserializer);
-            let api_allowed_pos = <Vec<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let output_ok = crate::api::text::Tokenizer::extract_keywords_tfidf(
-                            api_text,
-                            api_top_k,
-                            api_allowed_pos,
-                        )?;
-                        Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
 fn wire__crate__api__text__Tokenizer_tokenize_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1910,6 +1634,41 @@ fn wire__crate__api__text__Tokenizer_tokenize_impl(
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok = crate::api::text::Tokenizer::tokenize(api_text)?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__text__Tokenizer_tokenize_batch_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "Tokenizer_tokenize_batch",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_texts = <Vec<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::text::Tokenizer::tokenize_batch(api_texts)?;
                         Ok(output_ok)
                     })(),
                 )
@@ -2539,9 +2298,6 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>
-);
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
@@ -2627,16 +2383,6 @@ impl SseDecode for ImageCompressor {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <RustOpaqueMoi<
             flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>,
-        >>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
-impl SseDecode for JiebaKeyword {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<
-            flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>,
         >>::sse_decode(deserializer);
         return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
     }
@@ -2760,16 +2506,6 @@ impl SseDecode
 
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2922,13 +2658,6 @@ impl SseDecode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f32::<NativeEndian>().unwrap()
-    }
-}
-
-impl SseDecode for f64 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_f64::<NativeEndian>().unwrap()
     }
 }
 
@@ -3099,18 +2828,6 @@ impl SseDecode for crate::api::http::KeyValue {
     }
 }
 
-impl SseDecode for Vec<JiebaKeyword> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<JiebaKeyword>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
 impl SseDecode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3218,6 +2935,18 @@ impl SseDecode for Vec<crate::api::assistant::RigToolDef> {
             ans_.push(<crate::api::assistant::RigToolDef>::sse_decode(
                 deserializer,
             ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::text::TokenizeResult> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::text::TokenizeResult>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -3575,47 +3304,38 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        27 => wire__crate__api__text__Kmp_find_all_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__text__Kmp_replace_impl(port, ptr, rust_vec_len, data_len),
-        29 => {
+        23 => wire__crate__api__text__Kmp_find_all_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__text__Kmp_replace_impl(port, ptr, rust_vec_len, data_len),
+        25 => {
             wire__crate__api__s3__S3Client_create_exclusive_impl(port, ptr, rust_vec_len, data_len)
         }
-        30 => wire__crate__api__s3__S3Client_delete_object_impl(port, ptr, rust_vec_len, data_len),
-        31 => wire__crate__api__s3__S3Client_ensure_bucket_impl(port, ptr, rust_vec_len, data_len),
-        32 => wire__crate__api__s3__S3Client_new_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__api__s3__S3Client_read_object_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__api__s3__S3Client_stat_object_impl(port, ptr, rust_vec_len, data_len),
-        35 => {
+        26 => wire__crate__api__s3__S3Client_delete_object_impl(port, ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__s3__S3Client_ensure_bucket_impl(port, ptr, rust_vec_len, data_len),
+        28 => wire__crate__api__s3__S3Client_new_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__api__s3__S3Client_read_object_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__s3__S3Client_stat_object_impl(port, ptr, rust_vec_len, data_len),
+        31 => {
             wire__crate__api__s3__S3Client_test_connection_impl(port, ptr, rust_vec_len, data_len)
         }
-        36 => wire__crate__api__s3__S3Client_write_object_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__text__Tokenizer_extract_keywords_text_rank_impl(
+        32 => wire__crate__api__s3__S3Client_write_object_impl(port, ptr, rust_vec_len, data_len),
+        33 => wire__crate__api__text__Tokenizer_tokenize_impl(port, ptr, rust_vec_len, data_len),
+        34 => {
+            wire__crate__api__text__Tokenizer_tokenize_batch_impl(port, ptr, rust_vec_len, data_len)
+        }
+        35 => wire__crate__api__zip__Zip_add_bytes_impl(port, ptr, rust_vec_len, data_len),
+        36 => wire__crate__api__zip__Zip_add_dir_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__api__zip__Zip_add_file_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__zip__Zip_extract_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__zip__Zip_finish_impl(port, ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__audio__audio_duration_ms_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__text__init_tokenizer_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__graph_layout__layout_graph_stream_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        38 => wire__crate__api__text__Tokenizer_extract_keywords_tfidf_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        39 => wire__crate__api__text__Tokenizer_tokenize_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__api__zip__Zip_add_bytes_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__api__zip__Zip_add_dir_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__zip__Zip_add_file_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__api__zip__Zip_extract_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__api__zip__Zip_finish_impl(port, ptr, rust_vec_len, data_len),
-        46 => wire__crate__api__audio__audio_duration_ms_impl(port, ptr, rust_vec_len, data_len),
-        47 => wire__crate__api__text__init_tokenizer_impl(port, ptr, rust_vec_len, data_len),
-        48 => wire__crate__api__graph_layout__layout_graph_stream_impl(
-            port,
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        49 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3630,27 +3350,7 @@ fn pde_ffi_dispatcher_sync_impl(
     match func_id {
         18 => wire__crate__api__http_server__HttpServer_port_impl(ptr, rust_vec_len, data_len),
         20 => wire__crate__api__http_server__HttpServer_stop_impl(ptr, rust_vec_len, data_len),
-        23 => wire__crate__api__text__JiebaKeyword_auto_accessor_get_keyword_impl(
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        24 => wire__crate__api__text__JiebaKeyword_auto_accessor_get_weight_impl(
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        25 => wire__crate__api__text__JiebaKeyword_auto_accessor_set_keyword_impl(
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        26 => wire__crate__api__text__JiebaKeyword_auto_accessor_set_weight_impl(
-            ptr,
-            rust_vec_len,
-            data_len,
-        ),
-        45 => wire__crate__api__zip__Zip_new_impl(ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__zip__Zip_new_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3758,21 +3458,6 @@ impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<
 
 impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<ImageCompressor>> for ImageCompressor {
     fn into_into_dart(self) -> FrbWrapper<ImageCompressor> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<JiebaKeyword> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<JiebaKeyword> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<JiebaKeyword>> for JiebaKeyword {
-    fn into_into_dart(self) -> FrbWrapper<JiebaKeyword> {
         self.into()
     }
 }
@@ -4339,13 +4024,6 @@ impl SseEncode for ImageCompressor {
     }
 }
 
-impl SseEncode for JiebaKeyword {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>>>::sse_encode(flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self), serializer);
-    }
-}
-
 impl SseEncode for Kmp {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4465,17 +4143,6 @@ impl SseEncode
 
 impl SseEncode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>
-{
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode
-    for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>>
 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4617,13 +4284,6 @@ impl SseEncode for f32 {
     }
 }
 
-impl SseEncode for f64 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
-    }
-}
-
 impl SseEncode for crate::api::graph_layout::GraphLayoutParams {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4758,16 +4418,6 @@ impl SseEncode for crate::api::http::KeyValue {
     }
 }
 
-impl SseEncode for Vec<JiebaKeyword> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <JiebaKeyword>::sse_encode(item, serializer);
-        }
-    }
-}
-
 impl SseEncode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4854,6 +4504,16 @@ impl SseEncode for Vec<crate::api::assistant::RigToolDef> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::assistant::RigToolDef>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::text::TokenizeResult> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::text::TokenizeResult>::sse_encode(item, serializer);
         }
     }
 }
@@ -5211,20 +4871,6 @@ mod io {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>::decrement_strong_count(ptr as _);
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>>::increment_strong_count(ptr as _);
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]

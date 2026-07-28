@@ -2,14 +2,28 @@ import 'dart:convert';
 
 import 'markdown_converter.dart';
 
-/// 从 TipTap 文档 JSON 抽取纯文本镜像与内嵌媒体（落库 content=JSON 的 [DiaryType.tiptap] 日记用）。
-/// 识别不出 JSON 文档时回退到旧 markdown 处理（MarkdownConverter / `![](name)` 正则），故对旧
-/// markdown 内容同样安全。
+/// 解析一次的 TipTap 文档句柄：纯文本镜像、内嵌媒体、双链目标、大纲四项派生共用同一棵
+/// 已解析的树（落库 content=JSON 的 [DiaryType.tiptap] 日记用）。
+///
+/// 各派生都是 `late final`，按需惰性计算并缓存——只取一项时开销与旧的一次性静态调用相同，
+/// 取多项时省掉重复的 `jsonDecode`（重索引 / 数据修复这类全库路径上这是主要成本）。
+///
+/// 识别不出 JSON 文档时退化为「旧 markdown 模式」，各派生走各自的回退（MarkdownConverter /
+/// `![](name)` 正则 / 空），故对旧 markdown 内容同样安全。
 class TiptapContent {
-  const TiptapContent._();
+  final String _raw;
+  final Map<String, dynamic>? _doc;
+
+  TiptapContent._(this._raw, this._doc);
+
+  factory TiptapContent.parse(String content) =>
+      TiptapContent._(content, _tryDoc(content));
+
+  /// 是否解析出了 TipTap 文档（false = 旧 markdown / richText 内容，走回退路径）。
+  bool get isDoc => _doc != null;
 
   /// 解析为 TipTap 文档（`{"type":"doc",...}`）；非 JSON 文档返回 null。
-  static Map<String, dynamic>? tryDoc(String content) {
+  static Map<String, dynamic>? _tryDoc(String content) {
     final trimmed = content.trimLeft();
     if (!trimmed.startsWith('{')) return null;
     try {
@@ -30,13 +44,21 @@ class TiptapContent {
     'horizontalRule',
   };
 
+  static final RegExp _blankLines = RegExp(r'\n{3,}');
+
+  static final RegExp _markdownMedia = RegExp(
+    r'!\[[^\]]*\]\((image-[^\s)]+|audio-[^\s)]+|video-[^\s)]+)\)',
+  );
+
   /// 纯文本镜像（搜索分词 / 卡片预览 / 字数）。
-  static String plainText(String content) {
-    final doc = tryDoc(content);
-    if (doc == null) return MarkdownConverter.convert(content);
+  late final String plainText = _plainText();
+
+  String _plainText() {
+    final doc = _doc;
+    if (doc == null) return MarkdownConverter.convert(_raw);
     final buf = StringBuffer();
     _collectText(doc, buf);
-    return buf.toString().replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
+    return buf.toString().replaceAll(_blankLines, '\n\n').trim();
   }
 
   static void _collectText(dynamic node, StringBuffer buf) {
@@ -60,20 +82,18 @@ class TiptapContent {
     if (_blockTypes.contains(node['type'])) buf.write('\n');
   }
 
-  static final RegExp _markdownMedia = RegExp(
-    r'!\[[^\]]*\]\((image-[^\s)]+|audio-[^\s)]+|video-[^\s)]+)\)',
-  );
-
   /// 内嵌媒体文件名（去重、保持出现顺序）。JSON 按节点 type 分类；旧 markdown 回退正则按前缀分类。
-  static ({List<String> images, List<String> videos, List<String> audios})
-  media(String content) {
+  late final ({List<String> images, List<String> videos, List<String> audios})
+  media = _media();
+
+  ({List<String> images, List<String> videos, List<String> audios}) _media() {
     final images = <String>{};
     final audios = <String>{};
     final videos = <String>{};
 
-    final doc = tryDoc(content);
+    final doc = _doc;
     if (doc == null) {
-      for (final m in _markdownMedia.allMatches(content)) {
+      for (final m in _markdownMedia.allMatches(_raw)) {
         final name = m.group(1)!;
         if (name.startsWith('video-')) {
           videos.add(name);
@@ -83,7 +103,11 @@ class TiptapContent {
           images.add(name);
         }
       }
-      return (images: images.toList(), videos: videos.toList(), audios: audios.toList());
+      return (
+        images: images.toList(),
+        videos: videos.toList(),
+        audios: audios.toList(),
+      );
     }
 
     void walk(dynamic node) {
@@ -111,13 +135,19 @@ class TiptapContent {
     }
 
     walk(doc);
-    return (images: images.toList(), videos: videos.toList(), audios: audios.toList());
+    return (
+      images: images.toList(),
+      videos: videos.toList(),
+      audios: audios.toList(),
+    );
   }
 
   /// 内嵌双链的目标日记 id（diaryLink 节点 attrs.id；去重保序）。非 tiptap JSON 返回空
   /// （旧 markdown / richText 无双链节点）。供反向链接索引用。
-  static List<String> links(String content) {
-    final doc = tryDoc(content);
+  late final List<String> links = _links();
+
+  List<String> _links() {
+    final doc = _doc;
     if (doc == null) return const [];
     final ids = <String>{};
     void walk(dynamic node) {
@@ -144,8 +174,10 @@ class TiptapContent {
   /// 文档大纲：按出现顺序的 heading 节点（级别 1-6 + 标题纯文本）。非 tiptap JSON 返回空
   /// （旧 markdown / richText 不解析）。供目录（TOC）用；顺序与编辑器侧 heading 顺序一致，
   /// 故列表下标即 `scrollToHeading(index)` 的 index。
-  static List<({int level, String text})> headings(String content) {
-    final doc = tryDoc(content);
+  late final List<({int level, String text})> headings = _headings();
+
+  List<({int level, String text})> _headings() {
+    final doc = _doc;
     if (doc == null) return const [];
     final out = <({int level, String text})>[];
     void walk(dynamic node) {

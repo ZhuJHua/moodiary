@@ -77,7 +77,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0-beta.5';
 
   @override
-  int get rustContentHash => 66263541;
+  int get rustContentHash => -80425007;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -198,24 +198,6 @@ abstract class RustLibApi extends BaseApi {
     int? quality,
   });
 
-  String crateApiTextJiebaKeywordAutoAccessorGetKeyword({
-    required JiebaKeyword that,
-  });
-
-  double crateApiTextJiebaKeywordAutoAccessorGetWeight({
-    required JiebaKeyword that,
-  });
-
-  void crateApiTextJiebaKeywordAutoAccessorSetKeyword({
-    required JiebaKeyword that,
-    required String keyword,
-  });
-
-  void crateApiTextJiebaKeywordAutoAccessorSetWeight({
-    required JiebaKeyword that,
-    required double weight,
-  });
-
   Future<List<String>> crateApiTextKmpFindAll({
     required String text,
     required List<String> patterns,
@@ -266,19 +248,11 @@ abstract class RustLibApi extends BaseApi {
     required List<int> data,
   });
 
-  Future<List<JiebaKeyword>> crateApiTextTokenizerExtractKeywordsTextRank({
-    required String text,
-    required BigInt topK,
-    required List<String> allowedPos,
-  });
-
-  Future<List<JiebaKeyword>> crateApiTextTokenizerExtractKeywordsTfidf({
-    required String text,
-    required BigInt topK,
-    required List<String> allowedPos,
-  });
-
   Future<TokenizeResult> crateApiTextTokenizerTokenize({required String text});
+
+  Future<List<TokenizeResult>> crateApiTextTokenizerTokenizeBatch({
+    required List<String> texts,
+  });
 
   Future<void> crateApiZipZipAddBytes({
     required Zip that,
@@ -384,14 +358,6 @@ abstract class RustLibApi extends BaseApi {
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_ImageCompressorPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_JiebaKeyword;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_JiebaKeyword;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_JiebaKeywordPtr;
 
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Kmp;
 
@@ -1235,134 +1201,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  String crateApiTextJiebaKeywordAutoAccessorGetKeyword({
-    required JiebaKeyword that,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-            that,
-            serializer,
-          );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 23)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_String,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiTextJiebaKeywordAutoAccessorGetKeywordConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiTextJiebaKeywordAutoAccessorGetKeywordConstMeta =>
-      const TaskConstMeta(
-        debugName: "JiebaKeyword_auto_accessor_get_keyword",
-        argNames: ["that"],
-      );
-
-  @override
-  double crateApiTextJiebaKeywordAutoAccessorGetWeight({
-    required JiebaKeyword that,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-            that,
-            serializer,
-          );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_64,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiTextJiebaKeywordAutoAccessorGetWeightConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiTextJiebaKeywordAutoAccessorGetWeightConstMeta =>
-      const TaskConstMeta(
-        debugName: "JiebaKeyword_auto_accessor_get_weight",
-        argNames: ["that"],
-      );
-
-  @override
-  void crateApiTextJiebaKeywordAutoAccessorSetKeyword({
-    required JiebaKeyword that,
-    required String keyword,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-            that,
-            serializer,
-          );
-          sse_encode_String(keyword, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 25)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiTextJiebaKeywordAutoAccessorSetKeywordConstMeta,
-        argValues: [that, keyword],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiTextJiebaKeywordAutoAccessorSetKeywordConstMeta =>
-      const TaskConstMeta(
-        debugName: "JiebaKeyword_auto_accessor_set_keyword",
-        argNames: ["that", "keyword"],
-      );
-
-  @override
-  void crateApiTextJiebaKeywordAutoAccessorSetWeight({
-    required JiebaKeyword that,
-    required double weight,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-            that,
-            serializer,
-          );
-          sse_encode_f_64(weight, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26)!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiTextJiebaKeywordAutoAccessorSetWeightConstMeta,
-        argValues: [that, weight],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiTextJiebaKeywordAutoAccessorSetWeightConstMeta =>
-      const TaskConstMeta(
-        debugName: "JiebaKeyword_auto_accessor_set_weight",
-        argNames: ["that", "weight"],
-      );
-
-  @override
   Future<List<String>> crateApiTextKmpFindAll({
     required String text,
     required List<String> patterns,
@@ -1376,7 +1214,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 23,
             port: port_,
           );
         },
@@ -1410,7 +1248,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 28,
+            funcId: 24,
             port: port_,
           );
         },
@@ -1449,7 +1287,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 29,
+            funcId: 25,
             port: port_,
           );
         },
@@ -1487,7 +1325,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 30,
+            funcId: 26,
             port: port_,
           );
         },
@@ -1521,7 +1359,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 31,
+            funcId: 27,
             port: port_,
           );
         },
@@ -1564,7 +1402,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 32,
+            funcId: 28,
             port: port_,
           );
         },
@@ -1609,7 +1447,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 33,
+            funcId: 29,
             port: port_,
           );
         },
@@ -1647,7 +1485,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 34,
+            funcId: 30,
             port: port_,
           );
         },
@@ -1681,7 +1519,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 35,
+            funcId: 31,
             port: port_,
           );
         },
@@ -1721,7 +1559,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 36,
+            funcId: 32,
             port: port_,
           );
         },
@@ -1743,82 +1581,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<JiebaKeyword>> crateApiTextTokenizerExtractKeywordsTextRank({
-    required String text,
-    required BigInt topK,
-    required List<String> allowedPos,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(text, serializer);
-          sse_encode_usize(topK, serializer);
-          sse_encode_list_String(allowedPos, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 37,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiTextTokenizerExtractKeywordsTextRankConstMeta,
-        argValues: [text, topK, allowedPos],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiTextTokenizerExtractKeywordsTextRankConstMeta =>
-      const TaskConstMeta(
-        debugName: "Tokenizer_extract_keywords_text_rank",
-        argNames: ["text", "topK", "allowedPos"],
-      );
-
-  @override
-  Future<List<JiebaKeyword>> crateApiTextTokenizerExtractKeywordsTfidf({
-    required String text,
-    required BigInt topK,
-    required List<String> allowedPos,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(text, serializer);
-          sse_encode_usize(topK, serializer);
-          sse_encode_list_String(allowedPos, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 38,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiTextTokenizerExtractKeywordsTfidfConstMeta,
-        argValues: [text, topK, allowedPos],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiTextTokenizerExtractKeywordsTfidfConstMeta =>
-      const TaskConstMeta(
-        debugName: "Tokenizer_extract_keywords_tfidf",
-        argNames: ["text", "topK", "allowedPos"],
-      );
-
-  @override
   Future<TokenizeResult> crateApiTextTokenizerTokenize({required String text}) {
     return handler.executeNormal(
       NormalTask(
@@ -1828,7 +1590,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 39,
+            funcId: 33,
             port: port_,
           );
         },
@@ -1845,6 +1607,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   TaskConstMeta get kCrateApiTextTokenizerTokenizeConstMeta =>
       const TaskConstMeta(debugName: "Tokenizer_tokenize", argNames: ["text"]);
+
+  @override
+  Future<List<TokenizeResult>> crateApiTextTokenizerTokenizeBatch({
+    required List<String> texts,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_list_String(texts, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 34,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_tokenize_result,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiTextTokenizerTokenizeBatchConstMeta,
+        argValues: [texts],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiTextTokenizerTokenizeBatchConstMeta =>
+      const TaskConstMeta(
+        debugName: "Tokenizer_tokenize_batch",
+        argNames: ["texts"],
+      );
 
   @override
   Future<void> crateApiZipZipAddBytes({
@@ -1867,7 +1662,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 40,
+            funcId: 35,
             port: port_,
           );
         },
@@ -1908,7 +1703,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 41,
+            funcId: 36,
             port: port_,
           );
         },
@@ -1951,7 +1746,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 42,
+            funcId: 37,
             port: port_,
           );
         },
@@ -1987,7 +1782,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 43,
+            funcId: 38,
             port: port_,
           );
         },
@@ -2020,7 +1815,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 44,
+            funcId: 39,
             port: port_,
           );
         },
@@ -2045,7 +1840,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_String(filePath, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 45)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 40)!;
         },
         codec: SseCodec(
           decodeSuccessData:
@@ -2072,7 +1867,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 46,
+            funcId: 41,
             port: port_,
           );
         },
@@ -2099,7 +1894,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 47,
+            funcId: 42,
             port: port_,
           );
         },
@@ -2138,7 +1933,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 48,
+              funcId: 43,
               port: port_,
             );
           },
@@ -2189,7 +1984,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 49,
+              funcId: 44,
               port: port_,
             );
           },
@@ -2392,14 +2187,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_JiebaKeyword => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_JiebaKeyword => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_Kmp => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp;
 
@@ -2501,15 +2288,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  JiebaKeyword
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return JiebaKeywordImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   Kmp
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
     dynamic raw,
@@ -2555,15 +2333,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  JiebaKeyword
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return JiebaKeywordImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   Zip
   dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     dynamic raw,
@@ -2597,15 +2366,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return HttpServerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  JiebaKeyword
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return JiebaKeywordImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2727,15 +2487,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ImageCompressorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  JiebaKeyword
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return JiebaKeywordImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -2929,12 +2680,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  double dco_decode_f_64(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw as double;
-  }
-
-  @protected
   GraphLayoutParams dco_decode_graph_layout_params(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -3057,19 +2802,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<JiebaKeyword>
-  dco_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>)
-        .map(
-          dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword,
-        )
-        .toList();
-  }
-
-  @protected
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
@@ -3139,6 +2871,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<RigToolDef> dco_decode_list_rig_tool_def(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_rig_tool_def).toList();
+  }
+
+  @protected
+  List<TokenizeResult> dco_decode_list_tokenize_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_tokenize_result).toList();
   }
 
   @protected
@@ -3441,18 +3179,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  JiebaKeyword
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return JiebaKeywordImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   Kmp
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
     SseDeserializer deserializer,
@@ -3513,18 +3239,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  JiebaKeyword
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return JiebaKeywordImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   Zip
   sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     SseDeserializer deserializer,
@@ -3567,18 +3281,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return HttpServerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  JiebaKeyword
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return JiebaKeywordImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -3700,18 +3402,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ImageCompressorImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  JiebaKeyword
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return JiebaKeywordImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -3946,12 +3636,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  double sse_decode_f_64(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getFloat64();
-  }
-
-  @protected
   GraphLayoutParams sse_decode_graph_layout_params(
     SseDeserializer deserializer,
   ) {
@@ -4089,25 +3773,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<JiebaKeyword>
-  sse_decode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <JiebaKeyword>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(
-        sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-          deserializer,
-        ),
-      );
-    }
-    return ans_;
-  }
-
-  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -4223,6 +3888,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <RigToolDef>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_rig_tool_def(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<TokenizeResult> sse_decode_list_tokenize_result(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <TokenizeResult>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_tokenize_result(deserializer));
     }
     return ans_;
   }
@@ -4590,19 +4269,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    JiebaKeyword self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as JiebaKeywordImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
     Kmp self,
     SseSerializer serializer,
@@ -4668,19 +4334,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    JiebaKeyword self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as JiebaKeywordImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
     Zip self,
     SseSerializer serializer,
@@ -4727,19 +4380,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as HttpServerImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    JiebaKeyword self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as JiebaKeywordImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -4922,19 +4562,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as ImageCompressorImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    JiebaKeyword self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as JiebaKeywordImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -5193,12 +4820,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_f_64(double self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putFloat64(self);
-  }
-
-  @protected
   void sse_encode_graph_layout_params(
     GraphLayoutParams self,
     SseSerializer serializer,
@@ -5300,22 +4921,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.key, serializer);
     sse_encode_String(self.value, serializer);
-  }
-
-  @protected
-  void
-  sse_encode_list_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-    List<JiebaKeyword> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerJiebaKeyword(
-        item,
-        serializer,
-      );
-    }
   }
 
   @protected
@@ -5450,6 +5055,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_rig_tool_def(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_tokenize_result(
+    List<TokenizeResult> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_tokenize_result(item, serializer);
     }
   }
 
@@ -5889,44 +5506,6 @@ class ImageCompressorImpl extends RustOpaque implements ImageCompressor {
     rustArcDecrementStrongCountPtr:
         RustLib.instance.api.rust_arc_decrement_strong_count_ImageCompressorPtr,
   );
-}
-
-@sealed
-class JiebaKeywordImpl extends RustOpaque implements JiebaKeyword {
-  // Not to be used by end users
-  JiebaKeywordImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  JiebaKeywordImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_JiebaKeyword,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_JiebaKeyword,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_JiebaKeywordPtr,
-  );
-
-  String get keyword => RustLib.instance.api
-      .crateApiTextJiebaKeywordAutoAccessorGetKeyword(that: this);
-
-  double get weight => RustLib.instance.api
-      .crateApiTextJiebaKeywordAutoAccessorGetWeight(that: this);
-
-  set keyword(String keyword) =>
-      RustLib.instance.api.crateApiTextJiebaKeywordAutoAccessorSetKeyword(
-        that: this,
-        keyword: keyword,
-      );
-
-  set weight(double weight) =>
-      RustLib.instance.api.crateApiTextJiebaKeywordAutoAccessorSetWeight(
-        that: this,
-        weight: weight,
-      );
 }
 
 @sealed

@@ -68,9 +68,10 @@ class EditorMigrationService {
     await _writeBackup(diary);
 
     final converted = diary.copyWith(content: json, type: DiaryType.tiptap.value);
-    final media = DiaryContent.extractMedia(converted);
+    final derived = DiaryContent.of(converted);
+    final media = derived.media;
     final newDiary = converted.copyWith(
-      contentText: DiaryContent.derivePlainText(converted),
+      contentText: derived.plainText,
       imageName: media.images,
       audioName: media.audios,
       videoName: media.videos,
@@ -154,9 +155,10 @@ class EditorMigrationService {
       content: content,
       type: (data['type'] as String?) ?? DiaryType.richText.value,
     );
-    final media = DiaryContent.extractMedia(restored);
+    final derived = DiaryContent.of(restored);
+    final media = derived.media;
     final newDiary = restored.copyWith(
-      contentText: DiaryContent.derivePlainText(restored),
+      contentText: derived.plainText,
       imageName: media.images,
       audioName: media.audios,
       videoName: media.videos,

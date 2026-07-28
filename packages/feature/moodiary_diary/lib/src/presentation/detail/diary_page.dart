@@ -96,7 +96,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   List<({int level, String text})> _headingsOf(String content) {
     if (content != _headingsContent) {
       _headingsContent = content;
-      _headings = TiptapContent.headings(content);
+      _headings = TiptapContent.parse(content).headings;
     }
     return _headings;
   }

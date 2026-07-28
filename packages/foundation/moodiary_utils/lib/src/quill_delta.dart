@@ -22,11 +22,14 @@ class QuillDelta {
   /// 纯文本镜像：拼接所有字符串 `insert`，embed（Map insert）不产出文本。
   /// 与 flutter_quill `Document.toPlainText()` 的差别仅在于不补文档末尾换行，
   /// 调用方本就 `trimRight()`。非法 Delta 返回 null，由调用方回退原文。
-  static String? plainText(String deltaJson) {
-    final list = ops(deltaJson);
-    if (list == null) return null;
+  static String? plainText(String deltaJson) => plainTextOf(ops(deltaJson));
+
+  /// 同 [plainText]，但吃已解析好的 op 列表——同一篇要同时取纯文本与媒体时，
+  /// 由调用方解析一次后复用，避免重复 `jsonDecode`。
+  static String? plainTextOf(List<dynamic>? ops) {
+    if (ops == null) return null;
     final buffer = StringBuffer();
-    for (final op in list) {
+    for (final op in ops) {
       if (op is! Map) continue;
       final insert = op['insert'];
       if (insert is String) buffer.write(insert);

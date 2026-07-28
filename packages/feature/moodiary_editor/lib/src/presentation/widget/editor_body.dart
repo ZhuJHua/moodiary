@@ -100,7 +100,7 @@ class _EditorBodyState extends State<EditorBody> {
           firstLineIndent: firstLineIndent,
           fontScale: fontScale,
           onChanged: (content) =>
-              widget.onChanged(content, TiptapContent.plainText(content)),
+              widget.onChanged(content, TiptapContent.parse(content).plainText),
           onOpenDiaryLink: widget.onOpenDiaryLink,
           onOpenDetails: widget.onShowDetails,
         ),

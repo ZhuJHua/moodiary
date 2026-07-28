@@ -6,19 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `build_prefix_table`, `convert_keywords`, `get`, `has_alphanumeric`, `is_cjk`, `kmp_search`, `stem_latin_segment`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<JiebaKeyword>>
-abstract class JiebaKeyword implements RustOpaqueInterface {
-  String get keyword;
-
-  double get weight;
-
-  set keyword(String keyword);
-
-  set weight(double weight);
-}
+// These functions are ignored because they are not marked as `pub`: `build_prefix_table`, `get`, `has_alphanumeric`, `is_cjk`, `kmp_search`, `segment_text`, `stem_latin_segment`, `tokenize_one`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Segment`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>>
 abstract class Kmp implements RustOpaqueInterface {
@@ -41,30 +30,20 @@ abstract class Kmp implements RustOpaqueInterface {
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>
 abstract class Tokenizer implements RustOpaqueInterface {
-  static Future<List<JiebaKeyword>> extractKeywordsTextRank({
-    required String text,
-    required BigInt topK,
-    required List<String> allowedPos,
-  }) => RustLib.instance.api.crateApiTextTokenizerExtractKeywordsTextRank(
-    text: text,
-    topK: topK,
-    allowedPos: allowedPos,
-  );
-
-  static Future<List<JiebaKeyword>> extractKeywordsTfidf({
-    required String text,
-    required BigInt topK,
-    required List<String> allowedPos,
-  }) => RustLib.instance.api.crateApiTextTokenizerExtractKeywordsTfidf(
-    text: text,
-    topK: topK,
-    allowedPos: allowedPos,
-  );
-
-  /// 同时返回 `cut` 和 `cut_for_search` 两组分词结果。
-  /// CJK 段两种分词并发执行；非 CJK 段两组共享结果。
+  /// 单篇分词（交互路径：编辑保存、搜索框）。CJK 段的 cut 与 cut_for_search 拆两条
+  /// 线程并行，压低单次延迟；批量请走 [`Tokenizer::tokenize_batch`]，它跨篇并行、
+  /// 篇内串行，不会为每篇再起线程。
   static Future<TokenizeResult> tokenize({required String text}) =>
       RustLib.instance.api.crateApiTextTokenizerTokenize(text: text);
+
+  /// 批量分词：一次过桥处理整批，跨篇并行铺满多核。全量重建索引 / 批量导入用。
+  ///
+  /// 返回顺序与入参一一对应。线程数取 `available_parallelism`（钳到批大小），
+  /// 按步长分配任务；篇内串行——若篇内再起线程，20k 篇会退化成数万次线程创建，
+  /// 那正是逐篇调用的主要开销来源。
+  static Future<List<TokenizeResult>> tokenizeBatch({
+    required List<String> texts,
+  }) => RustLib.instance.api.crateApiTextTokenizerTokenizeBatch(texts: texts);
 }
 
 /// `cut`（高精度）和 `cut_for_search`（高召回）两组分词结果。

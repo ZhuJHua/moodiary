@@ -463,7 +463,7 @@ abstract final class AssistantToolRegistry {
     if (json != null && json.isNotEmpty) {
       return (
         content: json,
-        contentText: TiptapContent.plainText(json),
+        contentText: TiptapContent.parse(json).plainText,
         type: DiaryType.tiptap,
       );
     }
@@ -496,7 +496,7 @@ abstract final class AssistantToolRegistry {
         type: converted.type.value,
       );
       // 内容变更必须重算媒体引用列表，否则媒体库出现幻影条目、废弃媒体永不回收。
-      final media = DiaryContent.extractMedia(updated);
+      final media = DiaryContent.of(updated).media;
       updated = updated.copyWith(
         imageName: media.images,
         videoName: media.videos,
