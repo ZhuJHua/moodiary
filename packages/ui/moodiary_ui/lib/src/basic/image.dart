@@ -156,7 +156,7 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
           ? imageSize
           : (imageSize / imageAspect).ceil();
 
-      final path = await ImageCacheUtil().getLocalImagePathWithCache(
+      final path = await ImageCacheStore().getLocalImagePathWithCache(
         imagePath: widget.imagePath,
         imageWidth: width * 2,
         imageHeight: height * 2,

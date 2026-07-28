@@ -24,7 +24,7 @@ class PlatformService {
     final (supportDir, cacheDir, canBio) = await (
       getApplicationSupportDirectory(),
       getApplicationCacheDirectory(),
-      AuthUtil.canCheckBiometrics(),
+      BiometricAuth.canCheckBiometrics(),
     ).wait;
 
     applicationSupportDirectory = supportDir;

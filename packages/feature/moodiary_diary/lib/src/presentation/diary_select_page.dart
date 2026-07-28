@@ -189,7 +189,7 @@ class _DiarySelectTile extends StatelessWidget {
               ],
               const SizedBox(height: 6),
               Text(
-                TimeUtil.fullDateTime(diary.time),
+                TimeFormat.fullDateTime(diary.time),
                 style: context.textTheme.labelSmall?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),

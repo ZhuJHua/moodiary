@@ -178,7 +178,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                   return SettingListTile(
                     title: '立即同步',
                     subtitle: millis > 0
-                        ? '上次同步：${TimeUtil.listDateTime(DateTime.fromMillisecondsSinceEpoch(millis))}'
+                        ? '上次同步：${TimeFormat.listDateTime(DateTime.fromMillisecondsSinceEpoch(millis))}'
                         : '尚未同步',
                     leading: const Icon(Icons.sync_rounded),
                     trailing: const Icon(Icons.chevron_right_rounded),

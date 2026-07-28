@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Moodiary — a Flutter + Rust diary app (Android, iOS, Windows, macOS). **Layered pub-workspace monorepo**: 18 shared packages under `packages/` across four dependency layers, consumed by two Flutter apps: **`mobile/`** (pure mobile, pub name `moodiary`) and **`desktop/`** (desktop skeleton, pub name `moodiary_desktop`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code).
+Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 18 shared packages under `packages/` across four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later — the packages are already layered for it, but no desktop target exists in the tree today.
 
 ## Tech Stack
 
@@ -19,9 +19,8 @@ dart tool/task.dart setup          # flutter pub get + build editor
 
 # Run & Build (targets mobile app)
 dart tool/task.dart run            # build editor + flutter run
-dart tool/task.dart build-apk / build-ios  # mobile 只剩 android/ios，桌面构建后续由 desktop/ 提供
+dart tool/task.dart build-apk / build-ios  # 只有 android/ios 两个目标
 # Extra flutter flags go after --:  dart tool/task.dart run -- --release
-# Desktop (not yet wired into task.dart): cd desktop && fvm flutter run -d macos
 
 # Code Gen (after model/router/provider changes)
 dart tool/task.dart build-runner   # build_runner build --delete-conflicting-outputs
@@ -31,9 +30,13 @@ dart tool/task.dart editor         # rebuild editor asset only (needs corepack o
 
 # Lint & Test
 dart tool/task.dart analyze        # layer check + flutter analyze
-dart tool/task.dart test           # mobile/ tests
-fvm flutter test <pkg>/test ...    # package tests (bare `flutter test` at root finds nothing)
+dart tool/task.dart test           # mobile/ tests ONLY — not the full suite
+melos exec --dir-exists=test --fail-fast -c 1 -- flutter test   # 全仓 Dart 测试（CI 口径，自动发现）
+cd packages/foundation/moodiary_rust/rust && cargo test && cargo clippy --all-targets -- -D warnings
+cd packages/feature/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
 ```
+
+Full-repo verification = the four blocks above (analyze + layers, melos test sweep, Rust, editor). `flutter test` at the repo root finds nothing.
 
 **Melos**: `melos bootstrap` activates the workspace and regenerates IDE module files — pure, no codegen; run `dart tool/task.dart gen` separately. `melos list` / `melos run <script> --category <layer>` filter by layer.
 
@@ -52,7 +55,6 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
         home/                # home tab (diary_home_page)
         settings/            # settings hub
       main.dart
-  desktop/                   # desktop Flutter app skeleton (pub: moodiary_desktop)
   packages/
     foundation/              # leaf layer — no internal deps
       moodiary_lint/         #   shared analyzer options
@@ -63,8 +65,8 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
     core/                    # → foundation; internal order models → core → data,migration → preferences
       moodiary_models/       #   domain: Isar @Collection + Freezed DTOs
       moodiary_core/         #   infra: Isar/KV/SecureKV + theme + exceptions
-      moodiary_data/         #   repositories + controllers
-      moodiary_migration/    #   one-shot legacy data migration (flutter_quill holdout)
+      moodiary_data/         #   repositories + controllers + 跨 feature 共享的进程级瞬态状态
+      moodiary_migration/    #   one-shot legacy data migration
       moodiary_preferences/  #   preference state
     ui/                      # → core/foundation
       moodiary_ui/           #   business-agnostic reusable widgets
@@ -78,11 +80,11 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_share/        #   diary sharing
 ```
 
-Path convention: unqualified `lib/...` refers to `mobile/lib/...`; `packages/`, `tool/`, `desktop/` are repo-root-relative.
+Path convention: unqualified `lib/...` refers to `mobile/lib/...`; `packages/` and `tool/` are repo-root-relative.
 
 ### Layer Dependencies
 
-Cross-package DAG is strictly upper → lower: `foundation → core → ui → feature → apps`. Features never import each other (shared logic sinks to lower layers, cross-feature composition happens in the app layer). Enforced by pub's acyclic graph; Melos `categories:` are filter/grouping only.
+Cross-package DAG is strictly upper → lower: `foundation → core → ui → feature → apps`. Features never import each other (the one kept exception is `diary → editor`); shared logic sinks to lower layers, cross-feature composition happens in the app layer. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`**, which reads every pubspec's `moodiary_*` deps (no baseline — must stay at zero). Melos `categories:` are filter/grouping only.
 
-In-app layering within `mobile/lib` (`tool/check_layers.dart`): `gen → core → data → component → feature/<x> → app → main.dart`. Baseline is **zero violations**.
+In-app layering within `mobile/lib` (same script): `gen → core → data → component → feature/<x> → app → main.dart`. Baseline is **zero violations**.
 

@@ -44,7 +44,7 @@ class NoteShareCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    TimeUtil.fullDate(diary.time),
+                    TimeFormat.fullDate(diary.time),
                     style: TextStyle(
                       fontSize: 12,
                       color: inkSoft,

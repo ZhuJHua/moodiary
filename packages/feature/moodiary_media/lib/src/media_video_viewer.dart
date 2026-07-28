@@ -22,7 +22,7 @@ class MediaVideoViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final path = FileUtil.getRealPath('video', name);
+    final path = AppFiles.getRealPath('video', name);
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Stack(

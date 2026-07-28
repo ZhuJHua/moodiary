@@ -4,20 +4,20 @@ import 'package:moodiary_core/src/storage.dart';
 import 'package:moodiary_core/src/storage/database/isar.dart';
 import 'package:moodiary_core/src/storage/kv/pref.dart';
 import 'package:moodiary_core/src/storage/kv/secure.dart';
-import 'package:moodiary_core/src/utils/file_util.dart';
+import 'package:moodiary_core/src/files/app_files.dart';
 
 /// 基础设施层一次性初始化入口。
 ///
 /// 路径 + 业务目录是后续存储的前置（Isar 要求 database 目录存在；KV.init 经
-/// MergeUtil 读 applicationSupportPath），故先串行就位，再并发三条独立存储。
-/// 不在此调用 RustLib.init / ThemeUtil / registerService——那些含业务/UI 决策，
+/// VersionMigrator 读 applicationSupportPath），故先串行就位，再并发三条独立存储。
+/// 不在此调用 RustLib.init / ThemeManager / registerService——那些含业务/UI 决策，
 /// 由 main.dart 显式调用以便启动期定制。
 Future<void> injectBasicService() async {
   getIt.registerSingleton<IKVStorage>(SharedPreferencesKVStorage());
   getIt.registerSingleton<ISecureKVStorage>(FlutterSecureStorageKVStorage());
 
   await PlatformService.get().init();
-  await FileUtil.initCreateDir();
+  await AppFiles.initCreateDir();
 
   await Future.wait([
     IKVStorage.get().init(),
@@ -35,7 +35,7 @@ Future<void> resetAllData() async {
   await Future.wait([
     IKVStorage.get().clear(),
     ISecureKVStorage.get().clear(),
-    FileUtil.resetUserMediaDirs(),
-    FileUtil.clearCache(),
+    AppFiles.resetUserMediaDirs(),
+    AppFiles.clearCache(),
   ]);
 }

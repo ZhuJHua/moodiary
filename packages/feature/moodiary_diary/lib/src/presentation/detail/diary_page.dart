@@ -795,7 +795,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
           ),
           const SizedBox(width: 6),
           Text(
-            TimeUtil.fullDateTime(diary.time),
+            TimeFormat.fullDateTime(diary.time),
             style: theme.textTheme.labelMedium,
           ),
           const Spacer(),
@@ -1228,11 +1228,11 @@ class _LinkTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final hasTitle = diary.title.trim().isNotEmpty;
-    final title = hasTitle ? diary.title.trim() : TimeUtil.longDate(diary.time);
+    final title = hasTitle ? diary.title.trim() : TimeFormat.longDate(diary.time);
     final snippet = diary.contentText.trim().replaceAll(RegExp(r'\s+'), ' ');
     // 有标题时副标题给「日期 · 片段」；无标题时标题已是日期，副标题只放片段。
     final subtitle = hasTitle && snippet.isNotEmpty
-        ? '${TimeUtil.longDate(diary.time)} · $snippet'
+        ? '${TimeFormat.longDate(diary.time)} · $snippet'
         : snippet;
     return ListTile(
       onTap: onTap,
@@ -1309,7 +1309,7 @@ class _DetailSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dateLabel = TimeUtil.fullDateTime(diary.time);
+    final dateLabel = TimeFormat.fullDateTime(diary.time);
     final hasWeather = diary.weather.length >= 3;
     final categoryAsync = ref.watch(
       getCategoryProvider(id: diary.categoryId ?? ''),

@@ -20,7 +20,7 @@ class ColorSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final hasSystemColor = ThemeUtil().supportDynamic;
+    final hasSystemColor = ThemeManager().supportDynamic;
     final currentColor = MoodiaryKVs.color.get() ?? (hasSystemColor ? -1 : 0);
 
     final indices = <int>[
@@ -88,8 +88,8 @@ class _ColorOption extends StatelessWidget {
     final brightness = context.theme.colorScheme.brightness;
     if (colorIndex == -1) {
       return brightness == Brightness.light
-          ? ThemeUtil().lightDynamic!
-          : ThemeUtil().darkDynamic!;
+          ? ThemeManager().lightDynamic!
+          : ThemeManager().darkDynamic!;
     }
     return ColorScheme.fromSeed(
       seedColor: AppColor.themeColorList[colorIndex],

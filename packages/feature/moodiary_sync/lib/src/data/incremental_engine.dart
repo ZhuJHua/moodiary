@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
@@ -49,7 +50,7 @@ class IncrementalSyncEngine {
   /// 密文两份缓冲同时压在内存里，多视频日记并发时内存峰值无上限（移动端可能 OOM）。
   final Pool _mediaGate;
 
-  /// 本地存储端口（生产实现转发到 repository / FileUtil；测试注入内存假实现）。
+  /// 本地存储端口（生产实现转发到 repository / AppFiles；测试注入内存假实现）。
   final SyncDiaryStore _diaryStore;
   final SyncCategoryStore _categoryStore;
   final SyncTombstoneStore _tombstoneStore;

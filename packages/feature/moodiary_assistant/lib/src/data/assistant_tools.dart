@@ -364,7 +364,7 @@ abstract final class AssistantToolRegistry {
     final title = diary.title.trim().isEmpty ? '(无标题)' : diary.title.trim();
     final buffer = StringBuffer()
       ..writeln('id=${diary.id}')
-      ..writeln('日期=${TimeUtil.isoDate(diary.time)}')
+      ..writeln('日期=${TimeFormat.isoDate(diary.time)}')
       ..writeln('标题=$title')
       ..writeln('心情=${diary.mood.toStringAsFixed(2)}');
     if (diary.categoryId != null && diary.categoryId!.isNotEmpty) {
@@ -406,8 +406,8 @@ abstract final class AssistantToolRegistry {
     final buffer = StringBuffer()..writeln('日记总数=${counts.total}');
     if (newest.isNotEmpty && oldest.isNotEmpty) {
       buffer.writeln(
-        '时间跨度=${TimeUtil.isoDate(oldest.first.time)} ~ '
-        '${TimeUtil.isoDate(newest.first.time)}',
+        '时间跨度=${TimeFormat.isoDate(oldest.first.time)} ~ '
+        '${TimeFormat.isoDate(newest.first.time)}',
       );
     }
     final categorized = counts.byCategory.values.fold<int>(0, (a, b) => a + b);
@@ -453,7 +453,7 @@ abstract final class AssistantToolRegistry {
       aspect: null,
     );
     await DiaryRepository.get().insertADiary(diary);
-    return '已创建日记「${title.isEmpty ? '(无标题)' : title}」（${TimeUtil.isoDate(diary.time)}），id=${diary.id}。';
+    return '已创建日记「${title.isEmpty ? '(无标题)' : title}」（${TimeFormat.isoDate(diary.time)}），id=${diary.id}。';
   }
 
   static ({String content, String contentText, DiaryType type}) _toTiptap(
@@ -496,7 +496,7 @@ abstract final class AssistantToolRegistry {
         type: converted.type.value,
       );
       // 内容变更必须重算媒体引用列表，否则媒体库出现幻影条目、废弃媒体永不回收。
-      final media = DiaryContentUtil.extractMedia(updated);
+      final media = DiaryContent.extractMedia(updated);
       updated = updated.copyWith(
         imageName: media.images,
         videoName: media.videos,
@@ -709,7 +709,7 @@ abstract final class AssistantToolRegistry {
       final cat = diary.categoryId;
       final catPart = (cat != null && cat.isNotEmpty) ? ' 分类id=$cat' : '';
       buffer.writeln(
-        'id=${diary.id} 【${TimeUtil.isoDate(diary.time)}】$title '
+        'id=${diary.id} 【${TimeFormat.isoDate(diary.time)}】$title '
         '心情=${diary.mood.toStringAsFixed(2)}$catPart',
       );
       final text = diary.contentText.trim();
@@ -734,9 +734,9 @@ abstract final class AssistantToolRegistry {
     final conds = <String>[
       if (keywords.isNotEmpty) '关键词「${keywords.join(' ')}」',
       if (categoryId != null) '分类 $categoryId',
-      if (start != null) '起 ${TimeUtil.isoDate(start)}',
+      if (start != null) '起 ${TimeFormat.isoDate(start)}',
       if (endExclusive != null)
-        '止 ${TimeUtil.isoDate(endExclusive.subtract(const Duration(days: 1)))}',
+        '止 ${TimeFormat.isoDate(endExclusive.subtract(const Duration(days: 1)))}',
     ];
     return conds.isEmpty
         ? '还没有任何日记。'

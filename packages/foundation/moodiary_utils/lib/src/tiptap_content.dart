@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'markdown_util.dart';
+import 'markdown_converter.dart';
 
 /// 从 TipTap 文档 JSON 抽取纯文本镜像与内嵌媒体（落库 content=JSON 的 [DiaryType.tiptap] 日记用）。
 /// 识别不出 JSON 文档时回退到旧 markdown 处理（MarkdownConverter / `![](name)` 正则），故对旧

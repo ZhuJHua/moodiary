@@ -252,7 +252,7 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              TimeUtil.fullDate(date),
+              TimeFormat.fullDate(date),
               style: context.textTheme.titleSmall?.copyWith(
                 color: scheme.primary,
                 fontWeight: FontWeight.w600,
@@ -298,7 +298,7 @@ class _MediaSliver extends StatelessWidget {
           itemBuilder: (context, i) => AudioTile(
             key: ValueKey(names[i]),
             controller: audioController,
-            path: FileUtil.getRealPath('audio', names[i]),
+            path: AppFiles.getRealPath('audio', names[i]),
           ),
         ),
       );
@@ -388,12 +388,12 @@ class _ImageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final path = FileUtil.getRealPath('image', names[index]);
+    final path = AppFiles.getRealPath('image', names[index]);
     return GestureDetector(
       onTap: () => MoodiaryImageBrowser.show(
         context,
         images: [
-          for (final name in names) FileUtil.getRealPath('image', name),
+          for (final name in names) AppFiles.getRealPath('image', name),
         ],
         initialIndex: index,
         heroPrefix: _kImageHeroPrefix,
@@ -422,7 +422,7 @@ class _VideoTile extends StatelessWidget {
       onTap: () => MediaVideoViewer.show(context, name: name),
       child: _Thumb(
         image: ResizeImage(
-          FileImage(File(FileUtil.getRealPath('thumbnail', name))),
+          FileImage(File(AppFiles.getRealPath('thumbnail', name))),
           width: cacheWidth,
         ),
         overlay: const Stack(

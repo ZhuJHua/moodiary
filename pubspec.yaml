@@ -7,7 +7,6 @@ environment:
 
 workspace:
   - mobile
-  - desktop
   - packages/*/*
 
 melos:

@@ -132,7 +132,7 @@ class _CalendarViewState extends ConsumerState<CalendarView> {
       allDate.add(t);
       dateWithDiary.add(t);
     }
-    final dateCountMap = ArrayUtil.countList(allDate);
+    final dateCountMap = ListCodec.countList(allDate);
 
     return Stack(
       children: [

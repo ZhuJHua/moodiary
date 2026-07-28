@@ -3,7 +3,7 @@ import 'package:moodiary_core/src/storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// `IKVStorage` 的 SharedPreferences 实现。[init] 落 `firstStart` 标记。版本迁移钩子
-/// （`MergeUtil`）已上移到组合根（`main.dart`）调用，以解除 core → merge 反向依赖。
+/// （`VersionMigrator`）已上移到组合根（`main.dart`）调用，以解除 core → merge 反向依赖。
 final class SharedPreferencesKVStorage extends IKVStorage {
   late final SharedPreferencesWithCache _prefs;
 

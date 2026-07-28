@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/data/lan/lan_discovery.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/lan/lan_receiver.dart';
@@ -33,7 +33,7 @@ class _LanReceivePageState extends State<LanReceivePage> {
       await _service.start();
       // mDNS 广播是纯增强，失败静默（对方仍可手动输 IP）。
       await _advertiser.start(port: _service.port);
-      final ips = await NetworkUtil.getLocalIPv4s();
+      final ips = await NetworkStatus.getLocalIPv4s();
       if (!mounted) return;
       setState(() {
         _ready = true;

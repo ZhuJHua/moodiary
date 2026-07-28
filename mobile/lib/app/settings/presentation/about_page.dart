@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary/gen/assets.gen.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -26,8 +25,8 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   Future<void> _load() async {
-    final pkg = await PackageUtil.getPackageInfo();
-    final device = await PackageUtil.getInfo();
+    final pkg = await AppInfo.getPackageInfo();
+    final device = await AppInfo.getInfo();
     if (!mounted) return;
     setState(() {
       _packageInfo = pkg;

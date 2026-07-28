@@ -113,7 +113,7 @@ class _MetaFooter extends StatelessWidget {
       ));
     }
 
-    children.add(Text(TimeUtil.cardDate(diary.time), style: labelStyle));
+    children.add(Text(TimeFormat.cardDate(diary.time), style: labelStyle));
 
     if (diary.weather.length >= 3) {
       children.add(Row(
@@ -175,7 +175,7 @@ Widget _image(String name, double pixelRatio, double targetWidth,
       decoration: BoxDecoration(
         image: DecorationImage(
           image: ResizeImage(
-            FileImage(File(FileUtil.getRealPath('image', name))),
+            FileImage(File(AppFiles.getRealPath('image', name))),
             width: (targetWidth * pixelRatio).toInt(),
           ),
           fit: fit,

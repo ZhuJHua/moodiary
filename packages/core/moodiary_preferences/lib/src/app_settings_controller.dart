@@ -24,7 +24,7 @@ final appInitialLocaleProvider = Provider<Locale>(
 class AppSettingsController extends _$AppSettingsController {
   @override
   AppSettings build() {
-    final (lightTheme, darkTheme) = ThemeUtil().getThemeData();
+    final (lightTheme, darkTheme) = ThemeManager().getThemeData();
     return AppSettings(
       lightTheme: lightTheme,
       darkTheme: darkTheme,
@@ -35,10 +35,10 @@ class AppSettingsController extends _$AppSettingsController {
   }
 
   Future<void> bumpTheme() async {
-    await ThemeUtil().buildTheme(
+    await ThemeManager().buildTheme(
       customFont: await FontRepository.get().getActiveFont(),
     );
-    final (lightTheme, darkTheme) = ThemeUtil().getThemeData();
+    final (lightTheme, darkTheme) = ThemeManager().getThemeData();
     state = state.copyWith(
       lightTheme: lightTheme,
       darkTheme: darkTheme,

@@ -35,7 +35,7 @@ class GraphInfoCard extends StatelessWidget {
     final cs = theme.colorScheme;
     final l10n = context.l10n;
     final title = node.title.trim().isEmpty
-        ? TimeUtil.longDate(node.time)
+        ? TimeFormat.longDate(node.time)
         : node.title.trim();
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
@@ -97,7 +97,7 @@ class GraphInfoCard extends StatelessWidget {
                               children: [
                                 Flexible(
                                   child: Text(
-                                    TimeUtil.longDate(node.time),
+                                    TimeFormat.longDate(node.time),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.textTheme.labelSmall?.copyWith(

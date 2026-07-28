@@ -475,7 +475,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   /// 仅下发「种子色 + 明暗 + 变体」；web 侧用 material-color-utilities 生成整套
-  /// Material 3 配色（与 [ThemeUtil.buildColorScheme] 同算法）再映射到编辑器配色。
+  /// Material 3 配色（与 [ThemeManager.buildColorScheme] 同算法）再映射到编辑器配色。
   Map<String, dynamic> _seedTheme() {
     final resolved = widget.seedResolver?.call();
     final seed = resolved?.seed ?? Theme.of(context).colorScheme.primary;
@@ -686,7 +686,7 @@ class MoodiaryEditorController {
     await _state?._insertVideo(name);
   }
 
-  /// 目录跳转：滚动到第 [index] 个 heading（文档序，与 `DiaryContentUtil` / `TiptapContent.headings` 一致）。
+  /// 目录跳转：滚动到第 [index] 个 heading（文档序，与 `DiaryContent` / `TiptapContent.headings` 一致）。
   Future<void> scrollToHeading(int index) async {
     await _state?._scrollToHeading(index);
   }

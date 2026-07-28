@@ -79,7 +79,7 @@ class _VideoPlayerComponentState extends State<VideoPlayerComponent> {
                     Positioned.fill(
                       child: Image.file(
                         File(
-                          FileUtil.getRealPath(
+                          AppFiles.getRealPath(
                             'thumbnail',
                             basename(widget.videoPath),
                           ),

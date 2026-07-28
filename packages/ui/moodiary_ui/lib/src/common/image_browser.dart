@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/src/basic/sheet.dart';
+import 'package:moodiary_ui/src/common/toast.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_view/photo_view.dart';
@@ -264,14 +265,14 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
           if (bytes == null || bytes.isEmpty) {
             throw const FormatException('empty body');
           }
-          tempPath = FileUtil.getCachePath('save-${uuidV7()}${_extOf(image)}');
+          tempPath = AppFiles.getCachePath('save-${uuidV7()}${_extOf(image)}');
           await File(tempPath).writeAsBytes(bytes);
           path = tempPath;
         } finally {
           await toast.dismiss();
         }
       }
-      final ok = await MediaUtil.saveToGallery(
+      final ok = await MediaManager.saveToGallery(
         path: path,
         type: MediaType.image,
       );
@@ -310,7 +311,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
       // 外链：图已在屏上（provider 命中缓存），只补分辨率。
       String? resolution;
       try {
-        final size = await MediaUtil.getImageSize(
+        final size = await MediaManager.getImageSize(
           _providerOf(image),
         ).timeout(const Duration(seconds: 3));
         resolution = '${size.width.toInt()} × ${size.height.toInt()}';
@@ -339,7 +340,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
       } catch (_) {}
     }
 
-    final unit = length == null ? null : FileUtil.bytesToUnits(length);
+    final unit = length == null ? null : AppFiles.bytesToUnits(length);
     final ext = p.extension(image).replaceFirst('.', '').toUpperCase();
     return _ImageInfoData(
       name: p.basename(image),
@@ -385,7 +386,7 @@ class _ImageInfoSheet extends StatelessWidget {
       if (info.size != null) (l10n.imageBrowserInfoSize, info.size!),
       if (info.format != null) (l10n.imageBrowserInfoFormat, info.format!),
       if (info.modified != null)
-        (l10n.imageBrowserInfoModified, TimeUtil.fullDateTime(info.modified!)),
+        (l10n.imageBrowserInfoModified, TimeFormat.fullDateTime(info.modified!)),
     ];
     return SafeArea(
       top: false,

@@ -85,7 +85,7 @@ class SearchResultCard extends StatelessWidget {
                   Icon(Icons.schedule_rounded, size: 13, color: scheme.outline),
                   const SizedBox(width: 4),
                   Text(
-                    TimeUtil.mediumDate(diary.time),
+                    TimeFormat.mediumDate(diary.time),
                     style: textTheme.bodySmall?.copyWith(color: scheme.outline),
                   ),
                 ],

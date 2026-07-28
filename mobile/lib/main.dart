@@ -10,11 +10,11 @@ import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show FlutterSmartDialog;
 import 'package:moodiary/app/router/router.dart';
 import 'package:moodiary/app/di/service_di.dart';
 
@@ -25,7 +25,7 @@ Future<Locale> _initSystem() async {
   // 用 try/catch 包裹：迁移抛异常时只记日志、不阻断启动——否则 appVersion 不推进，
   // 每次启动都在同一步崩，陷入永久崩溃循环把用户锁在数据外。步骤幂等，下次启动重试。
   try {
-    await MergeUtil.runVersionMigration();
+    await VersionMigrator.run();
   } catch (e, s) {
     logger.e('version migration failed', error: e, stackTrace: s);
   }
@@ -33,7 +33,7 @@ Future<Locale> _initSystem() async {
   final localeFuture = _findLanguage();
   await Future.wait([
     FontRepository.get().getActiveFont().then(
-      (font) => ThemeUtil().buildTheme(customFont: font),
+      (font) => ThemeManager().buildTheme(customFont: font),
     ),
     registerService(),
     localeFuture,
@@ -133,10 +133,7 @@ class Moodiary extends ConsumerWidget {
       darkTheme: settings.darkTheme,
       locale: settings.locale,
       themeMode: settings.themeMode,
-      localizationsDelegates: const [
-        ...AppLocalizations.localizationsDelegates,
-        FlutterQuillLocalizations.delegate,
-      ],
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
     );
   }

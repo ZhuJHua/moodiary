@@ -54,7 +54,7 @@ class _RecordSheetState extends State<RecordSheet>
       // 用户中途滑掉 sheet → 异步清理录音 + 文件。
       _recorder.cancel().catchError((_) {});
       // ignore: discarded_futures
-      FileUtil.deleteFile(FileUtil.getRealPath('audio', name));
+      AppFiles.deleteFile(AppFiles.getRealPath('audio', name));
     }
     _recorder.dispose();
     super.dispose();
@@ -64,7 +64,7 @@ class _RecordSheetState extends State<RecordSheet>
     final granted = await _recorder.hasPermission();
     if (!granted) return;
     final name = 'audio-${uuidV7()}.m4a';
-    final path = FileUtil.getRealPath('audio', name);
+    final path = AppFiles.getRealPath('audio', name);
     await _recorder.start(
       const RecordConfig(
         // Android 走 legacy MediaRecorder：兼容老设备的 m4a 编码。
@@ -137,7 +137,7 @@ class _RecordSheetState extends State<RecordSheet>
     final name = _fileName;
     _fileName = null;
     if (name != null) {
-      await FileUtil.deleteFile(FileUtil.getRealPath('audio', name));
+      await AppFiles.deleteFile(AppFiles.getRealPath('audio', name));
     }
     if (!mounted) return;
     Navigator.of(context).pop();

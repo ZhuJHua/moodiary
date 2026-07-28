@@ -7,7 +7,7 @@ part 'cache_controller.g.dart';
 class CacheController extends _$CacheController {
   @override
   Future<CacheUsage> build() async {
-    final map = await FileUtil.countSize();
+    final map = await AppFiles.countSize();
     return CacheUsage(
       display: '${map['size']} ${map['unit']}',
       bytes: map['bytes'] as int,
@@ -15,7 +15,7 @@ class CacheController extends _$CacheController {
   }
 
   Future<void> clear() async {
-    await FileUtil.clearCache();
+    await AppFiles.clearCache();
     ref.invalidateSelf();
   }
 }

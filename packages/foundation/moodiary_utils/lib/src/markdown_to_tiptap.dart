@@ -9,7 +9,7 @@ import 'package:markdown/markdown.dart' as md;
 ///
 /// 覆盖：段落 / heading(h1-6) / bulletList / orderedList / taskList(GFM `- [ ]`) / blockquote /
 /// codeBlock(带语言) / horizontalRule / 表格(GFM)；行内 bold/italic/strike/underline/code/link/硬换行；
-/// 媒体 `![](name)` 按文件名前缀还原为 image/audio/video 一等节点（与 DiaryContentUtil 路由一致）。
+/// 媒体 `![](name)` 按文件名前缀还原为 image/audio/video 一等节点（与 DiaryContent 路由一致）。
 /// 丢弃：原始 HTML、表格单元格对齐、嵌套列表以外的 GFM 扩展（脚注/alert 等降级为其文本）。
 ///
 /// 容错：解析抛异常返回 null，调用方据此跳过该篇（保留原 markdown）。

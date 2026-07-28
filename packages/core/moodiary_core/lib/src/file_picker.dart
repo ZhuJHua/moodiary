@@ -4,7 +4,7 @@ import 'package:moodiary_core/src/di.dart';
 
 /// 平台文件/媒体选取服务。移动端实现走应用内选择器（wechat_assets_picker /
 /// wechat_camera_picker + file_picker），桌面端实现走系统对话框；由各 app 在 DI 注册。
-/// 统一返回 [XFile] 对接 MediaUtil 存盘管线；取消返回空列表 / null。
+/// 统一返回 [XFile] 对接 MediaManager 存盘管线；取消返回空列表 / null。
 abstract class IFilePicker {
   static IFilePicker get() => getIt.get<IFilePicker>();
 

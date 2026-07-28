@@ -28,7 +28,7 @@ void main() {
 
     expect(await media.exists('image', 'a.jpg'), isTrue);
     expect(await media.read('image', 'a.jpg'), bytes([1, 2, 3]));
-    // 路径布局与 FileUtil.getRealPath 一致。
+    // 路径布局与 AppFiles.getRealPath 一致。
     expect(fs.file(p.join(baseDir, 'image', 'a.jpg')).existsSync(), isTrue);
   });
 

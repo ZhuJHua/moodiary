@@ -12,7 +12,7 @@ class SoulRepository {
 
   static final SoulRepository _instance = SoulRepository._();
 
-  String get _path => FileUtil.getRealPath('assistant', 'SOUL.md');
+  String get _path => AppFiles.getRealPath('assistant', 'SOUL.md');
 
   /// 读取生效人格：文件存在读文件，否则回退 [defaultSoul]；始终非空（保持缓存前缀稳定）。
   Future<String> read() async {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 
@@ -63,7 +62,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(
-                        TimeUtil.listDateTime(d.time),
+                        TimeFormat.listDateTime(d.time),
                       ),
                       onChanged: (v) {
                         setState(() {

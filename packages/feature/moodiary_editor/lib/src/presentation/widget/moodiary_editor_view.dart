@@ -114,22 +114,22 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   }
 
   /// 乐观插入：选图后立即把原图落到 image 目录并插入显示（快），压缩挪到后台就地进行、
-  /// 完成后无感替换同名文件（见 [MediaUtil.materializeOriginal] / [MediaUtil.compressInPlace]）。
+  /// 完成后无感替换同名文件（见 [MediaManager.materializeOriginal] / [MediaManager.compressInPlace]）。
   Future<void> _insertPicked(List<XFile> files) async {
     for (final file in files) {
-      final name = await MediaUtil.materializeOriginal(file);
+      final name = await MediaManager.materializeOriginal(file);
       if (name == null) continue;
       await _controller.insertMedia(name);
-      unawaited(MediaUtil.compressInPlace(name));
+      unawaited(MediaManager.compressInPlace(name));
     }
   }
 
-  /// 把 web 侧 data URI 落盘，复用 [MediaUtil.saveImages] 压缩 / 命名，返回存盘
+  /// 把 web 侧 data URI 落盘，复用 [MediaManager.saveImages] 压缩 / 命名，返回存盘
   /// 文件名（失败返回 null）。
   Future<String?> _saveDataUriImage(String dataUri, String fallbackName) async {
     final xfile = await _dataUriToTempFile(dataUri, fallbackName);
     if (xfile == null) return null;
-    final saved = await MediaUtil.saveImages(imageFileList: [xfile]);
+    final saved = await MediaManager.saveImages(imageFileList: [xfile]);
     return saved[xfile.path];
   }
 
@@ -150,7 +150,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
             : '.png',
     };
     final tmpName = 'upload-${uuidV7()}$ext';
-    final tmpPath = FileUtil.getCachePath(tmpName);
+    final tmpPath = AppFiles.getCachePath(tmpName);
     await File(tmpPath).writeAsBytes(bytes);
     return XFile(tmpPath);
   }
@@ -192,7 +192,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
         ? await IFilePicker.get().recordVideo(context)
         : await IFilePicker.get().pickVideo(context);
     if (file == null) return;
-    final saved = await MediaUtil.saveVideo(videoFileList: [file]);
+    final saved = await MediaManager.saveVideo(videoFileList: [file]);
     final name = saved[file.path];
     if (name != null) await _controller.insertVideo(name);
   }
@@ -233,7 +233,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       if (file == null) return;
       final ext = p.extension(file.path);
       final name = 'audio-${uuidV7()}$ext';
-      await File(file.path).copy(FileUtil.getRealPath('audio', name));
+      await File(file.path).copy(AppFiles.getRealPath('audio', name));
       await _controller.insertAudio(name);
     } catch (_) {
       if (mounted) toast.error(message: context.l10n.audioFileError);
@@ -258,7 +258,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       for (final src in images)
         src.startsWith('http://') || src.startsWith('https://')
             ? src
-            : FileUtil.getRealPath('image', src),
+            : AppFiles.getRealPath('image', src),
     ];
     MoodiaryImageBrowser.show(context, images: resolved, initialIndex: index);
   }
@@ -275,7 +275,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   String _candidateLabel(Diary d) {
     final title = d.title.trim();
     if (title.isNotEmpty) return title;
-    final date = TimeUtil.isoDate(d.time);
+    final date = TimeFormat.isoDate(d.time);
     final snippet = d.contentText.trim().replaceAll(RegExp(r'\s+'), ' ');
     if (snippet.isEmpty) return date;
     final clipped = snippet.length > 16 ? '${snippet.substring(0, 16)}…' : snippet;
@@ -306,8 +306,8 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       saveStatus: widget.saveStatus,
       firstLineIndent: widget.firstLineIndent,
       fontScale: widget.fontScale,
-      seedResolver: () => ThemeUtil().editorSeed,
-      fontResolver: () => ThemeUtil().editorFont,
+      seedResolver: () => ThemeManager().editorSeed,
+      fontResolver: () => ThemeManager().editorFont,
       mediaResolver: appMediaResolver,
       loadingBuilder: (_) => const MoodiaryLoading(),
     );

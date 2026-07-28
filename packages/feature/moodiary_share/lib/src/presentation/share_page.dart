@@ -46,7 +46,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   Future<void> _copy(Diary d) async {
     final text = [
       d.title,
-      TimeUtil.longDateTime(d.time),
+      TimeFormat.longDateTime(d.time),
       '',
       d.contentText,
     ].join('\n');

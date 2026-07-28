@@ -552,7 +552,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             ? AssistantRole.user
             : AssistantRole.assistant,
         content: m.text,
-        imagePath: hasImage ? FileUtil.getRealPath('image', imageName) : null,
+        imagePath: hasImage ? AppFiles.getRealPath('image', imageName) : null,
       ));
     }
 
@@ -849,7 +849,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     await _submit(_formatDiaryMessage(diary));
   }
 
-  /// 相册选一张图，经 MediaUtil 转码/压缩存进 image 目录，挂到输入框待发（可再配文字）。
+  /// 相册选一张图，经 MediaManager 转码/压缩存进 image 目录，挂到输入框待发（可再配文字）。
   Future<void> _pickImage() async {
     if (_sending) return;
     _panelController.updatePanelType(ChatBottomPanelType.none);
@@ -857,7 +857,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final files = await IFilePicker.get().pickImages(context, maxAssets: 1);
     if (files.isEmpty || !mounted) return;
     final first = files.first;
-    final saved = await MediaUtil.saveImages(imageFileList: [first]);
+    final saved = await MediaManager.saveImages(imageFileList: [first]);
     final name = saved[first.path];
     if (name == null || !mounted) return;
     setState(() => _pendingImageName = name);
@@ -869,7 +869,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   String _formatDiaryMessage(Diary diary) {
     final l10n = context.l10n;
-    final date = TimeUtil.fullDate(diary.time);
+    final date = TimeFormat.fullDate(diary.time);
     final title = diary.title.trim();
     final header = title.isEmpty ? date : '$date · $title';
     final body = diary.contentText.trim();
@@ -1545,7 +1545,7 @@ class _ComposerImagePreview extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.file(
-                File(FileUtil.getRealPath('image', imageName)),
+                File(AppFiles.getRealPath('image', imageName)),
                 width: 72,
                 height: 72,
                 fit: BoxFit.cover,
@@ -1608,7 +1608,7 @@ class _UserBubble extends StatelessWidget {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: 260),
             child: Image.file(
-              File(FileUtil.getRealPath('image', imageName)),
+              File(AppFiles.getRealPath('image', imageName)),
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => _brokenImage(scheme, 120),
             ),
@@ -2164,7 +2164,7 @@ class _SessionCard extends StatelessWidget {
           style: context.textTheme.titleSmall?.copyWith(color: onColor),
         ),
         subtitle: Text(
-          TimeUtil.relative(session.updatedAt),
+          TimeFormat.relative(session.updatedAt),
           style: context.textTheme.labelSmall?.copyWith(
             color: selected
                 ? scheme.onSecondaryContainer.withValues(alpha: 0.8)

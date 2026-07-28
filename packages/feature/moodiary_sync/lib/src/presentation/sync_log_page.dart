@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 
@@ -97,7 +97,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
                       : Icons.calendar_month_rounded,
                 ),
                 title: Text(
-                  TimeUtil.isoDate(day) +
+                  TimeFormat.isoDate(day) +
                       (_sameDay(day, today) ? '（今天）' : ''),
                 ),
                 trailing: _sameDay(day, _selectedDay)
@@ -169,7 +169,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
                 Text(
                   _viewingToday
                       ? '今天'
-                      : TimeUtil.isoDate(_selectedDay),
+                      : TimeFormat.isoDate(_selectedDay),
                   style: context.textTheme.labelLarge?.copyWith(
                     color: context.colorScheme.onSurfaceVariant,
                   ),
@@ -313,7 +313,7 @@ class _EventGroupTile extends StatelessWidget {
         ? scheme.tertiary
         : scheme.onSurfaceVariant;
     final range =
-        '${TimeUtil.timeHms(events.last.at)} – ${TimeUtil.timeHms(events.first.at)}';
+        '${TimeFormat.timeHms(events.last.at)} – ${TimeFormat.timeHms(events.first.at)}';
 
     return ExpansionTile(
       // 用组内最旧事件做 key：列表实时增长时最旧端不变，新事件插入不会让
@@ -393,7 +393,7 @@ class _EventTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 1),
                     Text(
-                      TimeUtil.timeHms(event.at),
+                      TimeFormat.timeHms(event.at),
                       style: context.textTheme.bodySmall?.copyWith(
                         color: scheme.outline,
                         fontFeatures: const [FontFeature.tabularFigures()],

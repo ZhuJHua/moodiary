@@ -14,9 +14,9 @@ class FontController extends _$FontController {
     final list = await FontRepository.get().getAllFonts();
     await Future.wait([
       for (final f in list)
-        FontUtil.loadFont(
+        FontManager.loadFont(
           fontName: f.fontFamily,
-          fontPath: FileUtil.getRealPath('font', f.fontFileName),
+          fontPath: AppFiles.getRealPath('font', f.fontFileName),
         ),
     ]);
     return list;
@@ -24,23 +24,23 @@ class FontController extends _$FontController {
 
   /// 返回 `null`=用户取消、非空错误 message=失败、空字符串=成功。
   Future<String?> addFont() async {
-    final xFile = await FontUtil.pickFont();
+    final xFile = await FontManager.pickFont();
     if (xFile == null) return null;
-    final fontName = await FontUtil.getFontName(filePath: xFile.path);
+    final fontName = await FontManager.getFontName(filePath: xFile.path);
     if (fontName == null || fontName.isEmpty) return '字体名称获取失败';
     final current = state.value ?? const <Font>[];
     if (current.any((e) => e.fontFamily == fontName)) {
       return '字体已存在';
     }
     final fontFileName = '$fontName${p.extension(xFile.path)}';
-    final newPath = FileUtil.getRealPath('font', fontFileName);
+    final newPath = AppFiles.getRealPath('font', fontFileName);
     final newFont = Font(
       fontFileName: fontFileName,
-      fontWghtAxisMap: await FontUtil.getFontWghtAxis(filePath: xFile.path),
+      fontWghtAxisMap: await FontManager.getFontWghtAxis(filePath: xFile.path),
     );
     await xFile.saveTo(newPath);
     await FontRepository.get().insertFont(newFont);
-    await FontUtil.loadFont(fontName: newFont.fontFamily, fontPath: newPath);
+    await FontManager.loadFont(fontName: newFont.fontFamily, fontPath: newPath);
     state = AsyncValue.data([...current, newFont]);
     return '';
   }
@@ -51,8 +51,8 @@ class FontController extends _$FontController {
       await setActive(null);
     }
     await FontRepository.get().deleteFontById(font.id);
-    await FileUtil.deleteFile(
-      FileUtil.getRealPath('font', font.fontFileName),
+    await AppFiles.deleteFile(
+      AppFiles.getRealPath('font', font.fontFileName),
     );
     final next = (state.value ?? const <Font>[])
         .where((e) => e.fontFamily != font.fontFamily)

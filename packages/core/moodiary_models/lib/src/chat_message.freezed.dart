@@ -18,7 +18,7 @@ mixin _$ChatMessage {
 @Id() String get id;@Index() String get sessionId;/// `"user"` 或 `"assistant"`。
  String get role; String get content; DateTime get createdAt;/// assistant 回复的思考 / 推理过程（思考模式开启时才有）。null 表示非思考回复。
  String? get reasoning;/// 思考耗时（毫秒）。null 表示无思考过程。
- int? get thinkingMillis;/// 随消息发送的图片文件名（存于 image 目录，用 FileUtil.getRealPath 解析）。null 表示无图。
+ int? get thinkingMillis;/// 随消息发送的图片文件名（存于 image 目录，用 AppFiles.getRealPath 解析）。null 表示无图。
  String? get imageName;/// 本轮（assistant 回复）消耗的输入 token 数。null 表示无用量数据。
  int? get inputTokens;/// 本轮（assistant 回复）产生的输出 token 数。null 表示无用量数据。
  int? get outputTokens;
@@ -237,7 +237,7 @@ class _ChatMessage implements ChatMessage {
 @override final  String? reasoning;
 /// 思考耗时（毫秒）。null 表示无思考过程。
 @override final  int? thinkingMillis;
-/// 随消息发送的图片文件名（存于 image 目录，用 FileUtil.getRealPath 解析）。null 表示无图。
+/// 随消息发送的图片文件名（存于 image 目录，用 AppFiles.getRealPath 解析）。null 表示无图。
 @override final  String? imageName;
 /// 本轮（assistant 回复）消耗的输入 token 数。null 表示无用量数据。
 @override final  int? inputTokens;

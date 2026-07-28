@@ -19,7 +19,7 @@ const String _kThinkingMillisKey = 'thinkingMillis';
 /// 是否仍在思考阶段（首个正文 token 到来前为 true，用于展示「思考中…」）。
 const String _kThinkingActiveKey = 'thinkingActive';
 
-/// 随消息发送的图片文件名（image 目录内，用 FileUtil.getRealPath 解析）。
+/// 随消息发送的图片文件名（image 目录内，用 AppFiles.getRealPath 解析）。
 const String _kImageNameKey = 'imageName';
 
 /// 本轮 assistant 回复的输入 / 输出 token 用量。

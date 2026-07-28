@@ -187,7 +187,7 @@ class EditController extends _$EditController {
   Future<DraftSaveResult> _doAutoSave() async {
     final current = _latest;
     if (current == null) return DraftSaveResult.saved;
-    final media = DiaryContentUtil.extractMedia(current);
+    final media = DiaryContent.extractMedia(current);
     final next = current.copyWith(
       lastModified: DateTime.timestamp(),
       imageName: media.images,

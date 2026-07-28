@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart' show FlutterSmartDialog;
+import 'package:moodiary_ui/moodiary_ui.dart' show FlutterSmartDialog;
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 

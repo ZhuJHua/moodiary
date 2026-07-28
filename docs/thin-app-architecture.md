@@ -2,6 +2,12 @@
 
 > **STATUS: ✅ EXECUTED (all phases 0–7 shipped).** `mobile/lib` now has zero `feature/` slice; `moodiary_diary`/`moodiary_sync`/`moodiary_lock`/`moodiary_share` extracted, `moodiary_editor_host` merged into `moodiary_editor`, `user`/`web_view` deleted; the settings hub relocated to `app/settings` and the diary home to `app/home`; `tool/layer_baseline.txt` is empty (0 violations). This doc is kept as the design record; the numbered roadmap in §6 is history.
 
+> **SINCE THEN (2026-07-28).** The body below is a snapshot of the state at execution time; these parts have changed and the doc was deliberately *not* rewritten:
+> - `flutter_quill` is gone from the whole repo. `merge/merge.dart` moved to `moodiary_migration` (`src/version_migrator.dart`, class `VersionMigrator`) and now validates/wraps Delta with the pure-Dart `QuillDelta` helper; legacy richText diaries render by converting to TipTap on open.
+> - The `desktop/` skeleton was deleted — a desktop app will be rebuilt later. Everything below about desktop is *intent*, not current code. `moodiary_scan` no longer exists either.
+> - `XxxUtil` classes were renamed to role-based names (`FileUtil`→`AppFiles`, `MergeUtil`→`VersionMigrator`, …), so identifiers quoted below may not resolve.
+> - Package layer direction is now machine-enforced by `tool/check_layers.dart`, not just by convention.
+
 **Goal:** `mobile/lib` retains *no* `feature/` slice. It becomes a composition root plus the two app-owned presentation surfaces the vision explicitly permits (导航布局 + 设置页). Every self-contained capability sinks into a package; both apps assemble the *same* packages into their own shells.
 
 **Taxonomy rule (settled):** **one feature = one self-contained package** — engine / logic / UI all inside. A package may hold multiple or adaptive UIs; we do **not** split a package merely because desktop rebuilds its UI (YAGNI — desktop is still a skeleton). We only keep the headless engine code **widget-free inside** its package (`src/data`+`src/application`), so a future engine-only split for desktop stays a trivial `git mv`.

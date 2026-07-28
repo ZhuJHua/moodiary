@@ -91,7 +91,7 @@ class MediaCleanupController extends _$MediaCleanupController {
 
   Future<MediaCleanupReport> scan() async {
     final used = await DiaryRepository.get().collectReferencedMedia();
-    return FileUtil.scanOrphanMedia(
+    return AppFiles.scanOrphanMedia(
       usedImages: used.images,
       usedAudios: used.audios,
       usedVideos: used.videos,
@@ -99,6 +99,6 @@ class MediaCleanupController extends _$MediaCleanupController {
   }
 
   Future<void> clean(MediaCleanupReport report) async {
-    await FileUtil.deleteOrphanMedia(report);
+    await AppFiles.deleteOrphanMedia(report);
   }
 }

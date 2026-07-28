@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_editor/src/data/editor_migration_service.dart';
-import 'package:moodiary_editor/src/presentation/widget/migration_compare_page.dart';
 
 /// 可视化「迁移到新编辑器」工具：把旧的 richText(Quill) / markdown 日记转换为 TipTap。
-/// 列出待迁移日记（可逐条预览转换结果、单篇或全部迁移），并列出已迁移项支持回退
-/// （转换前已备份原文）。
+/// 列出待迁移日记（单篇或全部迁移），并列出已迁移项支持回退（转换前已备份原文）。
+/// 旧日记打开时本就按转换结果渲染，等于常驻预览，故不再单设对比页。
 class EditorMigrationPage extends StatefulWidget {
   const EditorMigrationPage({super.key});
 
@@ -119,16 +118,6 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
     }
   }
 
-  /// 左右对比预览（右侧为新编辑器真实渲染）；在对比页里迁移成功后回 true，刷新列表。
-  Future<void> _preview(Diary diary) async {
-    final migrated = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
-        builder: (_) => MigrationComparePage(diary: diary),
-      ),
-    );
-    if (migrated == true && mounted) await _load();
-  }
-
   Future<bool?> _confirmMigrate(int count) {
     return showDialog<bool>(
       context: context,
@@ -178,20 +167,10 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
                       leading: const Icon(Icons.feed_outlined),
                       title: Text(_label(d), maxLines: 1, overflow: TextOverflow.ellipsis),
                       subtitle: Text(_date(d.time)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            tooltip: '预览转换结果',
-                            icon: const Icon(Icons.visibility_outlined),
-                            onPressed: _busy ? null : () => _preview(d),
-                          ),
-                          IconButton(
-                            tooltip: '迁移这一篇',
-                            icon: const Icon(Icons.arrow_forward_rounded),
-                            onPressed: _busy ? null : () => _migrateOne(d),
-                          ),
-                        ],
+                      trailing: IconButton(
+                        tooltip: '迁移这一篇',
+                        icon: const Icon(Icons.arrow_forward_rounded),
+                        onPressed: _busy ? null : () => _migrateOne(d),
                       ),
                     ),
                 if (_backups.isNotEmpty) ...[

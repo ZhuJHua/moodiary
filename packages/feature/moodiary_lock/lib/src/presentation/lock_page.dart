@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
@@ -60,7 +61,7 @@ class _LockPageState extends ConsumerState<LockPage>
   Future<void> _tryBiometric() async {
     if (_isLocked || _unlocked) return;
     if (!_supportBio) return;
-    final ok = await AuthUtil.check();
+    final ok = await BiometricAuth.check();
     if (!mounted || !ok) return;
     _unlock();
   }

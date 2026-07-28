@@ -8,7 +8,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'diary_content_util.dart';
+import 'diary_content.dart';
 
 /// 倒排 / 链接索引的建立时机：[inline] 立即建（默认，非编辑器调用方）；[defer] 只写行 +
 /// 入队，分词/倒排推迟到排空时建（编辑期内容有变）；[skip] 不建也不入队（编辑期仅改元
@@ -353,7 +353,7 @@ class DiaryRepository {
       diaryIsarId: diary.isarId,
       tokens: tokens,
       titleTokens: title?.cutForSearch ?? const [],
-      links: DiaryContentUtil.extractLinks(diary),
+      links: DiaryContent.extractLinks(diary),
       contentChars: diary.contentText.length,
     );
   }
@@ -575,19 +575,19 @@ class DiaryRepository {
   static Future<void> _cleanLocalMedia(Diary diary) async {
     for (final name in diary.imageName) {
       try {
-        await FileUtil.deleteFile(FileUtil.getRealPath('image', name));
+        await AppFiles.deleteFile(AppFiles.getRealPath('image', name));
       } catch (_) {}
     }
     for (final name in diary.audioName) {
       try {
-        await FileUtil.deleteFile(FileUtil.getRealPath('audio', name));
+        await AppFiles.deleteFile(AppFiles.getRealPath('audio', name));
       } catch (_) {}
     }
     for (final name in diary.videoName) {
       try {
-        await FileUtil.deleteFile(FileUtil.getRealPath('video', name));
+        await AppFiles.deleteFile(AppFiles.getRealPath('video', name));
         final thumbName = 'thumbnail-${name.substring(6, 42)}.jpeg';
-        await FileUtil.deleteFile(FileUtil.getRealPath('video', thumbName));
+        await AppFiles.deleteFile(AppFiles.getRealPath('video', thumbName));
       } catch (_) {}
     }
   }
@@ -1144,14 +1144,14 @@ class DiaryRepository {
       var next = diary;
       var changed = false;
 
-      final plain = DiaryContentUtil.derivePlainText(diary);
+      final plain = DiaryContent.derivePlainText(diary);
       if (plain != diary.contentText) {
         next = next.copyWith(contentText: plain);
         changed = true;
         contentTextFixed++;
       }
 
-      final media = DiaryContentUtil.extractMedia(diary);
+      final media = DiaryContent.extractMedia(diary);
       if (!_sameNameSet(media.images, diary.imageName) ||
           !_sameNameSet(media.videos, diary.videoName) ||
           !_sameNameSet(media.audios, diary.audioName)) {

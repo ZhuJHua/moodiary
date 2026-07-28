@@ -53,9 +53,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_driver:
-    sdk: flutter
-
   build_runner: 2.15.1
   flutter_gen_runner: 5.15.0
 

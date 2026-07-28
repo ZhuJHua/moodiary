@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 
 String lanFmtBytes(int bytes) {
-  final unit = FileUtil.bytesToUnits(bytes);
+  final unit = AppFiles.bytesToUnits(bytes);
   return '${unit['size']} ${unit['unit']}';
 }
 

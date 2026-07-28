@@ -10,7 +10,7 @@ import 'package:path/path.dart' as p;
 
 /// 引擎对本地存储的最小依赖面，抽成端口以便单测注入内存假实现 —— 生产实现
 /// （[RepoSyncDiaryStore] / [RepoSyncCategoryStore] / [DiskSyncMediaFiles]）只是
-/// 转发到现有 repository / FileUtil，行为与重构前完全一致。
+/// 转发到现有 repository / AppFiles，行为与重构前完全一致。
 abstract interface class SyncDiaryStore {
   /// 全量活跃日记（含回收站；已删日记的行已硬删、事实在墓碑表）。
   Future<List<Diary>> getAllDiaries();
@@ -114,7 +114,7 @@ class RepoSyncTombstoneStore implements SyncTombstoneStore {
 }
 
 /// 生产媒体实现：默认 [LocalFileSystem]（行为同 `dart:io`），布局
-/// `<baseDir>/<type>/<filename>`，与 `FileUtil.getRealPath` 一致。注入
+/// `<baseDir>/<type>/<filename>`，与 `AppFiles.getRealPath` 一致。注入
 /// `package:file` 的 `MemoryFileSystem` + 自定义 [baseDir] 即可纯内存单测。
 class DiskSyncMediaFiles implements SyncMediaFiles {
   DiskSyncMediaFiles({FileSystem? fileSystem, String? baseDir})

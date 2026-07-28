@@ -3,6 +3,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'diary_repository.dart';
+import 'loadmore.dart';
 
 part 'diary_controller.g.dart';
 

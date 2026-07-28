@@ -16,7 +16,7 @@ class LanAdvertiser {
     try {
       _registration = await nsd.register(
         nsd.Service(
-          name: 'Moodiary · ${await PackageUtil.getDeviceName()}',
+          name: 'Moodiary · ${await AppInfo.getDeviceName()}',
           type: lanServiceType,
           port: port,
         ),

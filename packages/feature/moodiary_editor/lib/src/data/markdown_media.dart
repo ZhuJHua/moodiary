@@ -8,12 +8,12 @@ import 'package:moodiary_editor/moodiary_editor.dart'
 ({String path, String mime})? appMediaResolver(String name, {bool poster = false}) {
   if (name.startsWith('video-')) {
     if (poster) {
-      return (path: FileUtil.getRealPath('thumbnail', name), mime: 'image/jpeg');
+      return (path: AppFiles.getRealPath('thumbnail', name), mime: 'image/jpeg');
     }
-    return (path: FileUtil.getRealPath('video', name), mime: videoMimeOf(name));
+    return (path: AppFiles.getRealPath('video', name), mime: videoMimeOf(name));
   }
   if (name.startsWith('audio-')) {
-    return (path: FileUtil.getRealPath('audio', name), mime: audioMimeOf(name));
+    return (path: AppFiles.getRealPath('audio', name), mime: audioMimeOf(name));
   }
-  return (path: FileUtil.getRealPath('image', name), mime: imageMimeOf(name));
+  return (path: AppFiles.getRealPath('image', name), mime: imageMimeOf(name));
 }

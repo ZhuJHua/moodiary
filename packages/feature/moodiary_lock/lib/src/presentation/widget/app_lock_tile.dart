@@ -12,7 +12,7 @@ class AppLockTile extends StatefulWidget {
 }
 
 class _AppLockTileState extends State<AppLockTile> {
-  late final Future<bool> _bioSupported = AuthUtil.canCheckBiometrics();
+  late final Future<bool> _bioSupported = BiometricAuth.canCheckBiometrics();
 
   Future<void> _onTapLock(bool currentlyOn) async {
     final confirm = await showDialog<bool>(
@@ -54,7 +54,7 @@ class _AppLockTileState extends State<AppLockTile> {
   Future<void> _toggleBiometric(bool value) async {
     if (value) {
       // 开启前先验证一次，确认设备已录入且本人可用。
-      final ok = await AuthUtil.check();
+      final ok = await BiometricAuth.check();
       if (!ok) return;
       await MoodiaryKVs.supportBiometrics.set(true);
     } else {
@@ -225,7 +225,7 @@ class _RemovePasswordSheetState extends State<RemovePasswordSheet> {
   }
 
   Future<void> _onBiometric() async {
-    if (await AuthUtil.check()) await _disable();
+    if (await BiometricAuth.check()) await _disable();
   }
 
   @override
@@ -308,7 +308,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
   }
 
   Future<void> _onBiometric() async {
-    if (_phase == _ChangePhase.verify && await AuthUtil.check()) {
+    if (_phase == _ChangePhase.verify && await BiometricAuth.check()) {
       _toEnterNew();
     }
   }

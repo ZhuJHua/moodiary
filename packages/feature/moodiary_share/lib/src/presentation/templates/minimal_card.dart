@@ -49,7 +49,7 @@ class MinimalShareCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            TimeUtil.longDateTime(diary.time),
+            TimeFormat.longDateTime(diary.time),
             style: TextStyle(fontSize: 12, color: metaColor),
           ),
           const SizedBox(height: 20),

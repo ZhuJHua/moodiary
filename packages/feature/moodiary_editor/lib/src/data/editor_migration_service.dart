@@ -11,7 +11,7 @@ import 'package:path/path.dart' as p;
 ///
 /// - richText → JSON：[QuillDeltaToTiptap]（纯 Dart，直接产出节点树，图片/音频/视频还原为一等节点）。
 /// - markdown → JSON：[MarkdownToTiptap]（纯 Dart，`markdown` 包 GFM 解析，无需无头 webview）。
-/// - 转换后用 [DiaryContentUtil]（tiptap 分支走 JSON 解析）重算 contentText 与媒体名，再经
+/// - 转换后用 [DiaryContent]（tiptap 分支走 JSON 解析）重算 contentText 与媒体名，再经
 ///   [DiaryRepository.updateADiary] 落库（自动重建搜索索引）。媒体文件本身不动（文件名不变）。
 /// - 迁移是纯本机行为：不 bump lastModified、不推送（多设备各自迁移）；回退则按真实编辑
 ///   对待（bump + 推送）。
@@ -22,7 +22,7 @@ class EditorMigrationService {
   static const String _backupType = 'migration_backup';
 
   static String _backupPath(String id) =>
-      FileUtil.getRealPath(_backupType, '$id.json');
+      AppFiles.getRealPath(_backupType, '$id.json');
 
   static String _backupDir() => p.dirname(_backupPath('_'));
 
@@ -68,9 +68,9 @@ class EditorMigrationService {
     await _writeBackup(diary);
 
     final converted = diary.copyWith(content: json, type: DiaryType.tiptap.value);
-    final media = DiaryContentUtil.extractMedia(converted);
+    final media = DiaryContent.extractMedia(converted);
     final newDiary = converted.copyWith(
-      contentText: DiaryContentUtil.derivePlainText(converted),
+      contentText: DiaryContent.derivePlainText(converted),
       imageName: media.images,
       audioName: media.audios,
       videoName: media.videos,
@@ -154,9 +154,9 @@ class EditorMigrationService {
       content: content,
       type: (data['type'] as String?) ?? DiaryType.richText.value,
     );
-    final media = DiaryContentUtil.extractMedia(restored);
+    final media = DiaryContent.extractMedia(restored);
     final newDiary = restored.copyWith(
-      contentText: DiaryContentUtil.derivePlainText(restored),
+      contentText: DiaryContent.derivePlainText(restored),
       imageName: media.images,
       audioName: media.audios,
       videoName: media.videos,
