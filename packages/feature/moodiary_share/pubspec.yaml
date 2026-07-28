@@ -22,7 +22,7 @@ dependencies:
 
   flutter_riverpod: 3.3.2
   path: 1.9.1
-  share_plus: 13.2.1
+  share_plus: 13.3.0
 
 dev_dependencies:
   flutter_test:

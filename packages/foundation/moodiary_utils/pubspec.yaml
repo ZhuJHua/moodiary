@@ -17,7 +17,7 @@ dependencies:
   intl: 0.20.2
   synchronized: 3.4.1+1
   image_size_getter: 2.4.1
-  connectivity_plus: 7.3.0
+  connectivity_plus: 7.3.1
   network_info_plus: 8.2.1
   device_info_plus: 13.2.0
   package_info_plus: 10.2.1
