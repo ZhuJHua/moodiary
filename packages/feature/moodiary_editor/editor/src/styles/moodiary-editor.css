@@ -381,6 +381,91 @@ body {
   border-radius: 8px;
 }
 
+/* —— 图片节点视图（components/nodes/ImageNodeView.vue）：外层承载宽度，<img> 撑满外层 ——
+   宽度必须落在外层：它的包含块是正文列，widthPercent 才有确定的百分比参照。未设时外层缩到
+   图片原始宽度（fit-content），角标才贴在图的角上而不是正文列的角上。 */
+.moodiary-editor .ProseMirror .moodiary-image {
+  position: relative;
+  width: -webkit-fit-content;
+  width: fit-content;
+  max-width: 100%;
+  /* 居中：外层是 fit-content，auto 左右外边距即把它摆在正文列中间。满栏图看不出差别，
+     调窄过的图和小图不再贴着左边。 */
+  margin: 0.4em auto;
+  /* 既有护栏 [draggable][contenteditable='false'] 对图片已失配（draggable 落在内层 <img>，
+     contenteditable 落在外层），iOS 长按会起选择手柄 / 「存储图像」callout 并吞掉点击。 */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.moodiary-editor .ProseMirror .moodiary-image__img {
+  width: 100%;
+  margin: 0;
+}
+/* 选中（NodeSelection）描边，复刻音视频观感；仅编辑态。 */
+.moodiary-editor
+  .ProseMirror[contenteditable='true']
+  .moodiary-image.is-selected
+  .moodiary-image__img {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+}
+/* 尺寸角标：命中区 44×44，但不超过图片的 40% —— 小图（头像 / 贴纸 / 二维码常在 100px 量级）
+   上固定 44px 会吃掉近半张图，而角标不是 <img>，那片区域点不出全屏画廊。
+   锚在顶部而非底部：长图要滚一屏多才够得着底边，且改尺寸时顶边不动，视口不会跳。
+   尺寸落在 host 上（它的包含块是 .moodiary-image，百分比才有确定参照），按钮再撑满。 */
+.moodiary-image__menu {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: grid;
+  width: min(44px, 40%);
+  height: min(44px, 40%);
+}
+.moodiary-image__badge {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.moodiary-image__chip {
+  display: grid;
+  place-items: center;
+  width: min(30px, 100%);
+  height: min(30px, 100%);
+  border-radius: 9px;
+  /* 走主题反色而非硬编码黑：压在夜景照 / 黑底截图上时按钮轮廓不会整个消失。 */
+  background: var(--app-inverse);
+  color: var(--app-on-inverse);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.14s ease;
+}
+.moodiary-image__badge:active .moodiary-image__chip {
+  transform: scale(0.9);
+}
+/* 尺寸面板里的档位标签：点即跳到该档，当前档高亮。面板 Teleport 到 body，故样式必须是全局的。 */
+.moodiary-image__stop {
+  padding: 2px 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--app-on-surface);
+  opacity: 0.6;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+}
+.moodiary-image__stop.is-active {
+  color: var(--app-primary);
+  font-weight: 600;
+  opacity: 1;
+}
+
 /* —— 音频 / 视频：webview 内原生 <audio>/<video> + daisyUI 自绘控件（components/nodes/*）。
    控件外观全部用 daisyUI（btn / range）+ Tailwind 工具类,见组件模板;这里只留外边距与选中描边。 —— */
 .moodiary-media {
@@ -391,6 +476,56 @@ body {
   outline: 2px solid var(--app-primary);
   outline-offset: 2px;
   border-radius: var(--radius-box, 0.75rem);
+}
+
+/* —— 视频容器：比例由 node view 夹取后经 --video-ratio 注入（见 VideoNodeView），画面
+   object-contain 居中，信箱区铺模糊封面 ——
+   改前是 `<video class="w-full">` 裸跑：宽度恒满栏、高度随片子比例，9:16 的手机竖拍在 360px
+   的正文列里会撑到 640px 高，一条视频吃掉整屏。
+   限高与比例不冲突的写法：把约束加在宽度上 —— 宽度取「满栏」与「限高反算出的宽度」的较小者，
+   高度由 aspect-ratio 导出，两个约束下比例都精确。用 max-height 会在触顶时压扁比例。
+   （360px 宽的手机上，区间内任何比例的高度都在 450px 以内，限高不会触发；它是给平板 /
+   横屏 / 将来桌面端兜的。） */
+.moodiary-video__frame--boxed {
+  --video-max-h: 60vh;
+  width: min(100%, calc(var(--video-max-h) * var(--video-ratio, 1.7778)));
+  aspect-ratio: var(--video-ratio, 1.7778);
+  margin-inline: auto;
+}
+/* 封面缺失或未加载时的兜底也不用黑色，走主题表面色。position 也在这里定，不借 Tailwind 的
+   .relative —— 见组件模板里的说明。 */
+.moodiary-video__frame {
+  position: relative;
+  background: var(--app-hover);
+}
+.moodiary-video__el {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+/* 控制条自动隐藏：淡出并交出命中区，藏起来后点击直接落到画面上（点画面即把它叫回来）。 */
+.moodiary-video__bar {
+  transition:
+    opacity 0.22s ease,
+    visibility 0.22s ease;
+}
+.moodiary-video__bar.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* 模糊封面：scale 外扩是为了盖住 blur 在边缘的透明羽化（否则四边透出底色一圈）。 */
+.moodiary-video__backdrop {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: blur(24px) saturate(1.25);
+  transform: scale(1.15);
 }
 
 /* —— 表格（@tiptap/extension-table / prosemirror-tables）：边框/表头/选中单元格/列宽拖拽手柄，配色走 --app-* —— */
