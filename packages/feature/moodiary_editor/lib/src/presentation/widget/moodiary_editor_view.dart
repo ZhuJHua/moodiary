@@ -263,6 +263,19 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     MoodiaryImageBrowser.show(context, images: resolved, initialIndex: index);
   }
 
+  /// 正文视频交接给原生播放器。路径解析、封面比例预读、锁方向都在 showByName 里
+  /// （与媒体库那条路共用同一份），这里只负责把退出位置带回去给编辑器回灌。
+  Future<Duration?> _openVideoFullscreen(String name, Duration position) async {
+    Duration? exitAt;
+    await MoodiaryVideoPlayerPage.showByName(
+      context,
+      name: name,
+      startAt: position,
+      onExitAt: (d) => exitAt = d,
+    );
+    return exitAt;
+  }
+
   // —— 双链候选 = 搜索：不输入关键词不列任何日记（避免列出全部）；输入后走相关性搜索（限量）。
   // 标签：标题优先，否则「日期 · 片段」。
   Future<List<DiaryLinkCandidate>> _linkCandidates(String query) async {
@@ -298,6 +311,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       onPickVideo: _showVideoDialog,
       onSaveImage: _saveDataUriImage,
       onImageTap: _previewImages,
+      onVideoFullscreen: _openVideoFullscreen,
       // —— 注入宿主依赖（主题种子 / 媒体磁盘解析 / 加载遮罩）——
       // 音视频在 webview 内用原生元素内联播放；双链候选/跳转见下。
       onRequestLinkCandidates: _linkCandidates,

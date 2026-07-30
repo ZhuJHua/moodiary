@@ -1652,4 +1652,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get imageBrowserInfoModified => 'Modified';
+
+  @override
+  String get videoPlayerLoadFailed => 'Couldn\'t load this video';
+
+  @override
+  String get videoPlayerRetry => 'Retry';
+
+  @override
+  String get videoPlayerClose => 'Close';
+
+  @override
+  String get videoPlayerPlay => 'Play';
+
+  @override
+  String get videoPlayerPause => 'Pause';
+
+  @override
+  String get videoPlayerReplay => 'Replay';
+
+  @override
+  String get videoPlayerProgress => 'Playback progress';
 }

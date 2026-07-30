@@ -3151,6 +3151,48 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'修改时间'**
   String get imageBrowserInfoModified;
+
+  /// No description provided for @videoPlayerLoadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'视频加载失败'**
+  String get videoPlayerLoadFailed;
+
+  /// No description provided for @videoPlayerRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get videoPlayerRetry;
+
+  /// No description provided for @videoPlayerClose.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get videoPlayerClose;
+
+  /// No description provided for @videoPlayerPlay.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放'**
+  String get videoPlayerPlay;
+
+  /// No description provided for @videoPlayerPause.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂停'**
+  String get videoPlayerPause;
+
+  /// No description provided for @videoPlayerReplay.
+  ///
+  /// In zh, this message translates to:
+  /// **'重播'**
+  String get videoPlayerReplay;
+
+  /// No description provided for @videoPlayerProgress.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放进度'**
+  String get videoPlayerProgress;
 }
 
 class _AppLocalizationsDelegate

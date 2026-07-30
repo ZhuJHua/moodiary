@@ -52,6 +52,9 @@ export function installBridge(): void {
       api?.resolveLinkCandidates(reqId, json),
     // 目录跳转：滚动到第 index 个 heading。
     scrollToHeading: (index: number) => api?.scrollToHeading(index),
+    // 正文视频交给 Flutter 全屏播完后回灌位置。
+    resumeVideo: (name: string, seconds: number) =>
+      api?.resumeVideo(name ?? '', Number(seconds) || 0),
     // 页内双链跳转的滚动位置保存 / 恢复。
     getScrollY: () => getScrollY(),
     setScrollY: (y: number) => setScrollY(y),

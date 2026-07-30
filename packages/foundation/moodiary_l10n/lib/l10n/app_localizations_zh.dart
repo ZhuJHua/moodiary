@@ -1589,4 +1589,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get imageBrowserInfoModified => '修改时间';
+
+  @override
+  String get videoPlayerLoadFailed => '视频加载失败';
+
+  @override
+  String get videoPlayerRetry => '重试';
+
+  @override
+  String get videoPlayerClose => '关闭';
+
+  @override
+  String get videoPlayerPlay => '播放';
+
+  @override
+  String get videoPlayerPause => '暂停';
+
+  @override
+  String get videoPlayerReplay => '重播';
+
+  @override
+  String get videoPlayerProgress => '播放进度';
 }

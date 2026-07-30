@@ -36,6 +36,8 @@ declare global {
       resolveLinkCandidates: (reqId: string, json: string) => void
       /** 目录跳转：滚动到第 index 个 heading（文档序）。 */
       scrollToHeading: (index: number) => void
+      /** Flutter 全屏播完后回灌位置到正文里的 <video>（name 为裸文件名）。 */
+      resumeVideo: (name: string, seconds: number) => void
       /** 页内双链跳转的滚动位置保存 / 恢复（视口 scrollTop）。 */
       getScrollY: () => number
       setScrollY: (y: number) => void

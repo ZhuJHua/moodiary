@@ -80,6 +80,12 @@ class MoodiaryEditor extends StatefulWidget {
   final VoidCallback? onPickAudio;
   final VoidCallback? onPickVideo;
 
+  /// 正文视频请求全屏：webview 内不做全屏（两端平台差异都试过，观感不过关），改为把播放
+  /// **交接**给宿主的原生播放器 —— 与「点图 → 原生画廊」同一条路子。
+  /// 入参为裸文件名与当前位置；返回退出时的位置，编辑器据此回灌给正文里那个 `<video>`
+  /// （返回 null 表示不回灌）。
+  final Future<Duration?> Function(String name, Duration position)? onVideoFullscreen;
+
   /// 拖拽 / 粘贴图片回调：入参 data URI + 原文件名，返回存盘文件名（失败返回 null），
   /// 编辑器据此兑现 web 侧上传 Promise。
   final Future<String?> Function(String dataUri, String name)? onSaveImage;
@@ -135,6 +141,7 @@ class MoodiaryEditor extends StatefulWidget {
     this.onPickImage,
     this.onPickAudio,
     this.onPickVideo,
+    this.onVideoFullscreen,
     this.onSaveImage,
     this.onRequestLinkCandidates,
     this.onOpenDiaryLink,
@@ -162,6 +169,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   final Completer<void> _fontReady = Completer<void>();
 
   bool _prepareStarted = false;
+
 
   /// 本地服务启动失败 / 平台不支持：无 webview 可挂，撤遮罩、显示错误占位（非空即进入错误态）。
   String? _loadError;
@@ -384,6 +392,15 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
           }
         }
         return;
+      case 'videoFullscreen':
+        if (payload is Map) {
+          final name = payload['name'];
+          final pos = payload['position'];
+          if (name is String && name.isNotEmpty) {
+            _handleVideoFullscreen(name, pos is num ? pos.toDouble() : 0);
+          }
+        }
+        return;
       case 'requestLinkCandidates':
         if (payload is Map) {
           final reqId = payload['reqId'];
@@ -404,6 +421,22 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
 
   /// 拉取双链候选并经 `resolveLinkCandidates(reqId, json)` 回传 web 侧（json 为 [{id,label}] 串）；
   /// 失败用空列表回传，避免 web 侧 Promise 永挂。
+  /// 交接给宿主的原生播放器，回来把位置灌回 webview。
+  /// 位置在桥上走秒（double）—— webview 侧 currentTime 就是秒，避免两侧各做一次换算。
+  Future<void> _handleVideoFullscreen(String name, double seconds) async {
+    final open = widget.onVideoFullscreen;
+    if (open == null) return;
+    final resumeAt = await open(
+      name,
+      Duration(milliseconds: (seconds * 1000).round()),
+    );
+    if (!mounted || resumeAt == null) return;
+    await _run(
+      'window.MoodiaryBridge.resumeVideo('
+      '${jsonEncode(name)}, ${resumeAt.inMilliseconds / 1000})',
+    );
+  }
+
   Future<void> _handleLinkCandidates(String reqId, String query) async {
     List<DiaryLinkCandidate> list = const [];
     try {

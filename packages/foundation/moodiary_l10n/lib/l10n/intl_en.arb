@@ -23,7 +23,7 @@
   "permission2": "In order to better use the experience, we need the following permissions",
   "permission3": "• Location permission (for getting the weather)",
   "shareTitle": "Share",
-  "shareName": "\u00A9 Moodiary",
+  "shareName": "© Moodiary",
   "settingFunction": "Function",
   "settingFunctionCategoryManage": "Category Management",
   "settingFunctionAnalysis": "Analysis Statistics",
@@ -508,5 +508,12 @@
   "imageBrowserInfoResolution": "Resolution",
   "imageBrowserInfoSize": "Size",
   "imageBrowserInfoFormat": "Format",
-  "imageBrowserInfoModified": "Modified"
+  "imageBrowserInfoModified": "Modified",
+  "videoPlayerLoadFailed": "Couldn't load this video",
+  "videoPlayerRetry": "Retry",
+  "videoPlayerClose": "Close",
+  "videoPlayerPlay": "Play",
+  "videoPlayerPause": "Pause",
+  "videoPlayerReplay": "Replay",
+  "videoPlayerProgress": "Playback progress"
 }

@@ -23,7 +23,7 @@
   "permission2": "为了更好的使用体验，我们需要以下权限",
   "permission3": "• 定位权限（用于获取天气）",
   "shareTitle": "分享",
-  "shareName": "\u00A9 Moodiary",
+  "shareName": "© Moodiary",
   "settingFunction": "功能",
   "settingFunctionCategoryManage": "分类管理",
   "settingFunctionAnalysis": "分析统计",
@@ -508,5 +508,12 @@
   "imageBrowserInfoResolution": "分辨率",
   "imageBrowserInfoSize": "大小",
   "imageBrowserInfoFormat": "格式",
-  "imageBrowserInfoModified": "修改时间"
+  "imageBrowserInfoModified": "修改时间",
+  "videoPlayerLoadFailed": "视频加载失败",
+  "videoPlayerRetry": "重试",
+  "videoPlayerClose": "关闭",
+  "videoPlayerPlay": "播放",
+  "videoPlayerPause": "暂停",
+  "videoPlayerReplay": "重播",
+  "videoPlayerProgress": "播放进度"
 }
