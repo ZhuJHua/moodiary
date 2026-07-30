@@ -6,7 +6,14 @@
 // 方向按视频比例锁定（横拍锁横、竖拍锁竖），走 lockOrientationsTemporarily —— 不要直接调
 // SystemChrome.setPreferredOrientations，全局竖屏锁按策略去重，绕过它就再也恢复不回来。
 //
-// 不提供音量控制：setVolume 只缩放播放器自身音量，用户用硬件键静音后任何音量 UI 都会说谎。
+// 手势表（一个动作只有一个含义，不按落点分歧义）：
+//   单击   显隐控制条            双击   播放 / 暂停
+//   横拖   跳转（常速刮擦）      长按   2× 倍速，松手还原
+//   竖拖   左亮度 / 右音量 / 中间下拉关闭
+// 刻意没有「双击左右两边 ±10s」：跳转统一交给横拖，双击就只做播放暂停。
+//
+// 音量走**系统媒体音量**而不是播放器自身的 setVolume：后者只缩放这一路音轨，
+// 用户用硬件键静音之后任何音量 UI 都会说谎（见 video_ambient_controller.dart）。
 //
 // —— 方向编排（这是「退出时先看到 app 横着、再猛地转回竖屏」的根治）——
 // 进场：路由转场**跑完之后**才锁方向。锁在 initState 里的话，旋转会和转场动画同时进行。
@@ -20,14 +27,18 @@
 // 不模糊），避免一段黑闪。
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show DeviceOrientation;
+import 'package:flutter/services.dart' show DeviceOrientation, HapticFeedback;
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 import '../../basic/loading.dart';
+import 'video_ambient_controller.dart';
+import 'video_ambient_port_impl.dart';
 import 'video_chrome_controller.dart';
 import 'video_playback_controller.dart';
 import 'video_playback_port.dart';
@@ -36,8 +47,19 @@ import 'video_player_port_impl.dart';
 
 typedef VideoSurfaceBuilder = Widget Function(VideoPlaybackPort port);
 
+/// 全屏横拖刮擦的换算：毫秒 / 像素。
+///
+/// 短片跟着时长走（划满一屏 ≈ 全片 60%），长片封顶 —— 不封顶的话 10 分钟的视频划一屏
+/// 就是 6 分钟，一根手指根本落不准。封顶值取一屏 ≈ 67 秒。
+double scrubMillisPerPixel(Duration duration, double width) {
+  if (width <= 0) return 0;
+  return math.min(0.6 * duration.inMilliseconds / width, 1000 / 6);
+}
+
 Widget defaultVideoSurfaceBuilder(VideoPlaybackPort port) =>
-    port is VideoPlayerPluginPort ? port.buildSurface() : const SizedBox.shrink();
+    port is VideoPlayerPluginPort
+    ? port.buildSurface()
+    : const SizedBox.shrink();
 
 class MoodiaryVideoPlayerPage extends StatefulWidget {
   const MoodiaryVideoPlayerPage({
@@ -156,16 +178,21 @@ class MoodiaryVideoPlayerPage extends StatefulWidget {
   }
 
   @override
-  State<MoodiaryVideoPlayerPage> createState() => _MoodiaryVideoPlayerPageState();
+  State<MoodiaryVideoPlayerPage> createState() =>
+      _MoodiaryVideoPlayerPageState();
 }
 
 class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     with WidgetsBindingObserver {
   late final MoodiaryVideoPlaybackController _player;
   final _chrome = VideoChromeController();
+  final _ambient = VideoAmbientController(ports: defaultVideoAmbientPorts());
 
   OrientationOverrideRelease? _releaseOrientation;
   List<DeviceOrientation>? _lockedTo;
+
+  /// 沉浸模式（藏起状态栏 / 导航栏）的恢复器。
+  ImmersiveOverrideRelease? _releaseImmersive;
 
   /// 进场转场是否已跑完。转场期间不许锁方向（旋转与转场动画同时进行必然难看），
   /// 期间拿到的比例只记下来，门开了补锁。
@@ -181,15 +208,19 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
   Completer<void>? _orientationWaiter;
   List<DeviceOrientation>? _waitFor;
 
-  /// 下拉关闭的跟手位移。
-  double _dragY = 0;
+  /// 下拉关闭的跟手位移。**不能走 setState** —— 那是每帧重建整个 Stack（含纹理那一支）。
+  final _dragY = ValueNotifier<double>(0);
 
-  /// 瞬时 HUD（±10s / 拖动时间码）。chrome 藏着时它也要能出现。
-  String? _hud;
+  /// 刮擦时间码。同上，跟手期间每帧都在变，必须自成一路。
+  final _hud = ValueNotifier<_ScrubHud?>(null);
   VoidCallback? _unpinChrome;
 
-  static const _kSkip = Duration(seconds: 10);
+  /// 长按倍速中。
+  final _boost = ValueNotifier<bool>(false);
+  double? _speedBeforeBoost;
+
   static const _kDismissThreshold = 120.0;
+  static const _kBoostSpeed = 2.0;
 
   /// 始终等不到就无条件放行 —— 系统旋转锁定、外接屏等情形下 metrics 可能永远不变。
   static const _kRotateTimeout = Duration(milliseconds: 700);
@@ -205,11 +236,16 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
       // 而那几帧被系统的旋转截图盖着，等于白解码，声音也先于画面出现。
       autoPlay: false,
     );
+    // 亮度 / 音量的初值要在第一次手势之前读回来，否则第一次滑动没有基准点。
+    _ambient.prime();
+    _ambient.active.addListener(_onAmbientChanged);
     WidgetsBinding.instance.addObserver(this);
     _player.state.addListener(_onStateChanged);
     _player.geometry.addListener(_applyOrientation);
     _player.initialize().then((_) {
-      if (mounted && widget.startAt > Duration.zero) _player.seekTo(widget.startAt);
+      if (mounted && widget.startAt > Duration.zero) {
+        _player.seekTo(widget.startAt);
+      }
     });
   }
 
@@ -253,12 +289,25 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
   void _onStageReady() {
     if (!mounted || _exiting || _stageReady) return;
     _stageReady = true;
+    // 方向落定之后才藏系统栏：藏栏本身会触发一次 metrics 变化，
+    // 排在旋转编排中间会和「等它转过去」的判据搅在一起。
+    _releaseImmersive ??= enterImmersiveTemporarily();
     _player.play();
     _chrome.keep();
   }
 
   void _onStateChanged() {
-    _chrome.syncPlayIntent(_player.state.value.isPlayIntent);
+    final state = _player.state.value;
+    _chrome.syncPlayIntent(state.isPlayIntent);
+    // 倍速期间播放被外部打断（来电、音频焦点丢失、播完）—— 速度得跟着还原，
+    // 否则下次按播放会莫名其妙以 2× 开始。
+    if (!state.isPlayIntent) _endBoost();
+  }
+
+  /// 两张卡共用正中偏上那个槽位。正常情况下不会同时出现（一个是横拖、一个是竖拖），
+  /// 但 ±10s 那张卡有 900ms 停留，期间开始调音量就会叠上 —— 让后来的把前一张顶掉。
+  void _onAmbientChanged() {
+    if (_ambient.active.value != null) _hideHud();
   }
 
   List<DeviceOrientation>? _orientationsForCurrentAspect() {
@@ -345,20 +394,36 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     // 这里只兜「被外部直接 pop」的异常路径，靠 _exitReported 保持幂等。
     _reportExit();
     WidgetsBinding.instance.removeObserver(this);
+    _ambient.active.removeListener(_onAmbientChanged);
     _player.state.removeListener(_onStateChanged);
     _player.geometry.removeListener(_applyOrientation);
     _unpinChrome?.call();
+    _hud.dispose();
+    _boost.dispose();
+    _dragY.dispose();
     _releaseOrientation?.call();
     _releaseOrientation = null;
+    // 兜「被外部直接 pop」的异常路径 —— 漏掉的话整个 app 从此没有状态栏。
+    _releaseImmersive?.call();
+    _releaseImmersive = null;
+    // 亮度复位、音量恢复系统弹窗都在这里面 —— 漏掉的话整个 app 会停在播放时那个亮度上。
+    _ambient.dispose();
     _chrome.dispose();
     _player.dispose();
     super.dispose();
   }
 
-  void _flashHud(String text) {
-    setState(() => _hud = text);
-    _chrome.keep();
+  /// 刮擦时每帧调用：只改 HUD 这一路，不动别的。
+  void _showHud(Duration position, {Duration? delta}) {
+    _hud.value = _ScrubHud(
+      position: position,
+      duration: _player.progress.value.duration,
+      delta: delta,
+    );
   }
+
+  void _hideHud() => _hud.value = null;
+
 
   bool _exitRequested = false;
 
@@ -386,11 +451,11 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     _exiting = true;
     // 先把屏上一切动的东西停掉：旋转期间 Flutter 侧不该有任何动画，
     // 且带着下拉位移去让系统截图必然难看。
+    _endBoost();
     _player.pause();
-    setState(() {
-      _hud = null;
-      _dragY = 0;
-    });
+    _hideHud();
+    _dragY.value = 0;
+    setState(() {});
     _reportExit();
 
     // 先请求恢复方向，**此刻还没 pop**，全屏画面仍在屏上 —— 于是用户看到的是
@@ -401,6 +466,10 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     if (restored && _lockedTo != null) {
       await _awaitOrientation(const [DeviceOrientation.portraitUp]);
     }
+    // 系统栏留到最后一刻才放回来：整段退场编排（转回竖屏）都还是沉浸的，
+    // 不会在转的过程中先把状态栏亮出来。
+    _releaseImmersive?.call();
+    _releaseImmersive = null;
     if (!mounted) return;
     Navigator.of(context).pop();
   }
@@ -409,11 +478,34 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
 
   void _onTapUp(TapUpDetails d) => _chrome.toggle();
 
-  void _onDoubleTapDown(TapDownDetails d) {
-    final w = MediaQuery.sizeOf(context).width;
-    final forward = d.localPosition.dx > w / 2;
-    _player.skip(forward ? _kSkip : -_kSkip);
-    _flashHud(forward ? '+10s' : '−10s');
+  /// 双击 = 播放 / 暂停。**不再是 ±10s** —— 跳转统一交给横滑，一个动作只有一个含义。
+  void _onDoubleTap() {
+    final state = _player.state.value;
+    if (!state.acceptsCommands) return;
+    if (state is VideoCompleted) {
+      _player.replay();
+      return;
+    }
+    _player.togglePlay();
+  }
+
+  /// 长按 = 倍速。松手、手势被打断、播放被外部打断（来电 / 音频焦点丢失）都要还原速度。
+  void _onLongPressStart(LongPressStartDetails d) {
+    final state = _player.state.value;
+    // 暂停时长按不生效：那会变成「长按开始播放」，和双击抢含义。
+    if (!state.isPlayIntent || !state.acceptsCommands) return;
+    if (_boost.value) return;
+    _speedBeforeBoost = _player.settings.value.speed;
+    _boost.value = true;
+    _player.setSpeed(_kBoostSpeed);
+    HapticFeedback.lightImpact();
+  }
+
+  void _endBoost() {
+    if (!_boost.value) return;
+    _boost.value = false;
+    _player.setSpeed(_speedBeforeBoost ?? 1.0);
+    _speedBeforeBoost = null;
   }
 
   /// 横拖 = 刮擦。**左右各让出系统手势插图宽度**：iOS 左缘返回与 Android 预测性返回都从边缘起手，
@@ -428,12 +520,18 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
 
   Duration? _scrubBase;
 
+  /// 起手位置，用来算 HUD 上那行 delta。[_scrubBase] 会随手指累加，不能拿它当基准。
+  Duration _scrubOrigin = Duration.zero;
+
   void _onHorizontalStart(DragStartDetails d) {
     if (!_inScrubZone(d.localPosition)) return;
     final p = _player.progress.value;
     if (!p.canSeek) return;
     _scrubBase = p.position;
-    _unpinChrome = _chrome.pin();
+    _scrubOrigin = p.position;
+    // 不叫醒 chrome：横划时该看的是时间码，控制栏跳出来只是遮画面。
+    // 但要钉住，否则划到一半 3 秒自动隐藏会把已经显示的控件抽走。
+    _unpinChrome = _chrome.pin(reveal: false);
     _player.beginScrub(p.position);
   }
 
@@ -442,13 +540,13 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     if (base == null) return;
     final total = _player.progress.value.duration;
     if (total <= Duration.zero) return;
-    // 全屏宽 ≈ 全片长的 60%，避免一划到底。
     final w = MediaQuery.sizeOf(context).width;
-    final deltaMs = (d.primaryDelta ?? 0) / w * total.inMilliseconds * 0.6;
+    final deltaMs = (d.primaryDelta ?? 0) * scrubMillisPerPixel(total, w);
     final next = base + Duration(milliseconds: deltaMs.round());
     _scrubBase = next;
     _player.updateScrub(next);
-    _flashHud(TimeFormat.mediaPosition(_player.progress.value.position, total));
+    final now = _player.progress.value.position;
+    _showHud(now, delta: now - _scrubOrigin);
   }
 
   void _onHorizontalEnd(DragEndDetails d) {
@@ -458,20 +556,73 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     _unpinChrome = null;
     if (base == null) return;
     _player.endScrub(_player.progress.value.position);
-    setState(() => _hud = null);
+    _hideHud();
+  }
+
+  /// 手势被系统收走（来电、切后台）时 end 不会来。不收尾的话时间码会一直挂在屏上，
+  /// 而且 chrome 的那个 pin 永远不释放 —— 控制条从此再也不自动隐藏。
+  void _onHorizontalCancel() {
+    if (_scrubBase == null) return;
+    _scrubBase = null;
+    _unpinChrome?.call();
+    _unpinChrome = null;
+    _player.cancelScrub();
+    _hideHud();
+  }
+
+  /// 竖拖按落点分工：左三分之一亮度、右三分之一音量、中间三分之一下拉关闭。
+  /// 落点一次定终身 —— 中途手指横移到别的区不换通道，否则调着调着会突然开始关页面。
+  VideoAmbientChannel? _ambientChannel;
+
+  void _onVerticalStart(DragStartDetails d) {
+    if (_scrubBase != null) return;
+    final channel = ambientChannelForX(
+      d.localPosition.dx,
+      MediaQuery.sizeOf(context).width,
+    );
+    // 通道读不到当前值（模拟器、部分 ROM 拿不到亮度）就把这三分之一还给下拉关闭 ——
+    // 认领了却调不动的话，那一侧既没有反馈也关不掉页面，是个死区。
+    if (channel == null || !_ambient.isReady(channel)) return;
+    _ambientChannel = channel;
+    _ambient.begin(channel);
   }
 
   void _onVerticalUpdate(DragUpdateDetails d) {
     if (_scrubBase != null) return;
-    setState(() => _dragY = (_dragY + (d.primaryDelta ?? 0)).clamp(0.0, 400.0));
+    final channel = _ambientChannel;
+    if (channel != null) {
+      final travel =
+          MediaQuery.sizeOf(context).height *
+          VideoAmbientController.travelFraction;
+      if (travel <= 0) return;
+      // 屏幕坐标向下为正，而上滑要调大，取反。
+      _ambient.dragBy(channel, -(d.primaryDelta ?? 0) / travel);
+      return;
+    }
+    _dragY.value = (_dragY.value + (d.primaryDelta ?? 0)).clamp(0.0, 400.0);
   }
 
   void _onVerticalEnd(DragEndDetails d) {
-    if (_dragY > _kDismissThreshold || (d.primaryVelocity ?? 0) > 700) {
+    if (_endAmbientDrag()) return;
+    if (_dragY.value > _kDismissThreshold || (d.primaryVelocity ?? 0) > 700) {
       _requestExit();
       return;
     }
-    setState(() => _dragY = 0);
+    _dragY.value = 0;
+  }
+
+  /// 手势被系统抢走（例如通知栏下拉）也要收尾，否则通道会一直停在「拖动中」。
+  bool _endAmbientDrag() {
+    if (_ambientChannel == null) return false;
+    _ambientChannel = null;
+    _ambient.end();
+    return true;
+  }
+
+  /// 同上，但下拉关闭那一路还得把位移归零 —— 否则整页会卡在被拖下去的位置。
+  void _onVerticalCancel() {
+    if (_endAmbientDrag()) return;
+    _dragY.value = 0;
   }
 
   // ─────────────────────────── 画面 ───────────────────────────
@@ -553,7 +704,12 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
                     onTap: _close,
                   ),
                 ),
-                Positioned(left: 0, right: 0, bottom: 0, child: _buildBottomBar(l10n)),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _buildBottomBar(l10n),
+                ),
               ],
             ),
           ),
@@ -562,20 +718,31 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     );
   }
 
+  /// 底栏。scrim 由 0xB8 三档换成 0x94 五档并收成定高（横 78 / 竖 104）+ 安全区：
+  /// 五个 stop 是为了压色带，定高是为了不再靠 padding 把渐变撑到画面下三分之一。
   Widget _buildBottomBar(AppLocalizations l10n) {
+    final inset = MediaQuery.paddingOf(context);
+    final size = MediaQuery.sizeOf(context);
+    final barHeight = size.width > size.height ? 78.0 : 104.0;
     return Container(
+      height: barHeight + inset.bottom,
       padding: EdgeInsets.only(
-        left: 8,
-        right: 12,
-        top: 28,
-        bottom: 8 + MediaQuery.paddingOf(context).bottom,
+        left: 8 + inset.left,
+        right: 12 + inset.right,
+        bottom: inset.bottom,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
-          stops: [0, 0.55, 1],
-          colors: [Color(0xB8000000), Color(0x47000000), Color(0x00000000)],
+          stops: [0, 0.26, 0.52, 0.76, 1],
+          colors: [
+            Color(0x94000000),
+            Color(0x66000000),
+            Color(0x33000000),
+            Color(0x12000000),
+            Color(0x00000000),
+          ],
         ),
       ),
       child: Row(
@@ -592,7 +759,9 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
                           : Icons.play_arrow_rounded),
                 tooltip: completed
                     ? l10n.videoPlayerReplay
-                    : (state.isPlayIntent ? l10n.videoPlayerPause : l10n.videoPlayerPlay),
+                    : (state.isPlayIntent
+                          ? l10n.videoPlayerPause
+                          : l10n.videoPlayerPlay),
                 filled: false,
                 onTap: () {
                   _chrome.keep();
@@ -613,58 +782,57 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
   }
 
   Widget _buildScrubber(AppLocalizations l10n) {
-    return ValueListenableBuilder<VideoProgress>(
-      valueListenable: _player.progress,
-      builder: (context, p, _) {
-        final fraction = p.fraction;
-        return Row(
-          children: [
-            Expanded(
-              child: SliderTheme(
-                data: SliderThemeData(
-                  trackHeight: p.draft ? 5 : 3,
-                  activeTrackColor: Theme.of(context).colorScheme.primary,
-                  inactiveTrackColor: Colors.white24,
-                  thumbColor: Theme.of(context).colorScheme.primary,
-                  overlayShape: SliderComponentShape.noOverlay,
-                  thumbShape: RoundSliderThumbShape(enabledThumbRadius: p.draft ? 8 : 6),
-                ),
-                child: Slider(
-                  value: fraction ?? 0,
-                  // 时长未知时禁用而不是画 0 —— Android 的 DURATION_UNSET 路径真的会给这种文件。
-                  onChanged: fraction == null
-                      ? null
-                      : (v) {
-                          _chrome.keep();
-                          _player.updateScrub(p.duration * v);
-                        },
-                  onChangeStart: fraction == null
-                      ? null
-                      : (v) {
-                          _unpinChrome = _chrome.pin();
-                          _player.beginScrub(p.duration * v);
-                        },
-                  onChangeEnd: fraction == null
-                      ? null
-                      : (v) {
-                          _unpinChrome?.call();
-                          _unpinChrome = null;
-                          _player.endScrub(p.duration * v);
-                        },
-                  label: l10n.videoPlayerProgress,
-                ),
-              ),
-            ),
-            Text(
-              TimeFormat.mediaPosition(p.position, p.duration),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                fontFeatures: [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
+    final accent = Theme.of(context).colorScheme.primary;
+    return Row(
+      children: [
+        Expanded(
+          child: _ScrubBar(
+            progress: _player.progress,
+            accent: accent,
+            semanticLabel: l10n.videoPlayerProgress,
+            onBegin: (at) {
+              _unpinChrome?.call();
+              _unpinChrome = _chrome.pin();
+              _player.beginScrub(at);
+            },
+            onUpdate: _player.updateScrub,
+            onEnd: (at) {
+              _unpinChrome?.call();
+              _unpinChrome = null;
+              _player.endScrub(at);
+            },
+            onNudge: (delta) {
+              _chrome.keep();
+              _player.skip(delta);
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        _TimeCode(progress: _player.progress, accent: accent),
+      ],
+    );
+  }
+
+  /// 亮度 / 音量的调节条。chrome 藏着也要出现 —— 调节时本来就不该把控件唤回来。
+  ///
+  /// 淡出期间要继续画最后一次的值：直接换成空盒子会让它「啪」地消失，没有淡出可言。
+  VideoAmbientLevel? _lastAmbient;
+
+  Widget _buildAmbientHud() {
+    return ValueListenableBuilder<VideoAmbientLevel?>(
+      valueListenable: _ambient.active,
+      builder: (context, level, _) {
+        if (level != null) _lastAmbient = level;
+        final shown = _lastAmbient;
+        final visible = level != null && !_exiting;
+        if (shown == null) return const SizedBox.shrink();
+        return IgnorePointer(
+          child: AnimatedOpacity(
+            opacity: visible ? 1 : 0,
+            // 进得快、出得慢：抬手之后那一下不该像被抽走。
+            duration: visible ? Durations.short2 : Durations.medium1,
+            child: _AmbientBar(level: shown),
+          ),
         );
       },
     );
@@ -681,7 +849,11 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, color: Colors.white70, size: 34),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.white70,
+                size: 34,
+              ),
               const SizedBox(height: 10),
               Text(
                 l10n.videoPlayerLoadFailed,
@@ -701,7 +873,9 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
             ],
           ),
         ),
-        _ when state.isBusy => const Center(child: MoodiaryLoading(color: Colors.white)),
+        _ when state.isBusy => const Center(
+          child: MoodiaryLoading(color: Colors.white),
+        ),
         VideoCompleted() || VideoReady() => Center(
           child: _RoundIcon(
             icon: state is VideoCompleted
@@ -739,57 +913,656 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
   }
 
   Widget _buildBody(BuildContext context) {
-    final fade = (1 - _dragY / 400).clamp(0.4, 1.0);
     return Scaffold(
       // 页面自身透明：纯黑由路由的 barrierColor 提供，于是下拉关闭时内容淡出而底色始终是黑。
       backgroundColor: Colors.transparent,
-      body: Opacity(
-        opacity: fade,
-        child: Transform.translate(
-          offset: Offset(0, _dragY),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              _buildSurface(),
-              _buildPoster(),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTapUp: _onTapUp,
-                onDoubleTapDown: _onDoubleTapDown,
-                onDoubleTap: () {},
-                onHorizontalDragStart: _onHorizontalStart,
-                onHorizontalDragUpdate: _onHorizontalUpdate,
-                onHorizontalDragEnd: _onHorizontalEnd,
-                onVerticalDragUpdate: _onVerticalUpdate,
-                onVerticalDragEnd: _onVerticalEnd,
-              ),
-              _buildStateLayer(),
-              _buildChrome(),
-              if (_hud != null)
-                Center(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.82),
-                      borderRadius: AppBorderRadius.mediumBorderRadius,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      child: Text(
-                        _hud!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontFeatures: [FontFeature.tabularFigures()],
+      // 下拉位移只重建这一层：以前它走 setState，等于每帧把整个 Stack（含纹理那一支）重建一次。
+      body: ValueListenableBuilder<double>(
+        valueListenable: _dragY,
+        builder: (context, dragY, child) => Opacity(
+          opacity: (1 - dragY / 400).clamp(0.4, 1.0),
+          child: Transform.translate(offset: Offset(0, dragY), child: child),
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _buildSurface(),
+            _buildPoster(),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapUp: _onTapUp,
+              onDoubleTap: _onDoubleTap,
+              onLongPressStart: _onLongPressStart,
+              onLongPressEnd: (_) => _endBoost(),
+              onLongPressCancel: _endBoost,
+              onHorizontalDragStart: _onHorizontalStart,
+              onHorizontalDragUpdate: _onHorizontalUpdate,
+              onHorizontalDragEnd: _onHorizontalEnd,
+              onHorizontalDragCancel: _onHorizontalCancel,
+              onVerticalDragStart: _onVerticalStart,
+              onVerticalDragUpdate: _onVerticalUpdate,
+              onVerticalDragEnd: _onVerticalEnd,
+              onVerticalDragCancel: _onVerticalCancel,
+            ),
+            _buildStateLayer(),
+            _buildChrome(),
+            _buildScrubRail(),
+            _buildAmbientHud(),
+            _buildScrubHud(),
+            _buildBoostBadge(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 刮擦时间码卡。同样自成一路：跟手期间每帧都在变。
+  Widget _buildScrubHud() {
+    final accent = Theme.of(context).colorScheme.primary;
+    return IgnorePointer(
+      child: ValueListenableBuilder<_ScrubHud?>(
+        valueListenable: _hud,
+        builder: (context, hud, _) => hud == null || _exiting
+            ? const SizedBox.shrink()
+            : _ScrubHudCard(hud: hud, accent: accent),
+      ),
+    );
+  }
+
+  /// 刮擦时贴底的一条 2dp 细进度。只在 **chrome 藏着** 时出现 ——
+  /// 横划不再把整条控制栏叫出来，但「刮到哪了」总得有个全局参照。
+  Widget _buildScrubRail() {
+    final accent = Theme.of(context).colorScheme.primary;
+    return IgnorePointer(
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _chrome,
+        builder: (context, chromeVisible, _) {
+          if (chromeVisible || _exiting) return const SizedBox.shrink();
+          return ValueListenableBuilder<_ScrubHud?>(
+            valueListenable: _hud,
+            builder: (context, hud, _) {
+              if (hud == null) return const SizedBox.shrink();
+              return Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  // 压在系统手势条 / home indicator 底下就看不见了，抬到安全区之上。
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.paddingOf(context).bottom,
+                  ),
+                  child: SizedBox(
+                    // 必须显式铺满：Align 给的是松约束，不写宽度这条轨会缩成 0。
+                    width: double.infinity,
+                    height: 2,
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(color: Color(0x1FFFFFFF)),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: hud.duration > Duration.zero
+                            ? (hud.position.inMilliseconds /
+                                      hud.duration.inMilliseconds)
+                                  .clamp(0.0, 1.0)
+                            : 0.0,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(color: accent),
                         ),
                       ),
                     ),
                   ),
                 ),
-            ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+
+  /// 长按倍速时顶部那枚牌子。刻意不放在正中那个槽位：它是**持续状态**，
+  /// 而正中那一格留给瞬时反馈（刮擦时间码 / 亮度音量）。
+  Widget _buildBoostBadge() {
+    final l10n = context.l10n;
+    return IgnorePointer(
+      child: ValueListenableBuilder<bool>(
+        valueListenable: _boost,
+        builder: (context, boosting, _) {
+          final visible = boosting && !_exiting;
+          // Align 必须在最外层：AnimatedSlide 的 offset 是按**自身尺寸**的比例算的，
+          // 套在铺满全屏的 Align 外面，一个 0.6 就是往上飞半个屏幕。
+          return Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: MediaQuery.paddingOf(context).top + 14,
+              ),
+              child: AnimatedSlide(
+                offset: visible ? Offset.zero : const Offset(0, -0.6),
+                duration: Durations.short3,
+                curve: Curves.easeOutCubic,
+                child: AnimatedOpacity(
+                  opacity: visible ? 1 : 0,
+                  duration: Durations.short3,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: const Color(0xB80C0C0E),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0x1FFFFFFF),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 8, 16, 8),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.fast_forward_rounded,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.videoPlayerSpeedBoost(
+                              _kBoostSpeed.toStringAsFixed(0),
+                            ),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// 自绘进度条。**刻意不用 Material Slider**：RoundSliderThumbShape 的半径不可动画、
+/// trackHeight 改值会跳、overlay 那套又和「按下整条上浮」打架。
+///
+/// 进度是 10Hz 的（插件内部 100ms 轮询），所以这里把 progress 直接喂给 CustomPainter 的
+/// repaint —— widget 树一次都不重建，只 markNeedsPaint；外面再套 RepaintBoundary，
+/// 免得每 100ms 把关闭键、时间码、渐变一起重录一遍。
+class _ScrubBar extends StatefulWidget {
+  const _ScrubBar({
+    required this.progress,
+    required this.accent,
+    required this.semanticLabel,
+    required this.onBegin,
+    required this.onUpdate,
+    required this.onEnd,
+    required this.onNudge,
+  });
+
+  final ValueListenable<VideoProgress> progress;
+  final Color accent;
+  final String semanticLabel;
+  final ValueChanged<Duration> onBegin;
+  final ValueChanged<Duration> onUpdate;
+  final ValueChanged<Duration> onEnd;
+  final ValueChanged<Duration> onNudge;
+
+  @override
+  State<_ScrubBar> createState() => _ScrubBarState();
+}
+
+class _ScrubBarState extends State<_ScrubBar>
+    with SingleTickerProviderStateMixin {
+  /// 视觉 3dp，命中整行 —— 命中区与视觉解耦，不必为了好按而把轨画粗。
+  static const _kRowHeight = 28.0;
+  static const _kNudge = Duration(seconds: 5);
+
+  late final AnimationController _press = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 160),
+  );
+  late final CurvedAnimation _pressed = CurvedAnimation(
+    parent: _press,
+    curve: Curves.easeOutCubic,
+  );
+
+  /// 读屏用的百分比。只在整数变化时才重建（一分钟的视频约 1Hz），
+  /// 不能直接跟着 10Hz 的 progress 走 —— 那会每 100ms 把语义树标脏一次。
+  final _percent = ValueNotifier<int>(0);
+  double _lastX = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.progress.addListener(_syncPercent);
+    _syncPercent();
+  }
+
+  @override
+  void dispose() {
+    widget.progress.removeListener(_syncPercent);
+    _percent.dispose();
+    _pressed.dispose();
+    _press.dispose();
+    super.dispose();
+  }
+
+  void _syncPercent() {
+    final f = widget.progress.value.fraction;
+    if (f == null) return;
+    _percent.value = (f * 100).round();
+  }
+
+  double get _width {
+    final box = context.findRenderObject();
+    return box is RenderBox && box.hasSize ? box.size.width : 0;
+  }
+
+  /// 落点 → 时间。时长未知（Android 的 DURATION_UNSET）时整条不可拖。
+  Duration? _timeAt(double dx) {
+    final p = widget.progress.value;
+    final w = _width;
+    if (w <= 0 || p.fraction == null) return null;
+    return p.duration * (dx / w).clamp(0.0, 1.0);
+  }
+
+  void _begin(double dx) {
+    final at = _timeAt(dx);
+    if (at == null) return;
+    _lastX = dx;
+    _press.forward();
+    widget.onBegin(at);
+  }
+
+  void _update(double dx) {
+    final at = _timeAt(dx);
+    if (at == null) return;
+    _lastX = dx;
+    widget.onUpdate(at);
+  }
+
+  void _finish() {
+    if (!_press.isForwardOrCompleted) return;
+    _press.reverse();
+    final at = _timeAt(_lastX);
+    if (at != null) widget.onEnd(at);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (d) => _begin(d.localPosition.dx),
+      onTapUp: (_) => _finish(),
+      onTapCancel: _finish,
+      onHorizontalDragStart: (d) => _begin(d.localPosition.dx),
+      onHorizontalDragUpdate: (d) => _update(d.localPosition.dx),
+      onHorizontalDragEnd: (_) => _finish(),
+      onHorizontalDragCancel: _finish,
+      // 认领长按：不接的话，按住进度条会被外面那个全屏手势当成「长按倍速」，
+      // 同时这里的按压还会顺手 seek 一次。这里长按什么都不做。
+      onLongPress: () {},
+      child: ValueListenableBuilder<int>(
+        valueListenable: _percent,
+        builder: (context, percent, child) => Semantics(
+          slider: true,
+          label: widget.semanticLabel,
+          value: '$percent%',
+          onIncrease: () => widget.onNudge(_kNudge),
+          onDecrease: () => widget.onNudge(-_kNudge),
+          child: child,
+        ),
+        child: RepaintBoundary(
+          child: CustomPaint(
+            size: const Size(double.infinity, _kRowHeight),
+            painter: _ScrubPainter(
+              progress: widget.progress,
+              press: _pressed,
+              accent: widget.accent,
+              dpr: dpr,
+            ),
           ),
         ),
       ),
     );
+  }
+}
+
+class _ScrubPainter extends CustomPainter {
+  _ScrubPainter({
+    required this.progress,
+    required this.press,
+    required this.accent,
+    required this.dpr,
+  }) : super(repaint: Listenable.merge([progress, press]));
+
+  final ValueListenable<VideoProgress> progress;
+  final Animation<double> press;
+  final Color accent;
+  final double dpr;
+
+  static const _kIdleTrack = 3.0;
+  static const _kPressTrack = 6.0;
+  static const _kLift = 2.0;
+  static const _kIdleThumb = 4.0;
+  static const _kPressThumb = 7.0;
+
+  /// 对齐到物理像素。3dp 的轨和 8dp 的白点在 2.625x 这种 DPR 上不对齐就会发糊。
+  double _snap(double v) => dpr <= 0 ? v : (v * dpr).roundToDouble() / dpr;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = press.value;
+    final p = progress.value;
+    final f = (p.fraction ?? 0).clamp(0.0, 1.0);
+
+    final h = _kIdleTrack + (_kPressTrack - _kIdleTrack) * t;
+    final cy = _snap(size.height / 2 - _kLift * t);
+    final top = _snap(cy - h / 2);
+    final radius = Radius.circular(h / 2);
+    final rail = RRect.fromLTRBR(0, top, size.width, top + h, radius);
+
+    // 0.5dp 黑底压在轨下面。**填充而不是描边** —— 0.5px 的 stroke 骑在路径上、
+    // 两侧各 0.25dp，抗锯齿之后基本等于没画，而纯白画面上 12% 白的轨本来就会消失。
+    canvas.drawRRect(
+      rail.inflate(0.5),
+      Paint()..color = const Color(0x8C000000),
+    );
+    canvas.drawRRect(rail, Paint()..color = const Color(0x1FFFFFFF));
+
+    if (f > 0) {
+      final right = math.max(size.width * f, h);
+      canvas.drawRRect(
+        RRect.fromLTRBR(0, top, right, top + h, radius),
+        Paint()..color = accent,
+      );
+    }
+
+    // thumb 只是长大，**不套外环** —— 那圈光晕是 Material overlay 的遗风，
+    // 在一条 3dp 的细轨上只会显得脏。
+    final core = _kIdleThumb + (_kPressThumb - _kIdleThumb) * t;
+    final cx = (size.width * f).clamp(core, size.width - core);
+    canvas.drawCircle(Offset(cx, cy), core, Paint()..color = Colors.white);
+  }
+
+  @override
+  bool shouldRepaint(_ScrubPainter old) =>
+      old.accent != accent || old.dpr != dpr || old.progress != progress;
+}
+
+/// 时间码。等宽数字 + 固定最小宽度：不定宽的话每跳一秒轨就会被挤动一次；
+/// 超过 1 小时字串变长（1:02:33），最小宽度跟着换一档。
+class _TimeCode extends StatelessWidget {
+  const _TimeCode({required this.progress, required this.accent});
+
+  final ValueListenable<VideoProgress> progress;
+  final Color accent;
+
+  static const _kShadow = [
+    Shadow(color: Color(0x80000000), blurRadius: 2, offset: Offset(0, 1)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<VideoProgress>(
+      valueListenable: progress,
+      builder: (context, p, _) {
+        final known = p.duration > Duration.zero;
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            minWidth: p.duration.inHours >= 1 ? 128 : 92,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              AnimatedDefaultTextStyle(
+                duration: Durations.short3,
+                style: TextStyle(
+                  // 刮擦中把已播时间染成强调色：手指在动的是它，不是总长。
+                  color: p.draft ? accent : Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                  shadows: _kShadow,
+                ),
+                child: Text(TimeFormat.mediaDuration(p.position)),
+              ),
+              if (known) ...[
+                const Text(
+                  ' / ',
+                  style: TextStyle(
+                    color: Color(0x4DFFFFFF),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    shadows: _kShadow,
+                  ),
+                ),
+                Text(
+                  TimeFormat.mediaDuration(p.duration),
+                  style: const TextStyle(
+                    color: Color(0x9EFFFFFF),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                    shadows: _kShadow,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 刮擦 / ±10s 的时间码卡。
+class _ScrubHud {
+  const _ScrubHud({required this.position, required this.duration, this.delta});
+
+  final Duration position;
+  final Duration duration;
+
+  /// 相对起手点的位移；null 则不画那一行。
+  final Duration? delta;
+}
+
+class _ScrubHudCard extends StatelessWidget {
+  const _ScrubHudCard({required this.hud, required this.accent});
+
+  final _ScrubHud hud;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final delta = hud.delta;
+    return Center(
+      // 定量上移 34dp（不是按比例）：正中恰好是手指按住的地方，
+      // 按比例的话竖屏会飘到离手指很远的位置。
+      child: Transform.translate(
+        offset: const Offset(0, -34),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: const Color(0x9E0E0E10),
+            borderRadius: AppBorderRadius.mediumBorderRadius,
+            border: Border.all(color: const Color(0x1FFFFFFF), width: 0.5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 9, 16, 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (delta != null)
+                  Text(
+                    _formatDelta(delta),
+                    style: TextStyle(
+                      color: accent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                const SizedBox(height: 3),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      TimeFormat.mediaDuration(hud.position),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    if (hud.duration > Duration.zero) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        TimeFormat.mediaDuration(hud.duration),
+                        style: const TextStyle(
+                          color: Color(0x9EFFFFFF),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 负号用 U+2212，别用连字符 —— 等宽数字里连字符会比减号窄一截。
+  static String _formatDelta(Duration d) {
+    final sign = d.isNegative ? '−' : '+';
+    return '$sign${TimeFormat.mediaDuration(d.abs())}';
+  }
+}
+
+/// 亮度 / 音量条：屏幕正中的一枚胶囊（图标 + 条 + 数字）。
+///
+/// 早先是贴左右边缘的竖条，废掉了 —— 它换来的「不遮画面」在实机上没兑现：5dp 的条正好落在
+/// Android 手势导航的边缘热区里，用户会本能地去摸着它拖，那一下常被系统的返回手势吃掉。
+///
+/// 两条通道**都用白色填充**，只靠图标区分。深色半透明底是为了在过曝画面上也读得清；
+/// 这一页不用毛玻璃 —— chrome 的淡入淡出与下拉关闭都会压层，模糊会在那两个时刻退化成纯色板。
+class _AmbientBar extends StatelessWidget {
+  const _AmbientBar({required this.level});
+
+  final VideoAmbientLevel level;
+
+  static const _kHeight = 40.0;
+  static const _kTrackWidth = 132.0;
+  static const _kTrackHeight = 4.0;
+  static const _kTrackRadius = BorderRadius.all(
+    Radius.circular(_kTrackHeight / 2),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final isBrightness = level.channel == VideoAmbientChannel.brightness;
+    final value = level.value.clamp(0.0, 1.0);
+    final label = isBrightness
+        ? l10n.videoPlayerBrightness
+        : l10n.videoPlayerVolume;
+
+    return Center(
+      // 与刮擦时间码共用同一个槽位（正中偏上 34dp）：同一时刻只会出现一张，
+      // 位置一致比各占一处更稳，也不压住画面正中的主体。
+      child: Transform.translate(
+        offset: const Offset(0, -34),
+        child: Semantics(
+          label: label,
+          value: '${(value * 100).round()}%',
+          child: Container(
+            height: _kHeight,
+            padding: const EdgeInsets.only(left: 16, right: 18),
+            decoration: BoxDecoration(
+              color: const Color(0xB80C0C0E),
+              borderRadius: BorderRadius.circular(_kHeight / 2),
+              border: Border.all(color: const Color(0x1FFFFFFF), width: 0.5),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x59000000),
+                  blurRadius: 20,
+                  offset: Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _iconFor(isBrightness, value),
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: _kTrackWidth,
+                  height: _kTrackHeight,
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: Color(0x33FFFFFF),
+                      borderRadius: _kTrackRadius,
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      // 跟手的量不做隐式动画，做了手感立刻发黏。
+                      widthFactor: value,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: _kTrackRadius,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 26,
+                  child: Text(
+                    '${(value * 100).round()}',
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _iconFor(bool isBrightness, double v) {
+    if (isBrightness) {
+      return v < 0.5
+          ? Icons.brightness_low_rounded
+          : Icons.brightness_high_rounded;
+    }
+    if (v <= 0) return Icons.volume_off_rounded;
+    return v < 0.5 ? Icons.volume_down_rounded : Icons.volume_up_rounded;
   }
 }
 
@@ -808,21 +1581,42 @@ class _RoundIcon extends StatelessWidget {
   final bool big;
   final bool filled;
 
+  /// 视觉尺寸保持 36，**命中区撑到 44** —— 36dp 不到无障碍最小命中标准，
+  /// 而这两个键（关闭 / 播放）恰好是全屏下最要紧的两个。
+  static const _kMinTouch = 44.0;
+
   @override
   Widget build(BuildContext context) {
     final size = big ? 56.0 : 36.0;
+    final touch = math.max(size, _kMinTouch);
     return Tooltip(
       message: tooltip,
+      // Material 必须撑到命中尺寸：水波纹画在最近的 Material 上，交给外面 Scaffold 那层的话
+      // 会画在视频纹理**底下**，等于没有反馈。
       child: Material(
-        color: filled ? Colors.black38 : Colors.transparent,
+        color: Colors.transparent,
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onTap,
+          // 认领长按，免得按住关闭键被外面那个全屏手势当成「长按倍速」。
+          onLongPress: () {},
           child: SizedBox(
-            width: size,
-            height: size,
-            child: Icon(icon, color: Colors.white, size: big ? 30 : 21),
+            width: touch,
+            height: touch,
+            child: Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: filled ? Colors.black38 : Colors.transparent,
+                ),
+                child: SizedBox(
+                  width: size,
+                  height: size,
+                  child: Icon(icon, color: Colors.white, size: big ? 30 : 21),
+                ),
+              ),
+            ),
           ),
         ),
       ),

@@ -42,9 +42,17 @@ class VideoChromeController extends ValueNotifier<bool> {
     keep();
   }
 
-  VoidCallback pin() {
+  /// 钉住，返回释放器。
+  ///
+  /// [reveal] 为 false 时只是「不许自动隐藏」，**不会把藏着的控件叫出来** ——
+  /// 刮擦就该走这条：手指在画面上横划时，用户要看的是时间码，不是整条控制栏。
+  VoidCallback pin({bool reveal = true}) {
     _pins += 1;
-    keep();
+    if (reveal) {
+      keep();
+    } else {
+      _restart();
+    }
     var released = false;
     return () {
       if (released) return;
