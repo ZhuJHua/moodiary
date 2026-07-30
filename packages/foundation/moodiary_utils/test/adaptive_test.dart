@@ -98,4 +98,74 @@ void main() {
       expect(calls, hasLength(3));
     });
   });
+
+  group('enterImmersiveTemporarily', () {
+    late List<MethodCall> calls;
+
+    setUp(() {
+      resetImmersiveOverridesForTest();
+      calls = <MethodCall>[];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+            // manual 走的是**另一个方法名**（setEnabledSystemUIOverlays），
+            // 只筛 setEnabledSystemUIMode 会把「点亮两条栏」那一步整个漏掉。
+            if (call.method.startsWith('SystemChrome.setEnabledSystemUI')) {
+              calls.add(call);
+            }
+            return null;
+          });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null);
+      resetImmersiveOverridesForTest();
+    });
+
+    testWidgets('进入沉浸走 immersiveSticky', (tester) async {
+      final release = enterImmersiveTemporarily();
+      expect(calls, hasLength(1));
+      expect(calls.single.method, 'SystemChrome.setEnabledSystemUIMode');
+      expect(calls.single.arguments, 'SystemUiMode.immersiveSticky');
+      release();
+    });
+
+    testWidgets('恢复必须先 manual 点亮两条栏，再回 edgeToEdge', (tester) async {
+      final release = enterImmersiveTemporarily();
+      calls.clear();
+
+      release();
+      // 只调 edgeToEdge 的话对「栏的显隐」是空操作（此刻本来就在 edgeToEdge 里），
+      // 状态栏会一直藏着 —— 整个 app 从此没有状态栏。顺序不能反，也不能少。
+      expect(calls, hasLength(2));
+      expect(calls.first.method, 'SystemChrome.setEnabledSystemUIOverlays');
+      expect((calls.first.arguments as List).cast<String>(), [
+        'SystemUiOverlay.top',
+        'SystemUiOverlay.bottom',
+      ]);
+      expect(calls.last.method, 'SystemChrome.setEnabledSystemUIMode');
+      expect(calls.last.arguments, 'SystemUiMode.edgeToEdge');
+    });
+
+    testWidgets('嵌套安全：计数没归零不恢复', (tester) async {
+      final a = enterImmersiveTemporarily();
+      final b = enterImmersiveTemporarily();
+      calls.clear();
+
+      a();
+      expect(calls, isEmpty, reason: 'b 还占着');
+      b();
+      expect(calls, hasLength(2));
+    });
+
+    testWidgets('恢复器幂等：重复调用不会把计数扣穿', (tester) async {
+      final release = enterImmersiveTemporarily();
+      release();
+      calls.clear();
+      release();
+      release();
+      expect(calls, isEmpty);
+    });
+  });
+
 }

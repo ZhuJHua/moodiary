@@ -100,3 +100,37 @@ OrientationOverrideRelease lockOrientationsTemporarily(
     return true;
   };
 }
+
+/// 沉浸模式（藏起状态栏与导航栏），返回恢复函数；嵌套安全。
+///
+/// **恢复不能只调 [SystemUiMode.edgeToEdge]。** 全 app 平时就跑在 edgeToEdge 里，
+/// 再设一次对「栏的显隐」是空操作，于是被沉浸模式藏掉的栏再也不出现 —— 整个 app 从此没有
+/// 状态栏。必须先用 manual 把两条栏点亮，再回到 edgeToEdge。
+///
+/// 关于「targetSdk 36 上还能不能藏」：Flutter 的 [SystemUiMode] 文档写着「Android 系统会
+/// 忽略这个值」，那句话过重了。Android 16 的行为变更只规定「边到边不能再退出」，并没有把
+/// `View.setSystemUiVisibility` 的那几个 flag 变成空操作，而引擎里 immersiveSticky 正是用
+/// 它们实现的；实测（含 flutter 3.44 + targetSdk 36 的其它 app）**藏得掉，坏的只有恢复这条路**。
+ImmersiveOverrideRelease enterImmersiveTemporarily() {
+  _immersiveOverrides += 1;
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  var released = false;
+  return () {
+    if (released) return;
+    released = true;
+    _immersiveOverrides -= 1;
+    if (_immersiveOverrides > 0) return;
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  };
+}
+
+typedef ImmersiveOverrideRelease = void Function();
+
+int _immersiveOverrides = 0;
+
+@visibleForTesting
+void resetImmersiveOverridesForTest() => _immersiveOverrides = 0;
