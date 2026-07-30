@@ -26,14 +26,13 @@ dependencies:
   expressive_refresh: 0.1.2
   path: 1.9.1
 
-  cached_network_image_ce: 4.9.0
+  cached_network_image_ce: 4.9.1
   flutter_svg: 2.3.0
 
   photo_view: 0.15.0
   dismissible_page: 1.0.2
 
   video_player: 2.13.0
-  chewie: 1.14.1
   audioplayers: 6.8.1
 
 dev_dependencies:

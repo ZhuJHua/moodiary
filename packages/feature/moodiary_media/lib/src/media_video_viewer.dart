@@ -1,44 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:flutter/widgets.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 
-/// 媒体库视频全屏播放页，黑底居中铺放 [VideoPlayerComponent]。
-class MediaVideoViewer extends StatelessWidget {
-  final String name;
+/// 媒体库 → 视频播放页。路径解析、封面比例预读、锁方向编排全在
+/// [MoodiaryVideoPlayerPage.showByName]（与正文交接那条路共用同一份），这里只留调用点。
+class MediaVideoViewer {
+  const MediaVideoViewer._();
 
-  const MediaVideoViewer({super.key, required this.name});
-
-  static Future<void> show(BuildContext context, {required String name}) {
-    return Navigator.of(context).push(
-      PageRouteBuilder(
-        opaque: false,
-        barrierColor: Colors.black,
-        pageBuilder: (_, _, _) => MediaVideoViewer(name: name),
-        transitionsBuilder: (_, animation, _, child) =>
-            FadeTransition(opacity: animation, child: child),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final path = AppFiles.getRealPath('video', name);
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          Center(child: VideoPlayerComponent(videoPath: path, isEdit: true)),
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + 8,
-            left: 8,
-            child: IconButton(
-              icon: const Icon(Icons.close_rounded, color: Colors.white),
-              style: IconButton.styleFrom(backgroundColor: Colors.black38),
-              onPressed: () => Navigator.of(context).maybePop(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  static Future<void> show(BuildContext context, {required String name}) =>
+      MoodiaryVideoPlayerPage.showByName(context, name: name);
 }

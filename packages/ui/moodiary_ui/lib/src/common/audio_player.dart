@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 音频时长缓存：用 Rust（lofty）只读文件头拿时长，不建播放器实例；结果按路径记忆，
 /// 待命卡片据此显示时长。同一路径的并发请求合流。
@@ -333,17 +334,6 @@ class _AudioBarState extends State<AudioBar> {
   bool _dragging = false;
   double _dragValue = 0.0;
 
-  /// 秒 → m:ss（超过 1 小时则 h:mm:ss），与编辑器内 formatTime 一致（分钟不补零）。
-  String _fmt(Duration d) {
-    final total = d.inSeconds < 0 ? 0 : d.inSeconds;
-    final h = total ~/ 3600;
-    final m = (total % 3600) ~/ 60;
-    final s = total % 60;
-    final ss = s.toString().padLeft(2, '0');
-    if (h > 0) return '$h:${m.toString().padLeft(2, '0')}:$ss';
-    return '$m:$ss';
-  }
-
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
@@ -416,7 +406,7 @@ class _AudioBarState extends State<AudioBar> {
             ),
             const SizedBox(width: 8),
             Text(
-              '${_fmt(widget.position)} / ${_fmt(widget.duration)}',
+              TimeFormat.mediaPosition(widget.position, widget.duration),
               style: context.textTheme.labelSmall?.copyWith(
                 color: scheme.onSurfaceVariant,
                 fontFeatures: const [FontFeature.tabularFigures()],
