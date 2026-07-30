@@ -515,5 +515,11 @@
   "videoPlayerPlay": "播放",
   "videoPlayerPause": "暂停",
   "videoPlayerReplay": "重播",
-  "videoPlayerProgress": "播放进度"
+  "videoPlayerProgress": "播放进度",
+  "videoPlayerBrightness": "亮度",
+  "videoPlayerVolume": "音量",
+  "videoPlayerSpeedBoost": "{speed}× 倍速播放中",
+  "@videoPlayerSpeedBoost": {
+    "placeholders": { "speed": { "type": "String" } }
+  }
 }

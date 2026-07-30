@@ -1610,4 +1610,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoPlayerProgress => '播放进度';
+
+  @override
+  String get videoPlayerBrightness => '亮度';
+
+  @override
+  String get videoPlayerVolume => '音量';
+
+  @override
+  String videoPlayerSpeedBoost(String speed) {
+    return '$speed× 倍速播放中';
+  }
 }

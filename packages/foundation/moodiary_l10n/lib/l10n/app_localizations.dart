@@ -3193,6 +3193,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'播放进度'**
   String get videoPlayerProgress;
+
+  /// No description provided for @videoPlayerBrightness.
+  ///
+  /// In zh, this message translates to:
+  /// **'亮度'**
+  String get videoPlayerBrightness;
+
+  /// No description provided for @videoPlayerVolume.
+  ///
+  /// In zh, this message translates to:
+  /// **'音量'**
+  String get videoPlayerVolume;
+
+  /// No description provided for @videoPlayerSpeedBoost.
+  ///
+  /// In zh, this message translates to:
+  /// **'{speed}× 倍速播放中'**
+  String videoPlayerSpeedBoost(String speed);
 }
 
 class _AppLocalizationsDelegate

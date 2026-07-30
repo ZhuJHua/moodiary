@@ -34,6 +34,10 @@ dependencies:
 
   video_player: 2.13.0
   audioplayers: 6.8.1
+  # 全屏播放器的左右滑动调节：亮度只用 application 级（无需 WRITE_SETTINGS 权限），
+  # 音量走系统媒体音量（否则我们的音量条会在用户按硬件键静音后说谎）。
+  screen_brightness: 2.1.11
+  volume_controller: 3.6.0
 
 dev_dependencies:
   flutter_test:

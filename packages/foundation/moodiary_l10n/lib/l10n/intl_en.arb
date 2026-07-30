@@ -515,5 +515,8 @@
   "videoPlayerPlay": "Play",
   "videoPlayerPause": "Pause",
   "videoPlayerReplay": "Replay",
-  "videoPlayerProgress": "Playback progress"
+  "videoPlayerProgress": "Playback progress",
+  "videoPlayerBrightness": "Brightness",
+  "videoPlayerVolume": "Volume",
+  "videoPlayerSpeedBoost": "Playing at {speed}×"
 }

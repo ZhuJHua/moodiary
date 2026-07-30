@@ -1673,4 +1673,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoPlayerProgress => 'Playback progress';
+
+  @override
+  String get videoPlayerBrightness => 'Brightness';
+
+  @override
+  String get videoPlayerVolume => 'Volume';
+
+  @override
+  String videoPlayerSpeedBoost(String speed) {
+    return 'Playing at $speed×';
+  }
 }
