@@ -28,7 +28,7 @@ const poster = computed(() =>
 )
 
 const videoEl = ref<HTMLVideoElement | null>(null)
-const { playing, duration, muted, sliderValue, toggle, toggleMute, onSeekInput, onSeekChange } =
+const { playing, duration, muted, sliderValue, dragging, toggle, toggleMute, seekTo, endSeek } =
   useMediaControls(videoEl)
 
 // 容器比例夹在 [4:5, 16:9] 之间取片子自身的比例，画面 object-contain 居中，信箱区铺一层
@@ -115,13 +115,52 @@ function handOffToNative(): void {
   post('videoFullscreen', { name: filename.value, position: el.currentTime })
 }
 
-// 拖进度条可能超过 3 秒，单靠 pointerdown 续命会在拖拽中途被藏掉。
-function onSeek(e: Event): void {
-  onSeekInput(e)
+// —— 进度条 ——
+// 自绘而不用 <input type="range">：原生 range 的轨高、滑块尺寸都不能随按压动画，
+// 而全屏播放器那条是「静止 3px、按下 6px 并整条上浮、thumb 从小白点长大」。两边要长一样。
+const trackEl = ref<HTMLElement | null>(null)
+
+const progressPercent = computed(() => {
+  const total = duration.value
+  if (!(total > 0)) return 0
+  return Math.min(100, Math.max(0, (sliderValue.value / total) * 100))
+})
+
+/** 落点 → 秒。时长未知（残缺 mp4 / 还没 metadata）时整条不可拖。 */
+function timeAtPointer(e: PointerEvent): number | null {
+  const el = trackEl.value
+  const total = duration.value
+  if (!el || !(total > 0)) return null
+  const rect = el.getBoundingClientRect()
+  if (rect.width <= 0) return null
+  const fraction = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width))
+  return fraction * total
+}
+
+function onTrackDown(e: PointerEvent): void {
+  const at = timeAtPointer(e)
+  if (at === null) return
+  // 捕获指针：手指划出轨道范围（很容易，轨才 28px 高）之后仍然跟手。
+  // 老 WebView 与 jsdom 都可能没有这个方法，拿不到只是「划出去就断」，不该整条崩掉。
+  try {
+    trackEl.value?.setPointerCapture?.(e.pointerId)
+  } catch {
+    /* no-op */
+  }
+  seekTo(at)
   keepControls()
 }
-function onSeekDone(e: Event): void {
-  onSeekChange(e)
+function onTrackMove(e: PointerEvent): void {
+  if (!dragging.value) return
+  const at = timeAtPointer(e)
+  if (at === null) return
+  seekTo(at)
+  // 拖一次可能超过 3 秒，不续命会在拖拽中途被藏掉。
+  keepControls()
+}
+function onTrackUp(e: PointerEvent): void {
+  if (!dragging.value) return
+  endSeek(timeAtPointer(e) ?? sliderValue.value)
   keepControls()
 }
 
@@ -168,47 +207,52 @@ onBeforeUnmount(() => {
         @click="onPictureTap"
       ></video>
 
-      <!-- 暂停时居中大播放键 -->
-      <button
-        v-if="!playing"
-        class="btn btn-circle btn-lg btn-primary absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        type="button"
-        title="播放"
-        @click="toggle"
-      >
-        <IconPlay class="size-7" />
-      </button>
+      <!-- 画面正中不放任何播放/暂停键：与全屏播放器一致，播放入口只有底栏那一个。
+           暂停时控制条不会自动隐藏，所以入口始终够得着。 -->
 
       <!-- 底部控制条：播放中 3 秒无操作淡出（pointer-events 一并关掉，点击穿到画面上） -->
       <div
-        class="moodiary-video__bar absolute inset-x-0 bottom-0 flex items-center gap-2 bg-gradient-to-t from-black/70 to-transparent px-3 pb-2 pt-6 text-white"
-        :class="{ 'is-hidden': !controlsVisible }"
+        class="moodiary-video__bar absolute inset-x-0 bottom-0 flex items-center gap-1"
+        :class="{ 'is-hidden': !controlsVisible, 'is-scrubbing': dragging }"
         @pointerdown="keepControls"
       >
         <button
-          class="btn btn-circle btn-ghost btn-xs text-white"
+          class="moodiary-video__key"
           type="button"
           :title="playing ? '暂停' : '播放'"
           @click="toggle"
         >
           <component :is="playing ? IconPause : IconPlay" class="size-5" />
         </button>
-        <input
-          class="range range-primary range-xs flex-1"
-          type="range"
-          min="0"
-          :max="duration || 0"
-          step="any"
-          :value="sliderValue"
+
+        <div
+          ref="trackEl"
+          class="moodiary-video__track"
+          :class="{ 'is-pressed': dragging }"
+          role="slider"
           aria-label="视频进度"
-          @input="onSeek"
-          @change="onSeekDone"
-        />
-        <span class="shrink-0 text-xs tabular-nums">
-          {{ formatTime(sliderValue) }} / {{ formatTime(duration) }}
+          :aria-valuemin="0"
+          :aria-valuemax="Math.round(duration)"
+          :aria-valuenow="Math.round(sliderValue)"
+          :aria-valuetext="`${formatTime(sliderValue)} / ${formatTime(duration)}`"
+          @pointerdown="onTrackDown"
+          @pointermove="onTrackMove"
+          @pointerup="onTrackUp"
+          @pointercancel="onTrackUp"
+        >
+          <span class="moodiary-video__rail"></span>
+          <span class="moodiary-video__fill" :style="{ width: `${progressPercent}%` }"></span>
+          <span class="moodiary-video__thumb" :style="{ left: `${progressPercent}%` }"></span>
+        </div>
+
+        <span class="moodiary-video__time">
+          <span class="moodiary-video__time-pos">{{ formatTime(sliderValue) }}</span>
+          <span class="moodiary-video__time-sep">/</span>
+          <span class="moodiary-video__time-dur">{{ formatTime(duration) }}</span>
         </span>
+
         <button
-          class="btn btn-circle btn-ghost btn-xs text-white"
+          class="moodiary-video__key"
           type="button"
           :title="muted ? '取消静音' : '静音'"
           @click="toggleMute"
@@ -216,7 +260,7 @@ onBeforeUnmount(() => {
           <component :is="muted ? IconMuted : IconVolume" class="size-5" />
         </button>
         <button
-          class="btn btn-circle btn-ghost btn-xs text-white"
+          class="moodiary-video__key"
           type="button"
           title="全屏播放"
           @click="handOffToNative"

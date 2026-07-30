@@ -506,11 +506,136 @@ body {
   height: 100%;
   object-fit: contain;
 }
-/* 控制条自动隐藏：淡出并交出命中区，藏起来后点击直接落到画面上（点画面即把它叫回来）。 */
+/* —— 控制条 ——
+   这一整套（渐变档位、轨的粗细与上浮、thumb 尺寸、时间码的三段配色）都是照 Flutter 侧
+   全屏播放器 video_fullscreen_page.dart 的数值抄的，两个播放器必须长一样。
+   控制条自动隐藏：淡出并交出命中区，藏起来后点击直接落到画面上（点画面即把它叫回来）。 */
 .moodiary-video__bar {
+  height: 64px;
+  padding: 0 6px 0 2px;
+  color: #fff;
+  /* 五档而不是两档：档位少了在渐变上会看出色带。 */
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.58) 0%,
+    rgba(0, 0, 0, 0.4) 26%,
+    rgba(0, 0, 0, 0.2) 52%,
+    rgba(0, 0, 0, 0.07) 76%,
+    rgba(0, 0, 0, 0) 100%
+  );
   transition:
     opacity 0.22s ease,
     visibility 0.22s ease;
+}
+
+/* 圆形图标键：命中 44（与全屏播放器的水波纹同尺寸），透明底，按下才有一层极淡的白。 */
+.moodiary-video__key {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.16s ease;
+}
+.moodiary-video__key:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+
+/* 进度轨：视觉 3px、命中整行 28px（命中区与视觉解耦，不为了好按把轨画粗）。 */
+.moodiary-video__track {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 28px;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.moodiary-video__rail,
+.moodiary-video__fill {
+  position: absolute;
+  top: 50%;
+  height: 3px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  transition:
+    height 0.16s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.16s cubic-bezier(0.2, 0, 0, 1);
+}
+/* 0.5px 黑边压在轨下面：纯白画面上 12% 白的未播段本来会整条消失。 */
+.moodiary-video__rail {
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.55);
+}
+.moodiary-video__fill {
+  left: 0;
+  background: var(--color-primary);
+}
+.moodiary-video__thumb {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.16s cubic-bezier(0.2, 0, 0, 1),
+    height 0.16s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.16s cubic-bezier(0.2, 0, 0, 1);
+}
+/* 按下：轨加粗到 6px、整条上浮 2px，thumb 长到 14px —— **不套外环**，
+   那圈光晕是 Material overlay 的遗风，在一条 3px 细轨上只显得脏。 */
+.moodiary-video__track.is-pressed .moodiary-video__rail,
+.moodiary-video__track.is-pressed .moodiary-video__fill {
+  height: 6px;
+  transform: translateY(calc(-50% - 2px));
+}
+.moodiary-video__track.is-pressed .moodiary-video__thumb {
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, calc(-50% - 2px));
+}
+
+/* 时间码：等宽数字，已播 / 分隔 / 总长三段各自配色；刮擦中已播段染成主题色。 */
+.moodiary-video__time {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  margin-inline: 4px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.moodiary-video__time-pos {
+  font-weight: 600;
+  color: #fff;
+  transition: color 0.16s ease;
+}
+.moodiary-video__time-sep {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.3);
+}
+.moodiary-video__time-dur {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.62);
+}
+.moodiary-video__bar.is-scrubbing .moodiary-video__time-pos {
+  color: var(--color-primary);
 }
 .moodiary-video__bar.is-hidden {
   opacity: 0;

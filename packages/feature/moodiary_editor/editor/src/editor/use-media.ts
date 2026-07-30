@@ -76,16 +76,23 @@ export function useMediaControls(mediaRef: Ref<HTMLMediaElement | null>) {
     if (el) el.muted = !el.muted
   }
   // 拖拽中实时定位（current 不变,显示走 dragValue,避免回弹）；松手提交并恢复跟随。
-  function onSeekInput(e: Event): void {
+  function seekTo(seconds: number): void {
     dragging.value = true
-    dragValue.value = Number((e.target as HTMLInputElement).value)
-    if (el) el.currentTime = dragValue.value
+    dragValue.value = seconds
+    if (el) el.currentTime = seconds
+  }
+  function endSeek(seconds: number): void {
+    if (el) el.currentTime = seconds
+    current.value = seconds
+    dragging.value = false
+  }
+
+  // <input type="range"> 的两个包装 —— 音频节点仍用原生 range（那儿是一条窄条,没必要自绘）。
+  function onSeekInput(e: Event): void {
+    seekTo(Number((e.target as HTMLInputElement).value))
   }
   function onSeekChange(e: Event): void {
-    const v = Number((e.target as HTMLInputElement).value)
-    if (el) el.currentTime = v
-    current.value = v
-    dragging.value = false
+    endSeek(Number((e.target as HTMLInputElement).value))
   }
 
   return {
@@ -95,8 +102,11 @@ export function useMediaControls(mediaRef: Ref<HTMLMediaElement | null>) {
     muted,
     buffering,
     sliderValue,
+    dragging,
     toggle,
     toggleMute,
+    seekTo,
+    endSeek,
     onSeekInput,
     onSeekChange,
   }
