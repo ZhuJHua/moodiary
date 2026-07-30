@@ -674,8 +674,10 @@ class DiaryRepository {
     for (final name in diary.videoName) {
       try {
         await AppFiles.deleteFile(AppFiles.getRealPath('video', name));
-        final thumbName = 'thumbnail-${name.substring(6, 42)}.jpeg';
-        await AppFiles.deleteFile(AppFiles.getRealPath('video', thumbName));
+        final thumbName = AppFiles.thumbnailNameOf(name);
+        if (thumbName != null) {
+          await AppFiles.deleteFile(AppFiles.getRealPath('video', thumbName));
+        }
       } catch (_) {}
     }
   }
@@ -721,16 +723,11 @@ class DiaryRepository {
       audios.addAll(d.audioName);
       videos.addAll(d.videoName);
       for (final name in d.videoName) {
-        final thumb = _thumbnailName(name);
+        final thumb = AppFiles.thumbnailNameOf(name);
         if (thumb != null) videos.add(thumb);
       }
     }
     return (images: images, audios: audios, videos: videos);
-  }
-
-  static String? _thumbnailName(String videoName) {
-    if (videoName.length < 42) return null;
-    return 'thumbnail-${videoName.substring(6, 42)}.jpeg';
   }
 
   /// BM25 字段加权。IDF/TF/DF 来自 posting（词频平行数组、行长），N 与 avgdl 来自

@@ -287,7 +287,7 @@ class CloudReCipher {
       for (final n in names.whereType<String>()) {
         into.add('$type/$n');
         if (type == 'video') {
-          final thumb = _thumbnailName(n);
+          final thumb = AppFiles.thumbnailNameOf(n);
           if (thumb != null) into.add('video/$thumb');
         }
       }
@@ -298,11 +298,4 @@ class CloudReCipher {
     addAll('video', json['videoName']);
   }
 
-  /// 视频文件名 `video-<uuid>.mp4` → 缩略图名 `thumbnail-<uuid>.jpeg`。
-  static String? _thumbnailName(String videoName) {
-    if (!videoName.startsWith('video-')) return null;
-    final dotIdx = videoName.lastIndexOf('.');
-    if (dotIdx <= 6) return null;
-    return 'thumbnail-${videoName.substring(6, dotIdx)}.jpeg';
-  }
 }
