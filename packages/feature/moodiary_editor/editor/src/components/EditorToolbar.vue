@@ -6,6 +6,8 @@
 // 位置由 platform 决定：桌面置顶（下边框）、移动置底（上边框）。
 import { computed, onBeforeUnmount, onMounted, ref, type Component } from 'vue'
 import type { Editor } from '@tiptap/core'
+import IconUndo from '~icons/material-symbols/undo-rounded'
+import IconRedo from '~icons/material-symbols/redo-rounded'
 import IconImage from '~icons/material-symbols/image-rounded'
 import IconAudio from '~icons/material-symbols/music-note-rounded'
 import IconVideo from '~icons/material-symbols/videocam-rounded'
@@ -67,6 +69,17 @@ const isActive = (name: string, attrs?: Record<string, unknown>): boolean => {
 // 命令统一带 .focus()：执行后把焦点交回正文（配合按钮的 @mousedown.prevent,移动端点工具栏
 // 不会让 contenteditable 失焦收键盘）。
 const chain = () => props.editor.chain().focus()
+
+// 撤销 / 重做。移动端没有 Mod-Z（软键盘不给这套快捷键），工具栏按钮是唯一入口，故放在最前。
+// 可用性与激活态同理走 tick：每个 transaction 后重算。
+const canUndo = (): boolean => {
+  void tick.value
+  return props.editor.can().undo()
+}
+const canRedo = (): boolean => {
+  void tick.value
+  return props.editor.can().redo()
+}
 
 // 插入日记双链：在光标处插入 `[[`，触发搜索弹层（纯编辑器侧，无需宿主回调）。
 const insertLink = (): void => {
@@ -165,6 +178,31 @@ function onHeadingSelect(key: string): void {
     class="moodiary-toolbar no-scrollbar flex items-center gap-0.5 overflow-x-auto bg-base-100 px-2 py-1.5"
     :class="platform === 'desktop' ? 'border-b border-base-300' : 'border-t border-base-300'"
   >
+    <!-- 撤销 / 重做：移动端唯一入口（无 Mod-Z），故置于最前，不随工具栏横向滚动被推走 -->
+    <button
+      :class="[btnClass, 'btn-square']"
+      type="button"
+      title="撤销"
+      data-testid="undo"
+      :disabled="!canUndo()"
+      @mousedown.prevent
+      @click="chain().undo().run()"
+    >
+      <IconUndo class="size-5" />
+    </button>
+    <button
+      :class="[btnClass, 'btn-square']"
+      type="button"
+      title="重做"
+      data-testid="redo"
+      :disabled="!canRedo()"
+      @mousedown.prevent
+      @click="chain().redo().run()"
+    >
+      <IconRedo class="size-5" />
+    </button>
+    <span class="mx-1 h-5 w-px shrink-0 bg-base-300" />
+
     <!-- 详情：打开日记元信息面板（原生实现，宿主接管） -->
     <button :class="[btnClass, 'btn-square']" type="button" title="详情" @mousedown.prevent @click="emit('open-details')">
       <IconTune class="size-5" />

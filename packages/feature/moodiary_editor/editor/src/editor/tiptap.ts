@@ -10,11 +10,10 @@
 // 媒体只存裸文件名（image 节点 attr.src、audio/video 节点 attr.filename 都是裸名，故 JSON 落库即裸名，
 // 与每次启动随机变化的媒体服务前缀无关）；显示时由 image 的 renderHTML / 音视频 node view 拼上前缀。
 
-import { mergeAttributes } from '@tiptap/core'
 import type { Editor, EditorOptions, JSONContent } from '@tiptap/core'
-import { EditorState, NodeSelection } from '@tiptap/pm/state'
+import { history } from '@tiptap/pm/history'
+import { NodeSelection } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
-import Image from '@tiptap/extension-image'
 import { Placeholder, CharacterCount } from '@tiptap/extensions'
 import { Markdown } from 'tiptap-markdown'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
@@ -28,10 +27,16 @@ import { DiaryLink, resolveLinkCandidates as applyLinkCandidates } from './diary
 import { SearchExtension } from './search'
 
 import { post } from '../bridge/post'
-import { getMediaPrefix, isLocalMedia, stripMediaPrefix } from './media'
+import { setEditableState } from './editable'
+import { MediaImage } from './image-node'
+import { stripMediaPrefix } from './media'
 import { Audio, Video } from './media-nodes'
 
 const lowlight = createLowlight(common)
+
+// 与 StarterKit 里 UndoRedo 扩展的默认值保持一致 —— 清空 undo 栈是把同一个 history 插件
+// 换成新的，参数不同就等于顺手改了撤销行为。
+const HISTORY_OPTIONS = { depth: 100, newGroupDelay: 500 }
 
 export interface EditorApi {
   /** 灌入内容：TipTap 文档 JSON 串（新）或 markdown 文本（旧日记只读查看，自动识别）。 */
@@ -50,6 +55,11 @@ export interface EditorApi {
   resolveLinkCandidates(reqId: string, json: string): void
   /** 滚动到第 index 个 heading（文档序，与 Dart TiptapContent.headings 一致）；供目录跳转。不聚焦（不弹键盘）。 */
   scrollToHeading(index: number): void
+  /**
+   * Flutter 侧全屏播完退出后，把最终位置回灌给正文里那个 <video>，接着看不用从头找。
+   * name 为裸文件名（与节点 attrs.filename 一致）。
+   */
+  resumeVideo(name: string, seconds: number): void
 }
 
 export interface EditorKitOptions {
@@ -66,19 +76,6 @@ export interface EditorKit {
   api: EditorApi
   attach(editor: Editor): void
 }
-
-// 自定义 Image：attr.src 永远是裸文件名（JSON 落库即裸名）；仅 renderHTML 给本地媒体名拼上
-// 媒体服务前缀供 DOM 显示。外链 http(s) 图原样。键入 ![]() 仍可建图（沿用 extension-image 输入规则）。
-const MediaImage = Image.extend({
-  renderHTML({ HTMLAttributes }) {
-    const attrs = { ...HTMLAttributes }
-    const src = attrs.src
-    if (typeof src === 'string' && isLocalMedia(src)) {
-      attrs.src = getMediaPrefix() + src
-    }
-    return ['img', mergeAttributes(this.options.HTMLAttributes, attrs)]
-  },
-})
 
 /** 识别内容是否为 TipTap 文档 JSON（区别于旧 markdown 文本）。 */
 function parseDoc(content: string): JSONContent | null {
@@ -158,11 +155,15 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       } else {
         ed.commands.setContent(stripMediaPrefix(content), { emitUpdate: false })
       }
-      // 重建 EditorState 清空 undo 栈：灌入即新文档的起点，undo 不能穿越回上一篇
+      // 重建 history 插件清空 undo 栈：灌入即新文档的起点，undo 不能穿越回上一篇
       //（页内双链跳转换日记）或空文档（首次打开）。
-      ed.view.updateState(
-        EditorState.create({ doc: ed.state.doc, plugins: ed.state.plugins }),
-      )
+      //
+      // 不能用 view.updateState(EditorState.create(...))：那条路绕过 dispatchTransaction，
+      // @tiptap/vue-3 的 Editor 子类的响应式 state 不跟着走，而 updateStateInner 内部会拿陈旧
+      // state 再 dispatch 一次，把刚清掉的 history 原样烤回来 —— 实测「灌入内容后按一次撤销，
+      // 整篇变空」。register/unregisterPlugin 是公开路径，子类覆写里会同步响应式 state。
+      ed.unregisterPlugin('history')
+      ed.registerPlugin(history(HISTORY_OPTIONS))
     })
   }
 
@@ -216,7 +217,9 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     getContent: () => (editor ? JSON.stringify(editor.getJSON()) : ''),
     setEditable: (value) => {
       editor?.setEditable(value, false)
-      // setEditable(emitUpdate=false) 不触发 onUpdate，故 Vue 侧无从感知；显式回调驱动工具栏显隐。
+      // setEditable(emitUpdate=false) 不触发 onUpdate，故 Vue 侧无从感知；显式回调驱动工具栏显隐，
+      // 共享状态驱动 node view 内的编辑控件显隐。
+      setEditableState(value)
       onEditableChange?.(value)
     },
     focus: () => {
@@ -241,6 +244,25 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
       }
     },
     resolveLinkCandidates: (reqId, json) => applyLinkCandidates(reqId, json),
+    resumeVideo: (name, seconds) => {
+      const ed = editor
+      if (!ed || !name) return
+      const els = Array.from(
+        ed.view.dom.querySelectorAll<HTMLVideoElement>('video.moodiary-video__el'),
+      )
+      const el = els.find((v) => v.src.endsWith(name))
+      if (!el) return
+      const apply = (): void => {
+        try {
+          el.currentTime = seconds
+        } catch {
+          // 个别 WebView 在 metadata 未就绪时设 currentTime 会抛。
+        }
+      }
+      // readyState 0（HAVE_NOTHING）时设 currentTime 必抛，等 metadata 到了再设。
+      if (el.readyState >= 1) apply()
+      else el.addEventListener('loadedmetadata', apply, { once: true })
+    },
     scrollToHeading: (index) => {
       const ed = editor
       if (!ed) return
@@ -261,6 +283,10 @@ export function createEditorKit(opts: EditorKitOptions): EditorKit {
     api,
     attach: (e) => {
       editor = e
+      // node view（图片尺寸角标等）读这个共享状态决定是否渲染编辑控件；初始值必须显式推入，
+      // 否则只读浏览态会被当成可编辑。放在 attach 而非 createEditorKit 里：状态是模块级的，
+      // 建了却没接上编辑器的 kit 不该影响已经在跑的那个。
+      setEditableState(editable)
     },
   }
 }
