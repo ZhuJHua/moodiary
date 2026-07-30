@@ -11,8 +11,12 @@ const double _kTabletShortestSideThreshold = 600.0;
 class _OrientationLockObserver extends WidgetsBindingObserver {
   DeviceOrientationPolicy? _lastApplied;
 
+  /// 临时放开期间不让 metrics 回调抢回方向（转屏本身就会触发 didChangeMetrics）。
+  int _overrides = 0;
+
   @override
   void didChangeMetrics() {
+    if (_overrides > 0) return;
     _evaluateAndApply();
   }
 
@@ -42,6 +46,12 @@ class _OrientationLockObserver extends WidgetsBindingObserver {
 
 enum DeviceOrientationPolicy { portraitOnly, unrestricted }
 
+/// 按内容宽高比选全屏方向：宽 > 高 锁横（两个横向都给，用户左右手持都行），否则锁竖。
+/// 正方形按竖处理 —— 手机自然持握是竖的，1:1 放进横屏两侧留白过大。
+List<DeviceOrientation> fullscreenOrientationsFor(double aspectRatio) => aspectRatio > 1.0
+    ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
+    : const [DeviceOrientation.portraitUp];
+
 final _OrientationLockObserver _orientationObserver = _OrientationLockObserver();
 bool _orientationObserverRegistered = false;
 
@@ -52,4 +62,41 @@ void applyDeviceOrientationLock() {
     _orientationObserverRegistered = true;
   }
   _orientationObserver._evaluateAndApply();
+}
+
+/// 恢复函数。返回值 = **这一次调用是否真的把全局策略应用回去了**（嵌套计数归零才会）。
+/// 调用方据此决定要不要去等「屏幕真的转回来」—— 计数没归零时一个方向请求都没发出去，
+/// 傻等只会吃满超时。
+typedef OrientationOverrideRelease = bool Function();
+
+/// 当前全局方向策略。平板 / 折叠屏展开态是 unrestricted（放开四向），此时任何
+/// 「锁定 → 等它转回来」的编排都不成立：系统会按物理姿态自己转，等不到确定终态。
+DeviceOrientationPolicy currentOrientationPolicy() =>
+    _orientationObserver._lastApplied ?? DeviceOrientationPolicy.portraitOnly;
+
+/// 临时把方向锁到 [orientations]（视频全屏按片子比例锁横 / 锁竖），返回恢复函数；
+/// 嵌套安全（计数到 0 才恢复全局策略）。
+///
+/// 必须走这里，不要直接调 [SystemChrome.setPreferredOrientations] —— 观察者用
+/// `_lastApplied` 去重，外部绕过它改了方向之后策略并未变化，竖屏锁就再也应用不回来了。
+///
+/// 平台前提：iOS 只能转到 Info.plist 的 `UISupportedInterfaceOrientations` 声明过的方向，
+/// 未声明的方向这里会静默无效（Android 走 setRequestedOrientation，可越过系统旋转锁定）。
+OrientationOverrideRelease lockOrientationsTemporarily(
+  List<DeviceOrientation> orientations,
+) {
+  final observer = _orientationObserver;
+  observer._overrides += 1;
+  SystemChrome.setPreferredOrientations(orientations);
+  var released = false;
+  return () {
+    if (released) return false;
+    released = true;
+    observer._overrides -= 1;
+    if (observer._overrides > 0) return false;
+    // 去重状态清掉，否则策略「未变化」会让恢复成为空操作。
+    observer._lastApplied = null;
+    observer._evaluateAndApply();
+    return true;
+  };
 }

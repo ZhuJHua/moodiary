@@ -82,9 +82,14 @@
 	<string>Main</string>
 	<key>UIStatusBarHidden</key>
 	<true/>
+	<!-- iPhone 声明横向仅为让「横拍视频全屏锁横」成为可能：iOS 转不到这里没声明过的方向，
+	     setPreferredOrientations 会静默无效。App 其余部分仍由 applyDeviceOrientationLock()
+	     锁竖屏（见 moodiary_utils/adaptive.dart）—— 这里放开的是「可能性」，实际方向由代码决定。 -->
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>

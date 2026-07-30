@@ -3,6 +3,25 @@ import 'package:intl/intl.dart';
 /// 统一的时间展示工具。入参为绝对时刻（UTC 或本地皆可），内部一律先
 /// `toLocal()` 再格式化；本地化跟随启动/切语言时设置的 `Intl.defaultLocale`。
 class TimeFormat {
+  /// 播放时长：m:ss，超过 1 小时给 h:mm:ss（分钟此时补零）。负数按 0。
+  /// 与编辑器 webview 内 use-media.ts 的 formatTime 保持一致，两端观感统一。
+  static String mediaDuration(Duration d) {
+    final total = d.inSeconds < 0 ? 0 : d.inSeconds;
+    final h = total ~/ 3600;
+    final m = (total % 3600) ~/ 60;
+    final s = total % 60;
+    final ss = s.toString().padLeft(2, '0');
+    if (h > 0) return '$h:${m.toString().padLeft(2, '0')}:$ss';
+    return '$m:$ss';
+  }
+
+  /// 「已播 / 总长」。总长未知（<= 0）时只给已播 —— Android 对无 moov 的残缺 mp4
+  /// 会报 DURATION_UNSET，此时画一个假的总长比不画更糟。
+  static String mediaPosition(Duration position, Duration duration) =>
+      duration <= Duration.zero
+      ? mediaDuration(position)
+      : '${mediaDuration(position)} / ${mediaDuration(duration)}';
+
   /// 完整日期+星期+时分秒——详情页等需要完整精度的场景。
   static String fullDateTime(DateTime time) =>
       DateFormat.yMMMMEEEEd().add_Hms().format(time.toLocal());
