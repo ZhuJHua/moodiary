@@ -15,10 +15,6 @@ export function setMediaPrefix(base: string): void {
   if (base) mediaPrefix = base.endsWith('/') ? base : `${base}/`
 }
 
-export function getMediaPrefix(): string {
-  return mediaPrefix
-}
-
 /**
  * 拼出本地媒体的显示 URL。[poster] = true 时取视频海报（缩略图）—— 本地服务对带 `?poster=1`
  * 的请求返回 thumbnail jpeg；否则返回原片字节（支持 Range，供 <audio>/<video> 内联播放）。
@@ -42,6 +38,14 @@ export function isVideo(name: string): boolean {
 /** 是否本地媒体文件名（区别于外链 http(s) 图片）。 */
 export function isLocalMedia(name: string): boolean {
   return isImage(name) || isAudio(name) || isVideo(name)
+}
+
+/**
+ * 落库形态（裸文件名 / 外链）→ 显示 URL。image 的 renderHTML 与 image node view 共用同一份，
+ * 两处逻辑漂移就会出现「复制出去能显示、编辑器里裂图」。
+ */
+export function displaySrc(src: string): string {
+  return isLocalMedia(src) ? mediaPrefix + src : src
 }
 
 /** 把显示 URL 反解回原始文件名（外链原样返回）。 */

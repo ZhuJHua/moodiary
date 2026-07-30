@@ -11,10 +11,15 @@ export interface PopupMenuItem {
   destructive?: boolean
 }
 
-const props = defineProps<{
-  items: PopupMenuItem[]
-  modelValue: boolean
-}>()
+// items 与 #panel 二选一：给 items 就是标准条目菜单，给 #panel 则面板内容自定义
+//（图片尺寸滑块用后者），定位 / 遮罩 / 动画 / 面板外观共用这一份。
+const props = withDefaults(
+  defineProps<{
+    items?: PopupMenuItem[]
+    modelValue: boolean
+  }>(),
+  { items: () => [] },
+)
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
@@ -101,28 +106,30 @@ watch(
           class="popup-menu-panel fixed z-[71] flex flex-col gap-0.5 p-1.5"
           :style="{ ...menuStyle, borderRadius: '16px' }"
         >
-          <button
-            v-for="item in items"
-            :key="item.key"
-            type="button"
-            class="popup-menu-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors"
-            :class="{
-              'popup-menu-item--active': item.active,
-              'popup-menu-item--destructive': item.destructive,
-            }"
-            @mousedown.prevent
-            @click.stop="onSelect(item.key)"
-          >
-            <!-- 前导图标位（任一条目有图标即留空位保证对齐） -->
-            <span v-if="hasIcon" class="flex w-5 shrink-0 justify-center">
-              <component :is="item.icon" v-if="item.icon" class="size-[19px]" />
-            </span>
-            <span class="flex-1 whitespace-nowrap">{{ item.label }}</span>
-            <!-- 选中标记 -->
-            <span v-if="hasActive" class="flex w-[18px] shrink-0 justify-center">
-              <IconCheck v-if="item.active" class="size-[18px]" />
-            </span>
-          </button>
+          <slot name="panel">
+            <button
+              v-for="item in items"
+              :key="item.key"
+              type="button"
+              class="popup-menu-item flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors"
+              :class="{
+                'popup-menu-item--active': item.active,
+                'popup-menu-item--destructive': item.destructive,
+              }"
+              @mousedown.prevent
+              @click.stop="onSelect(item.key)"
+            >
+              <!-- 前导图标位（任一条目有图标即留空位保证对齐） -->
+              <span v-if="hasIcon" class="flex w-5 shrink-0 justify-center">
+                <component :is="item.icon" v-if="item.icon" class="size-[19px]" />
+              </span>
+              <span class="flex-1 whitespace-nowrap">{{ item.label }}</span>
+              <!-- 选中标记 -->
+              <span v-if="hasActive" class="flex w-[18px] shrink-0 justify-center">
+                <IconCheck v-if="item.active" class="size-[18px]" />
+              </span>
+            </button>
+          </slot>
         </div>
       </template>
     </Teleport>
