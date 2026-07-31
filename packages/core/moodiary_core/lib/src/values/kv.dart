@@ -12,8 +12,10 @@ enum MoodiaryKVs<T extends Object> {
 
   /// 自动同步总开关：开启即启用「变更后 push + 定时轮询双向 sync」（见 [AutoSyncWatcher]）。
   autoSync<bool>(defaultValue: false),
+
   /// 轮询间隔（秒）；过短会频繁抢占远端锁 / 读清单，徒增流量与耗电。
   syncPollInterval<int>(defaultValue: 30),
+
   /// 加密由 [MoodiarySecureKVs.syncDek] 是否配置驱动，没有独立开关。
   syncProvider<String>(defaultValue: 'webdav'),
   webDavOption<List<String>>(),
@@ -59,7 +61,7 @@ enum MoodiaryKVs<T extends Object> {
 
   /// 图片优化：存储时按 1280 规则压缩 + 统一转 WebP；关闭则保存原图（HEIC 仍转码）。
   imageOptimize<bool>(defaultValue: true),
-  homeViewMode<int>(defaultValue: 1 /* ViewModeType.grid.number */),
+  homeViewMode<int>(defaultValue: 3 /* ViewModeType.timeline.number */),
   homeSortMode<int>(defaultValue: 0 /* DiarySort.timeDesc.number */),
 
   categoryOrder<List<String>>(),

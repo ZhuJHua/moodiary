@@ -52,12 +52,12 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
               duration: Durations.short3,
               child: KeyedSubtree(
                 key: ValueKey('$viewMode-$sortMode-$categoryId'),
+                // 目前只有时间线一种模式；保留 switch 是为了将来加布局时编译器会在这里
+                // 报缺分支，而不是悄悄漏掉。
                 child: switch (viewModeType) {
-                  ViewModeType.list => DiaryListView(categoryId: categoryId),
-                  ViewModeType.grid => DiaryWaterFallView(
+                  ViewModeType.timeline => DiaryTimelineView(
                     categoryId: categoryId,
                   ),
-                  ViewModeType.calendar => CalendarView(categoryId: categoryId),
                 },
               ),
             );
@@ -169,20 +169,12 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
         // 知识图谱入口暂隐藏(功能保留,打磨后再放出):
         // IconButton(icon: Icon(Icons.hub_rounded)) → DiaryGraphRoute().push
         const SyncStatusButton(),
-        ValueListenableBuilder(
-          valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
-          builder: (context, homeViewMode, _) {
-            final viewModeType = ViewModeType.getType(homeViewMode);
-            return IconButton(
-              tooltip: context.l10n.diaryPageViewModeButton,
-              icon: Icon(switch (viewModeType) {
-                ViewModeType.list => Icons.view_list_rounded,
-                ViewModeType.grid => Icons.grid_view_rounded,
-                ViewModeType.calendar => Icons.calendar_month_rounded,
-              }),
-              onPressed: () => ViewModeSheet.show(context),
-            );
-          },
+        // 只剩时间线一种布局，面板里目前只有排序，图标与提示按排序来；
+        // 将来加回第二种布局时，这里换回按当前模式取图标。
+        IconButton(
+          tooltip: context.l10n.diarySortTitle,
+          icon: const Icon(Icons.sort_rounded),
+          onPressed: () => ViewModeSheet.show(context),
         ),
       ],
     );

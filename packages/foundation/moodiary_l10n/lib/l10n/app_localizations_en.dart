@@ -379,12 +379,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeNewDiaryPlainText => 'Plain Text';
 
   @override
-  String get diaryViewModeList => 'List view';
-
-  @override
-  String get diaryViewModeGrid => 'Grid view';
-
-  @override
   String get diaryTabViewEmpty => 'Nothing here yet';
 
   @override
@@ -963,7 +957,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labTencentCloud => 'Tencent Cloud';
 
   @override
-  String get diaryViewModeCalendar => 'Calendar view';
+  String get diaryViewModeTimeline => 'Timeline';
 
   @override
   String get assistantConfigTooltip => 'Settings';
@@ -1617,10 +1611,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diarySortModifiedFirst => 'Recently edited first';
 
   @override
-  String get diarySortCalendarHint =>
-      'Calendar is organized by date and ignores sorting';
-
-  @override
   String get categoryDeletedReset => 'Category deleted, showing all diaries';
 
   @override
@@ -1683,5 +1673,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String videoPlayerSpeedBoost(String speed) {
     return 'Playing at $speed×';
+  }
+
+  @override
+  String diaryTimelineMonthCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries',
+      one: '1 entry',
+    );
+    return '$_temp0';
   }
 }

@@ -818,18 +818,6 @@ abstract class AppLocalizations {
   /// **'纯文本'**
   String get homeNewDiaryPlainText;
 
-  /// No description provided for @diaryViewModeList.
-  ///
-  /// In zh, this message translates to:
-  /// **'列表视图'**
-  String get diaryViewModeList;
-
-  /// No description provided for @diaryViewModeGrid.
-  ///
-  /// In zh, this message translates to:
-  /// **'网格视图'**
-  String get diaryViewModeGrid;
-
   /// No description provided for @diaryTabViewEmpty.
   ///
   /// In zh, this message translates to:
@@ -1892,11 +1880,11 @@ abstract class AppLocalizations {
   /// **'腾讯云'**
   String get labTencentCloud;
 
-  /// No description provided for @diaryViewModeCalendar.
+  /// No description provided for @diaryViewModeTimeline.
   ///
   /// In zh, this message translates to:
-  /// **'日历视图'**
-  String get diaryViewModeCalendar;
+  /// **'时间线'**
+  String get diaryViewModeTimeline;
 
   /// No description provided for @assistantConfigTooltip.
   ///
@@ -3080,12 +3068,6 @@ abstract class AppLocalizations {
   /// **'最近修改在前'**
   String get diarySortModifiedFirst;
 
-  /// No description provided for @diarySortCalendarHint.
-  ///
-  /// In zh, this message translates to:
-  /// **'日历按日期组织，不受排序影响'**
-  String get diarySortCalendarHint;
-
   /// No description provided for @categoryDeletedReset.
   ///
   /// In zh, this message translates to:
@@ -3211,6 +3193,12 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{speed}× 倍速播放中'**
   String videoPlayerSpeedBoost(String speed);
+
+  /// No description provided for @diaryTimelineMonthCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 篇'**
+  String diaryTimelineMonthCount(int count);
 }
 
 class _AppLocalizationsDelegate

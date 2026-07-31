@@ -120,8 +120,6 @@
   "homeNewDiaryMarkdown": "Markdown",
   "homeNewDiaryTiptap": "Diary",
   "homeNewDiaryPlainText": "Plain Text",
-  "diaryViewModeList": "List view",
-  "diaryViewModeGrid": "Grid view",
   "diaryTabViewEmpty": "Nothing here yet",
   "diaryPageSearchButton": "Search",
   "diaryPageViewModeButton": "View mode",
@@ -299,7 +297,7 @@
   "labQweather": "Qweather",
   "labTianditu": "Tianditu",
   "labTencentCloud": "Tencent Cloud",
-  "diaryViewModeCalendar": "Calendar view",
+  "diaryViewModeTimeline": "Timeline",
   "assistantConfigTooltip": "Settings",
   "assistantWelcome": "Hi, I'm the Moodiary assistant. How can I help you?",
   "assistantInputHint": "Say something...",
@@ -497,7 +495,6 @@
   "diarySortNewestFirst": "Newest first",
   "diarySortOldestFirst": "Oldest first",
   "diarySortModifiedFirst": "Recently edited first",
-  "diarySortCalendarHint": "Calendar is organized by date and ignores sorting",
   "categoryDeletedReset": "Category deleted, showing all diaries",
   "imageBrowserSave": "Save to gallery",
   "imageBrowserSaved": "Saved to gallery",
@@ -518,5 +515,6 @@
   "videoPlayerProgress": "Playback progress",
   "videoPlayerBrightness": "Brightness",
   "videoPlayerVolume": "Volume",
-  "videoPlayerSpeedBoost": "Playing at {speed}×"
+  "videoPlayerSpeedBoost": "Playing at {speed}×",
+  "diaryTimelineMonthCount": "{count, plural, =1{1 entry} other{{count} entries}}"
 }

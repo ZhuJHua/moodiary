@@ -120,8 +120,6 @@
   "homeNewDiaryMarkdown": "Markdown",
   "homeNewDiaryTiptap": "日记",
   "homeNewDiaryPlainText": "纯文本",
-  "diaryViewModeList": "列表视图",
-  "diaryViewModeGrid": "网格视图",
   "diaryTabViewEmpty": "这里一片荒芜",
   "diaryPageSearchButton": "搜索",
   "diaryPageViewModeButton": "视图模式",
@@ -299,7 +297,7 @@
   "labQweather": "和风天气",
   "labTianditu": "天地图",
   "labTencentCloud": "腾讯云",
-  "diaryViewModeCalendar": "日历视图",
+  "diaryViewModeTimeline": "时间线",
   "assistantConfigTooltip": "配置",
   "assistantWelcome": "你好，我是 Moodiary 助手，有什么可以帮你的吗？",
   "assistantInputHint": "说点什么...",
@@ -497,7 +495,6 @@
   "diarySortNewestFirst": "最新在前",
   "diarySortOldestFirst": "最早在前",
   "diarySortModifiedFirst": "最近修改在前",
-  "diarySortCalendarHint": "日历按日期组织，不受排序影响",
   "categoryDeletedReset": "分类已被删除，已切回全部",
   "imageBrowserSave": "保存到相册",
   "imageBrowserSaved": "已保存到相册",
@@ -521,5 +518,9 @@
   "videoPlayerSpeedBoost": "{speed}× 倍速播放中",
   "@videoPlayerSpeedBoost": {
     "placeholders": { "speed": { "type": "String" } }
+  },
+  "diaryTimelineMonthCount": "{count} 篇",
+  "@diaryTimelineMonthCount": {
+    "placeholders": { "count": { "type": "int" } }
   }
 }

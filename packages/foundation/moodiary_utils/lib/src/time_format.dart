@@ -63,6 +63,17 @@ class TimeFormat {
   static String timeHms(DateTime time) =>
       DateFormat.Hms().format(time.toLocal());
 
+  /// 时分——时间线条目只需要「几点几分」，日期由左侧轴上的节点承担。
+  static String clock(DateTime time) => DateFormat.Hm().format(time.toLocal());
+
+  /// 年月——时间线的月份吸顶头。
+  static String monthTitle(DateTime time) =>
+      DateFormat.yMMMM().format(time.toLocal());
+
+  /// 短星期（周一 / Mon）——时间线左栏日期下的第二行。
+  static String weekdayShort(DateTime time) =>
+      DateFormat.E().format(time.toLocal());
+
   /// 相对时间——今天给时分，今年给月日，更早给年月日（会话列表）。
   static String relative(DateTime time) {
     final t = time.toLocal();

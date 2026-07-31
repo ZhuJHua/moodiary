@@ -1,0 +1,222 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:moodiary_diary/src/application/diary_selection.dart';
+import 'package:moodiary_diary/src/application/timeline_controller.dart';
+import 'package:moodiary_diary/src/application/timeline_group.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
+import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
+
+/// 时间线视图：左侧一条真正的轴——圆点与线段都取心情色，滑动即读一段情绪走向。
+///
+/// 分组键必须等于排序键（见 [timelineStampOf]），否则按「最近修改」排序时月份吸顶头
+/// 会重复且乱序。分组本身是对**已加载前缀**的纯函数（[buildTimeline]），分页续加和
+/// 同步回写触发的重排都只是重新算一遍。
+class DiaryTimelineView extends ConsumerWidget {
+  final String? categoryId;
+
+  const DiaryTimelineView({super.key, this.categoryId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = diaryControllerProvider(categoryId: categoryId);
+    final diaryAsync = ref.watch(provider);
+    final selection = ref.watch(diarySelectionProvider);
+    final selecting = selection.isNotEmpty;
+
+    return diaryAsync.buildLoading(
+      data: (diaries) {
+        return ListenableBuilder(
+          listenable: Listenable.merge([
+            SyncPendingTracker.instance.listenable,
+            SyncDirtyTracker.instance.listenable,
+          ]),
+          builder: (context, _) {
+            final pending = SyncPendingTracker.instance.listenable.value;
+            final dirty = SyncDirtyTracker.instance.listenable.value;
+            Widget body;
+            if (diaries.isEmpty) {
+              body = Center(child: Text(context.l10n.diaryTabViewEmpty));
+            } else {
+              final sort = DiarySort.getType(MoodiaryKVs.homeSortMode.get()!);
+              // 篇数走独立聚合查询：列表分页加载，从中数只能数出「加载到哪儿了」。
+              final monthCounts = ref
+                  .watch(
+                    timelineMonthCountsProvider(
+                      categoryId: categoryId,
+                      sort: sort,
+                    ),
+                  )
+                  .value;
+              final months = buildTimeline(diaries, sort);
+              final flat = [for (final m in months) ...m.entries];
+              final selNotifier = ref.read(diarySelectionProvider.notifier);
+              var offset = 0;
+
+              final slivers = <Widget>[];
+              for (final month in months) {
+                final base = offset;
+                offset += month.entries.length;
+                slivers.add(
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _MonthHeaderDelegate(
+                      month: month.month,
+                      count: monthCounts?[month.month],
+                    ),
+                  ),
+                );
+                slivers.add(
+                  SliverList.builder(
+                    itemCount: month.entries.length,
+                    itemBuilder: (context, index) {
+                      final flatIndex = base + index;
+                      final entry = flat[flatIndex];
+                      final diary = entry.diary;
+                      final syncState =
+                          pending.updateDiaryIds.contains(diary.id)
+                          ? DiaryCardSyncState.syncing
+                          : dirty.contains(diary.id)
+                          ? DiaryCardSyncState.dirty
+                          : DiaryCardSyncState.none;
+                      return Consumer(
+                        builder: (context, ref, _) {
+                          final category = ref.watch(
+                            categoryByIdProvider(diary.categoryId),
+                          );
+                          final next = flatIndex == flat.length - 1
+                              ? null
+                              : flat[flatIndex + 1];
+                          return DiaryTimelineTile(
+                            // 按日记 id 定身份：列表按 index 复用 Element，重排后
+                            // 缩略图（gaplessPlayback）会先画上一篇的照片。
+                            key: ValueKey(diary.id),
+                            diary: diary,
+                            stamp: entry.stamp,
+                            dayStart: entry.dayStart,
+                            breakBefore: entry.breakBefore,
+                            breakAfter: next?.breakBefore ?? false,
+                            hasAbove: flatIndex > 0,
+                            moodBelow: next?.diary.mood,
+                            category: category,
+                            showCategoryLabel: categoryId == null,
+                            syncState: syncState,
+                            selecting: selecting,
+                            selected: selection.contains(diary.id),
+                            onTap: selecting
+                                ? () => selNotifier.toggle(diary.id)
+                                : () => openDiaryDetail(context, diary),
+                            onLongPress: selecting
+                                ? null
+                                : () => selNotifier.enter(diary.id),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                );
+              }
+              slivers.add(
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 24 + MediaQuery.paddingOf(context).bottom,
+                  ),
+                ),
+              );
+
+              body = MoodiaryRefresh(
+                onLoadMore: () => ref.read(provider.notifier).loadMore(),
+                onRefresh: () => ref.read(provider.notifier).refresh(),
+                child: CustomScrollView(
+                  slivers: [
+                    // 左右留白统一加在这里：吸顶头与条目必须同一条左边线，
+                    // 否则轴心 x 会跟着差 14px。
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      sliver: SliverMainAxisGroup(slivers: slivers),
+                    ),
+                  ],
+                ),
+              );
+            }
+            // 聚合提示卡只进「全部」视图（全局数量）。
+            final showSummary =
+                categoryId == null &&
+                (pending.newDiaryIds.isNotEmpty ||
+                    pending.updateDiaryIds.isNotEmpty);
+            if (!showSummary) return body;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                  child: SyncPendingSummaryCard(
+                    newCount: pending.newDiaryIds.length,
+                    updateCount: pending.updateDiaryIds.length,
+                  ),
+                ),
+                Expanded(child: body),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// 月份吸顶头。篇数由 [timelineMonthCounts] 聚合查询提供（不是数已加载的列表），
+/// 查询回来之前为 null —— 宁可先不显示，也不要先显示一个会跳变的数。
+class _MonthHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final DateTime month;
+  final int? count;
+
+  const _MonthHeaderDelegate({required this.month, required this.count});
+
+  static const double _height = 34.0;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlaps) {
+    final scheme = context.colorScheme;
+    return Container(
+      height: _height,
+      alignment: Alignment.centerLeft,
+      color: scheme.surface,
+      child: Row(
+        children: [
+          Text(
+            TimeFormat.monthTitle(month),
+            style: context.textTheme.titleSmall?.copyWith(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (count != null) ...[
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.diaryTimelineMonthCount(count!),
+              style: context.textTheme.labelSmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          const SizedBox(width: 10),
+          Expanded(child: Divider(height: 1, color: scheme.outlineVariant)),
+        ],
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _MonthHeaderDelegate old) =>
+      old.month != month || old.count != count;
+}

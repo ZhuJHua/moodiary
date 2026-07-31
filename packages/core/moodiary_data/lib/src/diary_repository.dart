@@ -55,7 +55,8 @@ class DiaryRepository {
 
   static Future<List<TokenizeResult>> Function(List<String>) _fakeBatch(
     Future<TokenizeResult> Function(String) tokenizer,
-  ) => (texts) async => [for (final t in texts) await tokenizer(t)];
+  ) =>
+      (texts) async => [for (final t in texts) await tokenizer(t)];
 
   static final DiaryRepository _instance = DiaryRepository._(
     IsarDatabase.get().isar,
@@ -550,6 +551,31 @@ class DiaryRepository {
         filtered.sortByLastModifiedDesc().thenByIsarIdDesc(),
     };
     return sorted.findAllAsync(offset: offset, limit: limit);
+  }
+
+  /// 按**本地月份**统计可见日记篇数（该月 1 号零点 -> 篇数）。时间线的月份吸顶头用它：
+  /// 首页列表是分页加载的，从已加载前缀里数出来的只是「加载到哪儿了」，不是这个月有多少篇。
+  ///
+  /// 分桶字段跟着 [sort] 走（与时间线的分组键一致），只取一列时间属性、在 Dart 侧分桶，
+  /// 不载入正文。
+  Future<Map<DateTime, int>> diaryCountByMonth({
+    String? categoryId,
+    DiarySort sort = DiarySort.timeDesc,
+  }) async {
+    final base = _isar.diarys.where().showEqualTo(true);
+    final filtered = categoryId == null
+        ? base
+        : base.categoryIdEqualTo(categoryId);
+    final stamps = sort == DiarySort.lastModifiedDesc
+        ? await filtered.lastModifiedProperty().findAllAsync()
+        : await filtered.timeProperty().findAllAsync();
+    final counts = <DateTime, int>{};
+    for (final stamp in stamps) {
+      final local = stamp.toLocal();
+      final key = DateTime(local.year, local.month);
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+    return counts;
   }
 
   /// 每个分类下「可见」日记的数量（categoryId -> count）与可见总数（含未分类），

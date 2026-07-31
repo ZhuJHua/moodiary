@@ -373,12 +373,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeNewDiaryPlainText => '纯文本';
 
   @override
-  String get diaryViewModeList => '列表视图';
-
-  @override
-  String get diaryViewModeGrid => '网格视图';
-
-  @override
   String get diaryTabViewEmpty => '这里一片荒芜';
 
   @override
@@ -930,7 +924,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get labTencentCloud => '腾讯云';
 
   @override
-  String get diaryViewModeCalendar => '日历视图';
+  String get diaryViewModeTimeline => '时间线';
 
   @override
   String get assistantConfigTooltip => '配置';
@@ -1555,9 +1549,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diarySortModifiedFirst => '最近修改在前';
 
   @override
-  String get diarySortCalendarHint => '日历按日期组织，不受排序影响';
-
-  @override
   String get categoryDeletedReset => '分类已被删除，已切回全部';
 
   @override
@@ -1620,5 +1611,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String videoPlayerSpeedBoost(String speed) {
     return '$speed× 倍速播放中';
+  }
+
+  @override
+  String diaryTimelineMonthCount(int count) {
+    return '$count 篇';
   }
 }

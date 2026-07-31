@@ -14,10 +14,11 @@ class ViewModeSheet extends StatelessWidget {
     );
   }
 
+  /// 只剩一种模式时不画模式网格——一格的选择器没有意义。加回第二种布局时自动出现。
+  static bool get _showModes => ViewModeType.values.length > 1;
+
   String _label(BuildContext context, ViewModeType type) => switch (type) {
-    ViewModeType.list => context.l10n.diaryViewModeList,
-    ViewModeType.grid => context.l10n.diaryViewModeGrid,
-    ViewModeType.calendar => context.l10n.diaryViewModeCalendar,
+    ViewModeType.timeline => context.l10n.diaryViewModeTimeline,
   };
 
   String _sortLabel(BuildContext context, DiarySort sort) => switch (sort) {
@@ -45,36 +46,36 @@ class ViewModeSheet extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Text(
-                    context.l10n.diaryPageViewModeButton,
-                    style: context.textTheme.titleMedium,
+                if (_showModes) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      context.l10n.diaryPageViewModeButton,
+                      style: context.textTheme.titleMedium,
+                    ),
                   ),
-                ),
-                Row(
-                  crossAxisAlignment: .start,
-                  spacing: 12,
-                  children: [
-                    for (final type in ViewModeType.values)
-                      Expanded(
-                        child: _ViewModeOption(
-                          type: type,
-                          label: _label(context, type),
-                          selected: type == current,
-                          onTap: () async {
-                            await MoodiaryKVs.homeViewMode.set(type.number);
-                            if (context.mounted) Navigator.of(context).pop();
-                          },
+                  // 间距与内边距按四格排布收紧，否则每格的预览会挤成条。
+                  Row(
+                    crossAxisAlignment: .start,
+                    spacing: 8,
+                    children: [
+                      for (final type in ViewModeType.values)
+                        Expanded(
+                          child: _ViewModeOption(
+                            type: type,
+                            label: _label(context, type),
+                            selected: type == current,
+                            onTap: () async {
+                              await MoodiaryKVs.homeViewMode.set(type.number);
+                              if (context.mounted) Navigator.of(context).pop();
+                            },
+                          ),
                         ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _buildSortSection(
-                  context,
-                  disabled: current == ViewModeType.calendar,
-                ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                ],
+                _buildSortSection(context),
               ],
             );
           },
@@ -83,60 +84,39 @@ class ViewModeSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildSortSection(BuildContext context, {required bool disabled}) {
+  /// 时间线三种排序都成立：分组键跟着排序键走（见 `timelineStampOf`），
+  /// 不再像日历那样需要把排序整段禁用。
+  Widget _buildSortSection(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              context.l10n.diarySortTitle,
-              style: context.textTheme.titleMedium,
-            ),
-            if (disabled) ...[
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.diarySortCalendarHint,
-                style: context.textTheme.labelSmall?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ],
-        ),
+        Text(context.l10n.diarySortTitle, style: context.textTheme.titleMedium),
         const SizedBox(height: 4),
-        AnimatedOpacity(
-          opacity: disabled ? 0.4 : 1,
-          duration: Durations.short3,
-          child: IgnorePointer(
-            ignoring: disabled,
-            child: ValueListenableBuilder<int>(
-              valueListenable: MoodiaryKVs.homeSortMode.getNotifier(),
-              builder: (context, sortMode, _) {
-                return RadioGroup<int>(
-                  groupValue: sortMode,
-                  onChanged: (v) {
-                    if (v != null) MoodiaryKVs.homeSortMode.set(v);
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final sort in DiarySort.values)
-                        RadioListTile<int>(
-                          value: sort.number,
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
-                          title: Text(_sortLabel(context, sort)),
-                          secondary: Icon(_sortIcon(sort), size: 20),
-                        ),
-                    ],
-                  ),
-                );
+        ValueListenableBuilder<int>(
+          valueListenable: MoodiaryKVs.homeSortMode.getNotifier(),
+          builder: (context, sortMode, _) {
+            return RadioGroup<int>(
+              groupValue: sortMode,
+              onChanged: (v) {
+                if (v != null) MoodiaryKVs.homeSortMode.set(v);
               },
-            ),
-          ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final sort in DiarySort.values)
+                    RadioListTile<int>(
+                      value: sort.number,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                      title: Text(_sortLabel(context, sort)),
+                      secondary: Icon(_sortIcon(sort), size: 20),
+                    ),
+                ],
+              ),
+            );
+          },
         ),
       ],
     );
@@ -175,7 +155,7 @@ class _ViewModeOption extends StatelessWidget {
               width: selected ? 2 : 1,
             ),
           ),
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(9),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -183,10 +163,12 @@ class _ViewModeOption extends StatelessWidget {
                 aspectRatio: 1,
                 child: _ViewModePreview(type: type, selected: selected),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 label,
-                maxLines: 1,
+                textAlign: TextAlign.center,
+                // 四列下「日历视图 / Calendar view」放不进一行，给第二行而不是省略号。
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: context.textTheme.labelMedium?.copyWith(
                   color: selected ? scheme.primary : scheme.onSurfaceVariant,
@@ -212,9 +194,7 @@ class _ViewModePreview extends StatelessWidget {
     final scheme = context.colorScheme;
     final block = selected ? scheme.primary : scheme.onSurfaceVariant;
     return switch (type) {
-      ViewModeType.list => _list(block),
-      ViewModeType.grid => _grid(block),
-      ViewModeType.calendar => _calendar(block),
+      ViewModeType.timeline => _timeline(block),
     };
   }
 
@@ -225,72 +205,51 @@ class _ViewModePreview extends StatelessWidget {
     ),
   );
 
-  Widget _list(Color block) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (var i = 0; i < 3; i++) ...[
-          if (i > 0) const SizedBox(height: 8),
-          SizedBox(height: 14, width: double.infinity, child: _cell(block)),
-        ],
-      ],
-    );
-  }
-
-  Widget _grid(Color block) {
-    Widget column(List<int> flexes) => Expanded(
-      child: Column(
-        crossAxisAlignment: .stretch,
+  /// 一条竖轴 + 三个节点，右侧是长短不一的条目——与真实版式同构。
+  Widget _timeline(Color block) {
+    Widget node(double barFlex, {bool dim = false}) => Expanded(
+      flex: (barFlex * 10).round(),
+      child: Row(
+        crossAxisAlignment: .start,
         children: [
-          for (var i = 0; i < flexes.length; i++) ...[
-            if (i > 0) const SizedBox(height: 8),
-            Expanded(flex: flexes[i], child: _cell(block)),
-          ],
+          SizedBox(
+            width: 8,
+            child: Column(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  margin: const EdgeInsets.only(top: 2),
+                  decoration: BoxDecoration(
+                    color: dim ? block.withValues(alpha: 0.35) : block,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    width: 1.5,
+                    color: block.withValues(alpha: 0.3),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: .stretch,
+              children: [
+                SizedBox(height: 6, child: _cell(block, radius: 3)),
+                const SizedBox(height: 4),
+                Expanded(child: _cell(block.withValues(alpha: 0.3), radius: 3)),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
         ],
       ),
     );
-    return Row(
-      crossAxisAlignment: .stretch,
-      children: [
-        column(const [3, 2]),
-        const SizedBox(width: 8),
-        column(const [2, 3]),
-      ],
-    );
-  }
 
-  Widget _calendar(Color block) {
-    const filled = {2, 3, 9, 14, 15, 20, 27, 31};
-    const rows = 5, cols = 7;
-    return Center(
-      child: AspectRatio(
-        aspectRatio: cols / rows,
-        child: Column(
-          children: [
-            for (var r = 0; r < rows; r++) ...[
-              if (r > 0) const SizedBox(height: 3),
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: .stretch,
-                  children: [
-                    for (var c = 0; c < cols; c++) ...[
-                      if (c > 0) const SizedBox(width: 3),
-                      Expanded(
-                        child: _cell(
-                          filled.contains(r * cols + c)
-                              ? block
-                              : block.withValues(alpha: 0.22),
-                          radius: 2,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
+    return Column(children: [node(1.4), node(0.8, dim: true), node(1.2)]);
   }
 }
