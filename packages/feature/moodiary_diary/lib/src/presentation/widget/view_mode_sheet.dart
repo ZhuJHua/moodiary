@@ -19,6 +19,7 @@ class ViewModeSheet extends StatelessWidget {
 
   String _label(BuildContext context, ViewModeType type) => switch (type) {
     ViewModeType.timeline => context.l10n.diaryViewModeTimeline,
+    ViewModeType.feed => context.l10n.diaryViewModeFeed,
   };
 
   String _sortLabel(BuildContext context, DiarySort sort) => switch (sort) {
@@ -195,6 +196,7 @@ class _ViewModePreview extends StatelessWidget {
     final block = selected ? scheme.primary : scheme.onSurfaceVariant;
     return switch (type) {
       ViewModeType.timeline => _timeline(block),
+      ViewModeType.feed => _feed(block),
     };
   }
 
@@ -204,6 +206,49 @@ class _ViewModePreview extends StatelessWidget {
       borderRadius: BorderRadius.circular(radius),
     ),
   );
+
+  /// 左文右图的条目堆叠——与真实版式同构：一条带图、一条纯文字。
+  Widget _feed(Color block) {
+    Widget row({required bool thumb, required int lines}) => Expanded(
+      flex: thumb ? 5 : 3,
+      child: Row(
+        crossAxisAlignment: .start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: .stretch,
+              children: [
+                SizedBox(height: 5, child: _cell(block, radius: 2)),
+                for (var i = 0; i < lines; i++) ...[
+                  const SizedBox(height: 3),
+                  SizedBox(
+                    height: 3,
+                    child: _cell(block.withValues(alpha: 0.3), radius: 2),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (thumb) ...[
+            const SizedBox(width: 5),
+            AspectRatio(
+              aspectRatio: 4 / 3,
+              child: _cell(block.withValues(alpha: 0.55), radius: 3),
+            ),
+          ],
+        ],
+      ),
+    );
+    return Column(
+      children: [
+        row(thumb: true, lines: 2),
+        const SizedBox(height: 7),
+        row(thumb: false, lines: 1),
+        const SizedBox(height: 7),
+        row(thumb: true, lines: 2),
+      ],
+    );
+  }
 
   /// 一条竖轴 + 三个节点，右侧是长短不一的条目——与真实版式同构。
   Widget _timeline(Color block) {

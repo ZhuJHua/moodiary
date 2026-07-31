@@ -927,6 +927,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diaryViewModeTimeline => '时间线';
 
   @override
+  String get diaryViewModeFeed => '信息流';
+
+  @override
   String get assistantConfigTooltip => '配置';
 
   @override

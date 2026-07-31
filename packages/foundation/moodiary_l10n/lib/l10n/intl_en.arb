@@ -298,6 +298,7 @@
   "labTianditu": "Tianditu",
   "labTencentCloud": "Tencent Cloud",
   "diaryViewModeTimeline": "Timeline",
+  "diaryViewModeFeed": "Feed",
   "assistantConfigTooltip": "Settings",
   "assistantWelcome": "Hi, I'm the Moodiary assistant. How can I help you?",
   "assistantInputHint": "Say something...",

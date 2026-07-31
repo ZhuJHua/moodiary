@@ -5,9 +5,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-
-/// 条目的同步状态：内联进元信息行，不用会盖住内容的角标。
-enum DiaryCardSyncState { none, dirty, syncing }
+import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 
 /// 左栏三段固定宽度：日期列 / 间隙 / 轴列 / 间隙。轴心 x 与内容起始 x 都由它们推出，
 /// Painter 与 Row 必须用同一组常量，否则线会画歪。
@@ -26,12 +24,6 @@ const double _kDotOffset = 9.0;
 
 /// 时间线最多展示三张图，多出来的折成末张上的「+N」。
 const int _kMaxImages = 3;
-
-Color timelineMoodColor(double mood) => Color.lerp(
-  AppColor.emoColorList.first,
-  AppColor.emoColorList.last,
-  mood.clamp(0.0, 1.0).toDouble(),
-)!;
 
 /// 时间线的一行 = 一篇日记。左栏日期只在当天第一条出现，轴上圆点每条都有 ——
 /// 一天多篇时不会共用一个心情色。
@@ -83,13 +75,13 @@ class DiaryTimelineTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final topPad = _kTopPad + (breakBefore ? _kBreakPad : 0.0);
-    final mood = timelineMoodColor(diary.mood);
+    final mood = diaryMoodColor(diary.mood);
 
     return CustomPaint(
       painter: _AxisPainter(
         color: mood,
         hasAbove: hasAbove,
-        below: moodBelow == null ? null : timelineMoodColor(moodBelow!),
+        below: moodBelow == null ? null : diaryMoodColor(moodBelow!),
         dashedAbove: breakBefore,
         dashedBelow: breakAfter,
         idle: scheme.outlineVariant,
@@ -191,67 +183,50 @@ class _Content extends StatelessWidget {
     final hasTitle = diary.title.trim().isNotEmpty;
     final body = diary.contentText.preview();
 
-    return AnimatedContainer(
-      duration: Durations.short3,
-      decoration: BoxDecoration(
-        color: selected ? scheme.primaryContainer.withValues(alpha: 0.4) : null,
-        borderRadius: AppBorderRadius.mediumBorderRadius,
-        border: selected
-            ? Border.all(color: scheme.primary, width: 1.5)
-            : Border.all(color: Colors.transparent, width: 1.5),
-      ),
-      child: InkWell(
-        // 圆角跟着选中态那层容器走，水波不会溢出成直角；水波只在内容块里。
-        borderRadius: AppBorderRadius.mediumBorderRadius,
-        // 无边框的连续流里，扩散水波比高亮更吵；只保留一层轻微的按压高亮。
-        splashFactory: NoSplash.splashFactory,
-        highlightColor: scheme.onSurface.withValues(alpha: 0.06),
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _MetaLine(
-                diary: diary,
-                stamp: stamp,
-                category: category,
-                showCategoryLabel: showCategoryLabel,
-                syncState: syncState,
-                selecting: selecting,
-                selected: selected,
-              ),
-              if (hasTitle) ...[
-                const SizedBox(height: 3),
-                Text(
-                  diary.title.trim(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.titleMedium?.copyWith(
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ],
-              if (body.isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  body,
-                  maxLines: hasTitle ? 2 : 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              if (diary.imageName.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                _Images(names: diary.imageName, aspect: diary.aspect),
-              ],
-              _Footer(diary: diary),
-            ],
+    return DiaryTileFrame(
+      selected: selected,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _MetaLine(
+            diary: diary,
+            stamp: stamp,
+            category: category,
+            showCategoryLabel: showCategoryLabel,
+            syncState: syncState,
+            selecting: selecting,
+            selected: selected,
           ),
-        ),
+          if (hasTitle) ...[
+            const SizedBox(height: 3),
+            Text(
+              diary.title.trim(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.textTheme.titleMedium?.copyWith(
+                color: scheme.onSurface,
+              ),
+            ),
+          ],
+          if (body.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              body,
+              maxLines: hasTitle ? 2 : 3,
+              overflow: TextOverflow.ellipsis,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          if (diary.imageName.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _Images(names: diary.imageName, aspect: diary.aspect),
+          ],
+          _Footer(diary: diary),
+        ],
       ),
     );
   }
@@ -309,30 +284,11 @@ class _MetaLine extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         if (syncState != DiaryCardSyncState.none) ...[
-          syncState == DiaryCardSyncState.syncing
-              ? SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.6,
-                    color: scheme.primary,
-                  ),
-                )
-              : Icon(
-                  Icons.cloud_upload_outlined,
-                  size: 14,
-                  color: scheme.primary,
-                ),
+          DiarySyncBadge(state: syncState),
           const SizedBox(width: 8),
         ],
         if (selecting)
-          Icon(
-            selected
-                ? Icons.check_circle_rounded
-                : Icons.radio_button_unchecked_rounded,
-            size: 16,
-            color: selected ? scheme.primary : scheme.outline,
-          )
+          DiarySelectMark(selected: selected)
         else if (showCategoryLabel && category != null)
           _CategoryLabel(category: category!, style: style),
       ],

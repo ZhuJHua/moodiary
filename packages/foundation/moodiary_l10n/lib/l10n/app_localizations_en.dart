@@ -960,6 +960,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diaryViewModeTimeline => 'Timeline';
 
   @override
+  String get diaryViewModeFeed => 'Feed';
+
+  @override
   String get assistantConfigTooltip => 'Settings';
 
   @override

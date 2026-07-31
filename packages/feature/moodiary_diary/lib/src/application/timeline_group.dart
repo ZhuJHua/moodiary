@@ -1,5 +1,9 @@
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_diary/src/application/diary_stamp.dart';
+
+export 'package:moodiary_diary/src/application/diary_stamp.dart'
+    show diaryStampOf;
 
 /// 时间线上的一条日记。轴的每一段视觉（日期头、圆点、断档虚线）都由这里的标志位决定，
 /// 渲染层不再自己回溯前后条目。
@@ -33,11 +37,6 @@ class TimelineMonth {
   const TimelineMonth({required this.month, required this.entries});
 }
 
-/// 按 [sort] 取分组键：与列表实际排序字段保持一致。
-DateTime timelineStampOf(Diary diary, DiarySort sort) =>
-    (sort == DiarySort.lastModifiedDesc ? diary.lastModified : diary.time)
-        .toLocal();
-
 /// 把**已加载的前缀**切成「月 → 条目」两级。纯函数：同样的输入永远得到同样的输出，
 /// 分页续加、同步回写触发的整表重排都只是重新调用一次。
 ///
@@ -51,7 +50,7 @@ List<TimelineMonth> buildTimeline(List<Diary> diaries, DiarySort sort) {
   DateTime? prevDay;
 
   for (final diary in diaries) {
-    final stamp = timelineStampOf(diary, sort);
+    final stamp = diaryStampOf(diary, sort);
     // 日键刻意用 UTC 构造：只拿它算「差了几个日历日」。若用本地零点，跨夏令时前拨的
     // 两天只差 47 小时，Duration.inDays 会截断成 1，整整空一天的断档就漏判了。
     // 月份仍按本地取，吸顶头显示的是用户所在时区的月份。

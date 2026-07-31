@@ -66,6 +66,19 @@ class TimeFormat {
   /// 时分——时间线条目只需要「几点几分」，日期由左侧轴上的节点承担。
   static String clock(DateTime time) => DateFormat.Hm().format(time.toLocal());
 
+  /// 紧凑日期+时分——信息流的元信息行，一行要塞下分类/日期/天气/地点，
+  /// 带星期的完整日期在 11px 下就要 130px，装不下。
+  ///
+  /// 跨年才补年份：信息流里没有月份吸顶头这类别处交代年份的地方，翻到去年的条目
+  /// 只显示「12/31」会读成今年。
+  static String compactDateTime(DateTime time) {
+    final t = time.toLocal();
+    final pattern = t.year == DateTime.now().year
+        ? DateFormat.Md()
+        : DateFormat.yMd();
+    return pattern.add_Hm().format(t);
+  }
+
   /// 年月——时间线的月份吸顶头。
   static String monthTitle(DateTime time) =>
       DateFormat.yMMMM().format(time.toLocal());

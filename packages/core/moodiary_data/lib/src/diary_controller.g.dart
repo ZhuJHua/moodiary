@@ -22,7 +22,7 @@ final class DiaryControllerProvider
   /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新，无需重查库。
   DiaryControllerProvider._({
     required DiaryControllerFamily super.from,
-    required String? super.argument,
+    required ({String? categoryId, bool uncategorized}) super.argument,
   }) : super(
          retry: null,
          name: r'diaryControllerProvider',
@@ -38,7 +38,7 @@ final class DiaryControllerProvider
   String toString() {
     return r'diaryControllerProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -56,7 +56,7 @@ final class DiaryControllerProvider
   }
 }
 
-String _$diaryControllerHash() => r'5f2386e5eeaf3f2b2adc7cb5b219c2d95b7590de';
+String _$diaryControllerHash() => r'55880cf2f80459e1bdbe8cdf59290caeb3efbbb5';
 
 /// 按 [categoryId] 维度的日记列表（`categoryId == null` 表示「全部分类」）。
 /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新，无需重查库。
@@ -68,7 +68,7 @@ final class DiaryControllerFamily extends $Family
           AsyncValue<List<Diary>>,
           List<Diary>,
           FutureOr<List<Diary>>,
-          String?
+          ({String? categoryId, bool uncategorized})
         > {
   DiaryControllerFamily._()
     : super(
@@ -82,8 +82,13 @@ final class DiaryControllerFamily extends $Family
   /// 按 [categoryId] 维度的日记列表（`categoryId == null` 表示「全部分类」）。
   /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新，无需重查库。
 
-  DiaryControllerProvider call({String? categoryId}) =>
-      DiaryControllerProvider._(argument: categoryId, from: this);
+  DiaryControllerProvider call({
+    String? categoryId,
+    bool uncategorized = false,
+  }) => DiaryControllerProvider._(
+    argument: (categoryId: categoryId, uncategorized: uncategorized),
+    from: this,
+  );
 
   @override
   String toString() => r'diaryControllerProvider';
@@ -93,10 +98,11 @@ final class DiaryControllerFamily extends $Family
 /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新，无需重查库。
 
 abstract class _$DiaryController extends $AsyncNotifier<List<Diary>> {
-  late final _$args = ref.$arg as String?;
-  String? get categoryId => _$args;
+  late final _$args = ref.$arg as ({String? categoryId, bool uncategorized});
+  String? get categoryId => _$args.categoryId;
+  bool get uncategorized => _$args.uncategorized;
 
-  FutureOr<List<Diary>> build({String? categoryId});
+  FutureOr<List<Diary>> build({String? categoryId, bool uncategorized = false});
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
@@ -109,7 +115,13 @@ abstract class _$DiaryController extends $AsyncNotifier<List<Diary>> {
               Object?,
               Object?
             >;
-    return element.handleCreate(ref, () => build(categoryId: _$args));
+    return element.handleCreate(
+      ref,
+      () => build(
+        categoryId: _$args.categoryId,
+        uncategorized: _$args.uncategorized,
+      ),
+    );
   }
 }
 
@@ -141,7 +153,7 @@ final class RecycleBinDiariesProvider
   RecycleBinDiaries create() => RecycleBinDiaries();
 }
 
-String _$recycleBinDiariesHash() => r'e46b18e3b58dab07047a4687e21936542b972c25';
+String _$recycleBinDiariesHash() => r'cc7a8f1de48c0a7b4dfd621a8e2664189c7d1286';
 
 /// 回收站列表（按时间倒序的所有 `show == false` 的日记）。
 

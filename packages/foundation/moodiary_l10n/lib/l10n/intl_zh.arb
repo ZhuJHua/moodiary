@@ -298,6 +298,7 @@
   "labTianditu": "天地图",
   "labTencentCloud": "腾讯云",
   "diaryViewModeTimeline": "时间线",
+  "diaryViewModeFeed": "信息流",
   "assistantConfigTooltip": "配置",
   "assistantWelcome": "你好，我是 Moodiary 助手，有什么可以帮你的吗？",
   "assistantInputHint": "说点什么...",

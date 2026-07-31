@@ -5,25 +5,30 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:moodiary_diary/src/application/diary_filter.dart';
 import 'package:moodiary_diary/src/application/diary_selection.dart';
 import 'package:moodiary_diary/src/application/timeline_controller.dart';
 import 'package:moodiary_diary/src/application/timeline_group.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 
 /// 时间线视图：左侧一条真正的轴——圆点与线段都取心情色，滑动即读一段情绪走向。
 ///
-/// 分组键必须等于排序键（见 [timelineStampOf]），否则按「最近修改」排序时月份吸顶头
+/// 分组键必须等于排序键（见 [diaryStampOf]），否则按「最近修改」排序时月份吸顶头
 /// 会重复且乱序。分组本身是对**已加载前缀**的纯函数（[buildTimeline]），分页续加和
 /// 同步回写触发的重排都只是重新算一遍。
 class DiaryTimelineView extends ConsumerWidget {
-  final String? categoryId;
+  final DiaryFilter filter;
 
-  const DiaryTimelineView({super.key, this.categoryId});
+  const DiaryTimelineView({super.key, this.filter = const DiaryFilter.all()});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final provider = diaryControllerProvider(categoryId: categoryId);
+    final provider = diaryControllerProvider(
+      categoryId: filter.categoryId,
+      uncategorized: filter.uncategorized,
+    );
     final diaryAsync = ref.watch(provider);
     final selection = ref.watch(diarySelectionProvider);
     final selecting = selection.isNotEmpty;
@@ -47,7 +52,8 @@ class DiaryTimelineView extends ConsumerWidget {
               final monthCounts = ref
                   .watch(
                     timelineMonthCountsProvider(
-                      categoryId: categoryId,
+                      categoryId: filter.categoryId,
+                      uncategorized: filter.uncategorized,
                       sort: sort,
                     ),
                   )
@@ -103,7 +109,7 @@ class DiaryTimelineView extends ConsumerWidget {
                             hasAbove: flatIndex > 0,
                             moodBelow: next?.diary.mood,
                             category: category,
-                            showCategoryLabel: categoryId == null,
+                            showCategoryLabel: filter.isAll,
                             syncState: syncState,
                             selecting: selecting,
                             selected: selection.contains(diary.id),
@@ -145,7 +151,7 @@ class DiaryTimelineView extends ConsumerWidget {
             }
             // 聚合提示卡只进「全部」视图（全局数量）。
             final showSummary =
-                categoryId == null &&
+                filter.isAll &&
                 (pending.newDiaryIds.isNotEmpty ||
                     pending.updateDiaryIds.isNotEmpty);
             if (!showSummary) return body;

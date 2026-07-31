@@ -13,10 +13,15 @@ part 'timeline_controller.g.dart';
 Future<Map<DateTime, int>> timelineMonthCounts(
   Ref ref, {
   String? categoryId,
+  bool uncategorized = false,
   required DiarySort sort,
 }) async {
   final repository = DiaryRepository.get();
   final sub = repository.diaryEvents.listen((_) => ref.invalidateSelf());
   ref.onDispose(sub.cancel);
-  return repository.diaryCountByMonth(categoryId: categoryId, sort: sort);
+  return repository.diaryCountByMonth(
+    categoryId: categoryId,
+    uncategorized: uncategorized,
+    sort: sort,
+  );
 }

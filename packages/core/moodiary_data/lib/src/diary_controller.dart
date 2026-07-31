@@ -58,7 +58,10 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   DiarySort get _sort => DiarySort.getType(MoodiaryKVs.homeSortMode.get()!);
 
   @override
-  FutureOr<List<Diary>> build({String? categoryId}) async {
+  FutureOr<List<Diary>> build({
+    String? categoryId,
+    bool uncategorized = false,
+  }) async {
     final sub = _repository.diaryEvents.listen(_applyChange);
     ref.onDispose(sub.cancel);
     final sortNotifier = MoodiaryKVs.homeSortMode.getNotifier();
@@ -72,6 +75,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   Future<Iterable<Diary>?> load({required int limit, required int offset}) {
     return _repository.getDiaryByCategory(
       categoryId: categoryId,
+      uncategorized: uncategorized,
       limit: limit,
       offset: offset,
       sort: _sort,
@@ -86,7 +90,10 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
         list,
         event,
         belongs: (d) =>
-            d.show && (categoryId == null || d.categoryId == categoryId),
+            d.show &&
+            (uncategorized
+                ? d.categoryId == null
+                : categoryId == null || d.categoryId == categoryId),
         compare: diarySortComparator(_sort),
         mayHaveMore: !noMore,
       ),

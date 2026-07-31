@@ -534,14 +534,20 @@ class DiaryRepository {
     return pending.length;
   }
 
+  /// [uncategorized] 为真时只取**没有分类**的日记；此时 [categoryId] 必须为 null。
+  /// 「全部」与「未分类」都以 categoryId == null 表达，靠这个开关区分。
   Future<List<Diary>> getDiaryByCategory({
     String? categoryId,
+    bool uncategorized = false,
     int? offset,
     int? limit,
     DiarySort sort = DiarySort.timeDesc,
   }) async {
+    assert(!(uncategorized && categoryId != null));
     final base = _isar.diarys.where().showEqualTo(true);
-    final filtered = categoryId == null
+    final filtered = uncategorized
+        ? base.categoryIdIsNull()
+        : categoryId == null
         ? base
         : base.categoryIdEqualTo(categoryId);
     final sorted = switch (sort) {
@@ -560,10 +566,14 @@ class DiaryRepository {
   /// 不载入正文。
   Future<Map<DateTime, int>> diaryCountByMonth({
     String? categoryId,
+    bool uncategorized = false,
     DiarySort sort = DiarySort.timeDesc,
   }) async {
+    assert(!(uncategorized && categoryId != null));
     final base = _isar.diarys.where().showEqualTo(true);
-    final filtered = categoryId == null
+    final filtered = uncategorized
+        ? base.categoryIdIsNull()
+        : categoryId == null
         ? base
         : base.categoryIdEqualTo(categoryId);
     final stamps = sort == DiarySort.lastModifiedDesc

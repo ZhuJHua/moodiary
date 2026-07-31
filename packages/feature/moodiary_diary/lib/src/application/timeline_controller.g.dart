@@ -40,7 +40,8 @@ final class TimelineMonthCountsProvider
   /// 保持一致，否则表头数字会和它下面的条目对不上。
   TimelineMonthCountsProvider._({
     required TimelineMonthCountsFamily super.from,
-    required ({String? categoryId, DiarySort sort}) super.argument,
+    required ({String? categoryId, bool uncategorized, DiarySort sort})
+    super.argument,
   }) : super(
          retry: null,
          name: r'timelineMonthCountsProvider',
@@ -67,10 +68,13 @@ final class TimelineMonthCountsProvider
 
   @override
   FutureOr<Map<DateTime, int>> create(Ref ref) {
-    final argument = this.argument as ({String? categoryId, DiarySort sort});
+    final argument =
+        this.argument
+            as ({String? categoryId, bool uncategorized, DiarySort sort});
     return timelineMonthCounts(
       ref,
       categoryId: argument.categoryId,
+      uncategorized: argument.uncategorized,
       sort: argument.sort,
     );
   }
@@ -87,7 +91,7 @@ final class TimelineMonthCountsProvider
 }
 
 String _$timelineMonthCountsHash() =>
-    r'9c43c3ce3d1a2453833cd18a5393801a60f8de5d';
+    r'0e37c562deac0a9c6cc4f4b6b1f3cef35efe6d33';
 
 /// 月份 -> 该月可见日记篇数（月首零点为键，本地时区）。
 ///
@@ -99,7 +103,7 @@ final class TimelineMonthCountsFamily extends $Family
     with
         $FunctionalFamilyOverride<
           FutureOr<Map<DateTime, int>>,
-          ({String? categoryId, DiarySort sort})
+          ({String? categoryId, bool uncategorized, DiarySort sort})
         > {
   TimelineMonthCountsFamily._()
     : super(
@@ -118,9 +122,14 @@ final class TimelineMonthCountsFamily extends $Family
 
   TimelineMonthCountsProvider call({
     String? categoryId,
+    bool uncategorized = false,
     required DiarySort sort,
   }) => TimelineMonthCountsProvider._(
-    argument: (categoryId: categoryId, sort: sort),
+    argument: (
+      categoryId: categoryId,
+      uncategorized: uncategorized,
+      sort: sort,
+    ),
     from: this,
   );
 

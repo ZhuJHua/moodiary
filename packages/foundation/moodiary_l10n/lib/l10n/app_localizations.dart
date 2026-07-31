@@ -1886,6 +1886,12 @@ abstract class AppLocalizations {
   /// **'时间线'**
   String get diaryViewModeTimeline;
 
+  /// No description provided for @diaryViewModeFeed.
+  ///
+  /// In zh, this message translates to:
+  /// **'信息流'**
+  String get diaryViewModeFeed;
+
   /// No description provided for @assistantConfigTooltip.
   ///
   /// In zh, this message translates to:

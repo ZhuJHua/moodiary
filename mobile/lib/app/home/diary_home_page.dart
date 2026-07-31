@@ -16,30 +16,18 @@ import 'package:moodiary_router/moodiary_router.dart';
 class _DiaryListView extends ConsumerStatefulWidget {
   final bool showFab;
 
-  const _DiaryListView({required this.showFab});
+  /// 打开分类抽屉。抽屉挂在**根壳**的 Scaffold 上（首页只是 IndexedStack 里的一个
+  /// tab，挂在这层会被底部导航条截断），所以只能由外面把开关递进来。
+  final VoidCallback? onOpenDrawer;
+
+  const _DiaryListView({required this.showFab, this.onOpenDrawer});
 
   @override
   ConsumerState<_DiaryListView> createState() => _DiaryListViewState();
 }
 
 class _DiaryListViewState extends ConsumerState<_DiaryListView> {
-  String? _selectedCategoryId;
-
-  void _onCategorySelected(String? categoryId) {
-    if (categoryId == _selectedCategoryId) return;
-    setState(() => _selectedCategoryId = categoryId);
-  }
-
-  Future<void> _openSwitcher() async {
-    final result = await CategorySwitcherSheet.show(
-      context,
-      selectedId: _selectedCategoryId,
-    );
-    if (result == null || !mounted) return;
-    _onCategorySelected(result.categoryId);
-  }
-
-  Widget _buildDiaryView() {
+  Widget _buildDiaryView(DiaryFilter filter) {
     return ValueListenableBuilder(
       valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
       builder: (context, viewMode, _) {
@@ -47,17 +35,13 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           valueListenable: MoodiaryKVs.homeSortMode.getNotifier(),
           builder: (context, sortMode, _) {
             final viewModeType = ViewModeType.getType(viewMode);
-            final categoryId = _selectedCategoryId;
             return AnimatedSwitcher(
               duration: Durations.short3,
               child: KeyedSubtree(
-                key: ValueKey('$viewMode-$sortMode-$categoryId'),
-                // 目前只有时间线一种模式；保留 switch 是为了将来加布局时编译器会在这里
-                // 报缺分支，而不是悄悄漏掉。
+                key: ValueKey('$viewMode-$sortMode-$filter'),
                 child: switch (viewModeType) {
-                  ViewModeType.timeline => DiaryTimelineView(
-                    categoryId: categoryId,
-                  ),
+                  ViewModeType.timeline => DiaryTimelineView(filter: filter),
+                  ViewModeType.feed => DiaryFeedView(filter: filter),
                 },
               ),
             );
@@ -71,35 +55,21 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
   Widget build(BuildContext context) {
     final selection = ref.watch(diarySelectionProvider);
     final selecting = selection.isNotEmpty;
+    final filter = ref.watch(homeDiaryFilterProvider);
 
+    // 选中的分类被删掉时切回「全部」。放在这层是因为提示需要 context 取文案。
     ref.listen(orderedCategoriesProvider, (_, next) {
-      final id = _selectedCategoryId;
+      final id = ref.read(homeDiaryFilterProvider).categoryId;
       final categories = next.value;
       if (id == null || categories == null) return;
       if (!categories.any((c) => c.id == id)) {
-        setState(() => _selectedCategoryId = null);
+        ref.read(homeDiaryFilterProvider.notifier).reset();
         ref.read(diarySelectionProvider.notifier).clear();
         toast.info(message: context.l10n.categoryDeletedReset);
       }
     });
 
-    Widget body = Column(
-      children: [
-        AnimatedOpacity(
-          opacity: selecting ? 0.4 : 1,
-          duration: Durations.short3,
-          child: IgnorePointer(
-            ignoring: selecting,
-            child: CategoryFilterBar(
-              selectedId: _selectedCategoryId,
-              onSelected: _onCategorySelected,
-              onOpenSwitcher: _openSwitcher,
-            ),
-          ),
-        ),
-        Expanded(child: _buildDiaryView()),
-      ],
-    );
+    Widget body = _buildDiaryView(filter);
     if (widget.showFab) {
       // 为底部 FAB 让出滚动空间：往子树 MediaQuery 注入额外底部留白，列表据此补 padding。
       final mq = MediaQuery.of(context);
@@ -119,7 +89,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       child: Scaffold(
         appBar: selecting
             ? _selectionAppBar(context, selection.length)
-            : _normalAppBar(context),
+            : _normalAppBar(context, filter),
         floatingActionButton: (widget.showFab && !selecting)
             ? FloatingActionButton(
                 // 唯一 heroTag：底部导航 IndexedStack 里本页与助手页 FAB 同时存活，
@@ -129,7 +99,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
                 onPressed: () => openNewDiaryEditor(
                   context,
                   DiaryType.tiptap,
-                  categoryId: _selectedCategoryId,
+                  categoryId: filter.categoryId,
                 ),
                 child: const Icon(Icons.add),
               )
@@ -157,9 +127,24 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
     );
   }
 
-  PreferredSizeWidget _normalAppBar(BuildContext context) {
+  PreferredSizeWidget _normalAppBar(BuildContext context, DiaryFilter filter) {
     return AppBar(
-      title: Text(context.l10n.appName),
+      leadingWidth: 52,
+      leading: ValueListenableBuilder(
+        valueListenable: SyncPendingTracker.instance.listenable,
+        builder: (context, pending, _) => IconButton(
+          tooltip: context.l10n.categoryAllCategory,
+          onPressed: widget.onOpenDrawer,
+          icon: Badge(
+            // 有新建但还没同步上去的分类时点一下 —— 抽屉里才看得到详情。
+            isLabelVisible: pending.newCategoryIds.isNotEmpty,
+            smallSize: 7,
+            child: const Icon(Icons.menu_rounded),
+          ),
+        ),
+      ),
+      titleSpacing: 0,
+      title: _FilterTitle(filter: filter),
       actions: [
         IconButton(
           tooltip: context.l10n.diarySearch,
@@ -169,12 +154,19 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
         // 知识图谱入口暂隐藏(功能保留,打磨后再放出):
         // IconButton(icon: Icon(Icons.hub_rounded)) → DiaryGraphRoute().push
         const SyncStatusButton(),
-        // 只剩时间线一种布局，面板里目前只有排序，图标与提示按排序来；
-        // 将来加回第二种布局时，这里换回按当前模式取图标。
-        IconButton(
-          tooltip: context.l10n.diarySortTitle,
-          icon: const Icon(Icons.sort_rounded),
-          onPressed: () => ViewModeSheet.show(context),
+        ValueListenableBuilder(
+          valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
+          builder: (context, homeViewMode, _) {
+            final viewModeType = ViewModeType.getType(homeViewMode);
+            return IconButton(
+              tooltip: context.l10n.diaryPageViewModeButton,
+              icon: Icon(switch (viewModeType) {
+                ViewModeType.timeline => Icons.view_timeline_rounded,
+                ViewModeType.feed => Icons.view_agenda_outlined,
+              }),
+              onPressed: () => ViewModeSheet.show(context),
+            );
+          },
         ),
       ],
     );
@@ -204,22 +196,109 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       ),
     );
     if (confirmed != true) return;
+    final filter = ref.read(homeDiaryFilterProvider);
     final n = await ref
-        .read(diaryControllerProvider(categoryId: _selectedCategoryId).notifier)
+        .read(
+          diaryControllerProvider(
+            categoryId: filter.categoryId,
+            uncategorized: filter.uncategorized,
+          ).notifier,
+        )
         .softDeleteByIds(ids);
     if (!mounted) return;
     ref.read(diarySelectionProvider.notifier).clear();
-    toast.success(message: '已移入回收站（$n 篇）');
+    // 一篇都没删掉时别报成功：选中集合与当前列表对不上时 softDeleteByIds 会返回 0，
+    // 弹绿色的「已移入回收站（0 篇）」等于骗人。
+    if (n == 0) {
+      toast.info(message: '没有可删除的日记');
+    } else {
+      toast.success(message: '已移入回收站（$n 篇）');
+    }
+  }
+}
+
+/// 顶栏标题位：不再是固定的 App 名，而是「当前在看什么」——分类色点 + 名称 + 篇数。
+/// App 名下沉到抽屉头部。
+class _FilterTitle extends ConsumerWidget {
+  final DiaryFilter filter;
+
+  const _FilterTitle({required this.filter});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = context.colorScheme;
+    final counts = ref.watch(categoryDiaryCountsProvider).value;
+    final category = filter.categoryId == null
+        ? null
+        : ref.watch(categoryByIdProvider(filter.categoryId));
+
+    final (String label, Color? dot, int? count) = switch (filter) {
+      _ when filter.isAll => (context.l10n.appName, null, null),
+      _ when filter.uncategorized => (
+        context.l10n.categoryNoCategory,
+        null,
+        counts == null
+            ? null
+            : counts.total -
+                  counts.byCategory.values.fold<int>(0, (a, b) => a + b),
+      ),
+      _ => (
+        category?.categoryName ?? context.l10n.appName,
+        category == null
+            ? null
+            : categoryColorOf(colorValue: category.color, id: category.id),
+        counts?.byCategory[filter.categoryId],
+      ),
+    };
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (dot != null) ...[
+          Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+        ] else if (filter.uncategorized) ...[
+          Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: scheme.outline, width: 1.4),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
+        Flexible(
+          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        if (count != null) ...[
+          const SizedBox(width: 8),
+          Text(
+            context.l10n.diarySearchResult(count),
+            style: context.textTheme.labelSmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ],
+    );
   }
 }
 
 /// 移动端：详情路由是顶层兄弟，push 落 root navigator 全屏盖过 shell，故本页只渲染
 /// 列表，不涉及内层 navigator。
 class DiaryHomePage extends StatelessWidget {
-  const DiaryHomePage({super.key});
+  /// 见 [_DiaryListView.onOpenDrawer]。
+  final VoidCallback? onOpenDrawer;
+
+  const DiaryHomePage({super.key, this.onOpenDrawer});
 
   @override
   Widget build(BuildContext context) {
-    return const _DiaryListView(showFab: true);
+    return _DiaryListView(showFab: true, onOpenDrawer: onOpenDrawer);
   }
 }

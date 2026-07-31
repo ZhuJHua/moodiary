@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 
 Diary diary({
@@ -224,9 +225,9 @@ void main() {
   });
 
   testWidgets('mood color maps the two ends of the palette', (t) async {
-    expect(timelineMoodColor(0), isNot(timelineMoodColor(1)));
+    expect(diaryMoodColor(0), isNot(diaryMoodColor(1)));
     // 越界值不该抛，钳到端点。
-    expect(timelineMoodColor(-1), timelineMoodColor(0));
-    expect(timelineMoodColor(2), timelineMoodColor(1));
+    expect(diaryMoodColor(-1), diaryMoodColor(0));
+    expect(diaryMoodColor(2), diaryMoodColor(1));
   });
 }
