@@ -315,6 +315,17 @@ class ThemeManager {
     return ThemeData(
       colorScheme: colorScheme,
       materialTapTargetSize: MaterialTapTargetSize.padded,
+      // 内容滚到顶栏下方时不再有任何视觉变化。要关的是**两件事**，缺一个都还会跳：
+      //   1. 底色：滚动态取的是 `colorScheme.surfaceContainer` 而非 `surface`
+      //      （app_bar.dart 的 scrolledUnderBackground）——把 backgroundColor 钉住，
+      //      两种状态就都用它；
+      //   2. 阴影：scrolledUnderElevation 默认 3，会投出一道影子。
+      // 注意**不是**改 surfaceTintColor —— Flutter 3.44 的 M3 默认值本来就是
+      // transparent（_AppBarDefaultsM3），设它等于没设（实测两者渲染结果完全一致）。
+      appBarTheme: AppBarTheme(
+        backgroundColor: colorScheme.surface,
+        scrolledUnderElevation: 0,
+      ),
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStateProperty.all(
           colorScheme.secondary.withValues(alpha: 0.4),
