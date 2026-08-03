@@ -354,7 +354,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   Future<void> _submit(String text) async {
     text = text.trim();
     final imageName = _pendingImageName;
-    if ((text.isEmpty && imageName == null) || _sending || !_disclaimerAccepted) {
+    if ((text.isEmpty && imageName == null) ||
+        _sending ||
+        !_disclaimerAccepted) {
       return;
     }
     final imageLabel = context.l10n.assistantImageMessageLabel;
@@ -435,7 +437,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final localeTag = Localizations.localeOf(context).toLanguageTag();
     // 稳定前缀（身份/护栏/SOUL/工具目录）逐轮字节一致以命中缓存；易变文本另拼到外发消息。
     final soul = await SoulRepository.get().read();
-    final memories = await MemoryRepository.get().getRecent(memoryInjectionLimit);
+    final memories = await MemoryRepository.get().getRecent(
+      memoryInjectionLimit,
+    );
     if (!mounted || gen != _generation) return;
     final systemPrompt = buildStableSystemPrompt(
       soul: soul,
@@ -528,7 +532,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   List<AssistantMessage> _buildHistory() {
     // 1. 收集逐字文本消息（带 id，供压缩水位定位）。
     final raw =
-        <({String id, AssistantRole role, String content, String? imagePath})>[];
+        <
+          ({String id, AssistantRole role, String content, String? imagePath})
+        >[];
     for (final m in _chat.messages) {
       if (m is! TextMessage) continue;
       final imageName = IsarChatController.imageNameOf(m);
@@ -1549,7 +1555,10 @@ class _ComposerImagePreview extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: scheme.surfaceContainerHighest,
                     shape: BoxShape.circle,
-                    border: Border.all(color: scheme.surfaceContainer, width: 2),
+                    border: Border.all(
+                      color: scheme.surfaceContainer,
+                      width: 2,
+                    ),
                   ),
                   padding: const EdgeInsets.all(2),
                   child: Icon(
@@ -1970,20 +1979,32 @@ class AssistantSessionListPage extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        // 唯一 heroTag：本页作为底部导航 tab 与首页 FAB 在 IndexedStack 中同时存活。
-        heroTag: 'assistantSessionFab',
-        onPressed: () => const AssistantConversationRoute().push(context),
-        icon: const Icon(Icons.add_comment_rounded),
-        label: Text(l10n.assistantNewChat),
+      // 本页是根壳的一个 tab，而根壳的底栏是悬浮的 —— Scaffold 把底栏带高折进了
+      // padding.bottom，但内层 Scaffold 算 FAB 位置读的是 viewPadding（这里恒为 0），
+      // 不手动抬的话 FAB 会正好落在胶囊上。
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
+        child: FloatingActionButton.extended(
+          // 唯一 heroTag：本页作为底部导航 tab 与其它 tab 的 FAB 在 IndexedStack 中
+          // 同时存活。
+          heroTag: 'assistantSessionFab',
+          onPressed: () => const AssistantConversationRoute().push(context),
+          icon: const Icon(Icons.add_comment_rounded),
+          label: Text(l10n.assistantNewChat),
+        ),
       ),
       body: _SessionListView(
         currentId: null,
         onSelect: (session) =>
             AssistantConversationRoute(sessionId: session.id).push(context),
         onDelete: (session) => ChatRepository.get().deleteSession(session.id),
-        // 底部留白，避免 FAB 遮住最后一条会话。
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 88),
+        // 底部留白，避免 FAB 遮住最后一条会话；底栏那条带另算。
+        padding: EdgeInsets.fromLTRB(
+          12,
+          8,
+          12,
+          88 + MediaQuery.paddingOf(context).bottom,
+        ),
       ),
     );
   }
@@ -2062,11 +2083,7 @@ class _EmptySessions extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.forum_outlined,
-            size: 56,
-            color: scheme.onSurfaceVariant,
-          ),
+          Icon(Icons.forum_outlined, size: 56, color: scheme.onSurfaceVariant),
           const SizedBox(height: 12),
           Text(
             context.l10n.assistantHistoryEmpty,
@@ -2159,7 +2176,10 @@ class _SessionCard extends StatelessWidget {
           ],
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: Icon(Icons.more_vert_rounded, color: scheme.onSurfaceVariant),
+            child: Icon(
+              Icons.more_vert_rounded,
+              color: scheme.onSurfaceVariant,
+            ),
           ),
         ),
       ),

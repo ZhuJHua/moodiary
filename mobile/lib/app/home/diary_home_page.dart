@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
@@ -14,13 +12,11 @@ import 'package:moodiary_router/moodiary_router.dart';
 /// [SyncStatusButton]、新建日记 FAB 焊到一起。这是 diary↔sync 的唯一相遇处，故留在
 /// app 侧、不入包。
 class _DiaryListView extends ConsumerStatefulWidget {
-  final bool showFab;
-
   /// 打开分类抽屉。抽屉挂在**根壳**的 Scaffold 上（首页只是 IndexedStack 里的一个
   /// tab，挂在这层会被底部导航条截断），所以只能由外面把开关递进来。
   final VoidCallback? onOpenDrawer;
 
-  const _DiaryListView({required this.showFab, this.onOpenDrawer});
+  const _DiaryListView({this.onOpenDrawer});
 
   @override
   ConsumerState<_DiaryListView> createState() => _DiaryListViewState();
@@ -69,17 +65,9 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       }
     });
 
-    Widget body = _buildDiaryView(filter);
-    if (widget.showFab) {
-      // 为底部 FAB 让出滚动空间：往子树 MediaQuery 注入额外底部留白，列表据此补 padding。
-      final mq = MediaQuery.of(context);
-      body = MediaQuery(
-        data: mq.copyWith(
-          padding: mq.padding.copyWith(bottom: mq.padding.bottom + 80),
-        ),
-        child: body,
-      );
-    }
+    // 底部留白不再由本页自己注入：新建按钮上了底栏，而根壳开了 extendBody，
+    // 底栏的整条带高已经在 MediaQuery.padding.bottom 里，列表直接读就是。
+    final body = _buildDiaryView(filter);
     return PopScope(
       // 多选态：返回键先退出多选，而非离开首页。
       canPop: !selecting,
@@ -90,20 +78,6 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
         appBar: selecting
             ? _selectionAppBar(context, selection.length)
             : _normalAppBar(context, filter),
-        floatingActionButton: (widget.showFab && !selecting)
-            ? FloatingActionButton(
-                // 唯一 heroTag：底部导航 IndexedStack 里本页与助手页 FAB 同时存活，
-                // 默认 tag 相同会触发「multiple heroes share the same tag」。
-                heroTag: 'diaryHomeFab',
-                tooltip: context.l10n.homePageAddDiaryButton,
-                onPressed: () => openNewDiaryEditor(
-                  context,
-                  DiaryType.tiptap,
-                  categoryId: filter.categoryId,
-                ),
-                child: const Icon(Icons.add),
-              )
-            : null,
         body: body,
       ),
     );
@@ -286,6 +260,6 @@ class DiaryHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _DiaryListView(showFab: true, onOpenDrawer: onOpenDrawer);
+    return _DiaryListView(onOpenDrawer: onOpenDrawer);
   }
 }

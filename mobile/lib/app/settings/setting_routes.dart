@@ -6,9 +6,14 @@ import 'package:moodiary/app/settings/presentation/diary_setting_page.dart';
 import 'package:moodiary/app/settings/presentation/font_page.dart';
 import 'package:moodiary/app/settings/presentation/privacy_page.dart';
 import 'package:moodiary/app/settings/presentation/services_page.dart';
+import 'package:moodiary/app/settings/presentation/setting_page.dart';
 import 'package:moodiary/app/settings/presentation/sponsor_page.dart';
 
 List<RouteBase> settingRoutes() => [
+  GoRoute(
+    path: SettingRoute.path,
+    builder: (_, _) => const SettingListPageMobile(),
+  ),
   GoRoute(
     path: DiarySettingRoute.path,
     builder: (_, _) => const DiarySettingPage(),

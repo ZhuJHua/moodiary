@@ -207,7 +207,12 @@ class _MediaBody extends ConsumerWidget {
                   audioController: audioController,
                 ),
               ],
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              // 底栏悬浮，最后一屏得自己让出那条带 —— 根壳把带高折进了 padding.bottom。
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 24 + MediaQuery.paddingOf(context).bottom,
+                ),
+              ),
             ],
           ),
         );
@@ -376,9 +381,7 @@ class _ImageTile extends StatelessWidget {
     return GestureDetector(
       onTap: () => MoodiaryImageBrowser.show(
         context,
-        images: [
-          for (final name in names) AppFiles.getRealPath('image', name),
-        ],
+        images: [for (final name in names) AppFiles.getRealPath('image', name)],
         initialIndex: index,
         heroPrefix: _kImageHeroPrefix,
         // 与网格缩略图同解码宽度 → 同缓存键，浏览器加载态直接命中缩略图。

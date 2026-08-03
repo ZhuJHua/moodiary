@@ -1,9 +1,8 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 
 /// 选中节点的悬浮信息卡（总图与 ego 图共用）。整卡可点打开日记；前导圆点用**节点本色**，
 /// 与画布上看到的颜色一致。出/入链分开显示——只给合计看不出方向。
@@ -48,116 +47,114 @@ class GraphInfoCard extends StatelessWidget {
           child: child,
         ),
       ),
-      // 毛玻璃卡（无阴影）：半透明底 + 背景模糊 + 发丝线描边，浮在图上但不压图。
+      // 毛玻璃卡（无阴影）：浮在图上但不压图。走全仓统一的玻璃面，跟着设置里的
+      // 「玻璃效果」开关走 —— 关掉后退成实色，而不是变成一层看不清字的半透明。
       child: Semantics(
         button: true,
         label: l10n.graphOpenDiary,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-            child: Material(
-              color: cs.surfaceContainerHigh.withValues(alpha: 0.72),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(22),
-                side: BorderSide(
-                  color: cs.outlineVariant.withValues(alpha: 0.45),
-                ),
-              ),
-              child: InkWell(
-                onTap: onOpen,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 11, 4, 11),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 11,
-                        height: 11,
-                        decoration: BoxDecoration(
-                          color: accent,
-                          shape: BoxShape.circle,
-                        ),
+        child: MoodiaryGlassSurface(
+          shape: const RoundedRectangleBorder(
+            borderRadius: AppBorderRadius.xLargeBorderRadius,
+          ),
+          // 这张卡不投影（浮在图上但不压图），边界全靠发丝线交代。描边比默认再淡一档：
+          // 图谱画布本身线条就多，实色描边会跟着一起抢。
+          shadows: const [],
+          borderColor: cs.outlineVariant.withValues(alpha: 0.45),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onOpen,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 11, 4, 11),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 11,
+                      height: 11,
+                      decoration: BoxDecoration(
+                        color: accent,
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
                             ),
-                            const SizedBox(height: 3),
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    TimeFormat.longDate(node.time),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: cs.onSurfaceVariant,
-                                    ),
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  TimeFormat.longDate(node.time),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
                                   ),
                                 ),
-                                if (outgoing > 0) ...[
-                                  const SizedBox(width: 8),
-                                  _LinkChip(
-                                    color: cs.primary,
-                                    icon: Icons.north_east_rounded,
-                                    count: outgoing,
-                                  ),
-                                ],
-                                if (incoming > 0) ...[
-                                  const SizedBox(width: 6),
-                                  _LinkChip(
-                                    color: cs.tertiary,
-                                    icon: Icons.south_west_rounded,
-                                    count: incoming,
-                                  ),
-                                ],
+                              ),
+                              if (outgoing > 0) ...[
+                                const SizedBox(width: 8),
+                                _LinkChip(
+                                  color: cs.primary,
+                                  icon: Icons.north_east_rounded,
+                                  count: outgoing,
+                                ),
                               ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (onCenter != null)
-                        IconButton(
-                          tooltip: l10n.graphSetAsCenter,
-                          iconSize: 20,
-                          visualDensity: VisualDensity.compact,
-                          icon: Icon(
-                            Icons.center_focus_strong_rounded,
-                            color: cs.onSurfaceVariant,
+                              if (incoming > 0) ...[
+                                const SizedBox(width: 6),
+                                _LinkChip(
+                                  color: cs.tertiary,
+                                  icon: Icons.south_west_rounded,
+                                  count: incoming,
+                                ),
+                              ],
+                            ],
                           ),
-                          onPressed: onCenter,
-                        ),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: cs.onSurfaceVariant,
+                        ],
                       ),
-                      if (onClose != null)
-                        IconButton(
-                          tooltip: MaterialLocalizations.of(
-                            context,
-                          ).closeButtonTooltip,
-                          iconSize: 20,
-                          visualDensity: VisualDensity.compact,
-                          icon: Icon(
-                            Icons.close_rounded,
-                            color: cs.onSurfaceVariant,
-                          ),
-                          onPressed: onClose,
-                        )
-                      else
-                        const SizedBox(width: 8),
-                    ],
-                  ),
+                    ),
+                    if (onCenter != null)
+                      IconButton(
+                        tooltip: l10n.graphSetAsCenter,
+                        iconSize: 20,
+                        visualDensity: VisualDensity.compact,
+                        icon: Icon(
+                          Icons.center_focus_strong_rounded,
+                          color: cs.onSurfaceVariant,
+                        ),
+                        onPressed: onCenter,
+                      ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: cs.onSurfaceVariant,
+                    ),
+                    if (onClose != null)
+                      IconButton(
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).closeButtonTooltip,
+                        iconSize: 20,
+                        visualDensity: VisualDensity.compact,
+                        icon: Icon(
+                          Icons.close_rounded,
+                          color: cs.onSurfaceVariant,
+                        ),
+                        onPressed: onClose,
+                      )
+                    else
+                      const SizedBox(width: 8),
+                  ],
                 ),
               ),
             ),

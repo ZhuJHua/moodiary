@@ -167,20 +167,40 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                     12,
                     12 + MediaQuery.viewInsetsOf(context).bottom,
                   ),
-                  child: FilledButton.tonalIcon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      const CategoryManagerRoute().push(context);
-                    },
-                    icon: const Icon(Icons.tune_rounded, size: 18),
-                    label: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(context.l10n.categoryManageEntry),
-                    ),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(44),
-                      alignment: Alignment.centerLeft,
-                    ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.tonalIcon(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            const CategoryManagerRoute().push(context);
+                          },
+                          icon: const Icon(Icons.tune_rounded, size: 18),
+                          label: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(context.l10n.categoryManageEntry),
+                          ),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(44),
+                            alignment: Alignment.centerLeft,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // 设置从底栏挪进来了：底栏只剩三个 tab，而抽屉本来就是「离开当前
+                      // 内容去别处」的那一栏。
+                      IconButton.filledTonal(
+                        tooltip: context.l10n.homeNavigatorSetting,
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          const SettingRoute().push(context);
+                        },
+                        icon: const Icon(Icons.settings_rounded, size: 20),
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(48, 44),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],

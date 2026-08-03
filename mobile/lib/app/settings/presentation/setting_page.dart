@@ -26,7 +26,15 @@ class _SettingSectionList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(8),
+      // 本页从底栏 tab 变成了 push 出来的整页路由：以前 Scaffold 因为有
+      // bottomNavigationBar 会把 body 的 padding.bottom 清零、导航条自己占住安全区，
+      // 现在没人吃这个 inset 了 —— 不补的话最后一行会压在手势条 / 三键导航底下。
+      padding: EdgeInsets.fromLTRB(
+        8,
+        8,
+        8,
+        8 + MediaQuery.paddingOf(context).bottom,
+      ),
       children: [
         const DashboardSection(),
         const _DataSection(),

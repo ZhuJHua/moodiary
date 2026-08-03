@@ -177,6 +177,14 @@ class AboutRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
+/// 设置列表页。底栏只剩三个 tab 之后设置不再常驻，入口在分类抽屉底部。
+class SettingRoute extends MoodiaryRouteBase {
+  static const String path = '/setting';
+  const SettingRoute();
+  @override
+  String get location => path;
+}
+
 class DiarySettingRoute extends MoodiaryRouteBase {
   static const String path = '/setting/diary_setting';
   const DiarySettingRoute();
