@@ -119,14 +119,14 @@ class Moodiary extends ConsumerWidget {
       onGenerateTitle: (context) => context.l10n.appName,
       routerConfig: router,
       builder: (context, child) {
-        return FlutterSmartDialog.init()(
-          context,
-          MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.linear(settings.fontScale),
-            ),
-            child: child!,
-          ),
+        // 字号套在 SmartDialog **外面**：init() 会自建 Overlay，把传入的 child 放进
+        // entry[0]，而 toast / loading 是与之平级的兄弟 entry —— 包在里面的话那些
+        // 浮层吃不到字号缩放。
+        return MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(settings.fontScale)),
+          child: FlutterSmartDialog.init()(context, child!),
         );
       },
       theme: settings.lightTheme,
