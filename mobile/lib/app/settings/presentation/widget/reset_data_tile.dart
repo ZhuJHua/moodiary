@@ -37,31 +37,18 @@ class ResetDataTile extends StatelessWidget {
   }
 
   Future<void> _confirmAndReset(BuildContext context) async {
-    final scheme = context.colorScheme;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        icon: Icon(Icons.warning_amber_rounded, color: scheme.error),
-        title: const Text('重置所有数据'),
-        content: const Text(
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: '重置所有数据',
+      message:
           '此操作将永久删除全部日记、分类、媒体文件、字体，以及所有设置'
           '（包括同步配置、加密密钥、应用锁密码等），且无法恢复。\n\n'
           '请确保已做好备份。确认后应用将自动关闭，请重新打开以完成重置。',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: scheme.error),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('确认重置'),
-          ),
-        ],
-      ),
+      confirmLabel: '确认重置',
+      isDestructive: true,
+      icon: Icons.warning_amber_rounded,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     await _performReset();
   }
 

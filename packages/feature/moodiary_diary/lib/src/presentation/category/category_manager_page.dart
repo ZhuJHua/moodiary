@@ -188,27 +188,14 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
   }
 
   Future<void> _onDelete(Category category) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('删除分类？'),
-        content: Text('"${category.categoryName}" 下若仍有日记将无法删除。本操作不会影响日记本身。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: '删除分类？',
+      message: '"${category.categoryName}" 下若仍有日记将无法删除。本操作不会影响日记本身。',
+      confirmLabel: '删除',
+      isDestructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     final ok = await ref
         .read(categoryControllerProvider.notifier)
         .deleteCategory(category.id);
@@ -397,71 +384,145 @@ class CategoryDraft {
   const CategoryDraft({required this.name, required this.color});
 }
 
+const _emptyNameError = '分类名称不能为空';
+
 Future<CategoryDraft?> showCategoryEditor(
   BuildContext context, {
   required String initialName,
   required int? initialColor,
-}) {
-  final controller = TextEditingController(text: initialName);
-  int? selected = initialColor;
-  return showDialog<CategoryDraft>(
-    context: context,
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setState) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: controller,
-              autofocus: true,
-              decoration: const InputDecoration(hintText: '分类名称'),
+}) async {
+  // 名字与颜色两个值要一起回传，弹窗按钮的返回值是静态的，所以用可变 holder 承接
+  // 内容区的实时编辑结果，按钮只负责回答「确认还是取消」。
+  final draft = _CategoryDraft(name: initialName, color: initialColor);
+  final contentKey = GlobalKey<_CategoryEditorContentState>();
+  final confirmed = await showMoodiaryAlert<bool>(
+    context,
+    content: _CategoryEditorContent(key: contentKey, draft: draft),
+    actions: [
+      MoodiaryAlertAction(label: context.l10n.cancel, value: false),
+      MoodiaryAlertAction(
+        label: context.l10n.ok,
+        value: true,
+        isPrimary: true,
+        // 空名不放行：就地亮红字并留住弹窗，而不是关掉再 toast 骂人。
+        onIntercept: () => contentKey.currentState?.validate() ?? false,
+      ),
+    ],
+  );
+  if (confirmed != true) return null;
+  return CategoryDraft(name: draft.name.trim(), color: draft.color);
+}
+
+class _CategoryDraft {
+  String name;
+  int? color;
+
+  _CategoryDraft({required this.name, required this.color});
+}
+
+class _CategoryEditorContent extends StatefulWidget {
+  final _CategoryDraft draft;
+
+  const _CategoryEditorContent({super.key, required this.draft});
+
+  @override
+  State<_CategoryEditorContent> createState() => _CategoryEditorContentState();
+}
+
+class _CategoryEditorContentState extends State<_CategoryEditorContent> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.draft.name,
+  );
+
+  /// 一进来就红字太吵，用户动过输入框、或点了确认之后才提示空名。
+  bool _edited = false;
+
+  /// 供确认键拦截使用：名字非空才放行，否则亮出错误提示。
+  bool validate() {
+    final ok = widget.draft.name.trim().isNotEmpty;
+    if (!ok && !_edited) setState(() => _edited = true);
+    return ok;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    OutlineInputBorder border([BorderSide side = BorderSide.none]) =>
+        OutlineInputBorder(
+          borderRadius: AppBorderRadius.mediumBorderRadius,
+          borderSide: side,
+        );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _controller,
+          autofocus: true,
+          textInputAction: TextInputAction.done,
+          onChanged: (value) => setState(() {
+            _edited = true;
+            widget.draft.name = value;
+          }),
+          style: context.textTheme.bodyLarge?.copyWith(color: scheme.onSurface),
+          decoration: InputDecoration(
+            hintText: '分类名称',
+            errorText: _edited && widget.draft.name.trim().isEmpty
+                ? _emptyNameError
+                : null,
+            filled: true,
+            isDense: true,
+            fillColor: scheme.surfaceContainerHighest,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 13,
             ),
-            const SizedBox(height: 16),
-            Text(ctx.l10n.categoryColorLabel, style: ctx.textTheme.labelMedium),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final c in kCategoryPalette)
-                  GestureDetector(
-                    key: ValueKey('category-swatch-${c.toARGB32()}'),
-                    onTap: () => setState(() => selected = c.toARGB32()),
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: c,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: selected == c.toARGB32()
-                              ? ctx.colorScheme.onSurface
-                              : Colors.transparent,
-                          width: 2,
-                        ),
-                      ),
+            border: border(),
+            enabledBorder: border(),
+            focusedBorder: border(
+              BorderSide(color: scheme.primary, width: 1.5),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          context.l10n.categoryColorLabel,
+          style: context.textTheme.labelMedium,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final c in kCategoryPalette)
+              GestureDetector(
+                key: ValueKey('category-swatch-${c.toARGB32()}'),
+                onTap: () => setState(() => widget.draft.color = c.toARGB32()),
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: c,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: widget.draft.color == c.toARGB32()
+                          ? scheme.onSurface
+                          : Colors.transparent,
+                      width: 2,
                     ),
                   ),
-              ],
-            ),
+                ),
+              ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(ctx.l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isEmpty) return;
-              Navigator.of(ctx).pop(CategoryDraft(name: name, color: selected));
-            },
-            child: Text(ctx.l10n.ok),
-          ),
-        ],
-      ),
-    ),
-  );
+      ],
+    );
+  }
 }

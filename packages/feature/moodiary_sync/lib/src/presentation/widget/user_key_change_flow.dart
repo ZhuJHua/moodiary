@@ -75,12 +75,14 @@ Future<bool> applyUserKeyChange({
 
     if (hasRemote) {
       if (!context.mounted) return false;
-      final confirmed = await _confirm(
+      final confirmed = await showMoodiaryConfirm(
         context,
         title: '加密云端已有数据',
-        body: '检测到当前同步后端已存在数据。确认后会生成随机数据密钥并加密云端的日记、分类与媒体文件；该密钥由你的密码封装存放在云端。',
+        message: '检测到当前同步后端已存在数据。确认后会生成随机数据密钥并加密云端的日记、分类与媒体文件；该密钥由你的密码封装存放在云端。',
+        confirmLabel: '继续',
+        barrierDismissible: false,
       );
-      if (confirmed != true) return false;
+      if (!confirmed) return false;
     }
 
     final newDek = SyncKeyManager.generateDek();
@@ -127,12 +129,14 @@ Future<bool> applyUserKeyChange({
 
   // ── 关闭加密（dek != null && target == null） ──
   if (!context.mounted) return false;
-  final confirmed = await _confirm(
+  final confirmed = await showMoodiaryConfirm(
     context,
     title: '解密云端数据',
-    body: '关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？',
+    message: '关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？',
+    confirmLabel: '继续',
+    barrierDismissible: false,
   );
-  if (confirmed != true) return false;
+  if (!confirmed) return false;
 
   if (backendReady) {
     if (!context.mounted) return false;
@@ -167,31 +171,6 @@ Future<bool> _remoteExists(IRemoteSyncBackend backend) async {
   } catch (_) {
     return true; // 探测失败按「有远端」保守处理
   }
-}
-
-Future<bool?> _confirm(
-  BuildContext context, {
-  required String title,
-  required String body,
-}) {
-  return showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => AlertDialog(
-      title: Text(title),
-      content: Text(body),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(false),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(ctx).pop(true),
-          child: const Text('继续'),
-        ),
-      ],
-    ),
-  );
 }
 
 Future<ReCipherReport?> _runWithProgress(

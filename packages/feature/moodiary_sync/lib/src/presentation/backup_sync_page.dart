@@ -306,29 +306,17 @@ class _LocalBackupSection extends StatelessWidget {
   Future<void> _import(BuildContext context) async {
     final file = await IFilePicker.get().pickFile(allowedExtensions: ['zip']);
     if (file == null || !context.mounted) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('导入本地备份'),
-        content: const Text(
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: '导入本地备份',
+      message:
           '将按「最后修改时间」与本地数据合并（规则与云同步一致）：\n\n'
           '· 备份中较新的条目覆盖本地版本\n'
           '· 本地较新的条目保留不变\n'
           '· 备份中已删除的条目，若删除时间更晚，本地对应条目也会被删除',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('导入'),
-          ),
-        ],
-      ),
+      confirmLabel: '导入',
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     toast.loading(message: '正在导入备份...');
     try {
       final report = await LocalArchive.import(file.path);

@@ -55,74 +55,42 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
   }
 
   Future<void> _openMenu() async {
-    final controller = TextEditingController(text: '$_defaultTotal');
-    // 关闭前先收焦点：autofocus 输入框带着活跃的输入法/选区会话被 pop，会在 debug
-    // 构建触发 InheritedElement 拆除顺序断言（_dependents.isEmpty），紧随的批量事件
-    // 会把它放大成红屏。
-    void close(BuildContext ctx, [String? action]) {
-      FocusManager.instance.primaryFocus?.unfocus();
-      Navigator.pop(ctx, action);
-    }
-
-    final action = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('压测数据'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '用于知识图谱等极限性能测试。每篇随机链接 $_minLinks–$_maxLinks 篇其它日记，'
-              '标题以「$_prefix」开头，可一键清除。',
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                labelText: '生成数量',
-                hintText: '$_minTotal–$_maxTotal',
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: (_) => close(ctx, 'gen'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => close(ctx),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => close(ctx, 'clear'),
-            child: const Text('清除压测'),
-          ),
-          FilledButton(
-            onPressed: () => close(ctx, 'gen'),
-            child: const Text('生成'),
-          ),
-        ],
-      ),
+    final action = await showMoodiaryAlert<String>(
+      context,
+      title: '压测数据',
+      message:
+          '用于知识图谱等极限性能测试。每篇随机链接 $_minLinks–$_maxLinks 篇其它日记，'
+          '标题以「$_prefix」开头，可一键清除。',
+      actions: const [
+        MoodiaryAlertAction(label: '取消'),
+        MoodiaryAlertAction(label: '清除压测', value: 'clear'),
+        MoodiaryAlertAction(label: '生成', value: 'gen', isPrimary: true),
+      ],
     );
-    if (!mounted) {
-      controller.dispose();
+    if (!mounted) return;
+    if (action == 'clear') {
+      await _clear();
       return;
     }
-    if (action == 'gen') {
-      final total = int.tryParse(controller.text.trim());
-      controller.dispose();
-      if (total == null || total < _minTotal || total > _maxTotal) {
-        toast.error(message: '数量需在 $_minTotal–$_maxTotal 之间');
-      } else {
-        await _generate(total);
-      }
-    } else {
-      controller.dispose();
-      if (action == 'clear') await _clear();
-    }
+    if (action != 'gen') return;
+
+    final input = await showMoodiaryPrompt(
+      context,
+      title: '生成数量',
+      initialValue: '$_defaultTotal',
+      hintText: '$_minTotal–$_maxTotal',
+      confirmLabel: '生成',
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      validator: (value) {
+        final total = int.tryParse(value);
+        return (total == null || total < _minTotal || total > _maxTotal)
+            ? '数量需在 $_minTotal–$_maxTotal 之间'
+            : null;
+      },
+    );
+    if (!mounted || input == null) return;
+    await _generate(int.parse(input));
   }
 
   Future<void> _generate(int total) async {

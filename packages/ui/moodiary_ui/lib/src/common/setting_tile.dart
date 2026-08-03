@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../basic/alert.dart';
+
 class SettingTitleTile extends StatelessWidget {
   const SettingTitleTile({super.key, required this.title, this.subtitle});
 
@@ -269,31 +271,13 @@ class SettingInputTile extends StatelessWidget {
   }
 
   Future<void> _showInputDialog(BuildContext context) async {
-    final controller = TextEditingController(text: value);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          obscureText: obscureText,
-          decoration: InputDecoration(
-            border: const OutlineInputBorder(),
-            hintText: hintText,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: const Text('保存'),
-          ),
-        ],
-      ),
+    final result = await showMoodiaryPrompt(
+      context,
+      title: title,
+      initialValue: value,
+      hintText: hintText,
+      obscureText: obscureText,
+      confirmLabel: '保存',
     );
     if (result != null && result.isNotEmpty) onValue?.call(result);
   }

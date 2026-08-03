@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_editor/moodiary_editor.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
-import 'package:moodiary_editor/moodiary_editor.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
@@ -175,27 +175,14 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
   Future<void> _deleteSelected() async {
     final ids = ref.read(diarySelectionProvider);
     if (ids.isEmpty) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('删除所选日记？'),
-        content: Text('已选 ${ids.length} 篇，将移入回收站，可在回收站恢复。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: '删除所选日记？',
+      message: '已选 ${ids.length} 篇，将移入回收站，可在回收站恢复。',
+      confirmLabel: '删除',
+      isDestructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     final filter = ref.read(homeDiaryFilterProvider);
     final n = await ref
         .read(

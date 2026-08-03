@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
@@ -70,26 +69,33 @@ Future<bool> ensureSyncKeyReady({
 
   if (!context.mounted) return false;
   List<int>? unwrappedDek;
-  final entered = await showDialog<String>(
-    context: context,
+  final entered = await showMoodiaryPrompt(
+    context,
+    title: '远端备份已加密',
+    message: hasLocalKey
+        ? '当前设备的密钥无法解密远端数据。请输入与原设备一致的加密密码，验证通过后开始同步。'
+        : '远端数据已加密。请输入与原设备一致的加密密码，验证通过后开始同步。',
+    hintText: '加密密码',
+    confirmLabel: '验证并保存',
+    obscureText: true,
+    // 保持 trim：旧实现校验与落盘用的都是 trim 后的串，改成原文会让首尾带空格的
+    // 密码解不开已有的 keyfile。
     barrierDismissible: false,
-    builder: (_) => _KeyEntryDialog(
-      hasLocalKey: hasLocalKey,
-      verify: (passphrase) async {
-        try {
-          final dek = await SyncKeyManager.unwrapDek(
-            keyfile: keyfile!,
-            passphrase: passphrase,
-          );
-          // 双保险：keyfile 解包成功后再实测解密 manifest（防 keyfile 与数据不配套）。
-          await SyncCipher.withKey(dek).decode(bytes);
-          unwrappedDek = dek;
-          return true;
-        } catch (_) {
-          return false;
-        }
-      },
-    ),
+    validator: (value) => value.isEmpty ? '请输入密码' : null,
+    onSubmit: (passphrase) async {
+      try {
+        final dek = await SyncKeyManager.unwrapDek(
+          keyfile: keyfile!,
+          passphrase: passphrase,
+        );
+        // 双保险：keyfile 解包成功后再实测解密 manifest（防 keyfile 与数据不配套）。
+        await SyncCipher.withKey(dek).decode(bytes);
+        unwrappedDek = dek;
+        return null;
+      } catch (_) {
+        return '密码不正确，无法解密远端数据';
+      }
+    },
   );
   if (entered == null || unwrappedDek == null) return false;
 
@@ -102,97 +108,4 @@ Future<bool> ensureSyncKeyReady({
   ref.invalidate(syncDekControllerProvider);
   toast.success(message: '密钥已配置');
   return true;
-}
-
-class _KeyEntryDialog extends StatefulWidget {
-  /// true = 本地已有密钥但解不开远端（配错了）；false = 尚未配置密钥。
-  final bool hasLocalKey;
-  final Future<bool> Function(String passphrase) verify;
-
-  const _KeyEntryDialog({required this.hasLocalKey, required this.verify});
-
-  @override
-  State<_KeyEntryDialog> createState() => _KeyEntryDialogState();
-}
-
-class _KeyEntryDialogState extends State<_KeyEntryDialog> {
-  final _controller = TextEditingController();
-  String? _errorText;
-  bool _verifying = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    final key = _controller.text.trim();
-    if (key.isEmpty) {
-      setState(() => _errorText = '请输入密码');
-      return;
-    }
-    setState(() {
-      _verifying = true;
-      _errorText = null;
-    });
-    final ok = await widget.verify(key);
-    if (!mounted) return;
-    if (ok) {
-      Navigator.of(context).pop(key);
-    } else {
-      setState(() {
-        _verifying = false;
-        _errorText = '密码不正确，无法解密远端数据';
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('远端备份已加密'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            widget.hasLocalKey
-                ? '当前设备的密钥无法解密远端数据。请输入与原设备一致的加密密码，验证通过后开始同步。'
-                : '远端数据已加密。请输入与原设备一致的加密密码，验证通过后开始同步。',
-            style: context.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _controller,
-            obscureText: true,
-            autofocus: true,
-            enabled: !_verifying,
-            decoration: InputDecoration(
-              labelText: '加密密码',
-              border: const OutlineInputBorder(),
-              errorText: _errorText,
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _verifying ? null : () => Navigator.of(context).pop(),
-          child: const Text('取消'),
-        ),
-        FilledButton(
-          onPressed: _verifying ? null : _submit,
-          child: _verifying
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('验证并保存'),
-        ),
-      ],
-    );
-  }
 }

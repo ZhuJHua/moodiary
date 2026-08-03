@@ -4,6 +4,7 @@ library;
 export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 export 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+export 'src/basic/alert.dart';
 export 'src/basic/bubble.dart';
 export 'src/basic/button.dart';
 export 'src/basic/clipper.dart';

@@ -323,27 +323,11 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<void> _onAddTag(Diary current) async {
-    final controller = TextEditingController();
-    final tag = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('添加标签'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: '标签名'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
-            child: const Text('添加'),
-          ),
-        ],
-      ),
+    final tag = await showMoodiaryPrompt(
+      context,
+      title: '添加标签',
+      hintText: '标签名',
+      confirmLabel: '添加',
     );
     if (tag == null || tag.isEmpty || !mounted) return;
     if (current.tags.contains(tag)) return;

@@ -36,7 +36,7 @@ void main() {
     await t.tap(
       find.byKey(ValueKey('category-swatch-${kCategoryPalette[2].toARGB32()}')),
     );
-    await t.tap(find.widgetWithText(TextButton, '确认'));
+    await t.tap(find.widgetWithText(FilledButton, '确认'));
     await t.pumpAndSettle();
     expect(result?.name, 'travel');
     expect(result?.color, kCategoryPalette[2].toARGB32());

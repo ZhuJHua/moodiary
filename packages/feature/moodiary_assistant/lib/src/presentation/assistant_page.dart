@@ -252,28 +252,16 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   Future<void> _showDisclaimer() async {
     final l10n = context.l10n;
-    final agreed = await showDialog<bool>(
-      context: context,
+    final agreed = await showMoodiaryConfirm(
+      context,
+      icon: Icons.privacy_tip_outlined,
+      title: l10n.assistantDisclaimerTitle,
+      message: l10n.assistantDisclaimerContent,
+      confirmLabel: l10n.assistantDisclaimerAgree,
+      cancelLabel: l10n.assistantDisclaimerDecline,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.privacy_tip_outlined),
-        title: Text(l10n.assistantDisclaimerTitle),
-        content: SingleChildScrollView(
-          child: Text(l10n.assistantDisclaimerContent),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.assistantDisclaimerDecline),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.assistantDisclaimerAgree),
-          ),
-        ],
-      ),
     );
-    if (agreed == true) {
+    if (agreed) {
       await MoodiaryKVs.assistantDisclaimerAccepted.set(true);
       if (!mounted) return;
       setState(() => _disclaimerAccepted = true);
@@ -2107,27 +2095,14 @@ class _SessionCard extends StatelessWidget {
 
   Future<void> _confirmDelete(BuildContext context) async {
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.assistantSessionDelete),
-        content: Text(session.title),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.assistantSessionDelete),
-          ),
-        ],
-      ),
+    final ok = await showMoodiaryConfirm(
+      context,
+      title: l10n.assistantSessionDelete,
+      message: session.title,
+      confirmLabel: l10n.assistantSessionDelete,
+      isDestructive: true,
     );
-    if (ok == true) onDelete();
+    if (ok) onDelete();
   }
 
   @override

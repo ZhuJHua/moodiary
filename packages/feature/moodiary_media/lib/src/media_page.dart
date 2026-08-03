@@ -130,29 +130,13 @@ Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
   }
 
   if (!context.mounted) return;
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(l10n.mediaCleanupConfirmTitle),
-      content: Text(
-        l10n.mediaCleanupConfirmMessage(report.count, report.readableSize),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(false),
-          child: Text(l10n.cancel),
-        ),
-        TextButton(
-          style: TextButton.styleFrom(
-            foregroundColor: Theme.of(ctx).colorScheme.error,
-          ),
-          onPressed: () => Navigator.of(ctx).pop(true),
-          child: Text(l10n.ok),
-        ),
-      ],
-    ),
+  final confirmed = await showMoodiaryConfirm(
+    context,
+    title: l10n.mediaCleanupConfirmTitle,
+    message: l10n.mediaCleanupConfirmMessage(report.count, report.readableSize),
+    isDestructive: true,
   );
-  if (confirmed != true) return;
+  if (!confirmed) return;
 
   toast.loading();
   try {

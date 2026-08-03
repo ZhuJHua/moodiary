@@ -64,24 +64,14 @@ class _AssistantProviderListPageState
 
   Future<void> _delete(LlmProvider provider) async {
     final l10n = context.l10n;
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.modelProviderDeleteTitle),
-        content: Text(l10n.modelProviderDeleteContent(provider.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.diaryDelete),
-          ),
-        ],
-      ),
+    final ok = await showMoodiaryConfirm(
+      context,
+      title: l10n.modelProviderDeleteTitle,
+      message: l10n.modelProviderDeleteContent(provider.name),
+      confirmLabel: l10n.diaryDelete,
+      isDestructive: true,
     );
-    if (ok != true) return;
+    if (!ok) return;
     await _repo.deleteProvider(provider.id);
     toast.success(message: l10n.modelProviderDeleted);
   }

@@ -45,8 +45,18 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   Future<void> _migrateAll() async {
     final pending = _pending;
     if (pending == null || pending.isEmpty) return;
-    final confirmed = await _confirmMigrate(pending.length);
-    if (confirmed != true) return;
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: '迁移到新编辑器',
+      message:
+          '将 ${pending.length} 篇旧编辑器日记转换为新编辑器格式。'
+          '\n\n· 文字、标题、列表、引用、代码、图片、音频、视频都会保留；'
+          '\n· 文字颜色 / 高亮 / 对齐无法在新格式中表示，会被丢弃；'
+          '\n· 迁移只改变本机的存储格式，不会作为编辑同步到其他设备（多设备请分别迁移）；'
+          '\n· 转换前会备份原文，可随时回退。',
+      confirmLabel: '开始迁移',
+    );
+    if (!confirmed) return;
     setState(() {
       _busy = true;
       _done = 0;
@@ -86,27 +96,15 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   }
 
   Future<void> _revert(({MigrationBackup backup, Diary? diary}) item) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('回退迁移'),
-        content: const Text(
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: '回退迁移',
+      message:
           '将这篇恢复为迁移前的旧编辑器格式，并删除备份。'
           '\n\n注意：迁移之后对该篇做的修改会丢失。',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('回退'),
-          ),
-        ],
-      ),
+      confirmLabel: '回退',
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     setState(() => _busy = true);
     try {
       final ok = await EditorMigrationService.revert(item.backup.id);
@@ -116,32 +114,6 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
-  }
-
-  Future<bool?> _confirmMigrate(int count) {
-    return showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('迁移到新编辑器'),
-        content: Text(
-          '将 $count 篇旧编辑器日记转换为新编辑器格式。'
-          '\n\n· 文字、标题、列表、引用、代码、图片、音频、视频都会保留；'
-          '\n· 文字颜色 / 高亮 / 对齐无法在新格式中表示，会被丢弃；'
-          '\n· 迁移只改变本机的存储格式，不会作为编辑同步到其他设备（多设备请分别迁移）；'
-          '\n· 转换前会备份原文，可随时回退。',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('开始迁移'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override

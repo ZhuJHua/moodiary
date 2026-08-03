@@ -326,6 +326,26 @@ class ThemeManager {
         backgroundColor: colorScheme.surface,
         scrolledUnderElevation: 0,
       ),
+      // 兜住尚未迁到 showMoodiaryAlert 的原生弹窗（选择列表、进度、日期选择器），
+      // 让它们的圆角/标题/遮罩与新组件一致 —— M3 默认是 28 圆角 + headlineSmall(24sp)
+      // + black54，是全仓唯一不遵守 AppBorderRadius 的一处。
+      dialogTheme: DialogThemeData(
+        backgroundColor: colorScheme.surfaceContainerHigh,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.black.withValues(alpha: 0.24),
+        elevation: 8,
+        barrierColor: colorScheme.scrim.withValues(alpha: 0.32),
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppBorderRadius.xLargeBorderRadius,
+        ),
+        titleTextStyle: textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
+        ),
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
+      ),
       scrollbarTheme: ScrollbarThemeData(
         thumbColor: WidgetStateProperty.all(
           colorScheme.secondary.withValues(alpha: 0.4),

@@ -118,24 +118,14 @@ class _SyncLogPageState extends State<SyncLogPage> {
   }
 
   Future<void> _onClearLogs() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('清空日志'),
-        content: const Text('将删除内存中的事件流和按天滚动的所有 jsonl 文件，操作不可恢复。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('清空'),
-          ),
-        ],
-      ),
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: '清空日志',
+      message: '将删除内存中的事件流和按天滚动的所有 jsonl 文件，操作不可恢复。',
+      confirmLabel: '清空',
+      isDestructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     await SyncLogger.get().clearAll();
     if (!mounted) return;
     setState(() => _events = const []);

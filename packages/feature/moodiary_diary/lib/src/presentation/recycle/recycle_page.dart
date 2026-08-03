@@ -68,13 +68,14 @@ class RecyclePage extends ConsumerWidget {
     WidgetRef ref,
     Diary diary,
   ) async {
-    final confirmed = await _confirm(
+    final confirmed = await showMoodiaryConfirm(
       context,
       title: '彻底删除？',
       message: '此操作不可恢复，日记将永久消失。',
       confirmLabel: '彻底删除',
+      isDestructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     final ok = await ref
         .read(recycleBinDiariesProvider.notifier)
         .permanentDelete(diary.isarId);
@@ -90,43 +91,16 @@ class RecyclePage extends ConsumerWidget {
     WidgetRef ref,
     int total,
   ) async {
-    final confirmed = await _confirm(
+    final confirmed = await showMoodiaryConfirm(
       context,
       title: '清空回收站？',
       message: '将永久删除 $total 条日记。此操作不可恢复。',
       confirmLabel: '清空',
+      isDestructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     final count = await ref.read(recycleBinDiariesProvider.notifier).clear();
     toast.success(message: '已清空 $count 条');
-  }
-
-  Future<bool?> _confirm(
-    BuildContext context, {
-    required String title,
-    required String message,
-    required String confirmLabel,
-  }) {
-    return showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(confirmLabel),
-          ),
-        ],
-      ),
-    );
   }
 }
 

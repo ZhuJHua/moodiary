@@ -91,27 +91,14 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
     AsyncValue<List<Diary>> async,
   ) async {
     final picked = _selected.toList();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('批量移入回收站？'),
-        content: Text('共 ${picked.length} 条日记将被移入回收站，可在「回收站」内恢复。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('移入回收站'),
-          ),
-        ],
-      ),
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: '批量移入回收站？',
+      message: '共 ${picked.length} 条日记将被移入回收站，可在「回收站」内恢复。',
+      confirmLabel: '移入回收站',
+      isDestructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     final list = async.value ?? const <Diary>[];
     final notifier = ref.read(provider.notifier);
     int ok = 0;

@@ -159,24 +159,14 @@ class _FontPicker extends ConsumerWidget {
     Font font,
   ) async {
     HapticFeedback.selectionClick();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('删除字体'),
-        content: Text('确认删除字体「${font.fontFamily}」吗？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
+    final ok = await showMoodiaryConfirm(
+      context,
+      title: '删除字体',
+      message: '确认删除字体「${font.fontFamily}」吗？',
+      confirmLabel: '删除',
+      isDestructive: true,
     );
-    if (ok != true) return;
+    if (!ok) return;
     await ref.read(fontControllerProvider.notifier).removeFont(font);
   }
 }

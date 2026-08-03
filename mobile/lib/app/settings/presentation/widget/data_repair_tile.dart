@@ -38,27 +38,15 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
   }
 
   Future<void> _confirmAndRepair() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('数据修复'),
-        content: const Text(
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: '数据修复',
+      message:
           '将扫描全部日记，按正文重新生成卡片预览、媒体引用，并清理失效的分类引用，'
           '最后重建搜索索引。\n\n该操作只修正可从正文重算的衍生数据，不会改动你的正文内容。',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('开始修复'),
-          ),
-        ],
-      ),
+      confirmLabel: '开始修复',
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     await _repair();
   }
 
@@ -93,18 +81,11 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
       ],
       '搜索索引已重建（${report.reindexed} 篇）。',
     ];
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('修复完成'),
-        content: Text(lines.join('\n')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('好'),
-          ),
-        ],
-      ),
+    await showMoodiaryNotice(
+      context,
+      title: '修复完成',
+      message: lines.join('\n'),
+      closeLabel: '好',
     );
   }
 }

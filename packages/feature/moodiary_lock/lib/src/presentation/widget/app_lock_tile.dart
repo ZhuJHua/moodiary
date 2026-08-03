@@ -15,26 +15,13 @@ class _AppLockTileState extends State<AppLockTile> {
   late final Future<bool> _bioSupported = BiometricAuth.canCheckBiometrics();
 
   Future<void> _onTapLock(bool currentlyOn) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('应用锁'),
-        content: Text(
-          currentlyOn ? '关闭后启动将不再需要密码。' : '开启后，每次启动应用都需要输入密码。',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(currentlyOn ? '去关闭' : '去设置'),
-          ),
-        ],
-      ),
+    final confirm = await showMoodiaryConfirm(
+      context,
+      title: '应用锁',
+      message: currentlyOn ? '关闭后启动将不再需要密码。' : '开启后，每次启动应用都需要输入密码。',
+      confirmLabel: currentlyOn ? '去关闭' : '去设置',
     );
-    if (confirm != true || !mounted) return;
+    if (!confirm || !mounted) return;
     await showFloatingModalBottomSheet(
       context: context,
       isScrollControlled: true,
