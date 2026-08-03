@@ -2,7 +2,7 @@ library;
 
 // UI 依赖的 owner 包：toast/弹层与图标库由 ui 转发，core 保持 headless。
 export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-export 'package:font_awesome_flutter/font_awesome_flutter.dart';
+export 'package:lucide_icons_flutter/lucide_icons.dart';
 
 export 'src/basic/alert.dart';
 export 'src/basic/bubble.dart';
@@ -33,6 +33,7 @@ export 'src/common/frosted_glass_overlay.dart';
 export 'src/common/image_browser.dart';
 export 'src/common/lock_pin_pad.dart';
 export 'src/common/mood_icon.dart';
+export 'src/common/qweather_icon.dart';
 export 'src/common/nav_bar.dart';
 export 'src/common/setting_tile.dart';
 export 'src/common/sync_pending_indicator.dart';

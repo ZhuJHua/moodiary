@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class FrostedGlassButton extends StatelessWidget {
   final Widget child;
@@ -110,7 +111,7 @@ class PageBackButton extends StatelessWidget {
     return Center(
       child: IconButton(
         onPressed: onBack ?? () => Navigator.maybePop(context),
-        icon: const Icon(Icons.arrow_back_rounded),
+        icon: const Icon(LucideIcons.arrowLeft),
         color: color ?? context.theme.colorScheme.onSurface,
         tooltip: context.l10n.back,
       ),

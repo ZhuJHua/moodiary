@@ -40,7 +40,7 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
     return SettingListTile(
       isFirst: widget.isFirst,
       isLast: widget.isLast,
-      leading: const Icon(Icons.speed_rounded),
+      leading: const Icon(LucideIcons.gauge),
       title: '压测数据（调试）',
       subtitle: '批量生成或清除随机双链日记，用于图谱性能测试',
       trailing: _busy
@@ -49,7 +49,7 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
               height: 20,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : const Icon(Icons.chevron_right_rounded),
+          : const Icon(LucideIcons.chevronRight),
       onTap: _busy ? null : _openMenu,
     );
   }

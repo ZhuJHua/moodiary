@@ -185,14 +185,14 @@ class _LockPageState extends ConsumerState<LockPage>
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 250),
                   child: _unlocked
-                      ? FaIcon(
-                          FontAwesomeIcons.unlock,
+                      ? Icon(
+                          LucideIcons.lockOpen,
                           key: const ValueKey('unlock'),
                           size: 28,
                           color: scheme.primary,
                         )
-                      : FaIcon(
-                          FontAwesomeIcons.lock,
+                      : Icon(
+                          LucideIcons.lock,
                           key: const ValueKey('lock'),
                           size: 28,
                           color: scheme.onSurface,
@@ -248,14 +248,14 @@ class _LockPageState extends ConsumerState<LockPage>
                         _NumButton(label: d, onTap: () => _onDigit(d), size: dotSize),
                       _supportBio
                           ? _IconButton(
-                              icon: Icons.fingerprint_rounded,
+                              icon: LucideIcons.fingerprint,
                               onTap: _tryBiometric,
                               size: dotSize,
                             )
                           : SizedBox(width: dotSize, height: dotSize),
                       _NumButton(label: '0', onTap: () => _onDigit('0'), size: dotSize),
                       _IconButton(
-                        icon: Icons.keyboard_backspace_rounded,
+                        icon: LucideIcons.delete,
                         onTap: _onBackspace,
                         size: dotSize,
                       ),

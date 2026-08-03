@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 
@@ -28,8 +28,8 @@ class Toast {
         return _build(
           context: context,
           message: message,
-          icon: FaIcon(
-            FontAwesomeIcons.circleInfo,
+          icon: Icon(
+            LucideIcons.info,
             color: context.theme.colorScheme.onSurfaceVariant,
             size: 24,
           ),
@@ -79,8 +79,8 @@ class Toast {
         return _build(
           context: context,
           message: message ?? context.l10n.toastError,
-          icon: FaIcon(
-            FontAwesomeIcons.solidCircleXmark,
+          icon: Icon(
+            LucideIcons.circleX,
             color: context.theme.colorScheme.onSurfaceVariant,
             size: 24,
           ),
@@ -104,8 +104,8 @@ class Toast {
         return _build(
           context: context,
           message: message ?? context.l10n.toastSuccess,
-          icon: FaIcon(
-            FontAwesomeIcons.solidCircleCheck,
+          icon: Icon(
+            LucideIcons.circleCheck,
             color: context.theme.colorScheme.onSurfaceVariant,
             size: 24,
           ),

@@ -104,7 +104,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
               SettingListTile(
                 isFirst: true,
                 title: '同步方式',
-                leading: const Icon(Icons.swap_horiz_rounded),
+                leading: const Icon(LucideIcons.arrowRightLeft),
                 trailing: Text(
                   current.label,
                   style: context.textTheme.bodySmall?.copyWith(
@@ -117,11 +117,11 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                 title: '${current.label} 配置',
                 leading: Icon(
                   current == SyncProviderType.webdav
-                      ? Icons.cloud_outlined
-                      : Icons.storage_rounded,
+                      ? LucideIcons.cloud
+                      : LucideIcons.database,
                 ),
                 subtitle: configured ? '已配置' : '未配置（点击设置）',
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () async {
                   final ok = current == SyncProviderType.webdav
                       ? await WebDavFormSheet.show(context)
@@ -139,8 +139,8 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
               ),
               SettingListTile(
                 title: '测试连接',
-                leading: const Icon(Icons.network_check_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.plugZap),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: configured ? _testConnection : null,
               ),
               ValueListenableBuilder(
@@ -157,7 +157,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                           subtitle: stopping
                               ? '等待当前条目完成后收尾'
                               : '正在后台同步，点击停止',
-                          leading: const Icon(Icons.stop_circle_outlined),
+                          leading: const Icon(LucideIcons.circleStop),
                           trailing: const SizedBox(
                             width: 16,
                             height: 16,
@@ -180,8 +180,8 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                     subtitle: millis > 0
                         ? '上次同步：${TimeFormat.listDateTime(DateTime.fromMillisecondsSinceEpoch(millis))}'
                         : '尚未同步',
-                    leading: const Icon(Icons.sync_rounded),
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    leading: const Icon(LucideIcons.refreshCw),
+                    trailing: const Icon(LucideIcons.chevronRight),
                     onTap: configured
                         ? () async {
                             final backend = IRemoteSyncBackend.get();
@@ -204,8 +204,8 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                 isLast: true,
                 title: '同步日志',
                 subtitle: '按日期查看同步事件',
-                leading: const Icon(Icons.history_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.history),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => const SyncLogRoute().push(context),
               ),
             ],
@@ -260,16 +260,16 @@ class _LanSection extends StatelessWidget {
                 isFirst: true,
                 title: '发送',
                 subtitle: '发送日记到同一 Wi-Fi 下的设备',
-                leading: const Icon(Icons.wifi_tethering_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.radioTower),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => const LanSendRoute().push(context),
               ),
               SettingListTile(
                 isLast: true,
                 title: '接收',
                 subtitle: '等待其它设备发送到本机',
-                leading: const Icon(Icons.wifi_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.wifi),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => const LanReceiveRoute().push(context),
               ),
             ],
@@ -347,16 +347,16 @@ class _LocalBackupSection extends StatelessWidget {
                 isFirst: true,
                 title: '导出备份',
                 subtitle: '打包全部日记与媒体为 zip 文件',
-                leading: const Icon(Icons.archive_outlined),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.archive),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _export(context),
               ),
               SettingListTile(
                 isLast: true,
                 title: '导入备份',
                 subtitle: '从 zip 备份恢复，按最后修改时间合并',
-                leading: const Icon(Icons.unarchive_outlined),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.archiveRestore),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _import(context),
               ),
             ],
@@ -421,7 +421,7 @@ class _AutoSyncSection extends StatelessWidget {
                     isFirst: true,
                     title: '自动同步',
                     subtitle: '日记变更后自动推送，并定时拉取其它设备的变更',
-                    secondary: const Icon(Icons.sync_rounded),
+                    secondary: const Icon(LucideIcons.refreshCw),
                     value: enabled,
                     onChanged: (v) => MoodiaryKVs.autoSync.set(v),
                   ),
@@ -432,7 +432,7 @@ class _AutoSyncSection extends StatelessWidget {
                         isLast: true,
                         title: '轮询间隔',
                         subtitle: '每隔此时间在后台拉取其它设备的变更',
-                        leading: const Icon(Icons.timer_outlined),
+                        leading: const Icon(LucideIcons.timer),
                         trailing: Text(
                           _fmtInterval(seconds),
                           style: context.textTheme.bodyMedium?.copyWith(
@@ -536,7 +536,7 @@ class _NetworkSection extends StatelessWidget {
                 isLast: true,
                 title: '并发请求数',
                 subtitle: '同步时同时进行的网络请求上限，弱网或服务端限流时调小',
-                leading: const Icon(Icons.dns_outlined),
+                leading: const Icon(LucideIcons.server),
                 trailing: Text(
                   '$value',
                   style: context.textTheme.bodyMedium?.copyWith(

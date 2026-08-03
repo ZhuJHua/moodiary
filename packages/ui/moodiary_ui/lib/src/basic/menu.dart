@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 圆角弹出菜单的单个条目。
 class MoodiaryMenuEntry<T> {
@@ -318,7 +319,7 @@ class _MoodiaryMenuItem<T> extends StatelessWidget {
                   SizedBox(
                     width: 18,
                     child: selected
-                        ? Icon(Icons.check_rounded, size: 18, color: fg)
+                        ? Icon(LucideIcons.check, size: 18, color: fg)
                         : null,
                   ),
                 ],

@@ -29,7 +29,7 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
       floatingActionButton: FloatingActionButton(
         heroTag: 'categoryManagerFab',
         onPressed: _onAddCategory,
-        child: const Icon(Icons.add),
+        child: const Icon(LucideIcons.plus),
       ),
       body: async.buildLoading(
         data: (categories) {
@@ -222,7 +222,7 @@ class _SearchField extends StatelessWidget {
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           hintText: context.l10n.categorySearchHint,
-          prefixIcon: const Icon(Icons.search_rounded),
+          prefixIcon: const Icon(LucideIcons.search),
           filled: true,
           isDense: true,
           border: const OutlineInputBorder(
@@ -261,13 +261,13 @@ class _Empty extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.label_outline, size: 48),
+          const Icon(LucideIcons.folder, size: 48),
           const SizedBox(height: 12),
           Text('暂无分类', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           FilledButton.icon(
             onPressed: onAdd,
-            icon: const Icon(Icons.add),
+            icon: const Icon(LucideIcons.plus),
             label: const Text('新建分类'),
           ),
         ],
@@ -311,7 +311,7 @@ class _CategoryTile extends StatelessWidget {
             color: color,
             borderRadius: BorderRadius.circular(13),
           ),
-          child: Icon(Icons.label_rounded, size: 21, color: onColor),
+          child: Icon(LucideIcons.folder, size: 21, color: onColor),
         ),
         title: Text(
           category.categoryName,
@@ -342,19 +342,19 @@ class _CategoryTile extends StatelessWidget {
                 MoodiaryMenuEntry(
                   value: 'rename',
                   label: '重命名',
-                  icon: Icons.edit_outlined,
+                  icon: LucideIcons.squarePen,
                 ),
                 MoodiaryMenuEntry(
                   value: 'delete',
                   label: '删除',
-                  icon: Icons.delete_outline,
+                  icon: LucideIcons.trash2,
                   isDestructive: true,
                 ),
               ],
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Icon(
-                  Icons.more_vert_rounded,
+                  LucideIcons.ellipsisVertical,
                   color: scheme.onSurfaceVariant,
                 ),
               ),
@@ -365,7 +365,7 @@ class _CategoryTile extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(left: 4),
                   child: Icon(
-                    Icons.drag_handle_rounded,
+                    LucideIcons.gripHorizontal,
                     color: scheme.onSurfaceVariant,
                   ),
                 ),

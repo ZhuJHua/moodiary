@@ -78,33 +78,33 @@ class _DataSection extends StatelessWidget {
               SettingListTile(
                 title: '回收站',
                 isFirst: true,
-                leading: const Icon(Icons.delete_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.trash),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _openSetting(context, const RecycleRoute()),
               ),
               SettingListTile(
                 title: '数据同步与备份',
-                leading: const Icon(Icons.sync_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.refreshCw),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _openSetting(context, const BackupSyncRoute()),
               ),
               SettingListTile(
                 title: '分类管理',
-                leading: const Icon(Icons.category_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.folders),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _openSetting(context, const CategoryManagerRoute()),
               ),
               SettingListTile(
                 title: '足迹地图',
-                leading: const Icon(Icons.map_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.map),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _openSetting(context, const MapRoute()),
               ),
               SettingListTile(
                 title: '迁移到新编辑器',
                 subtitle: '把旧日记（富文本 / Markdown）转换为新编辑器以便编辑',
-                leading: const Icon(Icons.auto_fix_high_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.wandSparkles),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _openSetting(context, const EditorMigrationRoute()),
               ),
               const DataRepairTile(),
@@ -142,8 +142,8 @@ class _DisplaySection extends ConsumerWidget {
               SettingListTile(
                 title: '日记设置',
                 isFirst: true,
-                leading: const Icon(Icons.article_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.fileText),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _openSetting(context, const DiarySettingRoute()),
               ),
               ValueListenableBuilder(
@@ -151,7 +151,7 @@ class _DisplaySection extends ConsumerWidget {
                 builder: (context, mode, _) {
                   return SettingListTile(
                     title: '主题模式',
-                    leading: const Icon(Icons.invert_colors_rounded),
+                    leading: const Icon(LucideIcons.contrast),
                     trailing: Text(
                       _themeModeLabels[mode.clamp(
                         0,
@@ -170,7 +170,7 @@ class _DisplaySection extends ConsumerWidget {
               ),
               SettingListTile(
                 title: '主题色',
-                leading: const Icon(Icons.color_lens_rounded),
+                leading: const Icon(LucideIcons.palette),
                 trailing: Text(
                   AppColor.colorName(colorIndex, context),
                   style: context.textTheme.bodySmall?.copyWith(color: primary),
@@ -180,8 +180,8 @@ class _DisplaySection extends ConsumerWidget {
               SettingListTile(
                 isLast: true,
                 title: '字体样式',
-                leading: const Icon(Icons.format_size_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.type),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _openSetting(context, const FontRoute()),
               ),
             ],
@@ -215,7 +215,7 @@ class _PrivacySection extends StatelessWidget {
                     isLast: true,
                     title: '后台隐私保护',
                     subtitle: '退到后台时遮罩内容',
-                    secondary: const Icon(Icons.remove_red_eye_rounded),
+                    secondary: const Icon(LucideIcons.eyeOff),
                     value: on,
                     onChanged: (v) => MoodiaryKVs.backendPrivacy.set(v),
                   );
@@ -254,13 +254,13 @@ class _MoreSection extends ConsumerWidget {
               SettingListTile(
                 isFirst: true,
                 title: '关于',
-                leading: const Icon(Icons.info_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.info),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _openSetting(context, const AboutRoute()),
               ),
               SettingListTile(
                 title: '语言',
-                leading: const Icon(Icons.language_rounded),
+                leading: const Icon(LucideIcons.languages),
                 trailing: Text(
                   lang.l10nText(context),
                   style: context.textTheme.bodySmall?.copyWith(color: primary),
@@ -273,8 +273,8 @@ class _MoreSection extends ConsumerWidget {
               SettingListTile(
                 isLast: true,
                 title: '第三方服务',
-                leading: const Icon(Icons.hub_rounded),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(LucideIcons.waypoints),
+                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _openSetting(context, const ServicesRoute()),
               ),
             ],

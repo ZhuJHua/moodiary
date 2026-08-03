@@ -268,7 +268,12 @@ class _MetaLine extends StatelessWidget {
               Text(TimeFormat.clock(stamp), style: style),
               if (diary.weather.length >= 3) ...[
                 const SizedBox(width: 8),
-                Icon(Icons.cloud_outlined, size: 12, color: onVariant),
+                Icon(
+                  // 天气来自和风，图标跟着数据源走；未知码退回通用的云。
+                  qweatherIcon(diary.weather[0]) ?? LucideIcons.cloud,
+                  size: 12,
+                  color: onVariant,
+                ),
                 const SizedBox(width: 3),
                 Flexible(
                   child: Text(
@@ -421,7 +426,7 @@ class _Thumb extends StatelessWidget {
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
             errorBuilder: (context, _, _) => Icon(
-              Icons.broken_image_outlined,
+              LucideIcons.imageOff,
               color: scheme.onSurfaceVariant,
             ),
           ),
@@ -463,7 +468,7 @@ class _Footer extends StatelessWidget {
     if (diary.audioName.isNotEmpty) {
       chips.add(
         _MediaChip(
-          icon: Icons.mic_none_rounded,
+          icon: LucideIcons.mic,
           count: diary.audioName.length,
           style: style,
         ),
@@ -472,7 +477,7 @@ class _Footer extends StatelessWidget {
     if (diary.videoName.isNotEmpty) {
       chips.add(
         _MediaChip(
-          icon: Icons.videocam_outlined,
+          icon: LucideIcons.video,
           count: diary.videoName.length,
           style: style,
         ),
@@ -500,7 +505,7 @@ class _Footer extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.place_outlined,
+              LucideIcons.mapPin,
               size: 12,
               color: scheme.onSurfaceVariant,
             ),

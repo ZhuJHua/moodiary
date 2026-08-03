@@ -20,7 +20,7 @@ dependencies:
 
   flutter_riverpod: 3.3.2
   flutter_smart_dialog: 5.1.1
-  font_awesome_flutter: 11.0.0
+  lucide_icons_flutter: 3.1.15
   modal_bottom_sheet: 3.0.0
   expressive_refresh: 0.1.2
   path: 1.9.1
@@ -40,3 +40,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
+
+flutter:
+  # 和风天气图标字体。跟着 qweather_icon.dart 走：谁用图标谁带字体，
+  # 调用方（含将来的桌面端）不需要自己在 pubspec 里再声明一遍。
+  fonts:
+    - family: qweather
+      fonts:
+        - asset: assets/fonts/qweather-icons.ttf

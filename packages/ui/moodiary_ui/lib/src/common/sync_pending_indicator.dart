@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 同步进行中的聚合提示卡。不为每篇远端日记插入独立占位 —— manifest 只有 LWW 时间戳，
 /// 占位卡无法按真实展示时间排序、会出现在错误位置；待更新的已有日记改用 [SyncPendingBadge]。
@@ -70,7 +71,7 @@ class SyncPendingBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.sync_rounded, size: 11, color: scheme.onTertiaryContainer),
+          Icon(LucideIcons.refreshCw, size: 11, color: scheme.onTertiaryContainer),
           const SizedBox(width: 3),
           Text(
             '同步中',
@@ -102,7 +103,7 @@ class SyncDirtyBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.cloud_upload_outlined,
+            LucideIcons.cloudUpload,
             size: 11,
             color: scheme.onSecondaryContainer,
           ),

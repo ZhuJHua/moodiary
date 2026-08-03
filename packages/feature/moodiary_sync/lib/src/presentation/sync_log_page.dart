@@ -93,8 +93,8 @@ class _SyncLogPageState extends State<SyncLogPage> {
               ListTile(
                 leading: Icon(
                   _sameDay(day, today)
-                      ? Icons.today_rounded
-                      : Icons.calendar_month_rounded,
+                      ? LucideIcons.calendarCheck
+                      : LucideIcons.calendarDays,
                 ),
                 title: Text(
                   TimeFormat.isoDate(day) +
@@ -102,7 +102,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
                 ),
                 trailing: _sameDay(day, _selectedDay)
                     ? Icon(
-                        Icons.check_rounded,
+                        LucideIcons.check,
                         color: ctx.colorScheme.primary,
                       )
                     : null,
@@ -139,12 +139,12 @@ class _SyncLogPageState extends State<SyncLogPage> {
         actions: [
           IconButton(
             tooltip: '按日期筛选',
-            icon: const Icon(Icons.calendar_month_rounded),
+            icon: const Icon(LucideIcons.calendarDays),
             onPressed: _pickDay,
           ),
           IconButton(
             tooltip: '清空日志',
-            icon: const Icon(Icons.delete_sweep_outlined),
+            icon: const Icon(LucideIcons.eraser),
             onPressed: _onClearLogs,
           ),
         ],
@@ -200,7 +200,7 @@ class _EventList extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_sync_outlined, size: 40, color: scheme.outline),
+            Icon(LucideIcons.cloudSync, size: 40, color: scheme.outline),
             const SizedBox(height: 12),
             Text(
               '该日期暂无同步事件',
@@ -238,27 +238,27 @@ class _EventList extends StatelessWidget {
 }
 
 const _kindIcon = <SyncEventKind, IconData>{
-  SyncEventKind.syncStart: Icons.play_arrow_rounded,
-  SyncEventKind.syncEnd: Icons.flag_outlined,
-  SyncEventKind.manifestRead: Icons.list_alt_rounded,
-  SyncEventKind.manifestWrite: Icons.edit_note_rounded,
-  SyncEventKind.diaryUpload: Icons.upload_rounded,
-  SyncEventKind.diaryDownload: Icons.download_rounded,
-  SyncEventKind.diarySkip: Icons.skip_next_rounded,
-  SyncEventKind.diaryTombstonePush: Icons.delete_sweep_outlined,
-  SyncEventKind.diaryTombstonePull: Icons.delete_outline,
-  SyncEventKind.categoryUpload: Icons.upload_rounded,
-  SyncEventKind.categoryDownload: Icons.download_rounded,
-  SyncEventKind.categorySkip: Icons.skip_next_rounded,
-  SyncEventKind.categoryTombstonePush: Icons.delete_sweep_outlined,
-  SyncEventKind.categoryTombstonePull: Icons.delete_outline,
-  SyncEventKind.mediaUpload: Icons.cloud_upload_outlined,
-  SyncEventKind.mediaDownload: Icons.cloud_download_outlined,
-  SyncEventKind.mediaSkip: Icons.skip_next_rounded,
-  SyncEventKind.mediaDelete: Icons.delete_outline,
-  SyncEventKind.lockAcquire: Icons.lock_outline,
-  SyncEventKind.lockRelease: Icons.lock_open,
-  SyncEventKind.error: Icons.error_outline,
+  SyncEventKind.syncStart: LucideIcons.play,
+  SyncEventKind.syncEnd: LucideIcons.flag,
+  SyncEventKind.manifestRead: LucideIcons.list,
+  SyncEventKind.manifestWrite: LucideIcons.filePenLine,
+  SyncEventKind.diaryUpload: LucideIcons.upload,
+  SyncEventKind.diaryDownload: LucideIcons.download,
+  SyncEventKind.diarySkip: LucideIcons.skipForward,
+  SyncEventKind.diaryTombstonePush: LucideIcons.eraser,
+  SyncEventKind.diaryTombstonePull: LucideIcons.trash2,
+  SyncEventKind.categoryUpload: LucideIcons.upload,
+  SyncEventKind.categoryDownload: LucideIcons.download,
+  SyncEventKind.categorySkip: LucideIcons.skipForward,
+  SyncEventKind.categoryTombstonePush: LucideIcons.eraser,
+  SyncEventKind.categoryTombstonePull: LucideIcons.trash2,
+  SyncEventKind.mediaUpload: LucideIcons.cloudUpload,
+  SyncEventKind.mediaDownload: LucideIcons.cloudDownload,
+  SyncEventKind.mediaSkip: LucideIcons.skipForward,
+  SyncEventKind.mediaDelete: LucideIcons.trash2,
+  SyncEventKind.lockAcquire: LucideIcons.lock,
+  SyncEventKind.lockRelease: LucideIcons.lockOpen,
+  SyncEventKind.error: LucideIcons.circleAlert,
 };
 
 const _kindLabel = <SyncEventKind, String>{
@@ -317,7 +317,7 @@ class _EventGroupTile extends StatelessWidget {
       childrenPadding: const EdgeInsets.only(left: 12),
       visualDensity: VisualDensity.compact,
       leading: Icon(
-        _kindIcon[kind] ?? Icons.circle_outlined,
+        _kindIcon[kind] ?? LucideIcons.circleDot,
         size: 18,
         color: color,
       ),
@@ -353,7 +353,7 @@ class _EventTile extends StatelessWidget {
         : isWarn
         ? scheme.tertiary
         : scheme.onSurfaceVariant;
-    final icon = _kindIcon[event.kind] ?? Icons.circle_outlined;
+    final icon = _kindIcon[event.kind] ?? LucideIcons.circleDot;
     final hasPayload = event.payload != null && event.payload!.isNotEmpty;
 
     return Material(
@@ -396,7 +396,7 @@ class _EventTile extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Icon(
-                    Icons.chevron_right_rounded,
+                    LucideIcons.chevronRight,
                     size: 16,
                     color: scheme.outline,
                   ),
@@ -437,7 +437,7 @@ class _EventTile extends StatelessWidget {
                   ),
                   IconButton(
                     tooltip: '复制',
-                    icon: const Icon(Icons.copy_rounded),
+                    icon: const Icon(LucideIcons.copy),
                     onPressed: () async {
                       await Clipboard.setData(ClipboardData(text: pretty));
                       if (!ctx.mounted) return;

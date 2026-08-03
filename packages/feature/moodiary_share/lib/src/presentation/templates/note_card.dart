@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 import 'share_card_template.dart';
 
@@ -69,7 +70,7 @@ class NoteShareCard extends StatelessWidget {
                   const SizedBox(height: 22),
                   Row(
                     children: [
-                      Icon(Icons.favorite_rounded, size: 13, color: inkSoft),
+                      Icon(LucideIcons.heart, size: 13, color: inkSoft),
                       const SizedBox(width: 5),
                       Text(
                         '心情 ${(diary.mood * 100).toStringAsFixed(0)}%',

@@ -29,7 +29,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
           if (_selected.isNotEmpty)
             IconButton(
               tooltip: '批量移入回收站',
-              icon: const Icon(Icons.delete_outline),
+              icon: const Icon(LucideIcons.trash2),
               onPressed: () => _onBatchSoftDelete(provider, async),
             ),
         ],

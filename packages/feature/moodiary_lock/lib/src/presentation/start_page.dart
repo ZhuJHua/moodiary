@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_router/moodiary_router.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 class _StartSlide {
   final IconData icon;
@@ -16,17 +17,17 @@ class _StartSlide {
 
 const _slides = <_StartSlide>[
   _StartSlide(
-    icon: Icons.auto_stories_outlined,
+    icon: LucideIcons.bookOpen,
     title: '欢迎使用 Moodiary',
     body: '一本离线优先的私密日记，数据默认只留在你的设备上。',
   ),
   _StartSlide(
-    icon: Icons.sentiment_satisfied_outlined,
+    icon: LucideIcons.smile,
     title: '记录每一种情绪',
     body: '心情、分类、标签随心组织，写作时长与字数实时可见。',
   ),
   _StartSlide(
-    icon: Icons.cloud_done_outlined,
+    icon: LucideIcons.cloudCheck,
     title: '数据始终归你掌控',
     body: '一键导出 JSON 备份，也可开启 WebDAV / S3 云同步，端到端加密可选。',
   ),

@@ -64,7 +64,7 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: l10n.assistantSelectDiarySearchHint,
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: const Icon(LucideIcons.search),
                 filled: true,
                 fillColor: scheme.surfaceContainerHigh,
                 isDense: true,

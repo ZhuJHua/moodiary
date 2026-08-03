@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 class ColorSheet extends ConsumerWidget {
   const ColorSheet({super.key});
@@ -134,7 +135,7 @@ class _ColorOption extends StatelessWidget {
                   child: Align(
                     alignment: Alignment.topRight,
                     child: Icon(
-                      Icons.check_circle,
+                      LucideIcons.circleCheck,
                       size: 14,
                       color: scheme.onPrimary,
                     ),

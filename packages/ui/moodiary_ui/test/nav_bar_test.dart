@@ -3,21 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 
 const _destinations = [
-  MoodiaryNavDestination(
-    icon: Icon(Icons.article_outlined),
-    selectedIcon: Icon(Icons.article),
-    label: '日记',
-  ),
-  MoodiaryNavDestination(
-    icon: Icon(Icons.image_outlined),
-    selectedIcon: Icon(Icons.image),
-    label: '媒体',
-  ),
-  MoodiaryNavDestination(
-    icon: Icon(Icons.smart_toy_outlined),
-    selectedIcon: Icon(Icons.smart_toy),
-    label: '助手',
-  ),
+  MoodiaryNavDestination(icon: Icon(LucideIcons.bookText), label: '日记'),
+  MoodiaryNavDestination(icon: Icon(LucideIcons.image), label: '媒体'),
+  MoodiaryNavDestination(icon: Icon(LucideIcons.astroid), label: '助手'),
 ];
 
 /// 底栏整条带高 —— 取 Scaffold 折进 body 的 `padding.bottom`，这正是各页面读来
@@ -43,7 +31,9 @@ Future<double> _bandHeight(
             destinations: _destinations,
             selectedIndex: 0,
             onDestinationSelected: (_) {},
-            action: const MoodiaryNavAction(icon: Icon(Icons.add)),
+            action: const MoodiaryNavAction(
+              icon: Icon(LucideIcons.pencilLine),
+            ),
           ),
         ),
       ),

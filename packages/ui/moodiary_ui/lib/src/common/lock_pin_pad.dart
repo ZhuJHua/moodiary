@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 密码长度 —— 与启动解锁页对齐。
 const int kPinLength = 4;
@@ -182,14 +183,14 @@ class _LockPinPadState extends State<LockPinPad>
                 _NumButton(label: d, onTap: () => _onDigit(d), size: dotSize),
               widget.showBiometric
                   ? _IconButton(
-                      icon: Icons.fingerprint_rounded,
+                      icon: LucideIcons.fingerprint,
                       onTap: widget.onBiometric ?? () {},
                       size: dotSize,
                     )
                   : SizedBox(width: dotSize, height: dotSize),
               _NumButton(label: '0', onTap: () => _onDigit('0'), size: dotSize),
               _IconButton(
-                icon: Icons.keyboard_backspace_rounded,
+                icon: LucideIcons.delete,
                 onTap: _onBackspace,
                 size: dotSize,
               ),

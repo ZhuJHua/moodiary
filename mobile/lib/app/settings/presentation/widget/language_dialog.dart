@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 class LanguageDialog extends ConsumerWidget {
   const LanguageDialog({super.key});
@@ -49,7 +50,7 @@ class _Option extends StatelessWidget {
       onPressed: onTap,
       child: Row(
         children: [
-          Icon(selected ? Icons.check : Icons.language_outlined),
+          Icon(selected ? LucideIcons.check : LucideIcons.languages),
           const SizedBox(width: 8),
           Text(label),
         ],

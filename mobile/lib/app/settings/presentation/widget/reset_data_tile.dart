@@ -21,7 +21,7 @@ class ResetDataTile extends StatelessWidget {
           bottom: isLast ? const Radius.circular(12) : Radius.zero,
         ),
       ),
-      leading: Icon(Icons.delete_forever_rounded, color: scheme.error),
+      leading: Icon(LucideIcons.trash2, color: scheme.error),
       title: Text(
         '重置所有数据',
         style: context.textTheme.bodyLarge?.copyWith(color: scheme.error),
@@ -46,7 +46,7 @@ class ResetDataTile extends StatelessWidget {
           '请确保已做好备份。确认后应用将自动关闭，请重新打开以完成重置。',
       confirmLabel: '确认重置',
       isDestructive: true,
-      icon: Icons.warning_amber_rounded,
+      icon: LucideIcons.triangleAlert,
     );
     if (!confirmed) return;
     await _performReset();

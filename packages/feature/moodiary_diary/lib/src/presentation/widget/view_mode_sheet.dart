@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 class ViewModeSheet extends StatelessWidget {
   const ViewModeSheet({super.key});
@@ -29,9 +30,9 @@ class ViewModeSheet extends StatelessWidget {
   };
 
   IconData _sortIcon(DiarySort sort) => switch (sort) {
-    DiarySort.timeDesc => Icons.south_rounded,
-    DiarySort.timeAsc => Icons.north_rounded,
-    DiarySort.lastModifiedDesc => Icons.edit_calendar_rounded,
+    DiarySort.timeDesc => LucideIcons.arrowDown,
+    DiarySort.timeAsc => LucideIcons.arrowUp,
+    DiarySort.lastModifiedDesc => LucideIcons.calendarClock,
   };
 
   @override

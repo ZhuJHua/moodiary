@@ -49,7 +49,7 @@ class _Note extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            Icon(Icons.smart_toy_outlined, color: scheme.primary),
+            Icon(LucideIcons.bot, color: scheme.primary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -141,8 +141,8 @@ class _ProviderEntryTileState extends State<_ProviderEntryTile> {
       isLast: true,
       title: l10n.modelProviderTitle,
       subtitle: subtitle,
-      leading: const Icon(Icons.cloud_rounded),
-      trailing: const Icon(Icons.chevron_right_rounded),
+      leading: const Icon(LucideIcons.cloud),
+      trailing: const Icon(LucideIcons.chevronRight),
       onTap: () => const AssistantProvidersRoute().push(context),
     );
   }
@@ -190,8 +190,8 @@ class _SoulSectionState extends State<_SoulSection> {
             isLast: true,
             title: l10n.assistantSoulTileTitle,
             subtitle: subtitle,
-            leading: const Icon(Icons.favorite_outline),
-            trailing: const Icon(Icons.chevron_right_rounded),
+            leading: const Icon(LucideIcons.heart),
+            trailing: const Icon(LucideIcons.chevronRight),
             onTap: () async {
               await const AssistantSoulRoute().push(context);
               await _load();
@@ -252,7 +252,7 @@ class _ToolSectionState extends State<_ToolSection> {
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
               onPressed: _resetGrants,
-              icon: const Icon(Icons.lock_reset_rounded),
+              icon: const Icon(LucideIcons.rotateCcwKey),
               label: Text(l10n.assistantToolResetGrants),
             ),
           ),
@@ -296,7 +296,7 @@ class _ToolSectionState extends State<_ToolSection> {
                     child: Tooltip(
                       message: context.l10n.assistantToolAlwaysAllowedHint,
                       child: Icon(
-                        Icons.verified_user_rounded,
+                        LucideIcons.shieldCheck,
                         size: 18,
                         color: scheme.primary,
                       ),

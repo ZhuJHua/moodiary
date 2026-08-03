@@ -232,7 +232,7 @@ class _AssistantProviderEditPageState
     final scheme = context.colorScheme;
     return InputDecoration(
       hintText: hint,
-      prefixIcon: const Icon(Icons.search_rounded, size: 20),
+      prefixIcon: const Icon(LucideIcons.search, size: 20),
       filled: true,
       fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
       isDense: true,
@@ -329,19 +329,19 @@ class _AssistantProviderEditPageState
           ),
         ),
         _CapabilitySwitch(
-          icon: Icons.build_rounded,
+          icon: LucideIcons.wrench,
           label: l10n.modelProviderBadgeTools,
           value: _toolCall,
           onChanged: (v) => setState(() => _toolCall = v),
         ),
         _CapabilitySwitch(
-          icon: Icons.psychology_rounded,
+          icon: LucideIcons.brain,
           label: l10n.modelProviderBadgeReasoning,
           value: _reasoning,
           onChanged: (v) => setState(() => _reasoning = v),
         ),
         _CapabilitySwitch(
-          icon: Icons.image_rounded,
+          icon: LucideIcons.image,
           label: l10n.modelProviderBadgeVision,
           value: _attachment,
           onChanged: (v) => setState(() => _attachment = v),
@@ -397,7 +397,7 @@ class _AssistantProviderEditPageState
                         textInputAction: TextInputAction.next,
                         decoration: _fieldDecoration(
                           hint: l10n.modelProviderNameHint,
-                          icon: Icons.badge_outlined,
+                          icon: LucideIcons.idCard,
                         ),
                         validator: (v) => (v ?? '').trim().isEmpty
                             ? l10n.modelProviderNeedName
@@ -416,10 +416,10 @@ class _AssistantProviderEditPageState
                           enableInteractiveSelection: !locked,
                           decoration: _fieldDecoration(
                             hint: l10n.modelProviderBaseUrlHint,
-                            icon: Icons.link_rounded,
+                            icon: LucideIcons.link,
                             suffixIcon: locked
                                 ? const Icon(
-                                    Icons.lock_outline_rounded,
+                                    LucideIcons.lock,
                                     size: 18,
                                   )
                                 : null,
@@ -437,14 +437,14 @@ class _AssistantProviderEditPageState
                           hint: _keyConfigured
                               ? l10n.modelProviderApiKeyHintSet
                               : l10n.modelProviderApiKeyHintUnset,
-                          icon: Icons.key_rounded,
+                          icon: LucideIcons.key,
                           suffixIcon: IconButton(
                             onPressed: () =>
                                 setState(() => _obscureKey = !_obscureKey),
                             icon: Icon(
                               _obscureKey
-                                  ? Icons.visibility_rounded
-                                  : Icons.visibility_off_rounded,
+                                  ? LucideIcons.eye
+                                  : LucideIcons.eyeOff,
                             ),
                           ),
                         ),
@@ -455,7 +455,7 @@ class _AssistantProviderEditPageState
                         alignment: Alignment.centerLeft,
                         child: TextButton.icon(
                           onPressed: _openApiKeyUrl,
-                          icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                          icon: const Icon(LucideIcons.externalLink, size: 18),
                           label: Text(l10n.modelProviderGetApiKey),
                         ),
                       ),
@@ -465,7 +465,7 @@ class _AssistantProviderEditPageState
                       child: TextFormField(
                         controller: _model,
                         decoration: _fieldDecoration(
-                          icon: Icons.memory_rounded,
+                          icon: LucideIcons.cpu,
                         ),
                         validator: (v) => (v ?? '').trim().isEmpty
                             ? l10n.modelProviderNeedModel
@@ -544,18 +544,18 @@ class _ModelTile extends StatelessWidget {
     final l10n = context.l10n;
     final badges = <Widget>[
       if (model.toolCall)
-        _Badge(icon: Icons.build_rounded, text: l10n.modelProviderBadgeTools),
+        _Badge(icon: LucideIcons.wrench, text: l10n.modelProviderBadgeTools),
       if (model.reasoning)
         _Badge(
-          icon: Icons.psychology_rounded,
+          icon: LucideIcons.brain,
           text: l10n.modelProviderBadgeReasoning,
         ),
       if (model.attachment)
-        _Badge(icon: Icons.image_rounded, text: l10n.modelProviderBadgeVision),
+        _Badge(icon: LucideIcons.image, text: l10n.modelProviderBadgeVision),
       if (_formatContext(model.contextLimit) case final ctx?)
-        _Badge(icon: Icons.unfold_more_rounded, text: ctx),
+        _Badge(icon: LucideIcons.chevronsUpDown, text: ctx),
       if (_formatPrice(model.inputCost, model.outputCost) case final price?)
-        _Badge(icon: Icons.payments_outlined, text: price),
+        _Badge(icon: LucideIcons.banknote, text: price),
     ];
 
     return Padding(
@@ -603,7 +603,7 @@ class _ModelTile extends StatelessWidget {
                   top: 10,
                   right: 10,
                   child: Icon(
-                    Icons.check_circle_rounded,
+                    LucideIcons.circleCheck,
                     color: scheme.primary,
                     size: 20,
                   ),

@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class MoodiaryLoading extends StatelessWidget {
   const MoodiaryLoading({super.key, this.size = 24, this.color});
@@ -51,7 +52,7 @@ class _MoodiarySyncingState extends State<MoodiarySyncing>
             child: child,
           );
         },
-        child: const Icon(Icons.sync_rounded),
+        child: const Icon(LucideIcons.refreshCw),
       ),
     );
   }

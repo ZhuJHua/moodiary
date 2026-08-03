@@ -35,6 +35,7 @@ import 'package:flutter/services.dart' show DeviceOrientation, HapticFeedback;
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../basic/loading.dart';
 import 'video_ambient_controller.dart';
@@ -699,7 +700,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
                   top: MediaQuery.paddingOf(context).top + 8,
                   left: 8,
                   child: _RoundIcon(
-                    icon: Icons.close_rounded,
+                    icon: LucideIcons.x,
                     tooltip: l10n.videoPlayerClose,
                     onTap: _close,
                   ),
@@ -753,10 +754,10 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
               final completed = state is VideoCompleted;
               return _RoundIcon(
                 icon: completed
-                    ? Icons.replay_rounded
+                    ? LucideIcons.rotateCcw
                     : (state.isPlayIntent
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded),
+                          ? LucideIcons.pause
+                          : LucideIcons.play),
                 tooltip: completed
                     ? l10n.videoPlayerReplay
                     : (state.isPlayIntent
@@ -850,7 +851,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.error_outline_rounded,
+                LucideIcons.circleAlert,
                 color: Colors.white70,
                 size: 34,
               ),
@@ -879,8 +880,8 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
         VideoCompleted() || VideoReady() => Center(
           child: _RoundIcon(
             icon: state is VideoCompleted
-                ? Icons.replay_rounded
-                : Icons.play_arrow_rounded,
+                ? LucideIcons.rotateCcw
+                : LucideIcons.play,
             tooltip: state is VideoCompleted
                 ? l10n.videoPlayerReplay
                 : l10n.videoPlayerPlay,
@@ -1057,7 +1058,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
-                            Icons.fast_forward_rounded,
+                            LucideIcons.fastForward,
                             color: Colors.white,
                             size: 18,
                           ),
@@ -1558,11 +1559,11 @@ class _AmbientBar extends StatelessWidget {
   IconData _iconFor(bool isBrightness, double v) {
     if (isBrightness) {
       return v < 0.5
-          ? Icons.brightness_low_rounded
-          : Icons.brightness_high_rounded;
+          ? LucideIcons.sunDim
+          : LucideIcons.sun;
     }
-    if (v <= 0) return Icons.volume_off_rounded;
-    return v < 0.5 ? Icons.volume_down_rounded : Icons.volume_up_rounded;
+    if (v <= 0) return LucideIcons.volumeX;
+    return v < 0.5 ? LucideIcons.volume1 : LucideIcons.volume2;
   }
 }
 

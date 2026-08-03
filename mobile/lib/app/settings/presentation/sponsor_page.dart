@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 class SponsorPage extends StatelessWidget {
   const SponsorPage({super.key});
@@ -20,7 +21,7 @@ class SponsorPage extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         children: [
           Icon(
-            Icons.favorite,
+            LucideIcons.heart,
             size: 48,
             color: theme.colorScheme.primary,
           ),
@@ -41,14 +42,14 @@ class SponsorPage extends StatelessWidget {
           FilledButton.icon(
             onPressed: () =>
                 _open(context, 'https://github.com/sponsors/ZhuJHua'),
-            icon: const Icon(Icons.open_in_new),
+            icon: const Icon(LucideIcons.externalLink),
             label: const Text('GitHub Sponsors'),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () =>
                 _open(context, 'https://afdian.com/a/ZhuJHua'),
-            icon: const Icon(Icons.open_in_new),
+            icon: const Icon(LucideIcons.externalLink),
             label: const Text('爱发电'),
           ),
         ],

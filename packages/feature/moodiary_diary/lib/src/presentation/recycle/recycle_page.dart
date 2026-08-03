@@ -20,7 +20,7 @@ class RecyclePage extends ConsumerWidget {
                 ? const SizedBox.shrink()
                 : IconButton(
                     tooltip: '清空回收站',
-                    icon: const Icon(Icons.delete_sweep_outlined),
+                    icon: const Icon(LucideIcons.eraser),
                     onPressed: () => _onClear(context, ref, list.length),
                   ),
             orElse: () => const SizedBox.shrink(),
@@ -111,7 +111,7 @@ class _Empty extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.delete_outline, size: 48),
+          const Icon(LucideIcons.trash2, size: 48),
           const SizedBox(height: 12),
           Text(
             '回收站为空',
@@ -172,7 +172,7 @@ class _RecycleTile extends StatelessWidget {
               children: [
                 TextButton.icon(
                   onPressed: onRestore,
-                  icon: const Icon(Icons.restore),
+                  icon: const Icon(LucideIcons.undo2),
                   label: const Text('恢复'),
                 ),
                 const SizedBox(width: 4),
@@ -181,7 +181,7 @@ class _RecycleTile extends StatelessWidget {
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.error,
                   ),
-                  icon: const Icon(Icons.delete_forever_outlined),
+                  icon: const Icon(LucideIcons.trash2),
                   label: const Text('彻底删除'),
                 ),
               ],

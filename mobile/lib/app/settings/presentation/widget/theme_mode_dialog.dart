@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 class ThemeModeDialog extends ConsumerWidget {
   const ThemeModeDialog({super.key});
@@ -16,19 +17,19 @@ class ThemeModeDialog extends ConsumerWidget {
           children: [
             _Option(
               selected: mode == 0,
-              icon: Icons.brightness_auto_outlined,
+              icon: LucideIcons.sunMoon,
               label: '跟随系统',
               onTap: () => _select(context, ref, 0),
             ),
             _Option(
               selected: mode == 1,
-              icon: Icons.light_mode_outlined,
+              icon: LucideIcons.sun,
               label: '浅色',
               onTap: () => _select(context, ref, 1),
             ),
             _Option(
               selected: mode == 2,
-              icon: Icons.dark_mode_outlined,
+              icon: LucideIcons.moon,
               label: '深色',
               onTap: () => _select(context, ref, 2),
             ),
@@ -66,7 +67,7 @@ class _Option extends StatelessWidget {
       onPressed: onTap,
       child: Row(
         children: [
-          Icon(selected ? Icons.check : icon),
+          Icon(selected ? LucideIcons.check : icon),
           const SizedBox(width: 8),
           Text(label),
         ],

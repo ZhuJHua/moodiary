@@ -82,9 +82,9 @@ void main() {
       host(
         selected: null,
         onSelected: (_) {},
-        trailing: const Icon(Icons.segment_rounded),
+        trailing: const Icon(LucideIcons.alignLeft),
       ),
     );
-    expect(find.byIcon(Icons.segment_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.alignLeft), findsOneWidget);
   });
 }

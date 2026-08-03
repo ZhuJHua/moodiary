@@ -302,7 +302,7 @@ class _AddFontCard extends StatelessWidget {
             width: 72,
             height: 72,
             child: Center(
-              child: Icon(Icons.add_rounded, color: scheme.onSurfaceVariant),
+              child: Icon(LucideIcons.plus, color: scheme.onSurfaceVariant),
             ),
           ),
         ),

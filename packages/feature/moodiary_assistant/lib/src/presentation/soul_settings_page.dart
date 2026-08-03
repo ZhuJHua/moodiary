@@ -82,7 +82,7 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
                       padding: const EdgeInsets.all(12),
                       child: Row(
                         children: [
-                          Icon(Icons.favorite_outline, color: scheme.primary),
+                          Icon(LucideIcons.heart, color: scheme.primary),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -117,7 +117,7 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
                     alignment: AlignmentDirectional.centerStart,
                     child: TextButton.icon(
                       onPressed: _reset,
-                      icon: const Icon(Icons.restart_alt_rounded),
+                      icon: const Icon(LucideIcons.rotateCcw),
                       label: Text(l10n.assistantSoulReset),
                     ),
                   ),

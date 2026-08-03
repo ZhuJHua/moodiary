@@ -82,7 +82,7 @@ class SearchResultCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Icon(Icons.schedule_rounded, size: 13, color: scheme.outline),
+                  Icon(LucideIcons.clock, size: 13, color: scheme.outline),
                   const SizedBox(width: 4),
                   Text(
                     TimeFormat.mediumDate(diary.time),

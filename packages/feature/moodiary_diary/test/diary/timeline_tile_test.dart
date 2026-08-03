@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons, qweatherIcon;
 
 Diary diary({
   String title = 'T',
@@ -106,7 +107,7 @@ void main() {
     await t.pumpWidget(
       wrap(tile(category: cat(), selecting: true, selected: true)),
     );
-    expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.circleCheck), findsOneWidget);
     expect(find.text('work'), findsNothing);
   });
 
@@ -126,8 +127,8 @@ void main() {
     expect(find.text('#旅行'), findsOneWidget);
     expect(find.text('#海'), findsOneWidget);
     expect(find.text('厦门 环岛路'), findsOneWidget);
-    expect(find.byIcon(Icons.mic_none_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.videocam_outlined), findsOneWidget);
+    expect(find.byIcon(LucideIcons.mic), findsOneWidget);
+    expect(find.byIcon(LucideIcons.video), findsOneWidget);
   });
 
   testWidgets('extra tags collapse into a +N counter', (t) async {
@@ -229,5 +230,23 @@ void main() {
     // 越界值不该抛，钳到端点。
     expect(diaryMoodColor(-1), diaryMoodColor(0));
     expect(diaryMoodColor(2), diaryMoodColor(1));
+  });
+
+  testWidgets('天气图标取和风天气码，不是通用的云', (tester) async {
+    // weather[0] 存的就是和风的天气码，而天气数据本身也来自和风 —— 画通用云等于
+    // 把这条信息丢了。101 = 多云。
+    await tester.pumpWidget(
+      wrap(tile(d: diary(weather: const ['101', '26', '多云']))),
+    );
+    expect(find.byIcon(qweatherIcon('101')!), findsOneWidget);
+    expect(find.byIcon(LucideIcons.cloud), findsNothing);
+  });
+
+  testWidgets('认不出的天气码退回通用的云', (tester) async {
+    // 和风将来加了新码、或老日记存了脏值时不能画成豆腐块。
+    await tester.pumpWidget(
+      wrap(tile(d: diary(weather: const ['nope', '26', '?']))),
+    );
+    expect(find.byIcon(LucideIcons.cloud), findsOneWidget);
   });
 }

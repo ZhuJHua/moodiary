@@ -202,8 +202,8 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
           leading: IconButton(
             icon: Icon(
               _centers.length > 1
-                  ? Icons.arrow_back_rounded
-                  : Icons.close_rounded,
+                  ? LucideIcons.arrowLeft
+                  : LucideIcons.x,
             ),
             onPressed: () {
               if (!_popCenter()) Navigator.of(context).pop();
@@ -330,7 +330,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
                 backgroundColor: cs.surfaceContainerHigh,
                 foregroundColor: cs.onSurfaceVariant,
                 onPressed: _canvas.fit,
-                child: const Icon(Icons.my_location_rounded),
+                child: const Icon(LucideIcons.focus),
               ),
             ),
           ),

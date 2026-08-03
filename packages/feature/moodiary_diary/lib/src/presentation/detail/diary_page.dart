@@ -432,17 +432,17 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                   children: [
                     IconButton(
                       tooltip: '主页',
-                      icon: const Icon(Icons.home_rounded),
+                      icon: const Icon(LucideIcons.house),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     IconButton(
                       tooltip: '后退',
-                      icon: const Icon(Icons.arrow_back_rounded),
+                      icon: const Icon(LucideIcons.arrowLeft),
                       onPressed: _hops.atRoot ? null : () => _goHistory(-1),
                     ),
                     IconButton(
                       tooltip: '前进',
-                      icon: const Icon(Icons.arrow_forward_rounded),
+                      icon: const Icon(LucideIcons.arrowRight),
                       onPressed: _hops.peek(1) == null
                           ? null
                           : () => _goHistory(1),
@@ -458,7 +458,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             if (diary != null && _mode == _Mode.edit)
               IconButton(
                 tooltip: '保存',
-                icon: const Icon(Icons.check_rounded),
+                icon: const Icon(LucideIcons.check),
                 onPressed: _saveAndExit,
               ),
             // 只读态 + 可编辑（tiptap）：✏️ 进入编辑。旧格式不可编辑，不显示。
@@ -467,20 +467,20 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                 DiaryType.fromValue(diary.type).isEditable)
               IconButton(
                 tooltip: '编辑',
-                icon: const Icon(Icons.edit_outlined),
+                icon: const Icon(LucideIcons.squarePen),
                 onPressed: _enterEdit,
               ),
             // 分享仅在只读预览态显示（编辑态不出现）。
             if (diary != null && _mode == _Mode.read)
               IconButton(
                 tooltip: '分享',
-                icon: const Icon(Icons.ios_share_rounded),
+                icon: const Icon(LucideIcons.share),
                 onPressed: () => ShareRoute(diaryId: diary.id).push(context),
               ),
             if (headings.isNotEmpty)
               IconButton(
                 tooltip: '目录',
-                icon: const Icon(Icons.toc_rounded),
+                icon: const Icon(LucideIcons.tableOfContents),
                 onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
               ),
           ],
@@ -522,7 +522,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final segs = <Widget>[
       if (showWords)
         _pillSeg(
-          Icons.notes_rounded,
+          LucideIcons.text,
           '${diary.contentText.runes.length} 字',
           scheme.onSurfaceVariant,
         ),
@@ -530,7 +530,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         ValueListenableBuilder<int>(
           valueListenable: _elapsed,
           builder: (_, sec, _) => _pillSeg(
-            Icons.timer_outlined,
+            LucideIcons.timer,
             _fmtDuration(sec),
             scheme.onSurfaceVariant,
           ),
@@ -600,12 +600,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
           ],
         );
       case 'saved':
-        return _pillSeg(Icons.check_circle_rounded, '已保存', scheme.primary);
+        return _pillSeg(LucideIcons.circleCheck, '已保存', scheme.primary);
       case 'failed':
-        return _pillSeg(Icons.error_rounded, '未保存', scheme.error);
+        return _pillSeg(LucideIcons.circleAlert, '未保存', scheme.error);
       default:
         return _pillSeg(
-          Icons.cloud_done_rounded,
+          LucideIcons.cloudCheck,
           '自动保存',
           scheme.onSurfaceVariant,
         );
@@ -773,7 +773,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       Row(
         children: [
           Icon(
-            Icons.access_time,
+            LucideIcons.clock,
             size: 16,
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -806,7 +806,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         Row(
           children: [
             Icon(
-              Icons.cloud_outlined,
+              // 天气来自和风，图标跟着数据源走；未知码退回通用的云。
+              qweatherIcon(diary.weather[0]) ?? LucideIcons.cloud,
               size: 16,
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -838,7 +839,7 @@ class _MoodChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.mood, size: 16, color: color),
+          Icon(LucideIcons.smile, size: 16, color: color),
           const SizedBox(width: 4),
           Text('${(value * 100).toStringAsFixed(0)}%'),
         ],
@@ -873,7 +874,7 @@ class _TocDrawer extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: Row(
                 children: [
-                  Icon(Icons.toc_rounded, size: 20, color: scheme.primary),
+                  Icon(LucideIcons.tableOfContents, size: 20, color: scheme.primary),
                   const SizedBox(width: 10),
                   Text(
                     '目录',
@@ -1070,7 +1071,7 @@ class _LinksPanelState extends State<_LinksPanel> {
           children: [
             Row(
               children: [
-                Icon(Icons.link_rounded, size: 18, color: scheme.primary),
+                Icon(LucideIcons.link, size: 18, color: scheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   context.l10n.graphLinks,
@@ -1081,7 +1082,7 @@ class _LinksPanelState extends State<_LinksPanel> {
                 const SizedBox(width: 8),
                 if (_out.isNotEmpty)
                   _CountPill(
-                    icon: Icons.north_east_rounded,
+                    icon: LucideIcons.arrowUpRight,
                     count: _out.length,
                     background: scheme.secondaryContainer,
                     foreground: scheme.onSecondaryContainer,
@@ -1089,7 +1090,7 @@ class _LinksPanelState extends State<_LinksPanel> {
                 if (_in.isNotEmpty) ...[
                   const SizedBox(width: 4),
                   _CountPill(
-                    icon: Icons.south_west_rounded,
+                    icon: LucideIcons.arrowDownLeft,
                     count: _in.length,
                     background: scheme.tertiaryContainer,
                     foreground: scheme.onTertiaryContainer,
@@ -1100,7 +1101,7 @@ class _LinksPanelState extends State<_LinksPanel> {
                   tooltip: context.l10n.graphLocal,
                   iconSize: 20,
                   visualDensity: VisualDensity.compact,
-                  icon: Icon(Icons.hub_rounded, color: scheme.onSurfaceVariant),
+                  icon: Icon(LucideIcons.waypoints, color: scheme.onSurfaceVariant),
                   onPressed: () =>
                       DiaryGraphRoute(diaryId: widget.diaryId).push(context),
                 ),
@@ -1235,8 +1236,8 @@ class _LinkTile extends StatelessWidget {
         ),
         child: Icon(
           outgoing
-              ? Icons.north_east_rounded
-              : Icons.subdirectory_arrow_left_rounded,
+              ? LucideIcons.arrowUpRight
+              : LucideIcons.cornerDownLeft,
           size: 18,
           color: outgoing ? scheme.primary : scheme.onSurfaceVariant,
         ),
@@ -1258,7 +1259,7 @@ class _LinkTile extends StatelessWidget {
               ),
             ),
       trailing: Icon(
-        Icons.chevron_right_rounded,
+        LucideIcons.chevronRight,
         size: 18,
         color: scheme.onSurfaceVariant,
       ),
@@ -1317,12 +1318,12 @@ class _DetailSheet extends ConsumerWidget {
             children: [
               IconButton.filledTonal(
                 onPressed: onPickDate,
-                icon: const Icon(Icons.date_range),
+                icon: const Icon(LucideIcons.calendarDays),
               ),
               const SizedBox(width: 8),
               IconButton.filledTonal(
                 onPressed: onPickTime,
-                icon: const Icon(Icons.access_time),
+                icon: const Icon(LucideIcons.clock),
               ),
             ],
           ),
@@ -1334,7 +1335,7 @@ class _DetailSheet extends ConsumerWidget {
               : '未获取',
           trailing: IconButton.filledTonal(
             onPressed: onFetchWeather,
-            icon: const Icon(Icons.location_on),
+            icon: const Icon(LucideIcons.mapPin),
           ),
         ),
         SettingListTile(
@@ -1342,7 +1343,7 @@ class _DetailSheet extends ConsumerWidget {
           subtitle: categoryLabel,
           trailing: IconButton.filledTonal(
             onPressed: onPickCategory,
-            icon: const Icon(Icons.category),
+            icon: const Icon(LucideIcons.folders),
           ),
         ),
         SettingListTile(
@@ -1366,7 +1367,7 @@ class _DetailSheet extends ConsumerWidget {
                 ),
           trailing: IconButton.filledTonal(
             onPressed: onAddTag,
-            icon: const Icon(Icons.tag),
+            icon: const Icon(LucideIcons.tagPlus),
           ),
         ),
         SettingListTile(

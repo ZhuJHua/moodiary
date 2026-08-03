@@ -41,7 +41,6 @@ dependencies:
   file_picker: 12.0.0-beta.7
   provider: 6.1.5+1
 
-  unicons: 3.0.0
   flutter_markdown_plus: 1.0.12
 
   flutter_displaymode: 0.7.0
@@ -75,11 +74,6 @@ flutter_native_splash:
   web: false
 
 flutter:
-  fonts:
-    - family: qweather
-      fonts:
-        - asset: assets/fonts/qweather-icons.ttf
-
   assets:
     - assets/icon/dark/
     - assets/icon/light/

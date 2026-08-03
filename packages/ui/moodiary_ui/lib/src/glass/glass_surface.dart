@@ -34,6 +34,18 @@ class MoodiaryGlassSurface extends StatelessWidget {
     this.shadows,
   });
 
+  /// 默认投影。底栏那颗动作按钮不是玻璃却要跟胶囊同款，所以抽出来共用 ——
+  /// 两边各写一份迟早会飘。
+  static List<BoxShadow> defaultShadows(Brightness brightness) => [
+    BoxShadow(
+      color: Colors.black.withValues(
+        alpha: brightness == Brightness.dark ? 0.42 : 0.12,
+      ),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final config = MoodiaryGlass.of(context);
@@ -62,15 +74,7 @@ class MoodiaryGlassSurface extends StatelessWidget {
       painter: _GlassShadowPainter(
         shape: shape,
         textDirection: Directionality.maybeOf(context),
-        shadows:
-            shadows ??
-            [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: dark ? 0.42 : 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
+        shadows: shadows ?? defaultShadows(scheme.brightness),
       ),
       child: ClipPath(
         // 裁剪必须是 BackdropFilter 的**祖先**：反过来的话模糊会溢出圆角，

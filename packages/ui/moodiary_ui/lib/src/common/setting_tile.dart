@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../basic/alert.dart';
 
@@ -264,7 +265,7 @@ class SettingInputTile extends StatelessWidget {
       subtitle: subtitle ?? (hasValue ? '已配置' : '未配置'),
       trailing: IconButton.filled(
         tooltip: '输入',
-        icon: Icon(Icons.input_rounded, color: scheme.onPrimary),
+        icon: Icon(LucideIcons.squarePen, color: scheme.onPrimary),
         onPressed: () => _showInputDialog(context),
       ),
     );

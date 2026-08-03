@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 Diary diary({
   String title = 'T',
@@ -137,7 +138,7 @@ void main() {
         ),
       ),
     );
-    expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.circleCheck), findsOneWidget);
     expect(find.text('#a'), findsNothing);
   });
 
@@ -146,7 +147,7 @@ void main() {
       wrap(DiaryFeedTile(diary: diary(audios: const ['a.m4a']))),
     );
     expect(t.takeException(), isNull);
-    expect(find.byIcon(Icons.mic_none_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.mic), findsOneWidget);
   });
 
   testWidgets(
@@ -243,7 +244,7 @@ void main() {
       ),
     );
     // 有图时波形条让位给图片，语音只剩元信息行里的标记 —— 不能连它也没有。
-    expect(find.byIcon(Icons.mic_none_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.mic), findsOneWidget);
   });
 
   testWidgets('the shown timestamp follows the sort key', (t) async {
@@ -286,6 +287,6 @@ void main() {
     );
     expect(t.takeException(), isNull);
     // 时长没有存进模型，所以只标「这是视频」。
-    expect(find.byIcon(Icons.play_circle_fill_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.circlePlay), findsOneWidget);
   });
 }

@@ -84,7 +84,7 @@ class _AssistantProviderListPageState
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'assistantProviderFab',
         onPressed: () => const AssistantProviderPickerRoute().push(context),
-        icon: const Icon(Icons.add_rounded),
+        icon: const Icon(LucideIcons.plus),
         label: Text(l10n.modelProviderAdd),
       ),
       body: !_loaded
@@ -180,7 +180,7 @@ class _ProviderCard extends StatelessWidget {
                               ),
                             ),
                             child: Icon(
-                              Icons.check_rounded,
+                              LucideIcons.check,
                               size: 11,
                               color: scheme.onPrimary,
                             ),
@@ -229,19 +229,19 @@ class _ProviderCard extends StatelessWidget {
                     MoodiaryMenuEntry(
                       value: 'edit',
                       label: l10n.diaryEdit,
-                      icon: Icons.edit_outlined,
+                      icon: LucideIcons.squarePen,
                     ),
                     MoodiaryMenuEntry(
                       value: 'delete',
                       label: l10n.diaryDelete,
-                      icon: Icons.delete_outline,
+                      icon: LucideIcons.trash2,
                       isDestructive: true,
                     ),
                   ],
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Icon(
-                      Icons.more_vert_rounded,
+                      LucideIcons.ellipsisVertical,
                       color: scheme.onSurfaceVariant,
                     ),
                   ),
@@ -287,7 +287,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.cloud_off_rounded, size: 48, color: scheme.outline),
+          Icon(LucideIcons.cloudOff, size: 48, color: scheme.outline),
           const SizedBox(height: 12),
           Text(
             l10n.modelProviderEmptyTitle,

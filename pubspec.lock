@@ -845,14 +845,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  font_awesome_flutter:
-    dependency: transitive
-    description:
-      name: font_awesome_flutter
-      sha256: "09dcde8ab90ffae1a7d65ff2ef96fc62a17ad9d0ce7c127b317ded676b0d5935"
-      url: "https://pub.dev"
-    source: hosted
-    version: "11.0.0"
   fpdart:
     dependency: transitive
     description:
@@ -1324,6 +1316,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.0"
+  lucide_icons_flutter:
+    dependency: transitive
+    description:
+      name: lucide_icons_flutter
+      sha256: "234155b10641b8ef7bab8a077b93ea6c92fe849c06740cf89dcd86dcf350934f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.15"
   markdown:
     dependency: transitive
     description:
@@ -2225,14 +2225,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.9"
-  unicons:
-    dependency: transitive
-    description:
-      name: unicons
-      sha256: f3eab9d87c226415ef857cfd2167e1d12ad81ea1f5783b46cf644224fea4eab7
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
   universal_io:
     dependency: transitive
     description:

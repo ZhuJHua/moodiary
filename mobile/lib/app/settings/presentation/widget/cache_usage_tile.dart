@@ -21,7 +21,7 @@ class CacheUsageTile extends ConsumerWidget {
     return SettingListTile(
       isFirst: isFirst,
       isLast: isLast,
-      leading: const Icon(Icons.cleaning_services_rounded),
+      leading: const Icon(LucideIcons.brushCleaning),
       title: '清理缓存',
       trailing: Text(
         async.when(

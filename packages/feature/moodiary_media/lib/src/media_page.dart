@@ -28,9 +28,9 @@ String _typeLabel(BuildContext c, MediaType t) => switch (t) {
 };
 
 IconData _typeIcon(MediaType t) => switch (t) {
-  MediaType.image => Icons.image_rounded,
-  MediaType.audio => Icons.audiotrack_rounded,
-  MediaType.video => Icons.movie_rounded,
+  MediaType.image => LucideIcons.image,
+  MediaType.audio => LucideIcons.music,
+  MediaType.video => LucideIcons.film,
 };
 
 String _countLabel(BuildContext c, MediaType t, int n) => switch (t) {
@@ -102,7 +102,7 @@ class _CleanupButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
       tooltip: context.l10n.mediaDeleteUseLessFile,
-      icon: const Icon(Icons.cleaning_services_rounded),
+      icon: const Icon(LucideIcons.brushCleaning),
       onPressed: () => runMediaCleanup(context, ref),
     );
   }
@@ -349,7 +349,7 @@ class _Thumb extends StatelessWidget {
               );
             },
             errorBuilder: (context, _, _) => Icon(
-              Icons.broken_image_outlined,
+              LucideIcons.imageOff,
               color: context.colorScheme.onSurfaceVariant,
             ),
           ),
@@ -418,7 +418,7 @@ class _VideoTile extends StatelessWidget {
             DecoratedBox(decoration: BoxDecoration(color: Colors.black26)),
             Center(
               child: Icon(
-                Icons.play_circle_fill_rounded,
+                LucideIcons.circlePlay,
                 color: Colors.white,
                 size: 36,
               ),
@@ -438,8 +438,8 @@ class _Empty extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          FaIcon(
-            FontAwesomeIcons.boxArchive,
+          Icon(
+            LucideIcons.packageOpen,
             size: 64,
             color: scheme.onSurfaceVariant,
           ),

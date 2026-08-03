@@ -7,6 +7,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:record/record.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 /// 录音底栏。保存返回文件名（落地在 `getRealPath('audio', ...)`），取消返回 null。
 /// 直接录到正式目录、不走缓存中转，取消 / 失败时主动清理文件。
@@ -207,7 +208,7 @@ class _RecordSheetState extends State<RecordSheet>
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         icon: const Icon(
-                          Icons.circle,
+                          LucideIcons.circleDot,
                           size: 48,
                           color: Colors.redAccent,
                         ),

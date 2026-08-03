@@ -82,14 +82,14 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
             SimpleDialogOption(
               onPressed: () => _pickFromGallery(sheetContext),
               child: _DialogRow(
-                icon: Icons.photo_library_outlined,
+                icon: LucideIcons.images,
                 label: context.l10n.editPickImageFromGallery,
               ),
             ),
             SimpleDialogOption(
               onPressed: () => _pickFromCamera(sheetContext),
               child: _DialogRow(
-                icon: Icons.camera_alt_outlined,
+                icon: LucideIcons.camera,
                 label: context.l10n.editPickImageFromCamera,
               ),
             ),
@@ -166,14 +166,14 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
             SimpleDialogOption(
               onPressed: () => _pickVideo(sheetContext, fromCamera: false),
               child: _DialogRow(
-                icon: Icons.photo_library_outlined,
+                icon: LucideIcons.images,
                 label: context.l10n.editPickVideoFromGallery,
               ),
             ),
             SimpleDialogOption(
               onPressed: () => _pickVideo(sheetContext, fromCamera: true),
               child: _DialogRow(
-                icon: Icons.camera_alt_outlined,
+                icon: LucideIcons.camera,
                 label: context.l10n.editPickVideoFromCamera,
               ),
             ),
@@ -208,14 +208,14 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
             SimpleDialogOption(
               onPressed: () => _pickAudioFile(sheetContext),
               child: _DialogRow(
-                icon: Icons.audio_file_rounded,
+                icon: LucideIcons.fileAudio,
                 label: context.l10n.editPickAudioFromFile,
               ),
             ),
             SimpleDialogOption(
               onPressed: () => _recordAudio(sheetContext),
               child: _DialogRow(
-                icon: Icons.mic_rounded,
+                icon: LucideIcons.mic,
                 label: context.l10n.editPickAudioFromRecord,
               ),
             ),

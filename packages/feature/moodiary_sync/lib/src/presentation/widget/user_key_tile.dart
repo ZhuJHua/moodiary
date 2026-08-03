@@ -26,11 +26,11 @@ class UserKeyTile extends ConsumerWidget {
       isFirst: isFirst,
       isLast: isLast,
       title: '端到端加密',
-      leading: const Icon(Icons.key_rounded),
+      leading: const Icon(LucideIcons.key),
       subtitle: hasKey ? '已开启' : '未开启',
       trailing: IconButton.filled(
         tooltip: '管理加密',
-        icon: Icon(Icons.settings_rounded, color: scheme.onPrimary),
+        icon: Icon(LucideIcons.settings, color: scheme.onPrimary),
         onPressed: () => _showKeyManageSheet(context, ref, hasKey),
       ),
     );
@@ -152,7 +152,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
             children: [
             Row(
               children: [
-                Icon(Icons.key_rounded, color: scheme.primary),
+                Icon(LucideIcons.key, color: scheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   '加密管理',
@@ -160,7 +160,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(LucideIcons.x),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -176,7 +176,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
                   hintText: '请输入当前密码进行验证',
                   border: const OutlineInputBorder(),
                   suffixIcon: _currentVerified
-                      ? Icon(Icons.check_circle_rounded, color: scheme.primary)
+                      ? Icon(LucideIcons.circleCheck, color: scheme.primary)
                       : null,
                 ),
                 onChanged: (value) {
@@ -201,7 +201,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.verified_rounded, size: 18),
+                      : const Icon(LucideIcons.badgeCheck, size: 18),
                   label: const Text('验证'),
                   onPressed: _verifying ? null : _verifyCurrent,
                 ),
@@ -250,7 +250,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
                 if (widget.onRemove != null)
                   Expanded(
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.delete_outline_rounded),
+                      icon: const Icon(LucideIcons.trash2),
                       label: const Text('关闭加密'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: scheme.error,
@@ -270,7 +270,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
                 Expanded(
                   flex: widget.onRemove != null ? 2 : 1,
                   child: FilledButton.icon(
-                    icon: const Icon(Icons.save_rounded),
+                    icon: const Icon(LucideIcons.save),
                     label: const Text('保存'),
                     onPressed: () {
                       if (!_formKey.currentState!.validate()) return;

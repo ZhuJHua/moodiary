@@ -20,16 +20,13 @@ const double _kTrackInset = 6;
 /// 底栏是导航不是正文：字号缩放到这里封顶，否则 1.6× 下标签会把胶囊顶穿。
 const double _kMaxTextScale = 1.15;
 
+/// 一个 tab。只有一个图标 —— Lucide 是单线图标集，没有 Material 那种填充变体，
+/// 选中态由药丸和变色承担。
 class MoodiaryNavDestination {
   final Widget icon;
-  final Widget selectedIcon;
   final String label;
 
-  const MoodiaryNavDestination({
-    required this.icon,
-    required this.selectedIcon,
-    required this.label,
-  });
+  const MoodiaryNavDestination({required this.icon, required this.label});
 }
 
 /// 胶囊右侧那颗独立按钮。与 iOS 侧 `GlassBottomBar.extraButton` 对齐：它不是 tab，
@@ -179,6 +176,17 @@ class _Tab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
+    // 图标和标签同色，取所在背景的配对色：选中态整格都盖在药丸上 → onSecondaryContainer，
+    // 未选中坐在玻璃（surfaceContainer / High）上 → onSurfaceVariant。
+    //
+    // **别照抄 `_NavigationBarDefaultsM3`**：那边标签用 onSurface，是因为 M3 的药丸只包
+    // 图标、标签落在药丸外的底栏背景上，两者本来就在两个不同的背景上。我们的药丸铺满
+    // 整格，标签也在药丸上，跟着图标走才是对的配对。
+    //
+    // 已知代价：浅色主题下 onSecondaryContainer 与 onSurfaceVariant 同为 tone 30，经
+    // harmonized() 后对比度正好 1.00（六套主题里除 monochrome 全中）——选中态的前景色
+    // 其实不变色，全靠药丸在说话。M3 那边图标靠填充 / 描边两个字形补这一刀，而 Lucide
+    // 是单线图标集，没有这根柱子。铺满整格的药丸比 M3 只包图标的信号强得多，够用。
     final target = selected
         ? scheme.onSecondaryContainer
         : scheme.onSurfaceVariant;
@@ -206,9 +214,7 @@ class _Tab extends StatelessWidget {
                 children: [
                   IconTheme.merge(
                     data: IconThemeData(size: 21, color: color),
-                    child: selected
-                        ? destination.selectedIcon
-                        : destination.icon,
+                    child: destination.icon,
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -238,19 +244,26 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    Widget button = Material(
-      color: scheme.primary,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      elevation: 3,
-      shadowColor: Colors.black.withValues(alpha: 0.3),
-      child: InkWell(
-        onTap: action.onPressed,
-        child: SizedBox.square(
-          dimension: _kActionSize,
-          child: IconTheme.merge(
-            data: IconThemeData(size: 26, color: scheme.onPrimary),
-            child: Center(child: action.icon),
+    // 投影跟胶囊同款，所以不用 Material 的 elevation（那是另一套物理投影模型，
+    // 形状和衰减都对不上）。按钮本身不透明，直接让 ShapeDecoration 画就行 ——
+    // 玻璃那边要自绘挖空是因为投影会被 BackdropFilter 当背景采走，这里没这问题。
+    Widget button = DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: const CircleBorder(),
+        shadows: MoodiaryGlassSurface.defaultShadows(scheme.brightness),
+      ),
+      child: Material(
+        color: scheme.primary,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: action.onPressed,
+          child: SizedBox.square(
+            dimension: _kActionSize,
+            child: IconTheme.merge(
+              data: IconThemeData(size: 22, color: scheme.onPrimary),
+              child: Center(child: action.icon),
+            ),
           ),
         ),
       ),

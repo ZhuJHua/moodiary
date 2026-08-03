@@ -49,10 +49,10 @@ class _AnalyseBody extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         _StatGrid(items: [
-          ('日记总数', diaries.length.toString(), Icons.book_outlined),
-          ('本月', thisMonth.toString(), Icons.calendar_month_outlined),
-          ('心情均值', '${(moodAvg * 100).toStringAsFixed(0)}%', Icons.mood),
-          ('连续天数', '$streak', Icons.local_fire_department_outlined),
+          ('日记总数', diaries.length.toString(), LucideIcons.book),
+          ('本月', thisMonth.toString(), LucideIcons.calendarDays),
+          ('心情均值', '${(moodAvg * 100).toStringAsFixed(0)}%', LucideIcons.smile),
+          ('连续天数', '$streak', LucideIcons.flame),
         ]),
         const SizedBox(height: 24),
         Text(

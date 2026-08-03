@@ -87,14 +87,14 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
     return AppBar(
       leading: IconButton(
         tooltip: '取消',
-        icon: const Icon(Icons.close_rounded),
+        icon: const Icon(LucideIcons.x),
         onPressed: () => ref.read(diarySelectionProvider.notifier).clear(),
       ),
       title: Text('已选 $count'),
       actions: [
         IconButton(
           tooltip: '删除',
-          icon: const Icon(Icons.delete_outline_rounded),
+          icon: const Icon(LucideIcons.trash2),
           onPressed: count == 0 ? null : _deleteSelected,
         ),
       ],
@@ -113,7 +113,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
             // 有新建但还没同步上去的分类时点一下 —— 抽屉里才看得到详情。
             isLabelVisible: pending.newCategoryIds.isNotEmpty,
             smallSize: 7,
-            child: const Icon(Icons.menu_rounded),
+            child: const Icon(LucideIcons.menu),
           ),
         ),
       ),
@@ -122,11 +122,11 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       actions: [
         IconButton(
           tooltip: context.l10n.diarySearch,
-          icon: const Icon(Icons.search_rounded),
+          icon: const Icon(LucideIcons.search),
           onPressed: () => const DiarySearchRoute().push(context),
         ),
         // 知识图谱入口暂隐藏(功能保留,打磨后再放出):
-        // IconButton(icon: Icon(Icons.hub_rounded)) → DiaryGraphRoute().push
+        // IconButton(icon: Icon(LucideIcons.waypoints)) → DiaryGraphRoute().push
         const SyncStatusButton(),
         ValueListenableBuilder(
           valueListenable: MoodiaryKVs.homeViewMode.getNotifier(),
@@ -135,8 +135,8 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
             return IconButton(
               tooltip: context.l10n.diaryPageViewModeButton,
               icon: Icon(switch (viewModeType) {
-                ViewModeType.timeline => Icons.view_timeline_rounded,
-                ViewModeType.feed => Icons.view_agenda_outlined,
+                ViewModeType.timeline => LucideIcons.gitCommitVertical,
+                ViewModeType.feed => LucideIcons.layoutList,
               }),
               onPressed: () => ViewModeSheet.show(context),
             );

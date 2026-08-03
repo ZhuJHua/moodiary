@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 class S3FormSheet extends StatefulWidget {
   const S3FormSheet({super.key});
@@ -137,8 +138,8 @@ class _S3FormSheetState extends State<S3FormSheet> {
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureSecret
-                          ? Icons.visibility_off
-                          : Icons.visibility,
+                          ? LucideIcons.eyeOff
+                          : LucideIcons.eye,
                     ),
                     onPressed: () =>
                         setState(() => _obscureSecret = !_obscureSecret),

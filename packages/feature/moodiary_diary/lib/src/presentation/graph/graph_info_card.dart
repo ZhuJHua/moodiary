@@ -107,7 +107,7 @@ class GraphInfoCard extends StatelessWidget {
                                 const SizedBox(width: 8),
                                 _LinkChip(
                                   color: cs.primary,
-                                  icon: Icons.north_east_rounded,
+                                  icon: LucideIcons.arrowUpRight,
                                   count: outgoing,
                                 ),
                               ],
@@ -115,7 +115,7 @@ class GraphInfoCard extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 _LinkChip(
                                   color: cs.tertiary,
-                                  icon: Icons.south_west_rounded,
+                                  icon: LucideIcons.arrowDownLeft,
                                   count: incoming,
                                 ),
                               ],
@@ -130,13 +130,13 @@ class GraphInfoCard extends StatelessWidget {
                         iconSize: 20,
                         visualDensity: VisualDensity.compact,
                         icon: Icon(
-                          Icons.center_focus_strong_rounded,
+                          LucideIcons.crosshair,
                           color: cs.onSurfaceVariant,
                         ),
                         onPressed: onCenter,
                       ),
                     Icon(
-                      Icons.chevron_right_rounded,
+                      LucideIcons.chevronRight,
                       color: cs.onSurfaceVariant,
                     ),
                     if (onClose != null)
@@ -147,7 +147,7 @@ class GraphInfoCard extends StatelessWidget {
                         iconSize: 20,
                         visualDensity: VisualDensity.compact,
                         icon: Icon(
-                          Icons.close_rounded,
+                          LucideIcons.x,
                           color: cs.onSurfaceVariant,
                         ),
                         onPressed: onClose,

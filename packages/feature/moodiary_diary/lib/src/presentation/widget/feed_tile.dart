@@ -409,7 +409,7 @@ class _Thumb extends StatelessWidget {
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
             errorBuilder: (context, _, _) => Icon(
-              Icons.broken_image_outlined,
+              LucideIcons.imageOff,
               color: scheme.onSurfaceVariant,
             ),
           ),
@@ -445,7 +445,7 @@ class _VideoScrim extends StatelessWidget {
           left: 4,
           bottom: 3,
           child: Icon(
-            Icons.play_circle_fill_rounded,
+            LucideIcons.circlePlay,
             size: 14,
             color: Colors.white,
           ),
@@ -518,7 +518,7 @@ class _AudioBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.mic_none_rounded, size: 12, color: scheme.primary),
+          Icon(LucideIcons.mic, size: 12, color: scheme.primary),
           const SizedBox(width: 7),
           Expanded(
             child: Row(
@@ -618,18 +618,19 @@ class _MetaLine extends StatelessWidget {
       // 否则「配了图又录了音」的日记在信息流里没有任何语音痕迹。
       if (showAudioMark) ...[
         dot,
-        icon(Icons.mic_none_rounded),
+        icon(LucideIcons.mic),
         if (diary.audioName.length > 1)
           TextSpan(text: '${diary.audioName.length}'),
       ],
       if (hasWeather) ...[
         dot,
-        icon(Icons.cloud_outlined),
+        // 天气数据来自和风，图标就用和风自己那套天气码；码不认识才退回通用的云。
+        icon(qweatherIcon(diary.weather[0]) ?? LucideIcons.cloud),
         TextSpan(text: '${diary.weather[1]}°'),
       ],
       if (hasPlace) ...[
         dot,
-        icon(Icons.place_outlined),
+        icon(LucideIcons.mapPin),
         TextSpan(text: diary.position[2]),
       ],
     ];

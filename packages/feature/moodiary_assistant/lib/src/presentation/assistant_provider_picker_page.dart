@@ -74,7 +74,7 @@ class _AssistantProviderPickerPageState
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.refresh_rounded),
+                : const Icon(LucideIcons.rotateCw),
           ),
         ],
       ),
@@ -88,7 +88,7 @@ class _AssistantProviderPickerPageState
               onChanged: (v) => setState(() => _query = v),
               decoration: InputDecoration(
                 hintText: l10n.llmPickerSearchHint,
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: const Icon(LucideIcons.search),
                 filled: true,
                 isDense: true,
                 border: const OutlineInputBorder(
@@ -149,7 +149,7 @@ class _CustomTile extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: scheme.onSecondaryContainer,
           foregroundColor: scheme.secondaryContainer,
-          child: const Icon(Icons.tune_rounded, size: 20),
+          child: const Icon(LucideIcons.slidersHorizontal, size: 20),
         ),
         title: Text(
           l10n.llmPickerCustom,
@@ -164,7 +164,7 @@ class _CustomTile extends StatelessWidget {
           ),
         ),
         trailing: Icon(
-          Icons.chevron_right_rounded,
+          LucideIcons.chevronRight,
           color: scheme.onSecondaryContainer,
         ),
         onTap: onTap,
@@ -196,7 +196,7 @@ class _PresetCard extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        trailing: const Icon(Icons.chevron_right_rounded),
+        trailing: const Icon(LucideIcons.chevronRight),
         onTap: onTap,
       ),
     );
@@ -216,7 +216,7 @@ class _InlineError extends StatelessWidget {
       padding: const EdgeInsets.only(top: 32),
       child: Column(
         children: [
-          Icon(Icons.cloud_off_rounded, size: 40, color: scheme.outline),
+          Icon(LucideIcons.cloudOff, size: 40, color: scheme.outline),
           const SizedBox(height: 12),
           Text(
             l10n.llmPickerLoadFailed,
@@ -227,7 +227,7 @@ class _InlineError extends StatelessWidget {
           const SizedBox(height: 12),
           FilledButton.tonalIcon(
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(LucideIcons.rotateCw),
             label: Text(l10n.llmPickerRetry),
           ),
         ],

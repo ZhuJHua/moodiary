@@ -23,7 +23,7 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
     return SettingListTile(
       isFirst: widget.isFirst,
       isLast: widget.isLast,
-      leading: const Icon(Icons.healing_rounded),
+      leading: const Icon(LucideIcons.bandage),
       title: '数据修复',
       subtitle: '检查并修正卡片预览、媒体引用与失效分类',
       trailing: _repairing
@@ -32,7 +32,7 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
               height: 20,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : const Icon(Icons.chevron_right_rounded),
+          : const Icon(LucideIcons.chevronRight),
       onTap: _repairing ? null : _confirmAndRepair,
     );
   }

@@ -87,7 +87,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
               builder: (context, value, _) {
                 if (value.text.isEmpty) return const SizedBox.shrink();
                 return IconButton(
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(LucideIcons.x),
                   onPressed: _clearInput,
                 );
               },
@@ -173,7 +173,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           MoodiaryMenuEntry(value: p, label: _dateLabel(context, p)),
       ],
       child: _FilterChip(
-        icon: Icons.calendar_today_rounded,
+        icon: LucideIcons.calendar,
         label: _dateChipLabel(context, state),
         active: state.datePreset != DateRangePreset.all,
       ),
@@ -204,7 +204,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           MoodiaryMenuEntry(value: c.id, label: c.categoryName),
       ],
       child: _FilterChip(
-        icon: Icons.label_outline_rounded,
+        icon: LucideIcons.folder,
         label: label,
         active: state.categoryId != null,
       ),
@@ -220,7 +220,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           MoodiaryMenuEntry(value: s, label: _sortLabel(context, s)),
       ],
       child: _FilterChip(
-        icon: Icons.sort_rounded,
+        icon: LucideIcons.arrowUpDown,
         label: _sortLabel(context, state.sort),
         active: state.sort != SearchSort.relevance,
       ),
@@ -292,7 +292,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
     return _placeholder(
       context,
       key: 'empty',
-      icon: Icons.search_off_rounded,
+      icon: LucideIcons.searchX,
       text: context.l10n.searchNoResult,
     );
   }
@@ -308,7 +308,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           return _placeholder(
             context,
             key: 'history-empty',
-            icon: Icons.history_rounded,
+            icon: LucideIcons.history,
             text: context.l10n.searchHistoryEmpty,
           );
         }
@@ -329,7 +329,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                   const Spacer(),
                   TextButton.icon(
                     onPressed: _controller.clearHistory,
-                    icon: const Icon(Icons.delete_sweep_outlined, size: 18),
+                    icon: const Icon(LucideIcons.eraser, size: 18),
                     label: Text(context.l10n.searchHistoryClear),
                   ),
                 ],
@@ -341,7 +341,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                 children: [
                   for (final q in history)
                     InputChip(
-                      avatar: const Icon(Icons.history_rounded, size: 18),
+                      avatar: const Icon(LucideIcons.history, size: 18),
                       // 限宽 + 省略，避免超长查询（粘贴串 / 长 URL）撑破胶囊。
                       label: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 200),
@@ -432,7 +432,7 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
           child: Row(
             children: [
               Icon(
-                Icons.manage_search_rounded,
+                LucideIcons.textSearch,
                 size: 20,
                 color: scheme.onSecondaryContainer,
               ),
@@ -500,7 +500,7 @@ class _FilterChip extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 1),
-          Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: fg),
+          Icon(LucideIcons.chevronDown, size: 18, color: fg),
         ],
       ),
     );

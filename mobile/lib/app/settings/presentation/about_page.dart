@@ -80,7 +80,7 @@ class _AboutPageState extends State<AboutPage> {
                 children: [
                   SettingListTile(
                     isFirst: true,
-                    leading: const Icon(Icons.update_rounded),
+                    leading: const Icon(LucideIcons.refreshCw),
                     title: '检查更新',
                     trailing: Text(
                       appVersion,
@@ -93,41 +93,41 @@ class _AboutPageState extends State<AboutPage> {
                     },
                   ),
                   SettingListTile(
-                    leading: const Icon(Icons.source_rounded),
+                    leading: const Icon(LucideIcons.code),
                     title: '源码仓库',
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(LucideIcons.chevronRight),
                     onTap: () => _open('https://github.com/ZhuJHua/moodiary'),
                   ),
                   SettingListTile(
-                    leading: const Icon(Icons.file_copy_rounded),
+                    leading: const Icon(LucideIcons.scrollText),
                     title: '用户协议',
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(LucideIcons.chevronRight),
                     onTap: () => const AgreementRoute().push(context),
                   ),
                   SettingListTile(
-                    leading: const Icon(Icons.privacy_tip_rounded),
+                    leading: const Icon(LucideIcons.shieldAlert),
                     title: '隐私政策',
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(LucideIcons.chevronRight),
                     onTap: () => const PrivacyRoute().push(context),
                   ),
                   SettingListTile(
-                    leading: const Icon(Icons.bug_report_rounded),
+                    leading: const Icon(LucideIcons.bug),
                     title: '反馈 / 答疑',
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(LucideIcons.chevronRight),
                     onTap: () => _open('https://answer.moodiary.net'),
                   ),
                   SettingListTile(
                     isLast: true,
-                    leading: const Icon(Icons.attach_money_rounded),
+                    leading: const Icon(LucideIcons.handCoins),
                     title: '赞助',
-                    trailing: const Icon(Icons.chevron_right_rounded),
+                    trailing: const Icon(LucideIcons.chevronRight),
                     onTap: () => const SponsorRoute().push(context),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 32),
-            const _TechStackInfo(),
+            const _IcpFiling(),
           ],
         ),
       ),
@@ -191,43 +191,16 @@ class _LogoTitle extends StatelessWidget {
   }
 }
 
-class _TechStackInfo extends StatelessWidget {
-  const _TechStackInfo();
+class _IcpFiling extends StatelessWidget {
+  const _IcpFiling();
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final mutedIcon = scheme.onSurface.withValues(alpha: 0.8);
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const FaIcon(
-              FontAwesomeIcons.flutter,
-              size: 16,
-              color: Colors.lightBlue,
-            ),
-            const SizedBox(height: 12, child: VerticalDivider(thickness: 2)),
-            FaIcon(FontAwesomeIcons.dartLang, size: 16, color: mutedIcon),
-            const SizedBox(height: 12, child: VerticalDivider(thickness: 2)),
-            FaIcon(FontAwesomeIcons.rust, size: 16, color: mutedIcon),
-            const SizedBox(height: 12, child: VerticalDivider(thickness: 2)),
-            const FaIcon(
-              FontAwesomeIcons.solidHeart,
-              size: 16,
-              color: Colors.pinkAccent,
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Text(
-          '赣ICP备2022010939号-4A',
-          style: context.textTheme.labelMedium?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
-        ),
-      ],
+    return Text(
+      '赣ICP备2022010939号-4A',
+      style: context.textTheme.labelMedium?.copyWith(
+        color: context.colorScheme.onSurfaceVariant,
+      ),
     );
   }
 }

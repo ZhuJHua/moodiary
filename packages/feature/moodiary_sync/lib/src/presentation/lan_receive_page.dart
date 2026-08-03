@@ -127,11 +127,11 @@ class _StatusHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final (icon, color, active) = switch (state) {
-      LanReceiveWaiting() => (Icons.wifi_tethering_rounded, scheme.primary, true),
-      LanReceiveReceiving() => (Icons.downloading_rounded, scheme.primary, true),
-      LanReceiveImporting() => (Icons.sync_rounded, scheme.primary, true),
-      LanReceiveDone() => (Icons.check_rounded, scheme.primary, false),
-      LanReceiveFailed() => (Icons.close_rounded, scheme.error, false),
+      LanReceiveWaiting() => (LucideIcons.radioTower, scheme.primary, true),
+      LanReceiveReceiving() => (LucideIcons.download, scheme.primary, true),
+      LanReceiveImporting() => (LucideIcons.refreshCw, scheme.primary, true),
+      LanReceiveDone() => (LucideIcons.check, scheme.primary, false),
+      LanReceiveFailed() => (LucideIcons.x, scheme.error, false),
     };
     return LanRipple(
       size: 168,
@@ -335,7 +335,7 @@ class _AddressChip extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Icon(
-                Icons.copy_rounded,
+                LucideIcons.copy,
                 size: 14,
                 color: scheme.onSurfaceVariant,
               ),

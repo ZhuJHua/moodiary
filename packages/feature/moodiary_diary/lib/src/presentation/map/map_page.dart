@@ -57,7 +57,7 @@ class MapPage extends ConsumerWidget {
                       child: GestureDetector(
                         onTap: () => _openDiary(context, d),
                         child: Icon(
-                          Icons.location_on,
+                          LucideIcons.mapPin,
                           color: Theme.of(context).colorScheme.primary,
                           size: 32,
                         ),

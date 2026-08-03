@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 音频时长缓存：用 Rust（lofty）只读文件头拿时长，不建播放器实例；结果按路径记忆，
 /// 待命卡片据此显示时长。同一路径的并发请求合流。
@@ -363,7 +364,7 @@ class _AudioBarState extends State<AudioBar> {
               onPressed: widget.onToggle,
               iconSize: 22,
               icon: Icon(
-                widget.playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                widget.playing ? LucideIcons.pause : LucideIcons.play,
               ),
               style: IconButton.styleFrom(
                 minimumSize: const Size(40, 40),
@@ -419,8 +420,8 @@ class _AudioBarState extends State<AudioBar> {
               color: scheme.onSurfaceVariant,
               icon: Icon(
                 widget.muted
-                    ? Icons.volume_off_rounded
-                    : Icons.volume_up_rounded,
+                    ? LucideIcons.volumeX
+                    : LucideIcons.volume2,
               ),
               style: IconButton.styleFrom(
                 minimumSize: const Size(32, 32),

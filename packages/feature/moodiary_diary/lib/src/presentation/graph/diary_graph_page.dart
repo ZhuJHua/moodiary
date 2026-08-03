@@ -410,7 +410,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                               curve: Curves.easeOut,
                               child: _MiniFab(
                                 tooltip: l10n.graphResetCamera,
-                                icon: Icons.filter_center_focus_rounded,
+                                icon: LucideIcons.focus,
                                 onTap: _canvas.fit,
                               ),
                             ),
@@ -418,7 +418,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                           const SizedBox(height: 10),
                           _MiniFab(
                             tooltip: l10n.graphView,
-                            icon: Icons.tune_rounded,
+                            icon: LucideIcons.slidersHorizontal,
                             onTap: _openViewSheet,
                           ),
                         ],
@@ -494,7 +494,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                 children: [
                   _SheetGroup(
                     label: l10n.graphTimeAll,
-                    icon: Icons.schedule_rounded,
+                    icon: LucideIcons.clock,
                     child: SegmentedButton<_TimeFilter>(
                       showSelectedIcon: false,
                       selected: {_time},
@@ -523,7 +523,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                   const SizedBox(height: 20),
                   _SheetGroup(
                     label: l10n.graphStyle,
-                    icon: Icons.grain_rounded,
+                    icon: LucideIcons.chartNetwork,
                     child: SegmentedButton<GraphDensity>(
                       showSelectedIcon: false,
                       selected: {_density},
@@ -550,7 +550,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                   const SizedBox(height: 20),
                   _SheetGroup(
                     label: l10n.graphColorBy,
-                    icon: Icons.palette_outlined,
+                    icon: LucideIcons.palette,
                     child: SegmentedButton<GraphColorMode>(
                       showSelectedIcon: false,
                       selected: {_colorMode},
@@ -658,7 +658,7 @@ class _FilteredEmpty extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.filter_alt_off_rounded,
+            LucideIcons.filterX,
             size: 40,
             color: theme.colorScheme.outline,
           ),

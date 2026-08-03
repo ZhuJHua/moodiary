@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 弹窗底部的一个动作。字段名对齐 [MoodiaryMenuEntry]，让菜单与弹窗共享同一套心智。
 ///
@@ -381,7 +382,7 @@ class _AlertShell extends StatelessWidget {
     final scheme = context.colorScheme;
     final textTheme = context.textTheme;
     final effectiveIcon =
-        icon ?? (isDestructive ? Icons.warning_amber_rounded : null);
+        icon ?? (isDestructive ? LucideIcons.triangleAlert : null);
 
     return SingleChildScrollView(
       child: Padding(
@@ -728,7 +729,7 @@ class _AlertField extends StatelessWidget {
         suffixIcon: (controller.text.isEmpty || obscureText || !enabled)
             ? null
             : IconButton(
-                icon: const Icon(Icons.close_rounded, size: 18),
+                icon: const Icon(LucideIcons.x, size: 18),
                 color: scheme.onSurfaceVariant,
                 visualDensity: VisualDensity.compact,
                 tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,

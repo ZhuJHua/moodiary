@@ -23,13 +23,13 @@ void main() {
                   MoodiaryMenuEntry(
                     value: 'c',
                     label: 'Cherry',
-                    icon: Icons.delete_outline,
+                    icon: LucideIcons.trash2,
                     isDestructive: true,
                   ),
                 ],
             child: const Padding(
               padding: EdgeInsets.all(12),
-              child: Icon(Icons.more_vert_rounded),
+              child: Icon(LucideIcons.ellipsisVertical),
             ),
           ),
         ),
@@ -41,7 +41,7 @@ void main() {
     await tester.pumpWidget(host(onSelected: (_) {}));
     expect(find.text('Apple'), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.tap(find.byIcon(LucideIcons.ellipsisVertical));
     await tester.pumpAndSettle();
 
     expect(find.text('Apple'), findsOneWidget);
@@ -53,7 +53,7 @@ void main() {
     String? picked;
     await tester.pumpWidget(host(onSelected: (v) => picked = v));
 
-    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.tap(find.byIcon(LucideIcons.ellipsisVertical));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Banana'));
     await tester.pumpAndSettle();
@@ -66,7 +66,7 @@ void main() {
     var fired = false;
     await tester.pumpWidget(host(onSelected: (_) => fired = true));
 
-    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.tap(find.byIcon(LucideIcons.ellipsisVertical));
     await tester.pumpAndSettle();
     // Tap outside the menu to dismiss.
     await tester.tapAt(const Offset(10, 10));
@@ -79,10 +79,10 @@ void main() {
   testWidgets('selected entry shows a check mark', (tester) async {
     await tester.pumpWidget(host(onSelected: (_) {}, selected: 'b'));
 
-    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.tap(find.byIcon(LucideIcons.ellipsisVertical));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+    expect(find.byIcon(LucideIcons.check), findsOneWidget);
   });
 
   testWidgets('disabled entry does not fire onSelected', (tester) async {
@@ -97,7 +97,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.tap(find.byIcon(LucideIcons.ellipsisVertical));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Banana'));
     await tester.pumpAndSettle();

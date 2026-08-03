@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 /// Moodiary 风格的相册选择器：只重绘视觉件（确定按钮、选中角标、选中蒙层、
 /// 网格圆角与间距），资产分页加载/选择状态机/相册面板/权限处理全部沿用
@@ -111,7 +112,7 @@ class MoodiaryPickerDelegate
                     child: child,
                   ),
                   child: Icon(
-                    Icons.keyboard_arrow_down_rounded,
+                    LucideIcons.chevronDown,
                     size: 22,
                     color: _cs.onSurfaceVariant,
                   ),
@@ -194,7 +195,7 @@ class MoodiaryPickerDelegate
                       ),
                     ),
                     if (isSelected)
-                      Icon(Icons.check_rounded, color: _cs.primary, size: 22),
+                      Icon(LucideIcons.check, color: _cs.primary, size: 22),
                   ],
                 ),
               ),
@@ -263,7 +264,7 @@ class MoodiaryPickerDelegate
           child: selected
               ? (isSingleAssetMode
                     ? Icon(
-                        Icons.check_rounded,
+                        LucideIcons.check,
                         size: size * .66,
                         color: _cs.onPrimary,
                       )

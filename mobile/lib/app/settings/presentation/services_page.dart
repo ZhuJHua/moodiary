@@ -41,7 +41,7 @@ class _Note extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            Icon(Icons.hub_outlined, color: scheme.primary),
+            Icon(LucideIcons.waypoints, color: scheme.primary),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -98,14 +98,14 @@ class _QweatherSection extends ConsumerWidget {
               _KvTile(
                 kv: MoodiaryKVs.qweatherKey,
                 title: 'API Key',
-                leading: Icon(Icons.vpn_key_rounded),
+                leading: Icon(LucideIcons.key),
                 isFirst: true,
               ),
               _KvTile(
                 kv: MoodiaryKVs.qweatherApiHost,
                 title: 'API Host',
                 subtitleWhenEmpty: 'devapi.qweather.com 或自定义',
-                leading: Icon(Icons.dns_rounded),
+                leading: Icon(LucideIcons.server),
                 isLast: true,
               ),
             ],
@@ -134,7 +134,7 @@ class _TiandituSection extends ConsumerWidget {
               _KvTile(
                 kv: MoodiaryKVs.tiandituKey,
                 title: 'API Key',
-                leading: Icon(Icons.map_rounded),
+                leading: Icon(LucideIcons.map),
                 isFirst: true,
                 isLast: true,
               ),

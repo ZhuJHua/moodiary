@@ -60,7 +60,7 @@ class _AppLockTileState extends State<AppLockTile> {
             SettingListTile(
               isFirst: true,
               title: '应用锁',
-              leading: const Icon(Icons.lock_rounded),
+              leading: const Icon(LucideIcons.lock),
               trailing: Text(
                 lock ? '已开启' : '未开启',
                 style: context.textTheme.bodySmall?.copyWith(
@@ -72,7 +72,7 @@ class _AppLockTileState extends State<AppLockTile> {
             if (lock)
               SettingListTile(
                 title: '修改密码',
-                leading: const Icon(Icons.password_rounded),
+                leading: const Icon(LucideIcons.keyRound),
                 onTap: _changePassword,
               ),
             if (lock)
@@ -82,7 +82,7 @@ class _AppLockTileState extends State<AppLockTile> {
                   return SettingSwitchListTile(
                     title: '立即锁定',
                     subtitle: '退到后台后再回来需重新解锁',
-                    secondary: const Icon(Icons.lock_clock_rounded),
+                    secondary: const Icon(LucideIcons.lockKeyhole),
                     value: lockNow,
                     onChanged: (v) => MoodiaryKVs.lockNow.set(v),
                   );
@@ -99,7 +99,7 @@ class _AppLockTileState extends State<AppLockTile> {
                       return SettingSwitchListTile(
                         title: '生物识别解锁',
                         subtitle: '用指纹 / 面容快速解锁',
-                        secondary: const Icon(Icons.fingerprint_rounded),
+                        secondary: const Icon(LucideIcons.fingerprint),
                         value: bio,
                         onChanged: _toggleBiometric,
                       );

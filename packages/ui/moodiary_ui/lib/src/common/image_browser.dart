@@ -12,6 +12,7 @@ import 'package:moodiary_ui/src/common/toast.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_view/photo_view.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 全屏图片浏览器：左右翻页、双指缩放、下拉手势关闭（背景与操作钮随手势渐隐）、
 /// Hero 飞入飞出（传 [heroPrefix] 启用，缩略图侧 tag 须为 `'$heroPrefix-<image>'`）。
@@ -105,7 +106,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
           child: Opacity(
             opacity: _chrome,
             child: IconButton(
-              icon: const Icon(Icons.close_rounded, color: Colors.white),
+              icon: const Icon(LucideIcons.x, color: Colors.white),
               style: IconButton.styleFrom(backgroundColor: Colors.black38),
               onPressed: () => Navigator.of(context).maybePop(),
             ),
@@ -149,7 +150,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
                   IconButton(
                     tooltip: context.l10n.imageBrowserInfo,
                     icon: const Icon(
-                      Icons.info_outline_rounded,
+                      LucideIcons.info,
                       color: Colors.white,
                     ),
                     style: IconButton.styleFrom(
@@ -159,7 +160,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
                   ),
                   IconButton(
                     tooltip: context.l10n.imageBrowserSave,
-                    icon: const Icon(Icons.save_alt_rounded, color: Colors.white),
+                    icon: const Icon(LucideIcons.imageDown, color: Colors.white),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.black38,
                     ),
@@ -228,7 +229,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
           : const Center(child: CircularProgressIndicator(color: Colors.white)),
       errorBuilder: (_, _, _) => const Center(
         child: Icon(
-          Icons.broken_image_outlined,
+          LucideIcons.imageOff,
           color: Colors.white54,
           size: 48,
         ),

@@ -6,6 +6,7 @@ import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 final genui.Catalog assistantGenUiCatalog = genui.Catalog([
   _toolPermissionCard,
@@ -208,7 +209,7 @@ class _DangerNote extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.warning_amber_rounded,
+            LucideIcons.triangleAlert,
             size: 18,
             color: scheme.onErrorContainer,
           ),
@@ -284,25 +285,25 @@ class _DecisionBadge extends StatelessWidget {
     final l10n = context.l10n;
     final (icon, background, foreground, label) = switch (status) {
       ToolPermissionStatus.allowedOnce => (
-        Icons.check_circle_rounded,
+        LucideIcons.circleCheck,
         scheme.secondaryContainer,
         scheme.onSecondaryContainer,
         l10n.assistantToolStatusAllowedOnce,
       ),
       ToolPermissionStatus.allowedAlways => (
-        Icons.verified_rounded,
+        LucideIcons.badgeCheck,
         scheme.secondaryContainer,
         scheme.onSecondaryContainer,
         l10n.assistantToolAlwaysAllowedHint,
       ),
       ToolPermissionStatus.denied => (
-        Icons.cancel_rounded,
+        LucideIcons.circleX,
         scheme.errorContainer,
         scheme.onErrorContainer,
         l10n.assistantToolStatusDenied,
       ),
       ToolPermissionStatus.canceled || ToolPermissionStatus.pending => (
-        Icons.hourglass_disabled_rounded,
+        LucideIcons.timerOff,
         scheme.surfaceContainerHigh,
         scheme.onSurfaceVariant,
         l10n.assistantToolStatusCanceled,

@@ -14,6 +14,7 @@ import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
 import 'package:moodiary_router/moodiary_router.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 /// 「同步状态」底部弹窗：配置标签 / 当前状态与进度 / 数据概览 / 立即同步
 /// （同步中可停止）/ 查看日志入口。日志本身见 [SyncLogPage]。
@@ -123,17 +124,17 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
                     children: [
                       _Tag(
                         icon: backend.type == SyncProviderType.webdav
-                            ? Icons.cloud_outlined
-                            : Icons.storage_rounded,
+                            ? LucideIcons.cloud
+                            : LucideIcons.database,
                         label: backend.type.label,
                       ),
                       _Tag(
-                        icon: encryption ? Icons.lock_outline : Icons.lock_open,
+                        icon: encryption ? LucideIcons.lock : LucideIcons.lockOpen,
                         label: encryption ? '已加密' : '未加密',
                       ),
                       if (!backend.isReady)
                         const _Tag(
-                          icon: Icons.error_outline,
+                          icon: LucideIcons.circleAlert,
                           label: '未配置',
                           emphasis: true,
                         ),
@@ -142,7 +143,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
                 ),
                 IconButton(
                   tooltip: '刷新数据概览',
-                  icon: const Icon(Icons.refresh_rounded),
+                  icon: const Icon(LucideIcons.rotateCw),
                   iconSize: 18,
                   visualDensity: VisualDensity.compact,
                   color: scheme.onSurfaceVariant,
@@ -170,7 +171,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
             Row(
               children: [
                 TextButton.icon(
-                  icon: const Icon(Icons.history_rounded, size: 18),
+                  icon: const Icon(LucideIcons.history, size: 18),
                   label: const Text('查看日志'),
                   onPressed: () =>
                       Navigator.of(context).pop(_SyncStatusSheet.resultViewLog),
@@ -178,7 +179,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
                 const Spacer(),
                 if (!running)
                   FilledButton.icon(
-                    icon: const Icon(Icons.sync_rounded, size: 18),
+                    icon: const Icon(LucideIcons.refreshCw, size: 18),
                     label: const Text('立即同步'),
                     onPressed: backend.isReady
                         ? () async {
@@ -200,7 +201,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
                     valueListenable: SyncCancellation.instance.listenable,
                     builder: (context, stopping, _) {
                       return FilledButton.tonalIcon(
-                        icon: const Icon(Icons.stop_rounded, size: 18),
+                        icon: const Icon(LucideIcons.square, size: 18),
                         label: Text(stopping ? '正在停止…' : '停止同步'),
                         onPressed: stopping
                             ? null
@@ -328,14 +329,14 @@ class _StateSection extends StatelessWidget {
       ),
       SyncSuccess(:final message) => _line(
         context,
-        icon: Icons.check_circle_rounded,
+        icon: LucideIcons.circleCheck,
         iconColor: scheme.primary,
         text: message,
         textColor: scheme.onSurface,
       ),
       SyncError(:final message) => _line(
         context,
-        icon: Icons.error_rounded,
+        icon: LucideIcons.circleAlert,
         iconColor: scheme.error,
         text: message,
         textColor: scheme.error,
@@ -344,7 +345,7 @@ class _StateSection extends StatelessWidget {
         valueListenable: MoodiaryKVs.lastSyncTime.getNotifier(),
         builder: (context, millis, _) => _line(
           context,
-          icon: Icons.schedule_rounded,
+          icon: LucideIcons.clock,
           iconColor: scheme.onSurfaceVariant,
           text: millis > 0
               ? '上次同步：${TimeFormat.listDateTime(DateTime.fromMillisecondsSinceEpoch(millis))}'

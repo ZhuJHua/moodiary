@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 final kTransparentImage = Uint8List.fromList(<int>[
   0x89,
@@ -289,7 +290,7 @@ class _ErrorPlaceholder extends StatelessWidget {
       color: context.theme.colorScheme.errorContainer,
       child: Center(
         child: Icon(
-          Icons.error_rounded,
+          LucideIcons.circleAlert,
           color: context.theme.colorScheme.onErrorContainer,
         ),
       ),
@@ -306,7 +307,7 @@ class _LoadingPlaceholder extends StatelessWidget {
       color: context.theme.colorScheme.surfaceContainer,
       child: Center(
         child: Icon(
-          Icons.image_search_rounded,
+          LucideIcons.image,
           color: context.theme.colorScheme.onSurfaceVariant,
         ),
       ),

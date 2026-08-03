@@ -63,8 +63,8 @@ class _AssistantSummaryTileState extends State<AssistantSummaryTile> {
       isLast: true,
       title: 'AI 助手配置',
       subtitle: subtitle,
-      leading: const Icon(Icons.smart_toy_rounded),
-      trailing: const Icon(Icons.chevron_right_rounded),
+      leading: const Icon(LucideIcons.bot),
+      trailing: const Icon(LucideIcons.chevronRight),
       onTap: () async {
         await const AssistantSettingRoute().push(context);
         await _load();

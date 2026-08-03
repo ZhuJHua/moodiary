@@ -94,7 +94,7 @@ void main() {
       );
       await open(tester);
 
-      expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+      expect(find.byIcon(LucideIcons.triangleAlert), findsOneWidget);
       expect(backgroundOf(tester, '删除'), scheme.error);
       expect(backgroundOf(tester, '取消'), scheme.surfaceContainerHighest);
     });
@@ -109,7 +109,7 @@ void main() {
       );
       await open(tester);
 
-      expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
+      expect(find.byIcon(LucideIcons.triangleAlert), findsNothing);
       expect(backgroundOf(tester, '开始修复'), scheme.primary);
     });
 

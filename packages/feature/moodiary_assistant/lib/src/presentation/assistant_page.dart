@@ -254,7 +254,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final l10n = context.l10n;
     final agreed = await showMoodiaryConfirm(
       context,
-      icon: Icons.privacy_tip_outlined,
+      icon: LucideIcons.shieldAlert,
       title: l10n.assistantDisclaimerTitle,
       message: l10n.assistantDisclaimerContent,
       confirmLabel: l10n.assistantDisclaimerAgree,
@@ -968,7 +968,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       onSend: () => _submit(_inputController.text),
       onStop: _stop,
       onTool: _toggleToolPanel,
-      toolIcon: Icons.add_rounded,
+      toolIcon: LucideIcons.plus,
       toolTooltip: context.l10n.assistantToolPanelTitle,
       thinking: _thinking,
       showThinking: _canThink,
@@ -1015,13 +1015,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               runSpacing: 16,
               children: [
                 _ToolPanelItem(
-                  icon: Icons.auto_stories_rounded,
+                  icon: LucideIcons.bookOpen,
                   label: l10n.assistantToolSendDiary,
                   onTap: _pickAndSendDiary,
                 ),
                 if (_canSendImage)
                   _ToolPanelItem(
-                    icon: Icons.image_rounded,
+                    icon: LucideIcons.image,
                     label: l10n.assistantToolSendImage,
                     onTap: _pickImage,
                   ),
@@ -1057,7 +1057,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               MoodiaryMenuEntry(
                 value: 'compact',
                 label: l10n.assistantCompactNow,
-                icon: Icons.compress_rounded,
+                icon: LucideIcons.foldVertical,
                 enabled: _session != null && !_compacting && !_sending,
               ),
             ],
@@ -1066,7 +1066,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             },
             child: const Padding(
               padding: EdgeInsets.all(12),
-              child: Icon(Icons.more_vert_rounded),
+              child: Icon(LucideIcons.ellipsisVertical),
             ),
           ),
         ],
@@ -1150,7 +1150,7 @@ class _CompactionNoticeChip extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.compress_rounded,
+                  LucideIcons.foldVertical,
                   size: 16,
                   color: scheme.onSurfaceVariant,
                 ),
@@ -1211,7 +1211,7 @@ class _CompactionNoticeChip extends StatelessWidget {
                     Navigator.of(sheetContext).pop();
                     onRestore();
                   },
-                  icon: const Icon(Icons.unfold_more_rounded),
+                  icon: const Icon(LucideIcons.chevronsUpDown),
                   label: Text(l10n.assistantCompactionRestore),
                 ),
               ],
@@ -1238,7 +1238,7 @@ class _DisclaimerGate extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.shield_outlined, size: 56, color: scheme.primary),
+            Icon(LucideIcons.shield, size: 56, color: scheme.primary),
             const SizedBox(height: 16),
             Text(
               l10n.assistantDisclaimerGateTitle,
@@ -1248,7 +1248,7 @@ class _DisclaimerGate extends StatelessWidget {
             const SizedBox(height: 20),
             FilledButton.tonalIcon(
               onPressed: onReview,
-              icon: const Icon(Icons.description_outlined),
+              icon: const Icon(LucideIcons.fileText),
               label: Text(l10n.assistantDisclaimerGateAction),
             ),
           ],
@@ -1274,7 +1274,7 @@ class _NotConfiguredBanner extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: scheme.onErrorContainer),
+              Icon(LucideIcons.triangleAlert, color: scheme.onErrorContainer),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -1394,7 +1394,7 @@ class _AssistantComposer extends StatelessWidget {
                           return IconButton.filled(
                             tooltip: l10n.assistantStop,
                             onPressed: onStop,
-                            icon: const Icon(Icons.stop_rounded),
+                            icon: const Icon(LucideIcons.square),
                             visualDensity: VisualDensity.compact,
                             constraints: const BoxConstraints(
                               minWidth: 40,
@@ -1408,7 +1408,7 @@ class _AssistantComposer extends StatelessWidget {
                             pendingImageName != null;
                         return IconButton.filled(
                           onPressed: canSend ? onSend : null,
-                          icon: const Icon(Icons.arrow_upward_rounded),
+                          icon: const Icon(LucideIcons.arrowUp),
                           visualDensity: VisualDensity.compact,
                           constraints: const BoxConstraints(
                             minWidth: 40,
@@ -1451,7 +1451,7 @@ class _ThinkingToggle extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.psychology_rounded, size: 16, color: fg),
+              Icon(LucideIcons.brain, size: 16, color: fg),
               const SizedBox(width: 6),
               Text(
                 l10n.assistantThinkingToggle,
@@ -1562,7 +1562,7 @@ class _ComposerImagePreview extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.all(2),
                   child: Icon(
-                    Icons.close_rounded,
+                    LucideIcons.x,
                     size: 15,
                     color: scheme.onSurfaceVariant,
                   ),
@@ -1580,7 +1580,7 @@ Widget _brokenImage(ColorScheme scheme, double size) => Container(
   width: size,
   height: size,
   color: scheme.surfaceContainerHighest,
-  child: Icon(Icons.broken_image_outlined, color: scheme.onSurfaceVariant),
+  child: Icon(LucideIcons.imageOff, color: scheme.onSurfaceVariant),
 );
 
 class _UserBubble extends StatelessWidget {
@@ -1649,7 +1649,7 @@ class _UserBubble extends StatelessWidget {
       children: [
         content,
         _BubbleActionButton(
-          icon: Icons.refresh_rounded,
+          icon: LucideIcons.rotateCw,
           label: context.l10n.assistantRegenerate,
           onTap: onRetry!,
         ),
@@ -1761,7 +1761,7 @@ class _AssistantBubble extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             _BubbleActionButton(
-              icon: Icons.copy_rounded,
+              icon: LucideIcons.copy,
               label: l10n.assistantCopyTooltip,
               onTap: () async {
                 await Clipboard.setData(ClipboardData(text: text));
@@ -1770,7 +1770,7 @@ class _AssistantBubble extends StatelessWidget {
             ),
             if (onRegenerate != null)
               _BubbleActionButton(
-                icon: Icons.refresh_rounded,
+                icon: LucideIcons.rotateCw,
                 label: l10n.assistantRegenerate,
                 onTap: onRegenerate!,
               ),
@@ -1785,7 +1785,7 @@ class _AssistantBubble extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.arrow_upward_rounded,
+                        LucideIcons.arrowUp,
                         size: 13,
                         color: scheme.onSurfaceVariant,
                       ),
@@ -1793,7 +1793,7 @@ class _AssistantBubble extends StatelessWidget {
                       Text(_compactTokens(inputTokens)),
                       const SizedBox(width: 8),
                       Icon(
-                        Icons.arrow_downward_rounded,
+                        LucideIcons.arrowDown,
                         size: 13,
                         color: scheme.onSurfaceVariant,
                       ),
@@ -1863,7 +1863,7 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
               )
             else
               Icon(
-                Icons.psychology_rounded,
+                LucideIcons.brain,
                 size: 16,
                 color: scheme.onSurfaceVariant,
               ),
@@ -1882,8 +1882,8 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
               const SizedBox(width: 2),
               Icon(
                 _expanded
-                    ? Icons.expand_less_rounded
-                    : Icons.expand_more_rounded,
+                    ? LucideIcons.chevronUp
+                    : LucideIcons.chevronDown,
                 size: 18,
                 color: scheme.onSurfaceVariant,
               ),
@@ -1974,36 +1974,24 @@ class AssistantSessionListPage extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: l10n.assistantConfigTooltip,
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(LucideIcons.settings),
             onPressed: () => const AssistantSettingRoute().push(context),
           ),
         ],
       ),
-      // 本页是根壳的一个 tab，而根壳的底栏是悬浮的 —— Scaffold 把底栏带高折进了
-      // padding.bottom，但内层 Scaffold 算 FAB 位置读的是 viewPadding（这里恒为 0），
-      // 不手动抬的话 FAB 会正好落在胶囊上。
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
-        child: FloatingActionButton.extended(
-          // 唯一 heroTag：本页作为底部导航 tab 与其它 tab 的 FAB 在 IndexedStack 中
-          // 同时存活。
-          heroTag: 'assistantSessionFab',
-          onPressed: () => const AssistantConversationRoute().push(context),
-          icon: const Icon(Icons.add_comment_rounded),
-          label: Text(l10n.assistantNewChat),
-        ),
-      ),
+      // 「新对话」不在本页了 —— 本页是根壳的一个 tab，入口是底栏胶囊右边那颗按钮
+      // （站在助手 tab 上它就是新对话）。
       body: _SessionListView(
         currentId: null,
         onSelect: (session) =>
             AssistantConversationRoute(sessionId: session.id).push(context),
         onDelete: (session) => ChatRepository.get().deleteSession(session.id),
-        // 底部留白，避免 FAB 遮住最后一条会话；底栏那条带另算。
+        // 根壳开了 extendBody，底栏整条带高已折进 padding.bottom，直接读来让开。
         padding: EdgeInsets.fromLTRB(
           12,
           8,
           12,
-          88 + MediaQuery.paddingOf(context).bottom,
+          8 + MediaQuery.paddingOf(context).bottom,
         ),
       ),
     );
@@ -2083,7 +2071,7 @@ class _EmptySessions extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.forum_outlined, size: 56, color: scheme.onSurfaceVariant),
+          Icon(LucideIcons.messagesSquare, size: 56, color: scheme.onSurfaceVariant),
           const SizedBox(height: 12),
           Text(
             context.l10n.assistantHistoryEmpty,
@@ -2144,7 +2132,7 @@ class _SessionCard extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: Icon(
-            Icons.forum_rounded,
+            LucideIcons.messagesSquare,
             size: 22,
             color: selected ? scheme.onSecondaryContainer : scheme.primary,
           ),
@@ -2170,14 +2158,14 @@ class _SessionCard extends StatelessWidget {
             MoodiaryMenuEntry(
               value: 'delete',
               label: l10n.assistantSessionDelete,
-              icon: Icons.delete_outline_rounded,
+              icon: LucideIcons.trash2,
               isDestructive: true,
             ),
           ],
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Icon(
-              Icons.more_vert_rounded,
+              LucideIcons.ellipsisVertical,
               color: scheme.onSurfaceVariant,
             ),
           ),

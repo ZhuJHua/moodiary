@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 /// 条目的同步状态：内联进元信息行，不用会盖住内容的角标。
 enum DiaryCardSyncState { none, dirty, syncing }
@@ -97,7 +98,7 @@ class DiarySyncBadge extends StatelessWidget {
             height: 12,
             child: CircularProgressIndicator(strokeWidth: 1.6, color: color),
           )
-        : Icon(Icons.cloud_upload_outlined, size: 14, color: color);
+        : Icon(LucideIcons.cloudUpload, size: 14, color: color);
   }
 }
 
@@ -112,8 +113,8 @@ class DiarySelectMark extends StatelessWidget {
     final scheme = context.colorScheme;
     return Icon(
       selected
-          ? Icons.check_circle_rounded
-          : Icons.radio_button_unchecked_rounded,
+          ? LucideIcons.circleCheck
+          : LucideIcons.circle,
       size: 16,
       color: selected ? scheme.primary : scheme.outline,
     );

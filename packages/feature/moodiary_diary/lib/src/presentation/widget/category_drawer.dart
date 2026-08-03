@@ -90,7 +90,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                     child: SearchBar(
                       hintText: context.l10n.categorySearchHint,
-                      leading: const Icon(Icons.search_rounded, size: 20),
+                      leading: const Icon(LucideIcons.search, size: 20),
                       constraints: const BoxConstraints(minHeight: 42),
                       elevation: const WidgetStatePropertyAll(0),
                       backgroundColor: WidgetStatePropertyAll(
@@ -175,7 +175,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                             Navigator.of(context).pop();
                             const CategoryManagerRoute().push(context);
                           },
-                          icon: const Icon(Icons.tune_rounded, size: 18),
+                          icon: const Icon(LucideIcons.slidersHorizontal, size: 18),
                           label: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(context.l10n.categoryManageEntry),
@@ -195,7 +195,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                           Navigator.of(context).pop();
                           const SettingRoute().push(context);
                         },
-                        icon: const Icon(Icons.settings_rounded, size: 20),
+                        icon: const Icon(LucideIcons.settings, size: 20),
                         style: IconButton.styleFrom(
                           minimumSize: const Size(48, 44),
                         ),
@@ -300,7 +300,7 @@ class _Tile extends StatelessWidget {
                 if (syncing) ...[
                   const SizedBox(width: 6),
                   Icon(
-                    Icons.cloud_upload_outlined,
+                    LucideIcons.cloudUpload,
                     size: 14,
                     color: scheme.primary,
                   ),

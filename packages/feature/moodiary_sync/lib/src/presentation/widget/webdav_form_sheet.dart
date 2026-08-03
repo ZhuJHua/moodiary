@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 class WebDavFormSheet extends StatefulWidget {
   const WebDavFormSheet({super.key});
@@ -108,7 +109,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscure ? Icons.visibility_off : Icons.visibility,
+                    _obscure ? LucideIcons.eyeOff : LucideIcons.eye,
                   ),
                   onPressed: () => setState(() => _obscure = !_obscure),
                 ),

@@ -136,12 +136,12 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
                 else
                   for (final d in pending)
                     ListTile(
-                      leading: const Icon(Icons.feed_outlined),
+                      leading: const Icon(LucideIcons.notebookText),
                       title: Text(_label(d), maxLines: 1, overflow: TextOverflow.ellipsis),
                       subtitle: Text(_date(d.time)),
                       trailing: IconButton(
                         tooltip: '迁移这一篇',
-                        icon: const Icon(Icons.arrow_forward_rounded),
+                        icon: const Icon(LucideIcons.arrowRight),
                         onPressed: _busy ? null : () => _migrateOne(d),
                       ),
                     ),
@@ -149,7 +149,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
                   _section('已迁移（可回退）'),
                   for (final item in _backups)
                     ListTile(
-                      leading: const Icon(Icons.history_rounded),
+                      leading: const Icon(LucideIcons.history),
                       title: Text(
                         item.diary == null ? '(已删除)' : _label(item.diary!),
                         maxLines: 1,
@@ -185,7 +185,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
               )
             : FilledButton.icon(
                 onPressed: _migrateAll,
-                icon: const Icon(Icons.auto_fix_high_rounded),
+                icon: const Icon(LucideIcons.wandSparkles),
                 label: Text('全部迁移（${pending.length}）'),
               ),
       ),

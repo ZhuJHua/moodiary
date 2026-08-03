@@ -148,7 +148,7 @@ class _LanSendPageState extends State<LanSendPage> {
             keyboardType: TextInputType.url,
             decoration: InputDecoration(
               hintText: '选择上方设备后自动填写',
-              prefixIcon: const Icon(Icons.lan_outlined),
+              prefixIcon: const Icon(LucideIcons.network),
               filled: true,
               fillColor: scheme.surfaceContainerHigh,
               border: OutlineInputBorder(
@@ -183,7 +183,7 @@ class _LanSendPageState extends State<LanSendPage> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              icon: const Icon(Icons.send_rounded),
+              icon: const Icon(LucideIcons.send),
               label: const Text('发送'),
             ),
           ),
@@ -310,7 +310,7 @@ class _PeerTile extends StatelessWidget {
                         : scheme.surfaceContainerHigh,
                   ),
                   child: Icon(
-                    Icons.smartphone_rounded,
+                    LucideIcons.smartphone,
                     size: 20,
                     color: selected
                         ? scheme.onPrimary
@@ -344,7 +344,7 @@ class _PeerTile extends StatelessWidget {
                   ),
                 ),
                 if (selected)
-                  Icon(Icons.check_circle_rounded, color: scheme.primary),
+                  Icon(LucideIcons.circleCheck, color: scheme.primary),
               ],
             ),
           ),
@@ -450,7 +450,7 @@ class _ResultCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            success ? Icons.check_circle_rounded : Icons.error_rounded,
+            success ? LucideIcons.circleCheck : LucideIcons.circleAlert,
             color: foreground,
           ),
           const SizedBox(width: 12),

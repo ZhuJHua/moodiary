@@ -178,11 +178,11 @@ class _SharePageState extends ConsumerState<SharePage> {
             segments: const [
               ButtonSegment(
                 value: Brightness.light,
-                icon: Icon(Icons.light_mode_rounded),
+                icon: Icon(LucideIcons.sun),
               ),
               ButtonSegment(
                 value: Brightness.dark,
-                icon: Icon(Icons.dark_mode_rounded),
+                icon: Icon(LucideIcons.moon),
               ),
             ],
             selected: {brightness},
@@ -212,7 +212,7 @@ class _SharePageState extends ConsumerState<SharePage> {
               child: FilledButton.tonalIcon(
                 onPressed: () => _copy(diary),
                 style: shape(),
-                icon: const Icon(Icons.copy_rounded),
+                icon: const Icon(LucideIcons.copy),
                 label: const Text('复制文本'),
               ),
             ),
@@ -230,7 +230,7 @@ class _SharePageState extends ConsumerState<SharePage> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.ios_share_rounded),
+                    : const Icon(LucideIcons.share),
                 label: const Text('导出图片'),
               ),
             ),
