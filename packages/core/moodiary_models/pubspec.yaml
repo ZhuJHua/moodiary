@@ -15,7 +15,7 @@ dependencies:
 
   moodiary_utils: 0.0.1
 
-  isar_plus: 1.3.7
+  isar_plus: 1.3.8
   freezed_annotation: 3.1.0
   json_annotation: 4.12.0
   path: 1.9.1
@@ -26,4 +26,4 @@ dev_dependencies:
   moodiary_lint: 0.0.1
   build_runner: 2.15.1
   freezed: 3.2.6-dev.1
-  json_serializable: 6.14.0
+  json_serializable: 6.14.1

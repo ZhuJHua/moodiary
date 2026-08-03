@@ -165,10 +165,10 @@ packages:
     dependency: transitive
     description:
       name: build_daemon
-      sha256: fd754058c342243718d5171a95f352cfc9fcf0cba8cfa26df67cb13a5836db78
+      sha256: "8c0535c3b2f625619f4dd1036ef1127f2e77bfedf89ed2eb2676ef076e0b6712"
       url: "https://pub.dev"
     source: hosted
-    version: "4.1.2"
+    version: "4.1.3"
   build_runner:
     dependency: transitive
     description:
@@ -197,10 +197,10 @@ packages:
     dependency: transitive
     description:
       name: cached_network_image_ce
-      sha256: "2d76205eb8cbe8acd8d000357017231bc2d3a056ccec5201d72a589808d9861b"
+      sha256: "974594da61403c25849107ce6df0a31034f8a660612dc89c582b70caa03e6e98"
       url: "https://pub.dev"
     source: hosted
-    version: "4.9.1"
+    version: "4.10.0"
   cached_network_image_platform_interface_ce:
     dependency: transitive
     description:
@@ -237,10 +237,10 @@ packages:
     dependency: transitive
     description:
       name: camera_android_camerax
-      sha256: "4fb17b62dc25f97ec752596b749a31e80ccc9829ef95412badfdf0bc6c43a166"
+      sha256: "30f34108480912ac444c7d3c942005abb8f42baf730bf6f81cedfbfa035b2c21"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.4+2"
+    version: "0.7.4+3"
   camera_avfoundation:
     dependency: transitive
     description:
@@ -1152,18 +1152,18 @@ packages:
     dependency: transitive
     description:
       name: isar_plus
-      sha256: "53ad7c35e835306916fea2c7a2df852018c303a0a9e64e9c21256e32afcc6586"
+      sha256: b40feb14680a87dc070824fc11a96e196ef8f4fe1b2c133511b7339dd5f36e29
       url: "https://pub.dev"
     source: hosted
-    version: "1.3.7"
+    version: "1.3.8"
   isar_plus_flutter_libs:
     dependency: transitive
     description:
       name: isar_plus_flutter_libs
-      sha256: b461fa1a3e78f28a62fef3f962b8567f918ed7c7b94ee6c549471aec9f2cabc4
+      sha256: cb5195462709d63de9c4e1838091f9cad18de8d90c67deb013b1cf69e52257fa
       url: "https://pub.dev"
     source: hosted
-    version: "1.3.7"
+    version: "1.3.8"
   isolate_channel:
     dependency: transitive
     description:
@@ -1176,10 +1176,10 @@ packages:
     dependency: transitive
     description:
       name: jni
-      sha256: "5bc9a9daac5ccfbd6a758377600b9f7fdce13d93f26e8012a8941014a5d978d1"
+      sha256: f038e58b4dc2c9037f50e233175086337e0b305e356d28211bf55f21c504cbd3
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.2"
+    version: "1.0.3"
   jni_flutter:
     dependency: transitive
     description:
@@ -1224,10 +1224,10 @@ packages:
     dependency: transitive
     description:
       name: json_serializable
-      sha256: ffcd10cde35a93b2abbbcc26bd9971f4ca93763e8abe78d855e3c4177797e501
+      sha256: e45aefa0324f08c683caafbb94b72837aa6193c61822799c916e45f4a263113d
       url: "https://pub.dev"
     source: hosted
-    version: "6.14.0"
+    version: "6.14.1"
   latlong2:
     dependency: transitive
     description:
@@ -1808,18 +1808,18 @@ packages:
     dependency: transitive
     description:
       name: record_web
-      sha256: "7d75ed681b5bf40c3a9b51b6c105fe53705f752284d859d5f030ab5a2bfd49cf"
+      sha256: f53d3da48de3618a331868aec73261d5a75eddd9c09409afd9ec6d66b25db532
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.1"
+    version: "2.1.2"
   record_windows:
     dependency: transitive
     description:
       name: record_windows
-      sha256: "9cedfacee553a02b48977a5e1d74bf08a36cc5647eba56fb83e57da20552f443"
+      sha256: e6884f91be4370f122111aca3c04291ae5fe6d8fd045f87afa967635a02dbbac
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.2"
+    version: "2.2.3"
   riverpod:
     dependency: transitive
     description:
@@ -2069,10 +2069,10 @@ packages:
     dependency: transitive
     description:
       name: source_helper
-      sha256: "4227d54ceefd0bb8ca4c8fcb96e1719dc53f1ee1b6e2ca9d7a6069da160e4eae"
+      sha256: "5e6f216fdf6376c9f3852381ae037499797a3385377d388b011dac98d303c67c"
       url: "https://pub.dev"
     source: hosted
-    version: "1.3.12"
+    version: "1.3.13"
   source_map_stack_trace:
     dependency: transitive
     description:
@@ -2317,10 +2317,10 @@ packages:
     dependency: transitive
     description:
       name: vector_graphics
-      sha256: "2306c03da2ba81724afeb589c351ebbc0aa7d86005925be8f8735856dbe5e42d"
+      sha256: "9d0e3b9cb16542ad660daee871e726a10d13a93b7b5391677c3160e8f5e83935"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.2"
+    version: "1.2.3"
   vector_graphics_codec:
     dependency: transitive
     description:

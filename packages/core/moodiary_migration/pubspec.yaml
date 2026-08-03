@@ -17,7 +17,7 @@ dependencies:
   moodiary_models: 0.0.1
   moodiary_utils: 0.0.1
 
-  isar_plus: 1.3.7
+  isar_plus: 1.3.8
   pub_semver: 2.2.0
 
 dev_dependencies:

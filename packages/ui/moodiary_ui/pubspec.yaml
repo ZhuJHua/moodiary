@@ -19,14 +19,13 @@ dependencies:
   moodiary_rust: 0.0.1
 
   flutter_riverpod: 3.3.2
-  # UI 层是这两个依赖的 owner 包，经 barrel 转发给上层（见 moodiary_ui.dart）。
   flutter_smart_dialog: 5.1.1
   font_awesome_flutter: 11.0.0
   modal_bottom_sheet: 3.0.0
   expressive_refresh: 0.1.2
   path: 1.9.1
 
-  cached_network_image_ce: 4.9.1
+  cached_network_image_ce: 4.10.0
   flutter_svg: 2.3.0
 
   photo_view: 0.15.0
@@ -34,8 +33,6 @@ dependencies:
 
   video_player: 2.13.0
   audioplayers: 6.8.1
-  # 全屏播放器的左右滑动调节：亮度只用 application 级（无需 WRITE_SETTINGS 权限），
-  # 音量走系统媒体音量（否则我们的音量条会在用户按硬件键静音后说谎）。
   screen_brightness: 2.1.11
   volume_controller: 3.6.0
 
