@@ -1,0 +1,12 @@
+[package]
+name = "moodiary-sync"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = { workspace = true }
+url = { workspace = true }
+reqwest = { workspace = true }
+rusty-s3 = { workspace = true }
+reqwest_dav = { workspace = true }
+moodiary-http = { workspace = true }

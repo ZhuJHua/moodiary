@@ -4,62 +4,40 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+import 'export_ir.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `anchor_of`, `base_docx`, `block`, `blocks`, `content_width_emu`, `fonts`, `half_pt`, `image_run`, `indented`, `inline_colored`, `inline`, `link_paragraph`, `list`, `meta_line`, `numbering_def`, `quoted`, `run_fonts`, `styled_run`, `table`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Ctx`
-
-/// 把一批日记写成一个 .docx 文件。
-///
-/// [docs_json] 是 `ExportDoc.toJson()` 的**数组**。每篇一文件的场景由 Dart 侧循环调用、
-/// 每次传单元素数组实现 —— 合并与拆分共用同一条码路。
-///
-/// 直接落盘而不回传字节：与 `Zip::new(file_path)`、`ImageCompressor::optimize_to_file`
-/// 的既有约定一致，且带图日记几十 MB 时不必在内存里整份成型。
 Future<void> writeDocx({
-  required String docsJson,
+  required List<IrDoc> docs,
   required DocxStyle style,
   required String outPath,
 }) => RustLib.instance.api.crateApiDocxWriteDocx(
-  docsJson: docsJson,
+  docs: docs,
   style: style,
   outPath: outPath,
 );
 
-/// 排版配置。字体只写名字，不嵌文件。
 class DocxStyle {
-  /// 中文字体名（写进 `w:rFonts` 的 `eastAsia`）。
+  /// 写进 `w:rFonts` 的 `eastAsia`。
   final String eastAsiaFont;
 
-  /// 西文字体名（`ascii` / `hAnsi`）。
+  /// 写进 `ascii` / `hAnsi`。
   final String asciiFont;
-
-  /// 正文字号（磅）。
   final double fontSizePt;
 
   /// 行距倍数（1.0 = 单倍）。
   final double lineSpacing;
-
-  /// 正文首行缩进两字符（中文排版习惯）。
   final bool firstLineIndent;
 
-  /// 页面宽高（twip，1/1440 英寸）。A4 = 11906 × 16838。
+  /// 单位 twip（1/1440 英寸）。A4 = 11906 × 16838。
   final int pageWidth;
   final int pageHeight;
-
-  /// 四边页边距（twip）。
   final int pageMargin;
-
-  /// 每篇日记前写标题。
   final bool includeTitle;
-
-  /// 标题下写一行「日期 · 天气 · 位置 · 分类」摘要。
   final bool includeMeta;
-
-  /// 多篇合并时每篇之间插分页符。
   final bool pageBreakBetween;
 
-  /// 音视频占位行的类型词（已本地化，由 Dart 传入 —— 这一侧没有 l10n）。
+  /// 音视频占位行的类型词，已本地化（这一侧没有 l10n）。
   final String videoLabel;
   final String audioLabel;
 

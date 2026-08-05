@@ -8,16 +8,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Zip>>
 abstract class Zip implements RustOpaqueInterface {
-  /// 内存字节直接写入条目，免落地临时文件。
   Future<void> addBytes({
     required String zipPath,
     required List<int> data,
-    String? password,
-  });
-
-  Future<void> addDir({
-    required String dirPath,
-    required String basePath,
     String? password,
   });
 

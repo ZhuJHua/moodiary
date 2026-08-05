@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
@@ -39,7 +38,7 @@ class _S3FormSheetState extends State<S3FormSheet> {
   @override
   void initState() {
     super.initState();
-    final opts = MoodiaryKVs.s3Option.get() ?? const <String>[];
+    final opts = S3SyncBackend.options.value;
     String at(int i) => opts.length > i ? opts[i] : '';
     _endpointCtl = TextEditingController(text: at(0));
     _regionCtl = TextEditingController(text: at(1));
@@ -99,7 +98,6 @@ class _S3FormSheetState extends State<S3FormSheet> {
                 controller: _endpointCtl,
                 decoration: const InputDecoration(
                   labelText: 'Endpoint',
-                  hintText: 'play.min.io / s3.amazonaws.com',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -108,7 +106,6 @@ class _S3FormSheetState extends State<S3FormSheet> {
                 controller: _regionCtl,
                 decoration: const InputDecoration(
                   labelText: 'Region (可选)',
-                  hintText: 'us-east-1',
                   border: OutlineInputBorder(),
                 ),
               ),

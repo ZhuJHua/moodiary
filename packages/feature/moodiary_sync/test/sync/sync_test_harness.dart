@@ -5,6 +5,8 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
+import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
+import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
@@ -401,9 +403,13 @@ Future<void> tearDownSyncEnv() async {
 Future<void> configureBackend(SyncProviderType type) async {
   switch (type) {
     case SyncProviderType.webdav:
-      await MoodiaryKVs.webDavOption.set(['https://dav.example', 'user', 'pass']);
+      await WebDavSyncBackend.options.save([
+        'https://dav.example',
+        'user',
+        'pass',
+      ]);
     case SyncProviderType.s3:
-      await MoodiaryKVs.s3Option.set([
+      await S3SyncBackend.options.save([
         'https://s3.example',
         '',
         'ak',

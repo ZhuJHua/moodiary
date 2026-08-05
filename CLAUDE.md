@@ -32,7 +32,7 @@ dart tool/task.dart editor         # rebuild editor asset only (needs corepack o
 dart tool/task.dart analyze        # layer check + flutter analyze
 dart tool/task.dart test           # mobile/ tests ONLY — not the full suite
 melos exec --dir-exists=test --fail-fast -c 1 -- flutter test   # 全仓 Dart 测试（CI 口径，自动发现）
-cd packages/foundation/moodiary_rust/rust && cargo test && cargo clippy --all-targets -- -D warnings
+cd packages/foundation/moodiary_rust/rust && cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings
 cd packages/feature/moodiary_editor/editor && corepack pnpm type-check && corepack pnpm test
 ```
 
@@ -60,7 +60,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_lint/         #   shared analyzer options
       moodiary_l10n/         #   localization (ARB + gen-l10n)
       moodiary_router/       #   typed route primitives over go_router
-      moodiary_rust/         #   Rust FFI package (crate in rust/, built by hook/build.dart)
+      moodiary_rust/         #   Rust FFI package (cargo workspace in rust/, built by hook/build.dart)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
     core/                    # → foundation; internal order models → core → data,migration → preferences
       moodiary_models/       #   domain: Isar @Collection + Freezed DTOs
@@ -87,4 +87,25 @@ Path convention: unqualified `lib/...` refers to `mobile/lib/...`; `packages/` a
 Cross-package DAG is strictly upper → lower: `foundation → core → ui → feature → apps`. Features never import each other (the one kept exception is `diary → editor`); shared logic sinks to lower layers, cross-feature composition happens in the app layer. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`**, which reads every pubspec's `moodiary_*` deps (no baseline — must stay at zero). Melos `categories:` are filter/grouping only.
 
 In-app layering within `mobile/lib` (same script): `gen → core → data → component → feature/<x> → app → main.dart`. Baseline is **zero violations**.
+
+### Rust Workspace
+
+`packages/foundation/moodiary_rust/rust/` is both the cargo workspace root **and** the bridge package `moodiary_rust` — that shape is load-bearing: the Native Assets hook runs `cargo build --manifest-path rust/Cargo.toml --package moodiary_rust` and requires `Cargo.toml` + `rust-toolchain.toml` at `hook/build.dart`'s `cratePath`, so keeping `rust/` as the root means the hook and `flutter_rust_bridge.yaml` need no changes.
+
+```
+rust/
+  src/api/            # bridge = app layer: the ONLY place that knows about FRB
+  crates/
+    foundation/       # http (reqwest client + hyper server) / crypto / archive / media / text / font
+    core/             # doc (导出 IR，Dart export_doc.dart 的镜像)
+    feature/          # sync (s3+webdav) / export (pdf+docx) / assistant (rig) / graph
+```
+
+Same direction rule as Dart, enforced by the same script: `foundation → core → feature → bridge`, features never import each other, zero violations.
+
+Two invariants worth keeping:
+- **Sub-crates never mention `StreamSink` / `DartFnFuture`.** They take plain closures (`impl FnMut(T) -> bool`, `Arc<dyn Fn(..) -> BoxFuture<..>>`); `src/api/` adapts those to FRB.
+- **FFI-visible types are declared in the sub-crate and re-exposed via `#[frb(mirror(T))]` in `src/api/`.** Mirror emits identical Dart to a local declaration, so no DTO is duplicated and no `From` conversion is needed. Opaque handles (`S3Client`, `Zip`, …) are thin newtypes in `src/api/` that delegate.
+
+All third-party versions are exact-pinned (`=x.y.z`) in `[workspace.dependencies]`; sub-crates use `{ workspace = true }` and add only the features they need.
 

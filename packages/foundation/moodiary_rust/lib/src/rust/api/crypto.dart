@@ -16,10 +16,6 @@ abstract class Aes implements RustOpaqueInterface {
     encryptedData: encryptedData,
   );
 
-  /// 把 `user_key` 经 Argon2id 派生为 32 字节 key。参数缺省取 OWASP 推荐档
-  /// （m=64 MiB, t=3, p=4，PC 上约 100 ms）；同步层解包 keyfile 时按文件所记
-  /// 参数显式传入，未来升级强度不破坏旧 keyfile。同一 (salt, user_key, 参数)
-  /// 输出确定。
   static Future<Uint8List> deriveKey({
     required String salt,
     required String userKey,

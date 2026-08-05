@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:moodiary_export/moodiary_export.dart';
 
 String _resolve(String kind, String name) => '/data/$kind/$name';
 
 ExportDoc _convert(Map<String, dynamic> doc, {String title = '标题'}) =>
-    TiptapToExportDoc.convert(
+    TiptapToIr.convert(
       id: 'diary-1',
       title: title,
       time: DateTime(2026, 8, 4, 9, 30),
@@ -33,7 +33,7 @@ Map<String, dynamic> _para(List<Map<String, dynamic>> content) => {
 const _noMeta = MarkdownOptions(frontMatter: false, includeTitle: false);
 
 void main() {
-  group('TiptapToExportDoc', () {
+  group('TiptapToIr', () {
     test('段落与行内样式合并相邻同样式片段', () {
       final result = _convert(
         _doc([
@@ -49,7 +49,7 @@ void main() {
         ]),
       );
 
-      final block = result.blocks.single as ParagraphBlock;
+      final block = result.blocks.single as IrBlock_Paragraph;
       expect(block.spans, hasLength(2));
       expect(block.spans[0].text, '普通');
       expect(block.spans[1].text, '粗体');
@@ -66,7 +66,7 @@ void main() {
           },
         ]),
       );
-      expect((result.blocks.single as HeadingBlock).level, 6);
+      expect((result.blocks.single as IrBlock_Heading).level, 6);
     });
 
     test('本地图片拼绝对路径，外链原样保留', () {
@@ -83,14 +83,14 @@ void main() {
         ]),
       );
 
-      final local = result.blocks[0] as ImageBlock;
+      final local = result.blocks[0] as IrBlock_Image;
       expect(local.path, '/data/image/image-abc.webp');
-      expect(local.isExternal, isFalse);
+      expect(local.external_, isFalse);
       expect(local.widthPercent, 50);
 
-      final external = result.blocks[1] as ImageBlock;
+      final external = result.blocks[1] as IrBlock_Image;
       expect(external.path, 'https://example.com/a.png');
-      expect(external.isExternal, isTrue);
+      expect(external.external_, isTrue);
     });
 
     test('video 派生封面路径，audio 不派生', () {
@@ -107,12 +107,12 @@ void main() {
         ]),
       );
 
-      final video = result.blocks[0] as MediaBlock;
-      expect(video.kind, ExportMediaKind.video);
+      final video = result.blocks[0] as IrBlock_Media;
+      expect(video.kind, 'video');
       expect(video.coverPath, '/data/thumbnail/video-x.mp4');
 
-      final audio = result.blocks[1] as MediaBlock;
-      expect(audio.kind, ExportMediaKind.audio);
+      final audio = result.blocks[1] as IrBlock_Media;
+      expect(audio.kind, 'audio');
       expect(audio.coverPath, isNull);
     });
 
@@ -127,7 +127,7 @@ void main() {
           ]),
         ]),
       );
-      final span = (result.blocks.single as ParagraphBlock).spans.single;
+      final span = (result.blocks.single as IrBlock_Paragraph).spans.single;
       expect(span.text, '那天');
       expect(span.diaryLinkId, 'target-9');
     });
@@ -156,7 +156,7 @@ void main() {
           },
         ]),
       );
-      final list = result.blocks.single as ListBlock;
+      final list = result.blocks.single as IrBlock_List;
       expect(list.isTask, isTrue);
       expect(list.items.map((i) => i.checked), [true, false]);
     });
@@ -183,7 +183,7 @@ void main() {
           },
         ]),
       );
-      final cell = (result.blocks.single as TableBlock).rows.single.single;
+      final cell = (result.blocks.single as IrBlock_Table).rows.single.single;
       expect(cell.colspan, 1);
       expect(cell.rowspan, 1);
       expect(cell.header, isTrue);
@@ -201,7 +201,7 @@ void main() {
     });
 
     test('非 JSON 内容退化为单段纯文本', () {
-      final result = TiptapToExportDoc.convert(
+      final result = TiptapToIr.convert(
         id: 'd',
         title: 't',
         time: DateTime(2026),
@@ -209,7 +209,7 @@ void main() {
         resolvePath: _resolve,
       );
       expect(
-        (result.blocks.single as ParagraphBlock).spans.single.text,
+        (result.blocks.single as IrBlock_Paragraph).spans.single.text,
         '这是一篇旧的 markdown 日记',
       );
     });

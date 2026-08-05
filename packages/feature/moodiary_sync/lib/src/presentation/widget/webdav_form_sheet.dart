@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
@@ -36,7 +35,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
   @override
   void initState() {
     super.initState();
-    final opts = MoodiaryKVs.webDavOption.get() ?? const <String>[];
+    final opts = WebDavSyncBackend.options.value;
     _urlCtl = TextEditingController(text: opts.isNotEmpty ? opts[0] : '');
     _userCtl = TextEditingController(text: opts.length > 1 ? opts[1] : '');
     _passCtl = TextEditingController(text: opts.length > 2 ? opts[2] : '');
@@ -87,7 +86,6 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
               controller: _urlCtl,
               decoration: const InputDecoration(
                 labelText: 'Base URL',
-                hintText: 'https://dav.example.com/moodiary',
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.url,

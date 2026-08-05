@@ -6,12 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `anthropic_thinking_budget`, `build_tools`, `drive`, `split_history`, `to_message`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `ProxyTool`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `call`, `description`, `name`, `parameters`
-
-/// 流式对话 + 多轮工具调用。Dart 取消订阅会令 `sink.add` 失败，循环随即中断（取消在途
-/// 请求）。硬性失败（构造客户端 / 流错误）以 `Err` 形式让 Dart 流报错。
+/// Dart 取消订阅会令 `sink.add` 失败，循环随即中断并取消在途请求。
 Stream<RigStreamEvent> rigChatStream({
   required RigProviderConfig config,
   required String systemPrompt,
@@ -33,10 +28,8 @@ class RigChatMessage {
   final String role;
   final String content;
 
-  /// 可选图片（base64 编码，不含 data URL 前缀）。空表示无图；仅 user 消息使用。
+  /// base64，不含 data URL 前缀。空表示无图；仅 user 消息使用。
   final String imageBase64;
-
-  /// 图片 MIME（如 `image/jpeg`）。`image_base64` 非空时应给出，否则无法确定媒体类型。
   final String imageMime;
 
   const RigChatMessage({
@@ -65,34 +58,21 @@ class RigChatMessage {
 }
 
 /// 用「plain enum + 载荷字段」而非带数据的枚举变体，是为了让 FRB 生成普通 Dart
-/// 类 / 枚举，避开它对 `freezed`（项目当前钉在 pre-release 版）的版本门槛。
-enum RigEventKind {
-  textDelta,
+/// 类，避开它对 freezed（项目当前钉在 pre-release 版）的版本门槛。
+enum RigEventKind { textDelta, reasoningDelta, toolCall, usage }
 
-  /// 思考 / 推理增量（Anthropic thinking、OpenAI 兼容 `reasoning_content`）。
-  reasoningDelta,
-  toolCall,
-
-  /// 本轮结束时的 token 用量（已聚合内部多轮工具调用）。
-  usage,
-}
-
-/// 一次对话的 provider 连接配置。每次调用由 Dart 组装传入，Rust 不持有任何状态。
 class RigProviderConfig {
-  /// `"openai"`（OpenAI 兼容，走 Chat Completions API）或 `"anthropic"`。
+  /// `"openai"`（OpenAI 兼容，走 Chat Completions）或 `"anthropic"`。
   final String protocol;
   final String apiKey;
 
-  /// 自定义 baseUrl，留空表示该协议官方端点。
+  /// 留空表示该协议官方端点。
   final String baseUrl;
   final String model;
-
-  /// 单次回复最大 token 数（Anthropic 协议必传）。
   final int maxTokens;
 
-  /// 是否开启思考（reasoning）模式。开启后由 Rust 按协议注入思考参数（用默认强度）：
-  /// Anthropic 走 extended thinking（预算按 max_tokens 取默认值），
-  /// OpenAI 兼容走 `reasoning_effort: "medium"`。rig 不会自动开启，必须显式注入。
+  /// rig 不会自动开启思考，开启后由 Rust 按协议注入参数：Anthropic 走 extended
+  /// thinking，OpenAI 兼容走 `reasoning_effort: "medium"`。
   final bool thinking;
 
   const RigProviderConfig({
@@ -130,7 +110,7 @@ class RigStreamEvent {
   final RigEventKind kind;
   final String text;
 
-  /// 仅 [RigEventKind::Usage] 事件有意义：本轮聚合的输入 / 输出 token 数；其余事件为 0。
+  /// 仅 [RigEventKind::Usage] 事件有意义，其余为 0。
   final int inputTokens;
   final int outputTokens;
 
@@ -159,13 +139,13 @@ class RigStreamEvent {
           outputTokens == other.outputTokens;
 }
 
-/// 工具定义（数据驱动，对应 Dart 的 `AssistantTool`）。
 class RigToolDef {
-  /// 模型侧 function name，须与 Dart 工具路由表里的 key 一致。
+  /// 须与 Dart 工具路由表里的 key 一致。
   final String name;
   final String description;
 
-  /// 入参 JSON Schema（字符串，须是 `type: object`）。
+  /// 入参 JSON Schema（字符串，须是 `type: object`）。FRB 的 serde_json::Value 只支持
+  /// 函数参数/返回值，放进 mirror 结构体字段会缺 IntoIntoDart，所以这里仍走字符串。
   final String parametersJson;
 
   const RigToolDef({

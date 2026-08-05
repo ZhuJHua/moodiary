@@ -7,17 +7,10 @@ import '../frb_generated.dart';
 import 'http.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `bytes_response`, `collect_body`, `file_response`, `parse_range`, `serve_inner`, `serve_one`, `start_inner`, `text_response`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `CollectedBody`
-
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpServer>>
 abstract class HttpServer implements RustOpaqueInterface {
   int port();
 
-  /// 启动服务。[preferred_port] 被占自动回退随机端口（`port()` 读实际值）；
-  /// [loopback_only] 为 true 只监听 127.0.0.1，否则监听所有 IPv4 接口。
-  /// [on_body_progress] 以 (received, total) 回报请求体接收进度，total 为 -1
-  /// 表示长度未知。
   static Future<HttpServer> start({
     required int preferredPort,
     required bool loopbackOnly,
@@ -33,22 +26,13 @@ abstract class HttpServer implements RustOpaqueInterface {
     onBodyProgress: onBodyProgress,
   );
 
-  /// 停止监听并掐断在飞连接。幂等。
   void stop();
 }
 
-/// 收到的请求（body 已收集完毕才交给 handler）。
 class HttpServerRequest {
-  /// 大写方法名（GET / POST / ...）。
   final String method;
-
-  /// 以 `/` 开头、不含 query。
   final String path;
-
-  /// 已解码的 query 键值对。
   final List<KeyValue> query;
-
-  /// 头部键已小写。
   final List<KeyValue> headers;
 
   /// 小请求体内联；已落盘时为空、见 [Self::body_file_path]。

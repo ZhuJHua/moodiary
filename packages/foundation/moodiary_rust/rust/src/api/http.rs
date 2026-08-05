@@ -1,20 +1,14 @@
-//! 基于 reqwest 的通用 HTTP 客户端，经 flutter_rust_bridge 暴露给 Dart，替代原 Dio。
-//! 设计参考 rhttp（可复用连接池的 client + 一次 request 调用），但只覆盖当前所需的
-//! 「核心」子集：全动词、query、headers、字节请求体、字节响应、超时、重定向上限、
-//! 按状态码抛错。请求体的 json / form / text 编码与响应体的解码均放在 Dart 侧完成，
-//! 这里只做「字节进、字节出」的透明转发，FFI 面尽量薄。
-
-use std::time::Duration;
-
 use flutter_rust_bridge::frb;
-use futures::StreamExt;
 
 use crate::frb_generated::StreamSink;
-use crate::http_client::platform_client_builder;
 
-/// HTTP 方法。跨 FFI 的枚举，映射到 reqwest::Method。
-#[derive(Clone, Copy)]
-pub enum HttpMethod {
+pub use moodiary_http::request::{
+    ClientSettings, HttpError, HttpErrorKind, HttpMethod, HttpResponse, KeyValue, RequestOptions,
+    UploadEvent,
+};
+
+#[frb(mirror(HttpMethod))]
+pub enum _HttpMethod {
     Get,
     Post,
     Put,
@@ -24,34 +18,18 @@ pub enum HttpMethod {
     Options,
 }
 
-impl From<HttpMethod> for reqwest::Method {
-    fn from(m: HttpMethod) -> Self {
-        match m {
-            HttpMethod::Get => reqwest::Method::GET,
-            HttpMethod::Post => reqwest::Method::POST,
-            HttpMethod::Put => reqwest::Method::PUT,
-            HttpMethod::Delete => reqwest::Method::DELETE,
-            HttpMethod::Patch => reqwest::Method::PATCH,
-            HttpMethod::Head => reqwest::Method::HEAD,
-            HttpMethod::Options => reqwest::Method::OPTIONS,
-        }
-    }
-}
-
 /// 有序键值对，用于 query / 请求头 / 响应头。用结构体而非 map 以保留顺序与重复键
 /// （响应头如 set-cookie 可重复）。
-#[derive(Clone)]
-pub struct KeyValue {
+#[frb(mirror(KeyValue))]
+pub struct _KeyValue {
     pub key: String,
     pub value: String,
 }
 
-/// 建 client 时的设置。为空的字段走 reqwest 默认。
-pub struct ClientSettings {
-    /// 相对 url 的基准；为 None 时所有请求都必须传绝对 url。
+#[frb(mirror(ClientSettings))]
+pub struct _ClientSettings {
     pub base_url: Option<String>,
     pub connect_timeout_ms: Option<u32>,
-    /// 整体超时（含读取响应）。单次请求可再覆盖。
     pub timeout_ms: Option<u32>,
     pub user_agent: Option<String>,
     /// None=reqwest 默认(最多 10 跳)，Some(0)=不跟随重定向，Some(n)=最多 n 跳。
@@ -60,8 +38,8 @@ pub struct ClientSettings {
     pub throw_on_status: bool,
 }
 
-/// 一次请求的公共参数（body 之外），收拢成结构体保持 FFI 面稳定。
-pub struct RequestOptions {
+#[frb(mirror(RequestOptions))]
+pub struct _RequestOptions {
     pub method: HttpMethod,
     pub url: String,
     pub query: Vec<KeyValue>,
@@ -71,138 +49,49 @@ pub struct RequestOptions {
     pub throw_on_status: Option<bool>,
 }
 
-/// 一次响应。body 为原始字节，解码交给 Dart。
-#[derive(Clone)]
-pub struct HttpResponse {
+#[frb(mirror(HttpResponse))]
+pub struct _HttpResponse {
     pub status: u16,
     pub headers: Vec<KeyValue>,
     pub body: Vec<u8>,
 }
 
-/// 错误类别，供 Dart 侧映射成 typed 异常（对齐 rhttp 的异常分型）。
-#[derive(Debug)]
-pub enum HttpErrorKind {
-    /// 连接或读取超时。
+#[frb(mirror(HttpErrorKind))]
+pub enum _HttpErrorKind {
     Timeout,
-    /// 建立连接失败（DNS / 拒绝 / 网络不可达）。
     Connect,
-    /// 构造请求阶段出错（非法 url / 头等）。
     Request,
-    /// 超过重定向上限。
     Redirect,
-    /// 读取 / 解码响应体失败。
     Decode,
-    /// throw_on_status 打开时的非 2xx 响应。
     Status,
-    /// 其它未归类错误。
     Unknown,
 }
 
-#[derive(Debug)]
-pub struct HttpError {
+#[frb(mirror(HttpError))]
+pub struct _HttpError {
     pub kind: HttpErrorKind,
-    /// 有 HTTP 响应时的状态码。
     pub status: Option<u16>,
     pub message: String,
 }
 
-fn map_reqwest_err(e: reqwest::Error) -> HttpError {
-    let kind = if e.is_timeout() {
-        HttpErrorKind::Timeout
-    } else if e.is_connect() {
-        HttpErrorKind::Connect
-    } else if e.is_redirect() {
-        HttpErrorKind::Redirect
-    } else if e.is_decode() || e.is_body() {
-        HttpErrorKind::Decode
-    } else if e.is_request() || e.is_builder() {
-        HttpErrorKind::Request
-    } else {
-        HttpErrorKind::Unknown
-    };
-    HttpError {
-        kind,
-        status: e.status().map(|s| s.as_u16()),
-        message: e.to_string(),
-    }
+/// 文件上传过程事件：进度事件 [response] 为 None，最后一条携带最终响应。
+#[frb(mirror(UploadEvent))]
+pub struct _UploadEvent {
+    pub sent: i64,
+    pub total: i64,
+    pub response: Option<HttpResponse>,
 }
 
-fn err(kind: HttpErrorKind, message: impl Into<String>) -> HttpError {
-    HttpError {
-        kind,
-        status: None,
-        message: message.into(),
-    }
-}
-
-/// 可复用的 HTTP 客户端（内部持有 reqwest::Client 的连接池）。作为 opaque 句柄常驻
-/// Dart 侧，多次请求复用同一连接池。
 #[frb(opaque)]
 pub struct HttpClient {
-    inner: reqwest::Client,
-    base_url: Option<String>,
-    throw_on_status: bool,
+    inner: moodiary_http::request::HttpClient,
 }
 
 impl HttpClient {
     pub fn new(settings: ClientSettings) -> Result<HttpClient, HttpError> {
-        // platform_client_builder 处理 Android 上 rustls-platform-verifier 需初始化的坑：
-        // 仅 Android 换成内置 webpki 根，其余平台走 reqwest 默认 TLS（认系统信任库）。
-        let mut builder = platform_client_builder()
-            .map_err(|e| err(HttpErrorKind::Unknown, e.to_string()))?;
-        if let Some(ms) = settings.connect_timeout_ms {
-            builder = builder.connect_timeout(Duration::from_millis(ms as u64));
-        }
-        if let Some(ms) = settings.timeout_ms {
-            builder = builder.timeout(Duration::from_millis(ms as u64));
-        }
-        if let Some(ua) = settings.user_agent.as_deref() {
-            builder = builder.user_agent(ua);
-        }
-        builder = match settings.max_redirects {
-            Some(0) => builder.redirect(reqwest::redirect::Policy::none()),
-            Some(n) => builder.redirect(reqwest::redirect::Policy::limited(n as usize)),
-            None => builder,
-        };
-        let inner = builder.build().map_err(map_reqwest_err)?;
         Ok(HttpClient {
-            inner,
-            base_url: settings.base_url,
-            throw_on_status: settings.throw_on_status,
+            inner: moodiary_http::request::HttpClient::new(settings)?,
         })
-    }
-
-    /// 相对 url 用 base_url 解析；base_url 为 None 时要求绝对 url。传入的绝对 url 即便
-    /// 有 base_url 也按其自身解析（Url::join 语义）。
-    fn resolve_url(&self, url: &str) -> Result<reqwest::Url, HttpError> {
-        match self.base_url.as_deref() {
-            Some(base) => reqwest::Url::parse(base)
-                .and_then(|b| b.join(url))
-                .map_err(|e| err(HttpErrorKind::Request, format!("invalid url: {e}"))),
-            None => reqwest::Url::parse(url)
-                .map_err(|e| err(HttpErrorKind::Request, format!("invalid url: {e}"))),
-        }
-    }
-
-    /// 按 [RequestOptions] 组装 RequestBuilder（url 解析、query 追加、headers、超时）。
-    fn builder(&self, options: &RequestOptions) -> Result<reqwest::RequestBuilder, HttpError> {
-        let mut full_url = self.resolve_url(&options.url)?;
-        if !options.query.is_empty() {
-            // reqwest 关了默认特性，RequestBuilder::query 不可用；直接往 Url 追加
-            // query（application/x-www-form-urlencoded，语义一致）。
-            let mut pairs = full_url.query_pairs_mut();
-            for kv in &options.query {
-                pairs.append_pair(&kv.key, &kv.value);
-            }
-        }
-        let mut req = self.inner.request(options.method.into(), full_url);
-        for h in &options.headers {
-            req = req.header(&h.key, &h.value);
-        }
-        if let Some(ms) = options.timeout_ms {
-            req = req.timeout(Duration::from_millis(ms as u64));
-        }
-        Ok(req)
     }
 
     pub async fn request(
@@ -210,12 +99,7 @@ impl HttpClient {
         options: RequestOptions,
         body: Option<Vec<u8>>,
     ) -> Result<HttpResponse, HttpError> {
-        let mut req = self.builder(&options)?;
-        if let Some(b) = body {
-            req = req.body(b);
-        }
-        let resp = req.send().await.map_err(map_reqwest_err)?;
-        self.collect_response(resp, options.throw_on_status).await
+        self.inner.request(options, body).await
     }
 
     /// 流式上传本地文件（不整块进内存）。进度经 [sink] 回报（`response` 为 None），
@@ -228,7 +112,8 @@ impl HttpClient {
     ) -> Result<(), HttpError> {
         let progress = sink.clone();
         let (response, total) = self
-            .upload_file_inner(options, file_path, move |sent, total| {
+            .inner
+            .upload_file(options, file_path, move |sent, total| {
                 let _ = progress.add(UploadEvent {
                     sent,
                     total,
@@ -243,84 +128,4 @@ impl HttpClient {
         });
         Ok(())
     }
-
-    pub(crate) async fn upload_file_inner(
-        &self,
-        options: RequestOptions,
-        file_path: String,
-        on_progress: impl Fn(i64, i64) + Send + Sync + 'static,
-    ) -> Result<(HttpResponse, i64), HttpError> {
-        const PROGRESS_STEP: i64 = 512 * 1024;
-
-        let file = tokio::fs::File::open(&file_path)
-            .await
-            .map_err(|e| err(HttpErrorKind::Request, format!("open file failed: {e}")))?;
-        let total = file
-            .metadata()
-            .await
-            .map_err(|e| err(HttpErrorKind::Request, format!("stat file failed: {e}")))?
-            .len() as i64;
-
-        let mut sent: i64 = 0;
-        let mut last_report: i64 = 0;
-        let stream = tokio_util::io::ReaderStream::new(file).map(move |chunk| {
-            if let Ok(bytes) = &chunk {
-                sent += bytes.len() as i64;
-                if sent - last_report >= PROGRESS_STEP || sent == total {
-                    last_report = sent;
-                    on_progress(sent, total);
-                }
-            }
-            chunk
-        });
-
-        // 显式 content-length：hyper 对带该头的流式 body 走定长编码，接收端才有确定进度。
-        let req = self
-            .builder(&options)?
-            .header(reqwest::header::CONTENT_LENGTH, total)
-            .body(reqwest::Body::wrap_stream(stream));
-
-        let resp = req.send().await.map_err(map_reqwest_err)?;
-        let response = self.collect_response(resp, options.throw_on_status).await?;
-        Ok((response, total))
-    }
-
-    async fn collect_response(
-        &self,
-        resp: reqwest::Response,
-        throw_on_status: Option<bool>,
-    ) -> Result<HttpResponse, HttpError> {
-        let status = resp.status();
-        let headers = resp
-            .headers()
-            .iter()
-            .map(|(k, v)| KeyValue {
-                key: k.as_str().to_string(),
-                value: v.to_str().unwrap_or_default().to_string(),
-            })
-            .collect();
-
-        if throw_on_status.unwrap_or(self.throw_on_status) && !status.is_success() {
-            return Err(HttpError {
-                kind: HttpErrorKind::Status,
-                status: Some(status.as_u16()),
-                message: format!("HTTP {}", status.as_u16()),
-            });
-        }
-
-        let body = resp.bytes().await.map_err(map_reqwest_err)?.to_vec();
-        Ok(HttpResponse {
-            status: status.as_u16(),
-            headers,
-            body,
-        })
-    }
-}
-
-/// 文件上传过程事件：进度事件 [response] 为 None，最后一条携带最终响应。
-#[derive(Clone)]
-pub struct UploadEvent {
-    pub sent: i64,
-    pub total: i64,
-    pub response: Option<HttpResponse>,
 }

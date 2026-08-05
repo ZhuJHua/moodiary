@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_export/moodiary_export.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
 void main() {
   group('ExportSettings 持久化', () {

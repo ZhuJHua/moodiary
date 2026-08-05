@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:moodiary_core/moodiary_core.dart';
@@ -8,8 +7,11 @@ import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
+import 'export_doc.dart';
 import 'export_options.dart';
 import 'export_scope.dart';
+import 'markdown_writer.dart';
+import 'tiptap_to_ir.dart';
 
 class ExportOutcome {
   /// 最终产物路径。单文件时是它本身，多文件 / 带素材时是打包好的 zip。
@@ -157,7 +159,7 @@ class ExportService {
       content = MarkdownToTiptap.convert(content) ?? content;
     }
 
-    final doc = TiptapToExportDoc.convert(
+    final doc = TiptapToIr.convert(
       id: diary.id,
       title: diary.title,
       // 模型里存的是绝对时刻（UTC），展示与分桶前必须转本地。
@@ -271,7 +273,7 @@ class ExportService {
     if (settings.common.merge) {
       final path = p.join(outDir.path, '${_stamp()}.docx');
       await rust.writeDocx(
-        docsJson: _encodeDocs(docs),
+        docs: _toIr(docs),
         style: style,
         outPath: path,
       );
@@ -287,7 +289,7 @@ class ExportService {
         untitledLabel,
       );
       await rust.writeDocx(
-        docsJson: _encodeDocs([doc]),
+        docs: _toIr([doc]),
         style: style,
         outPath: p.join(outDir.path, name),
       );
@@ -336,7 +338,7 @@ class ExportService {
       onProgress?.call(const ExportProgress(ExportPhase.serializing, 0, 0));
       final path = p.join(outDir.path, '${_stamp()}.pdf');
       await rust.writePdf(
-        docsJson: _encodeDocs(docs),
+        docs: _toIr(docs),
         style: style,
         outPath: path,
       );
@@ -354,7 +356,7 @@ class ExportService {
         untitledLabel,
       );
       await rust.writePdf(
-        docsJson: _encodeDocs([doc]),
+        docs: _toIr([doc]),
         style: style,
         outPath: p.join(outDir.path, name),
       );
@@ -365,11 +367,10 @@ class ExportService {
     return _zip(outDir, p.join(workDir.path, 'moodiary-pdf-${_stamp()}.zip'));
   }
 
-  static String _encodeDocs(List<ExportDoc> docs) => jsonEncode([
-    for (final doc in docs)
-      // 时间在 IR 里是 ISO 串，Rust 侧只是照抄进 meta 行，这里换成人读的格式。
-      doc.toJson()..['time'] = TimeFormat.longDateTime(doc.time),
-  ]);
+  /// 时间过桥前换成人读格式 —— Rust 侧只是照抄进 meta 行。
+  static List<rust.IrDoc> _toIr(List<ExportDoc> docs) => [
+    for (final doc in docs) doc.toIr(TimeFormat.longDateTime(doc.time)),
+  ];
 
   // ------------------------------------------------------------ 文件命名
 
@@ -479,11 +480,11 @@ class _MediaStage {
     return _rebuild(doc, await _mapBlocks(doc.blocks, _stageBlock));
   }
 
-  Future<List<ExportBlock>> _mapBlocks(
-    List<ExportBlock> blocks,
-    Future<ExportBlock?> Function(ExportBlock) visit,
+  Future<List<IrBlock>> _mapBlocks(
+    List<IrBlock> blocks,
+    Future<IrBlock?> Function(IrBlock) visit,
   ) async {
-    final out = <ExportBlock>[];
+    final out = <IrBlock>[];
     for (final block in blocks) {
       final mapped = await visit(block);
       if (mapped != null) out.add(mapped);
@@ -491,17 +492,17 @@ class _MediaStage {
     return out;
   }
 
-  Future<ExportBlock?> _dropMedia(ExportBlock block) async => switch (block) {
-    ImageBlock() || MediaBlock() => null,
-    QuoteBlock(:final children) =>
-      QuoteBlock(await _mapBlocks(children, _dropMedia)),
-    ListBlock(:final ordered, :final start, :final items) => ListBlock(
+  Future<IrBlock?> _dropMedia(IrBlock block) async => switch (block) {
+    IrBlock_Image() || IrBlock_Media() => null,
+    IrBlock_Quote(:final children) =>
+      IrBlock.quote(children: await _mapBlocks(children, _dropMedia)),
+    IrBlock_List(:final ordered, :final start, :final items) => IrBlock.list(
       ordered: ordered,
       start: start,
       items: [
         for (final item in items)
-          ExportListItem(
-            await _mapBlocks(item.children, _dropMedia),
+          IrListItem(
+            children: await _mapBlocks(item.children, _dropMedia),
             checked: item.checked,
           ),
       ],
@@ -509,45 +510,46 @@ class _MediaStage {
     _ => block,
   };
 
-  Future<ExportBlock?> _stageBlock(ExportBlock block) async {
+  Future<IrBlock?> _stageBlock(IrBlock block) async {
     switch (block) {
-      case ImageBlock():
-        if (block.isExternal) return block;
+      case IrBlock_Image():
+        if (block.external_) return block;
         if (_policy == ExportMediaPolicy.placeholder) return null;
         final staged = await _stageImage(block.path);
         if (staged == null) {
           skipped++;
           return null;
         }
-        return ImageBlock(
+        return IrBlock.image(
           path: staged,
           alt: block.alt,
           widthPercent: block.widthPercent,
+          external_: false,
         );
 
-      case MediaBlock():
+      case IrBlock_Media():
         final cover = block.coverPath == null || _policy == ExportMediaPolicy.placeholder
             ? null
             : await _stageImage(block.coverPath!);
         _rememberAsset(block.path, block.filename);
-        return MediaBlock(
+        return IrBlock.media(
           kind: block.kind,
           filename: block.filename,
           path: block.path,
           coverPath: cover,
         );
 
-      case QuoteBlock(:final children):
-        return QuoteBlock(await _mapBlocks(children, _stageBlock));
+      case IrBlock_Quote(:final children):
+        return IrBlock.quote(children: await _mapBlocks(children, _stageBlock));
 
-      case ListBlock(:final ordered, :final start, :final items):
-        return ListBlock(
+      case IrBlock_List(:final ordered, :final start, :final items):
+        return IrBlock.list(
           ordered: ordered,
           start: start,
           items: [
             for (final item in items)
-              ExportListItem(
-                await _mapBlocks(item.children, _stageBlock),
+              IrListItem(
+                children: await _mapBlocks(item.children, _stageBlock),
                 checked: item.checked,
               ),
           ],
@@ -604,7 +606,7 @@ class _MediaStage {
     }
   }
 
-  ExportDoc _rebuild(ExportDoc doc, List<ExportBlock> blocks) => ExportDoc(
+  ExportDoc _rebuild(ExportDoc doc, List<IrBlock> blocks) => ExportDoc(
     id: doc.id,
     title: doc.title,
     time: doc.time,

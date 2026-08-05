@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 
 import '../data/export_options.dart';
+import '../data/markdown_writer.dart';
 import '../data/export_scope.dart';
 import '../data/export_service.dart';
 import 'export_page.dart' show shareExported;

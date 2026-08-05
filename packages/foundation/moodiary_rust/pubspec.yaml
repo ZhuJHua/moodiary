@@ -14,7 +14,11 @@ dependencies:
     sdk: flutter
   flutter_rust_bridge: 2.13.0-beta.5
   flutter_rust_bridge_hooks: 2.13.0-beta.5
+  # 导出 IR 是带数据的枚举，FRB 为它生成 freezed sealed class。
+  freezed_annotation: 3.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  build_runner: 2.15.1
+  freezed: 3.2.6-dev.1

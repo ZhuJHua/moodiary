@@ -6,8 +6,6 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `s3_is_not_found`, `s3_is_precondition_failed`
-
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<S3Client>>
 abstract class S3Client implements RustOpaqueInterface {
   /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
@@ -17,9 +15,6 @@ abstract class S3Client implements RustOpaqueInterface {
 
   /// 「不存在」视为成功；其它错误如实上抛 —— 引擎依赖删除结果决定 tombstone 是否已被远端接收。
   Future<void> deleteObject({required String key});
-
-  /// 确保 bucket 存在，不存在则创建；确认后缓存，之后的写不再重复往返。
-  Future<void> ensureBucket();
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<S3Client> newInstance({
@@ -38,11 +33,11 @@ abstract class S3Client implements RustOpaqueInterface {
     region: region,
   );
 
-  /// 仅「不存在」（NoSuchKey 等）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）
+  /// 仅「不存在」（404）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）
   /// 必须能区分「不存在」与「读取失败」，否则 push 会在网络抖动时把 manifest 从零重建。
   Future<Uint8List> readObject({required String key});
 
-  /// HEAD 请求取 Last-Modified（ISO 8601），不存在返回空字符串。
+  /// HEAD 请求取 Last-Modified，不存在返回空字符串。调用方只判空/非空，不解析格式。
   Future<String> statObject({required String key});
 
   Future<bool> testConnection();

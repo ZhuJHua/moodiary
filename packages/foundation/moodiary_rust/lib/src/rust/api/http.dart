@@ -6,9 +6,6 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `builder`, `collect_response`, `err`, `map_reqwest_err`, `resolve_url`, `upload_file_inner`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `from`
-
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpClient>>
 abstract class HttpClient implements RustOpaqueInterface {
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
@@ -28,13 +25,9 @@ abstract class HttpClient implements RustOpaqueInterface {
   });
 }
 
-/// 建 client 时的设置。为空的字段走 reqwest 默认。
 class ClientSettings {
-  /// 相对 url 的基准；为 None 时所有请求都必须传绝对 url。
   final String? baseUrl;
   final int? connectTimeoutMs;
-
-  /// 整体超时（含读取响应）。单次请求可再覆盖。
   final int? timeoutMs;
   final String? userAgent;
 
@@ -77,8 +70,6 @@ class ClientSettings {
 
 class HttpError implements FrbException {
   final HttpErrorKind kind;
-
-  /// 有 HTTP 响应时的状态码。
   final int? status;
   final String message;
 
@@ -97,34 +88,18 @@ class HttpError implements FrbException {
           message == other.message;
 }
 
-/// 错误类别，供 Dart 侧映射成 typed 异常（对齐 rhttp 的异常分型）。
 enum HttpErrorKind {
-  /// 连接或读取超时。
   timeout,
-
-  /// 建立连接失败（DNS / 拒绝 / 网络不可达）。
   connect,
-
-  /// 构造请求阶段出错（非法 url / 头等）。
   request,
-
-  /// 超过重定向上限。
   redirect,
-
-  /// 读取 / 解码响应体失败。
   decode,
-
-  /// throw_on_status 打开时的非 2xx 响应。
   status,
-
-  /// 其它未归类错误。
   unknown,
 }
 
-/// HTTP 方法。跨 FFI 的枚举，映射到 reqwest::Method。
 enum HttpMethod { get_, post, put, delete, patch, head, options }
 
-/// 一次响应。body 为原始字节，解码交给 Dart。
 class HttpResponse {
   final int status;
   final List<KeyValue> headers;
@@ -169,7 +144,6 @@ class KeyValue {
           value == other.value;
 }
 
-/// 一次请求的公共参数（body 之外），收拢成结构体保持 FFI 面稳定。
 class RequestOptions {
   final HttpMethod method;
   final String url;

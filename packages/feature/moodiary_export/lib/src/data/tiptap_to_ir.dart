@@ -14,8 +14,8 @@ typedef ResolveMediaPath = String Function(String kind, String name);
 ///
 /// 认不出的节点类型记进 [ExportDoc.unsupportedNodes] 而不是抛异常 —— 一篇日记里的一个
 /// 怪节点不该让整批 300 篇的导出失败；但也不静默，UI 负责把它报出来。
-class TiptapToExportDoc {
-  const TiptapToExportDoc._();
+class TiptapToIr {
+  const TiptapToIr._();
 
   static const _mediaPrefixes = {'image-', 'audio-', 'video-'};
 
@@ -32,7 +32,7 @@ class TiptapToExportDoc {
     String? categoryName,
   }) {
     final unsupported = <String>{};
-    final blocks = <ExportBlock>[];
+    final blocks = <IrBlock>[];
 
     final doc = _tryDoc(content);
     if (doc != null) {
@@ -40,7 +40,7 @@ class TiptapToExportDoc {
     } else if (content.trim().isNotEmpty) {
       // 旧 markdown / richText 日记：不在这里解析，交由调用方先经 MarkdownToTiptap
       // 转换。走到这里说明调用方没转，按整段纯文本降级，至少不丢字。
-      blocks.add(ParagraphBlock([ExportSpan(content)]));
+      blocks.add(IrBlock.paragraph(spans: [irSpan(content)]));
     }
 
     return ExportDoc(
@@ -71,7 +71,7 @@ class TiptapToExportDoc {
 
   static void _blocks(
     dynamic content,
-    List<ExportBlock> out,
+    List<IrBlock> out,
     Set<String> unsupported,
     ResolveMediaPath resolve,
   ) {
@@ -84,7 +84,7 @@ class TiptapToExportDoc {
 
   static void _block(
     Map node,
-    List<ExportBlock> out,
+    List<IrBlock> out,
     Set<String> unsupported,
     ResolveMediaPath resolve,
   ) {
@@ -93,22 +93,28 @@ class TiptapToExportDoc {
       case 'paragraph':
         final spans = _inline(node['content'], unsupported);
         // 空段落保留：它在原文里是有意的留白，markdown/docx 都靠它分段。
-        out.add(ParagraphBlock(spans));
+        out.add(IrBlock.paragraph(spans: spans));
 
       case 'heading':
         final raw = (attrs is Map) ? attrs['level'] : null;
         final level = (raw is int) ? raw.clamp(1, 6) : 1;
-        out.add(HeadingBlock(level, _inline(node['content'], unsupported)));
+        out.add(
+          IrBlock.heading(
+            level: level,
+            spans: _inline(node['content'], unsupported),
+          ),
+        );
 
       case 'blockquote':
-        final children = <ExportBlock>[];
+        final children = <IrBlock>[];
         _blocks(node['content'], children, unsupported, resolve);
-        out.add(QuoteBlock(children));
+        out.add(IrBlock.quote(children: children));
 
       case 'bulletList':
         out.add(
-          ListBlock(
+          IrBlock.list(
             ordered: false,
+            start: 1,
             items: _items(node['content'], unsupported, resolve),
           ),
         );
@@ -116,7 +122,7 @@ class TiptapToExportDoc {
       case 'orderedList':
         final rawStart = (attrs is Map) ? attrs['start'] : null;
         out.add(
-          ListBlock(
+          IrBlock.list(
             ordered: true,
             start: rawStart is int ? rawStart : 1,
             items: _items(node['content'], unsupported, resolve),
@@ -125,8 +131,9 @@ class TiptapToExportDoc {
 
       case 'taskList':
         out.add(
-          ListBlock(
+          IrBlock.list(
             ordered: false,
+            start: 1,
             items: _items(node['content'], unsupported, resolve),
           ),
         );
@@ -134,14 +141,14 @@ class TiptapToExportDoc {
       case 'codeBlock':
         final lang = (attrs is Map) ? attrs['language'] : null;
         out.add(
-          CodeBlock(
-            _plainText(node['content']),
+          IrBlock.code(
             language: lang is String && lang.isNotEmpty ? lang : null,
+            text: _plainText(node['content']),
           ),
         );
 
       case 'horizontalRule':
-        out.add(const DividerBlock());
+        out.add(const IrBlock.divider());
 
       case 'image':
         final block = _image(attrs, resolve);
@@ -161,13 +168,13 @@ class TiptapToExportDoc {
     }
   }
 
-  static List<ExportListItem> _items(
+  static List<IrListItem> _items(
     dynamic content,
     Set<String> unsupported,
     ResolveMediaPath resolve,
   ) {
     if (content is! List) return const [];
-    final items = <ExportListItem>[];
+    final items = <IrListItem>[];
     for (final node in content) {
       if (node is! Map) continue;
       final type = node['type'];
@@ -175,27 +182,27 @@ class TiptapToExportDoc {
         if (type is String) unsupported.add(type);
         continue;
       }
-      final children = <ExportBlock>[];
+      final children = <IrBlock>[];
       _blocks(node['content'], children, unsupported, resolve);
       final attrs = node['attrs'];
       final checked = (type == 'taskItem')
           ? ((attrs is Map && attrs['checked'] == true))
           : null;
-      items.add(ExportListItem(children, checked: checked));
+      items.add(IrListItem(children: children, checked: checked));
     }
     return items;
   }
 
-  static TableBlock _table(
+  static IrBlock _table(
     dynamic content,
     Set<String> unsupported,
     ResolveMediaPath resolve,
   ) {
-    final rows = <List<ExportCell>>[];
-    if (content is! List) return TableBlock(rows);
+    final rows = <List<IrCell>>[];
+    if (content is! List) return IrBlock.table(rows: rows);
     for (final row in content) {
       if (row is! Map || row['type'] != 'tableRow') continue;
-      final cells = <ExportCell>[];
+      final cells = <IrCell>[];
       final rowContent = row['content'];
       if (rowContent is List) {
         for (final cell in rowContent) {
@@ -203,12 +210,12 @@ class TiptapToExportDoc {
           final isHeader = cell['type'] == 'tableHeader';
           if (!isHeader && cell['type'] != 'tableCell') continue;
           final attrs = cell['attrs'];
-          final children = <ExportBlock>[];
+          final children = <IrBlock>[];
           _blocks(cell['content'], children, unsupported, resolve);
           final align = (attrs is Map) ? attrs['align'] : null;
           cells.add(
-            ExportCell(
-              children,
+            IrCell(
+              children: children,
               header: isHeader,
               colspan: _span(attrs, 'colspan'),
               rowspan: _span(attrs, 'rowspan'),
@@ -219,7 +226,7 @@ class TiptapToExportDoc {
       }
       rows.add(cells);
     }
-    return TableBlock(rows);
+    return IrBlock.table(rows: rows);
   }
 
   /// 合并跨度：属性缺失或非法（0 / 负数）时退回 1。
@@ -229,7 +236,7 @@ class TiptapToExportDoc {
     return (v is int && v >= 1) ? v : 1;
   }
 
-  static ImageBlock? _image(dynamic attrs, ResolveMediaPath resolve) {
+  static IrBlock? _image(dynamic attrs, ResolveMediaPath resolve) {
     if (attrs is! Map) return null;
     final src = attrs['src'];
     if (src is! String || src.isEmpty) return null;
@@ -238,21 +245,22 @@ class TiptapToExportDoc {
     final wp = attrs['widthPercent'];
 
     if (_isExternal(src)) {
-      return ImageBlock(
+      return IrBlock.image(
         path: src,
         alt: alt is String ? alt : null,
         widthPercent: wp is int ? wp : null,
-        isExternal: true,
+        external_: true,
       );
     }
-    return ImageBlock(
+    return IrBlock.image(
       path: resolve('image', src),
       alt: alt is String ? alt : null,
       widthPercent: wp is int ? wp : null,
+      external_: false,
     );
   }
 
-  static MediaBlock? _media(
+  static IrBlock? _media(
     String type,
     dynamic attrs,
     ResolveMediaPath resolve,
@@ -261,8 +269,8 @@ class TiptapToExportDoc {
     final name = attrs['filename'];
     if (name is! String || name.isEmpty) return null;
     final isVideo = type == 'video';
-    return MediaBlock(
-      kind: isVideo ? ExportMediaKind.video : ExportMediaKind.audio,
+    return IrBlock.media(
+      kind: isVideo ? 'video' : 'audio',
       filename: name,
       path: resolve(type, name),
       coverPath: isVideo ? resolve('thumbnail', name) : null,
@@ -277,15 +285,15 @@ class TiptapToExportDoc {
   }
 
   /// 收集行内节点为 span 列表，相邻同样式片段合并。
-  static List<ExportSpan> _inline(dynamic content, Set<String> unsupported) {
-    final spans = <ExportSpan>[];
+  static List<IrSpan> _inline(dynamic content, Set<String> unsupported) {
+    final spans = <IrSpan>[];
     if (content is! List) return spans;
 
-    void push(ExportSpan span) {
+    void push(IrSpan span) {
       if (span.text.isEmpty) return;
       final last = spans.isEmpty ? null : spans.last;
       if (last != null && _sameStyle(last, span)) {
-        spans[spans.length - 1] = ExportSpan(
+        spans[spans.length - 1] = irSpan(
           last.text + span.text,
           bold: last.bold,
           italic: last.italic,
@@ -309,7 +317,7 @@ class TiptapToExportDoc {
           push(_withMarks(text, node['marks']));
 
         case 'hardBreak':
-          push(const ExportSpan('\n'));
+          push(irSpan('\n'));
 
         case 'diaryLink':
           final attrs = node['attrs'];
@@ -317,7 +325,7 @@ class TiptapToExportDoc {
           final label = attrs['label'];
           final id = attrs['id'];
           push(
-            ExportSpan(
+            irSpan(
               label is String && label.isNotEmpty ? label : '未命名日记',
               diaryLinkId: id is String && id.isNotEmpty ? id : null,
             ),
@@ -331,7 +339,7 @@ class TiptapToExportDoc {
     return spans;
   }
 
-  static bool _sameStyle(ExportSpan a, ExportSpan b) =>
+  static bool _sameStyle(IrSpan a, IrSpan b) =>
       a.bold == b.bold &&
       a.italic == b.italic &&
       a.strike == b.strike &&
@@ -340,7 +348,7 @@ class TiptapToExportDoc {
       a.href == b.href &&
       a.diaryLinkId == b.diaryLinkId;
 
-  static ExportSpan _withMarks(String text, dynamic marks) {
+  static IrSpan _withMarks(String text, dynamic marks) {
     var bold = false, italic = false, strike = false;
     var underline = false, code = false;
     String? href;
@@ -368,7 +376,7 @@ class TiptapToExportDoc {
       }
     }
 
-    return ExportSpan(
+    return irSpan(
       text,
       bold: bold,
       italic: italic,

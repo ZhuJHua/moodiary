@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:moodiary_utils/moodiary_utils.dart';
+
+import 'markdown_writer.dart';
 
 enum ExportFormat {
   markdown('markdown', 'md'),

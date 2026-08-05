@@ -1,0 +1,11 @@
+[package]
+name = "moodiary-text"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = { workspace = true }
+jieba-rs = { workspace = true }
+unicode-segmentation = { workspace = true }
+rust-stemmers = { workspace = true }
+tokio = { workspace = true, features = ["sync", "rt"] }

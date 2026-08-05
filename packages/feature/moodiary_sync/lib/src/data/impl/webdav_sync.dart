@@ -8,20 +8,24 @@ import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
+import 'package:moodiary_sync/src/data/secure_options.dart';
 
 /// WebDAV 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust reqwest_dav。
-/// 配置以 `[baseUrl, username, password]` 存于 [MoodiaryKVs.webDavOption]。
+/// 配置以 `[baseUrl, username, password]` 存于 [MoodiarySecureKVs.webDavOption]（含密码）。
 /// 增量逻辑交给 [IncrementalSyncEngine]。
 class WebDavSyncBackend implements IRemoteSyncBackend {
   WebDavSyncBackend();
+
+  static final SecureOptions options = SecureOptions(
+    MoodiarySecureKVs.webDavOption,
+  );
 
   Future<rust.DavClient>? _cachedClient;
 
   /// 构建 client 时的配置快照。每次取 client 与当前 KV 对比，配置变更后自动失效重建。
   List<String>? _cachedOptions;
 
-  List<String> get _options =>
-      MoodiaryKVs.webDavOption.get() ?? const <String>[];
+  List<String> get _options => options.value;
 
   String get _baseUrl => _options.isNotEmpty ? _options[0] : '';
   String get _username => _options.length > 1 ? _options[1] : '';
@@ -147,11 +151,7 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
     required String username,
     required String password,
   }) async {
-    await MoodiaryKVs.webDavOption.set([
-      baseUrl.trim(),
-      username.trim(),
-      password,
-    ]);
+    await options.save([baseUrl.trim(), username.trim(), password]);
     // 加密已开启 → 新（重）配置的后端必须拿到 keyfile，登记待上传，下次同步补传。
     // 否则该后端会收到加密对象而无 keys.json，换设备后永远解不开。
     if (await SyncKeyManager.loadDek() != null) {
@@ -160,14 +160,13 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   }
 
   static bool isConfigured() {
-    final opts = MoodiaryKVs.webDavOption.get();
-    return opts != null &&
-        opts.length >= 3 &&
+    final opts = options.value;
+    return opts.length >= 3 &&
         opts[0].trim().isNotEmpty &&
         opts[1].trim().isNotEmpty;
   }
 
   static Future<void> clear() async {
-    await MoodiaryKVs.webDavOption.set(const <String>[]);
+    await options.clear();
   }
 }

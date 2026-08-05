@@ -6,12 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `accumulate_attraction`, `accumulate_gravity`, `accumulate_repulsion`, `child_cell`, `empty`, `insert_body`, `integrate_step`, `layout_scale`, `new`, `node_masses`, `normalized`, `push_leaf`, `quadrant`, `repulsion_on`, `reset`, `resolve_collisions`, `run_layout`, `scaled_frame`, `seed_positions`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Bodies`, `Cell`, `Params`, `QuadTree`, `Scratch`
-
-/// 流式布局。`edges` 为 `[src0,dst0,src1,dst1,...]` 密集下标对(无向,建议去重);
-/// `initial_positions` 为空则用黄金角螺旋确定性播种。每帧向 `sink` 推 `[x0,y0,...]`
-/// (长度 `2*node_count`);函数返回即流关闭,代表沉降完成。
+/// `edges` 为 `[src0,dst0,src1,dst1,...]` 密集下标对；`initial_positions` 为空则用
+/// 黄金角螺旋确定性播种。每帧向 `sink` 推 `[x0,y0,...]`，函数返回即沉降完成。
 Stream<Float32List> layoutGraphStream({
   required int nodeCount,
   required List<int> edges,
@@ -24,55 +20,43 @@ Stream<Float32List> layoutGraphStream({
   params: params,
 );
 
-/// 布局参数。Dart 侧给定,零值字段由 [normalized] 兜底成合理默认。
 class GraphLayoutParams {
-  /// 最大迭代步数。
   final int iterations;
 
-  /// Barnes-Hut 开角:节点宽度 / 距离 < theta 时整簇当一个质点。越小越准越慢(~0.9)。
+  /// Barnes-Hut 开角：节点宽度 / 距离 < theta 时整簇当一个质点。越小越准越慢(~0.9)。
   final double theta;
 
-  /// FA2 斥力系数 kr。建议传 `spring_strength × (spring_length/2)²`,则两个度数为 1
-  /// 的相连叶节点平衡距恰为 [spring_length](度数越高间距自动越大)。
+  /// FA2 斥力系数 kr。传 `spring_strength × (spring_length/2)²` 可让两个度数为 1 的
+  /// 相连叶节点平衡距恰为 spring_length。
   final double repulsion;
 
-  /// 叶对目标距(见 [repulsion] 的推导);同时用作单步位移上限。
+  /// 叶对目标距；同时用作单步位移上限。
   final double springLength;
-
-  /// FA2 线性引力系数 ka(每条边 F = ka·d)。
   final double springStrength;
 
-  /// 向心力,把彼此不连通的分量拉进视野。
+  /// 向心力，把彼此不连通的分量拉进视野。
   final double gravity;
 
-  /// 碰撞半径(世界单位,d3 forceCollide 语义):节点视为半径 r 的圆盘,每步把重叠对
-  /// 推开,收敛后圆心最小间距≈2r。配合 UI 按 scale 绘制节点,任意缩放不重叠。
+  /// d3 forceCollide 语义：节点视为半径 r 的圆盘，收敛后圆心最小间距≈2r。
   final double collideRadius;
 
-  /// 速度衰减(0~1,d3 velocityDecay 语义):每步速度乘以 `1-velocity_decay`。越大越黏、
-  /// 越不易振荡(过冲=抽搐感的来源),0.4 左右平滑。
+  /// d3 velocityDecay 语义：每步速度乘以 `1-velocity_decay`。越大越黏、越不易振荡。
   final double velocityDecay;
-
-  /// 每几步推一帧坐标。
   final int emitEvery;
-
-  /// 每帧之后 sleep 的毫秒数,保证小图也「看得见」沉降过程。
   final int frameDelayMs;
 
-  /// 起始 alpha(<=0 或 >1 视为 1.0)。增量重布局(数据刷新 / 换筛选)传 0.25~0.35,
-  /// 配合 initial_positions 让图原地微调而不是整体炸开重排。
+  /// 起始 alpha(<=0 或 >1 视为 1.0)。增量重布局传 0.25~0.35，配合 initial_positions
+  /// 让图原地微调而不是整体炸开重排。
   final double initialAlpha;
 
-  /// 收敛提前退出阈值,单位 = spring_length 的倍数(<=0 表示跑满 iterations)。
-  /// 建议 1e-3:连续 5 步最大位移低于它且 alpha 已衰减到 0.05 以下时收尾。
+  /// 提前退出阈值，单位 = spring_length 的倍数(<=0 表示跑满 iterations)。
   final double minStep;
 
   /// 前 k 个下标的节点钉住不动(0 = 不钉)。ego 图把中心节点排在下标 0。
   final int pinnedCount;
 
-  /// 是否对**发出的**坐标做尺度归一化:把相连节点距离的中位数缩放到 spring_length。
-  /// 仿真空间不变,只换算发出的副本;碰撞半径与单步位移上限同步按该因子放大,
-  /// 使二者在归一化后的视图里恒等于传入值。
+  /// 对**发出的**坐标做尺度归一化：把相连节点距离的中位数缩放到 spring_length。
+  /// 仿真空间不变，只换算发出的副本。
   final bool normalizeScale;
 
   const GraphLayoutParams({

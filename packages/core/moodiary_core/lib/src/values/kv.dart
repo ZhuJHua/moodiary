@@ -18,8 +18,6 @@ enum MoodiaryKVs<T extends Object> {
 
   /// 加密由 [MoodiarySecureKVs.syncDek] 是否配置驱动，没有独立开关。
   syncProvider<String>(defaultValue: 'webdav'),
-  webDavOption<List<String>>(),
-  s3Option<List<String>>(),
 
   /// 同步时同时在飞的网络请求上限（push / pull 共用）；引擎读取时夹紧到合理范围。
   syncConcurrency<int>(defaultValue: 8),
@@ -149,7 +147,13 @@ enum MoodiarySecureKVs {
   /// 同步数据密钥 DEK（base64 的 32 字节随机 key）。所有同步对象用它做
   /// AES-256-GCM；用户密码只用于解包远端 keys.json 里包着的这把 key，
   /// 密码原文不落本机。
-  syncDek;
+  syncDek,
+
+  /// WebDAV 连接配置，JSON 数组 `[baseUrl, username, password]`。含密码，故进 SecureKV。
+  webDavOption,
+
+  /// S3 连接配置，JSON 数组，索引见 `S3SyncBackend`。含 secretKey，故进 SecureKV。
+  s3Option;
 
   Future<String?> get() => ISecureKVStorage.get().get(name);
 

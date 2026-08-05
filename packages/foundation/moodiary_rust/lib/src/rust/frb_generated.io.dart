@@ -7,6 +7,7 @@ import 'api/assistant.dart';
 import 'api/audio.dart';
 import 'api/crypto.dart';
 import 'api/docx.dart';
+import 'api/export_ir.dart';
 import 'api/font.dart';
 import 'api/graph_layout.dart';
 import 'api/http.dart';
@@ -57,9 +58,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_ImageCompressorPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressorPtr;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_KmpPtr => wire
-      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmpPtr;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_S3ClientPtr => wire
@@ -114,12 +112,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ImageCompressor
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    dynamic raw,
-  );
-
-  @protected
-  Kmp
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
     dynamic raw,
   );
 
@@ -197,9 +189,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Object dco_decode_DartOpaque(dynamic raw);
 
   @protected
-  Map<String, String> dco_decode_Map_String_String_None(dynamic raw);
-
-  @protected
   Map<String, double> dco_decode_Map_String_f_32_None(dynamic raw);
 
   @protected
@@ -241,12 +230,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ImageCompressor
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    dynamic raw,
-  );
-
-  @protected
-  Kmp
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
     dynamic raw,
   );
 
@@ -377,6 +360,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_i_64(dynamic raw);
 
   @protected
+  IrBlock dco_decode_ir_block(dynamic raw);
+
+  @protected
+  IrCell dco_decode_ir_cell(dynamic raw);
+
+  @protected
+  IrDoc dco_decode_ir_doc(dynamic raw);
+
+  @protected
+  IrListItem dco_decode_ir_list_item(dynamic raw);
+
+  @protected
+  IrSpan dco_decode_ir_span(dynamic raw);
+
+  @protected
   PlatformInt64 dco_decode_isize(dynamic raw);
 
   @protected
@@ -386,7 +384,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
+  List<IrBlock> dco_decode_list_ir_block(dynamic raw);
+
+  @protected
+  List<IrCell> dco_decode_list_ir_cell(dynamic raw);
+
+  @protected
+  List<IrDoc> dco_decode_list_ir_doc(dynamic raw);
+
+  @protected
+  List<IrListItem> dco_decode_list_ir_list_item(dynamic raw);
+
+  @protected
+  List<IrSpan> dco_decode_list_ir_span(dynamic raw);
+
+  @protected
   List<KeyValue> dco_decode_list_key_value(dynamic raw);
+
+  @protected
+  List<List<IrCell>> dco_decode_list_list_ir_cell(dynamic raw);
 
   @protected
   List<double> dco_decode_list_prim_f_32_loose(dynamic raw);
@@ -408,9 +424,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<(String, double)> dco_decode_list_record_string_f_32(dynamic raw);
-
-  @protected
-  List<(String, String)> dco_decode_list_record_string_string(dynamic raw);
 
   @protected
   List<RigChatMessage> dco_decode_list_rig_chat_message(dynamic raw);
@@ -453,9 +466,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   (String, double) dco_decode_record_string_f_32(dynamic raw);
-
-  @protected
-  (String, String) dco_decode_record_string_string(dynamic raw);
 
   @protected
   RequestOptions dco_decode_request_options(dynamic raw);
@@ -542,12 +552,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  Kmp
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   S3Client
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     SseDeserializer deserializer,
@@ -605,11 +609,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Object sse_decode_DartOpaque(SseDeserializer deserializer);
 
   @protected
-  Map<String, String> sse_decode_Map_String_String_None(
-    SseDeserializer deserializer,
-  );
-
-  @protected
   Map<String, double> sse_decode_Map_String_f_32_None(
     SseDeserializer deserializer,
   );
@@ -653,12 +652,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   ImageCompressor
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  Kmp
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
     SseDeserializer deserializer,
   );
 
@@ -809,6 +802,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
 
   @protected
+  IrBlock sse_decode_ir_block(SseDeserializer deserializer);
+
+  @protected
+  IrCell sse_decode_ir_cell(SseDeserializer deserializer);
+
+  @protected
+  IrDoc sse_decode_ir_doc(SseDeserializer deserializer);
+
+  @protected
+  IrListItem sse_decode_ir_list_item(SseDeserializer deserializer);
+
+  @protected
+  IrSpan sse_decode_ir_span(SseDeserializer deserializer);
+
+  @protected
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
 
   @protected
@@ -818,7 +826,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
+  List<IrBlock> sse_decode_list_ir_block(SseDeserializer deserializer);
+
+  @protected
+  List<IrCell> sse_decode_list_ir_cell(SseDeserializer deserializer);
+
+  @protected
+  List<IrDoc> sse_decode_list_ir_doc(SseDeserializer deserializer);
+
+  @protected
+  List<IrListItem> sse_decode_list_ir_list_item(SseDeserializer deserializer);
+
+  @protected
+  List<IrSpan> sse_decode_list_ir_span(SseDeserializer deserializer);
+
+  @protected
   List<KeyValue> sse_decode_list_key_value(SseDeserializer deserializer);
+
+  @protected
+  List<List<IrCell>> sse_decode_list_list_ir_cell(SseDeserializer deserializer);
 
   @protected
   List<double> sse_decode_list_prim_f_32_loose(SseDeserializer deserializer);
@@ -840,11 +866,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<(String, double)> sse_decode_list_record_string_f_32(
-    SseDeserializer deserializer,
-  );
-
-  @protected
-  List<(String, String)> sse_decode_list_record_string_string(
     SseDeserializer deserializer,
   );
 
@@ -897,11 +918,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   (String, double) sse_decode_record_string_f_32(SseDeserializer deserializer);
-
-  @protected
-  (String, String) sse_decode_record_string_string(
-    SseDeserializer deserializer,
-  );
 
   @protected
   RequestOptions sse_decode_request_options(SseDeserializer deserializer);
@@ -1001,13 +1017,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
-    Kmp self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
     S3Client self,
     SseSerializer serializer,
@@ -1092,12 +1101,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_DartOpaque(Object self, SseSerializer serializer);
 
   @protected
-  void sse_encode_Map_String_String_None(
-    Map<String, String> self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_Map_String_f_32_None(
     Map<String, double> self,
     SseSerializer serializer,
@@ -1149,13 +1152,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
     ImageCompressor self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
-    Kmp self,
     SseSerializer serializer,
   );
 
@@ -1337,6 +1333,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_ir_block(IrBlock self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ir_cell(IrCell self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ir_doc(IrDoc self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ir_list_item(IrListItem self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ir_span(IrSpan self, SseSerializer serializer);
+
+  @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
 
   @protected
@@ -1346,7 +1357,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_ir_block(List<IrBlock> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_ir_cell(List<IrCell> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_ir_doc(List<IrDoc> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_ir_list_item(
+    List<IrListItem> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_ir_span(List<IrSpan> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_key_value(List<KeyValue> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_list_ir_cell(
+    List<List<IrCell>> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_f_32_loose(
@@ -1384,12 +1419,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_record_string_f_32(
     List<(String, double)> self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_list_record_string_string(
-    List<(String, String)> self,
     SseSerializer serializer,
   );
 
@@ -1456,12 +1485,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_record_string_f_32(
     (String, double) self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_record_string_string(
-    (String, String) self,
     SseSerializer serializer,
   );
 
@@ -1770,40 +1793,6 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressorPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmpPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp',
-      );
-  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp =
-      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmpPtr
-          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
-
-  void
-  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
-    ffi.Pointer<ffi.Void> ptr,
-  ) {
-    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
-      ptr,
-    );
-  }
-
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmpPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
-        'frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp',
-      );
-  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp =
-      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmpPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void

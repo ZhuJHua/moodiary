@@ -8,6 +8,13 @@ import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
 /// 同步后端的 DI 注册器。**同时只注入一个 [IRemoteSyncBackend]**：启动 / 切换
 /// provider 时按 KV `syncProvider` 重新注册。业务侧统一走 `IRemoteSyncBackend.get()`。
 Future<void> registerRemoteSync() async {
+  // SecureKV 是异步的，而 isReady / isConfigured 是同步 getter：在这里把两个后端的
+  // 配置都读进进程内缓存，之后同步读。两个都读是因为 configuredCloudBackendIds()
+  // 不论当前注册的是哪个都要查。
+  await Future.wait([
+    WebDavSyncBackend.options.load(),
+    S3SyncBackend.options.load(),
+  ]);
   if (getIt.isRegistered<IRemoteSyncBackend>()) {
     await getIt.unregister<IRemoteSyncBackend>();
   }

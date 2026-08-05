@@ -5,16 +5,20 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
+import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 
 /// S3 / MinIO 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust minio SDK。
-/// 配置存于 [MoodiaryKVs.s3Option]，按索引：0 endpoint、1 region（可空）、
-/// 2 accessKey、3 secretKey、4 bucket、5 useSSL（'1'/'0'）。远端 key 前缀 `moodiary/`。
+/// 配置存于 [MoodiarySecureKVs.s3Option]（含 secretKey），按索引：0 endpoint、1 region（可空）、
+/// 2 accessKey、3 secretKey、4 bucket、5 useSSL（'1'/'0'）。
+/// 远端 key 前缀 `moodiary/`。
 /// 增量逻辑交给 [IncrementalSyncEngine]。
 class S3SyncBackend implements IRemoteSyncBackend {
   static const String _root = 'moodiary';
+
+  static final SecureOptions options = SecureOptions(MoodiarySecureKVs.s3Option);
 
   S3SyncBackend();
 
@@ -23,7 +27,7 @@ class S3SyncBackend implements IRemoteSyncBackend {
   /// 构建 client 时的配置快照。每次取 client 与当前 KV 对比，配置变更后自动失效重建。
   List<String>? _cachedOptions;
 
-  List<String> get _options => MoodiaryKVs.s3Option.get() ?? const <String>[];
+  List<String> get _options => options.value;
 
   String _opt(int i) => _options.length > i ? _options[i] : '';
 
@@ -33,6 +37,7 @@ class S3SyncBackend implements IRemoteSyncBackend {
   String get _secretKey => _opt(3);
   String get _bucket => _opt(4);
   bool get _useSSL => _opt(5) != '0'; // 默认开启
+
 
   @override
   SyncProviderType get type => SyncProviderType.s3;
@@ -166,7 +171,7 @@ class S3SyncBackend implements IRemoteSyncBackend {
     required String bucket,
     required bool useSSL,
   }) async {
-    await MoodiaryKVs.s3Option.set([
+    await options.save([
       endpoint.trim(),
       region.trim(),
       accessKey.trim(),
@@ -181,9 +186,8 @@ class S3SyncBackend implements IRemoteSyncBackend {
   }
 
   static bool isConfigured() {
-    final opts = MoodiaryKVs.s3Option.get();
-    return opts != null &&
-        opts.length >= 5 &&
+    final opts = options.value;
+    return opts.length >= 5 &&
         opts[0].trim().isNotEmpty &&
         opts[2].trim().isNotEmpty &&
         opts[3].isNotEmpty &&
@@ -191,6 +195,6 @@ class S3SyncBackend implements IRemoteSyncBackend {
   }
 
   static Future<void> clear() async {
-    await MoodiaryKVs.s3Option.set(const <String>[]);
+    await options.clear();
   }
 }

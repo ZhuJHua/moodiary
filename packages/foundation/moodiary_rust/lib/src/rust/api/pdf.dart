@@ -4,50 +4,34 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+import 'export_ir.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `block`, `blocks`, `break_point`, `chunk_spans`, `document`, `finish`, `image`, `inline`, `list`, `merge_whitespace_spans`, `new`, `new`, `preamble`, `span`, `string_literal`, `styled`, `table`, `text_call`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Markup`, `MoodiaryWorld`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `book`, `file`, `font`, `library`, `main`, `source`, `today`
-
-/// 把一批日记写成一个 PDF 文件。
-///
-/// [docs_json] 是 `ExportDoc.toJson()` 的数组；每篇一文件由 Dart 侧循环调用实现。
 Future<void> writePdf({
-  required String docsJson,
+  required List<IrDoc> docs,
   required PdfStyle style,
   required String outPath,
 }) => RustLib.instance.api.crateApiPdfWritePdf(
-  docsJson: docsJson,
+  docs: docs,
   style: style,
   outPath: outPath,
 );
 
-/// PDF 排版配置。字体必须由调用方提供——本 app 不内置任何字体。
 class PdfStyle {
-  /// 字体文件绝对路径（TrueType / OpenType 均可，typst 都能读）。
   final String fontPath;
 
-  /// 写进 `#set text(font: …)` 的字体族名。留空则用字体文件自报的家族名。
+  /// 留空则用字体文件自报的家族名。
   final String fontFamily;
   final double fontSizePt;
-
-  /// 行距，单位 em。
   final double lineSpacingEm;
-
-  /// 正文首行缩进两字符。
   final bool firstLineIndent;
-
-  /// 纸张宽高（毫米）。
   final double pageWidthMm;
   final double pageHeightMm;
-
-  /// 四边页边距（毫米）。
   final double pageMarginMm;
   final bool includeTitle;
   final bool includeMeta;
 
-  /// 音视频占位行的类型词（已本地化）。
+  /// 音视频占位行的类型词，已本地化（这一侧没有 l10n）。
   final String videoLabel;
   final String audioLabel;
 

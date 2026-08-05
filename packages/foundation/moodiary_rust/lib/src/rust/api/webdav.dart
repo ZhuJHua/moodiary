@@ -6,8 +6,6 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `dav_is_not_found`, `dav_status`, `ensure_dir_cached`, `full_path`
-
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DavClient>>
 abstract class DavClient implements RustOpaqueInterface {
   /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
@@ -15,7 +13,6 @@ abstract class DavClient implements RustOpaqueInterface {
   /// 调用方（Dart 租约层）必须用「写后回读校验」兜底。
   Future<bool> createExclusive({required String key, required List<int> data});
 
-  /// 404（不存在）视为成功；其它错误如实上抛 —— 引擎依赖删除结果决定 tombstone 是否已被远端接收。
   Future<void> deleteObject({required String key});
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
@@ -29,11 +26,8 @@ abstract class DavClient implements RustOpaqueInterface {
     password: password,
   );
 
-  /// 仅 404（不存在）返回空 Vec；其它错误如实上抛 —— 调用方（同步引擎）必须能区分
-  /// 「不存在」与「读取失败」，否则 push 会在网络抖动时把 manifest 从零重建、丢失远端独有条目。
   Future<Uint8List> readObject({required String key});
 
-  /// HEAD 请求取 Last-Modified，不存在返回空字符串。
   Future<String> statObject({required String key});
 
   Future<bool> testConnection();

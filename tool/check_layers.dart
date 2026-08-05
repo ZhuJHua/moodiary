@@ -1,7 +1,9 @@
-// 分层依赖检查：只能上层依赖下层，同层不互相依赖。分两段跑——
+// 分层依赖检查：只能上层依赖下层，同层不互相依赖。分三段跑——
 //   1) 包级：各 pubspec 的 moodiary_* 依赖（foundation → core → ui → feature → apps）。
 //      pub 只保证依赖图无环、不保证方向，这段补上方向约束。无 baseline，必须零违规。
-//   2) 文件级：mobile/lib 内部的 package:moodiary import（见 _layers）。
+//   2) Rust crate 级：moodiary_rust/rust/crates 下各 Cargo.toml 的 moodiary-* 依赖
+//      （foundation → core → feature → bridge）。同样，cargo 只保证无环、不保证方向。
+//   3) 文件级：mobile/lib 内部的 package:moodiary import（见 _layers）。
 //
 // 运行：dart run tool/check_layers.dart            // 检查，存在新增违规则 exit(1)
 //      dart run tool/check_layers.dart --update-baseline  // 用当前文件级违规重写 baseline
@@ -137,6 +139,70 @@ List<String> _checkPackageLayers() {
   return out;
 }
 
+/// Rust crate 层级：index 越小越底层。bridge（moodiary_rust 本体）是顶层聚合。
+const Map<String, int> _rustLayers = {'foundation': 0, 'core': 1, 'feature': 2};
+
+const String _rustRoot = 'packages/foundation/moodiary_rust/rust';
+final RegExp _cargoDepRe = RegExp(
+  r'^\s*(moodiary-[a-z-]+)\s*=',
+  multiLine: true,
+);
+
+/// 校验 Rust crate 依赖方向，返回违规描述（空表示通过）。
+/// bridge crate（rust/Cargo.toml）可以依赖任何层，不参与源侧检查。
+List<String> _checkRustLayers() {
+  final crates = Directory('$_rustRoot/crates');
+  if (!crates.existsSync()) return const [];
+
+  final layerOf = <String, String>{};
+  final depsOf = <String, List<String>>{};
+
+  for (final layerDir in crates.listSync().whereType<Directory>()) {
+    final layer = layerDir.path.split(Platform.pathSeparator).last;
+    if (!_rustLayers.containsKey(layer)) continue;
+    for (final crate in layerDir.listSync().whereType<Directory>()) {
+      final f = File('${crate.path}/Cargo.toml');
+      if (!f.existsSync()) continue;
+      final text = f.readAsStringSync();
+      final name = RegExp(r'^name\s*=\s*"([^"]+)"', multiLine: true)
+          .firstMatch(text)
+          ?.group(1);
+      if (name == null) continue;
+      layerOf[name] = layer;
+      // dev-dependencies（测试用）不参与方向约束。
+      final main = text
+          .split(RegExp(r'^\[dev-dependencies\]', multiLine: true))
+          .first;
+      depsOf[name] = _cargoDepRe
+          .allMatches(main)
+          .map((m) => m.group(1)!)
+          .toList();
+    }
+  }
+
+  final out = <String>[];
+  for (final entry in depsOf.entries) {
+    final src = entry.key;
+    final srcLayer = _rustLayers[layerOf[src]]!;
+    for (final dst in entry.value) {
+      final dstLayerName = layerOf[dst];
+      if (dstLayerName == null) {
+        out.add('$src -> $dst（依赖了不在 crates/ 里的 moodiary-* crate）');
+        continue;
+      }
+      final dstLayer = _rustLayers[dstLayerName]!;
+      if (dstLayer < srcLayer) continue;
+      if (dstLayer > srcLayer) {
+        out.add('$src（${layerOf[src]}）-> $dst（$dstLayerName）：下层依赖上层');
+      } else {
+        out.add('$src -> $dst：同层互引（${layerOf[src]} 层不允许）');
+      }
+    }
+  }
+  out.sort();
+  return out;
+}
+
 void main(List<String> args) {
   final update = args.contains('--update-baseline');
   final pkgViolations = _checkPackageLayers();
@@ -145,6 +211,17 @@ void main(List<String> args) {
   } else {
     stderr.writeln('❌ 包级依赖方向违规 ${pkgViolations.length} 条：');
     for (final v in pkgViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    if (!update) exit(1);
+  }
+
+  final rustViolations = _checkRustLayers();
+  if (rustViolations.isEmpty) {
+    stdout.writeln('✅ Rust crate 依赖方向检查通过。');
+  } else {
+    stderr.writeln('❌ Rust crate 依赖方向违规 ${rustViolations.length} 条：');
+    for (final v in rustViolations) {
       stderr.writeln('  ✗ $v');
     }
     if (!update) exit(1);

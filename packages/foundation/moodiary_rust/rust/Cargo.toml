@@ -6,86 +6,106 @@ edition = "2024"
 [lib]
 crate-type = ["cdylib", "staticlib"]
 
-[dependencies]
-flutter_rust_bridge = "=2.13.0-beta.5"
-image = "0.25.10"
-# 有损 WebP 编码（libwebp 绑定）；image crate 的 WebPEncoder 仅无损，照片场景不可用。
-webp = "0.3.1"
-fast_image_resize = { version = "6.0.0", features = ["image"] }
-anyhow = "1.0.103"
-ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3" }
-ring = "0.17.14"
-zip = { version = "8.6.0", default-features = false, features = ["aes-crypto", "deflate", "zstd", "time"] }
-walkdir = "2.5.0"
-# 只用分词（cut / cut_for_search）。tfidf / textrank 关键词抽取全仓无调用方，其 idf.txt
-# 语料 2.6MB 是纯死重量；关掉后 posseg.txt 也被链接器 dead-strip（合计 -3.44MiB）。
-jieba-rs = { version = "0.10.1", default-features = false, features = ["default-dict"] }
-# net + fs：api::http_server 的监听/落盘、api::http 的流式文件上传。
-tokio = { version = "1.52.3", features = ["net", "fs", "io-util", "sync", "macros"] }
-tokio-util = { version = "0.7", features = ["io"] }
-# 应用内 HTTP 服务（api::http_server）。hyper 栈已由 reqwest 引入，仅增开 server 特性。
-hyper = { version = "1", features = ["server", "http1"] }
-hyper-util = { version = "0.1", features = ["tokio"] }
-http-body-util = "0.1"
-url = "2"
-unicode-segmentation = "1.13.3"
-rust-stemmers = "1.2.0"
-argon2 = { version = "0.6.0-rc.8", features = ["default", "rand_core"] }
-minio = { version = "0.4.0", default-features = false, features = ["rustls-tls", "default-crypto"] }
-reqwest_dav = { version = "0.3.3", default-features = false, features = ["rustls-tls"] }
-bytes = "1"
-futures = "0.3"
-# AI 助手底层 agent 框架（pure Rust）。默认特性含 reqwest + derive + rustls，
-# 与既有 minio / reqwest_dav 的 rustls-tls 一致，不引入 native-tls / openssl。
-# 以 `rig` 为 crate 名引入（rig-core 的 lib 名为 rig_core，官方文档 / 示例统一用 `rig`）。
-rig = { package = "rig-core", version = "0.40", default-features = false, features = ["reqwest", "derive", "rustls"] }
-serde_json = "1"
-# rig 的 reqwest 客户端在 reqwest 0.13 下默认用 rustls-platform-verifier 校验证书，
-# 该校验器在 Android 上需平台上下文初始化、否则首个 TLS 连接即 panic。直接依赖
-# reqwest/rustls/webpki-roots，自建走内置 webpki 根证书的客户端注入给 rig（见 assistant.rs）。
-# gzip/brotli/deflate：api::http::HttpClient 用它自动协商 Accept-Encoding 并解压响应，
-# 对齐旧 Dio(dart:io autoUncompress) 行为——部分服务端（如和风天气）会无条件返回 gzip。
-reqwest = { version = "0.13", default-features = false, features = [
-    "rustls",
+[workspace]
+members = ["crates/*/*"]
+
+[workspace.dependencies]
+anyhow = "=1.0.104"
+bytes = "=1.12.1"
+futures = { version = "=0.3.33", default-features = false, features = ["std", "async-await"] }
+serde = { version = "=1.0.229", default-features = false, features = ["std", "derive"] }
+serde_json = "=1.0.151"
+url = "=2.5.8"
+
+tokio = { version = "=1.53.1", default-features = false }
+tokio-util = { version = "=0.7.19", default-features = false, features = ["io"] }
+hyper = { version = "=1.11.0", default-features = false, features = ["server", "http1"] }
+hyper-util = { version = "=0.1.20", default-features = false, features = ["tokio"] }
+http-body-util = "=0.1.4"
+reqwest = { version = "=0.13.4", default-features = false, features = [
+    "rustls-no-provider",
     "gzip",
     "brotli",
     "deflate",
-    # 流式请求体（Body::wrap_stream，api::http 文件上传）。
     "stream",
 ] }
-rustls = "0.23"
-webpki-roots = "1"
-lofty = "0.24.0"
-# PDF 排版与生成（api::pdf）。选它是因为它带完整的排版引擎：32 万字的单段落
-# 0.29 秒排完 352 页，且 CJK 禁则（行首不出现标点）是原生的——dart_pdf 在同一用例上
-# 外推要 8 小时，根因是它按空格切词，中文整段被当成一个「词」做二分查找。
-# 代价是 .so +25.5 MiB（压缩后下载 +10.8 MiB），已明确接受。
-# typst-assets 是硬依赖但其 fonts 特性默认关闭，9.6 MiB 的西文字体不进包。
+rustls = { version = "=0.23.43", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+webpki-roots = "=1.0.9"
+reqwest_dav = { version = "=0.3.3", default-features = false, features = ["rustls-tls-no-provider"] }
+rusty-s3 = { version = "=0.10.2", default-features = false, features = ["rustcrypto"] }
+
+ring = "=0.17.14"
+argon2 = { version = "=0.6.0-rc.8", features = ["default", "rand_core"] }
+zip = { version = "=8.6.0", default-features = false, features = ["aes-crypto", "deflate", "zstd", "time"] }
+walkdir = "=2.5.0"
+
+image = { version = "=0.25.10", default-features = false, features = [
+    "bmp",
+    "gif",
+    "ico",
+    "jpeg",
+    "png",
+    "tiff",
+    "webp",
+] }
+webp = "=0.3.1"
+fast_image_resize = { version = "=6.1.0", default-features = false, features = ["image"] }
+lofty = "=0.24.0"
+ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3" }
+
+jieba-rs = { version = "=0.10.3", default-features = false, features = ["default-dict"] }
+unicode-segmentation = "=1.13.3"
+rust-stemmers = "=1.2.0"
+
 typst = "=0.15.1"
 typst-pdf = "=0.15.1"
-
-# DOCX 生成（api::docx）。只多它自己 + quick-xml：zip / image / serde / serde_json /
-# base64 / thiserror 全在依赖树里了。OOXML 只写字体名不嵌字体，中文导出零字体成本。
-docx-rs = "0.4.22"
-
-# 代码块语法高亮。版本与 feature 逐字镜像 typst-library 的声明 —— 它们本就在依赖树里，
-# 对齐后 cargo 特性合并不会新增任何东西（体积零成本）。**别开 default features**：
-# syntect 默认走 regex-onig，会拖一个 oniguruma C 库进来。
-syntect = { version = "5.3", default-features = false, features = [
+docx-rs = "=0.4.22"
+syntect = { version = "=5.3.0", default-features = false, features = [
     "parsing",
     "regex-fancy",
     "plist-load",
     "yaml-load",
 ] }
-two-face = { version = "0.4.3", default-features = false, features = ["syntect-fancy"] }
-# 导出 IR 的 JSON 反序列化。serde 本就是传递依赖，这里只是加 derive 宏（编译期，无体积）。
-serde = { version = "1", features = ["derive"] }
+two-face = { version = "=0.4.5", default-features = false, features = ["syntect-fancy"] }
+
+rig = { package = "rig-core", version = "=0.40.0", default-features = false, features = ["reqwest", "derive"] }
+
+moodiary-archive = { path = "crates/foundation/archive" }
+moodiary-crypto = { path = "crates/foundation/crypto" }
+moodiary-font = { path = "crates/foundation/font" }
+moodiary-http = { path = "crates/foundation/http" }
+moodiary-media = { path = "crates/foundation/media" }
+moodiary-text = { path = "crates/foundation/text" }
+moodiary-doc = { path = "crates/core/doc" }
+moodiary-assistant = { path = "crates/feature/assistant" }
+moodiary-export = { path = "crates/feature/export" }
+moodiary-graph = { path = "crates/feature/graph" }
+moodiary-sync = { path = "crates/feature/sync" }
+
+[dependencies]
+flutter_rust_bridge = "=2.13.0-beta.5"
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+
+moodiary-archive = { workspace = true }
+moodiary-assistant = { workspace = true }
+moodiary-crypto = { workspace = true }
+moodiary-doc = { workspace = true }
+moodiary-export = { workspace = true }
+moodiary-font = { workspace = true }
+moodiary-graph = { workspace = true }
+moodiary-http = { workspace = true }
+moodiary-media = { workspace = true }
+moodiary-sync = { workspace = true }
+moodiary-text = { workspace = true }
+
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
 [profile.release]
-lto = true
+opt-level = 3
+lto = "thin"
 codegen-units = 1
 panic = "abort"
 strip = "symbols"

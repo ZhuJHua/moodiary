@@ -6,47 +6,18 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `build_prefix_table`, `get`, `has_alphanumeric`, `is_cjk`, `kmp_search`, `segment_text`, `stem_latin_segment`, `tokenize_one`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `Segment`
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>>
-abstract class Kmp implements RustOpaqueInterface {
-  static Future<List<String>> findAll({
-    required String text,
-    required List<String> patterns,
-  }) => RustLib.instance.api.crateApiTextKmpFindAll(
-    text: text,
-    patterns: patterns,
-  );
-
-  static Future<String> replace({
-    required String text,
-    required Map<String, String> replacements,
-  }) => RustLib.instance.api.crateApiTextKmpReplace(
-    text: text,
-    replacements: replacements,
-  );
-}
-
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Tokenizer>>
 abstract class Tokenizer implements RustOpaqueInterface {
-  /// 单篇分词（交互路径：编辑保存、搜索框）。CJK 段的 cut 与 cut_for_search 拆两条
-  /// 线程并行，压低单次延迟；批量请走 [`Tokenizer::tokenize_batch`]，它跨篇并行、
-  /// 篇内串行，不会为每篇再起线程。
   static Future<TokenizeResult> tokenize({required String text}) =>
       RustLib.instance.api.crateApiTextTokenizerTokenize(text: text);
 
-  /// 批量分词：一次过桥处理整批，跨篇并行铺满多核。全量重建索引 / 批量导入用。
-  ///
-  /// 返回顺序与入参一一对应。线程数取 `available_parallelism`（钳到批大小），
-  /// 按步长分配任务；篇内串行——若篇内再起线程，20k 篇会退化成数万次线程创建，
-  /// 那正是逐篇调用的主要开销来源。
+  /// 一次过桥处理整批，跨篇并行铺满多核。全量重建索引 / 批量导入走这条。
   static Future<List<TokenizeResult>> tokenizeBatch({
     required List<String> texts,
   }) => RustLib.instance.api.crateApiTextTokenizerTokenizeBatch(texts: texts);
 }
 
-/// `cut`（高精度）和 `cut_for_search`（高召回）两组分词结果。
+/// `cut`（高精度）与 `cut_for_search`（高召回）两组分词结果。
 class TokenizeResult {
   final List<String> cut;
   final List<String> cutForSearch;

@@ -48,7 +48,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0-beta.5";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -521474064;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1467406777;
 
 // Section: executor
 
@@ -1074,81 +1074,6 @@ fn wire__crate__api__image__ImageCompressor_optimize_to_file_impl(
         },
     )
 }
-fn wire__crate__api__text__Kmp_find_all_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Kmp_find_all",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_text = <String>::sse_decode(&mut deserializer);
-            let api_patterns = <Vec<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(crate::api::text::Kmp::find_all(
-                        &api_text,
-                        api_patterns,
-                    ))?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
-fn wire__crate__api__text__Kmp_replace_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Kmp_replace",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_text = <String>::sse_decode(&mut deserializer);
-            let api_replacements =
-                <std::collections::HashMap<String, String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, ()>((move || {
-                    let output_ok = Result::<_, ()>::Ok(crate::api::text::Kmp::replace(
-                        api_text,
-                        api_replacements,
-                    ))?;
-                    Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
 fn wire__crate__api__s3__S3Client_create_exclusive_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1269,62 +1194,6 @@ fn wire__crate__api__s3__S3Client_delete_object_impl(
         },
     )
 }
-fn wire__crate__api__s3__S3Client_ensure_bucket_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "S3Client_ensure_bucket",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<S3Client>,
-            >>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| async move {
-                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || async move {
-                        let mut api_that_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_that, 0, false,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => {
-                                    api_that_guard =
-                                        Some(api_that.lockable_decode_async_ref().await)
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        let api_that_guard = api_that_guard.unwrap();
-                        let output_ok =
-                            crate::api::s3::S3Client::ensure_bucket(&*api_that_guard).await?;
-                        Ok(output_ok)
-                    })()
-                    .await,
-                )
-            }
-        },
-    )
-}
 fn wire__crate__api__s3__S3Client_new_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -1352,7 +1221,7 @@ fn wire__crate__api__s3__S3Client_new_impl(
             let api_secret_key = <String>::sse_decode(&mut deserializer);
             let api_bucket = <String>::sse_decode(&mut deserializer);
             let api_use_ssl = <bool>::sse_decode(&mut deserializer);
-            let api__region = <Option<String>>::sse_decode(&mut deserializer);
+            let api_region = <Option<String>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
@@ -1363,7 +1232,7 @@ fn wire__crate__api__s3__S3Client_new_impl(
                             api_secret_key,
                             api_bucket,
                             api_use_ssl,
-                            api__region,
+                            api_region,
                         )?;
                         Ok(output_ok)
                     })(),
@@ -1726,65 +1595,6 @@ fn wire__crate__api__zip__Zip_add_bytes_impl(
                             &mut *api_that_guard,
                             api_zip_path,
                             api_data,
-                            api_password,
-                        )?;
-                        Ok(output_ok)
-                    })(),
-                )
-            }
-        },
-    )
-}
-fn wire__crate__api__zip__Zip_add_dir_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
-    rust_vec_len_: i32,
-    data_len_: i32,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "Zip_add_dir",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let message = unsafe {
-                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
-                    ptr_,
-                    rust_vec_len_,
-                    data_len_,
-                )
-            };
-            let mut deserializer =
-                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_that = <RustOpaqueMoi<
-                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Zip>,
-            >>::sse_decode(&mut deserializer);
-            let api_dir_path = <String>::sse_decode(&mut deserializer);
-            let api_base_path = <String>::sse_decode(&mut deserializer);
-            let api_password = <Option<String>>::sse_decode(&mut deserializer);
-            deserializer.end();
-            move |context| {
-                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
-                    (move || {
-                        let mut api_that_guard = None;
-                        let decode_indices_ =
-                            flutter_rust_bridge::for_generated::lockable_compute_decode_order(
-                                vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                                    &api_that, 0, true,
-                                )],
-                            );
-                        for i in decode_indices_ {
-                            match i {
-                                0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
-                                _ => unreachable!(),
-                            }
-                        }
-                        let mut api_that_guard = api_that_guard.unwrap();
-                        let output_ok = crate::api::zip::Zip::add_dir(
-                            &mut *api_that_guard,
-                            api_dir_path,
-                            api_base_path,
                             api_password,
                         )?;
                         Ok(output_ok)
@@ -2180,7 +1990,7 @@ fn wire__crate__api__docx__write_docx_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_docs_json = <String>::sse_decode(&mut deserializer);
+            let api_docs = <Vec<crate::api::export_ir::IrDoc>>::sse_decode(&mut deserializer);
             let api_style = <crate::api::docx::DocxStyle>::sse_decode(&mut deserializer);
             let api_out_path = <String>::sse_decode(&mut deserializer);
             deserializer.end();
@@ -2188,7 +1998,7 @@ fn wire__crate__api__docx__write_docx_impl(
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok =
-                            crate::api::docx::write_docx(api_docs_json, api_style, api_out_path)?;
+                            crate::api::docx::write_docx(api_docs, api_style, api_out_path)?;
                         Ok(output_ok)
                     })(),
                 )
@@ -2218,7 +2028,7 @@ fn wire__crate__api__pdf__write_pdf_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_docs_json = <String>::sse_decode(&mut deserializer);
+            let api_docs = <Vec<crate::api::export_ir::IrDoc>>::sse_decode(&mut deserializer);
             let api_style = <crate::api::pdf::PdfStyle>::sse_decode(&mut deserializer);
             let api_out_path = <String>::sse_decode(&mut deserializer);
             deserializer.end();
@@ -2226,7 +2036,7 @@ fn wire__crate__api__pdf__write_pdf_impl(
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || {
                         let output_ok =
-                            crate::api::pdf::write_pdf(api_docs_json, api_style, api_out_path)?;
+                            crate::api::pdf::write_pdf(api_docs, api_style, api_out_path)?;
                         Ok(output_ok)
                     })(),
                 )
@@ -2234,6 +2044,248 @@ fn wire__crate__api__pdf__write_pdf_impl(
         },
     )
 }
+
+// Section: static_checks
+
+#[allow(clippy::unnecessary_literal_unwrap)]
+const _: fn() = || {
+    {
+        let ClientSettings = None::<crate::api::http::ClientSettings>.unwrap();
+        let _: Option<String> = ClientSettings.base_url;
+        let _: Option<u32> = ClientSettings.connect_timeout_ms;
+        let _: Option<u32> = ClientSettings.timeout_ms;
+        let _: Option<String> = ClientSettings.user_agent;
+        let _: Option<u32> = ClientSettings.max_redirects;
+        let _: bool = ClientSettings.throw_on_status;
+    }
+    {
+        let CompressSpec = None::<crate::api::image::CompressSpec>.unwrap();
+        let _: Option<crate::api::image::CompressFormat> = CompressSpec.compress_format;
+        let _: Option<u32> = CompressSpec.target_width;
+        let _: Option<u32> = CompressSpec.target_height;
+        let _: Option<u32> = CompressSpec.min_width;
+        let _: Option<u32> = CompressSpec.min_height;
+        let _: Option<u32> = CompressSpec.max_width;
+        let _: Option<u32> = CompressSpec.max_height;
+        let _: Option<u8> = CompressSpec.quality;
+    }
+    {
+        let DocxStyle = None::<crate::api::docx::DocxStyle>.unwrap();
+        let _: String = DocxStyle.east_asia_font;
+        let _: String = DocxStyle.ascii_font;
+        let _: f64 = DocxStyle.font_size_pt;
+        let _: f64 = DocxStyle.line_spacing;
+        let _: bool = DocxStyle.first_line_indent;
+        let _: u32 = DocxStyle.page_width;
+        let _: u32 = DocxStyle.page_height;
+        let _: u32 = DocxStyle.page_margin;
+        let _: bool = DocxStyle.include_title;
+        let _: bool = DocxStyle.include_meta;
+        let _: bool = DocxStyle.page_break_between;
+        let _: String = DocxStyle.video_label;
+        let _: String = DocxStyle.audio_label;
+    }
+    {
+        let GraphLayoutParams = None::<crate::api::graph_layout::GraphLayoutParams>.unwrap();
+        let _: u32 = GraphLayoutParams.iterations;
+        let _: f32 = GraphLayoutParams.theta;
+        let _: f32 = GraphLayoutParams.repulsion;
+        let _: f32 = GraphLayoutParams.spring_length;
+        let _: f32 = GraphLayoutParams.spring_strength;
+        let _: f32 = GraphLayoutParams.gravity;
+        let _: f32 = GraphLayoutParams.collide_radius;
+        let _: f32 = GraphLayoutParams.velocity_decay;
+        let _: u32 = GraphLayoutParams.emit_every;
+        let _: u32 = GraphLayoutParams.frame_delay_ms;
+        let _: f32 = GraphLayoutParams.initial_alpha;
+        let _: f32 = GraphLayoutParams.min_step;
+        let _: u32 = GraphLayoutParams.pinned_count;
+        let _: bool = GraphLayoutParams.normalize_scale;
+    }
+    {
+        let HttpError = None::<crate::api::http::HttpError>.unwrap();
+        let _: crate::api::http::HttpErrorKind = HttpError.kind;
+        let _: Option<u16> = HttpError.status;
+        let _: String = HttpError.message;
+    }
+    {
+        let HttpResponse = None::<crate::api::http::HttpResponse>.unwrap();
+        let _: u16 = HttpResponse.status;
+        let _: Vec<crate::api::http::KeyValue> = HttpResponse.headers;
+        let _: Vec<u8> = HttpResponse.body;
+    }
+    {
+        let HttpServerRequest = None::<crate::api::http_server::HttpServerRequest>.unwrap();
+        let _: String = HttpServerRequest.method;
+        let _: String = HttpServerRequest.path;
+        let _: Vec<crate::api::http::KeyValue> = HttpServerRequest.query;
+        let _: Vec<crate::api::http::KeyValue> = HttpServerRequest.headers;
+        let _: Vec<u8> = HttpServerRequest.body;
+        let _: Option<String> = HttpServerRequest.body_file_path;
+    }
+    {
+        let HttpServerResponse = None::<crate::api::http_server::HttpServerResponse>.unwrap();
+        let _: u16 = HttpServerResponse.status;
+        let _: Vec<crate::api::http::KeyValue> = HttpServerResponse.headers;
+        let _: Vec<u8> = HttpServerResponse.body;
+        let _: Option<String> = HttpServerResponse.body_file_path;
+    }
+    match None::<crate::api::export_ir::IrBlock>.unwrap() {
+        crate::api::export_ir::IrBlock::Paragraph { spans } => {
+            let _: Vec<crate::api::export_ir::IrSpan> = spans;
+        }
+        crate::api::export_ir::IrBlock::Heading { level, spans } => {
+            let _: u32 = level;
+            let _: Vec<crate::api::export_ir::IrSpan> = spans;
+        }
+        crate::api::export_ir::IrBlock::List {
+            ordered,
+            start,
+            items,
+        } => {
+            let _: bool = ordered;
+            let _: u32 = start;
+            let _: Vec<crate::api::export_ir::IrListItem> = items;
+        }
+        crate::api::export_ir::IrBlock::Quote { children } => {
+            let _: Vec<crate::api::export_ir::IrBlock> = children;
+        }
+        crate::api::export_ir::IrBlock::Code { language, text } => {
+            let _: Option<String> = language;
+            let _: String = text;
+        }
+        crate::api::export_ir::IrBlock::Divider => {}
+        crate::api::export_ir::IrBlock::Image {
+            path,
+            alt,
+            width_percent,
+            external,
+        } => {
+            let _: String = path;
+            let _: Option<String> = alt;
+            let _: Option<u32> = width_percent;
+            let _: bool = external;
+        }
+        crate::api::export_ir::IrBlock::Media {
+            kind,
+            filename,
+            path,
+            cover_path,
+        } => {
+            let _: String = kind;
+            let _: String = filename;
+            let _: String = path;
+            let _: Option<String> = cover_path;
+        }
+        crate::api::export_ir::IrBlock::Table { rows } => {
+            let _: Vec<Vec<crate::api::export_ir::IrCell>> = rows;
+        }
+    }
+    {
+        let IrCell = None::<crate::api::export_ir::IrCell>.unwrap();
+        let _: Vec<crate::api::export_ir::IrBlock> = IrCell.children;
+        let _: u32 = IrCell.colspan;
+        let _: u32 = IrCell.rowspan;
+        let _: Option<String> = IrCell.align;
+        let _: bool = IrCell.header;
+    }
+    {
+        let IrDoc = None::<crate::api::export_ir::IrDoc>.unwrap();
+        let _: String = IrDoc.id;
+        let _: String = IrDoc.title;
+        let _: String = IrDoc.time;
+        let _: Vec<String> = IrDoc.weather;
+        let _: Vec<String> = IrDoc.position;
+        let _: Vec<String> = IrDoc.tags;
+        let _: Option<String> = IrDoc.category_name;
+        let _: Vec<crate::api::export_ir::IrBlock> = IrDoc.blocks;
+    }
+    {
+        let IrListItem = None::<crate::api::export_ir::IrListItem>.unwrap();
+        let _: Vec<crate::api::export_ir::IrBlock> = IrListItem.children;
+        let _: Option<bool> = IrListItem.checked;
+    }
+    {
+        let IrSpan = None::<crate::api::export_ir::IrSpan>.unwrap();
+        let _: String = IrSpan.text;
+        let _: bool = IrSpan.bold;
+        let _: bool = IrSpan.italic;
+        let _: bool = IrSpan.strike;
+        let _: bool = IrSpan.underline;
+        let _: bool = IrSpan.code;
+        let _: Option<String> = IrSpan.href;
+        let _: Option<String> = IrSpan.diary_link_id;
+    }
+    {
+        let KeyValue = None::<crate::api::http::KeyValue>.unwrap();
+        let _: String = KeyValue.key;
+        let _: String = KeyValue.value;
+    }
+    {
+        let PdfStyle = None::<crate::api::pdf::PdfStyle>.unwrap();
+        let _: String = PdfStyle.font_path;
+        let _: String = PdfStyle.font_family;
+        let _: f64 = PdfStyle.font_size_pt;
+        let _: f64 = PdfStyle.line_spacing_em;
+        let _: bool = PdfStyle.first_line_indent;
+        let _: f64 = PdfStyle.page_width_mm;
+        let _: f64 = PdfStyle.page_height_mm;
+        let _: f64 = PdfStyle.page_margin_mm;
+        let _: bool = PdfStyle.include_title;
+        let _: bool = PdfStyle.include_meta;
+        let _: String = PdfStyle.video_label;
+        let _: String = PdfStyle.audio_label;
+    }
+    {
+        let RequestOptions = None::<crate::api::http::RequestOptions>.unwrap();
+        let _: crate::api::http::HttpMethod = RequestOptions.method;
+        let _: String = RequestOptions.url;
+        let _: Vec<crate::api::http::KeyValue> = RequestOptions.query;
+        let _: Vec<crate::api::http::KeyValue> = RequestOptions.headers;
+        let _: Option<u32> = RequestOptions.timeout_ms;
+        let _: Option<bool> = RequestOptions.throw_on_status;
+    }
+    {
+        let RigChatMessage = None::<crate::api::assistant::RigChatMessage>.unwrap();
+        let _: String = RigChatMessage.role;
+        let _: String = RigChatMessage.content;
+        let _: String = RigChatMessage.image_base64;
+        let _: String = RigChatMessage.image_mime;
+    }
+    {
+        let RigProviderConfig = None::<crate::api::assistant::RigProviderConfig>.unwrap();
+        let _: String = RigProviderConfig.protocol;
+        let _: String = RigProviderConfig.api_key;
+        let _: String = RigProviderConfig.base_url;
+        let _: String = RigProviderConfig.model;
+        let _: u32 = RigProviderConfig.max_tokens;
+        let _: bool = RigProviderConfig.thinking;
+    }
+    {
+        let RigStreamEvent = None::<crate::api::assistant::RigStreamEvent>.unwrap();
+        let _: crate::api::assistant::RigEventKind = RigStreamEvent.kind;
+        let _: String = RigStreamEvent.text;
+        let _: u32 = RigStreamEvent.input_tokens;
+        let _: u32 = RigStreamEvent.output_tokens;
+    }
+    {
+        let RigToolDef = None::<crate::api::assistant::RigToolDef>.unwrap();
+        let _: String = RigToolDef.name;
+        let _: String = RigToolDef.description;
+        let _: String = RigToolDef.parameters_json;
+    }
+    {
+        let TokenizeResult = None::<crate::api::text::TokenizeResult>.unwrap();
+        let _: Vec<String> = TokenizeResult.cut;
+        let _: Vec<String> = TokenizeResult.cut_for_search;
+    }
+    {
+        let UploadEvent = None::<crate::api::http::UploadEvent>.unwrap();
+        let _: i64 = UploadEvent.sent;
+        let _: i64 = UploadEvent.total;
+        let _: Option<crate::api::http::HttpResponse> = UploadEvent.response;
+    }
+};
 
 // Section: related_funcs
 
@@ -2374,9 +2426,6 @@ flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
-    flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>
-);
-flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
     flutter_rust_bridge::for_generated::RustAutoOpaqueInner<S3Client>
 );
 flutter_rust_bridge::frb_generated_moi_arc_impl_value!(
@@ -2464,14 +2513,6 @@ impl SseDecode for ImageCompressor {
     }
 }
 
-impl SseDecode for Kmp {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>>>::sse_decode(deserializer);
-        return flutter_rust_bridge::for_generated::rust_auto_opaque_decode_owned(inner);
-    }
-}
-
 impl SseDecode for S3Client {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2505,14 +2546,6 @@ impl SseDecode for flutter_rust_bridge::DartOpaque {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
         return unsafe { flutter_rust_bridge::for_generated::sse_decode_dart_opaque(inner) };
-    }
-}
-
-impl SseDecode for std::collections::HashMap<String, String> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <Vec<(String, String)>>::sse_decode(deserializer);
-        return inner.into_iter().collect();
     }
 }
 
@@ -2583,14 +2616,6 @@ impl SseDecode
 impl SseDecode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>
 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut inner = <usize>::sse_decode(deserializer);
-        return decode_rust_opaque_moi(inner);
-    }
-}
-
-impl SseDecode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut inner = <usize>::sse_decode(deserializer);
@@ -2926,6 +2951,166 @@ impl SseDecode for i64 {
     }
 }
 
+impl SseDecode for crate::api::export_ir::IrBlock {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                let mut var_spans = <Vec<crate::api::export_ir::IrSpan>>::sse_decode(deserializer);
+                return crate::api::export_ir::IrBlock::Paragraph { spans: var_spans };
+            }
+            1 => {
+                let mut var_level = <u32>::sse_decode(deserializer);
+                let mut var_spans = <Vec<crate::api::export_ir::IrSpan>>::sse_decode(deserializer);
+                return crate::api::export_ir::IrBlock::Heading {
+                    level: var_level,
+                    spans: var_spans,
+                };
+            }
+            2 => {
+                let mut var_ordered = <bool>::sse_decode(deserializer);
+                let mut var_start = <u32>::sse_decode(deserializer);
+                let mut var_items =
+                    <Vec<crate::api::export_ir::IrListItem>>::sse_decode(deserializer);
+                return crate::api::export_ir::IrBlock::List {
+                    ordered: var_ordered,
+                    start: var_start,
+                    items: var_items,
+                };
+            }
+            3 => {
+                let mut var_children =
+                    <Vec<crate::api::export_ir::IrBlock>>::sse_decode(deserializer);
+                return crate::api::export_ir::IrBlock::Quote {
+                    children: var_children,
+                };
+            }
+            4 => {
+                let mut var_language = <Option<String>>::sse_decode(deserializer);
+                let mut var_text = <String>::sse_decode(deserializer);
+                return crate::api::export_ir::IrBlock::Code {
+                    language: var_language,
+                    text: var_text,
+                };
+            }
+            5 => {
+                return crate::api::export_ir::IrBlock::Divider;
+            }
+            6 => {
+                let mut var_path = <String>::sse_decode(deserializer);
+                let mut var_alt = <Option<String>>::sse_decode(deserializer);
+                let mut var_widthPercent = <Option<u32>>::sse_decode(deserializer);
+                let mut var_external_ = <bool>::sse_decode(deserializer);
+                return crate::api::export_ir::IrBlock::Image {
+                    path: var_path,
+                    alt: var_alt,
+                    width_percent: var_widthPercent,
+                    external: var_external_,
+                };
+            }
+            7 => {
+                let mut var_kind = <String>::sse_decode(deserializer);
+                let mut var_filename = <String>::sse_decode(deserializer);
+                let mut var_path = <String>::sse_decode(deserializer);
+                let mut var_coverPath = <Option<String>>::sse_decode(deserializer);
+                return crate::api::export_ir::IrBlock::Media {
+                    kind: var_kind,
+                    filename: var_filename,
+                    path: var_path,
+                    cover_path: var_coverPath,
+                };
+            }
+            8 => {
+                let mut var_rows =
+                    <Vec<Vec<crate::api::export_ir::IrCell>>>::sse_decode(deserializer);
+                return crate::api::export_ir::IrBlock::Table { rows: var_rows };
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseDecode for crate::api::export_ir::IrCell {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_children = <Vec<crate::api::export_ir::IrBlock>>::sse_decode(deserializer);
+        let mut var_colspan = <u32>::sse_decode(deserializer);
+        let mut var_rowspan = <u32>::sse_decode(deserializer);
+        let mut var_align = <Option<String>>::sse_decode(deserializer);
+        let mut var_header = <bool>::sse_decode(deserializer);
+        return crate::api::export_ir::IrCell {
+            children: var_children,
+            colspan: var_colspan,
+            rowspan: var_rowspan,
+            align: var_align,
+            header: var_header,
+        };
+    }
+}
+
+impl SseDecode for crate::api::export_ir::IrDoc {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
+        let mut var_title = <String>::sse_decode(deserializer);
+        let mut var_time = <String>::sse_decode(deserializer);
+        let mut var_weather = <Vec<String>>::sse_decode(deserializer);
+        let mut var_position = <Vec<String>>::sse_decode(deserializer);
+        let mut var_tags = <Vec<String>>::sse_decode(deserializer);
+        let mut var_categoryName = <Option<String>>::sse_decode(deserializer);
+        let mut var_blocks = <Vec<crate::api::export_ir::IrBlock>>::sse_decode(deserializer);
+        return crate::api::export_ir::IrDoc {
+            id: var_id,
+            title: var_title,
+            time: var_time,
+            weather: var_weather,
+            position: var_position,
+            tags: var_tags,
+            category_name: var_categoryName,
+            blocks: var_blocks,
+        };
+    }
+}
+
+impl SseDecode for crate::api::export_ir::IrListItem {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_children = <Vec<crate::api::export_ir::IrBlock>>::sse_decode(deserializer);
+        let mut var_checked = <Option<bool>>::sse_decode(deserializer);
+        return crate::api::export_ir::IrListItem {
+            children: var_children,
+            checked: var_checked,
+        };
+    }
+}
+
+impl SseDecode for crate::api::export_ir::IrSpan {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_text = <String>::sse_decode(deserializer);
+        let mut var_bold = <bool>::sse_decode(deserializer);
+        let mut var_italic = <bool>::sse_decode(deserializer);
+        let mut var_strike = <bool>::sse_decode(deserializer);
+        let mut var_underline = <bool>::sse_decode(deserializer);
+        let mut var_code = <bool>::sse_decode(deserializer);
+        let mut var_href = <Option<String>>::sse_decode(deserializer);
+        let mut var_diaryLinkId = <Option<String>>::sse_decode(deserializer);
+        return crate::api::export_ir::IrSpan {
+            text: var_text,
+            bold: var_bold,
+            italic: var_italic,
+            strike: var_strike,
+            underline: var_underline,
+            code: var_code,
+            href: var_href,
+            diary_link_id: var_diaryLinkId,
+        };
+    }
+}
+
 impl SseDecode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2957,6 +3142,68 @@ impl SseDecode for Vec<String> {
     }
 }
 
+impl SseDecode for Vec<crate::api::export_ir::IrBlock> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::export_ir::IrBlock>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::export_ir::IrCell> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::export_ir::IrCell>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::export_ir::IrDoc> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::export_ir::IrDoc>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::export_ir::IrListItem> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::export_ir::IrListItem>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::export_ir::IrSpan> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::export_ir::IrSpan>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::http::KeyValue> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2964,6 +3211,20 @@ impl SseDecode for Vec<crate::api::http::KeyValue> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::http::KeyValue>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<Vec<crate::api::export_ir::IrCell>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<Vec<crate::api::export_ir::IrCell>>::sse_decode(
+                deserializer,
+            ));
         }
         return ans_;
     }
@@ -3012,18 +3273,6 @@ impl SseDecode for Vec<(String, f32)> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<(String, f32)>::sse_decode(deserializer));
-        }
-        return ans_;
-    }
-}
-
-impl SseDecode for Vec<(String, String)> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut len_ = <i32>::sse_decode(deserializer);
-        let mut ans_ = Vec::with_capacity(len_ as usize);
-        for idx_ in 0..len_ {
-            ans_.push(<(String, String)>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -3207,15 +3456,6 @@ impl SseDecode for (String, f32) {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_field0 = <String>::sse_decode(deserializer);
         let mut var_field1 = <f32>::sse_decode(deserializer);
-        return (var_field0, var_field1);
-    }
-}
-
-impl SseDecode for (String, String) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_field0 = <String>::sse_decode(deserializer);
-        let mut var_field1 = <String>::sse_decode(deserializer);
         return (var_field0, var_field1);
     }
 }
@@ -3453,40 +3693,36 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        23 => wire__crate__api__text__Kmp_find_all_impl(port, ptr, rust_vec_len, data_len),
-        24 => wire__crate__api__text__Kmp_replace_impl(port, ptr, rust_vec_len, data_len),
-        25 => {
+        23 => {
             wire__crate__api__s3__S3Client_create_exclusive_impl(port, ptr, rust_vec_len, data_len)
         }
-        26 => wire__crate__api__s3__S3Client_delete_object_impl(port, ptr, rust_vec_len, data_len),
-        27 => wire__crate__api__s3__S3Client_ensure_bucket_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__s3__S3Client_new_impl(port, ptr, rust_vec_len, data_len),
-        29 => wire__crate__api__s3__S3Client_read_object_impl(port, ptr, rust_vec_len, data_len),
-        30 => wire__crate__api__s3__S3Client_stat_object_impl(port, ptr, rust_vec_len, data_len),
-        31 => {
+        24 => wire__crate__api__s3__S3Client_delete_object_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__s3__S3Client_new_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__s3__S3Client_read_object_impl(port, ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__s3__S3Client_stat_object_impl(port, ptr, rust_vec_len, data_len),
+        28 => {
             wire__crate__api__s3__S3Client_test_connection_impl(port, ptr, rust_vec_len, data_len)
         }
-        32 => wire__crate__api__s3__S3Client_write_object_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__api__text__Tokenizer_tokenize_impl(port, ptr, rust_vec_len, data_len),
-        34 => {
+        29 => wire__crate__api__s3__S3Client_write_object_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__text__Tokenizer_tokenize_impl(port, ptr, rust_vec_len, data_len),
+        31 => {
             wire__crate__api__text__Tokenizer_tokenize_batch_impl(port, ptr, rust_vec_len, data_len)
         }
-        35 => wire__crate__api__zip__Zip_add_bytes_impl(port, ptr, rust_vec_len, data_len),
-        36 => wire__crate__api__zip__Zip_add_dir_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__zip__Zip_add_file_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__zip__Zip_extract_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__api__zip__Zip_finish_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__api__audio__audio_duration_ms_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__text__init_tokenizer_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__api__graph_layout__layout_graph_stream_impl(
+        32 => wire__crate__api__zip__Zip_add_bytes_impl(port, ptr, rust_vec_len, data_len),
+        33 => wire__crate__api__zip__Zip_add_file_impl(port, ptr, rust_vec_len, data_len),
+        34 => wire__crate__api__zip__Zip_extract_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__api__zip__Zip_finish_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__api__audio__audio_duration_ms_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__text__init_tokenizer_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__graph_layout__layout_graph_stream_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        44 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
-        45 => wire__crate__api__docx__write_docx_impl(port, ptr, rust_vec_len, data_len),
-        46 => wire__crate__api__pdf__write_pdf_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__docx__write_docx_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__pdf__write_pdf_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3501,7 +3737,7 @@ fn pde_ffi_dispatcher_sync_impl(
     match func_id {
         18 => wire__crate__api__http_server__HttpServer_port_impl(ptr, rust_vec_len, data_len),
         20 => wire__crate__api__http_server__HttpServer_stop_impl(ptr, rust_vec_len, data_len),
-        40 => wire__crate__api__zip__Zip_new_impl(ptr, rust_vec_len, data_len),
+        36 => wire__crate__api__zip__Zip_new_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3614,21 +3850,6 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<ImageCompressor>> for ImageCom
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for FrbWrapper<Kmp> {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
-            .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for FrbWrapper<Kmp> {}
-
-impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Kmp>> for Kmp {
-    fn into_into_dart(self) -> FrbWrapper<Kmp> {
-        self.into()
-    }
-}
-
-// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<S3Client> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self.0)
@@ -3674,500 +3895,701 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Zip>> for Zip {
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::http::ClientSettings {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http::ClientSettings> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.base_url.into_into_dart().into_dart(),
-            self.connect_timeout_ms.into_into_dart().into_dart(),
-            self.timeout_ms.into_into_dart().into_dart(),
-            self.user_agent.into_into_dart().into_dart(),
-            self.max_redirects.into_into_dart().into_dart(),
-            self.throw_on_status.into_into_dart().into_dart(),
+            self.0.base_url.into_into_dart().into_dart(),
+            self.0.connect_timeout_ms.into_into_dart().into_dart(),
+            self.0.timeout_ms.into_into_dart().into_dart(),
+            self.0.user_agent.into_into_dart().into_dart(),
+            self.0.max_redirects.into_into_dart().into_dart(),
+            self.0.throw_on_status.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::http::ClientSettings
+    for FrbWrapper<crate::api::http::ClientSettings>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::http::ClientSettings>
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::ClientSettings>>
     for crate::api::http::ClientSettings
 {
-    fn into_into_dart(self) -> crate::api::http::ClientSettings {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::http::ClientSettings> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::image::CompressFormat {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::image::CompressFormat> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self {
-            Self::Jpeg => 0.into_dart(),
-            Self::WebP => 1.into_dart(),
-            Self::Png => 2.into_dart(),
+        match self.0 {
+            crate::api::image::CompressFormat::Jpeg => 0.into_dart(),
+            crate::api::image::CompressFormat::WebP => 1.into_dart(),
+            crate::api::image::CompressFormat::Png => 2.into_dart(),
             _ => unreachable!(),
         }
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::image::CompressFormat
+    for FrbWrapper<crate::api::image::CompressFormat>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::image::CompressFormat>
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::image::CompressFormat>>
     for crate::api::image::CompressFormat
 {
-    fn into_into_dart(self) -> crate::api::image::CompressFormat {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::image::CompressFormat> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::image::CompressSpec {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::image::CompressSpec> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.compress_format.into_into_dart().into_dart(),
-            self.target_width.into_into_dart().into_dart(),
-            self.target_height.into_into_dart().into_dart(),
-            self.min_width.into_into_dart().into_dart(),
-            self.min_height.into_into_dart().into_dart(),
-            self.max_width.into_into_dart().into_dart(),
-            self.max_height.into_into_dart().into_dart(),
-            self.quality.into_into_dart().into_dart(),
+            self.0.compress_format.into_into_dart().into_dart(),
+            self.0.target_width.into_into_dart().into_dart(),
+            self.0.target_height.into_into_dart().into_dart(),
+            self.0.min_width.into_into_dart().into_dart(),
+            self.0.min_height.into_into_dart().into_dart(),
+            self.0.max_width.into_into_dart().into_dart(),
+            self.0.max_height.into_into_dart().into_dart(),
+            self.0.quality.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::image::CompressSpec
+    for FrbWrapper<crate::api::image::CompressSpec>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::image::CompressSpec>
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::image::CompressSpec>>
     for crate::api::image::CompressSpec
 {
-    fn into_into_dart(self) -> crate::api::image::CompressSpec {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::image::CompressSpec> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::docx::DocxStyle {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::docx::DocxStyle> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.east_asia_font.into_into_dart().into_dart(),
-            self.ascii_font.into_into_dart().into_dart(),
-            self.font_size_pt.into_into_dart().into_dart(),
-            self.line_spacing.into_into_dart().into_dart(),
-            self.first_line_indent.into_into_dart().into_dart(),
-            self.page_width.into_into_dart().into_dart(),
-            self.page_height.into_into_dart().into_dart(),
-            self.page_margin.into_into_dart().into_dart(),
-            self.include_title.into_into_dart().into_dart(),
-            self.include_meta.into_into_dart().into_dart(),
-            self.page_break_between.into_into_dart().into_dart(),
-            self.video_label.into_into_dart().into_dart(),
-            self.audio_label.into_into_dart().into_dart(),
+            self.0.east_asia_font.into_into_dart().into_dart(),
+            self.0.ascii_font.into_into_dart().into_dart(),
+            self.0.font_size_pt.into_into_dart().into_dart(),
+            self.0.line_spacing.into_into_dart().into_dart(),
+            self.0.first_line_indent.into_into_dart().into_dart(),
+            self.0.page_width.into_into_dart().into_dart(),
+            self.0.page_height.into_into_dart().into_dart(),
+            self.0.page_margin.into_into_dart().into_dart(),
+            self.0.include_title.into_into_dart().into_dart(),
+            self.0.include_meta.into_into_dart().into_dart(),
+            self.0.page_break_between.into_into_dart().into_dart(),
+            self.0.video_label.into_into_dart().into_dart(),
+            self.0.audio_label.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::docx::DocxStyle {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::docx::DocxStyle>
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::docx::DocxStyle>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::docx::DocxStyle>>
     for crate::api::docx::DocxStyle
 {
-    fn into_into_dart(self) -> crate::api::docx::DocxStyle {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::docx::DocxStyle> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::graph_layout::GraphLayoutParams {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::graph_layout::GraphLayoutParams> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.iterations.into_into_dart().into_dart(),
-            self.theta.into_into_dart().into_dart(),
-            self.repulsion.into_into_dart().into_dart(),
-            self.spring_length.into_into_dart().into_dart(),
-            self.spring_strength.into_into_dart().into_dart(),
-            self.gravity.into_into_dart().into_dart(),
-            self.collide_radius.into_into_dart().into_dart(),
-            self.velocity_decay.into_into_dart().into_dart(),
-            self.emit_every.into_into_dart().into_dart(),
-            self.frame_delay_ms.into_into_dart().into_dart(),
-            self.initial_alpha.into_into_dart().into_dart(),
-            self.min_step.into_into_dart().into_dart(),
-            self.pinned_count.into_into_dart().into_dart(),
-            self.normalize_scale.into_into_dart().into_dart(),
+            self.0.iterations.into_into_dart().into_dart(),
+            self.0.theta.into_into_dart().into_dart(),
+            self.0.repulsion.into_into_dart().into_dart(),
+            self.0.spring_length.into_into_dart().into_dart(),
+            self.0.spring_strength.into_into_dart().into_dart(),
+            self.0.gravity.into_into_dart().into_dart(),
+            self.0.collide_radius.into_into_dart().into_dart(),
+            self.0.velocity_decay.into_into_dart().into_dart(),
+            self.0.emit_every.into_into_dart().into_dart(),
+            self.0.frame_delay_ms.into_into_dart().into_dart(),
+            self.0.initial_alpha.into_into_dart().into_dart(),
+            self.0.min_step.into_into_dart().into_dart(),
+            self.0.pinned_count.into_into_dart().into_dart(),
+            self.0.normalize_scale.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::graph_layout::GraphLayoutParams
+    for FrbWrapper<crate::api::graph_layout::GraphLayoutParams>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::graph_layout::GraphLayoutParams>
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::graph_layout::GraphLayoutParams>>
     for crate::api::graph_layout::GraphLayoutParams
 {
-    fn into_into_dart(self) -> crate::api::graph_layout::GraphLayoutParams {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::graph_layout::GraphLayoutParams> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::http::HttpError {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http::HttpError> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.kind.into_into_dart().into_dart(),
-            self.status.into_into_dart().into_dart(),
-            self.message.into_into_dart().into_dart(),
+            self.0.kind.into_into_dart().into_dart(),
+            self.0.status.into_into_dart().into_dart(),
+            self.0.message.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::http::HttpError {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::http::HttpError>
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::http::HttpError>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::HttpError>>
     for crate::api::http::HttpError
 {
-    fn into_into_dart(self) -> crate::api::http::HttpError {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::http::HttpError> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::http::HttpErrorKind {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http::HttpErrorKind> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self {
-            Self::Timeout => 0.into_dart(),
-            Self::Connect => 1.into_dart(),
-            Self::Request => 2.into_dart(),
-            Self::Redirect => 3.into_dart(),
-            Self::Decode => 4.into_dart(),
-            Self::Status => 5.into_dart(),
-            Self::Unknown => 6.into_dart(),
+        match self.0 {
+            crate::api::http::HttpErrorKind::Timeout => 0.into_dart(),
+            crate::api::http::HttpErrorKind::Connect => 1.into_dart(),
+            crate::api::http::HttpErrorKind::Request => 2.into_dart(),
+            crate::api::http::HttpErrorKind::Redirect => 3.into_dart(),
+            crate::api::http::HttpErrorKind::Decode => 4.into_dart(),
+            crate::api::http::HttpErrorKind::Status => 5.into_dart(),
+            crate::api::http::HttpErrorKind::Unknown => 6.into_dart(),
             _ => unreachable!(),
         }
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::http::HttpErrorKind
+    for FrbWrapper<crate::api::http::HttpErrorKind>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::http::HttpErrorKind>
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::HttpErrorKind>>
     for crate::api::http::HttpErrorKind
 {
-    fn into_into_dart(self) -> crate::api::http::HttpErrorKind {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::http::HttpErrorKind> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::http::HttpMethod {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http::HttpMethod> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self {
-            Self::Get => 0.into_dart(),
-            Self::Post => 1.into_dart(),
-            Self::Put => 2.into_dart(),
-            Self::Delete => 3.into_dart(),
-            Self::Patch => 4.into_dart(),
-            Self::Head => 5.into_dart(),
-            Self::Options => 6.into_dart(),
+        match self.0 {
+            crate::api::http::HttpMethod::Get => 0.into_dart(),
+            crate::api::http::HttpMethod::Post => 1.into_dart(),
+            crate::api::http::HttpMethod::Put => 2.into_dart(),
+            crate::api::http::HttpMethod::Delete => 3.into_dart(),
+            crate::api::http::HttpMethod::Patch => 4.into_dart(),
+            crate::api::http::HttpMethod::Head => 5.into_dart(),
+            crate::api::http::HttpMethod::Options => 6.into_dart(),
             _ => unreachable!(),
         }
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::http::HttpMethod {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::http::HttpMethod>
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::http::HttpMethod>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::HttpMethod>>
     for crate::api::http::HttpMethod
 {
-    fn into_into_dart(self) -> crate::api::http::HttpMethod {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::http::HttpMethod> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::http::HttpResponse {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http::HttpResponse> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.status.into_into_dart().into_dart(),
-            self.headers.into_into_dart().into_dart(),
-            self.body.into_into_dart().into_dart(),
+            self.0.status.into_into_dart().into_dart(),
+            self.0.headers.into_into_dart().into_dart(),
+            self.0.body.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::http::HttpResponse>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::HttpResponse>>
     for crate::api::http::HttpResponse
 {
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::http::HttpResponse>
-    for crate::api::http::HttpResponse
-{
-    fn into_into_dart(self) -> crate::api::http::HttpResponse {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::http::HttpResponse> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::http_server::HttpServerRequest {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http_server::HttpServerRequest> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.method.into_into_dart().into_dart(),
-            self.path.into_into_dart().into_dart(),
-            self.query.into_into_dart().into_dart(),
-            self.headers.into_into_dart().into_dart(),
-            self.body.into_into_dart().into_dart(),
-            self.body_file_path.into_into_dart().into_dart(),
+            self.0.method.into_into_dart().into_dart(),
+            self.0.path.into_into_dart().into_dart(),
+            self.0.query.into_into_dart().into_dart(),
+            self.0.headers.into_into_dart().into_dart(),
+            self.0.body.into_into_dart().into_dart(),
+            self.0.body_file_path.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::http_server::HttpServerRequest>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http_server::HttpServerRequest>>
     for crate::api::http_server::HttpServerRequest
 {
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::http_server::HttpServerRequest>
-    for crate::api::http_server::HttpServerRequest
-{
-    fn into_into_dart(self) -> crate::api::http_server::HttpServerRequest {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::http_server::HttpServerRequest> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::http_server::HttpServerResponse {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http_server::HttpServerResponse> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.status.into_into_dart().into_dart(),
-            self.headers.into_into_dart().into_dart(),
-            self.body.into_into_dart().into_dart(),
-            self.body_file_path.into_into_dart().into_dart(),
+            self.0.status.into_into_dart().into_dart(),
+            self.0.headers.into_into_dart().into_dart(),
+            self.0.body.into_into_dart().into_dart(),
+            self.0.body_file_path.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::http_server::HttpServerResponse>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http_server::HttpServerResponse>>
     for crate::api::http_server::HttpServerResponse
 {
+    fn into_into_dart(self) -> FrbWrapper<crate::api::http_server::HttpServerResponse> {
+        self.into()
+    }
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::http_server::HttpServerResponse>
-    for crate::api::http_server::HttpServerResponse
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrBlock> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::api::export_ir::IrBlock::Paragraph { spans } => {
+                [0.into_dart(), spans.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::export_ir::IrBlock::Heading { level, spans } => [
+                1.into_dart(),
+                level.into_into_dart().into_dart(),
+                spans.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::export_ir::IrBlock::List {
+                ordered,
+                start,
+                items,
+            } => [
+                2.into_dart(),
+                ordered.into_into_dart().into_dart(),
+                start.into_into_dart().into_dart(),
+                items.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::export_ir::IrBlock::Quote { children } => {
+                [3.into_dart(), children.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::export_ir::IrBlock::Code { language, text } => [
+                4.into_dart(),
+                language.into_into_dart().into_dart(),
+                text.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::export_ir::IrBlock::Divider => [5.into_dart()].into_dart(),
+            crate::api::export_ir::IrBlock::Image {
+                path,
+                alt,
+                width_percent,
+                external,
+            } => [
+                6.into_dart(),
+                path.into_into_dart().into_dart(),
+                alt.into_into_dart().into_dart(),
+                width_percent.into_into_dart().into_dart(),
+                external.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::export_ir::IrBlock::Media {
+                kind,
+                filename,
+                path,
+                cover_path,
+            } => [
+                7.into_dart(),
+                kind.into_into_dart().into_dart(),
+                filename.into_into_dart().into_dart(),
+                path.into_into_dart().into_dart(),
+                cover_path.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::export_ir::IrBlock::Table { rows } => {
+                [8.into_dart(), rows.into_into_dart().into_dart()].into_dart()
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::export_ir::IrBlock>
 {
-    fn into_into_dart(self) -> crate::api::http_server::HttpServerResponse {
-        self
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrBlock>>
+    for crate::api::export_ir::IrBlock
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrBlock> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::http::KeyValue {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrCell> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.key.into_into_dart().into_dart(),
-            self.value.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::http::KeyValue {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::http::KeyValue> for crate::api::http::KeyValue {
-    fn into_into_dart(self) -> crate::api::http::KeyValue {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::pdf::PdfStyle {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.font_path.into_into_dart().into_dart(),
-            self.font_family.into_into_dart().into_dart(),
-            self.font_size_pt.into_into_dart().into_dart(),
-            self.line_spacing_em.into_into_dart().into_dart(),
-            self.first_line_indent.into_into_dart().into_dart(),
-            self.page_width_mm.into_into_dart().into_dart(),
-            self.page_height_mm.into_into_dart().into_dart(),
-            self.page_margin_mm.into_into_dart().into_dart(),
-            self.include_title.into_into_dart().into_dart(),
-            self.include_meta.into_into_dart().into_dart(),
-            self.video_label.into_into_dart().into_dart(),
-            self.audio_label.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::pdf::PdfStyle {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::pdf::PdfStyle> for crate::api::pdf::PdfStyle {
-    fn into_into_dart(self) -> crate::api::pdf::PdfStyle {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::http::RequestOptions {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.method.into_into_dart().into_dart(),
-            self.url.into_into_dart().into_dart(),
-            self.query.into_into_dart().into_dart(),
-            self.headers.into_into_dart().into_dart(),
-            self.timeout_ms.into_into_dart().into_dart(),
-            self.throw_on_status.into_into_dart().into_dart(),
+            self.0.children.into_into_dart().into_dart(),
+            self.0.colspan.into_into_dart().into_dart(),
+            self.0.rowspan.into_into_dart().into_dart(),
+            self.0.align.into_into_dart().into_dart(),
+            self.0.header.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::http::RequestOptions
+    for FrbWrapper<crate::api::export_ir::IrCell>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::http::RequestOptions>
-    for crate::api::http::RequestOptions
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrCell>>
+    for crate::api::export_ir::IrCell
 {
-    fn into_into_dart(self) -> crate::api::http::RequestOptions {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrCell> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigChatMessage {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrDoc> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.role.into_into_dart().into_dart(),
-            self.content.into_into_dart().into_dart(),
-            self.image_base64.into_into_dart().into_dart(),
-            self.image_mime.into_into_dart().into_dart(),
+            self.0.id.into_into_dart().into_dart(),
+            self.0.title.into_into_dart().into_dart(),
+            self.0.time.into_into_dart().into_dart(),
+            self.0.weather.into_into_dart().into_dart(),
+            self.0.position.into_into_dart().into_dart(),
+            self.0.tags.into_into_dart().into_dart(),
+            self.0.category_name.into_into_dart().into_dart(),
+            self.0.blocks.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::assistant::RigChatMessage
+    for FrbWrapper<crate::api::export_ir::IrDoc>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::assistant::RigChatMessage>
-    for crate::api::assistant::RigChatMessage
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrDoc>>
+    for crate::api::export_ir::IrDoc
 {
-    fn into_into_dart(self) -> crate::api::assistant::RigChatMessage {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrDoc> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigEventKind {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrListItem> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        match self {
-            Self::TextDelta => 0.into_dart(),
-            Self::ReasoningDelta => 1.into_dart(),
-            Self::ToolCall => 2.into_dart(),
-            Self::Usage => 3.into_dart(),
+        [
+            self.0.children.into_into_dart().into_dart(),
+            self.0.checked.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::export_ir::IrListItem>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrListItem>>
+    for crate::api::export_ir::IrListItem
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrListItem> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::export_ir::IrSpan> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.text.into_into_dart().into_dart(),
+            self.0.bold.into_into_dart().into_dart(),
+            self.0.italic.into_into_dart().into_dart(),
+            self.0.strike.into_into_dart().into_dart(),
+            self.0.underline.into_into_dart().into_dart(),
+            self.0.code.into_into_dart().into_dart(),
+            self.0.href.into_into_dart().into_dart(),
+            self.0.diary_link_id.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::export_ir::IrSpan>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrSpan>>
+    for crate::api::export_ir::IrSpan
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::api::export_ir::IrSpan> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http::KeyValue> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.key.into_into_dart().into_dart(),
+            self.0.value.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::http::KeyValue>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::KeyValue>>
+    for crate::api::http::KeyValue
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::api::http::KeyValue> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::pdf::PdfStyle> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.font_path.into_into_dart().into_dart(),
+            self.0.font_family.into_into_dart().into_dart(),
+            self.0.font_size_pt.into_into_dart().into_dart(),
+            self.0.line_spacing_em.into_into_dart().into_dart(),
+            self.0.first_line_indent.into_into_dart().into_dart(),
+            self.0.page_width_mm.into_into_dart().into_dart(),
+            self.0.page_height_mm.into_into_dart().into_dart(),
+            self.0.page_margin_mm.into_into_dart().into_dart(),
+            self.0.include_title.into_into_dart().into_dart(),
+            self.0.include_meta.into_into_dart().into_dart(),
+            self.0.video_label.into_into_dart().into_dart(),
+            self.0.audio_label.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::pdf::PdfStyle>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::pdf::PdfStyle>>
+    for crate::api::pdf::PdfStyle
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::api::pdf::PdfStyle> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http::RequestOptions> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.method.into_into_dart().into_dart(),
+            self.0.url.into_into_dart().into_dart(),
+            self.0.query.into_into_dart().into_dart(),
+            self.0.headers.into_into_dart().into_dart(),
+            self.0.timeout_ms.into_into_dart().into_dart(),
+            self.0.throw_on_status.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::http::RequestOptions>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::RequestOptions>>
+    for crate::api::http::RequestOptions
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::api::http::RequestOptions> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::assistant::RigChatMessage> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.role.into_into_dart().into_dart(),
+            self.0.content.into_into_dart().into_dart(),
+            self.0.image_base64.into_into_dart().into_dart(),
+            self.0.image_mime.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::assistant::RigChatMessage>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::assistant::RigChatMessage>>
+    for crate::api::assistant::RigChatMessage
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::api::assistant::RigChatMessage> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::assistant::RigEventKind> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self.0 {
+            crate::api::assistant::RigEventKind::TextDelta => 0.into_dart(),
+            crate::api::assistant::RigEventKind::ReasoningDelta => 1.into_dart(),
+            crate::api::assistant::RigEventKind::ToolCall => 2.into_dart(),
+            crate::api::assistant::RigEventKind::Usage => 3.into_dart(),
             _ => unreachable!(),
         }
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::assistant::RigEventKind>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::assistant::RigEventKind>>
     for crate::api::assistant::RigEventKind
 {
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::assistant::RigEventKind>
-    for crate::api::assistant::RigEventKind
-{
-    fn into_into_dart(self) -> crate::api::assistant::RigEventKind {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::assistant::RigEventKind> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigProviderConfig {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::assistant::RigProviderConfig> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.protocol.into_into_dart().into_dart(),
-            self.api_key.into_into_dart().into_dart(),
-            self.base_url.into_into_dart().into_dart(),
-            self.model.into_into_dart().into_dart(),
-            self.max_tokens.into_into_dart().into_dart(),
-            self.thinking.into_into_dart().into_dart(),
+            self.0.protocol.into_into_dart().into_dart(),
+            self.0.api_key.into_into_dart().into_dart(),
+            self.0.base_url.into_into_dart().into_dart(),
+            self.0.model.into_into_dart().into_dart(),
+            self.0.max_tokens.into_into_dart().into_dart(),
+            self.0.thinking.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::assistant::RigProviderConfig>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::assistant::RigProviderConfig>>
     for crate::api::assistant::RigProviderConfig
 {
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::assistant::RigProviderConfig>
-    for crate::api::assistant::RigProviderConfig
-{
-    fn into_into_dart(self) -> crate::api::assistant::RigProviderConfig {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::assistant::RigProviderConfig> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigStreamEvent {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::assistant::RigStreamEvent> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.kind.into_into_dart().into_dart(),
-            self.text.into_into_dart().into_dart(),
-            self.input_tokens.into_into_dart().into_dart(),
-            self.output_tokens.into_into_dart().into_dart(),
+            self.0.kind.into_into_dart().into_dart(),
+            self.0.text.into_into_dart().into_dart(),
+            self.0.input_tokens.into_into_dart().into_dart(),
+            self.0.output_tokens.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::assistant::RigStreamEvent>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::assistant::RigStreamEvent>>
     for crate::api::assistant::RigStreamEvent
 {
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::assistant::RigStreamEvent>
-    for crate::api::assistant::RigStreamEvent
-{
-    fn into_into_dart(self) -> crate::api::assistant::RigStreamEvent {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::assistant::RigStreamEvent> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::assistant::RigToolDef {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::assistant::RigToolDef> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.name.into_into_dart().into_dart(),
-            self.description.into_into_dart().into_dart(),
-            self.parameters_json.into_into_dart().into_dart(),
+            self.0.name.into_into_dart().into_dart(),
+            self.0.description.into_into_dart().into_dart(),
+            self.0.parameters_json.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::assistant::RigToolDef
+    for FrbWrapper<crate::api::assistant::RigToolDef>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::assistant::RigToolDef>
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::assistant::RigToolDef>>
     for crate::api::assistant::RigToolDef
 {
-    fn into_into_dart(self) -> crate::api::assistant::RigToolDef {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::assistant::RigToolDef> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::text::TokenizeResult {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::text::TokenizeResult> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.cut.into_into_dart().into_dart(),
-            self.cut_for_search.into_into_dart().into_dart(),
+            self.0.cut.into_into_dart().into_dart(),
+            self.0.cut_for_search.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::text::TokenizeResult
+    for FrbWrapper<crate::api::text::TokenizeResult>
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::text::TokenizeResult>
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::text::TokenizeResult>>
     for crate::api::text::TokenizeResult
 {
-    fn into_into_dart(self) -> crate::api::text::TokenizeResult {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::text::TokenizeResult> {
+        self.into()
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::http::UploadEvent {
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http::UploadEvent> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
-            self.sent.into_into_dart().into_dart(),
-            self.total.into_into_dart().into_dart(),
-            self.response.into_into_dart().into_dart(),
+            self.0.sent.into_into_dart().into_dart(),
+            self.0.total.into_into_dart().into_dart(),
+            self.0.response.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::http::UploadEvent {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::http::UploadEvent>
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::http::UploadEvent>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::http::UploadEvent>>
     for crate::api::http::UploadEvent
 {
-    fn into_into_dart(self) -> crate::api::http::UploadEvent {
-        self
+    fn into_into_dart(self) -> FrbWrapper<crate::api::http::UploadEvent> {
+        self.into()
     }
 }
 
@@ -4230,16 +4652,6 @@ impl SseEncode for ImageCompressor {
     }
 }
 
-impl SseEncode for Kmp {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>>>::sse_encode(
-            flutter_rust_bridge::for_generated::rust_auto_opaque_encode::<_, MoiArc<_>>(self),
-            serializer,
-        );
-    }
-}
-
 impl SseEncode for S3Client {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4268,13 +4680,6 @@ impl SseEncode for flutter_rust_bridge::DartOpaque {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <usize>::sse_encode(self.encode(), serializer);
-    }
-}
-
-impl SseEncode for std::collections::HashMap<String, String> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <Vec<(String, String)>>::sse_encode(self.into_iter().collect(), serializer);
     }
 }
 
@@ -4350,15 +4755,6 @@ impl SseEncode
 impl SseEncode
     for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>
 {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        let (ptr, size) = self.sse_encode_raw();
-        <usize>::sse_encode(ptr, serializer);
-        <i32>::sse_encode(size, serializer);
-    }
-}
-
-impl SseEncode for RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         let (ptr, size) = self.sse_encode_raw();
@@ -4632,6 +5028,123 @@ impl SseEncode for i64 {
     }
 }
 
+impl SseEncode for crate::api::export_ir::IrBlock {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::api::export_ir::IrBlock::Paragraph { spans } => {
+                <i32>::sse_encode(0, serializer);
+                <Vec<crate::api::export_ir::IrSpan>>::sse_encode(spans, serializer);
+            }
+            crate::api::export_ir::IrBlock::Heading { level, spans } => {
+                <i32>::sse_encode(1, serializer);
+                <u32>::sse_encode(level, serializer);
+                <Vec<crate::api::export_ir::IrSpan>>::sse_encode(spans, serializer);
+            }
+            crate::api::export_ir::IrBlock::List {
+                ordered,
+                start,
+                items,
+            } => {
+                <i32>::sse_encode(2, serializer);
+                <bool>::sse_encode(ordered, serializer);
+                <u32>::sse_encode(start, serializer);
+                <Vec<crate::api::export_ir::IrListItem>>::sse_encode(items, serializer);
+            }
+            crate::api::export_ir::IrBlock::Quote { children } => {
+                <i32>::sse_encode(3, serializer);
+                <Vec<crate::api::export_ir::IrBlock>>::sse_encode(children, serializer);
+            }
+            crate::api::export_ir::IrBlock::Code { language, text } => {
+                <i32>::sse_encode(4, serializer);
+                <Option<String>>::sse_encode(language, serializer);
+                <String>::sse_encode(text, serializer);
+            }
+            crate::api::export_ir::IrBlock::Divider => {
+                <i32>::sse_encode(5, serializer);
+            }
+            crate::api::export_ir::IrBlock::Image {
+                path,
+                alt,
+                width_percent,
+                external,
+            } => {
+                <i32>::sse_encode(6, serializer);
+                <String>::sse_encode(path, serializer);
+                <Option<String>>::sse_encode(alt, serializer);
+                <Option<u32>>::sse_encode(width_percent, serializer);
+                <bool>::sse_encode(external, serializer);
+            }
+            crate::api::export_ir::IrBlock::Media {
+                kind,
+                filename,
+                path,
+                cover_path,
+            } => {
+                <i32>::sse_encode(7, serializer);
+                <String>::sse_encode(kind, serializer);
+                <String>::sse_encode(filename, serializer);
+                <String>::sse_encode(path, serializer);
+                <Option<String>>::sse_encode(cover_path, serializer);
+            }
+            crate::api::export_ir::IrBlock::Table { rows } => {
+                <i32>::sse_encode(8, serializer);
+                <Vec<Vec<crate::api::export_ir::IrCell>>>::sse_encode(rows, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
+impl SseEncode for crate::api::export_ir::IrCell {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::export_ir::IrBlock>>::sse_encode(self.children, serializer);
+        <u32>::sse_encode(self.colspan, serializer);
+        <u32>::sse_encode(self.rowspan, serializer);
+        <Option<String>>::sse_encode(self.align, serializer);
+        <bool>::sse_encode(self.header, serializer);
+    }
+}
+
+impl SseEncode for crate::api::export_ir::IrDoc {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.title, serializer);
+        <String>::sse_encode(self.time, serializer);
+        <Vec<String>>::sse_encode(self.weather, serializer);
+        <Vec<String>>::sse_encode(self.position, serializer);
+        <Vec<String>>::sse_encode(self.tags, serializer);
+        <Option<String>>::sse_encode(self.category_name, serializer);
+        <Vec<crate::api::export_ir::IrBlock>>::sse_encode(self.blocks, serializer);
+    }
+}
+
+impl SseEncode for crate::api::export_ir::IrListItem {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::export_ir::IrBlock>>::sse_encode(self.children, serializer);
+        <Option<bool>>::sse_encode(self.checked, serializer);
+    }
+}
+
+impl SseEncode for crate::api::export_ir::IrSpan {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.text, serializer);
+        <bool>::sse_encode(self.bold, serializer);
+        <bool>::sse_encode(self.italic, serializer);
+        <bool>::sse_encode(self.strike, serializer);
+        <bool>::sse_encode(self.underline, serializer);
+        <bool>::sse_encode(self.code, serializer);
+        <Option<String>>::sse_encode(self.href, serializer);
+        <Option<String>>::sse_encode(self.diary_link_id, serializer);
+    }
+}
+
 impl SseEncode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4660,12 +5173,72 @@ impl SseEncode for Vec<String> {
     }
 }
 
+impl SseEncode for Vec<crate::api::export_ir::IrBlock> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::export_ir::IrBlock>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::export_ir::IrCell> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::export_ir::IrCell>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::export_ir::IrDoc> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::export_ir::IrDoc>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::export_ir::IrListItem> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::export_ir::IrListItem>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::export_ir::IrSpan> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::export_ir::IrSpan>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::http::KeyValue> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::http::KeyValue>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<Vec<crate::api::export_ir::IrCell>> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <Vec<crate::api::export_ir::IrCell>>::sse_encode(item, serializer);
         }
     }
 }
@@ -4706,16 +5279,6 @@ impl SseEncode for Vec<(String, f32)> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <(String, f32)>::sse_encode(item, serializer);
-        }
-    }
-}
-
-impl SseEncode for Vec<(String, String)> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.len() as _, serializer);
-        for item in self {
-            <(String, String)>::sse_encode(item, serializer);
         }
     }
 }
@@ -4863,14 +5426,6 @@ impl SseEncode for (String, f32) {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.0, serializer);
         <f32>::sse_encode(self.1, serializer);
-    }
-}
-
-impl SseEncode for (String, String) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.0, serializer);
-        <String>::sse_encode(self.1, serializer);
     }
 }
 
@@ -5121,20 +5676,6 @@ mod io {
         ptr: *const std::ffi::c_void,
     ) {
         MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ImageCompressor>>::decrement_strong_count(ptr as _);
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>>::increment_strong_count(ptr as _);
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKmp(
-        ptr: *const std::ffi::c_void,
-    ) {
-        MoiArc::<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Kmp>>::decrement_strong_count(ptr as _);
     }
 
     #[unsafe(no_mangle)]

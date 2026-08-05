@@ -123,7 +123,7 @@ class MarkdownWriter {
   /// CommonMark 判定为 loose list，渲染出多余的段落间距。顶层不能这么做 —— 段落与列表
   /// 之间少了空行，列表可能被当作段落的延续行吞掉。
   static void _blocks(
-    List<ExportBlock> blocks,
+    List<IrBlock> blocks,
     StringBuffer buf,
     MarkdownOptions o, {
     required String indent,
@@ -132,20 +132,20 @@ class MarkdownWriter {
     for (var i = 0; i < blocks.length; i++) {
       final block = blocks[i];
       final next = i + 1 < blocks.length ? blocks[i + 1] : null;
-      final skipBlank = tight && block is ParagraphBlock && next is ListBlock;
+      final skipBlank = tight && block is IrBlock_Paragraph && next is IrBlock_List;
       _block(block, buf, o, indent: indent, skipTrailingBlank: skipBlank);
     }
   }
 
   static void _block(
-    ExportBlock block,
+    IrBlock block,
     StringBuffer buf,
     MarkdownOptions o, {
     required String indent,
     bool skipTrailingBlank = false,
   }) {
     switch (block) {
-      case ParagraphBlock(:final spans):
+      case IrBlock_Paragraph(:final spans):
         final text = _spans(spans, o);
         if (text.trim().isEmpty) {
           buf.writeln();
@@ -154,11 +154,11 @@ class MarkdownWriter {
         _writeIndented(buf, text, indent);
         if (!skipTrailingBlank) buf.writeln();
 
-      case HeadingBlock(:final level, :final spans):
+      case IrBlock_Heading(:final level, :final spans):
         _writeIndented(buf, '${'#' * level} ${_spans(spans, o)}', indent);
         buf.writeln();
 
-      case QuoteBlock(:final children):
+      case IrBlock_Quote(:final children):
         final inner = StringBuffer();
         _blocks(children, inner, o, indent: '');
         for (final line in _lines(inner.toString())) {
@@ -166,7 +166,7 @@ class MarkdownWriter {
         }
         buf.writeln();
 
-      case CodeBlock(:final text, :final language):
+      case IrBlock_Code(:final text, :final language):
         // 正文里出现 ``` 时用更长的围栏，否则代码块会被提前关掉。
         final fence = '`' * _fenceLength(text);
         buf.writeln('$indent$fence${language ?? ''}');
@@ -176,34 +176,34 @@ class MarkdownWriter {
         buf.writeln('$indent$fence');
         buf.writeln();
 
-      case DividerBlock():
+      case IrBlock_Divider():
         buf.writeln('$indent---');
         buf.writeln();
 
-      case ListBlock():
+      case IrBlock_List():
         _list(block, buf, o, indent: indent);
         buf.writeln();
 
-      case ImageBlock():
+      case IrBlock_Image():
         _writeIndented(buf, _image(block, o), indent);
         buf.writeln();
 
-      case MediaBlock(:final kind, :final filename):
-        final label = kind == ExportMediaKind.video ? '视频' : '音频';
+      case IrBlock_Media(:final kind, :final filename):
+        final label = kind == 'video' ? '视频' : '音频';
         final target = o.mediaMode == MarkdownMediaMode.relative
             ? '${o.assetsDir}/$filename'
             : filename;
         _writeIndented(buf, '[$label：$filename]($target)', indent);
         buf.writeln();
 
-      case TableBlock(:final rows):
+      case IrBlock_Table(:final rows):
         _table(rows, buf, o, indent: indent);
         buf.writeln();
     }
   }
 
   static void _list(
-    ListBlock list,
+    IrBlock_List list,
     StringBuffer buf,
     MarkdownOptions o, {
     required String indent,
@@ -235,7 +235,7 @@ class MarkdownWriter {
   }
 
   static void _table(
-    List<List<ExportCell>> rows,
+    List<List<IrCell>> rows,
     StringBuffer buf,
     MarkdownOptions o, {
     required String indent,
@@ -271,7 +271,7 @@ class MarkdownWriter {
   }
 
   /// 单元格压成单行：表格语法里换行会把行结构打断，`|` 必须转义。
-  static String _cellText(ExportCell cell, MarkdownOptions o) {
+  static String _cellText(IrCell cell, MarkdownOptions o) {
     final inner = StringBuffer();
     _blocks(cell.children, inner, o, indent: '');
     return inner
@@ -281,9 +281,9 @@ class MarkdownWriter {
         .replaceAll('|', r'\|');
   }
 
-  static String _image(ImageBlock img, MarkdownOptions o) {
+  static String _image(IrBlock_Image img, MarkdownOptions o) {
     final alt = _escape(img.alt ?? '');
-    if (img.isExternal) return '![$alt](${img.path})';
+    if (img.external_) return '![$alt](${img.path})';
     final name = img.path.split(RegExp(r'[/\\]')).last;
     final target = switch (o.mediaMode) {
       MarkdownMediaMode.relative => '${o.assetsDir}/$name',
@@ -294,7 +294,7 @@ class MarkdownWriter {
 
   // -------------------------------------------------------------- inline
 
-  static String _spans(List<ExportSpan> spans, MarkdownOptions o) {
+  static String _spans(List<IrSpan> spans, MarkdownOptions o) {
     final buf = StringBuffer();
     for (final span in spans) {
       buf.write(_span(span, o));
@@ -302,7 +302,7 @@ class MarkdownWriter {
     return buf.toString();
   }
 
-  static String _span(ExportSpan span, MarkdownOptions o) {
+  static String _span(IrSpan span, MarkdownOptions o) {
     // 双链没有 markdown 对应语法：写成 wiki 链接，目标 id 丢失（导回来只能按标题再找）。
     if (span.diaryLinkId != null) return '[[${span.text}]]';
 
