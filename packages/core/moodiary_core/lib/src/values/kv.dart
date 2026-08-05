@@ -66,6 +66,10 @@ enum MoodiaryKVs<T extends Object> {
 
   categoryOrder<List<String>>(),
 
+  /// 导出配置（JSON，见 moodiary_export 的 ExportSettings）。按格式分别记，
+  /// 下次进导出页沿用上次的选择。
+  exportSettings<String>(defaultValue: ''),
+
   /// 日记搜索历史（最近在前、去重、截断到上限）。
   searchHistory<List<String>>(),
   diaryHeader<bool>(defaultValue: true),

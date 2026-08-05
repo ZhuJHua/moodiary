@@ -7,6 +7,7 @@
 library;
 
 export 'src/routes.dart' show syncRoutes;
+export 'src/data/impl/backup_archive_impl.dart' show SyncBackupArchive;
 export 'src/data/sync_registry.dart' show registerRemoteSync;
 export 'src/data/sync_logger.dart' show SyncLogger;
 export 'src/application/auto_sync_watcher.dart' show AutoSyncWatcher;

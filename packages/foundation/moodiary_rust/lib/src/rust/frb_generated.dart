@@ -6,11 +6,13 @@
 import 'api/assistant.dart';
 import 'api/audio.dart';
 import 'api/crypto.dart';
+import 'api/docx.dart';
 import 'api/font.dart';
 import 'api/graph_layout.dart';
 import 'api/http.dart';
 import 'api/http_server.dart';
 import 'api/image.dart';
+import 'api/pdf.dart';
 import 'api/s3.dart';
 import 'api/text.dart';
 import 'api/webdav.dart';
@@ -77,7 +79,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0-beta.5';
 
   @override
-  int get rustContentHash => -80425007;
+  int get rustContentHash => -521474064;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -304,6 +306,18 @@ abstract class RustLibApi extends BaseApi {
     required List<RigToolDef> tools,
     required int maxTurns,
     required FutureOr<String> Function(String, String) toolDispatch,
+  });
+
+  Future<void> crateApiDocxWriteDocx({
+    required String docsJson,
+    required DocxStyle style,
+    required String outPath,
+  });
+
+  Future<void> crateApiPdfWritePdf({
+    required String docsJson,
+    required PdfStyle style,
+    required String outPath,
   });
 
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Aes;
@@ -2023,6 +2037,78 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         ],
       );
 
+  @override
+  Future<void> crateApiDocxWriteDocx({
+    required String docsJson,
+    required DocxStyle style,
+    required String outPath,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(docsJson, serializer);
+          sse_encode_box_autoadd_docx_style(style, serializer);
+          sse_encode_String(outPath, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 45,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiDocxWriteDocxConstMeta,
+        argValues: [docsJson, style, outPath],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDocxWriteDocxConstMeta => const TaskConstMeta(
+    debugName: "write_docx",
+    argNames: ["docsJson", "style", "outPath"],
+  );
+
+  @override
+  Future<void> crateApiPdfWritePdf({
+    required String docsJson,
+    required PdfStyle style,
+    required String outPath,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(docsJson, serializer);
+          sse_encode_box_autoadd_pdf_style(style, serializer);
+          sse_encode_String(outPath, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 46,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiPdfWritePdfConstMeta,
+        argValues: [docsJson, style, outPath],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPdfWritePdfConstMeta => const TaskConstMeta(
+    debugName: "write_pdf",
+    argNames: ["docsJson", "style", "outPath"],
+  );
+
   Future<void> Function(int, dynamic, dynamic)
   encode_DartFn_Inputs_String_String_Output_String_AnyhowException(
     FutureOr<String> Function(String, String) raw,
@@ -2586,6 +2672,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DocxStyle dco_decode_box_autoadd_docx_style(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_docx_style(raw);
+  }
+
+  @protected
   GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_graph_layout_params(raw);
@@ -2601,6 +2693,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_i_64(raw);
+  }
+
+  @protected
+  PdfStyle dco_decode_box_autoadd_pdf_style(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_pdf_style(raw);
   }
 
   @protected
@@ -2674,7 +2772,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DocxStyle dco_decode_docx_style(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 13)
+      throw Exception('unexpected arr length: expect 13 but see ${arr.length}');
+    return DocxStyle(
+      eastAsiaFont: dco_decode_String(arr[0]),
+      asciiFont: dco_decode_String(arr[1]),
+      fontSizePt: dco_decode_f_64(arr[2]),
+      lineSpacing: dco_decode_f_64(arr[3]),
+      firstLineIndent: dco_decode_bool(arr[4]),
+      pageWidth: dco_decode_u_32(arr[5]),
+      pageHeight: dco_decode_u_32(arr[6]),
+      pageMargin: dco_decode_u_32(arr[7]),
+      includeTitle: dco_decode_bool(arr[8]),
+      includeMeta: dco_decode_bool(arr[9]),
+      pageBreakBetween: dco_decode_bool(arr[10]),
+      videoLabel: dco_decode_String(arr[11]),
+      audioLabel: dco_decode_String(arr[12]),
+    );
+  }
+
+  @protected
   double dco_decode_f_32(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as double;
+  }
+
+  @protected
+  double dco_decode_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
   }
@@ -2931,6 +3058,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_list_prim_u_8_strict(raw);
+  }
+
+  @protected
+  PdfStyle dco_decode_pdf_style(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 12)
+      throw Exception('unexpected arr length: expect 12 but see ${arr.length}');
+    return PdfStyle(
+      fontPath: dco_decode_String(arr[0]),
+      fontFamily: dco_decode_String(arr[1]),
+      fontSizePt: dco_decode_f_64(arr[2]),
+      lineSpacingEm: dco_decode_f_64(arr[3]),
+      firstLineIndent: dco_decode_bool(arr[4]),
+      pageWidthMm: dco_decode_f_64(arr[5]),
+      pageHeightMm: dco_decode_f_64(arr[6]),
+      pageMarginMm: dco_decode_f_64(arr[7]),
+      includeTitle: dco_decode_bool(arr[8]),
+      includeMeta: dco_decode_bool(arr[9]),
+      videoLabel: dco_decode_String(arr[10]),
+      audioLabel: dco_decode_String(arr[11]),
+    );
   }
 
   @protected
@@ -3523,6 +3672,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DocxStyle sse_decode_box_autoadd_docx_style(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_docx_style(deserializer));
+  }
+
+  @protected
   GraphLayoutParams sse_decode_box_autoadd_graph_layout_params(
     SseDeserializer deserializer,
   ) {
@@ -3542,6 +3697,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_i_64(deserializer));
+  }
+
+  @protected
+  PdfStyle sse_decode_box_autoadd_pdf_style(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_pdf_style(deserializer));
   }
 
   @protected
@@ -3630,9 +3791,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  DocxStyle sse_decode_docx_style(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_eastAsiaFont = sse_decode_String(deserializer);
+    var var_asciiFont = sse_decode_String(deserializer);
+    var var_fontSizePt = sse_decode_f_64(deserializer);
+    var var_lineSpacing = sse_decode_f_64(deserializer);
+    var var_firstLineIndent = sse_decode_bool(deserializer);
+    var var_pageWidth = sse_decode_u_32(deserializer);
+    var var_pageHeight = sse_decode_u_32(deserializer);
+    var var_pageMargin = sse_decode_u_32(deserializer);
+    var var_includeTitle = sse_decode_bool(deserializer);
+    var var_includeMeta = sse_decode_bool(deserializer);
+    var var_pageBreakBetween = sse_decode_bool(deserializer);
+    var var_videoLabel = sse_decode_String(deserializer);
+    var var_audioLabel = sse_decode_String(deserializer);
+    return DocxStyle(
+      eastAsiaFont: var_eastAsiaFont,
+      asciiFont: var_asciiFont,
+      fontSizePt: var_fontSizePt,
+      lineSpacing: var_lineSpacing,
+      firstLineIndent: var_firstLineIndent,
+      pageWidth: var_pageWidth,
+      pageHeight: var_pageHeight,
+      pageMargin: var_pageMargin,
+      includeTitle: var_includeTitle,
+      includeMeta: var_includeMeta,
+      pageBreakBetween: var_pageBreakBetween,
+      videoLabel: var_videoLabel,
+      audioLabel: var_audioLabel,
+    );
+  }
+
+  @protected
   double sse_decode_f_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat32();
+  }
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getFloat64();
   }
 
   @protected
@@ -4007,6 +4207,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
+  }
+
+  @protected
+  PdfStyle sse_decode_pdf_style(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_fontPath = sse_decode_String(deserializer);
+    var var_fontFamily = sse_decode_String(deserializer);
+    var var_fontSizePt = sse_decode_f_64(deserializer);
+    var var_lineSpacingEm = sse_decode_f_64(deserializer);
+    var var_firstLineIndent = sse_decode_bool(deserializer);
+    var var_pageWidthMm = sse_decode_f_64(deserializer);
+    var var_pageHeightMm = sse_decode_f_64(deserializer);
+    var var_pageMarginMm = sse_decode_f_64(deserializer);
+    var var_includeTitle = sse_decode_bool(deserializer);
+    var var_includeMeta = sse_decode_bool(deserializer);
+    var var_videoLabel = sse_decode_String(deserializer);
+    var var_audioLabel = sse_decode_String(deserializer);
+    return PdfStyle(
+      fontPath: var_fontPath,
+      fontFamily: var_fontFamily,
+      fontSizePt: var_fontSizePt,
+      lineSpacingEm: var_lineSpacingEm,
+      firstLineIndent: var_firstLineIndent,
+      pageWidthMm: var_pageWidthMm,
+      pageHeightMm: var_pageHeightMm,
+      pageMarginMm: var_pageMarginMm,
+      includeTitle: var_includeTitle,
+      includeMeta: var_includeMeta,
+      videoLabel: var_videoLabel,
+      audioLabel: var_audioLabel,
+    );
   }
 
   @protected
@@ -4715,6 +4946,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_docx_style(
+    DocxStyle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_docx_style(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_graph_layout_params(
     GraphLayoutParams self,
     SseSerializer serializer,
@@ -4739,6 +4979,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_64(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_pdf_style(
+    PdfStyle self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_pdf_style(self, serializer);
   }
 
   @protected
@@ -4814,9 +5063,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_docx_style(DocxStyle self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.eastAsiaFont, serializer);
+    sse_encode_String(self.asciiFont, serializer);
+    sse_encode_f_64(self.fontSizePt, serializer);
+    sse_encode_f_64(self.lineSpacing, serializer);
+    sse_encode_bool(self.firstLineIndent, serializer);
+    sse_encode_u_32(self.pageWidth, serializer);
+    sse_encode_u_32(self.pageHeight, serializer);
+    sse_encode_u_32(self.pageMargin, serializer);
+    sse_encode_bool(self.includeTitle, serializer);
+    sse_encode_bool(self.includeMeta, serializer);
+    sse_encode_bool(self.pageBreakBetween, serializer);
+    sse_encode_String(self.videoLabel, serializer);
+    sse_encode_String(self.audioLabel, serializer);
+  }
+
+  @protected
   void sse_encode_f_32(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat32(self);
+  }
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putFloat64(self);
   }
 
   @protected
@@ -5170,6 +5443,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_list_prim_u_8_strict(self, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_pdf_style(PdfStyle self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.fontPath, serializer);
+    sse_encode_String(self.fontFamily, serializer);
+    sse_encode_f_64(self.fontSizePt, serializer);
+    sse_encode_f_64(self.lineSpacingEm, serializer);
+    sse_encode_bool(self.firstLineIndent, serializer);
+    sse_encode_f_64(self.pageWidthMm, serializer);
+    sse_encode_f_64(self.pageHeightMm, serializer);
+    sse_encode_f_64(self.pageMarginMm, serializer);
+    sse_encode_bool(self.includeTitle, serializer);
+    sse_encode_bool(self.includeMeta, serializer);
+    sse_encode_String(self.videoLabel, serializer);
+    sse_encode_String(self.audioLabel, serializer);
   }
 
   @protected

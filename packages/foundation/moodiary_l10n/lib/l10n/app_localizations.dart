@@ -296,54 +296,6 @@ abstract class AppLocalizations {
   /// **'回收站'**
   String get settingRecycle;
 
-  /// No description provided for @settingExport.
-  ///
-  /// In zh, this message translates to:
-  /// **'导出'**
-  String get settingExport;
-
-  /// No description provided for @settingExportDialogTitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'数据导出'**
-  String get settingExportDialogTitle;
-
-  /// No description provided for @settingExportDialogContent.
-  ///
-  /// In zh, this message translates to:
-  /// **'确认后会将当前应用的数据导出为 ZIP 文件，文件可用于应用内导入使用。'**
-  String get settingExportDialogContent;
-
-  /// No description provided for @settingImport.
-  ///
-  /// In zh, this message translates to:
-  /// **'导入'**
-  String get settingImport;
-
-  /// No description provided for @settingImportDialogTitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'数据导入'**
-  String get settingImportDialogTitle;
-
-  /// No description provided for @settingImportDialogContent.
-  ///
-  /// In zh, this message translates to:
-  /// **'导入数据会覆盖当前已经有的数据，且原有数据无法恢复！请确认备份好原有数据。'**
-  String get settingImportDialogContent;
-
-  /// No description provided for @settingImportSelectFile.
-  ///
-  /// In zh, this message translates to:
-  /// **'选择文件'**
-  String get settingImportSelectFile;
-
-  /// No description provided for @settingImportDes.
-  ///
-  /// In zh, this message translates to:
-  /// **'仅支持本应用导出的文件'**
-  String get settingImportDes;
-
   /// No description provided for @settingClean.
   ///
   /// In zh, this message translates to:
@@ -3205,6 +3157,552 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'{count} 篇'**
   String diaryTimelineMonthCount(int count);
+
+  /// No description provided for @exportPageTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'导入与导出'**
+  String get exportPageTitle;
+
+  /// No description provided for @exportSectionExport.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出'**
+  String get exportSectionExport;
+
+  /// No description provided for @exportSectionBackup.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份'**
+  String get exportSectionBackup;
+
+  /// No description provided for @exportFormatDocx.
+  ///
+  /// In zh, this message translates to:
+  /// **'DOCX'**
+  String get exportFormatDocx;
+
+  /// No description provided for @exportBackupExport.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出备份'**
+  String get exportBackupExport;
+
+  /// No description provided for @exportBackupExportSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'打包全部日记与媒体'**
+  String get exportBackupExportSubtitle;
+
+  /// No description provided for @exportRestoreFromBackup.
+  ///
+  /// In zh, this message translates to:
+  /// **'从备份恢复'**
+  String get exportRestoreFromBackup;
+
+  /// No description provided for @exportBackupRestoreSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'按修改时间合并'**
+  String get exportBackupRestoreSubtitle;
+
+  /// No description provided for @exportRestoreConfirmMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份与本地数据按最后修改时间合并，较新的条目覆盖较旧的。'**
+  String get exportRestoreConfirmMessage;
+
+  /// No description provided for @exportRestoreConfirmLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复'**
+  String get exportRestoreConfirmLabel;
+
+  /// No description provided for @exportRestoring.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在恢复…'**
+  String get exportRestoring;
+
+  /// No description provided for @exportRestoreDone.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复完成：{summary}'**
+  String exportRestoreDone(Object summary);
+
+  /// No description provided for @exportRestoreFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'恢复失败：{error}'**
+  String exportRestoreFailed(Object error);
+
+  /// No description provided for @exportPackingBackup.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在打包备份…'**
+  String get exportPackingBackup;
+
+  /// No description provided for @exportBackupReady.
+  ///
+  /// In zh, this message translates to:
+  /// **'备份已生成'**
+  String get exportBackupReady;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出失败：{error}'**
+  String exportFailed(Object error);
+
+  /// No description provided for @exportArtifactMissing.
+  ///
+  /// In zh, this message translates to:
+  /// **'产物不见了，请重试'**
+  String get exportArtifactMissing;
+
+  /// No description provided for @exportGenerated.
+  ///
+  /// In zh, this message translates to:
+  /// **'已生成'**
+  String get exportGenerated;
+
+  /// No description provided for @exportTitleMarkdown.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出为 Markdown'**
+  String get exportTitleMarkdown;
+
+  /// No description provided for @exportTitleDocx.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出为 DOCX'**
+  String get exportTitleDocx;
+
+  /// No description provided for @exportTitlePdf.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出为 PDF'**
+  String get exportTitlePdf;
+
+  /// No description provided for @exportSectionScope.
+  ///
+  /// In zh, this message translates to:
+  /// **'范围'**
+  String get exportSectionScope;
+
+  /// No description provided for @exportSelectDiaries.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择日记'**
+  String get exportSelectDiaries;
+
+  /// No description provided for @exportCounting.
+  ///
+  /// In zh, this message translates to:
+  /// **'统计中…'**
+  String get exportCounting;
+
+  /// No description provided for @exportEntryCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 篇'**
+  String exportEntryCount(Object count);
+
+  /// No description provided for @exportMergeIntoOneFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'合并成一个文件'**
+  String get exportMergeIntoOneFile;
+
+  /// No description provided for @exportMergeSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭后每篇一个文件'**
+  String get exportMergeSubtitle;
+
+  /// No description provided for @exportFileName.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件名'**
+  String get exportFileName;
+
+  /// No description provided for @exportFileNameTemplate.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件名模板'**
+  String get exportFileNameTemplate;
+
+  /// No description provided for @exportFileNameTemplateHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'可用占位符：{date} 日期、{title} 标题、{id} 日记 id'**
+  String exportFileNameTemplateHint(Object date, Object id, Object title);
+
+  /// No description provided for @exportTemplateEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'模板不能为空'**
+  String get exportTemplateEmpty;
+
+  /// No description provided for @exportSectionContent.
+  ///
+  /// In zh, this message translates to:
+  /// **'内容'**
+  String get exportSectionContent;
+
+  /// No description provided for @exportIncludeTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'标题'**
+  String get exportIncludeTitle;
+
+  /// No description provided for @exportIncludeMeta.
+  ///
+  /// In zh, this message translates to:
+  /// **'日期、天气与位置'**
+  String get exportIncludeMeta;
+
+  /// No description provided for @exportMedia.
+  ///
+  /// In zh, this message translates to:
+  /// **'媒体'**
+  String get exportMedia;
+
+  /// No description provided for @exportMediaEmbed.
+  ///
+  /// In zh, this message translates to:
+  /// **'内嵌图片'**
+  String get exportMediaEmbed;
+
+  /// No description provided for @exportMediaPlaceholder.
+  ///
+  /// In zh, this message translates to:
+  /// **'只写占位文字'**
+  String get exportMediaPlaceholder;
+
+  /// No description provided for @exportMediaNone.
+  ///
+  /// In zh, this message translates to:
+  /// **'不含媒体'**
+  String get exportMediaNone;
+
+  /// No description provided for @exportMarkdownGfm.
+  ///
+  /// In zh, this message translates to:
+  /// **'GitHub 风味'**
+  String get exportMarkdownGfm;
+
+  /// No description provided for @exportMarkdownGfmSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'支持表格与任务清单'**
+  String get exportMarkdownGfmSubtitle;
+
+  /// No description provided for @exportMarkdownFrontMatter.
+  ///
+  /// In zh, this message translates to:
+  /// **'写入 Front Matter'**
+  String get exportMarkdownFrontMatter;
+
+  /// No description provided for @exportMarkdownFrontMatterSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'在文件开头记录日期、分类等信息'**
+  String get exportMarkdownFrontMatterSubtitle;
+
+  /// No description provided for @exportSectionLayout.
+  ///
+  /// In zh, this message translates to:
+  /// **'排版'**
+  String get exportSectionLayout;
+
+  /// No description provided for @exportFont.
+  ///
+  /// In zh, this message translates to:
+  /// **'字体'**
+  String get exportFont;
+
+  /// No description provided for @exportEastAsiaFont.
+  ///
+  /// In zh, this message translates to:
+  /// **'中文字体'**
+  String get exportEastAsiaFont;
+
+  /// No description provided for @exportAsciiFont.
+  ///
+  /// In zh, this message translates to:
+  /// **'西文字体'**
+  String get exportAsciiFont;
+
+  /// No description provided for @exportNoFontSelected.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有选择字体'**
+  String get exportNoFontSelected;
+
+  /// No description provided for @exportFontSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'字号'**
+  String get exportFontSize;
+
+  /// No description provided for @exportFontSizeValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'{size} pt'**
+  String exportFontSizeValue(Object size);
+
+  /// No description provided for @exportLineSpacing.
+  ///
+  /// In zh, this message translates to:
+  /// **'行距'**
+  String get exportLineSpacing;
+
+  /// No description provided for @exportLineSpacingValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'{value} 倍'**
+  String exportLineSpacingValue(Object value);
+
+  /// No description provided for @exportFirstLineIndent.
+  ///
+  /// In zh, this message translates to:
+  /// **'首行缩进两字符'**
+  String get exportFirstLineIndent;
+
+  /// No description provided for @exportPaper.
+  ///
+  /// In zh, this message translates to:
+  /// **'纸张'**
+  String get exportPaper;
+
+  /// No description provided for @exportFontNameHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'填写字体名，如「宋体」「Georgia」。'**
+  String get exportFontNameHint;
+
+  /// No description provided for @exportFontNameEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'字体名不能为空'**
+  String get exportFontNameEmpty;
+
+  /// No description provided for @exportScopeEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'这个范围里没有日记'**
+  String get exportScopeEmpty;
+
+  /// No description provided for @exportPickFontFirst.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先选择一个字体'**
+  String get exportPickFontFirst;
+
+  /// No description provided for @exportRunButton.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出 {count} 篇'**
+  String exportRunButton(Object count);
+
+  /// No description provided for @exportPartialTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出完成，但有几处没带上'**
+  String get exportPartialTitle;
+
+  /// No description provided for @exportSkippedMedia.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个媒体文件找不到，已跳过'**
+  String exportSkippedMedia(Object count);
+
+  /// No description provided for @exportUnsupportedNodes.
+  ///
+  /// In zh, this message translates to:
+  /// **'有 {count} 种内容这个版本还导不出：{types}'**
+  String exportUnsupportedNodes(Object count, Object types);
+
+  /// No description provided for @exportScopeAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部日记'**
+  String get exportScopeAll;
+
+  /// No description provided for @exportScopeByCategory.
+  ///
+  /// In zh, this message translates to:
+  /// **'按分类'**
+  String get exportScopeByCategory;
+
+  /// No description provided for @exportScopeByDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'按时间'**
+  String get exportScopeByDate;
+
+  /// No description provided for @exportScopePicked.
+  ///
+  /// In zh, this message translates to:
+  /// **'手动挑选'**
+  String get exportScopePicked;
+
+  /// No description provided for @exportScopeAllHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 篇'**
+  String exportScopeAllHint(Object count);
+
+  /// No description provided for @exportScopePickedLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'已选 {count} 篇'**
+  String exportScopePickedLabel(Object count);
+
+  /// No description provided for @exportDateRange.
+  ///
+  /// In zh, this message translates to:
+  /// **'时间区间'**
+  String get exportDateRange;
+
+  /// No description provided for @exportTapToPick.
+  ///
+  /// In zh, this message translates to:
+  /// **'点击选择'**
+  String get exportTapToPick;
+
+  /// No description provided for @exportDateRangeValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'{from} 至 {to}'**
+  String exportDateRangeValue(Object from, Object to);
+
+  /// No description provided for @exportSelectAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全选'**
+  String get exportSelectAll;
+
+  /// No description provided for @exportNothingSelected.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有选择'**
+  String get exportNothingSelected;
+
+  /// No description provided for @exportConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定'**
+  String get exportConfirm;
+
+  /// No description provided for @exportUncategorized.
+  ///
+  /// In zh, this message translates to:
+  /// **'未分类'**
+  String get exportUncategorized;
+
+  /// No description provided for @exportDeletedCategory.
+  ///
+  /// In zh, this message translates to:
+  /// **'已删除分类'**
+  String get exportDeletedCategory;
+
+  /// No description provided for @exportCategoryCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个分类'**
+  String exportCategoryCount(Object count);
+
+  /// No description provided for @exportUntitled.
+  ///
+  /// In zh, this message translates to:
+  /// **'无标题'**
+  String get exportUntitled;
+
+  /// No description provided for @exportPdfFontPageTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'PDF 字体'**
+  String get exportPdfFontPageTitle;
+
+  /// No description provided for @exportImportedFonts.
+  ///
+  /// In zh, this message translates to:
+  /// **'已导入的字体'**
+  String get exportImportedFonts;
+
+  /// No description provided for @exportImportFont.
+  ///
+  /// In zh, this message translates to:
+  /// **'导入字体'**
+  String get exportImportFont;
+
+  /// No description provided for @exportImportingFont.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在导入…'**
+  String get exportImportingFont;
+
+  /// No description provided for @exportImportFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'导入失败：{error}'**
+  String exportImportFailed(Object error);
+
+  /// No description provided for @exportFontNameUnreadable.
+  ///
+  /// In zh, this message translates to:
+  /// **'读不出字体名，文件可能已损坏'**
+  String get exportFontNameUnreadable;
+
+  /// No description provided for @exportNoPdfFontTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有可用于 PDF 的字体'**
+  String get exportNoPdfFontTitle;
+
+  /// No description provided for @exportNoPdfFontMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'导入一个 .ttf 字体后可在此选择。'**
+  String get exportNoPdfFontMessage;
+
+  /// No description provided for @exportMediaKindVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'视频'**
+  String get exportMediaKindVideo;
+
+  /// No description provided for @exportMediaKindAudio.
+  ///
+  /// In zh, this message translates to:
+  /// **'音频'**
+  String get exportMediaKindAudio;
+
+  /// No description provided for @exportProgressConverting.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在转换 {done}/{total}'**
+  String exportProgressConverting(Object done, Object total);
+
+  /// No description provided for @exportProgressWriting.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在排版…'**
+  String get exportProgressWriting;
+
+  /// No description provided for @exportProgressWritingCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在排版 {done}/{total}'**
+  String exportProgressWritingCount(Object done, Object total);
+
+  /// No description provided for @exportProgressSerializing.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在生成文件…'**
+  String get exportProgressSerializing;
 }
 
 class _AppLocalizationsDelegate

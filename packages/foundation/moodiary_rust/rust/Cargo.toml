@@ -56,6 +56,30 @@ reqwest = { version = "0.13", default-features = false, features = [
 rustls = "0.23"
 webpki-roots = "1"
 lofty = "0.24.0"
+# PDF 排版与生成（api::pdf）。选它是因为它带完整的排版引擎：32 万字的单段落
+# 0.29 秒排完 352 页，且 CJK 禁则（行首不出现标点）是原生的——dart_pdf 在同一用例上
+# 外推要 8 小时，根因是它按空格切词，中文整段被当成一个「词」做二分查找。
+# 代价是 .so +25.5 MiB（压缩后下载 +10.8 MiB），已明确接受。
+# typst-assets 是硬依赖但其 fonts 特性默认关闭，9.6 MiB 的西文字体不进包。
+typst = "=0.15.1"
+typst-pdf = "=0.15.1"
+
+# DOCX 生成（api::docx）。只多它自己 + quick-xml：zip / image / serde / serde_json /
+# base64 / thiserror 全在依赖树里了。OOXML 只写字体名不嵌字体，中文导出零字体成本。
+docx-rs = "0.4.22"
+
+# 代码块语法高亮。版本与 feature 逐字镜像 typst-library 的声明 —— 它们本就在依赖树里，
+# 对齐后 cargo 特性合并不会新增任何东西（体积零成本）。**别开 default features**：
+# syntect 默认走 regex-onig，会拖一个 oniguruma C 库进来。
+syntect = { version = "5.3", default-features = false, features = [
+    "parsing",
+    "regex-fancy",
+    "plist-load",
+    "yaml-load",
+] }
+two-face = { version = "0.4.3", default-features = false, features = ["syntect-fancy"] }
+# 导出 IR 的 JSON 反序列化。serde 本就是传递依赖，这里只是加 derive 宏（编译期，无体积）。
+serde = { version = "1", features = ["derive"] }
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

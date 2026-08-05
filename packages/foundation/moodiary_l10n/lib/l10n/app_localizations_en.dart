@@ -111,32 +111,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingRecycle => 'Recycle Bin';
 
   @override
-  String get settingExport => 'Export';
-
-  @override
-  String get settingExportDialogTitle => 'Data Export';
-
-  @override
-  String get settingExportDialogContent =>
-      'After confirmation, the current application\'s data will be exported as a ZIP file, which can be used for intra application import.';
-
-  @override
-  String get settingImport => 'Import';
-
-  @override
-  String get settingImportDialogTitle => 'Data Import';
-
-  @override
-  String get settingImportDialogContent =>
-      'Importing data will overwrite the existing data and the original data cannot be restored! Please confirm that the original data has been backed up.';
-
-  @override
-  String get settingImportSelectFile => 'Select File';
-
-  @override
-  String get settingImportDes => 'Only supports files exported from this app';
-
-  @override
   String get settingClean => 'Clear Cache';
 
   @override
@@ -1688,4 +1662,316 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get exportPageTitle => 'Import & export';
+
+  @override
+  String get exportSectionExport => 'Export';
+
+  @override
+  String get exportSectionBackup => 'Backup';
+
+  @override
+  String get exportFormatDocx => 'DOCX';
+
+  @override
+  String get exportBackupExport => 'Export backup';
+
+  @override
+  String get exportBackupExportSubtitle => 'Packs all entries and media';
+
+  @override
+  String get exportRestoreFromBackup => 'Restore from backup';
+
+  @override
+  String get exportBackupRestoreSubtitle => 'Merged by modification time';
+
+  @override
+  String get exportRestoreConfirmMessage =>
+      'The backup and your local data are merged by last modified time; newer entries win.';
+
+  @override
+  String get exportRestoreConfirmLabel => 'Restore';
+
+  @override
+  String get exportRestoring => 'Restoring…';
+
+  @override
+  String exportRestoreDone(Object summary) {
+    return 'Restored: $summary';
+  }
+
+  @override
+  String exportRestoreFailed(Object error) {
+    return 'Restore failed: $error';
+  }
+
+  @override
+  String get exportPackingBackup => 'Packing backup…';
+
+  @override
+  String get exportBackupReady => 'Backup created';
+
+  @override
+  String exportFailed(Object error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String get exportArtifactMissing =>
+      'The exported file is gone. Please try again.';
+
+  @override
+  String get exportGenerated => 'Exported';
+
+  @override
+  String get exportTitleMarkdown => 'Export to Markdown';
+
+  @override
+  String get exportTitleDocx => 'Export to DOCX';
+
+  @override
+  String get exportTitlePdf => 'Export to PDF';
+
+  @override
+  String get exportSectionScope => 'Scope';
+
+  @override
+  String get exportSelectDiaries => 'Select entries';
+
+  @override
+  String get exportCounting => 'Counting…';
+
+  @override
+  String exportEntryCount(Object count) {
+    return '$count entries';
+  }
+
+  @override
+  String get exportMergeIntoOneFile => 'Merge into one file';
+
+  @override
+  String get exportMergeSubtitle => 'When off, one file per entry';
+
+  @override
+  String get exportFileName => 'File name';
+
+  @override
+  String get exportFileNameTemplate => 'File name template';
+
+  @override
+  String exportFileNameTemplateHint(Object date, Object id, Object title) {
+    return 'Available placeholders: $date date, $title title, $id entry id';
+  }
+
+  @override
+  String get exportTemplateEmpty => 'Template can\'t be empty';
+
+  @override
+  String get exportSectionContent => 'Content';
+
+  @override
+  String get exportIncludeTitle => 'Title';
+
+  @override
+  String get exportIncludeMeta => 'Date, weather and location';
+
+  @override
+  String get exportMedia => 'Media';
+
+  @override
+  String get exportMediaEmbed => 'Embed images';
+
+  @override
+  String get exportMediaPlaceholder => 'Placeholder text only';
+
+  @override
+  String get exportMediaNone => 'No media';
+
+  @override
+  String get exportMarkdownGfm => 'GitHub Flavored';
+
+  @override
+  String get exportMarkdownGfmSubtitle => 'Supports tables and task lists';
+
+  @override
+  String get exportMarkdownFrontMatter => 'Write front matter';
+
+  @override
+  String get exportMarkdownFrontMatterSubtitle =>
+      'Records date, category and more at the top of the file';
+
+  @override
+  String get exportSectionLayout => 'Layout';
+
+  @override
+  String get exportFont => 'Font';
+
+  @override
+  String get exportEastAsiaFont => 'Chinese font';
+
+  @override
+  String get exportAsciiFont => 'Latin font';
+
+  @override
+  String get exportNoFontSelected => 'No font selected yet';
+
+  @override
+  String get exportFontSize => 'Font size';
+
+  @override
+  String exportFontSizeValue(Object size) {
+    return '$size pt';
+  }
+
+  @override
+  String get exportLineSpacing => 'Line spacing';
+
+  @override
+  String exportLineSpacingValue(Object value) {
+    return '$value×';
+  }
+
+  @override
+  String get exportFirstLineIndent => 'Indent first line by two characters';
+
+  @override
+  String get exportPaper => 'Paper size';
+
+  @override
+  String get exportFontNameHint =>
+      'Enter a font name, e.g. \"SimSun\" or \"Georgia\".';
+
+  @override
+  String get exportFontNameEmpty => 'Font name can\'t be empty';
+
+  @override
+  String get exportScopeEmpty => 'No entries in this scope';
+
+  @override
+  String get exportPickFontFirst => 'Pick a font first';
+
+  @override
+  String exportRunButton(Object count) {
+    return 'Export $count entries';
+  }
+
+  @override
+  String get exportPartialTitle => 'Exported, but a few things were left out';
+
+  @override
+  String exportSkippedMedia(Object count) {
+    return '$count media files were missing and were skipped';
+  }
+
+  @override
+  String exportUnsupportedNodes(Object count, Object types) {
+    return '$count kinds of content can\'t be exported in this version yet: $types';
+  }
+
+  @override
+  String get exportScopeAll => 'All entries';
+
+  @override
+  String get exportScopeByCategory => 'By category';
+
+  @override
+  String get exportScopeByDate => 'By date';
+
+  @override
+  String get exportScopePicked => 'Pick manually';
+
+  @override
+  String exportScopeAllHint(Object count) {
+    return '$count entries';
+  }
+
+  @override
+  String exportScopePickedLabel(Object count) {
+    return '$count selected';
+  }
+
+  @override
+  String get exportDateRange => 'Date range';
+
+  @override
+  String get exportTapToPick => 'Tap to choose';
+
+  @override
+  String exportDateRangeValue(Object from, Object to) {
+    return '$from – $to';
+  }
+
+  @override
+  String get exportSelectAll => 'Select all';
+
+  @override
+  String get exportNothingSelected => 'Nothing selected';
+
+  @override
+  String get exportConfirm => 'Done';
+
+  @override
+  String get exportUncategorized => 'Uncategorized';
+
+  @override
+  String get exportDeletedCategory => 'Deleted category';
+
+  @override
+  String exportCategoryCount(Object count) {
+    return '$count categories';
+  }
+
+  @override
+  String get exportUntitled => 'Untitled';
+
+  @override
+  String get exportPdfFontPageTitle => 'PDF font';
+
+  @override
+  String get exportImportedFonts => 'Imported fonts';
+
+  @override
+  String get exportImportFont => 'Import font';
+
+  @override
+  String get exportImportingFont => 'Importing…';
+
+  @override
+  String exportImportFailed(Object error) {
+    return 'Import failed: $error';
+  }
+
+  @override
+  String get exportFontNameUnreadable =>
+      'Can\'t read the font name; the file may be damaged';
+
+  @override
+  String get exportNoPdfFontTitle => 'No fonts available for PDF yet';
+
+  @override
+  String get exportNoPdfFontMessage => 'Import a .ttf font to pick it here.';
+
+  @override
+  String get exportMediaKindVideo => 'Video';
+
+  @override
+  String get exportMediaKindAudio => 'Audio';
+
+  @override
+  String exportProgressConverting(Object done, Object total) {
+    return 'Converting $done/$total';
+  }
+
+  @override
+  String get exportProgressWriting => 'Laying out…';
+
+  @override
+  String exportProgressWritingCount(Object done, Object total) {
+    return 'Laying out $done/$total';
+  }
+
+  @override
+  String get exportProgressSerializing => 'Writing file…';
 }

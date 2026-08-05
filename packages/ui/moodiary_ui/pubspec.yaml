@@ -48,3 +48,8 @@ flutter:
     - family: qweather
       fonts:
         - asset: assets/fonts/qweather-icons.ttf
+    # 文件类型角标用的圆角西文字体（Dosis，OFL-1.1，见同目录 Dosis-OFL.txt）。
+    # 可变字体（wght 200–800），字重由 FontVariation 指定，见 file_type_icon.dart。
+    - family: Dosis
+      fonts:
+        - asset: assets/fonts/Dosis.ttf

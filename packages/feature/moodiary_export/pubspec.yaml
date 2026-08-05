@@ -1,0 +1,35 @@
+name: moodiary_export
+description: "Moodiary 导入导出：日记导出为 Markdown / Word / PDF，以及本地备份 zip 与 Markdown 的导入。序列化核心在 moodiary_utils，DOCX 生成在 moodiary_rust，本包只做编排与 UI。"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.12.0"
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  moodiary_core: 0.0.1
+  moodiary_models: 0.0.1
+  moodiary_data: 0.0.1
+  moodiary_l10n: 0.0.1
+  moodiary_ui: 0.0.1
+  moodiary_router: 0.0.1
+  moodiary_rust: 0.0.1
+  moodiary_utils: 0.0.1
+
+  flutter_riverpod: 3.3.2
+  riverpod_annotation: 4.0.3
+  path: 1.9.1
+  share_plus: 13.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1
+  build_runner: 2.15.1
+  riverpod_generator: 4.0.4

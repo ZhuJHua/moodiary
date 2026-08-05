@@ -6,11 +6,13 @@
 import 'api/assistant.dart';
 import 'api/audio.dart';
 import 'api/crypto.dart';
+import 'api/docx.dart';
 import 'api/font.dart';
 import 'api/graph_layout.dart';
 import 'api/http.dart';
 import 'api/http_server.dart';
 import 'api/image.dart';
+import 'api/pdf.dart';
 import 'api/s3.dart';
 import 'api/text.dart';
 import 'api/webdav.dart';
@@ -300,6 +302,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CompressSpec dco_decode_box_autoadd_compress_spec(dynamic raw);
 
   @protected
+  DocxStyle dco_decode_box_autoadd_docx_style(dynamic raw);
+
+  @protected
   GraphLayoutParams dco_decode_box_autoadd_graph_layout_params(dynamic raw);
 
   @protected
@@ -307,6 +312,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
+
+  @protected
+  PdfStyle dco_decode_box_autoadd_pdf_style(dynamic raw);
 
   @protected
   RequestOptions dco_decode_box_autoadd_request_options(dynamic raw);
@@ -333,7 +341,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CompressSpec dco_decode_compress_spec(dynamic raw);
 
   @protected
+  DocxStyle dco_decode_docx_style(dynamic raw);
+
+  @protected
   double dco_decode_f_32(dynamic raw);
+
+  @protected
+  double dco_decode_f_64(dynamic raw);
 
   @protected
   GraphLayoutParams dco_decode_graph_layout_params(dynamic raw);
@@ -433,6 +447,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  PdfStyle dco_decode_pdf_style(dynamic raw);
 
   @protected
   (String, double) dco_decode_record_string_f_32(dynamic raw);
@@ -703,6 +720,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  DocxStyle sse_decode_box_autoadd_docx_style(SseDeserializer deserializer);
+
+  @protected
   GraphLayoutParams sse_decode_box_autoadd_graph_layout_params(
     SseDeserializer deserializer,
   );
@@ -714,6 +734,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
+
+  @protected
+  PdfStyle sse_decode_box_autoadd_pdf_style(SseDeserializer deserializer);
 
   @protected
   RequestOptions sse_decode_box_autoadd_request_options(
@@ -744,7 +767,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CompressSpec sse_decode_compress_spec(SseDeserializer deserializer);
 
   @protected
+  DocxStyle sse_decode_docx_style(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_f_32(SseDeserializer deserializer);
+
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
 
   @protected
   GraphLayoutParams sse_decode_graph_layout_params(
@@ -862,6 +891,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  PdfStyle sse_decode_pdf_style(SseDeserializer deserializer);
 
   @protected
   (String, double) sse_decode_record_string_f_32(SseDeserializer deserializer);
@@ -1194,6 +1226,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_docx_style(
+    DocxStyle self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_graph_layout_params(
     GraphLayoutParams self,
     SseSerializer serializer,
@@ -1208,6 +1246,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_i_64(
     PlatformInt64 self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_pdf_style(
+    PdfStyle self,
     SseSerializer serializer,
   );
 
@@ -1248,7 +1292,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_compress_spec(CompressSpec self, SseSerializer serializer);
 
   @protected
+  void sse_encode_docx_style(DocxStyle self, SseSerializer serializer);
+
+  @protected
   void sse_encode_f_32(double self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_graph_layout_params(
@@ -1399,6 +1449,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     Uint8List? self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_pdf_style(PdfStyle self, SseSerializer serializer);
 
   @protected
   void sse_encode_record_string_f_32(

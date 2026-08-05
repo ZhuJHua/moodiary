@@ -4,6 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:gap/gap.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary/app/settings/presentation/widget/cache_usage_tile.dart';
@@ -87,6 +88,12 @@ class _DataSection extends StatelessWidget {
                 leading: const Icon(LucideIcons.refreshCw),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _openSetting(context, const BackupSyncRoute()),
+              ),
+              SettingListTile(
+                title: context.l10n.exportPageTitle,
+                leading: const Icon(LucideIcons.fileOutput),
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: () => _openSetting(context, const ExportRoute()),
               ),
               SettingListTile(
                 title: '分类管理',

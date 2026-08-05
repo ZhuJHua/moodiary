@@ -48,7 +48,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0-beta.5";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -80425007;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -521474064;
 
 // Section: executor
 
@@ -2158,6 +2158,82 @@ fn wire__crate__api__assistant__rig_chat_stream_impl(
         },
     )
 }
+fn wire__crate__api__docx__write_docx_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "write_docx",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_docs_json = <String>::sse_decode(&mut deserializer);
+            let api_style = <crate::api::docx::DocxStyle>::sse_decode(&mut deserializer);
+            let api_out_path = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::docx::write_docx(api_docs_json, api_style, api_out_path)?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__pdf__write_pdf_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "write_pdf",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_docs_json = <String>::sse_decode(&mut deserializer);
+            let api_style = <crate::api::pdf::PdfStyle>::sse_decode(&mut deserializer);
+            let api_out_path = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok =
+                            crate::api::pdf::write_pdf(api_docs_json, api_style, api_out_path)?;
+                        Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
 
 // Section: related_funcs
 
@@ -2654,10 +2730,51 @@ impl SseDecode for crate::api::image::CompressSpec {
     }
 }
 
+impl SseDecode for crate::api::docx::DocxStyle {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_eastAsiaFont = <String>::sse_decode(deserializer);
+        let mut var_asciiFont = <String>::sse_decode(deserializer);
+        let mut var_fontSizePt = <f64>::sse_decode(deserializer);
+        let mut var_lineSpacing = <f64>::sse_decode(deserializer);
+        let mut var_firstLineIndent = <bool>::sse_decode(deserializer);
+        let mut var_pageWidth = <u32>::sse_decode(deserializer);
+        let mut var_pageHeight = <u32>::sse_decode(deserializer);
+        let mut var_pageMargin = <u32>::sse_decode(deserializer);
+        let mut var_includeTitle = <bool>::sse_decode(deserializer);
+        let mut var_includeMeta = <bool>::sse_decode(deserializer);
+        let mut var_pageBreakBetween = <bool>::sse_decode(deserializer);
+        let mut var_videoLabel = <String>::sse_decode(deserializer);
+        let mut var_audioLabel = <String>::sse_decode(deserializer);
+        return crate::api::docx::DocxStyle {
+            east_asia_font: var_eastAsiaFont,
+            ascii_font: var_asciiFont,
+            font_size_pt: var_fontSizePt,
+            line_spacing: var_lineSpacing,
+            first_line_indent: var_firstLineIndent,
+            page_width: var_pageWidth,
+            page_height: var_pageHeight,
+            page_margin: var_pageMargin,
+            include_title: var_includeTitle,
+            include_meta: var_includeMeta,
+            page_break_between: var_pageBreakBetween,
+            video_label: var_videoLabel,
+            audio_label: var_audioLabel,
+        };
+    }
+}
+
 impl SseDecode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_f32::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for f64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_f64::<NativeEndian>().unwrap()
     }
 }
 
@@ -3053,6 +3170,38 @@ impl SseDecode for Option<Vec<u8>> {
     }
 }
 
+impl SseDecode for crate::api::pdf::PdfStyle {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_fontPath = <String>::sse_decode(deserializer);
+        let mut var_fontFamily = <String>::sse_decode(deserializer);
+        let mut var_fontSizePt = <f64>::sse_decode(deserializer);
+        let mut var_lineSpacingEm = <f64>::sse_decode(deserializer);
+        let mut var_firstLineIndent = <bool>::sse_decode(deserializer);
+        let mut var_pageWidthMm = <f64>::sse_decode(deserializer);
+        let mut var_pageHeightMm = <f64>::sse_decode(deserializer);
+        let mut var_pageMarginMm = <f64>::sse_decode(deserializer);
+        let mut var_includeTitle = <bool>::sse_decode(deserializer);
+        let mut var_includeMeta = <bool>::sse_decode(deserializer);
+        let mut var_videoLabel = <String>::sse_decode(deserializer);
+        let mut var_audioLabel = <String>::sse_decode(deserializer);
+        return crate::api::pdf::PdfStyle {
+            font_path: var_fontPath,
+            font_family: var_fontFamily,
+            font_size_pt: var_fontSizePt,
+            line_spacing_em: var_lineSpacingEm,
+            first_line_indent: var_firstLineIndent,
+            page_width_mm: var_pageWidthMm,
+            page_height_mm: var_pageHeightMm,
+            page_margin_mm: var_pageMarginMm,
+            include_title: var_includeTitle,
+            include_meta: var_includeMeta,
+            video_label: var_videoLabel,
+            audio_label: var_audioLabel,
+        };
+    }
+}
+
 impl SseDecode for (String, f32) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3336,6 +3485,8 @@ fn pde_ffi_dispatcher_primary_impl(
             data_len,
         ),
         44 => wire__crate__api__assistant__rig_chat_stream_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__api__docx__write_docx_impl(port, ptr, rust_vec_len, data_len),
+        46 => wire__crate__api__pdf__write_pdf_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3597,6 +3748,35 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::image::CompressSpec>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::docx::DocxStyle {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.east_asia_font.into_into_dart().into_dart(),
+            self.ascii_font.into_into_dart().into_dart(),
+            self.font_size_pt.into_into_dart().into_dart(),
+            self.line_spacing.into_into_dart().into_dart(),
+            self.first_line_indent.into_into_dart().into_dart(),
+            self.page_width.into_into_dart().into_dart(),
+            self.page_height.into_into_dart().into_dart(),
+            self.page_margin.into_into_dart().into_dart(),
+            self.include_title.into_into_dart().into_dart(),
+            self.include_meta.into_into_dart().into_dart(),
+            self.page_break_between.into_into_dart().into_dart(),
+            self.video_label.into_into_dart().into_dart(),
+            self.audio_label.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::docx::DocxStyle {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::docx::DocxStyle>
+    for crate::api::docx::DocxStyle
+{
+    fn into_into_dart(self) -> crate::api::docx::DocxStyle {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::graph_layout::GraphLayoutParams {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -3780,6 +3960,32 @@ impl flutter_rust_bridge::IntoDart for crate::api::http::KeyValue {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::http::KeyValue {}
 impl flutter_rust_bridge::IntoIntoDart<crate::api::http::KeyValue> for crate::api::http::KeyValue {
     fn into_into_dart(self) -> crate::api::http::KeyValue {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::pdf::PdfStyle {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.font_path.into_into_dart().into_dart(),
+            self.font_family.into_into_dart().into_dart(),
+            self.font_size_pt.into_into_dart().into_dart(),
+            self.line_spacing_em.into_into_dart().into_dart(),
+            self.first_line_indent.into_into_dart().into_dart(),
+            self.page_width_mm.into_into_dart().into_dart(),
+            self.page_height_mm.into_into_dart().into_dart(),
+            self.page_margin_mm.into_into_dart().into_dart(),
+            self.include_title.into_into_dart().into_dart(),
+            self.include_meta.into_into_dart().into_dart(),
+            self.video_label.into_into_dart().into_dart(),
+            self.audio_label.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::pdf::PdfStyle {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::pdf::PdfStyle> for crate::api::pdf::PdfStyle {
+    fn into_into_dart(self) -> crate::api::pdf::PdfStyle {
         self
     }
 }
@@ -4277,10 +4483,36 @@ impl SseEncode for crate::api::image::CompressSpec {
     }
 }
 
+impl SseEncode for crate::api::docx::DocxStyle {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.east_asia_font, serializer);
+        <String>::sse_encode(self.ascii_font, serializer);
+        <f64>::sse_encode(self.font_size_pt, serializer);
+        <f64>::sse_encode(self.line_spacing, serializer);
+        <bool>::sse_encode(self.first_line_indent, serializer);
+        <u32>::sse_encode(self.page_width, serializer);
+        <u32>::sse_encode(self.page_height, serializer);
+        <u32>::sse_encode(self.page_margin, serializer);
+        <bool>::sse_encode(self.include_title, serializer);
+        <bool>::sse_encode(self.include_meta, serializer);
+        <bool>::sse_encode(self.page_break_between, serializer);
+        <String>::sse_encode(self.video_label, serializer);
+        <String>::sse_encode(self.audio_label, serializer);
+    }
+}
+
 impl SseEncode for f32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_f32::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for f64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_f64::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -4605,6 +4837,24 @@ impl SseEncode for Option<Vec<u8>> {
         if let Some(value) = self {
             <Vec<u8>>::sse_encode(value, serializer);
         }
+    }
+}
+
+impl SseEncode for crate::api::pdf::PdfStyle {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.font_path, serializer);
+        <String>::sse_encode(self.font_family, serializer);
+        <f64>::sse_encode(self.font_size_pt, serializer);
+        <f64>::sse_encode(self.line_spacing_em, serializer);
+        <bool>::sse_encode(self.first_line_indent, serializer);
+        <f64>::sse_encode(self.page_width_mm, serializer);
+        <f64>::sse_encode(self.page_height_mm, serializer);
+        <f64>::sse_encode(self.page_margin_mm, serializer);
+        <bool>::sse_encode(self.include_title, serializer);
+        <bool>::sse_encode(self.include_meta, serializer);
+        <String>::sse_encode(self.video_label, serializer);
+        <String>::sse_encode(self.audio_label, serializer);
     }
 }
 

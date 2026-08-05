@@ -18,6 +18,7 @@ export 'package:moodiary_utils/moodiary_utils.dart'
         applyDeviceOrientationLock;
 
 export 'src/di.dart';
+export 'src/backup_archive.dart';
 export 'src/file_picker.dart';
 export 'src/init.dart';
 export 'src/network/http_client.dart';

@@ -206,6 +206,30 @@ class BackupSyncRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
+class ExportRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/export';
+  const ExportRoute();
+  @override
+  String get location => path;
+}
+
+/// 单个格式的导出配置页。[format] 为 `markdown` / `docx` / `pdf`。
+class ExportFormatRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/export/format';
+
+  final String format;
+
+  const ExportFormatRoute({required this.format});
+
+  @override
+  String get location =>
+      buildLocation('/setting/export/format', {'format': format});
+
+  static ExportFormatRoute fromState(GoRouterState state) => ExportFormatRoute(
+    format: state.uri.queryParameters['format'] ?? 'markdown',
+  );
+}
+
 class SponsorRoute extends MoodiaryRouteBase {
   static const String path = '/setting/sponsor';
   const SponsorRoute();

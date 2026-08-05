@@ -109,32 +109,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingRecycle => '回收站';
 
   @override
-  String get settingExport => '导出';
-
-  @override
-  String get settingExportDialogTitle => '数据导出';
-
-  @override
-  String get settingExportDialogContent =>
-      '确认后会将当前应用的数据导出为 ZIP 文件，文件可用于应用内导入使用。';
-
-  @override
-  String get settingImport => '导入';
-
-  @override
-  String get settingImportDialogTitle => '数据导入';
-
-  @override
-  String get settingImportDialogContent =>
-      '导入数据会覆盖当前已经有的数据，且原有数据无法恢复！请确认备份好原有数据。';
-
-  @override
-  String get settingImportSelectFile => '选择文件';
-
-  @override
-  String get settingImportDes => '仅支持本应用导出的文件';
-
-  @override
   String get settingClean => '清理缓存';
 
   @override
@@ -1620,4 +1594,311 @@ class AppLocalizationsZh extends AppLocalizations {
   String diaryTimelineMonthCount(int count) {
     return '$count 篇';
   }
+
+  @override
+  String get exportPageTitle => '导入与导出';
+
+  @override
+  String get exportSectionExport => '导出';
+
+  @override
+  String get exportSectionBackup => '备份';
+
+  @override
+  String get exportFormatDocx => 'DOCX';
+
+  @override
+  String get exportBackupExport => '导出备份';
+
+  @override
+  String get exportBackupExportSubtitle => '打包全部日记与媒体';
+
+  @override
+  String get exportRestoreFromBackup => '从备份恢复';
+
+  @override
+  String get exportBackupRestoreSubtitle => '按修改时间合并';
+
+  @override
+  String get exportRestoreConfirmMessage => '备份与本地数据按最后修改时间合并，较新的条目覆盖较旧的。';
+
+  @override
+  String get exportRestoreConfirmLabel => '恢复';
+
+  @override
+  String get exportRestoring => '正在恢复…';
+
+  @override
+  String exportRestoreDone(Object summary) {
+    return '恢复完成：$summary';
+  }
+
+  @override
+  String exportRestoreFailed(Object error) {
+    return '恢复失败：$error';
+  }
+
+  @override
+  String get exportPackingBackup => '正在打包备份…';
+
+  @override
+  String get exportBackupReady => '备份已生成';
+
+  @override
+  String exportFailed(Object error) {
+    return '导出失败：$error';
+  }
+
+  @override
+  String get exportArtifactMissing => '产物不见了，请重试';
+
+  @override
+  String get exportGenerated => '已生成';
+
+  @override
+  String get exportTitleMarkdown => '导出为 Markdown';
+
+  @override
+  String get exportTitleDocx => '导出为 DOCX';
+
+  @override
+  String get exportTitlePdf => '导出为 PDF';
+
+  @override
+  String get exportSectionScope => '范围';
+
+  @override
+  String get exportSelectDiaries => '选择日记';
+
+  @override
+  String get exportCounting => '统计中…';
+
+  @override
+  String exportEntryCount(Object count) {
+    return '$count 篇';
+  }
+
+  @override
+  String get exportMergeIntoOneFile => '合并成一个文件';
+
+  @override
+  String get exportMergeSubtitle => '关闭后每篇一个文件';
+
+  @override
+  String get exportFileName => '文件名';
+
+  @override
+  String get exportFileNameTemplate => '文件名模板';
+
+  @override
+  String exportFileNameTemplateHint(Object date, Object id, Object title) {
+    return '可用占位符：$date 日期、$title 标题、$id 日记 id';
+  }
+
+  @override
+  String get exportTemplateEmpty => '模板不能为空';
+
+  @override
+  String get exportSectionContent => '内容';
+
+  @override
+  String get exportIncludeTitle => '标题';
+
+  @override
+  String get exportIncludeMeta => '日期、天气与位置';
+
+  @override
+  String get exportMedia => '媒体';
+
+  @override
+  String get exportMediaEmbed => '内嵌图片';
+
+  @override
+  String get exportMediaPlaceholder => '只写占位文字';
+
+  @override
+  String get exportMediaNone => '不含媒体';
+
+  @override
+  String get exportMarkdownGfm => 'GitHub 风味';
+
+  @override
+  String get exportMarkdownGfmSubtitle => '支持表格与任务清单';
+
+  @override
+  String get exportMarkdownFrontMatter => '写入 Front Matter';
+
+  @override
+  String get exportMarkdownFrontMatterSubtitle => '在文件开头记录日期、分类等信息';
+
+  @override
+  String get exportSectionLayout => '排版';
+
+  @override
+  String get exportFont => '字体';
+
+  @override
+  String get exportEastAsiaFont => '中文字体';
+
+  @override
+  String get exportAsciiFont => '西文字体';
+
+  @override
+  String get exportNoFontSelected => '还没有选择字体';
+
+  @override
+  String get exportFontSize => '字号';
+
+  @override
+  String exportFontSizeValue(Object size) {
+    return '$size pt';
+  }
+
+  @override
+  String get exportLineSpacing => '行距';
+
+  @override
+  String exportLineSpacingValue(Object value) {
+    return '$value 倍';
+  }
+
+  @override
+  String get exportFirstLineIndent => '首行缩进两字符';
+
+  @override
+  String get exportPaper => '纸张';
+
+  @override
+  String get exportFontNameHint => '填写字体名，如「宋体」「Georgia」。';
+
+  @override
+  String get exportFontNameEmpty => '字体名不能为空';
+
+  @override
+  String get exportScopeEmpty => '这个范围里没有日记';
+
+  @override
+  String get exportPickFontFirst => '请先选择一个字体';
+
+  @override
+  String exportRunButton(Object count) {
+    return '导出 $count 篇';
+  }
+
+  @override
+  String get exportPartialTitle => '导出完成，但有几处没带上';
+
+  @override
+  String exportSkippedMedia(Object count) {
+    return '$count 个媒体文件找不到，已跳过';
+  }
+
+  @override
+  String exportUnsupportedNodes(Object count, Object types) {
+    return '有 $count 种内容这个版本还导不出：$types';
+  }
+
+  @override
+  String get exportScopeAll => '全部日记';
+
+  @override
+  String get exportScopeByCategory => '按分类';
+
+  @override
+  String get exportScopeByDate => '按时间';
+
+  @override
+  String get exportScopePicked => '手动挑选';
+
+  @override
+  String exportScopeAllHint(Object count) {
+    return '$count 篇';
+  }
+
+  @override
+  String exportScopePickedLabel(Object count) {
+    return '已选 $count 篇';
+  }
+
+  @override
+  String get exportDateRange => '时间区间';
+
+  @override
+  String get exportTapToPick => '点击选择';
+
+  @override
+  String exportDateRangeValue(Object from, Object to) {
+    return '$from 至 $to';
+  }
+
+  @override
+  String get exportSelectAll => '全选';
+
+  @override
+  String get exportNothingSelected => '还没有选择';
+
+  @override
+  String get exportConfirm => '确定';
+
+  @override
+  String get exportUncategorized => '未分类';
+
+  @override
+  String get exportDeletedCategory => '已删除分类';
+
+  @override
+  String exportCategoryCount(Object count) {
+    return '$count 个分类';
+  }
+
+  @override
+  String get exportUntitled => '无标题';
+
+  @override
+  String get exportPdfFontPageTitle => 'PDF 字体';
+
+  @override
+  String get exportImportedFonts => '已导入的字体';
+
+  @override
+  String get exportImportFont => '导入字体';
+
+  @override
+  String get exportImportingFont => '正在导入…';
+
+  @override
+  String exportImportFailed(Object error) {
+    return '导入失败：$error';
+  }
+
+  @override
+  String get exportFontNameUnreadable => '读不出字体名，文件可能已损坏';
+
+  @override
+  String get exportNoPdfFontTitle => '还没有可用于 PDF 的字体';
+
+  @override
+  String get exportNoPdfFontMessage => '导入一个 .ttf 字体后可在此选择。';
+
+  @override
+  String get exportMediaKindVideo => '视频';
+
+  @override
+  String get exportMediaKindAudio => '音频';
+
+  @override
+  String exportProgressConverting(Object done, Object total) {
+    return '正在转换 $done/$total';
+  }
+
+  @override
+  String get exportProgressWriting => '正在排版…';
+
+  @override
+  String exportProgressWritingCount(Object done, Object total) {
+    return '正在排版 $done/$total';
+  }
+
+  @override
+  String get exportProgressSerializing => '正在生成文件…';
 }

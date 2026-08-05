@@ -6,6 +6,7 @@ import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary/app/shell/root_shell.dart' show MobileRootShell;
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_editor/moodiary_editor.dart' show editorRoutes;
+import 'package:moodiary_export/moodiary_export.dart' show exportRoutes;
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary/app/settings/setting_routes.dart';
 import 'package:moodiary_share/moodiary_share.dart';
@@ -41,6 +42,8 @@ List<RouteBase> _mobileRoutes() => [
   ...diaryRoutes(),
   ...settingRoutes(),
   ...syncRoutes(),
+  ...exportRoutes(),
+  ...exportRoutes(),
   ...lockRoutes(),
   ...shareRoutes(),
   ...editorRoutes(),
