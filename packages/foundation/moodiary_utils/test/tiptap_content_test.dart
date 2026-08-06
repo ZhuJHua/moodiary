@@ -175,7 +175,8 @@ void main() {
 
   group('TiptapContent — 非 TipTap 内容的回退', () {
     test('旧 markdown：plainText 走 MarkdownConverter，媒体走正则前缀分流', () {
-      const md = '# 标题\n\n正文 ![](image-1.webp) ![](audio-1.m4a) ![](video-1.mp4)';
+      const md =
+          '# 标题\n\n正文 ![](image-1.webp) ![](audio-1.m4a) ![](video-1.mp4)';
       final c = TiptapContent.parse(md);
       expect(c.isDoc, isFalse);
       expect(c.plainText, MarkdownConverter.convert(md));

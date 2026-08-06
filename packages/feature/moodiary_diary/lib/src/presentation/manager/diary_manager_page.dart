@@ -61,9 +61,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Text(
-                        TimeFormat.listDateTime(d.time),
-                      ),
+                      subtitle: Text(TimeFormat.listDateTime(d.time)),
                       onChanged: (v) {
                         setState(() {
                           if (v == true) {

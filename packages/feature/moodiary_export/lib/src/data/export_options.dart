@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 import 'markdown_writer.dart';
 
 enum ExportFormat {
@@ -116,11 +115,13 @@ class MarkdownExportOptions {
     this.frontMatter = true,
   });
 
-  MarkdownExportOptions copyWith({MarkdownDialect? dialect, bool? frontMatter}) =>
-      MarkdownExportOptions(
-        dialect: dialect ?? this.dialect,
-        frontMatter: frontMatter ?? this.frontMatter,
-      );
+  MarkdownExportOptions copyWith({
+    MarkdownDialect? dialect,
+    bool? frontMatter,
+  }) => MarkdownExportOptions(
+    dialect: dialect ?? this.dialect,
+    frontMatter: frontMatter ?? this.frontMatter,
+  );
 
   Map<String, dynamic> toJson() => {
     'dialect': dialect.name,

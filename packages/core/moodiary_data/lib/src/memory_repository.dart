@@ -21,10 +21,9 @@ class MemoryRepository {
 
   /// 最近更新的前 [limit] 条，用于每轮注入（避免注入全部撑爆上下文）。
   Future<List<MemoryEntry>> getRecent(int limit) {
-    return _isar.memories
-        .where()
-        .sortByUpdatedAtDesc()
-        .findAllAsync(limit: limit);
+    return _isar.memories.where().sortByUpdatedAtDesc().findAllAsync(
+      limit: limit,
+    );
   }
 
   Future<MemoryEntry?> get(String id) => _isar.memories.getAsync(id);

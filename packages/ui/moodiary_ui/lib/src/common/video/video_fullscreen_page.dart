@@ -425,7 +425,6 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
 
   void _hideHud() => _hud.value = null;
 
-
   bool _exitRequested = false;
 
   /// 退出位置必须在**决定 pop 的那一刻**上报：调用方 await 的是 push 的 future，
@@ -1018,7 +1017,6 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     );
   }
 
-
   /// 长按倍速时顶部那枚牌子。刻意不放在正中那个槽位：它是**持续状态**，
   /// 而正中那一格留给瞬时反馈（刮擦时间码 / 亮度音量）。
   Widget _buildBoostBadge() {
@@ -1558,9 +1556,7 @@ class _AmbientBar extends StatelessWidget {
 
   IconData _iconFor(bool isBrightness, double v) {
     if (isBrightness) {
-      return v < 0.5
-          ? LucideIcons.sunDim
-          : LucideIcons.sun;
+      return v < 0.5 ? LucideIcons.sunDim : LucideIcons.sun;
     }
     if (v <= 0) return LucideIcons.volumeX;
     return v < 0.5 ? LucideIcons.volume1 : LucideIcons.volume2;

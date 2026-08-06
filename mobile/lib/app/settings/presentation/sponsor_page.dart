@@ -20,11 +20,7 @@ class SponsorPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Icon(
-            LucideIcons.heart,
-            size: 48,
-            color: theme.colorScheme.primary,
-          ),
+          Icon(LucideIcons.heart, size: 48, color: theme.colorScheme.primary),
           const SizedBox(height: 12),
           Text(
             '感谢您的考虑！',
@@ -47,8 +43,7 @@ class SponsorPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            onPressed: () =>
-                _open(context, 'https://afdian.com/a/ZhuJHua'),
+            onPressed: () => _open(context, 'https://afdian.com/a/ZhuJHua'),
             icon: const Icon(LucideIcons.externalLink),
             label: const Text('爱发电'),
           ),

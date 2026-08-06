@@ -175,15 +175,24 @@ class AppFiles {
     required Set<String> usedVideos,
   }) async {
     final orphans = <(String type, Set<String> names)>[
-      (MediaType.image.value, (await getDirFileName(MediaType.image.value))
-          .toSet()
-          .difference(usedImages)),
-      (MediaType.audio.value, (await getDirFileName(MediaType.audio.value))
-          .toSet()
-          .difference(usedAudios)),
-      (MediaType.video.value, (await getDirFileName(MediaType.video.value))
-          .toSet()
-          .difference(usedVideos)),
+      (
+        MediaType.image.value,
+        (await getDirFileName(
+          MediaType.image.value,
+        )).toSet().difference(usedImages),
+      ),
+      (
+        MediaType.audio.value,
+        (await getDirFileName(
+          MediaType.audio.value,
+        )).toSet().difference(usedAudios),
+      ),
+      (
+        MediaType.video.value,
+        (await getDirFileName(
+          MediaType.video.value,
+        )).toSet().difference(usedVideos),
+      ),
     ];
 
     final paths = <String>[];

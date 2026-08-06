@@ -38,17 +38,11 @@ class VersionMigrator {
     bool below(String version) => lastVersion < Version.parse(version);
 
     if (below('2.4.8')) {
-      await compute(
-        _mergeToV2_4_8,
-        AppFiles.getRealPath('database', ''),
-      );
+      await compute(_mergeToV2_4_8, AppFiles.getRealPath('database', ''));
     }
 
     if (below('2.6.0')) {
-      await compute(
-        _mergeToV2_6_0,
-        AppFiles.getRealPath('database', ''),
-      );
+      await compute(_mergeToV2_6_0, AppFiles.getRealPath('database', ''));
     }
 
     if (below('2.6.2')) {
@@ -76,10 +70,7 @@ class VersionMigrator {
       await MoodiaryKVs.autoSync.set(false);
       // 跨引擎（isar 4.0.0-dev → isar_plus）迁移前留一份快照，出问题可回滚。
       await _backupDatabaseOnce();
-      await compute(
-        _mergeToV2_8_0,
-        AppFiles.getRealPath('database', ''),
-      );
+      await compute(_mergeToV2_8_0, AppFiles.getRealPath('database', ''));
     }
   }
 }
@@ -203,9 +194,7 @@ void _mergeToV2_8_0(String dir) {
           type = DiaryType.richText.value;
         }
 
-        isar.diarys.put(
-          diary.copyWith(content: content, type: type),
-        );
+        isar.diarys.put(diary.copyWith(content: content, type: type));
       }
     });
   }

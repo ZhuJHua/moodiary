@@ -84,10 +84,7 @@ abstract final class AssistantToolRegistry {
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {
-            'type': 'string',
-            'description': '目标日记的 id（来自 queryDiaries）。',
-          },
+          'id': {'type': 'string', 'description': '目标日记的 id（来自 queryDiaries）。'},
         },
         'required': ['id'],
       },
@@ -134,10 +131,7 @@ abstract final class AssistantToolRegistry {
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {
-            'type': 'string',
-            'description': '目标日记的 id（来自 queryDiaries）。',
-          },
+          'id': {'type': 'string', 'description': '目标日记的 id（来自 queryDiaries）。'},
           'title': {'type': 'string', 'description': '新的标题，可选。'},
           'content': {'type': 'string', 'description': '新的正文（Markdown），可选。'},
           'mood': {
@@ -160,10 +154,7 @@ abstract final class AssistantToolRegistry {
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {
-            'type': 'string',
-            'description': '目标日记的 id（来自 queryDiaries）。',
-          },
+          'id': {'type': 'string', 'description': '目标日记的 id（来自 queryDiaries）。'},
         },
         'required': ['id'],
       },
@@ -255,10 +246,7 @@ abstract final class AssistantToolRegistry {
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {
-            'type': 'string',
-            'description': '目标记忆的 id（来自 listMemories）。',
-          },
+          'id': {'type': 'string', 'description': '目标记忆的 id（来自 listMemories）。'},
           'text': {'type': 'string', 'description': '新的记忆内容。'},
           'category': {
             'type': 'string',
@@ -276,10 +264,7 @@ abstract final class AssistantToolRegistry {
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {
-            'type': 'string',
-            'description': '目标记忆的 id（来自 listMemories）。',
-          },
+          'id': {'type': 'string', 'description': '目标记忆的 id（来自 listMemories）。'},
         },
         'required': ['id'],
       },
@@ -738,8 +723,6 @@ abstract final class AssistantToolRegistry {
       if (endExclusive != null)
         '止 ${TimeFormat.isoDate(endExclusive.subtract(const Duration(days: 1)))}',
     ];
-    return conds.isEmpty
-        ? '还没有任何日记。'
-        : '没有找到符合条件（${conds.join('，')}）的日记。';
+    return conds.isEmpty ? '还没有任何日记。' : '没有找到符合条件（${conds.join('，')}）的日记。';
   }
 }

@@ -191,9 +191,7 @@ Stream<Diary?> getDiary(
 }) async* {
   if (id == null || id.isEmpty) {
     if (defaultType == null) {
-      throw ArgumentError(
-        'getDiary: 新建空白日记必须显式提供 defaultType（id 为空时）',
-      );
+      throw ArgumentError('getDiary: 新建空白日记必须显式提供 defaultType（id 为空时）');
     }
     final empty = Diary.empty(type: defaultType);
     yield defaultCategoryId == null

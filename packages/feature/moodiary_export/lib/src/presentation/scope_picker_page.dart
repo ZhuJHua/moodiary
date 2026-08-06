@@ -83,13 +83,14 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
 
   ExportScope? _build(AppLocalizations l10n) => switch (_kind) {
     _ScopeKind.all => const AllDiariesScope(),
-    _ScopeKind.category => _categoryIds.isEmpty
-        ? null
-        : CategoryScope({..._categoryIds}, _categoryLabel(l10n)),
-    _ScopeKind.dateRange => _range == null
-        ? null
-        : DateRangeScope(_range!.start, _range!.end),
-    _ScopeKind.picked => _pickedIds.isEmpty ? null : PickedScope({..._pickedIds}),
+    _ScopeKind.category =>
+      _categoryIds.isEmpty
+          ? null
+          : CategoryScope({..._categoryIds}, _categoryLabel(l10n)),
+    _ScopeKind.dateRange =>
+      _range == null ? null : DateRangeScope(_range!.start, _range!.end),
+    _ScopeKind.picked =>
+      _pickedIds.isEmpty ? null : PickedScope({..._pickedIds}),
   };
 
   String _categoryLabel(AppLocalizations l10n) {

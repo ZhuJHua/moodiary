@@ -60,9 +60,7 @@ Future<bool> ensureSyncKeyReady({
   }
   if (keyfile == null) {
     if (context.mounted) {
-      toast.error(
-        message: '远端数据已加密但缺少密钥文件（keys.json），无法解密。请清空远端数据后重新上传。',
-      );
+      toast.error(message: '远端数据已加密但缺少密钥文件（keys.json），无法解密。请清空远端数据后重新上传。');
     }
     return false;
   }

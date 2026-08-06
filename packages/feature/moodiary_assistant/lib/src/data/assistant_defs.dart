@@ -27,9 +27,15 @@ enum AssistantTool {
 
   listCategories('listCategories'),
 
-  createCategory('createCategory', permission: AssistantToolPermission.approval),
+  createCategory(
+    'createCategory',
+    permission: AssistantToolPermission.approval,
+  ),
 
-  updateCategory('updateCategory', permission: AssistantToolPermission.approval),
+  updateCategory(
+    'updateCategory',
+    permission: AssistantToolPermission.approval,
+  ),
 
   deleteCategory(
     'deleteCategory',
@@ -48,7 +54,10 @@ enum AssistantTool {
 
   final AssistantToolPermission permission;
 
-  const AssistantTool(this.id, {this.permission = AssistantToolPermission.none});
+  const AssistantTool(
+    this.id, {
+    this.permission = AssistantToolPermission.none,
+  });
 
   /// 调用前是否需要用户批准（只读工具无需）。
   bool get needsApproval => permission != AssistantToolPermission.none;

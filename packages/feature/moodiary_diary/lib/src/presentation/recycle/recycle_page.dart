@@ -55,7 +55,9 @@ class RecyclePage extends ConsumerWidget {
     WidgetRef ref,
     Diary diary,
   ) async {
-    final ok = await ref.read(recycleBinDiariesProvider.notifier).restore(diary);
+    final ok = await ref
+        .read(recycleBinDiariesProvider.notifier)
+        .restore(diary);
     if (ok) {
       toast.success(message: '已恢复');
     } else {
@@ -86,11 +88,7 @@ class RecyclePage extends ConsumerWidget {
     }
   }
 
-  Future<void> _onClear(
-    BuildContext context,
-    WidgetRef ref,
-    int total,
-  ) async {
+  Future<void> _onClear(BuildContext context, WidgetRef ref, int total) async {
     final confirmed = await showMoodiaryConfirm(
       context,
       title: '清空回收站？',
@@ -113,10 +111,7 @@ class _Empty extends StatelessWidget {
         children: [
           const Icon(LucideIcons.trash2, size: 48),
           const SizedBox(height: 12),
-          Text(
-            '回收站为空',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text('回收站为空', style: Theme.of(context).textTheme.titleMedium),
         ],
       ),
     );

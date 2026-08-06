@@ -17,7 +17,11 @@ void main() {
           trailing: trailing,
           items: const [
             MoodiaryChipData(value: null, label: 'All'),
-            MoodiaryChipData(value: 'a', label: 'Work', accentColor: Colors.red),
+            MoodiaryChipData(
+              value: 'a',
+              label: 'Work',
+              accentColor: Colors.red,
+            ),
             MoodiaryChipData(value: 'b', label: 'Life'),
           ],
         ),

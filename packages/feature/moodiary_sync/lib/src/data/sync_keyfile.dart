@@ -84,7 +84,12 @@ class SyncKeyfile {
 
   Map<String, dynamic> toJson() => {
     'version': version,
-    'kdf': {'alg': 'argon2id', 'mKiB': kdfMemoryKiB, 't': kdfIterations, 'p': kdfParallelism},
+    'kdf': {
+      'alg': 'argon2id',
+      'mKiB': kdfMemoryKiB,
+      't': kdfIterations,
+      'p': kdfParallelism,
+    },
     'salt': saltB64,
     'wrapped': wrappedDekB64,
   };

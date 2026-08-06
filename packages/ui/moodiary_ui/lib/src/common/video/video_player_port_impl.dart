@@ -54,7 +54,9 @@ class VideoPlayerPluginPort implements VideoPlaybackPort {
       // 关键：把旋转标记原样带出去。value.size / value.aspectRatio 都**不**应用它，
       // Android textureView 后端给的是编码朝向，竖拍视频靠这个字段才能算对显示比例。
       rotationDegrees: v.rotationCorrection,
-      errorMessage: v.hasError ? (v.errorDescription ?? 'unknown player error') : null,
+      errorMessage: v.hasError
+          ? (v.errorDescription ?? 'unknown player error')
+          : null,
     );
   }
 
@@ -74,7 +76,8 @@ class VideoPlayerPluginPort implements VideoPlaybackPort {
   Future<void> setVolume(double volume) => _controller.setVolume(volume);
 
   @override
-  Future<void> setPlaybackSpeed(double speed) => _controller.setPlaybackSpeed(speed);
+  Future<void> setPlaybackSpeed(double speed) =>
+      _controller.setPlaybackSpeed(speed);
 
   @override
   Future<void> setLooping(bool looping) => _controller.setLooping(looping);
@@ -92,4 +95,5 @@ class VideoPlayerPluginPort implements VideoPlaybackPort {
 }
 
 /// 默认端口工厂。状态机 retry 时用它换新实例。
-VideoPlaybackPort videoPlayerPortFactory(VideoSource source) => VideoPlayerPluginPort(source);
+VideoPlaybackPort videoPlayerPortFactory(VideoSource source) =>
+    VideoPlayerPluginPort(source);

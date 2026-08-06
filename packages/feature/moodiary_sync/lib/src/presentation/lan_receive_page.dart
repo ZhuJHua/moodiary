@@ -208,9 +208,7 @@ class _StatusLine extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '可继续接收，配对码不变',
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.outline,
-            ),
+            style: context.textTheme.bodySmall?.copyWith(color: scheme.outline),
           ),
         ],
       ),
@@ -219,9 +217,7 @@ class _StatusLine extends StatelessWidget {
         children: [
           Text(
             '接收失败',
-            style: context.textTheme.titleMedium?.copyWith(
-              color: scheme.error,
-            ),
+            style: context.textTheme.titleMedium?.copyWith(color: scheme.error),
           ),
           const SizedBox(height: 6),
           Text(
@@ -232,9 +228,7 @@ class _StatusLine extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '配对码不变，对方可直接重试',
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.outline,
-            ),
+            style: context.textTheme.bodySmall?.copyWith(color: scheme.outline),
           ),
         ],
       ),
@@ -277,10 +271,7 @@ class _AddressCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           if (ips.isEmpty)
-            Text(
-              '未连接 Wi-Fi，无法获取本机地址',
-              style: TextStyle(color: scheme.error),
-            )
+            Text('未连接 Wi-Fi，无法获取本机地址', style: TextStyle(color: scheme.error))
           else
             Wrap(
               spacing: 8,
@@ -296,9 +287,7 @@ class _AddressCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             '发送方通常会自动发现本机，也可手动输入上方地址。接收期间请保持本页打开。',
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.outline,
-            ),
+            style: context.textTheme.bodySmall?.copyWith(color: scheme.outline),
           ),
         ],
       ),
@@ -334,11 +323,7 @@ class _AddressChip extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 6),
-              Icon(
-                LucideIcons.copy,
-                size: 14,
-                color: scheme.onSurfaceVariant,
-              ),
+              Icon(LucideIcons.copy, size: 14, color: scheme.onSurfaceVariant),
             ],
           ),
         ),

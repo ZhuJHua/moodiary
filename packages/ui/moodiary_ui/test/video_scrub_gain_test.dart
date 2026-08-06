@@ -11,8 +11,14 @@ void main() {
     const width = 400.0;
 
     test('短片：一屏正好是全片的 60%', () {
-      expect(_screenSeconds(const Duration(seconds: 30), width), closeTo(18, 1e-9));
-      expect(_screenSeconds(const Duration(seconds: 60), width), closeTo(36, 1e-9));
+      expect(
+        _screenSeconds(const Duration(seconds: 30), width),
+        closeTo(18, 1e-9),
+      );
+      expect(
+        _screenSeconds(const Duration(seconds: 60), width),
+        closeTo(36, 1e-9),
+      );
     });
 
     test('长片封顶：一屏最多约 67 秒，不再随时长膨胀', () {

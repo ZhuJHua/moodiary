@@ -71,7 +71,8 @@ class _AiSection extends StatelessWidget {
           color: scheme.surfaceContainerLow,
           margin: EdgeInsets.zero,
           child: ValueListenableBuilder<String>(
-            valueListenable: MoodiaryKVs.assistantActiveProviderId.getNotifier(),
+            valueListenable: MoodiaryKVs.assistantActiveProviderId
+                .getNotifier(),
             builder: (context, _, _) => const AssistantSummaryTile(),
           ),
         ),

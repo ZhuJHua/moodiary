@@ -45,7 +45,10 @@ class MoodiaryVideoPlaybackController {
     // 封面已经给出了显示朝向的比例（缩略图插件按 rotation 归一化过），所以第一帧就能拿到
     // 正确几何，不必等 initialized —— 全屏页因此不会先竖着出现再转过去。
     if (initialAspect != null && initialAspect > 0) {
-      geometry.value = VideoGeometry(generation: 0, naturalAspect: initialAspect);
+      geometry.value = VideoGeometry(
+        generation: 0,
+        naturalAspect: initialAspect,
+      );
     }
   }
 
@@ -56,7 +59,9 @@ class MoodiaryVideoPlaybackController {
   final state = ValueNotifier<VideoPlaybackState>(const VideoIdle());
   final progress = ValueNotifier<VideoProgress>(VideoProgress.zero);
   final geometry = ValueNotifier<VideoGeometry>(VideoGeometry.unknown);
-  final settings = ValueNotifier<VideoPlaybackSettings>(VideoPlaybackSettings.initial);
+  final settings = ValueNotifier<VideoPlaybackSettings>(
+    VideoPlaybackSettings.initial,
+  );
 
   /// 起始 true；首帧确认已上屏后翻 false 并不再回头（除 generation 变化）。
   /// 平台不提供 first-frame-rendered 信号（initialized 只代表 READY，此刻纹理可能还是黑的）。
@@ -144,7 +149,9 @@ class MoodiaryVideoPlaybackController {
       // 真正的判据是快照里的 isInitialized（下面 _onSnapshot 会处理）。
       if (!_disposed && _port == port) _onSnapshot(port.snapshot);
     } catch (e) {
-      if (!_disposed && _port == port) _toError(VideoErrorKind.initialize, '$e');
+      if (!_disposed && _port == port) {
+        _toError(VideoErrorKind.initialize, '$e');
+      }
     }
   }
 
@@ -207,7 +214,11 @@ class MoodiaryVideoPlaybackController {
   void beginScrub(Duration target) {
     if (_disposed || !_state.acceptsCommands || !progress.value.canSeek) return;
     _scrubbing = true;
-    _applySeekTarget(target, resumeIntent: _state.isPlayIntent, scrubbing: true);
+    _applySeekTarget(
+      target,
+      resumeIntent: _state.isPlayIntent,
+      scrubbing: true,
+    );
   }
 
   void updateScrub(Duration target) {
@@ -277,7 +288,12 @@ class MoodiaryVideoPlaybackController {
 
     final err = s.errorMessage;
     if (err != null) {
-      _toError(_state is VideoInitializing ? VideoErrorKind.initialize : VideoErrorKind.playback, err);
+      _toError(
+        _state is VideoInitializing
+            ? VideoErrorKind.initialize
+            : VideoErrorKind.playback,
+        err,
+      );
       return;
     }
     if (!s.isInitialized) return; // 就绪前的噪声一律忽略
@@ -285,7 +301,10 @@ class MoodiaryVideoPlaybackController {
     if (s.duration > Duration.zero) _lastDuration = s.duration;
     final aspect = s.displayAspect;
     if (aspect != null && geometry.value.naturalAspect != aspect) {
-      geometry.value = VideoGeometry(generation: _generation, naturalAspect: aspect);
+      geometry.value = VideoGeometry(
+        generation: _generation,
+        naturalAspect: aspect,
+      );
     } else if (geometry.value.generation != _generation) {
       geometry.value = VideoGeometry(
         generation: _generation,
@@ -317,7 +336,9 @@ class MoodiaryVideoPlaybackController {
     if (s.isBuffering) {
       _bufferingTimer ??= Timer(_kBufferingDebounce, () {
         _bufferingTimer = null;
-        if (_disposed || _state is VideoSeeking || _state is VideoCompleted) return;
+        if (_disposed || _state is VideoSeeking || _state is VideoCompleted) {
+          return;
+        }
         _setState(VideoBuffering(resumeIntent: _state.isPlayIntent));
       });
     } else {
@@ -373,12 +394,18 @@ class MoodiaryVideoPlaybackController {
   Duration get _lastPositionOrTarget => _seekTarget ?? _lastPosition;
 
   Duration _clampToDuration(Duration d) {
-    if (_lastDuration <= Duration.zero) return d < Duration.zero ? Duration.zero : d;
+    if (_lastDuration <= Duration.zero) {
+      return d < Duration.zero ? Duration.zero : d;
+    }
     if (d < Duration.zero) return Duration.zero;
     return d > _lastDuration ? _lastDuration : d;
   }
 
-  void _applySeekTarget(Duration target, {required bool resumeIntent, required bool scrubbing}) {
+  void _applySeekTarget(
+    Duration target, {
+    required bool resumeIntent,
+    required bool scrubbing,
+  }) {
     _seekTarget = _clampToDuration(target);
     _bufferingTimer?.cancel();
     _bufferingTimer = null;
@@ -386,13 +413,21 @@ class MoodiaryVideoPlaybackController {
     // begin 与 settle 两次生命周期通知，松手不该额外算一次。
     if (_state is! VideoSeeking) {
       _setState(
-        VideoSeeking(target: _seekTarget!, resumeIntent: resumeIntent, scrubbing: scrubbing),
+        VideoSeeking(
+          target: _seekTarget!,
+          resumeIntent: resumeIntent,
+          scrubbing: scrubbing,
+        ),
       );
     }
     _publishProgress(_lastPosition, draftOverride: true);
   }
 
-  Future<void> _seek(Duration target, {required bool scrubbing, required bool resumeIntent}) async {
+  Future<void> _seek(
+    Duration target, {
+    required bool scrubbing,
+    required bool resumeIntent,
+  }) async {
     if (_disposed || !_state.acceptsCommands || !progress.value.canSeek) return;
     _completedLatched = false;
     _applySeekTarget(target, resumeIntent: resumeIntent, scrubbing: scrubbing);
@@ -461,13 +496,15 @@ class MoodiaryVideoPlaybackController {
     _clearPlayConfirm();
     _resumeFrom = _lastPosition;
     VideoPlaybackArbiter.release(this);
-    _setState(VideoError(
-      kind: kind,
-      message: message,
-      resumeFrom: _lastPosition,
-      canRetry: _attempt < _kMaxAttempts,
-      attempt: _attempt,
-    ));
+    _setState(
+      VideoError(
+        kind: kind,
+        message: message,
+        resumeFrom: _lastPosition,
+        canRetry: _attempt < _kMaxAttempts,
+        attempt: _attempt,
+      ),
+    );
   }
 
   // ────────────────────────────── 释放 ──────────────────────────────
@@ -485,9 +522,11 @@ class MoodiaryVideoPlaybackController {
       // pause 要立刻发出，取消平台侧那个 100ms 位置轮询。
       port.pause();
       // dispose 可能永久挂起（平台释放失败），绝不 await。
-      unawaited(port.dispose().catchError((Object e) {
-        debugPrint('video port dispose failed: $e');
-      }));
+      unawaited(
+        port.dispose().catchError((Object e) {
+          debugPrint('video port dispose failed: $e');
+        }),
+      );
     }
     unawaited(sub?.cancel() ?? Future<void>.value());
   }

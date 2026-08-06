@@ -91,9 +91,11 @@ class MarkdownToTiptap {
         return [
           {
             'type': 'blockquote',
-            'content': inner.isEmpty ? [
-              {'type': 'paragraph'},
-            ] : inner,
+            'content': inner.isEmpty
+                ? [
+                    {'type': 'paragraph'},
+                  ]
+                : inner,
           },
         ];
       case 'pre':
@@ -238,10 +240,7 @@ class MarkdownToTiptap {
     final alt = node.attributes['alt'];
     return {
       'type': 'image',
-      'attrs': {
-        'src': src,
-        if (alt != null && alt.isNotEmpty) 'alt': alt,
-      },
+      'attrs': {'src': src, if (alt != null && alt.isNotEmpty) 'alt': alt},
     };
   }
 

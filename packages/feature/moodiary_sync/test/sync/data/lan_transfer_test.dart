@@ -407,8 +407,7 @@ void main() {
 
   test('导入抛错 → 发送方收到 500 与错误信息，接收端进入 failed 状态', () async {
     final receiver = buildReceiver(
-      applier: (_, _) async =>
-          throw const SyncException('不是有效的 Moodiary 备份文件'),
+      applier: (_, _) async => throw const SyncException('不是有效的 Moodiary 备份文件'),
     );
     await receiver.start();
     addTearDown(receiver.stop);

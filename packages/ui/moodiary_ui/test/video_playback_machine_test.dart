@@ -41,18 +41,20 @@ class FakePort implements VideoPlaybackPort {
     int height = 1080,
     int rotation = 0,
     String? error,
-  }) => emit(VideoPortSnapshot(
-    isInitialized: error == null,
-    isPlaying: playing,
-    isBuffering: buffering,
-    isCompleted: completed,
-    position: position,
-    duration: duration,
-    width: width,
-    height: height,
-    rotationDegrees: rotation,
-    errorMessage: error,
-  ));
+  }) => emit(
+    VideoPortSnapshot(
+      isInitialized: error == null,
+      isPlaying: playing,
+      isBuffering: buffering,
+      isCompleted: completed,
+      position: position,
+      duration: duration,
+      width: width,
+      height: height,
+      rotationDegrees: rotation,
+      errorMessage: error,
+    ),
+  );
 
   @override
   Future<void> initialize() async {
@@ -67,16 +69,19 @@ class FakePort implements VideoPlaybackPort {
   Future<void> pause() async => calls.add('pause');
 
   @override
-  Future<void> seekTo(Duration position) async => calls.add('seekTo:${position.inMilliseconds}');
+  Future<void> seekTo(Duration position) async =>
+      calls.add('seekTo:${position.inMilliseconds}');
 
   @override
   Future<void> setVolume(double volume) async => calls.add('setVolume:$volume');
 
   @override
-  Future<void> setPlaybackSpeed(double speed) async => calls.add('setSpeed:$speed');
+  Future<void> setPlaybackSpeed(double speed) async =>
+      calls.add('setSpeed:$speed');
 
   @override
-  Future<void> setLooping(bool looping) async => calls.add('setLooping:$looping');
+  Future<void> setLooping(bool looping) async =>
+      calls.add('setLooping:$looping');
 
   @override
   Future<void> dispose() async {
@@ -166,7 +171,9 @@ void main() {
       expect(ctl.geometry.value.isPortrait, isTrue);
     });
 
-    testWidgets('rotation 90 要交换宽高 —— 这正是 value.aspectRatio 不做的修正', (tester) async {
+    testWidgets('rotation 90 要交换宽高 —— 这正是 value.aspectRatio 不做的修正', (
+      tester,
+    ) async {
       final ctl = build();
       await ctl.initialize();
       // 编码朝向是 1920×1080（横），但带 90° 旋转 → 实际显示是竖的。
@@ -294,7 +301,11 @@ void main() {
 
       ctl.beginScrub(const Duration(seconds: 20));
       // 两端 seek 都会让 isBuffering 闪一下，跟着画 spinner 就是每拖一次闪一次。
-      ports.first.ready(playing: false, buffering: true, position: const Duration(seconds: 5));
+      ports.first.ready(
+        playing: false,
+        buffering: true,
+        position: const Duration(seconds: 5),
+      );
       await tester.pump(const Duration(milliseconds: 400));
       expect(ctl.state.value, isA<VideoSeeking>());
       expect(ctl.state.value.isBusy, isFalse);
@@ -302,7 +313,9 @@ void main() {
   });
 
   group('播完与外部转移', () {
-    testWidgets('播完锁定 Completed，中途那帧 isPlaying=false 不会被误判成 Paused', (tester) async {
+    testWidgets('播完锁定 Completed，中途那帧 isPlaying=false 不会被误判成 Paused', (
+      tester,
+    ) async {
       final ctl = build(autoPlay: true);
       await ctl.initialize();
       ports.first.ready(playing: true, position: const Duration(seconds: 59));
@@ -332,7 +345,11 @@ void main() {
       // 我们没发任何命令，平台自己暂停了。
       ports.first.ready(playing: false, position: const Duration(seconds: 3));
       await tester.pump();
-      expect(ctl.state.value, isA<VideoPaused>(), reason: '播过之后就是 Paused 而非 Ready');
+      expect(
+        ctl.state.value,
+        isA<VideoPaused>(),
+        reason: '播过之后就是 Paused 而非 Ready',
+      );
     });
   });
 

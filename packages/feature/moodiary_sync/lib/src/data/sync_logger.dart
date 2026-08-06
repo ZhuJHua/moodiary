@@ -70,34 +70,40 @@ class SyncLogger {
     SyncEventKind kind,
     String message, {
     Map<String, Object?>? payload,
-  }) => log(SyncEvent.now(
-    level: SyncEventLevel.info,
-    kind: kind,
-    message: message,
-    payload: payload,
-  ));
+  }) => log(
+    SyncEvent.now(
+      level: SyncEventLevel.info,
+      kind: kind,
+      message: message,
+      payload: payload,
+    ),
+  );
 
   void warn(
     SyncEventKind kind,
     String message, {
     Map<String, Object?>? payload,
-  }) => log(SyncEvent.now(
-    level: SyncEventLevel.warn,
-    kind: kind,
-    message: message,
-    payload: payload,
-  ));
+  }) => log(
+    SyncEvent.now(
+      level: SyncEventLevel.warn,
+      kind: kind,
+      message: message,
+      payload: payload,
+    ),
+  );
 
   void error(
     SyncEventKind kind,
     String message, {
     Map<String, Object?>? payload,
-  }) => log(SyncEvent.now(
-    level: SyncEventLevel.error,
-    kind: kind,
-    message: message,
-    payload: payload,
-  ));
+  }) => log(
+    SyncEvent.now(
+      level: SyncEventLevel.error,
+      kind: kind,
+      message: message,
+      payload: payload,
+    ),
+  );
 
   Future<void> _persist(SyncEvent event) async {
     if (_dir == null) return;
@@ -136,7 +142,9 @@ class SyncLogger {
     await for (final entity in _dir!.list()) {
       if (entity is! File) continue;
       final name = p.basename(entity.path);
-      if (!name.startsWith(_filePrefix) || !name.endsWith(_fileSuffix)) continue;
+      if (!name.startsWith(_filePrefix) || !name.endsWith(_fileSuffix)) {
+        continue;
+      }
       final key = name.substring(
         _filePrefix.length,
         name.length - _fileSuffix.length,

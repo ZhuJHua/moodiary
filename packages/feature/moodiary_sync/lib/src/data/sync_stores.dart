@@ -87,8 +87,13 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   Future<Category?> getCategoryById(String id) => _repo.getCategoryById(id);
 
   @override
-  Future<bool> insertACategory(Category category, {bool fromSync = false}) async {
-    final result = await _repo.insertACategory(category, fromSync: fromSync).run();
+  Future<bool> insertACategory(
+    Category category, {
+    bool fromSync = false,
+  }) async {
+    final result = await _repo
+        .insertACategory(category, fromSync: fromSync)
+        .run();
     return result.isRight();
   }
 

@@ -29,7 +29,9 @@ class _AppLockObserverState extends State<AppLockObserver>
   };
 
   /// DiaryRoute 是 '/diary/:diaryId' 模板；详情/编辑页内嵌编辑器可选图，按前缀匹配。
-  static final String _diaryPrefix = DiaryRoute.path.split(':').first; // '/diary/'
+  static final String _diaryPrefix = DiaryRoute.path
+      .split(':')
+      .first; // '/diary/'
 
   @override
   void initState() {

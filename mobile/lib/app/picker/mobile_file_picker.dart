@@ -16,10 +16,7 @@ import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 /// 权限被拒时 toast 提示并返回空。
 class MobileFilePicker implements IFilePicker {
   @override
-  Future<List<XFile>> pickImages(
-    BuildContext context, {
-    int maxAssets = 9,
-  }) {
+  Future<List<XFile>> pickImages(BuildContext context, {int maxAssets = 9}) {
     return _pickAssets(context, RequestType.image, maxAssets: maxAssets);
   }
 
@@ -116,27 +113,29 @@ class MobileFilePicker implements IFilePicker {
       return const [];
     }
     if (!context.mounted) return const [];
-    final assets = await AssetPicker.pickAssetsWithDelegate<
-        AssetEntity,
-        AssetPathEntity,
-        DefaultAssetPickerProvider,
-        MoodiaryPickerDelegate>(
-      context,
-      delegate: MoodiaryPickerDelegate(
-        provider: DefaultAssetPickerProvider(
-          maxAssets: maxAssets,
-          requestType: type,
-        ),
-        initialPermission: permission,
-        pickerTheme: _pickerTheme(context),
-        textDelegate: assetPickerTextDelegateFromLocale(
-          Localizations.maybeLocaleOf(context),
-        ),
-        // Android 的「全部照片」虚拟相册固定叫 Recent，不随系统语言；按 app 语言本地化。
-        pathNameBuilder: (path) =>
-            path.isAll ? l10n.pickerRecentAlbum : path.name,
-      ),
-    );
+    final assets =
+        await AssetPicker.pickAssetsWithDelegate<
+          AssetEntity,
+          AssetPathEntity,
+          DefaultAssetPickerProvider,
+          MoodiaryPickerDelegate
+        >(
+          context,
+          delegate: MoodiaryPickerDelegate(
+            provider: DefaultAssetPickerProvider(
+              maxAssets: maxAssets,
+              requestType: type,
+            ),
+            initialPermission: permission,
+            pickerTheme: _pickerTheme(context),
+            textDelegate: assetPickerTextDelegateFromLocale(
+              Localizations.maybeLocaleOf(context),
+            ),
+            // Android 的「全部照片」虚拟相册固定叫 Recent，不随系统语言；按 app 语言本地化。
+            pathNameBuilder: (path) =>
+                path.isAll ? l10n.pickerRecentAlbum : path.name,
+          ),
+        );
     return _toXFiles(assets ?? const []);
   }
 

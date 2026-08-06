@@ -201,9 +201,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
-              _centers.length > 1
-                  ? LucideIcons.arrowLeft
-                  : LucideIcons.x,
+              _centers.length > 1 ? LucideIcons.arrowLeft : LucideIcons.x,
             ),
             onPressed: () {
               if (!_popCenter()) Navigator.of(context).pop();

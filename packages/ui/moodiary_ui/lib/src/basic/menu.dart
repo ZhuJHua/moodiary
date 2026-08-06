@@ -36,14 +36,15 @@ Future<T?> showMoodiaryMenu<T>({
 }) {
   final navigator = Navigator.of(anchorContext);
   final button = anchorContext.findRenderObject() as RenderBox;
-  final overlay =
-      navigator.overlay!.context.findRenderObject() as RenderBox;
+  final overlay = navigator.overlay!.context.findRenderObject() as RenderBox;
   final anchor = Rect.fromPoints(
     button.localToGlobal(Offset.zero, ancestor: overlay),
-    button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+    button.localToGlobal(
+      button.size.bottomRight(Offset.zero),
+      ancestor: overlay,
+    ),
   );
-  final preferAbove =
-      anchor.top > overlay.size.height - anchor.bottom;
+  final preferAbove = anchor.top > overlay.size.height - anchor.bottom;
 
   return navigator.push(
     _MoodiaryMenuRoute<T>(
@@ -51,10 +52,13 @@ Future<T?> showMoodiaryMenu<T>({
       entries: entries,
       selected: selected,
       preferAbove: preferAbove,
-      capturedThemes:
-          InheritedTheme.capture(from: anchorContext, to: navigator.context),
-      barrierLabelText:
-          MaterialLocalizations.of(anchorContext).modalBarrierDismissLabel,
+      capturedThemes: InheritedTheme.capture(
+        from: anchorContext,
+        to: navigator.context,
+      ),
+      barrierLabelText: MaterialLocalizations.of(
+        anchorContext,
+      ).modalBarrierDismissLabel,
     ),
   );
 }
@@ -348,15 +352,16 @@ class _MoodiaryMenuLayout extends SingleChildLayoutDelegate {
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    return BoxConstraints.loose(constraints.biggest).deflate(
-      const EdgeInsets.all(_kMenuScreenPadding) + screenPadding,
-    );
+    return BoxConstraints.loose(
+      constraints.biggest,
+    ).deflate(const EdgeInsets.all(_kMenuScreenPadding) + screenPadding);
   }
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
     final topLimit = _kMenuScreenPadding + screenPadding.top;
-    final bottomLimit = size.height - _kMenuScreenPadding - screenPadding.bottom;
+    final bottomLimit =
+        size.height - _kMenuScreenPadding - screenPadding.bottom;
     final belowSpace = bottomLimit - anchor.bottom;
     final aboveSpace = anchor.top - topLimit;
 
@@ -370,14 +375,20 @@ class _MoodiaryMenuLayout extends SingleChildLayoutDelegate {
     } else {
       y = anchor.top - _kMenuAnchorGap - childSize.height;
     }
-    y = y.clamp(topLimit, (bottomLimit - childSize.height).clamp(topLimit, bottomLimit));
+    y = y.clamp(
+      topLimit,
+      (bottomLimit - childSize.height).clamp(topLimit, bottomLimit),
+    );
 
     final leftLimit = _kMenuScreenPadding + screenPadding.left;
     final rightLimit = size.width - _kMenuScreenPadding - screenPadding.right;
     double x = textDirection == TextDirection.rtl
         ? anchor.right - childSize.width
         : anchor.left;
-    x = x.clamp(leftLimit, (rightLimit - childSize.width).clamp(leftLimit, rightLimit));
+    x = x.clamp(
+      leftLimit,
+      (rightLimit - childSize.width).clamp(leftLimit, rightLimit),
+    );
 
     return Offset(x, y);
   }

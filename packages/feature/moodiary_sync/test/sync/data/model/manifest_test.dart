@@ -26,17 +26,12 @@ void main() {
         1780000000123456,
         isUtc: true,
       );
-      final entry = ManifestEntry(
-        timeMs: localMicros.millisecondsSinceEpoch,
-      );
+      final entry = ManifestEntry(timeMs: localMicros.millisecondsSinceEpoch);
       final restored = ManifestEntry.fromJson(
         jsonDecode(jsonEncode(entry.toJson())),
       )!;
       // 模拟 push 的跳过判断
-      expect(
-        localMicros.millisecondsSinceEpoch <= restored.timeMs,
-        isTrue,
-      );
+      expect(localMicros.millisecondsSinceEpoch <= restored.timeMs, isTrue);
     });
 
     test('tombstone round-trips deleted flag and omits media', () {
@@ -110,18 +105,21 @@ void main() {
       }
     });
 
-    test('corrupt entries field (non-Map) throws instead of yielding empty', () {
-      for (final bad in ['oops', 5, <dynamic>[]]) {
-        expect(
-          () => SyncManifest.fromJson(validJson()..['entries'] = bad),
-          throwsA(isA<SyncException>()),
-          reason: 'entries $bad must be rejected, never silently empty',
-        );
-      }
-      // 缺失 entries 仍合法（视作空清单）。
-      final m = SyncManifest.fromJson(validJson()..remove('entries'));
-      expect(m.entries, isEmpty);
-    });
+    test(
+      'corrupt entries field (non-Map) throws instead of yielding empty',
+      () {
+        for (final bad in ['oops', 5, <dynamic>[]]) {
+          expect(
+            () => SyncManifest.fromJson(validJson()..['entries'] = bad),
+            throwsA(isA<SyncException>()),
+            reason: 'entries $bad must be rejected, never silently empty',
+          );
+        }
+        // 缺失 entries 仍合法（视作空清单）。
+        final m = SyncManifest.fromJson(validJson()..remove('entries'));
+        expect(m.entries, isEmpty);
+      },
+    );
 
     test('drops malformed entries instead of failing whole manifest', () {
       final json = validJson();

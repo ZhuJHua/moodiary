@@ -264,9 +264,7 @@ class _PendingActions extends StatelessWidget {
         ),
         FilledButton(
           onPressed: () => onAction(toolPermissionActionAllowOnce),
-          style: FilledButton.styleFrom(
-            visualDensity: VisualDensity.compact,
-          ),
+          style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
           child: Text(l10n.assistantToolAllowOnce),
         ),
       ],

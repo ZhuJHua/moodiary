@@ -31,9 +31,7 @@ Future<double> _bandHeight(
             destinations: _destinations,
             selectedIndex: 0,
             onDestinationSelected: (_) {},
-            action: const MoodiaryNavAction(
-              icon: Icon(LucideIcons.pencilLine),
-            ),
+            action: const MoodiaryNavAction(icon: Icon(LucideIcons.pencilLine)),
           ),
         ),
       ),

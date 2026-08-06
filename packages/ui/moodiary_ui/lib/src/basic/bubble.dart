@@ -35,10 +35,9 @@ class BubblePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = color
-          ..style = PaintingStyle.fill;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
     const arrowWidth = 16.0;
     const arrowHeight = 8.0;
     final rectWidth = size.width;
@@ -52,12 +51,11 @@ class BubblePainter extends CustomPainter {
       Radius.circular(borderRadius),
     );
 
-    final path =
-        Path()
-          ..addRRect(rrect)
-          ..moveTo((rectWidth - arrowWidth) / 2, rectHeight)
-          ..lineTo(rectWidth / 2, rectHeight + arrowHeight)
-          ..lineTo((rectWidth + arrowWidth) / 2, rectHeight);
+    final path = Path()
+      ..addRRect(rrect)
+      ..moveTo((rectWidth - arrowWidth) / 2, rectHeight)
+      ..lineTo(rectWidth / 2, rectHeight + arrowHeight)
+      ..lineTo((rectWidth + arrowWidth) / 2, rectHeight);
 
     canvas.drawPath(path, paint);
   }

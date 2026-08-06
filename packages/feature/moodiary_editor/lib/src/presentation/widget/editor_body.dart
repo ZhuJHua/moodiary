@@ -75,8 +75,8 @@ class _EditorBodyState extends State<EditorBody> {
     final converted = QuillDeltaToTiptap.convert(widget.initialContent);
     if (converted != null) return converted;
     // 不是合法 Delta（极老版本的裸文本残留）：按纯文本兜底，宁可掉格式也要能看。
-    final plain = QuillDelta.plainText(widget.initialContent) ??
-        widget.initialContent;
+    final plain =
+        QuillDelta.plainText(widget.initialContent) ?? widget.initialContent;
     return MarkdownToTiptap.convert(plain) ?? plain;
   }
 

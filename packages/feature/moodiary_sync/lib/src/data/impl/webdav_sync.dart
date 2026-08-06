@@ -50,16 +50,17 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
     final opts = _options;
     final cached = _cachedClient;
     if (cached != null && listEquals(_cachedOptions, opts)) return cached;
-    final future = rust.DavClient.newInstance(
-      baseUrl: _baseUrl,
-      username: _username,
-      password: _password,
-    ).onError((Object error, StackTrace stackTrace) {
-      // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
-      _cachedClient = null;
-      _cachedOptions = null;
-      Error.throwWithStackTrace(error, stackTrace);
-    });
+    final future =
+        rust.DavClient.newInstance(
+          baseUrl: _baseUrl,
+          username: _username,
+          password: _password,
+        ).onError((Object error, StackTrace stackTrace) {
+          // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
+          _cachedClient = null;
+          _cachedOptions = null;
+          Error.throwWithStackTrace(error, stackTrace);
+        });
     _cachedClient = future;
     _cachedOptions = opts;
     return future;

@@ -58,8 +58,9 @@ class _SharePageState extends ConsumerState<SharePage> {
     if (_exporting) return;
     setState(() => _exporting = true);
     try {
-      final boundary = _boundaryKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _boundaryKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) return;
       final image = await boundary.toImage(pixelRatio: 3);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);

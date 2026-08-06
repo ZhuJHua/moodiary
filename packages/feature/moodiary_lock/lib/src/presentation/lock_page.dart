@@ -162,7 +162,8 @@ class _LockPageState extends ConsumerState<LockPage>
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final dotSize = (context.textTheme.displayLarge?.fontSize ?? 57) *
+    final dotSize =
+        (context.textTheme.displayLarge?.fontSize ?? 57) *
         (context.textTheme.displayLarge?.height ?? 1.12);
     return PopScope(
       // 返回手势不得绕过进入内容；解锁由 _unlock 命令式完成。
@@ -199,10 +200,7 @@ class _LockPageState extends ConsumerState<LockPage>
                         ),
                 ),
                 const SizedBox(height: 24),
-                Text(
-                  '请输入密码',
-                  style: context.textTheme.titleMedium,
-                ),
+                Text('请输入密码', style: context.textTheme.titleMedium),
                 const SizedBox(height: 24),
                 AnimatedBuilder(
                   animation: _shake,
@@ -244,8 +242,22 @@ class _LockPageState extends ConsumerState<LockPage>
                     physics: const NeverScrollableScrollPhysics(),
                     padding: EdgeInsets.zero,
                     children: [
-                      for (final d in const ['1', '2', '3', '4', '5', '6', '7', '8', '9'])
-                        _NumButton(label: d, onTap: () => _onDigit(d), size: dotSize),
+                      for (final d in const [
+                        '1',
+                        '2',
+                        '3',
+                        '4',
+                        '5',
+                        '6',
+                        '7',
+                        '8',
+                        '9',
+                      ])
+                        _NumButton(
+                          label: d,
+                          onTap: () => _onDigit(d),
+                          size: dotSize,
+                        ),
                       _supportBio
                           ? _IconButton(
                               icon: LucideIcons.fingerprint,
@@ -253,7 +265,11 @@ class _LockPageState extends ConsumerState<LockPage>
                               size: dotSize,
                             )
                           : SizedBox(width: dotSize, height: dotSize),
-                      _NumButton(label: '0', onTap: () => _onDigit('0'), size: dotSize),
+                      _NumButton(
+                        label: '0',
+                        onTap: () => _onDigit('0'),
+                        size: dotSize,
+                      ),
                       _IconButton(
                         icon: LucideIcons.delete,
                         onTap: _onBackspace,
@@ -330,11 +346,7 @@ class _IconButton extends StatelessWidget {
     return InkWell(
       customBorder: const CircleBorder(),
       onTap: onTap,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Icon(icon, size: 24),
-      ),
+      child: SizedBox(width: size, height: size, child: Icon(icon, size: 24)),
     );
   }
 }

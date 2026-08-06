@@ -9,5 +9,6 @@ export 'src/data/export_options.dart';
 export 'src/data/export_scope.dart';
 export 'src/data/markdown_writer.dart';
 export 'src/data/tiptap_to_ir.dart';
-export 'src/data/export_service.dart' show ExportService, ExportOutcome, ExportException;
+export 'src/data/export_service.dart'
+    show ExportService, ExportOutcome, ExportException;
 export 'src/routes.dart' show exportRoutes;

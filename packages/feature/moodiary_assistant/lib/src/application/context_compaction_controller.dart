@@ -23,7 +23,9 @@ class ContextCompactionController {
   }) async {
     if (_inFlight.contains(session.id)) return null;
 
-    final budget = contextLimit > 0 ? contextLimit : assistantDefaultContextBudget;
+    final budget = contextLimit > 0
+        ? contextLimit
+        : assistantDefaultContextBudget;
     if (orderedMessages.length < assistantCompactionMinMessages) return null;
     if (!force && lastInputTokens < budget * assistantCompactionTriggerRatio) {
       return null;
@@ -77,7 +79,9 @@ class ContextCompactionController {
     final history = <AssistantMessage>[];
     if (priorSummary != null && priorSummary.trim().isNotEmpty) {
       history
-        ..add(AssistantMessage.user('[Earlier summary]\n${priorSummary.trim()}'))
+        ..add(
+          AssistantMessage.user('[Earlier summary]\n${priorSummary.trim()}'),
+        )
         ..add(const AssistantMessage.assistant('OK.'));
     }
     for (final m in messages) {

@@ -76,7 +76,10 @@ void main() {
     });
 
     test('反转义还原字面字符', () {
-      expect(MarkdownConverter.convert(r'价格 \$100 与 \*星号\*'), r'价格 $100 与 *星号*');
+      expect(
+        MarkdownConverter.convert(r'价格 \$100 与 \*星号\*'),
+        r'价格 $100 与 *星号*',
+      );
     });
 
     test('去除 HTML 标签', () {

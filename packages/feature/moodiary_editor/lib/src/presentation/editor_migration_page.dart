@@ -87,9 +87,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       final ok = await EditorMigrationService.migrate(diary);
       await _load();
       if (!mounted) return;
-      ok
-          ? toast.success(message: '已迁移')
-          : toast.error(message: '该篇解析失败，已跳过');
+      ok ? toast.success(message: '已迁移') : toast.error(message: '该篇解析失败，已跳过');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -137,7 +135,11 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
                   for (final d in pending)
                     ListTile(
                       leading: const Icon(LucideIcons.notebookText),
-                      title: Text(_label(d), maxLines: 1, overflow: TextOverflow.ellipsis),
+                      title: Text(
+                        _label(d),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       subtitle: Text(_date(d.time)),
                       trailing: IconButton(
                         tooltip: '迁移这一篇',

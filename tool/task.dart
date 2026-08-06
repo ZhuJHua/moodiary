@@ -17,7 +17,9 @@ import 'dart:io';
 
 /// 跑一个子进程，继承 stdio；非零退出码直接终止。Windows 下走 shell 以解析 .bat/.cmd 包装器。
 Future<void> _run(String cmd, List<String> args, {String? cwd}) async {
-  stdout.writeln('\$ ${[cmd, ...args].join(' ')}${cwd != null ? '  (cwd: $cwd)' : ''}');
+  stdout.writeln(
+    '\$ ${[cmd, ...args].join(' ')}${cwd != null ? '  (cwd: $cwd)' : ''}',
+  );
   final proc = await Process.start(
     cmd,
     args,
@@ -40,17 +42,15 @@ Future<void> _dartApp(List<String> args) =>
 // 注入给定 flavor，保持既有命令可用。（beta = 「Moodiary Beta」测试包，见 build-apk-beta。）
 List<String> _withFlavor(List<String> rest, String flavor) =>
     rest.any((a) => a == '--flavor' || a.startsWith('--flavor='))
-        ? rest
-        : ['--flavor', flavor, ...rest];
+    ? rest
+    : ['--flavor', flavor, ...rest];
 
 /// 命令是否在 PATH 上。
 Future<bool> _hasCommand(String cmd) async {
   try {
-    final r = await Process.run(
-      Platform.isWindows ? 'where' : 'which',
-      [cmd],
-      runInShell: Platform.isWindows,
-    );
+    final r = await Process.run(Platform.isWindows ? 'where' : 'which', [
+      cmd,
+    ], runInShell: Platform.isWindows);
     return r.exitCode == 0;
   } catch (_) {
     return false;
@@ -69,13 +69,20 @@ Future<void> _editor() async {
     exit(1);
   }
   await _run('corepack', ['enable']);
-  await _run('corepack', ['pnpm', 'install'], cwd: 'packages/feature/moodiary_editor/editor');
-  await _run('corepack', ['pnpm', 'build'], cwd: 'packages/feature/moodiary_editor/editor');
+  await _run('corepack', [
+    'pnpm',
+    'install',
+  ], cwd: 'packages/feature/moodiary_editor/editor');
+  await _run('corepack', [
+    'pnpm',
+    'build',
+  ], cwd: 'packages/feature/moodiary_editor/editor');
 }
 
 /// 重新生成 Rust FFI 绑定（从包内运行；codegen CLI 版本须与库版本一致）。
-Future<void> _genRust() =>
-    _run('flutter_rust_bridge_codegen', ['generate'], cwd: 'packages/foundation/moodiary_rust');
+Future<void> _genRust() => _run('flutter_rust_bridge_codegen', [
+  'generate',
+], cwd: 'packages/foundation/moodiary_rust');
 
 Future<void> _checkLayers() => _run('fvm', ['dart', 'tool/check_layers.dart']);
 
@@ -113,8 +120,12 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   'check-layers': (_) => _checkLayers(),
   'deps': (rest) => _run('fvm', ['dart', 'tool/dep_graph.dart', ...rest]),
   'test': (rest) => _flutter(['test', ...rest]),
-  'build-runner': (_) =>
-      _dartApp(['run', 'build_runner', 'build', '--delete-conflicting-outputs']),
+  'build-runner': (_) => _dartApp([
+    'run',
+    'build_runner',
+    'build',
+    '--delete-conflicting-outputs',
+  ]),
   // 代码生成：Rust FFI 绑定；`gen` = 绑定 + 编辑器资源（melos bootstrap 的 post hook）。
   'gen-rust': (_) => _genRust(),
   'gen': (_) async {

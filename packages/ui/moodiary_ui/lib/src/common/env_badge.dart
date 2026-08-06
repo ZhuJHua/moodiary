@@ -9,10 +9,9 @@ class EenBadgePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = const Color(0xffc03546)
-          ..style = PaintingStyle.fill;
+    final paint = Paint()
+      ..color = const Color(0xffc03546)
+      ..style = PaintingStyle.fill;
 
     final double diagonal = size.width * sqrt(2);
     final double height = size.height / 3;
@@ -21,13 +20,12 @@ class EenBadgePainter extends CustomPainter {
 
     canvas.rotate(pi / 4);
 
-    final path =
-        Path()
-          ..moveTo(0, height)
-          ..lineTo(diagonal, height)
-          ..lineTo(diagonal - height, 0)
-          ..lineTo(height, 0)
-          ..close();
+    final path = Path()
+      ..moveTo(0, height)
+      ..lineTo(diagonal, height)
+      ..lineTo(diagonal - height, 0)
+      ..lineTo(height, 0)
+      ..close();
 
     canvas.drawPath(path, paint);
 

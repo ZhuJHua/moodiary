@@ -5,7 +5,8 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 由 op 列表转换并解析回 doc map。
 Map<String, dynamic> doc(List<Map<String, dynamic>> ops) =>
-    jsonDecode(QuillDeltaToTiptap.convert(jsonEncode(ops))!) as Map<String, dynamic>;
+    jsonDecode(QuillDeltaToTiptap.convert(jsonEncode(ops))!)
+        as Map<String, dynamic>;
 
 List<dynamic> content(List<Map<String, dynamic>> ops) =>
     doc(ops)['content'] as List<dynamic>;
@@ -33,11 +34,14 @@ void main() {
     });
 
     test('空 Delta → 单个空段落', () {
-      expect(content([
-        {'insert': '\n'},
-      ]), [
-        {'type': 'paragraph'},
-      ]);
+      expect(
+        content([
+          {'insert': '\n'},
+        ]),
+        [
+          {'type': 'paragraph'},
+        ],
+      );
     });
 
     test('行内标记 bold/italic/strike/code/link', () {
@@ -49,7 +53,9 @@ void main() {
         },
         {'insert': '\n'},
       ]);
-      final marks = (c[0]['content'][1]['marks'] as List).map((m) => m['type']).toList();
+      final marks = (c[0]['content'][1]['marks'] as List)
+          .map((m) => m['type'])
+          .toList();
       expect(marks, containsAll(['bold', 'italic']));
 
       final link = content([
@@ -195,33 +201,42 @@ void main() {
 
   group('QuillDeltaToTiptap — embed', () {
     test('图片 / 音频 / 视频 → 对应一等节点（不退化成图片）', () {
-      expect(content([
+      expect(
+        content([
+          {
+            'insert': {'image': 'image-1.jpg'},
+          },
+          {'insert': '\n'},
+        ]).last,
         {
-          'insert': {'image': 'image-1.jpg'},
+          'type': 'image',
+          'attrs': {'src': 'image-1.jpg'},
         },
-        {'insert': '\n'},
-      ]).last, {
-        'type': 'image',
-        'attrs': {'src': 'image-1.jpg'},
-      });
-      expect(content([
+      );
+      expect(
+        content([
+          {
+            'insert': {'audio': 'audio-1.m4a'},
+          },
+          {'insert': '\n'},
+        ]).last,
         {
-          'insert': {'audio': 'audio-1.m4a'},
+          'type': 'audio',
+          'attrs': {'filename': 'audio-1.m4a'},
         },
-        {'insert': '\n'},
-      ]).last, {
-        'type': 'audio',
-        'attrs': {'filename': 'audio-1.m4a'},
-      });
-      expect(content([
+      );
+      expect(
+        content([
+          {
+            'insert': {'video': 'video-1.mp4'},
+          },
+          {'insert': '\n'},
+        ]).last,
         {
-          'insert': {'video': 'video-1.mp4'},
+          'type': 'video',
+          'attrs': {'filename': 'video-1.mp4'},
         },
-        {'insert': '\n'},
-      ]).last, {
-        'type': 'video',
-        'attrs': {'filename': 'video-1.mp4'},
-      });
+      );
     });
 
     test('有序列表里的图片：保留为该 listItem 内的 image 节点', () {
@@ -256,48 +271,54 @@ void main() {
     test('text_indent 占位被丢弃，段落文字保留（不崩、不留空节点）', () {
       // 旧「首行缩进」日记：每段行首一个 {"insert":{"text_indent":"2"}}，与段落文字同一行。
       // 迁移到 tiptap 后首行缩进改由全局 CSS 实现，故此占位应被静默丢弃、文字原样保留。
-      expect(content([
-        {
-          'insert': {'text_indent': '2'},
-        },
-        {'insert': '缩进段落'},
-        {'insert': '\n'},
-      ]), [
-        {
-          'type': 'paragraph',
-          'content': [
-            {'type': 'text', 'text': '缩进段落'},
-          ],
-        },
-      ]);
+      expect(
+        content([
+          {
+            'insert': {'text_indent': '2'},
+          },
+          {'insert': '缩进段落'},
+          {'insert': '\n'},
+        ]),
+        [
+          {
+            'type': 'paragraph',
+            'content': [
+              {'type': 'text', 'text': '缩进段落'},
+            ],
+          },
+        ],
+      );
     });
 
     test('多段均带 text_indent：逐段丢占位、保留文字', () {
-      expect(content([
-        {
-          'insert': {'text_indent': '2'},
-        },
-        {'insert': '第一段'},
-        {'insert': '\n'},
-        {
-          'insert': {'text_indent': '2'},
-        },
-        {'insert': '第二段'},
-        {'insert': '\n'},
-      ]), [
-        {
-          'type': 'paragraph',
-          'content': [
-            {'type': 'text', 'text': '第一段'},
-          ],
-        },
-        {
-          'type': 'paragraph',
-          'content': [
-            {'type': 'text', 'text': '第二段'},
-          ],
-        },
-      ]);
+      expect(
+        content([
+          {
+            'insert': {'text_indent': '2'},
+          },
+          {'insert': '第一段'},
+          {'insert': '\n'},
+          {
+            'insert': {'text_indent': '2'},
+          },
+          {'insert': '第二段'},
+          {'insert': '\n'},
+        ]),
+        [
+          {
+            'type': 'paragraph',
+            'content': [
+              {'type': 'text', 'text': '第一段'},
+            ],
+          },
+          {
+            'type': 'paragraph',
+            'content': [
+              {'type': 'text', 'text': '第二段'},
+            ],
+          },
+        ],
+      );
     });
   });
 }

@@ -106,7 +106,8 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
       for (var start = 0; start < total; start += _chunk) {
         final end = min(start + _chunk, total);
         final batch = <Diary>[
-          for (var i = start; i < end; i++) _makeDiary(i, total, idFor, rng, now),
+          for (var i = start; i < end; i++)
+            _makeDiary(i, total, idFor, rng, now),
         ];
         await DiaryRepository.get().insertDiaries(batch);
         progress.value = end / total;
@@ -230,7 +231,9 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
                 children: [
                   LinearProgressIndicator(value: v == 0 ? null : v),
                   const SizedBox(height: 12),
-                  Text('${(v * 100).round()}%  (${(v * total).round()}/$total)'),
+                  Text(
+                    '${(v * 100).round()}%  (${(v * total).round()}/$total)',
+                  ),
                 ],
               ),
             ),

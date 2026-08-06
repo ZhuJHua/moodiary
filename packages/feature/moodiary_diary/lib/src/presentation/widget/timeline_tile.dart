@@ -425,10 +425,8 @@ class _Thumb extends StatelessWidget {
             fit: BoxFit.cover,
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
-            errorBuilder: (context, _, _) => Icon(
-              LucideIcons.imageOff,
-              color: scheme.onSurfaceVariant,
-            ),
+            errorBuilder: (context, _, _) =>
+                Icon(LucideIcons.imageOff, color: scheme.onSurfaceVariant),
           ),
           if (moreCount > 0)
             DecoratedBox(
@@ -504,11 +502,7 @@ class _Footer extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              LucideIcons.mapPin,
-              size: 12,
-              color: scheme.onSurfaceVariant,
-            ),
+            Icon(LucideIcons.mapPin, size: 12, color: scheme.onSurfaceVariant),
             const SizedBox(width: 2),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 132),

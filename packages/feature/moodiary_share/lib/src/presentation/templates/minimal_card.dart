@@ -61,7 +61,10 @@ class MinimalShareCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: dark ? 0.22 : 0.12),
                   borderRadius: BorderRadius.circular(20),

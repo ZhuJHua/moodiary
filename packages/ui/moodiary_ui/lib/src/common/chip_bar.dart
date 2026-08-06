@@ -110,7 +110,12 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
       height: widget.height,
       child: widget.trailing == null
           ? scroller
-          : Row(children: [Expanded(child: scroller), widget.trailing!]),
+          : Row(
+              children: [
+                Expanded(child: scroller),
+                widget.trailing!,
+              ],
+            ),
     );
   }
 
@@ -177,13 +182,14 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
                     constraints: const BoxConstraints(maxWidth: 140),
                     child: AnimatedDefaultTextStyle(
                       duration: Durations.short4,
-                      style: (context.textTheme.labelMedium ?? const TextStyle())
-                          .copyWith(
-                            color: fg,
-                            fontWeight: selected
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                          ),
+                      style:
+                          (context.textTheme.labelMedium ?? const TextStyle())
+                              .copyWith(
+                                color: fg,
+                                fontWeight: selected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                              ),
                       child: Text(
                         item.label,
                         maxLines: 1,

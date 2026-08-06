@@ -19,12 +19,7 @@ class FileTypeIcon extends StatelessWidget {
   /// 轮廓与文字的颜色，默认跟随 IconTheme。
   final Color? color;
 
-  const FileTypeIcon(
-    this.extension, {
-    super.key,
-    this.size = 24,
-    this.color,
-  });
+  const FileTypeIcon(this.extension, {super.key, this.size = 24, this.color});
 
   /// 纸面去掉描边后能放字的宽度占比。lucide file 的纸面在 24 viewBox 里是
   /// x∈[4,20]，去掉 2 的描边还剩 14/24 ≈ 0.58；这里取 0.52 让最长的 DOCX 两侧

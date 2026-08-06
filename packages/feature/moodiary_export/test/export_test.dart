@@ -19,11 +19,8 @@ Map<String, dynamic> _doc(List<Map<String, dynamic>> content) => {
   'content': content,
 };
 
-Map<String, dynamic> _text(String text, [List<Map<String, dynamic>>? marks]) => {
-  'type': 'text',
-  'text': text,
-  'marks': ?marks,
-};
+Map<String, dynamic> _text(String text, [List<Map<String, dynamic>>? marks]) =>
+    {'type': 'text', 'text': text, 'marks': ?marks};
 
 Map<String, dynamic> _para(List<Map<String, dynamic>> content) => {
   'type': 'paragraph',
@@ -413,7 +410,11 @@ void main() {
     test('硬换行写成反斜杠形式', () {
       final doc = _convert(
         _doc([
-          _para([_text('上'), {'type': 'hardBreak'}, _text('下')]),
+          _para([
+            _text('上'),
+            {'type': 'hardBreak'},
+            _text('下'),
+          ]),
         ]),
       );
       expect(MarkdownWriter.write(doc, _noMeta), '上\\\n下');

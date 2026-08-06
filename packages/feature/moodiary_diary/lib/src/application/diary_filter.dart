@@ -51,6 +51,4 @@ class DiaryFilterNotifier extends Notifier<DiaryFilter> {
 }
 
 final homeDiaryFilterProvider =
-    NotifierProvider<DiaryFilterNotifier, DiaryFilter>(
-      DiaryFilterNotifier.new,
-    );
+    NotifierProvider<DiaryFilterNotifier, DiaryFilter>(DiaryFilterNotifier.new);

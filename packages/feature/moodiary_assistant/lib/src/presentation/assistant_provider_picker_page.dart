@@ -246,7 +246,9 @@ class _UpdatedFooter extends StatelessWidget {
     final l10n = context.l10n;
     final parts = <String>[l10n.llmPickerDataSource];
     if (at > 0) {
-      final time = TimeFormat.listDateTime(DateTime.fromMillisecondsSinceEpoch(at));
+      final time = TimeFormat.listDateTime(
+        DateTime.fromMillisecondsSinceEpoch(at),
+      );
       parts.add(l10n.llmPickerUpdatedAt(time));
     }
     return Padding(

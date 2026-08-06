@@ -45,7 +45,9 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
           return Column(
             children: [
               _SearchField(onChanged: (v) => setState(() => _query = v)),
-              Expanded(child: _buildList(filtered, counts, canReorder: q.isEmpty)),
+              Expanded(
+                child: _buildList(filtered, counts, canReorder: q.isEmpty),
+              ),
             ],
           );
         },

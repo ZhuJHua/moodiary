@@ -25,9 +25,7 @@ class DashboardController extends _$DashboardController {
         (await CategoryRepository.get().getAllCategoriesForSync().run())
             .getOrElse((_) => const <Category>[]);
 
-    final visibleDiaries = diaries
-        .where((d) => d.show)
-        .toList(growable: false);
+    final visibleDiaries = diaries.where((d) => d.show).toList(growable: false);
 
     return DashboardStats(
       useDays: _useDays(),

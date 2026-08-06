@@ -11,17 +11,14 @@ class _StubCategories extends CategoryController {
 }
 
 void main() {
-  Category cat(String id, String name) => Category(
-        id: id,
-        categoryName: name,
-        lastModified: DateTime(2026),
-      );
+  Category cat(String id, String name) =>
+      Category(id: id, categoryName: name, lastModified: DateTime(2026));
 
   ProviderContainer containerWith(List<Category> cats) => ProviderContainer(
-        overrides: [
-          categoryControllerProvider.overrideWith(() => _StubCategories(cats)),
-        ],
-      );
+    overrides: [
+      categoryControllerProvider.overrideWith(() => _StubCategories(cats)),
+    ],
+  );
 
   test('resolves a category by id', () async {
     final c = containerWith([cat('a', 'work'), cat('b', 'life')]);

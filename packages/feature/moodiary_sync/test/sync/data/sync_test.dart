@@ -4,7 +4,11 @@ import 'package:moodiary_sync/src/data/sync.dart';
 void main() {
   group('SyncReport', () {
     test('defaults: no failure, not cancelled', () {
-      const r = SyncReport(diaryCount: 1, categoryCount: 2, elapsed: Duration.zero);
+      const r = SyncReport(
+        diaryCount: 1,
+        categoryCount: 2,
+        elapsed: Duration.zero,
+      );
       expect(r.failed, 0);
       expect(r.cancelled, isFalse);
       expect(r.warning, isNull);

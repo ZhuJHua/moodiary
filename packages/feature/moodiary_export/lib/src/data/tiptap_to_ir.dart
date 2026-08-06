@@ -260,11 +260,7 @@ class TiptapToIr {
     );
   }
 
-  static IrBlock? _media(
-    String type,
-    dynamic attrs,
-    ResolveMediaPath resolve,
-  ) {
+  static IrBlock? _media(String type, dynamic attrs, ResolveMediaPath resolve) {
     if (attrs is! Map) return null;
     final name = attrs['filename'];
     if (name is! String || name.isEmpty) return null;

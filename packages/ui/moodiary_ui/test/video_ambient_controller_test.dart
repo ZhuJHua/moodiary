@@ -131,11 +131,17 @@ void main() {
       rig.controller.begin(VideoAmbientChannel.volume);
       rig.controller.dragBy(VideoAmbientChannel.volume, 0.25);
       await tester.pump();
-      expect(rig.controller.valueOf(VideoAmbientChannel.volume), closeTo(0.65, 1e-9));
+      expect(
+        rig.controller.valueOf(VideoAmbientChannel.volume),
+        closeTo(0.65, 1e-9),
+      );
 
       rig.controller.dragBy(VideoAmbientChannel.volume, -0.15);
       await tester.pump();
-      expect(rig.controller.valueOf(VideoAmbientChannel.volume), closeTo(0.5, 1e-9));
+      expect(
+        rig.controller.valueOf(VideoAmbientChannel.volume),
+        closeTo(0.5, 1e-9),
+      );
       expect(rig.volume.writes.last, closeTo(0.5, 1e-9));
     });
 
@@ -144,7 +150,10 @@ void main() {
       await tester.pump();
 
       rig.controller.begin(VideoAmbientChannel.brightness);
-      expect(rig.controller.active.value?.channel, VideoAmbientChannel.brightness);
+      expect(
+        rig.controller.active.value?.channel,
+        VideoAmbientChannel.brightness,
+      );
 
       rig.controller.end();
       expect(rig.controller.active.value, isNotNull, reason: '停手不该立刻消失');
@@ -167,7 +176,10 @@ void main() {
       rig.controller.dragBy(VideoAmbientChannel.brightness, -0.1);
       await tester.pump();
       // 攒了欠账的话这里还会停在 1.0。
-      expect(rig.controller.valueOf(VideoAmbientChannel.brightness), closeTo(0.9, 1e-9));
+      expect(
+        rig.controller.valueOf(VideoAmbientChannel.brightness),
+        closeTo(0.9, 1e-9),
+      );
     });
 
     ambientTest('下限同理', (tester, rig) async {
@@ -181,7 +193,10 @@ void main() {
 
       rig.controller.dragBy(VideoAmbientChannel.volume, 0.2);
       await tester.pump();
-      expect(rig.controller.valueOf(VideoAmbientChannel.volume), closeTo(0.2, 1e-9));
+      expect(
+        rig.controller.valueOf(VideoAmbientChannel.volume),
+        closeTo(0.2, 1e-9),
+      );
     });
 
     ambientTest('跟手期间写入单飞合并：只发首个与最后一个', (tester, rig) async {
@@ -255,7 +270,10 @@ void main() {
       await tester.pump(); // 初值 0.4 落地
       rig.controller.dragBy(VideoAmbientChannel.volume, 0.1);
       await tester.pump();
-      expect(rig.controller.valueOf(VideoAmbientChannel.volume), closeTo(0.5, 1e-9));
+      expect(
+        rig.controller.valueOf(VideoAmbientChannel.volume),
+        closeTo(0.5, 1e-9),
+      );
     });
 
     ambientTest('dispose 让端口收尾（亮度复位 / 音量恢复系统弹窗），之后不再写入', (tester, rig) async {

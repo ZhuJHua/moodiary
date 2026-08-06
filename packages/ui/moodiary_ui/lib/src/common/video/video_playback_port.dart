@@ -94,4 +94,5 @@ abstract class VideoPlaybackPort {
 }
 
 /// 端口工厂。retry 时状态机用它换新实例；单测里换成假端口。
-typedef VideoPlaybackPortFactory = VideoPlaybackPort Function(VideoSource source);
+typedef VideoPlaybackPortFactory =
+    VideoPlaybackPort Function(VideoSource source);

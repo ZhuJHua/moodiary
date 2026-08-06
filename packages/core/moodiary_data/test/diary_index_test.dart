@@ -20,8 +20,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 /// 替身分词:cut = 空白切词(保留重复,词频=出现次数),cutForSearch = 同词表
 /// (宿主测试无 Rust FFI)。
 Future<TokenizeResult> fakeTokenize(String text) async {
-  final words =
-      text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+  final words = text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
   return TokenizeResult(cut: words, cutForSearch: words);
 }
 
@@ -57,17 +56,15 @@ Diary makeDiary(
   String? title,
   List<String> linkTo = const [],
 }) {
-  final doc = content ??
+  final doc =
+      content ??
       jsonEncode({
         'type': 'doc',
         'content': [
           {
             'type': 'paragraph',
             'content': [
-              {
-                'type': 'text',
-                'text': text,
-              },
+              {'type': 'text', 'text': text},
               for (final target in linkTo)
                 {
                   'type': 'diaryLink',
@@ -153,8 +150,9 @@ void main() {
     final hits = await search('苹果');
     expect(hits.map((d) => d.id), ['d1']);
 
-    final posting =
-        await isar.searchPostings.getAsync(searchKey(TokenSource.cut, '苹果'));
+    final posting = await isar.searchPostings.getAsync(
+      searchKey(TokenSource.cut, '苹果'),
+    );
     expect(posting?.diaryIsarIds, [diary.isarId]);
     final snapshot = await isar.diaryIndexSnapshots.getAsync(diary.isarId);
     expect(snapshot?.cutTokens, containsAll(['苹果', '香蕉']));
@@ -166,8 +164,9 @@ void main() {
     await repo.insertADiary(diary);
     await repo.insertADiary(diary);
 
-    final posting =
-        await isar.searchPostings.getAsync(searchKey(TokenSource.cut, '苹果'));
+    final posting = await isar.searchPostings.getAsync(
+      searchKey(TokenSource.cut, '苹果'),
+    );
     expect(posting?.diaryIsarIds, [diary.isarId]);
   });
 
@@ -282,8 +281,9 @@ void main() {
 
     // 重复重建不累积
     await repo.rebuildAllIndexes();
-    final posting =
-        await isar.searchPostings.getAsync(searchKey(TokenSource.cut, '苹果'));
+    final posting = await isar.searchPostings.getAsync(
+      searchKey(TokenSource.cut, '苹果'),
+    );
     expect(posting?.diaryIsarIds, hasLength(2));
   });
 
@@ -305,12 +305,10 @@ void main() {
       ['d1'],
     );
 
-    final apple =
-        await isar.searchPostings.getAsync(searchKey(TokenSource.cut, '苹果'));
-    expect(apple?.diaryIsarIds.toSet(), {
-      fastHash('d1'),
-      fastHash('d2'),
-    });
+    final apple = await isar.searchPostings.getAsync(
+      searchKey(TokenSource.cut, '苹果'),
+    );
+    expect(apple?.diaryIsarIds.toSet(), {fastHash('d1'), fastHash('d2')});
     expect((await search('梨')).map((d) => d.id), ['d3']);
     expect(await search('苹果'), hasLength(2));
     expect((await repo.getBacklinks('d1')).map((d) => d.id), ['d2']);
@@ -502,9 +500,9 @@ void main() {
   group('buildEgoGraph', () {
     /// 边集合还原成业务 id 对,便于断言。
     Set<(String, String)> edgePairs(DiaryGraphData g) => {
-          for (var i = 0; i < g.edgeCount; i++)
-            (g.nodes[g.edges[i * 2]].id, g.nodes[g.edges[i * 2 + 1]].id),
-        };
+      for (var i = 0; i < g.edgeCount; i++)
+        (g.nodes[g.edges[i * 2]].id, g.nodes[g.edges[i * 2 + 1]].id),
+    };
 
     test('depth=1 只含中心与直接邻居(出链入链都算)', () async {
       await repo.insertADiary(makeDiary('far', '二跳'));
@@ -545,8 +543,11 @@ void main() {
     test('中心节点恒在下标 0,centerIndex 指向它', () async {
       // 邻居时间更新,若不按 depth 优先排序会排到中心前面。
       await repo.insertADiary(
-        makeDiary('newer', '更新的邻居', linkTo: ['center'])
-            .copyWith(time: DateTime(2026, 6, 1)),
+        makeDiary(
+          'newer',
+          '更新的邻居',
+          linkTo: ['center'],
+        ).copyWith(time: DateTime(2026, 6, 1)),
       );
       await repo.insertADiary(makeDiary('center', '中心'));
 
@@ -612,9 +613,7 @@ void main() {
     });
 
     test('中心在回收站返回空图', () async {
-      await repo.insertADiary(
-        makeDiary('center', '中心').copyWith(show: false),
-      );
+      await repo.insertADiary(makeDiary('center', '中心').copyWith(show: false));
       await repo.insertADiary(makeDiary('src', '来源', linkTo: ['center']));
 
       expect((await repo.buildEgoGraph('center')).isEmpty, isTrue);
@@ -694,9 +693,7 @@ void main() {
       await repo.insertADiary(
         makeDiary('newer', '晚').copyWith(time: DateTime(2026, 3, 1)),
       );
-      await repo.insertADiary(
-        makeDiary('hidden', '回收站').copyWith(show: false),
-      );
+      await repo.insertADiary(makeDiary('hidden', '回收站').copyWith(show: false));
       await repo.insertADiary(
         makeDiary('src', '来源', linkTo: ['older', 'newer', 'hidden', 'ghost']),
       );

@@ -160,7 +160,10 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
             lastDate: now,
             initialDateRange:
                 (state.customStart != null && state.customEnd != null)
-                ? DateTimeRange(start: state.customStart!, end: state.customEnd!)
+                ? DateTimeRange(
+                    start: state.customStart!,
+                    end: state.customEnd!,
+                  )
                 : null,
           );
           if (range != null) _controller.setCustomRange(range.start, range.end);
@@ -480,7 +483,9 @@ class _FilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final bg = active ? scheme.secondaryContainer : scheme.surfaceContainerHighest;
+    final bg = active
+        ? scheme.secondaryContainer
+        : scheme.surfaceContainerHighest;
     final fg = active ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
     return AnimatedContainer(
       duration: Durations.short3,

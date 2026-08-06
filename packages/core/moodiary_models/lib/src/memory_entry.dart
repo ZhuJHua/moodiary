@@ -24,10 +24,7 @@ abstract class MemoryEntry with _$MemoryEntry {
     required DateTime updatedAt,
   }) = _MemoryEntry;
 
-  factory MemoryEntry.create({
-    required String category,
-    required String text,
-  }) {
+  factory MemoryEntry.create({required String category, required String text}) {
     final now = DateTime.timestamp();
     return MemoryEntry(
       id: uuidV7(),

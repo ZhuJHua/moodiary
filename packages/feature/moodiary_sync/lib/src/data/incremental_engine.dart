@@ -182,22 +182,27 @@ class IncrementalSyncEngine {
   Future<(SyncReport, SyncManifest?)> _pullCore() async {
     await _uploadPendingKeyfile();
     final sw = Stopwatch()..start();
-    _logger.info(SyncEventKind.syncStart, '开始 pull', payload: {
-      ..._backendPayload(),
-      'direction': 'pull',
-    });
+    _logger.info(
+      SyncEventKind.syncStart,
+      '开始 pull',
+      payload: {..._backendPayload(), 'direction': 'pull'},
+    );
     final manifest = await _readManifest();
     if (manifest == null) {
       sw.stop();
       _logger.warn(SyncEventKind.manifestRead, '远端 manifest 不存在，结束 pull');
-      _logger.info(SyncEventKind.syncEnd, 'pull 完成（远端为空）', payload: {
-        ..._backendPayload(),
-        'direction': 'pull',
-        'diaryCount': 0,
-        'categoryCount': 0,
-        'failed': 0,
-        'elapsedMs': sw.elapsedMilliseconds,
-      });
+      _logger.info(
+        SyncEventKind.syncEnd,
+        'pull 完成（远端为空）',
+        payload: {
+          ..._backendPayload(),
+          'direction': 'pull',
+          'diaryCount': 0,
+          'categoryCount': 0,
+          'failed': 0,
+          'elapsedMs': sw.elapsedMilliseconds,
+        },
+      );
       return (
         SyncReport(
           diaryCount: 0,
@@ -528,16 +533,19 @@ class IncrementalSyncEngine {
 
     sw.stop();
     final stopped = SyncCancellation.instance.isRequested;
-    _logger.info(SyncEventKind.syncEnd, stopped ? 'pull 已手动停止' : 'pull 结束',
-        payload: {
-          ..._backendPayload(),
-          'direction': 'pull',
-          'diaryCount': diaryChanged,
-          'categoryCount': categoryChanged,
-          'failed': failed,
-          'cancelled': stopped,
-          'elapsedMs': sw.elapsedMilliseconds,
-        });
+    _logger.info(
+      SyncEventKind.syncEnd,
+      stopped ? 'pull 已手动停止' : 'pull 结束',
+      payload: {
+        ..._backendPayload(),
+        'direction': 'pull',
+        'diaryCount': diaryChanged,
+        'categoryCount': categoryChanged,
+        'failed': failed,
+        'cancelled': stopped,
+        'elapsedMs': sw.elapsedMilliseconds,
+      },
+    );
     final warnings = [
       if (failed > 0) '$failed 个条目同步失败已跳过',
       if (stopped) '已手动停止，剩余条目将在下次同步继续',
@@ -590,9 +598,10 @@ class IncrementalSyncEngine {
           pulled.failed == 0;
       final pushed = await _push(preloaded: reuse ? manifest : null);
       sw.stop();
-      final warnings = [pulled.warning, pushed.warning]
-          .whereType<String>()
-          .join('\n');
+      final warnings = [
+        pulled.warning,
+        pushed.warning,
+      ].whereType<String>().join('\n');
       return SyncReport(
         diaryCount: pulled.diaryCount + pushed.diaryCount,
         categoryCount: pulled.categoryCount + pushed.categoryCount,
@@ -623,10 +632,11 @@ class IncrementalSyncEngine {
   Future<SyncReport> _push({SyncManifest? preloaded}) async {
     await _uploadPendingKeyfile();
     final sw = Stopwatch()..start();
-    _logger.info(SyncEventKind.syncStart, '开始 push', payload: {
-      ..._backendPayload(),
-      'direction': 'push',
-    });
+    _logger.info(
+      SyncEventKind.syncStart,
+      '开始 push',
+      payload: {..._backendPayload(), 'direction': 'push'},
+    );
     SyncManifest? read = preloaded;
     var virginRemote = false;
     if (read == null) {
@@ -651,9 +661,8 @@ class IncrementalSyncEngine {
     final remoteMedia = manifest.referencedMedia();
 
     // 删远端媒体前的防御：仍被任何非 tombstone 条目引用的不删。
-    bool stillReferenced(String ref) => updated.entries.values.any(
-      (e) => !e.deleted && e.media.contains(ref),
-    );
+    bool stillReferenced(String ref) =>
+        updated.entries.values.any((e) => !e.deleted && e.media.contains(ref));
 
     // 权威跳过「打开中的日记」：push 前冻结一份 open-set 快照，把这些条目排除出本次
     // 上传。仅滤 push（pull 仍按 LWW 回写）；manifest 不会因本地缺席而删条目，故被
@@ -730,11 +739,12 @@ class IncrementalSyncEngine {
         // 清理远端不再被引用的旧媒体：旧清单直接取自 manifest 条目，无需回读旧 JSON。
         // 实际删除推迟到 manifest 提交校验后（abort 时旧媒体不被误删）。
         final newRefs = _mediaRefs(diary).toSet();
-        final staleRefs = (remoteEntry?.deleted ?? true
-                ? const <String>[]
-                : remoteEntry!.media)
-            .where((r) => !newRefs.contains(r) && !stillReferenced(r))
-            .toList();
+        final staleRefs =
+            (remoteEntry?.deleted ?? true
+                    ? const <String>[]
+                    : remoteEntry!.media)
+                .where((r) => !newRefs.contains(r) && !stillReferenced(r))
+                .toList();
         deferredMediaDeletes.addAll(staleRefs);
         remoteMedia.removeAll(staleRefs);
         pushedDiaryIds.add(diary.id);
@@ -912,16 +922,19 @@ class IncrementalSyncEngine {
 
     sw.stop();
     final stopped = SyncCancellation.instance.isRequested;
-    _logger.info(SyncEventKind.syncEnd, stopped ? 'push 已手动停止' : 'push 结束',
-        payload: {
-          ..._backendPayload(),
-          'direction': 'push',
-          'diaryCount': diaryChanged,
-          'categoryCount': categoryChanged,
-          'failed': failed,
-          'cancelled': stopped,
-          'elapsedMs': sw.elapsedMilliseconds,
-        });
+    _logger.info(
+      SyncEventKind.syncEnd,
+      stopped ? 'push 已手动停止' : 'push 结束',
+      payload: {
+        ..._backendPayload(),
+        'direction': 'push',
+        'diaryCount': diaryChanged,
+        'categoryCount': categoryChanged,
+        'failed': failed,
+        'cancelled': stopped,
+        'elapsedMs': sw.elapsedMilliseconds,
+      },
+    );
     final warnings = [
       if (failed > 0) '$failed 个条目上传失败已跳过',
       if (stopped) '已手动停止，剩余条目将在下次同步继续',
@@ -1008,8 +1021,7 @@ class IncrementalSyncEngine {
     }
     return [
       for (var i = 0; i < entries.length; i++)
-        if (results[i] == true)
-          SyncKeys.mediaRef(entries[i].$1, entries[i].$2),
+        if (results[i] == true) SyncKeys.mediaRef(entries[i].$1, entries[i].$2),
     ];
   }
 
@@ -1076,11 +1088,7 @@ class IncrementalSyncEngine {
       _logger.error(
         SyncEventKind.error,
         '上传媒体失败：$filename',
-        payload: {
-          'type': type,
-          'filename': filename,
-          'detail': e.toString(),
-        },
+        payload: {'type': type, 'filename': filename, 'detail': e.toString()},
       );
       return false;
     }
@@ -1157,21 +1165,13 @@ class IncrementalSyncEngine {
       _logger.info(
         SyncEventKind.mediaDownload,
         '下载媒体：$filename',
-        payload: {
-          'type': type,
-          'filename': filename,
-          'bytes': plain.length,
-        },
+        payload: {'type': type, 'filename': filename, 'bytes': plain.length},
       );
     } catch (e) {
       _logger.error(
         SyncEventKind.error,
         '下载媒体失败：$filename',
-        payload: {
-          'type': type,
-          'filename': filename,
-          'detail': e.toString(),
-        },
+        payload: {'type': type, 'filename': filename, 'detail': e.toString()},
       );
     }
   }
@@ -1298,4 +1298,3 @@ class _GatedBackend implements IRemoteSyncBackend {
   @override
   Future<SyncReport> syncAll() => _inner.syncAll();
 }
-

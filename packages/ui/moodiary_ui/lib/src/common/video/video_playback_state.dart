@@ -198,12 +198,15 @@ class VideoPlaybackSettings {
     required this.looping,
   });
 
-  VideoPlaybackSettings copyWith({double? volume, double? speed, bool? looping}) =>
-      VideoPlaybackSettings(
-        volume: volume ?? this.volume,
-        speed: speed ?? this.speed,
-        looping: looping ?? this.looping,
-      );
+  VideoPlaybackSettings copyWith({
+    double? volume,
+    double? speed,
+    bool? looping,
+  }) => VideoPlaybackSettings(
+    volume: volume ?? this.volume,
+    speed: speed ?? this.speed,
+    looping: looping ?? this.looping,
+  );
 
   static const initial = VideoPlaybackSettings(
     volume: 1.0,

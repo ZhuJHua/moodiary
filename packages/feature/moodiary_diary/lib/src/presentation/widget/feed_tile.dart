@@ -408,10 +408,8 @@ class _Thumb extends StatelessWidget {
             fit: BoxFit.cover,
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
-            errorBuilder: (context, _, _) => Icon(
-              LucideIcons.imageOff,
-              color: scheme.onSurfaceVariant,
-            ),
+            errorBuilder: (context, _, _) =>
+                Icon(LucideIcons.imageOff, color: scheme.onSurfaceVariant),
           ),
           if (cell.isVideo) const _VideoScrim(),
           if (moreCount > 0) _MoreOverlay(count: moreCount),
@@ -444,11 +442,7 @@ class _VideoScrim extends StatelessWidget {
         Positioned(
           left: 4,
           bottom: 3,
-          child: Icon(
-            LucideIcons.circlePlay,
-            size: 14,
-            color: Colors.white,
-          ),
+          child: Icon(LucideIcons.circlePlay, size: 14, color: Colors.white),
         ),
       ],
     );

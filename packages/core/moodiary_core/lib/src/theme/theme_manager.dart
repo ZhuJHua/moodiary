@@ -1,4 +1,4 @@
-﻿import 'package:dynamic_color/dynamic_color.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -437,4 +437,3 @@ extension ColorExt2 on BuildContext {
     return inverted.toColor();
   }
 }
-

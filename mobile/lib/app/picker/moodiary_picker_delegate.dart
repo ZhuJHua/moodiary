@@ -250,9 +250,7 @@ class MoodiaryPickerDelegate
           height: size,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected
-                ? _cs.primary
-                : Colors.black.withValues(alpha: .2),
+            color: selected ? _cs.primary : Colors.black.withValues(alpha: .2),
             border: selected
                 ? null
                 : Border.all(

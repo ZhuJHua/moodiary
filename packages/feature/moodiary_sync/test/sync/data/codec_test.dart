@@ -25,16 +25,21 @@ void main() {
       expect(decoded, {'a': 1, 'b': 'x'});
     });
 
-    test('encryptBytes / decryptBytes are identity in plaintext mode', () async {
-      final data = Uint8List.fromList([1, 2, 3, 4]);
-      expect(await cipher.encryptBytes(data), data);
-      expect(await cipher.decryptBytes(data), data);
-    });
+    test(
+      'encryptBytes / decryptBytes are identity in plaintext mode',
+      () async {
+        final data = Uint8List.fromList([1, 2, 3, 4]);
+        expect(await cipher.encryptBytes(data), data);
+        expect(await cipher.decryptBytes(data), data);
+      },
+    );
 
     test('decode of ciphertext without a key throws SyncException', () async {
       final ciphertext = Uint8List.fromList([
         ...utf8.encode(SyncCipher.magic),
-        9, 9, 9,
+        9,
+        9,
+        9,
       ]);
       expect(SyncCipher.isCipherText(ciphertext), isTrue);
       expect(cipher.decode(ciphertext), throwsA(isA<SyncException>()));

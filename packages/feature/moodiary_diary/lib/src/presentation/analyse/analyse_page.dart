@@ -48,17 +48,20 @@ class _AnalyseBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _StatGrid(items: [
-          ('日记总数', diaries.length.toString(), LucideIcons.book),
-          ('本月', thisMonth.toString(), LucideIcons.calendarDays),
-          ('心情均值', '${(moodAvg * 100).toStringAsFixed(0)}%', LucideIcons.smile),
-          ('连续天数', '$streak', LucideIcons.flame),
-        ]),
-        const SizedBox(height: 24),
-        Text(
-          '近 6 个月写作量',
-          style: Theme.of(context).textTheme.titleMedium,
+        _StatGrid(
+          items: [
+            ('日记总数', diaries.length.toString(), LucideIcons.book),
+            ('本月', thisMonth.toString(), LucideIcons.calendarDays),
+            (
+              '心情均值',
+              '${(moodAvg * 100).toStringAsFixed(0)}%',
+              LucideIcons.smile,
+            ),
+            ('连续天数', '$streak', LucideIcons.flame),
+          ],
         ),
+        const SizedBox(height: 24),
+        Text('近 6 个月写作量', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
         _BarChart(data: monthCounts),
       ],
@@ -158,10 +161,7 @@ class _BarChart extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Text(
-                    '$count',
-                    style: theme.textTheme.labelSmall,
-                  ),
+                  Text('$count', style: theme.textTheme.labelSmall),
                   const SizedBox(height: 4),
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 4),

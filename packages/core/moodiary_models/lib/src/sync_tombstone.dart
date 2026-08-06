@@ -41,12 +41,14 @@ abstract class SyncTombstone with _$SyncTombstone {
         pushedBackends: const [],
       );
 
-  factory SyncTombstone.forCategory(String categoryId, {required DateTime at}) =>
-      SyncTombstone(
-        key: categoryKey(categoryId),
-        timeMs: at.millisecondsSinceEpoch,
-        pushedBackends: const [],
-      );
+  factory SyncTombstone.forCategory(
+    String categoryId, {
+    required DateTime at,
+  }) => SyncTombstone(
+    key: categoryKey(categoryId),
+    timeMs: at.millisecondsSinceEpoch,
+    pushedBackends: const [],
+  );
 
   bool get isDiary => key.startsWith(diaryPrefix);
 

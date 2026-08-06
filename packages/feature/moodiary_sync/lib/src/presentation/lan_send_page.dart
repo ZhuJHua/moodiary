@@ -41,9 +41,8 @@ class _LanSendPageState extends State<LanSendPage> {
     super.dispose();
   }
 
-  String _peerAddress(LanPeer peer) => peer.port == lanDefaultPort
-      ? peer.host
-      : '${peer.host}:${peer.port}';
+  String _peerAddress(LanPeer peer) =>
+      peer.port == lanDefaultPort ? peer.host : '${peer.host}:${peer.port}';
 
   void _pickPeer(LanPeer peer) {
     _hostController.text = _peerAddress(peer);
@@ -435,7 +434,9 @@ class _ResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final background = success ? scheme.secondaryContainer : scheme.errorContainer;
+    final background = success
+        ? scheme.secondaryContainer
+        : scheme.errorContainer;
     final foreground = success
         ? scheme.onSecondaryContainer
         : scheme.onErrorContainer;

@@ -55,16 +55,14 @@ class RustLanCrypto implements LanCrypto {
 
 final Random _secureRandom = Random.secure();
 
-String lanGeneratePin() =>
-    (_secureRandom.nextInt(900000) + 100000).toString();
+String lanGeneratePin() => (_secureRandom.nextInt(900000) + 100000).toString();
 
 String lanRandomHex(int byteCount) => bytesToHex([
   for (var i = 0; i < byteCount; i++) _secureRandom.nextInt(256),
 ]);
 
-String bytesToHex(List<int> bytes) => [
-  for (final b in bytes) b.toRadixString(16).padLeft(2, '0'),
-].join();
+String bytesToHex(List<int> bytes) =>
+    [for (final b in bytes) b.toRadixString(16).padLeft(2, '0')].join();
 
 List<int> hexToBytes(String hex) => [
   for (var i = 0; i + 1 < hex.length; i += 2)

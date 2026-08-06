@@ -8,12 +8,21 @@ void main() {
     const uuid = '0123456789abcdef0123456789abcdef0123'; // 36 位
 
     test('标准名 → thumbnail-<uuid>.jpeg', () {
-      expect(AppFiles.thumbnailNameOf('video-$uuid.mp4'), 'thumbnail-$uuid.jpeg');
+      expect(
+        AppFiles.thumbnailNameOf('video-$uuid.mp4'),
+        'thumbnail-$uuid.jpeg',
+      );
     });
 
     test('扩展名长短不影响结果（按最后一个点定位，不靠定长）', () {
-      expect(AppFiles.thumbnailNameOf('video-$uuid.mov'), 'thumbnail-$uuid.jpeg');
-      expect(AppFiles.thumbnailNameOf('video-$uuid.webm'), 'thumbnail-$uuid.jpeg');
+      expect(
+        AppFiles.thumbnailNameOf('video-$uuid.mov'),
+        'thumbnail-$uuid.jpeg',
+      );
+      expect(
+        AppFiles.thumbnailNameOf('video-$uuid.webm'),
+        'thumbnail-$uuid.jpeg',
+      );
     });
 
     test('文件名里含多个点时取最后一个', () {
@@ -36,7 +45,11 @@ void main() {
           returnsNormally,
           reason: '输入「$bad」不该抛异常',
         );
-        expect(AppFiles.thumbnailNameOf(bad), isNull, reason: '输入「$bad」应判为不合约定');
+        expect(
+          AppFiles.thumbnailNameOf(bad),
+          isNull,
+          reason: '输入「$bad」应判为不合约定',
+        );
       }
     });
   });

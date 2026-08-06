@@ -155,8 +155,11 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   // ── 测试辅助 ──
 
   int opCount(String op, [String? keyContains]) => ops
-      .where((o) => o.startsWith('$op ') &&
-          (keyContains == null || o.contains(keyContains)))
+      .where(
+        (o) =>
+            o.startsWith('$op ') &&
+            (keyContains == null || o.contains(keyContains)),
+      )
       .length;
 
   bool hasObject(String key) => objects.containsKey(key);
@@ -292,7 +295,10 @@ final class FakeCategoryStore implements SyncCategoryStore {
   Future<Category?> getCategoryById(String id) async => categories[id];
 
   @override
-  Future<bool> insertACategory(Category category, {bool fromSync = false}) async {
+  Future<bool> insertACategory(
+    Category category, {
+    bool fromSync = false,
+  }) async {
     if (!insertSucceeds) return false;
     categories[category.id] = category;
     tombstones.rows.remove(SyncTombstone.categoryKey(category.id));
@@ -326,7 +332,9 @@ final class FakeMediaFiles implements SyncMediaFiles {
   String _k(String type, String filename) => '$type/$filename';
 
   void put(String type, String filename, [List<int>? bytes]) {
-    files[_k(type, filename)] = Uint8List.fromList(bytes ?? utf8.encode(filename));
+    files[_k(type, filename)] = Uint8List.fromList(
+      bytes ?? utf8.encode(filename),
+    );
   }
 
   @override
@@ -356,7 +364,11 @@ final class FakeMediaFiles implements SyncMediaFiles {
 
   @override
   Future<void> cleanUpReplaced(Diary oldDiary, Diary newDiary) async {
-    Future<void> drop(List<String> oldNames, List<String> newNames, String t) async {
+    Future<void> drop(
+      List<String> oldNames,
+      List<String> newNames,
+      String t,
+    ) async {
       for (final name in oldNames) {
         if (!newNames.contains(name)) await delete(t, name);
       }

@@ -34,7 +34,9 @@ class RustHttpServer extends IHttpServer {
         } catch (e) {
           return rust.HttpServerResponse(
             status: 500,
-            headers: _pairs(const {'content-type': 'text/plain; charset=utf-8'}),
+            headers: _pairs(const {
+              'content-type': 'text/plain; charset=utf-8',
+            }),
             body: utf8.encode(e.toString()),
           );
         }

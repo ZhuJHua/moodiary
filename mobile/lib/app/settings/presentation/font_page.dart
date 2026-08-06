@@ -335,9 +335,8 @@ class _FontScaleSlider extends StatelessWidget {
     required this.onChangeEnd,
   });
 
-  static double _snap(double v) => FontPage.scales.reduce(
-    (a, b) => (a - v).abs() < (b - v).abs() ? a : b,
-  );
+  static double _snap(double v) =>
+      FontPage.scales.reduce((a, b) => (a - v).abs() < (b - v).abs() ? a : b);
 
   @override
   Widget build(BuildContext context) {

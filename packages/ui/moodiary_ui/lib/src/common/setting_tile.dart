@@ -203,7 +203,9 @@ class SettingSwitchListTile extends StatelessWidget {
             ? BorderRadius.circular(12)
             : BorderRadius.vertical(
                 top: isFirst == true ? const Radius.circular(12) : Radius.zero,
-                bottom: isLast == true ? const Radius.circular(12) : Radius.zero,
+                bottom: isLast == true
+                    ? const Radius.circular(12)
+                    : Radius.zero,
               ),
       ),
       subtitle: (realSubtitle is String)

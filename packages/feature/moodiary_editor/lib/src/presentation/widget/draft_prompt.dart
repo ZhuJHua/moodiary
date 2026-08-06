@@ -15,9 +15,10 @@ Future<void> openNewDiaryEditor(
   if (_openingNewDiary) return;
   _openingNewDiary = true;
   try {
-    await NewDiaryRoute(type: type.routeQuery, categoryId: categoryId).push(
-      context,
-    );
+    await NewDiaryRoute(
+      type: type.routeQuery,
+      categoryId: categoryId,
+    ).push(context);
   } finally {
     _openingNewDiary = false;
   }

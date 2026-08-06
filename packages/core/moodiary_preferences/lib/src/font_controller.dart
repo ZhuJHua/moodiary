@@ -51,9 +51,7 @@ class FontController extends _$FontController {
       await setActive(null);
     }
     await FontRepository.get().deleteFontById(font.id);
-    await AppFiles.deleteFile(
-      AppFiles.getRealPath('font', font.fontFileName),
-    );
+    await AppFiles.deleteFile(AppFiles.getRealPath('font', font.fontFileName));
     final next = (state.value ?? const <Font>[])
         .where((e) => e.fontFamily != font.fontFamily)
         .toList();

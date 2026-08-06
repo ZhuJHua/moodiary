@@ -64,10 +64,12 @@ MediaGroup buildMediaGroup(List<Diary> diaries, MediaType type) {
     if (names.isEmpty) continue;
     final t = d.time.toLocal();
     final key = DateTime(t.year, t.month, t.day);
-    map.putIfAbsent(key, () {
-      order.add(key);
-      return <String>[];
-    }).addAll(names);
+    map
+        .putIfAbsent(key, () {
+          order.add(key);
+          return <String>[];
+        })
+        .addAll(names);
   }
   return MediaGroup(dates: order, groups: map);
 }

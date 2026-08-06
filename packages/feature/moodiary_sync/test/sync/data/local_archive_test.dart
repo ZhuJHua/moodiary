@@ -365,10 +365,7 @@ void main() {
       expect(diaryStore.writeOrigins['fresh'], isFalse);
       expect(categoryStore.categories.containsKey('c1'), isTrue);
       expect(mediaFiles.files.containsKey('image/img-1.png'), isTrue);
-      expect(
-        mediaFiles.files['image/img-1.png'],
-        utf8.encode('img-1.png'),
-      );
+      expect(mediaFiles.files['image/img-1.png'], utf8.encode('img-1.png'));
     });
 
     test('归档 tombstone 较新 → 删本地落墓碑并清媒体；本地较新 → 保留', () async {
@@ -394,11 +391,17 @@ void main() {
       expect(report.failed, 0);
       expect(diaryStore.diaries.containsKey('dead'), isFalse);
       expect(diaryStore.tombstones.rows.containsKey('d:dead'), isTrue);
-      expect(diaryStore.writeOrigins['dead'], isFalse,
-          reason: '归档导入应用的删除仍需推送到云端');
+      expect(
+        diaryStore.writeOrigins['dead'],
+        isFalse,
+        reason: '归档导入应用的删除仍需推送到云端',
+      );
       expect(mediaFiles.files.containsKey('image/img-1.png'), isFalse);
-      expect(diaryStore.diaries.containsKey('alive'), isTrue,
-          reason: '本地比归档 tombstone 新 → 保留');
+      expect(
+        diaryStore.diaries.containsKey('alive'),
+        isTrue,
+        reason: '本地比归档 tombstone 新 → 保留',
+      );
     });
 
     test('导入不推进 lastSyncTime', () async {

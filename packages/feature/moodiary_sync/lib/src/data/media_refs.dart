@@ -3,7 +3,8 @@ import 'package:moodiary_models/moodiary_models.dart';
 
 /// 视频文件名 `video-<uuid>.mp4` → 缩略图名 `thumbnail-<uuid>.jpeg`。
 /// 派生规则唯一实现在 [AppFiles.thumbnailNameOf]，这里只做转发（保留本名以免改动调用点）。
-String? videoThumbnailName(String videoName) => AppFiles.thumbnailNameOf(videoName);
+String? videoThumbnailName(String videoName) =>
+    AppFiles.thumbnailNameOf(videoName);
 
 /// 收集日记引用的全部媒体文件条目 (type, filename)，含视频缩略图。
 List<(String, String)> collectDiaryMediaEntries(Diary diary) {

@@ -22,11 +22,8 @@ void main() {
     type: DiaryType.tiptap.value,
   );
 
-  Category cat(String id) => Category(
-    id: id,
-    categoryName: id,
-    lastModified: DateTime(2026),
-  );
+  Category cat(String id) =>
+      Category(id: id, categoryName: id, lastModified: DateTime(2026));
 
   group('diarySortComparator', () {
     final a = diary('a', time: DateTime(2026, 1, 1));

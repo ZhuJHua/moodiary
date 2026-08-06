@@ -52,7 +52,10 @@ class MarkdownOptions {
 class MarkdownWriter {
   const MarkdownWriter._();
 
-  static String write(ExportDoc doc, [MarkdownOptions options = const MarkdownOptions()]) {
+  static String write(
+    ExportDoc doc, [
+    MarkdownOptions options = const MarkdownOptions(),
+  ]) {
     final buf = StringBuffer();
 
     if (options.frontMatter) {
@@ -86,7 +89,9 @@ class MarkdownWriter {
     if (doc.categoryName != null) {
       buf.writeln('category: ${_yamlString(doc.categoryName!)}');
     }
-    if (doc.weather.isNotEmpty) buf.writeln('weather: ${_yamlList(doc.weather)}');
+    if (doc.weather.isNotEmpty) {
+      buf.writeln('weather: ${_yamlList(doc.weather)}');
+    }
     if (doc.position.isNotEmpty) {
       buf.writeln('position: ${_yamlList(doc.position)}');
     }
@@ -132,7 +137,8 @@ class MarkdownWriter {
     for (var i = 0; i < blocks.length; i++) {
       final block = blocks[i];
       final next = i + 1 < blocks.length ? blocks[i + 1] : null;
-      final skipBlank = tight && block is IrBlock_Paragraph && next is IrBlock_List;
+      final skipBlank =
+          tight && block is IrBlock_Paragraph && next is IrBlock_List;
       _block(block, buf, o, indent: indent, skipTrailingBlank: skipBlank);
     }
   }
@@ -258,9 +264,7 @@ class MarkdownWriter {
         i < header.length ? _cellText(header[i], o) : '',
     ];
     buf.writeln('$indent| ${headerCells.join(' | ')} |');
-    buf.writeln(
-      '$indent|${List.filled(width, ' --- ').join('|')}|',
-    );
+    buf.writeln('$indent|${List.filled(width, ' --- ').join('|')}|');
     for (final row in rows.skip(1)) {
       final cells = [
         for (var i = 0; i < width; i++)
@@ -274,11 +278,7 @@ class MarkdownWriter {
   static String _cellText(IrCell cell, MarkdownOptions o) {
     final inner = StringBuffer();
     _blocks(cell.children, inner, o, indent: '');
-    return inner
-        .toString()
-        .trim()
-        .replaceAll('\n', ' ')
-        .replaceAll('|', r'\|');
+    return inner.toString().trim().replaceAll('\n', ' ').replaceAll('|', r'\|');
   }
 
   static String _image(IrBlock_Image img, MarkdownOptions o) {
@@ -309,7 +309,9 @@ class MarkdownWriter {
     // 行内代码里的内容不转义（转义反而会写进代码里），只需保证围栏比内容里最长的反引号长。
     if (span.code) {
       final fence = '`' * _inlineFenceLength(span.text);
-      final pad = span.text.startsWith('`') || span.text.endsWith('`') ? ' ' : '';
+      final pad = span.text.startsWith('`') || span.text.endsWith('`')
+          ? ' '
+          : '';
       return '$fence$pad${span.text}$pad$fence';
     }
 

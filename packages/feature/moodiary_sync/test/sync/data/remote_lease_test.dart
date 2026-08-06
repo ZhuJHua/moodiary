@@ -4,7 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 
-Uint8List _bytes(Object json) => Uint8List.fromList(utf8.encode(jsonEncode(json)));
+Uint8List _bytes(Object json) =>
+    Uint8List.fromList(utf8.encode(jsonEncode(json)));
 
 void main() {
   group('LeasePayload', () {
@@ -57,7 +58,9 @@ void main() {
           .add(RemoteLease.clockSkewMargin);
       expect(payload.isExpired(acquiredAt), isFalse);
       expect(
-        payload.isExpired(expiryWithMargin.subtract(const Duration(seconds: 1))),
+        payload.isExpired(
+          expiryWithMargin.subtract(const Duration(seconds: 1)),
+        ),
         isFalse,
         reason: 'ttl 已过但仍在时钟偏差余量内，不得判为过期',
       );

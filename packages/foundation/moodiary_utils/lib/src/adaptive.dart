@@ -48,11 +48,13 @@ enum DeviceOrientationPolicy { portraitOnly, unrestricted }
 
 /// 按内容宽高比选全屏方向：宽 > 高 锁横（两个横向都给，用户左右手持都行），否则锁竖。
 /// 正方形按竖处理 —— 手机自然持握是竖的，1:1 放进横屏两侧留白过大。
-List<DeviceOrientation> fullscreenOrientationsFor(double aspectRatio) => aspectRatio > 1.0
+List<DeviceOrientation> fullscreenOrientationsFor(double aspectRatio) =>
+    aspectRatio > 1.0
     ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
     : const [DeviceOrientation.portraitUp];
 
-final _OrientationLockObserver _orientationObserver = _OrientationLockObserver();
+final _OrientationLockObserver _orientationObserver =
+    _OrientationLockObserver();
 bool _orientationObserverRegistered = false;
 
 /// 启动时调用一次：注册 metrics 监听器并立即应用一次策略。

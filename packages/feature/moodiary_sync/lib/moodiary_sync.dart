@@ -23,5 +23,6 @@ export 'src/application/sync_controller.dart'
         SyncError;
 export 'src/presentation/backup_sync_page.dart' show BackupSyncPage;
 export 'src/presentation/sync_log_page.dart' show SyncLogPage;
-export 'src/presentation/widget/sync_status_sheet.dart' show showSyncStatusSheet;
+export 'src/presentation/widget/sync_status_sheet.dart'
+    show showSyncStatusSheet;
 export 'src/presentation/widget/sync_status_button.dart' show SyncStatusButton;

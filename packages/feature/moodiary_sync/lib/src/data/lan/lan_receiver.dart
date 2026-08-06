@@ -53,7 +53,7 @@ class LanReceiverService {
     this._server,
     Future<SyncManifest> Function()? manifestBuilder,
     Future<SyncReport> Function(String zipPath, String zipPassword)?
-        archiveApplier,
+    archiveApplier,
     this._tempDirPath,
   }) : _manifestBuilder = manifestBuilder ?? LocalArchive.buildLocalManifest,
        _archiveApplier = archiveApplier ?? _applyArchive;

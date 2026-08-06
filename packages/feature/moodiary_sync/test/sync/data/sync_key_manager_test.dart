@@ -46,9 +46,7 @@ Future<List<int>> fakeDecrypt({
     throw Exception('auth tag mismatch');
   }
   final body = data.sublist(1);
-  return [
-    for (var i = 0; i < body.length; i++) body[i] ^ key[i % key.length],
-  ];
+  return [for (var i = 0; i < body.length; i++) body[i] ^ key[i % key.length]];
 }
 
 void main() {
@@ -119,7 +117,10 @@ void main() {
       final kf2 = await SyncKeyManager.wrapDek(dek: dek, passphrase: 'p1');
       expect(kf1.saltB64, isNot(kf2.saltB64), reason: '每次包装都用新随机盐');
 
-      final out = await SyncKeyManager.unwrapDek(keyfile: kf1, passphrase: 'p1');
+      final out = await SyncKeyManager.unwrapDek(
+        keyfile: kf1,
+        passphrase: 'p1',
+      );
       expect(out, dek);
     });
 
@@ -185,10 +186,7 @@ void main() {
     test('mark / clear 合并去重', () async {
       await SyncKeyManager.markPendingUpload(['webdav']);
       await SyncKeyManager.markPendingUpload(['webdav', 's3']);
-      expect(
-        SyncKeyManager.pendingUploadBackends().toSet(),
-        {'webdav', 's3'},
-      );
+      expect(SyncKeyManager.pendingUploadBackends().toSet(), {'webdav', 's3'});
       await SyncKeyManager.clearPendingUpload('webdav');
       expect(SyncKeyManager.pendingUploadBackends(), ['s3']);
     });
@@ -208,9 +206,7 @@ void main() {
       expect(backend.hasObject(SyncKeys.keysPath), isTrue);
       expect(SyncKeyManager.pendingUploadBackends(), isEmpty);
 
-      final remote = SyncKeyfile.fromBytes(
-        backend.objects[SyncKeys.keysPath]!,
-      );
+      final remote = SyncKeyfile.fromBytes(backend.objects[SyncKeys.keysPath]!);
       expect(remote.wrappedDekB64, kf.wrappedDekB64);
     });
 

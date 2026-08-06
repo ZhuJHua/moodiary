@@ -175,7 +175,10 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                             Navigator.of(context).pop();
                             const CategoryManagerRoute().push(context);
                           },
-                          icon: const Icon(LucideIcons.slidersHorizontal, size: 18),
+                          icon: const Icon(
+                            LucideIcons.slidersHorizontal,
+                            size: 18,
+                          ),
                           label: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(context.l10n.categoryManageEntry),

@@ -99,7 +99,8 @@ class _DataSection extends StatelessWidget {
                 title: '分类管理',
                 leading: const Icon(LucideIcons.folders),
                 trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => _openSetting(context, const CategoryManagerRoute()),
+                onTap: () =>
+                    _openSetting(context, const CategoryManagerRoute()),
               ),
               SettingListTile(
                 title: '足迹地图',
@@ -112,7 +113,8 @@ class _DataSection extends StatelessWidget {
                 subtitle: '把旧日记（富文本 / Markdown）转换为新编辑器以便编辑',
                 leading: const Icon(LucideIcons.wandSparkles),
                 trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => _openSetting(context, const EditorMigrationRoute()),
+                onTap: () =>
+                    _openSetting(context, const EditorMigrationRoute()),
               ),
               const DataRepairTile(),
               // 压测入口随图谱一起暂隐藏(StressTestTile,打磨期再放出)。

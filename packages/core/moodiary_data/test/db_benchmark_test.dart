@@ -32,12 +32,14 @@ int _zipf() {
 
 /// 每篇 ~135 个采样词(去重后 ~110),经 cut+cutForSearch 双源 ≈ 220 个 posting 键,
 /// 对应约 2000 字日记的分词量级。
-String _contentText() =>
-    List.generate(135, (_) => _tok(_zipf())).join(' ');
+String _contentText() => List.generate(135, (_) => _tok(_zipf())).join(' ');
 
 Future<TokenizeResult> _fakeTokenize(String text) async {
-  final words =
-      text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toSet().toList();
+  final words = text
+      .split(RegExp(r'\s+'))
+      .where((w) => w.isNotEmpty)
+      .toSet()
+      .toList();
   return TokenizeResult(cut: words, cutForSearch: words);
 }
 
@@ -263,14 +265,26 @@ void main() {
 
       // ---- 磁盘占用 ----
       const mb = 1024 * 1024;
-      _report(scale, 'size_diary_mb',
-          isar.diarys.getSize(includeIndexes: true) / mb);
-      _report(scale, 'size_search_posting_mb',
-          isar.searchPostings.getSize(includeIndexes: true) / mb);
-      _report(scale, 'size_link_posting_mb',
-          isar.linkPostings.getSize(includeIndexes: true) / mb);
-      _report(scale, 'size_snapshot_mb',
-          isar.diaryIndexSnapshots.getSize(includeIndexes: true) / mb);
+      _report(
+        scale,
+        'size_diary_mb',
+        isar.diarys.getSize(includeIndexes: true) / mb,
+      );
+      _report(
+        scale,
+        'size_search_posting_mb',
+        isar.searchPostings.getSize(includeIndexes: true) / mb,
+      );
+      _report(
+        scale,
+        'size_link_posting_mb',
+        isar.linkPostings.getSize(includeIndexes: true) / mb,
+      );
+      _report(
+        scale,
+        'size_snapshot_mb',
+        isar.diaryIndexSnapshots.getSize(includeIndexes: true) / mb,
+      );
 
       expect(
         (await repo.searchDiaries(

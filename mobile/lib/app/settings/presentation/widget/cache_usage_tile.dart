@@ -8,11 +8,7 @@ class CacheUsageTile extends ConsumerWidget {
   final bool isFirst;
   final bool isLast;
 
-  const CacheUsageTile({
-    super.key,
-    this.isFirst = false,
-    this.isLast = false,
-  });
+  const CacheUsageTile({super.key, this.isFirst = false, this.isLast = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

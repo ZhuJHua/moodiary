@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:moodiary_core/src/storage.dart';
@@ -68,10 +68,12 @@ class ImageCacheStore {
     final int baseMinSize = ((rangeStart + rangeEnd) / 2).round();
 
     final bool isWidthMin = imageWidth < imageHeight;
-    final int standardWidth =
-        isWidthMin ? baseMinSize : (baseMinSize * imageAspectRatio).round();
-    final int standardHeight =
-        isWidthMin ? (baseMinSize / imageAspectRatio).round() : baseMinSize;
+    final int standardWidth = isWidthMin
+        ? baseMinSize
+        : (baseMinSize * imageAspectRatio).round();
+    final int standardHeight = isWidthMin
+        ? (baseMinSize / imageAspectRatio).round()
+        : baseMinSize;
 
     final cachedImageName =
         'resized_w${standardWidth}_h${standardHeight}_${basename(imagePath)}';

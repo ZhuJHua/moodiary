@@ -58,7 +58,9 @@ void main() {
       final backend = FakeRemoteBackend();
       backend.objects[SyncKeys.lockPath] = LeasePayload(
         owner: 'other-device',
-        acquiredAt: DateTime.now().toUtc().subtract(const Duration(minutes: 30)),
+        acquiredAt: DateTime.now().toUtc().subtract(
+          const Duration(minutes: 30),
+        ),
         ttl: RemoteLease.ttl,
       ).toBytes();
 
@@ -127,17 +129,29 @@ void main() {
         final backend = FakeRemoteBackend();
         RemoteLease.protect(backend, () async {}, logger: logger);
         async.elapse(const Duration(seconds: 1));
-        expect(backend.opCount('read', SyncKeys.lockPath), 1,
-            reason: '首次抢占仍做回读校验');
-        expect(backend.opCount('create', SyncKeys.lockPath), 2,
-            reason: '回读通过后追加一次条件写探测');
+        expect(
+          backend.opCount('read', SyncKeys.lockPath),
+          1,
+          reason: '首次抢占仍做回读校验',
+        );
+        expect(
+          backend.opCount('create', SyncKeys.lockPath),
+          2,
+          reason: '回读通过后追加一次条件写探测',
+        );
 
         RemoteLease.protect(backend, () async {}, logger: logger);
         async.elapse(const Duration(seconds: 1));
-        expect(backend.opCount('read', SyncKeys.lockPath), 1,
-            reason: '探测通过后免回读');
-        expect(backend.opCount('create', SyncKeys.lockPath), 3,
-            reason: '结论已缓存，不再探测');
+        expect(
+          backend.opCount('read', SyncKeys.lockPath),
+          1,
+          reason: '探测通过后免回读',
+        );
+        expect(
+          backend.opCount('create', SyncKeys.lockPath),
+          3,
+          reason: '结论已缓存，不再探测',
+        );
         expect(backend.hasObject(SyncKeys.lockPath), isFalse);
       });
     });
@@ -151,10 +165,16 @@ void main() {
 
         RemoteLease.protect(backend, () async {}, logger: logger);
         async.elapse(const Duration(seconds: 1));
-        expect(backend.opCount('read', SyncKeys.lockPath), 2,
-            reason: '不合规服务器不得免除回读');
-        expect(backend.hasObject(SyncKeys.lockPath), isFalse,
-            reason: '探测载荷是本机合法租约，释放不受影响');
+        expect(
+          backend.opCount('read', SyncKeys.lockPath),
+          2,
+          reason: '不合规服务器不得免除回读',
+        );
+        expect(
+          backend.hasObject(SyncKeys.lockPath),
+          isFalse,
+          reason: '探测载荷是本机合法租约，释放不受影响',
+        );
       });
     });
   });

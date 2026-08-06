@@ -418,10 +418,7 @@ class _AssistantProviderEditPageState
                             hint: l10n.modelProviderBaseUrlHint,
                             icon: LucideIcons.link,
                             suffixIcon: locked
-                                ? const Icon(
-                                    LucideIcons.lock,
-                                    size: 18,
-                                  )
+                                ? const Icon(LucideIcons.lock, size: 18)
                                 : null,
                           ),
                         ),
@@ -464,9 +461,7 @@ class _AssistantProviderEditPageState
                       label: l10n.modelProviderModel,
                       child: TextFormField(
                         controller: _model,
-                        decoration: _fieldDecoration(
-                          icon: LucideIcons.cpu,
-                        ),
+                        decoration: _fieldDecoration(icon: LucideIcons.cpu),
                         validator: (v) => (v ?? '').trim().isEmpty
                             ? l10n.modelProviderNeedModel
                             : null,
@@ -546,10 +541,7 @@ class _ModelTile extends StatelessWidget {
       if (model.toolCall)
         _Badge(icon: LucideIcons.wrench, text: l10n.modelProviderBadgeTools),
       if (model.reasoning)
-        _Badge(
-          icon: LucideIcons.brain,
-          text: l10n.modelProviderBadgeReasoning,
-        ),
+        _Badge(icon: LucideIcons.brain, text: l10n.modelProviderBadgeReasoning),
       if (model.attachment)
         _Badge(icon: LucideIcons.image, text: l10n.modelProviderBadgeVision),
       if (_formatContext(model.contextLimit) case final ctx?)

@@ -112,9 +112,7 @@ class DiarySelectMark extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Icon(
-      selected
-          ? LucideIcons.circleCheck
-          : LucideIcons.circle,
+      selected ? LucideIcons.circleCheck : LucideIcons.circle,
       size: 16,
       color: selected ? scheme.primary : scheme.outline,
     );

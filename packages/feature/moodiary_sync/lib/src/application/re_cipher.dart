@@ -80,20 +80,25 @@ class CloudReCipher {
     if (!from.encrypted && !to.encrypted) return null;
 
     final sw = Stopwatch()..start();
-    _logger.info(SyncEventKind.syncStart, '开始重新加密', payload: {
-      ..._backendPayload(),
-      'direction': 're-cipher',
-      'fromEncrypted': from.encrypted,
-      'toEncrypted': to.encrypted,
-    });
+    _logger.info(
+      SyncEventKind.syncStart,
+      '开始重新加密',
+      payload: {
+        ..._backendPayload(),
+        'direction': 're-cipher',
+        'fromEncrypted': from.encrypted,
+        'toEncrypted': to.encrypted,
+      },
+    );
 
     // 读 manifest（用旧 cipher 解码）。密钥不匹配 → AES-GCM auth tag 失败抛 SyncException。
     final mfBytes = await backend.readObject(SyncKeys.manifestPath);
     if (mfBytes == null) {
-      _logger.info(SyncEventKind.syncEnd, '远端为空，跳过重新加密', payload: {
-        ..._backendPayload(),
-        'direction': 're-cipher',
-      });
+      _logger.info(
+        SyncEventKind.syncEnd,
+        '远端为空，跳过重新加密',
+        payload: {..._backendPayload(), 'direction': 're-cipher'},
+      );
       return null;
     }
     final mfDecoded = await from.decode(mfBytes);
@@ -123,8 +128,7 @@ class CloudReCipher {
     int done = 0;
     // 媒体引用在改写 diary 时还会补收（见 _collectMediaRefs），total 待后补媒体数。
     int total = diaryIds.length + categoryIds.length;
-    void emitProgress(String label) =>
-        onProgress?.call(done, total, label);
+    void emitProgress(String label) => onProgress?.call(done, total, label);
     emitProgress('准备');
 
     // JSON 对象改写无需理解内容：decode 的 Map 原样用新 cipher 编回。
@@ -249,8 +253,9 @@ class CloudReCipher {
     // 回读校验（用新 cipher 解）：token 不一致 = 另一台设备并发写了 manifest，
     // 中止以免新旧 cipher 的 manifest 互相覆盖。
     final verifyBytes = await backend.readObject(SyncKeys.manifestPath);
-    final verifyDecoded =
-        verifyBytes == null ? null : await to.decode(verifyBytes);
+    final verifyDecoded = verifyBytes == null
+        ? null
+        : await to.decode(verifyBytes);
     final verifyToken = verifyDecoded is Map<String, dynamic>
         ? SyncManifest.fromJson(verifyDecoded).writeToken
         : null;
@@ -259,15 +264,19 @@ class CloudReCipher {
     }
 
     sw.stop();
-    _logger.info(SyncEventKind.syncEnd, '重新加密结束', payload: {
-      ..._backendPayload(),
-      'direction': 're-cipher',
-      'diaryCount': diaryCount,
-      'categoryCount': categoryCount,
-      'mediaCount': mediaCount,
-      'failed': failed,
-      'elapsedMs': sw.elapsedMilliseconds,
-    });
+    _logger.info(
+      SyncEventKind.syncEnd,
+      '重新加密结束',
+      payload: {
+        ..._backendPayload(),
+        'direction': 're-cipher',
+        'diaryCount': diaryCount,
+        'categoryCount': categoryCount,
+        'mediaCount': mediaCount,
+        'failed': failed,
+        'elapsedMs': sw.elapsedMilliseconds,
+      },
+    );
 
     return ReCipherReport(
       diaryCount: diaryCount,
@@ -297,5 +306,4 @@ class CloudReCipher {
     addAll('audio', json['audioName']);
     addAll('video', json['videoName']);
   }
-
 }

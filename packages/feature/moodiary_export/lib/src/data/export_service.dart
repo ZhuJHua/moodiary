@@ -79,8 +79,10 @@ class ExportService {
     required ExportFormat format,
     required ExportScope scope,
     required ExportSettings settings,
+
     /// 无标题日记在文件名里的回退词（已本地化）。
     required String untitledLabel,
+
     /// 音视频占位行的类型词（已本地化）——Rust 侧没有 l10n，由这里传下去。
     required String videoLabel,
     required String audioLabel,
@@ -113,8 +115,13 @@ class ExportService {
       }
 
       final outcome = switch (format) {
-        ExportFormat.markdown =>
-          await _writeMarkdown(docs, settings, workDir, media, untitledLabel),
+        ExportFormat.markdown => await _writeMarkdown(
+          docs,
+          settings,
+          workDir,
+          media,
+          untitledLabel,
+        ),
         ExportFormat.docx => await _writeDocx(
           docs,
           settings,
@@ -208,7 +215,8 @@ class ExportService {
       mediaMode: MarkdownMediaMode.relative,
     );
 
-    final outDir = Directory(p.join(workDir.path, 'out'))..createSync(recursive: true);
+    final outDir = Directory(p.join(workDir.path, 'out'))
+      ..createSync(recursive: true);
 
     if (settings.common.merge) {
       final buffer = StringBuffer();
@@ -218,8 +226,9 @@ class ExportService {
         buffer.writeln('---');
         buffer.writeln();
       }
-      File(p.join(outDir.path, '${_stamp()}.md'))
-          .writeAsStringSync(buffer.toString());
+      File(
+        p.join(outDir.path, '${_stamp()}.md'),
+      ).writeAsStringSync(buffer.toString());
     } else {
       final used = <String>{};
       for (final doc in docs) {
@@ -229,8 +238,9 @@ class ExportService {
           used,
           untitledLabel,
         );
-        File(p.join(outDir.path, name))
-            .writeAsStringSync(MarkdownWriter.write(doc, options));
+        File(
+          p.join(outDir.path, name),
+        ).writeAsStringSync(MarkdownWriter.write(doc, options));
       }
     }
 
@@ -240,7 +250,10 @@ class ExportService {
     if (entries.length == 1 && entries.single is File) {
       return (entries.single as File).path;
     }
-    return _zip(outDir, p.join(workDir.path, 'moodiary-markdown-${_stamp()}.zip'));
+    return _zip(
+      outDir,
+      p.join(workDir.path, 'moodiary-markdown-${_stamp()}.zip'),
+    );
   }
 
   static Future<String> _writeDocx(
@@ -268,15 +281,12 @@ class ExportService {
       audioLabel: audioLabel,
     );
 
-    final outDir = Directory(p.join(workDir.path, 'out'))..createSync(recursive: true);
+    final outDir = Directory(p.join(workDir.path, 'out'))
+      ..createSync(recursive: true);
 
     if (settings.common.merge) {
       final path = p.join(outDir.path, '${_stamp()}.docx');
-      await rust.writeDocx(
-        docs: _toIr(docs),
-        style: style,
-        outPath: path,
-      );
+      await rust.writeDocx(docs: _toIr(docs), style: style, outPath: path);
       return path;
     }
 
@@ -337,11 +347,7 @@ class ExportService {
     if (settings.common.merge) {
       onProgress?.call(const ExportProgress(ExportPhase.serializing, 0, 0));
       final path = p.join(outDir.path, '${_stamp()}.pdf');
-      await rust.writePdf(
-        docs: _toIr(docs),
-        style: style,
-        outPath: path,
-      );
+      await rust.writePdf(docs: _toIr(docs), style: style, outPath: path);
       return path;
     }
 
@@ -494,8 +500,9 @@ class _MediaStage {
 
   Future<IrBlock?> _dropMedia(IrBlock block) async => switch (block) {
     IrBlock_Image() || IrBlock_Media() => null,
-    IrBlock_Quote(:final children) =>
-      IrBlock.quote(children: await _mapBlocks(children, _dropMedia)),
+    IrBlock_Quote(:final children) => IrBlock.quote(
+      children: await _mapBlocks(children, _dropMedia),
+    ),
     IrBlock_List(:final ordered, :final start, :final items) => IrBlock.list(
       ordered: ordered,
       start: start,
@@ -528,7 +535,8 @@ class _MediaStage {
         );
 
       case IrBlock_Media():
-        final cover = block.coverPath == null || _policy == ExportMediaPolicy.placeholder
+        final cover =
+            block.coverPath == null || _policy == ExportMediaPolicy.placeholder
             ? null
             : await _stageImage(block.coverPath!);
         _rememberAsset(block.path, block.filename);

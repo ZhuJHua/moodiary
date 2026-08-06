@@ -21,13 +21,17 @@ class DiaryRoute extends MoodiaryRouteBase {
   final String diaryId;
   final bool edit;
 
-  const DiaryRoute({required this.type, required this.diaryId, this.edit = false});
+  const DiaryRoute({
+    required this.type,
+    required this.diaryId,
+    this.edit = false,
+  });
 
   @override
-  String get location => buildLocation('/diary/${Uri.encodeComponent(diaryId)}', {
-    'type': type,
-    if (edit) 'edit': 'true',
-  });
+  String get location => buildLocation(
+    '/diary/${Uri.encodeComponent(diaryId)}',
+    {'type': type, if (edit) 'edit': 'true'},
+  );
 
   static DiaryRoute fromState(GoRouterState state) => DiaryRoute(
     diaryId: state.pathParameters['diaryId']!,
@@ -46,10 +50,8 @@ class NewDiaryRoute extends MoodiaryRouteBase {
   const NewDiaryRoute({required this.type, this.categoryId});
 
   @override
-  String get location => buildLocation('/diary-new', {
-    'type': type,
-    'category-id': categoryId,
-  });
+  String get location =>
+      buildLocation('/diary-new', {'type': type, 'category-id': categoryId});
 
   static NewDiaryRoute fromState(GoRouterState state) => NewDiaryRoute(
     type: state.uri.queryParameters['type'] ?? 'tiptap',

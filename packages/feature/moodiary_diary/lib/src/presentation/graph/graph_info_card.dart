@@ -135,10 +135,7 @@ class GraphInfoCard extends StatelessWidget {
                         ),
                         onPressed: onCenter,
                       ),
-                    Icon(
-                      LucideIcons.chevronRight,
-                      color: cs.onSurfaceVariant,
-                    ),
+                    Icon(LucideIcons.chevronRight, color: cs.onSurfaceVariant),
                     if (onClose != null)
                       IconButton(
                         tooltip: MaterialLocalizations.of(
@@ -146,10 +143,7 @@ class GraphInfoCard extends StatelessWidget {
                         ).closeButtonTooltip,
                         iconSize: 20,
                         visualDensity: VisualDensity.compact,
-                        icon: Icon(
-                          LucideIcons.x,
-                          color: cs.onSurfaceVariant,
-                        ),
+                        icon: Icon(LucideIcons.x, color: cs.onSurfaceVariant),
                         onPressed: onClose,
                       )
                     else

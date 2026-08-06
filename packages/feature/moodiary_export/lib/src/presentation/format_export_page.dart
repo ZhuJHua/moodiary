@@ -125,8 +125,9 @@ class _FormatExportPageState extends State<FormatExportPage> {
                 title: Text(l10n.exportMergeIntoOneFile),
                 subtitle: Text(l10n.exportMergeSubtitle),
                 secondary: const Icon(LucideIcons.package),
-                onChanged: (v) =>
-                    _update(_settings.copyWith(common: _common.copyWith(merge: v))),
+                onChanged: (v) => _update(
+                  _settings.copyWith(common: _common.copyWith(merge: v)),
+                ),
               ),
               if (!_common.merge)
                 SettingListTile(
@@ -229,8 +230,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
       ExportScopeKind.all => l10n.exportScopeAll,
       ExportScopeKind.category => detail ?? l10n.exportScopeByCategory,
       ExportScopeKind.dateRange => detail ?? l10n.exportScopeByDate,
-      ExportScopeKind.picked =>
-        l10n.exportScopePickedLabel(_scopeCount ?? 0),
+      ExportScopeKind.picked => l10n.exportScopePickedLabel(_scopeCount ?? 0),
     };
   }
 
@@ -275,7 +275,9 @@ class _FormatExportPageState extends State<FormatExportPage> {
                 onChanged: (v) => _update(
                   _settings.copyWith(
                     markdown: md.copyWith(
-                      dialect: v ? MarkdownDialect.gfm : MarkdownDialect.commonMark,
+                      dialect: v
+                          ? MarkdownDialect.gfm
+                          : MarkdownDialect.commonMark,
                     ),
                   ),
                 ),
@@ -321,7 +323,9 @@ class _FormatExportPageState extends State<FormatExportPage> {
                     : layout.eastAsiaFont,
                 leading: const Icon(LucideIcons.type),
                 trailing: const Icon(LucideIcons.chevronRight),
-                onTap: isPdf ? _pickPdfFont : () => _editFontName(eastAsia: true),
+                onTap: isPdf
+                    ? _pickPdfFont
+                    : () => _editFontName(eastAsia: true),
               ),
               if (!isPdf)
                 SettingListTile(
@@ -333,14 +337,18 @@ class _FormatExportPageState extends State<FormatExportPage> {
                 ),
               SettingListTile(
                 title: l10n.exportFontSize,
-                subtitle: l10n.exportFontSizeValue(layout.fontSizePt.toStringAsFixed(0)),
+                subtitle: l10n.exportFontSizeValue(
+                  layout.fontSizePt.toStringAsFixed(0),
+                ),
                 leading: const Icon(LucideIcons.aLargeSmall),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: _pickFontSize,
               ),
               SettingListTile(
                 title: l10n.exportLineSpacing,
-                subtitle: l10n.exportLineSpacingValue(layout.lineSpacing.toStringAsFixed(1)),
+                subtitle: l10n.exportLineSpacingValue(
+                  layout.lineSpacing.toStringAsFixed(1),
+                ),
                 leading: const Icon(LucideIcons.alignJustify),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: _pickLineSpacing,
@@ -391,7 +399,9 @@ class _FormatExportPageState extends State<FormatExportPage> {
       ),
     );
     if (picked == null) return;
-    _update(_settings.copyWith(pdf: _settings.pdf.copyWith(eastAsiaFont: picked)));
+    _update(
+      _settings.copyWith(pdf: _settings.pdf.copyWith(eastAsiaFont: picked)),
+    );
   }
 
   Future<void> _pickFontSize() async {
@@ -476,7 +486,8 @@ class _FormatExportPageState extends State<FormatExportPage> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              onPressed: (_running || count == null || count == 0 || blocked != null)
+              onPressed:
+                  (_running || count == null || count == 0 || blocked != null)
                   ? null
                   : _run,
               icon: _running
@@ -506,7 +517,8 @@ class _FormatExportPageState extends State<FormatExportPage> {
         progress.done,
         progress.total,
       ),
-      ExportPhase.writing when progress.total == 0 => l10n.exportProgressWriting,
+      ExportPhase.writing when progress.total == 0 =>
+        l10n.exportProgressWriting,
       ExportPhase.writing => l10n.exportProgressWritingCount(
         progress.done,
         progress.total,
@@ -542,7 +554,9 @@ class _FormatExportPageState extends State<FormatExportPage> {
   /// PDF 必须先有一个可用的字体，否则导出会在写文件那一步才失败。
   String? _pdfBlockedReason() {
     if (widget.format != ExportFormat.pdf) return null;
-    if (_settings.pdf.eastAsiaFont.isEmpty) return context.l10n.exportPickFontFirst;
+    if (_settings.pdf.eastAsiaFont.isEmpty) {
+      return context.l10n.exportPickFontFirst;
+    }
     return null;
   }
 
@@ -583,9 +597,13 @@ class _FormatExportPageState extends State<FormatExportPage> {
     }
   }
 
-  Future<void> _reportAndShare(ExportOutcome outcome, AppLocalizations l10n) async {
+  Future<void> _reportAndShare(
+    ExportOutcome outcome,
+    AppLocalizations l10n,
+  ) async {
     final notes = [
-      if (outcome.skippedMedia > 0) l10n.exportSkippedMedia(outcome.skippedMedia),
+      if (outcome.skippedMedia > 0)
+        l10n.exportSkippedMedia(outcome.skippedMedia),
       if (outcome.unsupportedNodes.isNotEmpty)
         l10n.exportUnsupportedNodes(
           outcome.unsupportedNodes.length,
@@ -602,4 +620,3 @@ class _FormatExportPageState extends State<FormatExportPage> {
     await shareExported(outcome.path, l10n);
   }
 }
-

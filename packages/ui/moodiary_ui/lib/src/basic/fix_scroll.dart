@@ -21,9 +21,8 @@ class PrimaryScrollWrapperState extends State<PrimaryScrollWrapper> {
   @override
   Widget build(BuildContext context) {
     return CustomPrimaryScrollController(
-      scrollController:
-          _scrollController
-            ..realController = PrimaryScrollController.of(context),
+      scrollController: _scrollController
+        ..realController = PrimaryScrollController.of(context),
       child: widget.child,
     );
   }

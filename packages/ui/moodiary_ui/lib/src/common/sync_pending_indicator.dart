@@ -71,7 +71,11 @@ class SyncPendingBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.refreshCw, size: 11, color: scheme.onTertiaryContainer),
+          Icon(
+            LucideIcons.refreshCw,
+            size: 11,
+            color: scheme.onTertiaryContainer,
+          ),
           const SizedBox(width: 3),
           Text(
             '同步中',

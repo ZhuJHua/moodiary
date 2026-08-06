@@ -136,10 +136,9 @@ class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
   bool _running = false;
   int _roundCounter = 0;
 
-  bool get isDone =>
-      widget.numberOfRounds == null
-          ? false
-          : widget.numberOfRounds == _roundCounter;
+  bool get isDone => widget.numberOfRounds == null
+      ? false
+      : widget.numberOfRounds == _roundCounter;
 
   @override
   void initState() {
@@ -282,18 +281,18 @@ class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
       itemBuilder: (_, i) {
         return i.isEven
             ? Text(
-              widget.text,
-              style: widget.style,
-              textScaler: widget.textScaler,
-            )
+                widget.text,
+                style: widget.style,
+                textScaler: widget.textScaler,
+              )
             : SizedBox(
-              width:
-                  widget.scrollAxis == Axis.horizontal
-                      ? widget.blankSpace
-                      : null,
-              height:
-                  widget.scrollAxis == Axis.vertical ? widget.blankSpace : null,
-            );
+                width: widget.scrollAxis == Axis.horizontal
+                    ? widget.blankSpace
+                    : null,
+                height: widget.scrollAxis == Axis.vertical
+                    ? widget.blankSpace
+                    : null,
+              );
       },
     );
   }

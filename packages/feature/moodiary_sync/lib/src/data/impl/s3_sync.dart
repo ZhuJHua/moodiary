@@ -18,7 +18,9 @@ import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 class S3SyncBackend implements IRemoteSyncBackend {
   static const String _root = 'moodiary';
 
-  static final SecureOptions options = SecureOptions(MoodiarySecureKVs.s3Option);
+  static final SecureOptions options = SecureOptions(
+    MoodiarySecureKVs.s3Option,
+  );
 
   S3SyncBackend();
 
@@ -37,7 +39,6 @@ class S3SyncBackend implements IRemoteSyncBackend {
   String get _secretKey => _opt(3);
   String get _bucket => _opt(4);
   bool get _useSSL => _opt(5) != '0'; // 默认开启
-
 
   @override
   SyncProviderType get type => SyncProviderType.s3;
@@ -62,19 +63,20 @@ class S3SyncBackend implements IRemoteSyncBackend {
     final opts = _options;
     final cached = _cachedClient;
     if (cached != null && listEquals(_cachedOptions, opts)) return cached;
-    final future = rust.S3Client.newInstance(
-      endpoint: _endpoint,
-      accessKey: _accessKey,
-      secretKey: _secretKey,
-      bucket: _bucket,
-      useSsl: _useSSL,
-      region: _region,
-    ).onError((Object error, StackTrace stackTrace) {
-      // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
-      _cachedClient = null;
-      _cachedOptions = null;
-      Error.throwWithStackTrace(error, stackTrace);
-    });
+    final future =
+        rust.S3Client.newInstance(
+          endpoint: _endpoint,
+          accessKey: _accessKey,
+          secretKey: _secretKey,
+          bucket: _bucket,
+          useSsl: _useSSL,
+          region: _region,
+        ).onError((Object error, StackTrace stackTrace) {
+          // 构造失败的 Future 不能留缓存，否则后续操作会复用同一失败结果直到重启。
+          _cachedClient = null;
+          _cachedOptions = null;
+          Error.throwWithStackTrace(error, stackTrace);
+        });
     _cachedClient = future;
     _cachedOptions = opts;
     return future;

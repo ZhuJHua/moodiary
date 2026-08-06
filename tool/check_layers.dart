@@ -86,17 +86,17 @@ List<String> _checkPackageLayers() {
     final f = File(pubspecPath);
     if (!f.existsSync()) return;
     final text = f.readAsStringSync();
-    final name = RegExp(r'^name:\s*(\S+)', multiLine: true)
-        .firstMatch(text)
-        ?.group(1);
+    final name = RegExp(
+      r'^name:\s*(\S+)',
+      multiLine: true,
+    ).firstMatch(text)?.group(1);
     if (name == null) return;
     layerOf[name] = layer;
     // 只看正式依赖；dev_dependencies（lint/test 工具）不参与方向约束。
-    final main = text.split(RegExp(r'^dev_dependencies:', multiLine: true)).first;
-    depsOf[name] = _pkgDepRe
-        .allMatches(main)
-        .map((m) => m.group(1)!)
-        .toList();
+    final main = text
+        .split(RegExp(r'^dev_dependencies:', multiLine: true))
+        .first;
+    depsOf[name] = _pkgDepRe.allMatches(main).map((m) => m.group(1)!).toList();
   }
 
   for (final dir in Directory('packages').listSync().whereType<Directory>()) {
@@ -164,9 +164,10 @@ List<String> _checkRustLayers() {
       final f = File('${crate.path}/Cargo.toml');
       if (!f.existsSync()) continue;
       final text = f.readAsStringSync();
-      final name = RegExp(r'^name\s*=\s*"([^"]+)"', multiLine: true)
-          .firstMatch(text)
-          ?.group(1);
+      final name = RegExp(
+        r'^name\s*=\s*"([^"]+)"',
+        multiLine: true,
+      ).firstMatch(text)?.group(1);
       if (name == null) continue;
       layerOf[name] = layer;
       // dev-dependencies（测试用）不参与方向约束。
@@ -276,7 +277,9 @@ void main(List<String> args) {
   }
 
   final fresh = violations.where((v) => !baseline.contains(v.key)).toList();
-  final stale = baseline.where((b) => !violations.any((v) => v.key == b)).toList();
+  final stale = baseline
+      .where((b) => !violations.any((v) => v.key == b))
+      .toList();
 
   stdout.writeln(
     '扫描 $fileCount 个文件；违规 ${violations.length} 条'

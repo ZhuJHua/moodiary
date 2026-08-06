@@ -70,7 +70,8 @@ class LlmProviderRepository {
   Future<void> setKey(String id, String value) =>
       ISecureKVStorage.get().set(_keyOf(id), value);
 
-  Future<void> removeKey(String id) => ISecureKVStorage.get().remove(_keyOf(id));
+  Future<void> removeKey(String id) =>
+      ISecureKVStorage.get().remove(_keyOf(id));
 
   /// 当前激活的 Provider。激活指针缺失或失效时回退到列表首个；列表为空返回 null。
   Future<LlmProvider?> getActiveProvider() async {

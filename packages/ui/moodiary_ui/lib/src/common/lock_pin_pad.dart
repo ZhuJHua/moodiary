@@ -179,7 +179,17 @@ class _LockPinPadState extends State<LockPinPad>
             physics: const NeverScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
             children: [
-              for (final d in const ['1', '2', '3', '4', '5', '6', '7', '8', '9'])
+              for (final d in const [
+                '1',
+                '2',
+                '3',
+                '4',
+                '5',
+                '6',
+                '7',
+                '8',
+                '9',
+              ])
                 _NumButton(label: d, onTap: () => _onDigit(d), size: dotSize),
               widget.showBiometric
                   ? _IconButton(
@@ -259,11 +269,7 @@ class _IconButton extends StatelessWidget {
     return InkWell(
       customBorder: const CircleBorder(),
       onTap: onTap,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: Icon(icon, size: 24),
-      ),
+      child: SizedBox(width: size, height: size, child: Icon(icon, size: 24)),
     );
   }
 }

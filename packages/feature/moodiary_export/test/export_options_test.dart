@@ -52,11 +52,15 @@ void main() {
       // 设置页要能打开 —— 配置格式变过或写坏时不能把页面炸掉。
       expect(ExportSettings.decode('不是 json').common.merge, isTrue);
       expect(ExportSettings.decode('').docx.paper, ExportPaper.a4);
-      expect(ExportSettings.decode('{"common": 42}').common.includeTitle, isTrue);
+      expect(
+        ExportSettings.decode('{"common": 42}').common.includeTitle,
+        isTrue,
+      );
     });
 
     test('未知枚举值退回默认', () {
-      const raw = '{"common":{"media":"someFutureMode"},'
+      const raw =
+          '{"common":{"media":"someFutureMode"},'
           '"markdown":{"dialect":"someFutureDialect"},'
           '"docx":{"paper":"B5"}}';
       final settings = ExportSettings.decode(raw);

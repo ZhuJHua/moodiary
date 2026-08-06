@@ -4,10 +4,8 @@
 ///
 /// [poster] 为 true 时请求的是「海报/缩略图」而非媒体本身：视频节点的 webview 内播放器
 /// 用它当封面（宿主返回 thumbnail 目录的 jpeg）；非视频忽略该标志。
-typedef MediaResolver = ({String path, String mime})? Function(
-  String name, {
-  bool poster,
-});
+typedef MediaResolver =
+    ({String path, String mime})? Function(String name, {bool poster});
 
 /// 根据文件名后缀推断图片 MIME（自包含，供宿主实现 [MediaResolver] 时复用）。
 String imageMimeOf(String name) {

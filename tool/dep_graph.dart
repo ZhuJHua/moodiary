@@ -18,7 +18,13 @@ class Pkg {
   Pkg(this.name, this.layer);
 }
 
-const List<String> _layerOrder = ['apps', 'feature', 'ui', 'core', 'foundation'];
+const List<String> _layerOrder = [
+  'apps',
+  'feature',
+  'ui',
+  'core',
+  'foundation',
+];
 
 final RegExp _topRe = RegExp(r'^([a-zA-Z0-9_]+):');
 final RegExp _entryRe = RegExp(r'^  ([a-zA-Z0-9_]+):');
@@ -51,7 +57,9 @@ Map<String, Pkg> _scan() {
   final files = <File>[
     File('mobile/pubspec.yaml'),
     File('desktop/pubspec.yaml'),
-    for (final layerDir in Directory('packages').listSync().whereType<Directory>())
+    for (final layerDir in Directory(
+      'packages',
+    ).listSync().whereType<Directory>())
       for (final pkgDir in layerDir.listSync().whereType<Directory>())
         File('${pkgDir.path}/pubspec.yaml'),
   ];
@@ -70,8 +78,8 @@ Map<String, Pkg> _scan() {
 Map<String, Set<String>> _reach(Map<String, Pkg> pkgs) {
   final memo = <String, Set<String>>{};
   Set<String> go(String n) => memo[n] ??= {
-        for (final d in pkgs[n]?.internal ?? const <String>[]) ...{d, ...go(d)},
-      };
+    for (final d in pkgs[n]?.internal ?? const <String>[]) ...{d, ...go(d)},
+  };
   pkgs.keys.forEach(go);
   return memo;
 }
@@ -166,14 +174,14 @@ void main(List<String> args) {
   final dot = args.contains('--dot');
   final pub = args.contains('--pub');
   final outIdx = args.indexOf('--out');
-  final outFile = outIdx >= 0 && outIdx + 1 < args.length ? args[outIdx + 1] : null;
+  final outFile = outIdx >= 0 && outIdx + 1 < args.length
+      ? args[outIdx + 1]
+      : null;
 
   final pkgs = _scan();
   final String output;
   if (pub) {
-    final pos = args
-        .where((a) => !a.startsWith('--') && a != outFile)
-        .toList();
+    final pos = args.where((a) => !a.startsWith('--') && a != outFile).toList();
     output = _pubTable(pkgs, pos.isEmpty ? null : pos.first);
   } else {
     final all = _edges(pkgs, reduce: false);

@@ -66,7 +66,7 @@ class LanSender {
     this._crypto = const RustLanCrypto(),
     this._http,
     Future<(String, int)> Function(SyncManifest remote, String zipPassword)?
-        archiveBuilder,
+    archiveBuilder,
   }) : _archiveBuilder = archiveBuilder ?? _buildArchive;
 
   static Future<(String, int)> _buildArchive(
@@ -94,9 +94,7 @@ class LanSender {
     var uploading = false;
     try {
       onProgress?.call(const LanSendProgress(LanSendPhase.connecting));
-      final handshake = _decodeHandshake(
-        await _get('$base$lanHandshakePath'),
-      );
+      final handshake = _decodeHandshake(await _get('$base$lanHandshakePath'));
       final key = await _crypto.deriveKey(
         salt: handshake['salt'] as String,
         pin: pin,

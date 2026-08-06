@@ -120,7 +120,9 @@ class MarkdownConverter {
         ),
         '',
       )
-      .replaceAllMapped(RegExp(r'^[ \t]*\|(.+)\|[ \t]*$', multiLine: true), (m) {
+      .replaceAllMapped(RegExp(r'^[ \t]*\|(.+)\|[ \t]*$', multiLine: true), (
+        m,
+      ) {
         return m
             .group(1)!
             .split('|')

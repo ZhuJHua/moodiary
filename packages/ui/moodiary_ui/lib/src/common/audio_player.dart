@@ -363,9 +363,7 @@ class _AudioBarState extends State<AudioBar> {
             IconButton.filled(
               onPressed: widget.onToggle,
               iconSize: 22,
-              icon: Icon(
-                widget.playing ? LucideIcons.pause : LucideIcons.play,
-              ),
+              icon: Icon(widget.playing ? LucideIcons.pause : LucideIcons.play),
               style: IconButton.styleFrom(
                 minimumSize: const Size(40, 40),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -419,9 +417,7 @@ class _AudioBarState extends State<AudioBar> {
               iconSize: 20,
               color: scheme.onSurfaceVariant,
               icon: Icon(
-                widget.muted
-                    ? LucideIcons.volumeX
-                    : LucideIcons.volume2,
+                widget.muted ? LucideIcons.volumeX : LucideIcons.volume2,
               ),
               style: IconButton.styleFrom(
                 minimumSize: const Size(32, 32),

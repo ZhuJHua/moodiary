@@ -67,7 +67,10 @@ class EditorMigrationService {
 
     await _writeBackup(diary);
 
-    final converted = diary.copyWith(content: json, type: DiaryType.tiptap.value);
+    final converted = diary.copyWith(
+      content: json,
+      type: DiaryType.tiptap.value,
+    );
     final derived = DiaryContent.of(converted);
     final media = derived.media;
     final newDiary = converted.copyWith(
@@ -79,7 +82,10 @@ class EditorMigrationService {
     // 迁移是纯本机的格式转换：不动 lastModified（LWW 两侧都不视为更新，批量迁移不会
     // 覆盖他端更新的编辑），事件走 fromSync（远端持有同时间戳的等价旧格式副本，不标
     // 脏、不触发推送）。多设备各自迁移一次；正文首次真实编辑后按普通编辑同步收敛。
-    await DiaryRepository.get().updateADiary(newDiary: newDiary, fromSync: true);
+    await DiaryRepository.get().updateADiary(
+      newDiary: newDiary,
+      fromSync: true,
+    );
     return true;
   }
 

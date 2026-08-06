@@ -170,7 +170,10 @@ class RustHttpClient extends IHttpClient {
           headers: _headerMap(response.headers),
         );
       }
-      throw const HttpException(HttpErrorType.unknown, 'upload ended without response');
+      throw const HttpException(
+        HttpErrorType.unknown,
+        'upload ended without response',
+      );
     } on rust.HttpError catch (error) {
       throw _report(_exception(error), silent: silent);
     }
