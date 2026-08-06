@@ -169,7 +169,7 @@ Future<T?> _push<T>(
   return navigator.push(
     _MoodiaryAlertRoute<T>(
       builder: builder,
-      initialBarrierDismissible: barrierDismissible,
+      barrierDismissible: barrierDismissible,
       barrierColorValue: context.colorScheme.scrim.withValues(alpha: 0.32),
       barrierLabelText: localizations.modalBarrierDismissLabel,
       routeLabelText: localizations.dialogLabel,
@@ -197,12 +197,12 @@ class _MoodiaryAlertRoute<T> extends PopupRoute<T> {
 
   _MoodiaryAlertRoute({
     required this.builder,
-    required bool initialBarrierDismissible,
+    required this._barrierDismissible,
     required this.barrierColorValue,
     required this.barrierLabelText,
     required this.routeLabelText,
     required this.capturedThemes,
-  }) : _barrierDismissible = initialBarrierDismissible;
+  });
 
   @override
   Duration get transitionDuration => const Duration(milliseconds: 200);
