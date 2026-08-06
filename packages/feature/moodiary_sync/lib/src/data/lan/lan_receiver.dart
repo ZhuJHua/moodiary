@@ -176,7 +176,7 @@ class LanReceiverService {
             'diaryCount': report.diaryCount,
             'categoryCount': report.categoryCount,
             'failed': report.failed,
-            if (report.warning != null) 'warning': report.warning,
+            'warning': ?report.warning,
           }),
         ),
       );

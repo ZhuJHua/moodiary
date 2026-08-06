@@ -1,8 +1,10 @@
+/// @docImport 'package:moodiary_core/moodiary_core.dart';
+library;
+
 import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show listEquals;
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';

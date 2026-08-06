@@ -105,7 +105,7 @@ class MarkdownWriter {
       _formatTime(doc.time),
       if (doc.weather.isNotEmpty) doc.weather.join(' '),
       if (doc.position.isNotEmpty) doc.position.last,
-      if (doc.categoryName != null) doc.categoryName!,
+      ?doc.categoryName,
     ];
     return parts.join(' · ');
   }

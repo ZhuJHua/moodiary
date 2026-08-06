@@ -403,7 +403,7 @@ class _EventTile extends StatelessWidget {
       'level': event.level.name,
       'kind': event.kind.name,
       'message': event.message,
-      if (event.payload != null) 'payload': event.payload,
+      'payload': ?event.payload,
     });
     showMoodiarySheet<void>(
       context,

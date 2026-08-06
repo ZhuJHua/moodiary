@@ -1,10 +1,12 @@
+/// @docImport 'package:moodiary_diary/src/application/diary_stamp.dart';
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/application/diary_filter.dart';
 import 'package:moodiary_diary/src/application/diary_selection.dart';
-import 'package:moodiary_diary/src/application/diary_stamp.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
