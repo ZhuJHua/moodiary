@@ -1,5 +1,5 @@
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 由 `diary.content`（按 [Diary.type]）推导的派生视图：纯文本镜像 `contentText`、
 /// 内嵌媒体文件名、双链目标。编辑保存（[EditController]）与数据修复

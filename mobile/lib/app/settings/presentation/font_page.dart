@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 
 class FontPage extends ConsumerStatefulWidget {
   const FontPage({super.key});

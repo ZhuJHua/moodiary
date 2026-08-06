@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
+import 'package:moodiary_core/moodiary_core.dart';
 
 /// 用户自定义人格（SOUL），存为 `<applicationSupport>/assistant/SOUL.md`；
 /// 仅设备本地，不进备份/同步。

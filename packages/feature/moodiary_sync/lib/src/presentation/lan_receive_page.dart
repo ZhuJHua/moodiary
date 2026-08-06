@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/data/lan/lan_discovery.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/lan/lan_receiver.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/presentation/widget/lan_widgets.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 class LanReceivePage extends StatefulWidget {

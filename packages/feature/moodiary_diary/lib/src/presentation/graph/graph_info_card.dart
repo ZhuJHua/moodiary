@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 选中节点的悬浮信息卡（总图与 ego 图共用）。整卡可点打开日记；前导圆点用**节点本色**，
 /// 与画布上看到的颜色一致。出/入链分开显示——只给合计看不出方向。

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
-import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
+import 'package:moodiary_sync/moodiary_sync.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 
 /// 移动端首页壳（app 侧组合面）：把 moodiary_diary 的视图主体与 moodiary_sync 的
 /// [SyncStatusButton]、新建日记 FAB 焊到一起。这是 diary↔sync 的唯一相遇处，故留在

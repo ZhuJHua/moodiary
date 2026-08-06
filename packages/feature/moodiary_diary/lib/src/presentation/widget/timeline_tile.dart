@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 
 /// 左栏三段固定宽度：日期列 / 间隙 / 轴列 / 间隙。轴心 x 与内容起始 x 都由它们推出，
 /// Painter 与 Row 必须用同一组常量，否则线会画歪。

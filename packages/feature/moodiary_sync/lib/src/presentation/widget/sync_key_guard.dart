@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -10,6 +9,7 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 
 /// 同步前的密钥前置守卫：远端已加密而本地 DEK 缺失或不匹配时，弹框引导输入
 /// 密码，用远端 keys.json 解包出 DEK、再实测解密 manifest 验证，通过并保存后

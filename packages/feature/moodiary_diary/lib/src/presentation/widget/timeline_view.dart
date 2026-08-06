@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_diary/src/application/diary_filter.dart';
 import 'package:moodiary_diary/src/application/diary_selection.dart';
 import 'package:moodiary_diary/src/application/timeline_controller.dart';
@@ -12,6 +9,9 @@ import 'package:moodiary_diary/src/application/timeline_group.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_nav.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 时间线视图：左侧一条真正的轴——圆点与线段都取心情色，滑动即读一段情绪走向。
 ///

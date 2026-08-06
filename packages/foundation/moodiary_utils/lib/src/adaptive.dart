@@ -1,7 +1,7 @@
 import 'dart:ui';
 
-import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 /// 平板短边阈值（dp）：短边 ≥ 此值视为平板，放开旋转。仅用于方向锁定，与 UI 布局无关。
 const double _kTabletShortestSideThreshold = 600.0;

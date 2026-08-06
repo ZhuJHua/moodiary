@@ -6,6 +6,10 @@
 /// 供两端 app 直接组合使用。
 library;
 
+export 'src/application/edit_controller.dart';
+export 'src/editor_local_server.dart' show EditorLocalServer;
+export 'src/media.dart'
+    show MediaResolver, imageMimeOf, audioMimeOf, videoMimeOf;
 export 'src/moodiary_editor.dart'
     show
         MoodiaryEditor,
@@ -14,15 +18,10 @@ export 'src/moodiary_editor.dart'
         EditorSeed,
         EditorFont,
         DiaryLinkCandidate;
-export 'src/editor_local_server.dart' show EditorLocalServer;
-export 'src/media.dart'
-    show MediaResolver, imageMimeOf, audioMimeOf, videoMimeOf;
-
-export 'src/routes.dart' show editorRoutes;
 export 'src/presentation/editor_migration_page.dart' show EditorMigrationPage;
-export 'src/application/edit_controller.dart';
 export 'src/presentation/widget/category_picker_sheet.dart';
 export 'src/presentation/widget/draft_prompt.dart';
 export 'src/presentation/widget/editor_body.dart';
 export 'src/presentation/widget/moodiary_editor_view.dart';
 export 'src/presentation/widget/record_sheet.dart';
+export 'src/routes.dart' show editorRoutes;

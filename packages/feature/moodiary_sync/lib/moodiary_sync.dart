@@ -6,12 +6,7 @@
 /// `src/presentation` = 备份/日志/密钥等移动 UI + [SyncStatusButton] + [syncRoutes]。
 library;
 
-export 'src/routes.dart' show syncRoutes;
-export 'src/data/impl/backup_archive_impl.dart' show SyncBackupArchive;
-export 'src/data/sync_registry.dart' show registerRemoteSync;
-export 'src/data/sync_logger.dart' show SyncLogger;
 export 'src/application/auto_sync_watcher.dart' show AutoSyncWatcher;
-export 'src/application/tombstone_gc.dart' show purgeExpiredTombstones;
 export 'src/application/sync_controller.dart'
     show
         SyncController,
@@ -21,8 +16,13 @@ export 'src/application/sync_controller.dart'
         SyncRunning,
         SyncSuccess,
         SyncError;
+export 'src/application/tombstone_gc.dart' show purgeExpiredTombstones;
+export 'src/data/impl/backup_archive_impl.dart' show SyncBackupArchive;
+export 'src/data/sync_logger.dart' show SyncLogger;
+export 'src/data/sync_registry.dart' show registerRemoteSync;
 export 'src/presentation/backup_sync_page.dart' show BackupSyncPage;
 export 'src/presentation/sync_log_page.dart' show SyncLogPage;
+export 'src/presentation/widget/sync_status_button.dart' show SyncStatusButton;
 export 'src/presentation/widget/sync_status_sheet.dart'
     show showSyncStatusSheet;
-export 'src/presentation/widget/sync_status_button.dart' show SyncStatusButton;
+export 'src/routes.dart' show syncRoutes;

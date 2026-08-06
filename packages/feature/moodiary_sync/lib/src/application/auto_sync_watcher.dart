@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_data/moodiary_data.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
-import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/sync_registry.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
+import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_sync/src/data/sync_registry.dart';
 
 /// 自动同步监听器 —— 单开关 [MoodiaryKVs.autoSync] 启用两条机制，共用「正在同步」
 /// 闸门（[_syncing]）：变更触发（订阅领域事件流，去抖后 pushAll）+ 周期轮询

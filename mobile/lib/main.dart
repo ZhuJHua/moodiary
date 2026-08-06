@@ -8,15 +8,15 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
+import 'package:moodiary/app/di/service_di.dart';
+import 'package:moodiary/app/router/router.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_migration/moodiary_migration.dart';
-import 'package:moodiary_rust/moodiary_rust.dart';
-import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_migration/moodiary_migration.dart';
+import 'package:moodiary_preferences/moodiary_preferences.dart';
+import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show FlutterSmartDialog;
-import 'package:moodiary/app/router/router.dart';
-import 'package:moodiary/app/di/service_di.dart';
 
 Future<Locale> _initSystem() async {
   final rustInit = RustLib.init();

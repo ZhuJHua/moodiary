@@ -1,6 +1,6 @@
 import 'package:isar_plus/isar_plus.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/src/files/app_files.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 
 /// Isar 纯基建封装：只负责 schema 注册、打开与清空数据库；
 /// 领域查询一律走 moodiary_data 的仓储。

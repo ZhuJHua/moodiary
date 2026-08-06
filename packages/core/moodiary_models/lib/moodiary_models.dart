@@ -1,9 +1,6 @@
 library;
 
-export 'src/diary_type.dart';
-export 'src/diary_type_route.dart';
 export 'src/assistant_provider_type.dart';
-
 export 'src/category.dart';
 export 'src/category_event.dart';
 export 'src/chat_message.dart';
@@ -12,6 +9,8 @@ export 'src/diary.dart';
 export 'src/diary_event.dart';
 export 'src/diary_graph.dart';
 export 'src/diary_index_snapshot.dart';
+export 'src/diary_type.dart';
+export 'src/diary_type_route.dart';
 export 'src/font.dart';
 export 'src/link_posting.dart';
 export 'src/llm_model_preset.dart';

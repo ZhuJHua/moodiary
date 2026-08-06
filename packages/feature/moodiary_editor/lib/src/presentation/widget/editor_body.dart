@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_editor/src/presentation/widget/moodiary_editor_view.dart';
 import 'package:moodiary_editor/moodiary_editor.dart'
     show MoodiaryEditorController;
+import 'package:moodiary_editor/src/presentation/widget/moodiary_editor_view.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 编辑页正文区域：三种 [DiaryType] 统一由 TipTap webview（[MoodiaryEditorView]）承载，
 /// 变更经 [onChanged] 透传 `(content, contentText)`。

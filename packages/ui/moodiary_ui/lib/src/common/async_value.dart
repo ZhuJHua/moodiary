@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_ui/src/basic/loading.dart';
-
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_ui/src/basic/loading.dart';
 
 extension AsyncValueExtension<T> on AsyncValue<T> {
   Widget buildLoading({

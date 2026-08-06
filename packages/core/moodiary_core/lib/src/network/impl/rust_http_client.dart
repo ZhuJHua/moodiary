@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:moodiary_core/src/network/http_client.dart';
 import 'package:moodiary_core/src/app_logger.dart';
+import 'package:moodiary_core/src/network/http_client.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 
 /// [IHttpClient] 的 Rust(reqwest) 实现。opaque `HttpClient` 内含 reqwest 连接池，

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:moodiary_core/moodiary_core.dart';
 
 /// 同步进行中的聚合提示卡。不为每篇远端日记插入独立占位 —— manifest 只有 LWW 时间戳，
 /// 占位卡无法按真实展示时间排序、会出现在错误位置；待更新的已有日记改用 [SyncPendingBadge]。

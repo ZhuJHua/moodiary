@@ -1,9 +1,9 @@
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
+import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
+import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/model/sync_provider.dart';
-import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
 
 /// 同步后端的 DI 注册器。**同时只注入一个 [IRemoteSyncBackend]**：启动 / 切换
 /// provider 时按 KV `syncProvider` 重新注册。业务侧统一走 `IRemoteSyncBackend.get()`。

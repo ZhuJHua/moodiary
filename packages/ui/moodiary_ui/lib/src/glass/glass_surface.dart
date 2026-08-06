@@ -3,9 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
-
 import 'package:moodiary_ui/src/glass/glass_config.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 毛玻璃面：一层背景模糊 + 一层半透明底色 + 描边 + 投影。全仓唯一画玻璃的地方。
 class MoodiaryGlassSurface extends StatelessWidget {

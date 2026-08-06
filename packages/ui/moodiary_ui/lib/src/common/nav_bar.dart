@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_ui/src/glass/glass_surface.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 悬浮胶囊底栏的固定尺寸。改这里就等于改版式，别在调用方另写字面量。
 const double kMoodiaryNavBarHeight = 60;

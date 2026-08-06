@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/data/lan/lan_discovery.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/lan/lan_sender.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/presentation/widget/lan_widgets.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 
 class LanSendPage extends StatefulWidget {
   const LanSendPage({super.key});

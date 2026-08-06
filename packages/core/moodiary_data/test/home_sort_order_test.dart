@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 
 void main() {
   Diary diary(String id, {required DateTime time, DateTime? modified}) => Diary(

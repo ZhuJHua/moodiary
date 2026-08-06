@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show FlutterSmartDialog;
-import 'package:moodiary_router/moodiary_router.dart';
-import 'package:moodiary_assistant/moodiary_assistant.dart';
-
+import 'package:moodiary/app/settings/setting_routes.dart';
 import 'package:moodiary/app/shell/root_shell.dart' show MobileRootShell;
+import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
 import 'package:moodiary_editor/moodiary_editor.dart' show editorRoutes;
 import 'package:moodiary_export/moodiary_export.dart' show exportRoutes;
 import 'package:moodiary_lock/moodiary_lock.dart';
-import 'package:moodiary/app/settings/setting_routes.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_share/moodiary_share.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show FlutterSmartDialog;
 
-export 'package:moodiary_router/moodiary_router.dart';
 export 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantSettingRoute;
+export 'package:moodiary_router/moodiary_router.dart';
 
 final moodiaryNavigationKey = GlobalKey<NavigatorState>();
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/soul_repository.dart';
+import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 
 /// 编辑用户自定义人格（SOUL），叠加在安全与工具规则之上；留空恢复默认。见 [SoulRepository]。
 class AssistantSoulPage extends StatefulWidget {

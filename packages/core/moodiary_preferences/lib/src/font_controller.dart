@@ -1,9 +1,10 @@
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'app_settings_controller.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'app_settings_controller.dart';
 
 part 'font_controller.g.dart';
 

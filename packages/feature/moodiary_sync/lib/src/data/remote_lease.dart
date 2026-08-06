@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 远端锁文件（`sync.lock`）的内容。**明文 JSON、不走 SyncCodec** —— 锁须能被
 /// 任何设备（含密钥不同/未配密钥的）读取；内容只有随机设备 id 与时间戳，无敏感信息。

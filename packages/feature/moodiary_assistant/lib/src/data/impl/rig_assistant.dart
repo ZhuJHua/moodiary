@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:meta/meta.dart';
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
-import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
+import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
+import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 
 class RigAssistantService implements AssistantService {
   @override

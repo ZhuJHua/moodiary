@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_diary/src/application/diary_stamp.dart';
+import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:moodiary_diary/src/application/diary_stamp.dart';
-import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 
 /// 右侧缩略图的固定尺寸。密度全靠它：单图不再占整行，一条带图的日记只有约 85px 高。
 const double _kThumbW = 96.0;

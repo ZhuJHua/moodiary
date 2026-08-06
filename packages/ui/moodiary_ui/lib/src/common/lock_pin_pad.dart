@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:moodiary_core/moodiary_core.dart';
 
 /// 密码长度 —— 与启动解锁页对齐。
 const int kPinLength = 4;

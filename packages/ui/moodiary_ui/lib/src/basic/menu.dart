@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:moodiary_core/moodiary_core.dart';
 
 /// 圆角弹出菜单的单个条目。
 class MoodiaryMenuEntry<T> {

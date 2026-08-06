@@ -3,11 +3,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 同步日志单页：默认展示今天并实时追加；可按 [SyncLogger] 的按天 jsonl
 /// 切换历史日期（保留 7 天，历史视图不追加实时事件）；连续同类事件折叠为组。

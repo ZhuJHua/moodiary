@@ -1,5 +1,3 @@
-import 'package:moodiary_router/moodiary_router.dart';
-
 import 'package:moodiary/app/settings/presentation/about_page.dart';
 import 'package:moodiary/app/settings/presentation/agreement_page.dart';
 import 'package:moodiary/app/settings/presentation/diary_setting_page.dart';
@@ -8,6 +6,7 @@ import 'package:moodiary/app/settings/presentation/privacy_page.dart';
 import 'package:moodiary/app/settings/presentation/services_page.dart';
 import 'package:moodiary/app/settings/presentation/setting_page.dart';
 import 'package:moodiary/app/settings/presentation/sponsor_page.dart';
+import 'package:moodiary_router/moodiary_router.dart';
 
 List<RouteBase> settingRoutes() => [
   GoRoute(

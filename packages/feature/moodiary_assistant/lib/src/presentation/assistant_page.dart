@@ -9,21 +9,21 @@ import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genui/genui.dart' as genui;
 import 'package:gpt_markdown/gpt_markdown.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:moodiary_assistant/src/routes.dart';
-import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_data/moodiary_data.dart';
-import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary_assistant/src/application/isar_chat_controller.dart';
 import 'package:moodiary_assistant/src/application/context_compaction_controller.dart';
+import 'package:moodiary_assistant/src/application/isar_chat_controller.dart';
 import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
-import 'package:moodiary_assistant/src/data/soul_repository.dart';
+import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
+import 'package:moodiary_assistant/src/data/soul_repository.dart';
 import 'package:moodiary_assistant/src/presentation/tool_permission_card.dart';
+import 'package:moodiary_assistant/src/routes.dart';
+import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 enum _ToolPanel { tools }
 

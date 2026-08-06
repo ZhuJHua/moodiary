@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary/app/router/router.dart';
+import 'package:moodiary_assistant/moodiary_assistant.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 
 void main() {
   group('route tree config', () {

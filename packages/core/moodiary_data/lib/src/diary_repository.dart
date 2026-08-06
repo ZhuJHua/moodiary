@@ -5,9 +5,10 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+
 import 'diary_content.dart';
 
 /// 倒排 / 链接索引的建立时机：[inline] 立即建（默认，非编辑器调用方）；[defer] 只写行 +

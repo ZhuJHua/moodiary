@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show listEquals;
-import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
+import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/secure_options.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
-import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 
 /// S3 / MinIO 实现 [IRemoteSyncBackend]，经 flutter_rust_bridge 调 Rust minio SDK。
 /// 配置存于 [MoodiarySecureKVs.s3Option]（含 secretKey），按索引：0 endpoint、1 region（可空）、

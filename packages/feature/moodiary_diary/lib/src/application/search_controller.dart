@@ -1,8 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'search_controller.freezed.dart';

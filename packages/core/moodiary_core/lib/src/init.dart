@@ -1,10 +1,10 @@
 import 'package:moodiary_core/src/di.dart';
+import 'package:moodiary_core/src/files/app_files.dart';
 import 'package:moodiary_core/src/platform_service.dart';
 import 'package:moodiary_core/src/storage.dart';
 import 'package:moodiary_core/src/storage/database/isar.dart';
 import 'package:moodiary_core/src/storage/kv/pref.dart';
 import 'package:moodiary_core/src/storage/kv/secure.dart';
-import 'package:moodiary_core/src/files/app_files.dart';
 
 /// 基础设施层一次性初始化入口。
 ///

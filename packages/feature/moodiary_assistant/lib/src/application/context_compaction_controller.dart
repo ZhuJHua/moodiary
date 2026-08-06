@@ -1,6 +1,6 @@
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 
 /// 参与压缩判定的一条消息（从聊天控制器的文本消息投影而来）。
 typedef CompactionMessage = ({String id, bool fromUser, String text});

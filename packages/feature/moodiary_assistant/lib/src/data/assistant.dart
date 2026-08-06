@@ -1,6 +1,6 @@
+import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 
 enum AssistantRole { user, assistant }
 

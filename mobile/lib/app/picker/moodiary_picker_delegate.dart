@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 import 'package:provider/provider.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 
 /// Moodiary 风格的相册选择器：只重绘视觉件（确定按钮、选中角标、选中蒙层、
 /// 网格圆角与间距），资产分页加载/选择状态机/相册面板/权限处理全部沿用

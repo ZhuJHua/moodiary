@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 
 String _catalog(Map<String, dynamic> providers) => jsonEncode(providers);
 

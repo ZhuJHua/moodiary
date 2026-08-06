@@ -3,9 +3,9 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:isar_plus/isar_plus.dart';
+import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 final _schemas = [DiarySchema, CategorySchema, FontSchema];

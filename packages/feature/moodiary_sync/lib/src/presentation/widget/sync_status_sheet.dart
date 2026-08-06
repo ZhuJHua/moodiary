@@ -2,18 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_router/moodiary_router.dart';
+import 'package:moodiary_sync/src/application/sync_controller.dart';
 import 'package:moodiary_sync/src/application/sync_stats_controller.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
-import 'package:moodiary_sync/src/application/sync_controller.dart';
-import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
+import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
-import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 
 /// 「同步状态」底部弹窗：配置标签 / 当前状态与进度 / 数据概览 / 立即同步
 /// （同步中可停止）/ 查看日志入口。日志本身见 [SyncLogPage]。

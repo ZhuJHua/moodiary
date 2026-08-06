@@ -1,5 +1,5 @@
-import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_core/src/storage.dart';
+import 'package:moodiary_core/src/values/kv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// `IKVStorage` 的 SharedPreferences 实现。[init] 落 `firstStart` 标记。版本迁移钩子

@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_models/moodiary_models.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
 /// 「迁移到 tiptap」服务：把旧的 richText(Quill Delta) 与 markdown 文本日记转换为 tiptap 文档 JSON。

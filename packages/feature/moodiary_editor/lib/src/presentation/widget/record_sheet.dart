@@ -3,11 +3,11 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:record/record.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:record/record.dart';
 
 /// 录音底栏。保存返回文件名（落地在 `getRealPath('audio', ...)`），取消返回 null。
 /// 直接录到正式目录、不走缓存中转，取消 / 失败时主动清理文件。

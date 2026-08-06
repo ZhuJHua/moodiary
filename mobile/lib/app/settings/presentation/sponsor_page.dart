@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:url_launcher/url_launcher.dart';
 
 class SponsorPage extends StatelessWidget {
   const SponsorPage({super.key});
