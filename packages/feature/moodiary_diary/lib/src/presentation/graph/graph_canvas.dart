@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
-import 'dart:ui' as ui show Vertices, PointMode, VertexMode;
+import 'dart:ui' as ui show Vertices;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -85,13 +85,13 @@ class _GraphCanvasState extends State<GraphCanvas>
     with TickerProviderStateMixin {
   // —— 相机（world→screen: p*scale + translate）——
   double _scale = 1;
-  Offset _translate = Offset.zero;
+  Offset _translate = .zero;
   bool _autoFit = true;
-  Size _viewport = Size.zero;
+  Size _viewport = .zero;
 
   double _startScale = 1;
-  Offset _startTranslate = Offset.zero;
-  Offset _startFocal = Offset.zero;
+  Offset _startTranslate = .zero;
+  Offset _startFocal = .zero;
 
   // —— 绘制缓冲（世界坐标；手势只改相机，缓冲不重建）——
   Float32List _nodeBuf = Float32List(0);
@@ -103,9 +103,9 @@ class _GraphCanvasState extends State<GraphCanvas>
   late final AnimationController _settleCtl;
   late final AnimationController _cameraCtl;
   Ticker? _fling;
-  Offset _flingVelocity = Offset.zero;
+  Offset _flingVelocity = .zero;
   double _camFromScale = 1, _camToScale = 1;
-  Offset _camFromT = Offset.zero, _camToT = Offset.zero;
+  Offset _camFromT = .zero, _camToT = .zero;
 
   /// 聚焦中的节点。取消选中时保留到淡出动画走完，否则「取消」是一瞬间的跳变。
   int? _focusIndex;
@@ -120,7 +120,7 @@ class _GraphCanvasState extends State<GraphCanvas>
   final _paint = Paint()..isAntiAlias = true;
   Shader? _spotShader;
   Shader? _vignetteShader;
-  Size _shaderSize = Size.zero;
+  Size _shaderSize = .zero;
 
   // 标签 TextPainter 缓存（帧间标题不变，重复 layout 是纯浪费）。
   final _labels = <int, TextPainter>{};
@@ -250,7 +250,7 @@ class _GraphCanvasState extends State<GraphCanvas>
   }
 
   void _onFocusStatus(AnimationStatus status) {
-    if (status == AnimationStatus.dismissed && widget.selected == null) {
+    if (status == .dismissed && widget.selected == null) {
       _focusIndex = null;
       _rebuildBuffers();
       _bump();
@@ -258,7 +258,7 @@ class _GraphCanvasState extends State<GraphCanvas>
   }
 
   void _onExitStatus(AnimationStatus status) {
-    if (status == AnimationStatus.dismissed && _exitIndex != null) {
+    if (status == .dismissed && _exitIndex != null) {
       _exitIndex = null;
       _bump();
     }
@@ -400,7 +400,7 @@ class _GraphCanvasState extends State<GraphCanvas>
       v += 3;
     }
     _edgeMesh?.dispose();
-    _edgeMesh = ui.Vertices.raw(ui.VertexMode.triangles, xy, colors: colors);
+    _edgeMesh = .raw(.triangles, xy, colors: colors);
   }
 
   /// 写入一个四边形（两个三角形；不用 indices 以规避 Uint16 顶点上限）。
@@ -446,7 +446,7 @@ class _GraphCanvasState extends State<GraphCanvas>
         0.35,
         1.6,
       );
-      _translate = size.center(Offset.zero);
+      _translate = size.center(.zero);
       return;
     }
     var minX = double.infinity, minY = double.infinity;
@@ -468,7 +468,7 @@ class _GraphCanvasState extends State<GraphCanvas>
         .clamp(GraphTuning.minScale, GraphTuning.maxInitialFit)
         .toDouble();
     _translate =
-        size.center(Offset.zero) -
+        size.center(.zero) -
         Offset((minX + maxX) / 2, (minY + maxY) / 2) * _scale;
   }
 
@@ -499,7 +499,7 @@ class _GraphCanvasState extends State<GraphCanvas>
   void _stopFling() {
     _fling?.dispose();
     _fling = null;
-    _flingVelocity = Offset.zero;
+    _flingVelocity = .zero;
   }
 
   void _startFling(Offset velocity) {
@@ -550,7 +550,7 @@ class _GraphCanvasState extends State<GraphCanvas>
             color: widget.palette.label,
             // 一律同一档：选中不改字号字重，免得标签跟着「跳一下」。
             fontSize: GraphTuning.labelSize * _labelFactor,
-            fontWeight: FontWeight.w500,
+            fontWeight: .w500,
             height: 1.1,
             // 底色描边两遍：标签压在边和点阵上仍然可读。
             shadows: [
@@ -559,7 +559,7 @@ class _GraphCanvasState extends State<GraphCanvas>
             ],
           ),
         ),
-        textDirection: _labelDir ?? TextDirection.ltr,
+        textDirection: _labelDir ?? .ltr,
         maxLines: 1,
         ellipsis: '…',
       )..layout(maxWidth: GraphTuning.labelMaxWidth * _labelFactor);
@@ -594,7 +594,7 @@ class _GraphCanvasState extends State<GraphCanvas>
       _labelColor = widget.palette.label;
       _labelDir = dir;
       _labelFactor = factor;
-      _shaderSize = Size.zero; // 主题变了，渐变也要重建
+      _shaderSize = .zero; // 主题变了，渐变也要重建
       // 标签 / 渐变缓存刚被清空，但重绘只认 _repaint —— 帧后补一次，避免停在旧样式。
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _bump();
@@ -605,11 +605,11 @@ class _GraphCanvasState extends State<GraphCanvas>
         final size = constraints.biggest;
         if (_viewport != size) {
           _viewport = size;
-          _shaderSize = Size.zero;
+          _shaderSize = .zero;
           if (_autoFit) _fitCamera(size);
         }
         return GestureDetector(
-          behavior: HitTestBehavior.opaque,
+          behavior: .opaque,
           onScaleStart: (d) {
             _stopFling();
             _cameraCtl.stop();
@@ -638,10 +638,7 @@ class _GraphCanvasState extends State<GraphCanvas>
             widget.onSelect(hit);
           },
           child: RepaintBoundary(
-            child: CustomPaint(
-              size: Size.infinite,
-              painter: _GraphPainter(this),
-            ),
+            child: CustomPaint(size: .infinite, painter: _GraphPainter(this)),
           ),
         );
       },
@@ -686,9 +683,9 @@ class _GraphPainter extends CustomPainter {
       // BlendMode.dst = 忽略 paint、只用顶点色（见 painting.dart 的 drawVertices 文档）。
       canvas.drawVertices(
         mesh,
-        BlendMode.dst,
+        .dst,
         s._paint
-          ..style = PaintingStyle.fill
+          ..style = .fill
           ..color = palette.edge,
       );
     }
@@ -764,13 +761,13 @@ class _GraphPainter extends CustomPainter {
       }
     }
     canvas.drawRawPoints(
-      ui.PointMode.points,
+      .points,
       buf,
       s._paint
         ..color = palette.dot
         ..strokeWidth = 2
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.fill,
+        ..strokeCap = .round
+        ..style = .fill,
     );
   }
 
@@ -786,8 +783,8 @@ class _GraphPainter extends CustomPainter {
     final buf = s._nodeBuf;
     if (buf.length != scene.nodeCount * 2) return;
     final paint = s._paint
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.fill;
+      ..strokeCap = .round
+      ..style = .fill;
     // 节点 = 纯色圆，无描边（用户定调）。
     for (final b in scene.fillBatches) {
       var color = b.color;
@@ -802,8 +799,8 @@ class _GraphPainter extends CustomPainter {
         if (k < b.start || k >= b.end) continue;
         if (k > from) {
           canvas.drawRawPoints(
-            ui.PointMode.points,
-            Float32List.sublistView(buf, from * 2, k * 2),
+            .points,
+            .sublistView(buf, from * 2, k * 2),
             paint,
           );
         }
@@ -811,8 +808,8 @@ class _GraphPainter extends CustomPainter {
       }
       if (from < b.end) {
         canvas.drawRawPoints(
-          ui.PointMode.points,
-          Float32List.sublistView(buf, from * 2, b.end * 2),
+          .points,
+          .sublistView(buf, from * 2, b.end * 2),
           paint,
         );
       }
@@ -834,7 +831,7 @@ class _GraphPainter extends CustomPainter {
     double scale,
   ) {
     final pos = s.widget.frame.positions;
-    final paint = s._paint..style = PaintingStyle.fill;
+    final paint = s._paint..style = .fill;
     // 把这一圈邻居从「整体淡出」里捞回来。起点必须是批量绘制当前的实际颜色
     // （按 dimT 淡的），否则换选中期间新邻域会比背景还暗一档。
     for (final i in scene.neighborsOf(sel)) {
@@ -863,7 +860,7 @@ class _GraphPainter extends CustomPainter {
       center,
       outer - ringW / 2,
       paint
-        ..style = PaintingStyle.stroke
+        ..style = .stroke
         ..strokeWidth = ringW
         ..color = color,
     );
@@ -872,7 +869,7 @@ class _GraphPainter extends CustomPainter {
         center,
         core,
         paint
-          ..style = PaintingStyle.fill
+          ..style = .fill
           ..color = color,
       );
     }

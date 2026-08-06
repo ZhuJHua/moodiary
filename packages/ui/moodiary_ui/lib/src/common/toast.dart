@@ -9,18 +9,18 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 class Toast {
   Toast._();
 
-  static final Toast _instance = Toast._();
+  static final Toast _instance = ._();
 
   factory Toast() => _instance;
 
   void info({required String message}) {
     SmartDialog.show(
-      alignment: Alignment.center,
-      animationType: SmartAnimationType.centerFade_otherSlide,
+      alignment: .center,
+      animationType: .centerFade_otherSlide,
       clickMaskDismiss: false,
       usePenetrate: true,
       displayTime: const Duration(seconds: 2),
-      backType: SmartBackType.ignore,
+      backType: .ignore,
       debounce: true,
       bindPage: false,
       maskColor: Colors.transparent,
@@ -41,11 +41,11 @@ class Toast {
   void loading({String? message}) {
     SmartDialog.showLoading(
       msg: '',
-      animationType: SmartAnimationType.centerFade_otherSlide,
-      alignment: Alignment.center,
+      animationType: .centerFade_otherSlide,
+      alignment: .center,
       clickMaskDismiss: false,
       maskColor: Colors.transparent,
-      backType: SmartBackType.block,
+      backType: .block,
       builder: (context) {
         return _build(
           context: context,
@@ -54,7 +54,7 @@ class Toast {
             width: 24,
             height: 24,
             child: CircularProgressIndicator(
-              padding: EdgeInsets.zero,
+              padding: .zero,
               strokeWidth: 2.5,
               color: context.theme.colorScheme.onSurfaceVariant,
             ),
@@ -66,12 +66,12 @@ class Toast {
 
   void error({String? message}) {
     SmartDialog.show(
-      alignment: Alignment.center,
-      animationType: SmartAnimationType.centerFade_otherSlide,
+      alignment: .center,
+      animationType: .centerFade_otherSlide,
       displayTime: const Duration(seconds: 2),
       clickMaskDismiss: false,
       maskColor: Colors.transparent,
-      backType: SmartBackType.ignore,
+      backType: .ignore,
       usePenetrate: true,
       debounce: true,
       bindPage: false,
@@ -91,12 +91,12 @@ class Toast {
 
   void success({String? message}) {
     SmartDialog.show(
-      alignment: Alignment.center,
-      animationType: SmartAnimationType.centerFade_otherSlide,
+      alignment: .center,
+      animationType: .centerFade_otherSlide,
       displayTime: const Duration(seconds: 2),
       clickMaskDismiss: false,
       usePenetrate: true,
-      backType: SmartBackType.ignore,
+      backType: .ignore,
       maskColor: Colors.transparent,
       debounce: true,
       bindPage: false,
@@ -126,7 +126,7 @@ class Toast {
     Widget? widget;
     final size = MediaQuery.sizeOf(context);
     widget = Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       spacing: 8.0,
       children: [
         icon,
@@ -134,7 +134,7 @@ class Toast {
           constraints: BoxConstraints(maxWidth: size.width, minWidth: 60),
           child: Text(
             message,
-            textAlign: TextAlign.center,
+            textAlign: .center,
             style: context.textTheme.titleSmall?.copyWith(
               color: context.theme.colorScheme.onSurfaceVariant,
             ),
@@ -150,7 +150,7 @@ class Toast {
         ),
         borderRadius: AppBorderRadius.mediumBorderRadius,
       ),
-      child: Padding(padding: const EdgeInsets.all(16.0), child: widget),
+      child: Padding(padding: const .all(16.0), child: widget),
     );
   }
 }

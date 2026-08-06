@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,12 +8,12 @@ const _capsuleSize = Size(300, 60);
 
 Widget _harness(List<BoxShadow>? shadows) {
   return MaterialApp(
-    theme: ThemeData(colorScheme: const ColorScheme.dark()),
+    theme: ThemeData(colorScheme: const .dark()),
     home: RepaintBoundary(
       key: _boundaryKey,
       child: Container(
         color: Colors.white,
-        alignment: Alignment.center,
+        alignment: .center,
         child: SizedBox.fromSize(
           size: _capsuleSize,
           child: MoodiaryGlassSurface(
@@ -37,7 +35,7 @@ Future<List<int>> _pixel(WidgetTester tester, Offset at) async {
   late List<int> rgb;
   await tester.runAsync(() async {
     final image = await boundary.toImage();
-    final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    final data = await image.toByteData(format: .rawRgba);
     final width = image.width;
     final offset = ((at.dy.round() * width) + at.dx.round()) * 4;
     rgb = [

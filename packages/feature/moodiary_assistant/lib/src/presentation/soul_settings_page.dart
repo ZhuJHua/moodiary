@@ -71,15 +71,15 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
           : Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const .all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: .stretch,
                 children: [
                   Card.filled(
                     color: scheme.surfaceContainerHighest,
-                    margin: EdgeInsets.zero,
+                    margin: .zero,
                     child: Padding(
-                      padding: const EdgeInsets.all(12),
+                      padding: const .all(12),
                       child: Row(
                         children: [
                           Icon(LucideIcons.heart, color: scheme.primary),
@@ -100,9 +100,9 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
                       controller: _controller,
                       maxLines: null,
                       expands: true,
-                      textAlignVertical: TextAlignVertical.top,
+                      textAlignVertical: .top,
                       maxLength: soulMaxChars,
-                      keyboardType: TextInputType.multiline,
+                      keyboardType: .multiline,
                       decoration: InputDecoration(
                         hintText: l10n.assistantSoulEditorHint,
                         alignLabelWithHint: true,
@@ -114,7 +114,7 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
                   ),
                   const SizedBox(height: 8),
                   Align(
-                    alignment: AlignmentDirectional.centerStart,
+                    alignment: .centerStart,
                     child: TextButton.icon(
                       onPressed: _reset,
                       icon: const Icon(LucideIcons.rotateCcw),

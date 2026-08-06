@@ -62,11 +62,11 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
           valueListenable: SyncPendingTracker.instance.listenable,
           builder: (context, pending, _) {
             return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: .stretch,
               children: [
                 _Header(total: total),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+                  padding: const .fromLTRB(16, 4, 16, 6),
                   child: Row(
                     children: [
                       Text(
@@ -87,7 +87,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                 ),
                 if (categories.length >= _kSearchThreshold)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                    padding: const .fromLTRB(12, 0, 12, 8),
                     child: SearchBar(
                       hintText: context.l10n.categorySearchHint,
                       leading: const Icon(LucideIcons.search, size: 20),
@@ -101,7 +101,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                   ),
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.only(bottom: 8),
+                    padding: const .only(bottom: 8),
                     children: [
                       // 搜索时只留搜索结果：「全部日记」与「同步中」占位行永远匹配
                       // 不上查询，混在结果里会和下面的「没有匹配的分类」自相矛盾。
@@ -111,7 +111,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                           count: total,
                           selected: filter.isAll,
                           leading: _Swatch.all(scheme: scheme),
-                          onTap: () => _pick(const DiaryFilter.all()),
+                          onTap: () => _pick(const .all()),
                         ),
                       for (final c in visible)
                         _Tile(
@@ -125,7 +125,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                             ),
                           ),
                           syncing: pending.updateCategoryIds.contains(c.id),
-                          onTap: () => _pick(DiaryFilter.category(c.id)),
+                          onTap: () => _pick(.category(c.id)),
                         ),
                       // 新建但还没同步上去的分类：没有名字可显示，只表明「还有东西在路上」。
                       if (query.isEmpty)
@@ -135,7 +135,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                           ),
                       if (visible.isEmpty && query.isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.symmetric(
+                          padding: const .symmetric(
                             horizontal: 16,
                             vertical: 12,
                           ),
@@ -158,10 +158,10 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                   count: uncategorized,
                   selected: filter.uncategorized,
                   leading: _Swatch.none(scheme: scheme),
-                  onTap: () => _pick(const DiaryFilter.uncategorized()),
+                  onTap: () => _pick(const .uncategorized()),
                 ),
                 Padding(
-                  padding: EdgeInsets.fromLTRB(
+                  padding: .fromLTRB(
                     12,
                     4,
                     12,
@@ -180,12 +180,12 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                             size: 18,
                           ),
                           label: Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: .centerLeft,
                             child: Text(context.l10n.categoryManageEntry),
                           ),
                           style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(44),
-                            alignment: Alignment.centerLeft,
+                            minimumSize: const .fromHeight(44),
+                            alignment: .centerLeft,
                           ),
                         ),
                       ),
@@ -225,19 +225,17 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
+      padding: const .fromLTRB(20, 20, 20, 14),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Text(
             context.l10n.appName,
-            style: context.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: context.textTheme.titleLarge?.copyWith(fontWeight: .w700),
           ),
           if (total != null)
             Padding(
-              padding: const EdgeInsets.only(top: 2),
+              padding: const .only(top: 2),
               child: Text(
                 context.l10n.diarySearchResult(total!),
                 style: context.textTheme.labelMedium?.copyWith(
@@ -274,15 +272,15 @@ class _Tile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
+      padding: const .symmetric(horizontal: 12, vertical: 1),
       child: Material(
         color: selected ? scheme.secondaryContainer : Colors.transparent,
-        borderRadius: const BorderRadius.all(Radius.circular(28)),
-        clipBehavior: Clip.antiAlias,
+        borderRadius: const .all(.circular(28)),
+        clipBehavior: .antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const .symmetric(horizontal: 14, vertical: 12),
             child: Row(
               children: [
                 leading,
@@ -291,12 +289,12 @@ class _Tile extends StatelessWidget {
                   child: Text(
                     label,
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    overflow: .ellipsis,
                     style: context.textTheme.bodyLarge?.copyWith(
                       color: selected
                           ? scheme.onSecondaryContainer
                           : scheme.onSurface,
-                      fontWeight: selected ? FontWeight.w600 : null,
+                      fontWeight: selected ? .w600 : null,
                     ),
                   ),
                 ),
@@ -316,7 +314,7 @@ class _Tile extends StatelessWidget {
                       color: selected
                           ? scheme.onSecondaryContainer
                           : scheme.onSurfaceVariant,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                      fontFeatures: const [.tabularFigures()],
                     ),
                   ),
                 ],
@@ -338,7 +336,7 @@ class _PendingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 13),
+      padding: const .symmetric(horizontal: 26, vertical: 13),
       child: Row(
         children: [
           SizedBox(
@@ -389,8 +387,8 @@ class _Swatch extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         gradient: gradient,
-        shape: BoxShape.circle,
-        border: hollow ? Border.all(color: scheme.outline, width: 1.4) : null,
+        shape: .circle,
+        border: hollow ? .all(color: scheme.outline, width: 1.4) : null,
       ),
     );
   }

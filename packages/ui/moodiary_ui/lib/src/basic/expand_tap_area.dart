@@ -77,7 +77,7 @@ class _ExpandTapRenderBox extends RenderBox
     child!.layout(constraints, parentUsesSize: true);
     size = child!.size;
     if (size.isEmpty) {
-      _tapPadding = EdgeInsets.zero;
+      _tapPadding = .zero;
     }
   }
 
@@ -98,11 +98,11 @@ class _ExpandTapRenderBox extends RenderBox
 
     final RenderBox parentBox = parent as RenderBox;
 
-    Offset parentPosition = Offset.zero;
-    parentPosition = offset - localToGlobal(Offset.zero, ancestor: parentBox);
+    Offset parentPosition = .zero;
+    parentPosition = offset - localToGlobal(.zero, ancestor: parentBox);
 
     final Size parentSize = parentBox.size;
-    final Rect parentRect = Rect.fromLTWH(
+    final Rect parentRect = .fromLTWH(
       parentPosition.dx,
       parentPosition.dy,
       parentSize.width,
@@ -111,19 +111,19 @@ class _ExpandTapRenderBox extends RenderBox
     final BoxParentData childParentData = child!.parentData! as BoxParentData;
     final Offset paintOffset =
         childParentData.offset + offset - tapPadding.topLeft;
-    final Rect paintRect = Rect.fromLTWH(
+    final Rect paintRect = .fromLTWH(
       paintOffset.dx,
       paintOffset.dy,
       size.width + tapPadding.horizontal,
       size.height + tapPadding.vertical,
     );
     final Paint paint = Paint()
-      ..style = PaintingStyle.fill
+      ..style = .fill
       ..strokeWidth = 1.0
       ..color = debugPaintExpandAreaColor;
 
     final Paint paint2 = Paint()
-      ..style = PaintingStyle.fill
+      ..style = .fill
       ..strokeWidth = 1.0
       ..color = debugPaintClipAreaColor;
     context.canvas.drawRect(paintRect, paint);
@@ -160,7 +160,7 @@ class _ExpandTapRenderBox extends RenderBox
 
   @override
   bool hitTest(BoxHitTestResult result, {Offset? position}) {
-    final Rect expandRect = Rect.fromLTWH(
+    final Rect expandRect = .fromLTWH(
       0 - tapPadding.left,
       0 - tapPadding.top,
       size.width + tapPadding.right + tapPadding.left,

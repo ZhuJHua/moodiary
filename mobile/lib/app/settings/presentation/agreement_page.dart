@@ -32,11 +32,7 @@ github.com/ZhuJHua/moodiary
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('用户协议')),
-      body: const Markdown(
-        data: _text,
-        selectable: true,
-        padding: EdgeInsets.all(16),
-      ),
+      body: const Markdown(data: _text, selectable: true, padding: .all(16)),
     );
   }
 }

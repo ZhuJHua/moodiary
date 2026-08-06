@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 
@@ -38,16 +36,16 @@ class _FrostedGlassOverlayComponentState
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (MoodiaryKVs.backendPrivacy.get() != true) return;
     switch (state) {
-      case AppLifecycleState.inactive:
-      case AppLifecycleState.hidden:
-      case AppLifecycleState.paused:
+      case .inactive:
+      case .hidden:
+      case .paused:
         _animationController.forward();
-      case AppLifecycleState.resumed:
+      case .resumed:
         _animationController.animateTo(
           0,
           duration: const Duration(milliseconds: 50),
         );
-      case AppLifecycleState.detached:
+      case .detached:
         return;
     }
   }
@@ -61,7 +59,7 @@ class _FrostedGlassOverlayComponentState
           child: IgnorePointer(
             ignoring: _animationController.value == 0,
             child: BackdropFilter(
-              filter: ImageFilter.blur(
+              filter: .blur(
                 sigmaX: 10 * _animationController.value,
                 sigmaY: 10 * _animationController.value,
               ),

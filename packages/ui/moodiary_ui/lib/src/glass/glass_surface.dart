@@ -38,9 +38,7 @@ class MoodiaryGlassSurface extends StatelessWidget {
   /// 两边各写一份迟早会飘。
   static List<BoxShadow> defaultShadows(Brightness brightness) => [
     BoxShadow(
-      color: Colors.black.withValues(
-        alpha: brightness == Brightness.dark ? 0.42 : 0.12,
-      ),
+      color: Colors.black.withValues(alpha: brightness == .dark ? 0.42 : 0.12),
       blurRadius: 24,
       offset: const Offset(0, 8),
     ),
@@ -50,7 +48,7 @@ class MoodiaryGlassSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = MoodiaryGlass.of(context);
     final scheme = context.colorScheme;
-    final dark = scheme.brightness == Brightness.dark;
+    final dark = scheme.brightness == .dark;
 
     final base =
         tint ?? (dark ? scheme.surfaceContainerHigh : scheme.surfaceContainer);
@@ -103,13 +101,13 @@ ImageFilter _backdropFilter(MoodiaryGlassConfig config) {
     sigmaY: config.blurSigma,
   );
   if (config.saturation == 1) return blur;
-  return ImageFilter.compose(outer: _saturate(config.saturation), inner: blur);
+  return .compose(outer: _saturate(config.saturation), inner: blur);
 }
 
 /// 饱和度矩阵。系数用 sRGB 亮度权重，[s] 为 1 时是单位阵。
 ColorFilter _saturate(double s) {
   const lumR = 0.213, lumG = 0.715, lumB = 0.072;
-  return ColorFilter.matrix(<double>[
+  return .matrix(<double>[
     lumR + s * (1 - lumR), lumG * (1 - s), lumB * (1 - s), 0, 0, //
     lumR * (1 - s), lumG + s * (1 - lumG), lumB * (1 - s), 0, 0, //
     lumR * (1 - s), lumG * (1 - s), lumB + s * (1 - lumB), 0, 0, //
@@ -147,11 +145,7 @@ class _GlassShadowPainter extends CustomPainter {
     }
     canvas.save();
     canvas.clipPath(
-      Path.combine(
-        PathOperation.difference,
-        Path()..addRect(rect.inflate(reach + 1)),
-        body,
-      ),
+      .combine(.difference, Path()..addRect(rect.inflate(reach + 1)), body),
     );
     for (final shadow in shadows) {
       // 位移与扩散的算法对齐 ShapeDecoration._paintShadows，换个画法不换观感。

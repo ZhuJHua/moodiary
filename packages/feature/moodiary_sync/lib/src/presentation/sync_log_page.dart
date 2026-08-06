@@ -24,12 +24,12 @@ class _SyncLogPageState extends State<SyncLogPage> {
   StreamSubscription<SyncEvent>? _sub;
   bool _loading = true;
 
-  DateTime _selectedDay = DateTime.now();
+  DateTime _selectedDay = .now();
 
   static bool _sameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  bool get _viewingToday => _sameDay(_selectedDay, DateTime.now());
+  bool get _viewingToday => _sameDay(_selectedDay, .now());
 
   @override
   void initState() {
@@ -44,7 +44,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
         setState(() => _events = [event, ..._events]);
       }
     });
-    _loadDay(DateTime.now(), pendingDuringLoad: pending);
+    _loadDay(.now(), pendingDuringLoad: pending);
   }
 
   Future<void> _loadDay(
@@ -143,10 +143,10 @@ class _SyncLogPageState extends State<SyncLogPage> {
         ],
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
+            padding: const .fromLTRB(20, 10, 20, 4),
             child: Row(
               children: [
                 Text(
@@ -189,13 +189,13 @@ class _EventList extends StatelessWidget {
       final scheme = context.colorScheme;
       return Center(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: .min,
           children: [
             Icon(LucideIcons.cloudSync, size: 40, color: scheme.outline),
             const SizedBox(height: 12),
             Text(
               '该日期暂无同步事件',
-              textAlign: TextAlign.center,
+              textAlign: .center,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),
@@ -217,7 +217,7 @@ class _EventList extends StatelessWidget {
       i = j;
     }
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      padding: const .fromLTRB(8, 0, 8, 8),
       itemCount: entries.length,
       itemBuilder: (context, index) => switch (entries[index]) {
         final SyncEvent event => _EventTile(event: event),
@@ -229,51 +229,51 @@ class _EventList extends StatelessWidget {
 }
 
 const _kindIcon = <SyncEventKind, IconData>{
-  SyncEventKind.syncStart: LucideIcons.play,
-  SyncEventKind.syncEnd: LucideIcons.flag,
-  SyncEventKind.manifestRead: LucideIcons.list,
-  SyncEventKind.manifestWrite: LucideIcons.filePenLine,
-  SyncEventKind.diaryUpload: LucideIcons.upload,
-  SyncEventKind.diaryDownload: LucideIcons.download,
-  SyncEventKind.diarySkip: LucideIcons.skipForward,
-  SyncEventKind.diaryTombstonePush: LucideIcons.eraser,
-  SyncEventKind.diaryTombstonePull: LucideIcons.trash2,
-  SyncEventKind.categoryUpload: LucideIcons.upload,
-  SyncEventKind.categoryDownload: LucideIcons.download,
-  SyncEventKind.categorySkip: LucideIcons.skipForward,
-  SyncEventKind.categoryTombstonePush: LucideIcons.eraser,
-  SyncEventKind.categoryTombstonePull: LucideIcons.trash2,
-  SyncEventKind.mediaUpload: LucideIcons.cloudUpload,
-  SyncEventKind.mediaDownload: LucideIcons.cloudDownload,
-  SyncEventKind.mediaSkip: LucideIcons.skipForward,
-  SyncEventKind.mediaDelete: LucideIcons.trash2,
-  SyncEventKind.lockAcquire: LucideIcons.lock,
-  SyncEventKind.lockRelease: LucideIcons.lockOpen,
-  SyncEventKind.error: LucideIcons.circleAlert,
+  .syncStart: LucideIcons.play,
+  .syncEnd: LucideIcons.flag,
+  .manifestRead: LucideIcons.list,
+  .manifestWrite: LucideIcons.filePenLine,
+  .diaryUpload: LucideIcons.upload,
+  .diaryDownload: LucideIcons.download,
+  .diarySkip: LucideIcons.skipForward,
+  .diaryTombstonePush: LucideIcons.eraser,
+  .diaryTombstonePull: LucideIcons.trash2,
+  .categoryUpload: LucideIcons.upload,
+  .categoryDownload: LucideIcons.download,
+  .categorySkip: LucideIcons.skipForward,
+  .categoryTombstonePush: LucideIcons.eraser,
+  .categoryTombstonePull: LucideIcons.trash2,
+  .mediaUpload: LucideIcons.cloudUpload,
+  .mediaDownload: LucideIcons.cloudDownload,
+  .mediaSkip: LucideIcons.skipForward,
+  .mediaDelete: LucideIcons.trash2,
+  .lockAcquire: LucideIcons.lock,
+  .lockRelease: LucideIcons.lockOpen,
+  .error: LucideIcons.circleAlert,
 };
 
 const _kindLabel = <SyncEventKind, String>{
-  SyncEventKind.syncStart: '同步开始',
-  SyncEventKind.syncEnd: '同步结束',
-  SyncEventKind.manifestRead: '读取清单',
-  SyncEventKind.manifestWrite: '写回清单',
-  SyncEventKind.diaryUpload: '上传日记',
-  SyncEventKind.diaryDownload: '下载日记',
-  SyncEventKind.diarySkip: '跳过日记',
-  SyncEventKind.diaryTombstonePush: '推送日记删除',
-  SyncEventKind.diaryTombstonePull: '同步日记删除',
-  SyncEventKind.categoryUpload: '上传分类',
-  SyncEventKind.categoryDownload: '下载分类',
-  SyncEventKind.categorySkip: '跳过分类',
-  SyncEventKind.categoryTombstonePush: '推送分类删除',
-  SyncEventKind.categoryTombstonePull: '同步分类删除',
-  SyncEventKind.mediaUpload: '上传媒体',
-  SyncEventKind.mediaDownload: '下载媒体',
-  SyncEventKind.mediaSkip: '跳过媒体',
-  SyncEventKind.mediaDelete: '删除媒体',
-  SyncEventKind.lockAcquire: '获取同步锁',
-  SyncEventKind.lockRelease: '释放同步锁',
-  SyncEventKind.error: '错误',
+  .syncStart: '同步开始',
+  .syncEnd: '同步结束',
+  .manifestRead: '读取清单',
+  .manifestWrite: '写回清单',
+  .diaryUpload: '上传日记',
+  .diaryDownload: '下载日记',
+  .diarySkip: '跳过日记',
+  .diaryTombstonePush: '推送日记删除',
+  .diaryTombstonePull: '同步日记删除',
+  .categoryUpload: '上传分类',
+  .categoryDownload: '下载分类',
+  .categorySkip: '跳过分类',
+  .categoryTombstonePush: '推送分类删除',
+  .categoryTombstonePull: '同步分类删除',
+  .mediaUpload: '上传媒体',
+  .mediaDownload: '下载媒体',
+  .mediaSkip: '跳过媒体',
+  .mediaDelete: '删除媒体',
+  .lockAcquire: '获取同步锁',
+  .lockRelease: '释放同步锁',
+  .error: '错误',
 };
 
 class _EventGroupTile extends StatelessWidget {
@@ -286,8 +286,8 @@ class _EventGroupTile extends StatelessWidget {
     final scheme = context.colorScheme;
     final kind = events.first.kind;
     // 组内最高严重级别决定组头配色，错误 / 警告不会被折叠埋掉。
-    final hasError = events.any((e) => e.level == SyncEventLevel.error);
-    final hasWarn = events.any((e) => e.level == SyncEventLevel.warn);
+    final hasError = events.any((e) => e.level == .error);
+    final hasWarn = events.any((e) => e.level == .warn);
     final color = hasError
         ? scheme.error
         : hasWarn
@@ -302,9 +302,9 @@ class _EventGroupTile extends StatelessWidget {
       key: ValueKey('${kind.name}-${events.last.at.microsecondsSinceEpoch}'),
       shape: const Border(),
       collapsedShape: const Border(),
-      tilePadding: const EdgeInsets.symmetric(horizontal: 10),
-      childrenPadding: const EdgeInsets.only(left: 12),
-      visualDensity: VisualDensity.compact,
+      tilePadding: const .symmetric(horizontal: 10),
+      childrenPadding: const .only(left: 12),
+      visualDensity: .compact,
       leading: Icon(
         _kindIcon[kind] ?? LucideIcons.circleDot,
         size: 18,
@@ -320,7 +320,7 @@ class _EventGroupTile extends StatelessWidget {
         range,
         style: context.textTheme.bodySmall?.copyWith(
           color: scheme.outline,
-          fontFeatures: const [FontFeature.tabularFigures()],
+          fontFeatures: const [.tabularFigures()],
         ),
       ),
       children: [for (final e in events) _EventTile(event: e)],
@@ -335,8 +335,8 @@ class _EventTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final isError = event.level == SyncEventLevel.error;
-    final isWarn = event.level == SyncEventLevel.warn;
+    final isError = event.level == .error;
+    final isWarn = event.level == .warn;
     final iconColor = isError
         ? scheme.error
         : isWarn
@@ -348,21 +348,21 @@ class _EventTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: .circular(10),
         onTap: hasPayload ? () => _showPayloadSheet(context) : null,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          padding: const .symmetric(horizontal: 10, vertical: 7),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: .start,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 1),
+                padding: const .only(top: 1),
                 child: Icon(icon, size: 18, color: iconColor),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: .start,
                   children: [
                     Text(
                       event.message,
@@ -375,7 +375,7 @@ class _EventTile extends StatelessWidget {
                       TimeFormat.timeHms(event.at),
                       style: context.textTheme.bodySmall?.copyWith(
                         color: scheme.outline,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                        fontFeatures: const [.tabularFigures()],
                       ),
                     ),
                   ],
@@ -383,7 +383,7 @@ class _EventTile extends StatelessWidget {
               ),
               if (hasPayload)
                 Padding(
-                  padding: const EdgeInsets.only(top: 2),
+                  padding: const .only(top: 2),
                   child: Icon(
                     LucideIcons.chevronRight,
                     size: 16,

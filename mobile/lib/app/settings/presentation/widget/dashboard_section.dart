@@ -14,9 +14,9 @@ class DashboardSection extends ConsumerWidget {
     final stats = async.value;
     return Card.filled(
       color: scheme.surfaceContainerLow,
-      margin: EdgeInsets.zero,
+      margin: .zero,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        padding: const .symmetric(horizontal: 12, vertical: 16),
         child: Column(
           children: [
             Row(
@@ -56,7 +56,7 @@ class _Metric extends StatelessWidget {
     final display = value == null ? '' : '${value!}${suffix ?? ''}';
     return Expanded(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           AdaptiveText(
             label,
@@ -69,7 +69,7 @@ class _Metric extends StatelessWidget {
             display,
             style: context.textTheme.titleMedium?.copyWith(
               color: scheme.secondary,
-              fontFeatures: const [FontFeature.tabularFigures()],
+              fontFeatures: const [.tabularFigures()],
             ),
           ),
         ],

@@ -4,15 +4,14 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 
-Uint8List _bytes(Object json) =>
-    Uint8List.fromList(utf8.encode(jsonEncode(json)));
+Uint8List _bytes(Object json) => .fromList(utf8.encode(jsonEncode(json)));
 
 void main() {
   group('LeasePayload', () {
     test('round-trips through toBytes/fromBytes', () {
       final payload = LeasePayload(
         owner: 'device-a',
-        acquiredAt: DateTime.utc(2026, 6, 10, 12),
+        acquiredAt: .utc(2026, 6, 10, 12),
         ttl: const Duration(minutes: 5),
       );
       final restored = LeasePayload.fromBytes(payload.toBytes())!;
@@ -40,10 +39,7 @@ void main() {
         ),
         isNull,
       );
-      expect(
-        LeasePayload.fromBytes(Uint8List.fromList([0xff, 0x00, 0x01])),
-        isNull,
-      );
+      expect(LeasePayload.fromBytes(.fromList([0xff, 0x00, 0x01])), isNull);
     });
 
     test('isExpired honors ttl plus clock-skew margin', () {

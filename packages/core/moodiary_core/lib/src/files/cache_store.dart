@@ -27,7 +27,7 @@ class CacheStore {
     if (cachedData.length < 2) {
       return true; // 格式不正确，视为过期
     }
-    final int timestamp = int.parse(cachedData.last);
+    final int timestamp = .parse(cachedData.last);
     return DateTime.now().millisecondsSinceEpoch - timestamp >= maxAgeMillis;
   }
 
@@ -48,7 +48,7 @@ class CacheStore {
 class ImageCacheStore {
   ImageCacheStore._();
 
-  static final ImageCacheStore _instance = ImageCacheStore._();
+  static final ImageCacheStore _instance = ._();
 
   factory ImageCacheStore() => _instance;
 

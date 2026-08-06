@@ -48,7 +48,7 @@ class SyncEvent {
     required String message,
     Map<String, Object?>? payload,
   }) => SyncEvent(
-    at: DateTime.now(),
+    at: .now(),
     level: level,
     kind: kind,
     message: message,
@@ -67,7 +67,7 @@ class SyncEvent {
   /// 时间无法解析则用 [DateTime.fromMillisecondsSinceEpoch] 0 时刻占位。
   factory SyncEvent.fromJson(Map<String, Object?> json) {
     SyncEventLevel parseLevel(Object? v) {
-      if (v is! String) return SyncEventLevel.info;
+      if (v is! String) return .info;
       return SyncEventLevel.values.firstWhere(
         (e) => e.name == v,
         orElse: () => SyncEventLevel.info,
@@ -75,7 +75,7 @@ class SyncEvent {
     }
 
     SyncEventKind parseKind(Object? v) {
-      if (v is! String) return SyncEventKind.error;
+      if (v is! String) return .error;
       return SyncEventKind.values.firstWhere(
         (e) => e.name == v,
         orElse: () => SyncEventKind.error,
@@ -84,7 +84,7 @@ class SyncEvent {
 
     final at =
         DateTime.tryParse(json['at'] as String? ?? '') ??
-        DateTime.fromMillisecondsSinceEpoch(0);
+        .fromMillisecondsSinceEpoch(0);
     final raw = json['payload'];
     final payload = raw is Map<String, Object?>
         ? Map<String, Object?>.from(raw)

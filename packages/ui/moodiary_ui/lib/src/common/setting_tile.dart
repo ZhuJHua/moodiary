@@ -112,16 +112,16 @@ class SettingListTile extends StatelessWidget {
               realTitle,
               style: theme.textTheme.bodyLarge?.copyWith(
                 color: selected ? selectedFg : theme.colorScheme.onSurface,
-                fontWeight: selected ? FontWeight.w600 : null,
+                fontWeight: selected ? .w600 : null,
               ),
             )
           : realTitle as Widget,
       shape:
           shape ??
           RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(
-              top: isFirst == true ? const Radius.circular(12) : Radius.zero,
-              bottom: isLast == true ? const Radius.circular(12) : Radius.zero,
+            borderRadius: .vertical(
+              top: isFirst == true ? const .circular(12) : .zero,
+              bottom: isLast == true ? const .circular(12) : .zero,
             ),
           ),
       contentPadding: contentPadding,
@@ -200,12 +200,10 @@ class SettingSwitchListTile extends StatelessWidget {
       secondary: secondary,
       shape: RoundedRectangleBorder(
         borderRadius: isSingle == true
-            ? BorderRadius.circular(12)
-            : BorderRadius.vertical(
-                top: isFirst == true ? const Radius.circular(12) : Radius.zero,
-                bottom: isLast == true
-                    ? const Radius.circular(12)
-                    : Radius.zero,
+            ? .circular(12)
+            : .vertical(
+                top: isFirst == true ? const .circular(12) : .zero,
+                bottom: isLast == true ? const .circular(12) : .zero,
               ),
       ),
       subtitle: (realSubtitle is String)

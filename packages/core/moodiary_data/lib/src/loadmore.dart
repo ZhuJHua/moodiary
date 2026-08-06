@@ -19,7 +19,7 @@ mixin LoadMoreMixin<T> on AnyNotifier<AsyncValue<List<T>>, List<T>> {
     final epoch = _epoch;
     try {
       if (offset > 0) {
-        state = const AsyncValue.loading();
+        state = const .loading();
       }
       final items = await load(limit: pageSize, offset: offset);
       if (epoch != _epoch) return;
@@ -27,14 +27,14 @@ mixin LoadMoreMixin<T> on AnyNotifier<AsyncValue<List<T>>, List<T>> {
       final updated = [...current, ...?items];
       _noMore = items == null || items.length < pageSize;
       if (offset > 0 || refresh || current.isEmpty) {
-        state = AsyncValue.data(updated);
+        state = .data(updated);
       }
     } catch (e) {
       if (epoch != _epoch) return;
       if (offset == 0) {
         rethrow;
       } else {
-        state = AsyncValue.error(e, StackTrace.current);
+        state = .error(e, .current);
       }
     }
   }

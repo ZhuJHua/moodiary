@@ -34,7 +34,7 @@ Future<bool> applyUserKeyChange({
 
   IRemoteSyncBackend? backend;
   try {
-    backend = IRemoteSyncBackend.get();
+    backend = .get();
   } catch (_) {
     backend = null;
   }
@@ -115,8 +115,8 @@ Future<bool> applyUserKeyChange({
         context,
         // hasRemote 为真必然经过了 backendReady 探测。
         backend: backend!,
-        from: SyncCipher.plaintext,
-        to: SyncCipher.withKey(newDek),
+        from: .plaintext,
+        to: .withKey(newDek),
       );
       if (report != null && context.mounted) {
         toast.success(message: '云端已加密：$report');
@@ -143,8 +143,8 @@ Future<bool> applyUserKeyChange({
     final report = await _runWithProgress(
       context,
       backend: backend,
-      from: SyncCipher.withKey(dek),
-      to: SyncCipher.plaintext,
+      from: .withKey(dek),
+      to: .plaintext,
     );
     // 远端为空（report null 且无错误）也继续关闭；真失败在 _runWithProgress 内已提示并返回 null——
     // 为避免半解密状态下丢 DEK，报错时不清本机密钥。
@@ -249,8 +249,8 @@ class _RecipherDialogState extends State<_RecipherDialog> {
       child: AlertDialog(
         title: const Text('正在处理云端数据'),
         content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: .min,
+          crossAxisAlignment: .stretch,
           children: [
             LinearProgressIndicator(value: ratio),
             const SizedBox(height: 12),

@@ -41,7 +41,7 @@ class FontController extends _$FontController {
     await xFile.saveTo(newPath);
     await FontRepository.get().insertFont(newFont);
     await FontManager.loadFont(fontName: newFont.fontFamily, fontPath: newPath);
-    state = AsyncValue.data([...current, newFont]);
+    state = .data([...current, newFont]);
     return '';
   }
 
@@ -55,7 +55,7 @@ class FontController extends _$FontController {
     final next = (state.value ?? const <Font>[])
         .where((e) => e.fontFamily != font.fontFamily)
         .toList();
-    state = AsyncValue.data(next);
+    state = .data(next);
   }
 
   Future<void> setActive(Font? font) async {

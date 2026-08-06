@@ -7,7 +7,7 @@ import 'package:moodiary_core/src/files/app_files.dart';
 class AppLogger {
   AppLogger._();
 
-  static final AppLogger _instance = AppLogger._();
+  static final AppLogger _instance = ._();
 
   factory AppLogger() => _instance;
   late final Logger _logger = Logger(

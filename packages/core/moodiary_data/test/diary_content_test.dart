@@ -52,7 +52,7 @@ void main() {
     });
 
     test('三项派生与 TiptapContent 一致', () {
-      final c = DiaryContent.of(_diary(content: doc, type: DiaryType.tiptap));
+      final c = DiaryContent.of(_diary(content: doc, type: .tiptap));
       final direct = TiptapContent.parse(doc);
       expect(c.plainText, direct.plainText);
       expect(c.media.images, direct.media.images);
@@ -65,7 +65,7 @@ void main() {
     const md = '正文 ![](image-1.webp) ![](video-1.mp4) ![](audio-1.m4a)';
 
     test('plainText 走 markdown 转换，媒体按前缀分流，无双链', () {
-      final c = DiaryContent.of(_diary(content: md, type: DiaryType.markdown));
+      final c = DiaryContent.of(_diary(content: md, type: .markdown));
       expect(c.plainText, MarkdownConverter.convert(md));
       expect(c.media.images, ['image-1.webp']);
       expect(c.media.videos, ['video-1.mp4']);
@@ -85,9 +85,7 @@ void main() {
           },
         ],
       });
-      final c = DiaryContent.of(
-        _diary(content: asJson, type: DiaryType.markdown),
-      );
+      final c = DiaryContent.of(_diary(content: asJson, type: .markdown));
       expect(c.plainText, MarkdownConverter.convert(asJson));
       expect(c.links, isEmpty);
     });
@@ -102,9 +100,7 @@ void main() {
         },
         {'insert': '第二行\n\n'},
       ]);
-      final c = DiaryContent.of(
-        _diary(content: delta, type: DiaryType.richText),
-      );
+      final c = DiaryContent.of(_diary(content: delta, type: .richText));
       expect(c.plainText, '第一行\n第二行');
     });
 
@@ -120,9 +116,7 @@ void main() {
           'insert': {'audio': 'audio-1.m4a'},
         },
       ]);
-      final c = DiaryContent.of(
-        _diary(content: delta, type: DiaryType.richText),
-      );
+      final c = DiaryContent.of(_diary(content: delta, type: .richText));
       expect(c.media.images, ['image-1.webp']);
       expect(c.media.videos, ['video-1.mp4']);
       expect(c.media.audios, ['audio-1.m4a']);
@@ -132,7 +126,7 @@ void main() {
       final c = DiaryContent.of(
         _diary(
           content: '这不是 Delta',
-          type: DiaryType.richText,
+          type: .richText,
           imageName: const ['image-keep.webp'],
           videoName: const ['video-keep.mp4'],
           audioName: const ['audio-keep.m4a'],
@@ -149,7 +143,7 @@ void main() {
       final c = DiaryContent.of(
         _diary(
           content: '[]',
-          type: DiaryType.richText,
+          type: .richText,
           imageName: const ['image-stale.webp'],
         ),
       );

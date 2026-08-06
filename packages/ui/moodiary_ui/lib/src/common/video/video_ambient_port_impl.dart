@@ -10,10 +10,7 @@ import 'video_ambient_controller.dart';
 
 /// 播放页用的一组端口。
 Map<VideoAmbientChannel, VideoAmbientChannelPort> defaultVideoAmbientPorts() =>
-    {
-      VideoAmbientChannel.brightness: AppBrightnessPort(),
-      VideoAmbientChannel.volume: SystemVolumePort(),
-    };
+    {.brightness: AppBrightnessPort(), .volume: SystemVolumePort()};
 
 /// application 级亮度：只改本 app 窗口，不写系统设置，因此**不需要 WRITE_SETTINGS 权限**。
 /// 离开播放页要 reset，否则整个 app 会一直停在播放时那个亮度上。

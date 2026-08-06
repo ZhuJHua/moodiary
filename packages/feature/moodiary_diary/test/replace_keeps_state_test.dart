@@ -61,5 +61,5 @@ class _ProbeState extends State<_Probe> {
 
   @override
   Widget build(BuildContext context) =>
-      Text('probe-${widget.id}', textDirection: TextDirection.ltr);
+      Text('probe-${widget.id}', textDirection: .ltr);
 }

@@ -41,8 +41,8 @@ class DiaryTileFrame extends StatelessWidget {
   const DiaryTileFrame({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.fromLTRB(8, 2, 8, 6),
-    this.margin = EdgeInsets.zero,
+    this.padding = const .fromLTRB(8, 2, 8, 6),
+    this.margin = .zero,
     this.card = false,
     this.borderRadius = AppBorderRadius.mediumBorderRadius,
     this.selected = false,
@@ -63,7 +63,7 @@ class DiaryTileFrame extends StatelessWidget {
               : (card ? scheme.surfaceContainerLow : null),
           borderRadius: borderRadius,
           // 未选中也画一圈透明描边：否则选中时会因为多出 1.5px 而整条抖一下。
-          border: Border.all(
+          border: .all(
             color: selected ? scheme.primary : Colors.transparent,
             width: 1.5,
           ),
@@ -90,9 +90,9 @@ class DiarySyncBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state == DiaryCardSyncState.none) return const SizedBox.shrink();
+    if (state == .none) return const SizedBox.shrink();
     final color = context.colorScheme.primary;
-    return state == DiaryCardSyncState.syncing
+    return state == .syncing
         ? SizedBox(
             width: 12,
             height: 12,

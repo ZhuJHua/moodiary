@@ -11,9 +11,7 @@ class LlmProviderRepository {
 
   factory LlmProviderRepository.get() => _instance;
 
-  static final LlmProviderRepository _instance = LlmProviderRepository._(
-    IsarDatabase.get().isar,
-  );
+  static final LlmProviderRepository _instance = ._(IsarDatabase.get().isar);
 
   final Isar _isar;
 

@@ -8,7 +8,6 @@ import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
-import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
@@ -21,7 +20,7 @@ void main() {
   setUp(() async {
     logger = (await setUpSyncEnv()).logger;
     // 默认把 webdav 标记为唯一已配置后端，使单后端 tombstone 推完即可硬删。
-    await configureBackend(SyncProviderType.webdav);
+    await configureBackend(.webdav);
   });
 
   tearDown(tearDownSyncEnv);
@@ -72,8 +71,7 @@ void main() {
     ).push();
   }
 
-  Uint8List jsonBytes(Object v) =>
-      Uint8List.fromList(utf8.encode(jsonEncode(v)));
+  Uint8List jsonBytes(Object v) => .fromList(utf8.encode(jsonEncode(v)));
 
   group('push — first sync', () {
     test('uploads all diaries + categories and writes a v4 manifest', () async {
@@ -688,8 +686,8 @@ void main() {
         'hard-deletes only after EVERY configured backend received the tombstone',
         () async {
           // 两个云后端都已配置。
-          await configureBackend(SyncProviderType.webdav);
-          await configureBackend(SyncProviderType.s3);
+          await configureBackend(.webdav);
+          await configureBackend(.s3);
 
           final webdav = FakeRemoteBackend(backendId: 'webdav');
           final s3 = FakeRemoteBackend(backendId: 's3');
@@ -982,7 +980,7 @@ void main() {
           ).push(),
           throwsA(isA<SyncException>()),
         );
-        await Future<void>.delayed(Duration.zero); // 让广播事件投递完
+        await Future<void>.delayed(.zero); // 让广播事件投递完
         await sub.cancel();
 
         expect(kinds, contains(SyncEventKind.syncStart));

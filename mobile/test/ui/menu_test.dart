@@ -28,7 +28,7 @@ void main() {
                   ),
                 ],
             child: const Padding(
-              padding: EdgeInsets.all(12),
+              padding: .all(12),
               child: Icon(LucideIcons.ellipsisVertical),
             ),
           ),

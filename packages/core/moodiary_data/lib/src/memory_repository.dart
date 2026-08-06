@@ -8,9 +8,7 @@ class MemoryRepository {
 
   factory MemoryRepository.get() => _instance;
 
-  static final MemoryRepository _instance = MemoryRepository._(
-    IsarDatabase.get().isar,
-  );
+  static final MemoryRepository _instance = ._(IsarDatabase.get().isar);
 
   final Isar _isar;
 

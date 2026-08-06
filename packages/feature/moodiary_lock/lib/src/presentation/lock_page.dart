@@ -84,7 +84,7 @@ class _LockPageState extends ConsumerState<LockPage>
     _error = '尝试次数过多，请等待 $_cooldownLeft 秒';
     setState(() {});
     _cooldownTimer?.cancel();
-    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _cooldownTimer = .periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
@@ -181,7 +181,7 @@ class _LockPageState extends ConsumerState<LockPage>
         body: Center(
           child: SingleChildScrollView(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: .min,
               children: [
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 250),
@@ -211,17 +211,17 @@ class _LockPageState extends ConsumerState<LockPage>
                     );
                   },
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_pinLength, (i) {
+                    mainAxisAlignment: .center,
+                    children: .generate(_pinLength, (i) {
                       final filled = i < _pin.length;
                       return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        padding: const .symmetric(horizontal: 8),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 150),
                           width: 14,
                           height: 14,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
+                            shape: .circle,
                             color: filled
                                 ? scheme.onSurface
                                 : scheme.surfaceContainerHighest,
@@ -240,7 +240,7 @@ class _LockPageState extends ConsumerState<LockPage>
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                     physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
+                    padding: .zero,
                     children: [
                       for (final d in const [
                         '1',

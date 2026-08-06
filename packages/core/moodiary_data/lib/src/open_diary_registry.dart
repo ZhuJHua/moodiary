@@ -8,7 +8,7 @@
 class OpenDiaryRegistry {
   OpenDiaryRegistry._();
 
-  static final OpenDiaryRegistry instance = OpenDiaryRegistry._();
+  static final OpenDiaryRegistry instance = ._();
 
   final Map<String, int> _open = <String, int>{};
 

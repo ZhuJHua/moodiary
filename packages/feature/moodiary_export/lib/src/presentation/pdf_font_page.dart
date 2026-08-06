@@ -73,17 +73,17 @@ class _PdfFontPageState extends State<PdfFontPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              padding: const .symmetric(horizontal: 8, vertical: 8),
               children: [
                 if (_fonts.isEmpty) _empty(),
                 if (_fonts.isNotEmpty)
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: .stretch,
                     children: [
                       SettingTitleTile(title: l10n.exportImportedFonts),
                       Card.filled(
                         color: scheme.surfaceContainerLow,
-                        margin: EdgeInsets.zero,
+                        margin: .zero,
                         child: Column(
                           children: [for (final font in _fonts) _tile(font)],
                         ),
@@ -91,12 +91,12 @@ class _PdfFontPageState extends State<PdfFontPage> {
                     ],
                   ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 16),
+                  padding: const .only(top: 16),
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
+                      minimumSize: const .fromHeight(48),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: .circular(14),
                       ),
                     ),
                     onPressed: _import,
@@ -113,11 +113,11 @@ class _PdfFontPageState extends State<PdfFontPage> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: const .symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outlineVariant),
+        borderRadius: .circular(16),
+        border: .all(color: scheme.outlineVariant),
       ),
       child: Column(
         children: [
@@ -127,7 +127,7 @@ class _PdfFontPageState extends State<PdfFontPage> {
           const SizedBox(height: 6),
           Text(
             l10n.exportNoPdfFontMessage,
-            textAlign: TextAlign.center,
+            textAlign: .center,
             style: context.textTheme.bodySmall?.copyWith(
               color: scheme.onSurfaceVariant,
             ),

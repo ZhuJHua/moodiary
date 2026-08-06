@@ -11,9 +11,7 @@ class CategoryRepository {
 
   factory CategoryRepository.get() => _instance;
 
-  static final CategoryRepository _instance = CategoryRepository._(
-    IsarDatabase.get().isar,
-  );
+  static final CategoryRepository _instance = ._(IsarDatabase.get().isar);
 
   final Isar _isar;
 
@@ -25,7 +23,7 @@ class CategoryRepository {
 
   /// 全量分类（表内即全部活跃行，删除后行硬删、事实入 SyncTombstone 表）。
   TaskEither<DatabaseException, List<Category>> getAllCategories() {
-    return TaskEither.tryCatch(
+    return .tryCatch(
       () async => await _isar.categorys.where().sortById().findAllAsync(),
       (e, _) => DatabaseException('Failed to fetch categories: $e'),
     );
@@ -45,14 +43,14 @@ class CategoryRepository {
     Category category, {
     bool fromSync = false,
   }) {
-    return TaskEither.tryCatch(
+    return .tryCatch(
       () => _putCategory(category, fromSync: fromSync),
       (e, _) => DatabaseException('Failed to insert category: $e'),
     );
   }
 
   TaskEither<DatabaseException, bool> deleteACategory(String id) {
-    return TaskEither.tryCatch(
+    return .tryCatch(
       () => _deleteCategory(id),
       (e, _) => DatabaseException('Failed to delete category: $e'),
     );
@@ -65,7 +63,7 @@ class CategoryRepository {
     String id, {
     bool fromSync = false,
   }) async {
-    final tombstone = SyncTombstone.forCategory(id, at: DateTime.timestamp());
+    final tombstone = SyncTombstone.forCategory(id, at: .timestamp());
     await _isar.writeAsync((isar) {
       isar.categorys.delete(id);
       isar.syncTombstones.put(tombstone);
@@ -89,7 +87,7 @@ class CategoryRepository {
 
   /// 本地删除：仅当分类下没有日记时成功；行硬删 + 写同步墓碑。
   Future<bool> _deleteCategory(String id) async {
-    final tombstone = SyncTombstone.forCategory(id, at: DateTime.timestamp());
+    final tombstone = SyncTombstone.forCategory(id, at: .timestamp());
     final deleted = await _isar.writeAsync((isar) {
       final hasDiary = !isar.diarys.where().categoryIdEqualTo(id).isEmpty();
       if (hasDiary) return false;

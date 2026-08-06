@@ -59,16 +59,14 @@ final _categories = [
 
 GraphScene _scene(
   DiaryGraphData data, {
-  GraphColorMode mode = GraphColorMode.category,
+  GraphColorMode mode = .category,
   bool dark = false,
 }) {
-  final theme = ThemeData(
-    brightness: dark ? Brightness.dark : Brightness.light,
-  );
-  return GraphScene.build(
+  final theme = ThemeData(brightness: dark ? .dark : .light);
+  return .build(
     data: data,
     categories: _categories,
-    palette: GraphPalette.of(theme, edgeCount: data.edgeCount),
+    palette: .of(theme, edgeCount: data.edgeCount),
     mode: mode,
   );
 }
@@ -83,9 +81,7 @@ Future<void> _pumpCanvas(
   bool dark = false,
   bool showLabels = true,
 }) async {
-  final theme = ThemeData(
-    brightness: dark ? Brightness.dark : Brightness.light,
-  );
+  final theme = ThemeData(brightness: dark ? .dark : .light);
   await tester.pumpWidget(
     MaterialApp(
       theme: theme,
@@ -93,7 +89,7 @@ Future<void> _pumpCanvas(
         body: GraphCanvas(
           scene: scene,
           frame: frame,
-          palette: GraphPalette.of(theme, edgeCount: scene.edgeCount),
+          palette: .of(theme, edgeCount: scene.edgeCount),
           selected: selected,
           showLabels: showLabels,
           egoDirections: dirs,
@@ -190,7 +186,7 @@ void main() {
     });
 
     test('分类色向主色 harmonize，无分类回落主题色', () {
-      final cs = ThemeData(brightness: Brightness.light).colorScheme;
+      final cs = ThemeData(brightness: .light).colorScheme;
       final scene = _scene(_graph(n: 4, edges: [(0, 1), (2, 3)]));
       // index 0/3 无分类（i % 3 == 0）→ 主题色本色，不需要 harmonize。
       expect(scene.colors[0], cs.primary);
@@ -520,7 +516,7 @@ void main() {
 
       // 陈旧帧：坐标数与节点数不匹配，必须被守卫挡住而不是越界。
       final single = _scene(_graph(n: 1, edges: const []));
-      frame.push(Float32List.fromList([1, 2, 3, 4]), settled: true);
+      frame.push(.fromList([1, 2, 3, 4]), settled: true);
       await _pumpCanvas(tester, scene: single, frame: frame);
       await tester.pump();
       expect(tester.takeException(), isNull);
@@ -552,7 +548,7 @@ void main() {
       await _pumpCanvas(tester, scene: byCategory, frame: frame);
       await tester.pump(const Duration(milliseconds: 300));
       // 换成 plain 着色的新场景（节点数不变、不推帧）
-      final byPlain = _scene(data, mode: GraphColorMode.plain);
+      final byPlain = _scene(data, mode: .plain);
       await _pumpCanvas(tester, scene: byPlain, frame: frame);
       await tester.pump();
       expect(tester.takeException(), isNull);

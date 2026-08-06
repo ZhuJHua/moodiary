@@ -8,15 +8,15 @@ import 'loadmore.dart';
 part 'diary_controller.g.dart';
 
 Comparator<Diary> diarySortComparator(DiarySort sort) => switch (sort) {
-  DiarySort.timeDesc => (a, b) {
+  .timeDesc => (a, b) {
     final c = b.time.compareTo(a.time);
     return c != 0 ? c : b.isarId.compareTo(a.isarId);
   },
-  DiarySort.timeAsc => (a, b) {
+  .timeAsc => (a, b) {
     final c = a.time.compareTo(b.time);
     return c != 0 ? c : a.isarId.compareTo(b.isarId);
   },
-  DiarySort.lastModifiedDesc => (a, b) {
+  .lastModifiedDesc => (a, b) {
     final c = b.lastModified.compareTo(a.lastModified);
     return c != 0 ? c : b.isarId.compareTo(a.isarId);
   },
@@ -33,7 +33,7 @@ List<Diary> applyDiaryEvent(
   Comparator<Diary>? compare,
   bool mayHaveMore = false,
 }) {
-  final cmp = compare ?? diarySortComparator(DiarySort.timeDesc);
+  final cmp = compare ?? diarySortComparator(.timeDesc);
   switch (event) {
     case DiaryDeleted(:final isarId):
       if (!list.any((d) => d.isarId == isarId)) return list;
@@ -53,9 +53,9 @@ List<Diary> applyDiaryEvent(
 /// 订阅 [DiaryRepository.diaryEvents] 按事件原地增量更新，无需重查库。
 @riverpod
 class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
-  late final DiaryRepository _repository = DiaryRepository.get();
+  late final DiaryRepository _repository = .get();
 
-  DiarySort get _sort => DiarySort.getType(MoodiaryKVs.homeSortMode.get()!);
+  DiarySort get _sort => .getType(MoodiaryKVs.homeSortMode.get()!);
 
   @override
   FutureOr<List<Diary>> build({
@@ -85,7 +85,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   void _applyChange(DiaryEvent event) {
     final list = state.value;
     if (list == null) return;
-    state = AsyncValue.data(
+    state = .data(
       applyDiaryEvent(
         list,
         event,
@@ -103,10 +103,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
   /// 软删除：移入回收站（`show = false`）。仅写库，各视图经事件流自动同步。
   Future<bool> softDeleteDiary(Diary diary) async {
     try {
-      final next = diary.copyWith(
-        show: false,
-        lastModified: DateTime.timestamp(),
-      );
+      final next = diary.copyWith(show: false, lastModified: .timestamp());
       await _repository.updateADiary(newDiary: next);
       return true;
     } catch (_) {
@@ -128,7 +125,7 @@ class DiaryController extends _$DiaryController with LoadMoreMixin<Diary> {
 /// 回收站列表（按时间倒序的所有 `show == false` 的日记）。
 @riverpod
 class RecycleBinDiaries extends _$RecycleBinDiaries {
-  DiaryRepository get _repository => DiaryRepository.get();
+  DiaryRepository get _repository => .get();
 
   @override
   FutureOr<List<Diary>> build() async {
@@ -140,18 +137,13 @@ class RecycleBinDiaries extends _$RecycleBinDiaries {
   void _applyChange(DiaryEvent event) {
     final list = state.value;
     if (list == null) return;
-    state = AsyncValue.data(
-      applyDiaryEvent(list, event, belongs: (d) => !d.show),
-    );
+    state = .data(applyDiaryEvent(list, event, belongs: (d) => !d.show));
   }
 
   /// 还原为 `show = true`。仅写库，回收站与目标分类列表经事件流自动同步。
   Future<bool> restore(Diary diary) async {
     try {
-      final next = diary.copyWith(
-        show: true,
-        lastModified: DateTime.timestamp(),
-      );
+      final next = diary.copyWith(show: true, lastModified: .timestamp());
       await _repository.updateADiary(newDiary: next);
       return true;
     } catch (_) {

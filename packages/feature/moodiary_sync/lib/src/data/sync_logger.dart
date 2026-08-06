@@ -32,7 +32,7 @@ class SyncLogger {
   String? _currentDayKey;
 
   /// 内存中本进程已产生的事件（最旧在前）。
-  List<SyncEvent> get recent => List.unmodifiable(_buffer);
+  List<SyncEvent> get recent => .unmodifiable(_buffer);
 
   /// 广播流，每个监听者从订阅之后的事件开始收。
   Stream<SyncEvent> get events => _controller.stream;
@@ -70,40 +70,20 @@ class SyncLogger {
     SyncEventKind kind,
     String message, {
     Map<String, Object?>? payload,
-  }) => log(
-    SyncEvent.now(
-      level: SyncEventLevel.info,
-      kind: kind,
-      message: message,
-      payload: payload,
-    ),
-  );
+  }) => log(.now(level: .info, kind: kind, message: message, payload: payload));
 
   void warn(
     SyncEventKind kind,
     String message, {
     Map<String, Object?>? payload,
-  }) => log(
-    SyncEvent.now(
-      level: SyncEventLevel.warn,
-      kind: kind,
-      message: message,
-      payload: payload,
-    ),
-  );
+  }) => log(.now(level: .warn, kind: kind, message: message, payload: payload));
 
   void error(
     SyncEventKind kind,
     String message, {
     Map<String, Object?>? payload,
-  }) => log(
-    SyncEvent.now(
-      level: SyncEventLevel.error,
-      kind: kind,
-      message: message,
-      payload: payload,
-    ),
-  );
+  }) =>
+      log(.now(level: .error, kind: kind, message: message, payload: payload));
 
   Future<void> _persist(SyncEvent event) async {
     if (_dir == null) return;
@@ -121,7 +101,7 @@ class SyncLogger {
     await _sink?.flush();
     await _sink?.close();
     final path = p.join(_dir!.path, '$_filePrefix$key$_fileSuffix');
-    _sink = File(path).openWrite(mode: FileMode.append, encoding: utf8);
+    _sink = File(path).openWrite(mode: .append, encoding: utf8);
     _currentDayKey = key;
   }
 
@@ -161,7 +141,7 @@ class SyncLogger {
   /// 读取指定日期（默认今天）的历史日志，解析失败的行静默跳过。
   Future<List<SyncEvent>> readDay([DateTime? day]) async {
     if (_dir == null) return const [];
-    final key = _dayKey(day ?? DateTime.now());
+    final key = _dayKey(day ?? .now());
     final file = File(p.join(_dir!.path, '$_filePrefix$key$_fileSuffix'));
     if (!await file.exists()) return const [];
     final lines = await file.readAsLines(encoding: utf8);
@@ -170,7 +150,7 @@ class SyncLogger {
       if (line.trim().isEmpty) continue;
       try {
         final json = jsonDecode(line) as Map<String, Object?>;
-        events.add(SyncEvent.fromJson(json));
+        events.add(.fromJson(json));
       } catch (_) {}
     }
     return events;

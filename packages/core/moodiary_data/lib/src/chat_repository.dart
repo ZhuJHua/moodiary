@@ -9,9 +9,7 @@ class ChatRepository {
 
   factory ChatRepository.get() => _instance;
 
-  static final ChatRepository _instance = ChatRepository._(
-    IsarDatabase.get().isar,
-  );
+  static final ChatRepository _instance = ._(IsarDatabase.get().isar);
 
   final Isar _isar;
 

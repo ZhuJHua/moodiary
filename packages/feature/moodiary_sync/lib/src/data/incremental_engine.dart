@@ -8,7 +8,6 @@ import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
@@ -88,7 +87,7 @@ class IncrementalSyncEngine {
     return IncrementalSyncEngine._(
       _GatedBackend(backend, n),
       n,
-      logger ?? SyncLogger.get(),
+      logger ?? .get(),
       diaryStore ?? RepoSyncDiaryStore(),
       categoryStore ?? RepoSyncCategoryStore(),
       tombstoneStore ?? RepoSyncTombstoneStore(),
@@ -155,7 +154,7 @@ class IncrementalSyncEngine {
           // 发出，会让 AutoSyncWatcher 的 _syncing 闸门永久卡死、自动同步静默失效。
           // 这里补发一个 syncEnd 兜底。lease 抢占失败发生在 body 之前（无 syncStart）不受影响。
           _logger.info(
-            SyncEventKind.syncEnd,
+            .syncEnd,
             '同步异常中止',
             payload: {..._backendPayload(), 'error': e.toString()},
           );
@@ -183,16 +182,16 @@ class IncrementalSyncEngine {
     await _uploadPendingKeyfile();
     final sw = Stopwatch()..start();
     _logger.info(
-      SyncEventKind.syncStart,
+      .syncStart,
       '开始 pull',
       payload: {..._backendPayload(), 'direction': 'pull'},
     );
     final manifest = await _readManifest();
     if (manifest == null) {
       sw.stop();
-      _logger.warn(SyncEventKind.manifestRead, '远端 manifest 不存在，结束 pull');
+      _logger.warn(.manifestRead, '远端 manifest 不存在，结束 pull');
       _logger.info(
-        SyncEventKind.syncEnd,
+        .syncEnd,
         'pull 完成（远端为空）',
         payload: {
           ..._backendPayload(),
@@ -214,7 +213,7 @@ class IncrementalSyncEngine {
       );
     }
     _logger.info(
-      SyncEventKind.manifestRead,
+      .manifestRead,
       '读到远端 manifest（${manifest.entries.length} 条）',
       payload: {'entries': manifest.entries.length},
     );
@@ -300,7 +299,7 @@ class IncrementalSyncEngine {
             if (local != null &&
                 local.lastModified.millisecondsSinceEpoch > tombstoneMs) {
               _logger.info(
-                SyncEventKind.diarySkip,
+                .diarySkip,
                 '本地比远端 tombstone 更新，保留本地：$id',
                 payload: {
                   'diaryId': id,
@@ -315,7 +314,7 @@ class IncrementalSyncEngine {
             // 的 open-diary 跳过对称。
             if (local != null && OpenDiaryRegistry.instance.contains(id)) {
               _logger.info(
-                SyncEventKind.diarySkip,
+                .diarySkip,
                 '日记打开中，跳过应用远端 tombstone：$id',
                 payload: {'diaryId': id},
               );
@@ -332,7 +331,7 @@ class IncrementalSyncEngine {
               await _deleteLocalMedia(local);
               diaryChanged++;
               _logger.info(
-                SyncEventKind.diaryTombstonePull,
+                .diaryTombstonePull,
                 '本地删除日记（远端 tombstone）：$id',
                 payload: {'diaryId': id},
               );
@@ -348,7 +347,7 @@ class IncrementalSyncEngine {
               tombstones[key]?.timeMs;
           if (localMs != null && remoteMs <= localMs) {
             _logger.info(
-              SyncEventKind.diarySkip,
+              .diarySkip,
               '本地不旧于远端，跳过下载：$id',
               payload: {'diaryId': id},
             );
@@ -369,7 +368,7 @@ class IncrementalSyncEngine {
           if (diary.id != id) {
             failed++;
             _logger.error(
-              SyncEventKind.error,
+              .error,
               '远端日记对象身份不符，已跳过：$key',
               payload: {'key': key, 'objectId': diary.id},
             );
@@ -384,7 +383,7 @@ class IncrementalSyncEngine {
           if (freshMs != null && remoteMs <= freshMs) {
             pending.completeDiary(id);
             _logger.info(
-              SyncEventKind.diarySkip,
+              .diarySkip,
               '本地在 pull 期间已更新，跳过下载：$id',
               payload: {'diaryId': id},
             );
@@ -401,7 +400,7 @@ class IncrementalSyncEngine {
           }
           diaryChanged++;
           _logger.info(
-            SyncEventKind.diaryDownload,
+            .diaryDownload,
             '下载日记：${diary.title.isEmpty ? id : diary.title}',
             payload: {
               'diaryId': id,
@@ -420,7 +419,7 @@ class IncrementalSyncEngine {
             if (local != null &&
                 local.lastModified.millisecondsSinceEpoch > tombstoneMs) {
               _logger.info(
-                SyncEventKind.categorySkip,
+                .categorySkip,
                 '本地分类比远端 tombstone 更新：$id',
                 payload: {'categoryId': id},
               );
@@ -432,7 +431,7 @@ class IncrementalSyncEngine {
               );
               categoryChanged++;
               _logger.info(
-                SyncEventKind.categoryTombstonePull,
+                .categoryTombstonePull,
                 '本地删除分类（远端 tombstone）：$id',
                 payload: {'categoryId': id},
               );
@@ -446,7 +445,7 @@ class IncrementalSyncEngine {
               tombstones[key]?.timeMs;
           if (localMs != null && remoteMs <= localMs) {
             _logger.info(
-              SyncEventKind.categorySkip,
+              .categorySkip,
               '本地分类不旧于远端，跳过：$id',
               payload: {'categoryId': id},
             );
@@ -466,7 +465,7 @@ class IncrementalSyncEngine {
           if (freshMs != null && remoteMs <= freshMs) {
             pending.completeCategory(id);
             _logger.info(
-              SyncEventKind.categorySkip,
+              .categorySkip,
               '本地分类在 pull 期间已更新，跳过：$id',
               payload: {'categoryId': id},
             );
@@ -476,7 +475,7 @@ class IncrementalSyncEngine {
           if (category.id != id) {
             failed++;
             _logger.error(
-              SyncEventKind.error,
+              .error,
               '远端分类对象身份不符，已跳过：$key',
               payload: {'key': key, 'objectId': category.id},
             );
@@ -492,7 +491,7 @@ class IncrementalSyncEngine {
             pending.completeCategory(id);
             categoryChanged++;
             _logger.info(
-              SyncEventKind.categoryDownload,
+              .categoryDownload,
               '下载分类：$id',
               payload: {'categoryId': id},
             );
@@ -500,17 +499,13 @@ class IncrementalSyncEngine {
             // 本地写入失败（仓库把异常映射成 false，不抛）→ 必须计入 failed，
             // 否则本次同步谎报成功、推进 lastSyncTime。与日记下载失败对称。
             failed++;
-            _logger.error(
-              SyncEventKind.error,
-              '写入分类失败：$id',
-              payload: {'categoryId': id},
-            );
+            _logger.error(.error, '写入分类失败：$id', payload: {'categoryId': id});
           }
         }
       } catch (e) {
         failed++;
         _logger.error(
-          SyncEventKind.error,
+          .error,
           'pull 条目失败：$key',
           payload: {'key': key, 'detail': e.toString()},
         );
@@ -534,7 +529,7 @@ class IncrementalSyncEngine {
     sw.stop();
     final stopped = SyncCancellation.instance.isRequested;
     _logger.info(
-      SyncEventKind.syncEnd,
+      .syncEnd,
       stopped ? 'pull 已手动停止' : 'pull 结束',
       payload: {
         ..._backendPayload(),
@@ -633,7 +628,7 @@ class IncrementalSyncEngine {
     await _uploadPendingKeyfile();
     final sw = Stopwatch()..start();
     _logger.info(
-      SyncEventKind.syncStart,
+      .syncStart,
       '开始 push',
       payload: {..._backendPayload(), 'direction': 'push'},
     );
@@ -643,14 +638,14 @@ class IncrementalSyncEngine {
       read = await _readManifest();
       virginRemote = read == null;
     }
-    final manifest = read ?? SyncManifest.empty();
+    final manifest = read ?? .empty();
     // 兜底不变量：向「空远端」推加密数据前 keys.json 必须先落地 —— 否则该后端上
     // 只有密文没有信封，换设备后永远解不开。待上传清单是主路径，这里兜漏网。
     if (virginRemote && (await _cipher()).encrypted) {
       await _ensureKeyfileOnVirginRemote();
     }
     _logger.info(
-      SyncEventKind.manifestRead,
+      .manifestRead,
       '读到远端 manifest（${manifest.entries.length} 条）',
       payload: {'entries': manifest.entries.length},
     );
@@ -716,7 +711,7 @@ class IncrementalSyncEngine {
       if (remoteMs != null &&
           diary.lastModified.millisecondsSinceEpoch <= remoteMs) {
         _logger.info(
-          SyncEventKind.diarySkip,
+          .diarySkip,
           '本地不旧于远端，跳过上传：${diary.id}',
           payload: {'diaryId': diary.id},
         );
@@ -750,7 +745,7 @@ class IncrementalSyncEngine {
         pushedDiaryIds.add(diary.id);
         diaryChanged++;
         _logger.info(
-          SyncEventKind.diaryUpload,
+          .diaryUpload,
           '上传日记：${diary.title.isEmpty ? diary.id : diary.title}',
           payload: {
             'diaryId': diary.id,
@@ -761,7 +756,7 @@ class IncrementalSyncEngine {
       } catch (e) {
         failed++;
         _logger.error(
-          SyncEventKind.error,
+          .error,
           '上传日记失败：${diary.id}',
           payload: {'diaryId': diary.id, 'detail': e.toString()},
         );
@@ -778,7 +773,7 @@ class IncrementalSyncEngine {
       if (remoteMs != null &&
           category.lastModified.millisecondsSinceEpoch <= remoteMs) {
         _logger.info(
-          SyncEventKind.categorySkip,
+          .categorySkip,
           '本地分类不旧于远端：${category.id}',
           payload: {'categoryId': category.id},
         );
@@ -795,14 +790,14 @@ class IncrementalSyncEngine {
         );
         categoryChanged++;
         _logger.info(
-          SyncEventKind.categoryUpload,
+          .categoryUpload,
           '上传分类：${category.id}',
           payload: {'categoryId': category.id, 'bytes': bytes.length},
         );
       } catch (e) {
         failed++;
         _logger.error(
-          SyncEventKind.error,
+          .error,
           '上传分类失败：${category.id}',
           payload: {'categoryId': category.id, 'detail': e.toString()},
         );
@@ -830,7 +825,7 @@ class IncrementalSyncEngine {
       // 下次 pull 会按 LWW 把更新的远端版本拉回、本地复活（复活时墓碑行连带清除）。
       if (remoteEntry.timeMs >= t.timeMs) {
         _logger.info(
-          isDiary ? SyncEventKind.diarySkip : SyncEventKind.categorySkip,
+          isDiary ? .diarySkip : .categorySkip,
           '远端比本地删除更新，跳过推送 tombstone：${t.entityId}',
           payload: {
             isDiary ? 'diaryId' : 'categoryId': t.entityId,
@@ -858,9 +853,7 @@ class IncrementalSyncEngine {
       }
       if (trackingId != null) tombstones.markPushed(key, trackingId);
       _logger.info(
-        isDiary
-            ? SyncEventKind.diaryTombstonePush
-            : SyncEventKind.categoryTombstonePush,
+        isDiary ? .diaryTombstonePush : .categoryTombstonePush,
         '推送 tombstone：${t.entityId}',
         payload: {
           isDiary ? 'diaryId' : 'categoryId': t.entityId,
@@ -892,7 +885,7 @@ class IncrementalSyncEngine {
         );
       }
       _logger.info(
-        SyncEventKind.manifestWrite,
+        .manifestWrite,
         '写回远端 manifest（${updated.entries.length} 条）',
         payload: {
           'entries': updated.entries.length,
@@ -923,7 +916,7 @@ class IncrementalSyncEngine {
     sw.stop();
     final stopped = SyncCancellation.instance.isRequested;
     _logger.info(
-      SyncEventKind.syncEnd,
+      .syncEnd,
       stopped ? 'push 已手动停止' : 'push 结束',
       payload: {
         ..._backendPayload(),
@@ -964,7 +957,7 @@ class IncrementalSyncEngine {
       await SyncKeyManager.clearPendingUpload(backendId);
     }
     _logger.info(
-      SyncEventKind.manifestWrite,
+      .manifestWrite,
       '空远端初始化：已写入密钥文件 keys.json',
       payload: _backendPayload(),
     );
@@ -977,7 +970,7 @@ class IncrementalSyncEngine {
       await SyncKeyManager.uploadPendingKeyfile(backend);
     } catch (e) {
       _logger.warn(
-        SyncEventKind.error,
+        .error,
         'keyfile 补传失败（不阻塞本次同步）',
         payload: {..._backendPayload(), 'detail': e.toString()},
       );
@@ -994,7 +987,7 @@ class IncrementalSyncEngine {
     if (decoded is! Map<String, dynamic>) {
       throw const SyncException('远端 manifest 已损坏（非 JSON 对象），已中止同步以防丢失远端条目');
     }
-    return SyncManifest.fromJson(decoded);
+    return .fromJson(decoded);
   }
 
   List<String> _mediaRefs(Diary diary) => [
@@ -1035,7 +1028,7 @@ class IncrementalSyncEngine {
     Set<String> remoteMedia,
   ) {
     if (remoteMedia.contains(SyncKeys.mediaRef(type, filename))) {
-      return Future.value(true);
+      return .value(true);
     }
     // 整条「stat→读文件→加密→上传」在 [_mediaGate] 许可内执行，限制内存缓冲份数。
     return _mediaGate.withResource(
@@ -1051,7 +1044,7 @@ class IncrementalSyncEngine {
     try {
       if (!await _mediaFiles.exists(type, filename)) {
         _logger.warn(
-          SyncEventKind.mediaSkip,
+          .mediaSkip,
           '本地媒体不存在，跳过：$filename',
           payload: {'type': type, 'filename': filename},
         );
@@ -1062,7 +1055,7 @@ class IncrementalSyncEngine {
       final remoteModified = await backend.statObject(remotePath);
       if (remoteModified.isNotEmpty) {
         _logger.info(
-          SyncEventKind.mediaSkip,
+          .mediaSkip,
           '远端已存在，跳过：$filename',
           payload: {'type': type, 'filename': filename},
         );
@@ -1074,7 +1067,7 @@ class IncrementalSyncEngine {
       final encrypted = await (await _cipher()).encryptBytes(plain);
       await backend.writeObject(remotePath, encrypted);
       _logger.info(
-        SyncEventKind.mediaUpload,
+        .mediaUpload,
         '上传媒体：$filename',
         payload: {
           'type': type,
@@ -1086,7 +1079,7 @@ class IncrementalSyncEngine {
       return true;
     } catch (e) {
       _logger.error(
-        SyncEventKind.error,
+        .error,
         '上传媒体失败：$filename',
         payload: {'type': type, 'filename': filename, 'detail': e.toString()},
       );
@@ -1113,11 +1106,7 @@ class IncrementalSyncEngine {
       refs.map((ref) async {
         try {
           await backend.deleteObject(SyncKeys.mediaObjectPathFromRef(ref));
-          _logger.info(
-            SyncEventKind.mediaDelete,
-            '删除远端媒体：$ref',
-            payload: {'ref': ref},
-          );
+          _logger.info(.mediaDelete, '删除远端媒体：$ref', payload: {'ref': ref});
         } catch (_) {}
       }),
       eagerError: false,
@@ -1143,7 +1132,7 @@ class IncrementalSyncEngine {
     try {
       if (await _mediaFiles.exists(type, filename)) {
         _logger.info(
-          SyncEventKind.mediaSkip,
+          .mediaSkip,
           '本地已有，跳过下载：$filename',
           payload: {'type': type, 'filename': filename},
         );
@@ -1154,7 +1143,7 @@ class IncrementalSyncEngine {
       final encrypted = await backend.readObject(remotePath);
       if (encrypted == null || encrypted.isEmpty) {
         _logger.warn(
-          SyncEventKind.mediaSkip,
+          .mediaSkip,
           '远端无此媒体，跳过：$filename',
           payload: {'type': type, 'filename': filename},
         );
@@ -1163,13 +1152,13 @@ class IncrementalSyncEngine {
       final plain = await (await _cipher()).decryptBytes(encrypted);
       await _mediaFiles.write(type, filename, plain);
       _logger.info(
-        SyncEventKind.mediaDownload,
+        .mediaDownload,
         '下载媒体：$filename',
         payload: {'type': type, 'filename': filename, 'bytes': plain.length},
       );
     } catch (e) {
       _logger.error(
-        SyncEventKind.error,
+        .error,
         '下载媒体失败：$filename',
         payload: {'type': type, 'filename': filename, 'detail': e.toString()},
       );
@@ -1183,7 +1172,7 @@ class IncrementalSyncEngine {
         try {
           await _mediaFiles.delete(e.$1, e.$2);
           _logger.info(
-            SyncEventKind.mediaDelete,
+            .mediaDelete,
             '删除本地媒体：${e.$2}',
             payload: {'type': e.$1, 'filename': e.$2},
           );

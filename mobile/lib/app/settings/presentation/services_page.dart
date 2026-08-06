@@ -12,7 +12,7 @@ class ServicesPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('第三方服务')),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const .symmetric(horizontal: 8, vertical: 8),
         children: const [
           _Note(),
           SizedBox(height: 4),
@@ -36,9 +36,9 @@ class _Note extends StatelessWidget {
     final scheme = context.colorScheme;
     return Card.filled(
       color: scheme.surfaceContainerHighest,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+      margin: const .symmetric(horizontal: 8),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const .all(12),
         child: Row(
           children: [
             Icon(LucideIcons.waypoints, color: scheme.primary),
@@ -64,12 +64,12 @@ class _AiSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: 'AI 助手'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: ValueListenableBuilder<String>(
             valueListenable: MoodiaryKVs.assistantActiveProviderId
                 .getNotifier(),
@@ -88,22 +88,22 @@ class _QweatherSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '和风天气'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: const Column(
             children: [
               _KvTile(
-                kv: MoodiaryKVs.qweatherKey,
+                kv: .qweatherKey,
                 title: 'API Key',
                 leading: Icon(LucideIcons.key),
                 isFirst: true,
               ),
               _KvTile(
-                kv: MoodiaryKVs.qweatherApiHost,
+                kv: .qweatherApiHost,
                 title: 'API Host',
                 subtitleWhenEmpty: 'devapi.qweather.com 或自定义',
                 leading: Icon(LucideIcons.server),
@@ -124,16 +124,16 @@ class _TiandituSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '天地图'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: const Column(
             children: [
               _KvTile(
-                kv: MoodiaryKVs.tiandituKey,
+                kv: .tiandituKey,
                 title: 'API Key',
                 leading: Icon(LucideIcons.map),
                 isFirst: true,

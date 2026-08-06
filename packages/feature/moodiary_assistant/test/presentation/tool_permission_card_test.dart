@@ -35,9 +35,7 @@ void main() {
   }
 
   testWidgets('允许一次：Future 得 allowOnce，卡片原地更新为结果态', (tester) async {
-    final (coordinator, surfaceId, decision) = createCard(
-      AssistantTool.createDiary,
-    );
+    final (coordinator, surfaceId, decision) = createCard(.createDiary);
 
     await tester.pumpWidget(host(coordinator, surfaceId));
     await tester.pumpAndSettle();
@@ -56,9 +54,7 @@ void main() {
   });
 
   testWidgets('危险工具显示警示，拒绝后更新为已拒绝', (tester) async {
-    final (coordinator, surfaceId, decision) = createCard(
-      AssistantTool.deleteDiary,
-    );
+    final (coordinator, surfaceId, decision) = createCard(.deleteDiary);
 
     await tester.pumpWidget(host(coordinator, surfaceId));
     await tester.pumpAndSettle();
@@ -75,9 +71,7 @@ void main() {
   });
 
   testWidgets('取消在途申请：Future 得 canceled，卡片置为已取消', (tester) async {
-    final (coordinator, surfaceId, decision) = createCard(
-      AssistantTool.createDiary,
-    );
+    final (coordinator, surfaceId, decision) = createCard(.createDiary);
 
     await tester.pumpWidget(host(coordinator, surfaceId));
     await tester.pumpAndSettle();

@@ -65,7 +65,7 @@ class _LanReceivePageState extends State<LanReceivePage> {
       body: _startError != null
           ? Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const .all(24),
                 child: Text(
                   _startError!,
                   style: TextStyle(color: scheme.error),
@@ -77,7 +77,7 @@ class _LanReceivePageState extends State<LanReceivePage> {
           : ValueListenableBuilder(
               valueListenable: _service.state,
               builder: (context, state, _) => ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                padding: const .fromLTRB(20, 8, 20, 32),
                 children: [
                   Center(child: _StatusHero(state: state)),
                   const SizedBox(height: 4),
@@ -174,7 +174,7 @@ class _StatusLine extends StatelessWidget {
             child: LinearProgressIndicator(
               value: (total != null && total > 0) ? received / total : null,
               minHeight: 8,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: .circular(999),
             ),
           ),
           const SizedBox(height: 8),
@@ -200,7 +200,7 @@ class _StatusLine extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             _summary(report),
-            textAlign: TextAlign.center,
+            textAlign: .center,
             style: context.textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -222,7 +222,7 @@ class _StatusLine extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             message,
-            textAlign: TextAlign.center,
+            textAlign: .center,
             style: context.textTheme.bodySmall?.copyWith(color: scheme.error),
           ),
           const SizedBox(height: 4),
@@ -255,13 +255,13 @@ class _AddressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const .all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: .circular(16),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Text(
             '本机地址',
@@ -306,20 +306,20 @@ class _AddressChip extends StatelessWidget {
     final scheme = context.colorScheme;
     return Material(
       color: scheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: .circular(10),
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: .circular(10),
         onTap: () => onCopy(address),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const .symmetric(horizontal: 12, vertical: 8),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: .min,
             children: [
               Text(
                 address,
                 style: context.textTheme.bodyMedium?.copyWith(
                   fontFamily: 'monospace',
-                  fontFeatures: const [FontFeature.tabularFigures()],
+                  fontFeatures: const [.tabularFigures()],
                 ),
               ),
               const SizedBox(width: 6),

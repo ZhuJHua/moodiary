@@ -30,20 +30,20 @@ class MediaDiaries extends _$MediaDiaries with LoadMoreMixin<Diary> {
   }
 
   bool _hasMedia(Diary d) => switch (type) {
-    MediaType.image => d.imageName.isNotEmpty,
-    MediaType.audio => d.audioName.isNotEmpty,
-    MediaType.video => d.videoName.isNotEmpty,
+    .image => d.imageName.isNotEmpty,
+    .audio => d.audioName.isNotEmpty,
+    .video => d.videoName.isNotEmpty,
   };
 
   void _applyChange(DiaryEvent event) {
     final list = state.value;
     if (list == null) return;
-    state = AsyncValue.data(
+    state = .data(
       applyDiaryEvent(
         list,
         event,
         belongs: (d) => d.show && _hasMedia(d),
-        compare: diarySortComparator(DiarySort.timeDesc),
+        compare: diarySortComparator(.timeDesc),
         mayHaveMore: !noMore,
       ),
     );
@@ -57,9 +57,9 @@ MediaGroup buildMediaGroup(List<Diary> diaries, MediaType type) {
   final order = <DateTime>[];
   for (final d in diaries) {
     final names = switch (type) {
-      MediaType.image => d.imageName,
-      MediaType.audio => d.audioName,
-      MediaType.video => d.videoName,
+      .image => d.imageName,
+      .audio => d.audioName,
+      .video => d.videoName,
     };
     if (names.isEmpty) continue;
     final t = d.time.toLocal();

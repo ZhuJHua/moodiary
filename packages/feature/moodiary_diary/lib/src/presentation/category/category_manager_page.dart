@@ -90,7 +90,7 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
               color: Colors.transparent,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: .circular(12),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.12 * t),
@@ -145,11 +145,7 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
     final ok = await ref
         .read(categoryControllerProvider.notifier)
         .upsertCategory(
-          Category.create(
-            categoryName: draft.name,
-            color: draft.color,
-            parentId: null,
-          ),
+          .create(categoryName: draft.name, color: draft.color, parentId: null),
         );
     if (!mounted) return;
     if (ok) {
@@ -176,7 +172,7 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
           Category(
             id: category.id,
             categoryName: draft.name,
-            lastModified: DateTime.timestamp(),
+            lastModified: .timestamp(),
             parentId: category.parentId,
             color: draft.color,
           ),
@@ -218,10 +214,10 @@ class _SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+      padding: const .fromLTRB(12, 12, 12, 6),
       child: TextField(
         onChanged: onChanged,
-        textInputAction: TextInputAction.search,
+        textInputAction: .search,
         decoration: InputDecoration(
           hintText: context.l10n.categorySearchHint,
           prefixIcon: const Icon(LucideIcons.search),
@@ -229,7 +225,7 @@ class _SearchField extends StatelessWidget {
           isDense: true,
           border: const OutlineInputBorder(
             borderRadius: AppBorderRadius.mediumBorderRadius,
-            borderSide: BorderSide.none,
+            borderSide: .none,
           ),
         ),
       ),
@@ -261,7 +257,7 @@ class _Empty extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           const Icon(LucideIcons.folder, size: 48),
           const SizedBox(height: 12),
@@ -301,24 +297,21 @@ class _CategoryTile extends StatelessWidget {
         ? Colors.black87
         : Colors.white;
     return Card.filled(
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: const .symmetric(vertical: 4),
       color: scheme.surfaceContainerLow,
-      clipBehavior: Clip.antiAlias,
+      clipBehavior: .antiAlias,
       child: ListTile(
         onTap: onRename,
         leading: Container(
           width: 42,
           height: 42,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(13),
-          ),
+          decoration: BoxDecoration(color: color, borderRadius: .circular(13)),
           child: Icon(LucideIcons.folder, size: 21, color: onColor),
         ),
         title: Text(
           category.categoryName,
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
           style: context.textTheme.titleMedium,
         ),
         subtitle: Text(
@@ -328,7 +321,7 @@ class _CategoryTile extends StatelessWidget {
           ),
         ),
         trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: .min,
           children: [
             MoodiaryMenuButton<String>(
               tooltip: context.l10n.more,
@@ -354,7 +347,7 @@ class _CategoryTile extends StatelessWidget {
                 ),
               ],
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const .all(12),
                 child: Icon(
                   LucideIcons.ellipsisVertical,
                   color: scheme.onSurfaceVariant,
@@ -365,7 +358,7 @@ class _CategoryTile extends StatelessWidget {
               ReorderableDragStartListener(
                 index: dragIndex!,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 4),
+                  padding: const .only(left: 4),
                   child: Icon(
                     LucideIcons.gripHorizontal,
                     color: scheme.onSurfaceVariant,
@@ -455,20 +448,19 @@ class _CategoryEditorContentState extends State<_CategoryEditorContent> {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    OutlineInputBorder border([BorderSide side = BorderSide.none]) =>
-        OutlineInputBorder(
-          borderRadius: AppBorderRadius.mediumBorderRadius,
-          borderSide: side,
-        );
+    OutlineInputBorder border([BorderSide side = .none]) => OutlineInputBorder(
+      borderRadius: AppBorderRadius.mediumBorderRadius,
+      borderSide: side,
+    );
 
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: .min,
+      crossAxisAlignment: .start,
       children: [
         TextField(
           controller: _controller,
           autofocus: true,
-          textInputAction: TextInputAction.done,
+          textInputAction: .done,
           onChanged: (value) => setState(() {
             _edited = true;
             widget.draft.name = value;
@@ -482,10 +474,7 @@ class _CategoryEditorContentState extends State<_CategoryEditorContent> {
             filled: true,
             isDense: true,
             fillColor: scheme.surfaceContainerHighest,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 13,
-            ),
+            contentPadding: const .symmetric(horizontal: 16, vertical: 13),
             border: border(),
             enabledBorder: border(),
             focusedBorder: border(
@@ -512,8 +501,8 @@ class _CategoryEditorContentState extends State<_CategoryEditorContent> {
                   height: 28,
                   decoration: BoxDecoration(
                     color: c,
-                    shape: BoxShape.circle,
-                    border: Border.all(
+                    shape: .circle,
+                    border: .all(
                       color: widget.draft.color == c.toARGB32()
                           ? scheme.onSurface
                           : Colors.transparent,

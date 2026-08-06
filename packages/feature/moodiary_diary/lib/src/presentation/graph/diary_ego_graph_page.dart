@@ -256,11 +256,11 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
     final sameGraph = _scene != null && identical(_scene!.data, graph);
     _palette = palette;
     _categories = categories;
-    _scene = GraphScene.build(
+    _scene = .build(
       data: graph,
       categories: categories,
       palette: palette,
-      mode: GraphColorMode.category,
+      mode: .category,
     );
     _dirs = egoDirectionsOf(_scene!);
     if (!sameGraph) {
@@ -295,7 +295,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
           right: 12,
           top: 10,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: .spaceBetween,
             children: [
               _Legend(
                 color: cs.tertiary,
@@ -374,18 +374,18 @@ class _Legend extends StatelessWidget {
     final theme = Theme.of(context);
     return Container(
       height: 26,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const .symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: .circular(13),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Container(
             width: 7,
             height: 7,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: color, shape: .circle),
           ),
           const SizedBox(width: 6),
           Text(label, style: theme.textTheme.labelSmall),

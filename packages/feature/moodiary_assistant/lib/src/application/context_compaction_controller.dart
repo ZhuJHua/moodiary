@@ -60,7 +60,7 @@ class ContextCompactionController {
       return session.copyWith(
         compactedSummary: summary.trim(),
         compactedUpToMessageId: newWatermark,
-        compactedAt: DateTime.timestamp(),
+        compactedAt: .timestamp(),
         compactedInputTokensAtTrigger: lastInputTokens,
       );
     } catch (_) {
@@ -79,20 +79,14 @@ class ContextCompactionController {
     final history = <AssistantMessage>[];
     if (priorSummary != null && priorSummary.trim().isNotEmpty) {
       history
-        ..add(
-          AssistantMessage.user('[Earlier summary]\n${priorSummary.trim()}'),
-        )
-        ..add(const AssistantMessage.assistant('OK.'));
+        ..add(.user('[Earlier summary]\n${priorSummary.trim()}'))
+        ..add(const .assistant('OK.'));
     }
     for (final m in messages) {
-      history.add(
-        m.fromUser
-            ? AssistantMessage.user(m.text)
-            : AssistantMessage.assistant(m.text),
-      );
+      history.add(m.fromUser ? .user(m.text) : .assistant(m.text));
     }
     history.add(
-      const AssistantMessage.user(
+      const .user(
         'Summarize the conversation above following your instructions.',
       ),
     );
@@ -110,7 +104,7 @@ class ContextCompactionController {
 
     final buffer = StringBuffer();
     await for (final event in AssistantService.get().chat(request)) {
-      if (event.kind == AssistantStreamKind.text) buffer.write(event.text);
+      if (event.kind == .text) buffer.write(event.text);
     }
     return buffer.toString();
   }

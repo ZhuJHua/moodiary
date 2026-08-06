@@ -40,7 +40,7 @@ class QuillDeltaToTiptap {
       if (insert is String) {
         final parts = insert.split('\n');
         for (var i = 0; i < parts.length; i++) {
-          if (parts[i].isNotEmpty) current.segs.add(_Seg.text(parts[i], attrs));
+          if (parts[i].isNotEmpty) current.segs.add(.text(parts[i], attrs));
           if (i < parts.length - 1) close(Map<String, dynamic>.from(attrs));
         }
       } else if (insert is Map) {
@@ -53,7 +53,7 @@ class QuillDeltaToTiptap {
             : null;
         final name = kind == null ? null : insert[kind];
         if (kind != null && name is String && name.isNotEmpty) {
-          current.segs.add(_Seg.embed(kind, name));
+          current.segs.add(.embed(kind, name));
         }
       }
     }

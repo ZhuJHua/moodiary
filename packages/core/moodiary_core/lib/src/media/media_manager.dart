@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
@@ -27,18 +27,18 @@ enum ImageFormat {
 
   static ImageFormat getImageFormat(String imagePath) {
     final mimeType = lookupMimeType(imagePath);
-    if (mimeType == null) return ImageFormat.png;
+    if (mimeType == null) return .png;
     switch (mimeType) {
       case 'image/jpeg':
-        return ImageFormat.jpeg;
+        return .jpeg;
       case 'image/png':
-        return ImageFormat.png;
+        return .png;
       case 'image/heic':
-        return ImageFormat.heic;
+        return .heic;
       case 'image/webp':
-        return ImageFormat.webp;
+        return .webp;
       default:
-        return ImageFormat.png;
+        return .png;
     }
   }
 }
@@ -67,18 +67,16 @@ class MediaManager {
         // 先转 PNG 临时文件；优化开启时最终格式统一 WebP（自带 alpha，无需探测），
         // 关闭时按是否含 alpha 选 PNG（保透明）/ JPEG（省体积）。
         String? heicTempPath;
-        if (imageFormat == ImageFormat.heic) {
+        if (imageFormat == .heic) {
           heicTempPath = await _convertHeicToPng(imageFile.path);
           if (heicTempPath != null) {
             workingFile = XFile(heicTempPath);
             imageFormat = _optimizeEnabled
-                ? ImageFormat.webp
-                : (await _pngHasAlphaChannel(heicTempPath)
-                      ? ImageFormat.png
-                      : ImageFormat.jpeg);
+                ? .webp
+                : (await _pngHasAlphaChannel(heicTempPath) ? .png : .jpeg);
           }
         } else if (_optimizeEnabled) {
-          imageFormat = ImageFormat.webp;
+          imageFormat = .webp;
         }
         try {
           final imageName = 'image-${uuidV7()}${imageFormat.extension}';
@@ -107,7 +105,7 @@ class MediaManager {
     final srcName = basename(imageFile.path);
     if (srcName.startsWith('image-')) return srcName;
     final format = ImageFormat.getImageFormat(imageFile.path);
-    if (format == ImageFormat.heic) {
+    if (format == .heic) {
       final uuid = uuidV7();
       if (_optimizeEnabled) {
         // 转 PNG 字节直接落 .webp 名（HeifConverter 按输出后缀选编码器，非 .jpg
@@ -312,32 +310,32 @@ class MediaManager {
     ImageFormat? imageFormat,
     double? imageAspectRatio,
   }) async {
-    final imageFormat_ = imageFormat ?? ImageFormat.getImageFormat(imagePath);
+    final imageFormat_ = imageFormat ?? .getImageFormat(imagePath);
     return switch (imageFormat_) {
-      ImageFormat.jpeg => _compressRustToFile(
+      .jpeg => _compressRustToFile(
         imagePath,
         outputPath,
-        rust.CompressFormat.jpeg,
+        .jpeg,
         size: size,
         imageAspectRatio: imageAspectRatio,
       ),
-      ImageFormat.png => _compressRustToFile(
+      .png => _compressRustToFile(
         imagePath,
         outputPath,
-        rust.CompressFormat.png,
+        .png,
         size: size,
         imageAspectRatio: imageAspectRatio,
       ),
-      ImageFormat.heic => _compressHeicToFile(
+      .heic => _compressHeicToFile(
         imagePath,
         outputPath,
         size: size,
         imageAspectRatio: imageAspectRatio,
       ),
-      ImageFormat.webp => _compressRustToFile(
+      .webp => _compressRustToFile(
         imagePath,
         outputPath,
-        rust.CompressFormat.webP,
+        .webP,
         size: size,
         imageAspectRatio: imageAspectRatio,
       ),
@@ -390,7 +388,7 @@ class MediaManager {
       return await _compressRustToFile(
         tempPath,
         outputPath,
-        rust.CompressFormat.png,
+        .png,
         size: size,
         imageAspectRatio: imageAspectRatio,
       );
@@ -469,7 +467,7 @@ class MediaManager {
     try {
       final hasAccess = await Gal.hasAccess(toAlbum: true);
       if (!hasAccess) await Gal.requestAccess(toAlbum: true);
-      if (type == MediaType.video) {
+      if (type == .video) {
         await Gal.putVideo(path, album: 'Moodiary');
       } else {
         await Gal.putImage(path, album: 'Moodiary');
@@ -485,7 +483,7 @@ class MediaManager {
     final timestampHex = uuid.replaceAll('-', '').substring(0, 12);
     final timestampInt = int.tryParse(timestampHex, radix: 16);
     if (timestampInt == null) return null;
-    return DateTime.fromMillisecondsSinceEpoch(timestampInt);
+    return .fromMillisecondsSinceEpoch(timestampInt);
   }
 
   /// 根据日期分组文件
@@ -510,7 +508,7 @@ class MediaManager {
     });
     final sortedEntries = groupedMap.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
-    return Map.fromEntries(sortedEntries);
+    return .fromEntries(sortedEntries);
   }
 
   static Map<DateTime, List<String>> groupVideoFileByDate(
@@ -534,7 +532,7 @@ class MediaManager {
     });
     final sortedEntries = groupedMap.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
-    return Map.fromEntries(sortedEntries);
+    return .fromEntries(sortedEntries);
   }
 
   static Map<DateTime, List<String>> groupAudioFileByDate(
@@ -557,6 +555,6 @@ class MediaManager {
     });
     final sortedEntries = groupedMap.entries.toList()
       ..sort((a, b) => b.key.compareTo(a.key));
-    return Map.fromEntries(sortedEntries);
+    return .fromEntries(sortedEntries);
   }
 }

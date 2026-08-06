@@ -18,7 +18,7 @@ class SyncCipher {
 
   const SyncCipher.withKey(this.aesKey);
 
-  static const SyncCipher plaintext = SyncCipher.withKey(null);
+  static const SyncCipher plaintext = .withKey(null);
 
   /// 当前设备的 cipher：本机 SecureKV 里的 DEK，未配置即明文模式。
   static Future<SyncCipher> current() => SyncKeyManager.currentCipher();
@@ -27,11 +27,8 @@ class SyncCipher {
 
   Future<Uint8List> encode(Object value) async {
     final plain = utf8.encode(jsonEncode(value));
-    if (!encrypted) return Uint8List.fromList(plain);
-    return Uint8List.fromList([
-      ...utf8.encode(magic),
-      ...await _encrypt(plain),
-    ]);
+    if (!encrypted) return .fromList(plain);
+    return .fromList([...utf8.encode(magic), ...await _encrypt(plain)]);
   }
 
   /// 自动按 magic 头识别加密；密文但本 cipher 未配密钥 → 抛 [SyncException]。
@@ -47,10 +44,7 @@ class SyncCipher {
   /// 原始字节加密（媒体文件）。
   Future<Uint8List> encryptBytes(Uint8List bytes) async {
     if (!encrypted) return bytes;
-    return Uint8List.fromList([
-      ...utf8.encode(magic),
-      ...await _encrypt(bytes),
-    ]);
+    return .fromList([...utf8.encode(magic), ...await _encrypt(bytes)]);
   }
 
   Future<Uint8List> decryptBytes(Uint8List bytes) async => _maybeDecrypt(bytes);
@@ -66,7 +60,7 @@ class SyncCipher {
 
   Future<Uint8List> _encrypt(List<int> plain) async {
     final cipher = await rust.Aes.encrypt(key: aesKey!, data: plain);
-    return Uint8List.fromList(cipher);
+    return .fromList(cipher);
   }
 
   Future<Uint8List> _maybeDecrypt(Uint8List bytes) async {
@@ -76,7 +70,7 @@ class SyncCipher {
     }
     try {
       final magicLen = utf8.encode(magic).length;
-      return Uint8List.fromList(
+      return .fromList(
         await rust.Aes.decrypt(
           key: aesKey!,
           encryptedData: bytes.sublist(magicLen),

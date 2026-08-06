@@ -7,9 +7,7 @@ class FontRepository {
 
   factory FontRepository.get() => _instance;
 
-  static final FontRepository _instance = FontRepository._(
-    IsarDatabase.get().isar,
-  );
+  static final FontRepository _instance = ._(IsarDatabase.get().isar);
 
   final Isar _isar;
 

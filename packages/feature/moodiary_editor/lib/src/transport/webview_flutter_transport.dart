@@ -29,7 +29,7 @@ class WebViewFlutterTransport extends EditorTransport {
       params = const PlatformWebViewControllerCreationParams();
     }
     final controller = WebViewController.fromPlatformCreationParams(params);
-    await controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+    await controller.setJavaScriptMode(.unrestricted);
     // 不依赖透明 webview：保持不透明，由页面 CSS 自绘主题底色（readBoot 首帧即应用，
     // 加载期由加载遮罩盖住）。
     await controller.addJavaScriptChannel(
@@ -38,7 +38,7 @@ class WebViewFlutterTransport extends EditorTransport {
     );
     await controller.setOnConsoleMessage((message) {
       // 只保留 JS 异常日志：info/warning 不记录（每条 console 都回 Dart 拖性能）。
-      if (message.level != JavaScriptLogLevel.error) return;
+      if (message.level != .error) return;
       onConsoleError(message.message);
     });
     await controller.setNavigationDelegate(

@@ -48,7 +48,7 @@ abstract class ChatMessage with _$ChatMessage {
       sessionId: sessionId,
       role: role,
       content: content,
-      createdAt: DateTime.timestamp(),
+      createdAt: .timestamp(),
     );
   }
 

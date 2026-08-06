@@ -25,8 +25,8 @@ enum VideoAmbientChannel { brightness, volume }
 /// 于是 localPosition.dx 在两种朝向下都已经是视线里的水平方向，不需要再按朝向换算。
 VideoAmbientChannel? ambientChannelForX(double dx, double width) {
   if (width <= 0) return null;
-  if (dx < width / 3) return VideoAmbientChannel.brightness;
-  if (dx > width * 2 / 3) return VideoAmbientChannel.volume;
+  if (dx < width / 3) return .brightness;
+  if (dx > width * 2 / 3) return .volume;
   return null;
 }
 
@@ -227,7 +227,7 @@ class VideoAmbientController {
     // 硬件音量键：iOS 上系统弹窗被那个屏外 MPVolumeView 全局压掉了，我们不给反馈就完全没回应；
     // Android 压不掉（那边的 showSystemUI 只作用于我们自己的写入），但条也得跟着动 ——
     // 不然下次起手的基准就是错的。亮度没这个问题（用户在系统控制中心里改，那儿本来就有反馈）。
-    if (channel != VideoAmbientChannel.volume) return;
+    if (channel != .volume) return;
     _show(channel, v);
     _armHide();
   }

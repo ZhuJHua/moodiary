@@ -56,7 +56,7 @@ abstract interface class SyncMediaFiles {
 }
 
 class RepoSyncDiaryStore implements SyncDiaryStore {
-  final DiaryRepository _repo = DiaryRepository.get();
+  final DiaryRepository _repo = .get();
 
   @override
   Future<List<Diary>> getAllDiaries() => _repo.getAllDiaries();
@@ -75,7 +75,7 @@ class RepoSyncDiaryStore implements SyncDiaryStore {
 }
 
 class RepoSyncCategoryStore implements SyncCategoryStore {
-  final CategoryRepository _repo = CategoryRepository.get();
+  final CategoryRepository _repo = .get();
 
   @override
   Future<List<Category>> getAllCategoriesForSync() async {
@@ -103,7 +103,7 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
 }
 
 class RepoSyncTombstoneStore implements SyncTombstoneStore {
-  final TombstoneRepository _repo = TombstoneRepository.get();
+  final TombstoneRepository _repo = .get();
 
   @override
   Future<List<SyncTombstone>> getAll() => _repo.getAll();

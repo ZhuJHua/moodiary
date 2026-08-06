@@ -20,7 +20,7 @@ class AssistantSettingPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.assistantSettingTitle)),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const .symmetric(horizontal: 8, vertical: 8),
         children: const [
           _Note(),
           SizedBox(height: 4),
@@ -44,9 +44,9 @@ class _Note extends StatelessWidget {
     final scheme = context.colorScheme;
     return Card.filled(
       color: scheme.surfaceContainerHighest,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
+      margin: const .symmetric(horizontal: 8),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const .all(12),
         child: Row(
           children: [
             Icon(LucideIcons.bot, color: scheme.primary),
@@ -71,12 +71,12 @@ class _ProviderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         SettingTitleTile(title: context.l10n.modelProviderTitle),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: const _ProviderEntryTile(),
         ),
       ],
@@ -98,7 +98,7 @@ class _ProviderEntryTileState extends State<_ProviderEntryTile> {
   late final VoidCallback _activeListener;
   late final ValueNotifier<String> _activeNotifier;
 
-  LlmProviderRepository get _repo => LlmProviderRepository.get();
+  LlmProviderRepository get _repo => .get();
 
   @override
   void initState() {
@@ -179,12 +179,12 @@ class _SoulSectionState extends State<_SoulSection> {
         ? l10n.assistantSoulTileSubtitleCustom
         : l10n.assistantSoulTileSubtitleDefault;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         SettingTitleTile(title: l10n.assistantSectionSoul),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: SettingListTile(
             isFirst: true,
             isLast: true,
@@ -219,12 +219,12 @@ class _ToolSectionState extends State<_ToolSection> {
     final always =
         MoodiaryKVs.assistantAlwaysAllowedTools.get() ?? const <String>[];
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         SettingTitleTile(title: l10n.assistantSectionTool),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               for (var i = 0; i < tools.length; i++)
@@ -239,7 +239,7 @@ class _ToolSectionState extends State<_ToolSection> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const .fromLTRB(16, 8, 16, 0),
           child: Text(
             l10n.assistantToolSectionNote,
             style: context.textTheme.bodySmall?.copyWith(
@@ -249,7 +249,7 @@ class _ToolSectionState extends State<_ToolSection> {
         ),
         if (always.isNotEmpty)
           Align(
-            alignment: AlignmentDirectional.centerStart,
+            alignment: .centerStart,
             child: TextButton.icon(
               onPressed: _resetGrants,
               icon: const Icon(LucideIcons.rotateCcwKey),
@@ -287,12 +287,12 @@ class _ToolSectionState extends State<_ToolSection> {
       trailing: !hasTrailing
           ? null
           : Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: .min,
               children: [
                 if (readOnly) const _ReadOnlyBadge(),
                 if (alwaysAllowed)
                   Padding(
-                    padding: const EdgeInsets.only(right: 6),
+                    padding: const .only(right: 6),
                     child: Tooltip(
                       message: context.l10n.assistantToolAlwaysAllowedHint,
                       child: Icon(
@@ -316,10 +316,10 @@ class _ReadOnlyBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const .symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: .circular(8),
       ),
       child: Text(
         context.l10n.assistantToolReadOnlyBadge,
@@ -338,10 +338,10 @@ class _DangerBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const .symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: scheme.errorContainer,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: .circular(8),
       ),
       child: Text(
         context.l10n.assistantToolDangerBadge,

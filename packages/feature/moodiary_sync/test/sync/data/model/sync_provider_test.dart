@@ -17,7 +17,7 @@ void main() {
 
   test('current defaults to webdav and follows setCurrent', () async {
     expect(SyncProviderType.current(), SyncProviderType.webdav);
-    await SyncProviderType.setCurrent(SyncProviderType.s3);
+    await SyncProviderType.setCurrent(.s3);
     expect(SyncProviderType.current(), SyncProviderType.s3);
     expect(MoodiaryKVs.syncProvider.get(), 's3');
   });

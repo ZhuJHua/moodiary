@@ -50,7 +50,7 @@ class _AboutPageState extends State<AboutPage> {
   Future<void> _open(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await launchUrl(uri, mode: .externalApplication);
     }
   }
 
@@ -64,7 +64,7 @@ class _AboutPageState extends State<AboutPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('关于')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const .all(16),
         child: Column(
           children: [
             _LogoTitle(
@@ -75,7 +75,7 @@ class _AboutPageState extends State<AboutPage> {
             const SizedBox(height: 32),
             Card.outlined(
               color: scheme.surfaceContainerLow,
-              margin: EdgeInsets.zero,
+              margin: .zero,
               child: Column(
                 children: [
                   SettingListTile(
@@ -150,7 +150,7 @@ class _LogoTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       children: [
         Image.asset(
           isDark
@@ -169,7 +169,7 @@ class _LogoTitle extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: .center,
           children: [
             Text(
               appVersion,

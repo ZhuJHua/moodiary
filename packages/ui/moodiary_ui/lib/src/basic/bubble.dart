@@ -20,8 +20,8 @@ class Bubble extends StatelessWidget {
         borderRadius: borderRadius,
       ),
       child: Align(
-        alignment: Alignment.topCenter,
-        child: Padding(padding: const EdgeInsets.all(4.0), child: child),
+        alignment: .topCenter,
+        child: Padding(padding: const .all(4.0), child: child),
       ),
     );
   }
@@ -37,7 +37,7 @@ class BubblePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..style = PaintingStyle.fill;
+      ..style = .fill;
     const arrowWidth = 16.0;
     const arrowHeight = 8.0;
     final rectWidth = size.width;
@@ -48,7 +48,7 @@ class BubblePainter extends CustomPainter {
       0,
       rectWidth,
       rectHeight,
-      Radius.circular(borderRadius),
+      .circular(borderRadius),
     );
 
     final path = Path()

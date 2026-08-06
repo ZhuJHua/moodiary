@@ -29,7 +29,7 @@ class DiaryPage extends ConsumerStatefulWidget {
   const DiaryPage({
     super.key,
     this.diaryId,
-    this.initialType = DiaryType.markdown,
+    this.initialType = .markdown,
     this.initialCategoryId,
     this.startInEdit = false,
   });
@@ -43,9 +43,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   static const _autoSaveDebounce = Duration(seconds: 2);
 
   /// 压栈离页时记录的 webview 焦点位置，返回本页时按此恢复；none 表示离页时无焦点、不恢复。
-  EditorFocusTarget _restoreFocusTarget = EditorFocusTarget.none;
+  EditorFocusTarget _restoreFocusTarget = .none;
 
-  _Mode _mode = _Mode.read;
+  _Mode _mode = .read;
 
   bool _dirty = false;
 
@@ -112,14 +112,14 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // 从打开编辑器起计时（秒）。
-    _writingTimer = Timer.periodic(
+    _writingTimer = .periodic(
       const Duration(seconds: 1),
       (_) => _elapsed.value++,
     );
     _notifier = ref.read(_provider.notifier);
     // 既有日记默认只读预览，点击 AppBar 的编辑按钮才进编辑；仅新建 / 显式编辑入口
     // （startInEdit）直接进编辑态。旧格式（markdown / richText）不可编辑，恒为只读。
-    _mode = widget.startInEdit ? _Mode.edit : _Mode.read;
+    _mode = widget.startInEdit ? .edit : .read;
     // 登记「打开中」，同步层据此跳过本篇（编辑期不上传半成品）。新建打开时尚无 id，
     // 待空模板解析出稳定 id 再登记。
     final id = widget.diaryId;
@@ -149,9 +149,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   @override
   void didPushNext() {
-    _restoreFocusTarget = _mode == _Mode.edit
+    _restoreFocusTarget = _mode == .edit
         ? _editorController.focusTarget
-        : EditorFocusTarget.none;
+        : .none;
     unawaited(_editorController.blur());
     FocusManager.instance.primaryFocus?.unfocus();
   }
@@ -159,10 +159,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   @override
   void didPopNext() {
     final target = _restoreFocusTarget;
-    _restoreFocusTarget = EditorFocusTarget.none;
-    if (target == EditorFocusTarget.none || _mode != _Mode.edit) return;
+    _restoreFocusTarget = .none;
+    if (target == .none || _mode != .edit) return;
     unawaited(
-      target == EditorFocusTarget.title
+      target == .title
           ? _editorController.focusTitle()
           : _editorController.focus(),
     );
@@ -202,7 +202,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _guardId = newId;
     if (oldId != newId) OpenDiaryRegistry.instance.open(newId);
     _notifier = ref.read(_provider.notifier);
-    _mode = widget.startInEdit ? _Mode.edit : _Mode.read;
+    _mode = widget.startInEdit ? .edit : .read;
     _dirty = false;
     _saveStatus = 'idle';
     _autoSaveTimer?.cancel();
@@ -252,9 +252,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     final shouldFlush =
-        state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.hidden;
+        state == .paused || state == .inactive || state == .hidden;
     if (shouldFlush && _dirty) _flushAutoSave();
   }
 
@@ -271,7 +269,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   void _scheduleAutoSave() {
-    if (_mode != _Mode.edit) return;
+    if (_mode != .edit) return;
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(_autoSaveDebounce, _flushAutoSave);
   }
@@ -281,7 +279,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     _autoSaveTimer = null;
     if (mounted) setState(() => _saveStatus = 'saving');
     final result = await ref.read(_provider.notifier).autoSave();
-    final ok = result == DraftSaveResult.saved;
+    final ok = result == .saved;
     if (ok) _dirty = false;
     if (!mounted) return;
     setState(() => _saveStatus = ok ? 'saved' : 'failed');
@@ -292,7 +290,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       context: context,
       initialDate: current.time.toLocal(),
       firstDate: DateTime(1949, 10, 1),
-      lastDate: DateTime.now(),
+      lastDate: .now(),
     );
     if (picked == null || !mounted) return;
     ref.read(_provider.notifier).changeDate(picked);
@@ -303,7 +301,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   Future<void> _onPickTime(Diary current) async {
     final picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(current.time.toLocal()),
+      initialTime: .fromDateTime(current.time.toLocal()),
     );
     if (picked == null || !mounted) return;
     ref.read(_provider.notifier).changeTime(picked);
@@ -449,12 +447,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                   ],
                 )
               : null,
-          title: (_mode == _Mode.edit && diary != null)
-              ? _writingPill(diary)
-              : null,
+          title: (_mode == .edit && diary != null) ? _writingPill(diary) : null,
           actions: [
             // 编辑态：✓ 保存并退回只读预览（自动保存仍在，这个是显式入口）。
-            if (diary != null && _mode == _Mode.edit)
+            if (diary != null && _mode == .edit)
               IconButton(
                 tooltip: '保存',
                 icon: const Icon(LucideIcons.check),
@@ -462,7 +458,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
               ),
             // 只读态 + 可编辑（tiptap）：✏️ 进入编辑。旧格式不可编辑，不显示。
             if (diary != null &&
-                _mode == _Mode.read &&
+                _mode == .read &&
                 DiaryType.fromValue(diary.type).isEditable)
               IconButton(
                 tooltip: '编辑',
@@ -470,7 +466,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                 onPressed: _enterEdit,
               ),
             // 分享仅在只读预览态显示（编辑态不出现）。
-            if (diary != null && _mode == _Mode.read)
+            if (diary != null && _mode == .read)
               IconButton(
                 tooltip: '分享',
                 icon: const Icon(LucideIcons.share),
@@ -549,21 +545,21 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       children.add(segs[i]);
     }
     return FittedBox(
-      fit: BoxFit.scaleDown,
+      fit: .scaleDown,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const .symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: .circular(20),
         ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: children),
+        child: Row(mainAxisSize: .min, children: children),
       ),
     );
   }
 
   Widget _pillSeg(IconData icon, String text, Color color) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       children: [
         Icon(icon, size: 13, color: color),
         const SizedBox(width: 3),
@@ -573,7 +569,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             fontSize: 12,
             color: color,
             // 等宽数字：秒数跳动 / 字数增减时宽度不抖。
-            fontFeatures: const [FontFeature.tabularFigures()],
+            fontFeatures: const [.tabularFigures()],
           ),
         ),
       ],
@@ -584,7 +580,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     switch (_saveStatus) {
       case 'saving':
         return Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: .min,
           children: [
             const SizedBox(
               width: 11,
@@ -613,7 +609,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   /// 进入编辑并聚焦编辑器（弹软键盘）。复用同一编辑器实例，见 [_buildBody] 的稳定 key。
   void _enterEdit() {
-    setState(() => _mode = _Mode.edit);
+    setState(() => _mode = .edit);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _editorController.focus(),
     );
@@ -631,28 +627,28 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       toast.success(message: '已保存');
     }
     if (!mounted) return;
-    setState(() => _mode = _Mode.read);
+    setState(() => _mode = .read);
   }
 
   /// [EditorBody] 务必保持 Column 同一位置且 key 稳定，否则切换模式时编辑器实例
   /// （及其 webview）会被重建。
   Widget _buildBody(Diary diary) {
-    final isEdit = _mode == _Mode.edit;
+    final isEdit = _mode == .edit;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         if (!isEdit)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: const .fromLTRB(16, 12, 16, 8),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: .start,
               children: _meta(context, diary),
             ),
           ),
         Expanded(
           child: EditorBody(
             key: const ValueKey('diary-editor'),
-            type: DiaryType.fromValue(diary.type),
+            type: .fromValue(diary.type),
             initialContent: diary.content,
             // 标题在 webview 编辑器顶部（映射 Diary.title，不进正文）。
             initialTitle: diary.title,
@@ -750,7 +746,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   /// swap 文档，最后 replace URL 对齐真相源（didUpdateWidget 收尾 per-diary 状态重置）。
   Future<void> _showEntry(Diary target, {required double scrollY}) async {
     setState(() {
-      _mode = _Mode.read;
+      _mode = .read;
       _hopTarget = target;
     });
     await _editorController.swapDocument(
@@ -794,8 +790,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             for (final tag in diary.tags)
               Chip(
                 label: Text(tag),
-                visualDensity: VisualDensity.compact,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: .compact,
+                materialTapTargetSize: .shrinkWrap,
               ),
           ],
         ),
@@ -830,13 +826,13 @@ class _MoodChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Color.lerp(Colors.redAccent, Colors.greenAccent, value);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const .symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color?.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: .circular(8),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(LucideIcons.smile, size: 16, color: color),
           const SizedBox(width: 4),
@@ -867,10 +863,10 @@ class _TocDrawer extends StatelessWidget {
     return Drawer(
       child: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: .stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              padding: const .fromLTRB(20, 20, 20, 12),
               child: Row(
                 children: [
                   Icon(
@@ -881,19 +877,14 @@ class _TocDrawer extends StatelessWidget {
                   const SizedBox(width: 10),
                   Text(
                     '目录',
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: textTheme.titleMedium?.copyWith(fontWeight: .w600),
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
+                    padding: const .symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: scheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: .circular(999),
                     ),
                     child: Text(
                       '${headings.length}',
@@ -910,14 +901,14 @@ class _TocDrawer extends StatelessWidget {
                 valueListenable: activeHeading,
                 builder: (context, active, _) {
                   return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(8, 4, 8, 16),
+                    padding: const .fromLTRB(8, 4, 8, 16),
                     itemCount: headings.length,
                     itemBuilder: (context, i) {
                       final h = headings[i];
                       final isActive = active == i;
                       final label = h.text.trim().isEmpty ? '(无标题)' : h.text;
                       return Padding(
-                        padding: EdgeInsets.only(
+                        padding: .only(
                           left: (h.level - 1) * 14.0,
                           top: 1,
                           bottom: 1,
@@ -925,12 +916,12 @@ class _TocDrawer extends StatelessWidget {
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: .circular(12),
                             onTap: () => onTap(i),
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 180),
                               curve: Curves.easeOut,
-                              padding: const EdgeInsets.symmetric(
+                              padding: const .symmetric(
                                 horizontal: 12,
                                 vertical: 10,
                               ),
@@ -938,7 +929,7 @@ class _TocDrawer extends StatelessWidget {
                                 color: isActive
                                     ? scheme.secondaryContainer
                                     : Colors.transparent,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: .circular(12),
                               ),
                               child: Row(
                                 children: [
@@ -946,9 +937,9 @@ class _TocDrawer extends StatelessWidget {
                                     Container(
                                       width: 5,
                                       height: 5,
-                                      margin: const EdgeInsets.only(right: 10),
+                                      margin: const .only(right: 10),
                                       decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
+                                        shape: .circle,
                                         color: isActive
                                             ? scheme.onSecondaryContainer
                                             : scheme.onSurfaceVariant
@@ -960,7 +951,7 @@ class _TocDrawer extends StatelessWidget {
                                     child: Text(
                                       label,
                                       maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
+                                      overflow: .ellipsis,
                                       style:
                                           (h.level <= 1
                                                   ? textTheme.bodyMedium
@@ -972,8 +963,8 @@ class _TocDrawer extends StatelessWidget {
                                                     : scheme.onSurface,
                                                 fontWeight:
                                                     isActive || h.level <= 1
-                                                    ? FontWeight.w600
-                                                    : FontWeight.w400,
+                                                    ? .w600
+                                                    : .w400,
                                                 height: 1.3,
                                               ),
                                     ),
@@ -1065,12 +1056,12 @@ class _LinksPanelState extends State<_LinksPanel> {
     final textTheme = Theme.of(context).textTheme;
     return Card.filled(
       color: scheme.surfaceContainerLow,
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      margin: const .fromLTRB(16, 8, 16, 16),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 12, 8, 8),
+        padding: const .fromLTRB(14, 12, 8, 8),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: .min,
+          crossAxisAlignment: .start,
           children: [
             Row(
               children: [
@@ -1103,7 +1094,7 @@ class _LinksPanelState extends State<_LinksPanel> {
                 IconButton(
                   tooltip: context.l10n.graphLocal,
                   iconSize: 20,
-                  visualDensity: VisualDensity.compact,
+                  visualDensity: .compact,
                   icon: Icon(
                     LucideIcons.waypoints,
                     color: scheme.onSurfaceVariant,
@@ -1140,13 +1131,13 @@ class _LinksPanelState extends State<_LinksPanel> {
     ];
     return ListView.builder(
       shrinkWrap: true,
-      padding: EdgeInsets.zero,
+      padding: .zero,
       itemCount: rows.length,
       itemBuilder: (context, i) {
         final row = rows[i];
         if (row.diary == null) {
           return Padding(
-            padding: const EdgeInsets.fromLTRB(6, 6, 0, 2),
+            padding: const .fromLTRB(6, 6, 0, 2),
             child: Text(
               row.header!,
               style: theme.textTheme.labelSmall?.copyWith(
@@ -1181,13 +1172,13 @@ class _CountPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+      padding: const .symmetric(horizontal: 7, vertical: 1),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: .circular(999),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(icon, size: 11, color: foreground),
           const SizedBox(width: 3),
@@ -1229,15 +1220,15 @@ class _LinkTile extends StatelessWidget {
         : snippet;
     return ListTile(
       onTap: onTap,
-      visualDensity: VisualDensity.compact,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+      visualDensity: .compact,
+      contentPadding: const .symmetric(horizontal: 6),
       shape: const RoundedRectangleBorder(
         borderRadius: AppBorderRadius.smallBorderRadius,
       ),
       leading: Container(
         width: 36,
         height: 36,
-        alignment: Alignment.center,
+        alignment: .center,
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest,
           borderRadius: AppBorderRadius.smallBorderRadius,
@@ -1251,7 +1242,7 @@ class _LinkTile extends StatelessWidget {
       title: Text(
         title,
         maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+        overflow: .ellipsis,
         style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
       ),
       subtitle: subtitle.isEmpty
@@ -1259,7 +1250,7 @@ class _LinkTile extends StatelessWidget {
           : Text(
               subtitle,
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              overflow: .ellipsis,
               style: textTheme.bodySmall?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),
@@ -1324,7 +1315,7 @@ class _DetailSheet extends ConsumerWidget {
             title: '日期与时间',
             subtitle: dateLabel,
             trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: .min,
               children: [
                 IconButton.filledTonal(
                   onPressed: onPickDate,
@@ -1361,7 +1352,7 @@ class _DetailSheet extends ConsumerWidget {
             subtitle: diary.tags.isEmpty
                 ? null
                 : Padding(
-                    padding: const EdgeInsets.only(top: 4),
+                    padding: const .only(top: 4),
                     child: Wrap(
                       spacing: 8,
                       runSpacing: 4,
@@ -1369,7 +1360,7 @@ class _DetailSheet extends ConsumerWidget {
                         for (var i = 0; i < diary.tags.length; i++)
                           Chip(
                             label: Text(diary.tags[i]),
-                            visualDensity: VisualDensity.compact,
+                            visualDensity: .compact,
                             onDeleted: () => onRemoveTag(i),
                           ),
                       ],
@@ -1410,7 +1401,7 @@ class _MoodSlider extends ConsumerWidget {
             value: mood,
             divisions: 10,
             label: '${(mood * 100).toStringAsFixed(0)}%',
-            activeColor: Color.lerp(
+            activeColor: .lerp(
               const Color(0xFFFA4659),
               const Color(0xFF2EB872),
               mood,

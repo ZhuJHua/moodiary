@@ -66,7 +66,7 @@ class ExportCommon {
   const ExportCommon({
     this.includeTitle = true,
     this.includeMeta = true,
-    this.media = ExportMediaPolicy.embed,
+    this.media = .embed,
     this.merge = true,
     this.nameTemplate = '{date}-{title}',
   });
@@ -110,10 +110,7 @@ class MarkdownExportOptions {
   final MarkdownDialect dialect;
   final bool frontMatter;
 
-  const MarkdownExportOptions({
-    this.dialect = MarkdownDialect.gfm,
-    this.frontMatter = true,
-  });
+  const MarkdownExportOptions({this.dialect = .gfm, this.frontMatter = true});
 
   MarkdownExportOptions copyWith({
     MarkdownDialect? dialect,
@@ -154,7 +151,7 @@ class LayoutExportOptions {
   final String asciiFont;
 
   const LayoutExportOptions({
-    this.paper = ExportPaper.a4,
+    this.paper = .a4,
     this.margin = 1440,
     this.fontSizePt = 11,
     this.lineSpacing = 1.5,
@@ -193,7 +190,7 @@ class LayoutExportOptions {
 
   factory LayoutExportOptions.fromJson(Map<String, dynamic> json) =>
       LayoutExportOptions(
-        paper: ExportPaper.byLabel(json['paper'] as String? ?? 'A4'),
+        paper: .byLabel(json['paper'] as String? ?? 'A4'),
         margin: json['margin'] as int? ?? 1440,
         fontSizePt: (json['fontSizePt'] as num?)?.toDouble() ?? 11,
         lineSpacing: (json['lineSpacing'] as num?)?.toDouble() ?? 1.5,
@@ -241,18 +238,12 @@ class ExportSettings {
     try {
       final json = jsonDecode(raw) as Map<String, dynamic>;
       return ExportSettings(
-        common: ExportCommon.fromJson(
-          json['common'] as Map<String, dynamic>? ?? const {},
-        ),
-        markdown: MarkdownExportOptions.fromJson(
+        common: .fromJson(json['common'] as Map<String, dynamic>? ?? const {}),
+        markdown: .fromJson(
           json['markdown'] as Map<String, dynamic>? ?? const {},
         ),
-        docx: LayoutExportOptions.fromJson(
-          json['docx'] as Map<String, dynamic>? ?? const {},
-        ),
-        pdf: LayoutExportOptions.fromJson(
-          json['pdf'] as Map<String, dynamic>? ?? const {},
-        ),
+        docx: .fromJson(json['docx'] as Map<String, dynamic>? ?? const {}),
+        pdf: .fromJson(json['pdf'] as Map<String, dynamic>? ?? const {}),
       );
     } catch (_) {
       // 配置格式变过 / 存坏了：退回默认，不让设置页打不开。

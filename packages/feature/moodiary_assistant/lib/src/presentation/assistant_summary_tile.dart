@@ -23,7 +23,7 @@ class _AssistantSummaryTileState extends State<AssistantSummaryTile> {
   bool _loaded = false;
   StreamSubscription<void>? _sub;
 
-  LlmProviderRepository get _repo => LlmProviderRepository.get();
+  LlmProviderRepository get _repo => .get();
 
   @override
   void initState() {

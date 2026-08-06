@@ -18,9 +18,7 @@ import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 class S3SyncBackend implements IRemoteSyncBackend {
   static const String _root = 'moodiary';
 
-  static final SecureOptions options = SecureOptions(
-    MoodiarySecureKVs.s3Option,
-  );
+  static final SecureOptions options = SecureOptions(.s3Option);
 
   S3SyncBackend();
 
@@ -41,7 +39,7 @@ class S3SyncBackend implements IRemoteSyncBackend {
   bool get _useSSL => _opt(5) != '0'; // 默认开启
 
   @override
-  SyncProviderType get type => SyncProviderType.s3;
+  SyncProviderType get type => .s3;
 
   @override
   String get persistentBackendId => SyncProviderType.s3.value;

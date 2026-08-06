@@ -29,7 +29,7 @@ class FontManager {
     try {
       final Uint8List fontData = await fontFile.readAsBytes();
       final fontLoader = FontLoader(fontName)
-        ..addFont(Future.value(ByteData.view(fontData.buffer)));
+        ..addFont(.value(ByteData.view(fontData.buffer)));
       await fontLoader.load();
       _loadedFonts.add(fontName);
       return true;
@@ -57,7 +57,7 @@ class FontManager {
 
   static Future<XFile?> pickFont() async {
     final res = await FilePicker.pickFile(
-      type: FileType.custom,
+      type: .custom,
       allowedExtensions: ['ttf', 'otf'],
     );
     return res?.xFile;

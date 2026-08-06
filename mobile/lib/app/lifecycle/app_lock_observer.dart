@@ -47,8 +47,7 @@ class _AppLockObserverState extends State<AppLockObserver>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.paused &&
-        state != AppLifecycleState.hidden) {
+    if (state != .paused && state != .hidden) {
       return;
     }
     if (_locking) return;

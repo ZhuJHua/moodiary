@@ -71,7 +71,7 @@ class MoodiaryNavBar extends StatelessWidget {
     return MediaQuery.withClampedTextScaling(
       maxScaleFactor: _kMaxTextScale,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(
+        padding: .fromLTRB(
           kMoodiaryNavBarSideMargin,
           0,
           kMoodiaryNavBarSideMargin,
@@ -119,13 +119,13 @@ class _Capsule extends StatelessWidget {
       child: Padding(
         // 四边同一个 inset，药丸铺满自己那一格 —— 于是首/末 tab 的左右边距与上下
         // 边距天然相等。药丸窄于格子的话，两端就会多出 (格宽 − 药丸宽)/2 对不齐。
-        padding: const EdgeInsets.all(_kTrackInset),
+        padding: const .all(_kTrackInset),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final count = destinations.length;
             final tabWidth = constraints.maxWidth / count;
             return Stack(
-              fit: StackFit.expand,
+              fit: .expand,
               children: [
                 AnimatedPositioned(
                   duration: Durations.medium2,
@@ -199,7 +199,7 @@ class _Tab extends StatelessWidget {
       // 显出来还得额外铺一层。反馈交给药丸的滑动和图标变色就够了。
       // opaque 让整格都可点，而不是只有图标和文字那一小块。
       child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+        behavior: .opaque,
         onTap: onTap,
         // 视觉子树不再往上报语义：里面那个 Text 会和外层 Semantics.label 合并，
         // 读屏把标签念两遍。注意**不能**用外层 Semantics 的 excludeSemantics —
@@ -210,7 +210,7 @@ class _Tab extends StatelessWidget {
             duration: Durations.medium2,
             builder: (context, color, _) {
               return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: .center,
                 children: [
                   IconTheme.merge(
                     data: IconThemeData(size: 21, color: color),
@@ -220,10 +220,10 @@ class _Tab extends StatelessWidget {
                   Text(
                     destination.label,
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    overflow: .ellipsis,
                     style: context.textTheme.labelSmall?.copyWith(
                       color: color,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: .w500,
                     ),
                   ),
                 ],
@@ -255,7 +255,7 @@ class _ActionButton extends StatelessWidget {
       child: Material(
         color: scheme.primary,
         shape: const CircleBorder(),
-        clipBehavior: Clip.antiAlias,
+        clipBehavior: .antiAlias,
         child: InkWell(
           onTap: action.onPressed,
           child: SizedBox.square(

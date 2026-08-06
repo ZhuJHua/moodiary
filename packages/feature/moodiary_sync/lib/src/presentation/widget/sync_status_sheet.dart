@@ -9,7 +9,6 @@ import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/application/sync_controller.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
-import 'package:moodiary_sync/src/data/model/sync_provider.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
@@ -67,18 +66,18 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
 
   void _applyCounter(SyncEvent event) {
     switch (event.kind) {
-      case SyncEventKind.syncStart:
+      case .syncStart:
         _uploaded = 0;
         _downloaded = 0;
         _media = 0;
         _failed = 0;
-      case SyncEventKind.diaryUpload || SyncEventKind.categoryUpload:
+      case .diaryUpload || .categoryUpload:
         _uploaded++;
-      case SyncEventKind.diaryDownload || SyncEventKind.categoryDownload:
+      case .diaryDownload || .categoryDownload:
         _downloaded++;
-      case SyncEventKind.mediaUpload || SyncEventKind.mediaDownload:
+      case .mediaUpload || .mediaDownload:
         _media++;
-      case SyncEventKind.error:
+      case .error:
         _failed++;
       default:
         break;
@@ -110,7 +109,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
         title: '同步状态',
         // 后端与加密是背景事实不是状态，降到副标题，别跟「同步失败」抢同一级视觉。
         subtitle: '${backend.type.label} · ${encryption ? '已加密' : '未加密'}',
-        icon: backend.type == SyncProviderType.webdav
+        icon: backend.type == .webdav
             ? LucideIcons.cloud
             : LucideIcons.database,
         actions: [
@@ -131,9 +130,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
                 )) {
                   return;
                 }
-                await ref
-                    .read(syncControllerProvider.notifier)
-                    .sync(IRemoteSyncBackend.get());
+                await ref.read(syncControllerProvider.notifier).sync(.get());
               },
             )
           else
@@ -228,7 +225,7 @@ class _StateCard extends StatelessWidget {
           mainAxisSize: .min,
           children: [
             const ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(2)),
+              borderRadius: .all(.circular(2)),
               // year2023: false → 2024 版 M3 进度条；该参数为迁移期 deprecated 标记。
               // ignore: deprecated_member_use
               child: LinearProgressIndicator(year2023: false),
@@ -291,7 +288,7 @@ class _StateCard extends StatelessWidget {
                 title: '已同步',
                 detail:
                     '上次同步 '
-                    '${TimeFormat.listDateTime(DateTime.fromMillisecondsSinceEpoch(millis))}',
+                    '${TimeFormat.listDateTime(.fromMillisecondsSinceEpoch(millis))}',
               )
             : _Line(
                 icon: LucideIcons.clock,
@@ -313,7 +310,7 @@ class _Shell extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      padding: const .fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
         color: warn
             ? scheme.error.withValues(alpha: 0.10)
@@ -363,7 +360,7 @@ class _Line extends StatelessWidget {
                 ),
                 if (detail != null)
                   Padding(
-                    padding: const EdgeInsets.only(top: 2),
+                    padding: const .only(top: 2),
                     child: Text(
                       detail!,
                       style: context.textTheme.bodySmall?.copyWith(
@@ -392,12 +389,12 @@ class _Counter extends StatelessWidget {
     final scheme = context.colorScheme;
     final color = bad ? scheme.error : scheme.onSurfaceVariant;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      padding: const .symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: bad
             ? scheme.error.withValues(alpha: 0.12)
             : scheme.surfaceContainerHigh,
-        borderRadius: const BorderRadius.all(Radius.circular(999)),
+        borderRadius: const .all(.circular(999)),
       ),
       child: Row(
         mainAxisSize: .min,
@@ -408,7 +405,7 @@ class _Counter extends StatelessWidget {
             '$value',
             style: context.textTheme.labelMedium?.copyWith(
               color: color,
-              fontFeatures: const [FontFeature.tabularFigures()],
+              fontFeatures: const [.tabularFigures()],
             ),
           ),
         ],
@@ -440,7 +437,7 @@ class _StatsTable extends StatelessWidget {
       mainAxisSize: .min,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+          padding: const .fromLTRB(16, 0, 16, 4),
           child: Row(
             children: [
               const Spacer(),
@@ -465,7 +462,7 @@ class _StatsTable extends StatelessWidget {
         _row(context, label: '媒体', local: null, remote: value?.remoteMedia),
         if (error != null)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            padding: const .fromLTRB(16, 8, 16, 0),
             child: Text(
               error,
               maxLines: 2,
@@ -508,14 +505,14 @@ class _StatsTable extends StatelessWidget {
               : emphasize
               ? scheme.primary
               : scheme.onSurface,
-          fontFeatures: const [FontFeature.tabularFigures()],
+          fontFeatures: const [.tabularFigures()],
         ),
       ),
     );
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+      margin: const .only(bottom: 6),
+      padding: const .symmetric(horizontal: 16, vertical: 11),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
         borderRadius: AppBorderRadius.mediumBorderRadius,

@@ -20,8 +20,8 @@ Future<void> registerRemoteSync() async {
   }
   final type = SyncProviderType.current();
   final backend = switch (type) {
-    SyncProviderType.webdav => WebDavSyncBackend(),
-    SyncProviderType.s3 => S3SyncBackend(),
+    .webdav => WebDavSyncBackend(),
+    .s3 => S3SyncBackend(),
   };
   getIt.registerSingleton<IRemoteSyncBackend>(backend);
   // 后端配置可能换了服务器（backendId 只是 provider 类型）：清掉进程内的

@@ -52,7 +52,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
 
   void _useHistory(String q) {
     _textController.text = q;
-    _textController.selection = TextSelection.collapsed(offset: q.length);
+    _textController.selection = .collapsed(offset: q.length);
     _controller
       ..search(q)
       ..recordHistory();
@@ -76,11 +76,11 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           autofocus: true,
           controller: _textController,
           focusNode: _focusNode,
-          textInputAction: TextInputAction.search,
+          textInputAction: .search,
           onChanged: _onChanged,
           onSubmitted: (_) => _searchNow(),
           decoration: InputDecoration(
-            border: InputBorder.none,
+            border: .none,
             hintText: context.l10n.diarySearch,
             suffixIcon: ValueListenableBuilder(
               valueListenable: _textController,
@@ -109,9 +109,9 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
             ),
             if (state.query.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const .all(8.0),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: .min,
                   children: [
                     Text(context.l10n.diarySearchResult(state.totalCount)),
                     if (state.elapsed != null)
@@ -134,8 +134,8 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
 
   Widget _buildFilterBar(BuildContext context, DiarySearchState state) {
     return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+      scrollDirection: .horizontal,
+      padding: const .fromLTRB(12, 8, 12, 12),
       child: Row(
         children: [
           _dateChip(context, state),
@@ -152,7 +152,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
     return MoodiaryMenuButton<DateRangePreset>(
       selected: state.datePreset,
       onSelected: (preset) async {
-        if (preset == DateRangePreset.custom) {
+        if (preset == .custom) {
           final now = DateTime.now();
           final range = await showDateRangePicker(
             context: context,
@@ -178,7 +178,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
       child: _FilterChip(
         icon: LucideIcons.calendar,
         label: _dateChipLabel(context, state),
-        active: state.datePreset != DateRangePreset.all,
+        active: state.datePreset != .all,
       ),
     );
   }
@@ -225,21 +225,21 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
       child: _FilterChip(
         icon: LucideIcons.arrowUpDown,
         label: _sortLabel(context, state.sort),
-        active: state.sort != SearchSort.relevance,
+        active: state.sort != .relevance,
       ),
     );
   }
 
   String _dateLabel(BuildContext context, DateRangePreset p) => switch (p) {
-    DateRangePreset.all => context.l10n.searchRangeAll,
-    DateRangePreset.last7Days => context.l10n.searchRange7d,
-    DateRangePreset.last30Days => context.l10n.searchRange30d,
-    DateRangePreset.thisYear => context.l10n.searchRangeYear,
-    DateRangePreset.custom => context.l10n.searchRangeCustom,
+    .all => context.l10n.searchRangeAll,
+    .last7Days => context.l10n.searchRange7d,
+    .last30Days => context.l10n.searchRange30d,
+    .thisYear => context.l10n.searchRangeYear,
+    .custom => context.l10n.searchRangeCustom,
   };
 
   String _dateChipLabel(BuildContext context, DiarySearchState state) {
-    if (state.datePreset == DateRangePreset.custom &&
+    if (state.datePreset == .custom &&
         state.customStart != null &&
         state.customEnd != null) {
       final f = DateFormat.Md();
@@ -249,9 +249,9 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 
   String _sortLabel(BuildContext context, SearchSort s) => switch (s) {
-    SearchSort.relevance => context.l10n.searchSortRelevance,
-    SearchSort.timeDesc => context.l10n.searchSortNewest,
-    SearchSort.timeAsc => context.l10n.searchSortOldest,
+    .relevance => context.l10n.searchSortRelevance,
+    .timeDesc => context.l10n.searchSortNewest,
+    .timeAsc => context.l10n.searchSortOldest,
   };
 
   // ── 主体（历史 / 结果 / 空 / 加载） ──────────────────────────────────────
@@ -270,7 +270,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           Positioned.fill(
             child: ListView.separated(
               itemCount: state.results.length,
-              padding: const EdgeInsets.all(12),
+              padding: const .all(12),
               itemBuilder: (context, index) => SearchResultCard(
                 diary: state.results[index],
                 queryList: state.queryList,
@@ -317,9 +317,9 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
         }
         final scheme = context.colorScheme;
         return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          padding: const .fromLTRB(16, 12, 16, 16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: .start,
             children: [
               Row(
                 children: [
@@ -348,11 +348,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                       // 限宽 + 省略，避免超长查询（粘贴串 / 长 URL）撑破胶囊。
                       label: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 200),
-                        child: Text(
-                          q,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        child: Text(q, maxLines: 1, overflow: .ellipsis),
                       ),
                       onPressed: () => _useHistory(q),
                       onDeleted: () => _controller.removeHistory(q),
@@ -376,7 +372,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
     return Center(
       key: ValueKey(key),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(icon, size: 56, color: scheme.onSurfaceVariant),
           const SizedBox(height: 12),
@@ -424,13 +420,11 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
         if (done) return const SizedBox.shrink();
         final scheme = context.colorScheme;
         return Container(
-          margin: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-          padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+          margin: const .fromLTRB(12, 10, 12, 0),
+          padding: const .fromLTRB(12, 8, 8, 8),
           decoration: ShapeDecoration(
             color: scheme.secondaryContainer,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: .circular(12)),
           ),
           child: Row(
             children: [
@@ -451,7 +445,7 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
               const SizedBox(width: 8),
               if (_rebuilding)
                 const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  padding: .symmetric(horizontal: 10),
                   child: SizedBox(
                     width: 18,
                     height: 18,
@@ -490,10 +484,10 @@ class _FilterChip extends StatelessWidget {
     return AnimatedContainer(
       duration: Durations.short3,
       curve: Curves.easeOut,
-      padding: const EdgeInsets.fromLTRB(14, 9, 10, 9),
+      padding: const .fromLTRB(14, 9, 10, 9),
       decoration: ShapeDecoration(color: bg, shape: const StadiumBorder()),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(icon, size: 18, color: fg),
           const SizedBox(width: 6),
@@ -501,7 +495,7 @@ class _FilterChip extends StatelessWidget {
             label,
             style: context.textTheme.labelLarge?.copyWith(
               color: fg,
-              fontWeight: FontWeight.w600,
+              fontWeight: .w600,
             ),
           ),
           const SizedBox(width: 1),

@@ -16,9 +16,9 @@ class ResetDataTile extends StatelessWidget {
     final scheme = context.colorScheme;
     return ListTile(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: isFirst ? const Radius.circular(12) : Radius.zero,
-          bottom: isLast ? const Radius.circular(12) : Radius.zero,
+        borderRadius: .vertical(
+          top: isFirst ? const .circular(12) : .zero,
+          bottom: isLast ? const .circular(12) : .zero,
         ),
       ),
       leading: Icon(LucideIcons.trash2, color: scheme.error),

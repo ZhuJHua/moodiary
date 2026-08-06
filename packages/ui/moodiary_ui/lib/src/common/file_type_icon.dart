@@ -60,8 +60,8 @@ class FileTypeIcon extends StatelessWidget {
           fontVariations: [FontVariation('wght', 700)],
         ),
       ),
-      textDirection: TextDirection.ltr,
-      textScaler: TextScaler.noScaling,
+      textDirection: .ltr,
+      textScaler: .noScaling,
     )..layout();
     return painter.width;
   }
@@ -83,17 +83,17 @@ class FileTypeIcon extends StatelessWidget {
       width: size,
       height: size,
       child: Stack(
-        alignment: Alignment.center,
+        alignment: .center,
         children: [
           icon,
           // 纸面重心比图标中心略低——右上角被折角占掉一块。
           Padding(
-            padding: EdgeInsets.only(top: size * 0.02),
+            padding: .only(top: size * 0.02),
             child: Text(
               label,
               maxLines: 1,
               // 不跟随正文字号缩放，否则大字号下会撑破轮廓。
-              textScaler: TextScaler.noScaling,
+              textScaler: .noScaling,
               style: TextStyle(
                 fontFamily: 'Dosis',
                 package: 'moodiary_ui',

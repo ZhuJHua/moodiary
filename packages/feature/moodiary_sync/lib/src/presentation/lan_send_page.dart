@@ -104,7 +104,7 @@ class _LanSendPageState extends State<LanSendPage> {
   }
 
   Widget _sectionLabel(BuildContext context, String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
+    padding: const .only(bottom: 10),
     child: Text(
       text,
       style: context.textTheme.labelLarge?.copyWith(
@@ -119,7 +119,7 @@ class _LanSendPageState extends State<LanSendPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('局域网发送')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const .fromLTRB(20, 8, 20, 32),
         children: [
           Text(
             '只发送对方缺少的内容，按最后修改时间自动合并，重复发送不会产生重复数据。',
@@ -144,18 +144,18 @@ class _LanSendPageState extends State<LanSendPage> {
           TextField(
             controller: _hostController,
             enabled: !_running,
-            keyboardType: TextInputType.url,
+            keyboardType: .url,
             decoration: InputDecoration(
               hintText: '选择上方设备后自动填写',
               prefixIcon: const Icon(LucideIcons.network),
               filled: true,
               fillColor: scheme.surfaceContainerHigh,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide.none,
+                borderRadius: .circular(14),
+                borderSide: .none,
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: .circular(14),
                 borderSide: BorderSide(color: scheme.primary, width: 2),
               ),
             ),
@@ -178,9 +178,7 @@ class _LanSendPageState extends State<LanSendPage> {
             child: FilledButton.icon(
               onPressed: _running ? null : _send,
               style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: .circular(16)),
               ),
               icon: const Icon(LucideIcons.send),
               label: const Text('发送'),
@@ -223,10 +221,10 @@ class _PeerList extends StatelessWidget {
     final scheme = context.colorScheme;
     if (peers.isEmpty) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const .symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: .circular(16),
         ),
         child: Row(
           children: [
@@ -287,23 +285,23 @@ class _PeerTile extends StatelessWidget {
       duration: const Duration(milliseconds: 150),
       decoration: BoxDecoration(
         color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: .circular(16),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: .circular(16),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: .circular(16),
           onTap: enabled ? () => onPick(peer) : null,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const .all(12),
             child: Row(
               children: [
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                    shape: .circle,
                     color: selected
                         ? scheme.primary
                         : scheme.surfaceContainerHigh,
@@ -319,12 +317,12 @@ class _PeerTile extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: .start,
                     children: [
                       Text(
                         peer.name,
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        overflow: .ellipsis,
                         style: context.textTheme.titleSmall?.copyWith(
                           color: selected ? scheme.onPrimaryContainer : null,
                         ),
@@ -361,24 +359,24 @@ class _ProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final phase = progress?.phase ?? LanSendPhase.connecting;
+    final phase = progress?.phase ?? .connecting;
     final label = switch (phase) {
-      LanSendPhase.connecting => '正在连接…',
-      LanSendPhase.packing => '正在准备数据…',
-      LanSendPhase.uploading => '正在发送',
-      LanSendPhase.applying => '等待对方保存…',
+      .connecting => '正在连接…',
+      .packing => '正在准备数据…',
+      .uploading => '正在发送',
+      .applying => '等待对方保存…',
     };
     final sent = progress?.sent ?? 0;
     final total = progress?.total;
     return Container(
       key: const ValueKey('progress'),
-      padding: const EdgeInsets.all(16),
+      padding: const .all(16),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: .circular(16),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Row(
             children: [
@@ -390,22 +388,22 @@ class _ProgressCard extends StatelessWidget {
               const SizedBox(width: 12),
               Text(label, style: context.textTheme.titleSmall),
               const Spacer(),
-              if (phase == LanSendPhase.uploading && total != null && total > 0)
+              if (phase == .uploading && total != null && total > 0)
                 Text(
                   '${(sent / total * 100).clamp(0, 100).toStringAsFixed(0)}%',
                   style: context.textTheme.titleSmall?.copyWith(
                     color: scheme.primary,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontFeatures: const [.tabularFigures()],
                   ),
                 ),
             ],
           ),
-          if (phase == LanSendPhase.uploading) ...[
+          if (phase == .uploading) ...[
             const SizedBox(height: 12),
             LinearProgressIndicator(
               value: (total != null && total > 0) ? sent / total : null,
               minHeight: 8,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: .circular(999),
             ),
             const SizedBox(height: 8),
             Text(
@@ -442,13 +440,10 @@ class _ResultCard extends StatelessWidget {
         : scheme.onErrorContainer;
     return Container(
       key: ValueKey(success ? 'result' : 'error'),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(16),
-      ),
+      padding: const .all(16),
+      decoration: BoxDecoration(color: background, borderRadius: .circular(16)),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Icon(
             success ? LucideIcons.circleCheck : LucideIcons.circleAlert,

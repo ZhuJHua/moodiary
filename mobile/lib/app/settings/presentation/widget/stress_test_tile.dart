@@ -80,7 +80,7 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
       initialValue: '$_defaultTotal',
       hintText: '$_minTotal–$_maxTotal',
       confirmLabel: '生成',
-      keyboardType: TextInputType.number,
+      keyboardType: .number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       validator: (value) {
         final total = int.tryParse(value);
@@ -90,7 +90,7 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
       },
     );
     if (!mounted || input == null) return;
-    await _generate(int.parse(input));
+    await _generate(.parse(input));
   }
 
   Future<void> _generate(int total) async {
@@ -111,7 +111,7 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
         ];
         await DiaryRepository.get().insertDiaries(batch);
         progress.value = end / total;
-        await Future<void>.delayed(Duration.zero); // 让进度条刷新
+        await Future<void>.delayed(.zero); // 让进度条刷新
       }
     } catch (e, s) {
       ok = false;
@@ -201,7 +201,7 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
           ids.sublist(start, end),
         );
         progress.value = end / ids.length;
-        await Future<void>.delayed(Duration.zero);
+        await Future<void>.delayed(.zero);
       }
     } catch (e, s) {
       logger.e('清除压测数据失败', error: e, stackTrace: s);
@@ -227,7 +227,7 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
             content: ValueListenableBuilder<double>(
               valueListenable: progress,
               builder: (_, v, _) => Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: .min,
                 children: [
                   LinearProgressIndicator(value: v == 0 ? null : v),
                   const SizedBox(height: 12),

@@ -14,9 +14,7 @@ class TombstoneRepository {
   @visibleForTesting
   TombstoneRepository.forTesting(this._isar);
 
-  static final TombstoneRepository _instance = TombstoneRepository._(
-    IsarDatabase.get().isar,
-  );
+  static final TombstoneRepository _instance = ._(IsarDatabase.get().isar);
 
   final Isar _isar;
 
@@ -53,7 +51,7 @@ class TombstoneRepository {
     Duration retention = defaultRetention,
     DateTime? now,
   }) async {
-    final cutoff = (now ?? DateTime.timestamp())
+    final cutoff = (now ?? .timestamp())
         .subtract(retention)
         .millisecondsSinceEpoch;
     final expired = await _isar.syncTombstones

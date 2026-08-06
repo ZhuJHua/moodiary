@@ -90,7 +90,7 @@ class ExportService {
   }) async {
     final diaries = await scope.resolve();
     if (diaries.isEmpty) {
-      throw const ExportException(ExportError.emptyScope);
+      throw const ExportException(.emptyScope);
     }
 
     // 上一次的产物已经交给用户（分享 / 另存）了，这里先清掉再开工 —— 产物必须留在盘上
@@ -106,23 +106,21 @@ class ExportService {
       for (var i = 0; i < diaries.length; i++) {
         docs.add(await _toExportDoc(diaries[i], categories, media));
         unsupported.addAll(docs.last.unsupportedNodes);
-        onProgress?.call(
-          ExportProgress(ExportPhase.converting, i + 1, diaries.length),
-        );
+        onProgress?.call(ExportProgress(.converting, i + 1, diaries.length));
         // 无图日记整条链只产生 microtask，不让出事件循环——一批纯文字日记会连成一整块
         // 同步 CPU。显式让一帧，保证进度条能画出来。
-        if (i % 8 == 7) await Future<void>.delayed(Duration.zero);
+        if (i % 8 == 7) await Future<void>.delayed(.zero);
       }
 
       final outcome = switch (format) {
-        ExportFormat.markdown => await _writeMarkdown(
+        .markdown => await _writeMarkdown(
           docs,
           settings,
           workDir,
           media,
           untitledLabel,
         ),
-        ExportFormat.docx => await _writeDocx(
+        .docx => await _writeDocx(
           docs,
           settings,
           workDir,
@@ -130,7 +128,7 @@ class ExportService {
           videoLabel,
           audioLabel,
         ),
-        ExportFormat.pdf => await _writePdf(
+        .pdf => await _writePdf(
           docs,
           settings,
           workDir,
@@ -212,7 +210,7 @@ class ExportService {
       frontMatter: settings.markdown.frontMatter,
       includeTitle: settings.common.includeTitle,
       includeMetaLine: settings.common.includeMeta,
-      mediaMode: MarkdownMediaMode.relative,
+      mediaMode: .relative,
     );
 
     final outDir = Directory(p.join(workDir.path, 'out'))
@@ -345,7 +343,7 @@ class ExportService {
       ..createSync(recursive: true);
 
     if (settings.common.merge) {
-      onProgress?.call(const ExportProgress(ExportPhase.serializing, 0, 0));
+      onProgress?.call(const ExportProgress(.serializing, 0, 0));
       final path = p.join(outDir.path, '${_stamp()}.pdf');
       await rust.writePdf(docs: _toIr(docs), style: style, outPath: path);
       return path;
@@ -353,7 +351,7 @@ class ExportService {
 
     final used = <String>{};
     var done = 0;
-    onProgress?.call(ExportProgress(ExportPhase.writing, 0, docs.length));
+    onProgress?.call(ExportProgress(.writing, 0, docs.length));
     for (final doc in docs) {
       final name = _uniqueName(
         _fileName(doc, settings.common.nameTemplate, untitledLabel),
@@ -366,9 +364,7 @@ class ExportService {
         style: style,
         outPath: p.join(outDir.path, name),
       );
-      onProgress?.call(
-        ExportProgress(ExportPhase.writing, ++done, docs.length),
-      );
+      onProgress?.call(ExportProgress(.writing, ++done, docs.length));
     }
     return _zip(outDir, p.join(workDir.path, 'moodiary-pdf-${_stamp()}.zip'));
   }
@@ -480,7 +476,7 @@ class _MediaStage {
   _MediaStage(this._workDir, this._policy);
 
   Future<ExportDoc> apply(ExportDoc doc) async {
-    if (_policy == ExportMediaPolicy.none) {
+    if (_policy == .none) {
       return _rebuild(doc, await _mapBlocks(doc.blocks, _dropMedia));
     }
     return _rebuild(doc, await _mapBlocks(doc.blocks, _stageBlock));
@@ -521,13 +517,13 @@ class _MediaStage {
     switch (block) {
       case IrBlock_Image():
         if (block.external_) return block;
-        if (_policy == ExportMediaPolicy.placeholder) return null;
+        if (_policy == .placeholder) return null;
         final staged = await _stageImage(block.path);
         if (staged == null) {
           skipped++;
           return null;
         }
-        return IrBlock.image(
+        return .image(
           path: staged,
           alt: block.alt,
           widthPercent: block.widthPercent,
@@ -535,12 +531,11 @@ class _MediaStage {
         );
 
       case IrBlock_Media():
-        final cover =
-            block.coverPath == null || _policy == ExportMediaPolicy.placeholder
+        final cover = block.coverPath == null || _policy == .placeholder
             ? null
             : await _stageImage(block.coverPath!);
         _rememberAsset(block.path, block.filename);
-        return IrBlock.media(
+        return .media(
           kind: block.kind,
           filename: block.filename,
           path: block.path,
@@ -548,10 +543,10 @@ class _MediaStage {
         );
 
       case IrBlock_Quote(:final children):
-        return IrBlock.quote(children: await _mapBlocks(children, _stageBlock));
+        return .quote(children: await _mapBlocks(children, _stageBlock));
 
       case IrBlock_List(:final ordered, :final start, :final items):
-        return IrBlock.list(
+        return .list(
           ordered: ordered,
           start: start,
           items: [
@@ -584,10 +579,7 @@ class _MediaStage {
         filePath: source,
         outputPath: target,
         // 不给 maxWidth/maxHeight：那两个字段不是夹取而是「拉到正好」，小图会被放大。
-        spec: const rust.CompressSpec(
-          compressFormat: rust.CompressFormat.jpeg,
-          quality: 85,
-        ),
+        spec: const rust.CompressSpec(compressFormat: .jpeg, quality: 85),
       );
     } catch (_) {
       _converted[source] = null;

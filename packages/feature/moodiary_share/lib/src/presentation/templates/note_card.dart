@@ -19,7 +19,7 @@ class NoteShareCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = brightness == Brightness.dark;
+    final dark = brightness == .dark;
     final tape = Theme.of(context).colorScheme.primary;
     final paper = dark ? const Color(0xFF2A2621) : const Color(0xFFFBF3DE);
     final ink = dark ? const Color(0xFFE9E0CB) : const Color(0xFF4A4034);
@@ -27,22 +27,19 @@ class NoteShareCard extends StatelessWidget {
     final line = dark ? const Color(0x14E9E0CB) : const Color(0x0F4A4034);
     return Container(
       width: kShareCardWidth,
-      decoration: BoxDecoration(
-        color: paper,
-        borderRadius: BorderRadius.circular(6),
-      ),
+      decoration: BoxDecoration(color: paper, borderRadius: .circular(6)),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: .circular(6),
         child: Stack(
           children: [
             Positioned.fill(
               child: CustomPaint(painter: _RuledLinesPainter(line)),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(28, 34, 28, 24),
+              padding: const .fromLTRB(28, 34, 28, 24),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: .start,
+                mainAxisSize: .min,
                 children: [
                   Text(
                     TimeFormat.fullDate(diary.time),
@@ -57,7 +54,7 @@ class NoteShareCard extends StatelessWidget {
                     diary.title.isEmpty ? '(无标题)' : diary.title,
                     style: TextStyle(
                       fontSize: 21,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: .w700,
                       color: ink,
                       height: 1.35,
                     ),
@@ -82,7 +79,7 @@ class NoteShareCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           color: inkSoft,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: .w600,
                           letterSpacing: 0.5,
                         ),
                       ),

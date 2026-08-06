@@ -6,7 +6,6 @@ import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
-import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 
 class ReCipherReport {
@@ -49,7 +48,7 @@ class CloudReCipher {
   static int _seq = 0;
 
   CloudReCipher(this.backend, {SyncLogger? logger})
-    : _logger = logger ?? SyncLogger.get();
+    : _logger = logger ?? .get();
 
   Map<String, Object?> _backendPayload() => {
     'backend': backend.displayName,
@@ -81,7 +80,7 @@ class CloudReCipher {
 
     final sw = Stopwatch()..start();
     _logger.info(
-      SyncEventKind.syncStart,
+      .syncStart,
       '开始重新加密',
       payload: {
         ..._backendPayload(),
@@ -95,7 +94,7 @@ class CloudReCipher {
     final mfBytes = await backend.readObject(SyncKeys.manifestPath);
     if (mfBytes == null) {
       _logger.info(
-        SyncEventKind.syncEnd,
+        .syncEnd,
         '远端为空，跳过重新加密',
         payload: {..._backendPayload(), 'direction': 're-cipher'},
       );
@@ -150,11 +149,7 @@ class CloudReCipher {
         return null;
       }
       if (decoded is! Map<String, dynamic>) {
-        _logger.warn(
-          SyncEventKind.error,
-          '远端对象解码非对象，跳过重新加密：$path',
-          payload: {'path': path},
-        );
+        _logger.warn(.error, '远端对象解码非对象，跳过重新加密：$path', payload: {'path': path});
         return false;
       }
       await backend.writeObject(path, await to.encode(decoded));
@@ -177,7 +172,7 @@ class CloudReCipher {
       } catch (e) {
         failed++;
         _logger.error(
-          SyncEventKind.error,
+          .error,
           '重新加密日记失败：$id',
           payload: {'diaryId': id, 'detail': e.toString()},
         );
@@ -198,7 +193,7 @@ class CloudReCipher {
       } catch (e) {
         failed++;
         _logger.error(
-          SyncEventKind.error,
+          .error,
           '重新加密分类失败：$id',
           payload: {'categoryId': id, 'detail': e.toString()},
         );
@@ -232,7 +227,7 @@ class CloudReCipher {
       } catch (e) {
         failed++;
         _logger.error(
-          SyncEventKind.error,
+          .error,
           '重新加密媒体失败：$ref',
           payload: {'ref': ref, 'detail': e.toString()},
         );
@@ -265,7 +260,7 @@ class CloudReCipher {
 
     sw.stop();
     _logger.info(
-      SyncEventKind.syncEnd,
+      .syncEnd,
       '重新加密结束',
       payload: {
         ..._backendPayload(),

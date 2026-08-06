@@ -122,10 +122,7 @@ class _SheetScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MoodiarySheetScaffold<void>(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: child,
-      ),
+      child: Padding(padding: const .symmetric(vertical: 8), child: child),
     );
   }
 }
@@ -241,21 +238,21 @@ enum _ChangePhase { verify, enterNew, confirmNew }
 
 class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
   final _pad = LockPinPadController();
-  _ChangePhase _phase = _ChangePhase.verify;
+  _ChangePhase _phase = .verify;
   String? _newPin;
   String? _error;
 
   bool get _supportBio => MoodiaryKVs.supportBiometrics.get() == true;
 
   String get _title => switch (_phase) {
-    _ChangePhase.verify => '输入当前密码',
-    _ChangePhase.enterNew => '设置新密码',
-    _ChangePhase.confirmNew => '确认新密码',
+    .verify => '输入当前密码',
+    .enterNew => '设置新密码',
+    .confirmNew => '确认新密码',
   };
 
   void _toEnterNew() {
     setState(() {
-      _phase = _ChangePhase.enterNew;
+      _phase = .enterNew;
       _error = null;
     });
     _pad.clear();
@@ -263,21 +260,21 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
 
   Future<void> _onCompleted(String pin) async {
     switch (_phase) {
-      case _ChangePhase.verify:
+      case .verify:
         if (pin == (MoodiaryKVs.password.get() ?? '')) {
           _toEnterNew();
         } else {
           setState(() => _error = '密码错误');
           _pad.reject();
         }
-      case _ChangePhase.enterNew:
+      case .enterNew:
         setState(() {
           _newPin = pin;
-          _phase = _ChangePhase.confirmNew;
+          _phase = .confirmNew;
           _error = null;
         });
         _pad.clear();
-      case _ChangePhase.confirmNew:
+      case .confirmNew:
         if (pin == _newPin) {
           await MoodiaryKVs.password.set(pin);
           if (!mounted) return;
@@ -286,7 +283,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
         } else {
           setState(() {
             _newPin = null;
-            _phase = _ChangePhase.enterNew;
+            _phase = .enterNew;
             _error = '两次输入不一致，请重新设置';
           });
           _pad.reject();
@@ -295,7 +292,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
   }
 
   Future<void> _onBiometric() async {
-    if (_phase == _ChangePhase.verify && await BiometricAuth.check()) {
+    if (_phase == .verify && await BiometricAuth.check()) {
       _toEnterNew();
     }
   }
@@ -307,7 +304,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
         controller: _pad,
         title: _title,
         error: _error,
-        showBiometric: _phase == _ChangePhase.verify && _supportBio,
+        showBiometric: _phase == .verify && _supportBio,
         onBiometric: _onBiometric,
         onCompleted: _onCompleted,
       ),

@@ -16,7 +16,7 @@ class CachedImage extends StatelessWidget {
     required this.url,
     this.width,
     this.height,
-    this.fit = BoxFit.contain,
+    this.fit = .contain,
     this.svgColor,
     this.placeholder,
     this.errorWidget,
@@ -36,9 +36,7 @@ class CachedImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        colorFilter: svgColor == null
-            ? null
-            : ColorFilter.mode(svgColor!, BlendMode.srcIn),
+        colorFilter: svgColor == null ? null : .mode(svgColor!, .srcIn),
       ),
     );
   }

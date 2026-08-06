@@ -14,11 +14,11 @@ enum Language {
 extension LanguageExtension on Language {
   String l10nText(BuildContext context) {
     switch (this) {
-      case Language.system:
+      case .system:
         return context.l10n.settingLanguageSystem;
-      case Language.chinese:
+      case .chinese:
         return context.l10n.settingLanguageSimpleChinese;
-      case Language.english:
+      case .english:
         return context.l10n.settingLanguageEnglish;
     }
   }

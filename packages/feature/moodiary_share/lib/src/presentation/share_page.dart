@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -63,7 +62,7 @@ class _SharePageState extends ConsumerState<SharePage> {
               as RenderRepaintBoundary?;
       if (boundary == null) return;
       final image = await boundary.toImage(pixelRatio: 3);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final byteData = await image.toByteData(format: .png);
       if (byteData == null) return;
       final bytes = byteData.buffer.asUint8List();
       final dir = PlatformService.get().applicationCachePath;
@@ -118,18 +117,18 @@ class _SharePageState extends ConsumerState<SharePage> {
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: .topCenter,
+          end: .bottomCenter,
           colors: [scheme.surfaceContainerHigh, scheme.surfaceContainerLow],
         ),
       ),
       child: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          padding: const .symmetric(horizontal: 24, vertical: 28),
           // 阴影包在 RepaintBoundary 外层 —— 只让卡片本体入图，阴影/背景不导出。
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: .circular(18),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.18),
@@ -151,14 +150,14 @@ class _SharePageState extends ConsumerState<SharePage> {
   Widget _controls() {
     final brightness = _brightness ?? Theme.of(context).brightness;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      padding: const .fromLTRB(12, 12, 12, 4),
       child: Row(
         children: [
           Expanded(
             child: SizedBox(
               height: 40,
               child: ListView.separated(
-                scrollDirection: Axis.horizontal,
+                scrollDirection: .horizontal,
                 itemCount: kShareTemplates.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (context, i) => ChoiceChip(
@@ -173,8 +172,8 @@ class _SharePageState extends ConsumerState<SharePage> {
           SegmentedButton<Brightness>(
             showSelectedIcon: false,
             style: SegmentedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: .compact,
+              tapTargetSize: .shrinkWrap,
             ),
             segments: const [
               ButtonSegment(
@@ -196,15 +195,10 @@ class _SharePageState extends ConsumerState<SharePage> {
 
   Widget _actions(Diary diary) {
     ButtonStyle shape() => FilledButton.styleFrom(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: .circular(14)),
     );
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        16,
-        8,
-        16,
-        12 + MediaQuery.paddingOf(context).bottom,
-      ),
+      padding: .fromLTRB(16, 8, 16, 12 + MediaQuery.paddingOf(context).bottom),
       child: Row(
         children: [
           Expanded(

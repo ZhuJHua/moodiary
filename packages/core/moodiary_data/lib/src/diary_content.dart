@@ -16,28 +16,27 @@ class DiaryContent {
   DiaryContent._(this._diary, this._type);
 
   factory DiaryContent.of(Diary diary) =>
-      DiaryContent._(diary, DiaryType.fromValue(diary.type));
+      DiaryContent._(diary, .fromValue(diary.type));
 
   static final RegExp _markdownMedia = RegExp(
     r'!\[[^\]]*\]\((image-[^\s)]+|audio-[^\s)]+|video-[^\s)]+)\)',
   );
 
   /// tiptap 正文的解析句柄；其余类型为 null。
-  late final TiptapContent? _tiptap = _type == DiaryType.tiptap
-      ? TiptapContent.parse(_diary.content)
+  late final TiptapContent? _tiptap = _type == .tiptap
+      ? .parse(_diary.content)
       : null;
 
   /// richText 正文的 Delta op 列表（非法 Delta 为 null）；其余类型为 null。
-  late final List<dynamic>? _delta = _type == DiaryType.richText
+  late final List<dynamic>? _delta = _type == .richText
       ? QuillDelta.ops(_diary.content)
       : null;
 
   /// 从 `content` 还原纯文本镜像。解析失败一律回退为原始 `content`，绝不抛出。
   late final String plainText = switch (_type) {
-    DiaryType.tiptap => _tiptap!.plainText,
-    DiaryType.markdown => MarkdownConverter.convert(_diary.content),
-    DiaryType.richText =>
-      QuillDelta.plainTextOf(_delta)?.trimRight() ?? _diary.content,
+    .tiptap => _tiptap!.plainText,
+    .markdown => MarkdownConverter.convert(_diary.content),
+    .richText => QuillDelta.plainTextOf(_delta)?.trimRight() ?? _diary.content,
   };
 
   /// 抽取正文内嵌媒体文件名（去重、保持出现顺序）。Markdown 三类媒体统一写成
@@ -48,10 +47,10 @@ class DiaryContent {
 
   ({List<String> images, List<String> videos, List<String> audios}) _media() {
     switch (_type) {
-      case DiaryType.tiptap:
+      case .tiptap:
         final m = _tiptap!.media;
         return (images: m.images, videos: m.videos, audios: m.audios);
-      case DiaryType.markdown:
+      case .markdown:
         final images = <String>{};
         final audios = <String>{};
         final videos = <String>{};
@@ -70,7 +69,7 @@ class DiaryContent {
           videos: videos.toList(),
           audios: audios.toList(),
         );
-      case DiaryType.richText:
+      case .richText:
         final delta = _delta;
         if (delta == null) {
           return (
@@ -103,7 +102,7 @@ class DiaryContent {
 
   /// 抽取正文双链的目标日记 id（去重保序）。仅 tiptap 有 diaryLink 节点；其余类型返回空。
   late final List<String> links = switch (_type) {
-    DiaryType.tiptap => _tiptap!.links,
-    DiaryType.markdown || DiaryType.richText => const [],
+    .tiptap => _tiptap!.links,
+    .markdown || .richText => const [],
   };
 }

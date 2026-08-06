@@ -88,14 +88,14 @@ class _StartPageState extends ConsumerState<StartPage> {
             SizedBox(
               height: 52,
               child: Align(
-                alignment: Alignment.centerRight,
+                alignment: .centerRight,
                 child: AnimatedOpacity(
                   opacity: isLast ? 0 : 1,
                   duration: const Duration(milliseconds: 200),
                   child: IgnorePointer(
                     ignoring: isLast,
                     child: Padding(
-                      padding: const EdgeInsets.only(right: 8),
+                      padding: const .only(right: 8),
                       child: TextButton(
                         onPressed: _enter,
                         style: TextButton.styleFrom(
@@ -133,16 +133,16 @@ class _StartPageState extends ConsumerState<StartPage> {
             ),
             _Dots(count: _slides.length, page: _page),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+              padding: const .fromLTRB(24, 28, 24, 12),
               child: SizedBox(
                 height: 54,
-                width: double.infinity,
+                width: .infinity,
                 child: FilledButton(
                   onPressed: _next,
                   style: FilledButton.styleFrom(
                     shape: const StadiumBorder(),
                     textStyle: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: .w600,
                     ),
                   ),
                   child: Text(isLast ? '开始记录' : '下一步'),
@@ -150,9 +150,9 @@ class _StartPageState extends ConsumerState<StartPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const .only(bottom: 12),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: .center,
                 children: [
                   TextButton(
                     onPressed: () => const AgreementRoute().push(context),
@@ -188,26 +188,26 @@ class _SlideView extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: const .symmetric(horizontal: 32),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: .center,
         children: [
           Container(
             width: 132,
             height: 132,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                begin: .topLeft,
+                end: .bottomRight,
                 colors: [
                   scheme.primaryContainer,
-                  Color.alphaBlend(
+                  .alphaBlend(
                     scheme.primary.withValues(alpha: 0.16),
                     scheme.primaryContainer,
                   ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(36),
+              borderRadius: .circular(36),
               boxShadow: [
                 BoxShadow(
                   color: scheme.primary.withValues(alpha: 0.18),
@@ -221,16 +221,16 @@ class _SlideView extends StatelessWidget {
           const SizedBox(height: 40),
           Text(
             slide.title,
-            textAlign: TextAlign.center,
+            textAlign: .center,
             style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: .w700,
               height: 1.15,
             ),
           ),
           const SizedBox(height: 14),
           Text(
             slide.body,
-            textAlign: TextAlign.center,
+            textAlign: .center,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: scheme.onSurfaceVariant,
               height: 1.55,
@@ -251,18 +251,18 @@ class _Dots extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.primary;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(count, (i) {
+      mainAxisAlignment: .center,
+      children: .generate(count, (i) {
         final selected = i == page;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
-          margin: const EdgeInsets.symmetric(horizontal: 4),
+          margin: const .symmetric(horizontal: 4),
           width: selected ? 22 : 8,
           height: 8,
           decoration: BoxDecoration(
             color: selected ? color : color.withValues(alpha: 0.22),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: .circular(4),
           ),
         );
       }),

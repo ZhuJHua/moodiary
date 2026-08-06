@@ -52,7 +52,7 @@ abstract class LlmProvider with _$LlmProvider {
       type: type.id,
       baseUrl: baseUrl,
       model: model,
-      createdAt: DateTime.timestamp(),
+      createdAt: .timestamp(),
       sortOrder: sortOrder,
       providerId: providerId,
       toolCall: toolCall,
@@ -66,5 +66,5 @@ abstract class LlmProvider with _$LlmProvider {
 }
 
 extension LlmProviderX on LlmProvider {
-  AssistantProviderType get protocol => AssistantProviderType.fromId(type);
+  AssistantProviderType get protocol => .fromId(type);
 }

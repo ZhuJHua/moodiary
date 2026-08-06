@@ -8,7 +8,7 @@ class SponsorPage extends StatelessWidget {
   Future<void> _open(BuildContext context, String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await launchUrl(uri, mode: .externalApplication);
     }
   }
 
@@ -18,20 +18,20 @@ class SponsorPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('赞助')),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const .all(24),
         children: [
           Icon(LucideIcons.heart, size: 48, color: theme.colorScheme.primary),
           const SizedBox(height: 12),
           Text(
             '感谢您的考虑！',
-            textAlign: TextAlign.center,
+            textAlign: .center,
             style: theme.textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
           Text(
             'Moodiary 是开源软件，由开发者业余维护。'
             '如果您喜欢这款应用，可通过下面的链接支持作者继续维护。',
-            textAlign: TextAlign.center,
+            textAlign: .center,
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),

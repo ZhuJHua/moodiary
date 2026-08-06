@@ -53,7 +53,7 @@ class _FontPageState extends ConsumerState<FontPage> {
             builder: (context, currentScale, _) {
               final scale = _dragScale ?? currentScale;
               return ListView(
-                padding: const EdgeInsets.all(8),
+                padding: const .all(8),
                 children: [
                   const SettingTitleTile(
                     title: '字体',
@@ -61,9 +61,9 @@ class _FontPageState extends ConsumerState<FontPage> {
                   ),
                   Card.filled(
                     color: scheme.surfaceContainerLow,
-                    margin: EdgeInsets.zero,
+                    margin: .zero,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const .symmetric(vertical: 16),
                       child: _FontPicker(currentFamily: currentFamily),
                     ),
                   ),
@@ -71,9 +71,9 @@ class _FontPageState extends ConsumerState<FontPage> {
                   const SettingTitleTile(title: '字号'),
                   Card.filled(
                     color: scheme.surfaceContainerLow,
-                    margin: EdgeInsets.zero,
+                    margin: .zero,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                      padding: const .fromLTRB(16, 8, 16, 12),
                       child: _FontScaleSlider(
                         value: scale,
                         // 拖动中只动本页（滑块 + 预览）；松手提交全局并推给编辑器。
@@ -86,9 +86,9 @@ class _FontPageState extends ConsumerState<FontPage> {
                   const SettingTitleTile(title: '预览'),
                   Card.filled(
                     color: scheme.surfaceContainerLow,
-                    margin: EdgeInsets.zero,
+                    margin: .zero,
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const .all(16),
                       child: _Preview(fontFamily: currentFamily, scale: scale),
                     ),
                   ),
@@ -111,10 +111,10 @@ class _FontPicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncFonts = ref.watch(fontControllerProvider);
     return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      scrollDirection: .horizontal,
+      padding: const .symmetric(horizontal: 16),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         spacing: 12,
         children: [
           _FontCard(
@@ -192,7 +192,7 @@ class _FontCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       children: [
         GestureDetector(
           onTap: () {
@@ -208,7 +208,7 @@ class _FontCard extends StatelessWidget {
               color: selected
                   ? scheme.secondaryContainer
                   : scheme.surfaceContainerHigh,
-              border: Border.all(
+              border: .all(
                 color: selected ? scheme.primary : Colors.transparent,
                 width: 2,
               ),
@@ -234,20 +234,17 @@ class _FontCard extends StatelessWidget {
                     top: 4,
                     right: 4,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 5,
-                        vertical: 1,
-                      ),
+                      padding: const .symmetric(horizontal: 5, vertical: 1),
                       decoration: BoxDecoration(
                         // 用 tertiary（accent 调）而非 tertiaryContainer：暗色下后者与
                         // secondaryContainer 卡片同明度，仅靠色相区分、几乎不可见。
                         color: scheme.tertiary,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: .circular(999),
                       ),
                       child: Text(
                         '可变',
                         // 徽标属 UI 装饰，不随字号偏好缩放（0.8 档会低于可读下限）。
-                        textScaler: TextScaler.noScaling,
+                        textScaler: .noScaling,
                         style: context.textTheme.labelSmall?.copyWith(
                           fontSize: 10,
                           color: scheme.onTertiary,
@@ -266,7 +263,7 @@ class _FontCard extends StatelessWidget {
             child: AdaptiveText(
               label,
               style: context.textTheme.labelSmall?.copyWith(
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: selected ? .w600 : .w500,
                 color: selected ? scheme.primary : scheme.onSurfaceVariant,
               ),
               maxWidth: 72,
@@ -287,7 +284,7 @@ class _AddFontCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       children: [
         GestureDetector(
           onTap: () {
@@ -343,7 +340,7 @@ class _FontScaleSlider extends StatelessWidget {
     final scheme = context.colorScheme;
     final label = FontPage.scaleLabel(value);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         Row(
           children: [
@@ -377,7 +374,7 @@ class _FontScaleSlider extends StatelessWidget {
             label,
             style: context.textTheme.labelMedium?.copyWith(
               color: scheme.primary,
-              fontWeight: FontWeight.w600,
+              fontWeight: .w600,
             ),
           ),
         ),
@@ -410,7 +407,7 @@ class _Preview extends StatelessWidget {
   Widget build(BuildContext context) {
     final family = fontFamily.isEmpty ? null : fontFamily;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         Text(
           '八月的忧愁',
@@ -418,7 +415,7 @@ class _Preview extends StatelessWidget {
             height: 2,
             fontFamily: family,
           ),
-          textScaler: TextScaler.linear(scale),
+          textScaler: .linear(scale),
         ),
         const SizedBox(height: 8),
         Text(
@@ -427,7 +424,7 @@ class _Preview extends StatelessWidget {
             height: 2,
             fontFamily: family,
           ),
-          textScaler: TextScaler.linear(scale),
+          textScaler: .linear(scale),
         ),
       ],
     );

@@ -22,21 +22,21 @@ class MediaPage extends StatelessWidget {
 }
 
 String _typeLabel(BuildContext c, MediaType t) => switch (t) {
-  MediaType.image => c.l10n.mediaTypeImage,
-  MediaType.audio => c.l10n.mediaTypeAudio,
-  MediaType.video => c.l10n.mediaTypeVideo,
+  .image => c.l10n.mediaTypeImage,
+  .audio => c.l10n.mediaTypeAudio,
+  .video => c.l10n.mediaTypeVideo,
 };
 
 IconData _typeIcon(MediaType t) => switch (t) {
-  MediaType.image => LucideIcons.image,
-  MediaType.audio => LucideIcons.music,
-  MediaType.video => LucideIcons.film,
+  .image => LucideIcons.image,
+  .audio => LucideIcons.music,
+  .video => LucideIcons.film,
 };
 
 String _countLabel(BuildContext c, MediaType t, int n) => switch (t) {
-  MediaType.image => c.l10n.mediaImageCount(n),
-  MediaType.audio => c.l10n.mediaAudioCount(n),
-  MediaType.video => c.l10n.mediaVideoCount(n),
+  .image => c.l10n.mediaImageCount(n),
+  .audio => c.l10n.mediaAudioCount(n),
+  .video => c.l10n.mediaVideoCount(n),
 };
 
 class _MobileMediaPage extends ConsumerStatefulWidget {
@@ -47,7 +47,7 @@ class _MobileMediaPage extends ConsumerStatefulWidget {
 }
 
 class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
-  MediaType _type = MediaType.image;
+  MediaType _type = .image;
 
   // 整页共享一个播放器实例：媒体库任一时刻只播一条音频，避免一屏 N 个播放器。
   late final AudioPlaybackController _audio = AudioPlaybackController();
@@ -236,7 +236,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(_kGridPadding, 10, _kGridPadding, 8),
+      padding: const .fromLTRB(_kGridPadding, 10, _kGridPadding, 8),
       child: Row(
         children: [
           Expanded(
@@ -244,7 +244,7 @@ class _SectionHeader extends StatelessWidget {
               TimeFormat.fullDate(date),
               style: context.textTheme.titleSmall?.copyWith(
                 color: scheme.primary,
-                fontWeight: FontWeight.w600,
+                fontWeight: .w600,
               ),
             ),
           ),
@@ -277,9 +277,9 @@ class _MediaSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (type == MediaType.audio) {
+    if (type == .audio) {
       return SliverPadding(
-        padding: const EdgeInsets.symmetric(horizontal: _kGridPadding),
+        padding: const .symmetric(horizontal: _kGridPadding),
         sliver: SliverList.separated(
           itemCount: names.length,
           separatorBuilder: (_, _) => const SizedBox(height: 8),
@@ -293,7 +293,7 @@ class _MediaSliver extends StatelessWidget {
       );
     }
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: _kGridPadding),
+      padding: const .symmetric(horizontal: _kGridPadding),
       sliver: SliverGrid.builder(
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: _kGridColumns,
@@ -303,18 +303,18 @@ class _MediaSliver extends StatelessWidget {
         itemCount: names.length,
         // 按文件名 key：实时插入/重排时移动已解码的缩略图，避免闪成邻格旧图。
         itemBuilder: (context, i) => switch (type) {
-          MediaType.image => _ImageTile(
+          .image => _ImageTile(
             key: ValueKey(names[i]),
             names: names,
             index: i,
             cacheWidth: cacheWidth,
           ),
-          MediaType.video => _VideoTile(
+          .video => _VideoTile(
             key: ValueKey(names[i]),
             name: names[i],
             cacheWidth: cacheWidth,
           ),
-          MediaType.audio => const SizedBox.shrink(),
+          .audio => const SizedBox.shrink(),
         },
       ),
     );
@@ -333,12 +333,12 @@ class _Thumb extends StatelessWidget {
     return ClipRRect(
       borderRadius: AppBorderRadius.smallBorderRadius,
       child: Stack(
-        fit: StackFit.expand,
+        fit: .expand,
         children: [
           ColoredBox(color: context.colorScheme.surfaceContainerHighest),
           Image(
             image: image,
-            fit: BoxFit.cover,
+            fit: .cover,
             gaplessPlayback: true,
             frameBuilder: (context, child, frame, wasSync) {
               if (wasSync) return child;
@@ -413,7 +413,7 @@ class _VideoTile extends StatelessWidget {
           width: cacheWidth,
         ),
         overlay: const Stack(
-          fit: StackFit.expand,
+          fit: .expand,
           children: [
             DecoratedBox(decoration: BoxDecoration(color: Colors.black26)),
             Center(
@@ -436,7 +436,7 @@ class _Empty extends StatelessWidget {
     final scheme = context.colorScheme;
     return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(
             LucideIcons.packageOpen,

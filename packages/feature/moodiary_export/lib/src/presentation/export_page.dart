@@ -22,12 +22,7 @@ class ExportPage extends StatelessWidget {
       appBar: AppBar(title: Text(context.l10n.exportPageTitle)),
       body: ListView(
         // 与其它设置页一致：左右 8、上下 8，再补底部安全区。
-        padding: EdgeInsets.fromLTRB(
-          8,
-          8,
-          8,
-          8 + MediaQuery.paddingOf(context).bottom,
-        ),
+        padding: .fromLTRB(8, 8, 8, 8 + MediaQuery.paddingOf(context).bottom),
         children: const [
           _ExportSection(),
           SizedBox(height: 4),
@@ -45,12 +40,12 @@ class _ExportSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         SettingTitleTile(title: context.l10n.exportSectionExport),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SettingListTile(
@@ -58,20 +53,20 @@ class _ExportSection extends StatelessWidget {
                 title: 'Markdown',
                 leading: const FileTypeIcon('MD'),
                 trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => _open(context, ExportFormat.markdown),
+                onTap: () => _open(context, .markdown),
               ),
               SettingListTile(
                 title: context.l10n.exportFormatDocx,
                 leading: const FileTypeIcon('DOCX'),
                 trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => _open(context, ExportFormat.docx),
+                onTap: () => _open(context, .docx),
               ),
               SettingListTile(
                 isLast: true,
                 title: 'PDF',
                 leading: const FileTypeIcon('PDF'),
                 trailing: const Icon(LucideIcons.chevronRight),
-                onTap: () => _open(context, ExportFormat.pdf),
+                onTap: () => _open(context, .pdf),
               ),
             ],
           ),
@@ -131,12 +126,12 @@ class _ImportSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         SettingTitleTile(title: context.l10n.exportSectionBackup),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SettingListTile(

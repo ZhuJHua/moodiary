@@ -77,10 +77,10 @@ class SyncKeyManager {
     required List<int> data,
   }) => rust.Aes.decrypt(key: key, encryptedData: data);
 
-  static final Random _rng = Random.secure();
+  static final Random _rng = .secure();
 
   static Uint8List _randomBytes(int n) =>
-      Uint8List.fromList(List.generate(n, (_) => _rng.nextInt(256)));
+      .fromList(.generate(n, (_) => _rng.nextInt(256)));
 
   /// 生成新的 32 字节随机数据密钥。
   static List<int> generateDek() => _randomBytes(32);
@@ -165,8 +165,7 @@ class SyncKeyManager {
     await MoodiaryKVs.syncKeyfilePendingBackends.set(const <String>[]);
   }
 
-  static Future<SyncCipher> currentCipher() async =>
-      SyncCipher.withKey(await loadDek());
+  static Future<SyncCipher> currentCipher() async => .withKey(await loadDek());
 
   @visibleForTesting
   static void resetForTest() {
@@ -184,7 +183,7 @@ class SyncKeyManager {
     final raw = MoodiaryKVs.syncKeyfileCache.get();
     if (raw == null || raw.isEmpty) return null;
     try {
-      return SyncKeyfile.fromBytes(Uint8List.fromList(utf8.encode(raw)));
+      return .fromBytes(.fromList(utf8.encode(raw)));
     } catch (_) {
       return null;
     }
@@ -213,7 +212,7 @@ class SyncKeyManager {
   ) async {
     final bytes = await backend.readObject(SyncKeys.keysPath);
     if (bytes == null) return null;
-    return SyncKeyfile.fromBytes(bytes);
+    return .fromBytes(bytes);
   }
 
   static Future<void> writeRemoteKeyfile(

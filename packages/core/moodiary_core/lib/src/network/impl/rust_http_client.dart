@@ -52,7 +52,7 @@ class RustHttpClient extends IHttpClient {
       // 否则会绕过统一 catch、既不上报也不转成 HttpException。
       throw _report(
         HttpException(
-          HttpErrorType.decode,
+          .decode,
           'decode failed: $error',
           statusCode: raw.statusCode,
         ),
@@ -132,7 +132,7 @@ class RustHttpClient extends IHttpClient {
   Future<HttpResponse<Uint8List>> uploadFile(
     String url, {
     required String filePath,
-    HttpMethod method = HttpMethod.post,
+    HttpMethod method = .post,
     Map<String, dynamic>? headers,
     void Function(int sent, int total)? onProgress,
     Duration? timeout,
@@ -170,10 +170,7 @@ class RustHttpClient extends IHttpClient {
           headers: _headerMap(response.headers),
         );
       }
-      throw const HttpException(
-        HttpErrorType.unknown,
-        'upload ended without response',
-      );
+      throw const HttpException(.unknown, 'upload ended without response');
     } on rust.HttpError catch (error) {
       throw _report(_exception(error), silent: silent);
     }
@@ -191,13 +188,13 @@ class RustHttpClient extends IHttpClient {
   }
 
   rust.HttpMethod _method(HttpMethod method) => switch (method) {
-    HttpMethod.get => rust.HttpMethod.get_,
-    HttpMethod.post => rust.HttpMethod.post,
-    HttpMethod.put => rust.HttpMethod.put,
-    HttpMethod.delete => rust.HttpMethod.delete,
-    HttpMethod.patch => rust.HttpMethod.patch,
-    HttpMethod.head => rust.HttpMethod.head,
-    HttpMethod.options => rust.HttpMethod.options,
+    .get => rust.HttpMethod.get_,
+    .post => rust.HttpMethod.post,
+    .put => rust.HttpMethod.put,
+    .delete => rust.HttpMethod.delete,
+    .patch => rust.HttpMethod.patch,
+    .head => rust.HttpMethod.head,
+    .options => rust.HttpMethod.options,
   };
 
   List<rust.KeyValue> _pairs(Map<String, dynamic>? map) {
@@ -238,13 +235,13 @@ class RustHttpClient extends IHttpClient {
 
   HttpException _exception(rust.HttpError error) {
     final type = switch (error.kind) {
-      rust.HttpErrorKind.timeout => HttpErrorType.timeout,
-      rust.HttpErrorKind.connect => HttpErrorType.connection,
-      rust.HttpErrorKind.request => HttpErrorType.request,
-      rust.HttpErrorKind.redirect => HttpErrorType.redirect,
-      rust.HttpErrorKind.decode => HttpErrorType.decode,
-      rust.HttpErrorKind.status => HttpErrorType.statusCode,
-      rust.HttpErrorKind.unknown => HttpErrorType.unknown,
+      .timeout => HttpErrorType.timeout,
+      .connect => HttpErrorType.connection,
+      .request => HttpErrorType.request,
+      .redirect => HttpErrorType.redirect,
+      .decode => HttpErrorType.decode,
+      .status => HttpErrorType.statusCode,
+      .unknown => HttpErrorType.unknown,
     };
     return HttpException(type, error.message, statusCode: error.status);
   }

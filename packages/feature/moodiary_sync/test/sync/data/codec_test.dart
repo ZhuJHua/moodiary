@@ -51,9 +51,9 @@ void main() {
     });
 
     test('isCipherText needs the full magic header', () {
-      expect(SyncCipher.isCipherText(Uint8List.fromList([1, 2, 3])), isFalse);
+      expect(SyncCipher.isCipherText(.fromList([1, 2, 3])), isFalse);
       expect(
-        SyncCipher.isCipherText(Uint8List.fromList(utf8.encode('MD-ENC'))),
+        SyncCipher.isCipherText(.fromList(utf8.encode('MD-ENC'))),
         isFalse,
       );
     });

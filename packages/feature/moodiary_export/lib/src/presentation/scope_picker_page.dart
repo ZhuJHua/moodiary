@@ -82,15 +82,14 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
   }
 
   ExportScope? _build(AppLocalizations l10n) => switch (_kind) {
-    _ScopeKind.all => const AllDiariesScope(),
-    _ScopeKind.category =>
+    .all => const AllDiariesScope(),
+    .category =>
       _categoryIds.isEmpty
           ? null
           : CategoryScope({..._categoryIds}, _categoryLabel(l10n)),
-    _ScopeKind.dateRange =>
+    .dateRange =>
       _range == null ? null : DateRangeScope(_range!.start, _range!.end),
-    _ScopeKind.picked =>
-      _pickedIds.isEmpty ? null : PickedScope({..._pickedIds}),
+    .picked => _pickedIds.isEmpty ? null : PickedScope({..._pickedIds}),
   };
 
   String _categoryLabel(AppLocalizations l10n) {
@@ -118,11 +117,11 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              padding: const .symmetric(horizontal: 8, vertical: 8),
               children: [
                 Card.filled(
                   color: scheme.surfaceContainerLow,
-                  margin: EdgeInsets.zero,
+                  margin: .zero,
                   child: RadioGroup<_ScopeKind>(
                     groupValue: _kind,
                     onChanged: (v) => setState(() => _kind = v!),
@@ -139,20 +138,18 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                if (_kind == _ScopeKind.category) _categoryList(l10n),
-                if (_kind == _ScopeKind.dateRange) _rangeTile(l10n),
-                if (_kind == _ScopeKind.picked) _diaryList(l10n),
+                if (_kind == .category) _categoryList(l10n),
+                if (_kind == .dateRange) _rangeTile(l10n),
+                if (_kind == .picked) _diaryList(l10n),
               ],
             ),
       bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+        minimum: const .fromLTRB(16, 8, 16, 12),
         child: SizedBox(
           height: 50,
           child: FilledButton(
             style: FilledButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: .circular(14)),
             ),
             onPressed: built == null
                 ? null
@@ -167,17 +164,15 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
   }
 
   String _kindLabel(AppLocalizations l10n, _ScopeKind kind) => switch (kind) {
-    _ScopeKind.all => l10n.exportScopeAll,
-    _ScopeKind.category => l10n.exportScopeByCategory,
-    _ScopeKind.dateRange => l10n.exportScopeByDate,
-    _ScopeKind.picked => l10n.exportScopePicked,
+    .all => l10n.exportScopeAll,
+    .category => l10n.exportScopeByCategory,
+    .dateRange => l10n.exportScopeByDate,
+    .picked => l10n.exportScopePicked,
   };
 
   /// 只有「全部」需要带篇数，其余选项自解释。
   Widget? _kindHint(AppLocalizations l10n, _ScopeKind kind) =>
-      kind == _ScopeKind.all
-      ? Text(l10n.exportScopeAllHint(_diaries.length))
-      : null;
+      kind == .all ? Text(l10n.exportScopeAllHint(_diaries.length)) : null;
 
   Widget _categoryList(AppLocalizations l10n) {
     final scheme = context.colorScheme;
@@ -188,7 +183,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
 
     return Card.filled(
       color: scheme.surfaceContainerLow,
-      margin: EdgeInsets.zero,
+      margin: .zero,
       child: Column(
         children: [
           if (uncategorized > 0)
@@ -225,7 +220,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
     final range = _range;
     return Card.filled(
       color: scheme.surfaceContainerLow,
-      margin: EdgeInsets.zero,
+      margin: .zero,
       child: SettingListTile(
         isFirst: true,
         isLast: true,
@@ -262,7 +257,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
     final scheme = context.colorScheme;
     return Card.filled(
       color: scheme.surfaceContainerLow,
-      margin: EdgeInsets.zero,
+      margin: .zero,
       child: Column(
         children: [
           CheckboxListTile(
@@ -286,7 +281,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
               title: Text(
                 diary.title.trim().isEmpty ? l10n.exportUntitled : diary.title,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
               ),
               subtitle: Text(_date(diary.time.toLocal())),
               onChanged: (v) => setState(() {

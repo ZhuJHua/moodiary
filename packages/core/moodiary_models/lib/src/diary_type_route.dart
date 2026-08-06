@@ -5,9 +5,9 @@ import 'diary_type.dart';
 /// 故 foundation 的 `moodiary_router` 只收发字符串、不引入领域枚举，编解码留在领域层。
 extension DiaryTypeRouteQuery on DiaryType {
   String get routeQuery => switch (this) {
-    DiaryType.markdown => 'markdown',
-    DiaryType.richText => 'rich-text',
-    DiaryType.tiptap => 'tiptap',
+    .markdown => 'markdown',
+    .richText => 'rich-text',
+    .tiptap => 'tiptap',
   };
 }
 

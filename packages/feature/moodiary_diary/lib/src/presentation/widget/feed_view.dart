@@ -19,7 +19,7 @@ import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
 class DiaryFeedView extends ConsumerWidget {
   final DiaryFilter filter;
 
-  const DiaryFeedView({super.key, this.filter = const DiaryFilter.all()});
+  const DiaryFeedView({super.key, this.filter = const .all()});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,7 +34,7 @@ class DiaryFeedView extends ConsumerWidget {
     return diaryAsync.buildLoading(
       data: (diaries) {
         return ListenableBuilder(
-          listenable: Listenable.merge([
+          listenable: .merge([
             SyncPendingTracker.instance.listenable,
             SyncDirtyTracker.instance.listenable,
           ]),
@@ -51,7 +51,7 @@ class DiaryFeedView extends ConsumerWidget {
                 onLoadMore: () => ref.read(provider.notifier).loadMore(),
                 onRefresh: () => ref.read(provider.notifier).refresh(),
                 child: ListView.separated(
-                  padding: EdgeInsets.fromLTRB(
+                  padding: .fromLTRB(
                     0,
                     8,
                     0,
@@ -106,7 +106,7 @@ class DiaryFeedView extends ConsumerWidget {
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                  padding: const .fromLTRB(12, 12, 12, 0),
                   child: SyncPendingSummaryCard(
                     newCount: pending.newDiaryIds.length,
                     updateCount: pending.updateDiaryIds.length,

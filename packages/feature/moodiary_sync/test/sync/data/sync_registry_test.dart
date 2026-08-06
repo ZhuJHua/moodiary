@@ -16,22 +16,22 @@ void main() {
     });
 
     test('reflects each configured backend', () async {
-      await configureBackend(SyncProviderType.webdav);
+      await configureBackend(.webdav);
       expect(configuredCloudBackendIds(), {'webdav'});
 
-      await configureBackend(SyncProviderType.s3);
+      await configureBackend(.s3);
       expect(configuredCloudBackendIds(), {'webdav', 's3'});
     });
   });
 
   group('registerRemoteSync', () {
     test('registers the backend that matches the current provider', () async {
-      await SyncProviderType.setCurrent(SyncProviderType.webdav);
+      await SyncProviderType.setCurrent(.webdav);
       await registerRemoteSync();
       expect(getIt<IRemoteSyncBackend>().type, SyncProviderType.webdav);
 
       // 切换 provider → 重新注册为对应后端（单注册不残留旧实例）。
-      await SyncProviderType.setCurrent(SyncProviderType.s3);
+      await SyncProviderType.setCurrent(.s3);
       await registerRemoteSync();
       expect(getIt<IRemoteSyncBackend>().type, SyncProviderType.s3);
       expect(getIt.isRegistered<IRemoteSyncBackend>(), isTrue);

@@ -38,7 +38,7 @@ class RigAssistantService implements AssistantService {
       }
       history.add(
         rust.RigChatMessage(
-          role: m.role == AssistantRole.user ? 'user' : 'assistant',
+          role: m.role == .user ? 'user' : 'assistant',
           content: m.content,
           imageBase64: imageBase64,
           imageMime: imageMime,
@@ -77,14 +77,14 @@ class RigAssistantService implements AssistantService {
 
     await for (final event in stream) {
       switch (event.kind) {
-        case rust.RigEventKind.textDelta:
+        case .textDelta:
           yield AssistantStreamEvent.text(event.text);
-        case rust.RigEventKind.reasoningDelta:
+        case .reasoningDelta:
           yield AssistantStreamEvent.reasoning(event.text);
-        case rust.RigEventKind.toolCall:
+        case .toolCall:
           // 不在气泡里展示，但用作「思考阶段结束」的信号（冻结思考计时）。
           yield AssistantStreamEvent.tool(event.text);
-        case rust.RigEventKind.usage:
+        case .usage:
           yield AssistantStreamEvent.usage(
             event.inputTokens,
             event.outputTokens,

@@ -220,7 +220,7 @@ void main() {
 
     await t.pumpWidget(
       MediaQuery(
-        data: const MediaQueryData(textScaler: TextScaler.linear(1.3)),
+        data: const MediaQueryData(textScaler: .linear(1.3)),
         child: wrap(
           DiaryFeedTile(
             diary: diary(
@@ -266,12 +266,10 @@ void main() {
       type: DiaryType.tiptap.value,
     );
 
-    await t.pumpWidget(wrap(DiaryFeedTile(diary: d, sort: DiarySort.timeDesc)));
+    await t.pumpWidget(wrap(DiaryFeedTile(diary: d, sort: .timeDesc)));
     expect(find.textContaining('7/1', findRichText: true), findsOneWidget);
 
-    await t.pumpWidget(
-      wrap(DiaryFeedTile(diary: d, sort: DiarySort.lastModifiedDesc)),
-    );
+    await t.pumpWidget(wrap(DiaryFeedTile(diary: d, sort: .lastModifiedDesc)));
     expect(find.textContaining('8/20', findRichText: true), findsOneWidget);
   });
 

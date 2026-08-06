@@ -39,7 +39,7 @@ class _MoodiaryRefreshState extends State<MoodiaryRefresh> {
       !_loading &&
       m.hasContentDimensions &&
       m.hasViewportDimension &&
-      m.axis == Axis.vertical;
+      m.axis == .vertical;
 
   /// 预加载：进入底部一屏内即触发，按位置去重避免同点重复发。
   void _preload(ScrollMetrics m) {

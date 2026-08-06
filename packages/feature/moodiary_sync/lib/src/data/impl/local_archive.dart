@@ -35,7 +35,7 @@ class LocalArchive {
       final tombstones = await RepoSyncTombstoneStore().getAll();
       final zipPath = p.join(
         PlatformService.get().applicationCachePath,
-        _fileName(DateTime.now()),
+        _fileName(.now()),
       );
       try {
         await writeArchive(
@@ -75,7 +75,7 @@ class LocalArchive {
       final tombstones = await RepoSyncTombstoneStore().getAll();
       final zipPath = p.join(
         PlatformService.get().applicationCachePath,
-        _fileName(DateTime.now()),
+        _fileName(.now()),
       );
       try {
         final count = await writeArchive(

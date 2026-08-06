@@ -22,18 +22,9 @@ void main() {
 
   test('equality distinguishes all from uncategorized', () {
     expect(const DiaryFilter.all(), const DiaryFilter.all());
-    expect(
-      const DiaryFilter.all() == const DiaryFilter.uncategorized(),
-      isFalse,
-    );
-    expect(
-      const DiaryFilter.category('a') == const DiaryFilter.category('a'),
-      isTrue,
-    );
-    expect(
-      const DiaryFilter.category('a') == const DiaryFilter.category('b'),
-      isFalse,
-    );
+    expect(const DiaryFilter.all() == const .uncategorized(), isFalse);
+    expect(const DiaryFilter.category('a') == const .category('a'), isTrue);
+    expect(const DiaryFilter.category('a') == const .category('b'), isFalse);
     expect(
       const DiaryFilter.all().hashCode ==
           const DiaryFilter.uncategorized().hashCode,

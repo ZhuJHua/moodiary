@@ -39,10 +39,10 @@ class ProviderLogo extends StatelessWidget {
           child: url == null || url.isEmpty
               ? fallback
               : Padding(
-                  padding: EdgeInsets.all(size * 0.18),
+                  padding: .all(size * 0.18),
                   child: CachedImage(
                     url: url,
-                    fit: BoxFit.contain,
+                    fit: .contain,
                     svgColor: scheme.onSurface,
                     placeholder: fallback,
                     errorWidget: fallback,

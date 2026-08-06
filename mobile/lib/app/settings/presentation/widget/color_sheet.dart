@@ -38,7 +38,7 @@ class ColorSheet extends ConsumerWidget {
               childAspectRatio: 1.0,
             ),
             physics: const NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
+            padding: .zero,
             shrinkWrap: true,
             itemCount: indices.length,
             itemBuilder: (context, index) {
@@ -76,16 +76,14 @@ class _ColorOption extends StatelessWidget {
   ColorScheme _buildScheme(BuildContext context) {
     final brightness = context.theme.colorScheme.brightness;
     if (colorIndex == -1) {
-      return brightness == Brightness.light
+      return brightness == .light
           ? ThemeManager().lightDynamic!
           : ThemeManager().darkDynamic!;
     }
-    return ColorScheme.fromSeed(
+    return .fromSeed(
       seedColor: AppColor.themeColorList[colorIndex],
       brightness: brightness,
-      dynamicSchemeVariant: colorIndex == 0
-          ? DynamicSchemeVariant.monochrome
-          : DynamicSchemeVariant.tonalSpot,
+      dynamicSchemeVariant: colorIndex == 0 ? .monochrome : .tonalSpot,
     );
   }
 
@@ -94,7 +92,7 @@ class _ColorOption extends StatelessWidget {
     final scheme = _buildScheme(context);
     final label = AppColor.colorName(colorIndex, context);
     return Padding(
-      padding: const EdgeInsets.all(4),
+      padding: const .all(4),
       child: Material(
         color: scheme.primary,
         borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -109,7 +107,7 @@ class _ColorOption extends StatelessWidget {
                 right: 6,
                 child: Text(
                   label,
-                  overflow: TextOverflow.ellipsis,
+                  overflow: .ellipsis,
                   style: context.textTheme.labelMedium?.copyWith(
                     color: scheme.onPrimary,
                   ),
@@ -119,9 +117,9 @@ class _ColorOption extends StatelessWidget {
                 opacity: isSelected ? 1 : 0,
                 duration: const Duration(milliseconds: 200),
                 child: Padding(
-                  padding: const EdgeInsets.all(6),
+                  padding: const .all(6),
                   child: Align(
-                    alignment: Alignment.topRight,
+                    alignment: .topRight,
                     child: Icon(
                       LucideIcons.circleCheck,
                       size: 14,

@@ -18,7 +18,7 @@ class MinimalShareCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = brightness == Brightness.dark;
+    final dark = brightness == .dark;
     final accent = Theme.of(context).colorScheme.primary;
     final bg = dark ? const Color(0xFF1C1C1E) : const Color(0xFFFFFFFF);
     final titleColor = dark ? const Color(0xFFF5F5F7) : const Color(0xFF1A1A1A);
@@ -27,14 +27,11 @@ class MinimalShareCard extends StatelessWidget {
     final brand = dark ? const Color(0xFF5A5A5E) : const Color(0xFFC2C2C2);
     return Container(
       width: kShareCardWidth,
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      padding: const EdgeInsets.fromLTRB(26, 28, 26, 22),
+      decoration: BoxDecoration(color: bg, borderRadius: .circular(20)),
+      padding: const .fromLTRB(26, 28, 26, 22),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: .start,
+        mainAxisSize: .min,
         children: [
           Container(width: 32, height: 4, color: accent),
           const SizedBox(height: 18),
@@ -42,7 +39,7 @@ class MinimalShareCard extends StatelessWidget {
             diary.title.isEmpty ? '(无标题)' : diary.title,
             style: TextStyle(
               fontSize: 22,
-              fontWeight: FontWeight.w700,
+              fontWeight: .w700,
               color: titleColor,
               height: 1.3,
             ),
@@ -61,20 +58,17 @@ class MinimalShareCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
+                padding: const .symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: dark ? 0.22 : 0.12),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: .circular(20),
                 ),
                 child: Text(
                   '心情 ${(diary.mood * 100).toStringAsFixed(0)}%',
                   style: TextStyle(
                     fontSize: 12,
                     color: dark ? accent.withValues(alpha: 0.95) : accent,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: .w600,
                   ),
                 ),
               ),
@@ -84,7 +78,7 @@ class MinimalShareCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   color: brand,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: .w600,
                   letterSpacing: 0.5,
                 ),
               ),

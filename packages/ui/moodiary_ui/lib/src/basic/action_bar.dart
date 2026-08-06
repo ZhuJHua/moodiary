@@ -179,7 +179,7 @@ class MoodiaryActionButton<T> extends StatelessWidget {
         disabledBackgroundColor: scheme.onSurface.withValues(alpha: 0.12),
         disabledForegroundColor: scheme.onSurface.withValues(alpha: 0.38),
         minimumSize: .fromHeight(height),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const .symmetric(horizontal: 12),
         textStyle: textStyle,
         shape: const RoundedRectangleBorder(
           borderRadius: AppBorderRadius.mediumBorderRadius,

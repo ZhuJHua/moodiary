@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 class SyncCancellation {
   SyncCancellation._();
 
-  static final SyncCancellation instance = SyncCancellation._();
+  static final SyncCancellation instance = ._();
 
   final ValueNotifier<bool> _requested = ValueNotifier(false);
 

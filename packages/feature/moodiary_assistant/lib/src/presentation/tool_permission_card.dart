@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:genui/genui.dart' as genui;
-import 'package:json_schema_builder/json_schema_builder.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
@@ -39,12 +38,12 @@ class ToolPermissionActionDelegate implements genui.ActionDelegate {
 
 final genui.CatalogItem _toolPermissionCard = genui.CatalogItem(
   name: toolPermissionCardComponent,
-  dataSchema: S.object(
+  dataSchema: .object(
     description:
         'A Material 3 card that asks the user to approve an assistant tool '
         'call, then shows the resolved decision in place.',
     properties: {
-      'tool': S.string(
+      'tool': .string(
         description: 'The id of the assistant tool requesting permission.',
         enumValues: [for (final tool in AssistantTool.values) tool.id],
       ),
@@ -64,7 +63,7 @@ final genui.CatalogItem _toolPermissionCard = genui.CatalogItem(
       value: data['status'],
       builder: (context, statusId) => _ToolPermissionCardView(
         tool: tool,
-        status: ToolPermissionStatus.fromId(statusId),
+        status: .fromId(statusId),
         onAction: (name) => itemContext.dispatchEvent(
           genui.UserActionEvent(name: name, sourceComponentId: itemContext.id),
         ),
@@ -95,7 +94,7 @@ class _ToolPermissionCardView extends StatelessWidget {
     final l10n = context.l10n;
     final display = assistantToolDisplay(context, tool);
     final dangerous = tool.dangerous;
-    final pending = status == ToolPermissionStatus.pending;
+    final pending = status == .pending;
 
     final chipColor = dangerous
         ? scheme.errorContainer
@@ -107,18 +106,18 @@ class _ToolPermissionCardView extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
-          bottomLeft: Radius.circular(4),
-          bottomRight: Radius.circular(16),
+        borderRadius: const .only(
+          topLeft: .circular(16),
+          topRight: .circular(16),
+          bottomLeft: .circular(4),
+          bottomRight: .circular(16),
         ),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        border: .all(color: scheme.outlineVariant.withValues(alpha: 0.4)),
       ),
-      padding: const EdgeInsets.all(14),
+      padding: const .all(14),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: .min,
+        crossAxisAlignment: .start,
         children: [
           Row(
             children: [
@@ -127,19 +126,19 @@ class _ToolPermissionCardView extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: chipColor,
-                  borderRadius: BorderRadius.circular(11),
+                  borderRadius: .circular(11),
                 ),
                 child: Icon(display.icon, size: 20, color: onChipColor),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: .start,
                   children: [
                     Text(
                       display.title,
                       style: context.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: .w600,
                       ),
                     ),
                     Text(
@@ -169,7 +168,7 @@ class _ToolPermissionCardView extends StatelessWidget {
           AnimatedSize(
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            alignment: Alignment.centerLeft,
+            alignment: .centerLeft,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: pending
@@ -180,7 +179,7 @@ class _ToolPermissionCardView extends StatelessWidget {
                     )
                   : Align(
                       key: ValueKey(status),
-                      alignment: Alignment.centerLeft,
+                      alignment: .centerLeft,
                       child: _DecisionBadge(status: status),
                     ),
             ),
@@ -200,13 +199,13 @@ class _DangerNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const .symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: scheme.errorContainer,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: .circular(12),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Icon(
             LucideIcons.triangleAlert,
@@ -245,8 +244,8 @@ class _PendingActions extends StatelessWidget {
     final scheme = context.colorScheme;
     final l10n = context.l10n;
     return OverflowBar(
-      alignment: MainAxisAlignment.end,
-      overflowAlignment: OverflowBarAlignment.end,
+      alignment: .end,
+      overflowAlignment: .end,
       spacing: 8,
       overflowSpacing: 4,
       children: [
@@ -264,7 +263,7 @@ class _PendingActions extends StatelessWidget {
         ),
         FilledButton(
           onPressed: () => onAction(toolPermissionActionAllowOnce),
-          style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+          style: FilledButton.styleFrom(visualDensity: .compact),
           child: Text(l10n.assistantToolAllowOnce),
         ),
       ],
@@ -282,25 +281,25 @@ class _DecisionBadge extends StatelessWidget {
     final scheme = context.colorScheme;
     final l10n = context.l10n;
     final (icon, background, foreground, label) = switch (status) {
-      ToolPermissionStatus.allowedOnce => (
+      .allowedOnce => (
         LucideIcons.circleCheck,
         scheme.secondaryContainer,
         scheme.onSecondaryContainer,
         l10n.assistantToolStatusAllowedOnce,
       ),
-      ToolPermissionStatus.allowedAlways => (
+      .allowedAlways => (
         LucideIcons.badgeCheck,
         scheme.secondaryContainer,
         scheme.onSecondaryContainer,
         l10n.assistantToolAlwaysAllowedHint,
       ),
-      ToolPermissionStatus.denied => (
+      .denied => (
         LucideIcons.circleX,
         scheme.errorContainer,
         scheme.onErrorContainer,
         l10n.assistantToolStatusDenied,
       ),
-      ToolPermissionStatus.canceled || ToolPermissionStatus.pending => (
+      .canceled || .pending => (
         LucideIcons.timerOff,
         scheme.surfaceContainerHigh,
         scheme.onSurfaceVariant,
@@ -308,13 +307,13 @@ class _DecisionBadge extends StatelessWidget {
       ),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: const .symmetric(horizontal: 12, vertical: 7),
       decoration: ShapeDecoration(
         color: background,
         shape: const StadiumBorder(),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(icon, size: 17, color: foreground),
           const SizedBox(width: 7),

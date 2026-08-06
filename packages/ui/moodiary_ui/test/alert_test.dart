@@ -271,7 +271,7 @@ void main() {
             context,
             title: '生成数量',
             hintText: '1–500',
-            keyboardType: TextInputType.number,
+            keyboardType: .number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             validator: (value) {
               final n = int.tryParse(value);
@@ -341,7 +341,7 @@ void main() {
     Future<void> pumpActions(
       WidgetTester tester,
       List<MoodiaryAction<int>> actions, {
-      MoodiaryActionsLayout layout = MoodiaryActionsLayout.auto,
+      MoodiaryActionsLayout layout = .auto,
     }) async {
       await tester.pumpWidget(
         host(
@@ -398,7 +398,7 @@ void main() {
       await pumpActions(tester, const [
         MoodiaryAction(label: '我再想想，先不要动我的数据', value: 0),
         MoodiaryAction(label: '我确认要永久删除全部内容', value: 1),
-      ], layout: MoodiaryActionsLayout.horizontal);
+      ], layout: .horizontal);
 
       final cancel = tester.getCenter(find.text('我再想想，先不要动我的数据'));
       final confirm = tester.getCenter(find.text('我确认要永久删除全部内容'));

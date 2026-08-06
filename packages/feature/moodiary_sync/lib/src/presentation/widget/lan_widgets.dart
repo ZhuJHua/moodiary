@@ -77,7 +77,7 @@ class _LanRippleState extends State<LanRipple>
             width: widget.size * 0.42,
             height: widget.size * 0.42,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
+              shape: .circle,
               color: color.withValues(alpha: .14),
             ),
             child: Center(child: widget.child),
@@ -102,14 +102,14 @@ class _RipplePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (!active) return;
-    final center = size.center(Offset.zero);
+    final center = size.center(.zero);
     final minRadius = size.width * 0.21;
     final maxRadius = size.width * 0.5;
     for (var i = 0; i < 3; i++) {
       final t = (progress + i / 3) % 1;
       final radius = minRadius + (maxRadius - minRadius) * t;
       final paint = Paint()
-        ..style = PaintingStyle.stroke
+        ..style = .stroke
         ..strokeWidth = 2
         ..color = color.withValues(alpha: (1 - t) * .35);
       canvas.drawCircle(center, radius, paint);
@@ -136,25 +136,25 @@ class LanPinBoxes extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: .center,
         children: [
           for (var i = 0; i < 6; i++) ...[
             if (i == 3) const SizedBox(width: 14),
             Container(
               width: 44,
               height: 56,
-              margin: EdgeInsets.only(left: i == 0 || i == 3 ? 0 : 8),
+              margin: .only(left: i == 0 || i == 3 ? 0 : 8),
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: .circular(14),
               ),
               child: Center(
                 child: Text(
                   i < pin.length ? pin[i] : '',
                   style: context.textTheme.headlineMedium?.copyWith(
                     color: scheme.primary,
-                    fontWeight: FontWeight.w600,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontWeight: .w600,
+                    fontFeatures: const [.tabularFigures()],
                   ),
                 ),
               ),
@@ -213,7 +213,7 @@ class _LanPinInputState extends State<LanPinInput> {
                 controller: widget.controller,
                 focusNode: _focusNode,
                 enabled: widget.enabled,
-                keyboardType: TextInputType.number,
+                keyboardType: .number,
                 maxLength: 6,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 enableInteractiveSelection: false,
@@ -224,7 +224,7 @@ class _LanPinInputState extends State<LanPinInput> {
           ),
           IgnorePointer(
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: .center,
               children: [
                 for (var i = 0; i < 6; i++) ...[
                   if (i == 3) const SizedBox(width: 14),
@@ -232,11 +232,11 @@ class _LanPinInputState extends State<LanPinInput> {
                     duration: const Duration(milliseconds: 150),
                     width: 44,
                     height: 56,
-                    margin: EdgeInsets.only(left: i == 0 || i == 3 ? 0 : 8),
+                    margin: .only(left: i == 0 || i == 3 ? 0 : 8),
                     decoration: BoxDecoration(
                       color: scheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
+                      borderRadius: .circular(14),
+                      border: .all(
                         width: 2,
                         color:
                             widget.enabled &&
@@ -250,8 +250,8 @@ class _LanPinInputState extends State<LanPinInput> {
                       child: Text(
                         i < text.length ? text[i] : '',
                         style: context.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                          fontWeight: .w600,
+                          fontFeatures: const [.tabularFigures()],
                         ),
                       ),
                     ),

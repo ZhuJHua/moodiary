@@ -179,10 +179,7 @@ void main() {
       var seq = 0;
       final autosave = await _bench(30, () async {
         final i = targets[seq++ % targets.length];
-        await repo.updateADiary(
-          newDiary: _diary(i, scale),
-          index: IndexMode.defer,
-        );
+        await repo.updateADiary(newDiary: _diary(i, scale), index: .defer);
       });
       _report(scale, 'autosave_defer', autosave.median, autosave.p90);
 

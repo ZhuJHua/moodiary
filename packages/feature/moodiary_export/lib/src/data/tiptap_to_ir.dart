@@ -40,7 +40,7 @@ class TiptapToIr {
     } else if (content.trim().isNotEmpty) {
       // 旧 markdown / richText 日记：不在这里解析，交由调用方先经 MarkdownToTiptap
       // 转换。走到这里说明调用方没转，按整段纯文本降级，至少不丢字。
-      blocks.add(IrBlock.paragraph(spans: [irSpan(content)]));
+      blocks.add(.paragraph(spans: [irSpan(content)]));
     }
 
     return ExportDoc(
@@ -93,26 +93,23 @@ class TiptapToIr {
       case 'paragraph':
         final spans = _inline(node['content'], unsupported);
         // 空段落保留：它在原文里是有意的留白，markdown/docx 都靠它分段。
-        out.add(IrBlock.paragraph(spans: spans));
+        out.add(.paragraph(spans: spans));
 
       case 'heading':
         final raw = (attrs is Map) ? attrs['level'] : null;
         final level = (raw is int) ? raw.clamp(1, 6) : 1;
         out.add(
-          IrBlock.heading(
-            level: level,
-            spans: _inline(node['content'], unsupported),
-          ),
+          .heading(level: level, spans: _inline(node['content'], unsupported)),
         );
 
       case 'blockquote':
         final children = <IrBlock>[];
         _blocks(node['content'], children, unsupported, resolve);
-        out.add(IrBlock.quote(children: children));
+        out.add(.quote(children: children));
 
       case 'bulletList':
         out.add(
-          IrBlock.list(
+          .list(
             ordered: false,
             start: 1,
             items: _items(node['content'], unsupported, resolve),
@@ -122,7 +119,7 @@ class TiptapToIr {
       case 'orderedList':
         final rawStart = (attrs is Map) ? attrs['start'] : null;
         out.add(
-          IrBlock.list(
+          .list(
             ordered: true,
             start: rawStart is int ? rawStart : 1,
             items: _items(node['content'], unsupported, resolve),
@@ -131,7 +128,7 @@ class TiptapToIr {
 
       case 'taskList':
         out.add(
-          IrBlock.list(
+          .list(
             ordered: false,
             start: 1,
             items: _items(node['content'], unsupported, resolve),
@@ -141,14 +138,14 @@ class TiptapToIr {
       case 'codeBlock':
         final lang = (attrs is Map) ? attrs['language'] : null;
         out.add(
-          IrBlock.code(
+          .code(
             language: lang is String && lang.isNotEmpty ? lang : null,
             text: _plainText(node['content']),
           ),
         );
 
       case 'horizontalRule':
-        out.add(const IrBlock.divider());
+        out.add(const .divider());
 
       case 'image':
         final block = _image(attrs, resolve);
@@ -199,7 +196,7 @@ class TiptapToIr {
     ResolveMediaPath resolve,
   ) {
     final rows = <List<IrCell>>[];
-    if (content is! List) return IrBlock.table(rows: rows);
+    if (content is! List) return .table(rows: rows);
     for (final row in content) {
       if (row is! Map || row['type'] != 'tableRow') continue;
       final cells = <IrCell>[];
@@ -226,7 +223,7 @@ class TiptapToIr {
       }
       rows.add(cells);
     }
-    return IrBlock.table(rows: rows);
+    return .table(rows: rows);
   }
 
   /// 合并跨度：属性缺失或非法（0 / 负数）时退回 1。
@@ -245,14 +242,14 @@ class TiptapToIr {
     final wp = attrs['widthPercent'];
 
     if (_isExternal(src)) {
-      return IrBlock.image(
+      return .image(
         path: src,
         alt: alt is String ? alt : null,
         widthPercent: wp is int ? wp : null,
         external_: true,
       );
     }
-    return IrBlock.image(
+    return .image(
       path: resolve('image', src),
       alt: alt is String ? alt : null,
       widthPercent: wp is int ? wp : null,
@@ -265,7 +262,7 @@ class TiptapToIr {
     final name = attrs['filename'];
     if (name is! String || name.isEmpty) return null;
     final isVideo = type == 'video';
-    return IrBlock.media(
+    return .media(
       kind: isVideo ? 'video' : 'audio',
       filename: name,
       path: resolve(type, name),

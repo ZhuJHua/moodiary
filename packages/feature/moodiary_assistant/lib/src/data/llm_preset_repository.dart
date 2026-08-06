@@ -9,9 +9,7 @@ class LlmPresetRepository {
 
   factory LlmPresetRepository.get() => _instance;
 
-  static final LlmPresetRepository _instance = LlmPresetRepository(
-    IHttpClient.get(),
-  );
+  static final LlmPresetRepository _instance = LlmPresetRepository(.get());
 
   final IHttpClient _http;
 

@@ -118,7 +118,7 @@ void main() {
 
   setUp(() {
     dir = Directory.systemTemp.createTempSync('moodiary_index_test');
-    isar = Isar.open(
+    isar = .open(
       schemas: [
         DiarySchema,
         SearchPostingSchema,
@@ -132,7 +132,7 @@ void main() {
       directory: dir.path,
       inspector: false,
     );
-    repo = DiaryRepository.forTesting(isar, tokenizer: fakeTokenize);
+    repo = .forTesting(isar, tokenizer: fakeTokenize);
   });
 
   tearDown(() {
@@ -150,9 +150,7 @@ void main() {
     final hits = await search('苹果');
     expect(hits.map((d) => d.id), ['d1']);
 
-    final posting = await isar.searchPostings.getAsync(
-      searchKey(TokenSource.cut, '苹果'),
-    );
+    final posting = await isar.searchPostings.getAsync(searchKey(.cut, '苹果'));
     expect(posting?.diaryIsarIds, [diary.isarId]);
     final snapshot = await isar.diaryIndexSnapshots.getAsync(diary.isarId);
     expect(snapshot?.cutTokens, containsAll(['苹果', '香蕉']));
@@ -164,9 +162,7 @@ void main() {
     await repo.insertADiary(diary);
     await repo.insertADiary(diary);
 
-    final posting = await isar.searchPostings.getAsync(
-      searchKey(TokenSource.cut, '苹果'),
-    );
+    final posting = await isar.searchPostings.getAsync(searchKey(.cut, '苹果'));
     expect(posting?.diaryIsarIds, [diary.isarId]);
   });
 
@@ -178,18 +174,12 @@ void main() {
 
     expect(await search('苹果'), isEmpty);
     expect((await search('橘子')).map((d) => d.id), ['d1']);
-    expect(
-      await isar.searchPostings.getAsync(searchKey(TokenSource.cut, '苹果')),
-      isNull,
-    );
+    expect(await isar.searchPostings.getAsync(searchKey(.cut, '苹果')), isNull);
   });
 
   test('defer 更新只入队,drain 后索引生效', () async {
     await repo.insertADiary(makeDiary('d1', '苹果'));
-    await repo.updateADiary(
-      newDiary: makeDiary('d1', '橘子'),
-      index: IndexMode.defer,
-    );
+    await repo.updateADiary(newDiary: makeDiary('d1', '橘子'), index: .defer);
 
     // 排空前:索引仍是旧内容
     expect((await search('苹果')).map((d) => d.id), ['d1']);
@@ -205,10 +195,7 @@ void main() {
 
   test('skip 更新不入队、索引不动', () async {
     await repo.insertADiary(makeDiary('d1', '苹果'));
-    await repo.updateADiary(
-      newDiary: makeDiary('d1', '苹果'),
-      index: IndexMode.skip,
-    );
+    await repo.updateADiary(newDiary: makeDiary('d1', '苹果'), index: .skip);
     expect(isar.reindexQueues.where().count(), 0);
     expect((await search('苹果')).map((d) => d.id), ['d1']);
   });
@@ -281,9 +268,7 @@ void main() {
 
     // 重复重建不累积
     await repo.rebuildAllIndexes();
-    final posting = await isar.searchPostings.getAsync(
-      searchKey(TokenSource.cut, '苹果'),
-    );
+    final posting = await isar.searchPostings.getAsync(searchKey(.cut, '苹果'));
     expect(posting?.diaryIsarIds, hasLength(2));
   });
 
@@ -305,9 +290,7 @@ void main() {
       ['d1'],
     );
 
-    final apple = await isar.searchPostings.getAsync(
-      searchKey(TokenSource.cut, '苹果'),
-    );
+    final apple = await isar.searchPostings.getAsync(searchKey(.cut, '苹果'));
     expect(apple?.diaryIsarIds.toSet(), {fastHash('d1'), fastHash('d2')});
     expect((await search('梨')).map((d) => d.id), ['d3']);
     expect(await search('苹果'), hasLength(2));
@@ -355,7 +338,7 @@ void main() {
     await repo.insertADiary(makeDiary('d1', '正文', title: '旧标题'));
     await repo.updateADiary(
       newDiary: makeDiary('d1', '正文', title: '新标题'),
-      index: IndexMode.defer,
+      index: .defer,
     );
     await repo.drainReindexQueue();
 

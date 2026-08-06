@@ -145,7 +145,7 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
   }
 
   void _loadImage() async {
-    _loadState.value = _ImageLoadState.loading;
+    _loadState.value = .loading;
     try {
       final imageAspect = ImageSizeManager().getAspectRatio(widget.imagePath);
 
@@ -171,27 +171,27 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
         aspectRatio: imageAspect,
       );
 
-      _loadState.value = _ImageLoadState.success;
+      _loadState.value = .success;
     } catch (e) {
-      _loadState.value = _ImageLoadState.error;
+      _loadState.value = .error;
     }
   }
 
   BorderRadius _shrinkBorderRadius(BorderRadius radius, double amount) {
-    return BorderRadius.only(
-      topLeft: Radius.elliptical(
+    return .only(
+      topLeft: .elliptical(
         (radius.topLeft.x - amount).clamp(0, double.infinity),
         (radius.topLeft.y - amount).clamp(0, double.infinity),
       ),
-      topRight: Radius.elliptical(
+      topRight: .elliptical(
         (radius.topRight.x - amount).clamp(0, double.infinity),
         (radius.topRight.y - amount).clamp(0, double.infinity),
       ),
-      bottomLeft: Radius.elliptical(
+      bottomLeft: .elliptical(
         (radius.bottomLeft.x - amount).clamp(0, double.infinity),
         (radius.bottomLeft.y - amount).clamp(0, double.infinity),
       ),
-      bottomRight: Radius.elliptical(
+      bottomRight: .elliptical(
         (radius.bottomRight.x - amount).clamp(0, double.infinity),
         (radius.bottomRight.y - amount).clamp(0, double.infinity),
       ),
@@ -202,7 +202,7 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
   Widget build(BuildContext context) {
     const borderWidth = 1.0;
 
-    final outerRadius = widget.borderRadius ?? BorderRadius.zero;
+    final outerRadius = widget.borderRadius ?? .zero;
     final innerRadius = widget.showBorder
         ? _shrinkBorderRadius(outerRadius, borderWidth)
         : outerRadius;
@@ -211,7 +211,7 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
       decoration: BoxDecoration(
         borderRadius: outerRadius,
         border: widget.showBorder
-            ? Border.all(
+            ? .all(
                 color: context.theme.colorScheme.outline.withValues(alpha: 0.6),
                 width: borderWidth,
               )
@@ -228,11 +228,11 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
             valueListenable: _loadState,
             builder: (context, loadState, child) {
               switch (loadState) {
-                case _ImageLoadState.loading:
+                case .loading:
                   return const _LoadingPlaceholder(key: ValueKey('loading'));
-                case _ImageLoadState.error:
+                case .error:
                   return const _ErrorPlaceholder(key: ValueKey('error'));
-                case _ImageLoadState.success:
+                case .success:
                   final imagePath = _imageState.path;
                   final width = _imageState.width;
                   final height = _imageState.height;
@@ -249,7 +249,7 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
                             widget.onTap?.call();
                           }
                         : null,
-                    behavior: HitTestBehavior.translucent,
+                    behavior: .translucent,
                     child: HeroMode(
                       enabled: widget.heroTag != null,
                       child: Hero(
@@ -260,7 +260,7 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
                           placeholder: MemoryImage(kTransparentImage),
                           fadeInDuration: Durations.short2,
                           fadeOutDuration: Durations.short1,
-                          fit: widget.fit ?? BoxFit.cover,
+                          fit: widget.fit ?? .cover,
                           width: width.toDouble(),
                           height: height.toDouble(),
                           imageErrorBuilder: (_, _, _) {

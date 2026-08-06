@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
-import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 
@@ -50,7 +49,7 @@ class LeasePayload {
     }
   }
 
-  Uint8List toBytes() => Uint8List.fromList(
+  Uint8List toBytes() => .fromList(
     utf8.encode(
       jsonEncode({
         'owner': owner,
@@ -123,7 +122,7 @@ class RemoteLease {
   static Future<LeasePayload?> _read(IRemoteSyncBackend backend) async {
     final bytes = await backend.readObject(SyncKeys.lockPath);
     if (bytes == null) return null;
-    return LeasePayload.fromBytes(bytes);
+    return .fromBytes(bytes);
   }
 
   /// 在远端租约保护下执行 [body]。进程内互斥由调用方保证（引擎 `_lock` 在外层），
@@ -133,7 +132,7 @@ class RemoteLease {
     Future<T> Function() body, {
     SyncLogger? logger,
   }) async {
-    final log = logger ?? SyncLogger.get();
+    final log = logger ?? .get();
     final owner = await _ensureDeviceId();
     await _acquire(backend, owner, log);
 
@@ -142,20 +141,20 @@ class RemoteLease {
     // 请求，若续租在 deleteObject 之后才落盘，会把刚释放的锁复活成孤儿，他人白等一个 TTL。
     Future<void>? pendingRenew;
     try {
-      renewTimer = Timer.periodic(renewInterval, (_) {
+      renewTimer = .periodic(renewInterval, (_) {
         pendingRenew = backend
             .writeObject(
               SyncKeys.lockPath,
               LeasePayload(
                 owner: owner,
-                acquiredAt: DateTime.timestamp(),
+                acquiredAt: .timestamp(),
                 ttl: ttl,
               ).toBytes(),
             )
             .catchError((Object e) {
               // 单次续租失败可容忍（TTL >> 续租间隔）；连续失败超过 TTL 才有被抢占风险。
               log.warn(
-                SyncEventKind.lockRelease,
+                .lockRelease,
                 '同步锁续租失败（将于下个周期重试）',
                 payload: {'detail': e.toString()},
               );
@@ -167,11 +166,11 @@ class RemoteLease {
       await pendingRenew; // 错误已在 catchError 消化，这里只等落定
       try {
         await backend.deleteObject(SyncKeys.lockPath);
-        log.info(SyncEventKind.lockRelease, '释放同步锁');
+        log.info(.lockRelease, '释放同步锁');
       } catch (e) {
         // best-effort：残留锁由「本机接管」或 TTL 过期兜底。
         log.warn(
-          SyncEventKind.lockRelease,
+          .lockRelease,
           '释放同步锁失败（TTL 兜底）',
           payload: {'detail': e.toString()},
         );
@@ -187,7 +186,7 @@ class RemoteLease {
     for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
       final payload = LeasePayload(
         owner: owner,
-        acquiredAt: DateTime.timestamp(),
+        acquiredAt: .timestamp(),
         ttl: ttl,
       );
       final created = await backend.tryCreateExclusive(
@@ -199,7 +198,7 @@ class RemoteLease {
         if (backendId != null && _casVerified[backendId] == true) {
           // 条件写已验证：创建成功即严格原子，免抖动免回读。
           log.info(
-            SyncEventKind.lockAcquire,
+            .lockAcquire,
             '获得同步锁（条件写已验证，免回读）',
             payload: {'owner': owner, 'attempt': attempt},
           );
@@ -212,7 +211,7 @@ class RemoteLease {
         final verify = await _read(backend);
         if (verify != null && verify.owner == owner) {
           log.info(
-            SyncEventKind.lockAcquire,
+            .lockAcquire,
             '获得同步锁',
             payload: {'owner': owner, 'attempt': attempt},
           );
@@ -232,16 +231,12 @@ class RemoteLease {
         if (existing.owner == owner) {
           // 本机残留（上次崩溃 / 释放失败）→ 刷新接管。
           await backend.writeObject(SyncKeys.lockPath, payload.toBytes());
-          log.info(
-            SyncEventKind.lockAcquire,
-            '接管本机残留的同步锁',
-            payload: {'owner': owner},
-          );
+          log.info(.lockAcquire, '接管本机残留的同步锁', payload: {'owner': owner});
           return;
         }
-        if (existing.isExpired(DateTime.timestamp())) {
+        if (existing.isExpired(.timestamp())) {
           log.warn(
-            SyncEventKind.lockAcquire,
+            .lockAcquire,
             '清除过期同步锁（holder: ${existing.owner}）',
             payload: {
               'holder': existing.owner,
@@ -273,20 +268,20 @@ class RemoteLease {
         SyncKeys.lockPath,
         LeasePayload(
           owner: owner,
-          acquiredAt: DateTime.timestamp(),
+          acquiredAt: .timestamp(),
           ttl: ttl,
         ).toBytes(),
       );
       _casVerified[backendId] = !overwrote;
       if (overwrote) {
         log.warn(
-          SyncEventKind.lockAcquire,
+          .lockAcquire,
           '服务器不执行条件写，保留锁回读校验',
           payload: {'backendId': backendId},
         );
       } else {
         log.info(
-          SyncEventKind.lockAcquire,
+          .lockAcquire,
           '条件写探测通过，本进程后续免锁回读',
           payload: {'backendId': backendId},
         );

@@ -178,7 +178,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   late String _lastContent = widget.initialContent;
 
   /// webview 内焦点位置（focusChange 事件维护）。
-  EditorFocusTarget _focusTarget = EditorFocusTarget.none;
+  EditorFocusTarget _focusTarget = .none;
 
   @override
   void initState() {
@@ -513,7 +513,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     final resolved = widget.seedResolver?.call();
     final seed = resolved?.seed ?? Theme.of(context).colorScheme.primary;
     final variant = resolved?.variant ?? 'tonalSpot';
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final dark = Theme.of(context).brightness == .dark;
     // 字体家族随主题一起下发：web 侧据此用 FontFace 加载（src 用 boot.fontBase），
     // 缺省（系统字体）不带该字段。字体文件由本地服务经 fontResolver 供给。
     final font = widget.fontResolver?.call();
@@ -634,17 +634,17 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     return ColoredBox(
       color: surface,
       child: Stack(
-        fit: StackFit.expand,
+        fit: .expand,
         children: [
           if (transport != null) transport.buildView(),
           // 本地服务启动失败 / 平台不支持：无 webview 可显示，给出错误占位（替代永久加载遮罩）。
           if (loadError != null)
             Center(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const .all(24),
                 child: Text(
                   '编辑器加载失败 / Failed to load editor.\n$loadError',
-                  textAlign: TextAlign.center,
+                  textAlign: .center,
                 ),
               ),
             )
@@ -702,10 +702,9 @@ class MoodiaryEditorController {
   }
 
   /// 当前 webview 内焦点位置。由 web 侧 focusChange 事件维护，读取无 JS 回程。
-  EditorFocusTarget get focusTarget =>
-      _state?._focusTarget ?? EditorFocusTarget.none;
+  EditorFocusTarget get focusTarget => _state?._focusTarget ?? .none;
 
-  bool get hasFocus => focusTarget != EditorFocusTarget.none;
+  bool get hasFocus => focusTarget != .none;
 
   Future<void> insertMedia(String name, {String alt = ''}) async {
     await _state?._insertMedia(name, alt);

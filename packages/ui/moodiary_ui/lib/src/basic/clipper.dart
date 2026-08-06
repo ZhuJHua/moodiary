@@ -8,14 +8,14 @@ class TopRRectClipper extends CustomClipper<RRect> {
 
   @override
   RRect getClip(Size size) {
-    final Rect rect = Rect.fromLTWH(
+    final Rect rect = .fromLTWH(
       0,
       topOffset,
       size.width,
       size.height - topOffset,
     );
-    const Radius radius = Radius.circular(12.0);
-    return RRect.fromRectAndRadius(rect, radius);
+    const Radius radius = .circular(12.0);
+    return .fromRectAndRadius(rect, radius);
   }
 
   @override
@@ -33,7 +33,7 @@ class PageClipper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const .all(8.0),
       child: ClipRRect(
         borderRadius: AppBorderRadius.mediumBorderRadius,
         clipper: clipper,

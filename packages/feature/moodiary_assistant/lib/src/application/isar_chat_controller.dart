@@ -34,7 +34,7 @@ const String kCompactionNoticeKey = 'compactionNotice';
 class IsarChatController implements ChatController {
   IsarChatController();
 
-  final ChatRepository _repo = ChatRepository.get();
+  final ChatRepository _repo = .get();
   final StreamController<ChatOperation> _ops =
       StreamController<ChatOperation>.broadcast();
   List<Message> _messages = [];
@@ -53,11 +53,11 @@ class IsarChatController implements ChatController {
     if (_messages.any((m) => m.id == message.id)) return;
     if (index == null || index >= _messages.length) {
       _messages.add(message);
-      _ops.add(ChatOperation.insert(message, _messages.length - 1));
+      _ops.add(.insert(message, _messages.length - 1));
     } else {
       final i = index < 0 ? 0 : index;
       _messages.insert(i, message);
-      _ops.add(ChatOperation.insert(message, i));
+      _ops.add(.insert(message, i));
     }
   }
 
@@ -68,11 +68,11 @@ class IsarChatController implements ChatController {
     if (index == null || index >= _messages.length) {
       final start = _messages.length;
       _messages.addAll(messages);
-      _ops.add(ChatOperation.insertAll(messages, start));
+      _ops.add(.insertAll(messages, start));
     } else {
       final i = index < 0 ? 0 : index;
       _messages.insertAll(i, messages);
-      _ops.add(ChatOperation.insertAll(messages, i));
+      _ops.add(.insertAll(messages, i));
     }
   }
 
@@ -84,7 +84,7 @@ class IsarChatController implements ChatController {
     final actualOld = _messages[i];
     if (actualOld == newMessage) return;
     _messages[i] = newMessage;
-    _ops.add(ChatOperation.update(actualOld, newMessage, i));
+    _ops.add(.update(actualOld, newMessage, i));
   }
 
   @override
@@ -94,14 +94,14 @@ class IsarChatController implements ChatController {
     if (i == -1) return;
     final removed = _messages[i];
     _messages.removeAt(i);
-    _ops.add(ChatOperation.remove(removed, i));
+    _ops.add(.remove(removed, i));
   }
 
   @override
   Future<void> setMessages(List<Message> messages) async {
     if (_ops.isClosed) return;
-    _messages = List.of(messages);
-    _ops.add(ChatOperation.set(_messages, animated: _messages.isNotEmpty));
+    _messages = .of(messages);
+    _ops.add(.set(_messages, animated: _messages.isNotEmpty));
   }
 
   @override
@@ -132,7 +132,7 @@ class IsarChatController implements ChatController {
         sessionId: sid,
         role: message.authorId == kAssistantUserId ? 'user' : 'assistant',
         content: message.text,
-        createdAt: message.createdAt ?? DateTime.timestamp(),
+        createdAt: message.createdAt ?? .timestamp(),
         reasoning: reasoningOf(message).isEmpty ? null : reasoningOf(message),
         thinkingMillis: thinkingMillisOf(message) == 0
             ? null
@@ -188,7 +188,7 @@ class IsarChatController implements ChatController {
     id: uuidV7(),
     authorId: kAssistantUserId,
     text: text,
-    createdAt: createdAt ?? DateTime.timestamp(),
+    createdAt: createdAt ?? .timestamp(),
     metadata: (imageName != null && imageName.isNotEmpty)
         ? {_kImageNameKey: imageName}
         : null,
@@ -202,7 +202,7 @@ class IsarChatController implements ChatController {
     id: uuidV7(),
     authorId: kAssistantBotId,
     text: text,
-    createdAt: createdAt ?? DateTime.timestamp(),
+    createdAt: createdAt ?? .timestamp(),
     metadata: streaming ? const {_kStreamingFlag: true} : null,
   );
 
@@ -224,7 +224,7 @@ class IsarChatController implements ChatController {
   CustomMessage permissionCard(String surfaceId) => CustomMessage(
     id: surfaceId,
     authorId: kAssistantBotId,
-    createdAt: DateTime.timestamp(),
+    createdAt: .timestamp(),
     metadata: {kPermissionSurfaceKey: surfaceId},
   );
 
@@ -232,7 +232,7 @@ class IsarChatController implements ChatController {
   CustomMessage compactionNotice(String watermarkId) => CustomMessage(
     id: 'compaction-$watermarkId',
     authorId: kAssistantBotId,
-    createdAt: DateTime.timestamp(),
+    createdAt: .timestamp(),
     metadata: {kCompactionNoticeKey: true},
   );
 

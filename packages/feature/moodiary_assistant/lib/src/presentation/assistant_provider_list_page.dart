@@ -20,7 +20,7 @@ class AssistantProviderListPage extends ConsumerStatefulWidget {
 
 class _AssistantProviderListPageState
     extends ConsumerState<AssistantProviderListPage> {
-  LlmProviderRepository get _repo => LlmProviderRepository.get();
+  LlmProviderRepository get _repo => .get();
 
   List<LlmProvider> _providers = const [];
   Set<String> _withKey = const {};
@@ -92,7 +92,7 @@ class _AssistantProviderListPageState
           : _providers.isEmpty
           ? const _EmptyState()
           : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(0, 8, 0, 88),
+              padding: const .fromLTRB(0, 8, 0, 88),
               itemCount: _providers.length,
               itemBuilder: (context, index) {
                 final p = _providers[index];
@@ -133,33 +133,33 @@ class _ProviderCard extends StatelessWidget {
     final scheme = context.colorScheme;
     final l10n = context.l10n;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      padding: const .fromLTRB(12, 4, 12, 4),
       child: Material(
         color: isActive
             ? scheme.primaryContainer.withValues(alpha: 0.4)
             : scheme.surfaceContainerLow,
         borderRadius: AppBorderRadius.mediumBorderRadius,
-        clipBehavior: Clip.antiAlias,
+        clipBehavior: .antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Container(
             decoration: BoxDecoration(
               borderRadius: AppBorderRadius.mediumBorderRadius,
-              border: Border.all(
+              border: .all(
                 // 边框宽度恒定（不随选中变化），只变色，避免选中后卡片尺寸抖动。
                 color: isActive ? scheme.primary : scheme.outlineVariant,
                 width: 1,
               ),
             ),
-            padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
+            padding: const .fromLTRB(12, 12, 4, 12),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: .center,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(right: 12),
+                  padding: const .only(right: 12),
                   // 选中态用 logo 角标表达（Stack 叠加，不占布局）→ 选中不改卡片尺寸。
                   child: Stack(
-                    clipBehavior: Clip.none,
+                    clipBehavior: .none,
                     children: [
                       ProviderLogo(
                         logoUrl: ProviderLogo.urlOf(provider.providerId),
@@ -170,11 +170,11 @@ class _ProviderCard extends StatelessWidget {
                           right: -3,
                           bottom: -3,
                           child: Container(
-                            padding: const EdgeInsets.all(2),
+                            padding: const .all(2),
                             decoration: BoxDecoration(
                               color: scheme.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(
+                              shape: .circle,
+                              border: .all(
                                 color: scheme.primaryContainer,
                                 width: 1.5,
                               ),
@@ -191,13 +191,13 @@ class _ProviderCard extends StatelessWidget {
                 ),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: .start,
+                    mainAxisSize: .min,
                     children: [
                       Text(
                         provider.name,
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        overflow: .ellipsis,
                         style: context.textTheme.titleMedium?.copyWith(
                           color: scheme.onSurface,
                         ),
@@ -206,7 +206,7 @@ class _ProviderCard extends StatelessWidget {
                       Text(
                         provider.model,
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        overflow: .ellipsis,
                         style: context.textTheme.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -239,7 +239,7 @@ class _ProviderCard extends StatelessWidget {
                     ),
                   ],
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const .all(12),
                     child: Icon(
                       LucideIcons.ellipsisVertical,
                       color: scheme.onSurfaceVariant,
@@ -266,11 +266,8 @@ class _Badge extends StatelessWidget {
     final scheme = context.colorScheme;
     final bg = color ?? scheme.secondaryContainer;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
-      ),
+      padding: const .symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: bg, borderRadius: .circular(8)),
       child: Text(text, style: context.textTheme.labelSmall),
     );
   }
@@ -285,7 +282,7 @@ class _EmptyState extends StatelessWidget {
     final l10n = context.l10n;
     return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(LucideIcons.cloudOff, size: 48, color: scheme.outline),
           const SizedBox(height: 12),

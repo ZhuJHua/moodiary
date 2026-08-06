@@ -55,23 +55,23 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
       appBar: AppBar(
         title: Text(l10n.assistantSelectDiaryTitle),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
+          preferredSize: const .fromHeight(60),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+            padding: const .fromLTRB(12, 0, 12, 10),
             child: TextField(
               controller: _searchController,
               onChanged: _onQueryChanged,
-              textInputAction: TextInputAction.search,
+              textInputAction: .search,
               decoration: InputDecoration(
                 hintText: l10n.assistantSelectDiarySearchHint,
                 prefixIcon: const Icon(LucideIcons.search),
                 filled: true,
                 fillColor: scheme.surfaceContainerHigh,
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                contentPadding: const .symmetric(vertical: 4),
                 border: const OutlineInputBorder(
                   borderRadius: AppBorderRadius.largeBorderRadius,
-                  borderSide: BorderSide.none,
+                  borderSide: .none,
                 ),
               ),
             ),
@@ -91,7 +91,7 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
         return MoodiaryRefresh(
           onLoadMore: () => ref.read(provider.notifier).loadMore(),
           child: ListView.separated(
-            padding: const EdgeInsets.all(12),
+            padding: const .all(12),
             itemCount: list.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) => _DiarySelectTile(
@@ -108,13 +108,13 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
     return FutureBuilder<List<Diary>>(
       future: _searchFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == .waiting) {
           return const Center(child: MoodiaryLoading());
         }
         final list = snapshot.data ?? const <Diary>[];
         if (list.isEmpty) return _Empty();
         return ListView.separated(
-          padding: const EdgeInsets.all(12),
+          padding: const .all(12),
           itemCount: list.length,
           separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, index) => _DiarySelectTile(
@@ -133,10 +133,10 @@ class _Empty extends StatelessWidget {
     final scheme = context.colorScheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const .all(24),
         child: Text(
           context.l10n.assistantSelectDiaryEmpty,
-          textAlign: TextAlign.center,
+          textAlign: .center,
           style: TextStyle(color: scheme.onSurfaceVariant),
         ),
       ),
@@ -158,20 +158,20 @@ class _DiarySelectTile extends StatelessWidget {
     final preview = diary.contentText.preview();
     return Card.filled(
       color: scheme.surfaceContainerLow,
-      margin: EdgeInsets.zero,
+      margin: .zero,
       child: InkWell(
         borderRadius: AppBorderRadius.mediumBorderRadius,
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const .all(12),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: .start,
+            mainAxisSize: .min,
             children: [
               Text(
                 title.isEmpty ? l10n.assistantDiaryUntitled : title,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
                 style: context.textTheme.titleSmall?.copyWith(
                   color: scheme.onSurface,
                 ),
@@ -181,7 +181,7 @@ class _DiarySelectTile extends StatelessWidget {
                 Text(
                   preview,
                   maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  overflow: .ellipsis,
                   style: context.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),

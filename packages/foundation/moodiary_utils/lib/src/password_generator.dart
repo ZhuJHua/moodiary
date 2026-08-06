@@ -17,7 +17,7 @@ class PasswordGenerator {
     if (includeNumbers) chars += _numbers;
     if (includeSpecialChars) chars += _specialChars;
 
-    final Random random = Random.secure();
+    final Random random = .secure();
     return List.generate(
       length,
       (_) => chars[random.nextInt(chars.length)],

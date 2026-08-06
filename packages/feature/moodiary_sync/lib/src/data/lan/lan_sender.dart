@@ -93,7 +93,7 @@ class LanSender {
     String? zipPath;
     var uploading = false;
     try {
-      onProgress?.call(const LanSendProgress(LanSendPhase.connecting));
+      onProgress?.call(const LanSendProgress(.connecting));
       final handshake = _decodeHandshake(await _get('$base$lanHandshakePath'));
       final key = await _crypto.deriveKey(
         salt: handshake['salt'] as String,
@@ -112,7 +112,7 @@ class LanSender {
             as Map<String, dynamic>,
       );
 
-      onProgress?.call(const LanSendProgress(LanSendPhase.packing));
+      onProgress?.call(const LanSendProgress(.packing));
       final (path, count) = await _archiveBuilder(
         manifest,
         lanZipPassword(key),
@@ -132,12 +132,8 @@ class LanSender {
         onProgress: (sent, total) {
           onProgress?.call(
             sent >= total
-                ? const LanSendProgress(LanSendPhase.applying)
-                : LanSendProgress(
-                    LanSendPhase.uploading,
-                    sent: sent,
-                    total: total,
-                  ),
+                ? const LanSendProgress(.applying)
+                : LanSendProgress(.uploading, sent: sent, total: total),
           );
         },
         silent: true,
@@ -171,7 +167,7 @@ class LanSender {
 
   Future<Uint8List> _get(String url, {String? auth}) async {
     final resp = await _client.requestBytes(
-      HttpMethod.get,
+      .get,
       url,
       headers: auth == null ? null : {lanAuthHeader: auth},
       timeout: _controlTimeout,
@@ -222,8 +218,8 @@ class LanSender {
       return '传输中断，请确认对方仍停留在接收页后重试';
     }
     return switch (e.type) {
-      HttpErrorType.timeout => '连接超时，请检查地址和网络',
-      HttpErrorType.connection => '无法连接对方设备，请确认两台设备连接同一 Wi-Fi',
+      .timeout => '连接超时，请检查地址和网络',
+      .connection => '无法连接对方设备，请确认两台设备连接同一 Wi-Fi',
       _ => '网络异常：${e.message}',
     };
   }

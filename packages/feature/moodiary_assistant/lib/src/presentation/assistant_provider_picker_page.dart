@@ -79,7 +79,7 @@ class _AssistantProviderPickerPageState
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(12),
+        padding: const .all(12),
         children: [
           _CustomTile(onTap: _openCustom),
           const SizedBox(height: 12),
@@ -93,7 +93,7 @@ class _AssistantProviderPickerPageState
                 isDense: true,
                 border: const OutlineInputBorder(
                   borderRadius: AppBorderRadius.mediumBorderRadius,
-                  borderSide: BorderSide.none,
+                  borderSide: .none,
                 ),
               ),
             ),
@@ -101,14 +101,14 @@ class _AssistantProviderPickerPageState
           ],
           if (waiting)
             const Padding(
-              padding: EdgeInsets.only(top: 32),
+              padding: .only(top: 32),
               child: Center(child: CircularProgressIndicator()),
             )
           else if (hasError)
             _InlineError(onRetry: _refresh)
           else if (all.isEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 32),
+              padding: const .only(top: 32),
               child: Center(
                 child: Text(
                   l10n.llmPickerEmpty,
@@ -121,7 +121,7 @@ class _AssistantProviderPickerPageState
           else ...[
             for (final p in presets)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const .only(bottom: 8),
                 child: _PresetCard(preset: p, onTap: () => _openPreset(p)),
               ),
             _UpdatedFooter(at: LlmPresetRepository.get().cachedAt),
@@ -144,7 +144,7 @@ class _CustomTile extends StatelessWidget {
     return Material(
       color: scheme.secondaryContainer,
       borderRadius: AppBorderRadius.mediumBorderRadius,
-      clipBehavior: Clip.antiAlias,
+      clipBehavior: .antiAlias,
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: scheme.onSecondaryContainer,
@@ -187,14 +187,14 @@ class _PresetCard extends StatelessWidget {
     return Material(
       color: scheme.surfaceContainerLow,
       borderRadius: AppBorderRadius.mediumBorderRadius,
-      clipBehavior: Clip.antiAlias,
+      clipBehavior: .antiAlias,
       child: ListTile(
         leading: ProviderLogo(logoUrl: preset.logoUrl, name: name),
         title: Text(name),
         subtitle: Text(
           l10n.llmPickerModelCount(preset.models.length),
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
         ),
         trailing: const Icon(LucideIcons.chevronRight),
         onTap: onTap,
@@ -213,7 +213,7 @@ class _InlineError extends StatelessWidget {
     final scheme = context.colorScheme;
     final l10n = context.l10n;
     return Padding(
-      padding: const EdgeInsets.only(top: 32),
+      padding: const .only(top: 32),
       child: Column(
         children: [
           Icon(LucideIcons.cloudOff, size: 40, color: scheme.outline),
@@ -246,13 +246,11 @@ class _UpdatedFooter extends StatelessWidget {
     final l10n = context.l10n;
     final parts = <String>[l10n.llmPickerDataSource];
     if (at > 0) {
-      final time = TimeFormat.listDateTime(
-        DateTime.fromMillisecondsSinceEpoch(at),
-      );
+      final time = TimeFormat.listDateTime(.fromMillisecondsSinceEpoch(at));
       parts.add(l10n.llmPickerUpdatedAt(time));
     }
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const .symmetric(vertical: 12),
       child: Center(
         child: Text(
           parts.join(' · '),

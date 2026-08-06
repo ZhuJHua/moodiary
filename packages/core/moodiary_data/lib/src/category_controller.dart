@@ -31,7 +31,7 @@ List<Category> _applyEvent(List<Category> list, CategoryEvent event) {
 /// 订阅 [CategoryRepository.categoryEvents]，按事件原地增量更新，无需重查库。
 @riverpod
 class CategoryController extends _$CategoryController {
-  late final CategoryRepository _repository = CategoryRepository.get();
+  late final CategoryRepository _repository = .get();
 
   @override
   FutureOr<List<Category>> build() async {
@@ -44,7 +44,7 @@ class CategoryController extends _$CategoryController {
   void _applyChange(CategoryEvent event) {
     final list = state.value;
     if (list == null) return;
-    state = AsyncValue.data(_applyEvent(list, event));
+    state = .data(_applyEvent(list, event));
   }
 
   Future<bool> upsertCategory(Category category) async {

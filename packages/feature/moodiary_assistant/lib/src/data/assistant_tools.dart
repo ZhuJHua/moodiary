@@ -34,7 +34,7 @@ abstract final class AssistantToolRegistry {
 
   static const List<AssistantToolSpec> specs = [
     AssistantToolSpec(
-      tool: AssistantTool.queryDiaries,
+      tool: .queryDiaries,
       description:
           '查询 / 浏览用户的本地日记，所有参数均为可选过滤条件：关键词、分类、起止日期、排序、条数。'
           '提供关键词时按相关度检索；留空则按时间 / 分类浏览。'
@@ -77,7 +77,7 @@ abstract final class AssistantToolRegistry {
       run: _queryDiaries,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.getDiary,
+      tool: .getDiary,
       description:
           '按 id 读取单篇日记的完整内容（queryDiaries 只返回摘要）。'
           '当需要日记全文来总结、引用或回答细节时调用。',
@@ -91,7 +91,7 @@ abstract final class AssistantToolRegistry {
       run: _getDiary,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.diaryOverview,
+      tool: .diaryOverview,
       description:
           '返回日记的总体概况：总篇数、各分类的篇数、以及最早 / 最新日记的日期跨度。'
           '当用户询问「一共写了多少篇」「哪个分类最多」「从什么时候开始记」等统计类问题时调用。',
@@ -99,7 +99,7 @@ abstract final class AssistantToolRegistry {
       run: _diaryOverview,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.createDiary,
+      tool: .createDiary,
       description:
           '为用户创建一条新的本地日记并保存。当用户明确要求「记录 / 写一篇 / 创建日记」'
           '或希望把某段内容存为日记时调用。正文支持 Markdown，可选填 categoryId（取自 listCategories）。',
@@ -124,7 +124,7 @@ abstract final class AssistantToolRegistry {
       run: _createDiary,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.updateDiary,
+      tool: .updateDiary,
       description:
           '按 id 修改一篇已有日记。只更新提供的字段（title / content / mood / categoryId），'
           '未提供的保持不变。调用前请先用 queryDiaries 拿到目标日记的 id。',
@@ -147,7 +147,7 @@ abstract final class AssistantToolRegistry {
       run: _updateDiary,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.deleteDiary,
+      tool: .deleteDiary,
       description:
           '按 id 把一篇日记移入回收站（软删除，可在回收站恢复）。'
           '调用前请先用 queryDiaries 确认目标日记的 id。',
@@ -161,7 +161,7 @@ abstract final class AssistantToolRegistry {
       run: _deleteDiary,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.listCategories,
+      tool: .listCategories,
       description:
           '列出用户的全部日记分类（返回每个分类的 id 与名称）。在按分类创建 / 归类日记，'
           '或修改 / 删除分类前调用以获取 id。',
@@ -169,7 +169,7 @@ abstract final class AssistantToolRegistry {
       run: _listCategories,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.createCategory,
+      tool: .createCategory,
       description: '新建一个日记分类。当用户希望新增一个分类时调用。',
       jsonSchema: {
         'type': 'object',
@@ -181,7 +181,7 @@ abstract final class AssistantToolRegistry {
       run: _createCategory,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.updateCategory,
+      tool: .updateCategory,
       description: '按 id 重命名一个分类。调用前请先用 listCategories 获取目标分类的 id。',
       jsonSchema: {
         'type': 'object',
@@ -197,7 +197,7 @@ abstract final class AssistantToolRegistry {
       run: _updateCategory,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.deleteCategory,
+      tool: .deleteCategory,
       description:
           '按 id 删除一个分类（仅当该分类下没有任何日记时才会成功）。'
           '调用前请先用 listCategories 获取 id。',
@@ -214,7 +214,7 @@ abstract final class AssistantToolRegistry {
       run: _deleteCategory,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.listMemories,
+      tool: .listMemories,
       description:
           '列出你已保存的关于用户的长期记忆（每条含 id、类别、内容）。'
           '在修改（updateMemory）或删除（forgetFact）某条记忆前，先用它获取目标 id。',
@@ -222,7 +222,7 @@ abstract final class AssistantToolRegistry {
       run: _listMemories,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.rememberFact,
+      tool: .rememberFact,
       description:
           '保存一条关于用户的长期事实（稳定的偏好、反复出现的主题或持续的目标），以便日后对话中记起。'
           '仅在确有长期价值时使用，不要保存一次性细节或用户要求勿记的内容。',
@@ -241,7 +241,7 @@ abstract final class AssistantToolRegistry {
       run: _rememberFact,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.updateMemory,
+      tool: .updateMemory,
       description: '按 id 修改一条已保存的记忆内容。调用前请先用 listMemories 获取目标 id。',
       jsonSchema: {
         'type': 'object',
@@ -259,7 +259,7 @@ abstract final class AssistantToolRegistry {
       run: _updateMemory,
     ),
     AssistantToolSpec(
-      tool: AssistantTool.forgetFact,
+      tool: .forgetFact,
       description: '按 id 删除一条已保存的记忆。调用前请先用 listMemories 获取目标 id。',
       jsonSchema: {
         'type': 'object',
@@ -309,7 +309,7 @@ abstract final class AssistantToolRegistry {
       );
     } else if (start != null || endExclusive != null) {
       final ranged = await repo.getDiariesByDateRange(
-        start ?? DateTime.fromMillisecondsSinceEpoch(0),
+        start ?? .fromMillisecondsSinceEpoch(0),
         endExclusive ?? DateTime.now().add(const Duration(days: 1)),
       );
       results =
@@ -379,14 +379,8 @@ abstract final class AssistantToolRegistry {
     final cats = (await CategoryRepository.get().getAllCategories().run())
         .getOrElse((_) => const <Category>[]);
     final nameById = {for (final c in cats) c.id: c.categoryName};
-    final newest = await repo.getDiaryByCategory(
-      sort: DiarySort.timeDesc,
-      limit: 1,
-    );
-    final oldest = await repo.getDiaryByCategory(
-      sort: DiarySort.timeAsc,
-      limit: 1,
-    );
+    final newest = await repo.getDiaryByCategory(sort: .timeDesc, limit: 1);
+    final oldest = await repo.getDiaryByCategory(sort: .timeAsc, limit: 1);
 
     final buffer = StringBuffer()..writeln('日记总数=${counts.total}');
     if (newest.isNotEmpty && oldest.isNotEmpty) {
@@ -503,7 +497,7 @@ abstract final class AssistantToolRegistry {
         updated = updated.copyWith(categoryId: resolved);
       }
     }
-    updated = updated.copyWith(lastModified: DateTime.timestamp());
+    updated = updated.copyWith(lastModified: .timestamp());
 
     await repo.updateADiary(newDiary: updated);
     final shown = updated.title.trim().isEmpty ? '(无标题)' : updated.title.trim();
@@ -527,10 +521,7 @@ abstract final class AssistantToolRegistry {
     }
     // 软删=移入回收站(show=false)；勿用 deleteADiary(那是永久删除+删媒体)。
     await repo.updateADiary(
-      newDiary: existing.copyWith(
-        show: false,
-        lastModified: DateTime.timestamp(),
-      ),
+      newDiary: existing.copyWith(show: false, lastModified: .timestamp()),
     );
     return '已将日记「$title」（id=$id）移入回收站。';
   }
@@ -567,7 +558,7 @@ abstract final class AssistantToolRegistry {
     }
     final updated = existing.copyWith(
       categoryName: name,
-      lastModified: DateTime.timestamp(),
+      lastModified: .timestamp(),
     );
     final ok = (await repo.insertACategory(updated).run()).isRight();
     return ok ? '已将分类重命名为「$name」（id=$id）。' : '修改分类失败，请稍后再试。';
@@ -618,7 +609,7 @@ abstract final class AssistantToolRegistry {
       existing.copyWith(
         text: text,
         category: category,
-        updatedAt: DateTime.timestamp(),
+        updatedAt: .timestamp(),
       ),
     );
     return '已更新记忆（id=$id）：$text。';

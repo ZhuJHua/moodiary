@@ -8,7 +8,6 @@ import 'package:moodiary_diary/moodiary_diary.dart'
     show CategoryDrawer, diarySelectionProvider, homeDiaryFilterProvider;
 import 'package:moodiary_editor/moodiary_editor.dart' show openNewDiaryEditor;
 import 'package:moodiary_media/moodiary_media.dart';
-import 'package:moodiary_models/moodiary_models.dart' show DiaryType;
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart'
     show LucideIcons, MoodiaryNavAction, MoodiaryNavBar, MoodiaryNavDestination;
@@ -43,7 +42,7 @@ class MobileRootShell extends ConsumerStatefulWidget {
 }
 
 class _MobileRootShellState extends ConsumerState<MobileRootShell> {
-  _ShellTab _tab = _ShellTab.diary;
+  _ShellTab _tab = .diary;
 
   /// 分类抽屉挂在**本层**的 Scaffold 上才盖得住底部导航条；首页在 IndexedStack 里，
   /// 它自己那层 Scaffold 的抽屉只能覆盖内容区。首页拿不到本层的 ScaffoldState
@@ -58,10 +57,10 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
 
   void _newDiary() {
     // 只有站在日记 tab 上才继承当前分类筛选；别的 tab 没有「当前分类」这回事。
-    final categoryId = _tab == _ShellTab.diary
+    final categoryId = _tab == .diary
         ? ref.read(homeDiaryFilterProvider).categoryId
         : null;
-    openNewDiaryEditor(context, DiaryType.tiptap, categoryId: categoryId);
+    openNewDiaryEditor(context, .tiptap, categoryId: categoryId);
   }
 
   /// 右边那颗按钮跟着 tab 换功能。媒体页没有自己的「创建」——它是逛出来的，所以
@@ -69,12 +68,12 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
   MoodiaryNavAction _navAction(BuildContext context) {
     final l10n = context.l10n;
     return switch (_tab) {
-      _ShellTab.assistant => MoodiaryNavAction(
+      .assistant => MoodiaryNavAction(
         icon: const Icon(LucideIcons.messageCirclePlus),
         tooltip: l10n.assistantNewChat,
         onPressed: () => const AssistantConversationRoute().push(context),
       ),
-      _ShellTab.diary || _ShellTab.media => MoodiaryNavAction(
+      .diary || .media => MoodiaryNavAction(
         icon: const Icon(LucideIcons.pencilLine),
         tooltip: l10n.homePageAddDiaryButton,
         onPressed: _newDiary,
@@ -87,7 +86,7 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
     // 多选态下顶栏的汉堡会换成「取消」，边缘手势也必须跟着关 —— 否则入口看着没了、
     // 手一划却还能换分类，而换分类会作废当前的选中集合。
     final selecting = ref.watch(diarySelectionProvider).isNotEmpty;
-    final drawerUsable = _tab == _ShellTab.diary && !selecting;
+    final drawerUsable = _tab == .diary && !selecting;
     return Scaffold(
       key: _scaffoldKey,
       // 底栏悬浮，内容从它下面穿过去。开这个开关之后 Scaffold 会把底栏的整条带高

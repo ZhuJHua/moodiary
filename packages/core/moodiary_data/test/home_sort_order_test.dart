@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 
@@ -35,18 +34,17 @@ void main() {
     );
 
     test('timeDesc puts newest first', () {
-      final sorted = [a, b, c]..sort(diarySortComparator(DiarySort.timeDesc));
+      final sorted = [a, b, c]..sort(diarySortComparator(.timeDesc));
       expect(sorted.map((d) => d.id), ['b', 'c', 'a']);
     });
 
     test('timeAsc puts oldest first', () {
-      final sorted = [b, a, c]..sort(diarySortComparator(DiarySort.timeAsc));
+      final sorted = [b, a, c]..sort(diarySortComparator(.timeAsc));
       expect(sorted.map((d) => d.id), ['a', 'c', 'b']);
     });
 
     test('lastModifiedDesc puts recently edited first', () {
-      final sorted = [a, b, c]
-        ..sort(diarySortComparator(DiarySort.lastModifiedDesc));
+      final sorted = [a, b, c]..sort(diarySortComparator(.lastModifiedDesc));
       expect(sorted.first.id, 'c');
     });
 
@@ -54,8 +52,8 @@ void main() {
       final t = DateTime(2026, 5, 1);
       final x = diary('x', time: t);
       final y = diary('y', time: t);
-      final desc = [x, y]..sort(diarySortComparator(DiarySort.timeDesc));
-      final asc = [x, y]..sort(diarySortComparator(DiarySort.timeAsc));
+      final desc = [x, y]..sort(diarySortComparator(.timeDesc));
+      final asc = [x, y]..sort(diarySortComparator(.timeAsc));
       expect(desc.map((d) => d.id), asc.reversed.map((d) => d.id));
     });
   });

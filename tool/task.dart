@@ -24,7 +24,7 @@ Future<void> _run(String cmd, List<String> args, {String? cwd}) async {
     cmd,
     args,
     workingDirectory: cwd,
-    mode: ProcessStartMode.inheritStdio,
+    mode: .inheritStdio,
     runInShell: Platform.isWindows,
   );
   final code = await proc.exitCode;

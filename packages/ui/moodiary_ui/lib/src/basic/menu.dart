@@ -38,11 +38,8 @@ Future<T?> showMoodiaryMenu<T>({
   final button = anchorContext.findRenderObject() as RenderBox;
   final overlay = navigator.overlay!.context.findRenderObject() as RenderBox;
   final anchor = Rect.fromPoints(
-    button.localToGlobal(Offset.zero, ancestor: overlay),
-    button.localToGlobal(
-      button.size.bottomRight(Offset.zero),
-      ancestor: overlay,
-    ),
+    button.localToGlobal(.zero, ancestor: overlay),
+    button.localToGlobal(button.size.bottomRight(.zero), ancestor: overlay),
   );
   final preferAbove = anchor.top > overlay.size.height - anchor.bottom;
 
@@ -213,13 +210,13 @@ class _MoodiaryMenuBodyState<T> extends State<_MoodiaryMenuBody<T>> {
         );
       },
       child: Material(
-        type: MaterialType.card,
+        type: .card,
         color: scheme.surfaceContainerHigh,
         elevation: 8,
         shadowColor: Colors.black.withValues(alpha: 0.24),
         surfaceTintColor: Colors.transparent,
         borderRadius: AppBorderRadius.largeBorderRadius,
-        clipBehavior: Clip.antiAlias,
+        clipBehavior: .antiAlias,
         child: ConstrainedBox(
           constraints: const BoxConstraints(
             minWidth: _kMenuMinWidth,
@@ -227,11 +224,11 @@ class _MoodiaryMenuBodyState<T> extends State<_MoodiaryMenuBody<T>> {
           ),
           child: IntrinsicWidth(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(6),
+              padding: const .all(6),
               child: FocusTraversalGroup(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: .min,
+                  crossAxisAlignment: .stretch,
                   children: [
                     for (final (index, entry) in entries.indexed)
                       _MoodiaryMenuItem<T>(
@@ -285,17 +282,17 @@ class _MoodiaryMenuItem<T> extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const .symmetric(vertical: 2),
       child: Material(
         color: selected ? scheme.secondaryContainer : Colors.transparent,
         borderRadius: AppBorderRadius.mediumBorderRadius,
-        clipBehavior: Clip.antiAlias,
+        clipBehavior: .antiAlias,
         child: InkWell(
           onTap: entry.enabled ? onTap : null,
           autofocus: autofocus && entry.enabled,
           focusColor: scheme.onSurface.withValues(alpha: 0.08),
           child: Padding(
-            padding: EdgeInsets.fromLTRB(showLeadingSlot ? 12 : 14, 10, 12, 10),
+            padding: .fromLTRB(showLeadingSlot ? 12 : 14, 10, 12, 10),
             child: Row(
               children: [
                 if (showLeadingSlot) ...[
@@ -311,10 +308,10 @@ class _MoodiaryMenuItem<T> extends StatelessWidget {
                   child: Text(
                     entry.label,
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    overflow: .ellipsis,
                     style: context.textTheme.bodyMedium?.copyWith(
                       color: fg,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: selected ? .w600 : .w500,
                     ),
                   ),
                 ),
@@ -382,7 +379,7 @@ class _MoodiaryMenuLayout extends SingleChildLayoutDelegate {
 
     final leftLimit = _kMenuScreenPadding + screenPadding.left;
     final rightLimit = size.width - _kMenuScreenPadding - screenPadding.right;
-    double x = textDirection == TextDirection.rtl
+    double x = textDirection == .rtl
         ? anchor.right - childSize.width
         : anchor.left;
     x = x.clamp(

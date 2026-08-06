@@ -30,7 +30,7 @@ abstract class DiarySearchState with _$DiarySearchState {
 
 @riverpod
 class DiarySearchController extends _$DiarySearchController {
-  DiaryRepository get _repository => DiaryRepository.get();
+  DiaryRepository get _repository => .get();
 
   int _seq = 0;
   bool _disposed = false;
@@ -62,7 +62,7 @@ class DiarySearchController extends _$DiarySearchController {
 
   Future<void> setCustomRange(DateTime start, DateTime end) async {
     state = state.copyWith(
-      datePreset: DateRangePreset.custom,
+      datePreset: .custom,
       customStart: start,
       customEnd: end,
     );
@@ -80,15 +80,15 @@ class DiarySearchController extends _$DiarySearchController {
     // 统一按「天」对齐（零点），与 thisYear / custom 一致，避免随搜索时刻漂移而漏掉边界当天。
     final today = DateTime(now.year, now.month, now.day);
     switch (state.datePreset) {
-      case DateRangePreset.all:
+      case .all:
         return (start: null, end: null);
-      case DateRangePreset.last7Days:
+      case .last7Days:
         return (start: today.subtract(const Duration(days: 7)), end: null);
-      case DateRangePreset.last30Days:
+      case .last30Days:
         return (start: today.subtract(const Duration(days: 30)), end: null);
-      case DateRangePreset.thisYear:
+      case .thisYear:
         return (start: DateTime(now.year), end: null);
-      case DateRangePreset.custom:
+      case .custom:
         final end = state.customEnd;
         return (
           start: state.customStart,

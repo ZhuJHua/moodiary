@@ -7,5 +7,4 @@ import 'package:moodiary_models/moodiary_models.dart';
 /// 若行内仍显示 time，用户看到的就是一列日期完全无序的条目。
 /// 时间线还额外拿它当分组键——分组键与排序键不一致会让月份吸顶头重复且乱序。
 DateTime diaryStampOf(Diary diary, DiarySort sort) =>
-    (sort == DiarySort.lastModifiedDesc ? diary.lastModified : diary.time)
-        .toLocal();
+    (sort == .lastModifiedDesc ? diary.lastModified : diary.time).toLocal();

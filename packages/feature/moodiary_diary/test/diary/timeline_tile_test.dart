@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -161,7 +159,7 @@ void main() {
           body: RepaintBoundary(
             key: boundaryKey,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: .min,
               children: [
                 DiaryTimelineTile(
                   key: const ValueKey('a'),
@@ -193,7 +191,7 @@ void main() {
     // toImage 要等引擎真的出帧：必须跑在 runAsync 里，否则在 fake async 下永不完成。
     final data = await t.runAsync(() async {
       final image = await boundary.toImage();
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final bytes = await image.toByteData(format: .rawRgba);
       return (bytes: bytes!, width: image.width);
     });
     final bytes = data!.bytes;

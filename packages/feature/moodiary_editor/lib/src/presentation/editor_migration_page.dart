@@ -123,23 +123,19 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       body: pending == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const .symmetric(vertical: 8),
               children: [
                 _section('待迁移（${pending.length}）'),
                 if (pending.isEmpty)
                   const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    padding: .fromLTRB(16, 8, 16, 16),
                     child: Text('没有需要迁移的旧编辑器日记 🎉'),
                   )
                 else
                   for (final d in pending)
                     ListTile(
                       leading: const Icon(LucideIcons.notebookText),
-                      title: Text(
-                        _label(d),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      title: Text(_label(d), maxLines: 1, overflow: .ellipsis),
                       subtitle: Text(_date(d.time)),
                       trailing: IconButton(
                         tooltip: '迁移这一篇',
@@ -155,7 +151,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
                       title: Text(
                         item.diary == null ? '(已删除)' : _label(item.diary!),
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        overflow: .ellipsis,
                       ),
                       subtitle: Text('迁移于 ${_date(item.backup.savedAt)}'),
                       trailing: TextButton(
@@ -173,10 +169,10 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
     if (pending == null || pending.isEmpty) return null;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const .all(12),
         child: _busy
             ? Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: .min,
                 children: [
                   LinearProgressIndicator(
                     value: _total == 0 ? null : _done / _total,
@@ -196,7 +192,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
 
   Widget _section(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const .fromLTRB(16, 16, 16, 4),
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(

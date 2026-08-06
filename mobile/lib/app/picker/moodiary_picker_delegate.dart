@@ -32,7 +32,7 @@ class MoodiaryPickerDelegate
     required List<SpecialItemFinalized> specialItemsFinalized,
   }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(_itemRadius),
+      borderRadius: .circular(_itemRadius),
       child: super.assetGridItemBuilder(
         context: context,
         index: index,
@@ -63,7 +63,7 @@ class MoodiaryPickerDelegate
           ),
           padding: const EdgeInsetsDirectional.only(start: 14, end: 8),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: .circular(999),
             color: _cs.surfaceContainerHigh,
           ),
           child:
@@ -85,7 +85,7 @@ class MoodiaryPickerDelegate
                     name = pathNameBuilder?.call(path) ?? path.name;
                   }
                   return Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisSize: .min,
                     children: [
                       if (name != null)
                         Flexible(
@@ -93,11 +93,11 @@ class MoodiaryPickerDelegate
                             name,
                             style: TextStyle(
                               fontSize: 15,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: .w500,
                               color: _cs.onSurface,
                             ),
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            overflow: .ellipsis,
                           ),
                         ),
                       child!,
@@ -146,7 +146,7 @@ class MoodiaryPickerDelegate
           selected: isSelected,
           onTapHint: semanticsTextDelegate.sActionSwitchPathLabel,
           child: Material(
-            type: MaterialType.transparency,
+            type: .transparency,
             child: InkWell(
               onTap: () {
                 Feedback.forTap(context);
@@ -155,19 +155,16 @@ class MoodiaryPickerDelegate
                 gridScrollController.jumpTo(0);
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                padding: const .symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: .circular(10),
                       child: SizedBox(
                         width: 48,
                         height: 48,
                         child: data != null
-                            ? Image.memory(data, fit: BoxFit.cover)
+                            ? Image.memory(data, fit: .cover)
                             : ColoredBox(
                                 color: _cs.primary.withValues(alpha: .12),
                               ),
@@ -191,7 +188,7 @@ class MoodiaryPickerDelegate
                           ],
                         ),
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        overflow: .ellipsis,
                       ),
                     ),
                     if (isSelected)
@@ -218,8 +215,8 @@ class MoodiaryPickerDelegate
             : textDelegate.confirm;
         return FilledButton(
           style: FilledButton.styleFrom(
-            visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            visualDensity: .compact,
+            padding: const .symmetric(horizontal: 16),
           ),
           onPressed: enabled
               ? () => Navigator.maybeOf(context)?.maybePop(p.selectedAssets)
@@ -248,16 +245,13 @@ class MoodiaryPickerDelegate
         final Widget innerSelector = Container(
           width: size,
           height: size,
-          alignment: Alignment.center,
+          alignment: .center,
           decoration: BoxDecoration(
             color: selected ? _cs.primary : Colors.black.withValues(alpha: .2),
             border: selected
                 ? null
-                : Border.all(
-                    color: Colors.white.withValues(alpha: .9),
-                    width: 1.8,
-                  ),
-            shape: BoxShape.circle,
+                : .all(color: Colors.white.withValues(alpha: .9), width: 1.8),
+            shape: .circle,
           ),
           child: selected
               ? (isSingleAssetMode
@@ -271,20 +265,20 @@ class MoodiaryPickerDelegate
                         style: TextStyle(
                           color: _cs.onPrimary,
                           fontSize: size * .5,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: .w600,
                           height: 1,
                         ),
                       ))
               : null,
         );
         final Widget selectorWidget = GestureDetector(
-          behavior: HitTestBehavior.opaque,
+          behavior: .opaque,
           onTap: () => selectAsset(context, asset, index, selected),
           child: Container(
-            margin: EdgeInsets.all(indicatorSize / 4),
+            margin: .all(indicatorSize / 4),
             width: isPreviewEnabled ? indicatorSize : null,
             height: isPreviewEnabled ? indicatorSize : null,
-            alignment: AlignmentDirectional.topEnd,
+            alignment: .topEnd,
             child: (!isPreviewEnabled && isSingleAssetMode && !selected)
                 ? const SizedBox.shrink()
                 : innerSelector,
@@ -313,10 +307,8 @@ class MoodiaryPickerDelegate
                 .contains(asset);
             return Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(_itemRadius),
-                border: selected
-                    ? Border.all(color: _cs.primary, width: 2.5)
-                    : null,
+                borderRadius: .circular(_itemRadius),
+                border: selected ? .all(color: _cs.primary, width: 2.5) : null,
                 color: selected ? _cs.primary.withValues(alpha: .28) : null,
               ),
             );

@@ -32,7 +32,7 @@ class _RecordSheetState extends State<RecordSheet>
 
   bool _started = false;
   bool _recording = false;
-  Duration _elapsed = Duration.zero;
+  Duration _elapsed = .zero;
 
   final List<double> _amplitudes = [];
 
@@ -82,7 +82,7 @@ class _RecordSheetState extends State<RecordSheet>
       _fileName = name;
       _started = true;
       _recording = true;
-      _elapsed = Duration.zero;
+      _elapsed = .zero;
       _amplitudes.clear();
       _amplitudeBaseline = 0;
     });
@@ -170,7 +170,7 @@ class _RecordSheetState extends State<RecordSheet>
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      padding: const .fromLTRB(16, 12, 16, 24),
       child: LayoutBuilder(
         builder: (context, constraints) {
           _maxWidth = constraints.maxWidth;
@@ -182,7 +182,7 @@ class _RecordSheetState extends State<RecordSheet>
 
   Widget _buildBody(BuildContext context, AppLocalizations l10n) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       children: [
         SizedBox(
           height: 120,
@@ -192,21 +192,21 @@ class _RecordSheetState extends State<RecordSheet>
                 // 波形靠左生长（与旧版一致），Align 撑满宽度避免 switcher 随波形宽度抖动。
                 ? Align(
                     key: const ValueKey('wave'),
-                    alignment: Alignment.centerLeft,
+                    alignment: .centerLeft,
                     child: _Waveform(amplitudes: _amplitudes),
                   )
                 : Center(
                     key: const ValueKey('start'),
                     child: Container(
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
+                        shape: .circle,
+                        border: .all(
                           color: context.theme.colorScheme.outline,
                           width: 4,
                         ),
                       ),
                       child: IconButton(
-                        padding: EdgeInsets.zero,
+                        padding: .zero,
                         icon: const Icon(
                           LucideIcons.circleDot,
                           size: 48,
@@ -223,12 +223,12 @@ class _RecordSheetState extends State<RecordSheet>
           Text(
             _fmt(_elapsed),
             style: context.textTheme.titleMedium?.copyWith(
-              fontFeatures: const [FontFeature.tabularFigures()],
+              fontFeatures: const [.tabularFigures()],
             ),
           ),
           const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: .spaceEvenly,
             children: [
               TextButton(onPressed: _cancel, child: Text(l10n.cancel)),
               FilledButton(
@@ -257,7 +257,7 @@ class _Waveform extends StatelessWidget {
     return CustomPaint(
       // 快照副本：painter 若持有会被原地 mutate 的原列表，shouldRepaint 永远比不出差异。
       painter: _WaveformPainter(
-        List.of(amplitudes),
+        .of(amplitudes),
         color: context.theme.colorScheme.primary,
       ),
       size: Size(amplitudes.length * _WaveformPainter.stride, 100),
@@ -278,9 +278,9 @@ class _WaveformPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..strokeCap = StrokeCap.round
+      ..strokeCap = .round
       ..strokeWidth = barWidth
-      ..style = PaintingStyle.fill;
+      ..style = .fill;
     // 底部基线，条形向上生长。
     final baseY = size.height - barWidth;
     for (var i = 0; i < amplitudes.length; i++) {

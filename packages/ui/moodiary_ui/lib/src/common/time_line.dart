@@ -47,7 +47,7 @@ class TimeLineComponent extends StatelessWidget {
         actionColor: actionColor,
         lineWidth: 2.0,
       ),
-      child: Padding(padding: const EdgeInsets.only(left: 40.0), child: child),
+      child: Padding(padding: const .only(left: 40.0), child: child),
     );
   }
 }

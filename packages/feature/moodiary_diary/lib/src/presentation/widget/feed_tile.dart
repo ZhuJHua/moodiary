@@ -55,10 +55,10 @@ class DiaryFeedTile extends StatelessWidget {
   const DiaryFeedTile({
     super.key,
     required this.diary,
-    this.sort = DiarySort.timeDesc,
+    this.sort = .timeDesc,
     this.category,
     this.showCategoryLabel = true,
-    this.syncState = DiaryCardSyncState.none,
+    this.syncState = .none,
     this.onTap,
     this.onLongPress,
     this.selecting = false,
@@ -80,8 +80,8 @@ class DiaryFeedTile extends StatelessWidget {
       onLongPress: onLongPress,
       card: true,
       borderRadius: AppBorderRadius.largeBorderRadius,
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      margin: const .symmetric(horizontal: 12),
+      padding: const .fromLTRB(12, 12, 12, 12),
       child: sideThumb
           ? _SideThumbRow(
               diary: diary,
@@ -141,15 +141,15 @@ class _SideThumbRow extends StatelessWidget {
     final width = (ratio != null && ratio < 1) ? _kThumbTallW : _kThumbW;
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         Expanded(
           // 行高自然取「文字高」与「图高 72」的大者：列表给的是无界高度，
           // 这里不能用 Spacer/Expanded 把元信息顶到底，也不值得为对齐上
           // IntrinsicHeight（每帧多测一遍）。
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: .min,
+            crossAxisAlignment: .start,
             children: [
               _Headline(diary: diary),
               _Excerpt(diary: diary, maxLines: 2),
@@ -169,14 +169,14 @@ class _SideThumbRow extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         Padding(
-          padding: const EdgeInsets.only(top: 1),
+          padding: const .only(top: 1),
           child: SizedBox(
             width: width,
             height: _kThumbH,
             child: _Thumb(
               cell: cell,
               cacheWidth: (width * dpr).round(),
-              radius: const BorderRadius.all(Radius.circular(10)),
+              radius: const .all(.circular(10)),
             ),
           ),
         ),
@@ -213,7 +213,7 @@ class _StackedColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasMedia = cells.isNotEmpty || diary.audioName.isNotEmpty;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         // 有媒体压在下面时正文接在标题后跑成同一行，媒体就不额外吃一行。
         _Headline(diary: diary, runInBody: hasMedia),
@@ -256,15 +256,15 @@ class _Headline extends StatelessWidget {
     final theme = context.textTheme;
 
     final mark = WidgetSpan(
-      alignment: PlaceholderAlignment.middle,
+      alignment: .middle,
       child: Padding(
-        padding: const EdgeInsets.only(right: 7),
+        padding: const .only(right: 7),
         child: Container(
           width: 3.5,
           height: 12,
           decoration: BoxDecoration(
             color: diaryMoodColor(diary.mood),
-            borderRadius: const BorderRadius.all(Radius.circular(999)),
+            borderRadius: const .all(.circular(999)),
           ),
         ),
       ),
@@ -280,7 +280,7 @@ class _Headline extends StatelessWidget {
           ],
         ),
         maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+        overflow: .ellipsis,
         style: theme.bodyMedium?.copyWith(color: scheme.onSurface),
       );
     }
@@ -293,7 +293,7 @@ class _Headline extends StatelessWidget {
             text: title,
             style: theme.titleSmall?.copyWith(
               color: scheme.onSurface,
-              fontWeight: FontWeight.w600,
+              fontWeight: .w600,
               height: 1.35,
             ),
           ),
@@ -305,7 +305,7 @@ class _Headline extends StatelessWidget {
         ],
       ),
       maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+      overflow: .ellipsis,
     );
   }
 }
@@ -323,11 +323,11 @@ class _Excerpt extends StatelessWidget {
       return const SizedBox.shrink();
     }
     return Padding(
-      padding: const EdgeInsets.only(top: 3),
+      padding: const .only(top: 3),
       child: Text(
         body,
         maxLines: maxLines,
-        overflow: TextOverflow.ellipsis,
+        overflow: .ellipsis,
         style: context.textTheme.bodySmall?.copyWith(
           color: context.colorScheme.onSurfaceVariant,
           height: 1.55,
@@ -365,7 +365,7 @@ class _Strip extends StatelessWidget {
                   child: _Thumb(
                     cell: cells[i],
                     cacheWidth: (cell * dpr).round(),
-                    radius: const BorderRadius.all(Radius.circular(10)),
+                    radius: const .all(.circular(10)),
                     moreCount: i == show - 1 && extra > 0 ? extra : 0,
                   ),
                 ),
@@ -397,7 +397,7 @@ class _Thumb extends StatelessWidget {
     return ClipRRect(
       borderRadius: radius,
       child: Stack(
-        fit: StackFit.expand,
+        fit: .expand,
         children: [
           ColoredBox(color: scheme.surfaceContainerHighest),
           Image(
@@ -405,7 +405,7 @@ class _Thumb extends StatelessWidget {
             // 先画上一篇的照片。
             key: ValueKey(cell.path),
             image: ResizeImage(FileImage(File(cell.path)), width: cacheWidth),
-            fit: BoxFit.cover,
+            fit: .cover,
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
             errorBuilder: (context, _, _) =>
@@ -427,13 +427,13 @@ class _VideoScrim extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Stack(
-      fit: StackFit.expand,
+      fit: .expand,
       children: [
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
+              begin: .bottomCenter,
+              end: .topCenter,
               colors: [Colors.black54, Colors.transparent],
               stops: [0, 0.58],
             ),
@@ -463,7 +463,7 @@ class _MoreOverlay extends StatelessWidget {
           '+$count',
           style: context.textTheme.labelLarge?.copyWith(
             color: Colors.white,
-            fontWeight: FontWeight.w600,
+            fontWeight: .w600,
           ),
         ),
       ),
@@ -505,10 +505,10 @@ class _AudioBar extends StatelessWidget {
     return Container(
       height: 22,
       width: 188,
-      padding: const EdgeInsets.symmetric(horizontal: 9),
+      padding: const .symmetric(horizontal: 9),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHigh,
-        borderRadius: const BorderRadius.all(Radius.circular(11)),
+        borderRadius: const .all(.circular(11)),
       ),
       child: Row(
         children: [
@@ -516,20 +516,16 @@ class _AudioBar extends StatelessWidget {
           const SizedBox(width: 7),
           Expanded(
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: .spaceBetween,
+              crossAxisAlignment: .center,
               children: [
                 for (final h in _pattern)
                   Container(
                     width: 2,
                     height: h,
                     decoration: BoxDecoration(
-                      color: Color.lerp(
-                        scheme.outlineVariant,
-                        scheme.primary,
-                        0.52,
-                      ),
-                      borderRadius: const BorderRadius.all(Radius.circular(1)),
+                      color: .lerp(scheme.outlineVariant, scheme.primary, 0.52),
+                      borderRadius: const .all(.circular(1)),
                     ),
                   ),
               ],
@@ -587,9 +583,9 @@ class _MetaLine extends StatelessWidget {
     // 左半组做成**一段文本**而不是一排固定块：Row 里的固定块加起来超宽就会 overflow，
     // 而单行 Text 自带省略号，优先级天然由顺序决定（地点最先被吃掉）。
     InlineSpan icon(IconData data) => WidgetSpan(
-      alignment: PlaceholderAlignment.middle,
+      alignment: .middle,
       child: Padding(
-        padding: const EdgeInsets.only(right: 3),
+        padding: const .only(right: 3),
         child: Icon(data, size: 11.5, color: onVariant),
       ),
     );
@@ -598,9 +594,9 @@ class _MetaLine extends StatelessWidget {
     final spans = <InlineSpan>[
       if (showCategoryLabel && category != null) ...[
         WidgetSpan(
-          alignment: PlaceholderAlignment.middle,
+          alignment: .middle,
           child: Padding(
-            padding: const EdgeInsets.only(right: 4),
+            padding: const .only(right: 4),
             child: _CategoryDot(category: category!),
           ),
         ),
@@ -635,11 +631,11 @@ class _MetaLine extends StatelessWidget {
           child: Text.rich(
             TextSpan(children: spans),
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            overflow: .ellipsis,
             style: style,
           ),
         ),
-        if (syncState != DiaryCardSyncState.none) ...[
+        if (syncState != .none) ...[
           const SizedBox(width: 6),
           DiarySyncBadge(state: syncState),
         ],
@@ -652,12 +648,12 @@ class _MetaLine extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _kTagAreaMax),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: .min,
               children: [
                 for (final tag in diary.tags.take(2))
                   Flexible(
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 7),
+                      padding: const .only(left: 7),
                       child: _TagChip(label: tag),
                     ),
                   ),
@@ -681,7 +677,7 @@ class _CategoryDot extends StatelessWidget {
       height: 6,
       decoration: BoxDecoration(
         color: categoryColorOf(colorValue: category.color, id: category.id),
-        shape: BoxShape.circle,
+        shape: .circle,
       ),
     );
   }
@@ -699,7 +695,7 @@ class _TagChip extends StatelessWidget {
     return Text(
       '#$label',
       maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+      overflow: .ellipsis,
       softWrap: false,
       style: context.textTheme.labelSmall?.copyWith(
         color: scheme.onSurfaceVariant.withValues(alpha: 0.75),

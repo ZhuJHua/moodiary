@@ -9,7 +9,7 @@ import 'package:moodiary_ui/src/basic/action_bar.dart';
 /// 唯一覆盖官方默认值的形状；底色、elevation、宽度上限 640、高度上限、抓手与拖动
 /// 手势全部沿用 [showModalBottomSheet] 的默认行为。
 const RoundedRectangleBorder _kSheetShape = RoundedRectangleBorder(
-  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+  borderRadius: .vertical(top: .circular(24)),
 );
 
 const double _kSheetActionHeight = 52;
@@ -39,7 +39,7 @@ Future<T?> showMoodiarySheet<T>(
     isDismissible: barrierDismissible,
     showDragHandle: showHandle,
     shape: _kSheetShape,
-    clipBehavior: Clip.antiAlias,
+    clipBehavior: .antiAlias,
     barrierColor: context.colorScheme.scrim.withValues(alpha: 0.32),
     builder: (sheetContext) => Semantics(
       // 官方路由不给弹窗起名，读屏进入时只会念遮罩的「关闭」。
@@ -69,7 +69,7 @@ class _SheetInsets extends StatelessWidget {
     final bottomInset = media.viewInsets.bottom;
     return Padding(
       // 弹窗贴住屏幕下沿，内容要让开手势条；键盘顶起时那块已经被 viewInsets 占了。
-      padding: EdgeInsets.only(
+      padding: .only(
         top: topGap,
         bottom: bottomInset + (bottomInset > 0 ? 0 : media.viewPadding.bottom),
       ),
@@ -157,7 +157,7 @@ class MoodiarySheetOptionTile<T> extends StatelessWidget {
       selected: selected,
       enabled: option.enabled,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 6),
+        padding: const .only(bottom: 6),
         child: Material(
           color: selected
               ? scheme.primaryContainer
@@ -169,17 +169,14 @@ class MoodiarySheetOptionTile<T> extends StatelessWidget {
             borderRadius: AppBorderRadius.mediumBorderRadius,
             side: selected
                 ? BorderSide(color: scheme.primary, width: 1.5)
-                : BorderSide.none,
+                : .none,
           ),
           child: InkWell(
             onTap: option.enabled ? onTap : null,
             child: Opacity(
               opacity: option.enabled ? 1 : 0.4,
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const .symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     if (option.icon != null) ...[
@@ -276,9 +273,7 @@ class MoodiarySheetScaffold<T> extends StatelessWidget {
     final header = hasHeader
         ? Padding(
             // 顶部空隙由容器的手柄区负责，头部自己不再留。
-            padding: EdgeInsets.symmetric(
-              horizontal: foldHeader ? 0 : _kSheetPadding,
-            ),
+            padding: .symmetric(horizontal: foldHeader ? 0 : _kSheetPadding),
             child: Row(
               children: [
                 if (icon != null) ...[
@@ -336,7 +331,7 @@ class MoodiarySheetScaffold<T> extends StatelessWidget {
         if (!foldHeader) ?header,
         Flexible(
           child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
+            padding: .fromLTRB(
               _kSheetPadding,
               hasHeader && !foldHeader ? 16 : 8,
               _kSheetPadding,
@@ -353,12 +348,7 @@ class MoodiarySheetScaffold<T> extends StatelessWidget {
         ),
         if (actions.isNotEmpty)
           Container(
-            padding: const EdgeInsets.fromLTRB(
-              _kSheetPadding,
-              12,
-              _kSheetPadding,
-              16,
-            ),
+            padding: const .fromLTRB(_kSheetPadding, 12, _kSheetPadding, 16),
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(

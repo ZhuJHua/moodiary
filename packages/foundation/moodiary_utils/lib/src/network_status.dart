@@ -16,9 +16,7 @@ class NetworkStatus {
 
   /// 本机所有非回环 IPv4（Wi-Fi / 以太网等）。
   static Future<List<String>> getLocalIPv4s() async {
-    final interfaces = await NetworkInterface.list(
-      type: InternetAddressType.IPv4,
-    );
+    final interfaces = await NetworkInterface.list(type: .IPv4);
     return [
       for (final interface in interfaces)
         for (final address in interface.addresses) address.address,

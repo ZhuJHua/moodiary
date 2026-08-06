@@ -39,10 +39,7 @@ class WindowsInAppWebViewTransport extends EditorTransport {
       controllerFromPlatform: (controller) => controller,
       initialUrlRequest: URLRequest(url: WebUri(pageUri.toString())),
       initialUserScripts: UnmodifiableListView<UserScript>([
-        UserScript(
-          source: _shim,
-          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-        ),
+        UserScript(source: _shim, injectionTime: .AT_DOCUMENT_START),
       ]),
       initialSettings: InAppWebViewSettings(
         // 媒体内联自动播放（音视频用原生 <audio>/<video>）；不透明背景由页面 CSS 自绘底色。
@@ -64,7 +61,7 @@ class WindowsInAppWebViewTransport extends EditorTransport {
       },
       onConsoleMessage: (controller, message) {
         // 只保留 JS 异常日志，与 webview_flutter 对齐。
-        if (message.messageLevel == ConsoleMessageLevel.ERROR) {
+        if (message.messageLevel == .ERROR) {
           onConsoleError(message.message);
         }
       },

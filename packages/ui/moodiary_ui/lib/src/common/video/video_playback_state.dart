@@ -154,8 +154,8 @@ class VideoProgress {
       : null;
 
   static const zero = VideoProgress(
-    position: Duration.zero,
-    duration: Duration.zero,
+    position: .zero,
+    duration: .zero,
     draft: false,
   );
 }

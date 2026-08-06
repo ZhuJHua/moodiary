@@ -4,7 +4,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path_provider/path_provider.dart';
 
 class PlatformService {
-  static final PlatformService _instance = PlatformService._internal();
+  static final PlatformService _instance = ._internal();
 
   factory PlatformService.get() => _instance;
 

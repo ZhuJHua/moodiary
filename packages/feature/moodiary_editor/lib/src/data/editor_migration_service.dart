@@ -43,19 +43,17 @@ class EditorMigrationService {
   static Future<List<Diary>> pendingDiaries() async {
     final repo = DiaryRepository.get();
     final all = await repo.getAllDiaries(); // 含回收站
-    return all
-        .where((d) => DiaryType.fromValue(d.type) != DiaryType.tiptap)
-        .toList();
+    return all.where((d) => DiaryType.fromValue(d.type) != .tiptap).toList();
   }
 
   /// 把一篇内容转成 tiptap JSON（不落库）。richText / markdown 均为纯 Dart。失败返回 null。
   static String? _toJson(Diary diary) {
     switch (DiaryType.fromValue(diary.type)) {
-      case DiaryType.tiptap:
+      case .tiptap:
         return null; // 已是 tiptap
-      case DiaryType.richText:
+      case .richText:
         return QuillDeltaToTiptap.convert(diary.content);
-      case DiaryType.markdown:
+      case .markdown:
         return MarkdownToTiptap.convert(diary.content);
     }
   }
@@ -127,8 +125,7 @@ class EditorMigrationService {
           MigrationBackup(
             id: id,
             savedAt:
-                DateTime.tryParse(data['savedAt'] as String? ?? '') ??
-                DateTime.now(),
+                DateTime.tryParse(data['savedAt'] as String? ?? '') ?? .now(),
           ),
         );
       } catch (_) {
@@ -170,7 +167,7 @@ class EditorMigrationService {
       videoName: media.videos,
       // 与迁移不同，回退按真实内容编辑对待（bump + 正常推送）：弹窗已警告「迁移后的
       // 修改会丢失」。若不 bump，已推送过迁移后编辑的场景会留下同时间戳异内容的永久分歧。
-      lastModified: DateTime.now(),
+      lastModified: .now(),
     );
     await DiaryRepository.get().updateADiary(newDiary: newDiary);
     await file.delete();

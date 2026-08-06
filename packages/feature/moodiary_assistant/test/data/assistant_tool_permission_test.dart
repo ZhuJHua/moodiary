@@ -5,14 +5,14 @@ import 'package:moodiary_assistant/src/data/impl/rig_assistant.dart';
 
 void main() {
   final probe = AssistantToolSpec(
-    tool: AssistantTool.deleteDiary,
+    tool: .deleteDiary,
     description: 'probe',
     jsonSchema: const {'type': 'object', 'properties': {}},
     run: (input) async => 'ran:${input['x']}',
   );
 
   final readOnlyProbe = AssistantToolSpec(
-    tool: AssistantTool.queryDiaries,
+    tool: .queryDiaries,
     description: 'probe',
     jsonSchema: const {'type': 'object', 'properties': {}},
     run: (input) async => 'ran:${input['x']}',

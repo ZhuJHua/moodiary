@@ -31,10 +31,8 @@ class _OrientationLockObserver extends WidgetsBindingObserver {
     if (policy == _lastApplied) return;
     _lastApplied = policy;
     SystemChrome.setPreferredOrientations(switch (policy) {
-      DeviceOrientationPolicy.portraitOnly => const [
-        DeviceOrientation.portraitUp,
-      ],
-      DeviceOrientationPolicy.unrestricted => const [
+      .portraitOnly => const [DeviceOrientation.portraitUp],
+      .unrestricted => const [
         DeviceOrientation.portraitUp,
         DeviceOrientation.portraitDown,
         DeviceOrientation.landscapeLeft,
@@ -50,8 +48,8 @@ enum DeviceOrientationPolicy { portraitOnly, unrestricted }
 /// 正方形按竖处理 —— 手机自然持握是竖的，1:1 放进横屏两侧留白过大。
 List<DeviceOrientation> fullscreenOrientationsFor(double aspectRatio) =>
     aspectRatio > 1.0
-    ? const [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]
-    : const [DeviceOrientation.portraitUp];
+    ? const [.landscapeLeft, .landscapeRight]
+    : const [.portraitUp];
 
 final _OrientationLockObserver _orientationObserver =
     _OrientationLockObserver();
@@ -74,7 +72,7 @@ typedef OrientationOverrideRelease = bool Function();
 /// 当前全局方向策略。平板 / 折叠屏展开态是 unrestricted（放开四向），此时任何
 /// 「锁定 → 等它转回来」的编排都不成立：系统会按物理姿态自己转，等不到确定终态。
 DeviceOrientationPolicy currentOrientationPolicy() =>
-    _orientationObserver._lastApplied ?? DeviceOrientationPolicy.portraitOnly;
+    _orientationObserver._lastApplied ?? .portraitOnly;
 
 /// 临时把方向锁到 [orientations]（视频全屏按片子比例锁横 / 锁竖），返回恢复函数；
 /// 嵌套安全（计数到 0 才恢复全局策略）。
@@ -115,7 +113,7 @@ OrientationOverrideRelease lockOrientationsTemporarily(
 /// 它们实现的；实测（含 flutter 3.44 + targetSdk 36 的其它 app）**藏得掉，坏的只有恢复这条路**。
 ImmersiveOverrideRelease enterImmersiveTemporarily() {
   _immersiveOverrides += 1;
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  SystemChrome.setEnabledSystemUIMode(.immersiveSticky);
   var released = false;
   return () {
     if (released) return;
@@ -123,10 +121,10 @@ ImmersiveOverrideRelease enterImmersiveTemporarily() {
     _immersiveOverrides -= 1;
     if (_immersiveOverrides > 0) return;
     SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.manual,
+      .manual,
       overlays: SystemUiOverlay.values,
     );
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
   };
 }
 

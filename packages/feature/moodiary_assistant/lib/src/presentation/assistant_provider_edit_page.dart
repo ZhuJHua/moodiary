@@ -21,7 +21,7 @@ class AssistantProviderEditPage extends ConsumerStatefulWidget {
 
 class _AssistantProviderEditPageState
     extends ConsumerState<AssistantProviderEditPage> {
-  LlmProviderRepository get _repo => LlmProviderRepository.get();
+  LlmProviderRepository get _repo => .get();
 
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
@@ -29,7 +29,7 @@ class _AssistantProviderEditPageState
   final _apiKey = TextEditingController();
   final _model = TextEditingController();
 
-  AssistantProviderType _type = AssistantProviderType.openai;
+  AssistantProviderType _type = .openai;
   List<LlmModelPreset> _presetModels = const [];
   String? _apiKeyUrl;
   String _providerId = '';
@@ -142,7 +142,7 @@ class _AssistantProviderEditPageState
     final String id;
     final LlmProvider toSave;
     if (_isNew) {
-      toSave = LlmProvider.create(
+      toSave = .create(
         name: name,
         type: _type,
         baseUrl: baseUrl,
@@ -196,7 +196,7 @@ class _AssistantProviderEditPageState
     if (url == null) return;
     final uri = Uri.tryParse(url);
     if (uri != null) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      await launchUrl(uri, mode: .externalApplication);
     }
   }
 
@@ -208,9 +208,7 @@ class _AssistantProviderEditPageState
     final scheme = context.colorScheme;
     OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
       borderRadius: AppBorderRadius.mediumBorderRadius,
-      borderSide: width == 0
-          ? BorderSide.none
-          : BorderSide(color: color, width: width),
+      borderSide: width == 0 ? .none : BorderSide(color: color, width: width),
     );
     return InputDecoration(
       hintText: hint,
@@ -219,7 +217,7 @@ class _AssistantProviderEditPageState
       filled: true,
       fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      contentPadding: const .symmetric(vertical: 14, horizontal: 12),
       border: border(scheme.outline, 0),
       enabledBorder: border(scheme.outline, 0),
       focusedBorder: border(scheme.primary, 1.5),
@@ -238,7 +236,7 @@ class _AssistantProviderEditPageState
       isDense: true,
       border: const OutlineInputBorder(
         borderRadius: AppBorderRadius.mediumBorderRadius,
-        borderSide: BorderSide.none,
+        borderSide: .none,
       ),
     );
   }
@@ -263,7 +261,7 @@ class _AssistantProviderEditPageState
     final selected = _model.text.trim();
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         const SizedBox(height: 12),
         Row(
@@ -291,7 +289,7 @@ class _AssistantProviderEditPageState
         const SizedBox(height: 8),
         if (visible.isEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const .symmetric(vertical: 16),
             child: Center(
               child: Text(
                 l10n.modelProviderNoModelMatch,
@@ -315,12 +313,12 @@ class _AssistantProviderEditPageState
   Widget _buildCapabilities(AppLocalizations l10n) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         const SizedBox(height: 18),
         _SectionLabel(text: l10n.modelProviderCapabilities),
         Padding(
-          padding: const EdgeInsets.only(left: 4, top: 2, bottom: 2),
+          padding: const .only(left: 4, top: 2, bottom: 2),
           child: Text(
             l10n.modelProviderCapabilitiesHint,
             style: context.textTheme.bodySmall?.copyWith(
@@ -361,11 +359,11 @@ class _AssistantProviderEditPageState
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: const .only(right: 8),
             child: _saving
                 ? const Center(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      padding: .symmetric(horizontal: 12),
                       child: SizedBox(
                         width: 18,
                         height: 18,
@@ -383,18 +381,18 @@ class _AssistantProviderEditPageState
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
           : GestureDetector(
-              behavior: HitTestBehavior.translucent,
+              behavior: .translucent,
               onTap: () => FocusScope.of(context).unfocus(),
               child: Form(
                 key: _formKey,
                 child: ListView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const .all(16),
                   children: [
                     _LabeledField(
                       label: l10n.modelProviderName,
                       child: TextFormField(
                         controller: _name,
-                        textInputAction: TextInputAction.next,
+                        textInputAction: .next,
                         decoration: _fieldDecoration(
                           hint: l10n.modelProviderNameHint,
                           icon: LucideIcons.idCard,
@@ -411,7 +409,7 @@ class _AssistantProviderEditPageState
                         ignoring: locked,
                         child: TextFormField(
                           controller: _baseUrl,
-                          keyboardType: TextInputType.url,
+                          keyboardType: .url,
                           readOnly: locked,
                           enableInteractiveSelection: !locked,
                           decoration: _fieldDecoration(
@@ -449,7 +447,7 @@ class _AssistantProviderEditPageState
                     ),
                     if (_apiKeyUrl != null)
                       Align(
-                        alignment: Alignment.centerLeft,
+                        alignment: .centerLeft,
                         child: TextButton.icon(
                           onPressed: _openApiKeyUrl,
                           icon: const Icon(LucideIcons.externalLink, size: 18),
@@ -505,10 +503,10 @@ class _LabeledField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          padding: const .only(left: 4, bottom: 6),
           child: Text(
             label,
             style: context.textTheme.labelLarge?.copyWith(
@@ -551,34 +549,31 @@ class _ModelTile extends StatelessWidget {
     ];
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const .only(bottom: 8),
       child: Material(
         color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
         borderRadius: AppBorderRadius.mediumBorderRadius,
-        clipBehavior: Clip.antiAlias,
+        clipBehavior: .antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Stack(
             children: [
               // Stack 会缩到非定位子节点的尺寸；用满宽 SizedBox 撑开，卡片才占满整行宽度。
               SizedBox(
-                width: double.infinity,
+                width: .infinity,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
+                  padding: const .symmetric(horizontal: 12, vertical: 10),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: .start,
                     children: [
                       Padding(
                         // 常驻右侧留白（不随选中变化），给右上角选中标腾位，
                         // 避免选中后可用宽度变窄导致徽章从一行挤成两行。
-                        padding: const EdgeInsets.only(right: 22),
+                        padding: const .only(right: 22),
                         child: Text(
                           model.name,
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          overflow: .ellipsis,
                           style: context.textTheme.titleSmall,
                         ),
                       ),
@@ -625,7 +620,7 @@ class _CapabilitySwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return SwitchListTile.adaptive(
-      contentPadding: EdgeInsets.zero,
+      contentPadding: .zero,
       dense: true,
       secondary: Icon(icon, size: 20, color: scheme.onSurfaceVariant),
       title: Text(label, style: context.textTheme.bodyMedium),
@@ -645,13 +640,13 @@ class _Badge extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const .symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: .circular(6),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(icon, size: 13, color: scheme.onSurfaceVariant),
           const SizedBox(width: 4),

@@ -319,11 +319,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (always.contains(tool.id)) return true;
     if (!mounted) return false;
     final decision = await _permissions.request(tool);
-    if (decision == ToolPermissionDecision.allowAlways) {
+    if (decision == .allowAlways) {
       await MoodiaryKVs.assistantAlwaysAllowedTools.set([...always, tool.id]);
     }
-    return decision == ToolPermissionDecision.allowOnce ||
-        decision == ToolPermissionDecision.allowAlways;
+    return decision == .allowOnce || decision == .allowAlways;
   }
 
   Future<void> _insertPermissionCard(String surfaceId) async {
@@ -364,8 +363,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     // 用户开启了新一轮对话：放弃上一次失败重生成遗留的旧回复（保留在库里，不删）。
     _staleReplyIds = [];
 
-    if (_panelController.currentPanelType == ChatBottomPanelType.other) {
-      _panelController.updatePanelType(ChatBottomPanelType.none);
+    if (_panelController.currentPanelType == .other) {
+      _panelController.updatePanelType(.none);
     }
 
     final base = DateTime.timestamp();
@@ -423,7 +422,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       gen: gen,
       sessionSeedText: userMsg.text,
       userMessage: userMsg,
-      placeholderAt: DateTime.timestamp(),
+      placeholderAt: .timestamp(),
     );
   }
 
@@ -447,7 +446,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     );
     final volatilePrefix = buildVolatilePrompt(
       localeTag: localeTag,
-      nowLocal: DateTime.now(),
+      nowLocal: .now(),
       memories: [for (final m in memories) '(${m.category}) ${m.text}'],
     );
 
@@ -491,14 +490,14 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             (event) {
               if (gen != _generation) return;
               switch (event.kind) {
-                case AssistantStreamKind.text:
+                case .text:
                   _appendDelta(event.text);
-                case AssistantStreamKind.reasoning:
+                case .reasoning:
                   _appendReasoning(event.text);
-                case AssistantStreamKind.tool:
+                case .tool:
                   // 模型开始调用工具 → 思考阶段结束，冻结计时（不计入工具执行 / 授权等待）。
                   _freezeThinkingOnTool();
-                case AssistantStreamKind.usage:
+                case .usage:
                   _applyUsage(event.inputTokens, event.outputTokens);
               }
             },
@@ -565,14 +564,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final result = <AssistantMessage>[];
     if (start > 0 && summary != null && summary.isNotEmpty) {
       result
-        ..add(
-          AssistantMessage.user('[Summary of earlier conversation]\n$summary'),
-        )
-        ..add(
-          const AssistantMessage.assistant(
-            'Understood — I have the earlier context.',
-          ),
-        );
+        ..add(.user('[Summary of earlier conversation]\n$summary'))
+        ..add(const .assistant('Understood — I have the earlier context.'));
     }
 
     // 4. 合并相邻同角色纯文本；含图片的独立成条（避免图片被并进别的气泡）。
@@ -824,19 +817,16 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   }
 
   void _toggleToolPanel() {
-    if (_panelController.currentPanelType == ChatBottomPanelType.other) {
-      _panelController.updatePanelType(ChatBottomPanelType.keyboard);
+    if (_panelController.currentPanelType == .other) {
+      _panelController.updatePanelType(.keyboard);
     } else {
-      _panelController.updatePanelType(
-        ChatBottomPanelType.other,
-        data: _ToolPanel.tools,
-      );
+      _panelController.updatePanelType(.other, data: .tools);
     }
   }
 
   Future<void> _pickAndSendDiary() async {
     if (_sending) return;
-    _panelController.updatePanelType(ChatBottomPanelType.none);
+    _panelController.updatePanelType(.none);
     _inputFocusNode.unfocus();
     final diary = await const AssistantDiaryPickerRoute().push<Diary>(context);
     if (diary == null || !mounted) return;
@@ -846,7 +836,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   /// 相册选一张图，经 MediaManager 转码/压缩存进 image 目录，挂到输入框待发（可再配文字）。
   Future<void> _pickImage() async {
     if (_sending) return;
-    _panelController.updatePanelType(ChatBottomPanelType.none);
+    _panelController.updatePanelType(.none);
     _inputFocusNode.unfocus();
     final files = await IFilePicker.get().pickImages(context, maxAssets: 1);
     if (files.isEmpty || !mounted) return;
@@ -872,8 +862,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   /// 点击消息列表时收起键盘与工具面板（焦点从输入框移开）。
   void _dismissComposer() {
-    if (_panelController.currentPanelType == ChatBottomPanelType.other) {
-      _panelController.updatePanelType(ChatBottomPanelType.none);
+    if (_panelController.currentPanelType == .other) {
+      _panelController.updatePanelType(.none);
     }
     if (_inputFocusNode.hasFocus) _inputFocusNode.unfocus();
   }
@@ -883,7 +873,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       chatController: _chat,
       currentUserId: kAssistantUserId,
       resolveUser: (id) async => User(id: id),
-      theme: ChatTheme.fromThemeData(Theme.of(context)),
+      theme: .fromThemeData(Theme.of(context)),
       builders: Builders(
         textMessageBuilder: _buildTextMessage,
         customMessageBuilder: _buildCustomMessage,
@@ -982,7 +972,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         if (!_ready) _NotConfiguredBanner(onTap: _openSettings),
         Expanded(
           child: Listener(
-            behavior: HitTestBehavior.translucent,
+            behavior: .translucent,
             onPointerDown: (_) => _dismissComposer(),
             child: _buildChat(),
           ),
@@ -1007,9 +997,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+          padding: const .fromLTRB(20, 18, 20, 8),
           child: Align(
-            alignment: Alignment.topLeft,
+            alignment: .topLeft,
             child: Wrap(
               spacing: 16,
               runSpacing: 16,
@@ -1065,7 +1055,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               if (value == 'compact') unawaited(_compactNow());
             },
             child: const Padding(
-              padding: EdgeInsets.all(12),
+              padding: .all(12),
               child: Icon(LucideIcons.ellipsisVertical),
             ),
           ),
@@ -1105,17 +1095,17 @@ class _ContextUsagePill extends StatelessWidget {
           '$usedTokens / $contextLimit',
       child: Center(
         child: Container(
-          margin: const EdgeInsets.only(right: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          margin: const .only(right: 4),
+          padding: const .symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: .circular(12),
           ),
           child: Text(
             '$percent%',
             style: context.textTheme.labelSmall?.copyWith(
               color: color,
-              fontWeight: FontWeight.w600,
+              fontWeight: .w600,
             ),
           ),
         ),
@@ -1136,18 +1126,18 @@ class _CompactionNoticeChip extends StatelessWidget {
     final scheme = context.colorScheme;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const .symmetric(vertical: 8),
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: .circular(20),
           onTap: () => _showSheet(context),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const .symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: scheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: .circular(20),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: .min,
               children: [
                 Icon(
                   LucideIcons.foldVertical,
@@ -1224,15 +1214,15 @@ class _DisclaimerGate extends StatelessWidget {
     final l10n = context.l10n;
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const .all(32),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: .min,
           children: [
             Icon(LucideIcons.shield, size: 56, color: scheme.primary),
             const SizedBox(height: 16),
             Text(
               l10n.assistantDisclaimerGateTitle,
-              textAlign: TextAlign.center,
+              textAlign: .center,
               style: context.textTheme.titleMedium,
             ),
             const SizedBox(height: 20),
@@ -1261,7 +1251,7 @@ class _NotConfiguredBanner extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const .all(12),
           child: Row(
             children: [
               Icon(LucideIcons.triangleAlert, color: scheme.onErrorContainer),
@@ -1321,16 +1311,16 @@ class _AssistantComposer extends StatelessWidget {
         top: false,
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+          padding: const .fromLTRB(12, 6, 12, 8),
           child: Container(
             decoration: BoxDecoration(
               color: scheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: .circular(24),
             ),
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+            padding: const .fromLTRB(8, 8, 8, 8),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: .min,
+              crossAxisAlignment: .stretch,
               children: [
                 if (pendingImageName != null)
                   _ComposerImagePreview(
@@ -1339,17 +1329,17 @@ class _AssistantComposer extends StatelessWidget {
                   ),
                 // 文字输入区：独占上方，向上增高。
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
+                  padding: const .fromLTRB(8, 2, 8, 6),
                   child: TextField(
                     controller: controller,
                     focusNode: focusNode,
                     enabled: !sending,
                     minLines: 1,
                     maxLines: 6,
-                    textInputAction: TextInputAction.send,
+                    textInputAction: .send,
                     decoration: InputDecoration(
                       hintText: l10n.assistantInputHint,
-                      border: InputBorder.none,
+                      border: .none,
                       isCollapsed: true,
                     ),
                     onSubmitted: (_) => onSend(),
@@ -1369,12 +1359,12 @@ class _AssistantComposer extends StatelessWidget {
                       onPressed: sending ? null : onTool,
                       icon: Icon(toolIcon),
                       color: scheme.onSurfaceVariant,
-                      visualDensity: VisualDensity.compact,
+                      visualDensity: .compact,
                       constraints: const BoxConstraints(
                         minWidth: 38,
                         minHeight: 38,
                       ),
-                      padding: EdgeInsets.zero,
+                      padding: .zero,
                     ),
                     const SizedBox(width: 4),
                     ValueListenableBuilder<TextEditingValue>(
@@ -1385,12 +1375,12 @@ class _AssistantComposer extends StatelessWidget {
                             tooltip: l10n.assistantStop,
                             onPressed: onStop,
                             icon: const Icon(LucideIcons.square),
-                            visualDensity: VisualDensity.compact,
+                            visualDensity: .compact,
                             constraints: const BoxConstraints(
                               minWidth: 40,
                               minHeight: 40,
                             ),
-                            padding: EdgeInsets.zero,
+                            padding: .zero,
                           );
                         }
                         final canSend =
@@ -1399,12 +1389,12 @@ class _AssistantComposer extends StatelessWidget {
                         return IconButton.filled(
                           onPressed: canSend ? onSend : null,
                           icon: const Icon(LucideIcons.arrowUp),
-                          visualDensity: VisualDensity.compact,
+                          visualDensity: .compact,
                           constraints: const BoxConstraints(
                             minWidth: 40,
                             minHeight: 40,
                           ),
-                          padding: EdgeInsets.zero,
+                          padding: .zero,
                         );
                       },
                     ),
@@ -1433,13 +1423,13 @@ class _ThinkingToggle extends StatelessWidget {
     return Material(
       color: enabled ? scheme.secondaryContainer : scheme.surfaceContainerHigh,
       shape: const StadiumBorder(),
-      clipBehavior: Clip.antiAlias,
+      clipBehavior: .antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const .symmetric(horizontal: 12, vertical: 6),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: .min,
             children: [
               Icon(LucideIcons.brain, size: 16, color: fg),
               const SizedBox(width: 6),
@@ -1447,7 +1437,7 @@ class _ThinkingToggle extends StatelessWidget {
                 l10n.assistantThinkingToggle,
                 style: context.textTheme.labelMedium?.copyWith(
                   color: fg,
-                  fontWeight: enabled ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: enabled ? .w600 : .w400,
                 ),
               ),
             ],
@@ -1475,12 +1465,12 @@ class _ToolPanelItem extends StatelessWidget {
     return SizedBox(
       width: 64,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Material(
             color: scheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(18),
-            clipBehavior: Clip.antiAlias,
+            borderRadius: .circular(18),
+            clipBehavior: .antiAlias,
             child: InkWell(
               onTap: onTap,
               child: SizedBox(
@@ -1494,8 +1484,8 @@ class _ToolPanelItem extends StatelessWidget {
           Text(
             label,
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
+            overflow: .ellipsis,
+            textAlign: .center,
             style: context.textTheme.labelSmall?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
@@ -1520,19 +1510,19 @@ class _ComposerImagePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 2),
+      padding: const .fromLTRB(8, 6, 8, 2),
       child: Align(
-        alignment: Alignment.centerLeft,
+        alignment: .centerLeft,
         child: Stack(
-          clipBehavior: Clip.none,
+          clipBehavior: .none,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: .circular(12),
               child: Image.file(
                 File(AppFiles.getRealPath('image', imageName)),
                 width: 72,
                 height: 72,
-                fit: BoxFit.cover,
+                fit: .cover,
                 errorBuilder: (_, _, _) => _brokenImage(scheme, 72),
               ),
             ),
@@ -1544,13 +1534,10 @@ class _ComposerImagePreview extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: scheme.surfaceContainerHighest,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: scheme.surfaceContainer,
-                      width: 2,
-                    ),
+                    shape: .circle,
+                    border: .all(color: scheme.surfaceContainer, width: 2),
                   ),
-                  padding: const EdgeInsets.all(2),
+                  padding: const .all(2),
                   child: Icon(
                     LucideIcons.x,
                     size: 15,
@@ -1591,12 +1578,12 @@ class _UserBubble extends StatelessWidget {
     if (hasImage) {
       parts.add(
         ClipRRect(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: .circular(14),
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: 260),
             child: Image.file(
               File(AppFiles.getRealPath('image', imageName)),
-              fit: BoxFit.cover,
+              fit: .cover,
               errorBuilder: (_, _, _) => _brokenImage(scheme, 120),
             ),
           ),
@@ -1608,14 +1595,14 @@ class _UserBubble extends StatelessWidget {
       parts.add(
         Container(
           constraints: BoxConstraints(maxWidth: maxWidth),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const .symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: scheme.primaryContainer,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
-              bottomLeft: Radius.circular(16),
-              bottomRight: Radius.circular(4),
+            borderRadius: const .only(
+              topLeft: .circular(16),
+              topRight: .circular(16),
+              bottomLeft: .circular(16),
+              bottomRight: .circular(4),
             ),
           ),
           child: SelectableText(
@@ -1627,15 +1614,15 @@ class _UserBubble extends StatelessWidget {
     }
 
     final content = Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: .end,
+      mainAxisSize: .min,
       children: parts,
     );
 
     if (onRetry == null) return content;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: .end,
+      mainAxisSize: .min,
       children: [
         content,
         _BubbleActionButton(
@@ -1686,11 +1673,11 @@ class _AssistantBubble extends StatelessWidget {
 
     final decoration = BoxDecoration(
       color: scheme.surfaceContainerHighest,
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(16),
-        topRight: Radius.circular(16),
-        bottomLeft: Radius.circular(4),
-        bottomRight: Radius.circular(16),
+      borderRadius: const .only(
+        topLeft: .circular(16),
+        topRight: .circular(16),
+        bottomLeft: .circular(4),
+        bottomRight: .circular(16),
       ),
     );
     final constraints = BoxConstraints(
@@ -1702,7 +1689,7 @@ class _AssistantBubble extends StatelessWidget {
     if (hasText) {
       bubble = Container(
         constraints: constraints,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const .symmetric(horizontal: 14, vertical: 10),
         decoration: decoration,
         child: SelectionArea(
           child: GptMarkdown(text, style: TextStyle(color: scheme.onSurface)),
@@ -1711,7 +1698,7 @@ class _AssistantBubble extends StatelessWidget {
     } else if (!showThinking) {
       bubble = Container(
         constraints: constraints,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const .symmetric(horizontal: 14, vertical: 10),
         decoration: decoration,
         child: const SizedBox(
           width: 16,
@@ -1734,21 +1721,21 @@ class _AssistantBubble extends StatelessWidget {
     // 流式中或还没有正文：只堆叠思考块 + 气泡，不显示操作按钮。
     if (!hasText || streaming) {
       return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: .start,
+        mainAxisSize: .min,
         children: stacked,
       );
     }
 
     final hasTokens = inputTokens > 0 || outputTokens > 0;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: .start,
+      mainAxisSize: .min,
       children: [
         ...stacked,
         // 复制 / 重新回答，token 用量紧跟其右；用 Wrap，窄屏放不下时自动换行不溢出。
         Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
+          crossAxisAlignment: .center,
           children: [
             _BubbleActionButton(
               icon: LucideIcons.copy,
@@ -1766,13 +1753,13 @@ class _AssistantBubble extends StatelessWidget {
               ),
             if (hasTokens)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                padding: const .symmetric(horizontal: 6, vertical: 4),
                 child: DefaultTextStyle.merge(
                   style: context.textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisSize: .min,
                     children: [
                       Icon(
                         LucideIcons.arrowUp,
@@ -1835,12 +1822,12 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
         : l10n.assistantThoughtFor(_durationText());
 
     final header = InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: .circular(12),
       onTap: hasReasoning ? () => setState(() => _expanded = !_expanded) : null,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        padding: const .symmetric(horizontal: 10, vertical: 7),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: .min,
           children: [
             if (widget.active)
               SizedBox(
@@ -1858,7 +1845,7 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
               child: Text(
                 label,
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
                 style: context.textTheme.labelMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),
@@ -1878,22 +1865,22 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
     );
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
+      margin: const .only(bottom: 6),
       constraints: BoxConstraints(
         maxWidth: MediaQuery.sizeOf(context).width * 0.82,
       ),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: .circular(12),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: .start,
+        mainAxisSize: .min,
         children: [
           header,
           if (_expanded && hasReasoning)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              padding: const .fromLTRB(12, 0, 12, 10),
               child: SelectionArea(
                 child: GptMarkdown(
                   widget.reasoning,
@@ -1924,12 +1911,12 @@ class _BubbleActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return InkWell(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: .circular(8),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        padding: const .symmetric(horizontal: 6, vertical: 4),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: .min,
           children: [
             Icon(icon, size: 14, color: scheme.onSurfaceVariant),
             const SizedBox(width: 4),
@@ -1971,12 +1958,7 @@ class AssistantSessionListPage extends StatelessWidget {
             AssistantConversationRoute(sessionId: session.id).push(context),
         onDelete: (session) => ChatRepository.get().deleteSession(session.id),
         // 根壳开了 extendBody，底栏整条带高已折进 padding.bottom，直接读来让开。
-        padding: EdgeInsets.fromLTRB(
-          12,
-          8,
-          12,
-          8 + MediaQuery.paddingOf(context).bottom,
-        ),
+        padding: .fromLTRB(12, 8, 12, 8 + MediaQuery.paddingOf(context).bottom),
       ),
     );
   }
@@ -1995,7 +1977,7 @@ class _SessionListView extends StatefulWidget {
     required this.currentId,
     required this.onSelect,
     required this.onDelete,
-    this.padding = const EdgeInsets.symmetric(horizontal: 12),
+    this.padding = const .symmetric(horizontal: 12),
   });
 
   @override
@@ -2053,7 +2035,7 @@ class _EmptySessions extends StatelessWidget {
     final scheme = context.colorScheme;
     return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(
             LucideIcons.messagesSquare,
@@ -2104,12 +2086,12 @@ class _SessionCard extends StatelessWidget {
     final l10n = context.l10n;
     final onColor = selected ? scheme.onSecondaryContainer : scheme.onSurface;
     return Card.filled(
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: const .symmetric(vertical: 4),
       color: selected ? scheme.secondaryContainer : scheme.surfaceContainerLow,
-      clipBehavior: Clip.antiAlias,
+      clipBehavior: .antiAlias,
       child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+        contentPadding: const .fromLTRB(12, 4, 4, 4),
         leading: Container(
           width: 44,
           height: 44,
@@ -2117,7 +2099,7 @@ class _SessionCard extends StatelessWidget {
             color: selected
                 ? scheme.onSecondaryContainer.withValues(alpha: 0.12)
                 : scheme.primaryContainer,
-            shape: BoxShape.circle,
+            shape: .circle,
           ),
           child: Icon(
             LucideIcons.messagesSquare,
@@ -2128,7 +2110,7 @@ class _SessionCard extends StatelessWidget {
         title: Text(
           session.title,
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          overflow: .ellipsis,
           style: context.textTheme.titleSmall?.copyWith(color: onColor),
         ),
         subtitle: Text(
@@ -2151,7 +2133,7 @@ class _SessionCard extends StatelessWidget {
             ),
           ],
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const .all(12),
             child: Icon(
               LucideIcons.ellipsisVertical,
               color: scheme.onSurfaceVariant,

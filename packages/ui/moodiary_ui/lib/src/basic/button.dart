@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -24,10 +22,10 @@ class FrostedGlassButton extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        clipBehavior: Clip.hardEdge,
+        clipBehavior: .hardEdge,
         decoration: const ShapeDecoration(shape: CircleBorder()),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: .blur(sigmaX: 10, sigmaY: 10),
           child: Center(child: child),
         ),
       ),
@@ -53,7 +51,7 @@ class MultiFabLayoutDelegate extends MultiChildLayoutDelegate {
     if (hasChild(0)) {
       final mainButtonSize = layoutChild(
         0,
-        BoxConstraints.loose(const Size(mainButtonHeight, mainButtonHeight)),
+        .loose(const Size(mainButtonHeight, mainButtonHeight)),
       );
       positionChild(
         0,

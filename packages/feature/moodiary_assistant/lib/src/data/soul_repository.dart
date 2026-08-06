@@ -10,7 +10,7 @@ class SoulRepository {
 
   factory SoulRepository.get() => _instance;
 
-  static final SoulRepository _instance = SoulRepository._();
+  static final SoulRepository _instance = ._();
 
   String get _path => AppFiles.getRealPath('assistant', 'SOUL.md');
 

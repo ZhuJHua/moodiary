@@ -11,7 +11,7 @@ class EenBadgePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = const Color(0xffc03546)
-      ..style = PaintingStyle.fill;
+      ..style = .fill;
 
     final double diagonal = size.width * sqrt(2);
     final double height = size.height / 3;
@@ -34,11 +34,11 @@ class EenBadgePainter extends CustomPainter {
         text: envMode,
         style: const TextStyle(
           color: Colors.white,
-          fontWeight: FontWeight.bold,
+          fontWeight: .bold,
           fontSize: 12,
         ),
       ),
-      textDirection: TextDirection.ltr,
+      textDirection: .ltr,
     );
     textPainter.layout();
 

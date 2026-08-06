@@ -20,7 +20,7 @@ Widget wrap({
   ProviderContainer? container,
 }) => ProviderScope(
   overrides: [
-    orderedCategoriesProvider.overrideWithValue(AsyncValue.data(categories)),
+    orderedCategoriesProvider.overrideWithValue(.data(categories)),
     categoryDiaryCountsProvider.overrideWith(
       (ref) async => (byCategory: byCategory, total: total),
     ),
@@ -86,7 +86,7 @@ void main() {
     await t.pumpWidget(
       ProviderScope(
         overrides: [
-          orderedCategoriesProvider.overrideWithValue(AsyncValue.data(three)),
+          orderedCategoriesProvider.overrideWithValue(.data(three)),
           categoryDiaryCountsProvider.overrideWith(
             (ref) async => (byCategory: const {'tr': 2}, total: 8),
           ),
@@ -142,7 +142,7 @@ void main() {
     await t.pumpWidget(
       ProviderScope(
         overrides: [
-          orderedCategoriesProvider.overrideWithValue(AsyncValue.data(three)),
+          orderedCategoriesProvider.overrideWithValue(.data(three)),
           categoryDiaryCountsProvider.overrideWith(
             (ref) async => (byCategory: const {'tr': 2}, total: 8),
           ),
@@ -181,7 +181,7 @@ void main() {
     await t.pumpWidget(
       ProviderScope(
         overrides: [
-          orderedCategoriesProvider.overrideWithValue(AsyncValue.data(three)),
+          orderedCategoriesProvider.overrideWithValue(.data(three)),
           categoryDiaryCountsProvider.overrideWith(
             (ref) =>
                 Completer<({Map<String, int> byCategory, int total})>().future,

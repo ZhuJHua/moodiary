@@ -5,9 +5,9 @@ void main() {
   group('SyncEvent', () {
     test('round-trips through toJson/fromJson', () {
       final event = SyncEvent(
-        at: DateTime.utc(2026, 6, 10, 12, 30),
-        level: SyncEventLevel.warn,
-        kind: SyncEventKind.diaryUpload,
+        at: .utc(2026, 6, 10, 12, 30),
+        level: .warn,
+        kind: .diaryUpload,
         message: 'hi',
         payload: {'diaryId': 'x', 'bytes': 12},
       );
@@ -21,8 +21,8 @@ void main() {
 
     test('omits empty payload in json', () {
       final json = SyncEvent.now(
-        level: SyncEventLevel.info,
-        kind: SyncEventKind.syncStart,
+        level: .info,
+        kind: .syncStart,
         message: 'm',
       ).toJson();
       expect(json.containsKey('payload'), isFalse);

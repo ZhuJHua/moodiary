@@ -61,33 +61,30 @@ class GraphInfoCard extends StatelessWidget {
           shadows: const [],
           borderColor: cs.outlineVariant.withValues(alpha: 0.45),
           child: Material(
-            type: MaterialType.transparency,
+            type: .transparency,
             child: InkWell(
               onTap: onOpen,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(14, 11, 4, 11),
+                padding: const .fromLTRB(14, 11, 4, 11),
                 child: Row(
                   children: [
                     Container(
                       width: 11,
                       height: 11,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: BoxDecoration(color: accent, shape: .circle),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: .start,
+                        mainAxisSize: .min,
                         children: [
                           Text(
                             title,
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            overflow: .ellipsis,
                             style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
+                              fontWeight: .w600,
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -97,7 +94,7 @@ class GraphInfoCard extends StatelessWidget {
                                 child: Text(
                                   TimeFormat.longDate(node.time),
                                   maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  overflow: .ellipsis,
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: cs.onSurfaceVariant,
                                   ),
@@ -128,7 +125,7 @@ class GraphInfoCard extends StatelessWidget {
                       IconButton(
                         tooltip: l10n.graphSetAsCenter,
                         iconSize: 20,
-                        visualDensity: VisualDensity.compact,
+                        visualDensity: .compact,
                         icon: Icon(
                           LucideIcons.crosshair,
                           color: cs.onSurfaceVariant,
@@ -142,7 +139,7 @@ class GraphInfoCard extends StatelessWidget {
                           context,
                         ).closeButtonTooltip,
                         iconSize: 20,
-                        visualDensity: VisualDensity.compact,
+                        visualDensity: .compact,
                         icon: Icon(LucideIcons.x, color: cs.onSurfaceVariant),
                         onPressed: onClose,
                       )
@@ -174,13 +171,13 @@ class _LinkChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1),
+      padding: const .symmetric(horizontal: 7, vertical: 1),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: .circular(9),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(icon, size: 11, color: color),
           const SizedBox(width: 3),

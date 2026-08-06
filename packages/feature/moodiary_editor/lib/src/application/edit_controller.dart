@@ -14,7 +14,7 @@ enum DraftSaveResult { saved, failed }
 /// 空白不创建，有内容才 insert，写了又清空则丢弃。
 @riverpod
 class EditController extends _$EditController {
-  DiaryRepository get _repository => DiaryRepository.get();
+  DiaryRepository get _repository => .get();
 
   /// 是否已落库：false → 首次保存走 insert，之后 update。
   bool _persisted = false;
@@ -186,10 +186,10 @@ class EditController extends _$EditController {
 
   Future<DraftSaveResult> _doAutoSave() async {
     final current = _latest;
-    if (current == null) return DraftSaveResult.saved;
+    if (current == null) return .saved;
     final media = DiaryContent.of(current).media;
     final next = current.copyWith(
-      lastModified: DateTime.timestamp(),
+      lastModified: .timestamp(),
       imageName: media.images,
       videoName: media.videos,
       audioName: media.audios,
@@ -205,11 +205,11 @@ class EditController extends _$EditController {
         _indexedTitle = next.title;
         _latest = next;
         if (ref.mounted) {
-          state = AsyncValue.data(next);
+          state = .data(next);
         }
-        return DraftSaveResult.saved;
+        return .saved;
       } catch (_) {
-        return DraftSaveResult.failed;
+        return .failed;
       }
     }
     // 内容与标题都未变（仅元数据/媒体）→ skip：倒排索引仍有效，连入队都免；
@@ -231,11 +231,11 @@ class EditController extends _$EditController {
       _latest = next;
       // dispose 后 notifier 已销毁，set state 会抛 "use notifier after dispose"。
       if (ref.mounted) {
-        state = AsyncValue.data(next);
+        state = .data(next);
       }
-      return DraftSaveResult.saved;
+      return .saved;
     } catch (_) {
-      return DraftSaveResult.failed;
+      return .failed;
     }
   }
 

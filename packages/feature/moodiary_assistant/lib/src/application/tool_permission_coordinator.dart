@@ -70,7 +70,7 @@ class ToolPermissionCoordinator {
         ],
       ),
     );
-    _setStatus(surfaceId, ToolPermissionStatus.pending);
+    _setStatus(surfaceId, .pending);
 
     final completer = Completer<ToolPermissionDecision>();
     _pending[surfaceId] = completer;
@@ -98,7 +98,7 @@ class ToolPermissionCoordinator {
 
   void cancelPending() {
     for (final entry in _pending.entries) {
-      _setStatus(entry.key, ToolPermissionStatus.canceled);
+      _setStatus(entry.key, .canceled);
       entry.value.complete(ToolPermissionDecision.canceled);
     }
     _pending.clear();

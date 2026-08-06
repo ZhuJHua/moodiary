@@ -22,22 +22,22 @@ class AssistantStreamEvent {
   });
 
   const AssistantStreamEvent.text(this.text)
-    : kind = AssistantStreamKind.text,
+    : kind = .text,
       inputTokens = 0,
       outputTokens = 0;
 
   const AssistantStreamEvent.reasoning(this.text)
-    : kind = AssistantStreamKind.reasoning,
+    : kind = .reasoning,
       inputTokens = 0,
       outputTokens = 0;
 
   const AssistantStreamEvent.tool(this.text)
-    : kind = AssistantStreamKind.tool,
+    : kind = .tool,
       inputTokens = 0,
       outputTokens = 0;
 
   const AssistantStreamEvent.usage(this.inputTokens, this.outputTokens)
-    : kind = AssistantStreamKind.usage,
+    : kind = .usage,
       text = '';
 }
 
@@ -52,11 +52,10 @@ class AssistantMessage {
 
   const AssistantMessage(this.role, this.content, {this.imagePath});
 
-  const AssistantMessage.user(this.content, {this.imagePath})
-    : role = AssistantRole.user;
+  const AssistantMessage.user(this.content, {this.imagePath}) : role = .user;
 
   const AssistantMessage.assistant(this.content)
-    : role = AssistantRole.assistant,
+    : role = .assistant,
       imagePath = null;
 }
 

@@ -118,7 +118,7 @@ class _MoodiaryFieldState extends State<MoodiaryField> {
     OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
       borderRadius: AppBorderRadius.mediumBorderRadius,
       borderSide: color == Colors.transparent
-          ? BorderSide.none
+          ? .none
           : BorderSide(color: color, width: width),
     );
 
@@ -147,10 +147,7 @@ class _MoodiaryFieldState extends State<MoodiaryField> {
         constraints: multiline
             ? null
             : BoxConstraints(minHeight: widget.minHeight),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 13,
-        ),
+        contentPadding: const .symmetric(horizontal: 16, vertical: 13),
         suffixIcon: _buildTrailing(scheme),
         border: border(Colors.transparent, 0),
         enabledBorder: border(Colors.transparent, 0),
@@ -167,7 +164,7 @@ class _MoodiaryFieldState extends State<MoodiaryField> {
       mainAxisSize: .min,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          padding: const .only(left: 4, bottom: 6),
           child: Text(
             widget.label!,
             style: context.textTheme.labelMedium?.copyWith(
@@ -191,7 +188,7 @@ class MoodiaryFormSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 4, top: 4),
+      padding: const .only(left: 4, top: 4),
       child: Text(
         label,
         style: context.textTheme.labelMedium?.copyWith(
@@ -228,7 +225,7 @@ class MoodiarySwitchField extends StatelessWidget {
       child: InkWell(
         onTap: onChanged == null ? null : () => onChanged!(!value),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 6, 10, 6),
+          padding: const .fromLTRB(16, 6, 10, 6),
           child: Row(
             children: [
               Expanded(

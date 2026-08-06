@@ -30,11 +30,7 @@ Moodiary 是一款离线优先的日记应用，您的内容默认仅保存在�
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('隐私政策')),
-      body: const Markdown(
-        data: _text,
-        selectable: true,
-        padding: EdgeInsets.all(16),
-      ),
+      body: const Markdown(data: _text, selectable: true, padding: .all(16)),
     );
   }
 }

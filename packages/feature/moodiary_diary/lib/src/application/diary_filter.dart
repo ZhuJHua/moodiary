@@ -43,11 +43,11 @@ class DiaryFilter {
 /// 同一棵 State 树里，所以这个状态必须提到 provider 上，不能留在首页的 State 字段里。
 class DiaryFilterNotifier extends Notifier<DiaryFilter> {
   @override
-  DiaryFilter build() => const DiaryFilter.all();
+  DiaryFilter build() => const .all();
 
   void select(DiaryFilter filter) => state = filter;
 
-  void reset() => state = const DiaryFilter.all();
+  void reset() => state = const .all();
 }
 
 final homeDiaryFilterProvider =

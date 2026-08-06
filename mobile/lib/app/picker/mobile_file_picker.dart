@@ -17,12 +17,12 @@ import 'package:wechat_camera_picker/wechat_camera_picker.dart';
 class MobileFilePicker implements IFilePicker {
   @override
   Future<List<XFile>> pickImages(BuildContext context, {int maxAssets = 9}) {
-    return _pickAssets(context, RequestType.image, maxAssets: maxAssets);
+    return _pickAssets(context, .image, maxAssets: maxAssets);
   }
 
   @override
   Future<XFile?> pickVideo(BuildContext context) async {
-    final files = await _pickAssets(context, RequestType.video, maxAssets: 1);
+    final files = await _pickAssets(context, .video, maxAssets: 1);
     return files.isEmpty ? null : files.first;
   }
 
@@ -40,14 +40,14 @@ class MobileFilePicker implements IFilePicker {
 
   @override
   Future<XFile?> pickAudio() async {
-    final res = await fp.FilePicker.pickFile(type: fp.FileType.audio);
+    final res = await fp.FilePicker.pickFile(type: .audio);
     return res?.xFile;
   }
 
   @override
   Future<XFile?> pickFile({List<String>? allowedExtensions}) async {
     final res = await fp.FilePicker.pickFile(
-      type: allowedExtensions == null ? fp.FileType.any : fp.FileType.custom,
+      type: allowedExtensions == null ? .any : .custom,
       allowedExtensions: allowedExtensions,
     );
     return res?.xFile;
@@ -63,7 +63,7 @@ class MobileFilePicker implements IFilePicker {
     final cs = theme.colorScheme;
     final base = AssetPicker.themeData(
       cs.primary,
-      light: theme.brightness == Brightness.light,
+      light: theme.brightness == .light,
     );
     return base.copyWith(
       colorScheme: cs.copyWith(secondary: cs.primary),
@@ -181,7 +181,7 @@ class MobileFilePicker implements IFilePicker {
   /// JPEG（q95，照片无 alpha 顾虑），下游管线从此见不到 HEIC。转换失败回落
   /// originFile（走 MediaManager 的旧 HEIC 兜底路径）。
   Future<XFile?> _assetToXFile(AssetEntity asset) async {
-    if (asset.type == AssetType.image && await _isHeif(asset)) {
+    if (asset.type == .image && await _isHeif(asset)) {
       final converted = await _heifToJpeg(asset);
       if (converted != null) return converted;
     }

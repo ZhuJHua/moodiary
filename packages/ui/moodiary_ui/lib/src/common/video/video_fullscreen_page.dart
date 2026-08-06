@@ -68,7 +68,7 @@ class MoodiaryVideoPlayerPage extends StatefulWidget {
     required this.videoPath,
     this.coverPath,
     this.initialAspect,
-    this.startAt = Duration.zero,
+    this.startAt = .zero,
     this.onExitAt,
     this.surfaceBuilder = defaultVideoSurfaceBuilder,
   });
@@ -98,7 +98,7 @@ class MoodiaryVideoPlayerPage extends StatefulWidget {
     required String videoPath,
     String? coverPath,
     double? initialAspect,
-    Duration startAt = Duration.zero,
+    Duration startAt = .zero,
     ValueChanged<Duration>? onExitAt,
   }) {
     return Navigator.of(context, rootNavigator: true).push(
@@ -132,7 +132,7 @@ class MoodiaryVideoPlayerPage extends StatefulWidget {
   static Future<void> showByName(
     BuildContext context, {
     required String name,
-    Duration startAt = Duration.zero,
+    Duration startAt = .zero,
     ValueChanged<Duration>? onExitAt,
   }) async {
     if (_opening) return;
@@ -230,7 +230,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
   void initState() {
     super.initState();
     _player = MoodiaryVideoPlaybackController(
-      source: VideoSource.file(widget.videoPath),
+      source: .file(widget.videoPath),
       portFactory: videoPlayerPortFactory,
       initialAspect: widget.initialAspect,
       // 不自动播：转场与旋转都结束后才开播。否则画面/声音在旋转期间就起来了，
@@ -258,12 +258,12 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     if (_routeHooked) return;
     _routeHooked = true;
     final anim = ModalRoute.of(context)?.animation;
-    if (anim == null || anim.status == AnimationStatus.completed) {
+    if (anim == null || anim.status == .completed) {
       _openEntryGate();
       return;
     }
     void onStatus(AnimationStatus s) {
-      if (s != AnimationStatus.completed) return;
+      if (s != .completed) return;
       anim.removeStatusListener(onStatus);
       _openEntryGate();
     }
@@ -331,7 +331,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
   void _lockOrientation(List<DeviceOrientation> want) {
     if (_releaseOrientation != null) return;
     // 平板 / 折叠屏展开态放开四向，锁与等待都不成立 —— 整套编排跳过。
-    if (currentOrientationPolicy() != DeviceOrientationPolicy.portraitOnly) {
+    if (currentOrientationPolicy() != .portraitOnly) {
       _onStageReady();
       return;
     }
@@ -464,7 +464,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     _releaseOrientation = null;
     // 没真的下发方向请求（嵌套计数未归零），等下去只会吃满超时。
     if (restored && _lockedTo != null) {
-      await _awaitOrientation(const [DeviceOrientation.portraitUp]);
+      await _awaitOrientation(const [.portraitUp]);
     }
     // 系统栏留到最后一刻才放回来：整段退场编排（转回竖屏）都还是沉浸的，
     // 不会在转的过程中先把状态栏亮出来。
@@ -521,7 +521,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
   Duration? _scrubBase;
 
   /// 起手位置，用来算 HUD 上那行 delta。[_scrubBase] 会随手指累加，不能拿它当基准。
-  Duration _scrubOrigin = Duration.zero;
+  Duration _scrubOrigin = .zero;
 
   void _onHorizontalStart(DragStartDetails d) {
     if (!_inScrubZone(d.localPosition)) return;
@@ -664,8 +664,8 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
             final aspect = geo.naturalAspect;
             final image = Image.file(
               File(cover),
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.low,
+              fit: .contain,
+              filterQuality: .low,
               errorBuilder: (_, _, _) => const SizedBox.shrink(),
             );
             return Center(
@@ -726,15 +726,15 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
     final barHeight = size.width > size.height ? 78.0 : 104.0;
     return Container(
       height: barHeight + inset.bottom,
-      padding: EdgeInsets.only(
+      padding: .only(
         left: 8 + inset.left,
         right: 12 + inset.right,
         bottom: inset.bottom,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
+          begin: .bottomCenter,
+          end: .topCenter,
           stops: [0, 0.26, 0.52, 0.76, 1],
           colors: [
             Color(0x94000000),
@@ -847,7 +847,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
       builder: (context, state, _) => switch (state) {
         VideoError(:final canRetry) => Center(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: .min,
             children: [
               const Icon(
                 LucideIcons.circleAlert,
@@ -924,12 +924,12 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
           child: Transform.translate(offset: Offset(0, dragY), child: child),
         ),
         child: Stack(
-          fit: StackFit.expand,
+          fit: .expand,
           children: [
             _buildSurface(),
             _buildPoster(),
             GestureDetector(
-              behavior: HitTestBehavior.opaque,
+              behavior: .opaque,
               onTapUp: _onTapUp,
               onDoubleTap: _onDoubleTap,
               onLongPressStart: _onLongPressStart,
@@ -983,20 +983,18 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
             builder: (context, hud, _) {
               if (hud == null) return const SizedBox.shrink();
               return Align(
-                alignment: Alignment.bottomCenter,
+                alignment: .bottomCenter,
                 child: Padding(
                   // 压在系统手势条 / home indicator 底下就看不见了，抬到安全区之上。
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.paddingOf(context).bottom,
-                  ),
+                  padding: .only(bottom: MediaQuery.paddingOf(context).bottom),
                   child: SizedBox(
                     // 必须显式铺满：Align 给的是松约束，不写宽度这条轨会缩成 0。
-                    width: double.infinity,
+                    width: .infinity,
                     height: 2,
                     child: DecoratedBox(
                       decoration: const BoxDecoration(color: Color(0x1FFFFFFF)),
                       child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
+                        alignment: .centerLeft,
                         widthFactor: hud.duration > Duration.zero
                             ? (hud.position.inMilliseconds /
                                       hud.duration.inMilliseconds)
@@ -1029,13 +1027,11 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
           // Align 必须在最外层：AnimatedSlide 的 offset 是按**自身尺寸**的比例算的，
           // 套在铺满全屏的 Align 外面，一个 0.6 就是往上飞半个屏幕。
           return Align(
-            alignment: Alignment.topCenter,
+            alignment: .topCenter,
             child: Padding(
-              padding: EdgeInsets.only(
-                top: MediaQuery.paddingOf(context).top + 14,
-              ),
+              padding: .only(top: MediaQuery.paddingOf(context).top + 14),
               child: AnimatedSlide(
-                offset: visible ? Offset.zero : const Offset(0, -0.6),
+                offset: visible ? .zero : const Offset(0, -0.6),
                 duration: Durations.short3,
                 curve: Curves.easeOutCubic,
                 child: AnimatedOpacity(
@@ -1044,16 +1040,13 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: const Color(0xB80C0C0E),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0x1FFFFFFF),
-                        width: 0.5,
-                      ),
+                      borderRadius: .circular(16),
+                      border: .all(color: const Color(0x1FFFFFFF), width: 0.5),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 8, 16, 8),
+                      padding: const .fromLTRB(14, 8, 16, 8),
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisSize: .min,
                         children: [
                           const Icon(
                             LucideIcons.fastForward,
@@ -1068,7 +1061,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: .w600,
                             ),
                           ),
                         ],
@@ -1195,7 +1188,7 @@ class _ScrubBarState extends State<_ScrubBar>
   Widget build(BuildContext context) {
     final dpr = MediaQuery.devicePixelRatioOf(context);
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+      behavior: .opaque,
       onTapDown: (d) => _begin(d.localPosition.dx),
       onTapUp: (_) => _finish(),
       onTapCancel: _finish,
@@ -1218,7 +1211,7 @@ class _ScrubBarState extends State<_ScrubBar>
         ),
         child: RepaintBoundary(
           child: CustomPaint(
-            size: const Size(double.infinity, _kRowHeight),
+            size: const Size(.infinity, _kRowHeight),
             painter: _ScrubPainter(
               progress: widget.progress,
               press: _pressed,
@@ -1238,7 +1231,7 @@ class _ScrubPainter extends CustomPainter {
     required this.press,
     required this.accent,
     required this.dpr,
-  }) : super(repaint: Listenable.merge([progress, press]));
+  }) : super(repaint: .merge([progress, press]));
 
   final ValueListenable<VideoProgress> progress;
   final Animation<double> press;
@@ -1277,7 +1270,7 @@ class _ScrubPainter extends CustomPainter {
     if (f > 0) {
       final right = math.max(size.width * f, h);
       canvas.drawRRect(
-        RRect.fromLTRBR(0, top, right, top + h, radius),
+        .fromLTRBR(0, top, right, top + h, radius),
         Paint()..color = accent,
       );
     }
@@ -1317,8 +1310,8 @@ class _TimeCode extends StatelessWidget {
             minWidth: p.duration.inHours >= 1 ? 128 : 92,
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: .min,
+            mainAxisAlignment: .end,
             children: [
               AnimatedDefaultTextStyle(
                 duration: Durations.short3,
@@ -1326,8 +1319,8 @@ class _TimeCode extends StatelessWidget {
                   // 刮擦中把已播时间染成强调色：手指在动的是它，不是总长。
                   color: p.draft ? accent : Colors.white,
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+                  fontWeight: .w600,
+                  fontFeatures: const [.tabularFigures()],
                   shadows: _kShadow,
                 ),
                 child: Text(TimeFormat.mediaDuration(p.position)),
@@ -1338,7 +1331,7 @@ class _TimeCode extends StatelessWidget {
                   style: TextStyle(
                     color: Color(0x4DFFFFFF),
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: .w500,
                     shadows: _kShadow,
                   ),
                 ),
@@ -1347,8 +1340,8 @@ class _TimeCode extends StatelessWidget {
                   style: const TextStyle(
                     color: Color(0x9EFFFFFF),
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    fontFeatures: [FontFeature.tabularFigures()],
+                    fontWeight: .w500,
+                    fontFeatures: [.tabularFigures()],
                     shadows: _kShadow,
                   ),
                 ),
@@ -1390,12 +1383,12 @@ class _ScrubHudCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0x9E0E0E10),
             borderRadius: AppBorderRadius.mediumBorderRadius,
-            border: Border.all(color: const Color(0x1FFFFFFF), width: 0.5),
+            border: .all(color: const Color(0x1FFFFFFF), width: 0.5),
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 9, 16, 10),
+            padding: const .fromLTRB(16, 9, 16, 10),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: .min,
               children: [
                 if (delta != null)
                   Text(
@@ -1403,23 +1396,23 @@ class _ScrubHudCard extends StatelessWidget {
                     style: TextStyle(
                       color: accent,
                       fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                      fontWeight: .w600,
+                      fontFeatures: const [.tabularFigures()],
                     ),
                   ),
                 const SizedBox(height: 3),
                 Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+                  mainAxisSize: .min,
+                  crossAxisAlignment: .baseline,
+                  textBaseline: .alphabetic,
                   children: [
                     Text(
                       TimeFormat.mediaDuration(hud.position),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                        fontWeight: .w600,
+                        fontFeatures: [.tabularFigures()],
                       ),
                     ),
                     if (hud.duration > Duration.zero) ...[
@@ -1429,8 +1422,8 @@ class _ScrubHudCard extends StatelessWidget {
                         style: const TextStyle(
                           color: Color(0x9EFFFFFF),
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          fontFeatures: [FontFeature.tabularFigures()],
+                          fontWeight: .w500,
+                          fontFeatures: [.tabularFigures()],
                         ),
                       ),
                     ],
@@ -1466,14 +1459,12 @@ class _AmbientBar extends StatelessWidget {
   static const _kHeight = 40.0;
   static const _kTrackWidth = 132.0;
   static const _kTrackHeight = 4.0;
-  static const _kTrackRadius = BorderRadius.all(
-    Radius.circular(_kTrackHeight / 2),
-  );
+  static const _kTrackRadius = BorderRadius.all(.circular(_kTrackHeight / 2));
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final isBrightness = level.channel == VideoAmbientChannel.brightness;
+    final isBrightness = level.channel == .brightness;
     final value = level.value.clamp(0.0, 1.0);
     final label = isBrightness
         ? l10n.videoPlayerBrightness
@@ -1489,11 +1480,11 @@ class _AmbientBar extends StatelessWidget {
           value: '${(value * 100).round()}%',
           child: Container(
             height: _kHeight,
-            padding: const EdgeInsets.only(left: 16, right: 18),
+            padding: const .only(left: 16, right: 18),
             decoration: BoxDecoration(
               color: const Color(0xB80C0C0E),
-              borderRadius: BorderRadius.circular(_kHeight / 2),
-              border: Border.all(color: const Color(0x1FFFFFFF), width: 0.5),
+              borderRadius: .circular(_kHeight / 2),
+              border: .all(color: const Color(0x1FFFFFFF), width: 0.5),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x59000000),
@@ -1503,7 +1494,7 @@ class _AmbientBar extends StatelessWidget {
               ],
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: .min,
               children: [
                 Icon(
                   _iconFor(isBrightness, value),
@@ -1520,7 +1511,7 @@ class _AmbientBar extends StatelessWidget {
                       borderRadius: _kTrackRadius,
                     ),
                     child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
+                      alignment: .centerLeft,
                       // 跟手的量不做隐式动画，做了手感立刻发黏。
                       widthFactor: value,
                       child: const DecoratedBox(
@@ -1537,12 +1528,12 @@ class _AmbientBar extends StatelessWidget {
                   width: 26,
                   child: Text(
                     '${(value * 100).round()}',
-                    textAlign: TextAlign.right,
+                    textAlign: .right,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: [FontFeature.tabularFigures()],
+                      fontWeight: .w600,
+                      fontFeatures: [.tabularFigures()],
                     ),
                   ),
                 ),
@@ -1604,7 +1595,7 @@ class _RoundIcon extends StatelessWidget {
             child: Center(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
+                  shape: .circle,
                   color: filled ? Colors.black38 : Colors.transparent,
                 ),
                 child: SizedBox(

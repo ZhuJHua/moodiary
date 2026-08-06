@@ -28,31 +28,28 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
   late int _sort = MoodiaryKVs.homeSortMode.get() ?? DiarySort.timeDesc.number;
 
   /// 时间线是按记录时间叙事的轴，只给两种时间序；「最近修改在前」留给信息流。
-  static const List<DiarySort> _timelineSorts = [
-    DiarySort.timeDesc,
-    DiarySort.timeAsc,
-  ];
+  static const List<DiarySort> _timelineSorts = [.timeDesc, .timeAsc];
 
   List<DiarySort> get _availableSorts =>
-      ViewModeType.getType(_mode) == ViewModeType.timeline
+      ViewModeType.getType(_mode) == .timeline
       ? _timelineSorts
       : DiarySort.values;
 
   String _label(BuildContext context, ViewModeType type) => switch (type) {
-    ViewModeType.timeline => context.l10n.diaryViewModeTimeline,
-    ViewModeType.feed => context.l10n.diaryViewModeFeed,
+    .timeline => context.l10n.diaryViewModeTimeline,
+    .feed => context.l10n.diaryViewModeFeed,
   };
 
   String _sortLabel(BuildContext context, DiarySort sort) => switch (sort) {
-    DiarySort.timeDesc => context.l10n.diarySortNewestFirst,
-    DiarySort.timeAsc => context.l10n.diarySortOldestFirst,
-    DiarySort.lastModifiedDesc => context.l10n.diarySortModifiedFirst,
+    .timeDesc => context.l10n.diarySortNewestFirst,
+    .timeAsc => context.l10n.diarySortOldestFirst,
+    .lastModifiedDesc => context.l10n.diarySortModifiedFirst,
   };
 
   IconData _sortIcon(DiarySort sort) => switch (sort) {
-    DiarySort.timeDesc => LucideIcons.arrowDown,
-    DiarySort.timeAsc => LucideIcons.arrowUp,
-    DiarySort.lastModifiedDesc => LucideIcons.calendarClock,
+    .timeDesc => LucideIcons.arrowDown,
+    .timeAsc => LucideIcons.arrowUp,
+    .lastModifiedDesc => LucideIcons.calendarClock,
   };
 
   /// 停在当前模式选不到的排序上就退回默认的「最新在前」。两处都要做：切模式时，
@@ -102,7 +99,7 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
           if (showModes) ...[
             SegmentedButton<ViewModeType>(
               showSelectedIcon: false,
-              selected: {ViewModeType.getType(_mode)},
+              selected: {.getType(_mode)},
               segments: [
                 for (final type in ViewModeType.values)
                   ButtonSegment(

@@ -30,12 +30,7 @@ class _SettingSectionList extends StatelessWidget {
       // 本页从底栏 tab 变成了 push 出来的整页路由：以前 Scaffold 因为有
       // bottomNavigationBar 会把 body 的 padding.bottom 清零、导航条自己占住安全区，
       // 现在没人吃这个 inset 了 —— 不补的话最后一行会压在手势条 / 三键导航底下。
-      padding: EdgeInsets.fromLTRB(
-        8,
-        8,
-        8,
-        8 + MediaQuery.paddingOf(context).bottom,
-      ),
+      padding: .fromLTRB(8, 8, 8, 8 + MediaQuery.paddingOf(context).bottom),
       children: [
         const DashboardSection(),
         const _DataSection(),
@@ -68,12 +63,12 @@ class _DataSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '数据'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SettingListTile(
@@ -140,12 +135,12 @@ class _DisplaySection extends ConsumerWidget {
     final primary = scheme.primary;
     final colorIndex = MoodiaryKVs.color.get() ?? -1;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '显示'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SettingListTile(
@@ -208,12 +203,12 @@ class _PrivacySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '隐私'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               const AppLockTile(),
@@ -252,12 +247,12 @@ class _MoreSection extends ConsumerWidget {
       orElse: () => Language.system,
     );
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '更多'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SettingListTile(

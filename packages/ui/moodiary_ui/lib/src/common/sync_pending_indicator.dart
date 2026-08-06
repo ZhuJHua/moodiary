@@ -24,12 +24,12 @@ class SyncPendingSummaryCard extends StatelessWidget {
     ].join(' · ');
     return Card.filled(
       color: scheme.surfaceContainerLow,
-      margin: EdgeInsets.zero,
+      margin: .zero,
       shape: const RoundedRectangleBorder(
         borderRadius: AppBorderRadius.mediumBorderRadius,
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const .symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             SizedBox(
@@ -63,13 +63,13 @@ class SyncPendingBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const .symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: scheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: .circular(999),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(
             LucideIcons.refreshCw,
@@ -98,13 +98,13 @@ class SyncDirtyBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const .symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
         color: scheme.secondaryContainer,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: .circular(999),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(
             LucideIcons.cloudUpload,

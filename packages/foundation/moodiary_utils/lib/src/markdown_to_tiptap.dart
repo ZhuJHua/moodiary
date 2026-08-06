@@ -24,9 +24,7 @@ class MarkdownToTiptap {
 
   static String? convert(String markdown) {
     try {
-      final nodes = md.Document(
-        extensionSet: md.ExtensionSet.gitHubFlavored,
-      ).parse(markdown);
+      final nodes = md.Document(extensionSet: .gitHubFlavored).parse(markdown);
       final content = _blocks(nodes);
       if (content.isEmpty) content.add({'type': 'paragraph'});
       return jsonEncode({'type': 'doc', 'content': content});
@@ -45,7 +43,7 @@ class MarkdownToTiptap {
       final blank = inlineBuf.every(
         (n) => n is md.Text && n.text.trim().isEmpty,
       );
-      if (!blank) out.addAll(_paragraphLike(List.of(inlineBuf)));
+      if (!blank) out.addAll(_paragraphLike(.of(inlineBuf)));
       inlineBuf.clear();
     }
 

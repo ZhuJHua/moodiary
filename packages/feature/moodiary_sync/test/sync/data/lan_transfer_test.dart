@@ -23,7 +23,7 @@ final class FakeLanCrypto implements LanCrypto {
 
   @override
   Future<Uint8List> encrypt(List<int> key, List<int> plain) async =>
-      Uint8List.fromList([...key, ...plain]);
+      .fromList([...key, ...plain]);
 
   @override
   Future<Uint8List> decrypt(List<int> key, List<int> cipher) async {
@@ -31,7 +31,7 @@ final class FakeLanCrypto implements LanCrypto {
         !listEquals(cipher.sublist(0, key.length), key)) {
       throw Exception('密钥不匹配');
     }
-    return Uint8List.fromList(cipher.sublist(key.length));
+    return .fromList(cipher.sublist(key.length));
   }
 }
 
@@ -89,7 +89,7 @@ final class IoTestHttpServer extends IHttpServer {
           await file.writeAsBytes(bytes);
           bodyFile = file.path;
         } else {
-          inline = Uint8List.fromList(bytes);
+          inline = .fromList(bytes);
         }
         final headers = <String, String>{};
         req.headers.forEach(
@@ -108,7 +108,7 @@ final class IoTestHttpServer extends IHttpServer {
             ),
           );
         } catch (e) {
-          response = HttpServerResponse.text(500, e.toString());
+          response = .text(500, e.toString());
         }
         if (bodyFile != null) {
           try {
@@ -165,10 +165,7 @@ final class IoTestHttpClient extends IHttpClient {
     bool? throwOnStatus,
   }) async {
     try {
-      final req = await _client.openUrl(
-        method.name.toUpperCase(),
-        Uri.parse(url),
-      );
+      final req = await _client.openUrl(method.name.toUpperCase(), .parse(url));
       headers?.forEach((k, v) {
         if (v != null) req.headers.set(k, '$v');
       });
@@ -176,7 +173,7 @@ final class IoTestHttpClient extends IHttpClient {
       final resp = await req.close();
       return _finish(resp, throwOnStatus);
     } on io.SocketException catch (e) {
-      throw HttpException(HttpErrorType.connection, e.message);
+      throw HttpException(.connection, e.message);
     }
   }
 
@@ -184,7 +181,7 @@ final class IoTestHttpClient extends IHttpClient {
   Future<HttpResponse<Uint8List>> uploadFile(
     String url, {
     required String filePath,
-    HttpMethod method = HttpMethod.post,
+    HttpMethod method = .post,
     Map<String, dynamic>? headers,
     void Function(int sent, int total)? onProgress,
     Duration? timeout,
@@ -192,10 +189,7 @@ final class IoTestHttpClient extends IHttpClient {
     bool? throwOnStatus,
   }) async {
     try {
-      final req = await _client.openUrl(
-        method.name.toUpperCase(),
-        Uri.parse(url),
-      );
+      final req = await _client.openUrl(method.name.toUpperCase(), .parse(url));
       headers?.forEach((k, v) {
         if (v != null) req.headers.set(k, '$v');
       });
@@ -213,7 +207,7 @@ final class IoTestHttpClient extends IHttpClient {
       final resp = await req.close();
       return _finish(resp, throwOnStatus);
     } on io.SocketException catch (e) {
-      throw HttpException(HttpErrorType.connection, e.message);
+      throw HttpException(.connection, e.message);
     }
   }
 
@@ -228,7 +222,7 @@ final class IoTestHttpClient extends IHttpClient {
     if (throwOnStatus != false &&
         (resp.statusCode < 200 || resp.statusCode >= 300)) {
       throw HttpException(
-        HttpErrorType.statusCode,
+        .statusCode,
         'HTTP ${resp.statusCode}',
         statusCode: resp.statusCode,
       );
@@ -282,7 +276,7 @@ void main() {
         return const SyncReport(
           diaryCount: 3,
           categoryCount: 1,
-          elapsed: Duration.zero,
+          elapsed: .zero,
           warning: '1 个条目同步失败已跳过',
           failed: 1,
         );
@@ -345,7 +339,7 @@ void main() {
         return const SyncReport(
           diaryCount: 0,
           categoryCount: 0,
-          elapsed: Duration.zero,
+          elapsed: .zero,
         );
       },
     );
@@ -378,7 +372,7 @@ void main() {
         return const SyncReport(
           diaryCount: 0,
           categoryCount: 0,
-          elapsed: Duration.zero,
+          elapsed: .zero,
         );
       },
     );

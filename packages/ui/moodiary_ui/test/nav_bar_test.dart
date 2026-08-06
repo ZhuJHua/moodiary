@@ -18,7 +18,7 @@ Future<double> _bandHeight(
   await tester.pumpWidget(
     MaterialApp(
       home: MediaQuery(
-        data: MediaQueryData(padding: EdgeInsets.only(bottom: bottomInset)),
+        data: MediaQueryData(padding: .only(bottom: bottomInset)),
         child: Scaffold(
           extendBody: true,
           body: Builder(

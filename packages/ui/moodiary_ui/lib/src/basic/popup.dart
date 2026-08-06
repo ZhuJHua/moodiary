@@ -13,7 +13,7 @@ class _TrianglePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = color
-      ..style = PaintingStyle.fill;
+      ..style = .fill;
 
     final path = Path()
       ..moveTo(0, size.height)
@@ -37,7 +37,7 @@ void showPopupWidget({
     maskColor: Colors.transparent,
     builder: (context) {
       return Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           CustomPaint(
             size: const Size(12, 6),
@@ -47,7 +47,7 @@ void showPopupWidget({
             ),
           ),
           Container(
-            padding: const EdgeInsets.all(6.0),
+            padding: const .all(6.0),
             decoration: BoxDecoration(
               color: context.theme.colorScheme.surfaceContainer,
               borderRadius: AppBorderRadius.mediumBorderRadius,

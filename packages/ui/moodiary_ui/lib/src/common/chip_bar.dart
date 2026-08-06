@@ -37,7 +37,7 @@ class MoodiaryChipBar<T> extends StatefulWidget {
     required this.selected,
     required this.onSelected,
     this.trailing,
-    this.padding = const EdgeInsets.symmetric(horizontal: 12),
+    this.padding = const .symmetric(horizontal: 12),
     this.height = 32,
     this.fadeColor,
   });
@@ -78,7 +78,7 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
     final scroller = Stack(
       children: [
         ListView(
-          scrollDirection: Axis.horizontal,
+          scrollDirection: .horizontal,
           padding: widget.padding,
           children: [
             for (var i = 0; i < widget.items.length; i++) ...[
@@ -122,7 +122,7 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
   Widget _chip(BuildContext context, MoodiaryChipData<T> item) {
     final key = _chipKeys.putIfAbsent(item.value, GlobalKey.new);
     final scheme = context.colorScheme;
-    final dark = Theme.of(context).brightness == Brightness.dark;
+    final dark = Theme.of(context).brightness == .dark;
     final selected = widget.selected == item.value;
     final color = item.accentColor;
 
@@ -135,7 +135,7 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
       bg = scheme.secondaryContainer;
       fg = scheme.onSecondaryContainer;
     } else {
-      bg = Color.alphaBlend(
+      bg = .alphaBlend(
         color.withValues(alpha: dark ? 0.30 : 0.16),
         scheme.surfaceContainerHigh,
       );
@@ -150,18 +150,18 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
         height: widget.height,
         decoration: ShapeDecoration(color: bg, shape: const StadiumBorder()),
         child: Material(
-          type: MaterialType.transparency,
+          type: .transparency,
           shape: const StadiumBorder(),
-          clipBehavior: Clip.antiAlias,
+          clipBehavior: .antiAlias,
           child: InkWell(
             onTap: () {
               HapticFeedback.selectionClick();
               widget.onSelected(item.value);
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 13),
+              padding: const .symmetric(horizontal: 13),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: .min,
                 children: [
                   if (item.icon != null) ...[
                     Icon(item.icon, size: 16, color: fg),
@@ -171,10 +171,7 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
                       duration: Durations.short4,
                       width: 7,
                       height: 7,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: BoxDecoration(color: color, shape: .circle),
                     ),
                     const SizedBox(width: 6),
                   ],
@@ -186,15 +183,9 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
                           (context.textTheme.labelMedium ?? const TextStyle())
                               .copyWith(
                                 color: fg,
-                                fontWeight: selected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
+                                fontWeight: selected ? .w600 : .w500,
                               ),
-                      child: Text(
-                        item.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: Text(item.label, maxLines: 1, overflow: .ellipsis),
                     ),
                   ),
                 ],

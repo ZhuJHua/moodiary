@@ -75,7 +75,7 @@ class GraphScene {
 
   /// 邻居下标区间 `[adjOffsets[i], adjOffsets[i+1])` 上的视图。
   Int32List neighborsOf(int i) =>
-      Int32List.sublistView(adjTargets, adjOffsets[i], adjOffsets[i + 1]);
+      .sublistView(adjTargets, adjOffsets[i], adjOffsets[i + 1]);
 
   bool isNeighbor(int i, int j) {
     for (var k = adjOffsets[i]; k < adjOffsets[i + 1]; k++) {
@@ -125,7 +125,7 @@ class GraphScene {
       }),
     );
 
-    return GraphScene._(
+    return ._(
       data: data,
       adjOffsets: offsets,
       adjTargets: targets,
@@ -189,7 +189,7 @@ class GraphScene {
         }
       }
     }
-    return Int32List.sublistView(out, 0, w);
+    return .sublistView(out, 0, w);
   }
 
   static int _percentile95(Int32List degrees) {
@@ -207,9 +207,9 @@ class GraphScene {
   ) {
     final n = data.nodeCount;
     switch (mode) {
-      case GraphColorMode.plain:
+      case .plain:
         return List<Color>.filled(n, palette.fallbackNode);
-      case GraphColorMode.time:
+      case .time:
         var min = double.infinity, max = -double.infinity;
         for (final node in data.nodes) {
           final ms = node.time.millisecondsSinceEpoch.toDouble();
@@ -231,7 +231,7 @@ class GraphScene {
               return base.withLightness(l).toColor();
             }(),
         ];
-      case GraphColorMode.category:
+      case .category:
         // 分类色向主色 harmonize 一次（M3 的做法：色相最多挪 15°，色度/明度不动）——
         // 既保住「这是哪一类」的辨识度，整张图又和主题是一家人。按分类算一次，不是按节点。
         final byId = <String, Color>{
@@ -503,11 +503,11 @@ List<EgoDirection?> egoDirectionsOf(GraphScene scene) {
   for (var i = 0; i < n; i++) {
     if (i == center) continue;
     if (out[i] && inc[i]) {
-      dirs[i] = EgoDirection.mutual;
+      dirs[i] = .mutual;
     } else if (out[i]) {
-      dirs[i] = EgoDirection.outgoing;
+      dirs[i] = .outgoing;
     } else if (inc[i]) {
-      dirs[i] = EgoDirection.incoming;
+      dirs[i] = .incoming;
     }
   }
   return dirs;
@@ -552,11 +552,11 @@ layoutEgoRadial(GraphScene scene) {
         : (o ? EgoDirection.outgoing : EgoDirection.incoming);
     dirs[i] = dir;
     switch (dir) {
-      case EgoDirection.mutual:
+      case .mutual:
         mutualList.add(i);
-      case EgoDirection.outgoing:
+      case .outgoing:
         outList.add(i);
-      case EgoDirection.incoming:
+      case .incoming:
         inList.add(i);
     }
   }

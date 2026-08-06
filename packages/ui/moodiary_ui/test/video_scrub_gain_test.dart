@@ -41,7 +41,7 @@ void main() {
     });
 
     test('时长未知返回 0：不知道片长就没有可换算的东西', () {
-      expect(scrubMillisPerPixel(Duration.zero, width), 0);
+      expect(scrubMillisPerPixel(.zero, width), 0);
     });
   });
 }

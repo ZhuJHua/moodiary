@@ -16,9 +16,7 @@ import 'package:moodiary_sync/src/data/secure_options.dart';
 class WebDavSyncBackend implements IRemoteSyncBackend {
   WebDavSyncBackend();
 
-  static final SecureOptions options = SecureOptions(
-    MoodiarySecureKVs.webDavOption,
-  );
+  static final SecureOptions options = SecureOptions(.webDavOption);
 
   Future<rust.DavClient>? _cachedClient;
 
@@ -32,7 +30,7 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   String get _password => _options.length > 2 ? _options[2] : '';
 
   @override
-  SyncProviderType get type => SyncProviderType.webdav;
+  SyncProviderType get type => .webdav;
 
   @override
   String get persistentBackendId => SyncProviderType.webdav.value;

@@ -10,9 +10,7 @@ class WeatherRepository {
 
   factory WeatherRepository.get() => _instance;
 
-  static final WeatherRepository _instance = WeatherRepository(
-    IHttpClient.get(),
-  );
+  static final WeatherRepository _instance = WeatherRepository(.get());
 
   final IHttpClient _http;
 

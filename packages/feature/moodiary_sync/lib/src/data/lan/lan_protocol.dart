@@ -44,16 +44,14 @@ class RustLanCrypto implements LanCrypto {
 
   @override
   Future<Uint8List> encrypt(List<int> key, List<int> plain) async =>
-      Uint8List.fromList(await rust.Aes.encrypt(key: key, data: plain));
+      .fromList(await rust.Aes.encrypt(key: key, data: plain));
 
   @override
   Future<Uint8List> decrypt(List<int> key, List<int> cipher) async =>
-      Uint8List.fromList(
-        await rust.Aes.decrypt(key: key, encryptedData: cipher),
-      );
+      .fromList(await rust.Aes.decrypt(key: key, encryptedData: cipher));
 }
 
-final Random _secureRandom = Random.secure();
+final Random _secureRandom = .secure();
 
 String lanGeneratePin() => (_secureRandom.nextInt(900000) + 100000).toString();
 

@@ -36,8 +36,8 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
               child: KeyedSubtree(
                 key: ValueKey('$viewMode-$sortMode-$filter'),
                 child: switch (viewModeType) {
-                  ViewModeType.timeline => DiaryTimelineView(filter: filter),
-                  ViewModeType.feed => DiaryFeedView(filter: filter),
+                  .timeline => DiaryTimelineView(filter: filter),
+                  .feed => DiaryFeedView(filter: filter),
                 },
               ),
             );
@@ -135,8 +135,8 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
             return IconButton(
               tooltip: context.l10n.diaryPageViewModeButton,
               icon: Icon(switch (viewModeType) {
-                ViewModeType.timeline => LucideIcons.gitCommitVertical,
-                ViewModeType.feed => LucideIcons.layoutList,
+                .timeline => LucideIcons.gitCommitVertical,
+                .feed => LucideIcons.layoutList,
               }),
               onPressed: () => ViewModeSheet.show(context),
             );
@@ -213,13 +213,13 @@ class _FilterTitle extends ConsumerWidget {
     };
 
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       children: [
         if (dot != null) ...[
           Container(
             width: 9,
             height: 9,
-            decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
+            decoration: BoxDecoration(color: dot, shape: .circle),
           ),
           const SizedBox(width: 8),
         ] else if (filter.uncategorized) ...[
@@ -227,15 +227,13 @@ class _FilterTitle extends ConsumerWidget {
             width: 9,
             height: 9,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: scheme.outline, width: 1.4),
+              shape: .circle,
+              border: .all(color: scheme.outline, width: 1.4),
             ),
           ),
           const SizedBox(width: 8),
         ],
-        Flexible(
-          child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-        ),
+        Flexible(child: Text(label, maxLines: 1, overflow: .ellipsis)),
         if (count != null) ...[
           const SizedBox(width: 8),
           Text(

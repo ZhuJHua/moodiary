@@ -116,7 +116,7 @@ class LanReceiverService {
     };
   }
 
-  HttpServerResponse _handshake() => HttpServerResponse.json({
+  HttpServerResponse _handshake() => .json({
     'app': 'moodiary',
     'proto': lanProtoVersion,
     'salt': _salt,
@@ -132,7 +132,7 @@ class LanReceiverService {
         if (listEquals(plain, _challenge)) return null;
       } catch (_) {}
     }
-    return HttpServerResponse.text(HttpStatus.unauthorized, '配对码不正确');
+    return .text(HttpStatus.unauthorized, '配对码不正确');
   }
 
   Future<HttpServerResponse> _manifest(HttpServerRequest request) async {
@@ -143,14 +143,14 @@ class LanReceiverService {
       _key,
       utf8.encode(jsonEncode(manifest.toJson())),
     );
-    return HttpServerResponse.ok(body, contentType: 'application/octet-stream');
+    return .ok(body, contentType: 'application/octet-stream');
   }
 
   Future<HttpServerResponse> _archive(HttpServerRequest request) async {
     final denied = await _checkAuth(request);
     if (denied != null) return denied;
     if (_busy) {
-      return HttpServerResponse.text(HttpStatus.conflict, '对方正忙，请稍后再试');
+      return .text(HttpStatus.conflict, '对方正忙，请稍后再试');
     }
     _busy = true;
     File? inlineSpool;
@@ -180,10 +180,7 @@ class LanReceiverService {
           }),
         ),
       );
-      return HttpServerResponse.ok(
-        body,
-        contentType: 'application/octet-stream',
-      );
+      return .ok(body, contentType: 'application/octet-stream');
     } catch (e) {
       state.value = LanReceiveFailed(e.toString());
       // 服务器适配层把异常折叠为 500 + 错误信息，发送方据此展示。

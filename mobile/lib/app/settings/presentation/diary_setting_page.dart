@@ -10,28 +10,28 @@ class DiarySettingPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('日记偏好')),
       body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const .symmetric(vertical: 8),
         children: const [
           _Section('编辑器'),
-          _KvSwitchTile(kv: MoodiaryKVs.firstLineIndent, title: '首行缩进'),
+          _KvSwitchTile(kv: .firstLineIndent, title: '首行缩进'),
           _KvSwitchTile(
-            kv: MoodiaryKVs.autoCategory,
+            kv: .autoCategory,
             title: '保存时自动归类',
             subtitle: '根据上次写作位置 / 标签推测分类',
           ),
-          _KvSwitchTile(kv: MoodiaryKVs.showWritingTime, title: '展示写作时长'),
-          _KvSwitchTile(kv: MoodiaryKVs.showWordCount, title: '展示字数统计'),
+          _KvSwitchTile(kv: .showWritingTime, title: '展示写作时长'),
+          _KvSwitchTile(kv: .showWordCount, title: '展示字数统计'),
           _Section('日记展示'),
-          _KvSwitchTile(kv: MoodiaryKVs.diaryHeader, title: '列表卡片显示头图'),
-          _KvSwitchTile(kv: MoodiaryKVs.dynamicColor, title: '基于封面动态配色'),
+          _KvSwitchTile(kv: .diaryHeader, title: '列表卡片显示头图'),
+          _KvSwitchTile(kv: .dynamicColor, title: '基于封面动态配色'),
           _Section('媒体'),
           _KvSwitchTile(
-            kv: MoodiaryKVs.imageOptimize,
+            kv: .imageOptimize,
             title: '图片优化',
             subtitle: '压缩尺寸并统一转为 WebP；关闭则保存原图',
           ),
           _Section('天气'),
-          _KvSwitchTile(kv: MoodiaryKVs.autoWeather, title: '保存日记时自动获取天气'),
+          _KvSwitchTile(kv: .autoWeather, title: '保存日记时自动获取天气'),
         ],
       ),
     );
@@ -45,7 +45,7 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+      padding: const .fromLTRB(16, 16, 16, 4),
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(

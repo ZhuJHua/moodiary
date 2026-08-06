@@ -46,7 +46,7 @@ class _AnalyseBody extends StatelessWidget {
     final monthCounts = _last6Months(diaries, now);
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const .all(16),
       children: [
         _StatGrid(
           items: [
@@ -118,12 +118,12 @@ class _StatGrid extends StatelessWidget {
       children: [
         for (final (label, value, icon) in items)
           Card(
-            margin: EdgeInsets.zero,
+            margin: .zero,
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const .all(12),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: .start,
+                mainAxisAlignment: .center,
                 children: [
                   Row(
                     children: [
@@ -154,21 +154,21 @@ class _BarChart extends StatelessWidget {
     return SizedBox(
       height: 160,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        crossAxisAlignment: .end,
         children: [
           for (final (label, count) in data)
             Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: .end,
                 children: [
                   Text('$count', style: theme.textTheme.labelSmall),
                   const SizedBox(height: 4),
                   Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    margin: const .symmetric(horizontal: 4),
                     height: maxV == 0 ? 0 : 120 * count / maxV,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: .circular(4),
                     ),
                   ),
                   const SizedBox(height: 6),

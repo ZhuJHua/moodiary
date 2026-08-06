@@ -295,9 +295,9 @@ class _AlertScaffold extends StatelessWidget {
     return AnimatedPadding(
       duration: const Duration(milliseconds: 120),
       curve: Curves.easeOut,
-      padding: EdgeInsets.only(bottom: bottomInset),
+      padding: .only(bottom: bottomInset),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(
+        padding: .fromLTRB(
           _kAlertScreenPadding + viewPadding.left,
           24 + viewPadding.top,
           _kAlertScreenPadding + viewPadding.right,
@@ -307,13 +307,13 @@ class _AlertScaffold extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _kAlertMaxWidth),
             child: Material(
-              type: MaterialType.card,
+              type: .card,
               color: context.colorScheme.surfaceContainerHigh,
               elevation: 8,
               shadowColor: Colors.black.withValues(alpha: 0.24),
               surfaceTintColor: Colors.transparent,
               borderRadius: AppBorderRadius.xLargeBorderRadius,
-              clipBehavior: Clip.antiAlias,
+              clipBehavior: .antiAlias,
               child: child,
             ),
           ),
@@ -356,10 +356,10 @@ class _AlertShell extends StatelessWidget {
 
     return SingleChildScrollView(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+        padding: const .fromLTRB(16, 20, 16, 16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: .min,
+          crossAxisAlignment: .stretch,
           children: [
             if (effectiveIcon != null) ...[
               Center(
@@ -367,7 +367,7 @@ class _AlertShell extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                    shape: .circle,
                     color: isDestructive
                         ? scheme.errorContainer
                         : scheme.secondaryContainer,
@@ -386,9 +386,9 @@ class _AlertShell extends StatelessWidget {
             if (title != null)
               Text(
                 title!,
-                textAlign: TextAlign.center,
+                textAlign: .center,
                 style: textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: .w600,
                   color: scheme.onSurface,
                 ),
               ),
@@ -398,9 +398,7 @@ class _AlertShell extends StatelessWidget {
                 message!,
                 // 一句话居中；分段或长文左对齐 —— 「·」要点列表、免责声明这类多段
                 // 正文居中后每行起点都在跳，读起来很费劲。
-                textAlign: _isLongForm(message!)
-                    ? TextAlign.start
-                    : TextAlign.center,
+                textAlign: _isLongForm(message!) ? .start : .center,
                 style: textTheme.bodyMedium?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),

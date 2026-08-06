@@ -8,16 +8,16 @@ void main() {
         common: ExportCommon(
           includeTitle: false,
           includeMeta: false,
-          media: ExportMediaPolicy.placeholder,
+          media: .placeholder,
           merge: false,
           nameTemplate: '{title}',
         ),
         markdown: MarkdownExportOptions(
-          dialect: MarkdownDialect.commonMark,
+          dialect: .commonMark,
           frontMatter: false,
         ),
         docx: LayoutExportOptions(
-          paper: ExportPaper.letter,
+          paper: .letter,
           margin: 720,
           fontSizePt: 14,
           lineSpacing: 2,
@@ -25,7 +25,7 @@ void main() {
           eastAsiaFont: '思源宋体',
           asciiFont: 'Iowan',
         ),
-        pdf: LayoutExportOptions(paper: ExportPaper.a5, eastAsiaFont: 'x.ttf'),
+        pdf: LayoutExportOptions(paper: .a5, eastAsiaFont: 'x.ttf'),
       );
 
       final restored = ExportSettings.decode(settings.encode());

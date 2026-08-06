@@ -62,9 +62,7 @@ class _ExpandButtonComponentState extends State<ExpandButtonComponent>
       child: IconButton(
         onPressed: onTap,
         icon: Icon(icon, color: color),
-        style: const ButtonStyle(
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
+        style: const ButtonStyle(tapTargetSize: .shrinkWrap),
       ),
     );
   }
@@ -93,9 +91,7 @@ class _ExpandButtonComponentState extends State<ExpandButtonComponent>
           ),
           IconButton.filled(
             onPressed: animatedIcon,
-            style: const ButtonStyle(
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
+            style: const ButtonStyle(tapTargetSize: .shrinkWrap),
             icon: AnimatedIcon(
               icon: AnimatedIcons.menu_close,
               progress: animation,

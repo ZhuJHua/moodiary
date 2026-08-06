@@ -55,8 +55,8 @@ void main() {
 
     testWidgets('锁到指定方向，恢复函数把全局策略应用回来', (tester) async {
       final release = lockOrientationsTemporarily(const [
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
+        .landscapeLeft,
+        .landscapeRight,
       ]);
       expect(calls, hasLength(1));
       expect(orientationsOf(calls.first), [
@@ -74,20 +74,14 @@ void main() {
     testWidgets('恢复函数报告「是否真的恢复了」—— 调用方据此决定要不要等旋转', (tester) async {
       // 嵌套时内层 release 一个方向请求都没发出去，调用方若照样去等「屏幕转回来」
       // 就必然吃满超时。返回值就是这个判据。
-      final outer = lockOrientationsTemporarily(const [
-        DeviceOrientation.portraitUp,
-      ]);
-      final inner = lockOrientationsTemporarily(const [
-        DeviceOrientation.landscapeLeft,
-      ]);
+      final outer = lockOrientationsTemporarily(const [.portraitUp]);
+      final inner = lockOrientationsTemporarily(const [.landscapeLeft]);
       expect(inner(), isFalse, reason: '计数未归零，没有下发方向');
       expect(outer(), isTrue, reason: '归零才真的把全局策略应用回去');
     });
 
     testWidgets('恢复函数可重复调用，只生效一次', (tester) async {
-      final release = lockOrientationsTemporarily(const [
-        DeviceOrientation.portraitUp,
-      ]);
+      final release = lockOrientationsTemporarily(const [.portraitUp]);
       release();
       final afterFirst = calls.length;
       release();
@@ -96,12 +90,10 @@ void main() {
     });
 
     testWidgets('嵌套锁：内层释放不恢复，外层释放才恢复', (tester) async {
-      final outer = lockOrientationsTemporarily(const [
-        DeviceOrientation.portraitUp,
-      ]);
+      final outer = lockOrientationsTemporarily(const [.portraitUp]);
       final inner = lockOrientationsTemporarily(const [
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
+        .landscapeLeft,
+        .landscapeRight,
       ]);
       expect(calls, hasLength(2));
 

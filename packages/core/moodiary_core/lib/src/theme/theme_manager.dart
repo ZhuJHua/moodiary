@@ -13,7 +13,7 @@ import 'package:moodiary_core/src/app_logger.dart';
 class ThemeManager {
   ThemeManager._();
 
-  static final ThemeManager instance = ThemeManager._();
+  static final ThemeManager instance = ._();
 
   factory ThemeManager() => instance;
 
@@ -30,9 +30,9 @@ class ThemeManager {
   /// 系统取色种子，供把配色生成下放到 webview 侧时复用。
   Color? _dynamicSeed;
 
-  ThemeData get lightTheme => _lightTheme ?? ThemeData.light();
+  ThemeData get lightTheme => _lightTheme ?? .light();
 
-  ThemeData get darkTheme => _darkTheme ?? ThemeData.dark();
+  ThemeData get darkTheme => _darkTheme ?? .dark();
 
   bool get supportDynamic => lightDynamic != null && darkDynamic != null;
 
@@ -94,77 +94,77 @@ class ThemeManager {
     return baseTheme.copyWith(
       displayLarge: baseTheme.displayLarge?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w500,
+        fontWeight: .w500,
         fontVariations: [FontVariation('wght', mediumFontWeight)],
       ),
       displayMedium: baseTheme.displayMedium?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w500,
+        fontWeight: .w500,
         fontVariations: [FontVariation('wght', mediumFontWeight)],
       ),
       displaySmall: baseTheme.displaySmall?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w500,
+        fontWeight: .w500,
         fontVariations: [FontVariation('wght', mediumFontWeight)],
       ),
       headlineLarge: baseTheme.headlineLarge?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w700,
+        fontWeight: .w700,
         fontVariations: [FontVariation('wght', boldFontWeight)],
       ),
       headlineMedium: baseTheme.headlineMedium?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w600,
+        fontWeight: .w600,
         fontVariations: [FontVariation('wght', semiBoldFontWeight)],
       ),
       headlineSmall: baseTheme.headlineSmall?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w500,
+        fontWeight: .w500,
         fontVariations: [FontVariation('wght', mediumFontWeight)],
       ),
       titleLarge: baseTheme.titleLarge?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w600,
+        fontWeight: .w600,
         fontVariations: [FontVariation('wght', semiBoldFontWeight)],
       ),
       titleMedium: baseTheme.titleMedium?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w500,
+        fontWeight: .w500,
         fontVariations: [FontVariation('wght', mediumFontWeight)],
       ),
       titleSmall: baseTheme.titleSmall?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w500,
+        fontWeight: .w500,
         fontVariations: [FontVariation('wght', mediumFontWeight)],
       ),
       bodyLarge: baseTheme.bodyLarge?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w400,
+        fontWeight: .w400,
         fontVariations: [FontVariation('wght', regularFontWeight)],
       ),
       bodyMedium: baseTheme.bodyMedium?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w400,
+        fontWeight: .w400,
         fontVariations: [FontVariation('wght', regularFontWeight)],
       ),
       bodySmall: baseTheme.bodySmall?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w400,
+        fontWeight: .w400,
         fontVariations: [FontVariation('wght', regularFontWeight)],
       ),
       labelLarge: baseTheme.labelLarge?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w500,
+        fontWeight: .w500,
         fontVariations: [FontVariation('wght', mediumFontWeight)],
       ),
       labelMedium: baseTheme.labelMedium?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w500,
+        fontWeight: .w500,
         fontVariations: [FontVariation('wght', mediumFontWeight)],
       ),
       labelSmall: baseTheme.labelSmall?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w400,
+        fontWeight: .w400,
         fontVariations: [FontVariation('wght', regularFontWeight)],
       ),
     );
@@ -197,11 +197,11 @@ class ThemeManager {
 
     final lightColorScheme = isDynamic
         ? lightDynamic!
-        : buildColorScheme(normalColor, Brightness.light, color);
+        : buildColorScheme(normalColor, .light, color);
 
     final darkColorScheme = isDynamic
         ? darkDynamic!
-        : buildColorScheme(normalColor, Brightness.dark, color);
+        : buildColorScheme(normalColor, .dark, color);
 
     // 每次重建先归零字体状态：从自定义字体切回「系统」时才能立即生效（否则残留旧家族，
     // 须重启才恢复系统字体）。
@@ -233,7 +233,7 @@ class ThemeManager {
       lightTypography,
       fontFamily,
       wghtAxisMap,
-      Brightness.light,
+      .light,
     );
     _darkTheme = buildThemeData(
       darkColorScheme,
@@ -241,7 +241,7 @@ class ThemeManager {
       darkTypography,
       fontFamily,
       wghtAxisMap,
-      Brightness.dark,
+      .dark,
     );
   }
 
@@ -252,10 +252,10 @@ class ThemeManager {
   ) {
     var dynamicSchemeVariant = DynamicSchemeVariant.tonalSpot;
     if (color == 0) {
-      dynamicSchemeVariant = DynamicSchemeVariant.monochrome;
+      dynamicSchemeVariant = .monochrome;
     }
     if (color == -1) {
-      dynamicSchemeVariant = DynamicSchemeVariant.tonalSpot;
+      dynamicSchemeVariant = .tonalSpot;
     }
     return ColorScheme.fromSeed(
       seedColor: seedColor,
@@ -290,7 +290,7 @@ class ThemeManager {
   }
 
   Typography buildTypography(ColorScheme colorScheme) {
-    return Typography.material2021(
+    return .material2021(
       platform: defaultTargetPlatform,
       colorScheme: colorScheme,
     );
@@ -298,7 +298,7 @@ class ThemeManager {
 
   TextTheme buildTextTheme(ColorScheme colorScheme) {
     final typography = buildTypography(colorScheme);
-    final textTheme = colorScheme.brightness == Brightness.light
+    final textTheme = colorScheme.brightness == .light
         ? typography.black
         : typography.white;
     return _applyFontVariations(textTheme);
@@ -314,7 +314,7 @@ class ThemeManager {
   ) {
     return ThemeData(
       colorScheme: colorScheme,
-      materialTapTargetSize: MaterialTapTargetSize.padded,
+      materialTapTargetSize: .padded,
       // 内容滚到顶栏下方时不再有任何视觉变化。要关的是**两件事**，缺一个都还会跳：
       //   1. 底色：滚动态取的是 `colorScheme.surfaceContainer` 而非 `surface`
       //      （app_bar.dart 的 scrolledUnderBackground）——把 backgroundColor 钉住，
@@ -339,7 +339,7 @@ class ThemeManager {
           borderRadius: AppBorderRadius.xLargeBorderRadius,
         ),
         titleTextStyle: textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: .w600,
           color: colorScheme.onSurface,
         ),
         contentTextStyle: textTheme.bodyMedium?.copyWith(
@@ -347,11 +347,9 @@ class ThemeManager {
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(
-        thumbColor: WidgetStateProperty.all(
-          colorScheme.secondary.withValues(alpha: 0.4),
-        ),
-        thickness: WidgetStateProperty.all(4.0),
-        radius: const Radius.circular(2.0),
+        thumbColor: .all(colorScheme.secondary.withValues(alpha: 0.4)),
+        thickness: .all(4.0),
+        radius: const .circular(2.0),
         mainAxisMargin: 24.0,
       ),
       brightness: brightness,
@@ -369,8 +367,8 @@ class ThemeManager {
         final seedColor = Color(corePalette.primary.get(40));
 
         _dynamicSeed = seedColor;
-        lightDynamic = buildColorScheme(seedColor, Brightness.light, -1);
-        darkDynamic = buildColorScheme(seedColor, Brightness.dark, -1);
+        lightDynamic = buildColorScheme(seedColor, .light, -1);
+        darkDynamic = buildColorScheme(seedColor, .dark, -1);
         return;
       }
     } on PlatformException {
@@ -382,8 +380,8 @@ class ThemeManager {
 
       if (accentColor != null) {
         _dynamicSeed = accentColor;
-        lightDynamic = buildColorScheme(accentColor, Brightness.light, -1);
-        darkDynamic = buildColorScheme(accentColor, Brightness.dark, -1);
+        lightDynamic = buildColorScheme(accentColor, .light, -1);
+        darkDynamic = buildColorScheme(accentColor, .dark, -1);
         return;
       }
     } on PlatformException {
@@ -402,16 +400,16 @@ class ThemeManager {
               textTheme: buildTextTheme(lightDynamic!),
               typography: buildTypography(lightDynamic!),
             ) ??
-            ThemeData.light(),
+            .light(),
         _darkTheme?.copyWith(
               colorScheme: darkDynamic,
               textTheme: buildTextTheme(darkDynamic!),
               typography: buildTypography(darkDynamic!),
             ) ??
-            ThemeData.dark(),
+            .dark(),
       );
     } else {
-      return (_lightTheme ?? ThemeData.light(), _darkTheme ?? ThemeData.dark());
+      return (_lightTheme ?? .light(), _darkTheme ?? .dark());
     }
   }
 }
@@ -422,9 +420,9 @@ extension ColorExt on Color {
 
     const double kThreshold = 0.15;
     if ((relativeLuminance + 0.05) * (relativeLuminance + 0.05) > kThreshold) {
-      return Brightness.light;
+      return .light;
     }
-    return Brightness.dark;
+    return .dark;
   }
 }
 

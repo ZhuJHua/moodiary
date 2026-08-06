@@ -59,7 +59,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
                       title: Text(
                         d.title.isEmpty ? '(无标题)' : d.title,
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        overflow: .ellipsis,
                       ),
                       subtitle: Text(TimeFormat.listDateTime(d.time)),
                       onChanged: (v) {
@@ -104,7 +104,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
       final d = list.firstWhere(
         (e) => e.isarId == id,
         // 占位，下面被 d.id.isEmpty 拦掉，type 取哪个都行。
-        orElse: () => Diary.empty(type: DiaryType.richText),
+        orElse: () => Diary.empty(type: .richText),
       );
       if (d.id.isEmpty) continue;
       if (await notifier.softDeleteDiary(d)) ok += 1;
@@ -132,8 +132,8 @@ class _FilterBar extends StatelessWidget {
       height: 48,
       child: categoriesAsync.maybeWhen(
         data: (cats) => ListView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          scrollDirection: .horizontal,
+          padding: const .symmetric(horizontal: 12, vertical: 8),
           children: [
             ChoiceChip(
               label: const Text('全部'),

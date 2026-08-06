@@ -1,6 +1,6 @@
 class UploadSpeedCalculator {
   final int updateIntervalInMilliseconds;
-  DateTime _lastUpdateTime = DateTime.now();
+  DateTime _lastUpdateTime = .now();
   double _speed = 0.0;
   int _previousSentBytes = 0;
 

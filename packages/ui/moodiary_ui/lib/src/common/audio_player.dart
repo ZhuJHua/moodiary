@@ -17,7 +17,7 @@ class _AudioDurationCache {
 
   static Future<Duration?> resolve(String path) {
     final hit = _cache[path];
-    if (hit != null) return Future.value(hit);
+    if (hit != null) return .value(hit);
     return _inflight.putIfAbsent(path, () async {
       try {
         final ms = await rust.audioDurationMs(path: path);
@@ -51,8 +51,8 @@ class AudioProgress {
   });
 
   static const zero = AudioProgress(
-    position: Duration.zero,
-    duration: Duration.zero,
+    position: .zero,
+    duration: .zero,
     playing: false,
     muted: false,
   );
@@ -77,8 +77,8 @@ class AudioPlaybackController {
   late final StreamSubscription<PlayerState> _stateSub;
   late final StreamSubscription<void> _completeSub;
 
-  Duration _position = Duration.zero;
-  Duration _duration = Duration.zero;
+  Duration _position = .zero;
+  Duration _duration = .zero;
   bool _playing = false;
   bool _muted = false;
   bool _completed = false;
@@ -99,11 +99,11 @@ class AudioPlaybackController {
     });
     _durSub = _player.onDurationChanged.listen((d) => _emit(duration: d));
     _stateSub = _player.onPlayerStateChanged.listen(
-      (s) => _emit(playing: s == PlayerState.playing),
+      (s) => _emit(playing: s == .playing),
     );
     _completeSub = _player.onPlayerComplete.listen((_) {
       _completed = true;
-      _emit(position: Duration.zero, playing: false);
+      _emit(position: .zero, playing: false);
     });
   }
 
@@ -141,8 +141,8 @@ class AudioPlaybackController {
         activePath.value = path;
         _completed = false;
         _pendingSeek = null;
-        _position = Duration.zero;
-        _duration = Duration.zero;
+        _position = .zero;
+        _duration = .zero;
         _emit();
         await _player.play(DeviceFileSource(path));
       }
@@ -267,7 +267,7 @@ class _IdleAudioBar extends StatefulWidget {
 }
 
 class _IdleAudioBarState extends State<_IdleAudioBar> {
-  Duration _duration = Duration.zero;
+  Duration _duration = .zero;
 
   @override
   void initState() {
@@ -290,7 +290,7 @@ class _IdleAudioBarState extends State<_IdleAudioBar> {
   Widget build(BuildContext context) {
     return AudioBar(
       playing: false,
-      position: Duration.zero,
+      position: .zero,
       duration: _duration,
       muted: false,
       enabled: false,
@@ -357,7 +357,7 @@ class _AudioBarState extends State<AudioBar> {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const .symmetric(horizontal: 10, vertical: 6),
         child: Row(
           children: [
             IconButton.filled(
@@ -366,8 +366,8 @@ class _AudioBarState extends State<AudioBar> {
               icon: Icon(widget.playing ? LucideIcons.pause : LucideIcons.play),
               style: IconButton.styleFrom(
                 minimumSize: const Size(40, 40),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                padding: EdgeInsets.zero,
+                tapTargetSize: .shrinkWrap,
+                padding: .zero,
               ),
             ),
             const SizedBox(width: 10),
@@ -378,7 +378,7 @@ class _AudioBarState extends State<AudioBar> {
                   activeTrackColor: scheme.primary,
                   inactiveTrackColor: scheme.primary.withValues(alpha: 0.2),
                   thumbColor: scheme.primary,
-                  overlayShape: SliderComponentShape.noOverlay,
+                  overlayShape: .noOverlay,
                   thumbShape: const RoundSliderThumbShape(
                     enabledThumbRadius: 6,
                   ),
@@ -408,7 +408,7 @@ class _AudioBarState extends State<AudioBar> {
               TimeFormat.mediaPosition(widget.position, widget.duration),
               style: context.textTheme.labelSmall?.copyWith(
                 color: scheme.onSurfaceVariant,
-                fontFeatures: const [FontFeature.tabularFigures()],
+                fontFeatures: const [.tabularFigures()],
               ),
             ),
             const SizedBox(width: 2),
@@ -421,8 +421,8 @@ class _AudioBarState extends State<AudioBar> {
               ),
               style: IconButton.styleFrom(
                 minimumSize: const Size(32, 32),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                padding: EdgeInsets.zero,
+                tapTargetSize: .shrinkWrap,
+                padding: .zero,
               ),
             ),
           ],

@@ -49,7 +49,7 @@ class AdaptiveText extends StatelessWidget {
       builder: (context, constraints) {
         final textPainter = TextPainter(
           text: TextSpan(text: text, style: textStyle),
-          textDirection: TextDirection.ltr,
+          textDirection: .ltr,
           maxLines: 1,
           textScaler: textScaler,
         )..layout(maxWidth: maxWidth ?? constraints.maxWidth);
@@ -70,12 +70,7 @@ class AdaptiveText extends StatelessWidget {
                   style: textStyle,
                 ),
               )
-            : Text(
-                text,
-                style: textStyle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              );
+            : Text(text, style: textStyle, maxLines: 1, overflow: .ellipsis);
       },
     );
   }

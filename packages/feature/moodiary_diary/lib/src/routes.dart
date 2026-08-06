@@ -18,7 +18,7 @@ List<RouteBase> diaryRoutes() => [
     builder: (context, state) {
       final route = NewDiaryRoute.fromState(state);
       return DiaryPage(
-        initialType: diaryTypeFromRouteQuery(route.type) ?? DiaryType.tiptap,
+        initialType: diaryTypeFromRouteQuery(route.type) ?? .tiptap,
         initialCategoryId: route.categoryId,
         startInEdit: true,
       );
@@ -30,7 +30,7 @@ List<RouteBase> diaryRoutes() => [
       final route = DiaryRoute.fromState(state);
       return DiaryPage(
         diaryId: route.diaryId,
-        initialType: diaryTypeFromRouteQuery(route.type) ?? DiaryType.tiptap,
+        initialType: diaryTypeFromRouteQuery(route.type) ?? .tiptap,
         startInEdit: route.edit,
       );
     },

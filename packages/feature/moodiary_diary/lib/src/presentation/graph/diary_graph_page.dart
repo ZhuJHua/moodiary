@@ -64,7 +64,7 @@ class GraphEmptyState extends StatelessWidget {
     final cs = theme.colorScheme;
     return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           SizedBox(
             width: 120,
@@ -78,10 +78,10 @@ class GraphEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
+            padding: const .symmetric(horizontal: 40),
             child: Text(
               context.l10n.graphEmptyDesc,
-              textAlign: TextAlign.center,
+              textAlign: .center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant,
               ),
@@ -107,7 +107,7 @@ class _EmptyGlyph extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final stroke = Paint()
       ..color = color
-      ..style = PaintingStyle.stroke
+      ..style = .stroke
       ..strokeWidth = 1.5
       ..isAntiAlias = true;
     final a = Offset(size.width * 0.16, size.height * 0.72);
@@ -144,9 +144,9 @@ class _GraphView extends ConsumerStatefulWidget {
 class _GraphViewState extends ConsumerState<_GraphView> {
   // —— 会话级视图状态（不持久化）——
   String? _categoryId;
-  _TimeFilter _time = _TimeFilter.all;
-  GraphDensity _density = GraphDensity.normal;
-  GraphColorMode _colorMode = GraphColorMode.category;
+  _TimeFilter _time = .all;
+  GraphDensity _density = .normal;
+  GraphColorMode _colorMode = .category;
   bool _showLabels = true;
 
   DiaryGraphData _sub = emptyGraphData;
@@ -194,7 +194,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
     }
     _palette = palette;
     _categories = categories;
-    _scene = GraphScene.build(
+    _scene = .build(
       data: _sub,
       categories: categories,
       palette: palette,
@@ -302,10 +302,10 @@ class _GraphViewState extends ConsumerState<_GraphView> {
   (DateTime, DateTime)? _timeRangeRaw(_TimeFilter f) {
     final now = DateTime.now();
     return switch (f) {
-      _TimeFilter.all => null,
-      _TimeFilter.last30 => (now.subtract(const Duration(days: 30)), now),
-      _TimeFilter.thisYear => (DateTime(now.year), now),
-      _TimeFilter.last365 => (now.subtract(const Duration(days: 365)), now),
+      .all => null,
+      .last30 => (now.subtract(const Duration(days: 30)), now),
+      .thisYear => (DateTime(now.year), now),
+      .last365 => (now.subtract(const Duration(days: 365)), now),
     };
   }
 
@@ -339,7 +339,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 8),
+          padding: const .only(top: 8, bottom: 8),
           child: MoodiaryChipBar<String?>(
             selected: _categoryId,
             onSelected: (v) => setState(() {
@@ -364,7 +364,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
               ? _FilteredEmpty(
                   onClear: () => setState(() {
                     _categoryId = null;
-                    _time = _TimeFilter.all;
+                    _time = .all;
                     _invalidate();
                   }),
                 )
@@ -400,7 +400,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                       right: 16,
                       bottom: 16,
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                        mainAxisSize: .min,
                         children: [
                           ListenableBuilder(
                             listenable: _canvas,
@@ -602,7 +602,7 @@ class _SheetGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         Row(
           children: [
@@ -612,7 +612,7 @@ class _SheetGroup extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        SingleChildScrollView(scrollDirection: Axis.horizontal, child: child),
+        SingleChildScrollView(scrollDirection: .horizontal, child: child),
       ],
     );
   }
@@ -654,7 +654,7 @@ class _FilteredEmpty extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           Icon(LucideIcons.filterX, size: 40, color: theme.colorScheme.outline),
           const SizedBox(height: 12),

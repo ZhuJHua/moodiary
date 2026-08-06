@@ -14,7 +14,7 @@ class OptionDialog extends StatelessWidget {
     required ColorScheme colorScheme,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const .symmetric(horizontal: 16, vertical: 8),
       child: Ink(
         decoration: BoxDecoration(
           borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -26,7 +26,7 @@ class OptionDialog extends StatelessWidget {
             onTap.call();
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const .symmetric(horizontal: 16, vertical: 8),
             child: Text(
               option,
               style: TextStyle(color: colorScheme.onSecondaryContainer),

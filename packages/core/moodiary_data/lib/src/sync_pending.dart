@@ -38,7 +38,7 @@ class SyncPendingState {
 class SyncPendingTracker {
   SyncPendingTracker._();
 
-  static final SyncPendingTracker instance = SyncPendingTracker._();
+  static final SyncPendingTracker instance = ._();
 
   final ValueNotifier<SyncPendingState> _notifier = ValueNotifier(
     SyncPendingState.empty,
@@ -92,7 +92,7 @@ class SyncPendingTracker {
   /// 下次 pull 会重新预扫描。
   void clear() {
     if (_notifier.value.isEmpty) return;
-    _notifier.value = SyncPendingState.empty;
+    _notifier.value = .empty;
   }
 }
 
@@ -103,7 +103,7 @@ class SyncPendingTracker {
 class SyncDirtyTracker {
   SyncDirtyTracker._();
 
-  static final SyncDirtyTracker instance = SyncDirtyTracker._();
+  static final SyncDirtyTracker instance = ._();
 
   final ValueNotifier<Set<String>> _notifier = ValueNotifier(const {});
 

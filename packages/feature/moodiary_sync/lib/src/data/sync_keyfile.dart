@@ -79,7 +79,7 @@ class SyncKeyfile {
     if (decoded is! Map<String, dynamic>) {
       throw const SyncException('远端密钥文件已损坏（非 JSON 对象）');
     }
-    return SyncKeyfile.fromJson(decoded);
+    return .fromJson(decoded);
   }
 
   Map<String, dynamic> toJson() => {
@@ -94,5 +94,5 @@ class SyncKeyfile {
     'wrapped': wrappedDekB64,
   };
 
-  Uint8List toBytes() => Uint8List.fromList(utf8.encode(jsonEncode(toJson())));
+  Uint8List toBytes() => .fromList(utf8.encode(jsonEncode(toJson())));
 }

@@ -44,19 +44,19 @@ abstract final class GraphTuning {
   static const edgeWidthHi = 1.4;
   // —— 力学（疏密三档）——
   static double springLength(GraphDensity d) => switch (d) {
-    GraphDensity.sparse => nodeRadiusBase * 7.0,
-    GraphDensity.normal => nodeRadiusBase * 4.5,
-    GraphDensity.dense => nodeRadiusBase * 3.2,
+    .sparse => nodeRadiusBase * 7.0,
+    .normal => nodeRadiusBase * 4.5,
+    .dense => nodeRadiusBase * 3.2,
   };
   static double collideRadius(GraphDensity d) => switch (d) {
-    GraphDensity.sparse => 34.0,
-    GraphDensity.normal => 27.0,
-    GraphDensity.dense => 21.0,
+    .sparse => 34.0,
+    .normal => 27.0,
+    .dense => 21.0,
   };
   static double gravity(GraphDensity d) => switch (d) {
-    GraphDensity.sparse => 0.02,
-    GraphDensity.normal => 0.03,
-    GraphDensity.dense => 0.05,
+    .sparse => 0.02,
+    .normal => 0.03,
+    .dense => 0.05,
   };
 
   static const springStrength = 0.08; // FA2 引力系数 ka
@@ -151,7 +151,7 @@ class GraphPalette {
 
   factory GraphPalette.of(ThemeData theme, {required int edgeCount}) {
     final cs = theme.colorScheme;
-    final dark = theme.brightness == Brightness.dark;
+    final dark = theme.brightness == .dark;
     final dense = edgeCount > 3000;
     final edgeAlpha = dense ? (dark ? 0.08 : 0.09) : (dark ? 0.16 : 0.18);
     return GraphPalette._(

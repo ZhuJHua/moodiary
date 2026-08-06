@@ -44,20 +44,20 @@ class Marquee extends StatefulWidget {
     required this.text,
     this.style,
     this.textScaler,
-    this.textDirection = TextDirection.ltr,
-    this.scrollAxis = Axis.horizontal,
-    this.crossAxisAlignment = CrossAxisAlignment.center,
+    this.textDirection = .ltr,
+    this.scrollAxis = .horizontal,
+    this.crossAxisAlignment = .center,
     this.blankSpace = 0.0,
     this.velocity = 50.0,
-    this.startAfter = Duration.zero,
-    this.pauseAfterRound = Duration.zero,
+    this.startAfter = .zero,
+    this.pauseAfterRound = .zero,
     this.fadingEdgeStartFraction = 0.0,
     this.fadingEdgeEndFraction = 0.0,
     this.numberOfRounds,
     this.startPadding = 0.0,
-    this.accelerationDuration = Duration.zero,
+    this.accelerationDuration = .zero,
     Curve accelerationCurve = Curves.decelerate,
-    this.decelerationDuration = Duration.zero,
+    this.decelerationDuration = .zero,
     Curve decelerationCurve = Curves.decelerate,
     this.onDone,
   }) : assert(!blankSpace.isNaN),
@@ -257,7 +257,7 @@ class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
 
   double _getTextWidth(BuildContext context) {
     final span = TextSpan(text: widget.text, style: widget.style);
-    const constraints = BoxConstraints(maxWidth: double.infinity);
+    const constraints = BoxConstraints(maxWidth: .infinity);
     final richTextWidget = Text.rich(span).build(context) as RichText;
     final renderObject = richTextWidget.createRenderObject(context);
     renderObject.layout(constraints);
@@ -276,7 +276,7 @@ class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
     return ListView.builder(
       controller: _controller,
       scrollDirection: widget.scrollAxis,
-      reverse: widget.textDirection == TextDirection.rtl,
+      reverse: widget.textDirection == .rtl,
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (_, i) {
         return i.isEven
@@ -286,10 +286,10 @@ class _MarqueeState extends State<Marquee> with SingleTickerProviderStateMixin {
                 textScaler: widget.textScaler,
               )
             : SizedBox(
-                width: widget.scrollAxis == Axis.horizontal
+                width: widget.scrollAxis == .horizontal
                     ? widget.blankSpace
                     : null,
-                height: widget.scrollAxis == Axis.vertical
+                height: widget.scrollAxis == .vertical
                     ? widget.blankSpace
                     : null,
               );

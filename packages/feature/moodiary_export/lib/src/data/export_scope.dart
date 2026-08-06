@@ -26,7 +26,7 @@ class AllDiariesScope extends ExportScope {
       _visibleSorted(await DiaryRepository.get().getAllDiaries());
 
   @override
-  ExportScopeKind get kind => ExportScopeKind.all;
+  ExportScopeKind get kind => .all;
 }
 
 /// 指定分类（可多选）。空分类 id 代表「未分类」。
@@ -47,7 +47,7 @@ class CategoryScope extends ExportScope {
   }
 
   @override
-  ExportScopeKind get kind => ExportScopeKind.category;
+  ExportScopeKind get kind => .category;
 
   @override
   String? get detail => names;
@@ -74,7 +74,7 @@ class DateRangeScope extends ExportScope {
   }
 
   @override
-  ExportScopeKind get kind => ExportScopeKind.dateRange;
+  ExportScopeKind get kind => .dateRange;
 
   @override
   String? get detail => '${_d(from)} – ${_d(to)}';
@@ -96,7 +96,7 @@ class PickedScope extends ExportScope {
   }
 
   @override
-  ExportScopeKind get kind => ExportScopeKind.picked;
+  ExportScopeKind get kind => .picked;
 }
 
 /// 回收站里的日记（show=false）永远不导出 —— 用户已经把它们删掉了。

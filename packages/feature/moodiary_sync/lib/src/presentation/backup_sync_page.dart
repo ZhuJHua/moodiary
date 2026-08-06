@@ -35,7 +35,7 @@ class BackupSyncPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('备份与同步')),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const .symmetric(horizontal: 8, vertical: 8),
         children: const [
           _RemoteSection(),
           SizedBox(height: 4),
@@ -90,12 +90,12 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
     final backend = IRemoteSyncBackend.get();
     final configured = backend.isReady;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '云端同步'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SettingListTile(
@@ -113,14 +113,12 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
               SettingListTile(
                 title: '${current.label} 配置',
                 leading: Icon(
-                  current == SyncProviderType.webdav
-                      ? LucideIcons.cloud
-                      : LucideIcons.database,
+                  current == .webdav ? LucideIcons.cloud : LucideIcons.database,
                 ),
                 subtitle: configured ? '已配置' : '未配置（点击设置）',
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () async {
-                  final ok = current == SyncProviderType.webdav
+                  final ok = current == .webdav
                       ? await WebDavFormSheet.show(context)
                       : await S3FormSheet.show(context);
                   if (ok != true || !mounted) return;
@@ -130,7 +128,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                   await ensureSyncKeyReady(
                     context: context,
                     ref: ref,
-                    backend: IRemoteSyncBackend.get(),
+                    backend: .get(),
                   );
                 },
               ),
@@ -173,7 +171,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                   return SettingListTile(
                     title: '立即同步',
                     subtitle: millis > 0
-                        ? '上次同步：${TimeFormat.listDateTime(DateTime.fromMillisecondsSinceEpoch(millis))}'
+                        ? '上次同步：${TimeFormat.listDateTime(.fromMillisecondsSinceEpoch(millis))}'
                         : '尚未同步',
                     leading: const Icon(LucideIcons.refreshCw),
                     trailing: const Icon(LucideIcons.chevronRight),
@@ -236,12 +234,12 @@ class _LanSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '局域网同步'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SettingListTile(
@@ -275,12 +273,12 @@ class _EncryptionSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '加密'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           // 无独立加密开关：配置用户密钥即开启 AES-256 加密，清空即回到明文。
           child: const Column(
             children: [UserKeyTile(isFirst: true, isLast: true)],
@@ -309,12 +307,12 @@ class _AutoSyncSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '自动同步'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: ValueListenableBuilder(
             valueListenable: MoodiaryKVs.autoSync.getNotifier(),
             builder: (context, enabled, _) {
@@ -424,12 +422,12 @@ class _NetworkSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: '网络'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: ValueListenableBuilder(
             valueListenable: MoodiaryKVs.syncConcurrency.getNotifier(),
             builder: (context, value, _) {

@@ -19,7 +19,7 @@ void main() {
     media = DiskSyncMediaFiles(fileSystem: fs, baseDir: baseDir);
   });
 
-  Uint8List bytes(List<int> b) => Uint8List.fromList(b);
+  Uint8List bytes(List<int> b) => .fromList(b);
 
   test(
     'write creates parent dirs and read round-trips at <base>/<type>/<name>',

@@ -63,10 +63,7 @@ void ambientTest(
     final volume = FakeAmbientPort(initial: volumeInitial);
     final rig = (
       controller: VideoAmbientController(
-        ports: {
-          VideoAmbientChannel.brightness: brightness,
-          VideoAmbientChannel.volume: volume,
-        },
+        ports: {.brightness: brightness, .volume: volume},
         linger: const Duration(milliseconds: 100),
         echoWindow: const Duration(milliseconds: 50),
       ),
@@ -102,22 +99,22 @@ void main() {
 
   group('VideoAmbientController', () {
     ambientTest('prime 读初值并挂监听，读到之后通道才算就绪', (tester, rig) async {
-      expect(rig.controller.isReady(VideoAmbientChannel.volume), isFalse);
+      expect(rig.controller.isReady(.volume), isFalse);
       rig.controller.prime();
       await tester.pump();
 
       expect(rig.brightness.reads, 1);
-      expect(rig.controller.valueOf(VideoAmbientChannel.brightness), 0.5);
-      expect(rig.controller.valueOf(VideoAmbientChannel.volume), 0.4);
+      expect(rig.controller.valueOf(.brightness), 0.5);
+      expect(rig.controller.valueOf(.volume), 0.4);
     });
 
     ambientTest('读不到值的通道判为不可用，滑动不写也不显示 HUD', (tester, rig) async {
       rig.controller.prime();
       await tester.pump();
 
-      expect(rig.controller.isReady(VideoAmbientChannel.brightness), isFalse);
-      rig.controller.begin(VideoAmbientChannel.brightness);
-      rig.controller.dragBy(VideoAmbientChannel.brightness, 0.2);
+      expect(rig.controller.isReady(.brightness), isFalse);
+      rig.controller.begin(.brightness);
+      rig.controller.dragBy(.brightness, 0.2);
       await tester.pump();
 
       expect(rig.brightness.writes, isEmpty);
@@ -128,20 +125,14 @@ void main() {
       rig.controller.prime();
       await tester.pump();
 
-      rig.controller.begin(VideoAmbientChannel.volume);
-      rig.controller.dragBy(VideoAmbientChannel.volume, 0.25);
+      rig.controller.begin(.volume);
+      rig.controller.dragBy(.volume, 0.25);
       await tester.pump();
-      expect(
-        rig.controller.valueOf(VideoAmbientChannel.volume),
-        closeTo(0.65, 1e-9),
-      );
+      expect(rig.controller.valueOf(.volume), closeTo(0.65, 1e-9));
 
-      rig.controller.dragBy(VideoAmbientChannel.volume, -0.15);
+      rig.controller.dragBy(.volume, -0.15);
       await tester.pump();
-      expect(
-        rig.controller.valueOf(VideoAmbientChannel.volume),
-        closeTo(0.5, 1e-9),
-      );
+      expect(rig.controller.valueOf(.volume), closeTo(0.5, 1e-9));
       expect(rig.volume.writes.last, closeTo(0.5, 1e-9));
     });
 
@@ -149,7 +140,7 @@ void main() {
       rig.controller.prime();
       await tester.pump();
 
-      rig.controller.begin(VideoAmbientChannel.brightness);
+      rig.controller.begin(.brightness);
       expect(
         rig.controller.active.value?.channel,
         VideoAmbientChannel.brightness,
@@ -168,35 +159,29 @@ void main() {
       rig.controller.prime();
       await tester.pump();
 
-      rig.controller.begin(VideoAmbientChannel.brightness);
-      rig.controller.dragBy(VideoAmbientChannel.brightness, 3.0); // 划过头
+      rig.controller.begin(.brightness);
+      rig.controller.dragBy(.brightness, 3.0); // 划过头
       await tester.pump();
-      expect(rig.controller.valueOf(VideoAmbientChannel.brightness), 1.0);
+      expect(rig.controller.valueOf(.brightness), 1.0);
 
-      rig.controller.dragBy(VideoAmbientChannel.brightness, -0.1);
+      rig.controller.dragBy(.brightness, -0.1);
       await tester.pump();
       // 攒了欠账的话这里还会停在 1.0。
-      expect(
-        rig.controller.valueOf(VideoAmbientChannel.brightness),
-        closeTo(0.9, 1e-9),
-      );
+      expect(rig.controller.valueOf(.brightness), closeTo(0.9, 1e-9));
     });
 
     ambientTest('下限同理', (tester, rig) async {
       rig.controller.prime();
       await tester.pump();
 
-      rig.controller.begin(VideoAmbientChannel.volume);
-      rig.controller.dragBy(VideoAmbientChannel.volume, -3.0);
+      rig.controller.begin(.volume);
+      rig.controller.dragBy(.volume, -3.0);
       await tester.pump();
-      expect(rig.controller.valueOf(VideoAmbientChannel.volume), 0.0);
+      expect(rig.controller.valueOf(.volume), 0.0);
 
-      rig.controller.dragBy(VideoAmbientChannel.volume, 0.2);
+      rig.controller.dragBy(.volume, 0.2);
       await tester.pump();
-      expect(
-        rig.controller.valueOf(VideoAmbientChannel.volume),
-        closeTo(0.2, 1e-9),
-      );
+      expect(rig.controller.valueOf(.volume), closeTo(0.2, 1e-9));
     });
 
     ambientTest('跟手期间写入单飞合并：只发首个与最后一个', (tester, rig) async {
@@ -204,9 +189,9 @@ void main() {
       await tester.pump();
 
       rig.volume.gate = Completer<void>();
-      rig.controller.begin(VideoAmbientChannel.volume);
+      rig.controller.begin(.volume);
       for (var i = 0; i < 6; i++) {
-        rig.controller.dragBy(VideoAmbientChannel.volume, 0.02);
+        rig.controller.dragBy(.volume, 0.02);
       }
       await tester.pump();
       expect(rig.volume.writes.length, 1, reason: '第一次写还卡着，后续只该排队');
@@ -221,20 +206,20 @@ void main() {
       rig.controller.prime();
       await tester.pump();
 
-      rig.controller.begin(VideoAmbientChannel.volume);
-      rig.controller.dragBy(VideoAmbientChannel.volume, 0.23);
+      rig.controller.begin(.volume);
+      rig.controller.dragBy(.volume, 0.23);
       rig.controller.end();
       await tester.pump();
-      final mine = rig.controller.valueOf(VideoAmbientChannel.volume);
+      final mine = rig.controller.valueOf(.volume);
 
       rig.volume.emitExternal(0.6); // 平台把 0.63 落到了 0.6 档
       await tester.pump();
-      expect(rig.controller.valueOf(VideoAmbientChannel.volume), mine);
+      expect(rig.controller.valueOf(.volume), mine);
 
       await tester.pump(const Duration(milliseconds: 60)); // 窗口过期
       rig.volume.emitExternal(0.6);
       await tester.pump();
-      expect(rig.controller.valueOf(VideoAmbientChannel.volume), 0.6);
+      expect(rig.controller.valueOf(.volume), 0.6);
     });
 
     ambientTest('硬件音量键（外部变化）要弹我们的 HUD —— 系统弹窗被关掉了', (tester, rig) async {
@@ -256,30 +241,27 @@ void main() {
 
       rig.brightness.emitExternal(0.8);
       await tester.pump();
-      expect(rig.controller.valueOf(VideoAmbientChannel.brightness), 0.8);
+      expect(rig.controller.valueOf(.brightness), 0.8);
       expect(rig.controller.active.value, isNull);
     });
 
     ambientTest('初值迟到：按下时还没读到，读到之后以那一刻为基准', (tester, rig) async {
       rig.controller.prime(); // 刻意不 pump，read 还没完成
 
-      rig.controller.begin(VideoAmbientChannel.volume);
-      rig.controller.dragBy(VideoAmbientChannel.volume, 0.3); // 这一段作废
+      rig.controller.begin(.volume);
+      rig.controller.dragBy(.volume, 0.3); // 这一段作废
       expect(rig.volume.writes, isEmpty);
 
       await tester.pump(); // 初值 0.4 落地
-      rig.controller.dragBy(VideoAmbientChannel.volume, 0.1);
+      rig.controller.dragBy(.volume, 0.1);
       await tester.pump();
-      expect(
-        rig.controller.valueOf(VideoAmbientChannel.volume),
-        closeTo(0.5, 1e-9),
-      );
+      expect(rig.controller.valueOf(.volume), closeTo(0.5, 1e-9));
     });
 
     ambientTest('dispose 让端口收尾（亮度复位 / 音量恢复系统弹窗），之后不再写入', (tester, rig) async {
       rig.controller.prime();
       await tester.pump();
-      rig.controller.begin(VideoAmbientChannel.volume);
+      rig.controller.begin(.volume);
 
       rig.controller.dispose();
       await tester.pump();
@@ -287,7 +269,7 @@ void main() {
       expect(rig.volume.released, isTrue);
 
       final before = rig.volume.writes.length;
-      rig.controller.dragBy(VideoAmbientChannel.volume, 0.5);
+      rig.controller.dragBy(.volume, 0.5);
       rig.controller.end();
       await tester.pump();
       expect(rig.volume.writes.length, before);

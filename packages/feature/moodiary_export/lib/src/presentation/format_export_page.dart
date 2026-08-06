@@ -4,7 +4,6 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 
 import '../data/export_options.dart';
-import '../data/markdown_writer.dart';
 import '../data/export_scope.dart';
 import '../data/export_service.dart';
 import 'export_page.dart' show shareExported;
@@ -23,7 +22,7 @@ class FormatExportPage extends StatefulWidget {
 }
 
 class _FormatExportPageState extends State<FormatExportPage> {
-  late ExportSettings _settings = ExportSettings.decode(
+  late ExportSettings _settings = .decode(
     MoodiaryKVs.exportSettings.get() ?? '',
   );
 
@@ -51,18 +50,18 @@ class _FormatExportPageState extends State<FormatExportPage> {
   ExportCommon get _common => _settings.common;
 
   LayoutExportOptions get _layout =>
-      widget.format == ExportFormat.pdf ? _settings.pdf : _settings.docx;
+      widget.format == .pdf ? _settings.pdf : _settings.docx;
 
   void _updateLayout(LayoutExportOptions next) => _update(
-    widget.format == ExportFormat.pdf
+    widget.format == .pdf
         ? _settings.copyWith(pdf: next)
         : _settings.copyWith(docx: next),
   );
 
   String _titleOf(AppLocalizations l10n) => switch (widget.format) {
-    ExportFormat.markdown => l10n.exportTitleMarkdown,
-    ExportFormat.docx => l10n.exportTitleDocx,
-    ExportFormat.pdf => l10n.exportTitlePdf,
+    .markdown => l10n.exportTitleMarkdown,
+    .docx => l10n.exportTitleDocx,
+    .pdf => l10n.exportTitlePdf,
   };
 
   @override
@@ -71,14 +70,14 @@ class _FormatExportPageState extends State<FormatExportPage> {
       appBar: AppBar(title: Text(_titleOf(context.l10n))),
       body: ListView(
         // 底部有操作栏吃安全区，这里只补常规内边距。
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const .symmetric(horizontal: 8, vertical: 8),
         children: [
           _scopeSection(),
           const SizedBox(height: 4),
           _contentSection(),
           const SizedBox(height: 4),
-          if (widget.format == ExportFormat.markdown) _markdownSection(),
-          if (widget.format != ExportFormat.markdown) _layoutSection(),
+          if (widget.format == .markdown) _markdownSection(),
+          if (widget.format != .markdown) _layoutSection(),
         ],
       ),
       bottomNavigationBar: _actionBar(),
@@ -91,12 +90,12 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         SettingTitleTile(title: l10n.exportSectionScope),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SettingListTile(
@@ -105,7 +104,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
                 subtitle: _scopeLabel(l10n),
                 leading: const Icon(LucideIcons.calendarRange),
                 trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: .min,
                   children: [
                     Text(
                       _scopeCount == null
@@ -177,12 +176,12 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         SettingTitleTile(title: l10n.exportSectionContent),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SwitchListTile(
@@ -218,19 +217,19 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   static String _mediaLabel(AppLocalizations l10n, ExportMediaPolicy policy) =>
       switch (policy) {
-        ExportMediaPolicy.embed => l10n.exportMediaEmbed,
-        ExportMediaPolicy.placeholder => l10n.exportMediaPlaceholder,
-        ExportMediaPolicy.none => l10n.exportMediaNone,
+        .embed => l10n.exportMediaEmbed,
+        .placeholder => l10n.exportMediaPlaceholder,
+        .none => l10n.exportMediaNone,
       };
 
   /// 范围描述：成句的部分走 l10n，分类名 / 日期区间这类用户数据由 scope 自己带。
   String _scopeLabel(AppLocalizations l10n) {
     final detail = _scope.detail;
     return switch (_scope.kind) {
-      ExportScopeKind.all => l10n.exportScopeAll,
-      ExportScopeKind.category => detail ?? l10n.exportScopeByCategory,
-      ExportScopeKind.dateRange => detail ?? l10n.exportScopeByDate,
-      ExportScopeKind.picked => l10n.exportScopePickedLabel(_scopeCount ?? 0),
+      .all => l10n.exportScopeAll,
+      .category => detail ?? l10n.exportScopeByCategory,
+      .dateRange => detail ?? l10n.exportScopeByDate,
+      .picked => l10n.exportScopePickedLabel(_scopeCount ?? 0),
     };
   }
 
@@ -259,26 +258,22 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final scheme = context.colorScheme;
     final md = _settings.markdown;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: 'Markdown'),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SwitchListTile(
-                value: md.dialect == MarkdownDialect.gfm,
+                value: md.dialect == .gfm,
                 title: Text(l10n.exportMarkdownGfm),
                 subtitle: Text(l10n.exportMarkdownGfmSubtitle),
                 secondary: const Icon(LucideIcons.fileJson),
                 onChanged: (v) => _update(
                   _settings.copyWith(
-                    markdown: md.copyWith(
-                      dialect: v
-                          ? MarkdownDialect.gfm
-                          : MarkdownDialect.commonMark,
-                    ),
+                    markdown: md.copyWith(dialect: v ? .gfm : .commonMark),
                   ),
                 ),
               ),
@@ -304,15 +299,15 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final layout = _layout;
-    final isPdf = widget.format == ExportFormat.pdf;
+    final isPdf = widget.format == .pdf;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         SettingTitleTile(title: l10n.exportSectionLayout),
         Card.filled(
           color: scheme.surfaceContainerLow,
-          margin: EdgeInsets.zero,
+          margin: .zero,
           child: Column(
             children: [
               SettingListTile(
@@ -461,17 +456,17 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final count = _scopeCount;
     final blocked = _pdfBlockedReason();
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      minimum: const .fromLTRB(16, 8, 16, 12),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: .min,
+        crossAxisAlignment: .stretch,
         children: [
           if (blocked != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const .only(bottom: 8),
               child: Text(
                 blocked,
-                textAlign: TextAlign.center,
+                textAlign: .center,
                 style: context.textTheme.bodySmall?.copyWith(
                   color: context.colorScheme.error,
                 ),
@@ -482,9 +477,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
             height: 50,
             child: FilledButton.icon(
               style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: .circular(14)),
               ),
               onPressed:
                   (_running || count == null || count == 0 || blocked != null)
@@ -513,32 +506,27 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Widget _progressBar(ExportProgress progress, AppLocalizations l10n) {
     final label = switch (progress.phase) {
-      ExportPhase.converting => l10n.exportProgressConverting(
+      .converting => l10n.exportProgressConverting(
         progress.done,
         progress.total,
       ),
-      ExportPhase.writing when progress.total == 0 =>
-        l10n.exportProgressWriting,
-      ExportPhase.writing => l10n.exportProgressWritingCount(
+      .writing when progress.total == 0 => l10n.exportProgressWriting,
+      .writing => l10n.exportProgressWritingCount(
         progress.done,
         progress.total,
       ),
       // 收尾阶段切不开，只能给不确定进度条。
-      ExportPhase.serializing => l10n.exportProgressSerializing,
+      .serializing => l10n.exportProgressSerializing,
     };
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const .only(bottom: 10),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: .stretch,
         children: [
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: context.textTheme.bodySmall,
-          ),
+          Text(label, textAlign: .center, style: context.textTheme.bodySmall),
           const SizedBox(height: 6),
           ClipRRect(
-            borderRadius: BorderRadius.circular(3),
+            borderRadius: .circular(3),
             child: LinearProgressIndicator(
               minHeight: 4,
               value: progress.total == 0
@@ -553,7 +541,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   /// PDF 必须先有一个可用的字体，否则导出会在写文件那一步才失败。
   String? _pdfBlockedReason() {
-    if (widget.format != ExportFormat.pdf) return null;
+    if (widget.format != .pdf) return null;
     if (_settings.pdf.eastAsiaFont.isEmpty) {
       return context.l10n.exportPickFontFirst;
     }
@@ -564,7 +552,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final l10n = context.l10n;
     setState(() {
       _running = true;
-      _progress = const ExportProgress(ExportPhase.converting, 0, 1);
+      _progress = const ExportProgress(.converting, 0, 1);
     });
     try {
       final outcome = await ExportService.run(
@@ -582,7 +570,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     } on ExportException catch (e) {
       toast.error(
         message: switch (e.error) {
-          ExportError.emptyScope => l10n.exportScopeEmpty,
+          .emptyScope => l10n.exportScopeEmpty,
         },
       );
     } catch (e) {

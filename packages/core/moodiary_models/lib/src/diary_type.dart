@@ -23,5 +23,5 @@ enum DiaryType {
   }
 
   /// 旧格式（markdown / richText）只读，需经迁移工具转成 [tiptap] 才能编辑。
-  bool get isEditable => this == DiaryType.tiptap;
+  bool get isEditable => this == .tiptap;
 }

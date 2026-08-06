@@ -59,7 +59,7 @@ class LanBrowser {
       // 标准 DNS 解析里不可用，直连必须用 IP。
       final discovery = await nsd.startDiscovery(
         lanServiceType,
-        ipLookupType: nsd.IpLookupType.v4,
+        ipLookupType: .v4,
       );
       _discovery = discovery;
       discovery.addListener(_update);

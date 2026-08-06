@@ -55,7 +55,7 @@ class CustomPrimaryScrollController extends InheritedWidget
       TargetPlatform.values.toSet();
 
   @override
-  Axis get scrollDirection => Axis.vertical;
+  Axis get scrollDirection => .vertical;
 }
 
 class ScrollControllerWrapper implements ScrollController {

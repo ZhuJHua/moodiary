@@ -9,7 +9,7 @@ import 'lru.dart';
 class ImageSizeManager {
   ImageSizeManager._();
 
-  static final ImageSizeManager _instance = ImageSizeManager._();
+  static final ImageSizeManager _instance = ._();
 
   factory ImageSizeManager() => _instance;
 

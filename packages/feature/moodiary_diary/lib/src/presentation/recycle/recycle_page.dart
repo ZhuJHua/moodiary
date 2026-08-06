@@ -33,7 +33,7 @@ class RecyclePage extends ConsumerWidget {
             return _Empty();
           }
           return ListView.separated(
-            padding: const EdgeInsets.all(12),
+            padding: const .all(12),
             itemBuilder: (context, index) {
               final diary = diaries[index];
               return _RecycleTile(
@@ -107,7 +107,7 @@ class _Empty extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: .min,
         children: [
           const Icon(LucideIcons.trash2, size: 48),
           const SizedBox(height: 12),
@@ -133,17 +133,17 @@ class _RecycleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      margin: EdgeInsets.zero,
+      margin: .zero,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const .all(12),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: .start,
           children: [
             Text(
               diary.title.isEmpty ? '(无标题)' : diary.title,
               style: theme.textTheme.titleMedium,
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              overflow: .ellipsis,
             ),
             const SizedBox(height: 4),
             Text(
@@ -158,12 +158,12 @@ class _RecycleTile extends StatelessWidget {
                 diary.contentText.trim(),
                 style: theme.textTheme.bodyMedium,
                 maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
               ),
             ],
             const SizedBox(height: 8),
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: .end,
               children: [
                 TextButton.icon(
                   onPressed: onRestore,

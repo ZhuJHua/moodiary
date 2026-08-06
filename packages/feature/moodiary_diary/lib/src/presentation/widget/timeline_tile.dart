@@ -64,7 +64,7 @@ class DiaryTimelineTile extends StatelessWidget {
     this.moodBelow,
     this.category,
     this.showCategoryLabel = true,
-    this.syncState = DiaryCardSyncState.none,
+    this.syncState = .none,
     this.onTap,
     this.onLongPress,
     this.selecting = false,
@@ -91,9 +91,9 @@ class DiaryTimelineTile extends StatelessWidget {
       // 点击响应放在内容块里（见 [_Content]），不包整行：整行 InkWell 的水波是个直角
       // 矩形，会从日期列和轴线上直接洗过去，把轴那条线糊掉。
       child: Padding(
-        padding: EdgeInsets.only(top: topPad, bottom: _kBottomPad),
+        padding: .only(top: topPad, bottom: _kBottomPad),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: .start,
           children: [
             SizedBox(
               width: _kDateWidth,
@@ -129,21 +129,21 @@ class _DateColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: .end,
       children: [
         Text(
           '${stamp.day}',
           style: context.textTheme.titleMedium?.copyWith(
             color: scheme.onSurface,
-            fontWeight: FontWeight.w700,
+            fontWeight: .w700,
             height: 1.05,
-            fontFeatures: const [FontFeature.tabularFigures()],
+            fontFeatures: const [.tabularFigures()],
           ),
         ),
         Text(
           TimeFormat.weekdayShort(stamp),
           maxLines: 1,
-          overflow: TextOverflow.clip,
+          overflow: .clip,
           style: context.textTheme.labelSmall?.copyWith(
             color: scheme.onSurfaceVariant,
             height: 1.1,
@@ -188,7 +188,7 @@ class _Content extends StatelessWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           _MetaLine(
             diary: diary,
@@ -204,7 +204,7 @@ class _Content extends StatelessWidget {
             Text(
               diary.title.trim(),
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              overflow: .ellipsis,
               style: context.textTheme.titleMedium?.copyWith(
                 color: scheme.onSurface,
               ),
@@ -215,7 +215,7 @@ class _Content extends StatelessWidget {
             Text(
               body,
               maxLines: hasTitle ? 2 : 3,
-              overflow: TextOverflow.ellipsis,
+              overflow: .ellipsis,
               style: context.textTheme.bodyMedium?.copyWith(
                 color: scheme.onSurfaceVariant,
               ),
@@ -279,7 +279,7 @@ class _MetaLine extends StatelessWidget {
                   child: Text(
                     '${diary.weather[2]} ${diary.weather[1]}°',
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    overflow: .ellipsis,
                     style: style,
                   ),
                 ),
@@ -288,7 +288,7 @@ class _MetaLine extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        if (syncState != DiaryCardSyncState.none) ...[
+        if (syncState != .none) ...[
           DiarySyncBadge(state: syncState),
           const SizedBox(width: 8),
         ],
@@ -311,12 +311,12 @@ class _CategoryLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = categoryColorOf(colorValue: category.color, id: category.id);
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       children: [
         Container(
           width: 7,
           height: 7,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(color: color, shape: .circle),
         ),
         const SizedBox(width: 4),
         ConstrainedBox(
@@ -324,7 +324,7 @@ class _CategoryLabel extends StatelessWidget {
           child: Text(
             category.categoryName,
             maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            overflow: .ellipsis,
             style: style,
           ),
         ),
@@ -411,7 +411,7 @@ class _Thumb extends StatelessWidget {
     return ClipRRect(
       borderRadius: radius,
       child: Stack(
-        fit: StackFit.expand,
+        fit: .expand,
         children: [
           ColoredBox(color: scheme.surfaceContainerHighest),
           Image(
@@ -422,7 +422,7 @@ class _Thumb extends StatelessWidget {
               FileImage(File(AppFiles.getRealPath('image', name))),
               width: cacheWidth,
             ),
-            fit: BoxFit.cover,
+            fit: .cover,
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
             errorBuilder: (context, _, _) =>
@@ -438,7 +438,7 @@ class _Thumb extends StatelessWidget {
                   '+$moreCount',
                   style: context.textTheme.titleMedium?.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: .w700,
                   ),
                 ),
               ),
@@ -485,12 +485,7 @@ class _Footer extends StatelessWidget {
       chips.add(
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 108),
-          child: Text(
-            '#$tag',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: style,
-          ),
+          child: Text('#$tag', maxLines: 1, overflow: .ellipsis, style: style),
         ),
       );
     }
@@ -500,7 +495,7 @@ class _Footer extends StatelessWidget {
     if (diary.position.length >= 3 && diary.position[2].trim().isNotEmpty) {
       chips.add(
         Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: .min,
           children: [
             Icon(LucideIcons.mapPin, size: 12, color: scheme.onSurfaceVariant),
             const SizedBox(width: 2),
@@ -509,7 +504,7 @@ class _Footer extends StatelessWidget {
               child: Text(
                 diary.position[2],
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
                 style: style,
               ),
             ),
@@ -520,11 +515,11 @@ class _Footer extends StatelessWidget {
 
     if (chips.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(top: 6),
+      padding: const .only(top: 6),
       child: Wrap(
         spacing: 10,
         runSpacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
+        crossAxisAlignment: .center,
         children: chips,
       ),
     );
@@ -547,7 +542,7 @@ class _MediaChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       children: [
         Icon(icon, size: 13, color: context.colorScheme.onSurfaceVariant),
         if (count > 1) ...[
@@ -626,12 +621,12 @@ class _AxisPainter extends CustomPainter {
   ) {
     final paint = Paint()
       ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round
+      ..strokeCap = .round
       ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
+        begin: .topCenter,
+        end: .bottomCenter,
         colors: [a, b],
-      ).createShader(Rect.fromLTRB(x - 1, y0, x + 1, y1));
+      ).createShader(.fromLTRB(x - 1, y0, x + 1, y1));
     canvas.drawLine(Offset(x, y0), Offset(x, y1), paint);
   }
 
@@ -639,7 +634,7 @@ class _AxisPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
+      ..strokeCap = .round;
     const dash = 3.0, gap = 4.0;
     for (var y = y0; y < y1; y += dash + gap) {
       canvas.drawLine(Offset(x, y), Offset(x, (y + dash).clamp(y0, y1)), paint);

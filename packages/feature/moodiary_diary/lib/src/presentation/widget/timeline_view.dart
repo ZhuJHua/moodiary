@@ -21,7 +21,7 @@ import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 class DiaryTimelineView extends ConsumerWidget {
   final DiaryFilter filter;
 
-  const DiaryTimelineView({super.key, this.filter = const DiaryFilter.all()});
+  const DiaryTimelineView({super.key, this.filter = const .all()});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,7 +36,7 @@ class DiaryTimelineView extends ConsumerWidget {
     return diaryAsync.buildLoading(
       data: (diaries) {
         return ListenableBuilder(
-          listenable: Listenable.merge([
+          listenable: .merge([
             SyncPendingTracker.instance.listenable,
             SyncDirtyTracker.instance.listenable,
           ]),
@@ -142,7 +142,7 @@ class DiaryTimelineView extends ConsumerWidget {
                     // 左右留白统一加在这里：吸顶头与条目必须同一条左边线，
                     // 否则轴心 x 会跟着差 14px。
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      padding: const .symmetric(horizontal: 14),
                       sliver: SliverMainAxisGroup(slivers: slivers),
                     ),
                   ],
@@ -158,7 +158,7 @@ class DiaryTimelineView extends ConsumerWidget {
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                  padding: const .fromLTRB(12, 12, 12, 0),
                   child: SyncPendingSummaryCard(
                     newCount: pending.newDiaryIds.length,
                     updateCount: pending.updateDiaryIds.length,
@@ -195,7 +195,7 @@ class _MonthHeaderDelegate extends SliverPersistentHeaderDelegate {
     final scheme = context.colorScheme;
     return Container(
       height: _height,
-      alignment: Alignment.centerLeft,
+      alignment: .centerLeft,
       color: scheme.surface,
       child: Row(
         children: [
@@ -203,7 +203,7 @@ class _MonthHeaderDelegate extends SliverPersistentHeaderDelegate {
             TimeFormat.monthTitle(month),
             style: context.textTheme.titleSmall?.copyWith(
               color: scheme.onSurface,
-              fontWeight: FontWeight.w600,
+              fontWeight: .w600,
             ),
           ),
           if (count != null) ...[

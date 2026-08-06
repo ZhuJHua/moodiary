@@ -30,7 +30,7 @@ import 'package:moodiary_sync/src/data/sync_logger.dart';
 class AutoSyncWatcher {
   AutoSyncWatcher._();
 
-  static AutoSyncWatcher create() => AutoSyncWatcher._();
+  static AutoSyncWatcher create() => ._();
 
   factory AutoSyncWatcher.get() => getIt<AutoSyncWatcher>();
 
@@ -132,12 +132,12 @@ class AutoSyncWatcher {
 
   void _onSyncEvent(SyncEvent event) {
     switch (event.kind) {
-      case SyncEventKind.syncStart:
+      case .syncStart:
         _syncing = true;
         // 已有同步在跑，撤掉待发 push；同步内部写入由 _dirtyDuringSync 兜底。
         _timer?.cancel();
         _timer = null;
-      case SyncEventKind.syncEnd:
+      case .syncEnd:
         _syncing = false;
         if (_dirtyDuringSync) {
           _dirtyDuringSync = false;

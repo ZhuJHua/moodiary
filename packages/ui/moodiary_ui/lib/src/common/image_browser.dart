@@ -93,7 +93,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
         DismissiblePage(
           onDismissed: () => Navigator.of(context).pop(),
           onDragUpdate: (details) => setState(() => _chrome = details.opacity),
-          direction: DismissiblePageDismissDirection.vertical,
+          direction: .vertical,
           backgroundColor: Colors.black,
           minScale: 0.2,
           dragSensitivity: 0.8,
@@ -122,13 +122,10 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: Colors.black38,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: .circular(12),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
+                  padding: const .symmetric(horizontal: 10, vertical: 4),
                   child: Text(
                     '${_current + 1} / ${widget.images.length}',
                     style: const TextStyle(color: Colors.white, fontSize: 13),
@@ -146,7 +143,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
             child: Opacity(
               opacity: _chrome,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: .spaceBetween,
                 children: [
                   IconButton(
                     tooltip: context.l10n.imageBrowserInfo,
@@ -200,7 +197,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
     // 竖直轴 scope 让 PhotoView 的识别器按需抢占手势竞技场：双指（捏合）立即抢，
     // 否则会被外层 DismissiblePage 的竖直拖动判成下拉；单指竖直仅在放大后图可平移时
     // 抢（平移到边缘 / 原始比例时不抢，下拉 dismiss 照常）。
-    return PhotoViewGestureDetectorScope(axis: Axis.vertical, child: gallery);
+    return PhotoViewGestureDetectorScope(axis: .vertical, child: gallery);
   }
 
   /// Hero 包在整个 PhotoView 外面（而非 photo_view 的 heroAttributes——那个 Hero 在图
@@ -216,16 +213,16 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
       maxScale: PhotoViewComputedScale.covered * 3,
       scaleStateChangedCallback: (state) {
         if (index != _current) return;
-        final zoomed = state != PhotoViewScaleState.initial;
+        final zoomed = state != .initial;
         if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
       },
       onTapUp: (_, _, _) => Navigator.of(context).maybePop(),
       loadingBuilder: (_, _) => placeholder != null
           ? Image(
               image: placeholder,
-              fit: BoxFit.contain,
-              width: double.infinity,
-              height: double.infinity,
+              fit: .contain,
+              width: .infinity,
+              height: .infinity,
             )
           : const Center(child: CircularProgressIndicator(color: Colors.white)),
       errorBuilder: (_, _, _) => const Center(
@@ -255,7 +252,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
         toast.loading();
         try {
           final resp = await IHttpClient.get().requestBytes(
-            HttpMethod.get,
+            .get,
             image,
             silent: true,
           );
@@ -270,10 +267,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
           await toast.dismiss();
         }
       }
-      final ok = await MediaManager.saveToGallery(
-        path: path,
-        type: MediaType.image,
-      );
+      final ok = await MediaManager.saveToGallery(path: path, type: .image);
       ok
           ? toast.success(message: l10n.imageBrowserSaved)
           : toast.error(message: l10n.imageBrowserSaveFailed);
@@ -395,14 +389,14 @@ class _ImageInfoSheet extends StatelessWidget {
         ),
     ];
     return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: .min,
+      crossAxisAlignment: .start,
       children: [
         for (final (label, value) in rows)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
+            padding: const .symmetric(vertical: 5),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: .start,
               children: [
                 SizedBox(
                   width: 76,

@@ -19,51 +19,39 @@ enum AssistantTool {
 
   diaryOverview('diaryOverview'),
 
-  createDiary('createDiary', permission: AssistantToolPermission.approval),
+  createDiary('createDiary', permission: .approval),
 
-  updateDiary('updateDiary', permission: AssistantToolPermission.approval),
+  updateDiary('updateDiary', permission: .approval),
 
-  deleteDiary('deleteDiary', permission: AssistantToolPermission.dangerous),
+  deleteDiary('deleteDiary', permission: .dangerous),
 
   listCategories('listCategories'),
 
-  createCategory(
-    'createCategory',
-    permission: AssistantToolPermission.approval,
-  ),
+  createCategory('createCategory', permission: .approval),
 
-  updateCategory(
-    'updateCategory',
-    permission: AssistantToolPermission.approval,
-  ),
+  updateCategory('updateCategory', permission: .approval),
 
-  deleteCategory(
-    'deleteCategory',
-    permission: AssistantToolPermission.dangerous,
-  ),
+  deleteCategory('deleteCategory', permission: .dangerous),
 
   listMemories('listMemories'),
 
-  rememberFact('rememberFact', permission: AssistantToolPermission.approval),
+  rememberFact('rememberFact', permission: .approval),
 
-  updateMemory('updateMemory', permission: AssistantToolPermission.approval),
+  updateMemory('updateMemory', permission: .approval),
 
-  forgetFact('forgetFact', permission: AssistantToolPermission.dangerous);
+  forgetFact('forgetFact', permission: .dangerous);
 
   final String id;
 
   final AssistantToolPermission permission;
 
-  const AssistantTool(
-    this.id, {
-    this.permission = AssistantToolPermission.none,
-  });
+  const AssistantTool(this.id, {this.permission = .none});
 
   /// 调用前是否需要用户批准（只读工具无需）。
-  bool get needsApproval => permission != AssistantToolPermission.none;
+  bool get needsApproval => permission != .none;
 
   /// 是否为破坏性操作（权限卡片显示危险样式）。
-  bool get dangerous => permission == AssistantToolPermission.dangerous;
+  bool get dangerous => permission == .dangerous;
 }
 
 const int assistantMaxTokens = 8192;

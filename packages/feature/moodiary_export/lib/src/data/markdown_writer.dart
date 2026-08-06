@@ -35,11 +35,11 @@ class MarkdownOptions {
   final String assetsDir;
 
   const MarkdownOptions({
-    this.dialect = MarkdownDialect.gfm,
+    this.dialect = .gfm,
     this.frontMatter = true,
     this.includeTitle = true,
     this.includeMetaLine = false,
-    this.mediaMode = MarkdownMediaMode.relative,
+    this.mediaMode = .relative,
     this.assetsDir = 'assets',
   });
 }
@@ -196,7 +196,7 @@ class MarkdownWriter {
 
       case IrBlock_Media(:final kind, :final filename):
         final label = kind == 'video' ? '视频' : '音频';
-        final target = o.mediaMode == MarkdownMediaMode.relative
+        final target = o.mediaMode == .relative
             ? '${o.assetsDir}/$filename'
             : filename;
         _writeIndented(buf, '[$label：$filename]($target)', indent);
@@ -214,7 +214,7 @@ class MarkdownWriter {
     MarkdownOptions o, {
     required String indent,
   }) {
-    final gfm = o.dialect == MarkdownDialect.gfm;
+    final gfm = o.dialect == .gfm;
     var number = list.start;
 
     for (final item in list.items) {
@@ -249,7 +249,7 @@ class MarkdownWriter {
     if (rows.isEmpty) return;
 
     // GFM 简单表没有合并单元格：colspan/rowspan 只能丢，内容保留在起始格。
-    if (o.dialect != MarkdownDialect.gfm) {
+    if (o.dialect != .gfm) {
       for (final row in rows) {
         final cells = [for (final c in row) _cellText(c, o)];
         _writeIndented(buf, cells.join('\t'), indent);
@@ -286,8 +286,8 @@ class MarkdownWriter {
     if (img.external_) return '![$alt](${img.path})';
     final name = img.path.split(RegExp(r'[/\\]')).last;
     final target = switch (o.mediaMode) {
-      MarkdownMediaMode.relative => '${o.assetsDir}/$name',
-      MarkdownMediaMode.absolute => img.path,
+      .relative => '${o.assetsDir}/$name',
+      .absolute => img.path,
     };
     return '![$alt]($target)';
   }
@@ -320,7 +320,7 @@ class MarkdownWriter {
 
     if (span.bold) text = '**$text**';
     if (span.italic) text = '*$text*';
-    if (span.strike && o.dialect == MarkdownDialect.gfm) text = '~~$text~~';
+    if (span.strike && o.dialect == .gfm) text = '~~$text~~';
     if (span.underline) text = '<u>$text</u>';
     if (span.href != null) text = '[$text](${_escapeUrl(span.href!)})';
     return text;

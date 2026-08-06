@@ -31,8 +31,8 @@ class SearchResultCard extends StatelessWidget {
 
     return Material(
       color: scheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(16),
-      clipBehavior: Clip.antiAlias,
+      borderRadius: .circular(16),
+      clipBehavior: .antiAlias,
       child: InkWell(
         onTap: () {
           onTap?.call();
@@ -42,22 +42,22 @@ class SearchResultCard extends StatelessWidget {
           ).push(context);
         },
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const .all(14),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: .start,
             children: [
               if (title.trim().isNotEmpty) ...[
                 SubstringHighlight(
                   text: title,
                   terms: queryList,
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  overflow: .ellipsis,
                   textStyle: textTheme.titleMedium!.copyWith(
                     color: scheme.onSurface,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: .w600,
                   ),
                   textStyleHighlight: textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: .w600,
                     backgroundColor: scheme.primaryContainer,
                     color: scheme.onPrimaryContainer,
                   ),
@@ -68,7 +68,7 @@ class SearchResultCard extends StatelessWidget {
                 text: contentText,
                 terms: queryList,
                 maxLines: 3,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
                 textStyle: textTheme.bodyMedium!.copyWith(
                   color: scheme.onSurfaceVariant,
                   height: 1.4,

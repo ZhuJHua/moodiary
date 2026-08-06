@@ -24,17 +24,17 @@ class HttpBody {
   const HttpBody.raw(this.bytes, {this.contentType});
 
   factory HttpBody.text(String text) => HttpBody.raw(
-    Uint8List.fromList(utf8.encode(text)),
+    .fromList(utf8.encode(text)),
     contentType: 'text/plain; charset=utf-8',
   );
 
   factory HttpBody.json(Object? value) => HttpBody.raw(
-    Uint8List.fromList(utf8.encode(jsonEncode(value))),
+    .fromList(utf8.encode(jsonEncode(value))),
     contentType: 'application/json; charset=utf-8',
   );
 
   factory HttpBody.bytes(List<int> bytes, {String? contentType}) =>
-      HttpBody.raw(Uint8List.fromList(bytes), contentType: contentType);
+      HttpBody.raw(.fromList(bytes), contentType: contentType);
 
   factory HttpBody.form(Map<String, dynamic> fields) {
     final encoded = fields.entries
@@ -44,7 +44,7 @@ class HttpBody {
         )
         .join('&');
     return HttpBody.raw(
-      Uint8List.fromList(utf8.encode(encoded)),
+      .fromList(utf8.encode(encoded)),
       contentType: 'application/x-www-form-urlencoded',
     );
   }
@@ -101,7 +101,7 @@ abstract class IHttpClient {
     bool silent = false,
     bool plainText = false,
   }) => request<T>(
-    HttpMethod.get,
+    .get,
     url,
     query: query,
     headers: headers,
@@ -119,7 +119,7 @@ abstract class IHttpClient {
     bool silent = false,
     bool plainText = false,
   }) => request<T>(
-    HttpMethod.post,
+    .post,
     url,
     query: query,
     headers: headers,
@@ -147,7 +147,7 @@ abstract class IHttpClient {
   Future<HttpResponse<Uint8List>> uploadFile(
     String url, {
     required String filePath,
-    HttpMethod method = HttpMethod.post,
+    HttpMethod method = .post,
     Map<String, dynamic>? headers,
     void Function(int sent, int total)? onProgress,
     Duration? timeout,

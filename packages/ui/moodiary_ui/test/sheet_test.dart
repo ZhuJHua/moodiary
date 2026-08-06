@@ -1,5 +1,3 @@
-import 'dart:ui' show Tristate;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
@@ -250,7 +248,7 @@ void main() {
       late MaterialLocalizations localizations;
       await tester.pumpWidget(
         host((context) {
-          localizations = MaterialLocalizations.of(context);
+          localizations = .of(context);
           showMoodiarySheet<void>(
             context,
             builder: (_) => const MoodiarySheetScaffold<void>(
@@ -285,7 +283,7 @@ void main() {
 
       bool selectedOf(String label) =>
           tester.getSemantics(find.text(label)).flagsCollection.isSelected ==
-          Tristate.isTrue;
+          .isTrue;
       expect(selectedOf('WebDAV'), isTrue);
       expect(selectedOf('S3 / MinIO'), isFalse);
       handle.dispose();

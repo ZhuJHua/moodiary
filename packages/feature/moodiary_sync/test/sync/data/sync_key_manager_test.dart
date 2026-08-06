@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -98,13 +97,11 @@ void main() {
 
     test('损坏内容拒绝', () {
       expect(
-        () => SyncKeyfile.fromBytes(Uint8List.fromList(utf8.encode('[]'))),
+        () => SyncKeyfile.fromBytes(.fromList(utf8.encode('[]'))),
         throwsA(isA<SyncException>()),
       );
       expect(
-        () => SyncKeyfile.fromBytes(
-          Uint8List.fromList(utf8.encode('{"version":1}')),
-        ),
+        () => SyncKeyfile.fromBytes(.fromList(utf8.encode('{"version":1}'))),
         throwsA(isA<SyncException>()),
       );
     });

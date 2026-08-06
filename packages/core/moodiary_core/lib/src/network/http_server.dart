@@ -52,7 +52,7 @@ class HttpServerResponse {
       HttpServerResponse(
         200,
         headers: {'content-type': ?contentType},
-        body: Uint8List.fromList(body),
+        body: .fromList(body),
       );
 
   factory HttpServerResponse.json(Object? value) => HttpServerResponse.ok(
@@ -64,7 +64,7 @@ class HttpServerResponse {
       HttpServerResponse(
         statusCode,
         headers: const {'content-type': 'text/plain; charset=utf-8'},
-        body: Uint8List.fromList(utf8.encode(message)),
+        body: .fromList(utf8.encode(message)),
       );
 
   /// 从磁盘流式供给文件（自动支持 Range）。

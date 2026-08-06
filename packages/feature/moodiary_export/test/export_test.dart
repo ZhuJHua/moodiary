@@ -282,7 +282,7 @@ void main() {
           const MarkdownOptions(
             frontMatter: false,
             includeTitle: false,
-            dialect: MarkdownDialect.commonMark,
+            dialect: .commonMark,
           ),
         ),
         '- 买菜',

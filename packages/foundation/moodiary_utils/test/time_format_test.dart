@@ -24,7 +24,7 @@ void main() {
     });
 
     test('relative：今天给时分，跨年给年月日', () {
-      final today = TimeFormat.relative(DateTime.now());
+      final today = TimeFormat.relative(.now());
       expect(RegExp(r'^\d{1,2}:\d{2}$').hasMatch(today), isTrue);
       expect(
         TimeFormat.relative(DateTime(2000, 5, 5, 10, 30)),

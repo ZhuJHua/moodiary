@@ -93,8 +93,7 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   static const String _mtime = '2026-01-01T00:00:00.000Z';
 
   @override
-  SyncProviderType get type =>
-      backendId == 's3' ? SyncProviderType.s3 : SyncProviderType.webdav;
+  SyncProviderType get type => backendId == 's3' ? .s3 : .webdav;
 
   @override
   String? get persistentBackendId => backendId;
@@ -168,7 +167,7 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   SyncManifest? manifest() {
     final bytes = objects[SyncKeys.manifestPath];
     if (bytes == null) return null;
-    return SyncManifest.fromJson(jsonDecode(utf8.decode(bytes)));
+    return .fromJson(jsonDecode(utf8.decode(bytes)));
   }
 
   /// 解出远端某 diary JSON（明文）。
@@ -264,7 +263,7 @@ final class FakeDiaryStore implements SyncDiaryStore {
     calls.add('tombstone ${diary.id}');
     writeOrigins[diary.id] = fromSync;
     diaries.remove(diary.id);
-    final row = SyncTombstone.forDiary(diary.id, at: DateTime.timestamp());
+    final row = SyncTombstone.forDiary(diary.id, at: .timestamp());
     tombstones.rows[row.key] = row;
     return row;
   }
@@ -311,7 +310,7 @@ final class FakeCategoryStore implements SyncCategoryStore {
     bool fromSync = false,
   }) async {
     categories.remove(id);
-    final row = SyncTombstone.forCategory(id, at: DateTime.timestamp());
+    final row = SyncTombstone.forCategory(id, at: .timestamp());
     tombstones.rows[row.key] = row;
     return row;
   }
@@ -332,9 +331,7 @@ final class FakeMediaFiles implements SyncMediaFiles {
   String _k(String type, String filename) => '$type/$filename';
 
   void put(String type, String filename, [List<int>? bytes]) {
-    files[_k(type, filename)] = Uint8List.fromList(
-      bytes ?? utf8.encode(filename),
-    );
+    files[_k(type, filename)] = .fromList(bytes ?? utf8.encode(filename));
   }
 
   @override
@@ -414,13 +411,13 @@ Future<void> tearDownSyncEnv() async {
 /// 把后端标记为「已配置」，使 [configuredCloudBackendIds] 把它计入。
 Future<void> configureBackend(SyncProviderType type) async {
   switch (type) {
-    case SyncProviderType.webdav:
+    case .webdav:
       await WebDavSyncBackend.options.save([
         'https://dav.example',
         'user',
         'pass',
       ]);
-    case SyncProviderType.s3:
+    case .s3:
       await S3SyncBackend.options.save([
         'https://s3.example',
         '',
@@ -435,7 +432,7 @@ Future<void> configureBackend(SyncProviderType type) async {
 // ─────────────────────── model builders ───────────────────────
 
 /// 固定基准时刻（毫秒），各测试用偏移构造可比较的 lastModified。
-final DateTime kBaseTime = DateTime.utc(2026, 1, 1);
+final DateTime kBaseTime = .utc(2026, 1, 1);
 
 DateTime atMs(int millisOffset) =>
     kBaseTime.add(Duration(milliseconds: millisOffset));

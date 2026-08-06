@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
@@ -40,7 +40,7 @@ Future<Locale> _initSystem() async {
     rustInit,
   ]);
 
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setEnabledSystemUIMode(.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.transparent,
@@ -56,7 +56,7 @@ Future<Locale> _findLanguage() async {
     (e) => e.languageCode == MoodiaryKVs.language.get()!,
     orElse: () => Language.system,
   );
-  if (language == Language.system) {
+  if (language == .system) {
     final systemLocale = await findSystemLocale();
     final systemLanguageCode = systemLocale.contains('_')
         ? systemLocale.split('_').first
@@ -125,7 +125,7 @@ class Moodiary extends ConsumerWidget {
         return MediaQuery(
           data: MediaQuery.of(
             context,
-          ).copyWith(textScaler: TextScaler.linear(settings.fontScale)),
+          ).copyWith(textScaler: .linear(settings.fontScale)),
           child: FlutterSmartDialog.init()(context, child!),
         );
       },

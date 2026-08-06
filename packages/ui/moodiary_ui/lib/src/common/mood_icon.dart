@@ -11,8 +11,8 @@ class EmotionCurvePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final Paint paint = Paint()
       ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
+      ..style = .stroke
+      ..strokeCap = .round
       ..strokeWidth = strokeWidth;
 
     final Path path = Path();
@@ -50,14 +50,10 @@ class MoodIconComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Color.lerp(
-          const Color(0xFFFA4659),
-          const Color(0xFF2EB872),
-          value,
-        ),
+        color: .lerp(const Color(0xFFFA4659), const Color(0xFF2EB872), value),
         borderRadius: AppBorderRadius.smallBorderRadius,
       ),
-      padding: const EdgeInsets.all(4.0),
+      padding: const .all(4.0),
       child: CustomPaint(
         size: Size(width - 8.0, width - 8.0),
         painter: EmotionCurvePainter(value, strokeWidth: 4.0),

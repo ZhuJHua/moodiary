@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_diary/src/application/timeline_group.dart';
 
@@ -24,7 +23,7 @@ Diary diary(DateTime time, {DateTime? modified, String id = 'x'}) => Diary(
 
 void main() {
   test('empty input yields no months', () {
-    expect(buildTimeline(const [], DiarySort.timeDesc), isEmpty);
+    expect(buildTimeline(const [], .timeDesc), isEmpty);
   });
 
   test('splits by month and keeps input order', () {
@@ -32,7 +31,7 @@ void main() {
       diary(DateTime(2026, 7, 20, 9), id: 'a'),
       diary(DateTime(2026, 7, 2, 9), id: 'b'),
       diary(DateTime(2026, 6, 30, 9), id: 'c'),
-    ], DiarySort.timeDesc);
+    ], .timeDesc);
 
     expect(months.length, 2);
     expect(months[0].month, DateTime(2026, 7));
@@ -46,7 +45,7 @@ void main() {
       diary(DateTime(2026, 7, 20, 21), id: 'a'),
       diary(DateTime(2026, 7, 20, 9), id: 'b'),
       diary(DateTime(2026, 7, 19, 9), id: 'c'),
-    ], DiarySort.timeDesc);
+    ], .timeDesc);
 
     final entries = months.single.entries;
     expect(entries.map((e) => e.dayStart), [true, false, true]);
@@ -58,7 +57,7 @@ void main() {
       diary(DateTime(2026, 7, 19, 9), id: 'b'), // 相邻日：不算断档
       diary(DateTime(2026, 7, 16, 9), id: 'c'), // 隔了两天：断档
       diary(DateTime(2026, 7, 16, 8), id: 'd'), // 同日：不算
-    ], DiarySort.timeDesc);
+    ], .timeDesc);
 
     final entries = months.single.entries;
     expect(entries.map((e) => e.breakBefore), [false, false, true, false]);
@@ -69,7 +68,7 @@ void main() {
       diary(DateTime(2026, 7, 16, 9), id: 'a'),
       diary(DateTime(2026, 7, 17, 9), id: 'b'),
       diary(DateTime(2026, 7, 20, 9), id: 'c'),
-    ], DiarySort.timeAsc);
+    ], .timeAsc);
 
     expect(months.single.entries.map((e) => e.breakBefore), [
       false,
@@ -83,12 +82,9 @@ void main() {
       diary(DateTime(2026, 7, 1, 9), modified: DateTime(2026, 8, 20, 9)),
     ];
 
+    expect(buildTimeline(list, .timeDesc).single.month, DateTime(2026, 7));
     expect(
-      buildTimeline(list, DiarySort.timeDesc).single.month,
-      DateTime(2026, 7),
-    );
-    expect(
-      buildTimeline(list, DiarySort.lastModifiedDesc).single.month,
+      buildTimeline(list, .lastModifiedDesc).single.month,
       DateTime(2026, 8),
     );
   });
@@ -98,7 +94,7 @@ void main() {
     final months = buildTimeline([
       diary(DateTime(2026, 7, 1, 9), id: 'a'),
       diary(DateTime(2026, 6, 29, 9), id: 'b'),
-    ], DiarySort.timeDesc);
+    ], .timeDesc);
 
     expect(months[1].entries.single.breakBefore, isTrue);
   });
@@ -113,7 +109,7 @@ void main() {
       final months = buildTimeline([
         diary(b, id: 'later'),
         diary(a, id: 'earlier'),
-      ], DiarySort.timeDesc);
+      ], .timeDesc);
       final entries = [for (final m in months) ...m.entries];
       expect(
         entries.last.breakBefore,
@@ -127,16 +123,14 @@ void main() {
     final months = buildTimeline([
       diary(DateTime(2026, 3, 9, 9), id: 'later'),
       diary(DateTime(2026, 3, 8, 9), id: 'earlier'),
-    ], DiarySort.timeDesc);
+    ], .timeDesc);
     final entries = [for (final m in months) ...m.entries];
     expect(entries.last.breakBefore, isFalse);
   });
 
   test('stamp is local time', () {
     final utc = DateTime.utc(2026, 7, 20, 3);
-    final entry = buildTimeline([
-      diary(utc),
-    ], DiarySort.timeDesc).single.entries.single;
+    final entry = buildTimeline([diary(utc)], .timeDesc).single.entries.single;
     expect(entry.stamp, utc.toLocal());
     expect(entry.stamp.isUtc, isFalse);
   });

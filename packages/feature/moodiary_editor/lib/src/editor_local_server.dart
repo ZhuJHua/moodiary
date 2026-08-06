@@ -25,7 +25,7 @@ import 'media.dart';
 class EditorLocalServer {
   EditorLocalServer._();
 
-  static final EditorLocalServer instance = EditorLocalServer._();
+  static final EditorLocalServer instance = ._();
 
   static const _assetBase = 'packages/moodiary_editor/assets/editor';
 
@@ -89,14 +89,11 @@ class EditorLocalServer {
         final resolved = _isSafeMediaName(name)
             ? mediaResolver?.call(name, poster: poster)
             : null;
-        if (resolved == null) return HttpServerResponse.notFound();
-        return HttpServerResponse.file(
-          resolved.path,
-          contentType: resolved.mime,
-        );
+        if (resolved == null) return .notFound();
+        return .file(resolved.path, contentType: resolved.mime);
       } catch (e) {
         _log('media request failed: ${request.path}', error: e, level: 1000);
-        return HttpServerResponse.text(500, 'media request failed');
+        return .text(500, 'media request failed');
       }
     }
     // `/<token>/font`：供当前激活的自定义字体文件（web 侧 FontFace 的 src，查询串
@@ -104,8 +101,8 @@ class EditorLocalServer {
     if (seg.length == 2 && seg[0] == _token && seg[1] == 'font') {
       try {
         final font = fontResolver?.call();
-        if (font == null) return HttpServerResponse.notFound();
-        return HttpServerResponse.file(
+        if (font == null) return .notFound();
+        return .file(
           font.path,
           contentType: _fontMime(font.path),
           // URL 破缓存靠 ?v，可长缓存：同一 app 会话内反复开编辑器命中 HTTP 缓存，不重复下载。
@@ -113,7 +110,7 @@ class EditorLocalServer {
         );
       } catch (e) {
         _log('font request failed: ${request.path}', error: e, level: 1000);
-        return HttpServerResponse.text(500, 'font request failed');
+        return .text(500, 'font request failed');
       }
     }
     return _serveAsset(request.path);
@@ -125,7 +122,7 @@ class EditorLocalServer {
     var rel = path.startsWith('/') ? path.substring(1) : path;
     if (rel.isEmpty) rel = 'index.html';
     if (rel.contains('..') || rel.contains('\\')) {
-      return HttpServerResponse.notFound();
+      return .notFound();
     }
     final contentType = _assetContentType(rel);
     final compressed = await _tryLoadAsset('$_assetBase/$rel.gz');
@@ -133,7 +130,7 @@ class EditorLocalServer {
       return HttpServerResponse(
         200,
         headers: {'content-type': contentType},
-        body: Uint8List.fromList(gzip.decode(compressed)),
+        body: .fromList(gzip.decode(compressed)),
       );
     }
     final raw = await _tryLoadAsset('$_assetBase/$rel');
@@ -144,7 +141,7 @@ class EditorLocalServer {
         body: raw,
       );
     }
-    return HttpServerResponse.notFound();
+    return .notFound();
   }
 
   /// rootBundle.load 包装：资产不存在（或读失败）返回 null，供 `.gz` → 原文件回退。

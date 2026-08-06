@@ -57,11 +57,9 @@ class MoodiaryVideoPlaybackController {
   final VideoPlaybackPortFactory portFactory;
 
   final state = ValueNotifier<VideoPlaybackState>(const VideoIdle());
-  final progress = ValueNotifier<VideoProgress>(VideoProgress.zero);
-  final geometry = ValueNotifier<VideoGeometry>(VideoGeometry.unknown);
-  final settings = ValueNotifier<VideoPlaybackSettings>(
-    VideoPlaybackSettings.initial,
-  );
+  final progress = ValueNotifier<VideoProgress>(.zero);
+  final geometry = ValueNotifier<VideoGeometry>(.unknown);
+  final settings = ValueNotifier<VideoPlaybackSettings>(.initial);
 
   /// 起始 true；首帧确认已上屏后翻 false 并不再回头（除 generation 变化）。
   /// 平台不提供 first-frame-rendered 信号（initialized 只代表 READY，此刻纹理可能还是黑的）。
@@ -95,8 +93,8 @@ class MoodiaryVideoPlaybackController {
   bool _completedLatched = false;
 
   /// 错误会把平台 value 整体擦回 uninitialized，这几份副本供错误页与恢复播放点使用。
-  Duration _lastPosition = Duration.zero;
-  Duration _lastDuration = Duration.zero;
+  Duration _lastPosition = .zero;
+  Duration _lastDuration = .zero;
 
   /// 已下发 play、等平台回声确认。这期间要忽略快照里的 isPlaying=false ——
   /// 插件那个 100ms 轮询很可能在 play 生效前先报一张「没在播」，跟着它走播放键就会闪一下。
@@ -134,13 +132,13 @@ class MoodiaryVideoPlaybackController {
       },
       onError: (Object e) {
         if (_port != port) return;
-        _toError(VideoErrorKind.playback, '$e');
+        _toError(.playback, '$e');
       },
     );
 
     _initWatchdog = Timer(_kInitWatchdog, () {
       if (_disposed || _state is! VideoInitializing) return;
-      _toError(VideoErrorKind.initialize, 'initialize timed out');
+      _toError(.initialize, 'initialize timed out');
     });
 
     try {
@@ -150,15 +148,15 @@ class MoodiaryVideoPlaybackController {
       if (!_disposed && _port == port) _onSnapshot(port.snapshot);
     } catch (e) {
       if (!_disposed && _port == port) {
-        _toError(VideoErrorKind.initialize, '$e');
+        _toError(.initialize, '$e');
       }
     }
   }
 
   Future<void> retry() {
-    if (_disposed) return Future.value();
+    if (_disposed) return .value();
     final err = _state;
-    if (err is! VideoError || !err.canRetry) return Future.value();
+    if (err is! VideoError || !err.canRetry) return .value();
     return initialize();
   }
 
@@ -170,7 +168,7 @@ class MoodiaryVideoPlaybackController {
     }
     if (!_state.acceptsCommands) return;
     if (_state is VideoCompleted) {
-      await _seek(Duration.zero, scrubbing: false, resumeIntent: true);
+      await _seek(.zero, scrubbing: false, resumeIntent: true);
     }
     VideoPlaybackArbiter.activate(this);
     _hasPlayed = true;
@@ -248,7 +246,7 @@ class MoodiaryVideoPlaybackController {
 
   Future<void> replay() async {
     if (_disposed || !_state.acceptsCommands) return;
-    await _seek(Duration.zero, scrubbing: false, resumeIntent: true);
+    await _seek(.zero, scrubbing: false, resumeIntent: true);
     await play();
   }
 
@@ -288,12 +286,7 @@ class MoodiaryVideoPlaybackController {
 
     final err = s.errorMessage;
     if (err != null) {
-      _toError(
-        _state is VideoInitializing
-            ? VideoErrorKind.initialize
-            : VideoErrorKind.playback,
-        err,
-      );
+      _toError(_state is VideoInitializing ? .initialize : .playback, err);
       return;
     }
     if (!s.isInitialized) return; // 就绪前的噪声一律忽略
@@ -356,7 +349,7 @@ class MoodiaryVideoPlaybackController {
     _port?.setLooping(s.looping);
     final resumeFrom = _resumeFrom;
     if (resumeFrom > Duration.zero) _port?.seekTo(resumeFrom);
-    _resumeFrom = Duration.zero;
+    _resumeFrom = .zero;
     // 必须先离开 Initializing 再派发 play —— play() 开头会把 Initializing 期间的调用
     // 记成待执行意图然后返回，状态没先落地就会自己把自己挡掉。
     _setState(_hasPlayed ? const VideoPaused() : const VideoReady());
@@ -395,9 +388,9 @@ class MoodiaryVideoPlaybackController {
 
   Duration _clampToDuration(Duration d) {
     if (_lastDuration <= Duration.zero) {
-      return d < Duration.zero ? Duration.zero : d;
+      return d < Duration.zero ? .zero : d;
     }
-    if (d < Duration.zero) return Duration.zero;
+    if (d < Duration.zero) return .zero;
     return d > _lastDuration ? _lastDuration : d;
   }
 
@@ -443,7 +436,7 @@ class MoodiaryVideoPlaybackController {
 
     await _port?.seekTo(aim);
     if (_disposed) return;
-    _maybeSettleSeek(_port?.snapshot ?? VideoPortSnapshot.empty);
+    _maybeSettleSeek(_port?.snapshot ?? .empty);
   }
 
   void _maybeSettleSeek(VideoPortSnapshot s) {
@@ -481,7 +474,7 @@ class MoodiaryVideoPlaybackController {
 
   // ────────────────────────────── 错误 ──────────────────────────────
 
-  Duration _resumeFrom = Duration.zero;
+  Duration _resumeFrom = .zero;
 
   void _toError(VideoErrorKind kind, String message) {
     if (_disposed) return;

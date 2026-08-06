@@ -16,7 +16,7 @@ class FakePort implements VideoPlaybackPort {
   final _ctl = StreamController<VideoPortSnapshot>.broadcast();
   final calls = <String>[];
 
-  VideoPortSnapshot _snap = VideoPortSnapshot.empty;
+  VideoPortSnapshot _snap = .empty;
   bool disposed = false;
 
   @override
@@ -32,7 +32,7 @@ class FakePort implements VideoPlaybackPort {
 
   /// 就绪快照的便捷构造。
   void ready({
-    Duration position = Duration.zero,
+    Duration position = .zero,
     Duration duration = const Duration(seconds: 60),
     bool playing = false,
     bool buffering = false,
@@ -101,7 +101,7 @@ void main() {
   }) {
     ports = <FakePort>[];
     return c = MoodiaryVideoPlaybackController(
-      source: const VideoSource.file('/tmp/a.mp4'),
+      source: const .file('/tmp/a.mp4'),
       autoPlay: autoPlay,
       initialAspect: initialAspect,
       portFactory: (_) {
@@ -242,7 +242,7 @@ void main() {
     testWidgets('平台迟迟不追上时，600ms 兜底放开跟随', (tester) async {
       final ctl = build();
       await ctl.initialize();
-      ports.first.ready(position: Duration.zero);
+      ports.first.ready(position: .zero);
       await tester.pump();
 
       await ctl.seekTo(const Duration(seconds: 30));
@@ -254,7 +254,7 @@ void main() {
     testWidgets('时长未知时不许 seek', (tester) async {
       final ctl = build();
       await ctl.initialize();
-      ports.first.ready(duration: Duration.zero);
+      ports.first.ready(duration: .zero);
       await tester.pump();
       expect(ctl.progress.value.canSeek, isFalse);
       expect(ctl.progress.value.fraction, isNull);
@@ -420,7 +420,7 @@ void main() {
 
       late FakePort secondPort;
       final second = MoodiaryVideoPlaybackController(
-        source: const VideoSource.file('/tmp/b.mp4'),
+        source: const .file('/tmp/b.mp4'),
         autoPlay: true,
         portFactory: (_) => secondPort = FakePort(),
       );

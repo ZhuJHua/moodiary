@@ -12,42 +12,42 @@ part 'sync_controller.g.dart';
 @Riverpod(keepAlive: true)
 class SyncController extends _$SyncController {
   @override
-  SyncState build() => const SyncState.idle();
+  SyncState build() => const .idle();
 
   Future<void> push(SyncBackend backend) async {
-    state = SyncState.syncing(label: '上传 / 导出中：${backend.displayName}');
+    state = .syncing(label: '上传 / 导出中：${backend.displayName}');
     try {
       final report = await backend.pushAll();
-      state = SyncState.success(message: report.toString());
+      state = .success(message: report.toString());
     } on SyncException catch (e) {
-      state = SyncState.error(message: e.message);
+      state = .error(message: e.message);
     } catch (e) {
-      state = SyncState.error(message: e.toString());
+      state = .error(message: e.toString());
     }
   }
 
   Future<void> pull(SyncBackend backend) async {
-    state = SyncState.syncing(label: '下载 / 导入中：${backend.displayName}');
+    state = .syncing(label: '下载 / 导入中：${backend.displayName}');
     try {
       final report = await backend.pullAll();
-      state = SyncState.success(message: report.toString());
+      state = .success(message: report.toString());
     } on SyncException catch (e) {
-      state = SyncState.error(message: e.message);
+      state = .error(message: e.message);
     } catch (e) {
-      state = SyncState.error(message: e.toString());
+      state = .error(message: e.toString());
     }
   }
 
   /// 双向同步（pull 后 push，云后端专用）。引擎侧在同一把锁内原子完成。
   Future<void> sync(IRemoteSyncBackend backend) async {
-    state = SyncState.syncing(label: '同步中：${backend.displayName}');
+    state = .syncing(label: '同步中：${backend.displayName}');
     try {
       final report = await backend.syncAll();
-      state = SyncState.success(message: report.toString());
+      state = .success(message: report.toString());
     } on SyncException catch (e) {
-      state = SyncState.error(message: e.message);
+      state = .error(message: e.message);
     } catch (e) {
-      state = SyncState.error(message: e.toString());
+      state = .error(message: e.toString());
     }
   }
 
@@ -55,7 +55,7 @@ class SyncController extends _$SyncController {
   /// 见 [SyncCancellation]）。状态仍保持 syncing，直到引擎返回报告。
   void stop() => SyncCancellation.instance.requestStop();
 
-  void reset() => state = const SyncState.idle();
+  void reset() => state = const .idle();
 }
 
 sealed class SyncState {

@@ -117,7 +117,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
     });
     IRemoteSyncBackend? backend;
     try {
-      backend = IRemoteSyncBackend.get();
+      backend = .get();
     } catch (_) {
       backend = null;
     }

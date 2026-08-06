@@ -58,9 +58,7 @@ class DiaryRepository {
   ) =>
       (texts) async => [for (final t in texts) await tokenizer(t)];
 
-  static final DiaryRepository _instance = DiaryRepository._(
-    IsarDatabase.get().isar,
-  );
+  static final DiaryRepository _instance = ._(IsarDatabase.get().isar);
 
   final Isar _isar;
 
@@ -190,20 +188,16 @@ class DiaryRepository {
     if (old == null) return const {};
     final map = <int, int>{};
     for (var i = 0; i < old.cutTokens.length; i++) {
-      map[_searchKey(TokenSource.cut, old.cutTokens[i])] = _freqAt(
-        old.cutFreqs,
-        i,
-      );
+      map[_searchKey(.cut, old.cutTokens[i])] = _freqAt(old.cutFreqs, i);
     }
     for (var i = 0; i < old.cutForSearchTokens.length; i++) {
-      map[_searchKey(TokenSource.cutForSearch, old.cutForSearchTokens[i])] =
-          _freqAt(old.cutForSearchFreqs, i);
-    }
-    for (var i = 0; i < old.titleTokens.length; i++) {
-      map[_searchKey(TokenSource.title, old.titleTokens[i])] = _freqAt(
-        old.titleFreqs,
+      map[_searchKey(.cutForSearch, old.cutForSearchTokens[i])] = _freqAt(
+        old.cutForSearchFreqs,
         i,
       );
+    }
+    for (var i = 0; i < old.titleTokens.length; i++) {
+      map[_searchKey(.title, old.titleTokens[i])] = _freqAt(old.titleFreqs, i);
     }
     return map;
   }
@@ -235,12 +229,10 @@ class DiaryRepository {
       final cfsCounts = _countTokens(e.tokens?.cutForSearch ?? const []);
       final titleCounts = _countTokens(e.titleTokens);
       final newSearchTf = <int, int>{
-        for (final t in cutCounts.entries)
-          _searchKey(TokenSource.cut, t.key): t.value,
+        for (final t in cutCounts.entries) _searchKey(.cut, t.key): t.value,
         for (final t in cfsCounts.entries)
-          _searchKey(TokenSource.cutForSearch, t.key): t.value,
-        for (final t in titleCounts.entries)
-          _searchKey(TokenSource.title, t.key): t.value,
+          _searchKey(.cutForSearch, t.key): t.value,
+        for (final t in titleCounts.entries) _searchKey(.title, t.key): t.value,
       };
       final oldSearchTf = _snapshotSearchTf(old);
 
@@ -481,15 +473,15 @@ class DiaryRepository {
   /// 也走此标记，免得被当作待推变更。
   Future<void> updateADiary({
     required Diary newDiary,
-    IndexMode index = IndexMode.inline,
+    IndexMode index = .inline,
     bool fromSync = false,
   }) async {
-    if (index != IndexMode.inline) {
+    if (index != .inline) {
       // 编辑期：只写日记行（defer 时一并入队），分词/倒排推迟到关闭/启动排空；skip 连
       // 入队都免（内容未变，索引仍有效）。同一次 writeAsync 落盘，少一次提交。
       await _isar.writeAsync((isar) {
         isar.diarys.put(newDiary);
-        if (index == IndexMode.defer) {
+        if (index == .defer) {
           isar.reindexQueues.put(ReindexQueue(diaryIsarId: newDiary.isarId));
         }
       });
@@ -541,7 +533,7 @@ class DiaryRepository {
     bool uncategorized = false,
     int? offset,
     int? limit,
-    DiarySort sort = DiarySort.timeDesc,
+    DiarySort sort = .timeDesc,
   }) async {
     assert(!(uncategorized && categoryId != null));
     final base = _isar.diarys.where().showEqualTo(true);
@@ -551,10 +543,9 @@ class DiaryRepository {
         ? base
         : base.categoryIdEqualTo(categoryId);
     final sorted = switch (sort) {
-      DiarySort.timeDesc => filtered.sortByTimeDesc().thenByIsarIdDesc(),
-      DiarySort.timeAsc => filtered.sortByTime().thenByIsarId(),
-      DiarySort.lastModifiedDesc =>
-        filtered.sortByLastModifiedDesc().thenByIsarIdDesc(),
+      .timeDesc => filtered.sortByTimeDesc().thenByIsarIdDesc(),
+      .timeAsc => filtered.sortByTime().thenByIsarId(),
+      .lastModifiedDesc => filtered.sortByLastModifiedDesc().thenByIsarIdDesc(),
     };
     return sorted.findAllAsync(offset: offset, limit: limit);
   }
@@ -567,7 +558,7 @@ class DiaryRepository {
   Future<Map<DateTime, int>> diaryCountByMonth({
     String? categoryId,
     bool uncategorized = false,
-    DiarySort sort = DiarySort.timeDesc,
+    DiarySort sort = .timeDesc,
   }) async {
     assert(!(uncategorized && categoryId != null));
     final base = _isar.diarys.where().showEqualTo(true);
@@ -576,7 +567,7 @@ class DiaryRepository {
         : categoryId == null
         ? base
         : base.categoryIdEqualTo(categoryId);
-    final stamps = sort == DiarySort.lastModifiedDesc
+    final stamps = sort == .lastModifiedDesc
         ? await filtered.lastModifiedProperty().findAllAsync()
         : await filtered.timeProperty().findAllAsync();
     final counts = <DateTime, int>{};
@@ -663,10 +654,7 @@ class DiaryRepository {
     bool fromSync = false,
   }) async {
     final isarId = diary.isarId;
-    final tombstone = SyncTombstone.forDiary(
-      diary.id,
-      at: DateTime.timestamp(),
-    );
+    final tombstone = SyncTombstone.forDiary(diary.id, at: .timestamp());
     await _isar.writeAsync((isar) {
       isar.diarys.delete(isarId);
       _clearIndexes(isar, isarId);
@@ -735,9 +723,9 @@ class DiaryRepository {
   }) async {
     final base = _isar.diarys.where().showEqualTo(true);
     final filtered = switch (type) {
-      MediaType.image => base.imageNameIsNotEmpty(),
-      MediaType.audio => base.audioNameIsNotEmpty(),
-      MediaType.video => base.videoNameIsNotEmpty(),
+      .image => base.imageNameIsNotEmpty(),
+      .audio => base.audioNameIsNotEmpty(),
+      .video => base.videoNameIsNotEmpty(),
     };
     // thenByIsarIdDesc 与 diarySortComparator(timeDesc) 的次序一致，保证媒体库事件
     // 增量（applyDiaryEvent + 分页 offset）与库内顺序对齐，同 time 的日记不丢不重。
@@ -780,7 +768,7 @@ class DiaryRepository {
     String? categoryId,
     DateTime? start,
     DateTime? end,
-    SearchSort sort = SearchSort.relevance,
+    SearchSort sort = .relevance,
   }) async {
     if (cutTokens.isEmpty && cutForSearchTokens.isEmpty) return [];
 
@@ -819,16 +807,11 @@ class DiaryRepository {
 
     final cutSet = cutTokens.toSet();
     final cfsSet = cutForSearchTokens.toSet();
-    await probe(TokenSource.cut, cutSet, _weightCut, lengthNorm: true);
-    await probe(
-      TokenSource.cutForSearch,
-      cfsSet,
-      _weightCutForSearch,
-      lengthNorm: true,
-    );
+    await probe(.cut, cutSet, _weightCut, lengthNorm: true);
+    await probe(.cutForSearch, cfsSet, _weightCutForSearch, lengthNorm: true);
     // 标题索引本身是细粒度分词，用查询的全部词形探测。
     await probe(
-      TokenSource.title,
+      .title,
       {...cutSet, ...cfsSet},
       _weightTitle,
       lengthNorm: false,
@@ -860,14 +843,14 @@ class DiaryRepository {
 
     validDiaries.sort((a, b) {
       switch (sort) {
-        case SearchSort.relevance:
+        case .relevance:
           final sa = scores[a.isarId] ?? 0;
           final sb = scores[b.isarId] ?? 0;
           if (sa != sb) return sb.compareTo(sa);
           return b.time.compareTo(a.time);
-        case SearchSort.timeDesc:
+        case .timeDesc:
           return b.time.compareTo(a.time);
-        case SearchSort.timeAsc:
+        case .timeAsc:
           return a.time.compareTo(b.time);
       }
     });
@@ -879,7 +862,7 @@ class DiaryRepository {
   /// 等需要把用户输入当查询的场景用。空串 / 无 token 返回空列表；[limit] 截断结果条数。
   Future<List<Diary>> searchDiariesByText(
     String query, {
-    SearchSort sort = SearchSort.relevance,
+    SearchSort sort = .relevance,
     int limit = 12,
   }) async {
     final result = await _tokenize(query.trim());
@@ -914,7 +897,7 @@ class DiaryRepository {
     final runes = flat.runes.toList();
     return runes.length <= _graphPreviewChars
         ? flat
-        : String.fromCharCodes(runes.take(_graphPreviewChars));
+        : .fromCharCodes(runes.take(_graphPreviewChars));
   }
 
   /// 装配知识图谱数据:从双链快照(`DiaryIndexSnapshot.linkToIds`)直接取边,免解析 content、
@@ -1198,9 +1181,9 @@ class DiaryRepository {
           });
         }
 
-        addSource(TokenSource.cut, cutCounts);
-        addSource(TokenSource.cutForSearch, cfsCounts);
-        addSource(TokenSource.title, titleCounts);
+        addSource(.cut, cutCounts);
+        addSource(.cutForSearch, cfsCounts);
+        addSource(.title, titleCounts);
         for (final toId in entry.links) {
           linkPostings.putIfAbsent(_linkKey(toId), () => []).add(diary.isarId);
         }

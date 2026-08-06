@@ -135,7 +135,7 @@ class _LockPinPadState extends State<LockPinPad>
         (context.textTheme.displayLarge?.fontSize ?? 57) *
         (context.textTheme.displayLarge?.height ?? 1.12);
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: .min,
       children: [
         Text(widget.title, style: context.textTheme.titleMedium),
         const SizedBox(height: 24),
@@ -148,17 +148,17 @@ class _LockPinPadState extends State<LockPinPad>
             );
           },
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(kPinLength, (i) {
+            mainAxisAlignment: .center,
+            children: .generate(kPinLength, (i) {
               final filled = i < _pin.length;
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const .symmetric(horizontal: 8),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
                   width: 14,
                   height: 14,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                    shape: .circle,
                     color: filled
                         ? scheme.onSurface
                         : scheme.surfaceContainerHighest,
@@ -177,7 +177,7 @@ class _LockPinPadState extends State<LockPinPad>
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
             physics: const NeverScrollableScrollPhysics(),
-            padding: EdgeInsets.zero,
+            padding: .zero,
             children: [
               for (final d in const [
                 '1',

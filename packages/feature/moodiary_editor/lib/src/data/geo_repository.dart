@@ -12,20 +12,20 @@ class GeoRepository {
 
   factory GeoRepository.get() => _instance;
 
-  static final GeoRepository _instance = GeoRepository(IHttpClient.get());
+  static final GeoRepository _instance = GeoRepository(.get());
 
   final IHttpClient _http;
 
   Future<List<String>?> getGeo(BuildContext context) async {
     Position? position;
     var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
+    if (permission == .denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied && context.mounted) {
+      if (permission == .denied && context.mounted) {
         toast.info(message: context.l10n.noticeEnableLocation);
         return null;
       }
-      if (permission == LocationPermission.deniedForever && context.mounted) {
+      if (permission == .deniedForever && context.mounted) {
         toast.info(message: context.l10n.noticeEnableLocation2);
         return null;
       }

@@ -30,7 +30,7 @@ abstract class Category with _$Category {
     return Category(
       id: uuidV7(),
       categoryName: categoryName,
-      lastModified: DateTime.timestamp(),
+      lastModified: .timestamp(),
       parentId: parentId,
       color: color,
     );
