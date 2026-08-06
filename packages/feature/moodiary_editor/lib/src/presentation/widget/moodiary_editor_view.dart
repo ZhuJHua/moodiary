@@ -242,9 +242,8 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
 
   Future<void> _recordAudio(BuildContext sheetContext) async {
     Navigator.of(sheetContext).pop();
-    final name = await showFloatingModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
+    final name = await showMoodiarySheet<String>(
+      context,
       builder: (_) => const RecordSheet(),
     );
     if (name == null) return;
@@ -281,7 +280,10 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   Future<List<DiaryLinkCandidate>> _linkCandidates(String query) async {
     final q = query.trim();
     if (q.isEmpty) return const [];
-    final diaries = await DiaryRepository.get().searchDiariesByText(q, limit: 12);
+    final diaries = await DiaryRepository.get().searchDiariesByText(
+      q,
+      limit: 12,
+    );
     return [for (final d in diaries) (id: d.id, label: _candidateLabel(d))];
   }
 
@@ -291,7 +293,9 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     final date = TimeFormat.isoDate(d.time);
     final snippet = d.contentText.trim().replaceAll(RegExp(r'\s+'), ' ');
     if (snippet.isEmpty) return date;
-    final clipped = snippet.length > 16 ? '${snippet.substring(0, 16)}…' : snippet;
+    final clipped = snippet.length > 16
+        ? '${snippet.substring(0, 16)}…'
+        : snippet;
     return '$date · $clipped';
   }
 

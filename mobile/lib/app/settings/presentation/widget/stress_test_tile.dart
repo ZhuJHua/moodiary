@@ -62,9 +62,9 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
           '用于知识图谱等极限性能测试。每篇随机链接 $_minLinks–$_maxLinks 篇其它日记，'
           '标题以「$_prefix」开头，可一键清除。',
       actions: const [
-        MoodiaryAlertAction(label: '取消'),
-        MoodiaryAlertAction(label: '清除压测', value: 'clear'),
-        MoodiaryAlertAction(label: '生成', value: 'gen', isPrimary: true),
+        MoodiaryAction(label: '取消'),
+        MoodiaryAction(label: '清除压测', value: 'clear'),
+        MoodiaryAction(label: '生成', value: 'gen', isPrimary: true),
       ],
     );
     if (!mounted) return;

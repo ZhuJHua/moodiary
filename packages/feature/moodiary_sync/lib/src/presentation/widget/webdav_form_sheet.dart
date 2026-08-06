@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:moodiary_ui/moodiary_ui.dart';
 
+/// WebDAV 后端配置。保存与清除都返回 true，让调用方刷新「已配置」状态；
+/// 取消 / 下拉 / 点遮罩返回 null 或 false。
 class WebDavFormSheet extends StatefulWidget {
   const WebDavFormSheet({super.key});
 
@@ -9,18 +12,9 @@ class WebDavFormSheet extends StatefulWidget {
   State<WebDavFormSheet> createState() => _WebDavFormSheetState();
 
   static Future<bool?> show(BuildContext context) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      // 必须用 builder 自己的 context 取 viewInsets：外层 context 的 MediaQuery
-      // 变化不会重建 builder，padding 会停在打开时的 0、表单被键盘遮住。
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: const WebDavFormSheet(),
-      ),
+    return showMoodiarySheet<bool>(
+      context,
+      builder: (_) => const WebDavFormSheet(),
     );
   }
 }
@@ -29,16 +23,25 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
   late final TextEditingController _urlCtl;
   late final TextEditingController _userCtl;
   late final TextEditingController _passCtl;
-  bool _obscure = true;
+
+  /// 打开时的配置状态。保存后弹窗即关闭，所以它不需要跟着输入变。
+  late final bool _configured = WebDavSyncBackend.isConfigured();
+  late final String? _savedHost;
+
+  String? _urlError;
+  String? _userError;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
     final opts = WebDavSyncBackend.options.value;
-    _urlCtl = TextEditingController(text: opts.isNotEmpty ? opts[0] : '');
-    _userCtl = TextEditingController(text: opts.length > 1 ? opts[1] : '');
-    _passCtl = TextEditingController(text: opts.length > 2 ? opts[2] : '');
+    String at(int i) => opts.length > i ? opts[i] : '';
+    _urlCtl = TextEditingController(text: at(0));
+    _userCtl = TextEditingController(text: at(1));
+    _passCtl = TextEditingController(text: at(2));
+    final host = Uri.tryParse(at(0))?.host ?? '';
+    _savedHost = host.isEmpty ? null : host;
   }
 
   @override
@@ -49,97 +52,122 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
     super.dispose();
   }
 
+  /// 校验口径与 [WebDavSyncBackend.isConfigured] 一致 —— 存下一份它认不出的配置，
+  /// 用户要到同步失败时才知道。密码可空（部分服务器允许匿名）。
+  bool _validate() {
+    final l10n = context.l10n;
+    final url = _urlCtl.text.trim();
+    final uri = Uri.tryParse(url);
+    final urlError = url.isEmpty
+        ? l10n.syncFieldRequired(l10n.webdavOptionServer)
+        : (uri == null ||
+              !(uri.isScheme('http') || uri.isScheme('https')) ||
+              uri.host.isEmpty)
+        ? l10n.syncFieldInvalidUrl
+        : null;
+    final userError = _userCtl.text.trim().isEmpty
+        ? l10n.syncFieldRequired(l10n.webdavOptionUsername)
+        : null;
+    setState(() {
+      _urlError = urlError;
+      _userError = userError;
+    });
+    return urlError == null && userError == null;
+  }
+
   Future<void> _save() async {
-    if (_saving) return;
+    if (_saving || !_validate()) return;
     setState(() => _saving = true);
-    await WebDavSyncBackend.configure(
-      baseUrl: _urlCtl.text,
-      username: _userCtl.text,
-      password: _passCtl.text,
-    );
+    try {
+      await WebDavSyncBackend.configure(
+        baseUrl: _urlCtl.text,
+        username: _userCtl.text,
+        password: _passCtl.text,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
     if (!mounted) return;
     Navigator.of(context).pop(true);
   }
 
   Future<void> _clear() async {
-    await WebDavSyncBackend.clear();
+    final l10n = context.l10n;
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: l10n.syncConfigClearConfirmTitle,
+      message: l10n.syncConfigClearConfirmMessage,
+      confirmLabel: l10n.syncConfigClear,
+      isDestructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _saving = true);
+    try {
+      await WebDavSyncBackend.clear();
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
     if (!mounted) return;
     Navigator.of(context).pop(true);
+    toast.success(message: l10n.syncConfigCleared);
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      // 键盘顶起后剩余高度可能装不下整个表单（小屏/横屏），可滚动兜底。
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'WebDAV 配置',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _urlCtl,
-              decoration: const InputDecoration(
-                labelText: 'Base URL',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.url,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _userCtl,
-              decoration: const InputDecoration(
-                labelText: '用户名',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _passCtl,
-              obscureText: _obscure,
-              decoration: InputDecoration(
-                labelText: '密码',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscure ? LucideIcons.eyeOff : LucideIcons.eye,
-                  ),
-                  onPressed: () => setState(() => _obscure = !_obscure),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: _clear,
-                  child: const Text('清除'),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('取消'),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('保存'),
-                ),
-              ],
-            ),
-          ],
+    final l10n = context.l10n;
+    return MoodiarySheetScaffold<bool>(
+      title: l10n.backupSyncWebdav,
+      subtitle: _configured
+          ? (_savedHost ?? l10n.backupSyncWebdavOption)
+          : l10n.backupSyncWebdavNoOption,
+      icon: LucideIcons.cloud,
+      actions: [
+        MoodiaryAction(label: l10n.cancel, value: false, enabled: !_saving),
+        MoodiaryAction(
+          label: l10n.save,
+          isPrimary: true,
+          busy: _saving,
+          enabled: !_saving,
+          onPressed: _save,
         ),
+      ],
+      child: Column(
+        crossAxisAlignment: .stretch,
+        mainAxisSize: .min,
+        spacing: 14,
+        children: [
+          MoodiaryField(
+            controller: _urlCtl,
+            label: l10n.webdavOptionServer,
+            errorText: _urlError,
+            enabled: !_saving,
+            keyboardType: .url,
+            textInputAction: .next,
+          ),
+          MoodiaryField(
+            controller: _userCtl,
+            label: l10n.webdavOptionUsername,
+            errorText: _userError,
+            enabled: !_saving,
+            textInputAction: .next,
+          ),
+          MoodiaryField(
+            controller: _passCtl,
+            label: l10n.webdavOptionPassword,
+            enabled: !_saving,
+            obscureText: true,
+            onSubmitted: (_) => _save(),
+          ),
+          if (_configured)
+            MoodiaryDangerRow(
+              label: l10n.syncConfigClear,
+              onPressed: _saving ? null : _clear,
+            ),
+        ],
       ),
     );
   }

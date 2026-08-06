@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
@@ -82,35 +83,27 @@ class _SyncLogPageState extends State<SyncLogPage> {
       days.insert(0, today);
     }
     if (!mounted) return;
-    final picked = await showModalBottomSheet<DateTime>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            for (final day in days)
-              ListTile(
-                leading: Icon(
-                  _sameDay(day, today)
-                      ? LucideIcons.calendarCheck
-                      : LucideIcons.calendarDays,
-                ),
-                title: Text(
-                  TimeFormat.isoDate(day) +
-                      (_sameDay(day, today) ? '（今天）' : ''),
-                ),
-                trailing: _sameDay(day, _selectedDay)
-                    ? Icon(
-                        LucideIcons.check,
-                        color: ctx.colorScheme.primary,
-                      )
-                    : null,
-                onTap: () => Navigator.of(ctx).pop(day),
-              ),
-          ],
-        ),
-      ),
+    // 选中态按 == 比对，得挑出列表里那一份实例（_selectedDay 带时分秒，对不上）。
+    DateTime? selected;
+    for (final day in days) {
+      if (_sameDay(day, _selectedDay)) selected = day;
+    }
+    final picked = await showMoodiaryPickerSheet<DateTime>(
+      context,
+      title: '选择日期',
+      icon: LucideIcons.calendarDays,
+      selected: selected,
+      options: [
+        for (final day in days)
+          MoodiarySheetOption(
+            value: day,
+            label:
+                TimeFormat.isoDate(day) + (_sameDay(day, today) ? '（今天）' : ''),
+            icon: _sameDay(day, today)
+                ? LucideIcons.calendarCheck
+                : LucideIcons.calendarDays,
+          ),
+      ],
     );
     if (picked != null && mounted && !_sameDay(picked, _selectedDay)) {
       await _loadDay(picked);
@@ -157,9 +150,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
             child: Row(
               children: [
                 Text(
-                  _viewingToday
-                      ? '今天'
-                      : TimeFormat.isoDate(_selectedDay),
+                  _viewingToday ? '今天' : TimeFormat.isoDate(_selectedDay),
                   style: context.textTheme.labelLarge?.copyWith(
                     color: context.colorScheme.onSurfaceVariant,
                   ),
@@ -308,9 +299,7 @@ class _EventGroupTile extends StatelessWidget {
     return ExpansionTile(
       // 用组内最旧事件做 key：列表实时增长时最旧端不变，新事件插入不会让
       // 展开状态错位到别的组。
-      key: ValueKey(
-        '${kind.name}-${events.last.at.microsecondsSinceEpoch}',
-      ),
+      key: ValueKey('${kind.name}-${events.last.at.microsecondsSinceEpoch}'),
       shape: const Border(),
       collapsedShape: const Border(),
       tilePadding: const EdgeInsets.symmetric(horizontal: 10),
@@ -416,54 +405,27 @@ class _EventTile extends StatelessWidget {
       'message': event.message,
       if (event.payload != null) 'payload': event.payload,
     });
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '事件详情',
-                      style: context.textTheme.titleMedium,
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: '复制',
-                    icon: const Icon(LucideIcons.copy),
-                    onPressed: () async {
-                      await Clipboard.setData(ClipboardData(text: pretty));
-                      if (!ctx.mounted) return;
-                      Navigator.of(ctx).pop();
-                      toast.success(message: '已复制到剪贴板');
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(ctx).size.height * 0.6,
-                ),
-                child: SingleChildScrollView(
-                  child: SelectableText(
-                    pretty,
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+    showMoodiarySheet<void>(
+      context,
+      builder: (ctx) => MoodiarySheetScaffold<void>(
+        title: '事件详情',
+        subtitle: event.kind.name,
+        icon: LucideIcons.fileJson,
+        actions: [
+          MoodiaryAction(
+            label: '复制',
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: pretty));
+              if (!ctx.mounted) return;
+              Navigator.of(ctx).pop();
+              toast.success(message: '已复制到剪贴板');
+            },
           ),
+          MoodiaryAction(label: ctx.l10n.ok, isPrimary: true),
+        ],
+        child: SelectableText(
+          pretty,
+          style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
         ),
       ),
     );

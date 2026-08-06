@@ -4,71 +4,59 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:moodiary_ui/moodiary_ui.dart';
 
 class ColorSheet extends ConsumerWidget {
   const ColorSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (_) => const ColorSheet(),
-    );
+    return showMoodiarySheet<void>(context, builder: (_) => const ColorSheet());
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasSystemColor = ThemeManager().supportDynamic;
-    final currentColor = MoodiaryKVs.color.get() ?? (hasSystemColor ? -1 : 0);
 
     final indices = <int>[
       if (hasSystemColor) -1,
       for (int i = 0; i < AppColor.themeColorList.length; i++) i,
     ];
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-              child: Text(
-                context.l10n.colorCommon,
-                style: context.textTheme.titleMedium,
-              ),
+    return MoodiarySheetScaffold<void>(
+      title: context.l10n.colorCommon,
+      icon: LucideIcons.palette,
+      actions: [MoodiaryAction(label: context.l10n.ok, isPrimary: true)],
+      // 选中态必须自己订阅 KV：弹窗页面被路由缓存（builder 只跑一次），本 widget 若不
+      // 依赖任何会变的 InheritedWidget 就永远不重建，对勾会冻在打开时的那一格。
+      child: ValueListenableBuilder<int?>(
+        valueListenable: MoodiaryKVs.color.getNotifier(),
+        builder: (context, color, _) {
+          final currentColor = color ?? (hasSystemColor ? -1 : 0);
+          return GridView.builder(
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 80,
+              childAspectRatio: 1.0,
             ),
-            GridView.builder(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 80,
-                childAspectRatio: 1.0,
-              ),
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              itemCount: indices.length,
-              itemBuilder: (context, index) {
-                final colorIndex = indices[index];
-                return _ColorOption(
-                  colorIndex: colorIndex,
-                  isSelected: currentColor == colorIndex,
-                  onTap: () async {
-                    HapticFeedback.selectionClick();
-                    await MoodiaryKVs.color.set(colorIndex);
-                    await ref
-                        .read(appSettingsControllerProvider.notifier)
-                        .bumpTheme();
-                  },
-                );
-              },
-            ),
-          ],
-        ),
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: indices.length,
+            itemBuilder: (context, index) {
+              final colorIndex = indices[index];
+              return _ColorOption(
+                colorIndex: colorIndex,
+                isSelected: currentColor == colorIndex,
+                onTap: () async {
+                  HapticFeedback.selectionClick();
+                  await MoodiaryKVs.color.set(colorIndex);
+                  await ref
+                      .read(appSettingsControllerProvider.notifier)
+                      .bumpTheme();
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }

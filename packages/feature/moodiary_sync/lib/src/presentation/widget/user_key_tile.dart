@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
@@ -41,18 +42,13 @@ class UserKeyTile extends ConsumerWidget {
     WidgetRef ref,
     bool hasExistingKey,
   ) async {
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
+    await showMoodiarySheet<void>(
+      context,
       builder: (ctx) => _KeyManageSheet(
         hasExistingKey: hasExistingKey,
         onSubmit: (newKey) async {
           Navigator.of(ctx).pop();
-          await applyUserKeyChange(
-            context: context,
-            ref: ref,
-            newKey: newKey,
-          );
+          await applyUserKeyChange(context: context, ref: ref, newKey: newKey);
         },
         onRemove: hasExistingKey
             ? () async {
@@ -88,10 +84,12 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
   final _currentKeyController = TextEditingController();
   final _newKeyController = TextEditingController();
   final _confirmKeyController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
 
   bool _currentVerified = false;
   bool _verifying = false;
+  String? _currentError;
+  String? _newError;
+  String? _confirmError;
 
   @override
   void initState() {
@@ -113,7 +111,10 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
   /// 并与本机比对 —— 密码原文不落库，无从做字符串比较。
   Future<void> _verifyCurrent() async {
     if (_verifying) return;
-    setState(() => _verifying = true);
+    setState(() {
+      _verifying = true;
+      _currentError = null;
+    });
     IRemoteSyncBackend? backend;
     try {
       backend = IRemoteSyncBackend.get();
@@ -128,161 +129,108 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
     setState(() {
       _verifying = false;
       _currentVerified = ok;
+      _currentError = ok ? null : '密码不正确';
     });
-    if (ok) {
-      toast.success(message: '验证成功');
-    } else {
-      toast.error(message: '密码不正确');
+    if (ok) toast.success(message: '验证成功');
+  }
+
+  bool _validate() {
+    final currentError = widget.hasExistingKey && !_currentVerified
+        ? '请先验证当前密码'
+        : null;
+    final newError = _newKeyController.text.trim().isEmpty ? '请输入密码' : null;
+    final confirmError = _confirmKeyController.text != _newKeyController.text
+        ? '两次输入的密码不一致'
+        : null;
+    setState(() {
+      _currentError = currentError;
+      _newError = newError;
+      _confirmError = confirmError;
+    });
+    return currentError == null && newError == null && confirmError == null;
+  }
+
+  /// 关闭加密须先验证当前密码，防止拿到已解锁设备者直接解除加密。
+  void _remove() {
+    if (!_currentVerified) {
+      setState(() => _currentError = '请先验证当前密码');
+      return;
     }
+    widget.onRemove!();
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final bottomPadding = MediaQuery.viewInsetsOf(context).bottom;
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomPadding),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-            Row(
-              children: [
-                Icon(LucideIcons.key, color: scheme.primary),
-                const SizedBox(width: 8),
-                Text(
-                  '加密管理',
-                  style: context.textTheme.titleLarge,
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(LucideIcons.x),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            if (widget.hasExistingKey) ...[
-              TextFormField(
-                controller: _currentKeyController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: '当前密码',
-                  hintText: '请输入当前密码进行验证',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: _currentVerified
-                      ? Icon(LucideIcons.circleCheck, color: scheme.primary)
-                      : null,
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _currentVerified = false;
-                  });
-                },
-                validator: (value) {
-                  if (widget.hasExistingKey && !_currentVerified) {
-                    return '请先验证当前密码';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  icon: _verifying
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(LucideIcons.badgeCheck, size: 18),
-                  label: const Text('验证'),
-                  onPressed: _verifying ? null : _verifyCurrent,
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-
-            TextFormField(
-              controller: _newKeyController,
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: widget.hasExistingKey ? '新密码' : '加密密码',
-                hintText: widget.hasExistingKey
-                    ? '请输入新密码（数据密钥不变，云端无需重新加密）'
-                    : '请设置加密密码',
-                border: const OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return '请输入密码';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-
-            TextFormField(
-              controller: _confirmKeyController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: '确认密码',
-                hintText: '请再次输入密码',
-                border: OutlineInputBorder(),
-              ),
-              validator: (value) {
-                if (value != _newKeyController.text) {
-                  return '两次输入的密码不一致';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 24),
-
-            Row(
-              children: [
-                if (widget.onRemove != null)
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(LucideIcons.trash2),
-                      label: const Text('关闭加密'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: scheme.error,
-                        side: BorderSide(color: scheme.error),
-                      ),
-                      // 关闭加密须先验证当前密码，防止拿到已解锁设备者直接解除加密。
-                      onPressed: () {
-                        if (!_currentVerified) {
-                          toast.error(message: '请先验证当前密码');
-                          return;
-                        }
-                        widget.onRemove!();
-                      },
-                    ),
-                  ),
-                if (widget.onRemove != null) const SizedBox(width: 12),
-                Expanded(
-                  flex: widget.onRemove != null ? 2 : 1,
-                  child: FilledButton.icon(
-                    icon: const Icon(LucideIcons.save),
-                    label: const Text('保存'),
-                    onPressed: () {
-                      if (!_formKey.currentState!.validate()) return;
-                      widget.onSubmit(_newKeyController.text.trim());
-                    },
-                  ),
-                ),
-              ],
-            ),
-            ],
-          ),
+    return MoodiarySheetScaffold<void>(
+      title: '加密管理',
+      subtitle: widget.hasExistingKey ? '已开启' : '未开启',
+      icon: LucideIcons.key,
+      actions: [
+        MoodiaryAction(label: context.l10n.cancel, enabled: !_verifying),
+        MoodiaryAction(
+          label: context.l10n.save,
+          isPrimary: true,
+          enabled: !_verifying,
+          onPressed: () {
+            if (_validate()) widget.onSubmit(_newKeyController.text.trim());
+          },
         ),
+      ],
+      child: Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .stretch,
+        spacing: 14,
+        children: [
+          if (widget.hasExistingKey)
+            MoodiaryField(
+              controller: _currentKeyController,
+              label: '当前密码',
+              errorText: _currentError,
+              obscureText: true,
+              enabled: !_verifying,
+              onChanged: (_) {
+                if (_currentVerified) setState(() => _currentVerified = false);
+              },
+              // 验证是这个字段自己的动作，放尾部槽位比另起一行按钮更贴。
+              trailing: _currentVerified
+                  ? Icon(LucideIcons.circleCheck, color: scheme.primary)
+                  : IconButton(
+                      tooltip: '验证',
+                      icon: _verifying
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(LucideIcons.badgeCheck, size: 18),
+                      color: scheme.onSurfaceVariant,
+                      visualDensity: .compact,
+                      onPressed: _verifying ? null : _verifyCurrent,
+                    ),
+            ),
+          MoodiaryField(
+            controller: _newKeyController,
+            label: widget.hasExistingKey ? '新密码' : '加密密码',
+            errorText: _newError,
+            obscureText: true,
+            enabled: !_verifying,
+            textInputAction: .next,
+          ),
+          MoodiaryField(
+            controller: _confirmKeyController,
+            label: '确认密码',
+            errorText: _confirmError,
+            obscureText: true,
+            enabled: !_verifying,
+          ),
+          if (widget.onRemove != null)
+            MoodiaryDangerRow(
+              label: '关闭加密',
+              icon: LucideIcons.shieldOff,
+              onPressed: _verifying ? null : _remove,
+            ),
+        ],
       ),
     );
   }

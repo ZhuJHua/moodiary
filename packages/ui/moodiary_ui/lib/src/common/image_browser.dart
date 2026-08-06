@@ -7,6 +7,7 @@ import 'package:dismissible_page/dismissible_page.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_ui/src/basic/action_bar.dart';
 import 'package:moodiary_ui/src/basic/sheet.dart';
 import 'package:moodiary_ui/src/common/toast.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -149,10 +150,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
                 children: [
                   IconButton(
                     tooltip: context.l10n.imageBrowserInfo,
-                    icon: const Icon(
-                      LucideIcons.info,
-                      color: Colors.white,
-                    ),
+                    icon: const Icon(LucideIcons.info, color: Colors.white),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.black38,
                     ),
@@ -160,7 +158,10 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
                   ),
                   IconButton(
                     tooltip: context.l10n.imageBrowserSave,
-                    icon: const Icon(LucideIcons.imageDown, color: Colors.white),
+                    icon: const Icon(
+                      LucideIcons.imageDown,
+                      color: Colors.white,
+                    ),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.black38,
                     ),
@@ -228,11 +229,7 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
             )
           : const Center(child: CircularProgressIndicator(color: Colors.white)),
       errorBuilder: (_, _, _) => const Center(
-        child: Icon(
-          LucideIcons.imageOff,
-          color: Colors.white54,
-          size: 48,
-        ),
+        child: Icon(LucideIcons.imageOff, color: Colors.white54, size: 48),
       ),
     );
     if (!hero) return page;
@@ -301,9 +298,14 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
   Future<void> _showInfo() async {
     final info = await _loadInfo(widget.images[_current]);
     if (!mounted) return;
-    await showFloatingModalBottomSheet<void>(
-      context: context,
-      builder: (_) => _ImageInfoSheet(info: info),
+    await showMoodiarySheet<void>(
+      context,
+      builder: (sheetContext) => MoodiarySheetScaffold<void>(
+        title: sheetContext.l10n.imageBrowserInfo,
+        icon: LucideIcons.info,
+        actions: [MoodiaryAction(label: sheetContext.l10n.ok, isPrimary: true)],
+        child: _ImageInfoSheet(info: info),
+      ),
     );
   }
 
@@ -387,47 +389,37 @@ class _ImageInfoSheet extends StatelessWidget {
       if (info.size != null) (l10n.imageBrowserInfoSize, info.size!),
       if (info.format != null) (l10n.imageBrowserInfoFormat, info.format!),
       if (info.modified != null)
-        (l10n.imageBrowserInfoModified, TimeFormat.fullDateTime(info.modified!)),
-    ];
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              l10n.imageBrowserInfo,
-              style: context.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            for (final (label, value) in rows)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 5),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 76,
-                      child: Text(
-                        label,
-                        style: context.textTheme.bodyMedium?.copyWith(
-                          color: context.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(value, style: context.textTheme.bodyMedium),
-                    ),
-                  ],
-                ),
-              ),
-          ],
+        (
+          l10n.imageBrowserInfoModified,
+          TimeFormat.fullDateTime(info.modified!),
         ),
-      ),
+    ];
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (label, value) in rows)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 76,
+                  child: Text(
+                    label,
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(value, style: context.textTheme.bodyMedium),
+                ),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

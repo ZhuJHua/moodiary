@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -10,41 +11,46 @@ class CategoryPickerSheet extends ConsumerWidget {
 
   const CategoryPickerSheet({super.key, required this.currentCategoryId});
 
+  /// 点已选中的那一项按「没选」返回：调用方拿到结果就会改脏日记、刷新 lastModified
+  /// 并在下次同步推上去。改前用的 RadioListTile 在这种情况下是彻底的 no-op。
+  void _pick(BuildContext context, Category? category) {
+    final changed = category?.id != currentCategoryId;
+    Navigator.of(
+      context,
+    ).pop<_PickerResult>(_PickerResult(category: category, hasResult: changed));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(orderedCategoriesProvider);
-    return SafeArea(
+    return MoodiarySheetScaffold<_PickerResult>(
+      title: '选择分类',
+      icon: LucideIcons.folder,
+      actions: [MoodiaryAction(label: context.l10n.cancel)],
       child: async.buildLoading(
-        data: (categories) {
-          return RadioGroup<String?>(
-            groupValue: currentCategoryId,
-            onChanged: (selected) {
-              // selected 必来自下面某个 RadioListTile，firstWhere 不会抛，无需 orElse。
-              final cat = selected == null
-                  ? null
-                  : categories.firstWhere((c) => c.id == selected);
-              Navigator.of(context).pop<_PickerResult>(
-                _PickerResult(category: cat, hasResult: true),
-              );
-            },
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                const RadioListTile<String?>(
-                  value: null,
-                  title: Text('不分类'),
-                ),
-                const Divider(height: 0),
-                for (final c in categories)
-                  RadioListTile<String?>(
-                    value: c.id,
-                    title: Text(c.categoryName),
-                  ),
-              ],
+        data: (categories) => Column(
+          mainAxisSize: .min,
+          crossAxisAlignment: .stretch,
+          children: [
+            MoodiarySheetOptionTile<String?>(
+              option: const MoodiarySheetOption<String?>(
+                value: null,
+                label: '不分类',
+              ),
+              selected: currentCategoryId == null,
+              onTap: () => _pick(context, null),
             ),
-          );
-        },
+            for (final c in categories)
+              MoodiarySheetOptionTile<String?>(
+                option: MoodiarySheetOption<String?>(
+                  value: c.id,
+                  label: c.categoryName,
+                ),
+                selected: currentCategoryId == c.id,
+                onTap: () => _pick(context, c),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -54,9 +60,8 @@ class CategoryPickerSheet extends ConsumerWidget {
     required BuildContext context,
     required String? currentCategoryId,
   }) async {
-    final result = await showModalBottomSheet<_PickerResult>(
-      context: context,
-      showDragHandle: true,
+    final result = await showMoodiarySheet<_PickerResult>(
+      context,
       builder: (_) => CategoryPickerSheet(currentCategoryId: currentCategoryId),
     );
     if (result == null || !result.hasResult) return (false, null);

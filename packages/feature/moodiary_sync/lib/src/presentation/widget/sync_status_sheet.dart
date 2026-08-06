@@ -14,15 +14,13 @@ import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
 import 'package:moodiary_router/moodiary_router.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:moodiary_ui/moodiary_ui.dart';
 
 /// 「同步状态」底部弹窗：配置标签 / 当前状态与进度 / 数据概览 / 立即同步
 /// （同步中可停止）/ 查看日志入口。日志本身见 [SyncLogPage]。
 Future<void> showSyncStatusSheet(BuildContext context) async {
-  final result = await showModalBottomSheet<String>(
-    context: context,
-    useRootNavigator: true,
-    showDragHandle: true,
+  final result = await showMoodiarySheet<String>(
+    context,
     builder: (_) => const _SyncStatusSheet(),
   );
   // 等弹窗收起后再用外层 context 导航：弹窗自己的 context pop 后已卸载。
@@ -95,7 +93,6 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
       }
     });
 
-    final scheme = context.colorScheme;
     final state = ref.watch(syncControllerProvider);
     final stats = ref.watch(syncStatsProvider);
     final backend = IRemoteSyncBackend.get();
@@ -107,307 +104,436 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
         );
     final running = state is SyncRunning;
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 14, 12),
+    // 「立即同步 / 停止同步」自行接管点击：同步跑起来后弹窗要留着看进度，不能关。
+    MoodiarySheetScaffold<String> buildSheet(bool stopping) {
+      return MoodiarySheetScaffold<String>(
+        title: '同步状态',
+        // 后端与加密是背景事实不是状态，降到副标题，别跟「同步失败」抢同一级视觉。
+        subtitle: '${backend.type.label} · ${encryption ? '已加密' : '未加密'}',
+        icon: backend.type == SyncProviderType.webdav
+            ? LucideIcons.cloud
+            : LucideIcons.database,
+        actions: [
+          const MoodiaryAction(
+            label: '查看日志',
+            value: _SyncStatusSheet.resultViewLog,
+          ),
+          if (!running)
+            MoodiaryAction(
+              label: '立即同步',
+              isPrimary: true,
+              enabled: backend.isReady,
+              onPressed: () async {
+                if (!await ensureSyncKeyReady(
+                  context: context,
+                  ref: ref,
+                  backend: backend,
+                )) {
+                  return;
+                }
+                await ref
+                    .read(syncControllerProvider.notifier)
+                    .sync(IRemoteSyncBackend.get());
+              },
+            )
+          else
+            MoodiaryAction(
+              label: stopping ? '正在停止…' : '停止同步',
+              isPrimary: true,
+              enabled: !stopping,
+              onPressed: () => ref.read(syncControllerProvider.notifier).stop(),
+            ),
+        ],
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: .min,
+          crossAxisAlignment: .stretch,
           children: [
+            _StateCard(
+              state: state,
+              configured: backend.isReady,
+              stats: stats,
+              uploaded: _uploaded,
+              downloaded: _downloaded,
+              media: _media,
+              failed: _failed,
+            ),
+            const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(
-                  child: Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      _Tag(
-                        icon: backend.type == SyncProviderType.webdav
-                            ? LucideIcons.cloud
-                            : LucideIcons.database,
-                        label: backend.type.label,
-                      ),
-                      _Tag(
-                        icon: encryption ? LucideIcons.lock : LucideIcons.lockOpen,
-                        label: encryption ? '已加密' : '未加密',
-                      ),
-                      if (!backend.isReady)
-                        const _Tag(
-                          icon: LucideIcons.circleAlert,
-                          label: '未配置',
-                          emphasis: true,
-                        ),
-                    ],
-                  ),
-                ),
+                const Expanded(child: MoodiaryFormSection('数据概览')),
                 IconButton(
                   tooltip: '刷新数据概览',
                   icon: const Icon(LucideIcons.rotateCw),
-                  iconSize: 18,
-                  visualDensity: VisualDensity.compact,
-                  color: scheme.onSurfaceVariant,
+                  iconSize: 16,
+                  visualDensity: .compact,
+                  color: context.colorScheme.onSurfaceVariant,
                   onPressed: () => ref.invalidate(syncStatsProvider),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: _StateSection(
-                state: state,
-                uploaded: _uploaded,
-                downloaded: _downloaded,
-                media: _media,
-                failed: _failed,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: _MetricsLine(stats: stats),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                TextButton.icon(
-                  icon: const Icon(LucideIcons.history, size: 18),
-                  label: const Text('查看日志'),
-                  onPressed: () =>
-                      Navigator.of(context).pop(_SyncStatusSheet.resultViewLog),
-                ),
-                const Spacer(),
-                if (!running)
-                  FilledButton.icon(
-                    icon: const Icon(LucideIcons.refreshCw, size: 18),
-                    label: const Text('立即同步'),
-                    onPressed: backend.isReady
-                        ? () async {
-                            if (!await ensureSyncKeyReady(
-                              context: context,
-                              ref: ref,
-                              backend: backend,
-                            )) {
-                              return;
-                            }
-                            await ref
-                                .read(syncControllerProvider.notifier)
-                                .sync(IRemoteSyncBackend.get());
-                          }
-                        : null,
-                  )
-                else
-                  ValueListenableBuilder(
-                    valueListenable: SyncCancellation.instance.listenable,
-                    builder: (context, stopping, _) {
-                      return FilledButton.tonalIcon(
-                        icon: const Icon(LucideIcons.square, size: 18),
-                        label: Text(stopping ? '正在停止…' : '停止同步'),
-                        onPressed: stopping
-                            ? null
-                            : () => ref
-                                  .read(syncControllerProvider.notifier)
-                                  .stop(),
-                      );
-                    },
-                  ),
-              ],
-            ),
+            const SizedBox(height: 4),
+            _StatsTable(stats: stats),
           ],
         ),
-      ),
+      );
+    }
+
+    if (!running) return buildSheet(false);
+    return ValueListenableBuilder(
+      valueListenable: SyncCancellation.instance.listenable,
+      builder: (context, stopping, _) => buildSheet(stopping),
     );
   }
 }
 
-class _Tag extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  /// true → 警示配色（errorContainer），用于「未配置」。
-  final bool emphasis;
-
-  const _Tag({required this.icon, required this.label, this.emphasis = false});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final bg = emphasis ? scheme.errorContainer : scheme.secondaryContainer;
-    final fg = emphasis ? scheme.onErrorContainer : scheme.onSecondaryContainer;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: fg),
-          const SizedBox(width: 4),
-          Text(label, style: context.textTheme.labelSmall?.copyWith(color: fg)),
-        ],
-      ),
-    );
-  }
-}
-
-class _StateSection extends StatelessWidget {
+/// 状态卡：一行结论 + 一行佐证，是这张弹窗唯一的主视觉。四态各有自己的图标与配色，
+/// 失败与未配置走 error 底纹 —— 「未配置」是唯一需要用户离开去做点什么的状态，
+/// 藏在一堆胶囊标签里等于没说。
+class _StateCard extends StatelessWidget {
   final SyncState state;
+  final bool configured;
+  final AsyncValue<SyncStats> stats;
   final int uploaded;
   final int downloaded;
   final int media;
   final int failed;
 
-  const _StateSection({
+  const _StateCard({
     required this.state,
+    required this.configured,
+    required this.stats,
     required this.uploaded,
     required this.downloaded,
     required this.media,
     required this.failed,
   });
 
-  Widget _line(
-    BuildContext context, {
-    required IconData icon,
-    required Color iconColor,
-    required String text,
-    Color? textColor,
-  }) {
-    final scheme = context.colorScheme;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: iconColor),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: context.textTheme.bodySmall?.copyWith(
-              color: textColor ?? scheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ],
-    );
+  /// 从未同步过时，若远端已有内容就把「有多少可拉」说出来。
+  String? _pendingHint() {
+    final remote = switch (stats) {
+      AsyncData(:final value) => value.remoteDiaries,
+      _ => null,
+    };
+    if (remote == null || remote == 0) return null;
+    return '远端有 $remote 篇日记待拉取';
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    return switch (state) {
-      SyncRunning(:final label) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // year2023: false → 2024 版 M3 进度条；该参数为迁移期 deprecated 标记，未来默认即 false。
-          // ignore: deprecated_member_use
-          const LinearProgressIndicator(year2023: false),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
+    if (state case SyncRunning(:final label)) {
+      return _Shell(
+        warn: false,
+        child: Column(
+          crossAxisAlignment: .stretch,
+          mainAxisSize: .min,
+          children: [
+            const ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(2)),
+              // year2023: false → 2024 版 M3 进度条；该参数为迁移期 deprecated 标记。
+              // ignore: deprecated_member_use
+              child: LinearProgressIndicator(year2023: false),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text.rich(
-            TextSpan(
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: context.textTheme.titleSmall?.copyWith(
+                fontWeight: .w600,
+                color: context.colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
               children: [
-                TextSpan(text: '上传 $uploaded · 下载 $downloaded · 媒体 $media'),
+                _Counter(icon: LucideIcons.arrowUp, value: uploaded),
+                _Counter(icon: LucideIcons.arrowDown, value: downloaded),
+                _Counter(icon: LucideIcons.image, value: media),
+                // 没有失败时不占位 —— 常驻的「失败 0」只会让人多看一眼。
                 if (failed > 0)
-                  TextSpan(
-                    text: ' · 失败 $failed',
-                    style: TextStyle(color: scheme.error),
+                  _Counter(
+                    icon: LucideIcons.triangleAlert,
+                    value: failed,
+                    bad: true,
                   ),
               ],
             ),
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-      SyncSuccess(:final message) => _line(
-        context,
-        icon: LucideIcons.circleCheck,
-        iconColor: scheme.primary,
-        text: message,
-        textColor: scheme.onSurface,
-      ),
-      SyncError(:final message) => _line(
-        context,
-        icon: LucideIcons.circleAlert,
-        iconColor: scheme.error,
-        text: message,
-        textColor: scheme.error,
-      ),
-      SyncIdle() => ValueListenableBuilder(
-        valueListenable: MoodiaryKVs.lastSyncTime.getNotifier(),
-        builder: (context, millis, _) => _line(
-          context,
-          icon: LucideIcons.clock,
-          iconColor: scheme.onSurfaceVariant,
-          text: millis > 0
-              ? '上次同步：${TimeFormat.listDateTime(DateTime.fromMillisecondsSinceEpoch(millis))}'
-              : '尚未同步',
+          ],
         ),
+      );
+    }
+
+    return switch (state) {
+      SyncSuccess(:final message) => _Line(
+        icon: LucideIcons.circleCheck,
+        title: '同步完成',
+        detail: message,
+      ),
+      SyncError(:final message) => _Line(
+        icon: LucideIcons.triangleAlert,
+        title: '同步失败',
+        detail: message,
+        warn: true,
+      ),
+      _ when !configured => const _Line(
+        icon: LucideIcons.unplug,
+        title: '未配置同步后端',
+        detail: '去「备份与同步」填一个',
+        warn: true,
+      ),
+      _ => ValueListenableBuilder(
+        valueListenable: MoodiaryKVs.lastSyncTime.getNotifier(),
+        builder: (context, millis, _) => millis > 0
+            ? _Line(
+                icon: LucideIcons.circleCheck,
+                // 只说「同步过」这个事实：两侧条目数相等也不代表内容一致，
+                // 差异由下面的对照表用颜色说。
+                title: '已同步',
+                detail:
+                    '上次同步 '
+                    '${TimeFormat.listDateTime(DateTime.fromMillisecondsSinceEpoch(millis))}',
+              )
+            : _Line(
+                icon: LucideIcons.clock,
+                title: '尚未同步',
+                detail: _pendingHint(),
+              ),
       ),
     };
   }
 }
 
-class _MetricsLine extends StatelessWidget {
-  final AsyncValue<SyncStats> stats;
-  const _MetricsLine({required this.stats});
+class _Shell extends StatelessWidget {
+  final bool warn;
+  final Widget child;
+
+  const _Shell({required this.warn, required this.child});
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final style = context.textTheme.bodySmall?.copyWith(
-      color: scheme.onSurfaceVariant,
-      fontFeatures: const [FontFeature.tabularFigures()],
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: warn
+            ? scheme.error.withValues(alpha: 0.10)
+            : scheme.surfaceContainerHighest,
+        borderRadius: AppBorderRadius.mediumBorderRadius,
+      ),
+      child: child,
     );
-    return switch (stats) {
-      AsyncData(:final value) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  }
+}
+
+class _Line extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? detail;
+  final bool warn;
+
+  const _Line({
+    required this.icon,
+    required this.title,
+    this.detail,
+    this.warn = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final accent = warn ? scheme.error : scheme.primary;
+    return _Shell(
+      warn: warn,
+      child: Row(
+        crossAxisAlignment: .start,
         children: [
-          Wrap(
-            spacing: 16,
-            runSpacing: 2,
-            children: [
-              Text(
-                '本地：日记 ${value.localDiaries} · 分类 ${value.localCategories}',
-                style: style,
-              ),
-              Text(
-                value.remoteDiaries != null
-                    ? '远端：日记 ${value.remoteDiaries} · 分类 ${value.remoteCategories} · 媒体 ${value.remoteMedia}'
-                    : '远端：—',
-                style: style,
-              ),
-            ],
-          ),
-          if (value.remoteError != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              value.remoteError!,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: context.textTheme.bodySmall?.copyWith(color: scheme.error),
+          Icon(icon, size: 18, color: accent),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: .start,
+              mainAxisSize: .min,
+              children: [
+                Text(
+                  title,
+                  style: context.textTheme.titleSmall?.copyWith(
+                    fontWeight: .w600,
+                    color: warn ? scheme.error : scheme.onSurface,
+                  ),
+                ),
+                if (detail != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      detail!,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ],
+          ),
         ],
       ),
-      AsyncError(:final error) => Text(
-        '数据概览加载失败：$error',
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: context.textTheme.bodySmall?.copyWith(color: scheme.error),
+    );
+  }
+}
+
+class _Counter extends StatelessWidget {
+  final IconData icon;
+  final int value;
+  final bool bad;
+
+  const _Counter({required this.icon, required this.value, this.bad = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final color = bad ? scheme.error : scheme.onSurfaceVariant;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: bad
+            ? scheme.error.withValues(alpha: 0.12)
+            : scheme.surfaceContainerHigh,
+        borderRadius: const BorderRadius.all(Radius.circular(999)),
       ),
-      _ => Text(
-        '正在获取数据概览…',
-        style: context.textTheme.bodySmall?.copyWith(color: scheme.outline),
+      child: Row(
+        mainAxisSize: .min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 5),
+          Text(
+            '$value',
+            style: context.textTheme.labelMedium?.copyWith(
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+/// 本地 / 远端两列对照。两侧对不上时右列染 primary —— 折行文本要用户自己做减法。
+class _StatsTable extends StatelessWidget {
+  final AsyncValue<SyncStats> stats;
+
+  const _StatsTable({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final value = switch (stats) {
+      AsyncData(:final value) => value,
+      _ => null,
     };
+    final error = switch (stats) {
+      AsyncError(:final error) => '$error',
+      _ => value?.remoteError,
+    };
+
+    return Column(
+      crossAxisAlignment: .stretch,
+      mainAxisSize: .min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+          child: Row(
+            children: [
+              const Spacer(),
+              _head(context, '本地'),
+              _head(context, '远端'),
+            ],
+          ),
+        ),
+        _row(
+          context,
+          label: '日记',
+          local: value?.localDiaries,
+          remote: value?.remoteDiaries,
+        ),
+        _row(
+          context,
+          label: '分类',
+          local: value?.localCategories,
+          remote: value?.remoteCategories,
+        ),
+        // 本地媒体没有统计口径（SyncStats 只数日记与分类），宁可留空也不编。
+        _row(context, label: '媒体', local: null, remote: value?.remoteMedia),
+        if (error != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text(
+              error,
+              maxLines: 2,
+              overflow: .ellipsis,
+              style: context.textTheme.bodySmall?.copyWith(color: scheme.error),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _head(BuildContext context, String label) => SizedBox(
+    width: 56,
+    child: Text(
+      label,
+      textAlign: .end,
+      style: context.textTheme.labelSmall?.copyWith(
+        color: context.colorScheme.onSurfaceVariant,
+      ),
+    ),
+  );
+
+  Widget _row(
+    BuildContext context, {
+    required String label,
+    required int? local,
+    required int? remote,
+  }) {
+    final scheme = context.colorScheme;
+    final differs = local != null && remote != null && local != remote;
+    Widget cell(int? n, {bool emphasize = false}) => SizedBox(
+      width: 56,
+      child: Text(
+        n?.toString() ?? '—',
+        textAlign: .end,
+        style: context.textTheme.titleSmall?.copyWith(
+          fontWeight: n == null ? .w400 : .w600,
+          color: n == null
+              ? scheme.onSurfaceVariant
+              : emphasize
+              ? scheme.primary
+              : scheme.onSurface,
+          fontFeatures: const [FontFeature.tabularFigures()],
+        ),
+      ),
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: AppBorderRadius.mediumBorderRadius,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurface,
+              ),
+            ),
+          ),
+          cell(local),
+          cell(remote, emphasize: differs),
+        ],
+      ),
+    );
   }
 }

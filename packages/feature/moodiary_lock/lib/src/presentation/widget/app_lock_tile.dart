@@ -22,18 +22,16 @@ class _AppLockTileState extends State<AppLockTile> {
       confirmLabel: currentlyOn ? '去关闭' : '去设置',
     );
     if (!confirm || !mounted) return;
-    await showFloatingModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
+    await showMoodiarySheet<void>(
+      context,
       builder: (_) =>
           currentlyOn ? const RemovePasswordSheet() : const SetPasswordSheet(),
     );
   }
 
   Future<void> _changePassword() async {
-    await showFloatingModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
+    await showMoodiarySheet<void>(
+      context,
       builder: (_) => const ChangePasswordSheet(),
     );
   }
@@ -94,7 +92,8 @@ class _AppLockTileState extends State<AppLockTile> {
                 builder: (context, snapshot) {
                   if (snapshot.data != true) return const SizedBox.shrink();
                   return ValueListenableBuilder(
-                    valueListenable: MoodiaryKVs.supportBiometrics.getNotifier(),
+                    valueListenable: MoodiaryKVs.supportBiometrics
+                        .getNotifier(),
                     builder: (context, bio, _) {
                       return SettingSwitchListTile(
                         title: '生物识别解锁',
@@ -114,6 +113,7 @@ class _AppLockTileState extends State<AppLockTile> {
   }
 }
 
+/// PIN 键盘自己就是完整版式：输满即完成，没有需要确认的中间态，所以不给动作条。
 class _SheetScaffold extends StatelessWidget {
   final Widget child;
 
@@ -121,10 +121,10 @@ class _SheetScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return MoodiarySheetScaffold<void>(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-        child: SingleChildScrollView(child: child),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: child,
       ),
     );
   }

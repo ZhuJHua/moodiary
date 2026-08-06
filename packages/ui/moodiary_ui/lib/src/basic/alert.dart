@@ -3,40 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-
-/// 弹窗底部的一个动作。字段名对齐 [MoodiaryMenuEntry]，让菜单与弹窗共享同一套心智。
-///
-/// 三种呈现由两个布尔量决定：[isDestructive] → error 实心，[isPrimary] → primary
-/// 实心，都不是则为中性键（取消）。
-class MoodiaryAlertAction<T> {
-  /// 点击后弹窗返回的值。
-  final T? value;
-  final String label;
-  final bool isPrimary;
-  final bool isDestructive;
-  final bool enabled;
-
-  /// 点击拦截：返回 false 时弹窗不关闭。给自带校验的复合 [content] 用 —— 校验失败
-  /// 应当留住弹窗并就地报错，不要「先关弹窗再 toast」。
-  final bool Function()? onIntercept;
-
-  const MoodiaryAlertAction({
-    required this.label,
-    this.value,
-    this.isPrimary = false,
-    this.isDestructive = false,
-    this.enabled = true,
-    this.onIntercept,
-  });
-}
-
-/// 底部按钮的排布方式。
-enum MoodiaryAlertActionsLayout {
-  /// 两个动作且文案放得下时横排等宽，否则竖排。
-  auto,
-  horizontal,
-  vertical,
-}
+import 'package:moodiary_ui/src/basic/action_bar.dart';
+import 'package:moodiary_ui/src/basic/form.dart';
 
 const double _kAlertMaxWidth = 340;
 const double _kAlertScreenPadding = 28;
@@ -58,8 +26,8 @@ Future<T?> showMoodiaryAlert<T>(
   Widget? content,
   IconData? icon,
   bool isDestructive = false,
-  required List<MoodiaryAlertAction<T>> actions,
-  MoodiaryAlertActionsLayout actionsLayout = MoodiaryAlertActionsLayout.auto,
+  required List<MoodiaryAction<T>> actions,
+  MoodiaryActionsLayout actionsLayout = .auto,
   bool barrierDismissible = true,
 }) {
   return _push<T>(
@@ -90,7 +58,7 @@ Future<bool> showMoodiaryConfirm(
   String? cancelLabel,
   bool isDestructive = false,
   IconData? icon,
-  MoodiaryAlertActionsLayout actionsLayout = MoodiaryAlertActionsLayout.auto,
+  MoodiaryActionsLayout actionsLayout = .auto,
   bool barrierDismissible = true,
 }) async {
   final l10n = context.l10n;
@@ -104,8 +72,8 @@ Future<bool> showMoodiaryConfirm(
     actionsLayout: actionsLayout,
     barrierDismissible: barrierDismissible,
     actions: [
-      MoodiaryAlertAction(label: cancelLabel ?? l10n.cancel, value: false),
-      MoodiaryAlertAction(
+      MoodiaryAction(label: cancelLabel ?? l10n.cancel, value: false),
+      MoodiaryAction(
         label: confirmLabel ?? l10n.ok,
         value: true,
         isPrimary: !isDestructive,
@@ -132,10 +100,7 @@ Future<void> showMoodiaryNotice(
     content: content,
     icon: icon,
     actions: [
-      MoodiaryAlertAction(
-        label: closeLabel ?? context.l10n.ok,
-        isPrimary: true,
-      ),
+      MoodiaryAction(label: closeLabel ?? context.l10n.ok, isPrimary: true),
     ],
   );
 }
@@ -200,14 +165,14 @@ Future<T?> _push<T>(
   required bool barrierDismissible,
 }) {
   final navigator = Navigator.of(context, rootNavigator: true);
+  final localizations = MaterialLocalizations.of(context);
   return navigator.push(
     _MoodiaryAlertRoute<T>(
       builder: builder,
       initialBarrierDismissible: barrierDismissible,
       barrierColorValue: context.colorScheme.scrim.withValues(alpha: 0.32),
-      barrierLabelText: MaterialLocalizations.of(
-        context,
-      ).modalBarrierDismissLabel,
+      barrierLabelText: localizations.modalBarrierDismissLabel,
+      routeLabelText: localizations.dialogLabel,
       capturedThemes: InheritedTheme.capture(
         from: context,
         to: navigator.context,
@@ -222,6 +187,10 @@ class _MoodiaryAlertRoute<T> extends PopupRoute<T> {
   final WidgetBuilder builder;
   final Color barrierColorValue;
   final String barrierLabelText;
+
+  /// 路由名，读屏进入弹窗时播报。与 [barrierLabelText]（遮罩的「点这里关闭」）分开 ——
+  /// 混用会让读屏把每张弹窗都念成「关闭」。
+  final String routeLabelText;
   final CapturedThemes capturedThemes;
 
   bool _barrierDismissible;
@@ -231,6 +200,7 @@ class _MoodiaryAlertRoute<T> extends PopupRoute<T> {
     required bool initialBarrierDismissible,
     required this.barrierColorValue,
     required this.barrierLabelText,
+    required this.routeLabelText,
     required this.capturedThemes,
   }) : _barrierDismissible = initialBarrierDismissible;
 
@@ -275,7 +245,7 @@ class _MoodiaryAlertRoute<T> extends PopupRoute<T> {
       scopesRoute: true,
       explicitChildNodes: true,
       namesRoute: true,
-      label: barrierLabelText,
+      label: routeLabelText,
       child: capturedThemes.wrap(
         _AlertScaffold(
           viewPadding: viewPadding,
@@ -455,8 +425,8 @@ class _AlertBody<T> extends StatelessWidget {
   final Widget? content;
   final IconData? icon;
   final bool isDestructive;
-  final List<MoodiaryAlertAction<T>> actions;
-  final MoodiaryAlertActionsLayout actionsLayout;
+  final List<MoodiaryAction<T>> actions;
+  final MoodiaryActionsLayout actionsLayout;
 
   const _AlertBody({
     this.title,
@@ -476,22 +446,11 @@ class _AlertBody<T> extends StatelessWidget {
       content: content,
       icon: icon,
       isDestructive: isDestructive,
-      actions: _AlertActions(
+      actions: MoodiaryActionBar<T>(
         layout: actionsLayout,
-        actions: [
-          for (final action in actions)
-            _ActionSpec(
-              label: action.label,
-              isPrimary: action.isPrimary,
-              isDestructive: action.isDestructive,
-              onPressed: action.enabled
-                  ? () {
-                      if (action.onIntercept?.call() == false) return;
-                      Navigator.of(context).pop(action.value);
-                    }
-                  : null,
-            ),
-        ],
+        height: _kActionHeight,
+        gap: _kActionGap,
+        actions: actions,
       ),
     );
   }
@@ -546,21 +505,10 @@ class _PromptBodyState extends State<_PromptBody> {
   bool _busy = false;
 
   @override
-  void initState() {
-    super.initState();
-    // 只为了在有/无内容之间切换清除键，不参与校验。
-    _controller.addListener(_onChanged);
-  }
-
-  @override
   void dispose() {
-    _controller
-      ..removeListener(_onChanged)
-      ..dispose();
+    _controller.dispose();
     super.dispose();
   }
-
-  void _onChanged() => setState(() {});
 
   String get _value => widget.trim ? _controller.text.trim() : _controller.text;
 
@@ -608,7 +556,6 @@ class _PromptBodyState extends State<_PromptBody> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     final l10n = context.l10n;
 
     return PopScope(
@@ -618,269 +565,40 @@ class _PromptBodyState extends State<_PromptBody> {
         message: widget.message,
         icon: widget.icon,
         isDestructive: widget.isDestructive,
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _AlertField(
-              controller: _controller,
-              hintText: widget.hintText,
-              errorText: _error,
-              enabled: !_busy,
-              obscureText: widget.obscureText,
-              maxLength: widget.maxLength,
-              maxLines: widget.maxLines,
-              keyboardType: widget.keyboardType,
-              inputFormatters: widget.inputFormatters,
-              onSubmitted: (_) => _submit(),
-            ),
-          ],
+        content: MoodiaryField(
+          controller: _controller,
+          autofocus: true,
+          minHeight: _kFieldHeight,
+          hintText: widget.hintText,
+          errorText: _error,
+          enabled: !_busy,
+          obscureText: widget.obscureText,
+          maxLength: widget.maxLength,
+          maxLines: widget.maxLines,
+          keyboardType: widget.keyboardType,
+          inputFormatters: widget.inputFormatters,
+          onSubmitted: (_) => _submit(),
         ),
-        actions: _AlertActions(
-          layout: MoodiaryAlertActionsLayout.auto,
+        actions: MoodiaryActionBar<String>(
+          layout: .auto,
+          height: _kActionHeight,
+          gap: _kActionGap,
           actions: [
-            _ActionSpec(
+            MoodiaryAction(
               label: widget.cancelLabel ?? l10n.cancel,
-              onPressed: _busy ? null : () => Navigator.of(context).pop(),
+              enabled: !_busy,
             ),
-            _ActionSpec(
+            MoodiaryAction(
               label: widget.confirmLabel ?? l10n.ok,
               isPrimary: !widget.isDestructive,
               isDestructive: widget.isDestructive,
               busy: _busy,
-              onPressed: _busy ? null : _submit,
-              busyColor: widget.isDestructive
-                  ? scheme.onError
-                  : scheme.onPrimary,
+              enabled: !_busy,
+              onPressed: _submit,
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-/// 圆角填充式输入框。取代仓内并存的三种写法（OutlineInputBorder 默认 4 圆角 /
-/// 裸下划线 / 从不 filled），圆角与按钮同为 [AppBorderRadius.mediumBorderRadius]。
-class _AlertField extends StatelessWidget {
-  final TextEditingController controller;
-  final String? hintText;
-  final String? errorText;
-  final bool enabled;
-  final bool obscureText;
-  final int? maxLength;
-  final int maxLines;
-  final TextInputType? keyboardType;
-  final List<TextInputFormatter>? inputFormatters;
-  final ValueChanged<String>? onSubmitted;
-
-  const _AlertField({
-    required this.controller,
-    this.hintText,
-    this.errorText,
-    required this.enabled,
-    required this.obscureText,
-    this.maxLength,
-    required this.maxLines,
-    this.keyboardType,
-    this.inputFormatters,
-    this.onSubmitted,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
-      borderRadius: AppBorderRadius.mediumBorderRadius,
-      borderSide: color == Colors.transparent
-          ? BorderSide.none
-          : BorderSide(color: color, width: width),
-    );
-
-    return TextField(
-      controller: controller,
-      autofocus: true,
-      enabled: enabled,
-      obscureText: obscureText,
-      maxLength: maxLength,
-      maxLines: obscureText ? 1 : maxLines,
-      minLines: 1,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      textInputAction: maxLines > 1
-          ? TextInputAction.newline
-          : TextInputAction.done,
-      onSubmitted: onSubmitted,
-      style: context.textTheme.bodyLarge?.copyWith(color: scheme.onSurface),
-      decoration: InputDecoration(
-        hintText: hintText,
-        errorText: errorText,
-        filled: true,
-        isDense: true,
-        counterText: '',
-        fillColor: scheme.surfaceContainerHighest,
-        constraints: maxLines > 1
-            ? null
-            : const BoxConstraints(minHeight: _kFieldHeight),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 13,
-        ),
-        suffixIcon: (controller.text.isEmpty || obscureText || !enabled)
-            ? null
-            : IconButton(
-                icon: const Icon(LucideIcons.x, size: 18),
-                color: scheme.onSurfaceVariant,
-                visualDensity: VisualDensity.compact,
-                tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
-                onPressed: controller.clear,
-              ),
-        border: border(Colors.transparent, 0),
-        enabledBorder: border(Colors.transparent, 0),
-        disabledBorder: border(Colors.transparent, 0),
-        focusedBorder: border(scheme.primary, 1.5),
-        errorBorder: border(scheme.error, 1),
-        focusedErrorBorder: border(scheme.error, 1.5),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────── 按钮 ───────────────────────────
-
-class _ActionSpec {
-  final String label;
-  final bool isPrimary;
-  final bool isDestructive;
-  final bool busy;
-  final Color? busyColor;
-  final VoidCallback? onPressed;
-
-  const _ActionSpec({
-    required this.label,
-    this.isPrimary = false,
-    this.isDestructive = false,
-    this.busy = false,
-    this.busyColor,
-    this.onPressed,
-  });
-}
-
-/// 排布规则：单个动作全宽；两个动作且量出来放得下时横排等宽（原序，取消在左）；
-/// 其余一律竖排并反序，让主操作在上、取消在最下。
-class _AlertActions extends StatelessWidget {
-  final List<_ActionSpec> actions;
-  final MoodiaryAlertActionsLayout layout;
-
-  const _AlertActions({required this.actions, required this.layout});
-
-  bool _fitsInRow(BuildContext context, double maxWidth, TextStyle? style) {
-    final scaler = MediaQuery.textScalerOf(context);
-    final direction = Directionality.of(context);
-    var total = _kActionGap * (actions.length - 1);
-    for (final action in actions) {
-      final painter = TextPainter(
-        text: TextSpan(text: action.label, style: style),
-        textDirection: direction,
-        textScaler: scaler,
-        maxLines: 1,
-      )..layout();
-      // 每颗按钮文字两侧至少各留 16。
-      total += painter.width + 32;
-    }
-    return total <= maxWidth;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final style = context.textTheme.labelLarge?.copyWith(
-      fontWeight: FontWeight.w600,
-    );
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final horizontal = switch (layout) {
-          MoodiaryAlertActionsLayout.horizontal => true,
-          MoodiaryAlertActionsLayout.vertical => false,
-          MoodiaryAlertActionsLayout.auto =>
-            actions.length == 1 ||
-                (actions.length == 2 &&
-                    _fitsInRow(context, constraints.maxWidth, style)),
-        };
-
-        if (horizontal) {
-          return Row(
-            children: [
-              for (final (index, action) in actions.indexed) ...[
-                if (index > 0) const SizedBox(width: _kActionGap),
-                Expanded(
-                  child: _AlertButton(spec: action, textStyle: style),
-                ),
-              ],
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final (index, action) in actions.reversed.indexed) ...[
-              if (index > 0) const SizedBox(height: _kActionGap),
-              _AlertButton(spec: action, textStyle: style),
-            ],
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _AlertButton extends StatelessWidget {
-  final _ActionSpec spec;
-  final TextStyle? textStyle;
-
-  const _AlertButton({required this.spec, required this.textStyle});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final Color background;
-    final Color foreground;
-    if (spec.isDestructive) {
-      background = scheme.error;
-      foreground = scheme.onError;
-    } else if (spec.isPrimary) {
-      background = scheme.primary;
-      foreground = scheme.onPrimary;
-    } else {
-      background = scheme.surfaceContainerHighest;
-      foreground = scheme.onSurfaceVariant;
-    }
-
-    return FilledButton(
-      onPressed: spec.onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: background,
-        foregroundColor: foreground,
-        disabledBackgroundColor: scheme.onSurface.withValues(alpha: 0.12),
-        disabledForegroundColor: scheme.onSurface.withValues(alpha: 0.38),
-        minimumSize: const Size.fromHeight(_kActionHeight),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        textStyle: textStyle,
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppBorderRadius.mediumBorderRadius,
-        ),
-      ),
-      child: spec.busy
-          ? SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: spec.busyColor ?? foreground,
-              ),
-            )
-          : Text(spec.label, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
   }
 }

@@ -1172,50 +1172,40 @@ class _CompactionNoticeChip extends StatelessWidget {
   }
 
   void _showSheet(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
+    showMoodiarySheet<void>(
+      context,
       builder: (sheetContext) {
         final l10n = sheetContext.l10n;
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.assistantCompactionSheetTitle,
-                  style: sheetContext.textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.assistantCompactionSheetNote,
-                  style: sheetContext.textTheme.bodySmall?.copyWith(
-                    color: sheetContext.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: Text(
-                      summary.isEmpty ? '—' : summary,
-                      style: sheetContext.textTheme.bodyMedium,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                FilledButton.tonalIcon(
-                  onPressed: () {
-                    Navigator.of(sheetContext).pop();
-                    onRestore();
-                  },
-                  icon: const Icon(LucideIcons.chevronsUpDown),
-                  label: Text(l10n.assistantCompactionRestore),
-                ),
-              ],
+        return MoodiarySheetScaffold<void>(
+          title: l10n.assistantCompactionSheetTitle,
+          icon: LucideIcons.chevronsUpDown,
+          actions: [
+            MoodiaryAction(label: l10n.cancel),
+            MoodiaryAction(
+              label: l10n.assistantCompactionRestore,
+              isPrimary: true,
+              onPressed: () {
+                Navigator.of(sheetContext).pop();
+                onRestore();
+              },
             ),
+          ],
+          child: Column(
+            mainAxisSize: .min,
+            crossAxisAlignment: .stretch,
+            children: [
+              Text(
+                l10n.assistantCompactionSheetNote,
+                style: sheetContext.textTheme.bodySmall?.copyWith(
+                  color: sheetContext.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                summary.isEmpty ? '—' : summary,
+                style: sheetContext.textTheme.bodyMedium,
+              ),
+            ],
           ),
         );
       },
@@ -1862,11 +1852,7 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
                 ),
               )
             else
-              Icon(
-                LucideIcons.brain,
-                size: 16,
-                color: scheme.onSurfaceVariant,
-              ),
+              Icon(LucideIcons.brain, size: 16, color: scheme.onSurfaceVariant),
             const SizedBox(width: 7),
             Flexible(
               child: Text(
@@ -1881,9 +1867,7 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
             if (hasReasoning) ...[
               const SizedBox(width: 2),
               Icon(
-                _expanded
-                    ? LucideIcons.chevronUp
-                    : LucideIcons.chevronDown,
+                _expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
                 size: 18,
                 color: scheme.onSurfaceVariant,
               ),
@@ -2071,7 +2055,11 @@ class _EmptySessions extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(LucideIcons.messagesSquare, size: 56, color: scheme.onSurfaceVariant),
+          Icon(
+            LucideIcons.messagesSquare,
+            size: 56,
+            color: scheme.onSurfaceVariant,
+          ),
           const SizedBox(height: 12),
           Text(
             context.l10n.assistantHistoryEmpty,

@@ -467,8 +467,8 @@ class _GraphViewState extends ConsumerState<_GraphView> {
 
   Future<void> _openViewSheet() async {
     final l10n = context.l10n;
-    await showFloatingModalBottomSheet<void>(
-      context: context,
+    await showMoodiarySheet<void>(
+      context,
       builder: (sheetContext) => StatefulBuilder(
         builder: (sheetContext, setSheet) {
           void apply(VoidCallback change, {bool relayout = false}) {
@@ -484,102 +484,101 @@ class _GraphViewState extends ConsumerState<_GraphView> {
             }
           }
 
-          return SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _SheetGroup(
-                    label: l10n.graphTimeAll,
-                    icon: LucideIcons.clock,
-                    child: SegmentedButton<_TimeFilter>(
-                      showSelectedIcon: false,
-                      selected: {_time},
-                      segments: [
-                        ButtonSegment(
-                          value: _TimeFilter.all,
-                          label: Text(l10n.graphTimeAll),
-                        ),
-                        ButtonSegment(
-                          value: _TimeFilter.last30,
-                          label: Text(l10n.graphTimeLast30),
-                        ),
-                        ButtonSegment(
-                          value: _TimeFilter.thisYear,
-                          label: Text(l10n.graphTimeThisYear),
-                        ),
-                        ButtonSegment(
-                          value: _TimeFilter.last365,
-                          label: Text(l10n.graphTimeLast365),
-                        ),
-                      ],
-                      onSelectionChanged: (v) =>
-                          apply(() => _time = v.first, relayout: true),
-                    ),
+          return MoodiarySheetScaffold<void>(
+            title: l10n.graphStyle,
+            icon: LucideIcons.chartNetwork,
+            actions: [MoodiaryAction(label: l10n.ok, isPrimary: true)],
+            child: Column(
+              mainAxisSize: .min,
+              crossAxisAlignment: .stretch,
+              children: [
+                _SheetGroup(
+                  label: l10n.graphTimeAll,
+                  icon: LucideIcons.clock,
+                  child: SegmentedButton<_TimeFilter>(
+                    showSelectedIcon: false,
+                    selected: {_time},
+                    segments: [
+                      ButtonSegment(
+                        value: _TimeFilter.all,
+                        label: Text(l10n.graphTimeAll),
+                      ),
+                      ButtonSegment(
+                        value: _TimeFilter.last30,
+                        label: Text(l10n.graphTimeLast30),
+                      ),
+                      ButtonSegment(
+                        value: _TimeFilter.thisYear,
+                        label: Text(l10n.graphTimeThisYear),
+                      ),
+                      ButtonSegment(
+                        value: _TimeFilter.last365,
+                        label: Text(l10n.graphTimeLast365),
+                      ),
+                    ],
+                    onSelectionChanged: (v) =>
+                        apply(() => _time = v.first, relayout: true),
                   ),
-                  const SizedBox(height: 20),
-                  _SheetGroup(
-                    label: l10n.graphStyle,
-                    icon: LucideIcons.chartNetwork,
-                    child: SegmentedButton<GraphDensity>(
-                      showSelectedIcon: false,
-                      selected: {_density},
-                      segments: [
-                        ButtonSegment(
-                          value: GraphDensity.sparse,
-                          label: Text(l10n.graphStyleSparse),
-                        ),
-                        ButtonSegment(
-                          value: GraphDensity.normal,
-                          label: Text(l10n.graphStyleNormal),
-                        ),
-                        ButtonSegment(
-                          value: GraphDensity.dense,
-                          label: Text(l10n.graphStyleDense),
-                        ),
-                      ],
-                      onSelectionChanged: (v) => apply(() {
-                        _density = v.first;
-                        _memory.clear(); // 换疏密即换尺度，旧坐标不能当种子
-                      }, relayout: true),
-                    ),
+                ),
+                const SizedBox(height: 20),
+                _SheetGroup(
+                  label: l10n.graphStyle,
+                  icon: LucideIcons.chartNetwork,
+                  child: SegmentedButton<GraphDensity>(
+                    showSelectedIcon: false,
+                    selected: {_density},
+                    segments: [
+                      ButtonSegment(
+                        value: GraphDensity.sparse,
+                        label: Text(l10n.graphStyleSparse),
+                      ),
+                      ButtonSegment(
+                        value: GraphDensity.normal,
+                        label: Text(l10n.graphStyleNormal),
+                      ),
+                      ButtonSegment(
+                        value: GraphDensity.dense,
+                        label: Text(l10n.graphStyleDense),
+                      ),
+                    ],
+                    onSelectionChanged: (v) => apply(() {
+                      _density = v.first;
+                      _memory.clear(); // 换疏密即换尺度，旧坐标不能当种子
+                    }, relayout: true),
                   ),
-                  const SizedBox(height: 20),
-                  _SheetGroup(
-                    label: l10n.graphColorBy,
-                    icon: LucideIcons.palette,
-                    child: SegmentedButton<GraphColorMode>(
-                      showSelectedIcon: false,
-                      selected: {_colorMode},
-                      segments: [
-                        ButtonSegment(
-                          value: GraphColorMode.category,
-                          label: Text(l10n.graphColorByCategory),
-                        ),
-                        ButtonSegment(
-                          value: GraphColorMode.time,
-                          label: Text(l10n.graphColorByTime),
-                        ),
-                        ButtonSegment(
-                          value: GraphColorMode.plain,
-                          label: Text(l10n.graphColorByPlain),
-                        ),
-                      ],
-                      onSelectionChanged: (v) =>
-                          apply(() => _colorMode = v.first),
-                    ),
+                ),
+                const SizedBox(height: 20),
+                _SheetGroup(
+                  label: l10n.graphColorBy,
+                  icon: LucideIcons.palette,
+                  child: SegmentedButton<GraphColorMode>(
+                    showSelectedIcon: false,
+                    selected: {_colorMode},
+                    segments: [
+                      ButtonSegment(
+                        value: GraphColorMode.category,
+                        label: Text(l10n.graphColorByCategory),
+                      ),
+                      ButtonSegment(
+                        value: GraphColorMode.time,
+                        label: Text(l10n.graphColorByTime),
+                      ),
+                      ButtonSegment(
+                        value: GraphColorMode.plain,
+                        label: Text(l10n.graphColorByPlain),
+                      ),
+                    ],
+                    onSelectionChanged: (v) =>
+                        apply(() => _colorMode = v.first),
                   ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.graphShowLabels),
-                    value: _showLabels,
-                    onChanged: (v) => apply(() => _showLabels = v),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 20),
+                MoodiarySwitchField(
+                  label: l10n.graphShowLabels,
+                  value: _showLabels,
+                  onChanged: (v) => apply(() => _showLabels = v),
+                ),
+              ],
             ),
           );
         },
@@ -657,11 +656,7 @@ class _FilteredEmpty extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            LucideIcons.filterX,
-            size: 40,
-            color: theme.colorScheme.outline,
-          ),
+          Icon(LucideIcons.filterX, size: 40, color: theme.colorScheme.outline),
           const SizedBox(height: 12),
           Text(
             context.l10n.graphFilterEmpty,

@@ -340,8 +340,8 @@ void main() {
   group('按钮排布', () {
     Future<void> pumpActions(
       WidgetTester tester,
-      List<MoodiaryAlertAction<int>> actions, {
-      MoodiaryAlertActionsLayout layout = MoodiaryAlertActionsLayout.auto,
+      List<MoodiaryAction<int>> actions, {
+      MoodiaryActionsLayout layout = MoodiaryActionsLayout.auto,
     }) async {
       await tester.pumpWidget(
         host(
@@ -358,8 +358,8 @@ void main() {
 
     testWidgets('两个短标签横排：取消在左、主操作在右', (tester) async {
       await pumpActions(tester, const [
-        MoodiaryAlertAction(label: '取消', value: 0),
-        MoodiaryAlertAction(label: '删除', value: 1, isDestructive: true),
+        MoodiaryAction(label: '取消', value: 0),
+        MoodiaryAction(label: '删除', value: 1, isDestructive: true),
       ]);
 
       final cancel = tester.getCenter(find.text('取消'));
@@ -370,9 +370,9 @@ void main() {
 
     testWidgets('三个动作竖排且反序：主操作在上、取消在最下', (tester) async {
       await pumpActions(tester, const [
-        MoodiaryAlertAction(label: '取消', value: 0),
-        MoodiaryAlertAction(label: '清除压测数据', value: 1, isDestructive: true),
-        MoodiaryAlertAction(label: '生成', value: 2, isPrimary: true),
+        MoodiaryAction(label: '取消', value: 0),
+        MoodiaryAction(label: '清除压测数据', value: 1, isDestructive: true),
+        MoodiaryAction(label: '生成', value: 2, isPrimary: true),
       ]);
 
       final generate = tester.getCenter(find.text('生成'));
@@ -385,12 +385,8 @@ void main() {
 
     testWidgets('两个长标签放不下时自动竖排', (tester) async {
       await pumpActions(tester, const [
-        MoodiaryAlertAction(label: '我再想想，先不要动我的数据', value: 0),
-        MoodiaryAlertAction(
-          label: '我确认要永久删除全部内容',
-          value: 1,
-          isDestructive: true,
-        ),
+        MoodiaryAction(label: '我再想想，先不要动我的数据', value: 0),
+        MoodiaryAction(label: '我确认要永久删除全部内容', value: 1, isDestructive: true),
       ]);
 
       final cancel = tester.getCenter(find.text('我再想想，先不要动我的数据'));
@@ -400,9 +396,9 @@ void main() {
 
     testWidgets('layout: horizontal 可以强制横排', (tester) async {
       await pumpActions(tester, const [
-        MoodiaryAlertAction(label: '我再想想，先不要动我的数据', value: 0),
-        MoodiaryAlertAction(label: '我确认要永久删除全部内容', value: 1),
-      ], layout: MoodiaryAlertActionsLayout.horizontal);
+        MoodiaryAction(label: '我再想想，先不要动我的数据', value: 0),
+        MoodiaryAction(label: '我确认要永久删除全部内容', value: 1),
+      ], layout: MoodiaryActionsLayout.horizontal);
 
       final cancel = tester.getCenter(find.text('我再想想，先不要动我的数据'));
       final confirm = tester.getCenter(find.text('我确认要永久删除全部内容'));
@@ -411,8 +407,8 @@ void main() {
 
     testWidgets('enabled: false 的动作不可点', (tester) async {
       await pumpActions(tester, const [
-        MoodiaryAlertAction(label: '取消', value: 0),
-        MoodiaryAlertAction(label: '删除', value: 1, enabled: false),
+        MoodiaryAction(label: '取消', value: 0),
+        MoodiaryAction(label: '删除', value: 1, enabled: false),
       ]);
 
       final button = tester.widget<FilledButton>(
@@ -431,8 +427,8 @@ void main() {
             context,
             title: '选一个',
             actions: const [
-              MoodiaryAlertAction(label: '取消', value: 0),
-              MoodiaryAlertAction(label: '继续', value: 42, isPrimary: true),
+              MoodiaryAction(label: '取消', value: 0),
+              MoodiaryAction(label: '继续', value: 42, isPrimary: true),
             ],
           );
         }),
@@ -454,8 +450,8 @@ void main() {
             title: '新建分类',
             content: const Text('色板占位'),
             actions: [
-              const MoodiaryAlertAction(label: '取消', value: false),
-              MoodiaryAlertAction(
+              const MoodiaryAction(label: '取消', value: false),
+              MoodiaryAction(
                 label: '确认',
                 value: true,
                 isPrimary: true,
@@ -486,7 +482,7 @@ void main() {
             context,
             title: '导入本地备份',
             message: '· 同名条目按修改时间取新\n· 远端不存在的条目会被补齐\n· 本地多出的条目保持不变',
-            actions: const [MoodiaryAlertAction(label: '取消')],
+            actions: const [MoodiaryAction(label: '取消')],
           ),
         ),
       );
@@ -505,7 +501,7 @@ void main() {
             context,
             title: '清空日志',
             message: '操作不可恢复。',
-            actions: const [MoodiaryAlertAction(label: '取消')],
+            actions: const [MoodiaryAction(label: '取消')],
           ),
         ),
       );
@@ -524,7 +520,7 @@ void main() {
             title: '新建分类',
             message: '分类只影响筛选。',
             content: const Text('色板占位'),
-            actions: const [MoodiaryAlertAction(label: '取消')],
+            actions: const [MoodiaryAction(label: '取消')],
           ),
         ),
       );

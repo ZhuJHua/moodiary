@@ -495,28 +495,63 @@ class AppLocalizationsZh extends AppLocalizations {
   String get webdavOptionServer => '服务器地址';
 
   @override
-  String get webdavOptionServerDes => '请填写服务器地址';
-
-  @override
   String get webdavOptionUsername => '用户名';
-
-  @override
-  String get webdavOptionUsernameDes => '请填写用户名';
 
   @override
   String get webdavOptionPassword => '密码';
 
   @override
-  String get webdavOptionPasswordDes => '请填写密码';
+  String get backupSyncS3 => 'S3 / MinIO';
 
   @override
-  String get webdavOptionDelete => '删除配置';
+  String get s3OptionEndpoint => 'Endpoint';
 
   @override
-  String get webdavOptionUpdate => '更新配置';
+  String get s3OptionRegion => 'Region';
 
   @override
-  String get webdavOptionSave => '保存配置';
+  String get s3OptionBucket => 'Bucket';
+
+  @override
+  String get s3OptionAccessKey => 'Access Key';
+
+  @override
+  String get s3OptionSecretKey => 'Secret Key';
+
+  @override
+  String get s3OptionUseSsl => '使用 HTTPS';
+
+  @override
+  String get syncSectionConnection => '连接';
+
+  @override
+  String get syncSectionCredentials => '凭证';
+
+  @override
+  String get syncSectionOptions => '选项';
+
+  @override
+  String get syncConfigClear => '清除配置';
+
+  @override
+  String get syncConfigClearConfirmTitle => '清除配置？';
+
+  @override
+  String get syncConfigClearConfirmMessage => '清除后将停止与该后端同步，本地日记不受影响。';
+
+  @override
+  String get syncConfigCleared => '已清除配置';
+
+  @override
+  String syncFieldRequired(String field) {
+    return '$field不能为空';
+  }
+
+  @override
+  String get syncFieldOptional => '可留空';
+
+  @override
+  String get syncFieldInvalidUrl => '地址格式不正确';
 
   @override
   String get diarySettingRichText => '富文本';

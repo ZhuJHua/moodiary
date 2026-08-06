@@ -4,6 +4,7 @@ library;
 export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 export 'package:lucide_icons_flutter/lucide_icons.dart';
 
+export 'src/basic/action_bar.dart';
 export 'src/basic/alert.dart';
 export 'src/basic/bubble.dart';
 export 'src/basic/button.dart';
@@ -11,6 +12,7 @@ export 'src/basic/clipper.dart';
 export 'src/basic/dialog.dart';
 export 'src/basic/expand_tap_area.dart';
 export 'src/basic/fix_scroll.dart';
+export 'src/basic/form.dart';
 export 'src/basic/image.dart';
 export 'src/basic/keepalive.dart';
 export 'src/basic/keyboard_listener.dart';

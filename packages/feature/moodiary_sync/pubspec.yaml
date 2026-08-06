@@ -16,6 +16,7 @@ dependencies:
   moodiary_core: 0.0.1
   moodiary_models: 0.0.1
   moodiary_data: 0.0.1
+  moodiary_l10n: 0.0.1
   moodiary_ui: 0.0.1
   moodiary_router: 0.0.1
   moodiary_rust: 0.0.1

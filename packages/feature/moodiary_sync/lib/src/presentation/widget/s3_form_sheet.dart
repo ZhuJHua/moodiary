@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/impl/s3_sync.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:moodiary_ui/moodiary_ui.dart';
 
+/// S3 / MinIO 后端配置。字段按连接 / 凭证 / 选项分三节，装不下一屏时只有中间
+/// 内容滚动，动作条始终贴在卡片底边。
 class S3FormSheet extends StatefulWidget {
   const S3FormSheet({super.key});
 
@@ -9,18 +12,9 @@ class S3FormSheet extends StatefulWidget {
   State<S3FormSheet> createState() => _S3FormSheetState();
 
   static Future<bool?> show(BuildContext context) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      // 必须用 builder 自己的 context 取 viewInsets：外层 context 的 MediaQuery
-      // 变化不会重建 builder，padding 会停在打开时的 0、表单被键盘遮住。
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: const S3FormSheet(),
-      ),
+    return showMoodiarySheet<bool>(
+      context,
+      builder: (_) => const S3FormSheet(),
     );
   }
 }
@@ -31,9 +25,16 @@ class _S3FormSheetState extends State<S3FormSheet> {
   late final TextEditingController _accessKeyCtl;
   late final TextEditingController _secretKeyCtl;
   late final TextEditingController _bucketCtl;
+
+  late final bool _configured = S3SyncBackend.isConfigured();
+  late final String _savedBucket;
+
   bool _useSSL = true;
-  bool _obscureSecret = true;
   bool _saving = false;
+  String? _endpointError;
+  String? _bucketError;
+  String? _accessKeyError;
+  String? _secretKeyError;
 
   @override
   void initState() {
@@ -46,6 +47,7 @@ class _S3FormSheetState extends State<S3FormSheet> {
     _secretKeyCtl = TextEditingController(text: at(3));
     _bucketCtl = TextEditingController(text: at(4));
     _useSSL = at(5) != '0';
+    _savedBucket = at(4);
   }
 
   @override
@@ -58,123 +60,160 @@ class _S3FormSheetState extends State<S3FormSheet> {
     super.dispose();
   }
 
-  Future<void> _save() async {
-    if (_saving) return;
-    setState(() => _saving = true);
-    await S3SyncBackend.configure(
-      endpoint: _endpointCtl.text,
-      region: _regionCtl.text,
-      accessKey: _accessKeyCtl.text,
-      secretKey: _secretKeyCtl.text,
-      bucket: _bucketCtl.text,
-      useSSL: _useSSL,
+  /// Endpoint 存的是裸主机名，协议由下面的 HTTPS 开关决定。粘进来一整条 URL 时
+  /// 就地拆开：主机留在框里、协议翻到开关上，改动是看得见的。
+  void _normalizeEndpoint(String value) {
+    if (!value.contains('://')) return;
+    final uri = Uri.tryParse(value.trim());
+    if (uri == null || uri.host.isEmpty) return;
+    final host = uri.hasPort ? '${uri.host}:${uri.port}' : uri.host;
+    setState(() => _useSSL = uri.isScheme('https'));
+    _endpointCtl.value = TextEditingValue(
+      text: host,
+      selection: .collapsed(offset: host.length),
     );
+  }
+
+  /// 校验口径与 [S3SyncBackend.isConfigured] 一致：region 可空，其余四项必填。
+  bool _validate() {
+    final l10n = context.l10n;
+    String? required(TextEditingController controller, String field) =>
+        controller.text.trim().isEmpty ? l10n.syncFieldRequired(field) : null;
+
+    final endpointError = required(_endpointCtl, l10n.s3OptionEndpoint);
+    final bucketError = required(_bucketCtl, l10n.s3OptionBucket);
+    final accessKeyError = required(_accessKeyCtl, l10n.s3OptionAccessKey);
+    final secretKeyError = required(_secretKeyCtl, l10n.s3OptionSecretKey);
+    setState(() {
+      _endpointError = endpointError;
+      _bucketError = bucketError;
+      _accessKeyError = accessKeyError;
+      _secretKeyError = secretKeyError;
+    });
+    return endpointError == null &&
+        bucketError == null &&
+        accessKeyError == null &&
+        secretKeyError == null;
+  }
+
+  Future<void> _save() async {
+    if (_saving || !_validate()) return;
+    setState(() => _saving = true);
+    try {
+      await S3SyncBackend.configure(
+        endpoint: _endpointCtl.text,
+        region: _regionCtl.text,
+        accessKey: _accessKeyCtl.text,
+        secretKey: _secretKeyCtl.text,
+        bucket: _bucketCtl.text,
+        useSSL: _useSSL,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
     if (!mounted) return;
     Navigator.of(context).pop(true);
   }
 
   Future<void> _clear() async {
-    await S3SyncBackend.clear();
+    final l10n = context.l10n;
+    final confirmed = await showMoodiaryConfirm(
+      context,
+      title: l10n.syncConfigClearConfirmTitle,
+      message: l10n.syncConfigClearConfirmMessage,
+      confirmLabel: l10n.syncConfigClear,
+      isDestructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    setState(() => _saving = true);
+    try {
+      await S3SyncBackend.clear();
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
     if (!mounted) return;
     Navigator.of(context).pop(true);
+    toast.success(message: l10n.syncConfigCleared);
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'S3 / MinIO 配置',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _endpointCtl,
-                decoration: const InputDecoration(
-                  labelText: 'Endpoint',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _regionCtl,
-                decoration: const InputDecoration(
-                  labelText: 'Region (可选)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _bucketCtl,
-                decoration: const InputDecoration(
-                  labelText: 'Bucket',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _accessKeyCtl,
-                decoration: const InputDecoration(
-                  labelText: 'Access Key',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _secretKeyCtl,
-                obscureText: _obscureSecret,
-                decoration: InputDecoration(
-                  labelText: 'Secret Key',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureSecret
-                          ? LucideIcons.eyeOff
-                          : LucideIcons.eye,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscureSecret = !_obscureSecret),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('使用 HTTPS'),
-                value: _useSSL,
-                onChanged: (v) => setState(() => _useSSL = v),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  TextButton(onPressed: _clear, child: const Text('清除')),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('取消'),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: _saving ? null : _save,
-                    child: _saving
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('保存'),
-                  ),
-                ],
-              ),
-            ],
-          ),
+    final l10n = context.l10n;
+    return MoodiarySheetScaffold<bool>(
+      title: l10n.backupSyncS3,
+      subtitle: _configured ? _savedBucket : l10n.backupSyncWebdavNoOption,
+      icon: LucideIcons.database,
+      actions: [
+        MoodiaryAction(label: l10n.cancel, value: false, enabled: !_saving),
+        MoodiaryAction(
+          label: l10n.save,
+          isPrimary: true,
+          busy: _saving,
+          enabled: !_saving,
+          onPressed: _save,
         ),
+      ],
+      child: Column(
+        crossAxisAlignment: .stretch,
+        mainAxisSize: .min,
+        spacing: 14,
+        children: [
+          MoodiaryFormSection(l10n.syncSectionConnection),
+          MoodiaryField(
+            controller: _endpointCtl,
+            label: l10n.s3OptionEndpoint,
+            errorText: _endpointError,
+            enabled: !_saving,
+            keyboardType: .url,
+            textInputAction: .next,
+            onChanged: _normalizeEndpoint,
+          ),
+          MoodiaryField(
+            controller: _bucketCtl,
+            label: l10n.s3OptionBucket,
+            errorText: _bucketError,
+            enabled: !_saving,
+            textInputAction: .next,
+          ),
+          MoodiaryField(
+            controller: _regionCtl,
+            label: l10n.s3OptionRegion,
+            hintText: l10n.syncFieldOptional,
+            enabled: !_saving,
+            textInputAction: .next,
+          ),
+          MoodiaryFormSection(l10n.syncSectionCredentials),
+          MoodiaryField(
+            controller: _accessKeyCtl,
+            label: l10n.s3OptionAccessKey,
+            errorText: _accessKeyError,
+            enabled: !_saving,
+            textInputAction: .next,
+          ),
+          MoodiaryField(
+            controller: _secretKeyCtl,
+            label: l10n.s3OptionSecretKey,
+            errorText: _secretKeyError,
+            enabled: !_saving,
+            obscureText: true,
+            onSubmitted: (_) => _save(),
+          ),
+          MoodiaryFormSection(l10n.syncSectionOptions),
+          MoodiarySwitchField(
+            label: l10n.s3OptionUseSsl,
+            value: _useSSL,
+            onChanged: _saving ? null : (v) => setState(() => _useSSL = v),
+          ),
+          if (_configured)
+            MoodiaryDangerRow(
+              label: l10n.syncConfigClear,
+              onPressed: _saving ? null : _clear,
+            ),
+        ],
       ),
     );
   }

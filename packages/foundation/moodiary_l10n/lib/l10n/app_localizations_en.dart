@@ -504,28 +504,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webdavOptionServer => 'Server address';
 
   @override
-  String get webdavOptionServerDes => 'Please fill in the server address';
-
-  @override
-  String get webdavOptionUsername => 'username';
-
-  @override
-  String get webdavOptionUsernameDes => 'Please fill in the username';
+  String get webdavOptionUsername => 'Username';
 
   @override
   String get webdavOptionPassword => 'Password';
 
   @override
-  String get webdavOptionPasswordDes => 'Please fill in the password';
+  String get backupSyncS3 => 'S3 / MinIO';
 
   @override
-  String get webdavOptionDelete => 'Delete config';
+  String get s3OptionEndpoint => 'Endpoint';
 
   @override
-  String get webdavOptionUpdate => 'Update config';
+  String get s3OptionRegion => 'Region';
 
   @override
-  String get webdavOptionSave => 'Save config';
+  String get s3OptionBucket => 'Bucket';
+
+  @override
+  String get s3OptionAccessKey => 'Access Key';
+
+  @override
+  String get s3OptionSecretKey => 'Secret Key';
+
+  @override
+  String get s3OptionUseSsl => 'Use HTTPS';
+
+  @override
+  String get syncSectionConnection => 'Connection';
+
+  @override
+  String get syncSectionCredentials => 'Credentials';
+
+  @override
+  String get syncSectionOptions => 'Options';
+
+  @override
+  String get syncConfigClear => 'Clear settings';
+
+  @override
+  String get syncConfigClearConfirmTitle => 'Clear settings?';
+
+  @override
+  String get syncConfigClearConfirmMessage =>
+      'Syncing with this backend stops. Diaries on this device are untouched.';
+
+  @override
+  String get syncConfigCleared => 'Settings cleared';
+
+  @override
+  String syncFieldRequired(String field) {
+    return '$field is required';
+  }
+
+  @override
+  String get syncFieldOptional => 'Optional';
+
+  @override
+  String get syncFieldInvalidUrl => 'That address doesn\'t look right';
 
   @override
   String get diarySettingRichText => 'Rich text';

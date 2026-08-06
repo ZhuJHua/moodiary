@@ -399,8 +399,8 @@ Future<CategoryDraft?> showCategoryEditor(
     context,
     content: _CategoryEditorContent(key: contentKey, draft: draft),
     actions: [
-      MoodiaryAlertAction(label: context.l10n.cancel, value: false),
-      MoodiaryAlertAction(
+      MoodiaryAction(label: context.l10n.cancel, value: false),
+      MoodiaryAction(
         label: context.l10n.ok,
         value: true,
         isPrimary: true,

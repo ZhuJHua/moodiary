@@ -241,7 +241,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
       title: l10n.exportMedia,
       actions: [
         for (final policy in ExportMediaPolicy.values)
-          MoodiaryAlertAction(
+          MoodiaryAction(
             label: _mediaLabel(l10n, policy),
             value: policy,
             isPrimary: policy == _common.media,
@@ -436,7 +436,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     title: title,
     actions: [
       for (final value in values)
-        MoodiaryAlertAction(
+        MoodiaryAction(
           label: label(value),
           value: value,
           isPrimary: value == current,

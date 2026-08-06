@@ -160,14 +160,32 @@
   "webdavSyncEncryption": "加密",
   "webdavSyncEncryptionDes": "加密同步数据，需要设置私有密钥",
   "webdavOptionServer": "服务器地址",
-  "webdavOptionServerDes": "请填写服务器地址",
   "webdavOptionUsername": "用户名",
-  "webdavOptionUsernameDes": "请填写用户名",
   "webdavOptionPassword": "密码",
-  "webdavOptionPasswordDes": "请填写密码",
-  "webdavOptionDelete": "删除配置",
-  "webdavOptionUpdate": "更新配置",
-  "webdavOptionSave": "保存配置",
+  "backupSyncS3": "S3 / MinIO",
+  "s3OptionEndpoint": "Endpoint",
+  "s3OptionRegion": "Region",
+  "s3OptionBucket": "Bucket",
+  "s3OptionAccessKey": "Access Key",
+  "s3OptionSecretKey": "Secret Key",
+  "s3OptionUseSsl": "使用 HTTPS",
+  "syncSectionConnection": "连接",
+  "syncSectionCredentials": "凭证",
+  "syncSectionOptions": "选项",
+  "syncConfigClear": "清除配置",
+  "syncConfigClearConfirmTitle": "清除配置？",
+  "syncConfigClearConfirmMessage": "清除后将停止与该后端同步，本地日记不受影响。",
+  "syncConfigCleared": "已清除配置",
+  "syncFieldRequired": "{field}不能为空",
+  "@syncFieldRequired": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "syncFieldOptional": "可留空",
+  "syncFieldInvalidUrl": "地址格式不正确",
   "diarySettingRichText": "富文本",
   "diarySettingRichTextDes": "支持更多样式及附件，让内容呈现更丰富",
   "diarySettingShowHeaderImage": "日记页显示头图",

@@ -367,9 +367,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   Future<void> _showDetails(Diary diary) async {
     FocusManager.instance.primaryFocus?.unfocus();
-    await showFloatingModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
+    await showMoodiarySheet<void>(
+      context,
       builder: (_) => _DetailSheet(
         diary: diary,
         provider: _provider,
@@ -874,7 +873,11 @@ class _TocDrawer extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: Row(
                 children: [
-                  Icon(LucideIcons.tableOfContents, size: 20, color: scheme.primary),
+                  Icon(
+                    LucideIcons.tableOfContents,
+                    size: 20,
+                    color: scheme.primary,
+                  ),
                   const SizedBox(width: 10),
                   Text(
                     '目录',
@@ -1101,7 +1104,10 @@ class _LinksPanelState extends State<_LinksPanel> {
                   tooltip: context.l10n.graphLocal,
                   iconSize: 20,
                   visualDensity: VisualDensity.compact,
-                  icon: Icon(LucideIcons.waypoints, color: scheme.onSurfaceVariant),
+                  icon: Icon(
+                    LucideIcons.waypoints,
+                    color: scheme.onSurfaceVariant,
+                  ),
                   onPressed: () =>
                       DiaryGraphRoute(diaryId: widget.diaryId).push(context),
                 ),
@@ -1213,7 +1219,9 @@ class _LinkTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final hasTitle = diary.title.trim().isNotEmpty;
-    final title = hasTitle ? diary.title.trim() : TimeFormat.longDate(diary.time);
+    final title = hasTitle
+        ? diary.title.trim()
+        : TimeFormat.longDate(diary.time);
     final snippet = diary.contentText.trim().replaceAll(RegExp(r'\s+'), ' ');
     // 有标题时副标题给「日期 · 片段」；无标题时标题已是日期，副标题只放片段。
     final subtitle = hasTitle && snippet.isNotEmpty
@@ -1235,9 +1243,7 @@ class _LinkTile extends StatelessWidget {
           borderRadius: AppBorderRadius.smallBorderRadius,
         ),
         child: Icon(
-          outgoing
-              ? LucideIcons.arrowUpRight
-              : LucideIcons.cornerDownLeft,
+          outgoing ? LucideIcons.arrowUpRight : LucideIcons.cornerDownLeft,
           size: 18,
           color: outgoing ? scheme.primary : scheme.onSurfaceVariant,
         ),
@@ -1305,77 +1311,82 @@ class _DetailSheet extends ConsumerWidget {
             data: (c) => c?.categoryName ?? '未知分类',
             orElse: () => '加载中…',
           );
-    return ListView(
-      shrinkWrap: true,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      children: [
-        SettingListTile(
-          isFirst: true,
-          title: '日期与时间',
-          subtitle: dateLabel,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton.filledTonal(
-                onPressed: onPickDate,
-                icon: const Icon(LucideIcons.calendarDays),
-              ),
-              const SizedBox(width: 8),
-              IconButton.filledTonal(
-                onPressed: onPickTime,
-                icon: const Icon(LucideIcons.clock),
-              ),
-            ],
-          ),
-        ),
-        SettingListTile(
-          title: '天气',
-          subtitle: hasWeather
-              ? '${diary.weather[2]} ${diary.weather[1]}°C'
-              : '未获取',
-          trailing: IconButton.filledTonal(
-            onPressed: onFetchWeather,
-            icon: const Icon(LucideIcons.mapPin),
-          ),
-        ),
-        SettingListTile(
-          title: '分类',
-          subtitle: categoryLabel,
-          trailing: IconButton.filledTonal(
-            onPressed: onPickCategory,
-            icon: const Icon(LucideIcons.folders),
-          ),
-        ),
-        SettingListTile(
-          title: '标签',
-          subtitle: diary.tags.isEmpty
-              ? null
-              : Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      for (var i = 0; i < diary.tags.length; i++)
-                        Chip(
-                          label: Text(diary.tags[i]),
-                          visualDensity: VisualDensity.compact,
-                          onDeleted: () => onRemoveTag(i),
-                        ),
-                    ],
-                  ),
+    return MoodiarySheetScaffold<void>(
+      title: '日记信息',
+      icon: LucideIcons.info,
+      actions: [MoodiaryAction(label: context.l10n.ok, isPrimary: true)],
+      child: Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .stretch,
+        children: [
+          SettingListTile(
+            isFirst: true,
+            title: '日期与时间',
+            subtitle: dateLabel,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton.filledTonal(
+                  onPressed: onPickDate,
+                  icon: const Icon(LucideIcons.calendarDays),
                 ),
-          trailing: IconButton.filledTonal(
-            onPressed: onAddTag,
-            icon: const Icon(LucideIcons.tagPlus),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  onPressed: onPickTime,
+                  icon: const Icon(LucideIcons.clock),
+                ),
+              ],
+            ),
           ),
-        ),
-        SettingListTile(
-          isLast: true,
-          title: '心情',
-          subtitle: _MoodSlider(provider: provider, onChanged: onChangeMood),
-        ),
-      ],
+          SettingListTile(
+            title: '天气',
+            subtitle: hasWeather
+                ? '${diary.weather[2]} ${diary.weather[1]}°C'
+                : '未获取',
+            trailing: IconButton.filledTonal(
+              onPressed: onFetchWeather,
+              icon: const Icon(LucideIcons.mapPin),
+            ),
+          ),
+          SettingListTile(
+            title: '分类',
+            subtitle: categoryLabel,
+            trailing: IconButton.filledTonal(
+              onPressed: onPickCategory,
+              icon: const Icon(LucideIcons.folders),
+            ),
+          ),
+          SettingListTile(
+            title: '标签',
+            subtitle: diary.tags.isEmpty
+                ? null
+                : Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        for (var i = 0; i < diary.tags.length; i++)
+                          Chip(
+                            label: Text(diary.tags[i]),
+                            visualDensity: VisualDensity.compact,
+                            onDeleted: () => onRemoveTag(i),
+                          ),
+                      ],
+                    ),
+                  ),
+            trailing: IconButton.filledTonal(
+              onPressed: onAddTag,
+              icon: const Icon(LucideIcons.tagPlus),
+            ),
+          ),
+          SettingListTile(
+            isLast: true,
+            title: '心情',
+            subtitle: _MoodSlider(provider: provider, onChanged: onChangeMood),
+          ),
+        ],
+      ),
     );
   }
 }

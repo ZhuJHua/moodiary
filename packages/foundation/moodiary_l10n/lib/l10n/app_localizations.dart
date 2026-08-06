@@ -1058,23 +1058,11 @@ abstract class AppLocalizations {
   /// **'服务器地址'**
   String get webdavOptionServer;
 
-  /// No description provided for @webdavOptionServerDes.
-  ///
-  /// In zh, this message translates to:
-  /// **'请填写服务器地址'**
-  String get webdavOptionServerDes;
-
   /// No description provided for @webdavOptionUsername.
   ///
   /// In zh, this message translates to:
   /// **'用户名'**
   String get webdavOptionUsername;
-
-  /// No description provided for @webdavOptionUsernameDes.
-  ///
-  /// In zh, this message translates to:
-  /// **'请填写用户名'**
-  String get webdavOptionUsernameDes;
 
   /// No description provided for @webdavOptionPassword.
   ///
@@ -1082,29 +1070,107 @@ abstract class AppLocalizations {
   /// **'密码'**
   String get webdavOptionPassword;
 
-  /// No description provided for @webdavOptionPasswordDes.
+  /// No description provided for @backupSyncS3.
   ///
   /// In zh, this message translates to:
-  /// **'请填写密码'**
-  String get webdavOptionPasswordDes;
+  /// **'S3 / MinIO'**
+  String get backupSyncS3;
 
-  /// No description provided for @webdavOptionDelete.
+  /// No description provided for @s3OptionEndpoint.
   ///
   /// In zh, this message translates to:
-  /// **'删除配置'**
-  String get webdavOptionDelete;
+  /// **'Endpoint'**
+  String get s3OptionEndpoint;
 
-  /// No description provided for @webdavOptionUpdate.
+  /// No description provided for @s3OptionRegion.
   ///
   /// In zh, this message translates to:
-  /// **'更新配置'**
-  String get webdavOptionUpdate;
+  /// **'Region'**
+  String get s3OptionRegion;
 
-  /// No description provided for @webdavOptionSave.
+  /// No description provided for @s3OptionBucket.
   ///
   /// In zh, this message translates to:
-  /// **'保存配置'**
-  String get webdavOptionSave;
+  /// **'Bucket'**
+  String get s3OptionBucket;
+
+  /// No description provided for @s3OptionAccessKey.
+  ///
+  /// In zh, this message translates to:
+  /// **'Access Key'**
+  String get s3OptionAccessKey;
+
+  /// No description provided for @s3OptionSecretKey.
+  ///
+  /// In zh, this message translates to:
+  /// **'Secret Key'**
+  String get s3OptionSecretKey;
+
+  /// No description provided for @s3OptionUseSsl.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用 HTTPS'**
+  String get s3OptionUseSsl;
+
+  /// No description provided for @syncSectionConnection.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接'**
+  String get syncSectionConnection;
+
+  /// No description provided for @syncSectionCredentials.
+  ///
+  /// In zh, this message translates to:
+  /// **'凭证'**
+  String get syncSectionCredentials;
+
+  /// No description provided for @syncSectionOptions.
+  ///
+  /// In zh, this message translates to:
+  /// **'选项'**
+  String get syncSectionOptions;
+
+  /// No description provided for @syncConfigClear.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除配置'**
+  String get syncConfigClear;
+
+  /// No description provided for @syncConfigClearConfirmTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除配置？'**
+  String get syncConfigClearConfirmTitle;
+
+  /// No description provided for @syncConfigClearConfirmMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除后将停止与该后端同步，本地日记不受影响。'**
+  String get syncConfigClearConfirmMessage;
+
+  /// No description provided for @syncConfigCleared.
+  ///
+  /// In zh, this message translates to:
+  /// **'已清除配置'**
+  String get syncConfigCleared;
+
+  /// No description provided for @syncFieldRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'{field}不能为空'**
+  String syncFieldRequired(String field);
+
+  /// No description provided for @syncFieldOptional.
+  ///
+  /// In zh, this message translates to:
+  /// **'可留空'**
+  String get syncFieldOptional;
+
+  /// No description provided for @syncFieldInvalidUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'地址格式不正确'**
+  String get syncFieldInvalidUrl;
 
   /// No description provided for @diarySettingRichText.
   ///

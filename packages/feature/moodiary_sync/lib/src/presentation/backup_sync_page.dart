@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
 import 'package:moodiary_sync/src/application/sync_controller.dart';
@@ -150,9 +151,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                       builder: (context, stopping, _) {
                         return SettingListTile(
                           title: stopping ? '正在停止…' : '停止同步',
-                          subtitle: stopping
-                              ? '等待当前条目完成后收尾'
-                              : '正在后台同步，点击停止',
+                          subtitle: stopping ? '等待当前条目完成后收尾' : '正在后台同步，点击停止',
                           leading: const Icon(LucideIcons.circleStop),
                           trailing: const SizedBox(
                             width: 16,
@@ -215,22 +214,15 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
     BuildContext context,
     SyncProviderType current,
   ) async {
-    final picked = await showModalBottomSheet<SyncProviderType>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) => SafeArea(
-        child: RadioGroup(
-          onChanged: (v) => Navigator.of(ctx).pop(v),
-          groupValue: current,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final t in SyncProviderType.values)
-                RadioListTile<SyncProviderType>(value: t, title: Text(t.label)),
-            ],
-          ),
-        ),
-      ),
+    final picked = await showMoodiaryPickerSheet<SyncProviderType>(
+      context,
+      title: '同步方式',
+      icon: LucideIcons.arrowRightLeft,
+      selected: current,
+      options: [
+        for (final t in SyncProviderType.values)
+          MoodiarySheetOption(value: t, label: t.label),
+      ],
     );
     if (picked == null || picked == current) return;
     await _switchProvider(picked);
@@ -290,7 +282,9 @@ class _EncryptionSection extends StatelessWidget {
           color: scheme.surfaceContainerLow,
           margin: EdgeInsets.zero,
           // 无独立加密开关：配置用户密钥即开启 AES-256 加密，清空即回到明文。
-          child: const Column(children: [UserKeyTile(isFirst: true, isLast: true)]),
+          child: const Column(
+            children: [UserKeyTile(isFirst: true, isLast: true)],
+          ),
         ),
       ],
     );
@@ -371,56 +365,55 @@ class _AutoSyncSection extends StatelessWidget {
     for (var i = 0; i < _pollPresets.length; i++) {
       if (_pollPresets[i] <= current) index = i;
     }
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) {
-        return SafeArea(
-          child: StatefulBuilder(
-            builder: (ctx, setSheetState) {
-              final seconds = _pollPresets[index];
-              final tooFrequent = seconds < _frequentThreshold;
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '轮询间隔：${_fmtInterval(seconds)}',
-                      style: ctx.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '每隔此时间在后台跑一次双向同步。间隔越短，与其它设备的变更同步越及时；'
-                      '但每次轮询都会抢占远端锁、读取清单并发起网络请求 —— 间隔过短会显著'
-                      '增加流量与耗电，还可能触发 WebDAV / S3 服务端限流甚至临时封禁。'
-                      '建议不低于 30 秒。',
-                      style: ctx.textTheme.bodySmall?.copyWith(
-                        color: tooFrequent
-                            ? ctx.colorScheme.error
-                            : ctx.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Slider(
-                      value: index.toDouble(),
-                      min: 0,
-                      max: (_pollPresets.length - 1).toDouble(),
-                      divisions: _pollPresets.length - 1,
-                      label: _fmtInterval(seconds),
-                      onChanged: (v) => setSheetState(() => index = v.round()),
-                      onChangeEnd: (v) => MoodiaryKVs.syncPollInterval.set(
-                        _pollPresets[v.round()],
-                      ),
-                    ),
-                  ],
+    // 只在按下「确定」时落盘，「取消」就是真的取消。
+    final picked = await showMoodiarySheet<int>(
+      context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final seconds = _pollPresets[index];
+          final tooFrequent = seconds < _frequentThreshold;
+          return MoodiarySheetScaffold<int>(
+            title: '轮询间隔',
+            subtitle: _fmtInterval(seconds),
+            icon: LucideIcons.timer,
+            actions: [
+              MoodiaryAction(label: ctx.l10n.cancel),
+              MoodiaryAction(
+                label: ctx.l10n.ok,
+                value: _pollPresets[index],
+                isPrimary: true,
+              ),
+            ],
+            child: Column(
+              mainAxisSize: .min,
+              crossAxisAlignment: .start,
+              children: [
+                Text(
+                  '每隔此时间在后台跑一次双向同步。间隔越短，与其它设备的变更同步越及时；'
+                  '但每次轮询都会抢占远端锁、读取清单并发起网络请求 —— 间隔过短会显著'
+                  '增加流量与耗电，还可能触发 WebDAV / S3 服务端限流甚至临时封禁。'
+                  '建议不低于 30 秒。',
+                  style: ctx.textTheme.bodySmall?.copyWith(
+                    color: tooFrequent
+                        ? ctx.colorScheme.error
+                        : ctx.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              );
-            },
-          ),
-        );
-      },
+                Slider(
+                  value: index.toDouble(),
+                  min: 0,
+                  max: (_pollPresets.length - 1).toDouble(),
+                  divisions: _pollPresets.length - 1,
+                  label: _fmtInterval(seconds),
+                  onChanged: (v) => setSheetState(() => index = v.round()),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
+    if (picked != null) await MoodiaryKVs.syncPollInterval.set(picked);
   }
 }
 
@@ -463,45 +456,46 @@ class _NetworkSection extends StatelessWidget {
 
   Future<void> _editConcurrency(BuildContext context, int current) async {
     double value = current.clamp(1, 16).toDouble();
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) {
-        return SafeArea(
-          child: StatefulBuilder(
-            builder: (ctx, setSheetState) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('并发请求数：${value.round()}', style: ctx.textTheme.titleMedium),
-                    const SizedBox(height: 4),
-                    Text(
-                      '默认 8。值越大同步越快，但可能触发 WebDAV / S3 服务端限流或连接拒绝。',
-                      style: ctx.textTheme.bodySmall?.copyWith(
-                        color: ctx.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Slider(
-                      value: value,
-                      min: 1,
-                      max: 16,
-                      divisions: 15,
-                      label: '${value.round()}',
-                      onChanged: (v) => setSheetState(() => value = v),
-                      onChangeEnd: (v) =>
-                          MoodiaryKVs.syncConcurrency.set(v.round()),
-                    ),
-                  ],
+    final picked = await showMoodiarySheet<int>(
+      context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return MoodiarySheetScaffold<int>(
+            title: '并发请求数',
+            subtitle: '${value.round()}',
+            icon: LucideIcons.server,
+            actions: [
+              MoodiaryAction(label: ctx.l10n.cancel),
+              MoodiaryAction(
+                label: ctx.l10n.ok,
+                value: value.round(),
+                isPrimary: true,
+              ),
+            ],
+            child: Column(
+              mainAxisSize: .min,
+              crossAxisAlignment: .start,
+              children: [
+                Text(
+                  '默认 8。值越大同步越快，但可能触发 WebDAV / S3 服务端限流或连接拒绝。',
+                  style: ctx.textTheme.bodySmall?.copyWith(
+                    color: ctx.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              );
-            },
-          ),
-        );
-      },
+                Slider(
+                  value: value,
+                  min: 1,
+                  max: 16,
+                  divisions: 15,
+                  label: '${value.round()}',
+                  onChanged: (v) => setSheetState(() => value = v),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
+    if (picked != null) await MoodiaryKVs.syncConcurrency.set(picked);
   }
 }
-

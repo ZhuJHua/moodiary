@@ -1396,14 +1396,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.6.4"
-  modal_bottom_sheet:
-    dependency: transitive
-    description:
-      name: modal_bottom_sheet
-      sha256: eac66ef8cb0461bf069a38c5eb0fa728cee525a531a8304bd3f7b2185407c67e
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
   mustache_template:
     dependency: transitive
     description:
