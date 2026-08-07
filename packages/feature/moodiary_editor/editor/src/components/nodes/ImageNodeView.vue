@@ -11,7 +11,7 @@
 // 往 undo 栈里塞几十步。
 import { computed, ref, watch } from 'vue'
 import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
-import IconAspectRatio from '~icons/material-symbols/aspect-ratio-rounded'
+import IconAspectRatio from '~icons/lucide/ratio'
 import PopupMenu from '../PopupMenu.vue'
 import { editable } from '../../editor/editable'
 import {

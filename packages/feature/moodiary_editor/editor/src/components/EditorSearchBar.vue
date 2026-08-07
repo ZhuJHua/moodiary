@@ -15,9 +15,9 @@ import {
   setTerm,
   toggleCase,
 } from '../editor/search'
-import IconUp from '~icons/material-symbols/keyboard-arrow-up-rounded'
-import IconDown from '~icons/material-symbols/keyboard-arrow-down-rounded'
-import IconClose from '~icons/material-symbols/close-rounded'
+import IconUp from '~icons/lucide/chevron-up'
+import IconDown from '~icons/lucide/chevron-down'
+import IconClose from '~icons/lucide/x'
 
 defineProps<{ platform: 'mobile' | 'desktop' }>()
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, computed, type Component } from 'vue'
-import IconCheck from '~icons/material-symbols/check-rounded'
+import IconCheck from '~icons/lucide/check'
 
 export interface PopupMenuItem {
   key: string

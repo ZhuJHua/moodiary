@@ -1,13 +1,13 @@
 <script setup lang="ts">
 // 音频节点视图：webview 内播放，用原生 <audio>（HTMLMediaElement API）+ daisyUI 自绘控件（无播放器库）。
 // 音频字节由本地回环服务按需供给（支持 HTTP Range）。控件：播放/暂停 + daisyUI range 进度条（自带
-// 已播放填充）+ 时间 + 静音。图标用 unplugin-icons 按需引入 Material Symbols。读模式下同样可播。
+// 已播放填充）+ 时间 + 静音。图标用 unplugin-icons 按需引入 lucide。读模式下同样可播。
 import { computed, ref } from 'vue'
 import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
-import IconPlay from '~icons/material-symbols/play-arrow-rounded'
-import IconPause from '~icons/material-symbols/pause-rounded'
-import IconVolume from '~icons/material-symbols/volume-up-rounded'
-import IconMuted from '~icons/material-symbols/volume-off-rounded'
+import IconPlay from '~icons/lucide/play'
+import IconPause from '~icons/lucide/pause'
+import IconVolume from '~icons/lucide/volume-2'
+import IconMuted from '~icons/lucide/volume-x'
 import { mediaUrl } from '../../editor/media'
 import { formatTime, useMediaControls } from '../../editor/use-media'
 

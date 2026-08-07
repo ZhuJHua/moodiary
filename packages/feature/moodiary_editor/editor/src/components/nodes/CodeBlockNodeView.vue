@@ -4,8 +4,8 @@
 // markdown 设定；本视图不提供改语言入口，仅展示）。输出 .hljs-* span，配色见 moodiary-editor.css。
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { NodeViewContent, NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
-import IconCopy from '~icons/material-symbols/content-copy-rounded'
-import IconCheck from '~icons/material-symbols/check-rounded'
+import IconCopy from '~icons/lucide/copy'
+import IconCheck from '~icons/lucide/check'
 
 const props = defineProps(nodeViewProps)
 

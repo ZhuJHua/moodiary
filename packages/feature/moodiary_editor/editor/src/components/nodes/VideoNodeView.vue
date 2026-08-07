@@ -2,7 +2,7 @@
 // 视频节点视图：webview 内播放，用原生 <video>（HTMLMediaElement API）+ daisyUI 自绘控件（无播放器库）。
 // 视频字节由本地回环服务按需供给（支持 HTTP Range —— WKWebView 的 <video> 必须有 206 才能播）；海报
 // 用同名 `?poster=1` 取 thumbnail jpeg。iOS 靠 playsinline 内联而非弹原生播放器。
-// 图标用 unplugin-icons 按需引入 Material Symbols。
+// 图标用 unplugin-icons 按需引入 lucide。
 //
 // **全屏不在 webview 内做**：Android 的 Element Fullscreen + webview_flutter 的 custom-view 回调、
 // iOS 的 webkitEnterFullscreen（必然交给 AVKit、丢掉自绘控件）都接过一版，真机观感不过关，已撤除。
@@ -10,11 +10,11 @@
 // 交接前必须先暂停本地播放，否则两个解码器同时出声。退出时 Flutter 会经 resumeVideo 回灌位置。
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
-import IconPlay from '~icons/material-symbols/play-arrow-rounded'
-import IconPause from '~icons/material-symbols/pause-rounded'
-import IconVolume from '~icons/material-symbols/volume-up-rounded'
-import IconMuted from '~icons/material-symbols/volume-off-rounded'
-import IconFullscreen from '~icons/material-symbols/fullscreen-rounded'
+import IconPlay from '~icons/lucide/play'
+import IconPause from '~icons/lucide/pause'
+import IconVolume from '~icons/lucide/volume-2'
+import IconMuted from '~icons/lucide/volume-x'
+import IconFullscreen from '~icons/lucide/maximize'
 import { post } from '../../bridge/post'
 import { mediaUrl } from '../../editor/media'
 import { formatTime, useMediaControls } from '../../editor/use-media'

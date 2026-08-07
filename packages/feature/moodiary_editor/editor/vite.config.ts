@@ -7,9 +7,11 @@ import { compression, defineAlgorithm } from 'vite-plugin-compression2'
 export default defineConfig({
   // 生产编辑器（moodiary-editor.css）与 dev harness（dev/harness.css）都 `@import 'tailwindcss'`，
   // 故 Tailwind v4 + daisyUI 进生产产物（编辑器外观）—— 仅 tree-shake 后用到的工具类/组件 + 自定义主题。
-  // unplugin-icons：`import X from '~icons/material-symbols/...'` 按需把单个 Material Symbols 图标编译成
+  // unplugin-icons：`import X from '~icons/lucide/...'` 按需把单个 lucide 图标编译成
   // 内联 SVG Vue 组件 —— 只打包用到的图标（天然 tree-shake）、离线、无运行时/CDN。图标数据来自
-  // devDep @iconify-json/material-symbols（不进产物）。
+  // devDep @iconify-json/lucide（不进产物）。与 Dart 侧的 lucide_icons_flutter 同一套图标，
+  // 不走官方 @lucide/vue：那个是运行时组件工厂（每个图标多一层组件 + computed），
+  // 且 barrel 会把 vite 模块图从 458 撑到 2195。
   plugins: [
     vue(),
     Icons({ compiler: 'vue3' }),

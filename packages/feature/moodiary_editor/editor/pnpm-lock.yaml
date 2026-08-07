@@ -60,9 +60,9 @@ importers:
         specifier: 3.5.38
         version: 3.5.38(typescript@6.0.3)
     devDependencies:
-      '@iconify-json/material-symbols':
-        specifier: 1.2.79
-        version: 1.2.79
+      '@iconify-json/lucide':
+        specifier: 1.2.121
+        version: 1.2.121
       '@tailwindcss/vite':
         specifier: 4.3.1
         version: 4.3.1(vite@8.0.16(jiti@2.7.0))
@@ -204,8 +204,8 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@iconify-json/material-symbols@1.2.79':
-    resolution: {integrity: sha512-WRLBReaTNJAeHxsFlD7pJ/K6il2vOZ4va3XTAUdTDkn4rWzRYu6dnI1bAW/4pANlTCt5eemtP65gBBNxt8Xd7Q==}
+  '@iconify-json/lucide@1.2.121':
+    resolution: {integrity: sha512-zSoQQSmsyFaeTpSwURHJ9PIrsDcGFpDNhGlpiTrs+Ua4uFeH5UsE26L4OEBLrgLWoSK0UO+JhsO8yehSw0403g==}
 
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
@@ -1775,7 +1775,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@iconify-json/material-symbols@1.2.79':
+  '@iconify-json/lucide@1.2.121':
     dependencies:
       '@iconify/types': 2.0.0
 

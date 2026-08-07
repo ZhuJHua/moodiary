@@ -35,7 +35,7 @@
     "vue": "3.5.38"
   },
   "devDependencies": {
-    "@iconify-json/material-symbols": "1.2.79",
+    "@iconify-json/lucide": "1.2.121",
     "@tailwindcss/vite": "4.3.1",
     "@vitejs/plugin-vue": "6.0.7",
     "@vue/test-utils": "2.4.11",
