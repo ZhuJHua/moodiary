@@ -227,6 +227,96 @@ class MoodiaryPickerDelegate
     );
   }
 
+  /// 顶栏左上角关闭键。默认实现写死 `Icons.close`，主题的 actionIconTheme 管不到
+  /// （它不是 CloseButton，是裸 IconButton）。
+  @override
+  Widget backButton(BuildContext context) {
+    return Padding(
+      padding: const .symmetric(vertical: 4),
+      child: IconButton(
+        onPressed: () => Navigator.maybeOf(context)?.maybePop(),
+        tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+        icon: const Icon(LucideIcons.x),
+      ),
+    );
+  }
+
+  /// 视频缩略图左下角的类型角标 + 时长。白色 + 渐变底，压在任何封面上都可读。
+  @override
+  Widget videoIndicator(BuildContext context, AssetEntity asset) {
+    return Align(
+      alignment: .bottomCenter,
+      child: Container(
+        width: double.maxFinite,
+        height: 26,
+        padding: const .symmetric(horizontal: 4, vertical: 2),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: AlignmentDirectional.bottomCenter,
+            end: AlignmentDirectional.topCenter,
+            colors: [Colors.black.withValues(alpha: 0.45), Colors.transparent],
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(LucideIcons.video, size: 16, color: Colors.white),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(start: 4),
+                child: Text(
+                  textDelegate.durationIndicatorBuilder(
+                    Duration(seconds: asset.duration),
+                  ),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  maxLines: 1,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 受限授权（仅选定照片）时的底部提示条。默认实现是 Icons.warning +
+  /// Icons.keyboard_arrow_right，且底色写死 primaryColor。
+  @override
+  Widget accessLimitedBottomTip(BuildContext context) {
+    final bottomPadding = hasBottomActions
+        ? 0.0
+        : MediaQuery.paddingOf(context).bottom;
+    return GestureDetector(
+      onTap: () {
+        Feedback.forTap(context);
+        PhotoManager.openSetting();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+        ).add(EdgeInsets.only(bottom: bottomPadding)),
+        height: permissionLimitedBarHeight + bottomPadding,
+        color: _cs.surfaceContainerHigh,
+        child: Row(
+          spacing: 12,
+          children: [
+            Icon(LucideIcons.triangleAlert, size: 20, color: _cs.tertiary),
+            Expanded(
+              child: Text(
+                textDelegate.accessAllTip,
+                style: TextStyle(fontSize: 14, color: _cs.onSurface),
+              ),
+            ),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 20,
+              color: _cs.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// 选中 = 主色圆 + 选中序号（单选模式为对勾），未选 = 半透明黑底白圈——
   /// 无论压在深浅照片上都清晰。
   @override

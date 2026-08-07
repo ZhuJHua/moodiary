@@ -18,13 +18,8 @@ class RecordSheet extends StatefulWidget {
   State<RecordSheet> createState() => _RecordSheetState();
 }
 
-class _RecordSheetState extends State<RecordSheet>
-    with SingleTickerProviderStateMixin {
+class _RecordSheetState extends State<RecordSheet> {
   final _recorder = AudioRecorder();
-  late final _iconAnimation = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 200),
-  );
 
   StreamSubscription<Amplitude>? _ampSub;
 
@@ -47,7 +42,6 @@ class _RecordSheetState extends State<RecordSheet>
   @override
   void dispose() {
     _ampSub?.cancel();
-    _iconAnimation.dispose();
     // 已保存（_stopAndSave 置空 _fileName）时只释放资源；此时绝不能再 cancel()——
     // record 原生层 stop() 后仍持有输出路径，cancel() 会把刚录好的文件删掉。
     final name = _fileName;
@@ -76,7 +70,6 @@ class _RecordSheetState extends State<RecordSheet>
     _ampSub = _recorder
         .onAmplitudeChanged(_sampleInterval)
         .listen(_onAmplitude);
-    _iconAnimation.forward();
     if (!mounted) return;
     setState(() {
       _fileName = name;
@@ -120,12 +113,10 @@ class _RecordSheetState extends State<RecordSheet>
   Future<void> _pauseOrResume() async {
     if (_recording) {
       await _recorder.pause();
-      _iconAnimation.reverse();
       if (!mounted) return;
       setState(() => _recording = false);
     } else {
       await _recorder.resume();
-      _iconAnimation.forward();
       if (!mounted) return;
       setState(() => _recording = true);
     }
@@ -233,9 +224,12 @@ class _RecordSheetState extends State<RecordSheet>
               TextButton(onPressed: _cancel, child: Text(l10n.cancel)),
               FilledButton(
                 onPressed: _pauseOrResume,
-                child: AnimatedIcon(
-                  icon: AnimatedIcons.play_pause,
-                  progress: _iconAnimation,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    _recording ? LucideIcons.pause : LucideIcons.play,
+                    key: ValueKey(_recording),
+                  ),
                 ),
               ),
               TextButton(onPressed: _stopAndSave, child: Text(l10n.save)),

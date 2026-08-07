@@ -249,6 +249,8 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
       firstDate: DateTime(earliest.year, earliest.month, earliest.day),
       lastDate: now,
       initialDateRange: _range,
+      switchToInputEntryModeIcon: const Icon(LucideIcons.keyboard),
+      switchToCalendarEntryModeIcon: const Icon(LucideIcons.calendarDays),
     );
     if (picked != null) setState(() => _range = picked);
   }

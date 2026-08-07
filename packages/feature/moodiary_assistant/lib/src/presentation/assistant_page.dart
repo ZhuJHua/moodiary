@@ -16,6 +16,7 @@ import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/soul_repository.dart';
+import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/tool_permission_card.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -26,6 +27,13 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 enum _ToolPanel { tools }
+
+Widget _codeBlock(
+  BuildContext context,
+  String name,
+  String code,
+  bool closed,
+) => MarkdownCodeBlock(name: name, code: code);
 
 class AssistantPage extends ConsumerStatefulWidget {
   final String? initialSessionId;
@@ -878,6 +886,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         textMessageBuilder: _buildTextMessage,
         customMessageBuilder: _buildCustomMessage,
         composerBuilder: (_) => const SizedBox.shrink(),
+        // 只为换图标：ScrollToBottom 默认 Icons.keyboard_arrow_down。
+        scrollToBottomBuilder: (context, animation, onPressed) =>
+            ScrollToBottom(
+              animation: animation,
+              onPressed: onPressed,
+              icon: const Icon(LucideIcons.chevronDown, size: 22),
+            ),
         chatAnimatedListBuilder: (context, itemBuilder) => ChatAnimatedList(
           itemBuilder: itemBuilder,
           scrollController: _chatScroll,
@@ -1692,7 +1707,11 @@ class _AssistantBubble extends StatelessWidget {
         padding: const .symmetric(horizontal: 14, vertical: 10),
         decoration: decoration,
         child: SelectionArea(
-          child: GptMarkdown(text, style: TextStyle(color: scheme.onSurface)),
+          child: GptMarkdown(
+            text,
+            style: TextStyle(color: scheme.onSurface),
+            codeBuilder: _codeBlock,
+          ),
         ),
       );
     } else if (!showThinking) {
@@ -1887,6 +1906,7 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
                   style: context.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
+                  codeBuilder: _codeBlock,
                 ),
               ),
             ),

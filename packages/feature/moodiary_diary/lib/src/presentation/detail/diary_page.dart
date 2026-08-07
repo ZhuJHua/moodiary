@@ -291,6 +291,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       initialDate: current.time.toLocal(),
       firstDate: DateTime(1949, 10, 1),
       lastDate: .now(),
+      switchToInputEntryModeIcon: const Icon(LucideIcons.keyboard),
+      switchToCalendarEntryModeIcon: const Icon(LucideIcons.calendarDays),
     );
     if (picked == null || !mounted) return;
     ref.read(_provider.notifier).changeDate(picked);
@@ -302,6 +304,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final picked = await showTimePicker(
       context: context,
       initialTime: .fromDateTime(current.time.toLocal()),
+      switchToInputEntryModeIcon: const Icon(LucideIcons.keyboard),
+      switchToTimerEntryModeIcon: const Icon(LucideIcons.clock),
     );
     if (picked == null || !mounted) return;
     ref.read(_provider.notifier).changeTime(picked);
@@ -1362,6 +1366,7 @@ class _DetailSheet extends ConsumerWidget {
                             label: Text(diary.tags[i]),
                             visualDensity: .compact,
                             onDeleted: () => onRemoveTag(i),
+                            deleteIcon: const Icon(LucideIcons.x, size: 18),
                           ),
                       ],
                     ),

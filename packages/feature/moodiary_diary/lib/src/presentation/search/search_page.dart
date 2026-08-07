@@ -165,6 +165,8 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                     end: state.customEnd!,
                   )
                 : null,
+            switchToInputEntryModeIcon: const Icon(LucideIcons.keyboard),
+            switchToCalendarEntryModeIcon: const Icon(LucideIcons.calendarDays),
           );
           if (range != null) _controller.setCustomRange(range.start, range.end);
         } else {
@@ -352,6 +354,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                       ),
                       onPressed: () => _useHistory(q),
                       onDeleted: () => _controller.removeHistory(q),
+                      deleteIcon: const Icon(LucideIcons.x, size: 18),
                     ),
                 ],
               ),

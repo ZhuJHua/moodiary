@@ -2,6 +2,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/src/app_logger.dart';
 import 'package:moodiary_core/src/files/app_files.dart';
 import 'package:moodiary_core/src/theme/font_manager.dart';
@@ -9,6 +10,25 @@ import 'package:moodiary_core/src/values/colors.dart';
 import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+
+Widget _backIcon(BuildContext context) => const Icon(LucideIcons.arrowLeft);
+
+Widget _closeIcon(BuildContext context) => const Icon(LucideIcons.x);
+
+Widget _menuIcon(BuildContext context) => const Icon(LucideIcons.menu);
+
+/// 框架自带 leading/actions 的图标（`AppBar` 隐式返回键、`Scaffold` 抽屉键、
+/// `showDateRangePicker` 全屏关闭键）唯一的主题级替换入口 —— 全仓 30+ 个 `AppBar`
+/// 都不写 `leading:`，靠这一处把 Material 字形换成 lucide。
+/// 命中 builder 会短路掉 `_ActionIcon` 里的平台分支，iOS 的 `arrow_back_ios_new`
+/// 与 Android 的 `arrow_back` 就此统一；代价是跳过 Android 专属的 semanticLabel，
+/// 但 IconButton 的本地化 tooltip 还在，读屏不受影响。
+const ActionIconThemeData _actionIconTheme = ActionIconThemeData(
+  backButtonIconBuilder: _backIcon,
+  closeButtonIconBuilder: _closeIcon,
+  drawerButtonIconBuilder: _menuIcon,
+  endDrawerButtonIconBuilder: _menuIcon,
+);
 
 class ThemeManager {
   ThemeManager._();
@@ -315,6 +335,12 @@ class ThemeManager {
     return ThemeData(
       colorScheme: colorScheme,
       materialTapTargetSize: .padded,
+      actionIconTheme: _actionIconTheme,
+      // SegmentedButton 选中态的 √（框架默认 Icons.check）。当前 5 处都写了
+      // showSelectedIcon: false，这里是给将来不写的那处兜底。
+      segmentedButtonTheme: const SegmentedButtonThemeData(
+        selectedIcon: Icon(LucideIcons.check),
+      ),
       // 内容滚到顶栏下方时不再有任何视觉变化。要关的是**两件事**，缺一个都还会跳：
       //   1. 底色：滚动态取的是 `colorScheme.surfaceContainer` 而非 `surface`
       //      （app_bar.dart 的 scrolledUnderBackground）——把 backgroundColor 钉住，

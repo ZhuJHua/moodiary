@@ -276,13 +276,23 @@ const _kindLabel = <SyncEventKind, String>{
   .error: '错误',
 };
 
-class _EventGroupTile extends StatelessWidget {
+class _EventGroupTile extends StatefulWidget {
   /// 同 kind 的连续事件，最新在前。
   final List<SyncEvent> events;
   const _EventGroupTile({required this.events});
 
   @override
+  State<_EventGroupTile> createState() => _EventGroupTileState();
+}
+
+class _EventGroupTileState extends State<_EventGroupTile> {
+  /// 展开箭头自己维护角度：ExpansionTile 只在不传 trailing 时才给默认箭头包
+  /// RotationTransition，传了就是纯静态 Widget。
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
+    final events = widget.events;
     final scheme = context.colorScheme;
     final kind = events.first.kind;
     // 组内最高严重级别决定组头配色，错误 / 警告不会被折叠埋掉。
@@ -309,6 +319,12 @@ class _EventGroupTile extends StatelessWidget {
         _kindIcon[kind] ?? LucideIcons.circleDot,
         size: 18,
         color: color,
+      ),
+      onExpansionChanged: (v) => setState(() => _expanded = v),
+      trailing: AnimatedRotation(
+        turns: _expanded ? 0.5 : 0,
+        duration: const Duration(milliseconds: 200),
+        child: Icon(LucideIcons.chevronDown, size: 20, color: scheme.outline),
       ),
       title: Text(
         '${_kindLabel[kind] ?? kind.name} · ${events.length} 条',

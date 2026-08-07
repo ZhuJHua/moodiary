@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart' as fp;
 import 'package:flutter/material.dart';
+import 'package:moodiary/app/picker/moodiary_camera_picker_state.dart';
 import 'package:moodiary/app/picker/moodiary_picker_delegate.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
@@ -66,6 +67,9 @@ class MobileFilePicker implements IFilePicker {
       light: theme.brightness == .light,
     );
     return base.copyWith(
+      // AssetPicker.themeData 是从零构造的，不带 app 的 actionIconTheme，
+      // 不显式透传的话选择器内的返回/关闭键会掉回 Material 字形。
+      actionIconTheme: theme.actionIconTheme,
       colorScheme: cs.copyWith(secondary: cs.primary),
       primaryColor: cs.surface,
       canvasColor: cs.surfaceContainer,
@@ -147,6 +151,7 @@ class MobileFilePicker implements IFilePicker {
     try {
       entity = await CameraPicker.pickFromCamera(
         context,
+        createPickerState: MoodiaryCameraPickerState.new,
         pickerConfig: CameraPickerConfig(
           enableRecording: recording,
           onlyEnableRecording: recording,
