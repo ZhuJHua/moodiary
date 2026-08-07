@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 
 class AppBorderRadius {
   static const BorderRadius smallBorderRadius = .all(.circular(8.0));

@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 import 'package:moodiary_core/src/di.dart';
 
 class KVNotifier<T extends Object> extends ValueNotifier<T> {
