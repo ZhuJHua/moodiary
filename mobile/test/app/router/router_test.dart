@@ -61,6 +61,7 @@ void main() {
       expect(const RecycleRoute().location, '/recycle');
       expect(const DiarySearchRoute().location, '/search');
       expect(const FontRoute().location, '/setting/font');
+      expect(const AccentRoute().location, '/setting/accent');
     });
 
     test('AssistantConversationRoute', () {

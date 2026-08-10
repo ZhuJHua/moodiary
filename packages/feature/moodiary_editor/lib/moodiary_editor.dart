@@ -15,7 +15,7 @@ export 'src/moodiary_editor.dart'
         MoodiaryEditor,
         MoodiaryEditorController,
         EditorFocusTarget,
-        EditorSeed,
+        EditorRoles,
         EditorFont,
         DiaryLinkCandidate;
 export 'src/presentation/editor_migration_page.dart' show EditorMigrationPage;

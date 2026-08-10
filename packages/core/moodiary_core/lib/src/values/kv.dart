@@ -49,9 +49,18 @@ enum MoodiaryKVs<T extends Object> {
   /// 局域网发送页上次输入的目标地址（`ip` 或 `ip:端口`），便于重复发送。
   lanSendTarget<String>(defaultValue: ''),
 
-  color<int>(),
-  colorType<int>(defaultValue: 0 /* AppColorType.common.value */),
+  /// 强调色来源（[ThemeAccentMode] 的 index）。与 [themeMode] 正交：那个管明暗，
+  /// 这个管有没有颜色。缺省 0 = 无彩，也就是默认的纯灰度 UI。
+  themeAccentMode<int>(defaultValue: 0),
+
+  /// [themeAccentMode] 为 custom 时的种子色（`Color.toARGB32()`）。
+  /// 另外两档下不参与配色生成，但保留着 —— 切回自定义时沿用上次挑的颜色。
+  themeAccentColor<int>(defaultValue: 0xFF2E59A7),
+
   themeMode<int>(defaultValue: 0),
+
+  /// 日记卡片是否按封面图取色。与 [themeAccentMode] 无关 —— 那个管全局强调色，
+  /// 这个只管单张卡片的配色。
   dynamicColor<bool>(defaultValue: true),
   fontTheme<int>(defaultValue: 0),
   fontScale<double>(defaultValue: 1.0),

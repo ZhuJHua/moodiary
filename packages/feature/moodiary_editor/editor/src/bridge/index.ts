@@ -1,7 +1,7 @@
 // JS 侧桥接：安装 `window.MoodiaryBridge`（Flutter → JS 命令式入口）转发到 [EditorApi]，
 // 并提供 `markReady` / `emitChange`（JS → Flutter 事件）。就绪前各方法 no-op，Flutter 可安全调用。
 
-import { applyTheme, type SeedTheme } from './theme'
+import { applyTheme, type EditorTheme } from './theme'
 import { post } from './post'
 import { setSaveStatus } from './save-status'
 import { getScrollY, setScrollY } from './scroll'
@@ -29,7 +29,7 @@ export function installBridge(): void {
   window.MoodiaryBridge = {
     setContent: (content: string) => api?.setContent(content ?? ''),
     getContent: () => api?.getContent() ?? '',
-    setTheme: (theme: SeedTheme) => applyTheme(theme),
+    setTheme: (theme: EditorTheme) => applyTheme(theme),
     setSaveStatus: (status: string) => setSaveStatus(status),
     setTitle: (t: string) => setTitle(t ?? ''),
     focus: () => api?.focus(),

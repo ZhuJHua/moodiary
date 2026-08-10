@@ -1,5 +1,5 @@
 import type { EditorBoot } from '../bridge/boot'
-import type { SeedTheme } from '../bridge/theme'
+import type { EditorTheme } from '../bridge/theme'
 
 interface JsChannel {
   postMessage: (message: string) => void
@@ -17,7 +17,7 @@ declare global {
     MoodiaryBridge: {
       setContent: (content: string) => void
       getContent: () => string
-      setTheme: (theme: SeedTheme) => void
+      setTheme: (theme: EditorTheme) => void
       setSaveStatus: (status: string) => void
       /** 日记标题初值（打开日记时推入；用户改动经 titleChange 事件回传）。 */
       setTitle: (title: string) => void

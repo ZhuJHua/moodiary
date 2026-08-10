@@ -134,6 +134,66 @@ abstract class AppLocalizations {
   /// **'提示'**
   String get hint;
 
+  /// No description provided for @accentTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'主题色'**
+  String get accentTitle;
+
+  /// No description provided for @accentNeutral.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认'**
+  String get accentNeutral;
+
+  /// No description provided for @accentSystem.
+  ///
+  /// In zh, this message translates to:
+  /// **'壁纸取色'**
+  String get accentSystem;
+
+  /// No description provided for @accentCustom.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义'**
+  String get accentCustom;
+
+  /// No description provided for @accentCustomTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义配色'**
+  String get accentCustomTitle;
+
+  /// No description provided for @accentGroupAccent.
+  ///
+  /// In zh, this message translates to:
+  /// **'强调'**
+  String get accentGroupAccent;
+
+  /// No description provided for @accentGroupSurface.
+  ///
+  /// In zh, this message translates to:
+  /// **'表面'**
+  String get accentGroupSurface;
+
+  /// No description provided for @accentGroupSemantic.
+  ///
+  /// In zh, this message translates to:
+  /// **'语义'**
+  String get accentGroupSemantic;
+
+  /// No description provided for @colorPickerTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择颜色'**
+  String get colorPickerTitle;
+
+  /// No description provided for @accentSeed.
+  ///
+  /// In zh, this message translates to:
+  /// **'选取的颜色'**
+  String get accentSeed;
+
   /// No description provided for @save.
   ///
   /// In zh, this message translates to:
@@ -577,54 +637,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'深色模式'**
   String get themeModeDark;
-
-  /// No description provided for @colorNameSystem.
-  ///
-  /// In zh, this message translates to:
-  /// **'系统'**
-  String get colorNameSystem;
-
-  /// No description provided for @colorNameQunQin.
-  ///
-  /// In zh, this message translates to:
-  /// **'群青'**
-  String get colorNameQunQin;
-
-  /// No description provided for @colorNameJiHe.
-  ///
-  /// In zh, this message translates to:
-  /// **'芰荷'**
-  String get colorNameJiHe;
-
-  /// No description provided for @colorNameQinDai.
-  ///
-  /// In zh, this message translates to:
-  /// **'青黛'**
-  String get colorNameQinDai;
-
-  /// No description provided for @colorNameXiangYe.
-  ///
-  /// In zh, this message translates to:
-  /// **'缃叶'**
-  String get colorNameXiangYe;
-
-  /// No description provided for @colorNameBaiCaoShuang.
-  ///
-  /// In zh, this message translates to:
-  /// **'百草霜'**
-  String get colorNameBaiCaoShuang;
-
-  /// No description provided for @colorNameShuiZhuHua.
-  ///
-  /// In zh, this message translates to:
-  /// **'水朱华'**
-  String get colorNameShuiZhuHua;
-
-  /// No description provided for @colorCommon.
-  ///
-  /// In zh, this message translates to:
-  /// **'普通配色'**
-  String get colorCommon;
 
   /// No description provided for @specialColorNameMochaMousse.
   ///

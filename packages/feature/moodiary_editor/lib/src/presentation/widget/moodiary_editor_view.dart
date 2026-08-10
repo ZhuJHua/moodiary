@@ -324,7 +324,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       saveStatus: widget.saveStatus,
       firstLineIndent: widget.firstLineIndent,
       fontScale: widget.fontScale,
-      seedResolver: () => ThemeManager().editorSeed,
+      rolesResolver: ThemeManager().editorRoles,
       fontResolver: () => ThemeManager().editorFont,
       mediaResolver: appMediaResolver,
       loadingBuilder: (_) => const MoodiaryLoading(),

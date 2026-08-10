@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@material/material-color-utilities':
-        specifier: 0.4.0
-        version: 0.4.0
       '@tiptap/core':
         specifier: 3.26.1
         version: 3.26.1(@tiptap/pm@3.26.1)
@@ -63,6 +60,9 @@ importers:
       '@iconify-json/lucide':
         specifier: 1.2.121
         version: 1.2.121
+      '@material/material-color-utilities':
+        specifier: 0.4.0
+        version: 0.4.0
       '@tailwindcss/vite':
         specifier: 4.3.1
         version: 4.3.1(vite@8.0.16(jiti@2.7.0))

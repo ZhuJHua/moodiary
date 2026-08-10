@@ -27,6 +27,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String get hint => '提示';
 
   @override
+  String get accentTitle => '主题色';
+
+  @override
+  String get accentNeutral => '默认';
+
+  @override
+  String get accentSystem => '壁纸取色';
+
+  @override
+  String get accentCustom => '自定义';
+
+  @override
+  String get accentCustomTitle => '自定义配色';
+
+  @override
+  String get accentGroupAccent => '强调';
+
+  @override
+  String get accentGroupSurface => '表面';
+
+  @override
+  String get accentGroupSemantic => '语义';
+
+  @override
+  String get colorPickerTitle => '选择颜色';
+
+  @override
+  String get accentSeed => '选取的颜色';
+
+  @override
   String get save => '保存';
 
   @override
@@ -249,30 +279,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get themeModeDark => '深色模式';
-
-  @override
-  String get colorNameSystem => '系统';
-
-  @override
-  String get colorNameQunQin => '群青';
-
-  @override
-  String get colorNameJiHe => '芰荷';
-
-  @override
-  String get colorNameQinDai => '青黛';
-
-  @override
-  String get colorNameXiangYe => '缃叶';
-
-  @override
-  String get colorNameBaiCaoShuang => '百草霜';
-
-  @override
-  String get colorNameShuiZhuHua => '水朱华';
-
-  @override
-  String get colorCommon => '普通配色';
 
   @override
   String get specialColorNameMochaMousse => '摩卡慕斯';

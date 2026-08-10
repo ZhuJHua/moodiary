@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/src/app_logger.dart';
 import 'package:moodiary_core/src/files/app_files.dart';
+import 'package:moodiary_core/src/theme/app_color_scheme.dart';
 import 'package:moodiary_core/src/theme/font_manager.dart';
-import 'package:moodiary_core/src/values/colors.dart';
 import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -43,18 +43,26 @@ class ThemeManager {
 
   Map<String, double> wghtAxisMap = {};
 
-  ColorScheme? lightDynamic;
+  /// 系统壁纸的整套 tonal palette。取不到（iOS、Android 11-、取色失败）即为 null，
+  /// [ThemeAccentMode.system] 那一档随之不可选。
+  ///
+  /// 存整盘而不是存一个种子色：从 `primary.get(40)` 反推会丢掉壁纸的 chroma，
+  /// 实测 primary 最大能漂到 ΔE 34（红变褐红）。
+  SystemPalettes? _systemPalette;
 
-  ColorScheme? darkDynamic;
-
-  /// 系统取色种子，供把配色生成下放到 webview 侧时复用。
-  Color? _dynamicSeed;
+  /// 只拿到单个系统强调色（非 Android 通道）时的回退种子。
+  Color? _systemSeed;
 
   ThemeData get lightTheme => _lightTheme ?? .light();
 
   ThemeData get darkTheme => _darkTheme ?? .dark();
 
-  bool get supportDynamic => lightDynamic != null && darkDynamic != null;
+  /// 供设置页画那枚系统色块用。
+  Color? get systemAccentSeed => _systemPalette == null
+      ? _systemSeed
+      : Color(_systemPalette!.primary.get(40));
+
+  bool get supportDynamic => _systemPalette != null || _systemSeed != null;
 
   String? fontFamily;
 
@@ -194,34 +202,9 @@ class ThemeManager {
   Future<void> buildTheme({Font? customFont}) async {
     await findDynamicColor();
 
-    var color = MoodiaryKVs.color.get();
-
-    // 首次启动未设配色：支持动态取色用 -1，否则默认 0。
-    if (color == null) {
-      if (supportDynamic) {
-        MoodiaryKVs.color.set(-1);
-        color = -1;
-      } else {
-        MoodiaryKVs.color.set(0);
-        color = 0;
-      }
-    }
-
-    final isDynamic = color == -1 && supportDynamic;
-
-    late final normalColor =
-        AppColor.themeColorList[(color! >= 0 &&
-                color < AppColor.themeColorList.length)
-            ? color
-            : 0];
-
-    final lightColorScheme = isDynamic
-        ? lightDynamic!
-        : buildColorScheme(normalColor, .light, color);
-
-    final darkColorScheme = isDynamic
-        ? darkDynamic!
-        : buildColorScheme(normalColor, .dark, color);
+    final accent = resolveAccent();
+    final lightColorScheme = AppColorScheme.resolve(.light, accent);
+    final darkColorScheme = AppColorScheme.resolve(.dark, accent);
 
     // 每次重建先归零字体状态：从自定义字体切回「系统」时才能立即生效（否则残留旧家族，
     // 须重启才恢复系统字体）。
@@ -265,39 +248,54 @@ class ThemeManager {
     );
   }
 
-  ColorScheme buildColorScheme(
-    Color seedColor,
-    Brightness brightness,
-    int color,
-  ) {
-    var dynamicSchemeVariant = DynamicSchemeVariant.tonalSpot;
-    if (color == 0) {
-      dynamicSchemeVariant = .monochrome;
-    }
-    if (color == -1) {
-      dynamicSchemeVariant = .tonalSpot;
-    }
-    return ColorScheme.fromSeed(
-      seedColor: seedColor,
-      brightness: brightness,
-      dynamicSchemeVariant: dynamicSchemeVariant,
-    ).harmonized();
+  /// KV → 强调色来源。system 档在取不到壁纸色时静默回落到无彩，
+  /// 不写回 KV —— 换台支持的设备就该自己恢复。
+  AccentPalette resolveAccent() {
+    final index = MoodiaryKVs.themeAccentMode.get()!;
+    final mode = index >= 0 && index < ThemeAccentMode.values.length
+        ? ThemeAccentMode.values[index]
+        : ThemeAccentMode.neutral;
+    return switch (mode) {
+      .neutral => const AccentPalette.neutral(),
+      .system => switch ((_systemPalette, _systemSeed)) {
+        (final palettes?, _) => AccentPalette.system(palettes),
+        (_, final seed?) => AccentPalette.seeded(seed),
+        _ => const AccentPalette.neutral(),
+      },
+      .custom => AccentPalette.seeded(
+        Color(MoodiaryKVs.themeAccentColor.get()!),
+      ),
+    };
   }
 
-  /// 当前配色的「种子色 + 变体」，供 webview 侧用 material-color-utilities 重建配色。
-  /// 变体判定务必与 [buildColorScheme] 一致：`color == 0` monochrome，其余 tonalSpot。
-  ({Color seed, String variant}) get editorSeed {
-    final color = MoodiaryKVs.color.get() ?? (supportDynamic ? -1 : 0);
-    if (color == -1 && supportDynamic && _dynamicSeed != null) {
-      return (seed: _dynamicSeed!, variant: 'tonalSpot');
-    }
-    final index = (color >= 0 && color < AppColor.themeColorList.length)
-        ? color
-        : 0;
-    return (
-      seed: AppColor.themeColorList[index],
-      variant: color == 0 ? 'monochrome' : 'tonalSpot',
-    );
+  /// 编辑器 webview 的配色输入：**解析好的角色色表**，不是种子色。
+  ///
+  /// 原先下发 (seed, variant) 让 JS 侧用自己那份 material-color-utilities 再算一遍，
+  /// 等于两端各跑一套算法 —— [NeutralRamp] 的灰阶覆盖根本传不过去，两边库版本一漂
+  /// 还会静默不一致。现在 [ColorScheme] 是唯一真源，JS 只负责铺 CSS 变量。
+  Map<String, String> editorRoles(Brightness brightness) {
+    final scheme = brightness == .light
+        ? lightTheme.colorScheme
+        : darkTheme.colorScheme;
+    String hex(Color color) =>
+        '#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+    return {
+      'surface': hex(scheme.surface),
+      'onSurface': hex(scheme.onSurface),
+      'onSurfaceVariant': hex(scheme.onSurfaceVariant),
+      'surfaceContainerLow': hex(scheme.surfaceContainerLow),
+      'surfaceContainer': hex(scheme.surfaceContainer),
+      'surfaceContainerHigh': hex(scheme.surfaceContainerHigh),
+      'surfaceContainerHighest': hex(scheme.surfaceContainerHighest),
+      'primary': hex(scheme.primary),
+      'onPrimary': hex(scheme.onPrimary),
+      'secondaryContainer': hex(scheme.secondaryContainer),
+      'onSecondaryContainer': hex(scheme.onSecondaryContainer),
+      'inverseSurface': hex(scheme.inverseSurface),
+      'onInverseSurface': hex(scheme.onInverseSurface),
+      'outlineVariant': hex(scheme.outlineVariant),
+      'error': hex(scheme.error),
+    };
   }
 
   /// 当前激活的自定义字体（家族名 + 字体文件磁盘路径），供 webview 编辑器用 @font-face 加载
@@ -385,16 +383,20 @@ class ThemeManager {
     );
   }
 
+  /// 只负责拿到系统壁纸的色板；配色生成一律走 [AppColorScheme.resolve]。
   Future<void> findDynamicColor() async {
     try {
       final corePalette = await DynamicColorPlugin.getCorePalette();
-
       if (corePalette != null) {
-        final seedColor = Color(corePalette.primary.get(40));
-
-        _dynamicSeed = seedColor;
-        lightDynamic = buildColorScheme(seedColor, .light, -1);
-        darkDynamic = buildColorScheme(seedColor, .dark, -1);
+        // 就地拆成本仓自己的 SystemPalettes：dynamic_color 的返回类型 CorePalette 在
+        // MCU 0.13.0 已废弃，别让它渗进仓里。
+        _systemPalette = SystemPalettes(
+          primary: corePalette.primary,
+          secondary: corePalette.secondary,
+          tertiary: corePalette.tertiary,
+          neutral: corePalette.neutral,
+          neutralVariant: corePalette.neutralVariant,
+        );
         return;
       }
     } on PlatformException {
@@ -402,12 +404,11 @@ class ThemeManager {
     }
 
     try {
-      final Color? accentColor = await DynamicColorPlugin.getAccentColor();
-
+      final accentColor = await DynamicColorPlugin.getAccentColor();
       if (accentColor != null) {
-        _dynamicSeed = accentColor;
-        lightDynamic = buildColorScheme(accentColor, .light, -1);
-        darkDynamic = buildColorScheme(accentColor, .dark, -1);
+        // 这条通道（Windows / macOS / Linux）只给一个强调色，没有色板可端。
+        // 当成普通种子走 tonalSpot —— 只有一个颜色时本来就没有保真度可谈。
+        _systemSeed = accentColor;
         return;
       }
     } on PlatformException {
@@ -417,27 +418,8 @@ class ThemeManager {
     logger.d('dynamic_color: Dynamic color not detected on this device.');
   }
 
-  (ThemeData, ThemeData) getThemeData() {
-    final isDynamic = supportDynamic && MoodiaryKVs.color.get() == -1;
-    if (isDynamic) {
-      return (
-        _lightTheme?.copyWith(
-              colorScheme: lightDynamic,
-              textTheme: buildTextTheme(lightDynamic!),
-              typography: buildTypography(lightDynamic!),
-            ) ??
-            .light(),
-        _darkTheme?.copyWith(
-              colorScheme: darkDynamic,
-              textTheme: buildTextTheme(darkDynamic!),
-              typography: buildTypography(darkDynamic!),
-            ) ??
-            .dark(),
-      );
-    } else {
-      return (_lightTheme ?? .light(), _darkTheme ?? .dark());
-    }
-  }
+  (ThemeData, ThemeData) getThemeData() =>
+      (_lightTheme ?? .light(), _darkTheme ?? .dark());
 }
 
 extension ColorExt on Color {

@@ -10,8 +10,10 @@ import 'editor_local_server.dart';
 import 'media.dart';
 import 'transport/editor_transport.dart';
 
-/// 编辑器主题种子：种子色 + Material 3 变体名（由宿主 app 注入，见 [MoodiaryEditor.seedResolver]）。
-typedef EditorSeed = ({Color seed, String variant});
+/// 编辑器配色：宿主已解析好的 [ColorScheme] 角色色表（`{role: '#RRGGBB'}`）。
+/// 不下发种子色 —— 让 web 侧再算一遍等于两端各跑一套算法，宿主的灰阶覆盖传不过去，
+/// 两边 material-color-utilities 版本一漂还会静默不一致。
+typedef EditorRoles = Map<String, String>;
 
 /// 当前激活的自定义字体：家族名 + 字体文件磁盘路径（由宿主 app 注入，见 [MoodiaryEditor.fontResolver]）。
 /// webview 经本地服务按需读该字体文件，用 @font-face 加载，使编辑器正文与 App 同字体。
@@ -105,7 +107,7 @@ class MoodiaryEditor extends StatefulWidget {
   /// 自动保存状态，透传给编辑器右下角气泡：'saving' / 'saved' / 'failed' / 其它（不显示）。
   final String saveStatus;
 
-  /// 全局「首行缩进」开关：随主题一起下发（见 [_seedTheme]），web 侧据此对正文段落切 CSS
+  /// 全局「首行缩进」开关：随主题一起下发（见 [_themePayload]），web 侧据此对正文段落切 CSS
   /// `text-indent`。变更时经 [didUpdateWidget] 实时推给已打开的编辑器。
   final bool firstLineIndent;
 
@@ -115,7 +117,7 @@ class MoodiaryEditor extends StatefulWidget {
 
   /// 主题种子解析器（宿主 app 提供）：每次需要下发主题时实时读取当前种子色 + 变体；
   /// 明暗由 `Theme.of(context)` 推断。不传则用 Material 默认主色。
-  final EditorSeed Function()? seedResolver;
+  final EditorRoles Function(Brightness brightness)? rolesResolver;
 
   /// 当前自定义字体解析器（宿主 app 提供）：每次下发主题时实时读取当前激活字体（家族 + 磁盘路径）；
   /// 返回 null 表示用系统字体。用于把 App 的自定义字体带进 webview 编辑器正文。
@@ -150,7 +152,7 @@ class MoodiaryEditor extends StatefulWidget {
     this.saveStatus = 'idle',
     this.firstLineIndent = false,
     this.fontScale = 1.0,
-    this.seedResolver,
+    this.rolesResolver,
     this.fontResolver,
     this.mediaResolver,
     this.loadingBuilder,
@@ -253,7 +255,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
       'placeholder': widget.placeholder,
       'saveStatus': widget.saveStatus,
       // 首帧即用正确配色：web 侧据此用 material-color-utilities 生成整套配色。
-      'theme': _seedTheme(),
+      'theme': _themePayload(),
     };
     final server = EditorLocalServer.instance;
     server.mediaResolver ??= widget.mediaResolver;
@@ -507,24 +509,43 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     widget.onReady?.call();
   }
 
-  /// 仅下发「种子色 + 明暗 + 变体」；web 侧用 material-color-utilities 生成整套
-  /// Material 3 配色（与 [ThemeManager.buildColorScheme] 同算法）再映射到编辑器配色。
-  Map<String, dynamic> _seedTheme() {
-    final resolved = widget.seedResolver?.call();
-    final seed = resolved?.seed ?? Theme.of(context).colorScheme.primary;
-    final variant = resolved?.variant ?? 'tonalSpot';
-    final dark = Theme.of(context).brightness == .dark;
+  /// 下发「角色色表 + 明暗」。[ColorScheme] 是唯一真源，web 侧只负责铺 CSS 变量。
+  /// [dark] 仍要单独给：它还驱动 `data-theme`、`color-scheme` 与代码高亮的亮暗切换。
+  Map<String, dynamic> _themePayload() {
+    final brightness = Theme.of(context).brightness;
+    final roles =
+        widget.rolesResolver?.call(brightness) ?? _fallbackRoles(context);
     // 字体家族随主题一起下发：web 侧据此用 FontFace 加载（src 用 boot.fontBase），
     // 缺省（系统字体）不带该字段。字体文件由本地服务经 fontResolver 供给。
     final font = widget.fontResolver?.call();
     return {
-      'seed': _hex(seed),
-      'dark': dark,
-      'variant': variant,
+      'roles': roles,
+      'dark': brightness == .dark,
       if (font != null) 'font': font.family,
       if (font != null) 'fontV': _fontVersion(font),
       'firstLineIndent': widget.firstLineIndent,
       'fontScale': widget.fontScale,
+    };
+  }
+
+  static EditorRoles _fallbackRoles(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return {
+      'surface': _hex(scheme.surface),
+      'onSurface': _hex(scheme.onSurface),
+      'onSurfaceVariant': _hex(scheme.onSurfaceVariant),
+      'surfaceContainerLow': _hex(scheme.surfaceContainerLow),
+      'surfaceContainer': _hex(scheme.surfaceContainer),
+      'surfaceContainerHigh': _hex(scheme.surfaceContainerHigh),
+      'surfaceContainerHighest': _hex(scheme.surfaceContainerHighest),
+      'primary': _hex(scheme.primary),
+      'onPrimary': _hex(scheme.onPrimary),
+      'secondaryContainer': _hex(scheme.secondaryContainer),
+      'onSecondaryContainer': _hex(scheme.onSecondaryContainer),
+      'inverseSurface': _hex(scheme.inverseSurface),
+      'onInverseSurface': _hex(scheme.onInverseSurface),
+      'outlineVariant': _hex(scheme.outlineVariant),
+      'error': _hex(scheme.error),
     };
   }
 
@@ -555,7 +576,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   Future<void> _setTheme() async {
-    await _run('window.MoodiaryBridge.setTheme(${jsonEncode(_seedTheme())})');
+    await _run('window.MoodiaryBridge.setTheme(${jsonEncode(_themePayload())})');
   }
 
   Future<void> _setContent(String content) async {

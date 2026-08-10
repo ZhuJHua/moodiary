@@ -27,6 +27,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hint => 'Hint';
 
   @override
+  String get accentTitle => 'Accent color';
+
+  @override
+  String get accentNeutral => 'Default';
+
+  @override
+  String get accentSystem => 'From wallpaper';
+
+  @override
+  String get accentCustom => 'Custom';
+
+  @override
+  String get accentCustomTitle => 'Custom accent';
+
+  @override
+  String get accentGroupAccent => 'Accent';
+
+  @override
+  String get accentGroupSurface => 'Surface';
+
+  @override
+  String get accentGroupSemantic => 'Semantic';
+
+  @override
+  String get colorPickerTitle => 'Pick a color';
+
+  @override
+  String get accentSeed => 'Picked';
+
+  @override
   String get save => 'Save';
 
   @override
@@ -255,30 +285,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeModeDark => 'Dark Mode';
-
-  @override
-  String get colorNameSystem => 'System';
-
-  @override
-  String get colorNameQunQin => 'QunQin';
-
-  @override
-  String get colorNameJiHe => 'JiHe';
-
-  @override
-  String get colorNameQinDai => 'QinDai';
-
-  @override
-  String get colorNameXiangYe => 'XiangYe';
-
-  @override
-  String get colorNameBaiCaoShuang => 'BaiCaoShuang';
-
-  @override
-  String get colorNameShuiZhuHua => 'ShuiZhuHua';
-
-  @override
-  String get colorCommon => 'Common color';
 
   @override
   String get specialColorNameMochaMousse => 'Mocha Mousse';

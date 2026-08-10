@@ -29,6 +29,7 @@ export 'src/common/async_value.dart';
 export 'src/common/audio_player.dart';
 export 'src/common/category_color.dart';
 export 'src/common/chip_bar.dart';
+export 'src/common/color_picker.dart';
 export 'src/common/env_badge.dart';
 export 'src/common/file_type_icon.dart';
 export 'src/common/frosted_glass_overlay.dart';

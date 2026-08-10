@@ -151,6 +151,14 @@ class FontRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
+/// 自定义强调色取色页。灰度 / 壁纸两档在弹窗里一步选完，只有自定义才进这一层。
+class AccentRoute extends MoodiaryRouteBase {
+  static const String path = '/setting/accent';
+  const AccentRoute();
+  @override
+  String get location => path;
+}
+
 class ServicesRoute extends MoodiaryRouteBase {
   static const String path = '/setting/services';
   const ServicesRoute();

@@ -4,16 +4,20 @@
 // 同时 mock window.MoodiaryEditor 接收编辑器回传的事件（change / saveImage / imageTap）。
 // 编辑器源码（src/）改动经 Vite HMR 即时反映到 iframe 里,无需重跑 Flutter。样式用 Tailwind v4 +
 // daisyUI（见 ./harness.css,仅本页加载,不进生产编辑器）。
+import {
+  Hct,
+  MaterialDynamicColors,
+  SchemeMonochrome,
+  SchemeTonalSpot,
+  argbFromHex,
+  hexFromArgb,
+  type DynamicColor,
+} from '@material/material-color-utilities'
 import { onMounted, ref, watch } from 'vue'
+import type { EditorRoles, EditorTheme } from '../src/bridge/theme'
 
 type Device = 'phone' | 'desktop'
 type Variant = 'tonalSpot' | 'monochrome'
-interface SeedTheme {
-  seed: string
-  dark: boolean
-  variant: Variant
-  contrast: number
-}
 
 const SAMPLES: Record<string, string> = {
   基础排版: [
@@ -104,12 +108,35 @@ const iframeSrc = ref('')
 // 与正文无缝（无需在 harness 里重算 material 配色）。默认用编辑器浅色兜底值。
 const screenBg = ref('#fffdfb')
 
-const theme = (): SeedTheme => ({
-  seed: seed.value,
-  dark: dark.value,
-  variant: variant.value,
-  contrast: contrast.value,
-})
+// 协议是「宿主下发解析好的角色色表」，所以调试台得自己扮演 Flutter 那一侧把种子色
+// 算成角色表。material-color-utilities 只在 devDependencies 里 —— 生产入口只有
+// index.html，不引 dev/，这个库不会进编辑器产物。
+const theme = (): EditorTheme => {
+  const source = Hct.fromInt(argbFromHex(seed.value))
+  const scheme =
+    variant.value === 'monochrome'
+      ? new SchemeMonochrome(source, dark.value, contrast.value)
+      : new SchemeTonalSpot(source, dark.value, contrast.value)
+  const of = (role: DynamicColor) => hexFromArgb(role.getArgb(scheme))
+  const roles: EditorRoles = {
+    surface: of(MaterialDynamicColors.surface),
+    onSurface: of(MaterialDynamicColors.onSurface),
+    onSurfaceVariant: of(MaterialDynamicColors.onSurfaceVariant),
+    surfaceContainerLow: of(MaterialDynamicColors.surfaceContainerLow),
+    surfaceContainer: of(MaterialDynamicColors.surfaceContainer),
+    surfaceContainerHigh: of(MaterialDynamicColors.surfaceContainerHigh),
+    surfaceContainerHighest: of(MaterialDynamicColors.surfaceContainerHighest),
+    primary: of(MaterialDynamicColors.primary),
+    onPrimary: of(MaterialDynamicColors.onPrimary),
+    secondaryContainer: of(MaterialDynamicColors.secondaryContainer),
+    onSecondaryContainer: of(MaterialDynamicColors.onSecondaryContainer),
+    inverseSurface: of(MaterialDynamicColors.inverseSurface),
+    onInverseSurface: of(MaterialDynamicColors.inverseOnSurface),
+    outlineVariant: of(MaterialDynamicColors.outlineVariant),
+    error: of(MaterialDynamicColors.error),
+  }
+  return { roles, dark: dark.value }
+}
 
 // boot 编码：与 editor 的 readBoot 一致 —— base64url(UTF-8 JSON)。
 function bootParam(): string {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:gap/gap.dart';
+import 'package:moodiary/app/settings/presentation/widget/accent_sheet.dart';
 import 'package:moodiary/app/settings/presentation/widget/cache_usage_tile.dart';
-import 'package:moodiary/app/settings/presentation/widget/color_sheet.dart';
 import 'package:moodiary/app/settings/presentation/widget/dashboard_section.dart';
 import 'package:moodiary/app/settings/presentation/widget/data_repair_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/language_dialog.dart';
@@ -133,7 +133,6 @@ class _DisplaySection extends ConsumerWidget {
     ref.watch(appSettingsControllerProvider);
     final scheme = context.colorScheme;
     final primary = scheme.primary;
-    final colorIndex = MoodiaryKVs.color.get() ?? -1;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -172,14 +171,29 @@ class _DisplaySection extends ConsumerWidget {
                   );
                 },
               ),
-              SettingListTile(
-                title: '主题色',
-                leading: const Icon(LucideIcons.palette),
-                trailing: Text(
-                  AppColor.colorName(colorIndex, context),
-                  style: context.textTheme.bodySmall?.copyWith(color: primary),
-                ),
-                onTap: () => ColorSheet.show(context),
+              ValueListenableBuilder(
+                valueListenable: MoodiaryKVs.themeAccentMode.getNotifier(),
+                builder: (context, index, _) {
+                  final mode =
+                      index >= 0 && index < ThemeAccentMode.values.length
+                      ? ThemeAccentMode.values[index]
+                      : ThemeAccentMode.neutral;
+                  return SettingListTile(
+                    title: context.l10n.accentTitle,
+                    leading: const Icon(LucideIcons.palette),
+                    trailing: Text(
+                      switch (mode) {
+                        .neutral => context.l10n.accentNeutral,
+                        .system => context.l10n.accentSystem,
+                        .custom => context.l10n.accentCustom,
+                      },
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: primary,
+                      ),
+                    ),
+                    onTap: () => AccentSheet.show(context),
+                  );
+                },
               ),
               SettingListTile(
                 isLast: true,

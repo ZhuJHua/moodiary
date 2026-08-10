@@ -16,7 +16,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@material/material-color-utilities": "0.4.0",
     "@tiptap/core": "3.26.1",
     "@tiptap/extension-code-block-lowlight": "3.26.1",
     "@tiptap/extension-image": "3.26.1",
@@ -36,6 +35,7 @@
   },
   "devDependencies": {
     "@iconify-json/lucide": "1.2.121",
+    "@material/material-color-utilities": "0.4.0",
     "@tailwindcss/vite": "4.3.1",
     "@vitejs/plugin-vue": "6.0.7",
     "@vue/test-utils": "2.4.11",

@@ -1,11 +1,11 @@
-import type { SeedTheme } from './theme'
+import type { EditorTheme } from './theme'
 
 /** Flutter 注入的引导数据：挂在页面 URL 的 `?boot=<base64url(JSON)>` 上（同步可读，首帧即用）。 */
 export interface EditorBoot {
   platform?: 'mobile' | 'desktop'
   editable?: boolean
   placeholder?: string
-  theme?: SeedTheme | null
+  theme?: EditorTheme | null
   /** 本篇自动保存状态初值：'saving' / 'saved' / 'failed' / 'idle'（驱动编辑器右下角气泡）。 */
   saveStatus?: string
   /** 本地媒体服务 URL 前缀（随机端口 + token，每次启动不同），如 `http://127.0.0.1:PORT/<token>/media/`。 */

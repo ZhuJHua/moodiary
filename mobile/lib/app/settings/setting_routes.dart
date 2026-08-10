@@ -1,4 +1,5 @@
 import 'package:moodiary/app/settings/presentation/about_page.dart';
+import 'package:moodiary/app/settings/presentation/accent_page.dart';
 import 'package:moodiary/app/settings/presentation/agreement_page.dart';
 import 'package:moodiary/app/settings/presentation/diary_setting_page.dart';
 import 'package:moodiary/app/settings/presentation/font_page.dart';
@@ -18,6 +19,7 @@ List<RouteBase> settingRoutes() => [
     builder: (_, _) => const DiarySettingPage(),
   ),
   GoRoute(path: FontRoute.path, builder: (_, _) => const FontPage()),
+  GoRoute(path: AccentRoute.path, builder: (_, _) => const AccentPage()),
   GoRoute(path: ServicesRoute.path, builder: (_, _) => const ServicesPage()),
   GoRoute(path: AboutRoute.path, builder: (_, _) => const AboutPage()),
   GoRoute(path: PrivacyRoute.path, builder: (_, _) => const PrivacyPage()),

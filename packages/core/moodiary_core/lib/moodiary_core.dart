@@ -34,6 +34,7 @@ export 'src/storage.dart';
 export 'src/storage/database/isar.dart';
 export 'src/storage/kv/pref.dart';
 export 'src/storage/kv/secure.dart';
+export 'src/theme/app_color_scheme.dart';
 export 'src/theme/font_manager.dart';
 export 'src/theme/theme_manager.dart';
 export 'src/values/colors.dart';
