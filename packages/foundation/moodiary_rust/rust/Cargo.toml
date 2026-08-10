@@ -83,7 +83,7 @@ moodiary-graph = { path = "crates/feature/graph" }
 moodiary-sync = { path = "crates/feature/sync" }
 
 [dependencies]
-flutter_rust_bridge = "=2.13.0-beta.5"
+flutter_rust_bridge = "=2.13.0-beta.6"
 anyhow = { workspace = true }
 serde_json = { workspace = true }
 
@@ -103,9 +103,10 @@ moodiary-text = { workspace = true }
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
+# 不要加 panic = "abort"：FRB 靠 catch_unwind 把 Rust panic 转成 Dart 异常，abort
+# 会让第三方 crate（typst / image / zip / lofty）在脏输入上直接杀进程。
 [profile.release]
 opt-level = 3
 lto = "thin"
 codegen-units = 1
-panic = "abort"
 strip = "symbols"

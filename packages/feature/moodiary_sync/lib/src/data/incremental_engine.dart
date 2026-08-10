@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:moodiary_core/moodiary_core.dart';
@@ -15,6 +16,7 @@ import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
+import 'package:path/path.dart' as p;
 import 'package:pool/pool.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -1063,17 +1065,20 @@ class IncrementalSyncEngine {
         return true;
       }
 
-      final plain = await _mediaFiles.read(type, filename);
-      final encrypted = await (await _cipher()).encryptBytes(plain);
-      await backend.writeObject(remotePath, encrypted);
+      final localPath = _mediaFiles.realPath(type, filename);
+      final int bytes;
+      if (localPath != null && backend.supportsFileObjects) {
+        bytes = await _uploadMediaByFile(localPath, remotePath);
+      } else {
+        final plain = await _mediaFiles.read(type, filename);
+        final encrypted = await (await _cipher()).encryptBytes(plain);
+        await backend.writeObject(remotePath, encrypted);
+        bytes = encrypted.length;
+      }
       _logger.info(
         .mediaUpload,
         '上传媒体：$filename',
-        payload: {
-          'type': type,
-          'filename': filename,
-          'bytes': encrypted.length,
-        },
+        payload: {'type': type, 'filename': filename, 'bytes': bytes},
       );
       remoteMedia.add(SyncKeys.mediaRef(type, filename));
       return true;
@@ -1140,21 +1145,37 @@ class IncrementalSyncEngine {
       }
 
       final remotePath = SyncKeys.mediaObjectPath(type, filename);
-      final encrypted = await backend.readObject(remotePath);
-      if (encrypted == null || encrypted.isEmpty) {
-        _logger.warn(
-          .mediaSkip,
-          '远端无此媒体，跳过：$filename',
-          payload: {'type': type, 'filename': filename},
-        );
-        return;
+      final localPath = _mediaFiles.realPath(type, filename);
+      final int bytes;
+      if (localPath != null && backend.supportsFileObjects) {
+        final size = await _downloadMediaByFile(remotePath, localPath);
+        if (size == null) {
+          _logger.warn(
+            .mediaSkip,
+            '远端无此媒体，跳过：$filename',
+            payload: {'type': type, 'filename': filename},
+          );
+          return;
+        }
+        bytes = size;
+      } else {
+        final encrypted = await backend.readObject(remotePath);
+        if (encrypted == null || encrypted.isEmpty) {
+          _logger.warn(
+            .mediaSkip,
+            '远端无此媒体，跳过：$filename',
+            payload: {'type': type, 'filename': filename},
+          );
+          return;
+        }
+        final plain = await (await _cipher()).decryptBytes(encrypted);
+        await _mediaFiles.write(type, filename, plain);
+        bytes = plain.length;
       }
-      final plain = await (await _cipher()).decryptBytes(encrypted);
-      await _mediaFiles.write(type, filename, plain);
       _logger.info(
         .mediaDownload,
         '下载媒体：$filename',
-        payload: {'type': type, 'filename': filename, 'bytes': plain.length},
+        payload: {'type': type, 'filename': filename, 'bytes': bytes},
       );
     } catch (e) {
       _logger.error(
@@ -1163,6 +1184,45 @@ class IncrementalSyncEngine {
         payload: {'type': type, 'filename': filename, 'detail': e.toString()},
       );
     }
+  }
+
+  /// 返回上传字节数。
+  Future<int> _uploadMediaByFile(String localPath, String remotePath) async {
+    final temp = await _mediaTempFile('enc');
+    try {
+      await (await _cipher()).encryptFileTo(localPath, temp.path);
+      await backend.writeObjectFile(remotePath, temp.path);
+      return await temp.length();
+    } finally {
+      try {
+        await temp.delete();
+      } catch (_) {}
+    }
+  }
+
+  /// 远端不存在返回 null。
+  Future<int?> _downloadMediaByFile(String remotePath, String localPath) async {
+    final temp = await _mediaTempFile('dec');
+    try {
+      if (!await backend.readObjectToFile(remotePath, temp.path)) return null;
+      await File(localPath).parent.create(recursive: true);
+      await (await _cipher()).decryptFileTo(temp.path, localPath);
+      return await File(localPath).length();
+    } finally {
+      try {
+        await temp.delete();
+      } catch (_) {}
+    }
+  }
+
+  Future<File> _mediaTempFile(String tag) async {
+    final dir = Directory(
+      p.join(PlatformService.get().applicationCachePath, 'sync-media'),
+    );
+    await dir.create(recursive: true);
+    return File(
+      p.join(dir.path, '$tag-${DateTime.now().microsecondsSinceEpoch}.tmp'),
+    );
   }
 
   Future<void> _deleteLocalMedia(Diary diary) async {
@@ -1249,6 +1309,17 @@ class _GatedBackend implements IRemoteSyncBackend {
   @override
   Future<void> writeObject(String key, Uint8List bytes) =>
       _gate.withResource(() => _inner.writeObject(key, bytes));
+
+  @override
+  bool get supportsFileObjects => _inner.supportsFileObjects;
+
+  @override
+  Future<bool> readObjectToFile(String key, String filePath) =>
+      _gate.withResource(() => _inner.readObjectToFile(key, filePath));
+
+  @override
+  Future<void> writeObjectFile(String key, String filePath) =>
+      _gate.withResource(() => _inner.writeObjectFile(key, filePath));
 
   @override
   Future<bool> tryCreateExclusive(String key, Uint8List bytes) =>

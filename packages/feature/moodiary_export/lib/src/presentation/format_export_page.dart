@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_ui/moodiary_ui.dart';
 
 import '../data/export_options.dart';
@@ -30,6 +31,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
   int? _scopeCount;
   bool _running = false;
   ExportProgress? _progress;
+  rust.CancelToken? _cancel;
 
   @override
   void initState() {
@@ -479,10 +481,11 @@ class _FormatExportPageState extends State<FormatExportPage> {
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(borderRadius: .circular(14)),
               ),
-              onPressed:
-                  (_running || count == null || count == 0 || blocked != null)
-                  ? null
-                  : _run,
+              onPressed: _running
+                  ? _cancelRun
+                  : ((count == null || count == 0 || blocked != null)
+                        ? null
+                        : _run),
               icon: _running
                   ? const SizedBox(
                       width: 16,
@@ -491,11 +494,13 @@ class _FormatExportPageState extends State<FormatExportPage> {
                     )
                   : const Icon(LucideIcons.download),
               label: Text(
-                count == null
-                    ? l10n.exportCounting
-                    : (count == 0
-                          ? l10n.exportScopeEmpty
-                          : l10n.exportRunButton(count)),
+                _running
+                    ? l10n.exportCancel
+                    : (count == null
+                          ? l10n.exportCounting
+                          : (count == 0
+                                ? l10n.exportScopeEmpty
+                                : l10n.exportRunButton(count))),
               ),
             ),
           ),
@@ -548,14 +553,19 @@ class _FormatExportPageState extends State<FormatExportPage> {
     return null;
   }
 
+  void _cancelRun() => _cancel?.cancel();
+
   Future<void> _run() async {
     final l10n = context.l10n;
+    final token = rust.CancelToken();
     setState(() {
       _running = true;
+      _cancel = token;
       _progress = const ExportProgress(.converting, 0, 1);
     });
     try {
       final outcome = await ExportService.run(
+        cancel: token,
         format: widget.format,
         scope: _scope,
         settings: _settings,
@@ -571,14 +581,17 @@ class _FormatExportPageState extends State<FormatExportPage> {
       toast.error(
         message: switch (e.error) {
           .emptyScope => l10n.exportScopeEmpty,
+          .cancelled => l10n.exportCancelled,
         },
       );
     } catch (e) {
       toast.error(message: l10n.exportFailed('$e'));
     } finally {
+      token.dispose();
       if (mounted) {
         setState(() {
           _running = false;
+          _cancel = null;
           _progress = null;
         });
       }

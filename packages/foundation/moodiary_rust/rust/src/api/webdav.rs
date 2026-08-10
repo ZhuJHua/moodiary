@@ -32,6 +32,16 @@ impl DavClient {
         self.inner.write_object(key, data).await
     }
 
+    /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
+    pub async fn read_object_to_file(&self, key: String, file_path: String) -> Result<bool> {
+        self.inner.read_object_to_file(key, file_path).await
+    }
+
+    /// 文件版写入，整份不进内存。
+    pub async fn write_object_file(&self, key: String, file_path: String) -> Result<()> {
+        self.inner.write_object_file(key, file_path).await
+    }
+
     pub async fn delete_object(&self, key: String) -> Result<()> {
         self.inner.delete_object(key).await
     }

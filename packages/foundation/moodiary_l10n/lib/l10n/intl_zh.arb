@@ -600,6 +600,8 @@
   "exportFontNameHint": "填写字体名，如「宋体」「Georgia」。",
   "exportFontNameEmpty": "字体名不能为空",
   "exportScopeEmpty": "这个范围里没有日记",
+  "exportCancelled": "已取消导出",
+  "exportCancel": "取消",
   "exportPickFontFirst": "请先选择一个字体",
   "exportRunButton": "导出 {count} 篇",
   "exportPartialTitle": "导出完成，但有几处没带上",

@@ -1,13 +1,14 @@
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 
+use crate::api::cancel::CancelToken;
+
 #[frb(opaque)]
 pub struct Zip {
     inner: moodiary_archive::Zip,
 }
 
 impl Zip {
-    #[frb(sync)]
     pub fn new(file_path: String) -> Result<Self> {
         Ok(Self {
             inner: moodiary_archive::Zip::new(file_path)?,
@@ -38,7 +39,12 @@ impl Zip {
         self.inner.finish()
     }
 
-    pub fn extract(zip_path: String, dest_dir: String, password: Option<String>) -> Result<()> {
-        moodiary_archive::Zip::extract(zip_path, dest_dir, password)
+    pub fn extract(
+        zip_path: String,
+        dest_dir: String,
+        password: Option<String>,
+        cancel: &CancelToken,
+    ) -> Result<()> {
+        moodiary_archive::Zip::extract(zip_path, dest_dir, password, &cancel.checker())
     }
 }

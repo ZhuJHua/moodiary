@@ -1,6 +1,7 @@
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 
+use crate::api::cancel::CancelToken;
 use crate::api::export_ir::IrDoc;
 
 pub use moodiary_export::docx::DocxStyle;
@@ -27,6 +28,41 @@ pub struct _DocxStyle {
     pub audio_label: String,
 }
 
-pub fn write_docx(docs: Vec<IrDoc>, style: DocxStyle, out_path: String) -> Result<()> {
-    moodiary_export::docx::write_docx(docs, style, out_path)
+pub fn write_docx(
+    docs: Vec<IrDoc>,
+    style: DocxStyle,
+    out_path: String,
+    cancel: &CancelToken,
+) -> Result<()> {
+    moodiary_export::docx::write_docx(docs, &style, out_path, &cancel.checker())
 }
+
+/// 合并导出用的累加器，理由同 [PdfBuilder](crate::api::pdf::PdfBuilder)。
+#[frb(opaque)]
+pub struct DocxBuilder {
+    docs: Vec<IrDoc>,
+    style: DocxStyle,
+}
+
+impl DocxBuilder {
+    pub fn new(style: DocxStyle) -> DocxBuilder {
+        DocxBuilder {
+            docs: Vec::new(),
+            style,
+        }
+    }
+
+    pub fn add(&mut self, doc: IrDoc) {
+        self.docs.push(doc);
+    }
+
+    pub fn finish(&mut self, out_path: String, cancel: &CancelToken) -> Result<()> {
+        moodiary_export::docx::write_docx(
+            std::mem::take(&mut self.docs),
+            &self.style,
+            out_path,
+            &cancel.checker(),
+        )
+    }
+}
+

@@ -33,7 +33,7 @@ class ExportOutcome {
 }
 
 /// 导出失败的原因。文案在 UI 层按 l10n 映射。
-enum ExportError { emptyScope }
+enum ExportError { emptyScope, cancelled }
 
 /// 导出进度的阶段。文案在 UI 层按 l10n 映射。
 enum ExportPhase {
@@ -87,7 +87,11 @@ class ExportService {
     required String videoLabel,
     required String audioLabel,
     void Function(ExportProgress progress)? onProgress,
+
+    /// 取消信号。长任务只在循环边界响应；typst 的整篇排版会跑完当前这一趟。
+    rust.CancelToken? cancel,
   }) async {
+    final token = cancel ?? rust.CancelToken();
     final diaries = await scope.resolve();
     if (diaries.isEmpty) {
       throw const ExportException(.emptyScope);
@@ -104,6 +108,7 @@ class ExportService {
       final docs = <ExportDoc>[];
       final unsupported = <String>{};
       for (var i = 0; i < diaries.length; i++) {
+        _throwIfCancelled(token);
         docs.add(await _toExportDoc(diaries[i], categories, media));
         unsupported.addAll(docs.last.unsupportedNodes);
         onProgress?.call(ExportProgress(.converting, i + 1, diaries.length));
@@ -119,6 +124,7 @@ class ExportService {
           workDir,
           media,
           untitledLabel,
+          token,
         ),
         .docx => await _writeDocx(
           docs,
@@ -127,6 +133,7 @@ class ExportService {
           untitledLabel,
           videoLabel,
           audioLabel,
+          token,
         ),
         .pdf => await _writePdf(
           docs,
@@ -136,6 +143,7 @@ class ExportService {
           videoLabel,
           audioLabel,
           onProgress,
+          token,
         ),
       };
 
@@ -149,6 +157,10 @@ class ExportService {
       await _deleteQuietly(workDir);
       rethrow;
     }
+  }
+
+  static void _throwIfCancelled(rust.CancelToken token) {
+    if (token.isCancelled()) throw const ExportException(.cancelled);
   }
 
   // ------------------------------------------------------------- 组装 IR
@@ -204,6 +216,7 @@ class ExportService {
     Directory workDir,
     _MediaStage media,
     String untitledLabel,
+    rust.CancelToken token,
   ) async {
     final options = MarkdownOptions(
       dialect: settings.markdown.dialect,
@@ -251,6 +264,7 @@ class ExportService {
     return _zip(
       outDir,
       p.join(workDir.path, 'moodiary-markdown-${_stamp()}.zip'),
+      token,
     );
   }
 
@@ -261,6 +275,7 @@ class ExportService {
     String untitledLabel,
     String videoLabel,
     String audioLabel,
+    rust.CancelToken token,
   ) async {
     final layout = settings.docx;
     final style = rust.DocxStyle(
@@ -284,12 +299,22 @@ class ExportService {
 
     if (settings.common.merge) {
       final path = p.join(outDir.path, '${_stamp()}.docx');
-      await rust.writeDocx(docs: _toIr(docs), style: style, outPath: path);
+      final builder = await rust.DocxBuilder.newInstance(style: style);
+      try {
+        for (final doc in docs) {
+          _throwIfCancelled(token);
+          await builder.add(doc: _toIrDoc(doc));
+        }
+        await builder.finish(outPath: path, cancel: token);
+      } finally {
+        builder.dispose();
+      }
       return path;
     }
 
     final used = <String>{};
     for (final doc in docs) {
+      _throwIfCancelled(token);
       final name = _uniqueName(
         _fileName(doc, settings.common.nameTemplate, untitledLabel),
         'docx',
@@ -300,9 +325,14 @@ class ExportService {
         docs: _toIr([doc]),
         style: style,
         outPath: p.join(outDir.path, name),
+        cancel: token,
       );
     }
-    return _zip(outDir, p.join(workDir.path, 'moodiary-docx-${_stamp()}.zip'));
+    return _zip(
+      outDir,
+      p.join(workDir.path, 'moodiary-docx-${_stamp()}.zip'),
+      token,
+    );
   }
 
   /// PDF 排版走 Rust 侧的 typst。
@@ -320,6 +350,7 @@ class ExportService {
     String videoLabel,
     String audioLabel,
     void Function(ExportProgress progress)? onProgress,
+    rust.CancelToken token,
   ) async {
     final layout = settings.pdf;
     final style = rust.PdfStyle(
@@ -343,9 +374,21 @@ class ExportService {
       ..createSync(recursive: true);
 
     if (settings.common.merge) {
-      onProgress?.call(const ExportProgress(.serializing, 0, 0));
       final path = p.join(outDir.path, '${_stamp()}.pdf');
-      await rust.writePdf(docs: _toIr(docs), style: style, outPath: path);
+      final builder = await rust.PdfBuilder.newInstance(style: style);
+      try {
+        onProgress?.call(ExportProgress(.writing, 0, docs.length));
+        for (var i = 0; i < docs.length; i++) {
+          _throwIfCancelled(token);
+          await builder.add(doc: _toIrDoc(docs[i]));
+          onProgress?.call(ExportProgress(.writing, i + 1, docs.length));
+        }
+        // 排版 + 绘制 + 子集化是一整块，切不开。
+        onProgress?.call(const ExportProgress(.serializing, 0, 0));
+        await builder.finish(outPath: path, cancel: token);
+      } finally {
+        builder.dispose();
+      }
       return path;
     }
 
@@ -353,6 +396,7 @@ class ExportService {
     var done = 0;
     onProgress?.call(ExportProgress(.writing, 0, docs.length));
     for (final doc in docs) {
+      _throwIfCancelled(token);
       final name = _uniqueName(
         _fileName(doc, settings.common.nameTemplate, untitledLabel),
         'pdf',
@@ -363,15 +407,23 @@ class ExportService {
         docs: _toIr([doc]),
         style: style,
         outPath: p.join(outDir.path, name),
+        cancel: token,
       );
       onProgress?.call(ExportProgress(.writing, ++done, docs.length));
     }
-    return _zip(outDir, p.join(workDir.path, 'moodiary-pdf-${_stamp()}.zip'));
+    return _zip(
+      outDir,
+      p.join(workDir.path, 'moodiary-pdf-${_stamp()}.zip'),
+      token,
+    );
   }
 
   /// 时间过桥前换成人读格式 —— Rust 侧只是照抄进 meta 行。
+  static rust.IrDoc _toIrDoc(ExportDoc doc) =>
+      doc.toIr(TimeFormat.longDateTime(doc.time));
+
   static List<rust.IrDoc> _toIr(List<ExportDoc> docs) => [
-    for (final doc in docs) doc.toIr(TimeFormat.longDateTime(doc.time)),
+    for (final doc in docs) _toIrDoc(doc),
   ];
 
   // ------------------------------------------------------------ 文件命名
@@ -416,18 +468,28 @@ class ExportService {
 
   // ---------------------------------------------------------------- 打包
 
-  static Future<String> _zip(Directory dir, String zipPath) async {
-    final zip = rust.Zip(filePath: zipPath);
-    for (final entity in dir.listSync(recursive: true)) {
-      if (entity is! File) continue;
-      await zip.addFile(
-        filePath: entity.path,
-        zipPath: p.relative(entity.path, from: dir.path),
-        // 媒体与 docx/pdf 本身都是已压缩格式，再 deflate 一遍只费时间。
-        stored: true,
-      );
+  static Future<String> _zip(
+    Directory dir,
+    String zipPath,
+    rust.CancelToken token,
+  ) async {
+    final zip = await rust.Zip.newInstance(filePath: zipPath);
+    // 中途抛错就到不了 finish()，不 dispose 则 ZipWriter 一直攥着 fd 到 GC。
+    try {
+      for (final entity in dir.listSync(recursive: true)) {
+        if (entity is! File) continue;
+        _throwIfCancelled(token);
+        await zip.addFile(
+          filePath: entity.path,
+          zipPath: p.relative(entity.path, from: dir.path),
+          // 媒体与 docx/pdf 本身都是已压缩格式，再 deflate 一遍只费时间。
+          stored: true,
+        );
+      }
+      await zip.finish();
+    } finally {
+      zip.dispose();
     }
-    await zip.finish();
     return zipPath;
   }
 

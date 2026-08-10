@@ -1,8 +1,8 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use jieba_rs::Jieba as JiebaInner;
 use rust_stemmers::{Algorithm, Stemmer};
 use std::collections::HashSet;
-use tokio::sync::OnceCell as AsyncOnceCell;
+use std::sync::OnceLock;
 use unicode_segmentation::UnicodeSegmentation;
 
 /// `cut`（高精度）和 `cut_for_search`（高召回）两组分词结果。
@@ -78,26 +78,15 @@ fn segment_text(text: &str) -> Vec<Segment> {
     segments
 }
 
-static GLOBAL_TOKENIZER: AsyncOnceCell<Tokenizer> = AsyncOnceCell::const_new();
-
-pub async fn init_tokenizer() {
-    GLOBAL_TOKENIZER
-        .get_or_init(|| async {
-            tokio::task::spawn_blocking(|| Tokenizer {
-                jieba: JiebaInner::new(),
-                stemmer: Stemmer::create(Algorithm::English),
-            })
-            .await
-            .expect("Tokenizer init panicked")
-        })
-        .await;
-}
+static GLOBAL_TOKENIZER: OnceLock<Tokenizer> = OnceLock::new();
 
 impl Tokenizer {
-    fn get() -> Result<&'static Tokenizer> {
-        GLOBAL_TOKENIZER
-            .get()
-            .context("Tokenizer is not initialized")
+    /// 惰性建词典（约 100ms）。调用方都在 FRB 线程池上，不占启动路径。
+    fn get() -> &'static Tokenizer {
+        GLOBAL_TOKENIZER.get_or_init(|| Tokenizer {
+            jieba: JiebaInner::new(),
+            stemmer: Stemmer::create(Algorithm::English),
+        })
     }
 
     fn stem_latin_segment(&self, segment: &str) -> Vec<String> {
@@ -118,14 +107,14 @@ impl Tokenizer {
 
     /// 单篇路径：CJK 段的两种切分拆两条线程并行，压低单次延迟。批量走 tokenize_batch。
     pub fn tokenize(text: String) -> Result<TokenizeResult> {
-        let tokenizer = Self::get()?;
+        let tokenizer = Self::get();
         Ok(tokenizer.tokenize_one(&text, true))
     }
 
     /// 返回顺序与入参一一对应。篇内串行——若篇内再起线程，20k 篇会退化成数万次
     /// 线程创建，那正是逐篇调用的主要开销来源。
     pub fn tokenize_batch(texts: Vec<String>) -> Result<Vec<TokenizeResult>> {
-        let tokenizer = Self::get()?;
+        let tokenizer = Self::get();
         if texts.len() <= 1 {
             return Ok(texts
                 .iter()
@@ -356,16 +345,8 @@ mod tests {
         assert!(Tokenizer::tokenize_batch(vec![]).expect("batch").is_empty());
     }
 
-    /// 测试并行执行，必须统一走 `init_tokenizer`（内部 `get_or_init` 会串行化并发
-    /// 调用）；另起裸 `set` 的路径会互相踩：set 失败 + get 到 None。
     fn ensure_tokenizer() -> &'static Tokenizer {
-        if GLOBAL_TOKENIZER.get().is_none() {
-            let rt = tokio::runtime::Builder::new_current_thread()
-                .build()
-                .unwrap();
-            rt.block_on(init_tokenizer());
-        }
-        Tokenizer::get().expect("tokenizer initialized")
+        Tokenizer::get()
     }
 
     #[test]

@@ -12,8 +12,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_rust_bridge: 2.13.0-beta.5
-  flutter_rust_bridge_hooks: 2.13.0-beta.5
+  flutter_rust_bridge: 2.13.0-beta.6
+  flutter_rust_bridge_hooks: 2.13.0-beta.6
   # 导出 IR 是带数据的枚举，FRB 为它生成 freezed sealed class。
   freezed_annotation: 3.1.0
 

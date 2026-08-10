@@ -586,6 +586,8 @@
   "exportFontNameHint": "Enter a font name, e.g. \"SimSun\" or \"Georgia\".",
   "exportFontNameEmpty": "Font name can't be empty",
   "exportScopeEmpty": "No entries in this scope",
+  "exportCancelled": "Export cancelled",
+  "exportCancel": "Cancel",
   "exportPickFontFirst": "Pick a font first",
   "exportRunButton": "Export {count} entries",
   "exportPartialTitle": "Exported, but a few things were left out",

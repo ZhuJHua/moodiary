@@ -37,20 +37,25 @@ class LocalArchive {
         PlatformService.get().applicationCachePath,
         _fileName(.now()),
       );
+      // 中途抛错到不了 writeArchive 末尾的 finish()；不 dispose 则 fd 一直攥着，
+      // 被删的半成品要等 GC 才真正释放磁盘 —— 而失败原因往往正是磁盘满。
+      final zip = await rust.Zip.newInstance(filePath: zipPath);
       try {
         await writeArchive(
-          sink: _RustZipSink(rust.Zip(filePath: zipPath)),
+          sink: _RustZipSink(zip),
           diaries: diaries,
           categories: categories,
           tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
         );
       } catch (_) {
+        zip.dispose();
         try {
           await File(zipPath).delete();
         } catch (_) {}
         rethrow;
       }
+      zip.dispose();
       return zipPath;
     });
   }
@@ -77,22 +82,26 @@ class LocalArchive {
         PlatformService.get().applicationCachePath,
         _fileName(.now()),
       );
+      final zip = await rust.Zip.newInstance(filePath: zipPath);
+      final int count;
       try {
-        final count = await writeArchive(
-          sink: _RustZipSink(rust.Zip(filePath: zipPath), zipPassword),
+        count = await writeArchive(
+          sink: _RustZipSink(zip, zipPassword),
           diaries: diaries,
           categories: categories,
           tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
           remote: remote,
         );
-        return (zipPath, count);
       } catch (_) {
+        zip.dispose();
         try {
           await File(zipPath).delete();
         } catch (_) {}
         rethrow;
       }
+      zip.dispose();
+      return (zipPath, count);
     });
   }
 
@@ -223,7 +232,11 @@ class LocalArchive {
     return included.length;
   }
 
-  static Future<SyncReport> import(String zipPath, {String? password}) async {
+  static Future<SyncReport> import(
+    String zipPath, {
+    String? password,
+    rust.CancelToken? cancel,
+  }) async {
     final extractDir = await Directory(
       PlatformService.get().applicationCachePath,
     ).createTemp('backup-import-');
@@ -232,6 +245,7 @@ class LocalArchive {
         zipPath: zipPath,
         destDir: extractDir.path,
         password: password,
+        cancel: cancel ?? rust.CancelToken(),
       );
       return await importDirectory(extractDir.path);
     } finally {
@@ -329,6 +343,17 @@ class LocalArchiveBackend implements IRemoteSyncBackend {
     if (!await file.exists()) return null;
     return file.readAsBytes();
   }
+
+  @override
+  bool get supportsFileObjects => false;
+
+  @override
+  Future<bool> readObjectToFile(String key, String filePath) =>
+      throw UnsupportedError('不支持文件直通');
+
+  @override
+  Future<void> writeObjectFile(String key, String filePath) =>
+      throw UnsupportedError('不支持文件直通');
 
   @override
   Future<void> writeObject(String key, Uint8List bytes) async {

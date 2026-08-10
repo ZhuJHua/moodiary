@@ -241,7 +241,7 @@ class MarkdownWriter {
   }
 
   static void _table(
-    List<List<IrCell>> rows,
+    List<IrRow> rows,
     StringBuffer buf,
     MarkdownOptions o, {
     required String indent,
@@ -251,24 +251,27 @@ class MarkdownWriter {
     // GFM 简单表没有合并单元格：colspan/rowspan 只能丢，内容保留在起始格。
     if (o.dialect != .gfm) {
       for (final row in rows) {
-        final cells = [for (final c in row) _cellText(c, o)];
+        final cells = [for (final c in row.cells) _cellText(c, o)];
         _writeIndented(buf, cells.join('\t'), indent);
       }
       return;
     }
 
-    final width = rows.fold<int>(0, (m, r) => r.length > m ? r.length : m);
+    final width = rows.fold<int>(
+      0,
+      (m, r) => r.cells.length > m ? r.cells.length : m,
+    );
     final header = rows.first;
     final headerCells = [
       for (var i = 0; i < width; i++)
-        i < header.length ? _cellText(header[i], o) : '',
+        i < header.cells.length ? _cellText(header.cells[i], o) : '',
     ];
     buf.writeln('$indent| ${headerCells.join(' | ')} |');
     buf.writeln('$indent|${List.filled(width, ' --- ').join('|')}|');
     for (final row in rows.skip(1)) {
       final cells = [
         for (var i = 0; i < width; i++)
-          i < row.length ? _cellText(row[i], o) : '',
+          i < row.cells.length ? _cellText(row.cells[i], o) : '',
       ];
       buf.writeln('$indent| ${cells.join(' | ')} |');
     }

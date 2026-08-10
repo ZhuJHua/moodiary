@@ -138,6 +138,7 @@ class RustHttpClient extends IHttpClient {
     Duration? timeout,
     bool silent = false,
     bool? throwOnStatus,
+    rust.CancelToken? cancel,
   }) async {
     if (_enableLogging) {
       logger.i('Upload: ${method.name} $url ($filePath)');
@@ -155,6 +156,7 @@ class RustHttpClient extends IHttpClient {
           throwOnStatus: throwOnStatus,
         ),
         filePath: filePath,
+        cancel: cancel ?? rust.CancelToken(),
       )) {
         final response = event.response;
         if (response == null) {
@@ -170,10 +172,13 @@ class RustHttpClient extends IHttpClient {
           headers: _headerMap(response.headers),
         );
       }
-      throw const HttpException(.unknown, 'upload ended without response');
     } on rust.HttpError catch (error) {
       throw _report(_exception(error), silent: silent);
+    } catch (error) {
+      // 传输失败经 sink 下发，编解码固定为 AnyhowException，拿不到 kind 只有文本。
+      throw _report(HttpException(.unknown, error.toString()), silent: silent);
     }
+    throw const HttpException(.unknown, 'upload ended without response');
   }
 
   /// 非 silent 时上报错误（弹 toast），再返回原异常供调用方 `throw`。

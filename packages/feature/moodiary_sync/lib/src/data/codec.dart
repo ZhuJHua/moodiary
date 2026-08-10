@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
@@ -27,8 +28,8 @@ class SyncCipher {
 
   Future<Uint8List> encode(Object value) async {
     final plain = utf8.encode(jsonEncode(value));
-    if (!encrypted) return .fromList(plain);
-    return .fromList([...utf8.encode(magic), ...await _encrypt(plain)]);
+    if (!encrypted) return plain;
+    return _framed(await _encrypt(plain));
   }
 
   /// 自动按 magic 头识别加密；密文但本 cipher 未配密钥 → 抛 [SyncException]。
@@ -44,10 +45,64 @@ class SyncCipher {
   /// 原始字节加密（媒体文件）。
   Future<Uint8List> encryptBytes(Uint8List bytes) async {
     if (!encrypted) return bytes;
-    return .fromList([...utf8.encode(magic), ...await _encrypt(bytes)]);
+    return _framed(await _encrypt(bytes));
   }
 
   Future<Uint8List> decryptBytes(Uint8List bytes) async => _maybeDecrypt(bytes);
+
+  /// [encryptBytes] 的文件版：明文与密文都不进 Dart 内存。明文模式退化为复制。
+  Future<void> encryptFileTo(String srcPath, String dstPath) async {
+    if (!encrypted) {
+      await File(srcPath).copy(dstPath);
+      return;
+    }
+    await rust.Aes.encryptFile(
+      key: aesKey!,
+      inPath: srcPath,
+      outPath: dstPath,
+      prefix: utf8.encode(magic),
+    );
+  }
+
+  /// [decryptBytes] 的文件版，语义相同：按 magic 头识别，明文原样复制。
+  Future<void> decryptFileTo(String srcPath, String dstPath) async {
+    final magicBytes = utf8.encode(magic);
+    final head = await _readHead(srcPath, magicBytes.length);
+    if (!_startsWith(head, magicBytes)) {
+      await File(srcPath).copy(dstPath);
+      return;
+    }
+    if (!encrypted) {
+      throw const SyncException('远端文件已加密，但当前未配置用户密钥');
+    }
+    try {
+      await rust.Aes.decryptFile(
+        key: aesKey!,
+        inPath: srcPath,
+        outPath: dstPath,
+        skipPrefix: BigInt.from(magicBytes.length),
+      );
+    } catch (_) {
+      throw const SyncException('远端文件解密失败：用户密钥可能不匹配');
+    }
+  }
+
+  static Future<Uint8List> _readHead(String path, int length) async {
+    final handle = await File(path).open();
+    try {
+      return await handle.read(length);
+    } finally {
+      await handle.close();
+    }
+  }
+
+  static bool _startsWith(Uint8List bytes, Uint8List prefix) {
+    if (bytes.length < prefix.length) return false;
+    for (var i = 0; i < prefix.length; i++) {
+      if (bytes[i] != prefix[i]) return false;
+    }
+    return true;
+  }
 
   static bool isCipherText(Uint8List bytes) {
     final magicBytes = utf8.encode(magic);
@@ -58,10 +113,18 @@ class SyncCipher {
     return true;
   }
 
-  Future<Uint8List> _encrypt(List<int> plain) async {
-    final cipher = await rust.Aes.encrypt(key: aesKey!, data: plain);
-    return .fromList(cipher);
+  /// 必须预分配 typed buffer：`[...a, ...b]` 的字面量上下文类型是 `List<int>`，会先
+  /// 摊出一个每字节一个字长的装箱列表，媒体文件走这条 = OOM。
+  static Uint8List _framed(Uint8List cipher) {
+    final magicBytes = utf8.encode(magic);
+    final out = Uint8List(magicBytes.length + cipher.length);
+    out.setRange(0, magicBytes.length, magicBytes);
+    out.setRange(magicBytes.length, out.length, cipher);
+    return out;
   }
+
+  Future<Uint8List> _encrypt(List<int> plain) =>
+      rust.Aes.encrypt(key: aesKey!, data: plain);
 
   Future<Uint8List> _maybeDecrypt(Uint8List bytes) async {
     if (!SyncCipher.isCipherText(bytes)) return bytes;
@@ -70,11 +133,10 @@ class SyncCipher {
     }
     try {
       final magicLen = utf8.encode(magic).length;
-      return .fromList(
-        await rust.Aes.decrypt(
-          key: aesKey!,
-          encryptedData: bytes.sublist(magicLen),
-        ),
+      // 视图而非拷贝：FRB 的编码器直接把它 setRange 进 Rust 缓冲区。
+      return await rust.Aes.decrypt(
+        key: aesKey!,
+        encryptedData: Uint8List.sublistView(bytes, magicLen),
       );
     } catch (_) {
       throw const SyncException('远端文件解密失败：用户密钥可能不匹配');

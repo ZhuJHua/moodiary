@@ -44,6 +44,15 @@ abstract class IRemoteSyncBackend implements SyncBackend {
   /// 写入远端对象。失败抛异常。
   Future<void> writeObject(String key, Uint8List bytes);
 
+  /// 是否支持文件直读直写（对象体不进 Dart 内存）。归档类后端为 false。
+  bool get supportsFileObjects;
+
+  /// [readObject] 的落盘版。返回 false = 远端不存在（不建文件）。
+  Future<bool> readObjectToFile(String key, String filePath);
+
+  /// [writeObject] 的文件版。
+  Future<void> writeObjectFile(String key, String filePath);
+
   /// 条件创建：仅当对象不存在时写入。`false` = 远端已存在（412），其它错误抛
   /// [SyncException]。原子性取决于服务器对 `If-None-Match: *` 的支持 —— 不支持的
   /// 会覆盖写并返回 `true`，调用方（租约锁）须用「写后回读校验」兜底。

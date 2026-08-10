@@ -37,43 +37,17 @@ Map<String, int> _countTokens(List<String> raw) {
 int _freqAt(List<int> freqs, int i) => i < freqs.length ? freqs[i] : 1;
 
 class DiaryRepository {
-  DiaryRepository._(this._isar)
-    : _rawTokenize = _defaultTokenize,
-      _rawTokenizeBatch = _defaultTokenizeBatch;
+  DiaryRepository._(this._isar);
 
   factory DiaryRepository.get() => _instance;
 
-  /// 测试用：注入独立 Isar 与替身分词器（宿主测试环境无 Rust FFI）。
-  /// 注入替身时批量分词退化为逐篇调用替身，保持与线上路径同构。
+  /// 测试用：注入独立 Isar。分词替身走 `RustLib.initMock`（见 moodiary_rust/testing.dart）。
   @visibleForTesting
-  DiaryRepository.forTesting(
-    this._isar, {
-    Future<TokenizeResult> Function(String text)? tokenizer,
-  }) : _rawTokenize = tokenizer ?? _defaultTokenize,
-       _rawTokenizeBatch = tokenizer != null
-           ? _fakeBatch(tokenizer)
-           : _defaultTokenizeBatch;
-
-  static Future<List<TokenizeResult>> Function(List<String>) _fakeBatch(
-    Future<TokenizeResult> Function(String) tokenizer,
-  ) =>
-      (texts) async => [for (final t in texts) await tokenizer(t)];
+  DiaryRepository.forTesting(this._isar);
 
   static final DiaryRepository _instance = ._(IsarDatabase.get().isar);
 
   final Isar _isar;
-
-  final Future<TokenizeResult> Function(String text) _rawTokenize;
-
-  final Future<List<TokenizeResult>> Function(List<String> texts)
-  _rawTokenizeBatch;
-
-  static Future<TokenizeResult> _defaultTokenize(String text) =>
-      Tokenizer.tokenize(text: text);
-
-  static Future<List<TokenizeResult>> _defaultTokenizeBatch(
-    List<String> texts,
-  ) => Tokenizer.tokenizeBatch(texts: texts);
 
   /// 批量分词每次过桥的条目数上限。分块的目的是限制单次桥载荷与内存峰值——
   /// 一批 128 篇（正文 + 标题至多 256 条文本）已足够铺满多核，再大只增内存。
@@ -354,7 +328,7 @@ class DiaryRepository {
   Future<TokenizeResult?> _tokenize(String text) async {
     if (text.isEmpty) return null;
     try {
-      return await _rawTokenize(text);
+      return await Tokenizer.tokenize(text: text);
     } catch (_) {
       return null;
     }
@@ -404,7 +378,7 @@ class DiaryRepository {
     List<TokenizeResult>? results;
     if (texts.isNotEmpty) {
       try {
-        final out = await _rawTokenizeBatch(texts);
+        final out = await Tokenizer.tokenizeBatch(texts: texts);
         // 长度不符说明批量实现有问题，宁可退回逐篇也不能错位落库。
         results = out.length == texts.length ? out : null;
       } catch (_) {

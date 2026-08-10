@@ -115,6 +115,17 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
   }
 
   @override
+  bool get supportsFileObjects => false;
+
+  @override
+  Future<bool> readObjectToFile(String key, String filePath) =>
+      throw UnsupportedError('不支持文件直通');
+
+  @override
+  Future<void> writeObjectFile(String key, String filePath) =>
+      throw UnsupportedError('不支持文件直通');
+
+  @override
   Future<void> writeObject(String key, Uint8List bytes) async {
     ops.add('write $key');
     beforeOp?.call('write', key);
@@ -375,6 +386,9 @@ final class FakeMediaFiles implements SyncMediaFiles {
     await drop(oldDiary.audioName, newDiary.audioName, 'audio');
     await drop(oldDiary.videoName, newDiary.videoName, 'video');
   }
+  @override
+  String? realPath(String type, String filename) => null;
+
 }
 
 // ─────────────────────── env setup ───────────────────────

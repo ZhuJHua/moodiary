@@ -154,7 +154,7 @@ impl S3Client {
         method: reqwest::Method,
         url: url::Url,
         headers: &[(&str, &str)],
-        body: Option<Vec<u8>>,
+        body: Option<reqwest::Body>,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let mut req = self.http.request(method, url);
         for (key, value) in headers {
@@ -179,7 +179,7 @@ impl S3Client {
         method: reqwest::Method,
         sign: impl Fn(&Bucket) -> url::Url,
         headers: &[(&str, &str)],
-        body: Option<Vec<u8>>,
+        body: Option<reqwest::Body>,
     ) -> Result<reqwest::Response> {
         let retryable =
             self.can_fall_back && body.is_none() && !self.fell_back.load(Ordering::Relaxed);
@@ -275,7 +275,47 @@ impl S3Client {
                 reqwest::Method::PUT,
                 |b| b.put_object(Some(&self.creds), &key).sign(SIGN_TTL),
                 &[],
-                Some(data),
+                Some(data.into()),
+            )
+            .await?;
+        if !resp.status().is_success() {
+            return Err(Self::fail(&format!("Write {key}"), resp).await);
+        }
+        Ok(())
+    }
+
+    /// [read_object] 的落盘版：响应体边收边写，整份不进内存。媒体对象走这条。
+    /// 远端不存在（404）返回 false 且不建文件。
+    pub async fn read_object_to_file(&self, key: String, file_path: String) -> Result<bool> {
+        let resp = self
+            .send(
+                reqwest::Method::GET,
+                |b| b.get_object(Some(&self.creds), &key).sign(SIGN_TTL),
+                &[],
+                None,
+            )
+            .await?;
+        if resp.status().as_u16() == 404 {
+            return Ok(false);
+        }
+        if !resp.status().is_success() {
+            return Err(Self::fail(&format!("Read {key}"), resp).await);
+        }
+        moodiary_http::client::write_body_to_file(resp, &file_path).await?;
+        Ok(true)
+    }
+
+    /// [write_object] 的文件版：请求体边读边发，整份不进内存。
+    pub async fn write_object_file(&self, key: String, file_path: String) -> Result<()> {
+        self.ensure_bucket().await?;
+        let (body, len) = moodiary_http::client::file_body(&file_path).await?;
+        let len = len.to_string();
+        let resp = self
+            .send(
+                reqwest::Method::PUT,
+                |b| b.put_object(Some(&self.creds), &key).sign(SIGN_TTL),
+                &[("content-length", len.as_str())],
+                Some(body),
             )
             .await?;
         if !resp.status().is_success() {
@@ -299,7 +339,7 @@ impl S3Client {
                     action.sign(SIGN_TTL)
                 },
                 &[("if-none-match", "*")],
-                Some(data),
+                Some(data.into()),
             )
             .await?;
         match resp.status().as_u16() {

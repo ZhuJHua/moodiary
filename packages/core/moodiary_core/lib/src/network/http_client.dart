@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:moodiary_core/src/di.dart';
+import 'package:moodiary_rust/moodiary_rust.dart' show CancelToken;
 
 /// HTTP 方法。
 enum HttpMethod { get, post, put, delete, patch, head, options }
@@ -153,5 +154,6 @@ abstract class IHttpClient {
     Duration? timeout,
     bool silent = false,
     bool? throwOnStatus,
+    CancelToken? cancel,
   });
 }

@@ -106,6 +106,44 @@ impl DavClient {
             .map_err(|e| anyhow::anyhow!("Failed to read {key}: {e}"))
     }
 
+    /// [read_object] 的落盘版：响应体边收边写，整份不进内存。远端不存在返回 false。
+    pub async fn read_object_to_file(&self, key: String, file_path: String) -> Result<bool> {
+        let path = self.full_path(&key);
+        let resp = match self.client.get(&path).await {
+            Ok(r) => r,
+            Err(e) if dav_is_not_found(&e) => return Ok(false),
+            Err(e) => return Err(anyhow::anyhow!("Failed to read {key}: {e}")),
+        };
+        moodiary_http::client::write_body_to_file(resp, &file_path).await?;
+        Ok(true)
+    }
+
+    /// [write_object] 的文件版：请求体边读边发，整份不进内存。
+    pub async fn write_object_file(&self, key: String, file_path: String) -> Result<()> {
+        let path = self.full_path(&key);
+        if let Some(pos) = path.rfind('/') {
+            self.ensure_dir_cached(&path[..pos]).await?;
+        }
+        let (body, len) = moodiary_http::client::file_body(&file_path).await?;
+        let resp = self
+            .client
+            .start_request(Method::PUT, &path)
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to build request: {e}"))?
+            .header(reqwest::header::CONTENT_LENGTH, len)
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to write {key}: {e}"))?;
+        if !resp.status().is_success() {
+            return Err(anyhow::anyhow!(
+                "Failed to write {key}: HTTP {}",
+                resp.status()
+            ));
+        }
+        Ok(())
+    }
+
     /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
     /// false=远端已存在（412）。不支持条件 PUT 的服务器会忽略该头、直接覆盖并返回 true ——
     /// 调用方（Dart 租约层）必须用「写后回读校验」兜底。

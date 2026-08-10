@@ -22,7 +22,16 @@ Future<void> registerService() async {
   final autoSync = AutoSyncWatcher.create();
   autoSync.start();
   getIt.registerSingleton<AutoSyncWatcher>(autoSync);
-  unawaited(DiaryRepository.get().drainReindexQueue());
+  // 不能静默失败：抛错时受影响的日记会带着空索引出队，从此搜不到。
+  unawaited(
+    DiaryRepository.get().drainReindexQueue().catchError((
+      Object e,
+      StackTrace s,
+    ) {
+      logger.e('drain reindex queue failed', error: e, stackTrace: s);
+      return 0;
+    }),
+  );
   // 同步墓碑保留窗 GC（默认 90 天）：零后端用户的墓碑因此有界，不无限累积。
   unawaited(purgeExpiredTombstones());
 }

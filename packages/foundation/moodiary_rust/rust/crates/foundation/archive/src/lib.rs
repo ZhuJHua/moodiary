@@ -85,12 +85,20 @@ impl Zip {
         Ok(())
     }
 
-    pub fn extract(zip_path: String, dest_dir: String, password: Option<String>) -> Result<()> {
+    pub fn extract(
+        zip_path: String,
+        dest_dir: String,
+        password: Option<String>,
+        cancelled: &dyn Fn() -> bool,
+    ) -> Result<()> {
         let file = File::open(&zip_path)
             .with_context(|| format!("Failed to open ZIP file {}", zip_path))?;
         let mut archive = ZipArchive::new(file)?;
 
         for i in 0..archive.len() {
+            if cancelled() {
+                anyhow::bail!("cancelled");
+            }
             let mut file = match &password {
                 Some(pwd) => archive.by_index_decrypt(i, pwd.as_bytes())?,
                 None => archive.by_index(i)?,
@@ -151,6 +159,7 @@ mod tests {
             zip_path.to_str().unwrap().to_string(),
             out.to_str().unwrap().to_string(),
             None,
+            &|| false,
         )
         .unwrap();
 
@@ -198,6 +207,7 @@ mod tests {
             zip_path.to_str().unwrap().to_string(),
             out.to_str().unwrap().to_string(),
             Some(password),
+            &|| false,
         )
         .unwrap();
         assert_eq!(
@@ -215,6 +225,7 @@ mod tests {
                 zip_path.to_str().unwrap().to_string(),
                 out_bad.to_str().unwrap().to_string(),
                 Some("wrong-password".to_string()),
+                &|| false,
             )
             .is_err()
         );

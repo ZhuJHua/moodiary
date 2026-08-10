@@ -3572,6 +3572,18 @@ abstract class AppLocalizations {
   /// **'这个范围里没有日记'**
   String get exportScopeEmpty;
 
+  /// No description provided for @exportCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消导出'**
+  String get exportCancelled;
+
+  /// No description provided for @exportCancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get exportCancel;
+
   /// No description provided for @exportPickFontFirst.
   ///
   /// In zh, this message translates to:

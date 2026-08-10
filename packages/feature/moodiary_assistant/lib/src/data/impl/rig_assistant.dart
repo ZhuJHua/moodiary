@@ -76,20 +76,17 @@ class RigAssistantService implements AssistantService {
     );
 
     await for (final event in stream) {
-      switch (event.kind) {
-        case .textDelta:
-          yield AssistantStreamEvent.text(event.text);
-        case .reasoningDelta:
-          yield AssistantStreamEvent.reasoning(event.text);
-        case .toolCall:
-          // 不在气泡里展示，但用作「思考阶段结束」的信号（冻结思考计时）。
-          yield AssistantStreamEvent.tool(event.text);
-        case .usage:
-          yield AssistantStreamEvent.usage(
-            event.inputTokens,
-            event.outputTokens,
-          );
-      }
+      yield switch (event) {
+        rust.RigStreamEvent_TextDelta(:final field0) => AssistantStreamEvent
+            .text(field0),
+        rust.RigStreamEvent_ReasoningDelta(:final field0) =>
+          AssistantStreamEvent.reasoning(field0),
+        // 工具调用不在气泡里展示，但用作「思考阶段结束」的信号（冻结思考计时）。
+        rust.RigStreamEvent_ToolCall(:final field0) => AssistantStreamEvent
+            .tool(field0),
+        rust.RigStreamEvent_Usage(:final inputTokens, :final outputTokens) =>
+          AssistantStreamEvent.usage(inputTokens, outputTokens),
+      };
     }
   }
 
@@ -150,15 +147,20 @@ Future<String> dispatchAssistantTool({
 }) async {
   if (spec == null) return '未知工具：$toolName。';
 
-  // 只读工具直接执行；写入 / 破坏性工具先请用户确认。
-  if (spec.tool.needsApproval &&
-      requester != null &&
-      !await requester(spec.tool)) {
-    return '用户拒绝了执行「$toolName」操作。请不要重试，可换一种方式继续对话。';
-  }
+  // 失败一律以文本回灌模型，让它自己纠正参数——而不是抛穿 FFI 中断整轮对话。
+  try {
+    // 只读工具直接执行；写入 / 破坏性工具先请用户确认。
+    if (spec.tool.needsApproval &&
+        requester != null &&
+        !await requester(spec.tool)) {
+      return '用户拒绝了执行「$toolName」操作。请不要重试，可换一种方式继续对话。';
+    }
 
-  final trimmed = argsJson.trim();
-  final raw = (trimmed.isEmpty || trimmed == 'null') ? '{}' : trimmed;
-  final input = (jsonDecode(raw) as Map).cast<String, dynamic>();
-  return spec.run(input);
+    final trimmed = argsJson.trim();
+    final raw = (trimmed.isEmpty || trimmed == 'null') ? '{}' : trimmed;
+    final input = (jsonDecode(raw) as Map).cast<String, dynamic>();
+    return await spec.run(input);
+  } catch (e) {
+    return '工具「$toolName」执行失败：$e。请检查参数是否符合 schema，可调整后重试或换一种方式继续。';
+  }
 }

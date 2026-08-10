@@ -47,22 +47,14 @@ pub struct RigToolDef {
     pub parameters_json: String,
 }
 
-/// 用「plain enum + 载荷字段」而非带数据的枚举变体，是为了让 FRB 生成普通 Dart
-/// 类 / 枚举，避开它对 `freezed`（项目当前钉在 pre-release 版）的版本门槛。
-pub enum RigEventKind {
-    TextDelta,
+pub enum RigStreamEvent {
+    TextDelta(String),
     /// 思考 / 推理增量（Anthropic thinking、OpenAI 兼容 `reasoning_content`）。
-    ReasoningDelta,
-    ToolCall,
-    Usage,
-}
-
-pub struct RigStreamEvent {
-    pub kind: RigEventKind,
-    pub text: String,
-    /// 仅 [RigEventKind::Usage] 事件有意义：本轮聚合的输入 / 输出 token 数；其余事件为 0。
-    pub input_tokens: u32,
-    pub output_tokens: u32,
+    ReasoningDelta(String),
+    /// 载荷是工具名。
+    ToolCall(String),
+    /// 本轮聚合用量（含内部工具轮次）。
+    Usage { input_tokens: u32, output_tokens: u32 },
 }
 
 /// 工具分发回调：入参 `(tool_name, args_json)`，返回工具结果字符串。
@@ -251,25 +243,14 @@ where
     while let Some(item) = stream.next().await {
         match item {
             Ok(MultiTurnStreamItem::StreamAssistantItem(StreamedAssistantContent::Text(text))) => {
-                let event = RigStreamEvent {
-                    kind: RigEventKind::TextDelta,
-                    text: text.text,
-                    input_tokens: 0,
-                    output_tokens: 0,
-                };
-                if !emit(event) {
+                if !emit(RigStreamEvent::TextDelta(text.text)) {
                     break; // Dart 已取消订阅 → 中断在途请求
                 }
             }
             Ok(MultiTurnStreamItem::StreamAssistantItem(
                 StreamedAssistantContent::ReasoningDelta { reasoning, .. },
             )) => {
-                if !emit(RigStreamEvent {
-                    kind: RigEventKind::ReasoningDelta,
-                    text: reasoning,
-                    input_tokens: 0,
-                    output_tokens: 0,
-                }) {
+                if !emit(RigStreamEvent::ReasoningDelta(reasoning)) {
                     break;
                 }
             }
@@ -277,21 +258,14 @@ where
                 tool_call,
                 ..
             })) => {
-                if !emit(RigStreamEvent {
-                    kind: RigEventKind::ToolCall,
-                    text: tool_call.function.name,
-                    input_tokens: 0,
-                    output_tokens: 0,
-                }) {
+                if !emit(RigStreamEvent::ToolCall(tool_call.function.name)) {
                     break;
                 }
             }
             Ok(MultiTurnStreamItem::FinalResponse(final_resp)) => {
-                // 本轮聚合用量（含内部工具轮次）。供应商未上报时为全 0。
+                // 供应商未上报时为全 0。
                 let usage = final_resp.usage();
-                let _ = emit(RigStreamEvent {
-                    kind: RigEventKind::Usage,
-                    text: String::new(),
+                let _ = emit(RigStreamEvent::Usage {
                     input_tokens: usage.input_tokens as u32,
                     output_tokens: usage.output_tokens as u32,
                 });

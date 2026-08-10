@@ -140,7 +140,7 @@ return table(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<IrSpan> spans)?  paragraph,TResult Function( int level,  List<IrSpan> spans)?  heading,TResult Function( bool ordered,  int start,  List<IrListItem> items)?  list,TResult Function( List<IrBlock> children)?  quote,TResult Function( String? language,  String text)?  code,TResult Function()?  divider,TResult Function( String path,  String? alt,  int? widthPercent,  bool external_)?  image,TResult Function( String kind,  String filename,  String path,  String? coverPath)?  media,TResult Function( List<List<IrCell>> rows)?  table,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<IrSpan> spans)?  paragraph,TResult Function( int level,  List<IrSpan> spans)?  heading,TResult Function( bool ordered,  int start,  List<IrListItem> items)?  list,TResult Function( List<IrBlock> children)?  quote,TResult Function( String? language,  String text)?  code,TResult Function()?  divider,TResult Function( String path,  String? alt,  int? widthPercent,  bool external_)?  image,TResult Function( String kind,  String filename,  String path,  String? coverPath)?  media,TResult Function( List<IrRow> rows)?  table,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case IrBlock_Paragraph() when paragraph != null:
 return paragraph(_that.spans);case IrBlock_Heading() when heading != null:
@@ -169,7 +169,7 @@ return table(_that.rows);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<IrSpan> spans)  paragraph,required TResult Function( int level,  List<IrSpan> spans)  heading,required TResult Function( bool ordered,  int start,  List<IrListItem> items)  list,required TResult Function( List<IrBlock> children)  quote,required TResult Function( String? language,  String text)  code,required TResult Function()  divider,required TResult Function( String path,  String? alt,  int? widthPercent,  bool external_)  image,required TResult Function( String kind,  String filename,  String path,  String? coverPath)  media,required TResult Function( List<List<IrCell>> rows)  table,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<IrSpan> spans)  paragraph,required TResult Function( int level,  List<IrSpan> spans)  heading,required TResult Function( bool ordered,  int start,  List<IrListItem> items)  list,required TResult Function( List<IrBlock> children)  quote,required TResult Function( String? language,  String text)  code,required TResult Function()  divider,required TResult Function( String path,  String? alt,  int? widthPercent,  bool external_)  image,required TResult Function( String kind,  String filename,  String path,  String? coverPath)  media,required TResult Function( List<IrRow> rows)  table,}) {final _that = this;
 switch (_that) {
 case IrBlock_Paragraph():
 return paragraph(_that.spans);case IrBlock_Heading():
@@ -194,7 +194,7 @@ return table(_that.rows);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<IrSpan> spans)?  paragraph,TResult? Function( int level,  List<IrSpan> spans)?  heading,TResult? Function( bool ordered,  int start,  List<IrListItem> items)?  list,TResult? Function( List<IrBlock> children)?  quote,TResult? Function( String? language,  String text)?  code,TResult? Function()?  divider,TResult? Function( String path,  String? alt,  int? widthPercent,  bool external_)?  image,TResult? Function( String kind,  String filename,  String path,  String? coverPath)?  media,TResult? Function( List<List<IrCell>> rows)?  table,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<IrSpan> spans)?  paragraph,TResult? Function( int level,  List<IrSpan> spans)?  heading,TResult? Function( bool ordered,  int start,  List<IrListItem> items)?  list,TResult? Function( List<IrBlock> children)?  quote,TResult? Function( String? language,  String text)?  code,TResult? Function()?  divider,TResult? Function( String path,  String? alt,  int? widthPercent,  bool external_)?  image,TResult? Function( String kind,  String filename,  String path,  String? coverPath)?  media,TResult? Function( List<IrRow> rows)?  table,}) {final _that = this;
 switch (_that) {
 case IrBlock_Paragraph() when paragraph != null:
 return paragraph(_that.spans);case IrBlock_Heading() when heading != null:
@@ -757,11 +757,11 @@ as String?,
 
 
 class IrBlock_Table extends IrBlock {
-  const IrBlock_Table({required final  List<List<IrCell>> rows}): _rows = rows,super._();
+  const IrBlock_Table({required final  List<IrRow> rows}): _rows = rows,super._();
   
 
- final  List<List<IrCell>> _rows;
- List<List<IrCell>> get rows {
+ final  List<IrRow> _rows;
+ List<IrRow> get rows {
   if (_rows is EqualUnmodifiableListView) return _rows;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_rows);
@@ -798,7 +798,7 @@ abstract mixin class $IrBlock_TableCopyWith<$Res> implements $IrBlockCopyWith<$R
   factory $IrBlock_TableCopyWith(IrBlock_Table value, $Res Function(IrBlock_Table) _then) = _$IrBlock_TableCopyWithImpl;
 @useResult
 $Res call({
- List<List<IrCell>> rows
+ List<IrRow> rows
 });
 
 
@@ -818,7 +818,7 @@ class _$IrBlock_TableCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? rows = null,}) {
   return _then(IrBlock_Table(
 rows: null == rows ? _self._rows : rows // ignore: cast_nullable_to_non_nullable
-as List<List<IrCell>>,
+as List<IrRow>,
   ));
 }
 

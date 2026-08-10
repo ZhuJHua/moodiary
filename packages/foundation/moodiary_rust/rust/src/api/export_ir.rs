@@ -2,7 +2,7 @@
 
 use flutter_rust_bridge::frb;
 
-pub use moodiary_doc::{IrBlock, IrCell, IrDoc, IrListItem, IrSpan};
+pub use moodiary_doc::{IrBlock, IrCell, IrDoc, IrListItem, IrRow, IrSpan};
 
 #[frb(mirror(IrDoc))]
 pub struct _IrDoc {
@@ -34,6 +34,13 @@ pub struct _IrListItem {
     pub children: Vec<IrBlock>,
     /// 非空表示这是任务项。
     pub checked: Option<bool>,
+}
+
+/// 表格的一行。包一层具名结构而不是 `Vec<Vec<IrCell>>` —— FRB 的 CST 编解码器
+/// 生成嵌套列表时会漏掉内层的 fill 函数。
+#[frb(mirror(IrRow))]
+pub struct _IrRow {
+    pub cells: Vec<IrCell>,
 }
 
 #[frb(mirror(IrCell))]
@@ -82,6 +89,6 @@ pub enum _IrBlock {
         cover_path: Option<String>,
     },
     Table {
-        rows: Vec<Vec<IrCell>>,
+        rows: Vec<IrRow>,
     },
 }

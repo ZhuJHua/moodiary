@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_rust/moodiary_rust.dart' show CancelToken;
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/lan/lan_receiver.dart';
 import 'package:moodiary_sync/src/data/lan/lan_sender.dart';
@@ -187,6 +188,7 @@ final class IoTestHttpClient extends IHttpClient {
     Duration? timeout,
     bool silent = false,
     bool? throwOnStatus,
+    CancelToken? cancel,
   }) async {
     try {
       final req = await _client.openUrl(method.name.toUpperCase(), .parse(url));

@@ -22,7 +22,7 @@ use typst::text::{Font, FontBook};
 use typst::utils::LazyHash;
 use typst::{Library, LibraryExt, World};
 
-use moodiary_doc::{IrBlock, IrCell, IrDoc, IrListItem, IrSpan};
+use moodiary_doc::{IrBlock, IrDoc, IrListItem, IrRow, IrSpan};
 
 pub struct PdfStyle {
     pub font_path: String,
@@ -42,12 +42,20 @@ pub struct PdfStyle {
 }
 
 /// [docs_json] 是 `ExportDoc.toJson()` 的数组；每篇一文件由 Dart 侧循环调用实现。
-pub fn write_pdf(docs: Vec<IrDoc>, style: PdfStyle, out_path: String) -> Result<()> {
+pub fn write_pdf(
+    docs: Vec<IrDoc>,
+    style: &PdfStyle,
+    out_path: String,
+    cancelled: &dyn Fn() -> bool,
+) -> Result<()> {
     let font_blob = std::fs::read(&style.font_path)
         .with_context(|| format!("读取字体失败：{}", style.font_path))?;
 
-    let mut generator = Markup::new(&style);
-    generator.document(&docs);
+    let mut generator = Markup::new(style);
+    generator.document(&docs, cancelled)?;
+    if cancelled() {
+        anyhow::bail!("cancelled");
+    }
     let (source, images) = generator.finish();
 
     let world = MoodiaryWorld::new(source, font_blob, images)?;
@@ -176,9 +184,12 @@ impl<'a> Markup<'a> {
         (self.out, self.images)
     }
 
-    fn document(&mut self, docs: &[IrDoc]) {
+    fn document(&mut self, docs: &[IrDoc], cancelled: &dyn Fn() -> bool) -> Result<()> {
         self.preamble();
         for (i, doc) in docs.iter().enumerate() {
+            if cancelled() {
+                anyhow::bail!("cancelled");
+            }
             if i > 0 {
                 self.out.push_str("#pagebreak()\n");
             }
@@ -202,6 +213,7 @@ impl<'a> Markup<'a> {
             }
             self.blocks(&doc.blocks);
         }
+        Ok(())
     }
 
     fn preamble(&mut self) {
@@ -360,13 +372,13 @@ impl<'a> Markup<'a> {
         self.out.push_str(")\n");
     }
 
-    fn table(&mut self, rows: &[Vec<IrCell>]) {
+    fn table(&mut self, rows: &[IrRow]) {
         if rows.is_empty() {
             return;
         }
         let columns = rows
             .iter()
-            .map(|r| r.iter().map(|c| c.colspan as usize).sum::<usize>())
+            .map(|r| r.cells.iter().map(|c| c.colspan as usize).sum::<usize>())
             .max()
             .unwrap_or(1)
             .max(1);
@@ -376,7 +388,7 @@ impl<'a> Markup<'a> {
             vec!["1fr"; columns].join(", ")
         );
         for row in rows {
-            for cell in row {
+            for cell in &row.cells {
                 self.out.push_str(",\ntable.cell(");
                 if cell.colspan > 1 {
                     let _ = write!(self.out, "colspan: {}, ", cell.colspan);
@@ -647,6 +659,7 @@ fn break_point(chars: &[char], limit: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use moodiary_doc::IrCell;
     use crate::fixture;
     use std::io::Read;
 
@@ -748,21 +761,25 @@ mod tests {
                 },
                 IrBlock::Table {
                     rows: vec![
-                        vec![IrCell {
-                            header: true,
-                            colspan: 2,
-                            ..fixture::cell(vec![fixture::text_para("merged head")])
-                        }],
-                        vec![
-                            fixture::cell(vec![fixture::text_para("a")]),
-                            fixture::cell(vec![fixture::text_para("b")]),
-                        ],
+                        IrRow {
+                            cells: vec![IrCell {
+                                header: true,
+                                colspan: 2,
+                                ..fixture::cell(vec![fixture::text_para("merged head")])
+                            }],
+                        },
+                        IrRow {
+                            cells: vec![
+                                fixture::cell(vec![fixture::text_para("a")]),
+                                fixture::cell(vec![fixture::text_para("b")]),
+                            ],
+                        },
                     ],
                 },
             ],
         }];
 
-        write_pdf(docs, style(), out.clone()).expect("导出应当成功");
+        write_pdf(docs, &style(), out.clone(), &|| false).expect("导出应当成功");
         assert_eq!(&read_head(&out, 5), b"%PDF-");
         assert!(std::fs::metadata(&out).unwrap().len() > 1000);
     }
@@ -787,7 +804,7 @@ mod tests {
                 title: "inject".into(),
                 ..fixture::doc(vec![fixture::text_para(payload)])
             }];
-            write_pdf(docs, style(), out.clone())
+            write_pdf(docs, &style(), out.clone(), &|| false)
                 .unwrap_or_else(|e| panic!("payload {i} 让导出失败了：{e}"));
             assert_eq!(&read_head(&out, 5), b"%PDF-", "payload {i}");
         }
@@ -818,7 +835,7 @@ mod tests {
         }];
 
         let started = std::time::Instant::now();
-        write_pdf(docs, style(), out.clone()).expect("32 万字应当能导出");
+        write_pdf(docs, &style(), out.clone(), &|| false).expect("32 万字应当能导出");
         let elapsed = started.elapsed();
 
         assert_eq!(&read_head(&out, 5), b"%PDF-");
@@ -853,7 +870,7 @@ mod tests {
         let mut bad = style();
         bad.font_path = "/nowhere/none.ttf".into();
         let docs = vec![fixture::doc(vec![])];
-        let err = write_pdf(docs, bad, out.clone()).unwrap_err();
+        let err = write_pdf(docs, &bad, out.clone(), &|| false).unwrap_err();
         assert!(err.to_string().contains("读取字体失败"));
         assert!(!std::path::Path::new(&out).exists(), "失败时不应留下文件");
     }
@@ -865,7 +882,7 @@ mod tests {
             fixture::image("/nowhere/gone.jpg"),
             fixture::text_para("after"),
         ])];
-        write_pdf(docs, style(), out.clone()).expect("缺图不应让导出失败");
+        write_pdf(docs, &style(), out.clone(), &|| false).expect("缺图不应让导出失败");
         assert_eq!(&read_head(&out, 5), b"%PDF-");
     }
 }
@@ -881,7 +898,7 @@ mod whitespace_between_marks {
         let font_blob = std::fs::read(super::tests::font_path()).unwrap();
         let st = super::tests::style();
         let mut g = Markup::new(&st);
-        g.document(&docs);
+        g.document(&docs, &|| false).unwrap();
         let (source, images) = g.finish();
         let world = MoodiaryWorld::new(source, font_blob, images).unwrap();
         let compiled = typst::compile(&world);
@@ -920,7 +937,7 @@ mod whitespace_between_marks {
         let font_blob = std::fs::read(super::tests::font_path()).unwrap();
         let st = super::tests::style();
         let mut g = Markup::new(&st);
-        g.document(&docs);
+        g.document(&docs, &|| false).unwrap();
         let (source, images) = g.finish();
         let world = MoodiaryWorld::new(source, font_blob, images).unwrap();
         let compiled = typst::compile(&world);
@@ -945,7 +962,7 @@ mod whitespace_between_marks {
         let font_blob = std::fs::read(super::tests::font_path()).unwrap();
         let st = super::tests::style();
         let mut g = Markup::new(&st);
-        g.document(&docs);
+        g.document(&docs, &|| false).unwrap();
         let (source, images) = g.finish();
         let world = MoodiaryWorld::new(source, font_blob, images).unwrap();
         let compiled = typst::compile(&world);

@@ -98,6 +98,28 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   }
 
   @override
+  bool get supportsFileObjects => true;
+
+  @override
+  Future<bool> readObjectToFile(String key, String filePath) async {
+    try {
+      final client = await _client();
+      return await client.readObjectToFile(
+        key: key,
+        filePath: filePath,
+      );
+    } catch (e) {
+      throw SyncException('读取远端对象失败（$key）：$e');
+    }
+  }
+
+  @override
+  Future<void> writeObjectFile(String key, String filePath) async {
+    final client = await _client();
+    await client.writeObjectFile(key: key, filePath: filePath);
+  }
+
+  @override
   Future<bool> tryCreateExclusive(String key, Uint8List bytes) async {
     try {
       final client = await _client();

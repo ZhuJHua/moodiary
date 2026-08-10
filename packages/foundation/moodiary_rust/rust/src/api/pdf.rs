@@ -1,6 +1,7 @@
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 
+use crate::api::cancel::CancelToken;
 use crate::api::export_ir::IrDoc;
 
 pub use moodiary_export::pdf::PdfStyle;
@@ -23,6 +24,42 @@ pub struct _PdfStyle {
     pub audio_label: String,
 }
 
-pub fn write_pdf(docs: Vec<IrDoc>, style: PdfStyle, out_path: String) -> Result<()> {
-    moodiary_export::pdf::write_pdf(docs, style, out_path)
+pub fn write_pdf(
+    docs: Vec<IrDoc>,
+    style: PdfStyle,
+    out_path: String,
+    cancel: &CancelToken,
+) -> Result<()> {
+    moodiary_export::pdf::write_pdf(docs, &style, out_path, &cancel.checker())
 }
+
+/// 合并导出用的累加器。直接把整库交给 [write_pdf] 结果一样，但那样整个语料会同时以
+/// 三份存在（Dart 对象、过桥缓冲、Rust 的 Vec）；逐篇推则缓冲里只有一篇。
+#[frb(opaque)]
+pub struct PdfBuilder {
+    docs: Vec<IrDoc>,
+    style: PdfStyle,
+}
+
+impl PdfBuilder {
+    pub fn new(style: PdfStyle) -> PdfBuilder {
+        PdfBuilder {
+            docs: Vec::new(),
+            style,
+        }
+    }
+
+    pub fn add(&mut self, doc: IrDoc) {
+        self.docs.push(doc);
+    }
+
+    pub fn finish(&mut self, out_path: String, cancel: &CancelToken) -> Result<()> {
+        moodiary_export::pdf::write_pdf(
+            std::mem::take(&mut self.docs),
+            &self.style,
+            out_path,
+            &cancel.checker(),
+        )
+    }
+}
+

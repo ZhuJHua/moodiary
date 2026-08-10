@@ -767,18 +767,18 @@ packages:
     dependency: transitive
     description:
       name: flutter_rust_bridge
-      sha256: d9d819e3f39efe08a68309ff7cadc9d8bcfd65d86319e0c5735cd4f4fee16c4a
+      sha256: "7e8f565714dcb06197d29c74a559ee826c4eab4d586d7ccf9826aa5dc9478015"
       url: "https://pub.dev"
     source: hosted
-    version: "2.13.0-beta.5"
+    version: "2.13.0-beta.6"
   flutter_rust_bridge_hooks:
     dependency: transitive
     description:
       name: flutter_rust_bridge_hooks
-      sha256: "33f96e930af9016405f519696574f6fcb96ec37a515188d1da484fa81f9a90f7"
+      sha256: a950952d2de2ffc2464e336bd04fe16124b863a27ed547c41b94ad635d07bfd1
       url: "https://pub.dev"
     source: hosted
-    version: "2.13.0-beta.5"
+    version: "2.13.0-beta.6"
   flutter_secure_storage:
     dependency: transitive
     description:
@@ -1112,10 +1112,10 @@ packages:
     dependency: transitive
     description:
       name: idb_shim
-      sha256: "3448298f244bc76a14aca71461eeab6add2b8a877930521c42c2e8b71b644590"
+      sha256: bc66cfd9afb17b3e1e966bbf0d16fa3cc782dfb058351f15daf4105a48033dca
       url: "https://pub.dev"
     source: hosted
-    version: "2.9.6+2"
+    version: "2.9.7"
   image:
     dependency: transitive
     description:
@@ -1624,10 +1624,10 @@ packages:
     dependency: transitive
     description:
       name: photo_manager
-      sha256: "4f7de6c9778993c5c54cf1fb2eaa8d5c27c0771dc24a4dfca341aa81aef13fe1"
+      sha256: "2d00a785b501bf1e5f6180bbef772846e767be11d45d11112b63092ef54a419e"
       url: "https://pub.dev"
     source: hosted
-    version: "3.11.0"
+    version: "3.12.0"
   photo_manager_image_provider:
     dependency: transitive
     description:

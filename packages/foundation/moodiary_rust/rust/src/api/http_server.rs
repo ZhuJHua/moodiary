@@ -28,6 +28,19 @@ pub struct _HttpServerResponse {
     pub body_file_path: Option<String>,
 }
 
+/// 正常的业务错误由 Dart 侧自己折叠成 500；走到这里说明 handler 本身炸了。
+fn fallback_response(error: anyhow::Error) -> HttpServerResponse {
+    HttpServerResponse {
+        status: 500,
+        headers: vec![KeyValue {
+            key: "content-type".to_owned(),
+            value: "text/plain; charset=utf-8".to_owned(),
+        }],
+        body: error.to_string().into_bytes(),
+        body_file_path: None,
+    }
+}
+
 #[frb(opaque)]
 pub struct HttpServer {
     inner: moodiary_http::server::HttpServer,
@@ -39,16 +52,24 @@ impl HttpServer {
         loopback_only: bool,
         spool_dir: String,
         // 不叫 handler：会与 FRB 生成代码里的内部调度器字段同名冲突。
-        on_request: impl Fn(HttpServerRequest) -> DartFnFuture<HttpServerResponse>
+        // 两个回调都必须声明成可失败，理由见 assistant.rs。
+        on_request: impl Fn(HttpServerRequest) -> DartFnFuture<Result<HttpServerResponse>>
         + Send
         + Sync
         + 'static,
-        on_body_progress: impl Fn(i64, i64) -> DartFnFuture<()> + Send + Sync + 'static,
+        on_body_progress: impl Fn(i64, i64) -> DartFnFuture<Result<()>> + Send + Sync + 'static,
     ) -> Result<HttpServer> {
-        let handler: moodiary_http::server::HandlerFn =
-            Arc::new(move |req| Box::pin(on_request(req)));
-        let progress: moodiary_http::server::ProgressFn =
-            Arc::new(move |received, total| Box::pin(on_body_progress(received, total)));
+        let handler: moodiary_http::server::HandlerFn = Arc::new(move |req| {
+            let call = on_request(req);
+            Box::pin(async move { call.await.unwrap_or_else(fallback_response) })
+        });
+        let progress: moodiary_http::server::ProgressFn = Arc::new(move |received, total| {
+            let call = on_body_progress(received, total);
+            // 进度回报失败不该影响传输本身。
+            Box::pin(async move {
+                let _ = call.await;
+            })
+        });
         Ok(HttpServer {
             inner: moodiary_http::server::HttpServer::start(
                 preferred_port,

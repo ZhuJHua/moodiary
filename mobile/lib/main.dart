@@ -31,13 +31,14 @@ Future<Locale> _initSystem() async {
   }
   unawaited(_platFormOption());
   final localeFuture = _findLanguage();
+  // registerService 会立刻打到 Rust，必须先等桥就绪。
+  await rustInit;
   await Future.wait([
     FontRepository.get().getActiveFont().then(
       (font) => ThemeManager().buildTheme(customFont: font),
     ),
     registerService(),
     localeFuture,
-    rustInit,
   ]);
 
   SystemChrome.setEnabledSystemUIMode(.edgeToEdge);

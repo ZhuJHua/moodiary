@@ -14,6 +14,7 @@ import 'package:moodiary_core/src/values/media_type.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart';
+import 'package:pool/pool.dart';
 
 enum ImageFormat {
   jpeg(extension: '.jpg'),
@@ -358,14 +359,20 @@ class MediaManager {
     }
   }
 
+  /// 每个在飞调用把整张图解码进内存（12MP 约 36MiB），而选图一次最多 9 张且是逐张
+  /// fire-and-forget 的。闸门放在这个咽喉处，两条扇出路径都覆盖到。
+  static final Pool _optimizeGate = Pool(2);
+
   static Future<bool> _optimizeRustToFile(
     String imagePath,
     String outputPath,
   ) async {
     try {
-      await rust.ImageCompressor.optimizeToFile(
-        filePath: imagePath,
-        outputPath: outputPath,
+      await _optimizeGate.withResource(
+        () => rust.ImageCompressor.optimizeToFile(
+          filePath: imagePath,
+          outputPath: outputPath,
+        ),
       );
       return true;
     } catch (e) {

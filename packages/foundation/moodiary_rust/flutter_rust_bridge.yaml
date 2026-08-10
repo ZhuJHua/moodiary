@@ -2,3 +2,10 @@ rust_input: crate::api
 rust_root: rust/
 dart_output: lib/src/rust
 web: false
+# 默认 false 时解析不了的 pub fn 会被静默跳过，gen-rust 照样打印 Done! 并退出 0。
+stop_on_error: true
+# 不要开 full_dep: true（换 CST/DCO 编解码，图个 Vec<u8> 的零拷贝）。实测 2026-08-10、
+# FRB 2.13.0-beta.6 + ffigen 21：生成的 frb_generated.io.dart 里有一个 cst_encode 辅助
+# 函数的签名行被吃掉，只剩函数体，analyze 直接一片红。IrBlock 的表格已为此改成具名
+# IrRow（CST 生成器不支持嵌套 Vec<Vec<T>>，那个问题已经解决），剩下这个是上游 bug。
+# 另：ffigen 全系列钉 cli_util ^0.4.2，与 melos 8 的 ^0.5.0 无交集，还得加 override。

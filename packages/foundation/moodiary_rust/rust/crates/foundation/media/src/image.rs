@@ -112,11 +112,12 @@ pub fn optimize_to_file(file_path: String, output_path: String, quality: Option<
         .with_guessed_format()?
         .decode()
         .map_err(|e| anyhow::anyhow!("Failed to decode image: {}", e))?;
-    // libwebp 只吃 RGB8/RGBA8。
+    // libwebp 只吃 RGB8/RGBA8。必须用 into_ 而非 to_：后者借用再新建一份，而 shadowing
+    // 不 drop 旧值，两份全分辨率缓冲会一直活到函数结束。
     let src_img = if src_img.color().has_alpha() {
-        DynamicImage::ImageRgba8(src_img.to_rgba8())
+        DynamicImage::ImageRgba8(src_img.into_rgba8())
     } else {
-        DynamicImage::ImageRgb8(src_img.to_rgb8())
+        DynamicImage::ImageRgb8(src_img.into_rgb8())
     };
     let (width, height) = src_img.dimensions();
     let (dst_width, dst_height) = optimize_dimensions(width, height);

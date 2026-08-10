@@ -1892,6 +1892,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportScopeEmpty => 'No entries in this scope';
 
   @override
+  String get exportCancelled => 'Export cancelled';
+
+  @override
+  String get exportCancel => 'Cancel';
+
+  @override
   String get exportPickFontFirst => 'Pick a font first';
 
   @override

@@ -10,12 +10,6 @@ pub struct _TokenizeResult {
     pub cut_for_search: Vec<String>,
 }
 
-/// jieba 词典加载约百毫秒，进程启动时在后台线程预热。
-#[frb(init)]
-pub async fn init_tokenizer() {
-    moodiary_text::init_tokenizer().await;
-}
-
 #[frb(opaque)]
 pub struct Tokenizer {}
 

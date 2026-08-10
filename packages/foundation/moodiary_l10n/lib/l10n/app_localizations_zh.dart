@@ -1819,6 +1819,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exportScopeEmpty => '这个范围里没有日记';
 
   @override
+  String get exportCancelled => '已取消导出';
+
+  @override
+  String get exportCancel => '取消';
+
+  @override
   String get exportPickFontFirst => '请先选择一个字体';
 
   @override

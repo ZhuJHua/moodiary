@@ -201,6 +201,7 @@ impl HttpClient {
         options: RequestOptions,
         file_path: String,
         on_progress: impl Fn(i64, i64) + Send + Sync + 'static,
+        cancelled: impl Fn() -> bool + Send + Sync + 'static,
     ) -> Result<(HttpResponse, i64), HttpError> {
         const PROGRESS_STEP: i64 = 512 * 1024;
 
@@ -216,6 +217,10 @@ impl HttpClient {
         let mut sent: i64 = 0;
         let mut last_report: i64 = 0;
         let stream = tokio_util::io::ReaderStream::new(file).map(move |chunk| {
+            // 传输中途取消：给 body 流一个 Err，reqwest 随即中断这次请求。
+            if cancelled() {
+                return Err(std::io::Error::other("cancelled"));
+            }
             if let Ok(bytes) = &chunk {
                 sent += bytes.len() as i64;
                 if sent - last_report >= PROGRESS_STEP || sent == total {

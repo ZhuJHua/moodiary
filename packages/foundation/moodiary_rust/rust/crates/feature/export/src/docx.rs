@@ -7,9 +7,9 @@
 //! 这也是它相对 PDF 的关键优势 —— 导出侧一个字节的字体都不用管。
 //!
 //! 两个 docx-rs 的坑，改这个文件时别踩回去：
-//! 1. [`Pic::new`] 内部连着四个 `expect()`，而本 crate 是 `panic = abort` —— 一张坏图会
-//!    直接带走整个 app。**只用 [`Pic::new_with_dimensions`]**，尺寸自己用 image crate 读，
-//!    每张图失败就跳过，不让它毁掉整次导出。
+//! 1. [`Pic::new`] 内部连着四个 `expect()` —— 一张坏图就让整次导出以 panic 收场
+//!    （FRB 会兜成 Dart 异常，但这一趟导出的成果全没了）。**只用
+//!    [`Pic::new_with_dimensions`]**，尺寸自己用 image crate 读，每张图失败就跳过。
 //! 2. zipper 把媒体一律写成 `word/media/{id}.png`（`src/zipper/mod.rs:111`，上游 main 至今
 //!    未改）。我们喂的是 JPEG 字节，故部件名与实际格式不符。`[Content_Types].xml` 里 png 与
 //!    jpeg 都声明了 Default，Word / WPS 按内容嗅探能正常渲染，但这不是合规写法；若哪天遇到
@@ -21,7 +21,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::path::Path;
 
-use moodiary_doc::{IrBlock, IrCell, IrDoc, IrListItem, IrSpan};
+use moodiary_doc::{IrBlock, IrDoc, IrListItem, IrRow, IrSpan};
 
 pub struct DocxStyle {
     /// 中文字体名（写进 `w:rFonts` 的 `eastAsia`）。
@@ -114,15 +114,23 @@ const META_COLOR: &str = "8A93A0";
 ///
 /// 直接落盘而不回传字节：与 `Zip::new(file_path)`、`ImageCompressor::optimize_to_file`
 /// 的既有约定一致，且带图日记几十 MB 时不必在内存里整份成型。
-pub fn write_docx(docs: Vec<IrDoc>, style: DocxStyle, out_path: String) -> Result<()> {
+pub fn write_docx(
+    docs: Vec<IrDoc>,
+    style: &DocxStyle,
+    out_path: String,
+    cancelled: &dyn Fn() -> bool,
+) -> Result<()> {
     // 同一批里的双链改成文档内跳转；不在这批里的目标只能降级成普通文字。
     let ids: HashSet<&str> = docs.iter().map(|d| d.id.as_str()).collect();
 
-    let mut docx = base_docx(&style);
-    let content_width_emu = content_width_emu(&style);
+    let mut docx = base_docx(style);
+    let content_width_emu = content_width_emu(style);
     let mut bookmark_id = 0usize;
 
     for (i, doc) in docs.iter().enumerate() {
+        if cancelled() {
+            anyhow::bail!("cancelled");
+        }
         if i > 0 && style.page_break_between {
             docx =
                 docx.add_paragraph(Paragraph::new().add_run(Run::new().add_break(BreakType::Page)));
@@ -135,7 +143,7 @@ pub fn write_docx(docs: Vec<IrDoc>, style: DocxStyle, out_path: String) -> Resul
                 .add_paragraph(
                     Paragraph::new()
                         .style("Heading1")
-                        .add_run(fonts(Run::new(), &style).bold().add_text(&doc.title)),
+                        .add_run(fonts(Run::new(), style).bold().add_text(&doc.title)),
                 )
                 .add_bookmark_end(bookmark_id);
             bookmark_id += 1;
@@ -146,7 +154,7 @@ pub fn write_docx(docs: Vec<IrDoc>, style: DocxStyle, out_path: String) -> Resul
             if !meta.is_empty() {
                 docx = docx.add_paragraph(
                     Paragraph::new().add_run(
-                        fonts(Run::new(), &style)
+                        fonts(Run::new(), style)
                             .size(half_pt(style.font_size_pt * 0.85))
                             .color(META_COLOR)
                             .add_text(meta),
@@ -156,7 +164,7 @@ pub fn write_docx(docs: Vec<IrDoc>, style: DocxStyle, out_path: String) -> Resul
         }
 
         let ctx = Ctx {
-            style: &style,
+            style,
             ids: &ids,
             content_width_emu,
         };
@@ -465,11 +473,11 @@ fn list(mut docx: Docx, ordered: bool, items: &[IrListItem], ctx: &Ctx, depth: u
     docx
 }
 
-fn table(docx: Docx, rows: &[Vec<IrCell>], ctx: &Ctx) -> Docx {
+fn table(docx: Docx, rows: &[IrRow], ctx: &Ctx) -> Docx {
     if rows.is_empty() {
         return docx;
     }
-    let columns = rows.iter().map(|r| r.len()).max().unwrap_or(1).max(1);
+    let columns = rows.iter().map(|r| r.cells.len()).max().unwrap_or(1).max(1);
     // 表格铺满正文宽度、列宽均分。光给 set_grid 不够 —— 不显式设 width + Fixed 布局，
     // Word 会按内容自动收窄，两列中文表会挤成窄条。
     let total = (ctx.content_width_emu / EMU_PER_TWIP) as usize;
@@ -480,6 +488,7 @@ fn table(docx: Docx, rows: &[Vec<IrCell>], ctx: &Ctx) -> Docx {
         .iter()
         .map(|row| {
             let cells: Vec<TableCell> = row
+                .cells
                 .iter()
                 .map(|cell| {
                     let mut tc = TableCell::new()
@@ -626,7 +635,7 @@ fn link_paragraph(text: &str, href: &str, ctx: &Ctx) -> Paragraph {
 }
 
 /// 读图并按正文宽度换算显示尺寸。任何一步失败都返回 None（跳过这张），
-/// 绝不 panic —— 本 crate 是 `panic = abort`。
+/// 绝不 panic —— 一次 panic 会废掉整次导出。
 fn image_run(path: &str, width_percent: Option<u32>, ctx: &Ctx) -> Option<Run> {
     let path = Path::new(path);
     if !path.is_file() {
@@ -661,6 +670,7 @@ fn image_run(path: &str, width_percent: Option<u32>, ctx: &Ctx) -> Option<Run> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use moodiary_doc::IrCell;
     use crate::fixture;
     use std::collections::HashMap;
     use std::io::Read;
@@ -731,7 +741,7 @@ mod tests {
             language: Some("dart".into()),
             text: "// 注释\nvoid main() { print(\"x\"); }".into(),
         }])];
-        write_docx(docs, test_style(), out.clone()).expect("导出应当成功");
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
 
         let xml = doc_xml(&unzip(&out));
         for (scope, hex) in [
@@ -755,7 +765,7 @@ mod tests {
             language: Some("没有这种语言".into()),
             text: "hello".into(),
         }])];
-        write_docx(docs, test_style(), out.clone()).expect("未知语言也要能导出");
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("未知语言也要能导出");
         assert!(doc_xml(&unzip(&out)).contains("hello"));
     }
 
@@ -811,7 +821,7 @@ mod tests {
             ],
         }];
 
-        write_docx(docs, test_style(), out.clone()).expect("导出应当成功");
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
 
         let parts = unzip(&out);
         let xml = doc_xml(&parts);
@@ -853,7 +863,7 @@ mod tests {
             },
         ])];
 
-        write_docx(docs, test_style(), out.clone()).expect("导出应当成功");
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
 
         let parts = unzip(&out);
         // zipper 会单独写一个 `word/media/` 目录条目，过滤时要排掉它。
@@ -911,7 +921,7 @@ mod tests {
             },
         ];
 
-        write_docx(docs, test_style(), out.clone()).expect("导出应当成功");
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
 
         let xml = doc_xml(&unzip(&out));
         assert!(
@@ -956,7 +966,7 @@ mod tests {
             },
         ])];
 
-        write_docx(docs, test_style(), out.clone()).expect("导出应当成功");
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
 
         let parts = unzip(&out);
         let xml = doc_xml(&parts);
@@ -979,19 +989,23 @@ mod tests {
 
         let docs = vec![fixture::doc(vec![IrBlock::Table {
             rows: vec![
-                vec![IrCell {
-                    header: true,
-                    colspan: 2,
-                    ..fixture::cell(vec![fixture::text_para("合并表头")])
-                }],
-                vec![
-                    fixture::cell(vec![fixture::text_para("甲")]),
-                    fixture::cell(vec![fixture::text_para("乙")]),
-                ],
+                IrRow {
+                    cells: vec![IrCell {
+                        header: true,
+                        colspan: 2,
+                        ..fixture::cell(vec![fixture::text_para("合并表头")])
+                    }],
+                },
+                IrRow {
+                    cells: vec![
+                        fixture::cell(vec![fixture::text_para("甲")]),
+                        fixture::cell(vec![fixture::text_para("乙")]),
+                    ],
+                },
             ],
         }])];
 
-        write_docx(docs, test_style(), out.clone()).expect("导出应当成功");
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
 
         let xml = doc_xml(&unzip(&out));
         assert!(xml.contains("<w:tbl>"), "应当产出真表格而不是纯文本");
@@ -1037,7 +1051,7 @@ mod tests {
             },
         ];
 
-        write_docx(docs, test_style(), out.clone()).expect("导出应当成功");
+        write_docx(docs, &test_style(), out.clone(), &|| false).expect("导出应当成功");
 
         let xml = doc_xml(&unzip(&out));
         assert_eq!(

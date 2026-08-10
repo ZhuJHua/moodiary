@@ -195,7 +195,7 @@ class TiptapToIr {
     Set<String> unsupported,
     ResolveMediaPath resolve,
   ) {
-    final rows = <List<IrCell>>[];
+    final rows = <IrRow>[];
     if (content is! List) return .table(rows: rows);
     for (final row in content) {
       if (row is! Map || row['type'] != 'tableRow') continue;
@@ -221,7 +221,7 @@ class TiptapToIr {
           );
         }
       }
-      rows.add(cells);
+      rows.add(IrRow(cells: cells));
     }
     return .table(rows: rows);
   }

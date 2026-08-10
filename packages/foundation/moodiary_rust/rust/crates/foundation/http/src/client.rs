@@ -62,6 +62,30 @@ fn android_tls_config() -> Result<&'static rustls::ClientConfig> {
 
 /// 收响应体。不走 `Response::bytes()`：那条路先把分块拼进 `BytesMut`，再 `to_vec()`
 /// 复制一遍整个 body。这里按 content-length 预分配后直接收进 `Vec`，整包只拷一次。
+/// 响应体边收边落盘，不在内存里攒整份 —— 媒体对象走这条。
+pub async fn write_body_to_file(resp: reqwest::Response, path: &str) -> anyhow::Result<()> {
+    use tokio::io::AsyncWriteExt;
+
+    let mut file = tokio::fs::File::create(path).await?;
+    let mut stream = resp.bytes_stream();
+    while let Some(chunk) = futures::StreamExt::next(&mut stream).await {
+        file.write_all(&chunk?).await?;
+    }
+    file.flush().await?;
+    Ok(())
+}
+
+/// 本地文件作为请求体，边读边发。返回 (body, 字节数) —— 调用方要显式带
+/// content-length，否则 reqwest 走 chunked，多数对象存储不收。
+pub async fn file_body(path: &str) -> anyhow::Result<(reqwest::Body, u64)> {
+    let file = tokio::fs::File::open(path).await?;
+    let len = file.metadata().await?.len();
+    Ok((
+        reqwest::Body::wrap_stream(tokio_util::io::ReaderStream::new(file)),
+        len,
+    ))
+}
+
 pub async fn read_body(resp: reqwest::Response) -> reqwest::Result<Vec<u8>> {
     let mut out = Vec::with_capacity(resp.content_length().unwrap_or(0) as usize);
     let mut stream = resp.bytes_stream();

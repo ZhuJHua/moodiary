@@ -36,6 +36,16 @@ impl S3Client {
         self.inner.write_object(key, data).await
     }
 
+    /// 落盘版读取，整份不进内存。远端不存在返回 false 且不建文件。
+    pub async fn read_object_to_file(&self, key: String, file_path: String) -> Result<bool> {
+        self.inner.read_object_to_file(key, file_path).await
+    }
+
+    /// 文件版写入，整份不进内存。
+    pub async fn write_object_file(&self, key: String, file_path: String) -> Result<()> {
+        self.inner.write_object_file(key, file_path).await
+    }
+
     /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
     /// false=远端已存在（412）。不支持条件 PUT 的实现会忽略该头、直接覆盖并返回 true ——
     /// 调用方（Dart 租约层）必须用「写后回读校验」兜底。

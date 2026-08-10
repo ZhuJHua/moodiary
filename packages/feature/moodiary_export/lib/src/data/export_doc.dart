@@ -14,6 +14,7 @@ export 'package:moodiary_rust/moodiary_rust.dart'
         IrBlock_Quote,
         IrBlock_Table,
         IrCell,
+        IrRow,
         IrDoc,
         IrListItem,
         IrSpan;

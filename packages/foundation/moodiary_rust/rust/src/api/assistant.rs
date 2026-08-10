@@ -4,9 +4,7 @@ use std::sync::Arc;
 
 use crate::frb_generated::StreamSink;
 
-pub use moodiary_assistant::{
-    RigChatMessage, RigEventKind, RigProviderConfig, RigStreamEvent, RigToolDef,
-};
+pub use moodiary_assistant::{RigChatMessage, RigProviderConfig, RigStreamEvent, RigToolDef};
 
 #[frb(mirror(RigProviderConfig))]
 pub struct _RigProviderConfig {
@@ -42,26 +40,18 @@ pub struct _RigToolDef {
     pub parameters_json: String,
 }
 
-/// 用「plain enum + 载荷字段」而非带数据的枚举变体，是为了让 FRB 生成普通 Dart
-/// 类，避开它对 freezed（项目当前钉在 pre-release 版）的版本门槛。
-#[frb(mirror(RigEventKind))]
-pub enum _RigEventKind {
-    TextDelta,
-    ReasoningDelta,
-    ToolCall,
-    Usage,
-}
-
 #[frb(mirror(RigStreamEvent))]
-pub struct _RigStreamEvent {
-    pub kind: RigEventKind,
-    pub text: String,
-    /// 仅 [RigEventKind::Usage] 事件有意义，其余为 0。
-    pub input_tokens: u32,
-    pub output_tokens: u32,
+pub enum _RigStreamEvent {
+    TextDelta(String),
+    ReasoningDelta(String),
+    ToolCall(String),
+    Usage { input_tokens: u32, output_tokens: u32 },
 }
 
 /// Dart 取消订阅会令 `sink.add` 失败，循环随即中断并取消在途请求。
+///
+/// 失败必须经 `sink.add_error` 下发：流函数的 `Err` 返回值走另一条 port，Dart 生成码
+/// 把它 `unawaited` 掉，`await for` 只会正常结束。
 pub async fn rig_chat_stream(
     sink: StreamSink<RigStreamEvent>,
     config: RigProviderConfig,
@@ -69,12 +59,19 @@ pub async fn rig_chat_stream(
     history: Vec<RigChatMessage>,
     tools: Vec<RigToolDef>,
     max_turns: u32,
-    tool_dispatch: impl Fn(String, String) -> DartFnFuture<String> + Send + Sync + 'static,
+    tool_dispatch: impl Fn(String, String) -> DartFnFuture<Result<String>> + Send + Sync + 'static,
 ) -> Result<()> {
-    let emit: moodiary_assistant::EmitFn = Arc::new(move |event| sink.add(event).is_ok());
-    let dispatch: moodiary_assistant::ToolDispatch =
-        Arc::new(move |name, args| Box::pin(tool_dispatch(name, args)));
-    moodiary_assistant::rig_chat_stream(
+    // 包 Arc 而非 sink.clone()：StreamSink 的 derive(Clone) 带了多余的 `T: Clone` 约束。
+    let sink = Arc::new(sink);
+    let emit_sink = sink.clone();
+    let emit: moodiary_assistant::EmitFn = Arc::new(move |event| emit_sink.add(event).is_ok());
+    // 回调必须声明成可失败：不可失败版本的生成代码会对 Dart 抛出的异常 `.expect`，
+    // 变成一次 Rust panic。这里只兜意料外的抛出，同样回灌模型而不中断对话。
+    let dispatch: moodiary_assistant::ToolDispatch = Arc::new(move |name, args| {
+        let call = tool_dispatch(name, args);
+        Box::pin(async move { call.await.unwrap_or_else(|e| format!("tool error: {e}")) })
+    });
+    if let Err(e) = moodiary_assistant::rig_chat_stream(
         emit,
         config,
         system_prompt,
@@ -84,4 +81,8 @@ pub async fn rig_chat_stream(
         dispatch,
     )
     .await
+    {
+        let _ = sink.add_error(e);
+    }
+    Ok(())
 }

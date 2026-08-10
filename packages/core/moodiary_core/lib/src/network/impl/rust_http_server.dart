@@ -41,6 +41,7 @@ class RustHttpServer extends IHttpServer {
           );
         }
       },
+      // 抛出不会击穿 FFI：Rust 侧把这个回调声明为可失败，异常会被解成 Err 后丢弃。
       onBodyProgress: (received, total) {
         onBodyProgress?.call(received, total < 0 ? null : total);
       },

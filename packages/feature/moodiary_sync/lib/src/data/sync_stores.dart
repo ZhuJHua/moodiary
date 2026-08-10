@@ -51,6 +51,10 @@ abstract interface class SyncMediaFiles {
   Future<void> write(String type, String filename, Uint8List bytes);
   Future<void> delete(String type, String filename);
 
+  /// 真实磁盘路径，供 Rust 直接读写；内存文件系统等 Rust 看不见的实现返回 null，
+  /// 调用方退回字节路径。
+  String? realPath(String type, String filename);
+
   /// 用新日记替换旧日记后，删除不再被引用的旧媒体（含视频缩略图）。
   Future<void> cleanUpReplaced(Diary oldDiary, Diary newDiary);
 }
@@ -139,6 +143,10 @@ class DiskSyncMediaFiles implements SyncMediaFiles {
   @override
   Future<Uint8List> read(String type, String filename) =>
       _file(type, filename).readAsBytes();
+
+  @override
+  String? realPath(String type, String filename) =>
+      _fs is LocalFileSystem ? _file(type, filename).path : null;
 
   @override
   Future<void> write(String type, String filename, Uint8List bytes) async {

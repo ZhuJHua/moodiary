@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   // 仅覆盖明文路径与密文识别 —— 加密走 Rust AES-GCM，无法在 flutter test 中跑。
@@ -56,6 +58,45 @@ void main() {
         SyncCipher.isCipherText(.fromList(utf8.encode('MD-ENC'))),
         isFalse,
       );
+    });
+  });
+
+  // 文件版的加解密本体在 Rust（moodiary-crypto 那侧有格式互通测试），这里只覆盖
+  // 不需要 FFI 的分支：明文直通与「密文但无密钥」。
+  group('SyncCipher file path', () {
+    late Directory dir;
+
+    setUp(() async {
+      dir = await Directory.systemTemp.createTemp('codec-file-test');
+    });
+
+    tearDown(() => dir.delete(recursive: true));
+
+    test('plaintext mode copies the file untouched both ways', () async {
+      const cipher = SyncCipher.plaintext;
+      final src = File(p.join(dir.path, 'src.bin'));
+      final payload = Uint8List.fromList(List.generate(4096, (i) => i % 256));
+      await src.writeAsBytes(payload);
+
+      final enc = p.join(dir.path, 'enc.bin');
+      await cipher.encryptFileTo(src.path, enc);
+      expect(await File(enc).readAsBytes(), payload);
+
+      final dec = p.join(dir.path, 'dec.bin');
+      await cipher.decryptFileTo(enc, dec);
+      expect(await File(dec).readAsBytes(), payload);
+    });
+
+    test('ciphertext without a key is rejected, not silently copied', () async {
+      const cipher = SyncCipher.plaintext;
+      final enc = File(p.join(dir.path, 'enc.bin'));
+      await enc.writeAsBytes([...utf8.encode(SyncCipher.magic), 1, 2, 3, 4]);
+
+      await expectLater(
+        cipher.decryptFileTo(enc.path, p.join(dir.path, 'out.bin')),
+        throwsA(isA<SyncException>()),
+      );
+      expect(File(p.join(dir.path, 'out.bin')).existsSync(), isFalse);
     });
   });
 }

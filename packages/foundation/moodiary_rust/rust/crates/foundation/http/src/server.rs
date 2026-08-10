@@ -642,6 +642,7 @@ mod tests {
                 },
                 dir.join("src.bin").to_string_lossy().into_owned(),
                 move |s, t| sent_in_progress.lock().unwrap().push((s, t)),
+                || false,
             )
             .await
             .unwrap();

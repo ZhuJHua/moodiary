@@ -1,7 +1,7 @@
 use anyhow::Result;
 use flutter_rust_bridge::frb;
 
-use crate::frb_generated::StreamSink;
+use crate::frb_generated::{FLUTTER_RUST_BRIDGE_HANDLER, StreamSink};
 
 pub use moodiary_graph::GraphLayoutParams;
 
@@ -38,15 +38,33 @@ pub struct _GraphLayoutParams {
 
 /// `edges` 为 `[src0,dst0,src1,dst1,...]` 密集下标对；`initial_positions` 为空则用
 /// 黄金角螺旋确定性播种。每帧向 `sink` 推 `[x0,y0,...]`，函数返回即沉降完成。
-pub fn layout_graph_stream(
+pub async fn layout_graph_stream(
     node_count: u32,
     edges: Vec<i32>,
     initial_positions: Vec<f32>,
     params: GraphLayoutParams,
     sink: StreamSink<Vec<f32>>,
 ) -> Result<()> {
-    // sink.add 报错 = 下游已取消（离页 / 换筛选），内核据此立刻收尾。
-    moodiary_graph::layout_graph_stream(node_count, edges, initial_positions, params, |frame| {
-        sink.add(frame).is_ok()
-    })
+    let error_sink = sink.clone();
+    // 仿真循环会在帧间 sleep，占着 FRB 那个固定 num_cpus 的池不划算，挪到 tokio 的
+    // 弹性 blocking 池。
+    let result = flutter_rust_bridge::spawn_blocking_with(
+        move || {
+            // sink.add 报错 = 下游已取消（离页 / 换筛选），内核据此立刻收尾。
+            moodiary_graph::layout_graph_stream(
+                node_count,
+                edges,
+                initial_positions,
+                params,
+                |frame| sink.add(frame).is_ok(),
+            )
+        },
+        FLUTTER_RUST_BRIDGE_HANDLER.thread_pool(),
+    )
+    .await?;
+    // 见 assistant.rs：Err 返回值到不了 Dart 的流，必须经 sink 下发。
+    if let Err(e) = result {
+        let _ = error_sink.add_error(e);
+    }
+    Ok(())
 }

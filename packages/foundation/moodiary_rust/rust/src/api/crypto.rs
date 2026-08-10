@@ -22,6 +22,27 @@ impl Aes {
     pub fn decrypt(key: Vec<u8>, encrypted_data: Vec<u8>) -> Result<Vec<u8>> {
         moodiary_crypto::aes::decrypt(key, encrypted_data)
     }
+
+    /// 文件到文件，明文密文都不过桥。[prefix] 原样写在最前面（同步层的 magic 头）。
+    /// 字节布局与 [Self::encrypt] 一致，两条路互通。
+    pub fn encrypt_file(
+        key: Vec<u8>,
+        in_path: String,
+        out_path: String,
+        prefix: Vec<u8>,
+    ) -> Result<()> {
+        moodiary_crypto::aes::encrypt_file(key, &in_path, &out_path, &prefix)
+    }
+
+    /// [skip_prefix] = 写入时 prefix 的字节数。
+    pub fn decrypt_file(
+        key: Vec<u8>,
+        in_path: String,
+        out_path: String,
+        skip_prefix: u64,
+    ) -> Result<()> {
+        moodiary_crypto::aes::decrypt_file(key, &in_path, &out_path, skip_prefix)
+    }
 }
 
 #[frb(opaque)]

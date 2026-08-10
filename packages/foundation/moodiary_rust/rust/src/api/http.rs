@@ -1,5 +1,7 @@
+use anyhow::anyhow;
 use flutter_rust_bridge::frb;
 
+use crate::api::cancel::CancelToken;
 use crate::frb_generated::StreamSink;
 
 pub use moodiary_http::request::{
@@ -109,9 +111,10 @@ impl HttpClient {
         sink: StreamSink<UploadEvent>,
         options: RequestOptions,
         file_path: String,
+        cancel: &CancelToken,
     ) -> Result<(), HttpError> {
         let progress = sink.clone();
-        let (response, total) = self
+        let uploaded = self
             .inner
             .upload_file(options, file_path, move |sent, total| {
                 let _ = progress.add(UploadEvent {
@@ -119,13 +122,22 @@ impl HttpClient {
                     total,
                     response: None,
                 });
-            })
-            .await?;
-        let _ = sink.add(UploadEvent {
-            sent: total,
-            total,
-            response: Some(response),
-        });
+            }, cancel.checker())
+            .await;
+        match uploaded {
+            Ok((response, total)) => {
+                let _ = sink.add(UploadEvent {
+                    sent: total,
+                    total,
+                    response: Some(response),
+                });
+            }
+            // 见 assistant.rs。sink 的错误编解码固定是 AnyhowException，装不下
+            // HttpError 本体，只带文本。
+            Err(e) => {
+                let _ = sink.add_error(anyhow!("{}", e.message));
+            }
+        }
         Ok(())
     }
 }

@@ -35,6 +35,12 @@ pub struct IrListItem {
     pub checked: Option<bool>,
 }
 
+/// 表格的一行。包一层具名结构而不是 `Vec<Vec<IrCell>>`：FRB 的 CST 编解码器
+/// （full_dep: true）生成嵌套列表时会漏掉内层的 fill 函数，编译不过。
+pub struct IrRow {
+    pub cells: Vec<IrCell>,
+}
+
 pub struct IrCell {
     pub children: Vec<IrBlock>,
     pub colspan: u32,
@@ -79,7 +85,7 @@ pub enum IrBlock {
         cover_path: Option<String>,
     },
     Table {
-        rows: Vec<Vec<IrCell>>,
+        rows: Vec<IrRow>,
     },
 }
 
