@@ -80,7 +80,7 @@ pub enum _IrBlock {
         /// 正文列宽百分比上限（25/50/75/100）。
         width_percent: Option<u32>,
         /// 粘贴进来的外链图，导出时不下载、只当链接处理。
-        external: bool,
+        is_external: bool,
     },
     Media {
         kind: String,

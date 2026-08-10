@@ -286,7 +286,7 @@ class MarkdownWriter {
 
   static String _image(IrBlock_Image img, MarkdownOptions o) {
     final alt = _escape(img.alt ?? '');
-    if (img.external_) return '![$alt](${img.path})';
+    if (img.isExternal) return '![$alt](${img.path})';
     final name = img.path.split(RegExp(r'[/\\]')).last;
     final target = switch (o.mediaMode) {
       .relative => '${o.assetsDir}/$name',

@@ -36,7 +36,7 @@ sealed class IrBlock with _$IrBlock {
     int? widthPercent,
 
     /// 粘贴进来的外链图，导出时不下载、只当链接处理。
-    required bool external_,
+    required bool isExternal,
   }) = IrBlock_Image;
   const factory IrBlock.media({
     required String kind,

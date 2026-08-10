@@ -21,4 +21,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner: 2.15.1
+  # full_dep: true 的 codegen 走 ffigen。**必须钉 15.x**，理由见
+  # flutter_rust_bridge.yaml；FRB 自己的示例也钉 ^15.0.0。
+  ffigen: 15.0.0
   freezed: 3.2.6-dev.1

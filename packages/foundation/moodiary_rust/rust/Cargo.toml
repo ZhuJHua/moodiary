@@ -104,7 +104,11 @@ moodiary-text = { workspace = true }
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
 # 不要加 panic = "abort"：FRB 靠 catch_unwind 把 Rust panic 转成 Dart 异常，abort
-# 会让第三方 crate（typst / image / zip / lofty）在脏输入上直接杀进程。
+# 会让第三方 crate（typst / image / zip / lofty）在脏输入上直接杀进程，而 Dart 侧
+# 现成的 try/catch 本来兜得住。代价实测（arm64 release）：.so 42.52 → 46.00 MB、
+# APK 40.2 → 41.6 MB，大头是 .text 里的 landing pad 而非 unwind 表本身。
+# 注：改 [profile.*] 后必须 flutter clean 才会真正重编——构建钩子与 Gradle 两层都会
+# 把上一次的 .so 当作最新，光删 .dart_tool/hooks_runner/moodiary_rust 不够。
 [profile.release]
 opt-level = 3
 lto = "thin"

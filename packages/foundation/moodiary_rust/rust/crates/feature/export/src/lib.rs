@@ -54,7 +54,7 @@ pub(crate) mod fixture {
             path: path.into(),
             alt: None,
             width_percent: None,
-            external: false,
+            is_external: false,
         }
     }
 }

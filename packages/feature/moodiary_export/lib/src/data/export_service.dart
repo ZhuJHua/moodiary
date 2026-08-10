@@ -578,7 +578,7 @@ class _MediaStage {
   Future<IrBlock?> _stageBlock(IrBlock block) async {
     switch (block) {
       case IrBlock_Image():
-        if (block.external_) return block;
+        if (block.isExternal) return block;
         if (_policy == .placeholder) return null;
         final staged = await _stageImage(block.path);
         if (staged == null) {
@@ -589,7 +589,7 @@ class _MediaStage {
           path: staged,
           alt: block.alt,
           widthPercent: block.widthPercent,
-          external_: false,
+          isExternal: false,
         );
 
       case IrBlock_Media():

@@ -246,14 +246,14 @@ class TiptapToIr {
         path: src,
         alt: alt is String ? alt : null,
         widthPercent: wp is int ? wp : null,
-        external_: true,
+        isExternal: true,
       );
     }
     return .image(
       path: resolve('image', src),
       alt: alt is String ? alt : null,
       widthPercent: wp is int ? wp : null,
-      external_: false,
+      isExternal: false,
     );
   }
 

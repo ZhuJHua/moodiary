@@ -20,7 +20,7 @@ Future<void> writePdf({
   cancel: cancel,
 );
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PdfBuilder>>
 abstract class PdfBuilder implements RustOpaqueInterface {
   Future<void> add({required IrDoc doc});
 

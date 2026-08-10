@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>>
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Aes>>
 abstract class Aes implements RustOpaqueInterface {
   static Future<Uint8List> decrypt({
     required List<int> key,
@@ -63,7 +63,7 @@ abstract class Aes implements RustOpaqueInterface {
   );
 }
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>>
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Argon2>>
 abstract class Argon2 implements RustOpaqueInterface {
   static Future<String> hash({required String password}) =>
       RustLib.instance.api.crateApiCryptoArgon2Hash(password: password);

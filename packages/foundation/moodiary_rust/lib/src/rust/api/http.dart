@@ -7,7 +7,9 @@ import '../frb_generated.dart';
 import 'cancel.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpClient>>
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `from`
+
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<HttpClient>>
 abstract class HttpClient implements RustOpaqueInterface {
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<HttpClient> newInstance({required ClientSettings settings}) =>
@@ -90,6 +92,9 @@ class HttpError implements FrbException {
           message == other.message;
 }
 
+/// 错误类型必须由桥 crate 自己声明、不能 mirror 子 crate 的：DCO 编解码下
+/// `transform_result_dco::<_, _, E>` 要的是裸类型的 `DartCObject: From<E>`，而孤儿规则
+/// 不允许我们给别的 crate 的类型 impl 外部 trait。形状与 [moodiary_http] 的一致。
 enum HttpErrorKind {
   timeout,
   connect,

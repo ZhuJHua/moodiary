@@ -312,8 +312,8 @@ impl<'a> Markup<'a> {
                 path,
                 alt,
                 width_percent,
-                external,
-            } => self.image(path, alt.as_deref(), *width_percent, *external),
+                is_external,
+            } => self.image(path, alt.as_deref(), *width_percent, *is_external),
 
             IrBlock::Media {
                 kind,
@@ -421,8 +421,8 @@ impl<'a> Markup<'a> {
         self.out.push_str("\n)\n");
     }
 
-    fn image(&mut self, path: &str, alt: Option<&str>, width_percent: Option<u32>, external: bool) {
-        if external {
+    fn image(&mut self, path: &str, alt: Option<&str>, width_percent: Option<u32>, is_external: bool) {
+        if is_external {
             // 外链图不下载（导出必须离线可用），退化成链接文字。
             let _ = writeln!(
                 self.out,

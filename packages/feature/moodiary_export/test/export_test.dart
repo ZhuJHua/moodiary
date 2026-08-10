@@ -82,12 +82,12 @@ void main() {
 
       final local = result.blocks[0] as IrBlock_Image;
       expect(local.path, '/data/image/image-abc.webp');
-      expect(local.external_, isFalse);
+      expect(local.isExternal, isFalse);
       expect(local.widthPercent, 50);
 
       final external = result.blocks[1] as IrBlock_Image;
       expect(external.path, 'https://example.com/a.png');
-      expect(external.external_, isTrue);
+      expect(external.isExternal, isTrue);
     });
 
     test('video 派生封面路径，audio 不派生', () {

@@ -140,7 +140,7 @@ return table(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<IrSpan> spans)?  paragraph,TResult Function( int level,  List<IrSpan> spans)?  heading,TResult Function( bool ordered,  int start,  List<IrListItem> items)?  list,TResult Function( List<IrBlock> children)?  quote,TResult Function( String? language,  String text)?  code,TResult Function()?  divider,TResult Function( String path,  String? alt,  int? widthPercent,  bool external_)?  image,TResult Function( String kind,  String filename,  String path,  String? coverPath)?  media,TResult Function( List<IrRow> rows)?  table,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<IrSpan> spans)?  paragraph,TResult Function( int level,  List<IrSpan> spans)?  heading,TResult Function( bool ordered,  int start,  List<IrListItem> items)?  list,TResult Function( List<IrBlock> children)?  quote,TResult Function( String? language,  String text)?  code,TResult Function()?  divider,TResult Function( String path,  String? alt,  int? widthPercent,  bool isExternal)?  image,TResult Function( String kind,  String filename,  String path,  String? coverPath)?  media,TResult Function( List<IrRow> rows)?  table,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case IrBlock_Paragraph() when paragraph != null:
 return paragraph(_that.spans);case IrBlock_Heading() when heading != null:
@@ -149,7 +149,7 @@ return list(_that.ordered,_that.start,_that.items);case IrBlock_Quote() when quo
 return quote(_that.children);case IrBlock_Code() when code != null:
 return code(_that.language,_that.text);case IrBlock_Divider() when divider != null:
 return divider();case IrBlock_Image() when image != null:
-return image(_that.path,_that.alt,_that.widthPercent,_that.external_);case IrBlock_Media() when media != null:
+return image(_that.path,_that.alt,_that.widthPercent,_that.isExternal);case IrBlock_Media() when media != null:
 return media(_that.kind,_that.filename,_that.path,_that.coverPath);case IrBlock_Table() when table != null:
 return table(_that.rows);case _:
   return orElse();
@@ -169,7 +169,7 @@ return table(_that.rows);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<IrSpan> spans)  paragraph,required TResult Function( int level,  List<IrSpan> spans)  heading,required TResult Function( bool ordered,  int start,  List<IrListItem> items)  list,required TResult Function( List<IrBlock> children)  quote,required TResult Function( String? language,  String text)  code,required TResult Function()  divider,required TResult Function( String path,  String? alt,  int? widthPercent,  bool external_)  image,required TResult Function( String kind,  String filename,  String path,  String? coverPath)  media,required TResult Function( List<IrRow> rows)  table,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<IrSpan> spans)  paragraph,required TResult Function( int level,  List<IrSpan> spans)  heading,required TResult Function( bool ordered,  int start,  List<IrListItem> items)  list,required TResult Function( List<IrBlock> children)  quote,required TResult Function( String? language,  String text)  code,required TResult Function()  divider,required TResult Function( String path,  String? alt,  int? widthPercent,  bool isExternal)  image,required TResult Function( String kind,  String filename,  String path,  String? coverPath)  media,required TResult Function( List<IrRow> rows)  table,}) {final _that = this;
 switch (_that) {
 case IrBlock_Paragraph():
 return paragraph(_that.spans);case IrBlock_Heading():
@@ -178,7 +178,7 @@ return list(_that.ordered,_that.start,_that.items);case IrBlock_Quote():
 return quote(_that.children);case IrBlock_Code():
 return code(_that.language,_that.text);case IrBlock_Divider():
 return divider();case IrBlock_Image():
-return image(_that.path,_that.alt,_that.widthPercent,_that.external_);case IrBlock_Media():
+return image(_that.path,_that.alt,_that.widthPercent,_that.isExternal);case IrBlock_Media():
 return media(_that.kind,_that.filename,_that.path,_that.coverPath);case IrBlock_Table():
 return table(_that.rows);}
 }
@@ -194,7 +194,7 @@ return table(_that.rows);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<IrSpan> spans)?  paragraph,TResult? Function( int level,  List<IrSpan> spans)?  heading,TResult? Function( bool ordered,  int start,  List<IrListItem> items)?  list,TResult? Function( List<IrBlock> children)?  quote,TResult? Function( String? language,  String text)?  code,TResult? Function()?  divider,TResult? Function( String path,  String? alt,  int? widthPercent,  bool external_)?  image,TResult? Function( String kind,  String filename,  String path,  String? coverPath)?  media,TResult? Function( List<IrRow> rows)?  table,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<IrSpan> spans)?  paragraph,TResult? Function( int level,  List<IrSpan> spans)?  heading,TResult? Function( bool ordered,  int start,  List<IrListItem> items)?  list,TResult? Function( List<IrBlock> children)?  quote,TResult? Function( String? language,  String text)?  code,TResult? Function()?  divider,TResult? Function( String path,  String? alt,  int? widthPercent,  bool isExternal)?  image,TResult? Function( String kind,  String filename,  String path,  String? coverPath)?  media,TResult? Function( List<IrRow> rows)?  table,}) {final _that = this;
 switch (_that) {
 case IrBlock_Paragraph() when paragraph != null:
 return paragraph(_that.spans);case IrBlock_Heading() when heading != null:
@@ -203,7 +203,7 @@ return list(_that.ordered,_that.start,_that.items);case IrBlock_Quote() when quo
 return quote(_that.children);case IrBlock_Code() when code != null:
 return code(_that.language,_that.text);case IrBlock_Divider() when divider != null:
 return divider();case IrBlock_Image() when image != null:
-return image(_that.path,_that.alt,_that.widthPercent,_that.external_);case IrBlock_Media() when media != null:
+return image(_that.path,_that.alt,_that.widthPercent,_that.isExternal);case IrBlock_Media() when media != null:
 return media(_that.kind,_that.filename,_that.path,_that.coverPath);case IrBlock_Table() when table != null:
 return table(_that.rows);case _:
   return null;
@@ -611,7 +611,7 @@ String toString() {
 
 
 class IrBlock_Image extends IrBlock {
-  const IrBlock_Image({required this.path, this.alt, this.widthPercent, required this.external_}): super._();
+  const IrBlock_Image({required this.path, this.alt, this.widthPercent, required this.isExternal}): super._();
   
 
  final  String path;
@@ -619,7 +619,7 @@ class IrBlock_Image extends IrBlock {
 /// 正文列宽百分比上限（25/50/75/100）。
  final  int? widthPercent;
 /// 粘贴进来的外链图，导出时不下载、只当链接处理。
- final  bool external_;
+ final  bool isExternal;
 
 /// Create a copy of IrBlock
 /// with the given fields replaced by the non-null parameter values.
@@ -631,16 +631,16 @@ $IrBlock_ImageCopyWith<IrBlock_Image> get copyWith => _$IrBlock_ImageCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Image&&(identical(other.path, path) || other.path == path)&&(identical(other.alt, alt) || other.alt == alt)&&(identical(other.widthPercent, widthPercent) || other.widthPercent == widthPercent)&&(identical(other.external_, external_) || other.external_ == external_));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IrBlock_Image&&(identical(other.path, path) || other.path == path)&&(identical(other.alt, alt) || other.alt == alt)&&(identical(other.widthPercent, widthPercent) || other.widthPercent == widthPercent)&&(identical(other.isExternal, isExternal) || other.isExternal == isExternal));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,path,alt,widthPercent,external_);
+int get hashCode => Object.hash(runtimeType,path,alt,widthPercent,isExternal);
 
 @override
 String toString() {
-  return 'IrBlock.image(path: $path, alt: $alt, widthPercent: $widthPercent, external_: $external_)';
+  return 'IrBlock.image(path: $path, alt: $alt, widthPercent: $widthPercent, isExternal: $isExternal)';
 }
 
 
@@ -651,7 +651,7 @@ abstract mixin class $IrBlock_ImageCopyWith<$Res> implements $IrBlockCopyWith<$R
   factory $IrBlock_ImageCopyWith(IrBlock_Image value, $Res Function(IrBlock_Image) _then) = _$IrBlock_ImageCopyWithImpl;
 @useResult
 $Res call({
- String path, String? alt, int? widthPercent, bool external_
+ String path, String? alt, int? widthPercent, bool isExternal
 });
 
 
@@ -668,12 +668,12 @@ class _$IrBlock_ImageCopyWithImpl<$Res>
 
 /// Create a copy of IrBlock
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? path = null,Object? alt = freezed,Object? widthPercent = freezed,Object? external_ = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? path = null,Object? alt = freezed,Object? widthPercent = freezed,Object? isExternal = null,}) {
   return _then(IrBlock_Image(
 path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as String,alt: freezed == alt ? _self.alt : alt // ignore: cast_nullable_to_non_nullable
 as String?,widthPercent: freezed == widthPercent ? _self.widthPercent : widthPercent // ignore: cast_nullable_to_non_nullable
-as int?,external_: null == external_ ? _self.external_ : external_ // ignore: cast_nullable_to_non_nullable
+as int?,isExternal: null == isExternal ? _self.isExternal : isExternal // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

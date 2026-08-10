@@ -377,10 +377,10 @@ fn block(docx: Docx, block: &IrBlock, ctx: &Ctx, depth: usize) -> Docx {
         IrBlock::Image {
             path,
             width_percent,
-            external,
+            is_external,
             ..
         } => {
-            if *external {
+            if *is_external {
                 // 外链图不下载（导出必须离线可用），退化成链接文字。
                 return docx.add_paragraph(link_paragraph(path, path, ctx));
             }
@@ -852,14 +852,14 @@ mod tests {
                 path: jpeg,
                 alt: None,
                 width_percent: Some(50),
-                external: false,
+                is_external: false,
             },
             fixture::image("/nowhere/missing.jpg"),
             IrBlock::Image {
                 path: "https://example.com/a.png".into(),
                 alt: None,
                 width_percent: None,
-                external: true,
+                is_external: true,
             },
         ])];
 

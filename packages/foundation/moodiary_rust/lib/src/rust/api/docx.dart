@@ -20,7 +20,7 @@ Future<void> writeDocx({
   cancel: cancel,
 );
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DocxBuilder>>
 abstract class DocxBuilder implements RustOpaqueInterface {
   Future<void> add({required IrDoc doc});
 

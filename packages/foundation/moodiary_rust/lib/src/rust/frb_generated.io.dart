@@ -319,17 +319,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<Float32List> dco_decode_StreamSink_list_prim_f_32_strict_Sse(
+  RustStreamSink<Float32List> dco_decode_StreamSink_list_prim_f_32_strict_Dco(
     dynamic raw,
   );
 
   @protected
-  RustStreamSink<RigStreamEvent> dco_decode_StreamSink_rig_stream_event_Sse(
+  RustStreamSink<RigStreamEvent> dco_decode_StreamSink_rig_stream_event_Dco(
     dynamic raw,
   );
 
   @protected
-  RustStreamSink<UploadEvent> dco_decode_StreamSink_upload_event_Sse(
+  RustStreamSink<UploadEvent> dco_decode_StreamSink_upload_event_Dco(
     dynamic raw,
   );
 
@@ -801,17 +801,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  RustStreamSink<Float32List> sse_decode_StreamSink_list_prim_f_32_strict_Sse(
+  RustStreamSink<Float32List> sse_decode_StreamSink_list_prim_f_32_strict_Dco(
     SseDeserializer deserializer,
   );
 
   @protected
-  RustStreamSink<RigStreamEvent> sse_decode_StreamSink_rig_stream_event_Sse(
+  RustStreamSink<RigStreamEvent> sse_decode_StreamSink_rig_stream_event_Dco(
     SseDeserializer deserializer,
   );
 
   @protected
-  RustStreamSink<UploadEvent> sse_decode_StreamSink_upload_event_Sse(
+  RustStreamSink<UploadEvent> sse_decode_StreamSink_upload_event_Dco(
     SseDeserializer deserializer,
   );
 
@@ -1094,6 +1094,1209 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_AnyhowException(
+    AnyhowException raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    throw UnimplementedError();
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_record_string_f_32> cst_encode_Map_String_f_32_None(
+    Map<String, double> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_list_record_string_f_32(
+      raw.entries.map((e) => (e.key, e.value)).toList(),
+    );
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict>
+  cst_encode_StreamSink_list_prim_f_32_strict_Dco(
+    RustStreamSink<Float32List> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_String(
+      raw.setupAndSerialize(
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_f_32_strict,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+      ),
+    );
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict>
+  cst_encode_StreamSink_rig_stream_event_Dco(
+    RustStreamSink<RigStreamEvent> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_String(
+      raw.setupAndSerialize(
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_rig_stream_event,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+      ),
+    );
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict>
+  cst_encode_StreamSink_upload_event_Dco(RustStreamSink<UploadEvent> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_String(
+      raw.setupAndSerialize(
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_upload_event,
+          decodeErrorData: dco_decode_AnyhowException,
+        ),
+      ),
+    );
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_String(String raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_list_prim_u_8_strict(utf8.encoder.convert(raw));
+  }
+
+  @protected
+  ffi.Pointer<ffi.Bool> cst_encode_box_autoadd_bool(bool raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_bool(cst_encode_bool(raw));
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_client_settings> cst_encode_box_autoadd_client_settings(
+    ClientSettings raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_client_settings();
+    cst_api_fill_to_wire_client_settings(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<ffi.Int32> cst_encode_box_autoadd_compress_format(
+    CompressFormat raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_compress_format(
+      cst_encode_compress_format(raw),
+    );
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_compress_spec> cst_encode_box_autoadd_compress_spec(
+    CompressSpec raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_compress_spec();
+    cst_api_fill_to_wire_compress_spec(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_docx_style> cst_encode_box_autoadd_docx_style(
+    DocxStyle raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_docx_style();
+    cst_api_fill_to_wire_docx_style(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_graph_layout_params>
+  cst_encode_box_autoadd_graph_layout_params(GraphLayoutParams raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_graph_layout_params();
+    cst_api_fill_to_wire_graph_layout_params(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_http_response> cst_encode_box_autoadd_http_response(
+    HttpResponse raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_http_response();
+    cst_api_fill_to_wire_http_response(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<ffi.Int64> cst_encode_box_autoadd_i_64(PlatformInt64 raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_i_64(cst_encode_i_64(raw));
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_ir_doc> cst_encode_box_autoadd_ir_doc(IrDoc raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_ir_doc();
+    cst_api_fill_to_wire_ir_doc(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_pdf_style> cst_encode_box_autoadd_pdf_style(
+    PdfStyle raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_pdf_style();
+    cst_api_fill_to_wire_pdf_style(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_request_options> cst_encode_box_autoadd_request_options(
+    RequestOptions raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_request_options();
+    cst_api_fill_to_wire_request_options(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_rig_provider_config>
+  cst_encode_box_autoadd_rig_provider_config(RigProviderConfig raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ptr = wire.cst_new_box_autoadd_rig_provider_config();
+    cst_api_fill_to_wire_rig_provider_config(raw, ptr.ref);
+    return ptr;
+  }
+
+  @protected
+  ffi.Pointer<ffi.Uint16> cst_encode_box_autoadd_u_16(int raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_u_16(cst_encode_u_16(raw));
+  }
+
+  @protected
+  ffi.Pointer<ffi.Uint32> cst_encode_box_autoadd_u_32(int raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_u_32(cst_encode_u_32(raw));
+  }
+
+  @protected
+  ffi.Pointer<ffi.Uint8> cst_encode_box_autoadd_u_8(int raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return wire.cst_new_box_autoadd_u_8(cst_encode_u_8(raw));
+  }
+
+  @protected
+  int cst_encode_i_64(PlatformInt64 raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.toInt();
+  }
+
+  @protected
+  int cst_encode_isize(PlatformInt64 raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.toInt();
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_String> cst_encode_list_String(List<String> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_String(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      ans.ref.ptr[i] = cst_encode_String(raw[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_ir_block> cst_encode_list_ir_block(
+    List<IrBlock> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_ir_block(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_ir_block(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_ir_cell> cst_encode_list_ir_cell(List<IrCell> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_ir_cell(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_ir_cell(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_ir_doc> cst_encode_list_ir_doc(List<IrDoc> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_ir_doc(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_ir_doc(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_ir_list_item> cst_encode_list_ir_list_item(
+    List<IrListItem> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_ir_list_item(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_ir_list_item(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_ir_row> cst_encode_list_ir_row(List<IrRow> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_ir_row(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_ir_row(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_ir_span> cst_encode_list_ir_span(List<IrSpan> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_ir_span(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_ir_span(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_key_value> cst_encode_list_key_value(
+    List<KeyValue> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_key_value(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_key_value(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_f_32_loose> cst_encode_list_prim_f_32_loose(
+    List<double> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_prim_f_32_loose(raw.length);
+    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_f_32_strict> cst_encode_list_prim_f_32_strict(
+    Float32List raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_prim_f_32_strict(raw.length);
+    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_i_32_loose> cst_encode_list_prim_i_32_loose(
+    List<int> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_prim_i_32_loose(raw.length);
+    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_i_32_strict> cst_encode_list_prim_i_32_strict(
+    Int32List raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_prim_i_32_strict(raw.length);
+    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_loose> cst_encode_list_prim_u_8_loose(
+    List<int> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_prim_u_8_loose(raw.length);
+    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_list_prim_u_8_strict(
+    Uint8List raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_prim_u_8_strict(raw.length);
+    ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_record_string_f_32>
+  cst_encode_list_record_string_f_32(List<(String, double)> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_record_string_f_32(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_record_string_f_32(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_rig_chat_message> cst_encode_list_rig_chat_message(
+    List<RigChatMessage> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_rig_chat_message(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_rig_chat_message(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_rig_tool_def> cst_encode_list_rig_tool_def(
+    List<RigToolDef> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_rig_tool_def(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_rig_tool_def(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_tokenize_result> cst_encode_list_tokenize_result(
+    List<TokenizeResult> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_tokenize_result(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_tokenize_result(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_encode_opt_String(
+    String? raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_String(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Bool> cst_encode_opt_box_autoadd_bool(bool? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_bool(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Int32> cst_encode_opt_box_autoadd_compress_format(
+    CompressFormat? raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null
+        ? ffi.nullptr
+        : cst_encode_box_autoadd_compress_format(raw);
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_http_response> cst_encode_opt_box_autoadd_http_response(
+    HttpResponse? raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null
+        ? ffi.nullptr
+        : cst_encode_box_autoadd_http_response(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Int64> cst_encode_opt_box_autoadd_i_64(PlatformInt64? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_i_64(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Uint16> cst_encode_opt_box_autoadd_u_16(int? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_16(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Uint32> cst_encode_opt_box_autoadd_u_32(int? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_32(raw);
+  }
+
+  @protected
+  ffi.Pointer<ffi.Uint8> cst_encode_opt_box_autoadd_u_8(int? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_u_8(raw);
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_prim_u_8_strict>
+  cst_encode_opt_list_prim_u_8_strict(Uint8List? raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw == null ? ffi.nullptr : cst_encode_list_prim_u_8_strict(raw);
+  }
+
+  @protected
+  int cst_encode_u_64(BigInt raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.toSigned(64).toInt();
+  }
+
+  @protected
+  int cst_encode_usize(BigInt raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.toSigned(64).toInt();
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_client_settings(
+    ClientSettings apiObj,
+    ffi.Pointer<wire_cst_client_settings> wireObj,
+  ) {
+    cst_api_fill_to_wire_client_settings(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_compress_spec(
+    CompressSpec apiObj,
+    ffi.Pointer<wire_cst_compress_spec> wireObj,
+  ) {
+    cst_api_fill_to_wire_compress_spec(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_docx_style(
+    DocxStyle apiObj,
+    ffi.Pointer<wire_cst_docx_style> wireObj,
+  ) {
+    cst_api_fill_to_wire_docx_style(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_graph_layout_params(
+    GraphLayoutParams apiObj,
+    ffi.Pointer<wire_cst_graph_layout_params> wireObj,
+  ) {
+    cst_api_fill_to_wire_graph_layout_params(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_http_response(
+    HttpResponse apiObj,
+    ffi.Pointer<wire_cst_http_response> wireObj,
+  ) {
+    cst_api_fill_to_wire_http_response(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_ir_doc(
+    IrDoc apiObj,
+    ffi.Pointer<wire_cst_ir_doc> wireObj,
+  ) {
+    cst_api_fill_to_wire_ir_doc(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_pdf_style(
+    PdfStyle apiObj,
+    ffi.Pointer<wire_cst_pdf_style> wireObj,
+  ) {
+    cst_api_fill_to_wire_pdf_style(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_request_options(
+    RequestOptions apiObj,
+    ffi.Pointer<wire_cst_request_options> wireObj,
+  ) {
+    cst_api_fill_to_wire_request_options(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_box_autoadd_rig_provider_config(
+    RigProviderConfig apiObj,
+    ffi.Pointer<wire_cst_rig_provider_config> wireObj,
+  ) {
+    cst_api_fill_to_wire_rig_provider_config(apiObj, wireObj.ref);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_client_settings(
+    ClientSettings apiObj,
+    wire_cst_client_settings wireObj,
+  ) {
+    wireObj.base_url = cst_encode_opt_String(apiObj.baseUrl);
+    wireObj.connect_timeout_ms = cst_encode_opt_box_autoadd_u_32(
+      apiObj.connectTimeoutMs,
+    );
+    wireObj.timeout_ms = cst_encode_opt_box_autoadd_u_32(apiObj.timeoutMs);
+    wireObj.user_agent = cst_encode_opt_String(apiObj.userAgent);
+    wireObj.max_redirects = cst_encode_opt_box_autoadd_u_32(
+      apiObj.maxRedirects,
+    );
+    wireObj.throw_on_status = cst_encode_bool(apiObj.throwOnStatus);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_compress_spec(
+    CompressSpec apiObj,
+    wire_cst_compress_spec wireObj,
+  ) {
+    wireObj.compress_format = cst_encode_opt_box_autoadd_compress_format(
+      apiObj.compressFormat,
+    );
+    wireObj.target_width = cst_encode_opt_box_autoadd_u_32(apiObj.targetWidth);
+    wireObj.target_height = cst_encode_opt_box_autoadd_u_32(
+      apiObj.targetHeight,
+    );
+    wireObj.min_width = cst_encode_opt_box_autoadd_u_32(apiObj.minWidth);
+    wireObj.min_height = cst_encode_opt_box_autoadd_u_32(apiObj.minHeight);
+    wireObj.max_width = cst_encode_opt_box_autoadd_u_32(apiObj.maxWidth);
+    wireObj.max_height = cst_encode_opt_box_autoadd_u_32(apiObj.maxHeight);
+    wireObj.quality = cst_encode_opt_box_autoadd_u_8(apiObj.quality);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_docx_style(
+    DocxStyle apiObj,
+    wire_cst_docx_style wireObj,
+  ) {
+    wireObj.east_asia_font = cst_encode_String(apiObj.eastAsiaFont);
+    wireObj.ascii_font = cst_encode_String(apiObj.asciiFont);
+    wireObj.font_size_pt = cst_encode_f_64(apiObj.fontSizePt);
+    wireObj.line_spacing = cst_encode_f_64(apiObj.lineSpacing);
+    wireObj.first_line_indent = cst_encode_bool(apiObj.firstLineIndent);
+    wireObj.page_width = cst_encode_u_32(apiObj.pageWidth);
+    wireObj.page_height = cst_encode_u_32(apiObj.pageHeight);
+    wireObj.page_margin = cst_encode_u_32(apiObj.pageMargin);
+    wireObj.include_title = cst_encode_bool(apiObj.includeTitle);
+    wireObj.include_meta = cst_encode_bool(apiObj.includeMeta);
+    wireObj.page_break_between = cst_encode_bool(apiObj.pageBreakBetween);
+    wireObj.video_label = cst_encode_String(apiObj.videoLabel);
+    wireObj.audio_label = cst_encode_String(apiObj.audioLabel);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_graph_layout_params(
+    GraphLayoutParams apiObj,
+    wire_cst_graph_layout_params wireObj,
+  ) {
+    wireObj.iterations = cst_encode_u_32(apiObj.iterations);
+    wireObj.theta = cst_encode_f_32(apiObj.theta);
+    wireObj.repulsion = cst_encode_f_32(apiObj.repulsion);
+    wireObj.spring_length = cst_encode_f_32(apiObj.springLength);
+    wireObj.spring_strength = cst_encode_f_32(apiObj.springStrength);
+    wireObj.gravity = cst_encode_f_32(apiObj.gravity);
+    wireObj.collide_radius = cst_encode_f_32(apiObj.collideRadius);
+    wireObj.velocity_decay = cst_encode_f_32(apiObj.velocityDecay);
+    wireObj.emit_every = cst_encode_u_32(apiObj.emitEvery);
+    wireObj.frame_delay_ms = cst_encode_u_32(apiObj.frameDelayMs);
+    wireObj.initial_alpha = cst_encode_f_32(apiObj.initialAlpha);
+    wireObj.min_step = cst_encode_f_32(apiObj.minStep);
+    wireObj.pinned_count = cst_encode_u_32(apiObj.pinnedCount);
+    wireObj.normalize_scale = cst_encode_bool(apiObj.normalizeScale);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_http_error(
+    HttpError apiObj,
+    wire_cst_http_error wireObj,
+  ) {
+    wireObj.kind = cst_encode_http_error_kind(apiObj.kind);
+    wireObj.status = cst_encode_opt_box_autoadd_u_16(apiObj.status);
+    wireObj.message = cst_encode_String(apiObj.message);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_http_response(
+    HttpResponse apiObj,
+    wire_cst_http_response wireObj,
+  ) {
+    wireObj.status = cst_encode_u_16(apiObj.status);
+    wireObj.headers = cst_encode_list_key_value(apiObj.headers);
+    wireObj.body = cst_encode_list_prim_u_8_strict(apiObj.body);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_http_server_request(
+    HttpServerRequest apiObj,
+    wire_cst_http_server_request wireObj,
+  ) {
+    wireObj.method = cst_encode_String(apiObj.method);
+    wireObj.path = cst_encode_String(apiObj.path);
+    wireObj.query = cst_encode_list_key_value(apiObj.query);
+    wireObj.headers = cst_encode_list_key_value(apiObj.headers);
+    wireObj.body = cst_encode_list_prim_u_8_strict(apiObj.body);
+    wireObj.body_file_path = cst_encode_opt_String(apiObj.bodyFilePath);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_http_server_response(
+    HttpServerResponse apiObj,
+    wire_cst_http_server_response wireObj,
+  ) {
+    wireObj.status = cst_encode_u_16(apiObj.status);
+    wireObj.headers = cst_encode_list_key_value(apiObj.headers);
+    wireObj.body = cst_encode_list_prim_u_8_strict(apiObj.body);
+    wireObj.body_file_path = cst_encode_opt_String(apiObj.bodyFilePath);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ir_block(
+    IrBlock apiObj,
+    wire_cst_ir_block wireObj,
+  ) {
+    if (apiObj is IrBlock_Paragraph) {
+      var pre_spans = cst_encode_list_ir_span(apiObj.spans);
+      wireObj.tag = 0;
+      wireObj.kind.Paragraph.spans = pre_spans;
+      return;
+    }
+    if (apiObj is IrBlock_Heading) {
+      var pre_level = cst_encode_u_32(apiObj.level);
+      var pre_spans = cst_encode_list_ir_span(apiObj.spans);
+      wireObj.tag = 1;
+      wireObj.kind.Heading.level = pre_level;
+      wireObj.kind.Heading.spans = pre_spans;
+      return;
+    }
+    if (apiObj is IrBlock_List) {
+      var pre_ordered = cst_encode_bool(apiObj.ordered);
+      var pre_start = cst_encode_u_32(apiObj.start);
+      var pre_items = cst_encode_list_ir_list_item(apiObj.items);
+      wireObj.tag = 2;
+      wireObj.kind.List.ordered = pre_ordered;
+      wireObj.kind.List.start = pre_start;
+      wireObj.kind.List.items = pre_items;
+      return;
+    }
+    if (apiObj is IrBlock_Quote) {
+      var pre_children = cst_encode_list_ir_block(apiObj.children);
+      wireObj.tag = 3;
+      wireObj.kind.Quote.children = pre_children;
+      return;
+    }
+    if (apiObj is IrBlock_Code) {
+      var pre_language = cst_encode_opt_String(apiObj.language);
+      var pre_text = cst_encode_String(apiObj.text);
+      wireObj.tag = 4;
+      wireObj.kind.Code.language = pre_language;
+      wireObj.kind.Code.text = pre_text;
+      return;
+    }
+    if (apiObj is IrBlock_Divider) {
+      wireObj.tag = 5;
+      return;
+    }
+    if (apiObj is IrBlock_Image) {
+      var pre_path = cst_encode_String(apiObj.path);
+      var pre_alt = cst_encode_opt_String(apiObj.alt);
+      var pre_width_percent = cst_encode_opt_box_autoadd_u_32(
+        apiObj.widthPercent,
+      );
+      var pre_is_external = cst_encode_bool(apiObj.isExternal);
+      wireObj.tag = 6;
+      wireObj.kind.Image.path = pre_path;
+      wireObj.kind.Image.alt = pre_alt;
+      wireObj.kind.Image.width_percent = pre_width_percent;
+      wireObj.kind.Image.is_external = pre_is_external;
+      return;
+    }
+    if (apiObj is IrBlock_Media) {
+      var pre_kind = cst_encode_String(apiObj.kind);
+      var pre_filename = cst_encode_String(apiObj.filename);
+      var pre_path = cst_encode_String(apiObj.path);
+      var pre_cover_path = cst_encode_opt_String(apiObj.coverPath);
+      wireObj.tag = 7;
+      wireObj.kind.Media.kind = pre_kind;
+      wireObj.kind.Media.filename = pre_filename;
+      wireObj.kind.Media.path = pre_path;
+      wireObj.kind.Media.cover_path = pre_cover_path;
+      return;
+    }
+    if (apiObj is IrBlock_Table) {
+      var pre_rows = cst_encode_list_ir_row(apiObj.rows);
+      wireObj.tag = 8;
+      wireObj.kind.Table.rows = pre_rows;
+      return;
+    }
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ir_cell(IrCell apiObj, wire_cst_ir_cell wireObj) {
+    wireObj.children = cst_encode_list_ir_block(apiObj.children);
+    wireObj.colspan = cst_encode_u_32(apiObj.colspan);
+    wireObj.rowspan = cst_encode_u_32(apiObj.rowspan);
+    wireObj.align = cst_encode_opt_String(apiObj.align);
+    wireObj.header = cst_encode_bool(apiObj.header);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ir_doc(IrDoc apiObj, wire_cst_ir_doc wireObj) {
+    wireObj.id = cst_encode_String(apiObj.id);
+    wireObj.title = cst_encode_String(apiObj.title);
+    wireObj.time = cst_encode_String(apiObj.time);
+    wireObj.weather = cst_encode_list_String(apiObj.weather);
+    wireObj.position = cst_encode_list_String(apiObj.position);
+    wireObj.tags = cst_encode_list_String(apiObj.tags);
+    wireObj.category_name = cst_encode_opt_String(apiObj.categoryName);
+    wireObj.blocks = cst_encode_list_ir_block(apiObj.blocks);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ir_list_item(
+    IrListItem apiObj,
+    wire_cst_ir_list_item wireObj,
+  ) {
+    wireObj.children = cst_encode_list_ir_block(apiObj.children);
+    wireObj.checked = cst_encode_opt_box_autoadd_bool(apiObj.checked);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ir_row(IrRow apiObj, wire_cst_ir_row wireObj) {
+    wireObj.cells = cst_encode_list_ir_cell(apiObj.cells);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_ir_span(IrSpan apiObj, wire_cst_ir_span wireObj) {
+    wireObj.text = cst_encode_String(apiObj.text);
+    wireObj.bold = cst_encode_bool(apiObj.bold);
+    wireObj.italic = cst_encode_bool(apiObj.italic);
+    wireObj.strike = cst_encode_bool(apiObj.strike);
+    wireObj.underline = cst_encode_bool(apiObj.underline);
+    wireObj.code = cst_encode_bool(apiObj.code);
+    wireObj.href = cst_encode_opt_String(apiObj.href);
+    wireObj.diary_link_id = cst_encode_opt_String(apiObj.diaryLinkId);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_key_value(
+    KeyValue apiObj,
+    wire_cst_key_value wireObj,
+  ) {
+    wireObj.key = cst_encode_String(apiObj.key);
+    wireObj.value = cst_encode_String(apiObj.value);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_pdf_style(
+    PdfStyle apiObj,
+    wire_cst_pdf_style wireObj,
+  ) {
+    wireObj.font_path = cst_encode_String(apiObj.fontPath);
+    wireObj.font_family = cst_encode_String(apiObj.fontFamily);
+    wireObj.font_size_pt = cst_encode_f_64(apiObj.fontSizePt);
+    wireObj.line_spacing_em = cst_encode_f_64(apiObj.lineSpacingEm);
+    wireObj.first_line_indent = cst_encode_bool(apiObj.firstLineIndent);
+    wireObj.page_width_mm = cst_encode_f_64(apiObj.pageWidthMm);
+    wireObj.page_height_mm = cst_encode_f_64(apiObj.pageHeightMm);
+    wireObj.page_margin_mm = cst_encode_f_64(apiObj.pageMarginMm);
+    wireObj.include_title = cst_encode_bool(apiObj.includeTitle);
+    wireObj.include_meta = cst_encode_bool(apiObj.includeMeta);
+    wireObj.video_label = cst_encode_String(apiObj.videoLabel);
+    wireObj.audio_label = cst_encode_String(apiObj.audioLabel);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_record_string_f_32(
+    (String, double) apiObj,
+    wire_cst_record_string_f_32 wireObj,
+  ) {
+    wireObj.field0 = cst_encode_String(apiObj.$1);
+    wireObj.field1 = cst_encode_f_32(apiObj.$2);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_request_options(
+    RequestOptions apiObj,
+    wire_cst_request_options wireObj,
+  ) {
+    wireObj.method = cst_encode_http_method(apiObj.method);
+    wireObj.url = cst_encode_String(apiObj.url);
+    wireObj.query = cst_encode_list_key_value(apiObj.query);
+    wireObj.headers = cst_encode_list_key_value(apiObj.headers);
+    wireObj.timeout_ms = cst_encode_opt_box_autoadd_u_32(apiObj.timeoutMs);
+    wireObj.throw_on_status = cst_encode_opt_box_autoadd_bool(
+      apiObj.throwOnStatus,
+    );
+  }
+
+  @protected
+  void cst_api_fill_to_wire_rig_chat_message(
+    RigChatMessage apiObj,
+    wire_cst_rig_chat_message wireObj,
+  ) {
+    wireObj.role = cst_encode_String(apiObj.role);
+    wireObj.content = cst_encode_String(apiObj.content);
+    wireObj.image_base64 = cst_encode_String(apiObj.imageBase64);
+    wireObj.image_mime = cst_encode_String(apiObj.imageMime);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_rig_provider_config(
+    RigProviderConfig apiObj,
+    wire_cst_rig_provider_config wireObj,
+  ) {
+    wireObj.protocol = cst_encode_String(apiObj.protocol);
+    wireObj.api_key = cst_encode_String(apiObj.apiKey);
+    wireObj.base_url = cst_encode_String(apiObj.baseUrl);
+    wireObj.model = cst_encode_String(apiObj.model);
+    wireObj.max_tokens = cst_encode_u_32(apiObj.maxTokens);
+    wireObj.thinking = cst_encode_bool(apiObj.thinking);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_rig_stream_event(
+    RigStreamEvent apiObj,
+    wire_cst_rig_stream_event wireObj,
+  ) {
+    if (apiObj is RigStreamEvent_TextDelta) {
+      var pre_field0 = cst_encode_String(apiObj.field0);
+      wireObj.tag = 0;
+      wireObj.kind.TextDelta.field0 = pre_field0;
+      return;
+    }
+    if (apiObj is RigStreamEvent_ReasoningDelta) {
+      var pre_field0 = cst_encode_String(apiObj.field0);
+      wireObj.tag = 1;
+      wireObj.kind.ReasoningDelta.field0 = pre_field0;
+      return;
+    }
+    if (apiObj is RigStreamEvent_ToolCall) {
+      var pre_field0 = cst_encode_String(apiObj.field0);
+      wireObj.tag = 2;
+      wireObj.kind.ToolCall.field0 = pre_field0;
+      return;
+    }
+    if (apiObj is RigStreamEvent_Usage) {
+      var pre_input_tokens = cst_encode_u_32(apiObj.inputTokens);
+      var pre_output_tokens = cst_encode_u_32(apiObj.outputTokens);
+      wireObj.tag = 3;
+      wireObj.kind.Usage.input_tokens = pre_input_tokens;
+      wireObj.kind.Usage.output_tokens = pre_output_tokens;
+      return;
+    }
+  }
+
+  @protected
+  void cst_api_fill_to_wire_rig_tool_def(
+    RigToolDef apiObj,
+    wire_cst_rig_tool_def wireObj,
+  ) {
+    wireObj.name = cst_encode_String(apiObj.name);
+    wireObj.description = cst_encode_String(apiObj.description);
+    wireObj.parameters_json = cst_encode_String(apiObj.parametersJson);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_tokenize_result(
+    TokenizeResult apiObj,
+    wire_cst_tokenize_result wireObj,
+  ) {
+    wireObj.cut = cst_encode_list_String(apiObj.cut);
+    wireObj.cut_for_search = cst_encode_list_String(apiObj.cutForSearch);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_upload_event(
+    UploadEvent apiObj,
+    wire_cst_upload_event wireObj,
+  ) {
+    wireObj.sent = cst_encode_i_64(apiObj.sent);
+    wireObj.total = cst_encode_i_64(apiObj.total);
+    wireObj.response = cst_encode_opt_box_autoadd_http_response(
+      apiObj.response,
+    );
+  }
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
+    Aes raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
+    Argon2 raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
+    CancelToken raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
+    DavClient raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
+    DocxBuilder raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
+    FontReader raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
+    HttpClient raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
+    HttpServer raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
+    ImageCompressor raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+    PdfBuilder raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
+    S3Client raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
+    Tokenizer raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
+    Zip raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
+    DocxBuilder raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
+    HttpServer raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+    PdfBuilder raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
+    Zip raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
+    CancelToken raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
+    DavClient raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
+    HttpClient raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
+    HttpServer raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
+    S3Client raw,
+  );
+
+  @protected
+  PlatformPointer
+  cst_encode_DartFn_Inputs_String_String_Output_String_AnyhowException(
+    FutureOr<String> Function(String, String) raw,
+  );
+
+  @protected
+  PlatformPointer
+  cst_encode_DartFn_Inputs_http_server_request_Output_http_server_response_AnyhowException(
+    FutureOr<HttpServerResponse> Function(HttpServerRequest) raw,
+  );
+
+  @protected
+  PlatformPointer
+  cst_encode_DartFn_Inputs_i_64_i_64_Output_unit_AnyhowException(
+    FutureOr<void> Function(PlatformInt64, PlatformInt64) raw,
+  );
+
+  @protected
+  PlatformPointer cst_encode_DartOpaque(Object raw);
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
+    Aes raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArgon2(
+    Argon2 raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCancelToken(
+    CancelToken raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDavClient(
+    DavClient raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDocxBuilder(
+    DocxBuilder raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFontReader(
+    FontReader raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpClient(
+    HttpClient raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHttpServer(
+    HttpServer raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerImageCompressor(
+    ImageCompressor raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPdfBuilder(
+    PdfBuilder raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerS3Client(
+    S3Client raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerTokenizer(
+    Tokenizer raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip(
+    Zip raw,
+  );
+
+  @protected
+  bool cst_encode_bool(bool raw);
+
+  @protected
+  int cst_encode_compress_format(CompressFormat raw);
+
+  @protected
+  double cst_encode_f_32(double raw);
+
+  @protected
+  double cst_encode_f_64(double raw);
+
+  @protected
+  int cst_encode_http_error_kind(HttpErrorKind raw);
+
+  @protected
+  int cst_encode_http_method(HttpMethod raw);
+
+  @protected
+  int cst_encode_i_32(int raw);
+
+  @protected
+  int cst_encode_u_16(int raw);
+
+  @protected
+  int cst_encode_u_32(int raw);
+
+  @protected
+  int cst_encode_u_8(int raw);
+
+  @protected
+  void cst_encode_unit(void raw);
+
+  @protected
   void sse_encode_AnyhowException(
     AnyhowException self,
     SseSerializer serializer,
@@ -1373,19 +2576,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_StreamSink_list_prim_f_32_strict_Sse(
+  void sse_encode_StreamSink_list_prim_f_32_strict_Dco(
     RustStreamSink<Float32List> self,
     SseSerializer serializer,
   );
 
   @protected
-  void sse_encode_StreamSink_rig_stream_event_Sse(
+  void sse_encode_StreamSink_rig_stream_event_Dco(
     RustStreamSink<RigStreamEvent> self,
     SseSerializer serializer,
   );
 
   @protected
-  void sse_encode_StreamSink_upload_event_Sse(
+  void sse_encode_StreamSink_upload_event_Dco(
     RustStreamSink<UploadEvent> self,
     SseSerializer serializer,
   );
@@ -1744,6 +2947,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
 // Section: wire_class
 
+// ignore_for_file: camel_case_types, non_constant_identifier_names, avoid_positional_boolean_parameters, annotate_overrides, constant_identifier_names
+// AUTO GENERATED FILE, DO NOT EDIT.
+//
+// Generated by `package:ffigen`.
+// ignore_for_file: type=lint
+
+/// generated by flutter_rust_bridge
 class RustLibWire implements BaseWire {
   factory RustLibWire.fromExternalLibrary(ExternalLibrary lib) =>
       RustLibWire(lib.ffiDynamicLibrary);
@@ -1755,6 +2965,1692 @@ class RustLibWire implements BaseWire {
   /// The symbols are looked up in [dynamicLibrary].
   RustLibWire(ffi.DynamicLibrary dynamicLibrary)
     : _lookup = dynamicLibrary.lookup;
+
+  /// The symbols are looked up with [lookup].
+  RustLibWire.fromLookup(
+    ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
+  ) : _lookup = lookup;
+
+  void store_dart_post_cobject(DartPostCObjectFnType ptr) {
+    return _store_dart_post_cobject(ptr);
+  }
+
+  late final _store_dart_post_cobjectPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(DartPostCObjectFnType)>>(
+        'store_dart_post_cobject',
+      );
+  late final _store_dart_post_cobject = _store_dart_post_cobjectPtr
+      .asFunction<void Function(DartPostCObjectFnType)>();
+
+  void wire__crate__api__crypto__Aes_decrypt(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> encrypted_data,
+  ) {
+    return _wire__crate__api__crypto__Aes_decrypt(port_, key, encrypted_data);
+  }
+
+  late final _wire__crate__api__crypto__Aes_decryptPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__crypto__Aes_decrypt');
+  late final _wire__crate__api__crypto__Aes_decrypt =
+      _wire__crate__api__crypto__Aes_decryptPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  void wire__crate__api__crypto__Aes_decrypt_file(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> in_path,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
+    int skip_prefix,
+  ) {
+    return _wire__crate__api__crypto__Aes_decrypt_file(
+      port_,
+      key,
+      in_path,
+      out_path,
+      skip_prefix,
+    );
+  }
+
+  late final _wire__crate__api__crypto__Aes_decrypt_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint64,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__crypto__Aes_decrypt_file');
+  late final _wire__crate__api__crypto__Aes_decrypt_file =
+      _wire__crate__api__crypto__Aes_decrypt_filePtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+            )
+          >();
+
+  void wire__crate__api__crypto__Aes_derive_key(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> salt,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> user_key,
+    ffi.Pointer<ffi.Uint32> m_cost_kib,
+    ffi.Pointer<ffi.Uint32> t_cost,
+    ffi.Pointer<ffi.Uint32> p_cost,
+  ) {
+    return _wire__crate__api__crypto__Aes_derive_key(
+      port_,
+      salt,
+      user_key,
+      m_cost_kib,
+      t_cost,
+      p_cost,
+    );
+  }
+
+  late final _wire__crate__api__crypto__Aes_derive_keyPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<ffi.Uint32>,
+            ffi.Pointer<ffi.Uint32>,
+            ffi.Pointer<ffi.Uint32>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__crypto__Aes_derive_key');
+  late final _wire__crate__api__crypto__Aes_derive_key =
+      _wire__crate__api__crypto__Aes_derive_keyPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<ffi.Uint32>,
+              ffi.Pointer<ffi.Uint32>,
+              ffi.Pointer<ffi.Uint32>,
+            )
+          >();
+
+  void wire__crate__api__crypto__Aes_encrypt(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__crypto__Aes_encrypt(port_, key, data);
+  }
+
+  late final _wire__crate__api__crypto__Aes_encryptPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__crypto__Aes_encrypt');
+  late final _wire__crate__api__crypto__Aes_encrypt =
+      _wire__crate__api__crypto__Aes_encryptPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  void wire__crate__api__crypto__Aes_encrypt_file(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> in_path,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> prefix,
+  ) {
+    return _wire__crate__api__crypto__Aes_encrypt_file(
+      port_,
+      key,
+      in_path,
+      out_path,
+      prefix,
+    );
+  }
+
+  late final _wire__crate__api__crypto__Aes_encrypt_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__crypto__Aes_encrypt_file');
+  late final _wire__crate__api__crypto__Aes_encrypt_file =
+      _wire__crate__api__crypto__Aes_encrypt_filePtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  void wire__crate__api__crypto__Argon2_hash(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> password,
+  ) {
+    return _wire__crate__api__crypto__Argon2_hash(port_, password);
+  }
+
+  late final _wire__crate__api__crypto__Argon2_hashPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__crypto__Argon2_hash');
+  late final _wire__crate__api__crypto__Argon2_hash =
+      _wire__crate__api__crypto__Argon2_hashPtr
+          .asFunction<
+            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__crypto__Argon2_verify(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> hash,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> password,
+  ) {
+    return _wire__crate__api__crypto__Argon2_verify(port_, hash, password);
+  }
+
+  late final _wire__crate__api__crypto__Argon2_verifyPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__crypto__Argon2_verify');
+  late final _wire__crate__api__crypto__Argon2_verify =
+      _wire__crate__api__crypto__Argon2_verifyPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  WireSyncRust2DartDco wire__crate__api__cancel__CancelToken_cancel(int that) {
+    return _wire__crate__api__cancel__CancelToken_cancel(that);
+  }
+
+  late final _wire__crate__api__cancel__CancelToken_cancelPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_moodiary_rust_wire__crate__api__cancel__CancelToken_cancel',
+      );
+  late final _wire__crate__api__cancel__CancelToken_cancel =
+      _wire__crate__api__cancel__CancelToken_cancelPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__cancel__CancelToken_is_cancelled(
+    int that,
+  ) {
+    return _wire__crate__api__cancel__CancelToken_is_cancelled(that);
+  }
+
+  late final _wire__crate__api__cancel__CancelToken_is_cancelledPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_moodiary_rust_wire__crate__api__cancel__CancelToken_is_cancelled',
+      );
+  late final _wire__crate__api__cancel__CancelToken_is_cancelled =
+      _wire__crate__api__cancel__CancelToken_is_cancelledPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__cancel__CancelToken_new() {
+    return _wire__crate__api__cancel__CancelToken_new();
+  }
+
+  late final _wire__crate__api__cancel__CancelToken_newPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function()>>(
+        'frbgen_moodiary_rust_wire__crate__api__cancel__CancelToken_new',
+      );
+  late final _wire__crate__api__cancel__CancelToken_new =
+      _wire__crate__api__cancel__CancelToken_newPtr
+          .asFunction<WireSyncRust2DartDco Function()>();
+
+  void wire__crate__api__webdav__DavClient_create_exclusive(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__webdav__DavClient_create_exclusive(
+      port_,
+      that,
+      key,
+      data,
+    );
+  }
+
+  late final _wire__crate__api__webdav__DavClient_create_exclusivePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_create_exclusive',
+      );
+  late final _wire__crate__api__webdav__DavClient_create_exclusive =
+      _wire__crate__api__webdav__DavClient_create_exclusivePtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  void wire__crate__api__webdav__DavClient_delete_object(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+  ) {
+    return _wire__crate__api__webdav__DavClient_delete_object(port_, that, key);
+  }
+
+  late final _wire__crate__api__webdav__DavClient_delete_objectPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_delete_object',
+      );
+  late final _wire__crate__api__webdav__DavClient_delete_object =
+      _wire__crate__api__webdav__DavClient_delete_objectPtr
+          .asFunction<
+            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__webdav__DavClient_new(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> base_url,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> username,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> password,
+  ) {
+    return _wire__crate__api__webdav__DavClient_new(
+      port_,
+      base_url,
+      username,
+      password,
+    );
+  }
+
+  late final _wire__crate__api__webdav__DavClient_newPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_new');
+  late final _wire__crate__api__webdav__DavClient_new =
+      _wire__crate__api__webdav__DavClient_newPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  void wire__crate__api__webdav__DavClient_read_object(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+  ) {
+    return _wire__crate__api__webdav__DavClient_read_object(port_, that, key);
+  }
+
+  late final _wire__crate__api__webdav__DavClient_read_objectPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_read_object');
+  late final _wire__crate__api__webdav__DavClient_read_object =
+      _wire__crate__api__webdav__DavClient_read_objectPtr
+          .asFunction<
+            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__webdav__DavClient_read_object_to_file(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+  ) {
+    return _wire__crate__api__webdav__DavClient_read_object_to_file(
+      port_,
+      that,
+      key,
+      file_path,
+    );
+  }
+
+  late final _wire__crate__api__webdav__DavClient_read_object_to_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_read_object_to_file',
+      );
+  late final _wire__crate__api__webdav__DavClient_read_object_to_file =
+      _wire__crate__api__webdav__DavClient_read_object_to_filePtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  void wire__crate__api__webdav__DavClient_stat_object(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+  ) {
+    return _wire__crate__api__webdav__DavClient_stat_object(port_, that, key);
+  }
+
+  late final _wire__crate__api__webdav__DavClient_stat_objectPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_stat_object');
+  late final _wire__crate__api__webdav__DavClient_stat_object =
+      _wire__crate__api__webdav__DavClient_stat_objectPtr
+          .asFunction<
+            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__webdav__DavClient_test_connection(
+    int port_,
+    int that,
+  ) {
+    return _wire__crate__api__webdav__DavClient_test_connection(port_, that);
+  }
+
+  late final _wire__crate__api__webdav__DavClient_test_connectionPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_test_connection',
+      );
+  late final _wire__crate__api__webdav__DavClient_test_connection =
+      _wire__crate__api__webdav__DavClient_test_connectionPtr
+          .asFunction<void Function(int, int)>();
+
+  void wire__crate__api__webdav__DavClient_write_object(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__webdav__DavClient_write_object(
+      port_,
+      that,
+      key,
+      data,
+    );
+  }
+
+  late final _wire__crate__api__webdav__DavClient_write_objectPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_write_object',
+      );
+  late final _wire__crate__api__webdav__DavClient_write_object =
+      _wire__crate__api__webdav__DavClient_write_objectPtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  void wire__crate__api__webdav__DavClient_write_object_file(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+  ) {
+    return _wire__crate__api__webdav__DavClient_write_object_file(
+      port_,
+      that,
+      key,
+      file_path,
+    );
+  }
+
+  late final _wire__crate__api__webdav__DavClient_write_object_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__webdav__DavClient_write_object_file',
+      );
+  late final _wire__crate__api__webdav__DavClient_write_object_file =
+      _wire__crate__api__webdav__DavClient_write_object_filePtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  void wire__crate__api__docx__DocxBuilder_add(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_ir_doc> doc,
+  ) {
+    return _wire__crate__api__docx__DocxBuilder_add(port_, that, doc);
+  }
+
+  late final _wire__crate__api__docx__DocxBuilder_addPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_ir_doc>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__docx__DocxBuilder_add');
+  late final _wire__crate__api__docx__DocxBuilder_add =
+      _wire__crate__api__docx__DocxBuilder_addPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ir_doc>)>();
+
+  void wire__crate__api__docx__DocxBuilder_finish(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
+    int cancel,
+  ) {
+    return _wire__crate__api__docx__DocxBuilder_finish(
+      port_,
+      that,
+      out_path,
+      cancel,
+    );
+  }
+
+  late final _wire__crate__api__docx__DocxBuilder_finishPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.UintPtr,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__docx__DocxBuilder_finish');
+  late final _wire__crate__api__docx__DocxBuilder_finish =
+      _wire__crate__api__docx__DocxBuilder_finishPtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+            )
+          >();
+
+  void wire__crate__api__docx__DocxBuilder_new(
+    int port_,
+    ffi.Pointer<wire_cst_docx_style> style,
+  ) {
+    return _wire__crate__api__docx__DocxBuilder_new(port_, style);
+  }
+
+  late final _wire__crate__api__docx__DocxBuilder_newPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_docx_style>)
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__docx__DocxBuilder_new');
+  late final _wire__crate__api__docx__DocxBuilder_new =
+      _wire__crate__api__docx__DocxBuilder_newPtr
+          .asFunction<void Function(int, ffi.Pointer<wire_cst_docx_style>)>();
+
+  void wire__crate__api__font__FontReader_get_font_name_from_ttf(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> ttf_file_path,
+  ) {
+    return _wire__crate__api__font__FontReader_get_font_name_from_ttf(
+      port_,
+      ttf_file_path,
+    );
+  }
+
+  late final _wire__crate__api__font__FontReader_get_font_name_from_ttfPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__font__FontReader_get_font_name_from_ttf',
+      );
+  late final _wire__crate__api__font__FontReader_get_font_name_from_ttf =
+      _wire__crate__api__font__FontReader_get_font_name_from_ttfPtr
+          .asFunction<
+            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__font__FontReader_get_wght_axis_from_vf_font(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> ttf_file_path,
+  ) {
+    return _wire__crate__api__font__FontReader_get_wght_axis_from_vf_font(
+      port_,
+      ttf_file_path,
+    );
+  }
+
+  late final _wire__crate__api__font__FontReader_get_wght_axis_from_vf_fontPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__font__FontReader_get_wght_axis_from_vf_font',
+      );
+  late final _wire__crate__api__font__FontReader_get_wght_axis_from_vf_font =
+      _wire__crate__api__font__FontReader_get_wght_axis_from_vf_fontPtr
+          .asFunction<
+            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__http__HttpClient_new(
+    int port_,
+    ffi.Pointer<wire_cst_client_settings> settings,
+  ) {
+    return _wire__crate__api__http__HttpClient_new(port_, settings);
+  }
+
+  late final _wire__crate__api__http__HttpClient_newPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_client_settings>)
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__http__HttpClient_new');
+  late final _wire__crate__api__http__HttpClient_new =
+      _wire__crate__api__http__HttpClient_newPtr
+          .asFunction<
+            void Function(int, ffi.Pointer<wire_cst_client_settings>)
+          >();
+
+  void wire__crate__api__http__HttpClient_request(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_request_options> options,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> body,
+  ) {
+    return _wire__crate__api__http__HttpClient_request(
+      port_,
+      that,
+      options,
+      body,
+    );
+  }
+
+  late final _wire__crate__api__http__HttpClient_requestPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_request_options>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__http__HttpClient_request');
+  late final _wire__crate__api__http__HttpClient_request =
+      _wire__crate__api__http__HttpClient_requestPtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_request_options>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  void wire__crate__api__http__HttpClient_upload_file(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> sink,
+    ffi.Pointer<wire_cst_request_options> options,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+    int cancel,
+  ) {
+    return _wire__crate__api__http__HttpClient_upload_file(
+      port_,
+      that,
+      sink,
+      options,
+      file_path,
+      cancel,
+    );
+  }
+
+  late final _wire__crate__api__http__HttpClient_upload_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_request_options>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.UintPtr,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__http__HttpClient_upload_file');
+  late final _wire__crate__api__http__HttpClient_upload_file =
+      _wire__crate__api__http__HttpClient_upload_filePtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_request_options>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+            )
+          >();
+
+  WireSyncRust2DartDco wire__crate__api__http_server__HttpServer_port(
+    int that,
+  ) {
+    return _wire__crate__api__http_server__HttpServer_port(that);
+  }
+
+  late final _wire__crate__api__http_server__HttpServer_portPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_moodiary_rust_wire__crate__api__http_server__HttpServer_port',
+      );
+  late final _wire__crate__api__http_server__HttpServer_port =
+      _wire__crate__api__http_server__HttpServer_portPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  void wire__crate__api__http_server__HttpServer_start(
+    int port_,
+    int preferred_port,
+    bool loopback_only,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> spool_dir,
+    ffi.Pointer<ffi.Void> on_request,
+    ffi.Pointer<ffi.Void> on_body_progress,
+  ) {
+    return _wire__crate__api__http_server__HttpServer_start(
+      port_,
+      preferred_port,
+      loopback_only,
+      spool_dir,
+      on_request,
+      on_body_progress,
+    );
+  }
+
+  late final _wire__crate__api__http_server__HttpServer_startPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Uint16,
+            ffi.Bool,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Void>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__http_server__HttpServer_start');
+  late final _wire__crate__api__http_server__HttpServer_start =
+      _wire__crate__api__http_server__HttpServer_startPtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              bool,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+            )
+          >();
+
+  WireSyncRust2DartDco wire__crate__api__http_server__HttpServer_stop(
+    int that,
+  ) {
+    return _wire__crate__api__http_server__HttpServer_stop(that);
+  }
+
+  late final _wire__crate__api__http_server__HttpServer_stopPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_moodiary_rust_wire__crate__api__http_server__HttpServer_stop',
+      );
+  late final _wire__crate__api__http_server__HttpServer_stop =
+      _wire__crate__api__http_server__HttpServer_stopPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  void wire__crate__api__image__ImageCompressor_contain_to_file(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> output_path,
+    ffi.Pointer<wire_cst_compress_spec> spec,
+  ) {
+    return _wire__crate__api__image__ImageCompressor_contain_to_file(
+      port_,
+      file_path,
+      output_path,
+      spec,
+    );
+  }
+
+  late final _wire__crate__api__image__ImageCompressor_contain_to_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_compress_spec>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__image__ImageCompressor_contain_to_file',
+      );
+  late final _wire__crate__api__image__ImageCompressor_contain_to_file =
+      _wire__crate__api__image__ImageCompressor_contain_to_filePtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_compress_spec>,
+            )
+          >();
+
+  void wire__crate__api__image__ImageCompressor_optimize_to_file(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> output_path,
+    ffi.Pointer<ffi.Uint8> quality,
+  ) {
+    return _wire__crate__api__image__ImageCompressor_optimize_to_file(
+      port_,
+      file_path,
+      output_path,
+      quality,
+    );
+  }
+
+  late final _wire__crate__api__image__ImageCompressor_optimize_to_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<ffi.Uint8>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__image__ImageCompressor_optimize_to_file',
+      );
+  late final _wire__crate__api__image__ImageCompressor_optimize_to_file =
+      _wire__crate__api__image__ImageCompressor_optimize_to_filePtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<ffi.Uint8>,
+            )
+          >();
+
+  void wire__crate__api__pdf__PdfBuilder_add(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_ir_doc> doc,
+  ) {
+    return _wire__crate__api__pdf__PdfBuilder_add(port_, that, doc);
+  }
+
+  late final _wire__crate__api__pdf__PdfBuilder_addPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_ir_doc>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__pdf__PdfBuilder_add');
+  late final _wire__crate__api__pdf__PdfBuilder_add =
+      _wire__crate__api__pdf__PdfBuilder_addPtr
+          .asFunction<void Function(int, int, ffi.Pointer<wire_cst_ir_doc>)>();
+
+  void wire__crate__api__pdf__PdfBuilder_finish(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
+    int cancel,
+  ) {
+    return _wire__crate__api__pdf__PdfBuilder_finish(
+      port_,
+      that,
+      out_path,
+      cancel,
+    );
+  }
+
+  late final _wire__crate__api__pdf__PdfBuilder_finishPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.UintPtr,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__pdf__PdfBuilder_finish');
+  late final _wire__crate__api__pdf__PdfBuilder_finish =
+      _wire__crate__api__pdf__PdfBuilder_finishPtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+            )
+          >();
+
+  void wire__crate__api__pdf__PdfBuilder_new(
+    int port_,
+    ffi.Pointer<wire_cst_pdf_style> style,
+  ) {
+    return _wire__crate__api__pdf__PdfBuilder_new(port_, style);
+  }
+
+  late final _wire__crate__api__pdf__PdfBuilder_newPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_pdf_style>)
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__pdf__PdfBuilder_new');
+  late final _wire__crate__api__pdf__PdfBuilder_new =
+      _wire__crate__api__pdf__PdfBuilder_newPtr
+          .asFunction<void Function(int, ffi.Pointer<wire_cst_pdf_style>)>();
+
+  void wire__crate__api__s3__S3Client_create_exclusive(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__s3__S3Client_create_exclusive(
+      port_,
+      that,
+      key,
+      data,
+    );
+  }
+
+  late final _wire__crate__api__s3__S3Client_create_exclusivePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_create_exclusive');
+  late final _wire__crate__api__s3__S3Client_create_exclusive =
+      _wire__crate__api__s3__S3Client_create_exclusivePtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  void wire__crate__api__s3__S3Client_delete_object(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+  ) {
+    return _wire__crate__api__s3__S3Client_delete_object(port_, that, key);
+  }
+
+  late final _wire__crate__api__s3__S3Client_delete_objectPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_delete_object');
+  late final _wire__crate__api__s3__S3Client_delete_object =
+      _wire__crate__api__s3__S3Client_delete_objectPtr
+          .asFunction<
+            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__s3__S3Client_new(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> endpoint,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> access_key,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> secret_key,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> bucket,
+    bool use_ssl,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> region,
+  ) {
+    return _wire__crate__api__s3__S3Client_new(
+      port_,
+      endpoint,
+      access_key,
+      secret_key,
+      bucket,
+      use_ssl,
+      region,
+    );
+  }
+
+  late final _wire__crate__api__s3__S3Client_newPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Bool,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_new');
+  late final _wire__crate__api__s3__S3Client_new =
+      _wire__crate__api__s3__S3Client_newPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              bool,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  void wire__crate__api__s3__S3Client_read_object(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+  ) {
+    return _wire__crate__api__s3__S3Client_read_object(port_, that, key);
+  }
+
+  late final _wire__crate__api__s3__S3Client_read_objectPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_read_object');
+  late final _wire__crate__api__s3__S3Client_read_object =
+      _wire__crate__api__s3__S3Client_read_objectPtr
+          .asFunction<
+            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__s3__S3Client_read_object_to_file(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+  ) {
+    return _wire__crate__api__s3__S3Client_read_object_to_file(
+      port_,
+      that,
+      key,
+      file_path,
+    );
+  }
+
+  late final _wire__crate__api__s3__S3Client_read_object_to_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__s3__S3Client_read_object_to_file',
+      );
+  late final _wire__crate__api__s3__S3Client_read_object_to_file =
+      _wire__crate__api__s3__S3Client_read_object_to_filePtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  void wire__crate__api__s3__S3Client_stat_object(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+  ) {
+    return _wire__crate__api__s3__S3Client_stat_object(port_, that, key);
+  }
+
+  late final _wire__crate__api__s3__S3Client_stat_objectPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_stat_object');
+  late final _wire__crate__api__s3__S3Client_stat_object =
+      _wire__crate__api__s3__S3Client_stat_objectPtr
+          .asFunction<
+            void Function(int, int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__s3__S3Client_test_connection(int port_, int that) {
+    return _wire__crate__api__s3__S3Client_test_connection(port_, that);
+  }
+
+  late final _wire__crate__api__s3__S3Client_test_connectionPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+        'frbgen_moodiary_rust_wire__crate__api__s3__S3Client_test_connection',
+      );
+  late final _wire__crate__api__s3__S3Client_test_connection =
+      _wire__crate__api__s3__S3Client_test_connectionPtr
+          .asFunction<void Function(int, int)>();
+
+  void wire__crate__api__s3__S3Client_write_object(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__s3__S3Client_write_object(port_, that, key, data);
+  }
+
+  late final _wire__crate__api__s3__S3Client_write_objectPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__s3__S3Client_write_object');
+  late final _wire__crate__api__s3__S3Client_write_object =
+      _wire__crate__api__s3__S3Client_write_objectPtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  void wire__crate__api__s3__S3Client_write_object_file(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> key,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+  ) {
+    return _wire__crate__api__s3__S3Client_write_object_file(
+      port_,
+      that,
+      key,
+      file_path,
+    );
+  }
+
+  late final _wire__crate__api__s3__S3Client_write_object_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__s3__S3Client_write_object_file',
+      );
+  late final _wire__crate__api__s3__S3Client_write_object_file =
+      _wire__crate__api__s3__S3Client_write_object_filePtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  void wire__crate__api__text__Tokenizer_tokenize(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> text,
+  ) {
+    return _wire__crate__api__text__Tokenizer_tokenize(port_, text);
+  }
+
+  late final _wire__crate__api__text__Tokenizer_tokenizePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__text__Tokenizer_tokenize');
+  late final _wire__crate__api__text__Tokenizer_tokenize =
+      _wire__crate__api__text__Tokenizer_tokenizePtr
+          .asFunction<
+            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__text__Tokenizer_tokenize_batch(
+    int port_,
+    ffi.Pointer<wire_cst_list_String> texts,
+  ) {
+    return _wire__crate__api__text__Tokenizer_tokenize_batch(port_, texts);
+  }
+
+  late final _wire__crate__api__text__Tokenizer_tokenize_batchPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(ffi.Int64, ffi.Pointer<wire_cst_list_String>)
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__text__Tokenizer_tokenize_batch',
+      );
+  late final _wire__crate__api__text__Tokenizer_tokenize_batch =
+      _wire__crate__api__text__Tokenizer_tokenize_batchPtr
+          .asFunction<void Function(int, ffi.Pointer<wire_cst_list_String>)>();
+
+  void wire__crate__api__zip__Zip_add_bytes(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> zip_path,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> password,
+  ) {
+    return _wire__crate__api__zip__Zip_add_bytes(
+      port_,
+      that,
+      zip_path,
+      data,
+      password,
+    );
+  }
+
+  late final _wire__crate__api__zip__Zip_add_bytesPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__zip__Zip_add_bytes');
+  late final _wire__crate__api__zip__Zip_add_bytes =
+      _wire__crate__api__zip__Zip_add_bytesPtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  void wire__crate__api__zip__Zip_add_file(
+    int port_,
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> zip_path,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> password,
+    ffi.Pointer<ffi.Bool> stored,
+  ) {
+    return _wire__crate__api__zip__Zip_add_file(
+      port_,
+      that,
+      file_path,
+      zip_path,
+      password,
+      stored,
+    );
+  }
+
+  late final _wire__crate__api__zip__Zip_add_filePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<ffi.Bool>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__zip__Zip_add_file');
+  late final _wire__crate__api__zip__Zip_add_file =
+      _wire__crate__api__zip__Zip_add_filePtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<ffi.Bool>,
+            )
+          >();
+
+  void wire__crate__api__zip__Zip_extract(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> zip_path,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> dest_dir,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> password,
+    int cancel,
+  ) {
+    return _wire__crate__api__zip__Zip_extract(
+      port_,
+      zip_path,
+      dest_dir,
+      password,
+      cancel,
+    );
+  }
+
+  late final _wire__crate__api__zip__Zip_extractPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.UintPtr,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__zip__Zip_extract');
+  late final _wire__crate__api__zip__Zip_extract =
+      _wire__crate__api__zip__Zip_extractPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+            )
+          >();
+
+  void wire__crate__api__zip__Zip_finish(int port_, int that) {
+    return _wire__crate__api__zip__Zip_finish(port_, that);
+  }
+
+  late final _wire__crate__api__zip__Zip_finishPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int64, ffi.UintPtr)>>(
+        'frbgen_moodiary_rust_wire__crate__api__zip__Zip_finish',
+      );
+  late final _wire__crate__api__zip__Zip_finish =
+      _wire__crate__api__zip__Zip_finishPtr
+          .asFunction<void Function(int, int)>();
+
+  void wire__crate__api__zip__Zip_new(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> file_path,
+  ) {
+    return _wire__crate__api__zip__Zip_new(port_, file_path);
+  }
+
+  late final _wire__crate__api__zip__Zip_newPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__zip__Zip_new');
+  late final _wire__crate__api__zip__Zip_new =
+      _wire__crate__api__zip__Zip_newPtr
+          .asFunction<
+            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__audio__audio_duration_ms(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> path,
+  ) {
+    return _wire__crate__api__audio__audio_duration_ms(port_, path);
+  }
+
+  late final _wire__crate__api__audio__audio_duration_msPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__audio__audio_duration_ms');
+  late final _wire__crate__api__audio__audio_duration_ms =
+      _wire__crate__api__audio__audio_duration_msPtr
+          .asFunction<
+            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+          >();
+
+  void wire__crate__api__graph_layout__layout_graph_stream(
+    int port_,
+    int node_count,
+    ffi.Pointer<wire_cst_list_prim_i_32_loose> edges,
+    ffi.Pointer<wire_cst_list_prim_f_32_loose> initial_positions,
+    ffi.Pointer<wire_cst_graph_layout_params> params,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> sink,
+  ) {
+    return _wire__crate__api__graph_layout__layout_graph_stream(
+      port_,
+      node_count,
+      edges,
+      initial_positions,
+      params,
+      sink,
+    );
+  }
+
+  late final _wire__crate__api__graph_layout__layout_graph_streamPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Uint32,
+            ffi.Pointer<wire_cst_list_prim_i_32_loose>,
+            ffi.Pointer<wire_cst_list_prim_f_32_loose>,
+            ffi.Pointer<wire_cst_graph_layout_params>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >(
+        'frbgen_moodiary_rust_wire__crate__api__graph_layout__layout_graph_stream',
+      );
+  late final _wire__crate__api__graph_layout__layout_graph_stream =
+      _wire__crate__api__graph_layout__layout_graph_streamPtr
+          .asFunction<
+            void Function(
+              int,
+              int,
+              ffi.Pointer<wire_cst_list_prim_i_32_loose>,
+              ffi.Pointer<wire_cst_list_prim_f_32_loose>,
+              ffi.Pointer<wire_cst_graph_layout_params>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  void wire__crate__api__assistant__rig_chat_stream(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> sink,
+    ffi.Pointer<wire_cst_rig_provider_config> config,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> system_prompt,
+    ffi.Pointer<wire_cst_list_rig_chat_message> history,
+    ffi.Pointer<wire_cst_list_rig_tool_def> tools,
+    int max_turns,
+    ffi.Pointer<ffi.Void> tool_dispatch,
+  ) {
+    return _wire__crate__api__assistant__rig_chat_stream(
+      port_,
+      sink,
+      config,
+      system_prompt,
+      history,
+      tools,
+      max_turns,
+      tool_dispatch,
+    );
+  }
+
+  late final _wire__crate__api__assistant__rig_chat_streamPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_rig_provider_config>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Pointer<wire_cst_list_rig_chat_message>,
+            ffi.Pointer<wire_cst_list_rig_tool_def>,
+            ffi.Uint32,
+            ffi.Pointer<ffi.Void>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__assistant__rig_chat_stream');
+  late final _wire__crate__api__assistant__rig_chat_stream =
+      _wire__crate__api__assistant__rig_chat_streamPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_rig_provider_config>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              ffi.Pointer<wire_cst_list_rig_chat_message>,
+              ffi.Pointer<wire_cst_list_rig_tool_def>,
+              int,
+              ffi.Pointer<ffi.Void>,
+            )
+          >();
+
+  void wire__crate__api__docx__write_docx(
+    int port_,
+    ffi.Pointer<wire_cst_list_ir_doc> docs,
+    ffi.Pointer<wire_cst_docx_style> style,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
+    int cancel,
+  ) {
+    return _wire__crate__api__docx__write_docx(
+      port_,
+      docs,
+      style,
+      out_path,
+      cancel,
+    );
+  }
+
+  late final _wire__crate__api__docx__write_docxPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_ir_doc>,
+            ffi.Pointer<wire_cst_docx_style>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.UintPtr,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__docx__write_docx');
+  late final _wire__crate__api__docx__write_docx =
+      _wire__crate__api__docx__write_docxPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_ir_doc>,
+              ffi.Pointer<wire_cst_docx_style>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+            )
+          >();
+
+  void wire__crate__api__pdf__write_pdf(
+    int port_,
+    ffi.Pointer<wire_cst_list_ir_doc> docs,
+    ffi.Pointer<wire_cst_pdf_style> style,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> out_path,
+    int cancel,
+  ) {
+    return _wire__crate__api__pdf__write_pdf(
+      port_,
+      docs,
+      style,
+      out_path,
+      cancel,
+    );
+  }
+
+  late final _wire__crate__api__pdf__write_pdfPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_ir_doc>,
+            ffi.Pointer<wire_cst_pdf_style>,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.UintPtr,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__pdf__write_pdf');
+  late final _wire__crate__api__pdf__write_pdf =
+      _wire__crate__api__pdf__write_pdfPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_ir_doc>,
+              ffi.Pointer<wire_cst_pdf_style>,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+            )
+          >();
 
   void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes(
@@ -2197,4 +5093,1033 @@ class RustLibWire implements BaseWire {
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZip =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerZipPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  ffi.Pointer<ffi.Bool> cst_new_box_autoadd_bool(bool value) {
+    return _cst_new_box_autoadd_bool(value);
+  }
+
+  late final _cst_new_box_autoadd_boolPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Bool> Function(ffi.Bool)>>(
+        'frbgen_moodiary_rust_cst_new_box_autoadd_bool',
+      );
+  late final _cst_new_box_autoadd_bool = _cst_new_box_autoadd_boolPtr
+      .asFunction<ffi.Pointer<ffi.Bool> Function(bool)>();
+
+  ffi.Pointer<wire_cst_client_settings> cst_new_box_autoadd_client_settings() {
+    return _cst_new_box_autoadd_client_settings();
+  }
+
+  late final _cst_new_box_autoadd_client_settingsPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Pointer<wire_cst_client_settings> Function()>
+      >('frbgen_moodiary_rust_cst_new_box_autoadd_client_settings');
+  late final _cst_new_box_autoadd_client_settings =
+      _cst_new_box_autoadd_client_settingsPtr
+          .asFunction<ffi.Pointer<wire_cst_client_settings> Function()>();
+
+  ffi.Pointer<ffi.Int32> cst_new_box_autoadd_compress_format(int value) {
+    return _cst_new_box_autoadd_compress_format(value);
+  }
+
+  late final _cst_new_box_autoadd_compress_formatPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int32> Function(ffi.Int32)>>(
+        'frbgen_moodiary_rust_cst_new_box_autoadd_compress_format',
+      );
+  late final _cst_new_box_autoadd_compress_format =
+      _cst_new_box_autoadd_compress_formatPtr
+          .asFunction<ffi.Pointer<ffi.Int32> Function(int)>();
+
+  ffi.Pointer<wire_cst_compress_spec> cst_new_box_autoadd_compress_spec() {
+    return _cst_new_box_autoadd_compress_spec();
+  }
+
+  late final _cst_new_box_autoadd_compress_specPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Pointer<wire_cst_compress_spec> Function()>
+      >('frbgen_moodiary_rust_cst_new_box_autoadd_compress_spec');
+  late final _cst_new_box_autoadd_compress_spec =
+      _cst_new_box_autoadd_compress_specPtr
+          .asFunction<ffi.Pointer<wire_cst_compress_spec> Function()>();
+
+  ffi.Pointer<wire_cst_docx_style> cst_new_box_autoadd_docx_style() {
+    return _cst_new_box_autoadd_docx_style();
+  }
+
+  late final _cst_new_box_autoadd_docx_stylePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_docx_style> Function()>>(
+        'frbgen_moodiary_rust_cst_new_box_autoadd_docx_style',
+      );
+  late final _cst_new_box_autoadd_docx_style =
+      _cst_new_box_autoadd_docx_stylePtr
+          .asFunction<ffi.Pointer<wire_cst_docx_style> Function()>();
+
+  ffi.Pointer<wire_cst_graph_layout_params>
+  cst_new_box_autoadd_graph_layout_params() {
+    return _cst_new_box_autoadd_graph_layout_params();
+  }
+
+  late final _cst_new_box_autoadd_graph_layout_paramsPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Pointer<wire_cst_graph_layout_params> Function()>
+      >('frbgen_moodiary_rust_cst_new_box_autoadd_graph_layout_params');
+  late final _cst_new_box_autoadd_graph_layout_params =
+      _cst_new_box_autoadd_graph_layout_paramsPtr
+          .asFunction<ffi.Pointer<wire_cst_graph_layout_params> Function()>();
+
+  ffi.Pointer<wire_cst_http_response> cst_new_box_autoadd_http_response() {
+    return _cst_new_box_autoadd_http_response();
+  }
+
+  late final _cst_new_box_autoadd_http_responsePtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Pointer<wire_cst_http_response> Function()>
+      >('frbgen_moodiary_rust_cst_new_box_autoadd_http_response');
+  late final _cst_new_box_autoadd_http_response =
+      _cst_new_box_autoadd_http_responsePtr
+          .asFunction<ffi.Pointer<wire_cst_http_response> Function()>();
+
+  ffi.Pointer<ffi.Int64> cst_new_box_autoadd_i_64(int value) {
+    return _cst_new_box_autoadd_i_64(value);
+  }
+
+  late final _cst_new_box_autoadd_i_64Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int64> Function(ffi.Int64)>>(
+        'frbgen_moodiary_rust_cst_new_box_autoadd_i_64',
+      );
+  late final _cst_new_box_autoadd_i_64 = _cst_new_box_autoadd_i_64Ptr
+      .asFunction<ffi.Pointer<ffi.Int64> Function(int)>();
+
+  ffi.Pointer<wire_cst_ir_doc> cst_new_box_autoadd_ir_doc() {
+    return _cst_new_box_autoadd_ir_doc();
+  }
+
+  late final _cst_new_box_autoadd_ir_docPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_ir_doc> Function()>>(
+        'frbgen_moodiary_rust_cst_new_box_autoadd_ir_doc',
+      );
+  late final _cst_new_box_autoadd_ir_doc = _cst_new_box_autoadd_ir_docPtr
+      .asFunction<ffi.Pointer<wire_cst_ir_doc> Function()>();
+
+  ffi.Pointer<wire_cst_pdf_style> cst_new_box_autoadd_pdf_style() {
+    return _cst_new_box_autoadd_pdf_style();
+  }
+
+  late final _cst_new_box_autoadd_pdf_stylePtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<wire_cst_pdf_style> Function()>>(
+        'frbgen_moodiary_rust_cst_new_box_autoadd_pdf_style',
+      );
+  late final _cst_new_box_autoadd_pdf_style = _cst_new_box_autoadd_pdf_stylePtr
+      .asFunction<ffi.Pointer<wire_cst_pdf_style> Function()>();
+
+  ffi.Pointer<wire_cst_request_options> cst_new_box_autoadd_request_options() {
+    return _cst_new_box_autoadd_request_options();
+  }
+
+  late final _cst_new_box_autoadd_request_optionsPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Pointer<wire_cst_request_options> Function()>
+      >('frbgen_moodiary_rust_cst_new_box_autoadd_request_options');
+  late final _cst_new_box_autoadd_request_options =
+      _cst_new_box_autoadd_request_optionsPtr
+          .asFunction<ffi.Pointer<wire_cst_request_options> Function()>();
+
+  ffi.Pointer<wire_cst_rig_provider_config>
+  cst_new_box_autoadd_rig_provider_config() {
+    return _cst_new_box_autoadd_rig_provider_config();
+  }
+
+  late final _cst_new_box_autoadd_rig_provider_configPtr =
+      _lookup<
+        ffi.NativeFunction<ffi.Pointer<wire_cst_rig_provider_config> Function()>
+      >('frbgen_moodiary_rust_cst_new_box_autoadd_rig_provider_config');
+  late final _cst_new_box_autoadd_rig_provider_config =
+      _cst_new_box_autoadd_rig_provider_configPtr
+          .asFunction<ffi.Pointer<wire_cst_rig_provider_config> Function()>();
+
+  ffi.Pointer<ffi.Uint16> cst_new_box_autoadd_u_16(int value) {
+    return _cst_new_box_autoadd_u_16(value);
+  }
+
+  late final _cst_new_box_autoadd_u_16Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint16> Function(ffi.Uint16)>>(
+        'frbgen_moodiary_rust_cst_new_box_autoadd_u_16',
+      );
+  late final _cst_new_box_autoadd_u_16 = _cst_new_box_autoadd_u_16Ptr
+      .asFunction<ffi.Pointer<ffi.Uint16> Function(int)>();
+
+  ffi.Pointer<ffi.Uint32> cst_new_box_autoadd_u_32(int value) {
+    return _cst_new_box_autoadd_u_32(value);
+  }
+
+  late final _cst_new_box_autoadd_u_32Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint32> Function(ffi.Uint32)>>(
+        'frbgen_moodiary_rust_cst_new_box_autoadd_u_32',
+      );
+  late final _cst_new_box_autoadd_u_32 = _cst_new_box_autoadd_u_32Ptr
+      .asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
+
+  ffi.Pointer<ffi.Uint8> cst_new_box_autoadd_u_8(int value) {
+    return _cst_new_box_autoadd_u_8(value);
+  }
+
+  late final _cst_new_box_autoadd_u_8Ptr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Uint8> Function(ffi.Uint8)>>(
+        'frbgen_moodiary_rust_cst_new_box_autoadd_u_8',
+      );
+  late final _cst_new_box_autoadd_u_8 = _cst_new_box_autoadd_u_8Ptr
+      .asFunction<ffi.Pointer<ffi.Uint8> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_String> cst_new_list_String(int len) {
+    return _cst_new_list_String(len);
+  }
+
+  late final _cst_new_list_StringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_String> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_String');
+  late final _cst_new_list_String = _cst_new_list_StringPtr
+      .asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_ir_block> cst_new_list_ir_block(int len) {
+    return _cst_new_list_ir_block(len);
+  }
+
+  late final _cst_new_list_ir_blockPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_ir_block> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_ir_block');
+  late final _cst_new_list_ir_block = _cst_new_list_ir_blockPtr
+      .asFunction<ffi.Pointer<wire_cst_list_ir_block> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_ir_cell> cst_new_list_ir_cell(int len) {
+    return _cst_new_list_ir_cell(len);
+  }
+
+  late final _cst_new_list_ir_cellPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_ir_cell> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_ir_cell');
+  late final _cst_new_list_ir_cell = _cst_new_list_ir_cellPtr
+      .asFunction<ffi.Pointer<wire_cst_list_ir_cell> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_ir_doc> cst_new_list_ir_doc(int len) {
+    return _cst_new_list_ir_doc(len);
+  }
+
+  late final _cst_new_list_ir_docPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_ir_doc> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_ir_doc');
+  late final _cst_new_list_ir_doc = _cst_new_list_ir_docPtr
+      .asFunction<ffi.Pointer<wire_cst_list_ir_doc> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_ir_list_item> cst_new_list_ir_list_item(int len) {
+    return _cst_new_list_ir_list_item(len);
+  }
+
+  late final _cst_new_list_ir_list_itemPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_ir_list_item> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_ir_list_item');
+  late final _cst_new_list_ir_list_item = _cst_new_list_ir_list_itemPtr
+      .asFunction<ffi.Pointer<wire_cst_list_ir_list_item> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_ir_row> cst_new_list_ir_row(int len) {
+    return _cst_new_list_ir_row(len);
+  }
+
+  late final _cst_new_list_ir_rowPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_ir_row> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_ir_row');
+  late final _cst_new_list_ir_row = _cst_new_list_ir_rowPtr
+      .asFunction<ffi.Pointer<wire_cst_list_ir_row> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_ir_span> cst_new_list_ir_span(int len) {
+    return _cst_new_list_ir_span(len);
+  }
+
+  late final _cst_new_list_ir_spanPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_ir_span> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_ir_span');
+  late final _cst_new_list_ir_span = _cst_new_list_ir_spanPtr
+      .asFunction<ffi.Pointer<wire_cst_list_ir_span> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_key_value> cst_new_list_key_value(int len) {
+    return _cst_new_list_key_value(len);
+  }
+
+  late final _cst_new_list_key_valuePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_key_value> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_key_value');
+  late final _cst_new_list_key_value = _cst_new_list_key_valuePtr
+      .asFunction<ffi.Pointer<wire_cst_list_key_value> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_prim_f_32_loose> cst_new_list_prim_f_32_loose(
+    int len,
+  ) {
+    return _cst_new_list_prim_f_32_loose(len);
+  }
+
+  late final _cst_new_list_prim_f_32_loosePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_prim_f_32_loose> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_prim_f_32_loose');
+  late final _cst_new_list_prim_f_32_loose = _cst_new_list_prim_f_32_loosePtr
+      .asFunction<ffi.Pointer<wire_cst_list_prim_f_32_loose> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_prim_f_32_strict> cst_new_list_prim_f_32_strict(
+    int len,
+  ) {
+    return _cst_new_list_prim_f_32_strict(len);
+  }
+
+  late final _cst_new_list_prim_f_32_strictPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_prim_f_32_strict> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_prim_f_32_strict');
+  late final _cst_new_list_prim_f_32_strict = _cst_new_list_prim_f_32_strictPtr
+      .asFunction<ffi.Pointer<wire_cst_list_prim_f_32_strict> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_prim_i_32_loose> cst_new_list_prim_i_32_loose(
+    int len,
+  ) {
+    return _cst_new_list_prim_i_32_loose(len);
+  }
+
+  late final _cst_new_list_prim_i_32_loosePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_prim_i_32_loose> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_prim_i_32_loose');
+  late final _cst_new_list_prim_i_32_loose = _cst_new_list_prim_i_32_loosePtr
+      .asFunction<ffi.Pointer<wire_cst_list_prim_i_32_loose> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_prim_i_32_strict> cst_new_list_prim_i_32_strict(
+    int len,
+  ) {
+    return _cst_new_list_prim_i_32_strict(len);
+  }
+
+  late final _cst_new_list_prim_i_32_strictPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_prim_i_32_strict> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_prim_i_32_strict');
+  late final _cst_new_list_prim_i_32_strict = _cst_new_list_prim_i_32_strictPtr
+      .asFunction<ffi.Pointer<wire_cst_list_prim_i_32_strict> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_prim_u_8_loose> cst_new_list_prim_u_8_loose(
+    int len,
+  ) {
+    return _cst_new_list_prim_u_8_loose(len);
+  }
+
+  late final _cst_new_list_prim_u_8_loosePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_prim_u_8_loose> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_prim_u_8_loose');
+  late final _cst_new_list_prim_u_8_loose = _cst_new_list_prim_u_8_loosePtr
+      .asFunction<ffi.Pointer<wire_cst_list_prim_u_8_loose> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_prim_u_8_strict> cst_new_list_prim_u_8_strict(
+    int len,
+  ) {
+    return _cst_new_list_prim_u_8_strict(len);
+  }
+
+  late final _cst_new_list_prim_u_8_strictPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_prim_u_8_strict');
+  late final _cst_new_list_prim_u_8_strict = _cst_new_list_prim_u_8_strictPtr
+      .asFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_record_string_f_32> cst_new_list_record_string_f_32(
+    int len,
+  ) {
+    return _cst_new_list_record_string_f_32(len);
+  }
+
+  late final _cst_new_list_record_string_f_32Ptr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_record_string_f_32> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_record_string_f_32');
+  late final _cst_new_list_record_string_f_32 =
+      _cst_new_list_record_string_f_32Ptr
+          .asFunction<
+            ffi.Pointer<wire_cst_list_record_string_f_32> Function(int)
+          >();
+
+  ffi.Pointer<wire_cst_list_rig_chat_message> cst_new_list_rig_chat_message(
+    int len,
+  ) {
+    return _cst_new_list_rig_chat_message(len);
+  }
+
+  late final _cst_new_list_rig_chat_messagePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_rig_chat_message> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_rig_chat_message');
+  late final _cst_new_list_rig_chat_message = _cst_new_list_rig_chat_messagePtr
+      .asFunction<ffi.Pointer<wire_cst_list_rig_chat_message> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_rig_tool_def> cst_new_list_rig_tool_def(int len) {
+    return _cst_new_list_rig_tool_def(len);
+  }
+
+  late final _cst_new_list_rig_tool_defPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_rig_tool_def> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_rig_tool_def');
+  late final _cst_new_list_rig_tool_def = _cst_new_list_rig_tool_defPtr
+      .asFunction<ffi.Pointer<wire_cst_list_rig_tool_def> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_tokenize_result> cst_new_list_tokenize_result(
+    int len,
+  ) {
+    return _cst_new_list_tokenize_result(len);
+  }
+
+  late final _cst_new_list_tokenize_resultPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_tokenize_result> Function(ffi.Int32)
+        >
+      >('frbgen_moodiary_rust_cst_new_list_tokenize_result');
+  late final _cst_new_list_tokenize_result = _cst_new_list_tokenize_resultPtr
+      .asFunction<ffi.Pointer<wire_cst_list_tokenize_result> Function(int)>();
+
+  int dummy_method_to_enforce_bundling() {
+    return _dummy_method_to_enforce_bundling();
+  }
+
+  late final _dummy_method_to_enforce_bundlingPtr =
+      _lookup<ffi.NativeFunction<ffi.Int64 Function()>>(
+        'dummy_method_to_enforce_bundling',
+      );
+  late final _dummy_method_to_enforce_bundling =
+      _dummy_method_to_enforce_bundlingPtr.asFunction<int Function()>();
+}
+
+typedef DartPostCObjectFnType =
+    ffi.Pointer<ffi.NativeFunction<DartPostCObjectFnTypeFunction>>;
+typedef DartPostCObjectFnTypeFunction =
+    ffi.Bool Function(DartPort port_id, ffi.Pointer<ffi.Void> message);
+typedef DartDartPostCObjectFnTypeFunction =
+    bool Function(DartDartPort port_id, ffi.Pointer<ffi.Void> message);
+typedef DartPort = ffi.Int64;
+typedef DartDartPort = int;
+
+final class wire_cst_list_prim_u_8_loose extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint8> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint8> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_list_String extends ffi.Struct {
+  external ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_ir_span extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> text;
+
+  @ffi.Bool()
+  external bool bold;
+
+  @ffi.Bool()
+  external bool italic;
+
+  @ffi.Bool()
+  external bool strike;
+
+  @ffi.Bool()
+  external bool underline;
+
+  @ffi.Bool()
+  external bool code;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> href;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> diary_link_id;
+}
+
+final class wire_cst_list_ir_span extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ir_span> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_IrBlock_Paragraph extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_ir_span> spans;
+}
+
+final class wire_cst_IrBlock_Heading extends ffi.Struct {
+  @ffi.Uint32()
+  external int level;
+
+  external ffi.Pointer<wire_cst_list_ir_span> spans;
+}
+
+final class wire_cst_ir_list_item extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_ir_block> children;
+
+  external ffi.Pointer<ffi.Bool> checked;
+}
+
+final class wire_cst_list_ir_block extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ir_block> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_ir_block extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external IrBlockKind kind;
+}
+
+final class IrBlockKind extends ffi.Union {
+  external wire_cst_IrBlock_Paragraph Paragraph;
+
+  external wire_cst_IrBlock_Heading Heading;
+
+  external wire_cst_IrBlock_List List;
+
+  external wire_cst_IrBlock_Quote Quote;
+
+  external wire_cst_IrBlock_Code Code;
+
+  external wire_cst_IrBlock_Image Image;
+
+  external wire_cst_IrBlock_Media Media;
+
+  external wire_cst_IrBlock_Table Table;
+}
+
+final class wire_cst_IrBlock_List extends ffi.Struct {
+  @ffi.Bool()
+  external bool ordered;
+
+  @ffi.Uint32()
+  external int start;
+
+  external ffi.Pointer<wire_cst_list_ir_list_item> items;
+}
+
+final class wire_cst_list_ir_list_item extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ir_list_item> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_IrBlock_Quote extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_ir_block> children;
+}
+
+final class wire_cst_IrBlock_Code extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> language;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> text;
+}
+
+final class wire_cst_IrBlock_Image extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> path;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> alt;
+
+  external ffi.Pointer<ffi.Uint32> width_percent;
+
+  @ffi.Bool()
+  external bool is_external;
+}
+
+final class wire_cst_IrBlock_Media extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> kind;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> filename;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> path;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> cover_path;
+}
+
+final class wire_cst_IrBlock_Table extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_ir_row> rows;
+}
+
+final class wire_cst_list_ir_row extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ir_row> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_ir_row extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_ir_cell> cells;
+}
+
+final class wire_cst_list_ir_cell extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ir_cell> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_ir_cell extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_ir_block> children;
+
+  @ffi.Uint32()
+  external int colspan;
+
+  @ffi.Uint32()
+  external int rowspan;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> align;
+
+  @ffi.Bool()
+  external bool header;
+}
+
+final class wire_cst_ir_doc extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> title;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> time;
+
+  external ffi.Pointer<wire_cst_list_String> weather;
+
+  external ffi.Pointer<wire_cst_list_String> position;
+
+  external ffi.Pointer<wire_cst_list_String> tags;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> category_name;
+
+  external ffi.Pointer<wire_cst_list_ir_block> blocks;
+}
+
+final class wire_cst_docx_style extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> east_asia_font;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> ascii_font;
+
+  @ffi.Double()
+  external double font_size_pt;
+
+  @ffi.Double()
+  external double line_spacing;
+
+  @ffi.Bool()
+  external bool first_line_indent;
+
+  @ffi.Uint32()
+  external int page_width;
+
+  @ffi.Uint32()
+  external int page_height;
+
+  @ffi.Uint32()
+  external int page_margin;
+
+  @ffi.Bool()
+  external bool include_title;
+
+  @ffi.Bool()
+  external bool include_meta;
+
+  @ffi.Bool()
+  external bool page_break_between;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> video_label;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> audio_label;
+}
+
+final class wire_cst_client_settings extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> base_url;
+
+  external ffi.Pointer<ffi.Uint32> connect_timeout_ms;
+
+  external ffi.Pointer<ffi.Uint32> timeout_ms;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> user_agent;
+
+  external ffi.Pointer<ffi.Uint32> max_redirects;
+
+  @ffi.Bool()
+  external bool throw_on_status;
+}
+
+final class wire_cst_key_value extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> key;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> value;
+}
+
+final class wire_cst_list_key_value extends ffi.Struct {
+  external ffi.Pointer<wire_cst_key_value> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_request_options extends ffi.Struct {
+  @ffi.Int32()
+  external int method;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> url;
+
+  external ffi.Pointer<wire_cst_list_key_value> query;
+
+  external ffi.Pointer<wire_cst_list_key_value> headers;
+
+  external ffi.Pointer<ffi.Uint32> timeout_ms;
+
+  external ffi.Pointer<ffi.Bool> throw_on_status;
+}
+
+final class wire_cst_compress_spec extends ffi.Struct {
+  external ffi.Pointer<ffi.Int32> compress_format;
+
+  external ffi.Pointer<ffi.Uint32> target_width;
+
+  external ffi.Pointer<ffi.Uint32> target_height;
+
+  external ffi.Pointer<ffi.Uint32> min_width;
+
+  external ffi.Pointer<ffi.Uint32> min_height;
+
+  external ffi.Pointer<ffi.Uint32> max_width;
+
+  external ffi.Pointer<ffi.Uint32> max_height;
+
+  external ffi.Pointer<ffi.Uint8> quality;
+}
+
+final class wire_cst_pdf_style extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> font_path;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> font_family;
+
+  @ffi.Double()
+  external double font_size_pt;
+
+  @ffi.Double()
+  external double line_spacing_em;
+
+  @ffi.Bool()
+  external bool first_line_indent;
+
+  @ffi.Double()
+  external double page_width_mm;
+
+  @ffi.Double()
+  external double page_height_mm;
+
+  @ffi.Double()
+  external double page_margin_mm;
+
+  @ffi.Bool()
+  external bool include_title;
+
+  @ffi.Bool()
+  external bool include_meta;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> video_label;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> audio_label;
+}
+
+final class wire_cst_list_prim_i_32_loose extends ffi.Struct {
+  external ffi.Pointer<ffi.Int32> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_list_prim_f_32_loose extends ffi.Struct {
+  external ffi.Pointer<ffi.Float> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_graph_layout_params extends ffi.Struct {
+  @ffi.Uint32()
+  external int iterations;
+
+  @ffi.Float()
+  external double theta;
+
+  @ffi.Float()
+  external double repulsion;
+
+  @ffi.Float()
+  external double spring_length;
+
+  @ffi.Float()
+  external double spring_strength;
+
+  @ffi.Float()
+  external double gravity;
+
+  @ffi.Float()
+  external double collide_radius;
+
+  @ffi.Float()
+  external double velocity_decay;
+
+  @ffi.Uint32()
+  external int emit_every;
+
+  @ffi.Uint32()
+  external int frame_delay_ms;
+
+  @ffi.Float()
+  external double initial_alpha;
+
+  @ffi.Float()
+  external double min_step;
+
+  @ffi.Uint32()
+  external int pinned_count;
+
+  @ffi.Bool()
+  external bool normalize_scale;
+}
+
+final class wire_cst_rig_provider_config extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> protocol;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> api_key;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> base_url;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> model;
+
+  @ffi.Uint32()
+  external int max_tokens;
+
+  @ffi.Bool()
+  external bool thinking;
+}
+
+final class wire_cst_rig_chat_message extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> role;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> content;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> image_base64;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> image_mime;
+}
+
+final class wire_cst_list_rig_chat_message extends ffi.Struct {
+  external ffi.Pointer<wire_cst_rig_chat_message> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_rig_tool_def extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> description;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> parameters_json;
+}
+
+final class wire_cst_list_rig_tool_def extends ffi.Struct {
+  external ffi.Pointer<wire_cst_rig_tool_def> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_list_ir_doc extends ffi.Struct {
+  external ffi.Pointer<wire_cst_ir_doc> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_http_response extends ffi.Struct {
+  @ffi.Uint16()
+  external int status;
+
+  external ffi.Pointer<wire_cst_list_key_value> headers;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body;
+}
+
+final class wire_cst_list_prim_f_32_strict extends ffi.Struct {
+  external ffi.Pointer<ffi.Float> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_list_prim_i_32_strict extends ffi.Struct {
+  external ffi.Pointer<ffi.Int32> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_record_string_f_32 extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> field0;
+
+  @ffi.Float()
+  external double field1;
+}
+
+final class wire_cst_list_record_string_f_32 extends ffi.Struct {
+  external ffi.Pointer<wire_cst_record_string_f_32> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_tokenize_result extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_String> cut;
+
+  external ffi.Pointer<wire_cst_list_String> cut_for_search;
+}
+
+final class wire_cst_list_tokenize_result extends ffi.Struct {
+  external ffi.Pointer<wire_cst_tokenize_result> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_http_error extends ffi.Struct {
+  @ffi.Int32()
+  external int kind;
+
+  external ffi.Pointer<ffi.Uint16> status;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
+}
+
+final class wire_cst_http_server_request extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> method;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> path;
+
+  external ffi.Pointer<wire_cst_list_key_value> query;
+
+  external ffi.Pointer<wire_cst_list_key_value> headers;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body_file_path;
+}
+
+final class wire_cst_http_server_response extends ffi.Struct {
+  @ffi.Uint16()
+  external int status;
+
+  external ffi.Pointer<wire_cst_list_key_value> headers;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> body_file_path;
+}
+
+final class wire_cst_RigStreamEvent_TextDelta extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> field0;
+}
+
+final class wire_cst_RigStreamEvent_ReasoningDelta extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> field0;
+}
+
+final class wire_cst_RigStreamEvent_ToolCall extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> field0;
+}
+
+final class wire_cst_RigStreamEvent_Usage extends ffi.Struct {
+  @ffi.Uint32()
+  external int input_tokens;
+
+  @ffi.Uint32()
+  external int output_tokens;
+}
+
+final class RigStreamEventKind extends ffi.Union {
+  external wire_cst_RigStreamEvent_TextDelta TextDelta;
+
+  external wire_cst_RigStreamEvent_ReasoningDelta ReasoningDelta;
+
+  external wire_cst_RigStreamEvent_ToolCall ToolCall;
+
+  external wire_cst_RigStreamEvent_Usage Usage;
+}
+
+final class wire_cst_rig_stream_event extends ffi.Struct {
+  @ffi.Int32()
+  external int tag;
+
+  external RigStreamEventKind kind;
+}
+
+final class wire_cst_upload_event extends ffi.Struct {
+  @ffi.Int64()
+  external int sent;
+
+  @ffi.Int64()
+  external int total;
+
+  external ffi.Pointer<wire_cst_http_response> response;
 }

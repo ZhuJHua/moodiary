@@ -5,8 +5,7 @@ use crate::api::cancel::CancelToken;
 use crate::frb_generated::StreamSink;
 
 pub use moodiary_http::request::{
-    ClientSettings, HttpError, HttpErrorKind, HttpMethod, HttpResponse, KeyValue, RequestOptions,
-    UploadEvent,
+    ClientSettings, HttpMethod, HttpResponse, KeyValue, RequestOptions, UploadEvent,
 };
 
 #[frb(mirror(HttpMethod))]
@@ -58,8 +57,10 @@ pub struct _HttpResponse {
     pub body: Vec<u8>,
 }
 
-#[frb(mirror(HttpErrorKind))]
-pub enum _HttpErrorKind {
+/// 错误类型必须由桥 crate 自己声明、不能 mirror 子 crate 的：DCO 编解码下
+/// `transform_result_dco::<_, _, E>` 要的是裸类型的 `DartCObject: From<E>`，而孤儿规则
+/// 不允许我们给别的 crate 的类型 impl 外部 trait。形状与 [moodiary_http] 的一致。
+pub enum HttpErrorKind {
     Timeout,
     Connect,
     Request,
@@ -69,11 +70,28 @@ pub enum _HttpErrorKind {
     Unknown,
 }
 
-#[frb(mirror(HttpError))]
-pub struct _HttpError {
+pub struct HttpError {
     pub kind: HttpErrorKind,
     pub status: Option<u16>,
     pub message: String,
+}
+
+impl From<moodiary_http::request::HttpError> for HttpError {
+    fn from(e: moodiary_http::request::HttpError) -> Self {
+        HttpError {
+            kind: match e.kind {
+                moodiary_http::request::HttpErrorKind::Timeout => HttpErrorKind::Timeout,
+                moodiary_http::request::HttpErrorKind::Connect => HttpErrorKind::Connect,
+                moodiary_http::request::HttpErrorKind::Request => HttpErrorKind::Request,
+                moodiary_http::request::HttpErrorKind::Redirect => HttpErrorKind::Redirect,
+                moodiary_http::request::HttpErrorKind::Decode => HttpErrorKind::Decode,
+                moodiary_http::request::HttpErrorKind::Status => HttpErrorKind::Status,
+                moodiary_http::request::HttpErrorKind::Unknown => HttpErrorKind::Unknown,
+            },
+            status: e.status,
+            message: e.message,
+        }
+    }
 }
 
 /// 文件上传过程事件：进度事件 [response] 为 None，最后一条携带最终响应。
@@ -92,7 +110,7 @@ pub struct HttpClient {
 impl HttpClient {
     pub fn new(settings: ClientSettings) -> Result<HttpClient, HttpError> {
         Ok(HttpClient {
-            inner: moodiary_http::request::HttpClient::new(settings)?,
+            inner: moodiary_http::request::HttpClient::new(settings).map_err(HttpError::from)?,
         })
     }
 
@@ -101,7 +119,10 @@ impl HttpClient {
         options: RequestOptions,
         body: Option<Vec<u8>>,
     ) -> Result<HttpResponse, HttpError> {
-        self.inner.request(options, body).await
+        self.inner
+            .request(options, body)
+            .await
+            .map_err(HttpError::from)
     }
 
     /// 流式上传本地文件（不整块进内存）。进度经 [sink] 回报（`response` 为 None），
