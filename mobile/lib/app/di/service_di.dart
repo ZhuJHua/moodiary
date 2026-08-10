@@ -34,4 +34,6 @@ Future<void> registerService() async {
   );
   // 同步墓碑保留窗 GC（默认 90 天）：零后端用户的墓碑因此有界，不无限累积。
   unawaited(purgeExpiredTombstones());
+  // 上次进程被杀时残留的同步临时密文（全尺寸，没人来收）。
+  unawaited(purgeSyncMediaTemp());
 }

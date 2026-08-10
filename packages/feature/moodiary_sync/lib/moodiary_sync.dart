@@ -18,6 +18,7 @@ export 'src/application/sync_controller.dart'
         SyncError;
 export 'src/application/tombstone_gc.dart' show purgeExpiredTombstones;
 export 'src/data/impl/backup_archive_impl.dart' show SyncBackupArchive;
+export 'src/data/incremental_engine.dart' show purgeSyncMediaTemp;
 export 'src/data/sync_logger.dart' show SyncLogger;
 export 'src/data/sync_registry.dart' show registerRemoteSync;
 export 'src/presentation/backup_sync_page.dart' show BackupSyncPage;

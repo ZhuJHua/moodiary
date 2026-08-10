@@ -16,6 +16,7 @@ import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 import 'package:moodiary_sync/src/data/sync_stores.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 import 'package:pool/pool.dart';
 import 'package:synchronized/synchronized.dart';
@@ -1200,13 +1201,31 @@ class IncrementalSyncEngine {
     }
   }
 
-  /// 远端不存在返回 null。
+  /// 远端不存在（或对象为空）返回 null。
+  ///
+  /// 空对象要和「不存在」同等对待：流式 PUT 中途断网会在服务端留下 0 字节对象，
+  /// 而 push 侧只看 statObject 是否存在就跳过重传。若这里当成有效内容落盘，本地媒体
+  /// 会永久是个 0 字节文件 —— [_downloadMediaIfNeeded] 的 exists() 之后再也不会重下。
+  /// 与字节路径的 `encrypted.isEmpty` 同语义。
   Future<int?> _downloadMediaByFile(String remotePath, String localPath) async {
     final temp = await _mediaTempFile('dec');
     try {
       if (!await backend.readObjectToFile(remotePath, temp.path)) return null;
+      if (await temp.length() == 0) return null;
       await File(localPath).parent.create(recursive: true);
-      await (await _cipher()).decryptFileTo(temp.path, localPath);
+      // 先落 .part 再 rename：解密期磁盘上同时压着密文与明文两份，ENOSPC / 进程被杀
+      // 都可能写一半，而截断文件同样会被 exists() 当成「已下载」永不重试。
+      // rename 在同一文件系统上是原子的（同 MediaManager.compressInPlace 的做法）。
+      final part = File('$localPath.part');
+      try {
+        await (await _cipher()).decryptFileTo(temp.path, part.path);
+        await part.rename(localPath);
+      } catch (_) {
+        try {
+          await part.delete();
+        } catch (_) {}
+        rethrow;
+      }
       return await File(localPath).length();
     } finally {
       try {
@@ -1215,15 +1234,18 @@ class IncrementalSyncEngine {
     }
   }
 
+  /// 文件名必须进程内唯一：调用方是 [_mediaGate] 放行的并发任务，取时间戳前只有本地
+  /// IO，多个任务的 `DateTime.now()` 落在同一微秒是常态（实测 8 并发下过半轮次会撞），
+  /// 撞名会让两份密文写进同一个文件、解密报「密钥不匹配」，把人引向完全错误的方向。
   Future<File> _mediaTempFile(String tag) async {
     final dir = Directory(
       p.join(PlatformService.get().applicationCachePath, 'sync-media'),
     );
     await dir.create(recursive: true);
-    return File(
-      p.join(dir.path, '$tag-${DateTime.now().microsecondsSinceEpoch}.tmp'),
-    );
+    return File(p.join(dir.path, '$tag-${uuidV7()}.tmp'));
   }
+
+
 
   Future<void> _deleteLocalMedia(Diary diary) async {
     final entries = collectDiaryMediaEntries(diary);
@@ -1357,4 +1379,14 @@ class _GatedBackend implements IRemoteSyncBackend {
 
   @override
   Future<SyncReport> syncAll() => _inner.syncAll();
+}
+
+/// 清掉上次进程被杀时残留的同步临时密文（全尺寸，且不会有人来收）。启动时调用一次。
+Future<void> purgeSyncMediaTemp() async {
+  final dir = Directory(
+    p.join(PlatformService.get().applicationCachePath, 'sync-media'),
+  );
+  try {
+    if (await dir.exists()) await dir.delete(recursive: true);
+  } catch (_) {}
 }

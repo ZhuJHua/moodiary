@@ -318,6 +318,20 @@ impl S3Client {
                 Some(body),
             )
             .await?;
+        // 流式 body 不能 clone，重定向中间件会把 3xx 原样交回；而预签名 URL 换了 host
+        // 签名即失效（跨区 307 要求按新区重签），盲目重发只会 403 —— 直说是配置问题。
+        if resp.status().is_redirection() {
+            let location = resp
+                .headers()
+                .get(reqwest::header::LOCATION)
+                .and_then(|v| v.to_str().ok())
+                .unwrap_or("(no location)")
+                .to_owned();
+            return Err(anyhow::anyhow!(
+                "Write {key}: 服务端要求重定向到 {location}，通常是 endpoint / region 填错。\
+                 预签名 URL 无法跟随重定向，请直接填写对象所在区域的 endpoint。"
+            ));
+        }
         if !resp.status().is_success() {
             return Err(Self::fail(&format!("Write {key}"), resp).await);
         }

@@ -155,6 +155,11 @@ class ExportService {
       );
     } catch (e) {
       await _deleteQuietly(workDir);
+      // 取消若落在 Rust 调用内（合并导出的耗时主体在 builder.finish，Dart 侧已无检查点），
+      // 抛上来的是 AnyhowException("cancelled")，翻译成取消而不是弹「导出失败」。
+      if (e is! ExportException && token.isCancelled()) {
+        throw const ExportException(.cancelled);
+      }
       rethrow;
     }
   }

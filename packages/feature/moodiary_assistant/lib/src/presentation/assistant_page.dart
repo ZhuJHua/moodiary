@@ -491,6 +491,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     }
 
     final needApiKeyText = l10n.assistantNeedApiKey;
+    var errored = false;
     try {
       _streamSub = AssistantService.get()
           .chat(request)
@@ -511,6 +512,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             },
             onError: (Object e) {
               if (gen != _generation) return;
+              errored = true;
               _permissions.cancelPending();
               if (e is AssistantNotConfiguredException) {
                 _appendDelta(needApiKeyText);
@@ -518,11 +520,16 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               } else {
                 _appendDelta('\n（出错：$e）');
               }
-              _finalizeStreaming(persist: false);
+              // 落库：屏幕上已经有这半截回复 + 出错标记，不存的话重进会话就凭空少一段。
+              // 空回复由 _finalizeStreaming 自己剔除。
+              _finalizeStreaming(persist: true);
               if (mounted) setState(() => _sending = false);
             },
             onDone: () {
               if (gen != _generation) return;
+              // 默认 cancelOnError: false，出错后流仍会正常关闭 —— 不挡住的话这一轮会被
+              // 收尾两次，还会对一次失败的对话发起自动压缩。
+              if (errored) return;
               _finalizeStreaming(persist: true);
               if (mounted) setState(() => _sending = false);
               // 本轮已落库、拿到 provider 上报的输入 token 后，按阈值尝试压缩上下文。

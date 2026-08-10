@@ -122,35 +122,6 @@ Future<void> _genRust() async {
   await _run('flutter_rust_bridge_codegen', ['generate'], cwd: _rustPkgDir);
 }
 
-/// 不是完整的漂移检查（那要装 codegen CLI 重跑一遍），只挡「用别的版本生成后提交」。
-/// 改了 api/*.rs 忘记生成由 cargo clippy 兜住 —— frb_generated.rs 是编译进去的。
-void _assertGeneratedInSync() {
-  String? grab(String path, RegExp re) =>
-      re.firstMatch(File(path).readAsStringSync())?.group(1);
-
-  final pinned = grab(
-    '$_rustPkgDir/pubspec.yaml',
-    RegExp(r'^\s*flutter_rust_bridge:\s*(\S+)\s*$', multiLine: true),
-  );
-  final versions = {
-    'rust/src/frb_generated.rs': grab(
-      '$_rustPkgDir/rust/src/frb_generated.rs',
-      RegExp(r'FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "([^"]+)"'),
-    ),
-    'lib/src/rust/frb_generated.dart': grab(
-      '$_rustPkgDir/lib/src/rust/frb_generated.dart',
-      RegExp(r"codegenVersion => '([^']+)'"),
-    ),
-  };
-  final stale = versions.entries.where((e) => e.value != pinned).toList();
-  if (stale.isEmpty) return;
-  stderr.writeln(
-    '✗ 生成物的 codegen 版本与 pubspec 钉的 $pinned 不一致：\n'
-    '${stale.map((e) => '    ${e.key} = ${e.value ?? '未知'}').join('\n')}\n'
-    '  跑 `dart tool/task.dart gen-rust` 重新生成。',
-  );
-  exit(1);
-}
 
 Future<void> _checkLayers() => _run('fvm', ['dart', 'tool/check_layers.dart']);
 
@@ -182,7 +153,7 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   },
   // 分层依赖检查（上层依赖下层，同层不互引）+ flutter analyze
   'analyze': (_) async {
-    _assertGeneratedInSync();
+    await _run('dart', ['tool/check_generated.dart']);
     await _checkLayers();
     await _run('fvm', ['flutter', 'analyze']);
   },

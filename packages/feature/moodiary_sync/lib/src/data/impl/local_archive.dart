@@ -344,16 +344,26 @@ class LocalArchiveBackend implements IRemoteSyncBackend {
     return file.readAsBytes();
   }
 
+  // 归档就摊在本地文件系统上，key 直接映射到真实路径，文件直通就是一次 copy ——
+  // 不开的话导入备份 / 局域网接收会把每个媒体整份读进 Dart 堆，而媒体闸门默认放 8 路。
   @override
-  bool get supportsFileObjects => false;
+  bool get supportsFileObjects => true;
 
   @override
-  Future<bool> readObjectToFile(String key, String filePath) =>
-      throw UnsupportedError('不支持文件直通');
+  Future<bool> readObjectToFile(String key, String filePath) async {
+    final file = _file(key);
+    if (!await file.exists()) return false;
+    await File(filePath).parent.create(recursive: true);
+    await file.copy(filePath);
+    return true;
+  }
 
   @override
-  Future<void> writeObjectFile(String key, String filePath) =>
-      throw UnsupportedError('不支持文件直通');
+  Future<void> writeObjectFile(String key, String filePath) async {
+    final file = _file(key);
+    await file.parent.create(recursive: true);
+    await File(filePath).copy(file.path);
+  }
 
   @override
   Future<void> writeObject(String key, Uint8List bytes) async {

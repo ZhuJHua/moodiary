@@ -119,22 +119,19 @@ impl DavClient {
     }
 
     /// [write_object] 的文件版：请求体边读边发，整份不进内存。
+    ///
+    /// 流式 body 不能 clone（`try_clone` 返回 None），重定向中间件会把 3xx 原样交回来，
+    /// 所以这里重开文件手动跟一跳 —— 反代做 http→https 的 308 很常见。
     pub async fn write_object_file(&self, key: String, file_path: String) -> Result<()> {
         let path = self.full_path(&key);
         if let Some(pos) = path.rfind('/') {
             self.ensure_dir_cached(&path[..pos]).await?;
         }
-        let (body, len) = moodiary_http::client::file_body(&file_path).await?;
-        let resp = self
-            .client
-            .start_request(Method::PUT, &path)
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to build request: {e}"))?
-            .header(reqwest::header::CONTENT_LENGTH, len)
-            .body(body)
-            .send()
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to write {key}: {e}"))?;
+        let resp = self.put_file_once(&path, &file_path, None).await?;
+        let resp = match redirect_target(&resp) {
+            Some(location) => self.put_file_once(&path, &file_path, Some(&location)).await?,
+            None => resp,
+        };
         if !resp.status().is_success() {
             return Err(anyhow::anyhow!(
                 "Failed to write {key}: HTTP {}",
@@ -142,6 +139,29 @@ impl DavClient {
             ));
         }
         Ok(())
+    }
+
+    /// [override_url] 非空时直接 PUT 到该地址（跟随重定向用），否则走 dav 客户端的路径。
+    async fn put_file_once(
+        &self,
+        path: &str,
+        file_path: &str,
+        override_url: Option<&str>,
+    ) -> Result<reqwest::Response> {
+        let (body, len) = moodiary_http::client::file_body(file_path).await?;
+        let req = match override_url {
+            Some(url) => moodiary_http::client::shared()?.put(url),
+            None => self
+                .client
+                .start_request(Method::PUT, path)
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to build request: {e}"))?,
+        };
+        req.header(reqwest::header::CONTENT_LENGTH, len)
+            .body(body)
+            .send()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to write {path}: {e}"))
     }
 
     /// 条件创建：仅当远端不存在时写入（`If-None-Match: *`）。返回 true=创建成功，
@@ -216,4 +236,16 @@ impl DavClient {
             .map(|s| s.to_string())
             .unwrap_or_default())
     }
+}
+
+/// 3xx 且带 Location 时返回目标地址。
+fn redirect_target(resp: &reqwest::Response) -> Option<String> {
+    if !resp.status().is_redirection() {
+        return None;
+    }
+    resp.headers()
+        .get(reqwest::header::LOCATION)?
+        .to_str()
+        .ok()
+        .map(str::to_owned)
 }

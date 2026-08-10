@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:moodiary_core/moodiary_core.dart';
@@ -7,6 +8,8 @@ import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/remote_lease.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
+import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:path/path.dart' as p;
 
 class ReCipherReport {
   final int diaryCount;
@@ -207,22 +210,13 @@ class CloudReCipher {
     for (final ref in mediaRefs) {
       try {
         final path = SyncKeys.mediaObjectPathFromRef(ref);
-        final bytes = await backend.readObject(path);
-        if (bytes == null) {
+        final rewritten = backend.supportsFileObjects
+            ? await _reEncryptMediaByFile(path, from, to)
+            : await _reEncryptMediaByBytes(path, from, to);
+        if (!rewritten) {
           done++;
           continue;
         }
-        final Uint8List plain;
-        try {
-          plain = await from.decryptBytes(bytes);
-        } on SyncException {
-          // 断点续跑：已是目标编码的媒体校验后跳过（同 reEncodeJson）。
-          await to.decryptBytes(bytes);
-          done++;
-          continue;
-        }
-        final newBytes = await to.encryptBytes(plain);
-        await backend.writeObject(path, newBytes);
         mediaCount++;
       } catch (e) {
         failed++;
@@ -280,6 +274,63 @@ class CloudReCipher {
       failed: failed,
       elapsed: sw.elapsed,
     );
+  }
+
+  /// 媒体重加密的落盘版：整份密文/明文都不进 Dart 堆。返回 false = 远端没有该对象，
+  /// 或它已经是目标编码（断点续跑）。
+  Future<bool> _reEncryptMediaByFile(
+    String path,
+    SyncCipher from,
+    SyncCipher to,
+  ) async {
+    final src = await _tempFile('rc-src');
+    final plain = await _tempFile('rc-plain');
+    final out = await _tempFile('rc-out');
+    try {
+      if (!await backend.readObjectToFile(path, src.path)) return false;
+      try {
+        await from.decryptFileTo(src.path, plain.path);
+      } on SyncException {
+        // 断点续跑：已是目标编码的媒体校验后跳过（同 reEncodeJson）。
+        await to.decryptFileTo(src.path, plain.path);
+        return false;
+      }
+      await to.encryptFileTo(plain.path, out.path);
+      await backend.writeObjectFile(path, out.path);
+      return true;
+    } finally {
+      for (final f in [src, plain, out]) {
+        try {
+          await f.delete();
+        } catch (_) {}
+      }
+    }
+  }
+
+  Future<bool> _reEncryptMediaByBytes(
+    String path,
+    SyncCipher from,
+    SyncCipher to,
+  ) async {
+    final bytes = await backend.readObject(path);
+    if (bytes == null) return false;
+    final Uint8List plain;
+    try {
+      plain = await from.decryptBytes(bytes);
+    } on SyncException {
+      await to.decryptBytes(bytes);
+      return false;
+    }
+    await backend.writeObject(path, await to.encryptBytes(plain));
+    return true;
+  }
+
+  Future<File> _tempFile(String tag) async {
+    final dir = Directory(
+      p.join(PlatformService.get().applicationCachePath, 'sync-media'),
+    );
+    await dir.create(recursive: true);
+    return File(p.join(dir.path, '$tag-${uuidV7()}.tmp'));
   }
 
   /// 从 diary JSON 补收媒体引用（含视频缩略图）并入 [into]：覆盖「中断 push 已上传

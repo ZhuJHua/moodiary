@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:moodiary_core/moodiary_core.dart';
@@ -114,16 +115,29 @@ final class FakeRemoteBackend implements IRemoteSyncBackend {
     return objects[key];
   }
 
+  /// 生产上 S3/WebDAV 都是 true，引擎会走 _downloadMediaByFile / _uploadMediaByFile ——
+  /// 替身也必须支持，否则那条分支在测试里恒不执行。
   @override
-  bool get supportsFileObjects => false;
+  bool get supportsFileObjects => true;
 
   @override
-  Future<bool> readObjectToFile(String key, String filePath) =>
-      throw UnsupportedError('不支持文件直通');
+  Future<bool> readObjectToFile(String key, String filePath) async {
+    ops.add('read $key');
+    beforeOp?.call('read', key);
+    final bytes = objects[key];
+    if (bytes == null) return false;
+    final file = File(filePath);
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes(bytes);
+    return true;
+  }
 
   @override
-  Future<void> writeObjectFile(String key, String filePath) =>
-      throw UnsupportedError('不支持文件直通');
+  Future<void> writeObjectFile(String key, String filePath) async {
+    ops.add('write $key');
+    beforeOp?.call('write', key);
+    objects[key] = await File(filePath).readAsBytes();
+  }
 
   @override
   Future<void> writeObject(String key, Uint8List bytes) async {
@@ -386,6 +400,8 @@ final class FakeMediaFiles implements SyncMediaFiles {
     await drop(oldDiary.audioName, newDiary.audioName, 'audio');
     await drop(oldDiary.videoName, newDiary.videoName, 'video');
   }
+  /// 纯内存实现，Rust 看不见 —— 引擎据此回退字节路径。路径式分支的覆盖见
+  /// media_file_path_test.dart，那里用生产的 DiskSyncMediaFiles 配临时目录。
   @override
   String? realPath(String type, String filename) => null;
 
