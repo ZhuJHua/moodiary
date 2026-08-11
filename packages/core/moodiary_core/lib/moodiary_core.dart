@@ -24,6 +24,7 @@ export 'src/file_picker.dart';
 export 'src/files/app_files.dart';
 export 'src/files/cache_store.dart';
 export 'src/init.dart';
+export 'src/media/audio_duration.dart';
 export 'src/media/media_manager.dart';
 export 'src/network/http_client.dart';
 export 'src/network/http_server.dart';

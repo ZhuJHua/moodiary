@@ -7,12 +7,19 @@ import { readBoot } from './bridge/boot'
 import { applyTheme, setFontBase } from './bridge/theme'
 import { setSaveStatus } from './bridge/save-status'
 import { post } from './bridge/post'
-import { setMediaPrefix, unproxyMedia } from './editor/media'
+import {
+  setAudioDefaultName,
+  setMediaInfoPrefix,
+  setMediaPrefix,
+  unproxyMedia,
+} from './editor/media'
 
 // Flutter 把引导数据挂在页面 URL 的 ?boot= 上（readBoot 同步解析，先于编辑器构建）。
 // 初始内容不走 boot：ready 后由 Flutter setContent（见 moodiary_editor.dart）。
 const boot = readBoot()
 if (boot.mediaBase) setMediaPrefix(boot.mediaBase)
+if (boot.mediaInfoBase) setMediaInfoPrefix(boot.mediaInfoBase)
+if (boot.audioDefaultName) setAudioDefaultName(boot.audioDefaultName)
 // 字体文件基址须先于 applyTheme 注入：applyTheme 里用它拼 @font-face 的 src。
 if (boot.fontBase) setFontBase(boot.fontBase)
 const initialEditable = boot.editable ?? true

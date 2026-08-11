@@ -15,6 +15,10 @@ final class IsarDatabase {
 
   Isar get isar => _isar;
 
+  // isar_plus 按「打开时列表的位置下标」寻址 collection（无按名解析），而
+  // moodiary_migration / app_files 会用子集列表重挂载同一原生实例——子集必须是
+  // 本列表的严格前缀才能对齐下标。因此**新 schema 只能追加到末尾**，插入中间会
+  // 让迁移把数据写进错误的表。
   static final _schemas = [
     DiarySchema,
     CategorySchema,
@@ -29,6 +33,7 @@ final class IsarDatabase {
     ChatSessionSchema,
     ChatMessageSchema,
     MemoryEntrySchema,
+    MediaInfoSchema,
   ];
 
   Future<void> init() async {

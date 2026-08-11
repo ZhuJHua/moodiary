@@ -4,7 +4,6 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/assistant.dart';
-import 'api/audio.dart';
 import 'api/cancel.dart';
 import 'api/crypto.dart';
 import 'api/docx.dart';
@@ -361,9 +360,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   HttpResponse dco_decode_box_autoadd_http_response(dynamic raw);
 
   @protected
-  PlatformInt64 dco_decode_box_autoadd_i_64(dynamic raw);
-
-  @protected
   IrDoc dco_decode_box_autoadd_ir_doc(dynamic raw);
 
   @protected
@@ -518,9 +514,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   HttpResponse? dco_decode_opt_box_autoadd_http_response(dynamic raw);
-
-  @protected
-  PlatformInt64? dco_decode_opt_box_autoadd_i_64(dynamic raw);
 
   @protected
   int? dco_decode_opt_box_autoadd_u_16(dynamic raw);
@@ -853,9 +846,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  PlatformInt64 sse_decode_box_autoadd_i_64(SseDeserializer deserializer);
-
-  @protected
   IrDoc sse_decode_box_autoadd_ir_doc(SseDeserializer deserializer);
 
   @protected
@@ -1030,9 +1020,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   HttpResponse? sse_decode_opt_box_autoadd_http_response(
     SseDeserializer deserializer,
   );
-
-  @protected
-  PlatformInt64? sse_decode_opt_box_autoadd_i_64(SseDeserializer deserializer);
 
   @protected
   int? sse_decode_opt_box_autoadd_u_16(SseDeserializer deserializer);
@@ -1226,12 +1213,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     final ptr = wire.cst_new_box_autoadd_http_response();
     cst_api_fill_to_wire_http_response(raw, ptr.ref);
     return ptr;
-  }
-
-  @protected
-  ffi.Pointer<ffi.Int64> cst_encode_box_autoadd_i_64(PlatformInt64 raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return wire.cst_new_box_autoadd_i_64(cst_encode_i_64(raw));
   }
 
   @protected
@@ -1526,12 +1507,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     return raw == null
         ? ffi.nullptr
         : cst_encode_box_autoadd_http_response(raw);
-  }
-
-  @protected
-  ffi.Pointer<ffi.Int64> cst_encode_opt_box_autoadd_i_64(PlatformInt64? raw) {
-    // Codec=Cst (C-struct based), see doc to use other codecs
-    return raw == null ? ffi.nullptr : cst_encode_box_autoadd_i_64(raw);
   }
 
   @protected
@@ -2639,12 +2614,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_box_autoadd_i_64(
-    PlatformInt64 self,
-    SseSerializer serializer,
-  );
-
-  @protected
   void sse_encode_box_autoadd_ir_doc(IrDoc self, SseSerializer serializer);
 
   @protected
@@ -2857,12 +2826,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_opt_box_autoadd_http_response(
     HttpResponse? self,
-    SseSerializer serializer,
-  );
-
-  @protected
-  void sse_encode_opt_box_autoadd_i_64(
-    PlatformInt64? self,
     SseSerializer serializer,
   );
 
@@ -4452,28 +4415,6 @@ class RustLibWire implements BaseWire {
             void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
           >();
 
-  void wire__crate__api__audio__audio_duration_ms(
-    int port_,
-    ffi.Pointer<wire_cst_list_prim_u_8_strict> path,
-  ) {
-    return _wire__crate__api__audio__audio_duration_ms(port_, path);
-  }
-
-  late final _wire__crate__api__audio__audio_duration_msPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Void Function(
-            ffi.Int64,
-            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
-          )
-        >
-      >('frbgen_moodiary_rust_wire__crate__api__audio__audio_duration_ms');
-  late final _wire__crate__api__audio__audio_duration_ms =
-      _wire__crate__api__audio__audio_duration_msPtr
-          .asFunction<
-            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
-          >();
-
   void wire__crate__api__graph_layout__layout_graph_stream(
     int port_,
     int node_count,
@@ -5177,17 +5118,6 @@ class RustLibWire implements BaseWire {
   late final _cst_new_box_autoadd_http_response =
       _cst_new_box_autoadd_http_responsePtr
           .asFunction<ffi.Pointer<wire_cst_http_response> Function()>();
-
-  ffi.Pointer<ffi.Int64> cst_new_box_autoadd_i_64(int value) {
-    return _cst_new_box_autoadd_i_64(value);
-  }
-
-  late final _cst_new_box_autoadd_i_64Ptr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Int64> Function(ffi.Int64)>>(
-        'frbgen_moodiary_rust_cst_new_box_autoadd_i_64',
-      );
-  late final _cst_new_box_autoadd_i_64 = _cst_new_box_autoadd_i_64Ptr
-      .asFunction<ffi.Pointer<ffi.Int64> Function(int)>();
 
   ffi.Pointer<wire_cst_ir_doc> cst_new_box_autoadd_ir_doc() {
     return _cst_new_box_autoadd_ir_doc();

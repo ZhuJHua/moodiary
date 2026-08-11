@@ -126,6 +126,14 @@ class MoodiaryEditor extends StatefulWidget {
   /// 正文媒体磁盘解析器（宿主 app 提供）：注入给 [EditorLocalServer] 按需读盘供图。
   final MediaResolver? mediaResolver;
 
+  /// 媒体名 → 用户命名（宿主提供，查 MediaInfo 表）：注入给 [EditorLocalServer]，
+  /// 供 web 侧音频节点取显示名；null 表示未命名，web 侧回退默认名。
+  final Future<String?> Function(String name)? mediaNameResolver;
+
+  /// 未命名音频的默认显示名（宿主传本地化文案，同 [placeholder] 模式）。
+  /// 经 boot.audioDefaultName 下发。
+  final String audioDefaultName;
+
   /// 加载遮罩构建器（宿主 app 提供）；不传则用居中 [CircularProgressIndicator]。
   final WidgetBuilder? loadingBuilder;
 
@@ -155,6 +163,8 @@ class MoodiaryEditor extends StatefulWidget {
     this.rolesResolver,
     this.fontResolver,
     this.mediaResolver,
+    this.mediaNameResolver,
+    this.audioDefaultName = '',
     this.loadingBuilder,
   });
 
@@ -260,6 +270,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     final server = EditorLocalServer.instance;
     server.mediaResolver ??= widget.mediaResolver;
     server.fontResolver ??= widget.fontResolver;
+    server.mediaNameResolver ??= widget.mediaNameResolver;
     try {
       await server.ensureStarted();
     } catch (e, s) {
@@ -271,6 +282,8 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     if (!mounted) return;
     boot['mediaBase'] = server.mediaBase;
     boot['fontBase'] = server.fontBase;
+    boot['mediaInfoBase'] = server.mediaInfoBase;
+    boot['audioDefaultName'] = widget.audioDefaultName;
     try {
       await _buildController(server.pageUri(boot));
     } catch (e, s) {

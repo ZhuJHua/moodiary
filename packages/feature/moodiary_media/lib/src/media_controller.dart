@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
@@ -102,5 +104,15 @@ class MediaCleanupController extends _$MediaCleanupController {
 
   Future<void> clean(MediaCleanupReport report) async {
     await AppFiles.deleteOrphanMedia(report);
+    // MediaInfo 行对账：文件已不存在的行一律删除（写墓碑，随同步扩散）。
+    // 覆盖两条路径——刚删掉的孤儿音频，以及日记永久删除时文件先没了、孤儿
+    // 扫描永远扫不到的悬空行（行否则无任何回收通道）。
+    final rows = await MediaInfoRepository.get().getAllMediaInfos().run();
+    for (final row in rows.getOrElse((_) => const [])) {
+      final file = File(AppFiles.getRealPath(row.mediaType, row.fileName));
+      if (!await file.exists()) {
+        await MediaInfoRepository.get().deleteAMediaInfo(row.fileName).run();
+      }
+    }
   }
 }

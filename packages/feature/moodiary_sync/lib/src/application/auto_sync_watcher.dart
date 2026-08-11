@@ -45,6 +45,7 @@ class AutoSyncWatcher {
 
   StreamSubscription<DiaryEvent>? _diarySub;
   StreamSubscription<CategoryEvent>? _categorySub;
+  StreamSubscription<MediaInfoEvent>? _mediaInfoSub;
   StreamSubscription<SyncEvent>? _syncSub;
 
   Timer? _timer;
@@ -82,6 +83,11 @@ class AutoSyncWatcher {
       unawaited(MoodiaryKVs.syncPendingLocal.set(true));
       _onLocalChange();
     });
+    _mediaInfoSub ??= MediaInfoRepository.get().mediaInfoEvents.listen((event) {
+      if (event.fromSync) return;
+      unawaited(MoodiaryKVs.syncPendingLocal.set(true));
+      _onLocalChange();
+    });
     _syncSub ??= SyncLogger.get().events.listen(_onSyncEvent);
     // 改了轮询间隔 → 立即按新值重排（缩短间隔不必等旧定时器走完）。
     MoodiaryKVs.syncPollInterval.getNotifier().addListener(_schedulePoll);
@@ -97,9 +103,11 @@ class AutoSyncWatcher {
     MoodiaryKVs.syncPollInterval.getNotifier().removeListener(_schedulePoll);
     await _diarySub?.cancel();
     await _categorySub?.cancel();
+    await _mediaInfoSub?.cancel();
     await _syncSub?.cancel();
     _diarySub = null;
     _categorySub = null;
+    _mediaInfoSub = null;
     _syncSub = null;
   }
 

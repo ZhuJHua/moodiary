@@ -8,4 +8,3 @@ anyhow = { workspace = true }
 image = { workspace = true }
 webp = { workspace = true }
 fast_image_resize = { workspace = true }
-lofty = { workspace = true }

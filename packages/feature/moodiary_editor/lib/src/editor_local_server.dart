@@ -43,6 +43,10 @@ class EditorLocalServer {
   /// 每次请求都实时调用，故切换字体后无需重启服务。
   ({String family, String path})? Function()? fontResolver;
 
+  /// 媒体名 → 用户命名的解析器（由宿主注入，查 MediaInfo 表）。返回 null 表示未命名，
+  /// web 侧回退默认名。每次请求实时调用，改名后重开日记即可见。未设置时一律 404。
+  Future<String?> Function(String name)? mediaNameResolver;
+
   static String _randomToken() {
     final rng = Random.secure();
     return List.generate(
@@ -94,6 +98,19 @@ class EditorLocalServer {
       } catch (e) {
         _log('media request failed: ${request.path}', error: e, level: 1000);
         return .text(500, 'media request failed');
+      }
+    }
+    // `/<token>/mediainfo/<name>`：媒体元数据（当前只有名称）。JSON `{"name": ...}`，
+    // 未命名为 null；resolver 未注入时 404，web 侧按默认名兜底。
+    if (seg.length == 3 && seg[0] == _token && seg[1] == 'mediainfo') {
+      final name = seg[2];
+      final resolver = mediaNameResolver;
+      if (resolver == null || !_isSafeMediaName(name)) return .notFound();
+      try {
+        return .json({'name': await resolver(name)});
+      } catch (e) {
+        _log('mediainfo request failed: ${request.path}', error: e, level: 1000);
+        return .text(500, 'mediainfo request failed');
       }
     }
     // `/<token>/font`：供当前激活的自定义字体文件（web 侧 FontFace 的 src，查询串
@@ -200,6 +217,10 @@ class EditorLocalServer {
   /// 字体文件 URL（注入 boot.fontBase，web 侧用它作 @font-face 的 src）。
   /// 仅在 [ensureStarted] 完成后可用。
   String get fontBase => 'http://localhost:$_port/$_token/font';
+
+  /// 媒体元数据 URL 前缀（注入 boot.mediaInfoBase，web 侧音频节点取名用）。
+  /// 仅在 [ensureStarted] 完成后可用。
+  String get mediaInfoBase => 'http://localhost:$_port/$_token/mediainfo/';
 
   /// 编辑器页面 URL，boot 数据经 base64url 挂在 query 上。仅在 [ensureStarted] 完成后可用。
   Uri pageUri(Map<String, dynamic> boot) {

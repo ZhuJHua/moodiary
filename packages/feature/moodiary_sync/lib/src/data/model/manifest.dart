@@ -1,3 +1,4 @@
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
 /// 单个 manifest 条目。JSON：`{"t": <ms>, "d": true?, "m": ["image/a.png", ...]?}`
@@ -154,9 +155,11 @@ class SyncManifest {
 class SyncKeys {
   static const String diaryPrefix = 'd:';
   static const String categoryPrefix = 'c:';
+  static const String mediaInfoPrefix = 'm:';
 
   static String diary(String id) => '$diaryPrefix$id';
   static String category(String id) => '$categoryPrefix$id';
+  static String mediaInfo(String fileName) => '$mediaInfoPrefix$fileName';
 
   static const String manifestPath = 'manifest.json';
 
@@ -169,6 +172,11 @@ class SyncKeys {
   static String diaryObjectPath(String id) => 'diary/$id.json';
 
   static String categoryObjectPath(String id) => 'category/$id.json';
+
+  /// 媒体元数据对象路径，按类型分子目录（`mediainfo/audio/…`，类型取自文件名
+  /// 前缀），与媒体本体目录 `media/<type>/` 平行、互不混淆。
+  static String mediaInfoObjectPath(String fileName) =>
+      'mediainfo/${mediaTypeOfFileName(fileName)}/$fileName.json';
 
   /// [type] 为 `image` / `audio` / `video`。
   static String mediaObjectPath(String type, String filename) =>

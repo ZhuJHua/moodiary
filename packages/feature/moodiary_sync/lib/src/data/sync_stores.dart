@@ -36,6 +36,21 @@ abstract interface class SyncCategoryStore {
   Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false});
 }
 
+abstract interface class SyncMediaInfoStore {
+  /// 全量媒体元数据快照（同步用）。
+  Future<List<MediaInfo>> getAllMediaInfosForSync();
+  Future<MediaInfo?> getMediaInfoByFileName(String fileName);
+
+  /// 写入成功返回 `true`；落库并连带清除同 key 的墓碑行（复活闸门）。
+  Future<bool> insertAMediaInfo(MediaInfo mediaInfo, {bool fromSync = false});
+
+  /// pull 应用远端媒体元数据墓碑：行硬删 + 写墓碑，返回墓碑行。
+  Future<SyncTombstone> tombstoneMediaInfo(
+    String fileName, {
+    bool fromSync = false,
+  });
+}
+
 /// 同步墓碑表端口：引擎读取全量、批量回写推送记录、清除已覆盖的行。
 abstract interface class SyncTombstoneStore {
   Future<List<SyncTombstone>> getAll();
@@ -104,6 +119,37 @@ class RepoSyncCategoryStore implements SyncCategoryStore {
   @override
   Future<SyncTombstone> tombstoneCategory(String id, {bool fromSync = false}) =>
       _repo.tombstoneCategoryForSync(id, fromSync: fromSync);
+}
+
+class RepoSyncMediaInfoStore implements SyncMediaInfoStore {
+  final MediaInfoRepository _repo = .get();
+
+  @override
+  Future<List<MediaInfo>> getAllMediaInfosForSync() async {
+    final result = await _repo.getAllMediaInfosForSync().run();
+    return result.getOrElse((_) => const <MediaInfo>[]);
+  }
+
+  @override
+  Future<MediaInfo?> getMediaInfoByFileName(String fileName) =>
+      _repo.getMediaInfoByFileName(fileName);
+
+  @override
+  Future<bool> insertAMediaInfo(
+    MediaInfo mediaInfo, {
+    bool fromSync = false,
+  }) async {
+    final result = await _repo
+        .insertAMediaInfo(mediaInfo, fromSync: fromSync)
+        .run();
+    return result.isRight();
+  }
+
+  @override
+  Future<SyncTombstone> tombstoneMediaInfo(
+    String fileName, {
+    bool fromSync = false,
+  }) => _repo.tombstoneMediaInfoForSync(fileName, fromSync: fromSync);
 }
 
 class RepoSyncTombstoneStore implements SyncTombstoneStore {

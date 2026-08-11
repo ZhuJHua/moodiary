@@ -1,5 +1,4 @@
 pub mod assistant;
-pub mod audio;
 pub mod cancel;
 pub mod crypto;
 pub mod docx;

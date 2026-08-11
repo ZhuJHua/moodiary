@@ -330,6 +330,7 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: FakeMediaFiles(),
       );
@@ -354,6 +355,7 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: categoryStore,
+        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: mediaFiles,
       );
@@ -385,6 +387,7 @@ void main() {
         dir,
         diaryStore: diaryStore,
         categoryStore: FakeCategoryStore(),
+        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: diaryStore.tombstones,
         mediaFiles: mediaFiles,
       );
@@ -412,6 +415,7 @@ void main() {
         dir,
         diaryStore: FakeDiaryStore(),
         categoryStore: FakeCategoryStore(),
+        mediaInfoStore: FakeMediaInfoStore(),
         tombstoneStore: FakeTombstoneStore(),
         mediaFiles: FakeMediaFiles(),
       );

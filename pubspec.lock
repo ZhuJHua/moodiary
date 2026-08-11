@@ -73,6 +73,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.1"
+  audio_metadata_reader:
+    dependency: transitive
+    description:
+      name: audio_metadata_reader
+      sha256: "79b08282447dfc4b7ff955f9c4eff824d7284c7b021ccfe8204550d8801a08a5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.7.1"
   audioplayers:
     dependency: transitive
     description:
@@ -281,6 +289,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  charset:
+    dependency: transitive
+    description:
+      name: charset
+      sha256: "27802032a581e01ac565904ece8c8962564b1070690794f0072f6865958ce8b9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   chat_bottom_container:
     dependency: transitive
     description:

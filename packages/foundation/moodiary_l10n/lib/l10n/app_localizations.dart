@@ -1760,6 +1760,24 @@ abstract class AppLocalizations {
   /// **'音频文件错误'**
   String get audioFileError;
 
+  /// No description provided for @audioNameLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'名称'**
+  String get audioNameLabel;
+
+  /// No description provided for @audioDefaultName.
+  ///
+  /// In zh, this message translates to:
+  /// **'音频'**
+  String get audioDefaultName;
+
+  /// No description provided for @mediaRename.
+  ///
+  /// In zh, this message translates to:
+  /// **'重命名'**
+  String get mediaRename;
+
   /// No description provided for @diaryDelete.
   ///
   /// In zh, this message translates to:
@@ -3187,6 +3205,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'关闭'**
   String get videoPlayerClose;
+
+  /// No description provided for @audioPlayerClose.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get audioPlayerClose;
+
+  /// No description provided for @audioPlayerPlay.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放'**
+  String get audioPlayerPlay;
+
+  /// No description provided for @audioPlayerPause.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂停'**
+  String get audioPlayerPause;
+
+  /// No description provided for @audioPlayerProgress.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放进度'**
+  String get audioPlayerProgress;
 
   /// No description provided for @videoPlayerPlay.
   ///

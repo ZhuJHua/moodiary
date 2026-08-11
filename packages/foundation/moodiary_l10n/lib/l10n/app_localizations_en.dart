@@ -869,6 +869,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioFileError => 'Audio file error';
 
   @override
+  String get audioNameLabel => 'Name';
+
+  @override
+  String get audioDefaultName => 'Audio';
+
+  @override
+  String get mediaRename => 'Rename';
+
+  @override
   String get diaryDelete => 'Delete';
 
   @override
@@ -1670,6 +1679,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get videoPlayerClose => 'Close';
+
+  @override
+  String get audioPlayerClose => 'Close';
+
+  @override
+  String get audioPlayerPlay => 'Play';
+
+  @override
+  String get audioPlayerPause => 'Pause';
+
+  @override
+  String get audioPlayerProgress => 'Playback progress';
 
   @override
   String get videoPlayerPlay => 'Play';

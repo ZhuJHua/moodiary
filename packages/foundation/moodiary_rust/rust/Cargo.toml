@@ -50,7 +50,6 @@ image = { version = "=0.25.10", default-features = false, features = [
 ] }
 webp = "=0.3.1"
 fast_image_resize = { version = "=6.1.0", default-features = false, features = ["image"] }
-lofty = "=0.24.0"
 ttf-parser = { git = "https://github.com/ZhuJHua/ttf-parser", rev = "4a0ddfee643e4a25a3d1363241fa94b9c5f113c3" }
 
 jieba-rs = { version = "=0.10.3", default-features = false, features = ["default-dict"] }
@@ -104,7 +103,7 @@ moodiary-text = { workspace = true }
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
 
 # 不要加 panic = "abort"：FRB 靠 catch_unwind 把 Rust panic 转成 Dart 异常，abort
-# 会让第三方 crate（typst / image / zip / lofty）在脏输入上直接杀进程，而 Dart 侧
+# 会让第三方 crate（typst / image / zip）在脏输入上直接杀进程，而 Dart 侧
 # 现成的 try/catch 本来兜得住。代价实测（arm64 release）：.so 42.52 → 46.00 MB、
 # APK 40.2 → 41.6 MB，大头是 .text 里的 landing pad 而非 unwind 表本身。
 # 注：改 [profile.*] 后必须 flutter clean 才会真正重编——构建钩子与 Gradle 两层都会

@@ -24,6 +24,7 @@ dependencies:
   shared_preferences: 2.5.5
   flutter_secure_storage: 11.0.0
 
+  audio_metadata_reader: 1.7.1
   path: 1.9.1
   path_provider: 2.1.6
   pool: 1.5.2

@@ -29,21 +29,24 @@ void main() {
     FakeRemoteBackend backend, {
     FakeDiaryStore? diaries,
     FakeCategoryStore? categories,
+    FakeMediaInfoStore? mediaInfos,
     FakeTombstoneStore? tombstones,
     FakeMediaFiles? media,
     int concurrency = 4,
   }) {
-    // 引擎与日记/分类 store 必须共享同一墓碑表（镜像真实仓储的同库不变量）。
+    // 引擎与日记/分类/媒体元数据 store 必须共享同一墓碑表（镜像真实仓储的同库不变量）。
     final tombstoneStore =
         tombstones ??
         diaries?.tombstones ??
         categories?.tombstones ??
+        mediaInfos?.tombstones ??
         FakeTombstoneStore();
     return IncrementalSyncEngine(
       backend,
       logger: logger,
       diaryStore: diaries ?? FakeDiaryStore(const [], tombstoneStore),
       categoryStore: categories ?? FakeCategoryStore(const [], tombstoneStore),
+      mediaInfoStore: mediaInfos ?? FakeMediaInfoStore(const [], tombstoneStore),
       tombstoneStore: tombstoneStore,
       mediaFiles: media ?? FakeMediaFiles(),
       cipherProvider: () async => SyncCipher.plaintext,
@@ -57,6 +60,7 @@ void main() {
     FakeRemoteBackend backend, {
     List<dynamic> diaries = const [],
     List<dynamic> cats = const [],
+    List<dynamic> mediaInfos = const [],
     FakeMediaFiles? media,
   }) async {
     await IncrementalSyncEngine(
@@ -64,6 +68,7 @@ void main() {
       logger: logger,
       diaryStore: FakeDiaryStore(diaries.cast()),
       categoryStore: FakeCategoryStore(cats.cast()),
+      mediaInfoStore: FakeMediaInfoStore(mediaInfos.cast()),
       tombstoneStore: FakeTombstoneStore(),
       mediaFiles: media ?? FakeMediaFiles(),
       cipherProvider: () async => SyncCipher.plaintext,

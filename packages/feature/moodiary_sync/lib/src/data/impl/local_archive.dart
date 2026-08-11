@@ -16,7 +16,8 @@ import 'package:path/path.dart' as p;
 
 /// 本地备份归档 —— 导出/导入 zip，包内布局与远端同步完全一致：
 /// `manifest.json` + `diary/<id>.json` + `category/<id>.json` +
-/// `media/<type>/<filename>`，一律明文（本地压缩包不加密）。
+/// `mediainfo/<type>/<fileName>.json` + `media/<type>/<filename>`，
+/// 一律明文（本地压缩包不加密）。
 ///
 /// - 导出：引擎操作锁内做全量快照（防止媒体被并发同步删除），tombstone 也写进
 ///   manifest（`d:true`，不带 body），使导入能按 LWW 传播删除；
@@ -32,6 +33,8 @@ class LocalArchive {
       final diaries = await RepoSyncDiaryStore().getAllDiaries();
       final categories = await RepoSyncCategoryStore()
           .getAllCategoriesForSync();
+      final mediaInfos = await RepoSyncMediaInfoStore()
+          .getAllMediaInfosForSync();
       final tombstones = await RepoSyncTombstoneStore().getAll();
       final zipPath = p.join(
         PlatformService.get().applicationCachePath,
@@ -45,6 +48,7 @@ class LocalArchive {
           sink: _RustZipSink(zip),
           diaries: diaries,
           categories: categories,
+          mediaInfos: mediaInfos,
           tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
         );
@@ -77,6 +81,8 @@ class LocalArchive {
       final diaries = await RepoSyncDiaryStore().getAllDiaries();
       final categories = await RepoSyncCategoryStore()
           .getAllCategoriesForSync();
+      final mediaInfos = await RepoSyncMediaInfoStore()
+          .getAllMediaInfosForSync();
       final tombstones = await RepoSyncTombstoneStore().getAll();
       final zipPath = p.join(
         PlatformService.get().applicationCachePath,
@@ -89,6 +95,7 @@ class LocalArchive {
           sink: _RustZipSink(zip, zipPassword),
           diaries: diaries,
           categories: categories,
+          mediaInfos: mediaInfos,
           tombstones: tombstones,
           mediaBaseDir: PlatformService.get().applicationSupportPath,
           remote: remote,
@@ -109,6 +116,7 @@ class LocalArchive {
   static Future<SyncManifest> buildLocalManifest() async => buildManifest(
     diaries: await RepoSyncDiaryStore().getAllDiaries(),
     categories: await RepoSyncCategoryStore().getAllCategoriesForSync(),
+    mediaInfos: await RepoSyncMediaInfoStore().getAllMediaInfosForSync(),
     tombstones: await RepoSyncTombstoneStore().getAll(),
     mediaBaseDir: PlatformService.get().applicationSupportPath,
   );
@@ -118,11 +126,12 @@ class LocalArchive {
   static Future<SyncManifest> buildManifest({
     required List<Diary> diaries,
     required List<Category> categories,
+    List<MediaInfo> mediaInfos = const [],
     required List<SyncTombstone> tombstones,
     required String mediaBaseDir,
   }) async {
     final entries = <String, ManifestEntry>{};
-    // 墓碑键（`d:`/`c:` 前缀）与活跃行按不变量互斥，覆盖顺序无关紧要。
+    // 墓碑键（`d:`/`c:`/`m:` 前缀）与活跃行按不变量互斥，覆盖顺序无关紧要。
     for (final tombstone in tombstones) {
       entries[tombstone.key] = ManifestEntry(
         timeMs: tombstone.timeMs,
@@ -146,6 +155,11 @@ class LocalArchive {
         timeMs: category.lastModified.millisecondsSinceEpoch,
       );
     }
+    for (final mediaInfo in mediaInfos) {
+      entries[SyncKeys.mediaInfo(mediaInfo.fileName)] = ManifestEntry(
+        timeMs: mediaInfo.lastModified.millisecondsSinceEpoch,
+      );
+    }
     return SyncManifest(
       version: SyncManifest.currentVersion,
       updatedAtMs: DateTime.now().millisecondsSinceEpoch,
@@ -164,6 +178,7 @@ class LocalArchive {
     required ArchiveSink sink,
     required List<Diary> diaries,
     required List<Category> categories,
+    List<MediaInfo> mediaInfos = const [],
     required List<SyncTombstone> tombstones,
     required String mediaBaseDir,
     SyncManifest? remote,
@@ -172,6 +187,7 @@ class LocalArchive {
     final manifest = await buildManifest(
       diaries: diaries,
       categories: categories,
+      mediaInfos: mediaInfos,
       tombstones: tombstones,
       mediaBaseDir: mediaBaseDir,
     );
@@ -190,6 +206,7 @@ class LocalArchive {
 
     final diaryById = {for (final d in diaries) d.id: d};
     final categoryById = {for (final c in categories) c.id: c};
+    final mediaInfoByName = {for (final m in mediaInfos) m.fileName: m};
     final remoteMedia = remote?.referencedMedia() ?? const <String>{};
     final addedMedia = <String>{};
 
@@ -214,6 +231,12 @@ class LocalArchive {
         await sink.addBytes(
           SyncKeys.categoryObjectPath(id),
           await cipher.encode(categoryById[id]!.toJson()),
+        );
+      } else if (entry.key.startsWith(SyncKeys.mediaInfoPrefix)) {
+        final id = entry.key.substring(SyncKeys.mediaInfoPrefix.length);
+        await sink.addBytes(
+          SyncKeys.mediaInfoObjectPath(id),
+          await cipher.encode(mediaInfoByName[id]!.toJson()),
         );
       }
     }
@@ -260,6 +283,7 @@ class LocalArchive {
     String dir, {
     SyncDiaryStore? diaryStore,
     SyncCategoryStore? categoryStore,
+    SyncMediaInfoStore? mediaInfoStore,
     SyncTombstoneStore? tombstoneStore,
     SyncMediaFiles? mediaFiles,
     Future<SyncCipher> Function()? cipherProvider,
@@ -272,6 +296,7 @@ class LocalArchive {
       LocalArchiveBackend(dir),
       diaryStore: diaryStore,
       categoryStore: categoryStore,
+      mediaInfoStore: mediaInfoStore,
       tombstoneStore: tombstoneStore,
       mediaFiles: mediaFiles,
       cipherProvider: cipherProvider,

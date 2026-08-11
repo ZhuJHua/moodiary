@@ -51,7 +51,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0-beta.6";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -882118191;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 905724807;
 
 // Section: executor
 
@@ -2053,27 +2053,6 @@ fn wire__crate__api__zip__Zip_new_impl(
         },
     )
 }
-fn wire__crate__api__audio__audio_duration_ms_impl(
-    port_: flutter_rust_bridge::for_generated::MessagePort,
-    path: impl CstDecode<String>,
-) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "audio_duration_ms",
-            port: Some(port_),
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
-        },
-        move || {
-            let api_path = path.cst_decode();
-            move |context| {
-                transform_result_dco::<_, _, ()>((move || {
-                    let output_ok = Ok::<_, ()>(crate::api::audio::audio_duration_ms(api_path))?;
-                    std::result::Result::Ok(output_ok)
-                })())
-            }
-        },
-    )
-}
 fn wire__crate__api__graph_layout__layout_graph_stream_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     node_count: impl CstDecode<u32>,
@@ -3754,17 +3733,6 @@ impl SseDecode for Option<crate::api::http::HttpResponse> {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<crate::api::http::HttpResponse>::sse_decode(deserializer));
-        } else {
-            return None;
-        }
-    }
-}
-
-impl SseDecode for Option<i64> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        if (<bool>::sse_decode(deserializer)) {
-            return Some(<i64>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -5773,16 +5741,6 @@ impl SseEncode for Option<crate::api::http::HttpResponse> {
     }
 }
 
-impl SseEncode for Option<i64> {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <bool>::sse_encode(self.is_some(), serializer);
-        if let Some(value) = self {
-            <i64>::sse_encode(value, serializer);
-        }
-    }
-}
-
 impl SseEncode for Option<u16> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6420,12 +6378,6 @@ mod io {
         fn cst_decode(self) -> crate::api::http::HttpResponse {
             let wrap = unsafe { flutter_rust_bridge::for_generated::box_from_leak_ptr(self) };
             CstDecode::<crate::api::http::HttpResponse>::cst_decode(*wrap).into()
-        }
-    }
-    impl CstDecode<i64> for *mut i64 {
-        // Codec=Cst (C-struct based), see doc to use other codecs
-        fn cst_decode(self) -> i64 {
-            unsafe { *flutter_rust_bridge::for_generated::box_from_leak_ptr(self) }
         }
     }
     impl CstDecode<crate::api::export_ir::IrDoc> for *mut wire_cst_ir_doc {
@@ -7902,14 +7854,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__audio__audio_duration_ms(
-        port_: i64,
-        path: *mut wire_cst_list_prim_u_8_strict,
-    ) {
-        wire__crate__api__audio__audio_duration_ms_impl(port_, path)
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__graph_layout__layout_graph_stream(
         port_: i64,
         node_count: u32,
@@ -8257,11 +8201,6 @@ mod io {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_http_response::new_with_null_ptr(),
         )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_i_64(value: i64) -> *mut i64 {
-        flutter_rust_bridge::for_generated::new_leak_box_ptr(value)
     }
 
     #[unsafe(no_mangle)]

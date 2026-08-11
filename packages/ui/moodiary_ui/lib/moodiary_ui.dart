@@ -26,6 +26,7 @@ export 'src/basic/pull_to_refresh.dart';
 export 'src/basic/sheet.dart';
 export 'src/basic/text.dart';
 export 'src/common/async_value.dart';
+export 'src/common/audio/audio_player_page.dart';
 export 'src/common/audio_player.dart';
 export 'src/common/category_color.dart';
 export 'src/common/chip_bar.dart';

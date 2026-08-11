@@ -14,6 +14,7 @@ import 'package:path/path.dart' as p;
 class ReCipherReport {
   final int diaryCount;
   final int categoryCount;
+  final int mediaInfoCount;
   final int mediaCount;
   final int failed;
   final Duration elapsed;
@@ -21,6 +22,7 @@ class ReCipherReport {
   const ReCipherReport({
     required this.diaryCount,
     required this.categoryCount,
+    this.mediaInfoCount = 0,
     required this.mediaCount,
     required this.failed,
     required this.elapsed,
@@ -29,8 +31,8 @@ class ReCipherReport {
   @override
   String toString() {
     final base =
-        '日记 $diaryCount + 分类 $categoryCount + 媒体 $mediaCount '
-        '（耗时 ${elapsed.inMilliseconds}ms）';
+        '日记 $diaryCount + 分类 $categoryCount + 媒体信息 $mediaInfoCount + '
+        '媒体 $mediaCount（耗时 ${elapsed.inMilliseconds}ms）';
     return failed == 0 ? base : '$base\n$failed 个对象失败已跳过';
   }
 }
@@ -112,24 +114,28 @@ class CloudReCipher {
     // 收集需改写的对象（跳过 tombstone：无 body）。媒体集合取 manifest 清单并集。
     final diaryIds = <String>[];
     final categoryIds = <String>[];
+    final mediaInfoIds = <String>[];
     for (final entry in manifest.entries.entries) {
       if (entry.value.deleted) continue;
       if (entry.key.startsWith(SyncKeys.diaryPrefix)) {
         diaryIds.add(entry.key.substring(SyncKeys.diaryPrefix.length));
       } else if (entry.key.startsWith(SyncKeys.categoryPrefix)) {
         categoryIds.add(entry.key.substring(SyncKeys.categoryPrefix.length));
+      } else if (entry.key.startsWith(SyncKeys.mediaInfoPrefix)) {
+        mediaInfoIds.add(entry.key.substring(SyncKeys.mediaInfoPrefix.length));
       }
     }
     final mediaRefs = manifest.referencedMedia();
 
     int diaryCount = 0;
     int categoryCount = 0;
+    int mediaInfoCount = 0;
     int mediaCount = 0;
     int failed = 0;
 
     int done = 0;
     // 媒体引用在改写 diary 时还会补收（见 _collectMediaRefs），total 待后补媒体数。
-    int total = diaryIds.length + categoryIds.length;
+    int total = diaryIds.length + categoryIds.length + mediaInfoIds.length;
     void emitProgress(String label) => onProgress?.call(done, total, label);
     emitProgress('准备');
 
@@ -205,6 +211,27 @@ class CloudReCipher {
       emitProgress('分类 $id');
     }
 
+    // 改写 mediainfo JSON（漏掉 = 改密码后媒体元数据对象永久解不开）
+    for (final id in mediaInfoIds) {
+      try {
+        final ok = await reEncodeJson(SyncKeys.mediaInfoObjectPath(id));
+        if (ok == true) {
+          mediaInfoCount++;
+        } else if (ok == false) {
+          failed++;
+        }
+      } catch (e) {
+        failed++;
+        _logger.error(
+          .error,
+          '重新加密媒体元数据失败：$id',
+          payload: {'mediaFileName': id, 'detail': e.toString()},
+        );
+      }
+      done++;
+      emitProgress('媒体信息 $id');
+    }
+
     // 改写媒体文件（manifest 并集 + diary JSON 补收的并集）
     total += mediaRefs.length;
     for (final ref in mediaRefs) {
@@ -270,6 +297,7 @@ class CloudReCipher {
     return ReCipherReport(
       diaryCount: diaryCount,
       categoryCount: categoryCount,
+      mediaInfoCount: mediaInfoCount,
       mediaCount: mediaCount,
       failed: failed,
       elapsed: sw.elapsed,

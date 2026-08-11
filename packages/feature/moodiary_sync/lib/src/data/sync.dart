@@ -69,6 +69,7 @@ abstract class IRemoteSyncBackend implements SyncBackend {
 class SyncReport {
   final int diaryCount;
   final int categoryCount;
+  final int mediaInfoCount;
   final Duration elapsed;
   final String? warning;
 
@@ -82,6 +83,7 @@ class SyncReport {
   const SyncReport({
     required this.diaryCount,
     required this.categoryCount,
+    this.mediaInfoCount = 0,
     required this.elapsed,
     this.warning,
     this.failed = 0,
@@ -90,7 +92,8 @@ class SyncReport {
 
   @override
   String toString() =>
-      '日记 $diaryCount 条 / 分类 $categoryCount 条（耗时 ${elapsed.inMilliseconds}ms）'
+      '日记 $diaryCount 条 / 分类 $categoryCount 条 / 媒体信息 $mediaInfoCount 条'
+      '（耗时 ${elapsed.inMilliseconds}ms）'
       '${warning == null ? '' : '\n$warning'}';
 }
 

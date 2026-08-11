@@ -24,6 +24,38 @@ export function mediaUrl(name: string, opts?: { poster?: boolean }): string {
   return opts?.poster ? `${base}?poster=1` : base
 }
 
+// —— 媒体元数据（名称）：来自 MediaInfo 表，经本地服务 `/<token>/mediainfo/<name>` 下发。——
+
+let mediaInfoPrefix = ''
+let fallbackAudioName = '音频'
+
+/** boot 后设置媒体元数据前缀（如 `http://127.0.0.1:PORT/<token>/mediainfo/`）。 */
+export function setMediaInfoPrefix(base: string): void {
+  if (base) mediaInfoPrefix = base.endsWith('/') ? base : `${base}/`
+}
+
+/** boot 后设置未命名音频的默认显示名（Flutter 传本地化文案）。 */
+export function setAudioDefaultName(name: string): void {
+  if (name) fallbackAudioName = name
+}
+
+export function audioDefaultName(): string {
+  return fallbackAudioName
+}
+
+/** 取媒体的用户命名；未命名 / 服务不可用返回 null（调用方回退默认名）。 */
+export async function fetchMediaName(name: string): Promise<string | null> {
+  if (!mediaInfoPrefix) return null
+  try {
+    const res = await fetch(mediaInfoPrefix + name)
+    if (!res.ok) return null
+    const data = (await res.json()) as { name?: string | null }
+    return typeof data.name === 'string' && data.name ? data.name : null
+  } catch {
+    return null
+  }
+}
+
 /** 本地媒体按文件名前缀分三类（与 Flutter 落库命名一致：image-/audio-/video-）。 */
 export function isImage(name: string): boolean {
   return /^image-/.test(name)

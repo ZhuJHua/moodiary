@@ -5,11 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons, MoodiaryField;
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:record/record.dart';
 
-/// 录音底栏。保存返回文件名（落地在 `getRealPath('audio', ...)`），取消返回 null。
+/// 录音保存结果：文件名（落地在 `getRealPath('audio', ...)`）+ 名称（输入框留空为
+/// null，默认名由显示层兜底）+ 时长（探测文件为准，认不出的 ADTS 裸流回落录制计时）。
+typedef RecordSaveResult = ({String fileName, String? name, Duration duration});
+
+/// 录音底栏。保存返回 [RecordSaveResult]，取消返回 null。
 /// 直接录到正式目录、不走缓存中转，取消 / 失败时主动清理文件。
 class RecordSheet extends StatefulWidget {
   const RecordSheet({super.key});
@@ -23,11 +27,22 @@ class _RecordSheetState extends State<RecordSheet> {
 
   StreamSubscription<Amplitude>? _ampSub;
 
+  final _nameController = TextEditingController();
+
   String? _fileName;
 
   bool _started = false;
   bool _recording = false;
+
+  /// 收尾中（保存/取消已发起）：stop→探测时长是真实的 await 窗口，二次点击会让
+  /// `_recorder.stop()` 返回 null 而 pop 空结果、把录音丢成孤儿文件。
+  bool _finishing = false;
+
   Duration _elapsed = .zero;
+
+  /// 权威计时（落库兜底用）：[_elapsed] 是搭在振幅回调上的盲加计数器，丢帧就少计，
+  /// 只配当 UI 预览；Stopwatch 读真实时钟，暂停期间停表。
+  final Stopwatch _watch = Stopwatch();
 
   final List<double> _amplitudes = [];
 
@@ -41,6 +56,7 @@ class _RecordSheetState extends State<RecordSheet> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _ampSub?.cancel();
     // 已保存（_stopAndSave 置空 _fileName）时只释放资源；此时绝不能再 cancel()——
     // record 原生层 stop() 后仍持有输出路径，cancel() 会把刚录好的文件删掉。
@@ -70,6 +86,9 @@ class _RecordSheetState extends State<RecordSheet> {
     _ampSub = _recorder
         .onAmplitudeChanged(_sampleInterval)
         .listen(_onAmplitude);
+    _watch
+      ..reset()
+      ..start();
     if (!mounted) return;
     setState(() {
       _fileName = name;
@@ -111,18 +130,23 @@ class _RecordSheetState extends State<RecordSheet> {
   }
 
   Future<void> _pauseOrResume() async {
+    if (_finishing) return;
     if (_recording) {
       await _recorder.pause();
+      _watch.stop();
       if (!mounted) return;
       setState(() => _recording = false);
     } else {
       await _recorder.resume();
+      _watch.start();
       if (!mounted) return;
       setState(() => _recording = true);
     }
   }
 
   Future<void> _cancel() async {
+    if (_finishing) return;
+    _finishing = true;
     await _ampSub?.cancel();
     _ampSub = null;
     await _recorder.cancel();
@@ -136,19 +160,31 @@ class _RecordSheetState extends State<RecordSheet> {
   }
 
   Future<void> _stopAndSave() async {
+    if (_finishing) return;
+    _finishing = true;
     await _ampSub?.cancel();
     _ampSub = null;
+    _watch.stop();
     final path = await _recorder.stop();
     if (path == null) {
       if (!mounted) return;
       Navigator.of(context).pop();
       return;
     }
-    final name = _fileName;
+    // 权威时长读文件头；Android 录音实为 ADTS 裸流探测不到 → 回落 Stopwatch。
+    // 此 await 期间 _fileName 保持有值：用户滑掉 sheet 即视为取消，dispose 会
+    // 连文件一起清掉，不留孤儿。
+    final duration = await probeAudioDuration(path) ?? _watch.elapsed;
+    final fileName = _fileName;
     // 标记已收尾，避免 dispose 把它当作"中途滑掉"再删一次。
     _fileName = null;
-    if (!mounted) return;
-    Navigator.of(context).pop(name);
+    final name = _nameController.text.trim();
+    if (!mounted || fileName == null) return;
+    Navigator.of(context).pop<RecordSaveResult>((
+      fileName: fileName,
+      name: name.isEmpty ? null : name,
+      duration: duration,
+    ));
   }
 
   String _fmt(Duration d) {
@@ -175,6 +211,15 @@ class _RecordSheetState extends State<RecordSheet> {
     return Column(
       mainAxisSize: .min,
       children: [
+        // 名称输入框只在录制开始后出现:未开始时保持一颗录制键的极简形态。
+        if (_started) ...[
+          MoodiaryField(
+            controller: _nameController,
+            label: l10n.audioNameLabel,
+            textInputAction: .done,
+          ),
+          const SizedBox(height: 16),
+        ],
         SizedBox(
           height: 120,
           child: AnimatedSwitcher(

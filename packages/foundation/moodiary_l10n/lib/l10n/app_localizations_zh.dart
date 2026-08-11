@@ -854,6 +854,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get audioFileError => '音频文件错误';
 
   @override
+  String get audioNameLabel => '名称';
+
+  @override
+  String get audioDefaultName => '音频';
+
+  @override
+  String get mediaRename => '重命名';
+
+  @override
   String get diaryDelete => '删除';
 
   @override
@@ -1607,6 +1616,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoPlayerClose => '关闭';
+
+  @override
+  String get audioPlayerClose => '关闭';
+
+  @override
+  String get audioPlayerPlay => '播放';
+
+  @override
+  String get audioPlayerPause => '暂停';
+
+  @override
+  String get audioPlayerProgress => '播放进度';
 
   @override
   String get videoPlayerPlay => '播放';

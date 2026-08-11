@@ -12,6 +12,10 @@ export interface EditorBoot {
   mediaBase?: string
   /** 自定义字体文件 URL（同一本地服务），作 @font-face 的 src；随主题里的 font 家族名一起用。 */
   fontBase?: string
+  /** 媒体元数据 URL 前缀（同一本地服务），如 `http://127.0.0.1:PORT/<token>/mediainfo/`；音频节点取显示名用。 */
+  mediaInfoBase?: string
+  /** 未命名音频的默认显示名（Flutter 传本地化文案）。 */
+  audioDefaultName?: string
 }
 
 let cached: EditorBoot | null = null

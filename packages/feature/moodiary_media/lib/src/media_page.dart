@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
@@ -50,15 +52,6 @@ class _MobileMediaPage extends ConsumerStatefulWidget {
 class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
   MediaType _type = .image;
 
-  // 整页共享一个播放器实例：媒体库任一时刻只播一条音频，避免一屏 N 个播放器。
-  late final AudioPlaybackController _audio = AudioPlaybackController();
-
-  @override
-  void dispose() {
-    _audio.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,11 +78,7 @@ class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
           Expanded(
             child: AnimatedSwitcher(
               duration: Durations.short3,
-              child: _MediaBody(
-                key: ValueKey(_type),
-                type: _type,
-                audioController: _audio,
-              ),
+              child: _MediaBody(key: ValueKey(_type), type: _type),
             ),
           ),
         ],
@@ -160,13 +149,8 @@ const int _kGridColumns = 3;
 
 class _MediaBody extends ConsumerWidget {
   final MediaType type;
-  final AudioPlaybackController audioController;
 
-  const _MediaBody({
-    super.key,
-    required this.type,
-    required this.audioController,
-  });
+  const _MediaBody({super.key, required this.type});
 
   /// 按实际单元格宽度算出缩略图解码宽度（像素），避免整图解码——大图列表卡顿主因。
   int _thumbCacheWidth(BuildContext context) {
@@ -203,9 +187,9 @@ class _MediaBody extends ConsumerWidget {
                 ),
                 _MediaSliver(
                   type: type,
+                  date: date,
                   names: group.groups[date]!,
                   cacheWidth: cacheWidth,
-                  audioController: audioController,
                 ),
               ],
               // 底栏悬浮，最后一屏得自己让出那条带 —— 根壳把带高折进了 padding.bottom。
@@ -265,15 +249,15 @@ class _SectionHeader extends StatelessWidget {
 /// 单个日期分段的媒体：图片 / 视频用 [SliverGrid]（cell 级懒加载），音频用 [SliverList]。
 class _MediaSliver extends StatelessWidget {
   final MediaType type;
+  final DateTime date;
   final List<String> names;
   final int cacheWidth;
-  final AudioPlaybackController audioController;
 
   const _MediaSliver({
     required this.type,
+    required this.date,
     required this.names,
     required this.cacheWidth,
-    required this.audioController,
   });
 
   @override
@@ -284,12 +268,9 @@ class _MediaSliver extends StatelessWidget {
         sliver: SliverList.separated(
           itemCount: names.length,
           separatorBuilder: (_, _) => const SizedBox(height: 8),
-          // 按文件名 key，实时插入/重排时移动元素而非改数据（不错位）；卡片仅绑定共享控制器。
-          itemBuilder: (context, i) => AudioTile(
-            key: ValueKey(names[i]),
-            controller: audioController,
-            path: AppFiles.getRealPath('audio', names[i]),
-          ),
+          // 按文件名 key，实时插入/重排时移动元素而非改数据（不错位）。
+          itemBuilder: (context, i) =>
+              _AudioTile(key: ValueKey(names[i]), name: names[i], date: date),
         ),
       );
     }
@@ -321,6 +302,163 @@ class _MediaSliver extends StatelessWidget {
     );
   }
 }
+
+/// 会话内已尝试过懒补行的文件名，避免探测失败的历史音频（ADTS 裸流）反复重试。
+final Set<String> _backfillAttempted = {};
+
+/// 历史音频懒补行：没有 MediaInfo 行（或行内缺时长）时后台探测一次时长写库。
+/// 探测不到（历史 Android 录音）就不落行——没有可存的事实，改名时再建行。
+///
+/// LWW 纪律：时长是派生缓存，**不得携带「现在」时钟**，否则会在 LWW 上压过
+/// 远端带用户命名的行（新装机 / pull 失败窗口下把名字全网擦掉）。无行时落
+/// epoch 0——任何真实用户写入都能压过它；已有行只补时长、保留原 lastModified
+/// ——不推进时钟就不会覆盖任何人（其它设备各自本地探测即可）。
+Future<void> _backfillMediaInfo(String name) async {
+  if (!_backfillAttempted.add(name)) return;
+  final duration = await probeAudioDuration(AppFiles.getRealPath('audio', name));
+  if (duration == null) return;
+  final existing = await MediaInfoRepository.get().getMediaInfoByFileName(name);
+  if (existing?.durationMs != null) return;
+  await MediaInfoRepository.get()
+      .insertAMediaInfo(
+        MediaInfo(
+          fileName: name,
+          name: existing?.name,
+          durationMs: duration.inMilliseconds,
+          lastModified:
+              existing?.lastModified ??
+              DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+        ),
+      )
+      .run();
+}
+
+/// 音频导航卡片：图标 + 名称 + 时长 + 箭头，点击进全屏播放页，长按重命名。
+/// 不初始化任何播放器；名称与时长都来自 MediaInfo 表。
+class _AudioTile extends ConsumerWidget {
+  final String name;
+  final DateTime date;
+
+  const _AudioTile({super.key, required this.name, required this.date});
+
+  Future<void> _rename(
+    BuildContext context,
+    WidgetRef ref,
+    MediaInfo? info,
+  ) async {
+    final action = await showMoodiaryMenu<_AudioTileAction>(
+      anchorContext: context,
+      entries: [
+        MoodiaryMenuEntry(
+          value: .rename,
+          label: context.l10n.mediaRename,
+          icon: LucideIcons.pencilLine,
+        ),
+      ],
+    );
+    if (action != .rename || !context.mounted) return;
+    final input = await showMoodiaryPrompt(
+      context,
+      title: context.l10n.mediaRename,
+      initialValue: info?.name ?? '',
+      hintText: context.l10n.audioNameLabel,
+    );
+    if (input == null) return;
+    // 清空即回落默认名（存 null，默认名不落盘）；全字段重建、刷 lastModified。
+    await ref
+        .read(mediaInfoControllerProvider.notifier)
+        .upsertMediaInfo(
+          MediaInfo(
+            fileName: name,
+            name: input.isEmpty ? null : input,
+            durationMs: info?.durationMs,
+            lastModified: .timestamp(),
+          ),
+        );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = context.colorScheme;
+    final info = ref.watch(mediaInfoByFileNameProvider(name));
+    if (info?.durationMs == null) {
+      Future.microtask(() => _backfillMediaInfo(name));
+    }
+    final displayName = info?.name ?? context.l10n.audioDefaultName;
+    final durationMs = info?.durationMs;
+    return Material(
+      color: scheme.surfaceContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: AppBorderRadius.largeBorderRadius,
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      child: InkWell(
+        customBorder: const RoundedRectangleBorder(
+          borderRadius: AppBorderRadius.largeBorderRadius,
+        ),
+        onTap: () => MoodiaryAudioPlayerPage.showByName(
+          context,
+          name: name,
+          title: displayName,
+          subtitle: TimeFormat.fullDate(date),
+          knownDuration: durationMs == null
+              ? null
+              : Duration(milliseconds: durationMs),
+        ),
+        onLongPress: () => _rename(context, ref, info),
+        child: Padding(
+          padding: const .all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: AppBorderRadius.smallBorderRadius,
+                ),
+                child: Icon(
+                  LucideIcons.music,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  displayName,
+                  maxLines: 1,
+                  overflow: .ellipsis,
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    fontWeight: .w500,
+                  ),
+                ),
+              ),
+              if (durationMs != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  TimeFormat.mediaDuration(Duration(milliseconds: durationMs)),
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontFeatures: const [.tabularFigures()],
+                  ),
+                ),
+              ],
+              const SizedBox(width: 8),
+              Icon(
+                LucideIcons.chevronRight,
+                size: 16,
+                color: scheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _AudioTileAction { rename }
 
 /// 缩略图基座：圆角 + 占位底色 + 解码后淡入，减少滚动时的「弹出」突兀感。
 class _Thumb extends StatelessWidget {

@@ -226,6 +226,8 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
   }
 
   /// 复制原文件到 audio 目录、命名 `audio-uuid.ext` 直接落库，不压缩 / 转码。
+  /// 时长探测（按内容识别容器）就是准入闸门：认不出的文件不允许添加。
+  /// 原文件名（去扩展名）作为音频名称落 MediaInfo。
   Future<void> _pickAudioFile(BuildContext sheetContext) async {
     Navigator.of(sheetContext).pop();
     try {
@@ -233,7 +235,19 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       if (file == null) return;
       final ext = p.extension(file.path);
       final name = 'audio-${uuidV7()}$ext';
-      await File(file.path).copy(AppFiles.getRealPath('audio', name));
+      final path = AppFiles.getRealPath('audio', name);
+      await File(file.path).copy(path);
+      final duration = await probeAudioDuration(path);
+      if (duration == null) {
+        await AppFiles.deleteFile(path);
+        if (mounted) toast.error(message: context.l10n.audioFileError);
+        return;
+      }
+      await _saveMediaInfo(
+        name,
+        title: p.basenameWithoutExtension(file.path),
+        duration: duration,
+      );
       await _controller.insertAudio(name);
     } catch (_) {
       if (mounted) toast.error(message: context.l10n.audioFileError);
@@ -242,12 +256,35 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
 
   Future<void> _recordAudio(BuildContext sheetContext) async {
     Navigator.of(sheetContext).pop();
-    final name = await showMoodiarySheet<String>(
+    final result = await showMoodiarySheet<RecordSaveResult>(
       context,
       builder: (_) => const RecordSheet(),
     );
-    if (name == null) return;
-    await _controller.insertAudio(name);
+    if (result == null) return;
+    await _saveMediaInfo(
+      result.fileName,
+      title: result.name,
+      duration: result.duration,
+    );
+    await _controller.insertAudio(result.fileName);
+  }
+
+  /// 名称 + 时长落 MediaInfo 表（随同步传播）。失败不阻断插入——缺行由媒体库
+  /// 懒补行兜底。
+  Future<void> _saveMediaInfo(
+    String fileName, {
+    String? title,
+    Duration? duration,
+  }) async {
+    await MediaInfoRepository.get()
+        .insertAMediaInfo(
+          MediaInfo.create(
+            fileName: fileName,
+            name: title,
+            durationMs: duration?.inMilliseconds,
+          ),
+        )
+        .run();
   }
 
   /// 点击正文图片 → 原生全屏画廊（翻页 / 缩放 / 下拉关闭 / 保存 / 信息）。
@@ -327,6 +364,9 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       rolesResolver: ThemeManager().editorRoles,
       fontResolver: () => ThemeManager().editorFont,
       mediaResolver: appMediaResolver,
+      mediaNameResolver: (name) async =>
+          (await MediaInfoRepository.get().getMediaInfoByFileName(name))?.name,
+      audioDefaultName: context.l10n.audioDefaultName,
       loadingBuilder: (_) => const MoodiaryLoading(),
     );
   }

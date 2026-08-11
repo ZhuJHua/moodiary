@@ -341,6 +341,54 @@ final class FakeCategoryStore implements SyncCategoryStore {
   }
 }
 
+/// 内存媒体元数据仓库，实现 [SyncMediaInfoStore]。
+final class FakeMediaInfoStore implements SyncMediaInfoStore {
+  final Map<String, MediaInfo> mediaInfos = {};
+  final FakeTombstoneStore tombstones;
+
+  /// 写入返回 false 用于模拟仓库写失败。
+  bool insertSucceeds = true;
+
+  FakeMediaInfoStore([
+    Iterable<MediaInfo> seed = const [],
+    FakeTombstoneStore? tombstones,
+  ]) : tombstones = tombstones ?? FakeTombstoneStore() {
+    for (final m in seed) {
+      mediaInfos[m.fileName] = m;
+    }
+  }
+
+  @override
+  Future<List<MediaInfo>> getAllMediaInfosForSync() async =>
+      mediaInfos.values.toList();
+
+  @override
+  Future<MediaInfo?> getMediaInfoByFileName(String fileName) async =>
+      mediaInfos[fileName];
+
+  @override
+  Future<bool> insertAMediaInfo(
+    MediaInfo mediaInfo, {
+    bool fromSync = false,
+  }) async {
+    if (!insertSucceeds) return false;
+    mediaInfos[mediaInfo.fileName] = mediaInfo;
+    tombstones.rows.remove(SyncTombstone.mediaInfoKey(mediaInfo.fileName));
+    return true;
+  }
+
+  @override
+  Future<SyncTombstone> tombstoneMediaInfo(
+    String fileName, {
+    bool fromSync = false,
+  }) async {
+    mediaInfos.remove(fileName);
+    final row = SyncTombstone.forMediaInfo(fileName, at: .timestamp());
+    tombstones.rows[row.key] = row;
+    return row;
+  }
+}
+
 /// 内存媒体文件，实现 [SyncMediaFiles]。`files` 以 `<type>/<filename>` 为键。
 final class FakeMediaFiles implements SyncMediaFiles {
   final Map<String, Uint8List> files = {};
@@ -534,6 +582,32 @@ SyncTombstone buildCategoryTombstone(
 }) {
   return SyncTombstone(
     key: SyncTombstone.categoryKey(id),
+    timeMs: atMs(modifiedMs).millisecondsSinceEpoch,
+    pushedBackends: pushed,
+  );
+}
+
+MediaInfo buildMediaInfo({
+  required String fileName,
+  int modifiedMs = 0,
+  String? name,
+  int? durationMs,
+}) {
+  return MediaInfo(
+    fileName: fileName,
+    name: name,
+    durationMs: durationMs,
+    lastModified: atMs(modifiedMs),
+  );
+}
+
+SyncTombstone buildMediaInfoTombstone(
+  String fileName, {
+  int modifiedMs = 0,
+  List<String> pushed = const [],
+}) {
+  return SyncTombstone(
+    key: SyncTombstone.mediaInfoKey(fileName),
     timeMs: atMs(modifiedMs).millisecondsSinceEpoch,
     pushedBackends: pushed,
   );

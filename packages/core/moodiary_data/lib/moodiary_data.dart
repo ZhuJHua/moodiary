@@ -12,6 +12,8 @@ export 'src/diary_repository.dart';
 export 'src/font_repository.dart';
 export 'src/llm_provider_repository.dart';
 export 'src/loadmore.dart';
+export 'src/media_info_controller.dart';
+export 'src/media_info_repository.dart';
 export 'src/memory_repository.dart';
 export 'src/open_diary_registry.dart';
 export 'src/sync_pending.dart';
