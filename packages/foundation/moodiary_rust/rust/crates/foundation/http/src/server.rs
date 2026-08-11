@@ -405,6 +405,11 @@ mod tests {
         Arc::new(|_, _| Box::pin(async {}))
     }
 
+    /// 不用 `reqwest::Client::new()`：它不装 rustls provider，单独跑本 crate 时建 client 即 panic。
+    fn test_client() -> reqwest::Client {
+        crate::client::builder().unwrap().build().unwrap()
+    }
+
     fn test_dir(tag: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!(
             "moodiary-http-server-test-{tag}-{}",
@@ -444,7 +449,7 @@ mod tests {
         .await
         .unwrap();
 
-        let client = reqwest::Client::new();
+        let client = test_client();
         let resp = client
             .post(format!("http://127.0.0.1:{}/echo?a=b%20c", server.port()))
             .body("hello")
@@ -492,7 +497,7 @@ mod tests {
         .unwrap();
 
         let payload = vec![7u8; 2 * 1024 * 1024];
-        let client = reqwest::Client::new();
+        let client = test_client();
         let resp = client
             .post(format!("http://127.0.0.1:{}/upload", server.port()))
             .body(payload.clone())
@@ -542,7 +547,7 @@ mod tests {
         .await
         .unwrap();
         let base = format!("http://127.0.0.1:{}/f", server.port());
-        let client = reqwest::Client::new();
+        let client = test_client();
 
         let full = client.get(&base).send().await.unwrap();
         assert_eq!(full.status().as_u16(), 200);
