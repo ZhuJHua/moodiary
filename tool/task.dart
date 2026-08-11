@@ -116,10 +116,65 @@ Future<void> _assertCodegenVersion() async {
   }
 }
 
+const _genRustOutDir = '$_rustPkgDir/lib/src/rust';
+
+/// ffigen 21 起会给每个结构体生成 `$allocate`，而 FRB 剥离 WireSyncRust2DartSse 的正则是
+/// 非贪婪的，会止于具名参数列表那个 `}`，把类头吃掉、留下半截函数体。codegen 照样 exit 0。
+const _ffigenMin = 8;
+const _ffigenMaxExclusive = 21;
+
+/// 从根 lock 读实际解析到的 ffigen 版本（workspace 下 dev 依赖记在根 lock 里）。
+String _resolvedFfigenVersion() {
+  final lock = File('pubspec.lock').readAsStringSync();
+  final v = RegExp(
+    r'^  ffigen:$.*?^    version:\s*"?([^"\s]+)"?$',
+    multiLine: true,
+    dotAll: true,
+  ).firstMatch(lock)?.group(1);
+  if (v == null) {
+    stderr.writeln('✗ pubspec.lock 里读不到 ffigen 版本，先跑 flutter pub get');
+    exit(1);
+  }
+  return v;
+}
+
+/// pub upgrade --major-versions 会把 ffigen 的钉版本改写成 ^21.0.0，而 21 的产出是坏的。
+void _assertFfigenVersion(String version) {
+  final major = int.tryParse(version.split('.').first);
+  if (major == null || major < _ffigenMin || major >= _ffigenMaxExclusive) {
+    stderr.writeln(
+      '✗ ffigen 版本不支持：解析到 $version，需要 >=$_ffigenMin.0.0 且 <$_ffigenMaxExclusive.0.0。\n'
+      '  21+ 生成的绑定无法解析（FRB 剥离 WireSyncRust2DartSse 的正则被 \$allocate 打断），\n'
+      '  且 codegen 仍会 exit 0。请把 $_rustPkgDir/pubspec.yaml 的 ffigen 钉回 20.1.1 后\n'
+      '  重跑 flutter pub get。',
+    );
+    exit(1);
+  }
+}
+
+/// FRB 走 `flutter pub run ffigen`，用的是 .dart_tool/pub/bin/ffigen 里的预编译快照；
+/// 换 ffigen 版本后 pub get 不一定让它失效，会拿旧快照静默跑出「看着没问题」的产物。
+void _clearStaleFfigenSnapshot(String version) {
+  final stamp = File('.dart_tool/moodiary_ffigen_snapshot_version');
+  if (stamp.existsSync() && stamp.readAsStringSync().trim() == version) return;
+  final dir = Directory('.dart_tool/pub/bin/ffigen');
+  if (dir.existsSync()) {
+    stdout.writeln('· ffigen 版本变为 $version，清掉旧的预编译快照');
+    dir.deleteSync(recursive: true);
+  }
+  stamp.parent.createSync(recursive: true);
+  stamp.writeAsStringSync(version);
+}
+
 /// 重新生成 Rust FFI 绑定（从包内运行）。
 Future<void> _genRust() async {
   await _assertCodegenVersion();
+  final ffigen = _resolvedFfigenVersion();
+  _assertFfigenVersion(ffigen);
+  _clearStaleFfigenSnapshot(ffigen);
   await _run('flutter_rust_bridge_codegen', ['generate'], cwd: _rustPkgDir);
+  // codegen 产出坏文件时依然 exit 0 并打印 Done!，只能自己验一遍。
+  await _run('fvm', ['dart', 'analyze', _genRustOutDir]);
 }
 
 

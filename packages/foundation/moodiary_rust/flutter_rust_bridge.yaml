@@ -2,16 +2,5 @@ rust_input: crate::api
 rust_root: rust/
 dart_output: lib/src/rust
 web: false
-# 默认 false 时解析不了的 pub fn 会被静默跳过，gen-rust 照样打印 Done! 并退出 0。
 stop_on_error: true
-# CST(入) + DCO(出) 编解码：Rust→Dart 的 Vec<u8> 落成 `raw as Uint8List`，零拷贝。
-# 三个硬性前提，缺一个生成物就是坏的：
-#   1. 本机要有 LLVM（brew install llvm），codegen 走 ffigen；
-#   2. ffigen 必须钉 15.x —— 16+ 会在每个结构体里生成 `static $allocate(Allocator, {..})`，
-#      而 FRB 删 WireSyncRust2DartSse 的正则是非贪婪的 `\{.*?\}`，会止于具名参数列表那个
-#      `}`，把类头一路吃掉只留下半截函数体（frb 2.13.0-beta.6 未修）。FRB 自己的
-#      frb_example 钉的就是 ^15.0.0；
-#   3. 跨桥类型不能用 Dart 保留字做字段名（CST 会把字段名原样搬进 wire 结构体），
-#      且自定义错误类型必须由本 crate 声明、不能 mirror 子 crate 的 —— DCO 的
-#      transform_result_dco 要裸类型的 DartCObject: From<E>，孤儿规则不允许外部类型。
 full_dep: true

@@ -39,7 +39,5 @@ melos:
 dev_dependencies:
   melos: ^8.1.0
 
-# ffigen 钉 cli_util ^0.4.x、melos 8 要 ^0.5.0，二者无交集。ffigen 只用它的
-# getSdkPath，0.5 没动那个 API，拉平安全（codegen 实测通过）。
 dependency_overrides:
   cli_util: 0.5.2
