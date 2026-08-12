@@ -14,7 +14,6 @@ export 'package:moodiary_utils/moodiary_utils.dart'
         AppBorderRadius,
         DeviceOrientationPolicy,
         KeyboardState,
-        ThemeExt,
         applyDeviceOrientationLock;
 
 export 'src/app_logger.dart';

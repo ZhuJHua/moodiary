@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 void main() {
   // T = String? with a null-valued chip mirrors the home category "全部" usage.
@@ -9,21 +12,24 @@ void main() {
     required ValueChanged<String?> onSelected,
     Widget? trailing,
   }) {
-    return MaterialApp(
-      home: Scaffold(
-        body: MoodiaryChipBar<String?>(
-          selected: selected,
-          onSelected: onSelected,
-          trailing: trailing,
-          items: const [
-            MoodiaryChipData(value: null, label: 'All'),
-            MoodiaryChipData(
-              value: 'a',
-              label: 'Work',
-              accentColor: Colors.red,
-            ),
-            MoodiaryChipData(value: 'b', label: 'Life'),
-          ],
+    return MuiTheme(
+      data: _mui,
+      child: MaterialApp(
+        home: Scaffold(
+          body: MoodiaryChipBar<String?>(
+            selected: selected,
+            onSelected: onSelected,
+            trailing: trailing,
+            items: const [
+              MoodiaryChipData(value: null, label: 'All'),
+              MoodiaryChipData(
+                value: 'a',
+                label: 'Work',
+                accentColor: Colors.red,
+              ),
+              MoodiaryChipData(value: 'b', label: 'Life'),
+            ],
+          ),
         ),
       ),
     );

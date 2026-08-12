@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:moodiary_ui/src/glass/glass_config.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 毛玻璃面：一层背景模糊 + 一层半透明底色 + 描边 + 投影。全仓唯一画玻璃的地方。
 class MoodiaryGlassSurface extends StatelessWidget {
@@ -35,9 +36,11 @@ class MoodiaryGlassSurface extends StatelessWidget {
 
   /// 默认投影。底栏那颗动作按钮不是玻璃却要跟胶囊同款，所以抽出来共用 ——
   /// 两边各写一份迟早会飘。
-  static List<BoxShadow> defaultShadows(Brightness brightness) => [
+  static List<BoxShadow> defaultShadows(MuiColorScheme colors) => [
     BoxShadow(
-      color: Colors.black.withValues(alpha: brightness == .dark ? 0.42 : 0.12),
+      color: colors.shadow.withValues(
+        alpha: colors.brightness == .dark ? 0.42 : 0.12,
+      ),
       blurRadius: 24,
       offset: const Offset(0, 8),
     ),
@@ -46,16 +49,20 @@ class MoodiaryGlassSurface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final config = MoodiaryGlass.of(context);
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final dark = scheme.brightness == .dark;
 
     final base =
         tint ?? (dark ? scheme.surfaceContainerHigh : scheme.surfaceContainer);
     final fill = base.withValues(alpha: config.tintAlpha);
     final side = BorderSide(
+      // 深色档要一条比 outlineVariant 亮的边才有玻璃感（自绘胶囊调出来的值）；
+      // 浅色档反过来，白边在浅底上看不见。
       color:
           borderColor ??
-          (dark ? Colors.white.withValues(alpha: 0.18) : scheme.outlineVariant),
+          (dark
+              ? scheme.onSurface.withValues(alpha: 0.18)
+              : scheme.outlineVariant),
       // 一个物理像素。写死 0.5 在 3x 屏上其实是 1.5 个物理像素，粗得能看出来。
       width: 1 / MediaQuery.devicePixelRatioOf(context),
     );
@@ -71,7 +78,7 @@ class MoodiaryGlassSurface extends StatelessWidget {
       painter: _GlassShadowPainter(
         shape: shape,
         textDirection: Directionality.maybeOf(context),
-        shadows: shadows ?? defaultShadows(scheme.brightness),
+        shadows: shadows ?? defaultShadows(scheme),
       ),
       child: ClipPath(
         // 裁剪必须是 BackdropFilter 的**祖先**：反过来的话模糊会溢出圆角，

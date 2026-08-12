@@ -4,6 +4,9 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_diary/src/presentation/widget/feed_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 Diary diary({
   String title = 'T',
@@ -36,8 +39,11 @@ Diary diary({
 Category cat() =>
     Category(id: 'a', categoryName: 'work', lastModified: DateTime(2026));
 
-Widget wrap(Widget child) => MaterialApp(
-  home: Scaffold(body: ListView(children: [child])),
+Widget wrap(Widget child) => MuiTheme(
+  data: _mui,
+  child: MaterialApp(
+    home: Scaffold(body: ListView(children: [child])),
+  ),
 );
 
 void main() {

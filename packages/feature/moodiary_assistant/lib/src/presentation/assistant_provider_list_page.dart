@@ -9,6 +9,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 class AssistantProviderListPage extends ConsumerStatefulWidget {
   const AssistantProviderListPage({super.key});
@@ -130,7 +131,7 @@ class _ProviderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     return Padding(
       padding: const .fromLTRB(12, 4, 12, 4),
@@ -198,18 +199,15 @@ class _ProviderCard extends StatelessWidget {
                         provider.name,
                         maxLines: 1,
                         overflow: .ellipsis,
-                        style: context.textTheme.titleMedium?.copyWith(
-                          color: scheme.onSurface,
-                        ),
+                        style: context.theme.typography.titleMedium.onSurface,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         provider.model,
                         maxLines: 1,
                         overflow: .ellipsis,
-                        style: context.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                        style:
+                            context.theme.typography.bodySmall.onSurfaceVariant,
                       ),
                       // 只与「是否配置密钥」有关（和选中无关）→ 不影响选中时的尺寸。
                       if (!hasKey) ...[
@@ -217,6 +215,7 @@ class _ProviderCard extends StatelessWidget {
                         _Badge(
                           text: l10n.modelProviderNoKey,
                           color: scheme.errorContainer,
+                          onColor: scheme.onErrorContainer,
                         ),
                       ],
                     ],
@@ -258,17 +257,24 @@ class _ProviderCard extends StatelessWidget {
 class _Badge extends StatelessWidget {
   final String text;
   final Color? color;
+  final Color? onColor;
 
-  const _Badge({required this.text, this.color});
+  const _Badge({required this.text, this.color, this.onColor});
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final bg = color ?? scheme.secondaryContainer;
+    final on = onColor ?? scheme.onSecondaryContainer;
     return Container(
       padding: const .symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(color: bg, borderRadius: .circular(8)),
-      child: Text(text, style: context.textTheme.labelSmall),
+      child: Text(
+        text,
+        style: context.theme.typography.labelSmall.onSurface.copyWith(
+          color: on,
+        ),
+      ),
     );
   }
 }
@@ -278,7 +284,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     return Center(
       child: Column(
@@ -288,12 +294,12 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             l10n.modelProviderEmptyTitle,
-            style: context.textTheme.titleMedium,
+            style: context.theme.typography.titleMedium.onSurface,
           ),
           const SizedBox(height: 4),
           Text(
             l10n.modelProviderEmptyHint,
-            style: context.textTheme.bodySmall?.copyWith(color: scheme.outline),
+            style: context.theme.typography.bodySmall.outline,
           ),
         ],
       ),

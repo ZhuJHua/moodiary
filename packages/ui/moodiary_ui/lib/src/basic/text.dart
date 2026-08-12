@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/src/basic/marquee.dart';
+import 'package:mui/mui.dart';
 
 class AdaptiveText extends StatelessWidget {
   final String text;
@@ -24,26 +24,20 @@ class AdaptiveText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final typography = context.theme.typography;
     final textScaler = MediaQuery.textScalerOf(context);
     var textStyle = style;
     if (isTileTitle == true) {
-      textStyle = textTheme.bodyLarge?.copyWith(
-        color: context.colorScheme.onSurface,
-      );
+      textStyle = typography.bodyLarge.onSurface;
     }
     if (isTileSubtitle == true) {
-      textStyle = textTheme.bodyMedium?.copyWith(
-        color: context.colorScheme.onSurfaceVariant,
-      );
+      textStyle = typography.bodyMedium.onSurfaceVariant;
     }
     if (isTitle == true) {
-      textStyle = textTheme.titleLarge;
+      textStyle = typography.titleLarge.onSurface;
     }
     if (isPrimaryTitle == true) {
-      textStyle = textTheme.titleLarge?.copyWith(
-        color: context.colorScheme.primary,
-      );
+      textStyle = typography.titleLarge.primary;
     }
     return LayoutBuilder(
       builder: (context, constraints) {

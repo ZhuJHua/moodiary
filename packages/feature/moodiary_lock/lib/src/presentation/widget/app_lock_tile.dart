@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 设置页应用锁管理（开关 + 改密 + 生物识别开关）；解锁时机由 `/lock` 负责，此处只管开关与凭据。
 class AppLockTile extends StatefulWidget {
@@ -49,7 +50,7 @@ class _AppLockTileState extends State<AppLockTile> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final theme = context.theme;
     return ValueListenableBuilder(
       valueListenable: MoodiaryKVs.lock.getNotifier(),
       builder: (context, lock, _) {
@@ -61,9 +62,7 @@ class _AppLockTileState extends State<AppLockTile> {
               leading: const Icon(LucideIcons.lock),
               trailing: Text(
                 lock ? '已开启' : '未开启',
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: scheme.primary,
-                ),
+                style: theme.typography.bodySmall.primary,
               ),
               onTap: () => _onTapLock(lock),
             ),

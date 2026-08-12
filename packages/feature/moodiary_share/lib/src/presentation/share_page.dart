@@ -9,6 +9,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 
@@ -97,7 +98,7 @@ class _SharePageState extends ConsumerState<SharePage> {
           if (diary == null) {
             return const Center(child: Text('没有可分享的日记'));
           }
-          final brightness = _brightness ?? Theme.of(context).brightness;
+          final brightness = _brightness ?? context.theme.brightness;
           return SafeArea(
             child: Column(
               children: [
@@ -113,7 +114,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   }
 
   Widget _preview(Diary diary, Brightness brightness) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -131,7 +132,7 @@ class _SharePageState extends ConsumerState<SharePage> {
               borderRadius: .circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.18),
+                  color: scheme.shadow.withValues(alpha: 0.18),
                   blurRadius: 32,
                   offset: const Offset(0, 14),
                 ),
@@ -148,7 +149,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   }
 
   Widget _controls() {
-    final brightness = _brightness ?? Theme.of(context).brightness;
+    final brightness = _brightness ?? context.theme.brightness;
     return Padding(
       padding: const .fromLTRB(12, 12, 12, 4),
       child: Row(

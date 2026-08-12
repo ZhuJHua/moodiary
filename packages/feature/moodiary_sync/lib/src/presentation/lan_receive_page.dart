@@ -7,6 +7,7 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/presentation/widget/lan_widgets.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 class LanReceivePage extends StatefulWidget {
   const LanReceivePage({super.key});
@@ -59,7 +60,6 @@ class _LanReceivePageState extends State<LanReceivePage> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('局域网接收')),
       body: _startError != null
@@ -68,7 +68,7 @@ class _LanReceivePageState extends State<LanReceivePage> {
                 padding: const .all(24),
                 child: Text(
                   _startError!,
-                  style: TextStyle(color: scheme.error),
+                  style: context.theme.typography.bodyMedium.error,
                 ),
               ),
             )
@@ -86,9 +86,7 @@ class _LanReceivePageState extends State<LanReceivePage> {
                   Center(
                     child: Text(
                       '配对码',
-                      style: context.textTheme.labelLarge?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: context.theme.typography.labelLarge.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -100,9 +98,7 @@ class _LanReceivePageState extends State<LanReceivePage> {
                   Center(
                     child: Text(
                       '在发送设备上输入 · 轻点复制',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: scheme.outline,
-                      ),
+                      style: context.theme.typography.bodySmall.outline,
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -125,7 +121,7 @@ class _StatusHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final (icon, color, active) = switch (state) {
       LanReceiveWaiting() => (LucideIcons.radioTower, scheme.primary, true),
       LanReceiveReceiving() => (LucideIcons.download, scheme.primary, true),
@@ -157,17 +153,17 @@ class _StatusLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final typography = context.theme.typography;
     final child = switch (state) {
       LanReceiveWaiting() => Text(
         '等待发送方连接…',
         key: const ValueKey('waiting'),
-        style: context.textTheme.titleMedium,
+        style: typography.titleMedium.onSurface,
       ),
       LanReceiveReceiving(:final received, :final total) => Column(
         key: const ValueKey('receiving'),
         children: [
-          Text('正在接收', style: context.textTheme.titleMedium),
+          Text('正在接收', style: typography.titleMedium.onSurface),
           const SizedBox(height: 12),
           SizedBox(
             width: 220,
@@ -182,54 +178,41 @@ class _StatusLine extends StatelessWidget {
             total != null
                 ? '${lanFmtBytes(received)} / ${lanFmtBytes(total)}'
                 : lanFmtBytes(received),
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: typography.bodySmall.onSurfaceVariant,
           ),
         ],
       ),
       LanReceiveImporting() => Text(
         '正在保存…',
         key: const ValueKey('importing'),
-        style: context.textTheme.titleMedium,
+        style: typography.titleMedium.onSurface,
       ),
       LanReceiveDone(:final report) => Column(
         key: const ValueKey('done'),
         children: [
-          Text('接收完成', style: context.textTheme.titleMedium),
+          Text('接收完成', style: typography.titleMedium.onSurface),
           const SizedBox(height: 6),
           Text(
             _summary(report),
             textAlign: .center,
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: typography.bodyMedium.onSurfaceVariant,
           ),
           const SizedBox(height: 4),
-          Text(
-            '可继续接收，配对码不变',
-            style: context.textTheme.bodySmall?.copyWith(color: scheme.outline),
-          ),
+          Text('可继续接收，配对码不变', style: typography.bodySmall.outline),
         ],
       ),
       LanReceiveFailed(:final message) => Column(
         key: const ValueKey('failed'),
         children: [
-          Text(
-            '接收失败',
-            style: context.textTheme.titleMedium?.copyWith(color: scheme.error),
-          ),
+          Text('接收失败', style: typography.titleMedium.error),
           const SizedBox(height: 6),
           Text(
             message,
             textAlign: .center,
-            style: context.textTheme.bodySmall?.copyWith(color: scheme.error),
+            style: typography.bodySmall.error,
           ),
           const SizedBox(height: 4),
-          Text(
-            '配对码不变，对方可直接重试',
-            style: context.textTheme.bodySmall?.copyWith(color: scheme.outline),
-          ),
+          Text('配对码不变，对方可直接重试', style: typography.bodySmall.outline),
         ],
       ),
     };
@@ -253,7 +236,8 @@ class _AddressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     return Container(
       padding: const .all(16),
       decoration: BoxDecoration(
@@ -263,15 +247,10 @@ class _AddressCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: .start,
         children: [
-          Text(
-            '本机地址',
-            style: context.textTheme.labelLarge?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
-          ),
+          Text('本机地址', style: typography.labelLarge.onSurfaceVariant),
           const SizedBox(height: 10),
           if (ips.isEmpty)
-            Text('未连接 Wi-Fi，无法获取本机地址', style: TextStyle(color: scheme.error))
+            Text('未连接 Wi-Fi，无法获取本机地址', style: typography.bodyMedium.error)
           else
             Wrap(
               spacing: 8,
@@ -287,7 +266,7 @@ class _AddressCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             '发送方通常会自动发现本机，也可手动输入上方地址。接收期间请保持本页打开。',
-            style: context.textTheme.bodySmall?.copyWith(color: scheme.outline),
+            style: typography.bodySmall.outline,
           ),
         ],
       ),
@@ -303,7 +282,7 @@ class _AddressChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Material(
       color: scheme.surfaceContainerHigh,
       borderRadius: .circular(10),
@@ -317,7 +296,7 @@ class _AddressChip extends StatelessWidget {
             children: [
               Text(
                 address,
-                style: context.textTheme.bodyMedium?.copyWith(
+                style: context.theme.typography.bodyMedium.onSurface.copyWith(
                   fontFamily: 'monospace',
                   fontFeatures: const [.tabularFigures()],
                 ),

@@ -25,6 +25,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 enum _ToolPanel { tools }
 
@@ -1003,7 +1004,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         ChatBottomPanelContainer<_ToolPanel>(
           controller: _panelController,
           inputFocusNode: _inputFocusNode,
-          panelBgColor: context.colorScheme.surfaceContainer,
+          panelBgColor: context.theme.colors.surfaceContainer,
           otherPanelWidget: (_) => _buildToolPanel(context),
         ),
       ],
@@ -1100,7 +1101,7 @@ class _ContextUsagePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final ratio = contextLimit <= 0 ? 0.0 : usedTokens / contextLimit;
     final percent = (ratio * 100).clamp(0, 999).round();
     final Color color;
@@ -1125,10 +1126,8 @@ class _ContextUsagePill extends StatelessWidget {
           ),
           child: Text(
             '$percent%',
-            style: context.textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: .w600,
-            ),
+            style: context.theme.typography.labelSmall.emphasized.onSurface
+                .copyWith(color: color),
           ),
         ),
       ),
@@ -1145,7 +1144,7 @@ class _CompactionNoticeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Center(
       child: Padding(
         padding: const .symmetric(vertical: 8),
@@ -1170,9 +1169,7 @@ class _CompactionNoticeChip extends StatelessWidget {
                 Flexible(
                   child: Text(
                     context.l10n.assistantCompactionNotice,
-                    style: context.textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                    style: context.theme.typography.labelSmall.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -1208,14 +1205,12 @@ class _CompactionNoticeChip extends StatelessWidget {
             children: [
               Text(
                 l10n.assistantCompactionSheetNote,
-                style: sheetContext.textTheme.bodySmall?.copyWith(
-                  color: sheetContext.colorScheme.onSurfaceVariant,
-                ),
+                style: sheetContext.theme.typography.bodySmall.onSurfaceVariant,
               ),
               const SizedBox(height: 12),
               Text(
                 summary.isEmpty ? '—' : summary,
-                style: sheetContext.textTheme.bodyMedium,
+                style: sheetContext.theme.typography.bodyMedium.onSurface,
               ),
             ],
           ),
@@ -1232,7 +1227,7 @@ class _DisclaimerGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     return Center(
       child: Padding(
@@ -1245,7 +1240,7 @@ class _DisclaimerGate extends StatelessWidget {
             Text(
               l10n.assistantDisclaimerGateTitle,
               textAlign: .center,
-              style: context.textTheme.titleMedium,
+              style: context.theme.typography.titleMedium.onSurface,
             ),
             const SizedBox(height: 20),
             FilledButton.tonalIcon(
@@ -1267,7 +1262,7 @@ class _NotConfiguredBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Material(
       color: scheme.errorContainer,
       child: InkWell(
@@ -1281,7 +1276,7 @@ class _NotConfiguredBanner extends StatelessWidget {
               Expanded(
                 child: Text(
                   context.l10n.assistantNotConfiguredBanner,
-                  style: TextStyle(color: scheme.onErrorContainer),
+                  style: context.theme.typography.bodyMedium.onErrorContainer,
                 ),
               ),
             ],
@@ -1325,7 +1320,7 @@ class _AssistantComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     return Material(
       color: scheme.surfaceContainer,
@@ -1439,7 +1434,7 @@ class _ThinkingToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     final fg = enabled ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
     return Material(
@@ -1457,10 +1452,12 @@ class _ThinkingToggle extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 l10n.assistantThinkingToggle,
-                style: context.textTheme.labelMedium?.copyWith(
-                  color: fg,
-                  fontWeight: enabled ? .w600 : .w400,
-                ),
+                style:
+                    (enabled
+                            ? context.theme.typography.labelMedium.emphasized
+                            : context.theme.typography.bodySmall)
+                        .onSurface
+                        .copyWith(color: fg),
               ),
             ],
           ),
@@ -1483,7 +1480,7 @@ class _ToolPanelItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return SizedBox(
       width: 64,
       child: Column(
@@ -1508,9 +1505,7 @@ class _ToolPanelItem extends StatelessWidget {
             maxLines: 1,
             overflow: .ellipsis,
             textAlign: .center,
-            style: context.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.labelSmall.onSurfaceVariant,
           ),
         ],
       ),
@@ -1530,7 +1525,7 @@ class _ComposerImagePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Padding(
       padding: const .fromLTRB(8, 6, 8, 2),
       child: Align(
@@ -1575,7 +1570,7 @@ class _ComposerImagePreview extends StatelessWidget {
   }
 }
 
-Widget _brokenImage(ColorScheme scheme, double size) => Container(
+Widget _brokenImage(MuiColorScheme scheme, double size) => Container(
   width: size,
   height: size,
   color: scheme.surfaceContainerHighest,
@@ -1591,7 +1586,7 @@ class _UserBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final maxWidth = MediaQuery.sizeOf(context).width * 0.82;
     final hasImage = imageName.isNotEmpty;
     final hasText = text.isNotEmpty;
@@ -1629,7 +1624,7 @@ class _UserBubble extends StatelessWidget {
           ),
           child: SelectableText(
             text,
-            style: TextStyle(color: scheme.onPrimaryContainer),
+            style: context.theme.typography.bodyMedium.onPrimaryContainer,
           ),
         ),
       );
@@ -1687,7 +1682,7 @@ class _AssistantBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
 
     final hasText = text.isNotEmpty;
@@ -1716,7 +1711,7 @@ class _AssistantBubble extends StatelessWidget {
         child: SelectionArea(
           child: GptMarkdown(
             text,
-            style: TextStyle(color: scheme.onSurface),
+            style: context.theme.typography.bodyMedium.onSurface,
             codeBuilder: _codeBlock,
           ),
         ),
@@ -1781,9 +1776,7 @@ class _AssistantBubble extends StatelessWidget {
               Padding(
                 padding: const .symmetric(horizontal: 6, vertical: 4),
                 child: DefaultTextStyle.merge(
-                  style: context.textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: context.theme.typography.labelSmall.onSurfaceVariant,
                   child: Row(
                     mainAxisSize: .min,
                     children: [
@@ -1840,7 +1833,7 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     final hasReasoning = widget.reasoning.isNotEmpty;
     final label = widget.active
@@ -1872,9 +1865,7 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
                 label,
                 maxLines: 1,
                 overflow: .ellipsis,
-                style: context.textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: context.theme.typography.labelMedium.onSurfaceVariant,
               ),
             ),
             if (hasReasoning) ...[
@@ -1910,9 +1901,7 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
               child: SelectionArea(
                 child: GptMarkdown(
                   widget.reasoning,
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: context.theme.typography.bodySmall.onSurfaceVariant,
                   codeBuilder: _codeBlock,
                 ),
               ),
@@ -1936,7 +1925,7 @@ class _BubbleActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return InkWell(
       borderRadius: .circular(8),
       onTap: onTap,
@@ -1949,9 +1938,7 @@ class _BubbleActionButton extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style: context.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: context.theme.typography.bodySmall.onSurfaceVariant,
             ),
           ],
         ),
@@ -2059,7 +2046,7 @@ class _SessionListViewState extends State<_SessionListView> {
 class _EmptySessions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Center(
       child: Column(
         mainAxisSize: .min,
@@ -2072,9 +2059,7 @@ class _EmptySessions extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             context.l10n.assistantHistoryEmpty,
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.bodyMedium.onSurfaceVariant,
           ),
         ],
       ),
@@ -2109,7 +2094,7 @@ class _SessionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     final onColor = selected ? scheme.onSecondaryContainer : scheme.onSurface;
     return Card.filled(
@@ -2131,20 +2116,24 @@ class _SessionCard extends StatelessWidget {
           child: Icon(
             LucideIcons.messagesSquare,
             size: 22,
-            color: selected ? scheme.onSecondaryContainer : scheme.primary,
+            color: selected
+                ? scheme.onSecondaryContainer
+                : scheme.onPrimaryContainer,
           ),
         ),
         title: Text(
           session.title,
           maxLines: 1,
           overflow: .ellipsis,
-          style: context.textTheme.titleSmall?.copyWith(color: onColor),
+          style: context.theme.typography.titleSmall.onSurface.copyWith(
+            color: onColor,
+          ),
         ),
         subtitle: Text(
           TimeFormat.relative(session.updatedAt),
-          style: context.textTheme.labelSmall?.copyWith(
+          style: context.theme.typography.labelSmall.onSurfaceVariant.copyWith(
             color: selected
-                ? scheme.onSecondaryContainer.withValues(alpha: 0.8)
+                ? scheme.onSecondaryContainer
                 : scheme.onSurfaceVariant,
           ),
         ),

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/presentation/widget/user_key_change_flow.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 /// 端到端加密设置项。**加密语义**：设置密码即开启加密（生成随机数据密钥 DEK，
 /// 密码只用来封装它）；清除即关闭加密。
@@ -21,7 +21,7 @@ class UserKeyTile extends ConsumerWidget {
     final async = ref.watch(syncDekControllerProvider);
     final dekB64 = async.maybeWhen(data: (v) => v, orElse: () => null);
     final hasKey = dekB64 != null && dekB64.isNotEmpty;
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
 
     return SettingListTile(
       isFirst: isFirst,
@@ -161,7 +161,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return MoodiarySheetScaffold<void>(
       title: '加密管理',
       subtitle: widget.hasExistingKey ? '已开启' : '未开启',
@@ -204,7 +204,6 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(LucideIcons.badgeCheck, size: 18),
-                      color: scheme.onSurfaceVariant,
                       visualDensity: .compact,
                       onPressed: _verifying ? null : _verifyCurrent,
                     ),

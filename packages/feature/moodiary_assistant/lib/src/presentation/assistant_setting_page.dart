@@ -11,6 +11,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 class AssistantSettingPage extends ConsumerWidget {
   const AssistantSettingPage({super.key});
@@ -41,7 +42,7 @@ class _Note extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Card.filled(
       color: scheme.surfaceContainerHighest,
       margin: const .symmetric(horizontal: 8),
@@ -54,7 +55,7 @@ class _Note extends StatelessWidget {
             Expanded(
               child: Text(
                 context.l10n.assistantSettingNote,
-                style: context.textTheme.bodySmall,
+                style: context.theme.typography.bodySmall.onSurfaceVariant,
               ),
             ),
           ],
@@ -69,7 +70,7 @@ class _ProviderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -171,7 +172,7 @@ class _SoulSectionState extends State<_SoulSection> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     final subtitle = _customized == null
         ? ''
@@ -213,7 +214,7 @@ class _ToolSection extends StatefulWidget {
 class _ToolSectionState extends State<_ToolSection> {
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     const tools = AssistantTool.values;
     final always =
@@ -242,9 +243,7 @@ class _ToolSectionState extends State<_ToolSection> {
           padding: const .fromLTRB(16, 8, 16, 0),
           child: Text(
             l10n.assistantToolSectionNote,
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.bodySmall.onSurfaceVariant,
           ),
         ),
         if (always.isNotEmpty)
@@ -274,7 +273,7 @@ class _ToolSectionState extends State<_ToolSection> {
     required bool isLast,
     required bool alwaysAllowed,
   }) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final display = assistantToolDisplay(context, tool);
     final readOnly = !tool.needsApproval;
     final hasTrailing = readOnly || alwaysAllowed || tool.dangerous;
@@ -314,7 +313,7 @@ class _ReadOnlyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Container(
       padding: const .symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -323,9 +322,7 @@ class _ReadOnlyBadge extends StatelessWidget {
       ),
       child: Text(
         context.l10n.assistantToolReadOnlyBadge,
-        style: context.textTheme.labelSmall?.copyWith(
-          color: scheme.onSecondaryContainer,
-        ),
+        style: context.theme.typography.labelSmall.onSecondaryContainer,
       ),
     );
   }
@@ -336,7 +333,7 @@ class _DangerBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Container(
       padding: const .symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -345,9 +342,7 @@ class _DangerBadge extends StatelessWidget {
       ),
       child: Text(
         context.l10n.assistantToolDangerBadge,
-        style: context.textTheme.labelSmall?.copyWith(
-          color: scheme.onErrorContainer,
-        ),
+        style: context.theme.typography.labelSmall.onErrorContainer,
       ),
     );
   }

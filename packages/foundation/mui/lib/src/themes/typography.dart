@@ -65,8 +65,8 @@ class MuiFontConfig with MuiValue {
 /// 字重档。[value] 喂 `fontWeight`，[axis] 喂可变字体的 wght 轴。
 ///
 /// 两者**必须同时设**：可变字体下 `fontVariations` 会吃掉后来的
-/// `copyWith(fontWeight:)`（`start_page.dart:225` 踩过）。所以字重只能经
-/// [MuiTextRole] 的四个 getter 改，裸 `copyWith(fontWeight:)` 由 CI 拦。
+/// `copyWith(fontWeight:)`（`start_page.dart:225` 踩过）。所以字重只由排版级决定，
+/// 调用点唯一能做的是取 [MuiTextRole.emphasized]；裸 `copyWith(fontWeight:)` 由 CI 拦。
 enum MuiWeight {
   regular(FontWeight.w400),
   medium(FontWeight.w500),
@@ -85,12 +85,17 @@ enum MuiWeight {
   };
 }
 
-/// 一个排版角色。链式读法：**先几何，再字重（可选），最后颜色**。
+/// 一个排版角色。链式读法：**先几何，再强调（可选），最后颜色**。
 ///
 /// ```dart
 /// context.theme.typography.titleLarge.onSurfaceVariant
-/// context.theme.typography.bodyMedium.semiBold.primary
+/// context.theme.typography.bodyMedium.emphasized.primary
 /// ```
+///
+/// **字重不是调用点的自由度**：每一级自带默认字重（M3 2021 的原值），需要在同一
+/// 尺寸上加重时只有 [emphasized] 一个替身，没有 regular/medium/semiBold/bold 四个
+/// 旋钮。给了旋钮的结果就是同一种语义在十几个文件里被拧成十几个值 —— 这正是
+/// 迁移前的状态。要更轻不是调字重，是换级（`titleSmall` → `bodyMedium` 同为 14px）。
 ///
 /// 刻意**不继承 `TextStyle`**：`TextStyle.operator ==` 头一句就是
 /// `if (other.runtimeType != runtimeType) return false`，子类因此永远不等于普通
@@ -103,25 +108,16 @@ enum MuiWeight {
 /// `theme.typography.labelSmall.onSurface.copyWith(color: categoryColor)`。
 @immutable
 class MuiTextRole {
-  const MuiTextRole._(this._base, this._colors, this._font);
+  const MuiTextRole._(this._base, this._colors, this._emphasis);
 
   final TextStyle _base;
   final MuiColorScheme _colors;
-  final MuiFontConfig _font;
 
-  MuiTextRole _weight(MuiWeight w) => MuiTextRole._(
-    _base.copyWith(
-      fontWeight: w.value,
-      fontVariations: [FontVariation('wght', w.axis(_font))],
-    ),
-    _colors,
-    _font,
-  );
+  /// 预解析好的强调档，与 [_base] 只差字重。
+  final TextStyle _emphasis;
 
-  MuiTextRole get regular => _weight(MuiWeight.regular);
-  MuiTextRole get medium => _weight(MuiWeight.medium);
-  MuiTextRole get semiBold => _weight(MuiWeight.semiBold);
-  MuiTextRole get bold => _weight(MuiWeight.bold);
+  /// 同尺寸的强调档 —— 唯一的字重入口。幂等（`emphasized.emphasized` 不再加重）。
+  MuiTextRole get emphasized => MuiTextRole._(_emphasis, _colors, _emphasis);
 
   TextStyle get onSurface => _base.copyWith(color: _colors.onSurface);
   TextStyle get onSurfaceVariant =>
@@ -151,6 +147,9 @@ class MuiTextRole {
   TextStyle get onInverseSurface =>
       _base.copyWith(color: _colors.onInverseSurface);
   TextStyle get inversePrimary => _base.copyWith(color: _colors.inversePrimary);
+
+  /// 叠在图片/视频上的文字，见 [MuiColorScheme.onMedia]。
+  TextStyle get onMedia => _base.copyWith(color: _colors.onMedia);
 }
 
 /// 排版表。角色名与 M3 `TextTheme` 逐级同名 —— 桥的投影是 1:1，
@@ -207,15 +206,21 @@ class MuiTypography with MuiValue {
   @override
   List<Object?> get props => [size, font, colors];
 
-  /// 每一级的字重档。字重只在这里定一次，见 [MuiWeight]。
+  /// 每一级的默认字重 —— **M3 2021 的原值**，与 `Typography.englishLike2021`
+  /// 逐级相同（`typography.dart:2096`）：15 级里 10 级 Regular，只有 title 的
+  /// medium/small 与三个 label 是 Medium。M3 里没有 600/700。
+  ///
+  /// 这张表以前是本仓 mui 之前那套自定义字重（display 500 / headlineLarge 700 /
+  /// titleLarge 600…），既不是 M3、内部也不自洽（titleLarge 600 但 titleSmall 500、
+  /// labelMedium 500 但 labelSmall 400），于是调用点一路用 `.semiBold` 打补丁。
   static const Map<String, MuiWeight> _weights = {
-    'displayLarge': .medium,
-    'displayMedium': .medium,
-    'displaySmall': .medium,
-    'headlineLarge': .bold,
-    'headlineMedium': .semiBold,
-    'headlineSmall': .medium,
-    'titleLarge': .semiBold,
+    'displayLarge': .regular,
+    'displayMedium': .regular,
+    'displaySmall': .regular,
+    'headlineLarge': .regular,
+    'headlineMedium': .regular,
+    'headlineSmall': .regular,
+    'titleLarge': .regular,
     'titleMedium': .medium,
     'titleSmall': .medium,
     'bodyLarge': .regular,
@@ -223,8 +228,16 @@ class MuiTypography with MuiValue {
     'bodySmall': .regular,
     'labelLarge': .medium,
     'labelMedium': .medium,
-    'labelSmall': .regular,
+    'labelSmall': .medium,
   };
+
+  /// 强调档按**光学尺寸**分两级：22px 及以上用 Bold，其余用 SemiBold。
+  ///
+  /// 取自 iOS HIG 的做法（Large Title / Title 1 / Title 2 的 emphasized 是 Bold，
+  /// Title 3 及以下是 Semibold）。理由是字越大越需要更强的字重反差才看得出加重，
+  /// 而正文尺寸上 Bold 会显得脏。M3 2021 本身没有定义强调档。
+  static MuiWeight _emphasisOf(double baseSize) =>
+      baseSize >= 22 ? MuiWeight.bold : MuiWeight.semiBold;
 
   /// M3 2021 的基准几何（[MuiTextSize.large] 档）：fontSize / height / letterSpacing。
   /// [height] 是**比例**不是绝对行高，所以换档时它不用动。
@@ -253,26 +266,28 @@ class MuiTypography with MuiValue {
     MuiColorScheme colors,
   ) {
     final (baseSize, height, spacing) = _geometry[name]!;
-    final weight = _weights[name]!;
     // 落到半个逻辑像素上：不取整会得到 11.638 这种值，取整则 xSmall 与 small
     // 在小字号级别会撞成同一个数。
     final scaled = (baseSize * size.scale * 2).round() / 2;
+    TextStyle styleOf(MuiWeight weight) => TextStyle(
+      inherit: false,
+      color: colors.onSurface,
+      fontFamily: font.family,
+      fontSize: scaled,
+      height: height,
+      // 字距按同一比例走，否则大字号档的字距会相对变紧。
+      letterSpacing: spacing * size.scale,
+      fontWeight: weight.value,
+      fontVariations: [FontVariation('wght', weight.axis(font))],
+      textBaseline: .alphabetic,
+      leadingDistribution: .even,
+    );
     return MuiTextRole._(
-      TextStyle(
-        inherit: false,
-        color: colors.onSurface,
-        fontFamily: font.family,
-        fontSize: scaled,
-        height: height,
-        // 字距按同一比例走，否则大字号档的字距会相对变紧。
-        letterSpacing: spacing * size.scale,
-        fontWeight: weight.value,
-        fontVariations: [FontVariation('wght', weight.axis(font))],
-        textBaseline: .alphabetic,
-        leadingDistribution: .even,
-      ),
+      styleOf(_weights[name]!),
       colors,
-      font,
+      // 强调档按**基准**尺寸分级，不按缩放后的尺寸 —— 否则同一级在
+      // xxxLarge 档会突然从 SemiBold 跳成 Bold。
+      styleOf(_emphasisOf(baseSize)),
     );
   }
 

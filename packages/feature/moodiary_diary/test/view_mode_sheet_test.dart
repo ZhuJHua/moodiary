@@ -3,6 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_diary/src/presentation/widget/view_mode_sheet.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 /// 内存 KV，只为把 [MoodiaryKVs] 的读写接上。
 final class _MemoryKVStorage extends IKVStorage {
@@ -42,16 +45,19 @@ void main() {
   tearDown(() => getIt.unregister<IKVStorage>());
 
   Widget host() {
-    return MaterialApp(
-      locale: const Locale('zh'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: Builder(
-          builder: (context) => Center(
-            child: TextButton(
-              onPressed: () => ViewModeSheet.show(context),
-              child: const Text('open'),
+    return MuiTheme(
+      data: _mui,
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => Center(
+              child: TextButton(
+                onPressed: () => ViewModeSheet.show(context),
+                child: const Text('open'),
+              ),
             ),
           ),
         ),

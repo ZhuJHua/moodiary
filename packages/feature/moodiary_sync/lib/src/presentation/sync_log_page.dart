@@ -8,6 +8,7 @@ import 'package:moodiary_sync/src/data/model/sync_event.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 同步日志单页：默认展示今天并实时追加；可按 [SyncLogger] 的按天 jsonl
 /// 切换历史日期（保留 7 天，历史视图不追加实时事件）；连续同类事件折叠为组。
@@ -151,17 +152,14 @@ class _SyncLogPageState extends State<SyncLogPage> {
               children: [
                 Text(
                   _viewingToday ? '今天' : TimeFormat.isoDate(_selectedDay),
-                  style: context.textTheme.labelLarge?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
+                  style:
+                      context.theme.typography.labelLarge.onSurfaceVariant,
                 ),
                 const Spacer(),
                 if (!_loading)
                   Text(
                     '${_events.length} 条',
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colorScheme.outline,
-                    ),
+                    style: context.theme.typography.bodySmall.outline,
                   ),
               ],
             ),
@@ -186,7 +184,7 @@ class _EventList extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (events.isEmpty) {
-      final scheme = context.colorScheme;
+      final scheme = context.theme.colors;
       return Center(
         child: Column(
           mainAxisSize: .min,
@@ -196,9 +194,7 @@ class _EventList extends StatelessWidget {
             Text(
               '该日期暂无同步事件',
               textAlign: .center,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: context.theme.typography.bodyMedium.onSurfaceVariant,
             ),
           ],
         ),
@@ -293,7 +289,8 @@ class _EventGroupTileState extends State<_EventGroupTile> {
   @override
   Widget build(BuildContext context) {
     final events = widget.events;
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     final kind = events.first.kind;
     // 组内最高严重级别决定组头配色，错误 / 警告不会被折叠埋掉。
     final hasError = events.any((e) => e.level == .error);
@@ -328,14 +325,11 @@ class _EventGroupTileState extends State<_EventGroupTile> {
       ),
       title: Text(
         '${_kindLabel[kind] ?? kind.name} · ${events.length} 条',
-        style: context.textTheme.bodyMedium?.copyWith(
-          color: hasError ? scheme.error : scheme.onSurface,
-        ),
+        style: hasError ? typography.bodyMedium.error : typography.bodyMedium.onSurface,
       ),
       subtitle: Text(
         range,
-        style: context.textTheme.bodySmall?.copyWith(
-          color: scheme.outline,
+        style: typography.bodySmall.outline.copyWith(
           fontFeatures: const [.tabularFigures()],
         ),
       ),
@@ -350,7 +344,8 @@ class _EventTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     final isError = event.level == .error;
     final isWarn = event.level == .warn;
     final iconColor = isError
@@ -382,15 +377,14 @@ class _EventTile extends StatelessWidget {
                   children: [
                     Text(
                       event.message,
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: isError ? scheme.error : scheme.onSurface,
-                      ),
+                      style: isError
+                          ? typography.bodyMedium.error
+                          : typography.bodyMedium.onSurface,
                     ),
                     const SizedBox(height: 1),
                     Text(
                       TimeFormat.timeHms(event.at),
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: scheme.outline,
+                      style: typography.bodySmall.outline.copyWith(
                         fontFeatures: const [.tabularFigures()],
                       ),
                     ),
@@ -441,7 +435,9 @@ class _EventTile extends StatelessWidget {
         ],
         child: SelectableText(
           pretty,
-          style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+          style: context.theme.typography.bodySmall.onSurface.copyWith(
+            fontFamily: 'monospace',
+          ),
         ),
       ),
     );

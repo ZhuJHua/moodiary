@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
+
+import 'category_color.dart';
 
 /// 圆角胶囊筛选条的单个条目。[accentColor] 提供时以小圆点 + 选中态着色（分类色）；
 /// [icon] 提供时改为前置图标（媒体类型等）；二者皆空则纯文字。
@@ -71,7 +73,7 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final fade = widget.fadeColor ?? context.colorScheme.surface;
+    final fade = widget.fadeColor ?? context.theme.colors.surface;
     final values = {for (final it in widget.items) it.value};
     _chipKeys.removeWhere((k, _) => !values.contains(k));
 
@@ -121,8 +123,8 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
 
   Widget _chip(BuildContext context, MoodiaryChipData<T> item) {
     final key = _chipKeys.putIfAbsent(item.value, GlobalKey.new);
-    final scheme = context.colorScheme;
-    final dark = Theme.of(context).brightness == .dark;
+    final scheme = context.theme.colors;
+    final dark = context.theme.isDark;
     final selected = widget.selected == item.value;
     final color = item.accentColor;
 
@@ -139,7 +141,7 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
         color.withValues(alpha: dark ? 0.30 : 0.16),
         scheme.surfaceContainerHigh,
       );
-      fg = Color.lerp(color, dark ? Colors.white : Colors.black, 0.35)!;
+      fg = categoryTextColor(color, dark: dark);
     }
 
     return KeyedSubtree(
@@ -179,12 +181,28 @@ class _MoodiaryChipBarState<T> extends State<MoodiaryChipBar<T>> {
                     constraints: const BoxConstraints(maxWidth: 140),
                     child: AnimatedDefaultTextStyle(
                       duration: Durations.short4,
-                      style:
-                          (context.textTheme.labelMedium ?? const TextStyle())
-                              .copyWith(
-                                color: fg,
-                                fontWeight: selected ? .w600 : .w500,
-                              ),
+                      // 选中态配色：无强调色走 onSecondaryContainer，业务强调色
+                      // （分类色）在其上 copyWith 覆盖，对齐 bg 那侧的 fg 计算。
+                      style: selected
+                          ? (color == null
+                                ? context
+                                      .theme
+                                      .typography
+                                      .labelMedium
+                                      .emphasized
+                                      .onSecondaryContainer
+                                : context
+                                      .theme
+                                      .typography
+                                      .labelMedium
+                                      .emphasized
+                                      .onSecondaryContainer
+                                      .copyWith(color: fg))
+                          : context
+                                .theme
+                                .typography
+                                .labelMedium
+                                .onSurfaceVariant,
                       child: Text(item.label, maxLines: 1, overflow: .ellipsis),
                     ),
                   ),

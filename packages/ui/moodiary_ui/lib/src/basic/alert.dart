@@ -5,6 +5,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/src/basic/action_bar.dart';
 import 'package:moodiary_ui/src/basic/form.dart';
+import 'package:mui/mui.dart';
 
 const double _kAlertMaxWidth = 340;
 const double _kAlertScreenPadding = 28;
@@ -170,7 +171,7 @@ Future<T?> _push<T>(
     _MoodiaryAlertRoute<T>(
       builder: builder,
       barrierDismissible: barrierDismissible,
-      barrierColorValue: context.colorScheme.scrim.withValues(alpha: 0.32),
+      barrierColorValue: context.theme.colors.scrim.withValues(alpha: 0.32),
       barrierLabelText: localizations.modalBarrierDismissLabel,
       routeLabelText: localizations.dialogLabel,
       capturedThemes: InheritedTheme.capture(
@@ -308,9 +309,9 @@ class _AlertScaffold extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: _kAlertMaxWidth),
             child: Material(
               type: .card,
-              color: context.colorScheme.surfaceContainerHigh,
+              color: context.theme.colors.surfaceContainerHigh,
               elevation: 8,
-              shadowColor: Colors.black.withValues(alpha: 0.24),
+              shadowColor: context.theme.colors.shadow.withValues(alpha: 0.24),
               surfaceTintColor: Colors.transparent,
               borderRadius: AppBorderRadius.xLargeBorderRadius,
               clipBehavior: .antiAlias,
@@ -349,8 +350,8 @@ class _AlertShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final textTheme = context.textTheme;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     final effectiveIcon =
         icon ?? (isDestructive ? LucideIcons.triangleAlert : null);
 
@@ -387,10 +388,7 @@ class _AlertShell extends StatelessWidget {
               Text(
                 title!,
                 textAlign: .center,
-                style: textTheme.titleLarge?.copyWith(
-                  fontWeight: .w600,
-                  color: scheme.onSurface,
-                ),
+                style: typography.titleLarge.emphasized.onSurface,
               ),
             if (message != null) ...[
               if (title != null) const SizedBox(height: 8),
@@ -399,9 +397,7 @@ class _AlertShell extends StatelessWidget {
                 // 一句话居中；分段或长文左对齐 —— 「·」要点列表、免责声明这类多段
                 // 正文居中后每行起点都在跳，读起来很费劲。
                 textAlign: _isLongForm(message!) ? .start : .center,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: typography.bodyMedium.onSurfaceVariant,
               ),
             ],
             if (content != null) ...[

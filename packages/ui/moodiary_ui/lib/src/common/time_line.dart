@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 class TimeLinePainter extends CustomPainter {
   final double lineWidth;
@@ -43,7 +43,7 @@ class TimeLineComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: TimeLinePainter(
-        lineColor: context.colorScheme.outlineVariant,
+        lineColor: context.theme.colors.outlineVariant,
         actionColor: actionColor,
         lineWidth: 2.0,
       ),

@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:mui/mui.dart';
 
 class Bubble extends StatelessWidget {
   final Widget child;
-  final Color backgroundColor;
+
+  /// 不给就跟着主题走。默认参数必须是编译期常量，取不到 context，所以留空。
+  final Color? backgroundColor;
   final double borderRadius;
 
   const Bubble({
     super.key,
     required this.child,
-    this.backgroundColor = Colors.white,
+    this.backgroundColor,
     this.borderRadius = 8.0,
   });
 
@@ -16,7 +19,7 @@ class Bubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: BubblePainter(
-        color: backgroundColor,
+        color: backgroundColor ?? context.theme.colors.surfaceContainerHigh,
         borderRadius: borderRadius,
       ),
       child: Align(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 class DiarySettingPage extends ConsumerWidget {
   const DiarySettingPage({super.key});
@@ -46,12 +47,7 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const .fromLTRB(16, 16, 16, 4),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
+      child: Text(title, style: context.theme.typography.labelMedium.primary),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 import 'package:substring_highlight/substring_highlight.dart';
 
 class SearchResultCard extends StatelessWidget {
@@ -21,8 +22,9 @@ class SearchResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final textTheme = context.textTheme;
+    final theme = context.theme;
+    final scheme = theme.colors;
+    final typography = theme.typography;
     final contentText = getHighlightedExcerpt(
       diary.contentText.trim().removeLineBreaks(),
       queryList,
@@ -52,15 +54,13 @@ class SearchResultCard extends StatelessWidget {
                   terms: queryList,
                   maxLines: 1,
                   overflow: .ellipsis,
-                  textStyle: textTheme.titleMedium!.copyWith(
-                    color: scheme.onSurface,
-                    fontWeight: .w600,
-                  ),
-                  textStyleHighlight: textTheme.titleMedium!.copyWith(
-                    fontWeight: .w600,
-                    backgroundColor: scheme.primaryContainer,
-                    color: scheme.onPrimaryContainer,
-                  ),
+                  textStyle: typography.titleMedium.emphasized.onSurface,
+                  // 搜索命中高亮是业务语义色，落到容器角色后按块底再补一个 backgroundColor。
+                  textStyleHighlight: typography
+                      .titleMedium
+                      .emphasized
+                      .onPrimaryContainer
+                      .copyWith(backgroundColor: scheme.primaryContainer),
                 ),
                 const SizedBox(height: 6),
               ],
@@ -69,15 +69,14 @@ class SearchResultCard extends StatelessWidget {
                 terms: queryList,
                 maxLines: 3,
                 overflow: .ellipsis,
-                textStyle: textTheme.bodyMedium!.copyWith(
-                  color: scheme.onSurfaceVariant,
+                textStyle: typography.bodyMedium.onSurfaceVariant.copyWith(
                   height: 1.4,
                 ),
-                textStyleHighlight: textTheme.bodyMedium!.copyWith(
-                  height: 1.4,
-                  backgroundColor: scheme.primaryContainer,
-                  color: scheme.onPrimaryContainer,
-                ),
+                textStyleHighlight: typography.bodyMedium.onPrimaryContainer
+                    .copyWith(
+                      height: 1.4,
+                      backgroundColor: scheme.primaryContainer,
+                    ),
               ),
               const SizedBox(height: 10),
               Row(
@@ -86,7 +85,7 @@ class SearchResultCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     TimeFormat.mediumDate(diary.time),
-                    style: textTheme.bodySmall?.copyWith(color: scheme.outline),
+                    style: typography.bodySmall.outline,
                   ),
                 ],
               ),

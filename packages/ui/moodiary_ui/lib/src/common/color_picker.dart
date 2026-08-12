@@ -8,6 +8,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/src/basic/action_bar.dart';
 import 'package:moodiary_ui/src/basic/alert.dart';
 import 'package:moodiary_ui/src/basic/form.dart';
+import 'package:mui/mui.dart';
 
 /// 起手色板。**不是**主题预置档 —— 点一格等于往自定义色里填一个值，落库的是 ARGB
 /// 而不是索引，所以改动这张表不会动到任何人已经选好的颜色。
@@ -64,7 +65,8 @@ enum _InputMode {
   hsv,
   hsl;
 
-  _InputMode get next => _InputMode.values[(index + 1) % _InputMode.values.length];
+  _InputMode get next =>
+      _InputMode.values[(index + 1) % _InputMode.values.length];
 }
 
 class _ColorPickerContent extends StatefulWidget {
@@ -159,7 +161,10 @@ class _ColorPickerContentState extends State<_ColorPickerContent> {
               _commit(_hsv.withSaturation(saturation).withValue(value)),
         ),
         const SizedBox(height: 13),
-        _HueSlider(hue: _hsv.hue, onChanged: (hue) => _commit(_hsv.withHue(hue))),
+        _HueSlider(
+          hue: _hsv.hue,
+          onChanged: (hue) => _commit(_hsv.withHue(hue)),
+        ),
         const SizedBox(height: 14),
         _buildFields(),
       ],
@@ -358,7 +363,9 @@ class _HueSlider extends StatelessWidget {
                 ),
                 Positioned(
                   left: (hue / 360) * width - _kKnobSize / 2,
-                  child: _Knob(color: HSVColor.fromAHSV(1, hue, 1, 1).toColor()),
+                  child: _Knob(
+                    color: HSVColor.fromAHSV(1, hue, 1, 1).toColor(),
+                  ),
                 ),
               ],
             ),
@@ -440,7 +447,7 @@ class _ModeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Padding(
       // 与输入框对齐：MoodiaryField 的 label 占了上方一行。
       padding: const .only(top: 20),
@@ -456,10 +463,12 @@ class _ModeButton extends StatelessWidget {
             child: Center(
               child: Text(
                 label,
-                style: context.textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: .w700,
-                ),
+                style: context
+                    .theme
+                    .typography
+                    .labelSmall
+                    .emphasized
+                    .onSurfaceVariant,
               ),
             ),
           ),
@@ -550,9 +559,7 @@ class MoodiarySwatchRow extends StatelessWidget {
 /// 而这里要的只是一个强调色种子。
 Color? parseHexColor(String raw) {
   var text = raw.trim().replaceAll(RegExp(r'[\s#＃]'), '');
-  if (text.length > 1 &&
-      text[0] == '0' &&
-      (text[1] == 'x' || text[1] == 'X')) {
+  if (text.length > 1 && text[0] == '0' && (text[1] == 'x' || text[1] == 'X')) {
     text = text.substring(2);
   }
   if (text.length == 3) {

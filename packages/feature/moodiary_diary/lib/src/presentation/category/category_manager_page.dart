@@ -6,6 +6,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 class CategoryManagerPage extends ConsumerStatefulWidget {
   const CategoryManagerPage({super.key});
@@ -93,7 +94,9 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
                   borderRadius: .circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12 * t),
+                      color: context.theme.colors.shadow.withValues(
+                        alpha: 0.12 * t,
+                      ),
                       blurRadius: 14,
                       offset: const Offset(0, 5),
                     ),
@@ -241,9 +244,7 @@ class _NoMatch extends StatelessWidget {
     return Center(
       child: Text(
         context.l10n.categoryNoMatch,
-        style: context.textTheme.bodyMedium?.copyWith(
-          color: context.colorScheme.onSurfaceVariant,
-        ),
+        style: context.theme.typography.bodyMedium.onSurfaceVariant,
       ),
     );
   }
@@ -259,9 +260,13 @@ class _Empty extends StatelessWidget {
       child: Column(
         mainAxisSize: .min,
         children: [
-          const Icon(LucideIcons.folder, size: 48),
+          Icon(
+            LucideIcons.folder,
+            size: 48,
+            color: context.theme.colors.onSurfaceVariant,
+          ),
           const SizedBox(height: 12),
-          Text('暂无分类', style: Theme.of(context).textTheme.titleMedium),
+          Text('暂无分类', style: context.theme.typography.titleMedium.onSurface),
           const SizedBox(height: 8),
           FilledButton.icon(
             onPressed: onAdd,
@@ -291,14 +296,12 @@ class _CategoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     final color = categoryColorOf(colorValue: category.color, id: category.id);
-    final onColor = color.computeLuminance() > 0.5
-        ? Colors.black87
-        : Colors.white;
+    final onColor = onCategoryColor(color);
     return Card.filled(
       margin: const .symmetric(vertical: 4),
-      color: scheme.surfaceContainerLow,
+      color: colors.surfaceContainerLow,
       clipBehavior: .antiAlias,
       child: ListTile(
         onTap: onRename,
@@ -312,13 +315,11 @@ class _CategoryTile extends StatelessWidget {
           category.categoryName,
           maxLines: 1,
           overflow: .ellipsis,
-          style: context.textTheme.titleMedium,
+          style: context.theme.typography.titleMedium.onSurface,
         ),
         subtitle: Text(
           count > 0 ? '$count 篇日记' : '暂无日记',
-          style: context.textTheme.labelSmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
+          style: context.theme.typography.labelSmall.onSurfaceVariant,
         ),
         trailing: Row(
           mainAxisSize: .min,
@@ -350,7 +351,7 @@ class _CategoryTile extends StatelessWidget {
                 padding: const .all(12),
                 child: Icon(
                   LucideIcons.ellipsisVertical,
-                  color: scheme.onSurfaceVariant,
+                  color: colors.onSurfaceVariant,
                 ),
               ),
             ),
@@ -361,7 +362,7 @@ class _CategoryTile extends StatelessWidget {
                   padding: const .only(left: 4),
                   child: Icon(
                     LucideIcons.gripHorizontal,
-                    color: scheme.onSurfaceVariant,
+                    color: colors.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -447,7 +448,7 @@ class _CategoryEditorContentState extends State<_CategoryEditorContent> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     OutlineInputBorder border([BorderSide side = .none]) => OutlineInputBorder(
       borderRadius: AppBorderRadius.mediumBorderRadius,
       borderSide: side,
@@ -465,7 +466,7 @@ class _CategoryEditorContentState extends State<_CategoryEditorContent> {
             _edited = true;
             widget.draft.name = value;
           }),
-          style: context.textTheme.bodyLarge?.copyWith(color: scheme.onSurface),
+          style: context.theme.typography.bodyLarge.onSurface,
           decoration: InputDecoration(
             hintText: '分类名称',
             errorText: _edited && widget.draft.name.trim().isEmpty
@@ -473,19 +474,19 @@ class _CategoryEditorContentState extends State<_CategoryEditorContent> {
                 : null,
             filled: true,
             isDense: true,
-            fillColor: scheme.surfaceContainerHighest,
+            fillColor: colors.surfaceContainerHighest,
             contentPadding: const .symmetric(horizontal: 16, vertical: 13),
             border: border(),
             enabledBorder: border(),
             focusedBorder: border(
-              BorderSide(color: scheme.primary, width: 1.5),
+              BorderSide(color: colors.primary, width: 1.5),
             ),
           ),
         ),
         const SizedBox(height: 16),
         Text(
           context.l10n.categoryColorLabel,
-          style: context.textTheme.labelMedium,
+          style: context.theme.typography.labelMedium.onSurfaceVariant,
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -504,7 +505,7 @@ class _CategoryEditorContentState extends State<_CategoryEditorContent> {
                     shape: .circle,
                     border: .all(
                       color: widget.draft.color == c.toARGB32()
-                          ? scheme.onSurface
+                          ? colors.onSurface
                           : Colors.transparent,
                       width: 2,
                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 class _TrianglePainter extends CustomPainter {
   final Color color;
@@ -42,14 +43,14 @@ void showPopupWidget({
           CustomPaint(
             size: const Size(12, 6),
             painter: _TrianglePainter(
-              color: context.colorScheme.surfaceContainer,
+              color: context.theme.colors.surfaceContainer,
               size: const Size(12, 6),
             ),
           ),
           Container(
             padding: const .all(6.0),
             decoration: BoxDecoration(
-              color: context.colorScheme.surfaceContainer,
+              color: context.theme.colors.surfaceContainer,
               borderRadius: AppBorderRadius.mediumBorderRadius,
             ),
             child: child,

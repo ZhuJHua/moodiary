@@ -3,40 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:mui/mui.dart';
 
-/// 复现**改造前** ThemeManager 的排版表达式：`Typography.material2021` 的
-/// black/white + 逐级 fontWeight/fontVariations 覆盖。
-/// 新路径改成由 [MuiTextTheme] 整块投影，这个函数是它的对照组。
-TextTheme legacyTextTheme(ColorScheme cs) {
-  final typography = Typography.material2021(
-    platform: TargetPlatform.android,
-    colorScheme: cs,
-  );
-  final base = cs.brightness == Brightness.light
-      ? typography.black
-      : typography.white;
-  TextStyle? st(TextStyle? s, FontWeight fw, double axis) => s?.copyWith(
-    fontWeight: fw,
-    fontVariations: [FontVariation('wght', axis)],
-  );
-  return base.copyWith(
-    displayLarge: st(base.displayLarge, FontWeight.w500, 500),
-    displayMedium: st(base.displayMedium, FontWeight.w500, 500),
-    displaySmall: st(base.displaySmall, FontWeight.w500, 500),
-    headlineLarge: st(base.headlineLarge, FontWeight.w700, 700),
-    headlineMedium: st(base.headlineMedium, FontWeight.w600, 600),
-    headlineSmall: st(base.headlineSmall, FontWeight.w500, 500),
-    titleLarge: st(base.titleLarge, FontWeight.w600, 600),
-    titleMedium: st(base.titleMedium, FontWeight.w500, 500),
-    titleSmall: st(base.titleSmall, FontWeight.w500, 500),
-    bodyLarge: st(base.bodyLarge, FontWeight.w400, 400),
-    bodyMedium: st(base.bodyMedium, FontWeight.w400, 400),
-    bodySmall: st(base.bodySmall, FontWeight.w400, 400),
-    labelLarge: st(base.labelLarge, FontWeight.w500, 500),
-    labelMedium: st(base.labelMedium, FontWeight.w500, 500),
-    labelSmall: st(base.labelSmall, FontWeight.w400, 400),
-  );
-}
-
 Map<String, TextStyle?> _levels(TextTheme t) => {
   'displayLarge': t.displayLarge,
   'displayMedium': t.displayMedium,
@@ -73,38 +39,68 @@ Future<TextTheme> _resolveInTree(WidgetTester tester, ThemeData theme) async {
 
 void main() {
   for (final brightness in Brightness.values) {
-    testWidgets('$brightness 排版投影与改造前逐级等价', (tester) async {
+    testWidgets('$brightness 排版投影与 M3 2021 逐级等价', (tester) async {
+      // 契约是**与 M3 2021 逐级等价**，不是「与改造前等价」—— 老的字重表
+      // （display 500 / headlineLarge 700 / titleLarge 600…）既不是 M3、内部也
+      // 不自洽，2026-08-12 已换成 `Typography.englishLike2021` 的原值。
+      //
       // 在真实渲染树里比，而不是比构造出的对象 —— 差异藏在 ThemeData 的
       // `typography.black.merge(textTheme)` 与 `ThemeData.localize` 两层里。
       final mui = MuiThemeData(brightness: brightness);
       final projected = materialThemeFrom(mui);
-      final legacy = ThemeData(
-        colorScheme: projected.colorScheme,
-        brightness: brightness,
-        typography: Typography.material2021(
+      final m3 = _levels(
+        Typography.material2021(
           platform: TargetPlatform.android,
           colorScheme: projected.colorScheme,
-        ),
-        textTheme: legacyTextTheme(projected.colorScheme),
+        ).englishLike,
       );
 
       final now = _levels(await _resolveInTree(tester, projected));
-      final before = _levels(await _resolveInTree(tester, legacy));
 
       for (final key in now.keys) {
         final a = now[key]!;
-        final b = before[key]!;
-        expect(a.fontSize, b.fontSize, reason: '$key fontSize 漂了');
-        expect(a.height, b.height, reason: '$key height 漂了');
+        final b = m3[key]!;
+        expect(a.fontSize, b.fontSize, reason: '$key fontSize 偏离 M3');
+        expect(a.height, b.height, reason: '$key height 偏离 M3');
         expect(
           a.letterSpacing,
           b.letterSpacing,
-          reason: '$key letterSpacing 漂了',
+          reason: '$key letterSpacing 偏离 M3',
         );
-        expect(a.fontWeight, b.fontWeight, reason: '$key fontWeight 漂了');
-        expect(a.fontVariations, b.fontVariations, reason: '$key wght 轴漂了');
-        expect(a.color, b.color, reason: '$key color 漂了');
-        expect(a.inherit, b.inherit, reason: '$key inherit 漂了');
+        expect(a.fontWeight, b.fontWeight, reason: '$key fontWeight 偏离 M3');
+        // 可变字体的 wght 轴必须跟 fontWeight 同步，否则字重静默失效。
+        expect(a.fontVariations, [
+          FontVariation('wght', b.fontWeight!.value.toDouble()),
+        ], reason: '$key 的 wght 轴与 fontWeight 不一致');
+        expect(a.inherit, isFalse, reason: '$key 必须整块替换');
+        expect(
+          a.color,
+          projected.colorScheme.onSurface,
+          reason: '$key 的投影色应为 onSurface',
+        );
+      }
+    });
+
+    testWidgets('$brightness 强调档：只加字重，几何一动不动', (tester) async {
+      final mui = MuiThemeData(brightness: brightness);
+      for (final level in MuiTypography.levels) {
+        final base = mui.typography.byLevel(level).onSurface;
+        final emphasized = mui.typography.byLevel(level).emphasized.onSurface;
+        expect(emphasized.fontSize, base.fontSize, reason: '$level 字号被改了');
+        expect(emphasized.height, base.height, reason: '$level 行高被改了');
+        expect(
+          emphasized.letterSpacing,
+          base.letterSpacing,
+          reason: '$level 字距被改了',
+        );
+        // 22px 及以上用 Bold，其余 SemiBold（取自 iOS HIG 的做法）。
+        final expected = base.fontSize! >= 22
+            ? FontWeight.w700
+            : FontWeight.w600;
+        expect(emphasized.fontWeight, expected, reason: '$level 强调档字重不对');
+        expect(emphasized.fontVariations, [
+          FontVariation('wght', expected.value.toDouble()),
+        ], reason: '$level 强调档的 wght 轴没跟上');
       }
     });
   }
@@ -149,7 +145,7 @@ void main() {
         home: Builder(
           builder: (context) {
             style = context.theme.typography.titleLarge.onSurfaceVariant;
-            emphasized = context.theme.typography.bodyMedium.bold.primary;
+            emphasized = context.theme.typography.bodyMedium.emphasized.primary;
             return const SizedBox();
           },
         ),
@@ -157,13 +153,13 @@ void main() {
     );
     expect(style.color, mui.colors.onSurfaceVariant);
     expect(style.fontSize, 22);
-    expect(style.fontWeight, FontWeight.w600);
+    expect(style.fontWeight, FontWeight.w400);
 
     expect(emphasized.color, mui.colors.primary);
     expect(emphasized.fontSize, 14);
     // 字重两条路必须一起动，否则可变字体下 fontWeight 会被 fontVariations 吃掉。
-    expect(emphasized.fontWeight, FontWeight.w700);
-    expect(emphasized.fontVariations, [const FontVariation('wght', 700)]);
+    expect(emphasized.fontWeight, FontWeight.w600);
+    expect(emphasized.fontVariations, [const FontVariation('wght', 600)]);
   });
 
   testWidgets('MuiTheme 能穿过 MaterialApp.builder 传到路由子树', (tester) async {

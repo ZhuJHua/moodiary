@@ -6,6 +6,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AssistantProviderEditPage extends ConsumerStatefulWidget {
@@ -205,7 +206,7 @@ class _AssistantProviderEditPageState
     required IconData icon,
     Widget? suffixIcon,
   }) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
       borderRadius: AppBorderRadius.mediumBorderRadius,
       borderSide: width == 0 ? .none : BorderSide(color: color, width: width),
@@ -227,7 +228,7 @@ class _AssistantProviderEditPageState
   }
 
   InputDecoration _searchDecoration(String hint) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return InputDecoration(
       hintText: hint,
       prefixIcon: const Icon(LucideIcons.search, size: 20),
@@ -293,9 +294,7 @@ class _AssistantProviderEditPageState
             child: Center(
               child: Text(
                 l10n.modelProviderNoModelMatch,
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
+                style: context.theme.typography.bodySmall.onSurfaceVariant,
               ),
             ),
           )
@@ -311,7 +310,6 @@ class _AssistantProviderEditPageState
   }
 
   Widget _buildCapabilities(AppLocalizations l10n) {
-    final scheme = context.colorScheme;
     return Column(
       crossAxisAlignment: .start,
       children: [
@@ -321,9 +319,7 @@ class _AssistantProviderEditPageState
           padding: const .only(left: 4, top: 2, bottom: 2),
           child: Text(
             l10n.modelProviderCapabilitiesHint,
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.bodySmall.onSurfaceVariant,
           ),
         ),
         _CapabilitySwitch(
@@ -487,9 +483,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: context.textTheme.labelLarge?.copyWith(
-        color: context.colorScheme.onSurfaceVariant,
-      ),
+      style: context.theme.typography.labelLarge.onSurfaceVariant,
     );
   }
 }
@@ -509,9 +503,7 @@ class _LabeledField extends StatelessWidget {
           padding: const .only(left: 4, bottom: 6),
           child: Text(
             label,
-            style: context.textTheme.labelLarge?.copyWith(
-              color: context.colorScheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.labelLarge.onSurfaceVariant,
           ),
         ),
         child,
@@ -533,7 +525,7 @@ class _ModelTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     final badges = <Widget>[
       if (model.toolCall)
@@ -574,7 +566,12 @@ class _ModelTile extends StatelessWidget {
                           model.name,
                           maxLines: 1,
                           overflow: .ellipsis,
-                          style: context.textTheme.titleSmall,
+                          style: context.theme.typography.titleSmall.onSurface
+                              .copyWith(
+                                color: selected
+                                    ? scheme.onPrimaryContainer
+                                    : scheme.onSurface,
+                              ),
                         ),
                       ),
                       if (badges.isNotEmpty) ...[
@@ -591,7 +588,7 @@ class _ModelTile extends StatelessWidget {
                   right: 10,
                   child: Icon(
                     LucideIcons.circleCheck,
-                    color: scheme.primary,
+                    color: scheme.onPrimaryContainer,
                     size: 20,
                   ),
                 ),
@@ -618,12 +615,12 @@ class _CapabilitySwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return SwitchListTile.adaptive(
       contentPadding: .zero,
       dense: true,
       secondary: Icon(icon, size: 20, color: scheme.onSurfaceVariant),
-      title: Text(label, style: context.textTheme.bodyMedium),
+      title: Text(label, style: context.theme.typography.bodyMedium.onSurface),
       value: value,
       onChanged: onChanged,
     );
@@ -638,7 +635,7 @@ class _Badge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Container(
       padding: const .symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -652,9 +649,7 @@ class _Badge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             text,
-            style: context.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.labelSmall.onSurfaceVariant,
           ),
         ],
       ),

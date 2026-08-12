@@ -3,6 +3,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 轻量提示工具，所有方法 fire-and-forget。[bindPage] 固定 false 让 toast 全局生效，
 /// 避免页面 pop 时被强制收起。
@@ -30,7 +31,7 @@ class Toast {
           message: message,
           icon: Icon(
             LucideIcons.info,
-            color: context.colorScheme.onSurfaceVariant,
+            color: context.theme.colors.onInverseSurface,
             size: 24,
           ),
         );
@@ -56,7 +57,7 @@ class Toast {
             child: CircularProgressIndicator(
               padding: .zero,
               strokeWidth: 2.5,
-              color: context.colorScheme.onSurfaceVariant,
+              color: context.theme.colors.onInverseSurface,
             ),
           ),
         );
@@ -81,7 +82,7 @@ class Toast {
           message: message ?? context.l10n.toastError,
           icon: Icon(
             LucideIcons.circleX,
-            color: context.colorScheme.onSurfaceVariant,
+            color: context.theme.colors.onInverseSurface,
             size: 24,
           ),
         );
@@ -106,7 +107,7 @@ class Toast {
           message: message ?? context.l10n.toastSuccess,
           icon: Icon(
             LucideIcons.circleCheck,
-            color: context.colorScheme.onSurfaceVariant,
+            color: context.theme.colors.onInverseSurface,
             size: 24,
           ),
         );
@@ -135,9 +136,7 @@ class Toast {
           child: Text(
             message,
             textAlign: .center,
-            style: context.textTheme.titleSmall?.copyWith(
-              color: context.colorScheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.titleSmall.onInverseSurface,
           ),
         ),
       ],
@@ -145,9 +144,7 @@ class Toast {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: context.colorScheme.surfaceContainerHighest.withValues(
-          alpha: 0.9,
-        ),
+        color: context.theme.colors.inverseSurface.withValues(alpha: 0.9),
         borderRadius: AppBorderRadius.mediumBorderRadius,
       ),
       child: Padding(padding: const .all(16.0), child: widget),

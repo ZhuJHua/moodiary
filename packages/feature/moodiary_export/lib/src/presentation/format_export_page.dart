@@ -3,6 +3,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 import '../data/export_options.dart';
 import '../data/export_scope.dart';
@@ -90,13 +91,13 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Widget _scopeSection() {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
         SettingTitleTile(title: l10n.exportSectionScope),
         Card.filled(
-          color: scheme.surfaceContainerLow,
+          color: theme.colors.surfaceContainerLow,
           margin: .zero,
           child: Column(
             children: [
@@ -112,9 +113,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
                       _scopeCount == null
                           ? l10n.exportCounting
                           : l10n.exportEntryCount(_scopeCount!),
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: theme.typography.bodySmall.onSurfaceVariant,
                     ),
                     const Icon(LucideIcons.chevronRight),
                   ],
@@ -176,13 +175,13 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Widget _contentSection() {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
         SettingTitleTile(title: l10n.exportSectionContent),
         Card.filled(
-          color: scheme.surfaceContainerLow,
+          color: theme.colors.surfaceContainerLow,
           margin: .zero,
           child: Column(
             children: [
@@ -257,14 +256,14 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Widget _markdownSection() {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
+    final theme = context.theme;
     final md = _settings.markdown;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
         const SettingTitleTile(title: 'Markdown'),
         Card.filled(
-          color: scheme.surfaceContainerLow,
+          color: theme.colors.surfaceContainerLow,
           margin: .zero,
           child: Column(
             children: [
@@ -299,7 +298,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Widget _layoutSection() {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
+    final theme = context.theme;
     final layout = _layout;
     final isPdf = widget.format == .pdf;
 
@@ -308,7 +307,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
       children: [
         SettingTitleTile(title: l10n.exportSectionLayout),
         Card.filled(
-          color: scheme.surfaceContainerLow,
+          color: theme.colors.surfaceContainerLow,
           margin: .zero,
           child: Column(
             children: [
@@ -469,9 +468,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
               child: Text(
                 blocked,
                 textAlign: .center,
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: context.colorScheme.error,
-                ),
+                style: context.theme.typography.bodySmall.error,
               ),
             ),
           if (_running && _progress != null) _progressBar(_progress!, l10n),
@@ -528,7 +525,11 @@ class _FormatExportPageState extends State<FormatExportPage> {
       child: Column(
         crossAxisAlignment: .stretch,
         children: [
-          Text(label, textAlign: .center, style: context.textTheme.bodySmall),
+          Text(
+            label,
+            textAlign: .center,
+            style: context.theme.typography.bodySmall.onSurfaceVariant,
+          ),
           const SizedBox(height: 6),
           ClipRRect(
             borderRadius: .circular(3),

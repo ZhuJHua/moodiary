@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 void main() {
   /// 弹窗内部取 `context.l10n` 的默认「取消」，所以宿主必须装 delegate。
@@ -14,11 +17,14 @@ void main() {
         ),
       ),
     );
-    return MaterialApp(
-      locale: const Locale('zh'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: body),
+    return MuiTheme(
+      data: _mui,
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: body),
+      ),
     );
   }
 
@@ -358,11 +364,14 @@ void main() {
   });
 
   group('MoodiaryField', () {
-    Widget fieldHost(Widget child) => MaterialApp(
-      locale: const Locale('zh'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: child),
+    Widget fieldHost(Widget child) => MuiTheme(
+      data: _mui,
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: child),
+      ),
     );
 
     testWidgets('有内容才出清除键，点了清空', (tester) async {

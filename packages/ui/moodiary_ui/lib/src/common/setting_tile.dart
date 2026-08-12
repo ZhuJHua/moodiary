@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:mui/mui.dart';
 
 import '../basic/alert.dart';
 
@@ -20,22 +21,15 @@ class SettingTitleTile extends StatelessWidget {
       subtitle == null || subtitle is String || subtitle is Widget,
       'subtitle must be a String or a Widget',
     );
-    final theme = Theme.of(context);
+    final theme = context.theme;
     return ListTile(
       title: (title is String)
-          ? Text(
-              title as String,
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.primary,
-              ),
-            )
+          ? Text(title as String, style: theme.typography.titleLarge.primary)
           : title as Widget,
       subtitle: (subtitle is String)
           ? Text(
               subtitle as String,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: theme.typography.bodyMedium.onSurfaceVariant,
             )
           : subtitle as Widget?,
     );
@@ -91,8 +85,8 @@ class SettingListTile extends StatelessWidget {
       subtitle == null || subtitle is String || subtitle is Widget,
       'subtitle must be a String or a Widget',
     );
-    final theme = Theme.of(context);
-    final selectedFg = theme.colorScheme.onSecondaryContainer;
+    final theme = context.theme;
+    final selectedFg = theme.colors.onSecondaryContainer;
     // 兼容历史用法：传入 Text 时取其文本，按 tile 默认样式渲染。
     var realTitle = title;
     var realSubtitle = subtitle;
@@ -106,14 +100,13 @@ class SettingListTile extends StatelessWidget {
       tileColor: tileColor,
       selected: selected,
       selectedColor: selectedFg,
-      selectedTileColor: theme.colorScheme.secondaryContainer,
+      selectedTileColor: theme.colors.secondaryContainer,
       title: (realTitle is String)
           ? Text(
               realTitle,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: selected ? selectedFg : theme.colorScheme.onSurface,
-                fontWeight: selected ? .w600 : null,
-              ),
+              style: selected
+                  ? theme.typography.bodyLarge.emphasized.onSecondaryContainer
+                  : theme.typography.bodyLarge.onSurface,
             )
           : realTitle as Widget,
       shape:
@@ -128,9 +121,7 @@ class SettingListTile extends StatelessWidget {
       subtitle: (realSubtitle is String)
           ? Text(
               realSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: theme.typography.bodyMedium.onSurfaceVariant,
             )
           : realSubtitle as Widget?,
       trailing: trailing,
@@ -179,7 +170,7 @@ class SettingSwitchListTile extends StatelessWidget {
       subtitle == null || subtitle is String || subtitle is Widget,
       'subtitle must be a String or a Widget',
     );
-    final theme = Theme.of(context);
+    final theme = context.theme;
     var realTitle = title;
     var realSubtitle = subtitle;
     if (title is Text) {
@@ -190,12 +181,7 @@ class SettingSwitchListTile extends StatelessWidget {
     }
     return SwitchListTile(
       title: (realTitle is String)
-          ? Text(
-              realTitle,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
-            )
+          ? Text(realTitle, style: theme.typography.bodyLarge.onSurface)
           : realTitle as Widget,
       secondary: secondary,
       shape: RoundedRectangleBorder(
@@ -209,9 +195,7 @@ class SettingSwitchListTile extends StatelessWidget {
       subtitle: (realSubtitle is String)
           ? Text(
               realSubtitle,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: theme.typography.bodyMedium.onSurfaceVariant,
             )
           : realSubtitle as Widget?,
       value: value,
@@ -255,7 +239,7 @@ class SettingInputTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = context.theme.colors;
     final hasValue = value.trim().isNotEmpty;
     return SettingListTile(
       isFirst: isFirst,

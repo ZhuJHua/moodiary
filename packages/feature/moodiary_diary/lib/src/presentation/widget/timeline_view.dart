@@ -12,6 +12,7 @@ import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 时间线视图：左侧一条真正的轴——圆点与线段都取心情色，滑动即读一段情绪走向。
 ///
@@ -192,31 +193,26 @@ class _MonthHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlaps) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     return Container(
       height: _height,
       alignment: .centerLeft,
-      color: scheme.surface,
+      color: colors.surface,
       child: Row(
         children: [
           Text(
             TimeFormat.monthTitle(month),
-            style: context.textTheme.titleSmall?.copyWith(
-              color: scheme.onSurface,
-              fontWeight: .w600,
-            ),
+            style: context.theme.typography.titleSmall.emphasized.onSurface,
           ),
           if (count != null) ...[
             const SizedBox(width: 8),
             Text(
               context.l10n.diaryTimelineMonthCount(count!),
-              style: context.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: context.theme.typography.labelSmall.onSurfaceVariant,
             ),
           ],
           const SizedBox(width: 10),
-          Expanded(child: Divider(height: 1, color: scheme.outlineVariant)),
+          Expanded(child: Divider(height: 1, color: colors.outlineVariant)),
         ],
       ),
     );

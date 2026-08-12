@@ -91,6 +91,8 @@ class MuiThemeData with MuiValue {
   final Map<Object, MuiComponentTheme<dynamic>> components;
   final Map<Object, MuiThemeExtension<dynamic>> extensions;
 
+  bool get isDark => brightness == Brightness.dark;
+
   @override
   List<Object?> get props => [
     brightness,

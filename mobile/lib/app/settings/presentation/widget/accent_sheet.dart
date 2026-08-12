@@ -6,6 +6,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 /// 强调色来源选择。三行，没别的 —— 前两档点了立刻生效并留在弹窗里，
 /// 「自定义」进单独一页。
@@ -13,7 +14,10 @@ class AccentSheet extends ConsumerWidget {
   const AccentSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showMoodiarySheet<void>(context, builder: (_) => const AccentSheet());
+    return showMoodiarySheet<void>(
+      context,
+      builder: (_) => const AccentSheet(),
+    );
   }
 
   @override
@@ -87,7 +91,7 @@ class _AccentModeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Semantics(
       selected: selected,
       child: Padding(
@@ -113,10 +117,14 @@ class _AccentModeRow extends StatelessWidget {
                   Expanded(
                     child: Text(
                       _label(context),
-                      style: context.textTheme.bodyLarge?.copyWith(
-                        color: scheme.onSurface,
-                        fontWeight: selected ? .w600 : .w400,
-                      ),
+                      style: selected
+                          ? context
+                                .theme
+                                .typography
+                                .bodyLarge
+                                .emphasized
+                                .onSurface
+                          : context.theme.typography.bodyLarge.onSurface,
                     ),
                   ),
                   if (selected)
@@ -143,7 +151,7 @@ class _AccentModeRow extends StatelessWidget {
   };
 
   Widget _swatch(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     const radius = AppBorderRadius.smallBorderRadius;
     return switch (mode) {
       // 白到黑的连续渐变。没有任何一条边，也就没有锯齿 —— 硬断点（stops [0.5, 0.5]）

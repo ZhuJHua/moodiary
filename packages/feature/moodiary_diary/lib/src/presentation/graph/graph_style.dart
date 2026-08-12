@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:mui/mui.dart';
 
 /// 节点着色维度（总图可切，ego 图固定按分类）。
 enum GraphColorMode { category, time, plain }
@@ -149,9 +150,8 @@ class GraphPalette {
     required this.incoming,
   });
 
-  factory GraphPalette.of(ThemeData theme, {required int edgeCount}) {
-    final cs = theme.colorScheme;
-    final dark = theme.brightness == .dark;
+  factory GraphPalette.of(MuiColorScheme cs, {required int edgeCount}) {
+    final dark = cs.brightness == .dark;
     final dense = edgeCount > 3000;
     final edgeAlpha = dense ? (dark ? 0.08 : 0.09) : (dark ? 0.16 : 0.18);
     return GraphPalette._(
@@ -159,9 +159,8 @@ class GraphPalette {
       surface: cs.surface,
       dot: cs.onSurface.withValues(alpha: dark ? 0.055 : 0.045),
       spotlight: cs.primary.withValues(alpha: dark ? 0.07 : 0.045),
-      vignette: dark
-          ? Colors.black.withValues(alpha: 0.30)
-          : Colors.transparent,
+      // scrim 是遮罩基色（不含 alpha），vignette 正是这个用途。
+      vignette: dark ? cs.scrim.withValues(alpha: 0.30) : Colors.transparent,
       edge: cs.onSurface.withValues(alpha: edgeAlpha),
       label: cs.onSurface.withValues(alpha: dark ? 0.90 : 0.88),
       labelHalo: cs.surface,
@@ -178,7 +177,7 @@ class GraphPalette {
   /// 聚焦态下非邻域边的淡出色（密图已经很淡，乘完要托底）。
   Color dimEdge(Color c) => c.withValues(alpha: math.max(0.045, c.a * 0.25));
 
-  // 值相等：调用方每帧都会 `GraphPalette.of(theme)` 出一个新实例，靠它判断「主题真的变了吗」，
+  // 值相等：调用方每帧都会 `GraphPalette.of(colors)` 出一个新实例，靠它判断「主题真的变了吗」，
   // 没有这个就会每帧重建场景（进而重启动画）。
   @override
   bool operator ==(Object other) =>

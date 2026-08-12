@@ -3,7 +3,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 import '../data/export_scope.dart';
 
@@ -109,7 +109,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final built = _build(l10n);
 
     return Scaffold(
@@ -175,7 +175,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
       kind == .all ? Text(l10n.exportScopeAllHint(_diaries.length)) : null;
 
   Widget _categoryList(AppLocalizations l10n) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final uncategorized = _diaries.where((d) {
       final id = d.categoryId;
       return id == null || id.isEmpty;
@@ -216,7 +216,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
   }
 
   Widget _rangeTile(AppLocalizations l10n) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final range = _range;
     return Card.filled(
       color: scheme.surfaceContainerLow,
@@ -256,7 +256,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
   }
 
   Widget _diaryList(AppLocalizations l10n) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Card.filled(
       color: scheme.surfaceContainerLow,
       margin: .zero,

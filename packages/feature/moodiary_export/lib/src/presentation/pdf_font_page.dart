@@ -3,6 +3,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
 
 /// 选一个用于 PDF 的字体，返回它的文件名；取消返回 null。
@@ -66,7 +67,7 @@ class _PdfFontPageState extends State<PdfFontPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
+    final theme = context.theme;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.exportPdfFontPageTitle)),
@@ -82,7 +83,7 @@ class _PdfFontPageState extends State<PdfFontPage> {
                     children: [
                       SettingTitleTile(title: l10n.exportImportedFonts),
                       Card.filled(
-                        color: scheme.surfaceContainerLow,
+                        color: theme.colors.surfaceContainerLow,
                         margin: .zero,
                         child: Column(
                           children: [for (final font in _fonts) _tile(font)],
@@ -111,26 +112,27 @@ class _PdfFontPageState extends State<PdfFontPage> {
 
   Widget _empty() {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
+    final theme = context.theme;
     return Container(
       padding: const .symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
+        color: theme.colors.surfaceContainerLow,
         borderRadius: .circular(16),
-        border: .all(color: scheme.outlineVariant),
+        border: .all(color: theme.colors.outlineVariant),
       ),
       child: Column(
         children: [
-          Icon(LucideIcons.type, size: 30, color: scheme.primary),
+          Icon(LucideIcons.type, size: 30, color: theme.colors.primary),
           const SizedBox(height: 10),
-          Text(l10n.exportNoPdfFontTitle, style: context.textTheme.titleSmall),
+          Text(
+            l10n.exportNoPdfFontTitle,
+            style: theme.typography.titleSmall.onSurface,
+          ),
           const SizedBox(height: 6),
           Text(
             l10n.exportNoPdfFontMessage,
             textAlign: .center,
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: theme.typography.bodySmall.onSurfaceVariant,
           ),
         ],
       ),
@@ -138,12 +140,12 @@ class _PdfFontPageState extends State<PdfFontPage> {
   }
 
   Widget _tile(Font font) {
-    final scheme = context.colorScheme;
+    final theme = context.theme;
     return ListTile(
       leading: const Icon(LucideIcons.type),
       title: Text(font.fontFamily),
       trailing: font.fontFileName == widget.selected
-          ? Icon(LucideIcons.check, color: scheme.primary)
+          ? Icon(LucideIcons.check, color: theme.colors.primary)
           : null,
       onTap: () => Navigator.of(context).pop(font.fontFileName),
     );

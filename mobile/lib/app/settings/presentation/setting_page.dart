@@ -15,6 +15,7 @@ import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 /// 一级菜单项跳转：全屏 `push` 落 root navigator。
 void _openSetting(BuildContext context, MoodiaryRouteBase route) {
@@ -61,7 +62,7 @@ class _DataSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -74,40 +75,73 @@ class _DataSection extends StatelessWidget {
               SettingListTile(
                 title: '回收站',
                 isFirst: true,
-                leading: const Icon(LucideIcons.trash),
-                trailing: const Icon(LucideIcons.chevronRight),
+                leading: Icon(
+                  LucideIcons.trash,
+                  color: scheme.onSurfaceVariant,
+                ),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
                 onTap: () => _openSetting(context, const RecycleRoute()),
               ),
               SettingListTile(
                 title: '数据同步与备份',
-                leading: const Icon(LucideIcons.refreshCw),
-                trailing: const Icon(LucideIcons.chevronRight),
+                leading: Icon(
+                  LucideIcons.refreshCw,
+                  color: scheme.onSurfaceVariant,
+                ),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
                 onTap: () => _openSetting(context, const BackupSyncRoute()),
               ),
               SettingListTile(
                 title: context.l10n.exportPageTitle,
-                leading: const Icon(LucideIcons.fileOutput),
-                trailing: const Icon(LucideIcons.chevronRight),
+                leading: Icon(
+                  LucideIcons.fileOutput,
+                  color: scheme.onSurfaceVariant,
+                ),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
                 onTap: () => _openSetting(context, const ExportRoute()),
               ),
               SettingListTile(
                 title: '分类管理',
-                leading: const Icon(LucideIcons.folders),
-                trailing: const Icon(LucideIcons.chevronRight),
+                leading: Icon(
+                  LucideIcons.folders,
+                  color: scheme.onSurfaceVariant,
+                ),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
                 onTap: () =>
                     _openSetting(context, const CategoryManagerRoute()),
               ),
               SettingListTile(
                 title: '足迹地图',
-                leading: const Icon(LucideIcons.map),
-                trailing: const Icon(LucideIcons.chevronRight),
+                leading: Icon(LucideIcons.map, color: scheme.onSurfaceVariant),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
                 onTap: () => _openSetting(context, const MapRoute()),
               ),
               SettingListTile(
                 title: '迁移到新编辑器',
                 subtitle: '把旧日记（富文本 / Markdown）转换为新编辑器以便编辑',
-                leading: const Icon(LucideIcons.wandSparkles),
-                trailing: const Icon(LucideIcons.chevronRight),
+                leading: Icon(
+                  LucideIcons.wandSparkles,
+                  color: scheme.onSurfaceVariant,
+                ),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
                 onTap: () =>
                     _openSetting(context, const EditorMigrationRoute()),
               ),
@@ -131,8 +165,7 @@ class _DisplaySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(appSettingsControllerProvider);
-    final scheme = context.colorScheme;
-    final primary = scheme.primary;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -145,8 +178,14 @@ class _DisplaySection extends ConsumerWidget {
               SettingListTile(
                 title: '日记设置',
                 isFirst: true,
-                leading: const Icon(LucideIcons.fileText),
-                trailing: const Icon(LucideIcons.chevronRight),
+                leading: Icon(
+                  LucideIcons.fileText,
+                  color: scheme.onSurfaceVariant,
+                ),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
                 onTap: () => _openSetting(context, const DiarySettingRoute()),
               ),
               ValueListenableBuilder(
@@ -154,15 +193,16 @@ class _DisplaySection extends ConsumerWidget {
                 builder: (context, mode, _) {
                   return SettingListTile(
                     title: '主题模式',
-                    leading: const Icon(LucideIcons.contrast),
+                    leading: Icon(
+                      LucideIcons.contrast,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     trailing: Text(
                       _themeModeLabels[mode.clamp(
                         0,
                         _themeModeLabels.length - 1,
                       )],
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: primary,
-                      ),
+                      style: context.theme.typography.bodySmall.primary,
                     ),
                     onTap: () => showDialog(
                       context: context,
@@ -180,16 +220,17 @@ class _DisplaySection extends ConsumerWidget {
                       : ThemeAccentMode.neutral;
                   return SettingListTile(
                     title: context.l10n.accentTitle,
-                    leading: const Icon(LucideIcons.palette),
+                    leading: Icon(
+                      LucideIcons.palette,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     trailing: Text(
                       switch (mode) {
                         .neutral => context.l10n.accentNeutral,
                         .system => context.l10n.accentSystem,
                         .custom => context.l10n.accentCustom,
                       },
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: primary,
-                      ),
+                      style: context.theme.typography.bodySmall.primary,
                     ),
                     onTap: () => AccentSheet.show(context),
                   );
@@ -198,8 +239,11 @@ class _DisplaySection extends ConsumerWidget {
               SettingListTile(
                 isLast: true,
                 title: '字体样式',
-                leading: const Icon(LucideIcons.type),
-                trailing: const Icon(LucideIcons.chevronRight),
+                leading: Icon(LucideIcons.type, color: scheme.onSurfaceVariant),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
                 onTap: () => _openSetting(context, const FontRoute()),
               ),
             ],
@@ -215,7 +259,7 @@ class _PrivacySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -233,7 +277,10 @@ class _PrivacySection extends StatelessWidget {
                     isLast: true,
                     title: '后台隐私保护',
                     subtitle: '退到后台时遮罩内容',
-                    secondary: const Icon(LucideIcons.eyeOff),
+                    secondary: Icon(
+                      LucideIcons.eyeOff,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     value: on,
                     onChanged: (v) => MoodiaryKVs.backendPrivacy.set(v),
                   );
@@ -253,8 +300,7 @@ class _MoreSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(appSettingsControllerProvider);
-    final scheme = context.colorScheme;
-    final primary = scheme.primary;
+    final scheme = context.theme.colors;
     final langCode = MoodiaryKVs.language.get() ?? Language.system.languageCode;
     final lang = Language.values.firstWhere(
       (e) => e.languageCode == langCode,
@@ -272,16 +318,22 @@ class _MoreSection extends ConsumerWidget {
               SettingListTile(
                 isFirst: true,
                 title: '关于',
-                leading: const Icon(LucideIcons.info),
-                trailing: const Icon(LucideIcons.chevronRight),
+                leading: Icon(LucideIcons.info, color: scheme.onSurfaceVariant),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
                 onTap: () => _openSetting(context, const AboutRoute()),
               ),
               SettingListTile(
                 title: '语言',
-                leading: const Icon(LucideIcons.languages),
+                leading: Icon(
+                  LucideIcons.languages,
+                  color: scheme.onSurfaceVariant,
+                ),
                 trailing: Text(
                   lang.l10nText(context),
-                  style: context.textTheme.bodySmall?.copyWith(color: primary),
+                  style: context.theme.typography.bodySmall.primary,
                 ),
                 onTap: () => showDialog(
                   context: context,
@@ -291,8 +343,14 @@ class _MoreSection extends ConsumerWidget {
               SettingListTile(
                 isLast: true,
                 title: '第三方服务',
-                leading: const Icon(LucideIcons.waypoints),
-                trailing: const Icon(LucideIcons.chevronRight),
+                leading: Icon(
+                  LucideIcons.waypoints,
+                  color: scheme.onSurfaceVariant,
+                ),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
                 onTap: () => _openSetting(context, const ServicesRoute()),
               ),
             ],

@@ -9,6 +9,7 @@ import 'package:moodiary_diary/src/presentation/graph/graph_scene.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_style.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 DiaryGraphData _graph({
   required int n,
@@ -61,11 +62,14 @@ GraphScene _scene(
   GraphColorMode mode = .category,
   bool dark = false,
 }) {
-  final theme = ThemeData(brightness: dark ? .dark : .light);
+  final colors = MuiColorScheme.resolve(
+    dark ? Brightness.dark : Brightness.light,
+    const MuiAccent.neutral(),
+  );
   return .build(
     data: data,
     categories: _categories,
-    palette: .of(theme, edgeCount: data.edgeCount),
+    palette: .of(colors, edgeCount: data.edgeCount),
     mode: mode,
   );
 }
@@ -80,15 +84,16 @@ Future<void> _pumpCanvas(
   bool dark = false,
   bool showLabels = true,
 }) async {
-  final theme = ThemeData(brightness: dark ? .dark : .light);
+  final mui = MuiThemeData(brightness: dark ? .dark : .light);
   await tester.pumpWidget(
     MaterialApp(
-      theme: theme,
+      theme: materialThemeFrom(mui),
+      builder: (context, child) => MuiTheme(data: mui, child: child!),
       home: Scaffold(
         body: GraphCanvas(
           scene: scene,
           frame: frame,
-          palette: .of(theme, edgeCount: scene.edgeCount),
+          palette: .of(mui.colors, edgeCount: scene.edgeCount),
           selected: selected,
           showLabels: showLabels,
           egoDirections: dirs,
@@ -185,7 +190,10 @@ void main() {
     });
 
     test('分类色向主色 harmonize，无分类回落主题色', () {
-      final cs = ThemeData(brightness: .light).colorScheme;
+      final cs = MuiColorScheme.resolve(
+        Brightness.light,
+        const MuiAccent.neutral(),
+      );
       final scene = _scene(_graph(n: 4, edges: [(0, 1), (2, 3)]));
       // index 0/3 无分类（i % 3 == 0）→ 主题色本色，不需要 harmonize。
       expect(scene.colors[0], cs.primary);

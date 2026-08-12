@@ -129,15 +129,22 @@ class Moodiary extends ConsumerWidget {
           .dark => Brightness.dark,
           .system => MediaQuery.platformBrightnessOf(context),
         };
+        final muiTheme = brightness == .light
+            ? settings.lightMuiTheme
+            : settings.darkMuiTheme;
         // 字号档已经解析进主题（见 MuiTextSize），所以这里把缩放**钉死为 1**：
         // 再乘一次会与主题里的尺寸叠加，局部 `textScaler:` 覆盖也会失去参照。
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(textScaler: .noScaling),
-          child: MuiAnimatedTheme(
-            data: brightness == .light
-                ? settings.lightMuiTheme
-                : settings.darkMuiTheme,
-            child: FlutterSmartDialog.init()(context, child!),
+          // 状态栏/导航栏图标的兜底。AppBar 自带的那层注解覆盖在它上面、只管有
+          // AppBar 的页面；没有 AppBar 的页面（详情、图片浏览、相机、视频全屏）
+          // 全靠这一层，否则会沿用上一个页面留下的明暗。
+          child: AnnotatedRegion<SystemUiOverlayStyle>(
+            value: systemOverlayStyleFrom(muiTheme),
+            child: MuiAnimatedTheme(
+              data: muiTheme,
+              child: FlutterSmartDialog.init()(context, child!),
+            ),
           ),
         );
       },

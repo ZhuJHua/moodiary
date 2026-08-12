@@ -8,6 +8,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 import 'media_controller.dart';
 import 'media_video_viewer.dart';
@@ -219,7 +220,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final theme = context.theme;
     return Padding(
       padding: const .fromLTRB(_kGridPadding, 10, _kGridPadding, 8),
       child: Row(
@@ -227,18 +228,13 @@ class _SectionHeader extends StatelessWidget {
           Expanded(
             child: Text(
               TimeFormat.fullDate(date),
-              style: context.textTheme.titleSmall?.copyWith(
-                color: scheme.primary,
-                fontWeight: .w600,
-              ),
+              style: theme.typography.titleSmall.emphasized.primary,
             ),
           ),
           const SizedBox(width: 8),
           Text(
             _countLabel(context, type, count),
-            style: context.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: theme.typography.labelSmall.onSurfaceVariant,
           ),
         ],
       ),
@@ -315,7 +311,9 @@ final Set<String> _backfillAttempted = {};
 /// ——不推进时钟就不会覆盖任何人（其它设备各自本地探测即可）。
 Future<void> _backfillMediaInfo(String name) async {
   if (!_backfillAttempted.add(name)) return;
-  final duration = await probeAudioDuration(AppFiles.getRealPath('audio', name));
+  final duration = await probeAudioDuration(
+    AppFiles.getRealPath('audio', name),
+  );
   if (duration == null) return;
   final existing = await MediaInfoRepository.get().getMediaInfoByFileName(name);
   if (existing?.durationMs != null) return;
@@ -379,7 +377,8 @@ class _AudioTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = context.colorScheme;
+    final theme = context.theme;
+    final scheme = theme.colors;
     final info = ref.watch(mediaInfoByFileNameProvider(name));
     if (info?.durationMs == null) {
       Future.microtask(() => _backfillMediaInfo(name));
@@ -429,17 +428,14 @@ class _AudioTile extends ConsumerWidget {
                   displayName,
                   maxLines: 1,
                   overflow: .ellipsis,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    fontWeight: .w500,
-                  ),
+                  style: theme.typography.bodyMedium.emphasized.onSurface,
                 ),
               ),
               if (durationMs != null) ...[
                 const SizedBox(width: 8),
                 Text(
                   TimeFormat.mediaDuration(Duration(milliseconds: durationMs)),
-                  style: context.textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                  style: theme.typography.labelSmall.onSurfaceVariant.copyWith(
                     fontFeatures: const [.tabularFigures()],
                   ),
                 ),
@@ -474,7 +470,7 @@ class _Thumb extends StatelessWidget {
       child: Stack(
         fit: .expand,
         children: [
-          ColoredBox(color: context.colorScheme.surfaceContainerHighest),
+          ColoredBox(color: context.theme.colors.surfaceContainerHighest),
           Image(
             image: image,
             fit: .cover,
@@ -489,7 +485,7 @@ class _Thumb extends StatelessWidget {
             },
             errorBuilder: (context, _, _) => Icon(
               LucideIcons.imageOff,
-              color: context.colorScheme.onSurfaceVariant,
+              color: context.theme.colors.onSurfaceVariant,
             ),
           ),
           ?overlay,
@@ -544,6 +540,7 @@ class _VideoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = context.theme.colors;
     return GestureDetector(
       onTap: () => MediaVideoViewer.show(context, name: name),
       child: _Thumb(
@@ -551,14 +548,19 @@ class _VideoTile extends StatelessWidget {
           FileImage(File(AppFiles.getRealPath('thumbnail', name))),
           width: cacheWidth,
         ),
-        overlay: const Stack(
+        // 缩略图底色不可预测：用固定 scrim 压暗，前景按「暗底」配对 onInverseSurface。
+        overlay: Stack(
           fit: .expand,
           children: [
-            DecoratedBox(decoration: BoxDecoration(color: Colors.black26)),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.scrim.withValues(alpha: 0.26),
+              ),
+            ),
             Center(
               child: Icon(
                 LucideIcons.circlePlay,
-                color: Colors.white,
+                color: scheme.onInverseSurface,
                 size: 36,
               ),
             ),
@@ -572,7 +574,7 @@ class _VideoTile extends StatelessWidget {
 class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final theme = context.theme;
     return Center(
       child: Column(
         mainAxisSize: .min,
@@ -580,14 +582,12 @@ class _Empty extends StatelessWidget {
           Icon(
             LucideIcons.packageOpen,
             size: 64,
-            color: scheme.onSurfaceVariant,
+            color: theme.colors.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
           Text(
             context.l10n.mediaEmpty,
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: theme.typography.bodyMedium.onSurfaceVariant,
           ),
         ],
       ),

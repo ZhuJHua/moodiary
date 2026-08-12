@@ -39,7 +39,7 @@ class _FontPageState extends ConsumerState<FontPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Scaffold(
       appBar: AppBar(title: const Text('字体')),
       body: ValueListenableBuilder<String>(
@@ -191,7 +191,7 @@ class _FontCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       mainAxisSize: .min,
       children: [
@@ -221,13 +221,21 @@ class _FontCard extends StatelessWidget {
                 Center(
                   child: Text(
                     'Aa',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontFamily: family.isEmpty ? null : family,
-                      color: selected
-                          ? scheme.onSecondaryContainer
-                          : scheme.onSurface,
-                    ),
+                    style:
+                        (selected
+                                ? context
+                                      .theme
+                                      .typography
+                                      .headlineMedium
+                                      .onSecondaryContainer
+                                : context
+                                      .theme
+                                      .typography
+                                      .headlineMedium
+                                      .onSurface)
+                            .copyWith(
+                              fontFamily: family.isEmpty ? null : family,
+                            ),
                   ),
                 ),
                 if (isVariable)
@@ -246,10 +254,8 @@ class _FontCard extends StatelessWidget {
                         '可变',
                         // 徽标属 UI 装饰，不随字号偏好缩放（0.8 档会低于可读下限）。
                         textScaler: .noScaling,
-                        style: context.textTheme.labelSmall?.copyWith(
-                          fontSize: 10,
-                          color: scheme.onTertiary,
-                        ),
+                        style: context.theme.typography.labelSmall.onTertiary
+                            .copyWith(fontSize: 10),
                       ),
                     ),
                   ),
@@ -263,10 +269,9 @@ class _FontCard extends StatelessWidget {
           child: Center(
             child: AdaptiveText(
               label,
-              style: context.textTheme.labelSmall?.copyWith(
-                fontWeight: selected ? .w600 : .w500,
-                color: selected ? scheme.primary : scheme.onSurfaceVariant,
-              ),
+              style: selected
+                  ? context.theme.typography.labelSmall.emphasized.primary
+                  : context.theme.typography.labelSmall.onSurfaceVariant,
               maxWidth: 72,
             ),
           ),
@@ -283,7 +288,7 @@ class _AddFontCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       mainAxisSize: .min,
       children: [
@@ -310,9 +315,7 @@ class _AddFontCard extends StatelessWidget {
           child: Center(
             child: AdaptiveText(
               '添加',
-              style: context.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: context.theme.typography.labelSmall.onSurfaceVariant,
               maxWidth: 72,
             ),
           ),
@@ -338,7 +341,6 @@ class _TextSizeSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     final label = FontPage.sizeLabel(value);
     return Column(
       crossAxisAlignment: .stretch,
@@ -347,7 +349,7 @@ class _TextSizeSlider extends StatelessWidget {
           children: [
             Text(
               'A',
-              style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
+              style: context.theme.typography.bodyMedium.onSurfaceVariant,
             ),
             Expanded(
               child: Slider(
@@ -365,17 +367,14 @@ class _TextSizeSlider extends StatelessWidget {
             ),
             Text(
               'A',
-              style: TextStyle(fontSize: 22, color: scheme.onSurfaceVariant),
+              style: context.theme.typography.titleLarge.onSurfaceVariant,
             ),
           ],
         ),
         Center(
           child: Text(
             label,
-            style: context.textTheme.labelMedium?.copyWith(
-              color: scheme.primary,
-              fontWeight: .w600,
-            ),
+            style: context.theme.typography.labelMedium.emphasized.primary,
           ),
         ),
       ],

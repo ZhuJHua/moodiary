@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 class ServicesPage extends ConsumerWidget {
   const ServicesPage({super.key});
@@ -33,7 +34,7 @@ class _Note extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Card.filled(
       color: scheme.surfaceContainerHighest,
       margin: const .symmetric(horizontal: 8),
@@ -47,7 +48,7 @@ class _Note extends StatelessWidget {
               child: Text(
                 '在此填入您自有的第三方服务凭证，启用 AI 助手、天气与地图等能力。'
                 '所有凭证仅保存在本机。',
-                style: context.textTheme.bodySmall,
+                style: context.theme.typography.bodySmall.onSurfaceVariant,
               ),
             ),
           ],
@@ -62,7 +63,7 @@ class _AiSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -86,7 +87,7 @@ class _QweatherSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -94,19 +95,22 @@ class _QweatherSection extends ConsumerWidget {
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
-          child: const Column(
+          child: Column(
             children: [
               _KvTile(
                 kv: .qweatherKey,
                 title: 'API Key',
-                leading: Icon(LucideIcons.key),
+                leading: Icon(LucideIcons.key, color: scheme.onSurfaceVariant),
                 isFirst: true,
               ),
               _KvTile(
                 kv: .qweatherApiHost,
                 title: 'API Host',
                 subtitleWhenEmpty: 'devapi.qweather.com 或自定义',
-                leading: Icon(LucideIcons.server),
+                leading: Icon(
+                  LucideIcons.server,
+                  color: scheme.onSurfaceVariant,
+                ),
                 isLast: true,
               ),
             ],
@@ -122,7 +126,7 @@ class _TiandituSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -130,12 +134,12 @@ class _TiandituSection extends ConsumerWidget {
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
-          child: const Column(
+          child: Column(
             children: [
               _KvTile(
                 kv: .tiandituKey,
                 title: 'API Key',
-                leading: Icon(LucideIcons.map),
+                leading: Icon(LucideIcons.map, color: scheme.onSurfaceVariant),
                 isFirst: true,
                 isLast: true,
               ),

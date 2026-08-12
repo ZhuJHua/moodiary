@@ -5,6 +5,9 @@ import 'package:moodiary_assistant/src/application/tool_permission_coordinator.d
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/presentation/tool_permission_card.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 void main() {
   (ToolPermissionCoordinator, String, Future<ToolPermissionDecision>)
@@ -19,15 +22,18 @@ void main() {
   }
 
   Widget host(ToolPermissionCoordinator coordinator, String surfaceId) {
-    return MaterialApp(
-      locale: const Locale('zh'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(
-        body: genui.Surface(
-          surfaceContext: coordinator.surfaces.contextFor(surfaceId),
-          actionDelegate: ToolPermissionActionDelegate(
-            coordinator.handleAction,
+    return MuiTheme(
+      data: _mui,
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: genui.Surface(
+            surfaceContext: coordinator.surfaces.contextFor(surfaceId),
+            actionDelegate: ToolPermissionActionDelegate(
+              coordinator.handleAction,
+            ),
           ),
         ),
       ),

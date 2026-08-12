@@ -8,6 +8,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 const int _pinLength = 4;
 const int _maxAttempts = 5;
@@ -161,10 +162,11 @@ class _LockPageState extends ConsumerState<LockPage>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final theme = context.theme;
+    final scheme = theme.colors;
+    final displayLarge = theme.typography.displayLarge.onSurface;
     final dotSize =
-        (context.textTheme.displayLarge?.fontSize ?? 57) *
-        (context.textTheme.displayLarge?.height ?? 1.12);
+        (displayLarge.fontSize ?? 57) * (displayLarge.height ?? 1.12);
     return PopScope(
       // 返回手势不得绕过进入内容；解锁由 _unlock 命令式完成。
       canPop: false,
@@ -200,7 +202,7 @@ class _LockPageState extends ConsumerState<LockPage>
                         ),
                 ),
                 const SizedBox(height: 24),
-                Text('请输入密码', style: context.textTheme.titleMedium),
+                Text('请输入密码', style: theme.typography.titleMedium.onSurface),
                 const SizedBox(height: 24),
                 AnimatedBuilder(
                   animation: _shake,
@@ -284,9 +286,7 @@ class _LockPageState extends ConsumerState<LockPage>
                   opacity: _error == null ? 0 : 1,
                   child: Text(
                     _error ?? ' ',
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: scheme.error,
-                    ),
+                    style: theme.typography.bodySmall.error,
                   ),
                 ),
               ],
@@ -311,9 +311,9 @@ class _NumButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final theme = context.theme;
     return Material(
-      color: scheme.surfaceContainerHighest,
+      color: theme.colors.surfaceContainerHighest,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -322,7 +322,7 @@ class _NumButton extends StatelessWidget {
           width: size,
           height: size,
           child: Center(
-            child: Text(label, style: context.textTheme.displaySmall),
+            child: Text(label, style: theme.typography.displaySmall.onSurface),
           ),
         ),
       ),
@@ -346,7 +346,11 @@ class _IconButton extends StatelessWidget {
     return InkWell(
       customBorder: const CircleBorder(),
       onTap: onTap,
-      child: SizedBox(width: size, height: size, child: Icon(icon, size: 24)),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Icon(icon, size: 24, color: context.theme.colors.onSurface),
+      ),
     );
   }
 }

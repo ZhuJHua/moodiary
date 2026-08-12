@@ -8,6 +8,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 class AssistantProviderPickerPage extends ConsumerStatefulWidget {
   const AssistantProviderPickerPage({super.key});
@@ -112,9 +113,7 @@ class _AssistantProviderPickerPageState
               child: Center(
                 child: Text(
                   l10n.llmPickerEmpty,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
+                  style: context.theme.typography.bodyMedium.onSurfaceVariant,
                 ),
               ),
             )
@@ -139,7 +138,7 @@ class _CustomTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     return Material(
       color: scheme.secondaryContainer,
@@ -153,15 +152,11 @@ class _CustomTile extends StatelessWidget {
         ),
         title: Text(
           l10n.llmPickerCustom,
-          style: context.textTheme.titleMedium?.copyWith(
-            color: scheme.onSecondaryContainer,
-          ),
+          style: context.theme.typography.titleMedium.onSecondaryContainer,
         ),
         subtitle: Text(
           l10n.llmPickerCustomDes,
-          style: context.textTheme.bodySmall?.copyWith(
-            color: scheme.onSecondaryContainer.withValues(alpha: 0.8),
-          ),
+          style: context.theme.typography.bodySmall.onSecondaryContainer,
         ),
         trailing: Icon(
           LucideIcons.chevronRight,
@@ -181,7 +176,7 @@ class _PresetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     final name = preset.name;
     return Material(
@@ -210,7 +205,7 @@ class _InlineError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     return Padding(
       padding: const .only(top: 32),
@@ -220,9 +215,7 @@ class _InlineError extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             l10n.llmPickerLoadFailed,
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.bodyMedium.onSurfaceVariant,
           ),
           const SizedBox(height: 12),
           FilledButton.tonalIcon(
@@ -254,9 +247,7 @@ class _UpdatedFooter extends StatelessWidget {
       child: Center(
         child: Text(
           parts.join(' · '),
-          style: context.textTheme.labelSmall?.copyWith(
-            color: context.colorScheme.outline,
-          ),
+          style: context.theme.typography.labelSmall.outline,
         ),
       ),
     );

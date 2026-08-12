@@ -14,6 +14,7 @@ import 'package:moodiary_sync/src/presentation/widget/user_key_tile.dart';
 import 'package:moodiary_sync/src/presentation/widget/webdav_form_sheet.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 class BackupSyncPage extends ConsumerWidget {
   const BackupSyncPage({super.key});
@@ -85,7 +86,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final current = SyncProviderType.current();
     final backend = IRemoteSyncBackend.get();
     final configured = backend.isReady;
@@ -104,9 +105,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                 leading: const Icon(LucideIcons.arrowRightLeft),
                 trailing: Text(
                   current.label,
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: scheme.primary,
-                  ),
+                  style: context.theme.typography.bodySmall.primary,
                 ),
                 onTap: () => _pickProvider(context, current),
               ),
@@ -232,7 +231,7 @@ class _LanSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -271,7 +270,7 @@ class _EncryptionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -305,7 +304,7 @@ class _AutoSyncSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -336,11 +335,13 @@ class _AutoSyncSection extends StatelessWidget {
                         leading: const Icon(LucideIcons.timer),
                         trailing: Text(
                           _fmtInterval(seconds),
-                          style: context.textTheme.bodyMedium?.copyWith(
-                            color: enabled
-                                ? scheme.primary
-                                : scheme.onSurfaceVariant,
-                          ),
+                          style: enabled
+                              ? context.theme.typography.bodyMedium.primary
+                              : context
+                                    .theme
+                                    .typography
+                                    .bodyMedium
+                                    .onSurfaceVariant,
                         ),
                         onTap: enabled
                             ? () => _editPollInterval(context, seconds)
@@ -391,11 +392,9 @@ class _AutoSyncSection extends StatelessWidget {
                   '但每次轮询都会抢占远端锁、读取清单并发起网络请求 —— 间隔过短会显著'
                   '增加流量与耗电，还可能触发 WebDAV / S3 服务端限流甚至临时封禁。'
                   '建议不低于 30 秒。',
-                  style: ctx.textTheme.bodySmall?.copyWith(
-                    color: tooFrequent
-                        ? ctx.colorScheme.error
-                        : ctx.colorScheme.onSurfaceVariant,
-                  ),
+                  style: tooFrequent
+                      ? ctx.theme.typography.bodySmall.error
+                      : ctx.theme.typography.bodySmall.onSurfaceVariant,
                 ),
                 Slider(
                   value: index.toDouble(),
@@ -420,7 +419,7 @@ class _NetworkSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -439,9 +438,7 @@ class _NetworkSection extends StatelessWidget {
                 leading: const Icon(LucideIcons.server),
                 trailing: Text(
                   '$value',
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: scheme.primary,
-                  ),
+                  style: context.theme.typography.bodyMedium.primary,
                 ),
                 onTap: () => _editConcurrency(context, value),
               );
@@ -476,9 +473,7 @@ class _NetworkSection extends StatelessWidget {
               children: [
                 Text(
                   '默认 8。值越大同步越快，但可能触发 WebDAV / S3 服务端限流或连接拒绝。',
-                  style: ctx.textTheme.bodySmall?.copyWith(
-                    color: ctx.colorScheme.onSurfaceVariant,
-                  ),
+                  style: ctx.theme.typography.bodySmall.onSurfaceVariant,
                 ),
                 Slider(
                   value: value,

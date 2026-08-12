@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 /// 圆角弹出菜单的单个条目。
 class MoodiaryMenuEntry<T> {
@@ -190,7 +191,7 @@ class _MoodiaryMenuBodyState<T> extends State<_MoodiaryMenuBody<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final entries = widget.route.entries;
     final hasIcon = entries.any((e) => e.icon != null);
     final hasSelected = entries.any((e) => e.value == widget.route.selected);
@@ -213,7 +214,7 @@ class _MoodiaryMenuBodyState<T> extends State<_MoodiaryMenuBody<T>> {
         type: .card,
         color: scheme.surfaceContainerHigh,
         elevation: 8,
-        shadowColor: Colors.black.withValues(alpha: 0.24),
+        shadowColor: scheme.shadow.withValues(alpha: 0.24),
         surfaceTintColor: Colors.transparent,
         borderRadius: AppBorderRadius.largeBorderRadius,
         clipBehavior: .antiAlias,
@@ -269,10 +270,12 @@ class _MoodiaryMenuItem<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final Color fg;
     if (!entry.enabled) {
-      fg = scheme.onSurface.withValues(alpha: 0.38);
+      fg = scheme.onSurface.withValues(
+        alpha: context.theme.states.disabledOpacity,
+      );
     } else if (entry.isDestructive) {
       fg = scheme.error;
     } else if (selected) {
@@ -309,10 +312,16 @@ class _MoodiaryMenuItem<T> extends StatelessWidget {
                     entry.label,
                     maxLines: 1,
                     overflow: .ellipsis,
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: fg,
-                      fontWeight: selected ? .w600 : .w500,
-                    ),
+                    style:
+                        (selected
+                                ? context.theme.typography.bodyMedium.emphasized
+                                : context
+                                      .theme
+                                      .typography
+                                      .bodyMedium
+                                      .emphasized)
+                            .onSurface
+                            .copyWith(color: fg),
                   ),
                 ),
                 if (showTrailingSlot) ...[

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:mui/mui.dart';
 
 /// 条目的同步状态：内联进元信息行，不用会盖住内容的角标。
 enum DiaryCardSyncState { none, dirty, syncing }
@@ -52,19 +53,19 @@ class DiaryTileFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     return Padding(
       padding: margin,
       child: AnimatedContainer(
         duration: Durations.short3,
         decoration: BoxDecoration(
           color: selected
-              ? scheme.primaryContainer.withValues(alpha: 0.4)
-              : (card ? scheme.surfaceContainerLow : null),
+              ? colors.primaryContainer.withValues(alpha: 0.4)
+              : (card ? colors.surfaceContainerLow : null),
           borderRadius: borderRadius,
           // 未选中也画一圈透明描边：否则选中时会因为多出 1.5px 而整条抖一下。
           border: .all(
-            color: selected ? scheme.primary : Colors.transparent,
+            color: selected ? colors.primary : Colors.transparent,
             width: 1.5,
           ),
         ),
@@ -72,7 +73,7 @@ class DiaryTileFrame extends StatelessWidget {
           borderRadius: borderRadius,
           // 无边框的连续流里，扩散水波比高亮更吵；只留一层轻微的按压高亮。
           splashFactory: NoSplash.splashFactory,
-          highlightColor: scheme.onSurface.withValues(alpha: 0.06),
+          highlightColor: colors.onSurface.withValues(alpha: 0.06),
           onTap: onTap,
           onLongPress: onLongPress,
           child: Padding(padding: padding, child: child),
@@ -91,7 +92,7 @@ class DiarySyncBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state == .none) return const SizedBox.shrink();
-    final color = context.colorScheme.primary;
+    final color = context.theme.colors.primary;
     return state == .syncing
         ? SizedBox(
             width: 12,
@@ -110,11 +111,11 @@ class DiarySelectMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     return Icon(
       selected ? LucideIcons.circleCheck : LucideIcons.circle,
       size: 16,
-      color: selected ? scheme.primary : scheme.outline,
+      color: selected ? colors.primary : colors.outline,
     );
   }
 }

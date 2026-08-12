@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:mui/mui.dart';
 
 class _StartSlide {
   final IconData icon;
@@ -78,8 +79,8 @@ class _StartPageState extends ConsumerState<StartPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final theme = context.theme;
+    final scheme = theme.colors;
     final isLast = _page == _slides.length - 1;
     return Scaffold(
       body: SafeArea(
@@ -141,9 +142,8 @@ class _StartPageState extends ConsumerState<StartPage> {
                   onPressed: _next,
                   style: FilledButton.styleFrom(
                     shape: const StadiumBorder(),
-                    textStyle: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: .w600,
-                    ),
+                    textStyle:
+                        theme.typography.titleMedium.emphasized.onPrimary,
                   ),
                   child: Text(isLast ? '开始记录' : '下一步'),
                 ),
@@ -161,7 +161,7 @@ class _StartPageState extends ConsumerState<StartPage> {
                     ),
                     child: const Text('用户协议'),
                   ),
-                  Text('·', style: TextStyle(color: scheme.outline)),
+                  Text('·', style: theme.typography.labelLarge.outline),
                   TextButton(
                     onPressed: () => const PrivacyRoute().push(context),
                     style: TextButton.styleFrom(
@@ -185,8 +185,8 @@ class _SlideView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final theme = context.theme;
+    final scheme = theme.colors;
     return Padding(
       padding: const .symmetric(horizontal: 32),
       child: Column(
@@ -222,17 +222,14 @@ class _SlideView extends StatelessWidget {
           Text(
             slide.title,
             textAlign: .center,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: .w700,
-              height: 1.15,
-            ),
+            style: theme.typography.headlineMedium.emphasized.onSurface
+                .copyWith(height: 1.15),
           ),
           const SizedBox(height: 14),
           Text(
             slide.body,
             textAlign: .center,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: scheme.onSurfaceVariant,
+            style: theme.typography.bodyLarge.onSurfaceVariant.copyWith(
               height: 1.55,
             ),
           ),
@@ -249,7 +246,7 @@ class _Dots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
+    final color = context.theme.colors.primary;
     return Row(
       mainAxisAlignment: .center,
       children: .generate(count, (i) {

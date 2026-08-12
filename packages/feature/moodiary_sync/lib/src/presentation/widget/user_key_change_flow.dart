@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_sync/src/application/re_cipher.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
@@ -9,6 +8,7 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
 import 'package:moodiary_sync/src/data/sync_registry.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 /// 加密开关 / 改密码的「准备—确认—执行」编排（信封加密）：
 ///
@@ -256,7 +256,7 @@ class _RecipherDialogState extends State<_RecipherDialog> {
             const SizedBox(height: 12),
             Text(
               '$_done / ${_total == 0 ? '?' : _total} · $_label',
-              style: context.textTheme.bodySmall,
+              style: context.theme.typography.bodySmall.onSurfaceVariant,
             ),
           ],
         ),

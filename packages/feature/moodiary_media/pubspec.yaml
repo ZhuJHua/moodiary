@@ -19,6 +19,7 @@ dependencies:
   moodiary_ui: 0.0.1
   moodiary_l10n: 0.0.1
   moodiary_utils: 0.0.1
+  mui: 0.0.1
 
   flutter_riverpod: 3.3.2
   riverpod_annotation: 4.0.3

@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 import '../audio_player.dart';
 
@@ -165,7 +166,7 @@ class _MoodiaryAudioPlayerPageState extends State<MoodiaryAudioPlayerPage>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Scaffold(
       backgroundColor: scheme.surface,
       appBar: AppBar(
@@ -202,18 +203,23 @@ class _MoodiaryAudioPlayerPageState extends State<MoodiaryAudioPlayerPage>
                           maxLines: 2,
                           overflow: .ellipsis,
                           textAlign: .center,
-                          style: context.textTheme.titleLarge?.copyWith(
-                            fontWeight: .w600,
-                          ),
+                          style: context
+                              .theme
+                              .typography
+                              .titleLarge
+                              .emphasized
+                              .onSurface,
                         ),
                       ),
                       if (widget.subtitle != null) ...[
                         const SizedBox(height: 8),
                         Text(
                           widget.subtitle!,
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                          style: context
+                              .theme
+                              .typography
+                              .bodySmall
+                              .onSurfaceVariant,
                         ),
                       ],
                     ],
@@ -228,7 +234,7 @@ class _MoodiaryAudioPlayerPageState extends State<MoodiaryAudioPlayerPage>
     );
   }
 
-  Widget _buildBottomBar(AppLocalizations l10n, ColorScheme scheme) {
+  Widget _buildBottomBar(AppLocalizations l10n, MuiColorScheme scheme) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20,
@@ -277,12 +283,15 @@ class _MoodiaryAudioPlayerPageState extends State<MoodiaryAudioPlayerPage>
                   Text(
                     '${TimeFormat.mediaDuration(shownPosition)} / '
                     '${TimeFormat.mediaDuration(total)}',
-                    style: context.textTheme.labelMedium?.copyWith(
-                      color: draft != null
-                          ? scheme.primary
-                          : scheme.onSurfaceVariant,
-                      fontFeatures: const [.tabularFigures()],
-                    ),
+                    style:
+                        (draft != null
+                                ? context.theme.typography.labelMedium.primary
+                                : context
+                                      .theme
+                                      .typography
+                                      .labelMedium
+                                      .onSurfaceVariant)
+                            .copyWith(fontFeatures: const [.tabularFigures()]),
                   ),
                 ],
               ),
@@ -300,7 +309,7 @@ class _Disc extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Container(
       width: 180,
       height: 180,
@@ -343,7 +352,7 @@ class _ScrubBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Semantics(
       label: semanticLabel,
       value: '${(fraction * 100).round()}%',

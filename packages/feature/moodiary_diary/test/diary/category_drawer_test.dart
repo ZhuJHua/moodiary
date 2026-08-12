@@ -9,6 +9,9 @@ import 'package:moodiary_diary/src/application/diary_selection.dart';
 import 'package:moodiary_diary/src/presentation/widget/category_drawer.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 Category cat(String id, String name) =>
     Category(id: id, categoryName: name, lastModified: DateTime(2026));
@@ -25,11 +28,14 @@ Widget wrap({
       (ref) async => (byCategory: byCategory, total: total),
     ),
   ],
-  child: const MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    locale: Locale('zh'),
-    home: Scaffold(body: CategoryDrawer()),
+  child: MuiTheme(
+    data: _mui,
+    child: const MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: Locale('zh'),
+      home: Scaffold(body: CategoryDrawer()),
+    ),
   ),
 );
 
@@ -94,14 +100,18 @@ void main() {
         child: Builder(
           builder: (context) {
             container = ProviderScope.containerOf(context);
-            return MaterialApp(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              locale: const Locale('zh'),
-              home: Scaffold(
-                key: key,
-                drawer: const CategoryDrawer(),
-                body: const SizedBox.expand(),
+            return MuiTheme(
+              data: _mui,
+              child: MaterialApp(
+                localizationsDelegates:
+                    AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                locale: const Locale('zh'),
+                home: Scaffold(
+                  key: key,
+                  drawer: const CategoryDrawer(),
+                  body: const SizedBox.expand(),
+                ),
               ),
             );
           },
@@ -150,14 +160,18 @@ void main() {
         child: Builder(
           builder: (context) {
             container = ProviderScope.containerOf(context);
-            return MaterialApp(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              locale: const Locale('zh'),
-              home: Scaffold(
-                key: key,
-                drawer: const CategoryDrawer(),
-                body: const SizedBox.expand(),
+            return MuiTheme(
+              data: _mui,
+              child: MaterialApp(
+                localizationsDelegates:
+                    AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                locale: const Locale('zh'),
+                home: Scaffold(
+                  key: key,
+                  drawer: const CategoryDrawer(),
+                  body: const SizedBox.expand(),
+                ),
               ),
             );
           },
@@ -187,11 +201,14 @@ void main() {
                 Completer<({Map<String, int> byCategory, int total})>().future,
           ),
         ],
-        child: const MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: Locale('zh'),
-          home: Scaffold(body: CategoryDrawer()),
+        child: MuiTheme(
+          data: _mui,
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('zh'),
+            home: Scaffold(body: CategoryDrawer()),
+          ),
         ),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mui/mui.dart';
 
@@ -117,6 +118,31 @@ TextTheme materialTextThemeFrom(MuiTypography t) => TextTheme(
   labelSmall: t.labelSmall.onSurface,
 );
 
+/// 状态栏与导航栏图标的明暗。**由主题亮度决定，不由背景色猜。**
+///
+/// 框架那条路只覆盖有 `AppBar` 的页面：`AppBar` 自带一层
+/// `AnnotatedRegion`，缺省值来自 `estimateBrightnessForColor(背景色)`
+/// （app_bar.dart:1220）。没有 AppBar 的页面（日记详情、图片浏览、相机、
+/// 视频全屏）不发任何注解，系统就沿用上一次设过的值 —— 症状是从深色页退回
+/// 浅色页后状态栏图标仍是白的，看不见。所以这个值要同时喂给
+/// [AppBarTheme.systemOverlayStyle] 与根部的 `AnnotatedRegion` 兜底。
+///
+/// iOS 与 Android 的字段语义相反：`statusBarBrightness` 说的是**背景**的明暗，
+/// `statusBarIconBrightness` 说的是**图标**的明暗，所以两者必须写反。
+SystemUiOverlayStyle systemOverlayStyleFrom(MuiThemeData t) {
+  final dark = t.brightness == Brightness.dark;
+  final icons = dark ? Brightness.light : Brightness.dark;
+  return SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarBrightness: t.brightness,
+    statusBarIconBrightness: icons,
+    systemStatusBarContrastEnforced: false,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: icons,
+    systemNavigationBarContrastEnforced: false,
+  );
+}
+
 ThemeData materialThemeFrom(MuiThemeData t) {
   final cs = materialColorSchemeFrom(t.colors);
   final text = materialTextThemeFrom(t.typography);
@@ -148,6 +174,35 @@ ThemeData materialThemeFrom(MuiThemeData t) {
     textTheme: text,
     materialTapTargetSize: .padded,
     actionIconTheme: _actionIconTheme,
+
+    // ── 色板漏点 ────────────────────────────────────────────────────
+    // 下面这几个字段的 SDK 缺省值**完全绕开 colorScheme**，是共存期最后几处
+    // 「颜色不归 mui 管」的地方（行号为 theme_data.dart 3.44.8）：
+    //   iconTheme            :526  light 0xDD000000 / dark 纯白 —— 所以裸 Icon
+    //                              至今都不是 onSurface，只是碰巧接近
+    //   dividerColor         :455  colorScheme.outline —— M3 规范里分隔线是
+    //                              outlineVariant，outline 是给描边用的，重了一档
+    //   hintColor            :487  black60 / white60
+    //   unselectedWidgetColor:484  black54 / white70
+    //   disabledColor        :500  black38 / white38
+    //   shadowColor          :469  Colors.black
+    // 只投颜色不投尺寸：`IconTheme.of` 会用 `IconThemeData.fallback()` 补上
+    // size 24，material 组件的既有尺寸因此一动不动（mui 自己的 20/18/24
+    // 三档留给将来的 MuiIcon）。
+    iconTheme: IconThemeData(color: t.icons.color),
+    primaryIconTheme: IconThemeData(color: cs.onPrimary),
+    dividerColor: cs.outlineVariant,
+    hintColor: cs.onSurfaceVariant,
+    unselectedWidgetColor: cs.onSurfaceVariant,
+    disabledColor: cs.onSurface.withValues(alpha: t.states.disabledOpacity),
+    shadowColor: cs.shadow,
+
+    // 选中底色是 mui 的自有槽位（半透明，画在文字下方），光标与拖拽手柄用 ring。
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: t.colors.ring,
+      selectionColor: t.colors.selection,
+      selectionHandleColor: t.colors.ring,
+    ),
 
     // ── 一行式视觉收敛 ──────────────────────────────────────────────
     // 水波纹整个关掉。mui 的按压反馈是「状态驱动的色块变化」，不是从触点扩散的圆
@@ -233,6 +288,7 @@ ThemeData materialThemeFrom(MuiThemeData t) {
     appBarTheme: AppBarTheme(
       backgroundColor: cs.surface,
       scrolledUnderElevation: 0,
+      systemOverlayStyle: systemOverlayStyleFrom(t),
     ),
 
     // 兜住尚未迁到 showMoodiaryAlert 的原生弹窗（选择列表、进度、日期选择器），

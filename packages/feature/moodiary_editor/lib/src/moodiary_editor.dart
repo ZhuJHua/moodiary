@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:mui/mui.dart';
 
 import 'editor_local_server.dart';
 import 'media.dart';
@@ -116,7 +117,7 @@ class MoodiaryEditor extends StatefulWidget {
   final double fontScale;
 
   /// 主题种子解析器（宿主 app 提供）：每次需要下发主题时实时读取当前种子色 + 变体；
-  /// 明暗由 `Theme.of(context)` 推断。不传则用 Material 默认主色。
+  /// 明暗由 `context.theme` 推断。不传则用 Material 默认主色。
   final EditorRoles Function(Brightness brightness)? rolesResolver;
 
   /// 当前自定义字体解析器（宿主 app 提供）：每次下发主题时实时读取当前激活字体（家族 + 磁盘路径）；
@@ -525,7 +526,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   /// 下发「角色色表 + 明暗」。[ColorScheme] 是唯一真源，web 侧只负责铺 CSS 变量。
   /// [dark] 仍要单独给：它还驱动 `data-theme`、`color-scheme` 与代码高亮的亮暗切换。
   Map<String, dynamic> _themePayload() {
-    final brightness = Theme.of(context).brightness;
+    final brightness = context.theme.brightness;
     final roles =
         widget.rolesResolver?.call(brightness) ?? _fallbackRoles(context);
     // 字体家族随主题一起下发：web 侧据此用 FontFace 加载（src 用 boot.fontBase），
@@ -542,7 +543,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   static EditorRoles _fallbackRoles(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final scheme = context.theme.colors;
     return {
       'surface': _hex(scheme.surface),
       'onSurface': _hex(scheme.onSurface),
@@ -661,7 +662,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final surface = Theme.of(context).colorScheme.surface;
+    final surface = context.theme.colors.surface;
     final transport = _transport;
     final loadError = _loadError;
 

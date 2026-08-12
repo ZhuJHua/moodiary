@@ -6,6 +6,7 @@ import 'package:moodiary_sync/src/data/lan/lan_sender.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/presentation/widget/lan_widgets.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 class LanSendPage extends StatefulWidget {
   const LanSendPage({super.key});
@@ -107,15 +108,13 @@ class _LanSendPageState extends State<LanSendPage> {
     padding: const .only(bottom: 10),
     child: Text(
       text,
-      style: context.textTheme.labelLarge?.copyWith(
-        color: context.colorScheme.onSurfaceVariant,
-      ),
+      style: context.theme.typography.labelLarge.onSurfaceVariant,
     ),
   );
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Scaffold(
       appBar: AppBar(title: const Text('局域网发送')),
       body: ListView(
@@ -123,9 +122,7 @@ class _LanSendPageState extends State<LanSendPage> {
         children: [
           Text(
             '只发送对方缺少的内容，按最后修改时间自动合并，重复发送不会产生重复数据。',
-            style: context.textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.bodySmall.onSurfaceVariant,
           ),
           const SizedBox(height: 20),
           _sectionLabel(context, '附近的设备'),
@@ -167,9 +164,7 @@ class _LanSendPageState extends State<LanSendPage> {
           Center(
             child: Text(
               '输入接收页显示的 6 位数字',
-              style: context.textTheme.bodySmall?.copyWith(
-                color: scheme.outline,
-              ),
+              style: context.theme.typography.bodySmall.outline,
             ),
           ),
           const SizedBox(height: 24),
@@ -218,7 +213,7 @@ class _PeerList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     if (peers.isEmpty) {
       return Container(
         padding: const .symmetric(horizontal: 16, vertical: 14),
@@ -237,9 +232,7 @@ class _PeerList extends StatelessWidget {
             Expanded(
               child: Text(
                 '正在搜索，请在接收设备上打开「接收」页',
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: context.theme.typography.bodySmall.onSurfaceVariant,
               ),
             ),
           ],
@@ -280,7 +273,8 @@ class _PeerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       decoration: BoxDecoration(
@@ -323,25 +317,24 @@ class _PeerTile extends StatelessWidget {
                         peer.name,
                         maxLines: 1,
                         overflow: .ellipsis,
-                        style: context.textTheme.titleSmall?.copyWith(
-                          color: selected ? scheme.onPrimaryContainer : null,
-                        ),
+                        style: selected
+                            ? typography.titleSmall.onPrimaryContainer
+                            : typography.titleSmall.onSurface,
                       ),
                       const SizedBox(height: 2),
                       Text(
                         address,
-                        style: context.textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          color: selected
-                              ? scheme.onPrimaryContainer.withValues(alpha: .7)
-                              : scheme.onSurfaceVariant,
-                        ),
+                        style:
+                            (selected
+                                    ? typography.bodySmall.onPrimaryContainer
+                                    : typography.bodySmall.onSurfaceVariant)
+                                .copyWith(fontFamily: 'monospace'),
                       ),
                     ],
                   ),
                 ),
                 if (selected)
-                  Icon(LucideIcons.circleCheck, color: scheme.primary),
+                  Icon(LucideIcons.circleCheck, color: scheme.onPrimaryContainer),
               ],
             ),
           ),
@@ -358,7 +351,8 @@ class _ProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     final phase = progress?.phase ?? .connecting;
     final label = switch (phase) {
       .connecting => '正在连接…',
@@ -386,13 +380,12 @@ class _ProgressCard extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
               const SizedBox(width: 12),
-              Text(label, style: context.textTheme.titleSmall),
+              Text(label, style: typography.titleSmall.onSurface),
               const Spacer(),
               if (phase == .uploading && total != null && total > 0)
                 Text(
                   '${(sent / total * 100).clamp(0, 100).toStringAsFixed(0)}%',
-                  style: context.textTheme.titleSmall?.copyWith(
-                    color: scheme.primary,
+                  style: typography.titleSmall.primary.copyWith(
                     fontFeatures: const [.tabularFigures()],
                   ),
                 ),
@@ -410,9 +403,7 @@ class _ProgressCard extends StatelessWidget {
               total != null
                   ? '${lanFmtBytes(sent)} / ${lanFmtBytes(total)}'
                   : lanFmtBytes(sent),
-              style: context.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: typography.bodySmall.onSurfaceVariant,
             ),
           ],
         ],
@@ -431,13 +422,12 @@ class _ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final background = success
-        ? scheme.secondaryContainer
-        : scheme.errorContainer;
-    final foreground = success
-        ? scheme.onSecondaryContainer
-        : scheme.onErrorContainer;
+    final scheme = context.theme.colors;
+    // 成功走 primary、失败走 error —— 灰度档下没有绿色可用于「成功」。
+    final background = success ? scheme.primaryContainer : scheme.errorContainer;
+    final style = success
+        ? context.theme.typography.bodyMedium.onPrimaryContainer
+        : context.theme.typography.bodyMedium.onErrorContainer;
     return Container(
       key: ValueKey(success ? 'result' : 'error'),
       padding: const .all(16),
@@ -447,15 +437,10 @@ class _ResultCard extends StatelessWidget {
         children: [
           Icon(
             success ? LucideIcons.circleCheck : LucideIcons.circleAlert,
-            color: foreground,
+            color: style.color,
           ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: context.textTheme.bodyMedium?.copyWith(color: foreground),
-            ),
-          ),
+          Expanded(child: Text(message, style: style)),
         ],
       ),
     );

@@ -10,6 +10,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 import 'hop_history.dart';
 
@@ -515,7 +516,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   /// AppBar 居中小胶囊：字数（可关）· 写作时长（可关）· 自动保存状态（常显不可关）。
   /// 前两项由日记偏好 [MoodiaryKVs.showWordCount] / [MoodiaryKVs.showWritingTime] 控制。
   Widget _writingPill(Diary diary) {
-    final scheme = context.colorScheme;
+    final typo = context.theme.typography;
     final showWords = MoodiaryKVs.showWordCount.get() ?? true;
     final showTime = MoodiaryKVs.showWritingTime.get() ?? true;
     final segs = <Widget>[
@@ -523,7 +524,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
         _pillSeg(
           LucideIcons.text,
           '${diary.contentText.runes.length} 字',
-          scheme.onSurfaceVariant,
+          typo.bodySmall.onSurfaceVariant,
         ),
       if (showTime)
         ValueListenableBuilder<int>(
@@ -531,20 +532,15 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
           builder: (_, sec, _) => _pillSeg(
             LucideIcons.timer,
             _fmtDuration(sec),
-            scheme.onSurfaceVariant,
+            typo.bodySmall.onSurfaceVariant,
           ),
         ),
-      _saveSeg(scheme),
+      _saveSeg(),
     ];
     final children = <Widget>[];
     for (var i = 0; i < segs.length; i++) {
       if (i > 0) {
-        children.add(
-          Text(
-            ' · ',
-            style: TextStyle(color: scheme.outlineVariant, fontSize: 12),
-          ),
-        );
+        children.add(Text(' · ', style: typo.bodySmall.outline));
       }
       children.add(segs[i]);
     }
@@ -553,7 +549,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       child: Container(
         padding: const .symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest,
+          color: context.theme.colors.surfaceContainerHighest,
           borderRadius: .circular(20),
         ),
         child: Row(mainAxisSize: .min, children: children),
@@ -561,26 +557,23 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     );
   }
 
-  Widget _pillSeg(IconData icon, String text, Color color) {
+  Widget _pillSeg(IconData icon, String text, TextStyle style) {
     return Row(
       mainAxisSize: .min,
       children: [
-        Icon(icon, size: 13, color: color),
+        Icon(icon, size: 13, color: style.color),
         const SizedBox(width: 3),
         Text(
           text,
-          style: TextStyle(
-            fontSize: 12,
-            color: color,
-            // 等宽数字：秒数跳动 / 字数增减时宽度不抖。
-            fontFeatures: const [.tabularFigures()],
-          ),
+          // 等宽数字：秒数跳动 / 字数增减时宽度不抖。
+          style: style.copyWith(fontFeatures: const [.tabularFigures()]),
         ),
       ],
     );
   }
 
-  Widget _saveSeg(ColorScheme scheme) {
+  Widget _saveSeg() {
+    final typo = context.theme.typography;
     switch (_saveStatus) {
       case 'saving':
         return Row(
@@ -592,21 +585,18 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
               child: CircularProgressIndicator(strokeWidth: 1.6),
             ),
             const SizedBox(width: 4),
-            Text(
-              '保存中',
-              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-            ),
+            Text('保存中', style: typo.bodySmall.onSurfaceVariant),
           ],
         );
       case 'saved':
-        return _pillSeg(LucideIcons.circleCheck, '已保存', scheme.primary);
+        return _pillSeg(LucideIcons.circleCheck, '已保存', typo.bodySmall.primary);
       case 'failed':
-        return _pillSeg(LucideIcons.circleAlert, '未保存', scheme.error);
+        return _pillSeg(LucideIcons.circleAlert, '未保存', typo.bodySmall.error);
       default:
         return _pillSeg(
           LucideIcons.cloudCheck,
           '自动保存',
-          scheme.onSurfaceVariant,
+          typo.bodySmall.onSurfaceVariant,
         );
     }
   }
@@ -767,19 +757,16 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   List<Widget> _meta(BuildContext context, Diary diary) {
-    final theme = Theme.of(context);
+    final colors = context.theme.colors;
+    final typo = context.theme.typography;
     return [
       Row(
         children: [
-          Icon(
-            LucideIcons.clock,
-            size: 16,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          Icon(LucideIcons.clock, size: 16, color: colors.onSurfaceVariant),
           const SizedBox(width: 6),
           Text(
             TimeFormat.fullDateTime(diary.time),
-            style: theme.textTheme.labelMedium,
+            style: typo.bodySmall.onSurfaceVariant,
           ),
           const Spacer(),
           _MoodChip(value: diary.mood),
@@ -808,12 +795,12 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
               // 天气来自和风，图标跟着数据源走；未知码退回通用的云。
               qweatherIcon(diary.weather[0]) ?? LucideIcons.cloud,
               size: 16,
-              color: theme.colorScheme.onSurfaceVariant,
+              color: colors.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
             Text(
               '${diary.weather[2]}  ${diary.weather[1]}°C',
-              style: theme.textTheme.labelMedium,
+              style: typo.bodySmall.onSurfaceVariant,
             ),
           ],
         ),
@@ -828,7 +815,12 @@ class _MoodChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color.lerp(Colors.redAccent, Colors.greenAccent, value);
+    // 心情色带全仓一份，见 AppColor.emoColorList。
+    final color = Color.lerp(
+      AppColor.emoColorList.first,
+      AppColor.emoColorList.last,
+      value,
+    );
     return Container(
       padding: const .symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -862,8 +854,8 @@ class _TocDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final colors = context.theme.colors;
+    final typo = context.theme.typography;
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -876,25 +868,20 @@ class _TocDrawer extends StatelessWidget {
                   Icon(
                     LucideIcons.tableOfContents,
                     size: 20,
-                    color: scheme.primary,
+                    color: colors.primary,
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    '目录',
-                    style: textTheme.titleMedium?.copyWith(fontWeight: .w600),
-                  ),
+                  Text('目录', style: typo.titleMedium.emphasized.onSurface),
                   const Spacer(),
                   Container(
                     padding: const .symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHighest,
+                      color: colors.surfaceContainerHighest,
                       borderRadius: .circular(999),
                     ),
                     child: Text(
                       '${headings.length}',
-                      style: textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: typo.labelSmall.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -911,6 +898,16 @@ class _TocDrawer extends StatelessWidget {
                       final h = headings[i];
                       final isActive = active == i;
                       final label = h.text.trim().isEmpty ? '(无标题)' : h.text;
+                      final level1 = h.level <= 1;
+                      final base = level1 ? typo.bodyMedium : typo.bodySmall;
+                      final weighted = (isActive || level1)
+                          ? base.emphasized
+                          : base;
+                      final labelStyle =
+                          (isActive
+                                  ? weighted.onSecondaryContainer
+                                  : weighted.onSurface)
+                              .copyWith(height: 1.3);
                       return Padding(
                         padding: .only(
                           left: (h.level - 1) * 14.0,
@@ -931,7 +928,7 @@ class _TocDrawer extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: isActive
-                                    ? scheme.secondaryContainer
+                                    ? colors.secondaryContainer
                                     : Colors.transparent,
                                 borderRadius: .circular(12),
                               ),
@@ -945,8 +942,8 @@ class _TocDrawer extends StatelessWidget {
                                       decoration: BoxDecoration(
                                         shape: .circle,
                                         color: isActive
-                                            ? scheme.onSecondaryContainer
-                                            : scheme.onSurfaceVariant
+                                            ? colors.onSecondaryContainer
+                                            : colors.onSurfaceVariant
                                                   .withValues(alpha: 0.5),
                                       ),
                                     ),
@@ -956,21 +953,7 @@ class _TocDrawer extends StatelessWidget {
                                       label,
                                       maxLines: 2,
                                       overflow: .ellipsis,
-                                      style:
-                                          (h.level <= 1
-                                                  ? textTheme.bodyMedium
-                                                  : textTheme.bodySmall)
-                                              ?.copyWith(
-                                                color: isActive
-                                                    ? scheme
-                                                          .onSecondaryContainer
-                                                    : scheme.onSurface,
-                                                fontWeight:
-                                                    isActive || h.level <= 1
-                                                    ? .w600
-                                                    : .w400,
-                                                height: 1.3,
-                                              ),
+                                      style: labelStyle,
                                     ),
                                   ),
                                 ],
@@ -1056,10 +1039,10 @@ class _LinksPanelState extends State<_LinksPanel> {
   @override
   Widget build(BuildContext context) {
     if (_out.isEmpty && _in.isEmpty) return const SizedBox.shrink();
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final colors = context.theme.colors;
+    final typo = context.theme.typography;
     return Card.filled(
-      color: scheme.surfaceContainerLow,
+      color: colors.surfaceContainerLow,
       margin: const .fromLTRB(16, 8, 16, 16),
       child: Padding(
         padding: const .fromLTRB(14, 12, 8, 8),
@@ -1069,29 +1052,24 @@ class _LinksPanelState extends State<_LinksPanel> {
           children: [
             Row(
               children: [
-                Icon(LucideIcons.link, size: 18, color: scheme.primary),
+                Icon(LucideIcons.link, size: 18, color: colors.primary),
                 const SizedBox(width: 8),
-                Text(
-                  context.l10n.graphLinks,
-                  style: textTheme.titleSmall?.copyWith(
-                    color: scheme.onSurface,
-                  ),
-                ),
+                Text(context.l10n.graphLinks, style: typo.titleSmall.onSurface),
                 const SizedBox(width: 8),
                 if (_out.isNotEmpty)
                   _CountPill(
                     icon: LucideIcons.arrowUpRight,
                     count: _out.length,
-                    background: scheme.secondaryContainer,
-                    foreground: scheme.onSecondaryContainer,
+                    background: colors.secondaryContainer,
+                    foreground: colors.onSecondaryContainer,
                   ),
                 if (_in.isNotEmpty) ...[
                   const SizedBox(width: 4),
                   _CountPill(
                     icon: LucideIcons.arrowDownLeft,
                     count: _in.length,
-                    background: scheme.tertiaryContainer,
-                    foreground: scheme.onTertiaryContainer,
+                    background: colors.tertiaryContainer,
+                    foreground: colors.onTertiaryContainer,
                   ),
                 ],
                 const Spacer(),
@@ -1099,10 +1077,7 @@ class _LinksPanelState extends State<_LinksPanel> {
                   tooltip: context.l10n.graphLocal,
                   iconSize: 20,
                   visualDensity: .compact,
-                  icon: Icon(
-                    LucideIcons.waypoints,
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  icon: const Icon(LucideIcons.waypoints),
                   onPressed: () =>
                       DiaryGraphRoute(diaryId: widget.diaryId).push(context),
                 ),
@@ -1122,7 +1097,7 @@ class _LinksPanelState extends State<_LinksPanel> {
   /// 出/入链拍平成一维「段头 + 条目」行，走 ListView.builder 懒构建 —— 重链日记下
   /// 不再每次刷新都全量构建离屏条目。
   Widget _buildList(BuildContext context) {
-    final theme = Theme.of(context);
+    final typo = context.theme.typography;
     final rows = <({String? header, Diary? diary, bool outgoing})>[
       if (_out.isNotEmpty) ...[
         (header: context.l10n.graphOutgoing, diary: null, outgoing: true),
@@ -1142,12 +1117,7 @@ class _LinksPanelState extends State<_LinksPanel> {
         if (row.diary == null) {
           return Padding(
             padding: const .fromLTRB(6, 6, 0, 2),
-            child: Text(
-              row.header!,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+            child: Text(row.header!, style: typo.labelSmall.onSurfaceVariant),
           );
         }
         return _LinkTile(
@@ -1188,9 +1158,9 @@ class _CountPill extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             '$count',
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: foreground),
+            style: context.theme.typography.labelSmall.onSurface.copyWith(
+              color: foreground,
+            ),
           ),
         ],
       ),
@@ -1211,8 +1181,8 @@ class _LinkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final colors = context.theme.colors;
+    final typo = context.theme.typography;
     final hasTitle = diary.title.trim().isNotEmpty;
     final title = hasTitle
         ? diary.title.trim()
@@ -1234,20 +1204,20 @@ class _LinkTile extends StatelessWidget {
         height: 36,
         alignment: .center,
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest,
+          color: colors.surfaceContainerHighest,
           borderRadius: AppBorderRadius.smallBorderRadius,
         ),
         child: Icon(
           outgoing ? LucideIcons.arrowUpRight : LucideIcons.cornerDownLeft,
           size: 18,
-          color: outgoing ? scheme.primary : scheme.onSurfaceVariant,
+          color: outgoing ? colors.primary : colors.onSurfaceVariant,
         ),
       ),
       title: Text(
         title,
         maxLines: 1,
         overflow: .ellipsis,
-        style: textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
+        style: typo.bodyMedium.onSurface,
       ),
       subtitle: subtitle.isEmpty
           ? null
@@ -1255,14 +1225,12 @@ class _LinkTile extends StatelessWidget {
               subtitle,
               maxLines: 1,
               overflow: .ellipsis,
-              style: textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: typo.bodySmall.onSurfaceVariant,
             ),
       trailing: Icon(
         LucideIcons.chevronRight,
         size: 18,
-        color: scheme.onSurfaceVariant,
+        color: colors.onSurfaceVariant,
       ),
     );
   }
@@ -1407,8 +1375,8 @@ class _MoodSlider extends ConsumerWidget {
             divisions: 10,
             label: '${(mood * 100).toStringAsFixed(0)}%',
             activeColor: .lerp(
-              const Color(0xFFFA4659),
-              const Color(0xFF2EB872),
+              AppColor.emoColorList.first,
+              AppColor.emoColorList.last,
               mood,
             ),
             onChanged: onChanged,

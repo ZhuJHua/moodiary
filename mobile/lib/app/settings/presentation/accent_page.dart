@@ -142,7 +142,7 @@ class _SeedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Material(
       color: Colors.transparent,
       shape: RoundedRectangleBorder(
@@ -173,16 +173,15 @@ class _SeedCard extends StatelessWidget {
                   children: [
                     Text(
                       context.l10n.accentSeed,
-                      style: context.textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style:
+                          context.theme.typography.labelSmall.onSurfaceVariant,
                     ),
                     Text(
                       hexOfColor(seed),
-                      style: context.textTheme.titleMedium?.copyWith(
-                        color: scheme.onSurface,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
+                      style: context.theme.typography.titleMedium.onSurface
+                          .copyWith(
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
                     ),
                   ],
                 ),
@@ -210,7 +209,7 @@ class _TokenGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -240,15 +239,13 @@ class _TokenGrid extends StatelessWidget {
                 token.label,
                 maxLines: 2,
                 overflow: .ellipsis,
-                style: context.textTheme.labelSmall?.copyWith(
-                  color: token.on,
-                  fontWeight: .w600,
-                ),
+                style: context.theme.typography.labelSmall.emphasized.onSurface
+                    .copyWith(color: token.on),
               ),
               Text(
                 hexOfColor(token.color),
-                style: context.textTheme.labelSmall?.copyWith(
-                  color: token.on.withValues(alpha: 0.75),
+                style: context.theme.typography.labelSmall.onSurface.copyWith(
+                  color: token.on,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -271,11 +268,8 @@ class _GroupLabel extends StatelessWidget {
       padding: const .only(top: 22, bottom: 8),
       child: Text(
         label,
-        style: context.textTheme.labelMedium?.copyWith(
-          color: context.colorScheme.onSurfaceVariant,
-          letterSpacing: 0.6,
-          fontWeight: .w700,
-        ),
+        style: context.theme.typography.labelMedium.emphasized.onSurfaceVariant
+            .copyWith(letterSpacing: 0.6),
       ),
     );
   }

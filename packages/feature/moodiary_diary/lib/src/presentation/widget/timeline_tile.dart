@@ -6,6 +6,7 @@ import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 左栏三段固定宽度：日期列 / 间隙 / 轴列 / 间隙。轴心 x 与内容起始 x 都由它们推出，
 /// Painter 与 Row 必须用同一组常量，否则线会画歪。
@@ -73,7 +74,7 @@ class DiaryTimelineTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     final topPad = _kTopPad + (breakBefore ? _kBreakPad : 0.0);
     final mood = diaryMoodColor(diary.mood);
 
@@ -84,7 +85,7 @@ class DiaryTimelineTile extends StatelessWidget {
         below: moodBelow == null ? null : diaryMoodColor(moodBelow!),
         dashedAbove: breakBefore,
         dashedBelow: breakAfter,
-        idle: scheme.outlineVariant,
+        idle: colors.outlineVariant,
         dotDy: topPad + _kDotOffset,
         big: dayStart,
       ),
@@ -127,15 +128,13 @@ class _DateColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final typo = context.theme.typography;
     return Column(
       crossAxisAlignment: .end,
       children: [
         Text(
           '${stamp.day}',
-          style: context.textTheme.titleMedium?.copyWith(
-            color: scheme.onSurface,
-            fontWeight: .w700,
+          style: typo.titleMedium.emphasized.onSurface.copyWith(
             height: 1.05,
             fontFeatures: const [.tabularFigures()],
           ),
@@ -144,10 +143,7 @@ class _DateColumn extends StatelessWidget {
           TimeFormat.weekdayShort(stamp),
           maxLines: 1,
           overflow: .clip,
-          style: context.textTheme.labelSmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-            height: 1.1,
-          ),
+          style: typo.labelSmall.onSurfaceVariant.copyWith(height: 1.1),
         ),
       ],
     );
@@ -179,7 +175,7 @@ class _Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final typo = context.theme.typography;
     final hasTitle = diary.title.trim().isNotEmpty;
     final body = diary.contentText.preview();
 
@@ -205,9 +201,7 @@ class _Content extends StatelessWidget {
               diary.title.trim(),
               maxLines: 1,
               overflow: .ellipsis,
-              style: context.textTheme.titleMedium?.copyWith(
-                color: scheme.onSurface,
-              ),
+              style: typo.titleMedium.onSurface,
             ),
           ],
           if (body.isNotEmpty) ...[
@@ -216,9 +210,7 @@ class _Content extends StatelessWidget {
               body,
               maxLines: hasTitle ? 2 : 3,
               overflow: .ellipsis,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: typo.bodyMedium.onSurfaceVariant,
             ),
           ],
           if (diary.imageName.isNotEmpty) ...[
@@ -253,9 +245,9 @@ class _MetaLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final onVariant = scheme.onSurfaceVariant;
-    final style = context.textTheme.labelSmall?.copyWith(color: onVariant);
+    final colors = context.theme.colors;
+    final onVariant = colors.onSurfaceVariant;
+    final style = context.theme.typography.labelSmall.onSurfaceVariant;
 
     return Row(
       children: [
@@ -407,13 +399,13 @@ class _Thumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     return ClipRRect(
       borderRadius: radius,
       child: Stack(
         fit: .expand,
         children: [
-          ColoredBox(color: scheme.surfaceContainerHighest),
+          ColoredBox(color: colors.surfaceContainerHighest),
           Image(
             // 按文件名 key：开了 gaplessPlayback，换图期间旧帧不会清空，列表重排后
             // 复用同一个 Element 会先画上一篇日记的照片。与媒体库同一处理。
@@ -426,20 +418,18 @@ class _Thumb extends StatelessWidget {
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
             errorBuilder: (context, _, _) =>
-                Icon(LucideIcons.imageOff, color: scheme.onSurfaceVariant),
+                Icon(LucideIcons.imageOff, color: colors.onSurfaceVariant),
           ),
           if (moreCount > 0)
             DecoratedBox(
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.45),
+                color: colors.scrim.withValues(alpha: 0.45),
               ),
               child: Center(
                 child: Text(
                   '+$moreCount',
-                  style: context.textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: .w700,
-                  ),
+                  style:
+                      context.theme.typography.titleMedium.emphasized.onMedia,
                 ),
               ),
             ),
@@ -457,10 +447,8 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final style = context.textTheme.labelSmall?.copyWith(
-      color: scheme.onSurfaceVariant,
-    );
+    final colors = context.theme.colors;
+    final style = context.theme.typography.labelSmall.onSurfaceVariant;
     final chips = <Widget>[];
 
     if (diary.audioName.isNotEmpty) {
@@ -497,7 +485,7 @@ class _Footer extends StatelessWidget {
         Row(
           mainAxisSize: .min,
           children: [
-            Icon(LucideIcons.mapPin, size: 12, color: scheme.onSurfaceVariant),
+            Icon(LucideIcons.mapPin, size: 12, color: colors.onSurfaceVariant),
             const SizedBox(width: 2),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 132),
@@ -544,7 +532,7 @@ class _MediaChip extends StatelessWidget {
     return Row(
       mainAxisSize: .min,
       children: [
-        Icon(icon, size: 13, color: context.colorScheme.onSurfaceVariant),
+        Icon(icon, size: 13, color: context.theme.colors.onSurfaceVariant),
         if (count > 1) ...[
           const SizedBox(width: 2),
           Text('$count', style: style),

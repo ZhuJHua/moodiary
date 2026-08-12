@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 
 import 'package:moodiary_diary/src/presentation/graph/graph_scene.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_style.dart';
+import 'package:mui/mui.dart';
 
 /// 布局产出的坐标帧。布局侧（Rust 流 / ego 径向）只管往里写，画布订阅重绘。
 class GraphFrame extends ChangeNotifier {
@@ -127,6 +128,7 @@ class _GraphCanvasState extends State<GraphCanvas>
   Color? _labelColor;
   TextDirection? _labelDir;
   double _labelFactor = 1;
+  TextStyle? _labelTemplate;
 
   double get _focusT => _focusCtl.value;
   double get _exitT => _exitIndex == null ? 0.0 : _exitCtl.value;
@@ -545,12 +547,11 @@ class _GraphCanvasState extends State<GraphCanvas>
       return TextPainter(
         text: TextSpan(
           text: text,
-          style: TextStyle(
+          style: _labelTemplate!.copyWith(
             // 标题、正文摘要、日期一视同仁：来源不同不该体现成深浅不一。
             color: widget.palette.label,
             // 一律同一档：选中不改字号字重，免得标签跟着「跳一下」。
             fontSize: GraphTuning.labelSize * _labelFactor,
-            fontWeight: .w500,
             height: 1.1,
             // 底色描边两遍：标签压在边和点阵上仍然可读。
             shadows: [
@@ -587,16 +588,18 @@ class _GraphCanvasState extends State<GraphCanvas>
   Widget build(BuildContext context) {
     final dir = Directionality.of(context);
     // 字号档已解析进主题、textScaler 恒为 1，所以缩放系数从主题反推：
-    // labelSmall 的基准字号是 11。
-    final factor =
-        (Theme.of(context).textTheme.labelSmall?.fontSize ?? 11) / 11;
+    // labelSmall 的基准字号是 11（字重取 medium，与原来的 w500 一致）。
+    final template = context.theme.typography.labelSmall.onSurface;
+    final factor = (template.fontSize ?? 11) / 11;
     if (_labelColor != widget.palette.label ||
         _labelDir != dir ||
-        _labelFactor != factor) {
+        _labelFactor != factor ||
+        _labelTemplate != template) {
       _clearLabels();
       _labelColor = widget.palette.label;
       _labelDir = dir;
       _labelFactor = factor;
+      _labelTemplate = template;
       _shaderSize = .zero; // 主题变了，渐变也要重建
       // 标签 / 渐变缓存刚被清空，但重绘只认 _repaint —— 帧后补一次，避免停在旧样式。
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -714,9 +717,10 @@ class _GraphPainter extends CustomPainter {
     final settleT = s._settleT;
     if (s.widget.showLabels && settleT > 0.01) {
       if (settleT < 1) {
+        // saveLayer 只吃 alpha，RGB 被整层忽略 —— 这里不是在选颜色。
         canvas.saveLayer(
           Offset.zero & size,
-          Paint()..color = Colors.white.withValues(alpha: settleT),
+          Paint()..color = Color.fromRGBO(0, 0, 0, settleT),
         );
         _paintLabels(canvas, size, scene, focus, focusT, scale, tx, ty);
         canvas.restore();

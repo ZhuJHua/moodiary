@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 /// 密码长度 —— 与启动解锁页对齐。
 const int kPinLength = 4;
@@ -130,14 +130,16 @@ class _LockPinPadState extends State<LockPinPad>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final dotSize =
-        (context.textTheme.displayLarge?.fontSize ?? 57) *
-        (context.textTheme.displayLarge?.height ?? 1.12);
+    final scheme = context.theme.colors;
+    final displayLarge = context.theme.typography.displayLarge.onSurface;
+    final dotSize = displayLarge.fontSize! * displayLarge.height!;
     return Column(
       mainAxisSize: .min,
       children: [
-        Text(widget.title, style: context.textTheme.titleMedium),
+        Text(
+          widget.title,
+          style: context.theme.typography.titleMedium.onSurface,
+        ),
         const SizedBox(height: 24),
         AnimatedBuilder(
           animation: _shake,
@@ -213,7 +215,7 @@ class _LockPinPadState extends State<LockPinPad>
           opacity: widget.error == null ? 0 : 1,
           child: Text(
             widget.error ?? ' ',
-            style: context.textTheme.bodySmall?.copyWith(color: scheme.error),
+            style: context.theme.typography.bodySmall.error,
           ),
         ),
       ],
@@ -234,7 +236,7 @@ class _NumButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Material(
       color: scheme.surfaceContainerHighest,
       shape: const CircleBorder(),
@@ -245,7 +247,10 @@ class _NumButton extends StatelessWidget {
           width: size,
           height: size,
           child: Center(
-            child: Text(label, style: context.textTheme.displaySmall),
+            child: Text(
+              label,
+              style: context.theme.typography.displaySmall.onSurface,
+            ),
           ),
         ),
       ),
@@ -269,7 +274,12 @@ class _IconButton extends StatelessWidget {
     return InkWell(
       customBorder: const CircleBorder(),
       onTap: onTap,
-      child: SizedBox(width: size, height: size, child: Icon(icon, size: 24)),
+      child: SizedBox(
+        width: size,
+        height: size,
+        // 与同排数字键同一视觉权重，不做弱化。
+        child: Icon(icon, size: 24, color: context.theme.colors.onSurface),
+      ),
     );
   }
 }

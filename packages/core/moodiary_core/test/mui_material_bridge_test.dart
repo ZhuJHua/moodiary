@@ -93,7 +93,8 @@ void main() {
     test('排版整块替换而非 merge —— inherit 为 false 才做得到', () {
       final mui = MuiThemeData(brightness: .light);
       expect(theme.textTheme.bodyMedium, mui.typography.bodyMedium.onSurface);
-      expect(theme.textTheme.headlineLarge!.fontWeight, FontWeight.w700);
+      // M3 2021 的 headline 三级都是 Regular，强调档不进 material 的 TextTheme。
+      expect(theme.textTheme.headlineLarge!.fontWeight, FontWeight.w400);
     });
 
     test('字号档投影进 material 的 textTheme', () {
@@ -112,6 +113,61 @@ void main() {
     test('顶栏滚动态不变色不投影', () {
       expect(theme.appBarTheme.backgroundColor, theme.colorScheme.surface);
       expect(theme.appBarTheme.scrolledUnderElevation, 0);
+    });
+
+    test('SDK 那几个绕开 colorScheme 的缺省值都被色板接管', () {
+      final cs = theme.colorScheme;
+      // 这五个 SDK 缺省值是绝对色（0xDD000000 / black54 / black60 / black38 /
+      // Colors.black），与色板无关；断言它们已落回角色。
+      expect(theme.iconTheme.color, cs.onSurface);
+      expect(theme.iconTheme.color, isNot(const Color(0xDD000000)));
+      expect(theme.primaryIconTheme.color, cs.onPrimary);
+      expect(theme.hintColor, cs.onSurfaceVariant);
+      expect(theme.unselectedWidgetColor, cs.onSurfaceVariant);
+      expect(theme.disabledColor.a, closeTo(const MuiStateTokens().disabledOpacity, 0.01));
+      expect(theme.shadowColor, cs.shadow);
+      // 分隔线：SDK 的 M3 缺省是 outline，规范里是 outlineVariant，重了一档。
+      expect(theme.dividerColor, cs.outlineVariant);
+      expect(theme.dividerColor, isNot(cs.outline));
+    });
+
+    test('图标只投颜色不投尺寸 —— 尺寸仍由 IconThemeData.fallback 兜到 24', () {
+      expect(theme.iconTheme.size, isNull);
+    });
+
+    test('文本选中态用 mui 的自有槽位', () {
+      final mui = MuiThemeData(brightness: .light);
+      expect(theme.textSelectionTheme.selectionColor, mui.colors.selection);
+      expect(theme.textSelectionTheme.cursorColor, mui.colors.ring);
+    });
+
+    group('systemOverlayStyleFrom', () {
+      test('图标明暗跟主题亮度走，且 iOS/Android 两个字段是反的', () {
+        final light = systemOverlayStyleFrom(MuiThemeData(brightness: .light));
+        expect(light.statusBarIconBrightness, Brightness.dark);
+        expect(light.statusBarBrightness, Brightness.light);
+        expect(light.systemNavigationBarIconBrightness, Brightness.dark);
+
+        final dark = systemOverlayStyleFrom(MuiThemeData(brightness: .dark));
+        expect(dark.statusBarIconBrightness, Brightness.light);
+        expect(dark.statusBarBrightness, Brightness.dark);
+        expect(dark.systemNavigationBarIconBrightness, Brightness.light);
+      });
+
+      test('两条栏都透明且不让系统补对比度（edge-to-edge 的前提）', () {
+        final style = systemOverlayStyleFrom(MuiThemeData(brightness: .light));
+        expect(style.statusBarColor, Colors.transparent);
+        expect(style.systemNavigationBarColor, Colors.transparent);
+        expect(style.systemStatusBarContrastEnforced, isFalse);
+        expect(style.systemNavigationBarContrastEnforced, isFalse);
+      });
+
+      test('顶栏拿的是同一个值 —— 有无 AppBar 的页面不许出现两种状态栏', () {
+        expect(
+          theme.appBarTheme.systemOverlayStyle,
+          systemOverlayStyleFrom(MuiThemeData(brightness: .light)),
+        );
+      });
     });
   });
 }

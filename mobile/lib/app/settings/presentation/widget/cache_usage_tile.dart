@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 class CacheUsageTile extends ConsumerWidget {
   final bool isFirst;
@@ -12,12 +12,12 @@ class CacheUsageTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final async = ref.watch(cacheControllerProvider);
     return SettingListTile(
       isFirst: isFirst,
       isLast: isLast,
-      leading: const Icon(LucideIcons.brushCleaning),
+      leading: Icon(LucideIcons.brushCleaning, color: scheme.onSurfaceVariant),
       title: '清理缓存',
       trailing: Text(
         async.when(
@@ -25,7 +25,7 @@ class CacheUsageTile extends ConsumerWidget {
           loading: () => '...',
           error: (_, _) => '—',
         ),
-        style: context.textTheme.bodySmall?.copyWith(color: scheme.primary),
+        style: context.theme.typography.bodySmall.primary,
       ),
       onTap: () => _clear(context, ref),
     );

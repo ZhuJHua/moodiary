@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 class Modal extends StatelessWidget {
   final Animation<double> animation;
@@ -15,7 +15,7 @@ class Modal extends StatelessWidget {
         return Visibility(
           visible: animation.value > 0,
           child: ModalBarrier(
-            color: context.colorScheme.surfaceContainer.withValues(
+            color: context.theme.colors.surfaceContainer.withValues(
               alpha: 0.6 * animation.value,
             ),
             barrierSemanticsDismissible: false,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 class ProviderLogo extends StatelessWidget {
   final String? logoUrl;
@@ -19,14 +19,12 @@ class ProviderLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final initial = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '#';
     final fallback = Center(
       child: Text(
         initial,
-        style: context.textTheme.titleMedium?.copyWith(
-          color: scheme.onSurfaceVariant,
-        ),
+        style: context.theme.typography.titleMedium.onSurfaceVariant,
       ),
     );
     final url = logoUrl;

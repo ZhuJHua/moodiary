@@ -3,9 +3,9 @@ import 'package:genui/genui.dart' as genui;
 import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:mui/mui.dart';
 
 final genui.Catalog assistantGenUiCatalog = genui.Catalog([
   _toolPermissionCard,
@@ -90,18 +90,18 @@ class _ToolPermissionCardView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     final display = assistantToolDisplay(context, tool);
     final dangerous = tool.dangerous;
     final pending = status == .pending;
 
-    final chipColor = dangerous
-        ? scheme.errorContainer
-        : scheme.primaryContainer;
-    final onChipColor = dangerous
-        ? scheme.onErrorContainer
-        : scheme.onPrimaryContainer;
+    // 三档权限对应三种容器色：只读（理论上不会走到这张卡）primary，写入 tertiary，破坏性 error。
+    final (chipColor, onChipColor) = switch (tool.permission) {
+      .dangerous => (scheme.errorContainer, scheme.onErrorContainer),
+      .approval => (scheme.tertiaryContainer, scheme.onTertiaryContainer),
+      .none => (scheme.primaryContainer, scheme.onPrimaryContainer),
+    };
 
     return Container(
       decoration: BoxDecoration(
@@ -137,15 +137,17 @@ class _ToolPermissionCardView extends StatelessWidget {
                   children: [
                     Text(
                       display.title,
-                      style: context.textTheme.titleSmall?.copyWith(
-                        fontWeight: .w600,
-                      ),
+                      style: context
+                          .theme
+                          .typography
+                          .titleSmall
+                          .emphasized
+                          .onSurface,
                     ),
                     Text(
                       l10n.assistantToolPermissionTitle,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style:
+                          context.theme.typography.bodySmall.onSurfaceVariant,
                     ),
                   ],
                 ),
@@ -155,10 +157,8 @@ class _ToolPermissionCardView extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             display.description,
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-              height: 1.35,
-            ),
+            style: context.theme.typography.bodyMedium.onSurfaceVariant
+                .copyWith(height: 1.35),
           ),
           if (dangerous && pending) ...[
             const SizedBox(height: 12),
@@ -197,7 +197,7 @@ class _DangerNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Container(
       padding: const .symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -216,10 +216,8 @@ class _DangerNote extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: context.textTheme.bodySmall?.copyWith(
-                color: scheme.onErrorContainer,
-                height: 1.3,
-              ),
+              style: context.theme.typography.bodySmall.onErrorContainer
+                  .copyWith(height: 1.3),
             ),
           ),
         ],
@@ -241,7 +239,7 @@ class _PendingActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     return OverflowBar(
       alignment: .end,
@@ -278,7 +276,7 @@ class _DecisionBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     final (icon, background, foreground, label) = switch (status) {
       .allowedOnce => (
@@ -319,7 +317,9 @@ class _DecisionBadge extends StatelessWidget {
           const SizedBox(width: 7),
           Text(
             label,
-            style: context.textTheme.labelLarge?.copyWith(color: foreground),
+            style: context.theme.typography.labelLarge.onSurface.copyWith(
+              color: foreground,
+            ),
           ),
         ],
       ),

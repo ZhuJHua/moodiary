@@ -8,6 +8,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 单页日记选择器：搜索 + 列表，点选一篇后经 `context.pop(diary)` 返回给调用方。
 /// 供「发送日记给 AI」使用，但本身与助手解耦（只返回 [Diary]）。
@@ -50,7 +51,7 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.assistantSelectDiaryTitle),
@@ -66,7 +67,7 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
                 hintText: l10n.assistantSelectDiarySearchHint,
                 prefixIcon: const Icon(LucideIcons.search),
                 filled: true,
-                fillColor: scheme.surfaceContainerHigh,
+                fillColor: colors.surfaceContainerHigh,
                 isDense: true,
                 contentPadding: const .symmetric(vertical: 4),
                 border: const OutlineInputBorder(
@@ -130,14 +131,13 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
 class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     return Center(
       child: Padding(
         padding: const .all(24),
         child: Text(
           context.l10n.assistantSelectDiaryEmpty,
           textAlign: .center,
-          style: TextStyle(color: scheme.onSurfaceVariant),
+          style: context.theme.typography.bodyMedium.onSurfaceVariant,
         ),
       ),
     );
@@ -152,12 +152,13 @@ class _DiarySelectTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
+    final typo = context.theme.typography;
     final l10n = context.l10n;
     final title = diary.title.trim();
     final preview = diary.contentText.preview();
     return Card.filled(
-      color: scheme.surfaceContainerLow,
+      color: colors.surfaceContainerLow,
       margin: .zero,
       child: InkWell(
         borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -172,9 +173,7 @@ class _DiarySelectTile extends StatelessWidget {
                 title.isEmpty ? l10n.assistantDiaryUntitled : title,
                 maxLines: 1,
                 overflow: .ellipsis,
-                style: context.textTheme.titleSmall?.copyWith(
-                  color: scheme.onSurface,
-                ),
+                style: typo.titleSmall.onSurface,
               ),
               if (preview.isNotEmpty) ...[
                 const SizedBox(height: 4),
@@ -182,17 +181,13 @@ class _DiarySelectTile extends StatelessWidget {
                   preview,
                   maxLines: 2,
                   overflow: .ellipsis,
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: typo.bodySmall.onSurfaceVariant,
                 ),
               ],
               const SizedBox(height: 6),
               Text(
                 TimeFormat.fullDateTime(diary.time),
-                style: context.textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: typo.labelSmall.onSurfaceVariant,
               ),
             ],
           ),

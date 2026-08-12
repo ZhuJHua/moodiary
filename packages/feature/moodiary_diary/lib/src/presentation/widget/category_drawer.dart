@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_diary/src/application/diary_filter.dart';
 import 'package:moodiary_diary/src/application/diary_selection.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 /// 分类超过这个数才在抽屉里出现搜索框 —— 三五个分类时搜索框只是噪音。
 const int _kSearchThreshold = 8;
@@ -35,7 +35,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     final filter = ref.watch(homeDiaryFilterProvider);
     final categories = ref.watch(orderedCategoriesProvider).value ?? const [];
     final counts = ref.watch(categoryDiaryCountsProvider).value;
@@ -71,16 +71,16 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                     children: [
                       Text(
                         context.l10n.editCategory,
-                        style: context.textTheme.labelMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                        style: context
+                            .theme
+                            .typography
+                            .labelMedium
+                            .onSurfaceVariant,
                       ),
                       const Spacer(),
                       Text(
                         context.l10n.categorySwitcherCount(categories.length),
-                        style: context.textTheme.labelSmall?.copyWith(
-                          color: scheme.outline,
-                        ),
+                        style: context.theme.typography.labelSmall.outline,
                       ),
                     ],
                   ),
@@ -94,7 +94,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                       constraints: const BoxConstraints(minHeight: 42),
                       elevation: const WidgetStatePropertyAll(0),
                       backgroundColor: WidgetStatePropertyAll(
-                        scheme.surfaceContainerHigh,
+                        colors.surfaceContainerHigh,
                       ),
                       onChanged: (v) => setState(() => _query = v),
                     ),
@@ -110,7 +110,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                           label: context.l10n.categoryAllDiary,
                           count: total,
                           selected: filter.isAll,
-                          leading: _Swatch.all(scheme: scheme),
+                          leading: _Swatch.all(scheme: colors),
                           onTap: () => _pick(const .all()),
                         ),
                       for (final c in visible)
@@ -141,15 +141,17 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                           ),
                           child: Text(
                             context.l10n.categoryNoMatch,
-                            style: context.textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                            style: context
+                                .theme
+                                .typography
+                                .bodyMedium
+                                .onSurfaceVariant,
                           ),
                         ),
                     ],
                   ),
                 ),
-                Divider(height: 1, color: scheme.outlineVariant),
+                Divider(height: 1, color: colors.outlineVariant),
                 // 抽屉不随键盘缩，底部这两项会被输入法整个盖住 —— 手动让位。
                 // 「未分类」不是一个分类，是「缺少分类」——所以放在分隔线以下、
                 // 和管理入口一组，而不是混进分类列表里。
@@ -157,7 +159,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                   label: context.l10n.categoryNoCategory,
                   count: uncategorized,
                   selected: filter.uncategorized,
-                  leading: _Swatch.none(scheme: scheme),
+                  leading: _Swatch.none(scheme: colors),
                   onTap: () => _pick(const .uncategorized()),
                 ),
                 Padding(
@@ -223,7 +225,6 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     return Padding(
       padding: const .fromLTRB(20, 20, 20, 14),
       child: Column(
@@ -231,16 +232,14 @@ class _Header extends StatelessWidget {
         children: [
           Text(
             context.l10n.appName,
-            style: context.textTheme.titleLarge?.copyWith(fontWeight: .w700),
+            style: context.theme.typography.titleLarge.emphasized.onSurface,
           ),
           if (total != null)
             Padding(
               padding: const .only(top: 2),
               child: Text(
                 context.l10n.diarySearchResult(total!),
-                style: context.textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: context.theme.typography.labelMedium.onSurfaceVariant,
               ),
             ),
         ],
@@ -270,11 +269,12 @@ class _Tile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
+    final typo = context.theme.typography;
     return Padding(
       padding: const .symmetric(horizontal: 12, vertical: 1),
       child: Material(
-        color: selected ? scheme.secondaryContainer : Colors.transparent,
+        color: selected ? colors.secondaryContainer : Colors.transparent,
         borderRadius: const .all(.circular(28)),
         clipBehavior: .antiAlias,
         child: InkWell(
@@ -290,12 +290,9 @@ class _Tile extends StatelessWidget {
                     label,
                     maxLines: 1,
                     overflow: .ellipsis,
-                    style: context.textTheme.bodyLarge?.copyWith(
-                      color: selected
-                          ? scheme.onSecondaryContainer
-                          : scheme.onSurface,
-                      fontWeight: selected ? .w600 : null,
-                    ),
+                    style: selected
+                        ? typo.bodyLarge.emphasized.onSecondaryContainer
+                        : typo.bodyLarge.onSurface,
                   ),
                 ),
                 if (syncing) ...[
@@ -303,19 +300,18 @@ class _Tile extends StatelessWidget {
                   Icon(
                     LucideIcons.cloudUpload,
                     size: 14,
-                    color: scheme.primary,
+                    color: colors.primary,
                   ),
                 ],
                 if (count != null) ...[
                   const SizedBox(width: 8),
                   Text(
                     '$count',
-                    style: context.textTheme.labelMedium?.copyWith(
-                      color: selected
-                          ? scheme.onSecondaryContainer
-                          : scheme.onSurfaceVariant,
-                      fontFeatures: const [.tabularFigures()],
-                    ),
+                    style:
+                        (selected
+                                ? typo.labelMedium.onSecondaryContainer
+                                : typo.labelMedium.onSurfaceVariant)
+                            .copyWith(fontFeatures: const [.tabularFigures()]),
                   ),
                 ],
               ],
@@ -334,7 +330,7 @@ class _PendingTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     return Padding(
       padding: const .symmetric(horizontal: 26, vertical: 13),
       child: Row(
@@ -344,15 +340,13 @@ class _PendingTile extends StatelessWidget {
             height: 12,
             child: CircularProgressIndicator(
               strokeWidth: 1.6,
-              color: scheme.primary,
+              color: colors.primary,
             ),
           ),
           const SizedBox(width: 12),
           Text(
             label,
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.bodyMedium.onSurfaceVariant,
           ),
         ],
       ),
@@ -368,19 +362,19 @@ class _Swatch extends StatelessWidget {
 
   const _Swatch({this.color}) : gradient = null, hollow = false;
 
-  _Swatch.all({required ColorScheme scheme})
+  _Swatch.all({required MuiColorScheme scheme})
     : color = null,
       hollow = false,
       gradient = LinearGradient(colors: [scheme.primary, scheme.tertiary]);
 
-  const _Swatch.none({required ColorScheme scheme})
+  const _Swatch.none({required MuiColorScheme scheme})
     : color = null,
       gradient = null,
       hollow = true;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     return Container(
       width: 12,
       height: 12,
@@ -388,7 +382,7 @@ class _Swatch extends StatelessWidget {
         color: color,
         gradient: gradient,
         shape: .circle,
-        border: hollow ? .all(color: scheme.outline, width: 1.4) : null,
+        border: hollow ? .all(color: colors.outline, width: 1.4) : null,
       ),
     );
   }

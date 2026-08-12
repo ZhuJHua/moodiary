@@ -3,8 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 void main() {
   /// 弹窗内部取 `context.l10n` 的默认「取消 / 确认」，所以宿主必须装 delegate。
@@ -17,11 +21,15 @@ void main() {
         ),
       ),
     );
-    return MaterialApp(
-      locale: const Locale('zh'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: body),
+    return MuiTheme(
+      data: _mui,
+      child: MaterialApp(
+        theme: materialThemeFrom(_mui),
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: body),
+      ),
     );
   }
 
@@ -80,37 +88,34 @@ void main() {
     });
 
     testWidgets('isDestructive 用 error 色并自动补警告图标', (tester) async {
-      late ColorScheme scheme;
       await tester.pumpWidget(
-        host((context) {
-          scheme = Theme.of(context).colorScheme;
-          showMoodiaryConfirm(
+        host(
+          (context) => showMoodiaryConfirm(
             context,
             title: '彻底删除？',
             confirmLabel: '删除',
             isDestructive: true,
-          );
-        }),
+          ),
+        ),
       );
       await open(tester);
 
       expect(find.byIcon(LucideIcons.triangleAlert), findsOneWidget);
-      expect(backgroundOf(tester, '删除'), scheme.error);
-      expect(backgroundOf(tester, '取消'), scheme.surfaceContainerHighest);
+      expect(backgroundOf(tester, '删除'), _mui.colors.error);
+      expect(backgroundOf(tester, '取消'), _mui.colors.surfaceContainerHighest);
     });
 
     testWidgets('非破坏性确认用 primary 色且不加图标', (tester) async {
-      late ColorScheme scheme;
       await tester.pumpWidget(
-        host((context) {
-          scheme = Theme.of(context).colorScheme;
-          showMoodiaryConfirm(context, title: '数据修复', confirmLabel: '开始修复');
-        }),
+        host(
+          (context) =>
+              showMoodiaryConfirm(context, title: '数据修复', confirmLabel: '开始修复'),
+        ),
       );
       await open(tester);
 
       expect(find.byIcon(LucideIcons.triangleAlert), findsNothing);
-      expect(backgroundOf(tester, '开始修复'), scheme.primary);
+      expect(backgroundOf(tester, '开始修复'), _mui.colors.primary);
     });
 
     testWidgets('barrierDismissible: false 时点遮罩不关闭', (tester) async {

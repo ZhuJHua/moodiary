@@ -5,6 +5,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../data/export_options.dart';
@@ -38,7 +39,7 @@ class _ExportSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -124,7 +125,7 @@ class _ImportSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Column(
       crossAxisAlignment: .stretch,
       children: [

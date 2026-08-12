@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 /// 同步进行中的聚合提示卡。不为每篇远端日记插入独立占位 —— manifest 只有 LWW 时间戳，
 /// 占位卡无法按真实展示时间排序、会出现在错误位置；待更新的已有日记改用 [SyncPendingBadge]。
@@ -17,7 +18,7 @@ class SyncPendingSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final parts = [
       if (newCount > 0) '$newCount 篇待下载',
       if (updateCount > 0) '$updateCount 篇待更新',
@@ -44,9 +45,7 @@ class SyncPendingSummaryCard extends StatelessWidget {
             Expanded(
               child: Text(
                 '云端同步中：$parts',
-                style: context.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: context.theme.typography.bodyMedium.onSurfaceVariant,
               ),
             ),
           ],
@@ -61,7 +60,7 @@ class SyncPendingBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Container(
       padding: const .symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
@@ -79,9 +78,7 @@ class SyncPendingBadge extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             '同步中',
-            style: context.textTheme.labelSmall?.copyWith(
-              color: scheme.onTertiaryContainer,
-            ),
+            style: context.theme.typography.labelSmall.onTertiaryContainer,
           ),
         ],
       ),
@@ -96,7 +93,7 @@ class SyncDirtyBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Container(
       padding: const .symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
@@ -114,9 +111,7 @@ class SyncDirtyBadge extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             '待同步',
-            style: context.textTheme.labelSmall?.copyWith(
-              color: scheme.onSecondaryContainer,
-            ),
+            style: context.theme.typography.labelSmall.onSecondaryContainer,
           ),
         ],
       ),

@@ -5,6 +5,7 @@ import 'package:moodiary/gen/assets.gen.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutPage extends StatefulWidget {
@@ -56,8 +57,8 @@ class _AboutPageState extends State<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final isDark = context.isDarkMode;
+    final scheme = context.theme.colors;
+    final isDark = context.theme.isDark;
     final appVersion = _packageInfo == null
         ? '...'
         : '${_packageInfo!.version}+${_packageInfo!.buildNumber}';
@@ -80,47 +81,78 @@ class _AboutPageState extends State<AboutPage> {
                 children: [
                   SettingListTile(
                     isFirst: true,
-                    leading: const Icon(LucideIcons.refreshCw),
+                    leading: Icon(
+                      LucideIcons.refreshCw,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     title: '检查更新',
                     trailing: Text(
                       appVersion,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: scheme.primary,
-                      ),
+                      style: context.theme.typography.bodySmall.primary,
                     ),
                     onTap: () {
                       toast.info(message: '当前已是最新版本');
                     },
                   ),
                   SettingListTile(
-                    leading: const Icon(LucideIcons.code),
+                    leading: Icon(
+                      LucideIcons.code,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     title: '源码仓库',
-                    trailing: const Icon(LucideIcons.chevronRight),
+                    trailing: Icon(
+                      LucideIcons.chevronRight,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     onTap: () => _open('https://github.com/ZhuJHua/moodiary'),
                   ),
                   SettingListTile(
-                    leading: const Icon(LucideIcons.scrollText),
+                    leading: Icon(
+                      LucideIcons.scrollText,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     title: '用户协议',
-                    trailing: const Icon(LucideIcons.chevronRight),
+                    trailing: Icon(
+                      LucideIcons.chevronRight,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     onTap: () => const AgreementRoute().push(context),
                   ),
                   SettingListTile(
-                    leading: const Icon(LucideIcons.shieldAlert),
+                    leading: Icon(
+                      LucideIcons.shieldAlert,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     title: '隐私政策',
-                    trailing: const Icon(LucideIcons.chevronRight),
+                    trailing: Icon(
+                      LucideIcons.chevronRight,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     onTap: () => const PrivacyRoute().push(context),
                   ),
                   SettingListTile(
-                    leading: const Icon(LucideIcons.bug),
+                    leading: Icon(
+                      LucideIcons.bug,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     title: '反馈 / 答疑',
-                    trailing: const Icon(LucideIcons.chevronRight),
+                    trailing: Icon(
+                      LucideIcons.chevronRight,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     onTap: () => _open('https://answer.moodiary.net'),
                   ),
                   SettingListTile(
                     isLast: true,
-                    leading: const Icon(LucideIcons.handCoins),
+                    leading: Icon(
+                      LucideIcons.handCoins,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     title: '赞助',
-                    trailing: const Icon(LucideIcons.chevronRight),
+                    trailing: Icon(
+                      LucideIcons.chevronRight,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     onTap: () => const SponsorRoute().push(context),
                   ),
                 ],
@@ -148,7 +180,8 @@ class _LogoTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final theme = context.theme;
+    final scheme = theme.colors;
     return Column(
       mainAxisSize: .min,
       children: [
@@ -161,29 +194,14 @@ class _LogoTitle extends StatelessWidget {
           width: 160,
         ),
         const SizedBox(height: 8),
-        Text(
-          'Moodiary',
-          style: context.textTheme.titleLarge?.copyWith(
-            color: scheme.onSurface,
-          ),
-        ),
+        Text('Moodiary', style: theme.typography.titleLarge.onSurface),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: .center,
           children: [
-            Text(
-              appVersion,
-              style: context.textTheme.labelSmall?.copyWith(
-                color: scheme.primary,
-              ),
-            ),
+            Text(appVersion, style: theme.typography.labelSmall.primary),
             const SizedBox(height: 10, child: VerticalDivider(thickness: 2)),
-            Text(
-              systemVersion,
-              style: context.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurface,
-              ),
-            ),
+            Text(systemVersion, style: theme.typography.labelSmall.onSurface),
           ],
         ),
       ],
@@ -198,9 +216,7 @@ class _IcpFiling extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       '赣ICP备2022010939号-4A',
-      style: context.textTheme.labelMedium?.copyWith(
-        color: context.colorScheme.onSurfaceVariant,
-      ),
+      style: context.theme.typography.labelMedium.onSurfaceVariant,
     );
   }
 }

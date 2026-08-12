@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 /// 弹层底部的一个动作。字段名对齐 [MoodiaryMenuEntry]，让菜单、居中弹窗与底部
 /// 弹窗共享同一套心智。
@@ -84,7 +85,7 @@ class MoodiaryActionBar<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = context.textTheme.labelLarge?.copyWith(fontWeight: .w600);
+    final style = context.theme.typography.labelLarge.emphasized.onSurface;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -147,7 +148,7 @@ class MoodiaryActionButton<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final Color background;
     final Color foreground;
     if (action.isDestructive) {
@@ -176,8 +177,12 @@ class MoodiaryActionButton<T> extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: background,
         foregroundColor: foreground,
-        disabledBackgroundColor: scheme.onSurface.withValues(alpha: 0.12),
-        disabledForegroundColor: scheme.onSurface.withValues(alpha: 0.38),
+        disabledBackgroundColor: scheme.onSurface.withValues(
+          alpha: context.theme.states.disabledContainerOpacity,
+        ),
+        disabledForegroundColor: scheme.onSurface.withValues(
+          alpha: context.theme.states.disabledOpacity,
+        ),
         minimumSize: .fromHeight(height),
         padding: const .symmetric(horizontal: 12),
         textStyle: textStyle,

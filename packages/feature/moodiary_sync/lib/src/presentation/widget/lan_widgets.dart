@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 String lanFmtBytes(int bytes) {
   final unit = AppFiles.bytesToUnits(bytes);
@@ -58,7 +59,7 @@ class _LanRippleState extends State<LanRipple>
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.color ?? context.colorScheme.primary;
+    final color = widget.color ?? context.theme.colors.primary;
     return SizedBox(
       width: widget.size,
       height: widget.size,
@@ -132,7 +133,6 @@ class LanPinBoxes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Row(
@@ -145,17 +145,19 @@ class LanPinBoxes extends StatelessWidget {
               height: 56,
               margin: .only(left: i == 0 || i == 3 ? 0 : 8),
               decoration: BoxDecoration(
-                color: scheme.surfaceContainerHigh,
+                color: context.theme.colors.surfaceContainerHigh,
                 borderRadius: .circular(14),
               ),
               child: Center(
                 child: Text(
                   i < pin.length ? pin[i] : '',
-                  style: context.textTheme.headlineMedium?.copyWith(
-                    color: scheme.primary,
-                    fontWeight: .w600,
-                    fontFeatures: const [.tabularFigures()],
-                  ),
+                  style: context
+                      .theme
+                      .typography
+                      .headlineMedium
+                      .emphasized
+                      .primary
+                      .copyWith(fontFeatures: const [.tabularFigures()]),
                 ),
               ),
             ),
@@ -198,7 +200,7 @@ class _LanPinInputState extends State<LanPinInput> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final text = widget.controller.text;
     final activeIndex = text.length.clamp(0, 5);
     return SizedBox(
@@ -249,10 +251,13 @@ class _LanPinInputState extends State<LanPinInput> {
                     child: Center(
                       child: Text(
                         i < text.length ? text[i] : '',
-                        style: context.textTheme.headlineSmall?.copyWith(
-                          fontWeight: .w600,
-                          fontFeatures: const [.tabularFigures()],
-                        ),
+                        style: context
+                            .theme
+                            .typography
+                            .headlineSmall
+                            .emphasized
+                            .onSurface
+                            .copyWith(fontFeatures: const [.tabularFigures()]),
                       ),
                     ),
                   ),

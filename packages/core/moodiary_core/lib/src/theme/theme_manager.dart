@@ -8,7 +8,6 @@ import 'package:moodiary_core/src/theme/font_manager.dart';
 import 'package:moodiary_core/src/theme/mui_material_bridge.dart';
 import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
 /// 主题的构建入口。
@@ -276,7 +275,7 @@ extension ColorExt on Color {
 
 extension ColorExt2 on BuildContext {
   Color adaptiveColor(Color color) {
-    if (!isDarkMode) return color;
+    if (!MuiTheme.of(this).isDark) return color;
 
     final hsl = HSLColor.fromColor(color);
     final inverted = hsl.withLightness(1.0 - hsl.lightness);

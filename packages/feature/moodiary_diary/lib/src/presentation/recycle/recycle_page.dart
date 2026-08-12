@@ -4,6 +4,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 class RecyclePage extends ConsumerWidget {
   const RecyclePage({super.key});
@@ -109,9 +110,13 @@ class _Empty extends StatelessWidget {
       child: Column(
         mainAxisSize: .min,
         children: [
-          const Icon(LucideIcons.trash2, size: 48),
+          Icon(
+            LucideIcons.trash2,
+            size: 48,
+            color: context.theme.colors.onSurfaceVariant,
+          ),
           const SizedBox(height: 12),
-          Text('回收站为空', style: Theme.of(context).textTheme.titleMedium),
+          Text('回收站为空', style: context.theme.typography.titleMedium.onSurface),
         ],
       ),
     );
@@ -131,7 +136,8 @@ class _RecycleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = context.theme.colors;
+    final typo = context.theme.typography;
     return Card(
       margin: .zero,
       child: Padding(
@@ -141,22 +147,20 @@ class _RecycleTile extends StatelessWidget {
           children: [
             Text(
               diary.title.isEmpty ? '(无标题)' : diary.title,
-              style: theme.textTheme.titleMedium,
+              style: typo.titleMedium.onSurface,
               maxLines: 1,
               overflow: .ellipsis,
             ),
             const SizedBox(height: 4),
             Text(
               TimeFormat.listDateTime(diary.time),
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: typo.labelSmall.onSurfaceVariant,
             ),
             if (diary.contentText.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
                 diary.contentText.trim(),
-                style: theme.textTheme.bodyMedium,
+                style: typo.bodyMedium.onSurface,
                 maxLines: 2,
                 overflow: .ellipsis,
               ),
@@ -173,9 +177,7 @@ class _RecycleTile extends StatelessWidget {
                 const SizedBox(width: 4),
                 TextButton.icon(
                   onPressed: onDelete,
-                  style: TextButton.styleFrom(
-                    foregroundColor: theme.colorScheme.error,
-                  ),
+                  style: TextButton.styleFrom(foregroundColor: colors.error),
                   icon: const Icon(LucideIcons.trash2),
                   label: const Text('彻底删除'),
                 ),

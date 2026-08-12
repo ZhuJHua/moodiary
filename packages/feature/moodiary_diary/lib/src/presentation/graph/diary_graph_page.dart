@@ -14,6 +14,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'diary_graph_page.g.dart';
@@ -59,8 +60,8 @@ class GraphEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+    final theme = context.theme;
+    final cs = theme.colors;
     return Center(
       child: Column(
         mainAxisSize: .min,
@@ -73,7 +74,7 @@ class GraphEmptyState extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             context.l10n.graphEmptyTitle,
-            style: theme.textTheme.titleMedium,
+            style: theme.typography.titleMedium.onSurface,
           ),
           const SizedBox(height: 8),
           Padding(
@@ -81,9 +82,7 @@ class GraphEmptyState extends StatelessWidget {
             child: Text(
               context.l10n.graphEmptyDesc,
               textAlign: .center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-              ),
+              style: theme.typography.bodySmall.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 24),
@@ -184,8 +183,8 @@ class _GraphViewState extends ConsumerState<_GraphView> {
     if (!identical(old.graph, widget.graph)) _invalidate(keepSelection: true);
   }
 
-  void _ensureScene(ThemeData theme, List<Category> categories) {
-    final palette = GraphPalette.of(theme, edgeCount: _sub.edgeCount);
+  void _ensureScene(MuiThemeData theme, List<Category> categories) {
+    final palette = GraphPalette.of(theme.colors, edgeCount: _sub.edgeCount);
     if (_scene != null &&
         _palette == palette &&
         identical(_categories, categories)) {
@@ -321,7 +320,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = context.theme;
     final l10n = context.l10n;
     final categories =
         ref.watch(categoryControllerProvider).value ?? const <Category>[];
@@ -355,7 +354,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                   accentColor: categoryColorOf(colorValue: c.color, id: c.id),
                 ),
             ],
-            fadeColor: theme.colorScheme.surface,
+            fadeColor: theme.colors.surface,
           ),
         ),
         Expanded(
@@ -388,10 +387,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                         duration: const Duration(milliseconds: 160),
                         child: Text(
                           l10n.graphCount(scene.edgeCount, scene.nodeCount),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant
-                                .withValues(alpha: 0.7),
-                          ),
+                          style: theme.typography.labelSmall.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -599,15 +595,16 @@ class _SheetGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = context.theme;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
         Row(
           children: [
-            Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
+            Icon(icon, size: 16, color: theme.colors.onSurfaceVariant),
             const SizedBox(width: 6),
-            Text(label, style: theme.textTheme.titleSmall),
+            // 分组小标题，弱前景。
+            Text(label, style: theme.typography.titleSmall.onSurfaceVariant),
           ],
         ),
         const SizedBox(height: 10),
@@ -630,7 +627,7 @@ class _MiniFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final cs = context.theme.colors;
     return FloatingActionButton.small(
       heroTag: null,
       tooltip: tooltip,
@@ -650,16 +647,16 @@ class _FilteredEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = context.theme;
     return Center(
       child: Column(
         mainAxisSize: .min,
         children: [
-          Icon(LucideIcons.filterX, size: 40, color: theme.colorScheme.outline),
+          Icon(LucideIcons.filterX, size: 40, color: theme.colors.outline),
           const SizedBox(height: 12),
           Text(
             context.l10n.graphFilterEmpty,
-            style: theme.textTheme.bodyMedium,
+            style: theme.typography.bodyMedium.onSurfaceVariant,
           ),
           const SizedBox(height: 8),
           TextButton(

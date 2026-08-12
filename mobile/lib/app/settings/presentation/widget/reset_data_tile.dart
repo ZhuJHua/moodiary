@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 /// 不可逆清空全部数据。因清空后内存仍残留 Riverpod / get_it 状态（见 [resetAllData]），
 /// 确认后退出应用，由用户重新打开走一次干净初始化。
@@ -13,7 +14,7 @@ class ResetDataTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return ListTile(
       shape: RoundedRectangleBorder(
         borderRadius: .vertical(
@@ -22,15 +23,10 @@ class ResetDataTile extends StatelessWidget {
         ),
       ),
       leading: Icon(LucideIcons.trash2, color: scheme.error),
-      title: Text(
-        '重置所有数据',
-        style: context.textTheme.bodyLarge?.copyWith(color: scheme.error),
-      ),
+      title: Text('重置所有数据', style: context.theme.typography.bodyLarge.error),
       subtitle: Text(
         '清空全部日记、设置与媒体，不可恢复',
-        style: context.textTheme.bodyMedium?.copyWith(
-          color: scheme.onSurfaceVariant,
-        ),
+        style: context.theme.typography.bodyMedium.onSurfaceVariant,
       ),
       onTap: () => _confirmAndReset(context),
     );

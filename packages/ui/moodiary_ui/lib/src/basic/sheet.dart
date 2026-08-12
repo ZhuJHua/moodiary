@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/src/basic/action_bar.dart';
+import 'package:mui/mui.dart';
 
 /// 顶部圆角取仓内的 [AppBorderRadius.xLargeBorderRadius]（24）而不是 M3 默认的 28 ——
 /// 那个 24 本来就是为了统一替掉 M3 弹窗的 28 才定的，两处得说同一种话。这也是本组件
@@ -40,7 +41,7 @@ Future<T?> showMoodiarySheet<T>(
     showDragHandle: showHandle,
     shape: _kSheetShape,
     clipBehavior: .antiAlias,
-    barrierColor: context.colorScheme.scrim.withValues(alpha: 0.32),
+    barrierColor: context.theme.colors.scrim.withValues(alpha: 0.32),
     builder: (sheetContext) => Semantics(
       // 官方路由不给弹窗起名，读屏进入时只会念遮罩的「关闭」。
       scopesRoute: true,
@@ -149,7 +150,8 @@ class MoodiarySheetOptionTile<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     final foreground = selected ? scheme.onPrimaryContainer : scheme.onSurface;
     // 选中态给读屏一个真的标志位：底色、字重、对勾都只是视觉，语义树里三项完全同形，
     // 读屏用户无从知道当前生效的是哪一个。
@@ -190,19 +192,19 @@ class MoodiarySheetOptionTile<T> extends StatelessWidget {
                         children: [
                           Text(
                             option.label,
-                            style: context.textTheme.bodyLarge?.copyWith(
-                              color: foreground,
-                              fontWeight: selected ? .w600 : .w400,
-                            ),
+                            style:
+                                (selected
+                                        ? typography.bodyLarge.emphasized
+                                        : typography.bodyLarge)
+                                    .onSurface
+                                    .copyWith(color: foreground),
                           ),
                           if (option.subtitle != null)
                             Text(
                               option.subtitle!,
-                              style: context.textTheme.bodySmall?.copyWith(
-                                color: selected
-                                    ? foreground.withValues(alpha: 0.75)
-                                    : scheme.onSurfaceVariant,
-                              ),
+                              style: selected
+                                  ? typography.bodySmall.onPrimaryContainer
+                                  : typography.bodySmall.onSurfaceVariant,
                             ),
                         ],
                       ),
@@ -265,8 +267,8 @@ class MoodiarySheetScaffold<T> extends StatelessWidget {
   }
 
   Widget _build(BuildContext context, {required bool foldHeader}) {
-    final scheme = context.colorScheme;
-    final textTheme = context.textTheme;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     final hasHeader = title != null || subtitle != null || icon != null;
 
     // 折进滚动区时不再重复左右内边距 —— 滚动区自己已经有一份。
@@ -304,17 +306,12 @@ class MoodiarySheetScaffold<T> extends StatelessWidget {
                       if (title != null)
                         Text(
                           title!,
-                          style: textTheme.titleLarge?.copyWith(
-                            fontWeight: .w600,
-                            color: scheme.onSurface,
-                          ),
+                          style: typography.titleLarge.emphasized.onSurface,
                         ),
                       if (subtitle != null)
                         Text(
                           subtitle!,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                          style: typography.bodySmall.onSurfaceVariant,
                         ),
                     ],
                   ),

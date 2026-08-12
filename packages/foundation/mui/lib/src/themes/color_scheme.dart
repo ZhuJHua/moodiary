@@ -31,7 +31,7 @@ class MuiAccent {
 ///
 /// 角色名与 M3 `ColorScheme` **逐个同名**，这是刻意的：`mui_material_bridge.dart`
 /// 的投影因此是 1:1 映射而不是语义翻译，共存期两棵主题树不可能漂。
-/// 另加两个 mui 自有槽位 [ring] / [selection]。
+/// 另加三个 mui 自有槽位 [ring] / [selection] / [onMedia]。
 ///
 /// 两条路径都是 MCU 的标准 scheme，逐角色 [MaterialDynamicColors] 解析，本仓不覆盖
 /// 任何一个角色：
@@ -92,6 +92,7 @@ class MuiColorScheme with MuiValue {
     required this.surfaceVariant,
     required this.ring,
     required this.selection,
+    required this.onMedia,
   });
 
   final Brightness brightness;
@@ -164,6 +165,13 @@ class MuiColorScheme with MuiValue {
   /// 文本选中底色。半透明存储：它画在文字下方且要叠在任意背景上。
   final Color selection;
 
+  /// 叠在**画面**上的前景：缩略图角标、播放器控件、图片浏览器、心情色带上的描边。
+  ///
+  /// 底不可预测（用户的照片可以是任何颜色），所以它既不跟明暗档变，也不参与
+  /// on\* 配对 —— 深浅两档同为纯白，靠调用点自己压 scrim/阴影保证对比度。
+  /// 有这个槽位是为了让「这里为什么是白的」写在代码里，而不是散落的 `Colors.white`。
+  final Color onMedia;
+
   @override
   List<Object?> get props => [
     brightness,
@@ -216,6 +224,7 @@ class MuiColorScheme with MuiValue {
     surfaceVariant,
     ring,
     selection,
+    onMedia,
   ];
 
   /// 配色的唯一入口。
@@ -320,6 +329,7 @@ class MuiColorScheme with MuiValue {
 
       ring: primary,
       selection: primary.withValues(alpha: 0.25),
+      onMedia: const Color(0xFFFFFFFF),
     );
   }
 
@@ -392,6 +402,7 @@ class MuiColorScheme with MuiValue {
       surfaceVariant: c(a.surfaceVariant, b.surfaceVariant),
       ring: c(a.ring, b.ring),
       selection: c(a.selection, b.selection),
+      onMedia: c(a.onMedia, b.onMedia),
     );
   }
 }

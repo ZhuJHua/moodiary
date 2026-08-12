@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 class EmotionCurvePainter extends CustomPainter {
   final double value;
   final double strokeWidth;
+  final Color color;
 
-  EmotionCurvePainter(this.value, {required this.strokeWidth});
+  EmotionCurvePainter(
+    this.value, {
+    required this.strokeWidth,
+    required this.color,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final Paint paint = Paint()
-      ..color = Colors.white
+      ..color = color
       ..style = .stroke
       ..strokeCap = .round
       ..strokeWidth = strokeWidth;
@@ -50,13 +56,22 @@ class MoodIconComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: .lerp(const Color(0xFFFA4659), const Color(0xFF2EB872), value),
+        // 心情色带是业务语义色，不跟主题走（见 AppColor.emoColorList）。
+        color: .lerp(
+          AppColor.emoColorList.first,
+          AppColor.emoColorList.last,
+          value,
+        ),
         borderRadius: AppBorderRadius.smallBorderRadius,
       ),
       padding: const .all(4.0),
       child: CustomPaint(
         size: Size(width - 8.0, width - 8.0),
-        painter: EmotionCurvePainter(value, strokeWidth: 4.0),
+        painter: EmotionCurvePainter(
+          value,
+          strokeWidth: 4.0,
+          color: context.theme.colors.onMedia,
+        ),
       ),
     );
   }

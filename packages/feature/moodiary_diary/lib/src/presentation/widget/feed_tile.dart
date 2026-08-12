@@ -7,6 +7,7 @@ import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 右侧缩略图的固定尺寸。密度全靠它：单图不再占整行，一条带图的日记只有约 85px 高。
 const double _kThumbW = 96.0;
@@ -250,10 +251,9 @@ class _Headline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final typo = context.theme.typography;
     final title = diary.title.trim();
     final body = diary.contentText.preview();
-    final theme = context.textTheme;
 
     final mark = WidgetSpan(
       alignment: .middle,
@@ -281,7 +281,7 @@ class _Headline extends StatelessWidget {
         ),
         maxLines: 1,
         overflow: .ellipsis,
-        style: theme.bodyMedium?.copyWith(color: scheme.onSurface),
+        style: typo.bodyMedium.onSurface,
       );
     }
 
@@ -291,17 +291,10 @@ class _Headline extends StatelessWidget {
           mark,
           TextSpan(
             text: title,
-            style: theme.titleSmall?.copyWith(
-              color: scheme.onSurface,
-              fontWeight: .w600,
-              height: 1.35,
-            ),
+            style: typo.titleSmall.emphasized.onSurface.copyWith(height: 1.35),
           ),
           if (runInBody && body.isNotEmpty)
-            TextSpan(
-              text: '  $body',
-              style: theme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
+            TextSpan(text: '  $body', style: typo.bodySmall.onSurfaceVariant),
         ],
       ),
       maxLines: 1,
@@ -328,8 +321,7 @@ class _Excerpt extends StatelessWidget {
         body,
         maxLines: maxLines,
         overflow: .ellipsis,
-        style: context.textTheme.bodySmall?.copyWith(
-          color: context.colorScheme.onSurfaceVariant,
+        style: context.theme.typography.bodySmall.onSurfaceVariant.copyWith(
           height: 1.55,
         ),
       ),
@@ -393,13 +385,13 @@ class _Thumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     return ClipRRect(
       borderRadius: radius,
       child: Stack(
         fit: .expand,
         children: [
-          ColoredBox(color: scheme.surfaceContainerHighest),
+          ColoredBox(color: colors.surfaceContainerHighest),
           Image(
             // 按文件名 key：开了 gaplessPlayback，列表重排后复用同一个 Element 会
             // 先画上一篇的照片。
@@ -409,7 +401,7 @@ class _Thumb extends StatelessWidget {
             gaplessPlayback: true,
             // 重装后媒体文件会被清空而日记还在——没有 errorBuilder 就是一片空白。
             errorBuilder: (context, _, _) =>
-                Icon(LucideIcons.imageOff, color: scheme.onSurfaceVariant),
+                Icon(LucideIcons.imageOff, color: colors.onSurfaceVariant),
           ),
           if (cell.isVideo) const _VideoScrim(),
           if (moreCount > 0) _MoreOverlay(count: moreCount),
@@ -426,7 +418,8 @@ class _VideoScrim extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Stack(
+    final scrim = context.theme.colors.scrim;
+    return Stack(
       fit: .expand,
       children: [
         DecoratedBox(
@@ -434,15 +427,19 @@ class _VideoScrim extends StatelessWidget {
             gradient: LinearGradient(
               begin: .bottomCenter,
               end: .topCenter,
-              colors: [Colors.black54, Colors.transparent],
-              stops: [0, 0.58],
+              colors: [scrim.withValues(alpha: 0.54), Colors.transparent],
+              stops: const [0, 0.58],
             ),
           ),
         ),
         Positioned(
           left: 4,
           bottom: 3,
-          child: Icon(LucideIcons.circlePlay, size: 14, color: Colors.white),
+          child: Icon(
+            LucideIcons.circlePlay,
+            size: 14,
+            color: context.theme.colors.onMedia,
+          ),
         ),
       ],
     );
@@ -457,14 +454,13 @@ class _MoreOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.44)),
+      decoration: BoxDecoration(
+        color: context.theme.colors.scrim.withValues(alpha: 0.44),
+      ),
       child: Center(
         child: Text(
           '+$count',
-          style: context.textTheme.labelLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: .w600,
-          ),
+          style: context.theme.typography.labelLarge.emphasized.onMedia,
         ),
       ),
     );
@@ -501,18 +497,18 @@ class _AudioBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final colors = context.theme.colors;
     return Container(
       height: 22,
       width: 188,
       padding: const .symmetric(horizontal: 9),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh,
+        color: colors.surfaceContainerHigh,
         borderRadius: const .all(.circular(11)),
       ),
       child: Row(
         children: [
-          Icon(LucideIcons.mic, size: 12, color: scheme.primary),
+          Icon(LucideIcons.mic, size: 12, color: colors.primary),
           const SizedBox(width: 7),
           Expanded(
             child: Row(
@@ -524,7 +520,7 @@ class _AudioBar extends StatelessWidget {
                     width: 2,
                     height: h,
                     decoration: BoxDecoration(
-                      color: .lerp(scheme.outlineVariant, scheme.primary, 0.52),
+                      color: .lerp(colors.outlineVariant, colors.primary, 0.52),
                       borderRadius: const .all(.circular(1)),
                     ),
                   ),
@@ -535,9 +531,7 @@ class _AudioBar extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               '$count',
-              style: context.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: context.theme.typography.labelSmall.onSurfaceVariant,
             ),
           ],
         ],
@@ -573,9 +567,9 @@ class _MetaLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final onVariant = scheme.onSurfaceVariant;
-    final style = context.textTheme.labelSmall?.copyWith(color: onVariant);
+    final colors = context.theme.colors;
+    final onVariant = colors.onSurfaceVariant;
+    final style = context.theme.typography.labelSmall.onSurfaceVariant;
     final hasWeather = diary.weather.length >= 3;
     final hasPlace =
         diary.position.length >= 3 && diary.position[2].trim().isNotEmpty;
@@ -691,15 +685,12 @@ class _TagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     return Text(
       '#$label',
       maxLines: 1,
       overflow: .ellipsis,
       softWrap: false,
-      style: context.textTheme.labelSmall?.copyWith(
-        color: scheme.onSurfaceVariant.withValues(alpha: 0.75),
-      ),
+      style: context.theme.typography.labelSmall.onSurfaceVariant,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'analyse_page.g.dart';
@@ -61,7 +62,10 @@ class _AnalyseBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 24),
-        Text('近 6 个月写作量', style: Theme.of(context).textTheme.titleMedium),
+        Text(
+          '近 6 个月写作量',
+          style: context.theme.typography.titleMedium.onSurface,
+        ),
         const SizedBox(height: 12),
         _BarChart(data: monthCounts),
       ],
@@ -107,7 +111,8 @@ class _StatGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = context.theme.colors;
+    final typo = context.theme.typography;
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -127,13 +132,13 @@ class _StatGrid extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(icon, size: 18, color: theme.colorScheme.primary),
+                      Icon(icon, size: 18, color: colors.primary),
                       const SizedBox(width: 6),
-                      Text(label, style: theme.textTheme.labelMedium),
+                      Text(label, style: typo.labelMedium.onSurfaceVariant),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(value, style: theme.textTheme.headlineSmall),
+                  Text(value, style: typo.headlineSmall.onSurface),
                 ],
               ),
             ),
@@ -150,7 +155,8 @@ class _BarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final maxV = data.fold<int>(0, (m, e) => e.$2 > m ? e.$2 : m);
-    final theme = Theme.of(context);
+    final colors = context.theme.colors;
+    final labelStyle = context.theme.typography.labelSmall.onSurfaceVariant;
     return SizedBox(
       height: 160,
       child: Row(
@@ -161,18 +167,18 @@ class _BarChart extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: .end,
                 children: [
-                  Text('$count', style: theme.textTheme.labelSmall),
+                  Text('$count', style: labelStyle),
                   const SizedBox(height: 4),
                   Container(
                     margin: const .symmetric(horizontal: 4),
                     height: maxV == 0 ? 0 : 120 * count / maxV,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
+                      color: colors.primaryContainer,
                       borderRadius: .circular(4),
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(label, style: theme.textTheme.labelSmall),
+                  Text(label, style: labelStyle),
                 ],
               ),
             ),

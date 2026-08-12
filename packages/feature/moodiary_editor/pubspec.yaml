@@ -20,6 +20,7 @@ dependencies:
   moodiary_l10n: 0.0.1
   moodiary_router: 0.0.1
   moodiary_utils: 0.0.1
+  mui: 0.0.1
 
   webview_flutter: 4.14.1
   webview_flutter_android: 4.13.0

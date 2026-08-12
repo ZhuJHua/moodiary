@@ -1,4 +1,6 @@
-// 分层依赖检查：只能上层依赖下层，同层不互相依赖。分三段跑——
+// 分层依赖检查：只能上层依赖下层，同层不互相依赖。另外三段无 baseline 的主题闸门
+// （ThemeData 只在桥里构造 / mui 零 material / 业务代码零色板外颜色，见 _themeBans）
+// 也挂在这里跑。依赖检查本身分三段——
 //   1) 包级：各 pubspec 的 moodiary_* 依赖（foundation → core → ui → feature → apps）。
 //      pub 只保证依赖图无环、不保证方向，这段补上方向约束。无 baseline，必须零违规。
 //   2) Rust crate 级：moodiary_rust/rust/crates 下各 Cargo.toml 的 moodiary-* 依赖
@@ -230,6 +232,91 @@ List<String> _checkMuiPurity() {
   return out;
 }
 
+/// 业务代码里的颜色与排版必须来自 mui 色板，不许有第二个来源。零 baseline。
+///
+/// 五条禁令各自堵一个真实回归：
+///   * `Colors.*` —— 色板外的绝对色，深浅色切换时不跟着走；
+///   * `Theme.of(context).colorScheme/textTheme` —— 走的是投影而不是真源，
+///     且 material 的 `TextTheme` 只带一个颜色，表达不出「弱文字」；
+///   * 裸 `TextStyle(` —— 脱离 15 级排版，用户调字号档时不跟着缩放；
+///   * `fontWeight:` —— 可变字体下 `fontVariations` 的 wght 轴会吃掉它，
+///     写了等于没写（`start_page.dart` 踩过）。字重只能走
+///     `.regular/.medium/.semiBold/.bold` 四个 getter；
+///   * `Color(0x…)` —— 同第一条。
+///
+/// 例外是**按文件**放行的，每一条都得有理由；行级 baseline 刻意不做，
+/// 那会变成一张只增不减的欠条。
+const Map<String, String> _themeAllowlist = {
+  'packages/foundation/mui/lib/': 'mui 自己就是色板与 token 的定义处',
+  'packages/core/moodiary_core/lib/src/theme/mui_material_bridge.dart':
+      '唯一的 material 投影点，按定义要落到绝对值',
+  'mobile/lib/app/picker/': '第三方 AssetPicker/CameraPicker 自建 ThemeData，够不着 mui',
+  'packages/feature/moodiary_share/lib/src/presentation/templates/':
+      '分享卡片是固定设计稿（纸/墨配色），要导出成图片，不能跟随 App 主题',
+  'packages/ui/moodiary_ui/lib/src/common/env_badge.dart': '开发环境角标，固定红',
+  'packages/ui/moodiary_ui/lib/src/common/video/': '播放器暗房：控件叠在任意画面上，白色前景是对的',
+  'packages/ui/moodiary_ui/lib/src/common/image_browser.dart': '图片浏览暗房，同上',
+  'packages/core/moodiary_core/lib/src/values/colors.dart':
+      '心情色带与分享卡片底色：业务语义色，全 App 唯一刻意不跟主题走的两组',
+  'packages/ui/moodiary_ui/lib/src/common/category_color.dart':
+      '分类哈希色板 + 由它派生前景色的唯一算处',
+  'packages/ui/moodiary_ui/lib/src/common/color_picker.dart': '取色器本体展示的就是任意颜色',
+  'packages/ui/moodiary_ui/lib/src/common/file_type_icon.dart':
+      'Dosis 角标：字号由轮廓几何反算并钉死 noScaling，不走排版档',
+  'packages/ui/moodiary_ui/lib/src/basic/expand_tap_area.dart': 'debugPaint 的辅助色',
+  'mobile/lib/app/settings/presentation/widget/accent_sheet.dart':
+      '配色档预览：白→黑的色块本身就是要展示的内容',
+};
+
+final List<(RegExp, String)> _themeBans = [
+  (
+    RegExp(r'(^|[^A-Za-z0-9_.])Colors\.(?!transparent)'),
+    'Colors.* → context.theme.colors.<角色>',
+  ),
+  (
+    RegExp(r'Theme\.of\([^)]*\)\.(colorScheme|textTheme)'),
+    'Theme.of(...).colorScheme/textTheme → context.theme.colors / context.theme.typography',
+  ),
+  (
+    RegExp(r'(^|[^A-Za-z0-9_])TextStyle\s*\('),
+    '裸 TextStyle( → context.theme.typography.<级>.<角色>',
+  ),
+  (
+    RegExp(r'fontWeight\s*:'),
+    'fontWeight: → 排版角色的 .medium/.semiBold/.bold（可变字体下 fontWeight 会被 fontVariations 吃掉）',
+  ),
+  // 全透明（0x00……）放行：它不携带任何配色信息，是占位/命中区那类用法。
+  (
+    RegExp(r'(^|[^A-Za-z0-9_])Color\(0x(?!00)'),
+    'Color(0x…) → context.theme.colors.<角色>',
+  ),
+];
+
+List<String> _checkThemePurity() {
+  final out = <String>[];
+  for (final root in ['mobile/lib', 'packages']) {
+    final dir = Directory(root);
+    if (!dir.existsSync()) continue;
+    for (final entity in dir.listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final rel = entity.path.replaceAll('\\', '/');
+      if (!rel.contains('/lib/')) continue;
+      if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
+      if (_themeAllowlist.keys.any(rel.startsWith)) continue;
+      final lines = entity.readAsStringSync().split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        final line = lines[i];
+        if (line.trimLeft().startsWith('//')) continue;
+        for (final (re, hint) in _themeBans) {
+          if (re.hasMatch(line)) out.add('$rel:${i + 1}: $hint\n      ${line.trim()}');
+        }
+      }
+    }
+  }
+  out.sort();
+  return out;
+}
+
 /// `ThemeData` 只许在桥里构造一次。共存期 material 主题是 [MuiThemeData] 的
 /// 只读投影，多一个构造点就多一条绕过真源的路，而配色漂移是最难查的一类 bug。
 ///
@@ -272,6 +359,18 @@ void main(List<String> args) {
       stderr.writeln('  ✗ $v');
     }
     stderr.writeln('  → material 主题必须由 materialThemeFrom(MuiThemeData) 单向投影。');
+    exit(1);
+  }
+
+  final themePurity = _checkThemePurity();
+  if (themePurity.isEmpty) {
+    stdout.writeln('✅ 业务代码的颜色与排版都来自 mui 色板。');
+  } else {
+    stderr.writeln('❌ 色板外的颜色/排版 ${themePurity.length} 处：');
+    for (final v in themePurity) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → 见 _themeBans；确属固定设计稿的整文件例外加进 _themeAllowlist 并写明理由。');
     exit(1);
   }
 

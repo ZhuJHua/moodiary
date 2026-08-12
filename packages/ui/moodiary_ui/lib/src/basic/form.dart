@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 const double kMoodiaryFieldHeight = 48;
 
@@ -88,7 +89,7 @@ class _MoodiaryFieldState extends State<MoodiaryField> {
     if (mounted) setState(() {});
   }
 
-  Widget? _buildTrailing(ColorScheme scheme) {
+  Widget? _buildTrailing(MuiColorScheme scheme) {
     if (widget.trailing != null) return widget.trailing;
     if (!widget.enabled) return null;
     if (widget.obscureText) {
@@ -111,7 +112,7 @@ class _MoodiaryFieldState extends State<MoodiaryField> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final multiline = widget.maxLines > 1 && !widget.obscureText;
 
     final field = TextField(
@@ -128,7 +129,7 @@ class _MoodiaryFieldState extends State<MoodiaryField> {
       textInputAction: widget.textInputAction ?? (multiline ? .newline : .done),
       onSubmitted: widget.onSubmitted,
       onChanged: widget.onChanged,
-      style: context.textTheme.bodyLarge?.copyWith(color: scheme.onSurface),
+      style: context.theme.typography.bodyLarge.onSurface,
       // 圆角填充式外观（filled / fillColor / contentPadding / 六种边框）已经整段
       // 搬进 `inputDecorationTheme`，见 core 的 mui_material_bridge.dart。
       // 这里只留**每个实例各不相同**的部分。
@@ -152,10 +153,12 @@ class _MoodiaryFieldState extends State<MoodiaryField> {
           padding: const .only(left: 4, bottom: 6),
           child: Text(
             widget.label!,
-            style: context.textTheme.labelMedium?.copyWith(
-              fontWeight: .w600,
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context
+                .theme
+                .typography
+                .labelMedium
+                .emphasized
+                .onSurfaceVariant,
           ),
         ),
         field,
@@ -176,10 +179,8 @@ class MoodiaryFormSection extends StatelessWidget {
       padding: const .only(left: 4, top: 4),
       child: Text(
         label,
-        style: context.textTheme.labelMedium?.copyWith(
-          fontWeight: .w700,
+        style: context.theme.typography.labelMedium.emphasized.primary.copyWith(
           letterSpacing: 0.6,
-          color: context.colorScheme.primary,
         ),
       ),
     );
@@ -202,7 +203,7 @@ class MoodiarySwitchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Material(
       color: scheme.surfaceContainerHighest,
       borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -216,9 +217,7 @@ class MoodiarySwitchField extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: context.textTheme.bodyLarge?.copyWith(
-                    color: scheme.onSurface,
-                  ),
+                  style: context.theme.typography.bodyLarge.onSurface,
                 ),
               ),
               Switch(value: value, onChanged: onChanged),
@@ -246,7 +245,7 @@ class MoodiaryDangerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Material(
       color: scheme.error.withValues(alpha: 0.08),
       borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -262,10 +261,7 @@ class MoodiaryDangerRow extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 label,
-                style: context.textTheme.labelLarge?.copyWith(
-                  fontWeight: .w600,
-                  color: scheme.error,
-                ),
+                style: context.theme.typography.labelLarge.emphasized.error,
               ),
             ],
           ),

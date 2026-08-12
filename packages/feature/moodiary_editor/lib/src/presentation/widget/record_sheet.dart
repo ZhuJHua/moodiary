@@ -7,6 +7,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons, MoodiaryField;
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 import 'package:record/record.dart';
 
 /// 录音保存结果：文件名（落地在 `getRealPath('audio', ...)`）+ 名称（输入框留空为
@@ -237,16 +238,16 @@ class _RecordSheetState extends State<RecordSheet> {
                       decoration: BoxDecoration(
                         shape: .circle,
                         border: .all(
-                          color: context.colorScheme.outline,
+                          color: context.theme.colors.outline,
                           width: 4,
                         ),
                       ),
                       child: IconButton(
                         padding: .zero,
-                        icon: const Icon(
+                        icon: Icon(
                           LucideIcons.circleDot,
                           size: 48,
-                          color: Colors.redAccent,
+                          color: context.theme.colors.error,
                         ),
                         onPressed: _start,
                       ),
@@ -258,7 +259,7 @@ class _RecordSheetState extends State<RecordSheet> {
           const SizedBox(height: 8),
           Text(
             _fmt(_elapsed),
-            style: context.textTheme.titleMedium?.copyWith(
+            style: context.theme.typography.titleMedium.onSurface.copyWith(
               fontFeatures: const [.tabularFigures()],
             ),
           ),
@@ -297,7 +298,7 @@ class _Waveform extends StatelessWidget {
       // 快照副本：painter 若持有会被原地 mutate 的原列表，shouldRepaint 永远比不出差异。
       painter: _WaveformPainter(
         .of(amplitudes),
-        color: context.colorScheme.primary,
+        color: context.theme.colors.primary,
       ),
       size: Size(amplitudes.length * _WaveformPainter.stride, 100),
     );

@@ -11,6 +11,7 @@ import 'package:moodiary_diary/src/presentation/search/search_result_card.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 /// 日记搜索页：AppBar 内嵌搜索框，下方筛选栏（时间 / 分类 / 排序）；空查询时展示搜索历史。
 class DiarySearchPage extends ConsumerStatefulWidget {
@@ -117,9 +118,8 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                     if (state.elapsed != null)
                       Text(
                         ' · ${context.l10n.diarySearchTime(state.elapsed!.inMilliseconds)}',
-                        style: context.textTheme.bodySmall?.copyWith(
-                          color: context.colorScheme.onSurfaceVariant,
-                        ),
+                        style:
+                            context.theme.typography.bodySmall.onSurfaceVariant,
                       ),
                   ],
                 ),
@@ -284,7 +284,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           if (state.isSearching)
             Positioned.fill(
               child: ColoredBox(
-                color: context.colorScheme.surfaceContainer.withValues(
+                color: context.theme.colors.surfaceContainer.withValues(
                   alpha: 0.8,
                 ),
                 child: const Center(child: CircularProgressIndicator()),
@@ -317,7 +317,6 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
             text: context.l10n.searchHistoryEmpty,
           );
         }
-        final scheme = context.colorScheme;
         return SingleChildScrollView(
           padding: const .fromLTRB(16, 12, 16, 16),
           child: Column(
@@ -327,9 +326,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                 children: [
                   Text(
                     context.l10n.searchHistory,
-                    style: context.textTheme.labelLarge?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                    style: context.theme.typography.labelLarge.onSurfaceVariant,
                   ),
                   const Spacer(),
                   TextButton.icon(
@@ -371,7 +368,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
     required IconData icon,
     required String text,
   }) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Center(
       key: ValueKey(key),
       child: Column(
@@ -381,9 +378,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           const SizedBox(height: 12),
           Text(
             text,
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.bodyMedium.onSurfaceVariant,
           ),
         ],
       ),
@@ -421,7 +416,7 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
       valueListenable: MoodiaryKVs.searchIndexBackfilled.getNotifier(),
       builder: (context, done, _) {
         if (done) return const SizedBox.shrink();
-        final scheme = context.colorScheme;
+        final scheme = context.theme.colors;
         return Container(
           margin: const .fromLTRB(12, 10, 12, 0),
           padding: const .fromLTRB(12, 8, 8, 8),
@@ -440,9 +435,8 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
               Expanded(
                 child: Text(
                   '升级后需重建索引，旧日记正文才能被搜索到',
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSecondaryContainer,
-                  ),
+                  style:
+                      context.theme.typography.bodySmall.onSecondaryContainer,
                 ),
               ),
               const SizedBox(width: 8),
@@ -479,7 +473,8 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final theme = context.theme;
+    final scheme = theme.colors;
     final bg = active
         ? scheme.secondaryContainer
         : scheme.surfaceContainerHighest;
@@ -496,9 +491,8 @@ class _FilterChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: context.textTheme.labelLarge?.copyWith(
+            style: theme.typography.labelLarge.emphasized.onSurface.copyWith(
               color: fg,
-              fontWeight: .w600,
             ),
           ),
           const SizedBox(width: 1),

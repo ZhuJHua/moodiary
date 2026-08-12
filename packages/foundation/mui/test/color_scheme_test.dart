@@ -263,8 +263,9 @@ void main() {
       expect(t.bodyMedium.onSurface.fontVariations, [
         const FontVariation('wght', 380),
       ]);
-      expect(t.headlineLarge.onSurface.fontWeight, FontWeight.w700);
-      expect(t.headlineLarge.onSurface.fontVariations, [
+      // M3 2021：headline 三级都是 Regular，Bold 只出现在 22px 以上的强调档。
+      expect(t.headlineLarge.onSurface.fontWeight, FontWeight.w400);
+      expect(t.headlineLarge.emphasized.onSurface.fontVariations, [
         const FontVariation('wght', 680),
       ]);
       expect(t.labelLarge.onSurface.fontVariations, [
@@ -272,17 +273,45 @@ void main() {
       ]);
     });
 
-    test('改字重时 fontWeight 与 fontVariations 一起动', () {
+    test('默认字重表就是 M3 2021 的原值', () {
+      final t = typo();
+      const m3 = {
+        'displayLarge': FontWeight.w400,
+        'displayMedium': FontWeight.w400,
+        'displaySmall': FontWeight.w400,
+        'headlineLarge': FontWeight.w400,
+        'headlineMedium': FontWeight.w400,
+        'headlineSmall': FontWeight.w400,
+        'titleLarge': FontWeight.w400,
+        'titleMedium': FontWeight.w500,
+        'titleSmall': FontWeight.w500,
+        'bodyLarge': FontWeight.w400,
+        'bodyMedium': FontWeight.w400,
+        'bodySmall': FontWeight.w400,
+        'labelLarge': FontWeight.w500,
+        'labelMedium': FontWeight.w500,
+        'labelSmall': FontWeight.w500,
+      };
+      for (final level in MuiTypography.levels) {
+        expect(
+          t.byLevel(level).onSurface.fontWeight,
+          m3[level],
+          reason: '$level 的默认字重偏离 M3',
+        );
+      }
+    });
+
+    test('强调档的 fontWeight 与 fontVariations 一起动', () {
       const font = MuiFontConfig(wghtAxis: {'SemiBold': 610});
       final role = typo(font: font).bodyMedium;
       expect(role.onSurface.fontWeight, FontWeight.w400);
-      expect(role.semiBold.onSurface.fontWeight, FontWeight.w600);
-      expect(role.semiBold.onSurface.fontVariations, [
+      expect(role.emphasized.onSurface.fontWeight, FontWeight.w600);
+      expect(role.emphasized.onSurface.fontVariations, [
         const FontVariation('wght', 610),
       ]);
       // 换字重不动几何。
-      expect(role.semiBold.onSurface.fontSize, role.onSurface.fontSize);
-      expect(role.semiBold.onSurface.height, role.onSurface.height);
+      expect(role.emphasized.onSurface.fontSize, role.onSurface.fontSize);
+      expect(role.emphasized.onSurface.height, role.onSurface.height);
     });
 
     test('链式取色只换颜色', () {

@@ -14,6 +14,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'diary_ego_graph_page.g.dart';
@@ -185,7 +186,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = context.theme;
     final l10n = context.l10n;
     final async = ref.watch(diaryEgoGraphProvider(diaryId: _centerId));
     final categories =
@@ -214,9 +215,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
               return Center(
                 child: Text(
                   l10n.graphNoLocalLinks,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  style: theme.typography.bodyMedium.onSurfaceVariant,
                 ),
               );
             }
@@ -226,9 +225,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
               return Center(
                 child: Text(
                   l10n.graphNoLocalLinks,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                  style: theme.typography.bodyMedium.onSurfaceVariant,
                 ),
               );
             }
@@ -241,10 +238,10 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
 
   void _ensureScene(
     DiaryGraphData graph,
-    ThemeData theme,
+    MuiThemeData theme,
     List<Category> categories,
   ) {
-    final palette = GraphPalette.of(theme, edgeCount: graph.edgeCount);
+    final palette = GraphPalette.of(theme.colors, edgeCount: graph.edgeCount);
     if (_scene != null &&
         identical(_scene!.data, graph) &&
         _palette == palette &&
@@ -268,8 +265,12 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
     }
   }
 
-  Widget _buildBody(ThemeData theme, AppLocalizations l10n, GraphScene scene) {
-    final cs = theme.colorScheme;
+  Widget _buildBody(
+    MuiThemeData theme,
+    AppLocalizations l10n,
+    GraphScene scene,
+  ) {
+    final cs = theme.colors;
     final center = scene.centerIndex ?? 0;
     final bottomSafe = MediaQuery.viewPaddingOf(context).bottom;
     final infoIndex = _selected ?? center;
@@ -370,12 +371,12 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = context.theme;
     return Container(
       height: 26,
       padding: const .symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.85),
+        color: theme.colors.surfaceContainerHigh.withValues(alpha: 0.85),
         borderRadius: .circular(13),
       ),
       child: Row(
@@ -387,7 +388,8 @@ class _Legend extends StatelessWidget {
             decoration: BoxDecoration(color: color, shape: .circle),
           ),
           const SizedBox(width: 6),
-          Text(label, style: theme.textTheme.labelSmall),
+          // 图例上的计数，弱前景。
+          Text(label, style: theme.typography.labelSmall.onSurfaceVariant),
         ],
       ),
     );

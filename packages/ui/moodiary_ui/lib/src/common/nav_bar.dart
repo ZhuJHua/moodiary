@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_ui/src/glass/glass_surface.dart';
-import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 悬浮胶囊底栏的固定尺寸。改这里就等于改版式，别在调用方另写字面量。
 const double kMoodiaryNavBarHeight = 60;
@@ -113,7 +113,7 @@ class _Capsule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return MoodiaryGlassSurface(
       shape: const StadiumBorder(),
       child: Padding(
@@ -175,7 +175,7 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     // 图标和标签同色，取所在背景的配对色：选中态整格都盖在药丸上 → onSecondaryContainer，
     // 未选中坐在玻璃（surfaceContainer / High）上 → onSurfaceVariant。
     //
@@ -221,10 +221,10 @@ class _Tab extends StatelessWidget {
                     destination.label,
                     maxLines: 1,
                     overflow: .ellipsis,
-                    style: context.textTheme.labelSmall?.copyWith(
-                      color: color,
-                      fontWeight: .w500,
-                    ),
+                    // color 是选中/未选中两个角色色之间的补间值，不是任一固定角色，
+                    // 按业务色惯例落到 medium 权重的角色样式上再 copyWith 颜色。
+                    style: context.theme.typography.labelSmall.onSurfaceVariant
+                        .copyWith(color: color),
                   ),
                 ],
               );
@@ -243,14 +243,14 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     // 投影跟胶囊同款，所以不用 Material 的 elevation（那是另一套物理投影模型，
     // 形状和衰减都对不上）。按钮本身不透明，直接让 ShapeDecoration 画就行 ——
     // 玻璃那边要自绘挖空是因为投影会被 BackdropFilter 当背景采走，这里没这问题。
     Widget button = DecoratedBox(
       decoration: ShapeDecoration(
         shape: const CircleBorder(),
-        shadows: MoodiaryGlassSurface.defaultShadows(scheme.brightness),
+        shadows: MoodiaryGlassSurface.defaultShadows(scheme),
       ),
       child: Material(
         color: scheme.primary,

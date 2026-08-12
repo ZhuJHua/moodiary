@@ -19,3 +19,17 @@ Color categoryColorOf({int? colorValue, required String id}) {
   final hash = id.codeUnits.fold<int>(0, (a, c) => (a * 31 + c) & 0x7fffffff);
   return kCategoryPalette[hash % kCategoryPalette.length];
 }
+
+/// 分类色当**实心底**时的前景。分类色是任意哈希色或用户自选色，配不进
+/// `on*` 那套配对表，只能按实际亮度算 —— 这里是全仓唯一算它的地方。
+Color onCategoryColor(Color color) => color.computeLuminance() > 0.5
+    ? const Color(0xDD000000)
+    : const Color(0xFFFFFFFF);
+
+/// 分类色当**淡底上的文字**时的前景：朝当前明暗档的极端拉 35%，
+/// 保住色相的同时把对比度拿回来。
+Color categoryTextColor(Color color, {required bool dark}) => Color.lerp(
+  color,
+  dark ? const Color(0xFFFFFFFF) : const Color(0xFF000000),
+  0.35,
+)!;

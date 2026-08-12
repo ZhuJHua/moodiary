@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 /// 助手回复里的 ``` 代码块。替代 gpt_markdown 自带的 CodeField —— 那个把复制按钮
 /// 写死成 `Icons.content_paste` / `Icons.done` 且文案是硬编码英文，两者都没有入参。
@@ -30,7 +31,7 @@ class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final l10n = context.l10n;
     return Material(
       color: scheme.surfaceContainerHigh,
@@ -46,9 +47,7 @@ class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
                 padding: const .symmetric(horizontal: 14, vertical: 6),
                 child: Text(
                   widget.name,
-                  style: context.textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: context.theme.typography.labelMedium.onSurfaceVariant,
                 ),
               ),
               const Spacer(),
@@ -56,7 +55,8 @@ class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
                 style: TextButton.styleFrom(
                   foregroundColor: scheme.onSurfaceVariant,
                   visualDensity: .compact,
-                  textStyle: context.textTheme.labelMedium,
+                  textStyle:
+                      context.theme.typography.labelMedium.onSurfaceVariant,
                 ),
                 onPressed: _copy,
                 icon: Icon(
@@ -75,7 +75,7 @@ class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
             padding: const .all(14),
             child: Text(
               widget.code,
-              style: const TextStyle(
+              style: context.theme.typography.bodyMedium.onSurface.copyWith(
                 fontFamily: 'JetBrainsMono',
                 package: 'gpt_markdown',
               ),

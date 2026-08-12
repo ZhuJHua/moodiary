@@ -7,6 +7,7 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'map_page.g.dart';
@@ -58,7 +59,7 @@ class MapPage extends ConsumerWidget {
                         onTap: () => _openDiary(context, d),
                         child: Icon(
                           LucideIcons.mapPin,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: context.theme.colors.primary,
                           size: 32,
                         ),
                       ),

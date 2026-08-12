@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 class OptionDialog extends StatelessWidget {
   final String title;
@@ -11,14 +12,14 @@ class OptionDialog extends StatelessWidget {
   Widget _buildOption({
     required String option,
     required Function onTap,
-    required ColorScheme colorScheme,
+    required MuiThemeData theme,
   }) {
     return Padding(
       padding: const .symmetric(horizontal: 16, vertical: 8),
       child: Ink(
         decoration: BoxDecoration(
           borderRadius: AppBorderRadius.mediumBorderRadius,
-          color: colorScheme.secondaryContainer,
+          color: theme.colors.secondaryContainer,
         ),
         child: InkWell(
           borderRadius: AppBorderRadius.mediumBorderRadius,
@@ -29,7 +30,7 @@ class OptionDialog extends StatelessWidget {
             padding: const .symmetric(horizontal: 16, vertical: 8),
             child: Text(
               option,
-              style: TextStyle(color: colorScheme.onSecondaryContainer),
+              style: theme.typography.bodyMedium.onSecondaryContainer,
             ),
           ),
         ),
@@ -46,7 +47,7 @@ class OptionDialog extends StatelessWidget {
             (entry) => _buildOption(
               option: entry.key,
               onTap: entry.value,
-              colorScheme: context.colorScheme,
+              theme: context.theme,
             ),
           )
           .toList(),

@@ -3,27 +3,33 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_diary/src/presentation/category/category_manager_page.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 void main() {
   testWidgets('editor returns entered name and picked color', (t) async {
     CategoryDraft? result;
     await t.pumpWidget(
-      MaterialApp(
-        locale: const Locale('zh'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Builder(
-          builder: (context) => Scaffold(
-            body: Center(
-              child: ElevatedButton(
-                onPressed: () async {
-                  result = await showCategoryEditor(
-                    context,
-                    initialName: '',
-                    initialColor: null,
-                  );
-                },
-                child: const Text('open'),
+      MuiTheme(
+        data: _mui,
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    result = await showCategoryEditor(
+                      context,
+                      initialName: '',
+                      initialColor: null,
+                    );
+                  },
+                  child: const Text('open'),
+                ),
               ),
             ),
           ),

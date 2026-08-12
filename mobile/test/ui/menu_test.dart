@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 void main() {
   Widget host({
@@ -8,28 +11,31 @@ void main() {
     String? selected,
     List<MoodiaryMenuEntry<String>>? entries,
   }) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: MoodiaryMenuButton<String>(
-            tooltip: 'more',
-            selected: selected,
-            onSelected: onSelected,
-            entries:
-                entries ??
-                const [
-                  MoodiaryMenuEntry(value: 'a', label: 'Apple'),
-                  MoodiaryMenuEntry(value: 'b', label: 'Banana'),
-                  MoodiaryMenuEntry(
-                    value: 'c',
-                    label: 'Cherry',
-                    icon: LucideIcons.trash2,
-                    isDestructive: true,
-                  ),
-                ],
-            child: const Padding(
-              padding: .all(12),
-              child: Icon(LucideIcons.ellipsisVertical),
+    return MuiTheme(
+      data: _mui,
+      child: MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: MoodiaryMenuButton<String>(
+              tooltip: 'more',
+              selected: selected,
+              onSelected: onSelected,
+              entries:
+                  entries ??
+                  const [
+                    MoodiaryMenuEntry(value: 'a', label: 'Apple'),
+                    MoodiaryMenuEntry(value: 'b', label: 'Banana'),
+                    MoodiaryMenuEntry(
+                      value: 'c',
+                      label: 'Cherry',
+                      icon: LucideIcons.trash2,
+                      isDestructive: true,
+                    ),
+                  ],
+              child: const Padding(
+                padding: .all(12),
+                child: Icon(LucideIcons.ellipsisVertical),
+              ),
             ),
           ),
         ),

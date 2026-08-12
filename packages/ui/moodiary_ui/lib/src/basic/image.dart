@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 final kTransparentImage = Uint8List.fromList(<int>[
   0x89,
@@ -212,7 +213,7 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
         borderRadius: outerRadius,
         border: widget.showBorder
             ? .all(
-                color: context.colorScheme.outline.withValues(alpha: 0.6),
+                color: context.theme.colors.outline.withValues(alpha: 0.6),
                 width: borderWidth,
               )
             : null,
@@ -287,11 +288,11 @@ class _ErrorPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: context.colorScheme.errorContainer,
+      color: context.theme.colors.errorContainer,
       child: Center(
         child: Icon(
           LucideIcons.circleAlert,
-          color: context.colorScheme.onErrorContainer,
+          color: context.theme.colors.onErrorContainer,
         ),
       ),
     );
@@ -304,11 +305,11 @@ class _LoadingPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: context.colorScheme.surfaceContainer,
+      color: context.theme.colors.surfaceContainer,
       child: Center(
         child: Icon(
           LucideIcons.image,
-          color: context.colorScheme.onSurfaceVariant,
+          color: context.theme.colors.onSurfaceVariant,
         ),
       ),
     );

@@ -12,6 +12,7 @@ import 'package:moodiary_ui/src/basic/action_bar.dart';
 import 'package:moodiary_ui/src/basic/sheet.dart';
 import 'package:moodiary_ui/src/common/toast.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
 import 'package:photo_view/photo_view.dart';
 
@@ -402,13 +403,14 @@ class _ImageInfoSheet extends StatelessWidget {
                   width: 76,
                   child: Text(
                     label,
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                    ),
+                    style: context.theme.typography.bodyMedium.onSurfaceVariant,
                   ),
                 ),
                 Expanded(
-                  child: Text(value, style: context.textTheme.bodyMedium),
+                  child: Text(
+                    value,
+                    style: context.theme.typography.bodyMedium.onSurface,
+                  ),
                 ),
               ],
             ),

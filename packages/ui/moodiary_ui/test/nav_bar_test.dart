@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 const _destinations = [
   MoodiaryNavDestination(icon: Icon(LucideIcons.bookText), label: '日记'),
@@ -16,22 +19,27 @@ Future<double> _bandHeight(
 }) async {
   late double band;
   await tester.pumpWidget(
-    MaterialApp(
-      home: MediaQuery(
-        data: MediaQueryData(padding: .only(bottom: bottomInset)),
-        child: Scaffold(
-          extendBody: true,
-          body: Builder(
-            builder: (context) {
-              band = MediaQuery.paddingOf(context).bottom;
-              return const SizedBox.expand();
-            },
-          ),
-          bottomNavigationBar: MoodiaryNavBar(
-            destinations: _destinations,
-            selectedIndex: 0,
-            onDestinationSelected: (_) {},
-            action: const MoodiaryNavAction(icon: Icon(LucideIcons.pencilLine)),
+    MuiTheme(
+      data: _mui,
+      child: MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(padding: .only(bottom: bottomInset)),
+          child: Scaffold(
+            extendBody: true,
+            body: Builder(
+              builder: (context) {
+                band = MediaQuery.paddingOf(context).bottom;
+                return const SizedBox.expand();
+              },
+            ),
+            bottomNavigationBar: MoodiaryNavBar(
+              destinations: _destinations,
+              selectedIndex: 0,
+              onDestinationSelected: (_) {},
+              action: const MoodiaryNavAction(
+                icon: Icon(LucideIcons.pencilLine),
+              ),
+            ),
           ),
         ),
       ),

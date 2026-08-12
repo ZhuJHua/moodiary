@@ -5,6 +5,9 @@ import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons, qweatherIcon;
+import 'package:mui/mui.dart';
+
+final _mui = MuiThemeData(brightness: Brightness.light);
 
 Diary diary({
   String title = 'T',
@@ -35,8 +38,11 @@ Diary diary({
 Category cat() =>
     Category(id: 'a', categoryName: 'work', lastModified: DateTime(2026));
 
-Widget wrap(Widget child) => MaterialApp(
-  home: Scaffold(body: ListView(children: [child])),
+Widget wrap(Widget child) => MuiTheme(
+  data: _mui,
+  child: MaterialApp(
+    home: Scaffold(body: ListView(children: [child])),
+  ),
 );
 
 DiaryTimelineTile tile({
@@ -154,30 +160,33 @@ void main() {
     final bottom = diary(title: '', mood: 1);
 
     await t.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: RepaintBoundary(
-            key: boundaryKey,
-            child: Column(
-              mainAxisSize: .min,
-              children: [
-                DiaryTimelineTile(
-                  key: const ValueKey('a'),
-                  diary: top,
-                  stamp: top.time,
-                  dayStart: true,
-                  breakBefore: false,
-                  moodBelow: bottom.mood,
-                ),
-                DiaryTimelineTile(
-                  key: const ValueKey('b'),
-                  diary: bottom,
-                  stamp: bottom.time,
-                  dayStart: true,
-                  breakBefore: false,
-                  hasAbove: true,
-                ),
-              ],
+      MuiTheme(
+        data: _mui,
+        child: MaterialApp(
+          home: Scaffold(
+            body: RepaintBoundary(
+              key: boundaryKey,
+              child: Column(
+                mainAxisSize: .min,
+                children: [
+                  DiaryTimelineTile(
+                    key: const ValueKey('a'),
+                    diary: top,
+                    stamp: top.time,
+                    dayStart: true,
+                    breakBefore: false,
+                    moodBelow: bottom.mood,
+                  ),
+                  DiaryTimelineTile(
+                    key: const ValueKey('b'),
+                    diary: bottom,
+                    stamp: bottom.time,
+                    dayStart: true,
+                    breakBefore: false,
+                    hasAbove: true,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

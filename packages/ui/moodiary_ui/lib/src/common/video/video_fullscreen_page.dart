@@ -36,6 +36,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 import '../../basic/loading.dart';
 import 'video_ambient_controller.dart';
@@ -782,7 +783,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
   }
 
   Widget _buildScrubber(AppLocalizations l10n) {
-    final accent = Theme.of(context).colorScheme.primary;
+    final accent = context.theme.colors.primary;
     return Row(
       children: [
         Expanded(
@@ -857,7 +858,9 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
               const SizedBox(height: 10),
               Text(
                 l10n.videoPlayerLoadFailed,
-                style: const TextStyle(color: Colors.white70, fontSize: 13),
+                style: context.theme.typography.bodySmall.onSurface.copyWith(
+                  color: Colors.white70,
+                ),
               ),
               if (canRetry) ...[
                 const SizedBox(height: 12),
@@ -958,7 +961,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
 
   /// 刮擦时间码卡。同样自成一路：跟手期间每帧都在变。
   Widget _buildScrubHud() {
-    final accent = Theme.of(context).colorScheme.primary;
+    final accent = context.theme.colors.primary;
     return IgnorePointer(
       child: ValueListenableBuilder<_ScrubHud?>(
         valueListenable: _hud,
@@ -972,7 +975,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
   /// 刮擦时贴底的一条 2dp 细进度。只在 **chrome 藏着** 时出现 ——
   /// 横划不再把整条控制栏叫出来，但「刮到哪了」总得有个全局参照。
   Widget _buildScrubRail() {
-    final accent = Theme.of(context).colorScheme.primary;
+    final accent = context.theme.colors.primary;
     return IgnorePointer(
       child: ValueListenableBuilder<bool>(
         valueListenable: _chrome,
@@ -1058,11 +1061,13 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
                             l10n.videoPlayerSpeedBoost(
                               _kBoostSpeed.toStringAsFixed(0),
                             ),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: .w600,
-                            ),
+                            style: context
+                                .theme
+                                .typography
+                                .labelLarge
+                                .emphasized
+                                .onSurface
+                                .copyWith(color: Colors.white),
                           ),
                         ],
                       ),
@@ -1315,35 +1320,32 @@ class _TimeCode extends StatelessWidget {
             children: [
               AnimatedDefaultTextStyle(
                 duration: Durations.short3,
-                style: TextStyle(
-                  // 刮擦中把已播时间染成强调色：手指在动的是它，不是总长。
-                  color: p.draft ? accent : Colors.white,
-                  fontSize: 12,
-                  fontWeight: .w600,
-                  fontFeatures: const [.tabularFigures()],
-                  shadows: _kShadow,
-                ),
+                // 刮擦中把已播时间染成强调色：手指在动的是它，不是总长。
+                style: context.theme.typography.labelMedium.emphasized.onSurface
+                    .copyWith(
+                      color: p.draft ? accent : Colors.white,
+                      fontFeatures: const [.tabularFigures()],
+                      shadows: _kShadow,
+                    ),
                 child: Text(TimeFormat.mediaDuration(p.position)),
               ),
               if (known) ...[
-                const Text(
+                Text(
                   ' / ',
-                  style: TextStyle(
-                    color: Color(0x4DFFFFFF),
-                    fontSize: 12,
-                    fontWeight: .w500,
-                    shadows: _kShadow,
-                  ),
+                  style: context.theme.typography.labelMedium.onSurface
+                      .copyWith(
+                        color: const Color(0x4DFFFFFF),
+                        shadows: _kShadow,
+                      ),
                 ),
                 Text(
                   TimeFormat.mediaDuration(p.duration),
-                  style: const TextStyle(
-                    color: Color(0x9EFFFFFF),
-                    fontSize: 12,
-                    fontWeight: .w500,
-                    fontFeatures: [.tabularFigures()],
-                    shadows: _kShadow,
-                  ),
+                  style: context.theme.typography.labelMedium.onSurface
+                      .copyWith(
+                        color: const Color(0x9EFFFFFF),
+                        fontFeatures: const [.tabularFigures()],
+                        shadows: _kShadow,
+                      ),
                 ),
               ],
             ],
@@ -1393,12 +1395,13 @@ class _ScrubHudCard extends StatelessWidget {
                 if (delta != null)
                   Text(
                     _formatDelta(delta),
-                    style: TextStyle(
-                      color: accent,
-                      fontSize: 11,
-                      fontWeight: .w600,
-                      fontFeatures: const [.tabularFigures()],
-                    ),
+                    style: context
+                        .theme
+                        .typography
+                        .labelSmall
+                        .emphasized
+                        .primary
+                        .copyWith(fontFeatures: const [.tabularFigures()]),
                   ),
                 const SizedBox(height: 3),
                 Row(
@@ -1408,23 +1411,21 @@ class _ScrubHudCard extends StatelessWidget {
                   children: [
                     Text(
                       TimeFormat.mediaDuration(hud.position),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: .w600,
-                        fontFeatures: [.tabularFigures()],
-                      ),
+                      style: context.theme.typography.titleLarge.onSurface
+                          .copyWith(
+                            color: Colors.white,
+                            fontFeatures: const [.tabularFigures()],
+                          ),
                     ),
                     if (hud.duration > Duration.zero) ...[
                       const SizedBox(width: 6),
                       Text(
                         TimeFormat.mediaDuration(hud.duration),
-                        style: const TextStyle(
-                          color: Color(0x9EFFFFFF),
-                          fontSize: 12,
-                          fontWeight: .w500,
-                          fontFeatures: [.tabularFigures()],
-                        ),
+                        style: context.theme.typography.labelMedium.onSurface
+                            .copyWith(
+                              color: const Color(0x9EFFFFFF),
+                              fontFeatures: const [.tabularFigures()],
+                            ),
                       ),
                     ],
                   ],
@@ -1529,12 +1530,16 @@ class _AmbientBar extends StatelessWidget {
                   child: Text(
                     '${(value * 100).round()}',
                     textAlign: .right,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: .w600,
-                      fontFeatures: [.tabularFigures()],
-                    ),
+                    style: context
+                        .theme
+                        .typography
+                        .labelLarge
+                        .emphasized
+                        .onSurface
+                        .copyWith(
+                          color: Colors.white,
+                          fontFeatures: const [.tabularFigures()],
+                        ),
                   ),
                 ),
               ],

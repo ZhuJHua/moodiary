@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 class DashboardSection extends ConsumerWidget {
   const DashboardSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final async = ref.watch(dashboardControllerProvider);
     final stats = async.value;
     return Card.filled(
@@ -52,7 +52,6 @@ class _Metric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     final display = value == null ? '' : '${value!}${suffix ?? ''}';
     return Expanded(
       child: Column(
@@ -60,15 +59,12 @@ class _Metric extends StatelessWidget {
         children: [
           AdaptiveText(
             label,
-            style: context.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.labelSmall.onSurfaceVariant,
           ),
           const SizedBox(height: 6),
           AnimatedText(
             display,
-            style: context.textTheme.titleMedium?.copyWith(
-              color: scheme.secondary,
+            style: context.theme.typography.titleMedium.secondary.copyWith(
               fontFeatures: const [.tabularFigures()],
             ),
           ),

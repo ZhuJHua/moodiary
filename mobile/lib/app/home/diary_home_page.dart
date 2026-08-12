@@ -7,6 +7,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_sync/moodiary_sync.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 /// 移动端首页壳（app 侧组合面）：把 moodiary_diary 的视图主体与 moodiary_sync 的
 /// [SyncStatusButton]、新建日记 FAB 焊到一起。这是 diary↔sync 的唯一相遇处，故留在
@@ -187,7 +188,7 @@ class _FilterTitle extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     final counts = ref.watch(categoryDiaryCountsProvider).value;
     final category = filter.categoryId == null
         ? null
@@ -238,9 +239,7 @@ class _FilterTitle extends ConsumerWidget {
           const SizedBox(width: 8),
           Text(
             context.l10n.diarySearchResult(count),
-            style: context.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: context.theme.typography.labelSmall.onSurfaceVariant,
           ),
         ],
       ],

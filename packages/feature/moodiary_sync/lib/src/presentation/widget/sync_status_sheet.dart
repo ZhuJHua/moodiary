@@ -14,6 +14,7 @@ import 'package:moodiary_sync/src/data/sync_logger.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_key_guard.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 「同步状态」底部弹窗：配置标签 / 当前状态与进度 / 数据概览 / 立即同步
 /// （同步中可停止）/ 查看日志入口。日志本身见 [SyncLogPage]。
@@ -163,7 +164,6 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
                   icon: const Icon(LucideIcons.rotateCw),
                   iconSize: 16,
                   visualDensity: .compact,
-                  color: context.colorScheme.onSurfaceVariant,
                   onPressed: () => ref.invalidate(syncStatsProvider),
                 ),
               ],
@@ -233,10 +233,7 @@ class _StateCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               label,
-              style: context.textTheme.titleSmall?.copyWith(
-                fontWeight: .w600,
-                color: context.colorScheme.onSurface,
-              ),
+              style: context.theme.typography.titleSmall.emphasized.onSurface,
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -308,7 +305,7 @@ class _Shell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
     return Container(
       padding: const .fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
@@ -337,7 +334,8 @@ class _Line extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     final accent = warn ? scheme.error : scheme.primary;
     return _Shell(
       warn: warn,
@@ -353,19 +351,16 @@ class _Line extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: context.textTheme.titleSmall?.copyWith(
-                    fontWeight: .w600,
-                    color: warn ? scheme.error : scheme.onSurface,
-                  ),
+                  style: warn
+                      ? typography.titleSmall.emphasized.error
+                      : typography.titleSmall.emphasized.onSurface,
                 ),
                 if (detail != null)
                   Padding(
                     padding: const .only(top: 2),
                     child: Text(
                       detail!,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                      style: typography.bodySmall.onSurfaceVariant,
                     ),
                   ),
               ],
@@ -386,8 +381,10 @@ class _Counter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    final color = bad ? scheme.error : scheme.onSurfaceVariant;
+    final scheme = context.theme.colors;
+    final style = bad
+        ? context.theme.typography.labelMedium.error
+        : context.theme.typography.labelMedium.onSurfaceVariant;
     return Container(
       padding: const .symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
@@ -399,14 +396,11 @@ class _Counter extends StatelessWidget {
       child: Row(
         mainAxisSize: .min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 12, color: style.color),
           const SizedBox(width: 5),
           Text(
             '$value',
-            style: context.textTheme.labelMedium?.copyWith(
-              color: color,
-              fontFeatures: const [.tabularFigures()],
-            ),
+            style: style.copyWith(fontFeatures: const [.tabularFigures()]),
           ),
         ],
       ),
@@ -422,7 +416,6 @@ class _StatsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     final value = switch (stats) {
       AsyncData(:final value) => value,
       _ => null,
@@ -467,7 +460,7 @@ class _StatsTable extends StatelessWidget {
               error,
               maxLines: 2,
               overflow: .ellipsis,
-              style: context.textTheme.bodySmall?.copyWith(color: scheme.error),
+              style: context.theme.typography.bodySmall.error,
             ),
           ),
       ],
@@ -479,9 +472,7 @@ class _StatsTable extends StatelessWidget {
     child: Text(
       label,
       textAlign: .end,
-      style: context.textTheme.labelSmall?.copyWith(
-        color: context.colorScheme.onSurfaceVariant,
-      ),
+      style: context.theme.typography.labelSmall.onSurfaceVariant,
     ),
   );
 
@@ -491,24 +482,27 @@ class _StatsTable extends StatelessWidget {
     required int? local,
     required int? remote,
   }) {
-    final scheme = context.colorScheme;
+    final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     final differs = local != null && remote != null && local != remote;
-    Widget cell(int? n, {bool emphasize = false}) => SizedBox(
-      width: 56,
-      child: Text(
-        n?.toString() ?? '—',
-        textAlign: .end,
-        style: context.textTheme.titleSmall?.copyWith(
-          fontWeight: n == null ? .w400 : .w600,
-          color: n == null
-              ? scheme.onSurfaceVariant
-              : emphasize
-              ? scheme.primary
-              : scheme.onSurface,
-          fontFeatures: const [.tabularFigures()],
+    Widget cell(int? n, {bool emphasize = false}) {
+      final role = n == null
+          ? typography.bodyMedium
+          : typography.titleSmall.emphasized;
+      final style = n == null
+          ? role.onSurfaceVariant
+          : emphasize
+          ? role.primary
+          : role.onSurface;
+      return SizedBox(
+        width: 56,
+        child: Text(
+          n?.toString() ?? '—',
+          textAlign: .end,
+          style: style.copyWith(fontFeatures: const [.tabularFigures()]),
         ),
-      ),
-    );
+      );
+    }
 
     return Container(
       margin: const .only(bottom: 6),
@@ -519,14 +513,7 @@ class _StatsTable extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: Text(
-              label,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurface,
-              ),
-            ),
-          ),
+          Expanded(child: Text(label, style: typography.bodyMedium.onSurface)),
           cell(local),
           cell(remote, emphasize: differs),
         ],

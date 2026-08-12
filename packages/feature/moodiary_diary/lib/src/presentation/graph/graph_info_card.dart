@@ -3,6 +3,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
 /// 选中节点的悬浮信息卡（总图与 ego 图共用）。整卡可点打开日记；前导圆点用**节点本色**，
 /// 与画布上看到的颜色一致。出/入链分开显示——只给合计看不出方向。
@@ -30,8 +31,8 @@ class GraphInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
+    final theme = context.theme;
+    final cs = theme.colors;
     final l10n = context.l10n;
     final title = node.title.trim().isEmpty
         ? TimeFormat.longDate(node.time)
@@ -83,9 +84,11 @@ class GraphInfoCard extends StatelessWidget {
                             title,
                             maxLines: 1,
                             overflow: .ellipsis,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: .w600,
-                            ),
+                            style: theme
+                                .typography
+                                .titleSmall
+                                .emphasized
+                                .onSurface,
                           ),
                           const SizedBox(height: 3),
                           Row(
@@ -95,9 +98,10 @@ class GraphInfoCard extends StatelessWidget {
                                   TimeFormat.longDate(node.time),
                                   maxLines: 1,
                                   overflow: .ellipsis,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                  ),
+                                  style: theme
+                                      .typography
+                                      .labelSmall
+                                      .onSurfaceVariant,
                                 ),
                               ),
                               if (outgoing > 0) ...[
@@ -169,11 +173,11 @@ class _LinkChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = context.theme;
     return Container(
       padding: const .symmetric(horizontal: 7, vertical: 1),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: theme.colors.surfaceContainerHighest,
         borderRadius: .circular(9),
       ),
       child: Row(
@@ -181,12 +185,7 @@ class _LinkChip extends StatelessWidget {
         children: [
           Icon(icon, size: 11, color: color),
           const SizedBox(width: 3),
-          Text(
-            '$count',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
+          Text('$count', style: theme.typography.labelSmall.onSurfaceVariant),
         ],
       ),
     );
