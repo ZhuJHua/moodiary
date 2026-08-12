@@ -32,10 +32,6 @@ class ThemeManager {
 
   Map<String, double> wghtAxisMap = {};
 
-  MuiTextSize _textSize = MuiTextSize.large;
-
-  MuiTextSize get textSize => _textSize;
-
   /// 系统主题色。取不到（iOS、Android 11-、取色失败）即为 null，
   /// [ThemeAccentMode.system] 那一档随之不可选。
   ///
@@ -132,36 +128,11 @@ class ThemeManager {
 
     final accent = resolveAccent();
     final font = MuiFontConfig(family: fontFamily, wghtAxis: wghtAxisMap);
-    _textSize = await _resolveTextSize();
 
-    _lightMui = MuiThemeData(
-      brightness: .light,
-      accent: accent,
-      font: font,
-      textSize: _textSize,
-    );
-    _darkMui = MuiThemeData(
-      brightness: .dark,
-      accent: accent,
-      font: font,
-      textSize: _textSize,
-    );
+    _lightMui = MuiThemeData(brightness: .light, accent: accent, font: font);
+    _darkMui = MuiThemeData(brightness: .dark, accent: accent, font: font);
     _lightTheme = materialThemeFrom(_lightMui!);
     _darkTheme = materialThemeFrom(_darkMui!);
-  }
-
-  /// KV → 字号档。老用户第一次进来时从连续的 [MoodiaryKVs.fontScale] 迁到最近的档
-  /// 并写回，之后不再走这条路。
-  Future<MuiTextSize> _resolveTextSize() async {
-    final stored = MoodiaryKVs.textSize.get()!;
-    if (stored >= 0 && stored < MuiTextSize.values.length) {
-      return MuiTextSize.values[stored];
-    }
-    final migrated = MuiTextSize.fromLegacyScale(
-      MoodiaryKVs.fontScale.get() ?? 1.0,
-    );
-    await MoodiaryKVs.textSize.set(migrated.index);
-    return migrated;
   }
 
   /// KV → 强调色来源。system 档在取不到壁纸色时静默回落到无彩，
@@ -252,14 +223,6 @@ class ThemeManager {
 
   (ThemeData, ThemeData) getThemeData() => (lightTheme, darkTheme);
 }
-
-/// 字号档 index → 倍率。给**不依赖 mui** 的包用（编辑器把它透传给 webview 当
-/// `--app-font-scale`）。越界或未设置一律回落到基准档。
-double textSizeScaleOf(int index) =>
-    (index >= 0 && index < MuiTextSize.values.length
-            ? MuiTextSize.values[index]
-            : MuiTextSize.large)
-        .scale;
 
 extension ColorExt on Color {
   Brightness get brightness {

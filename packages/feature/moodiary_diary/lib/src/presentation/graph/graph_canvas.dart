@@ -587,10 +587,10 @@ class _GraphCanvasState extends State<GraphCanvas>
   @override
   Widget build(BuildContext context) {
     final dir = Directionality.of(context);
-    // 字号档已解析进主题、textScaler 恒为 1，所以缩放系数从主题反推：
-    // labelSmall 的基准字号是 11（字重取 medium，与原来的 w500 一致）。
+    // 画布自己 layout 文本，吃不到 MediaQuery 的自动缩放，所以把系统字号倍率
+    // 显式取出来乘进标签几何（节点间距也按它放大，否则大字号下标签会糊成一片）。
     final template = context.theme.typography.labelSmall.onSurface;
-    final factor = (template.fontSize ?? 11) / 11;
+    final factor = MediaQuery.textScalerOf(context).scale(11) / 11;
     if (_labelColor != widget.palette.label ||
         _labelDir != dir ||
         _labelFactor != factor ||

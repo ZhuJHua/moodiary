@@ -121,9 +121,9 @@ class Moodiary extends ConsumerWidget {
       onGenerateTitle: (context) => context.l10n.appName,
       routerConfig: router,
       builder: (context, child) {
-        // 字号与 MuiTheme 都套在 SmartDialog **外面**：init() 会自建 Overlay，把传入的
-        // child 放进 entry[0]，而 toast / loading 是与之平级的兄弟 entry —— 包在里面
-        // 的话那些浮层既吃不到字号缩放，也读不到 mui 配色（toast.dart 的 builder 要取色）。
+        // MuiTheme 套在 SmartDialog **外面**：init() 会自建 Overlay，把传入的 child
+        // 放进 entry[0]，而 toast / loading 是与之平级的兄弟 entry —— 包在里面的话
+        // 那些浮层读不到 mui 配色（toast.dart 的 builder 要取色）。
         final brightness = switch (settings.themeMode) {
           .light => Brightness.light,
           .dark => Brightness.dark,
@@ -132,19 +132,17 @@ class Moodiary extends ConsumerWidget {
         final muiTheme = brightness == .light
             ? settings.lightMuiTheme
             : settings.darkMuiTheme;
-        // 字号档已经解析进主题（见 MuiTextSize），所以这里把缩放**钉死为 1**：
-        // 再乘一次会与主题里的尺寸叠加，局部 `textScaler:` 覆盖也会失去参照。
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaler: .noScaling),
-          // 状态栏/导航栏图标的兜底。AppBar 自带的那层注解覆盖在它上面、只管有
-          // AppBar 的页面；没有 AppBar 的页面（详情、图片浏览、相机、视频全屏）
-          // 全靠这一层，否则会沿用上一个页面留下的明暗。
-          child: AnnotatedRegion<SystemUiOverlayStyle>(
-            value: systemOverlayStyleFrom(muiTheme),
-            child: MuiAnimatedTheme(
-              data: muiTheme,
-              child: FlutterSmartDialog.init()(context, child!),
-            ),
+        // 字号跟随系统无障碍设置：主题里的 15 级是**基准**尺寸，缩放由
+        // MediaQuery.textScaler 在渲染期施加，App 内不再有自己的字号档。
+        //
+        // 状态栏/导航栏图标的兜底。AppBar 自带的那层注解覆盖在它上面、只管有
+        // AppBar 的页面；没有 AppBar 的页面（详情、图片浏览、相机、视频全屏）
+        // 全靠这一层，否则会沿用上一个页面留下的明暗。
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: systemOverlayStyleFrom(muiTheme),
+          child: MuiAnimatedTheme(
+            data: muiTheme,
+            child: FlutterSmartDialog.init()(context, child!),
           ),
         );
       },

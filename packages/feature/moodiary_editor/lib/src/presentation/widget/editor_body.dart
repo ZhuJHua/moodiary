@@ -82,28 +82,27 @@ class _EditorBodyState extends State<EditorBody> {
 
   @override
   Widget build(BuildContext context) {
-    // 全局「首行缩进」「字号」偏好：监听 KV，变更即重建并透传给 webview（走主题通道下发，
-    // web 侧据此切 CSS text-indent / --app-font-scale）。boot 首帧与运行时实时切换共用同一路径。
+    // 首行缩进走 KV；字号跟随系统 —— webview 的 Android textZoom 被钉死为 100
+    // （见 webview_flutter_transport），所以系统缩放必须由这里显式算出来下发，
+    // 两端才是同一个倍率。boot 首帧与运行时实时切换共用同一路径。
+    final fontScale = MediaQuery.textScalerOf(context).scale(16) / 16;
     return ValueListenableBuilder<bool>(
       valueListenable: MoodiaryKVs.firstLineIndent.getNotifier(),
-      builder: (context, firstLineIndent, _) => ValueListenableBuilder<int>(
-        valueListenable: MoodiaryKVs.textSize.getNotifier(),
-        builder: (context, textSize, _) => MoodiaryEditorView(
-          initialContent: _content,
-          initialTitle: widget.initialTitle,
-          onTitleChanged: widget.onTitleChanged,
-          controller: widget.editorController,
-          onActiveHeadingChanged: widget.onActiveHeadingChanged,
-          // 仅 tiptap 可编辑；markdown / richText 只读查看。
-          editable: widget.editable && widget.type.isEditable,
-          saveStatus: widget.saveStatus,
-          firstLineIndent: firstLineIndent,
-          fontScale: textSizeScaleOf(textSize),
-          onChanged: (content) =>
-              widget.onChanged(content, TiptapContent.parse(content).plainText),
-          onOpenDiaryLink: widget.onOpenDiaryLink,
-          onOpenDetails: widget.onShowDetails,
-        ),
+      builder: (context, firstLineIndent, _) => MoodiaryEditorView(
+        initialContent: _content,
+        initialTitle: widget.initialTitle,
+        onTitleChanged: widget.onTitleChanged,
+        controller: widget.editorController,
+        onActiveHeadingChanged: widget.onActiveHeadingChanged,
+        // 仅 tiptap 可编辑；markdown / richText 只读查看。
+        editable: widget.editable && widget.type.isEditable,
+        saveStatus: widget.saveStatus,
+        firstLineIndent: firstLineIndent,
+        fontScale: fontScale,
+        onChanged: (content) =>
+            widget.onChanged(content, TiptapContent.parse(content).plainText),
+        onOpenDiaryLink: widget.onOpenDiaryLink,
+        onOpenDetails: widget.onShowDetails,
       ),
     );
   }

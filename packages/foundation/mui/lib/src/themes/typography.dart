@@ -2,46 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:mui/src/themes/color_scheme.dart';
 import 'package:mui/src/themes/value.dart';
 
-/// 字号档。
-///
-/// 取代旧的连续 `fontScale` —— **`MediaQuery.textScaler` 钉死为 1**，字号在主题里
-/// 就解析完。好处有三：
-///   * `theme.typography.bodyMedium.onSurface` 拿到的 `TextStyle` 已经是最终尺寸，
-///     不需要读 `MediaQuery` 才知道它多大（`TextPainter` / `CustomPaint` 路径不再特殊）；
-///   * 字号档不会再和 widget 局部的 `textScaler:` 相乘，出不了「缩放叠缩放」；
-///   * 档与档之间可以逐级手调，而不是被一个乘数绑死。
-///
-/// [scale] 取 iOS Dynamic Type 的档间步长（正文 14/15/16/17/19/21/23 相对 17 的比值），
-/// 只借步长，字号基准仍是 M3。
-enum MuiTextSize {
-  xSmall(0.82),
-  small(0.88),
-  medium(0.94),
-  large(1.0),
-  xLarge(1.12),
-  xxLarge(1.24),
-  xxxLarge(1.35);
-
-  const MuiTextSize(this.scale);
-
-  final double scale;
-
-  /// 旧 `fontScale` KV（0.8 / 0.9 / 1.0 / 1.1 / 1.2 五档）→ 最近的新档。
-  /// 只在从未写过 [MoodiaryKVs.textSize] 的老用户身上跑一次。
-  static MuiTextSize fromLegacyScale(double legacy) {
-    var best = MuiTextSize.large;
-    var delta = double.infinity;
-    for (final size in MuiTextSize.values) {
-      final d = (size.scale - legacy).abs();
-      if (d < delta) {
-        delta = d;
-        best = size;
-      }
-    }
-    return best;
-  }
-}
-
 /// 字体族 + 可变字体的 wght 轴实测值。
 ///
 /// [wghtAxis] 由宿主从 ttf/otf 实读后注入（键为归一化后的字重名）；读不到就回落到
@@ -161,7 +121,6 @@ class MuiTextRole {
 @immutable
 class MuiTypography with MuiValue {
   const MuiTypography._({
-    required this.size,
     required this.font,
     required this.colors,
     required this.displayLarge,
@@ -181,7 +140,6 @@ class MuiTypography with MuiValue {
     required this.labelSmall,
   });
 
-  final MuiTextSize size;
   final MuiFontConfig font;
   final MuiColorScheme colors;
 
@@ -201,10 +159,10 @@ class MuiTypography with MuiValue {
   final MuiTextRole labelMedium;
   final MuiTextRole labelSmall;
 
-  /// 15 个角色由这三者**确定性地**算出，所以相等只比这三个。
+  /// 15 个角色由这两者**确定性地**算出，所以相等只比这两个。
   /// 多比 15 份 `TextStyle` 既慢又不会给出不同答案。
   @override
-  List<Object?> get props => [size, font, colors];
+  List<Object?> get props => [font, colors];
 
   /// 每一级的默认字重 —— **M3 2021 的原值**，与 `Typography.englishLike2021`
   /// 逐级相同（`typography.dart:2096`）：15 级里 10 级 Regular，只有 title 的
@@ -239,8 +197,12 @@ class MuiTypography with MuiValue {
   static MuiWeight _emphasisOf(double baseSize) =>
       baseSize >= 22 ? MuiWeight.bold : MuiWeight.semiBold;
 
-  /// M3 2021 的基准几何（[MuiTextSize.large] 档）：fontSize / height / letterSpacing。
-  /// [height] 是**比例**不是绝对行高，所以换档时它不用动。
+  /// M3 2021 的几何，与 `Typography.englishLike2021` 逐级逐字段相同
+  /// （`typography.dart:2096`，由 `theme_projection_test` 对拍）：
+  /// fontSize / height / letterSpacing。[height] 是**比例**不是绝对行高。
+  ///
+  /// 字号**不在这里缩放** —— 跟随系统字体大小，由 `MediaQuery.textScaler`
+  /// 在渲染期施加，这是平台无障碍设置的唯一入口。
   static const Map<String, (double, double, double)> _geometry = {
     'displayLarge': (57, 1.12, -0.25),
     'displayMedium': (45, 1.16, 0),
@@ -261,22 +223,17 @@ class MuiTypography with MuiValue {
 
   static MuiTextRole _role(
     String name,
-    MuiTextSize size,
     MuiFontConfig font,
     MuiColorScheme colors,
   ) {
     final (baseSize, height, spacing) = _geometry[name]!;
-    // 落到半个逻辑像素上：不取整会得到 11.638 这种值，取整则 xSmall 与 small
-    // 在小字号级别会撞成同一个数。
-    final scaled = (baseSize * size.scale * 2).round() / 2;
     TextStyle styleOf(MuiWeight weight) => TextStyle(
       inherit: false,
       color: colors.onSurface,
       fontFamily: font.family,
-      fontSize: scaled,
+      fontSize: baseSize,
       height: height,
-      // 字距按同一比例走，否则大字号档的字距会相对变紧。
-      letterSpacing: spacing * size.scale,
+      letterSpacing: spacing,
       fontWeight: weight.value,
       fontVariations: [FontVariation('wght', weight.axis(font))],
       textBaseline: .alphabetic,
@@ -285,20 +242,16 @@ class MuiTypography with MuiValue {
     return MuiTextRole._(
       styleOf(_weights[name]!),
       colors,
-      // 强调档按**基准**尺寸分级，不按缩放后的尺寸 —— 否则同一级在
-      // xxxLarge 档会突然从 SemiBold 跳成 Bold。
       styleOf(_emphasisOf(baseSize)),
     );
   }
 
   factory MuiTypography.resolve({
-    required MuiTextSize size,
     required MuiFontConfig font,
     required MuiColorScheme colors,
   }) {
-    MuiTextRole r(String name) => _role(name, size, font, colors);
+    MuiTextRole r(String name) => _role(name, font, colors);
     return MuiTypography._(
-      size: size,
       font: font,
       colors: colors,
       displayLarge: r('displayLarge'),
@@ -359,10 +312,9 @@ class MuiTypography with MuiValue {
 
   static MuiTypography lerp(MuiTypography a, MuiTypography b, double t) {
     if (identical(a, b)) return a;
-    // 排版由 (size, font, colors) 确定，所以补间只要拿插值后的色板重解析一次。
+    // 排版由 (font, colors) 确定，所以补间只要拿插值后的色板重解析一次。
     // 逐级 TextStyle.lerp 会算 15 次却得到同样的结果。
     return MuiTypography.resolve(
-      size: t < 0.5 ? a.size : b.size,
       font: t < 0.5 ? a.font : b.font,
       colors: MuiColorScheme.lerp(a.colors, b.colors, t),
     );

@@ -50,8 +50,9 @@ class WebViewFlutterTransport extends EditorTransport {
     final platform = controller.platform;
     if (platform is AndroidWebViewController) {
       await platform.setMediaPlaybackRequiresUserGesture(false);
-      // Android WebView 默认 textZoom 跟随系统字体缩放，会与 App 下发的 --app-font-scale
-      // 相乘（App 的 textScaler 已取代系统缩放）；钉死 100 让 App 字号偏好成为唯一缩放来源。
+      // Android WebView 默认 textZoom 自己跟随系统字体缩放，会与下发的
+      // --app-font-scale 相乘（那个值同样来自系统缩放）。钉死 100 断掉这条，
+      // 让 Flutter 侧算出来的倍率成为唯一来源，两个平台才是同一个行为。
       await platform.setTextZoom(100);
       if (debug) await AndroidWebViewController.enableDebugging(true);
     } else if (platform is WebKitWebViewController) {

@@ -18,7 +18,7 @@ final appInitialLocaleProvider = Provider<Locale>(
 );
 
 /// 全局应用设置。业务侧改完 KV 后调 [AppSettingsController.bumpTheme] / [bumpLocale]，
-/// 根 widget `ref.watch` 即刷新根节点的 theme / locale / themeMode / textScaler。
+/// 根 widget `ref.watch` 即刷新根节点的 theme / locale / themeMode。
 /// 收进 provider 而非直接读 KV：主题色 KV 无 defaultValue 不能 `getNotifier()`，
 /// 且主题 / locale 重建是异步的。
 @Riverpod(keepAlive: true)
@@ -34,7 +34,6 @@ class AppSettingsController extends _$AppSettingsController {
       darkMuiTheme: darkMui,
       themeMode: ThemeMode.values[MoodiaryKVs.themeMode.get()!],
       locale: ref.read(appInitialLocaleProvider),
-      textSize: ThemeManager().textSize,
     );
   }
 
@@ -52,16 +51,7 @@ class AppSettingsController extends _$AppSettingsController {
       lightMuiTheme: lightMui,
       darkMuiTheme: darkMui,
       themeMode: ThemeMode.values[MoodiaryKVs.themeMode.get()!],
-      textSize: ThemeManager().textSize,
     );
-  }
-
-  /// 字号档。与旧的 textScaler 方案不同，**字号现在解析进主题**，所以换档必须重建
-  /// 主题（[bumpTheme] 会把 mui 与 material 两份一起换）。档是离散的 7 个、
-  /// 不像旧滑块那样连续提交，重建开销可以接受。
-  Future<void> setTextSize(MuiTextSize value) async {
-    await MoodiaryKVs.textSize.set(value.index);
-    await bumpTheme();
   }
 
   Future<void> bumpLocale() async {
@@ -89,6 +79,5 @@ abstract class AppSettings with _$AppSettings {
     required MuiThemeData darkMuiTheme,
     required ThemeMode themeMode,
     required Locale locale,
-    required MuiTextSize textSize,
   }) = _AppSettings;
 }

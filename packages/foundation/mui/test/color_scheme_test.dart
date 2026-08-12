@@ -244,14 +244,11 @@ void main() {
   });
 
   group('MuiTypography', () {
-    MuiTypography typo({
-      MuiTextSize size = MuiTextSize.large,
-      MuiFontConfig font = const MuiFontConfig(),
-    }) => MuiTypography.resolve(
-      size: size,
-      font: font,
-      colors: MuiColorScheme.resolve(.light, const MuiAccent.neutral()),
-    );
+    MuiTypography typo({MuiFontConfig font = const MuiFontConfig()}) =>
+        MuiTypography.resolve(
+          font: font,
+          colors: MuiColorScheme.resolve(.light, const MuiAccent.neutral()),
+        );
 
     test('字重与 fontVariations 一致 —— 只改一个在可变字体下会被吃掉', () {
       const font = MuiFontConfig(
@@ -329,52 +326,13 @@ void main() {
       expect(role.onSurfaceVariant.letterSpacing, role.onSurface.letterSpacing);
     });
 
-    test('large 是基准档，字号沿七档单调递增且落在半像素上', () {
-      for (final level in MuiTypography.levels) {
-        final sizes = MuiTextSize.values
-            .map((s) => typo(size: s).byLevel(level).onSurface.fontSize!)
-            .toList();
-        expect(
-          sizes,
-          orderedEquals(sizes.toList()..sort()),
-          reason: '$level 的字号不是单调的',
-        );
-        expect(
-          sizes[MuiTextSize.large.index],
-          typo().byLevel(level).onSurface.fontSize,
-        );
-        for (final v in sizes) {
-          expect(v * 2, v * 2 ~/ 1, reason: '$level 的 $v 不在半像素上');
-        }
-      }
-    });
-
-    test('large 档与 M3 基准逐级相同', () {
+    test('字号就是 M3 基准值 —— App 内不做任何缩放，缩放归系统', () {
       final t = typo();
       expect(t.bodyMedium.onSurface.fontSize, 14);
       expect(t.bodyMedium.onSurface.height, 1.43);
       expect(t.bodyMedium.onSurface.letterSpacing, 0.25);
       expect(t.displayLarge.onSurface.fontSize, 57);
       expect(t.labelSmall.onSurface.fontSize, 11);
-    });
-
-    test('换档时 height 是比例所以不动，letterSpacing 跟着比例走', () {
-      final large = typo().bodyMedium.onSurface;
-      final big = typo(size: MuiTextSize.xxxLarge).bodyMedium.onSurface;
-      expect(big.height, large.height);
-      expect(big.fontSize, greaterThan(large.fontSize!));
-      expect(
-        big.letterSpacing,
-        closeTo(large.letterSpacing! * MuiTextSize.xxxLarge.scale, 1e-9),
-      );
-    });
-
-    test('旧 fontScale 映射到最近的档', () {
-      expect(MuiTextSize.fromLegacyScale(1.0), MuiTextSize.large);
-      expect(MuiTextSize.fromLegacyScale(0.8), MuiTextSize.xSmall);
-      expect(MuiTextSize.fromLegacyScale(0.9), MuiTextSize.small);
-      expect(MuiTextSize.fromLegacyScale(1.1), MuiTextSize.xLarge);
-      expect(MuiTextSize.fromLegacyScale(1.2), MuiTextSize.xxLarge);
     });
 
     test('全 15 级 inherit 为 false —— 投影到 material 时要整块替换', () {
@@ -385,10 +343,9 @@ void main() {
       }
     });
 
-    test('相等只看 (size, font, colors)', () {
+    test('相等只看 (font, colors)', () {
       expect(typo(), typo());
       expect(typo().hashCode, typo().hashCode);
-      expect(typo(), isNot(typo(size: MuiTextSize.small)));
       expect(typo(), isNot(typo(font: const MuiFontConfig(family: 'X'))));
     });
   });

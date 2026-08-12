@@ -23,7 +23,6 @@ class MuiThemeData with MuiValue {
     required this.colors,
     required this.typography,
     required this.font,
-    required this.textSize,
     required this.radii,
     required this.spacing,
     required this.motion,
@@ -42,7 +41,6 @@ class MuiThemeData with MuiValue {
     MuiAccent accent = const .neutral(),
     MuiColorScheme? colors,
     MuiFontConfig font = const MuiFontConfig(),
-    MuiTextSize textSize = MuiTextSize.large,
     MuiRadii radii = const MuiRadii(),
     MuiSpacing spacing = const MuiSpacing(),
     MuiMotion motion = const MuiMotion(),
@@ -57,13 +55,8 @@ class MuiThemeData with MuiValue {
     return MuiThemeData._(
       brightness: brightness,
       colors: scheme,
-      typography: MuiTypography.resolve(
-        size: textSize,
-        font: font,
-        colors: scheme,
-      ),
+      typography: MuiTypography.resolve(font: font, colors: scheme),
       font: font,
-      textSize: textSize,
       radii: radii,
       spacing: spacing,
       motion: motion,
@@ -80,7 +73,6 @@ class MuiThemeData with MuiValue {
   final MuiColorScheme colors;
   final MuiTypography typography;
   final MuiFontConfig font;
-  final MuiTextSize textSize;
   final MuiRadii radii;
   final MuiSpacing spacing;
   final MuiMotion motion;
@@ -99,7 +91,6 @@ class MuiThemeData with MuiValue {
     colors,
     typography,
     font,
-    textSize,
     radii,
     spacing,
     motion,
@@ -134,7 +125,6 @@ class MuiThemeData with MuiValue {
     colors: colors,
     typography: typography,
     font: font,
-    textSize: textSize,
     radii: radii,
     spacing: spacing,
     motion: motion,
@@ -159,7 +149,6 @@ class MuiThemeData with MuiValue {
       colors: MuiColorScheme.lerp(a.colors, b.colors, t),
       typography: MuiTypography.lerp(a.typography, b.typography, t),
       font: second.font,
-      textSize: second.textSize,
       radii: second.radii,
       spacing: second.spacing,
       motion: second.motion,

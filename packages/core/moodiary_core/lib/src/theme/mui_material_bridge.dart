@@ -89,7 +89,7 @@ ColorScheme materialColorSchemeFrom(MuiColorScheme c) => ColorScheme(
   surfaceVariant: c.surfaceVariant,
 );
 
-/// [MuiTypography] 的 15 级已带全套几何（M3 2021，字号已按 [MuiTextSize] 解析完）
+/// [MuiTypography] 的 15 级已带全套几何（M3 2021 的基准值，缩放归系统 textScaler）
 /// 且 `inherit: false`，所以它会**整块替换**而不是 merge 掉默认排版 ——
 /// `TextStyle.merge` 遇到 `inherit == false` 直接返回对方。连带地
 /// `ThemeData.localize` 那条按 `ScriptCategory` 换几何的路径变成空操作，这是好事：

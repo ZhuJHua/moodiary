@@ -97,17 +97,10 @@ void main() {
       expect(theme.textTheme.headlineLarge!.fontWeight, FontWeight.w400);
     });
 
-    test('字号档投影进 material 的 textTheme', () {
-      double bodyAt(MuiTextSize size) => materialThemeFrom(
-        MuiThemeData(brightness: .light, textSize: size),
-      ).textTheme.bodyMedium!.fontSize!;
-
-      // large 是基准，与 M3 原值一致；两侧各档单调。
-      expect(bodyAt(MuiTextSize.large), 14);
-      expect(bodyAt(MuiTextSize.xSmall), lessThan(bodyAt(MuiTextSize.large)));
-      expect(bodyAt(MuiTextSize.xxxLarge), greaterThan(bodyAt(.large)));
-      final all = MuiTextSize.values.map(bodyAt).toList();
-      expect(all, orderedEquals(all.toList()..sort()));
+    test('投影出去的是 M3 基准字号 —— 缩放归系统 textScaler，不进主题', () {
+      expect(theme.textTheme.bodyMedium!.fontSize, 14);
+      expect(theme.textTheme.titleLarge!.fontSize, 22);
+      expect(theme.textTheme.labelSmall!.fontSize, 11);
     });
 
     test('顶栏滚动态不变色不投影', () {

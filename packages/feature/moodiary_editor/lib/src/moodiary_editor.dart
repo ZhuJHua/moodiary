@@ -112,7 +112,7 @@ class MoodiaryEditor extends StatefulWidget {
   /// `text-indent`。变更时经 [didUpdateWidget] 实时推给已打开的编辑器。
   final bool firstLineIndent;
 
-  /// 全局「字号」缩放（1.0 = 标准）：随主题一起下发，web 侧置 CSS `--app-font-scale`
+  /// 系统字号缩放倍率（1.0 = 标准）：随主题一起下发，web 侧置 CSS `--app-font-scale`
   /// 缩放正文与标题根字号（层级/行内代码为 em，自动跟随）。变更同样实时推送。
   final double fontScale;
 
