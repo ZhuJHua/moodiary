@@ -1,35 +1,21 @@
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/src/app_logger.dart';
 import 'package:moodiary_core/src/files/app_files.dart';
 import 'package:moodiary_core/src/theme/app_color_scheme.dart';
 import 'package:moodiary_core/src/theme/font_manager.dart';
+import 'package:moodiary_core/src/theme/mui_material_bridge.dart';
 import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 
-Widget _backIcon(BuildContext context) => const Icon(LucideIcons.arrowLeft);
-
-Widget _closeIcon(BuildContext context) => const Icon(LucideIcons.x);
-
-Widget _menuIcon(BuildContext context) => const Icon(LucideIcons.menu);
-
-/// 框架自带 leading/actions 的图标（`AppBar` 隐式返回键、`Scaffold` 抽屉键、
-/// `showDateRangePicker` 全屏关闭键）唯一的主题级替换入口 —— 全仓 30+ 个 `AppBar`
-/// 都不写 `leading:`，靠这一处把 Material 字形换成 lucide。
-/// 命中 builder 会短路掉 `_ActionIcon` 里的平台分支，iOS 的 `arrow_back_ios_new`
-/// 与 Android 的 `arrow_back` 就此统一；代价是跳过 Android 专属的 semanticLabel，
-/// 但 IconButton 的本地化 tooltip 还在，读屏不受影响。
-const ActionIconThemeData _actionIconTheme = ActionIconThemeData(
-  backButtonIconBuilder: _backIcon,
-  closeButtonIconBuilder: _closeIcon,
-  drawerButtonIconBuilder: _menuIcon,
-  endDrawerButtonIconBuilder: _menuIcon,
-);
-
+/// 主题的构建入口。
+///
+/// [MuiThemeData] 是真源，[ThemeData] 是它经 `mui_material_bridge.dart` 得到的
+/// 只读投影。两者在 [buildTheme] 里**同一次**算出并一起替换 —— 分开更新会出现
+/// 「material 已切、mui 未切」的一帧。
 class ThemeManager {
   ThemeManager._();
 
@@ -37,32 +23,41 @@ class ThemeManager {
 
   factory ThemeManager() => instance;
 
+  MuiThemeData? _lightMui;
+
+  MuiThemeData? _darkMui;
+
   ThemeData? _lightTheme;
 
   ThemeData? _darkTheme;
 
   Map<String, double> wghtAxisMap = {};
 
-  /// 系统壁纸的整套 tonal palette。取不到（iOS、Android 11-、取色失败）即为 null，
+  MuiTextSize _textSize = MuiTextSize.large;
+
+  MuiTextSize get textSize => _textSize;
+
+  /// 系统主题色。取不到（iOS、Android 11-、取色失败）即为 null，
   /// [ThemeAccentMode.system] 那一档随之不可选。
   ///
-  /// 存整盘而不是存一个种子色：从 `primary.get(40)` 反推会丢掉壁纸的 chroma，
-  /// 实测 primary 最大能漂到 ΔE 34（红变褐红）。
-  SystemPalettes? _systemPalette;
-
-  /// 只拿到单个系统强调色（非 Android 通道）时的回退种子。
+  /// 只存一个种子色：系统档与自定义档共用同一条生成路径，`dynamic_color` 的职责
+  /// 到「交出一个颜色」为止。代价是壁纸的 chroma 会按 tone-40 重算，实测 primary
+  /// 最大能漂到 ΔE 34（红变褐红）。
   Color? _systemSeed;
 
-  ThemeData get lightTheme => _lightTheme ?? .light();
+  MuiThemeData get lightMuiTheme =>
+      _lightMui ?? MuiThemeData(brightness: .light);
 
-  ThemeData get darkTheme => _darkTheme ?? .dark();
+  MuiThemeData get darkMuiTheme => _darkMui ?? MuiThemeData(brightness: .dark);
+
+  ThemeData get lightTheme => _lightTheme ?? materialThemeFrom(lightMuiTheme);
+
+  ThemeData get darkTheme => _darkTheme ?? materialThemeFrom(darkMuiTheme);
 
   /// 供设置页画那枚系统色块用。
-  Color? get systemAccentSeed => _systemPalette == null
-      ? _systemSeed
-      : Color(_systemPalette!.primary.get(40));
+  Color? get systemAccentSeed => _systemSeed;
 
-  bool get supportDynamic => _systemPalette != null || _systemSeed != null;
+  bool get supportDynamic => _systemSeed != null;
 
   String? fontFamily;
 
@@ -114,97 +109,9 @@ class ThemeManager {
     return unified;
   }
 
-  TextTheme _applyFontVariations(TextTheme baseTheme) {
-    final regularFontWeight = wghtAxisMap['Regular'] ?? 400;
-    final mediumFontWeight = wghtAxisMap['Medium'] ?? 500;
-    final semiBoldFontWeight = wghtAxisMap['SemiBold'] ?? 600;
-    final boldFontWeight = wghtAxisMap['Bold'] ?? 700;
-    return baseTheme.copyWith(
-      displayLarge: baseTheme.displayLarge?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w500,
-        fontVariations: [FontVariation('wght', mediumFontWeight)],
-      ),
-      displayMedium: baseTheme.displayMedium?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w500,
-        fontVariations: [FontVariation('wght', mediumFontWeight)],
-      ),
-      displaySmall: baseTheme.displaySmall?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w500,
-        fontVariations: [FontVariation('wght', mediumFontWeight)],
-      ),
-      headlineLarge: baseTheme.headlineLarge?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w700,
-        fontVariations: [FontVariation('wght', boldFontWeight)],
-      ),
-      headlineMedium: baseTheme.headlineMedium?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w600,
-        fontVariations: [FontVariation('wght', semiBoldFontWeight)],
-      ),
-      headlineSmall: baseTheme.headlineSmall?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w500,
-        fontVariations: [FontVariation('wght', mediumFontWeight)],
-      ),
-      titleLarge: baseTheme.titleLarge?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w600,
-        fontVariations: [FontVariation('wght', semiBoldFontWeight)],
-      ),
-      titleMedium: baseTheme.titleMedium?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w500,
-        fontVariations: [FontVariation('wght', mediumFontWeight)],
-      ),
-      titleSmall: baseTheme.titleSmall?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w500,
-        fontVariations: [FontVariation('wght', mediumFontWeight)],
-      ),
-      bodyLarge: baseTheme.bodyLarge?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w400,
-        fontVariations: [FontVariation('wght', regularFontWeight)],
-      ),
-      bodyMedium: baseTheme.bodyMedium?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w400,
-        fontVariations: [FontVariation('wght', regularFontWeight)],
-      ),
-      bodySmall: baseTheme.bodySmall?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w400,
-        fontVariations: [FontVariation('wght', regularFontWeight)],
-      ),
-      labelLarge: baseTheme.labelLarge?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w500,
-        fontVariations: [FontVariation('wght', mediumFontWeight)],
-      ),
-      labelMedium: baseTheme.labelMedium?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w500,
-        fontVariations: [FontVariation('wght', mediumFontWeight)],
-      ),
-      labelSmall: baseTheme.labelSmall?.copyWith(
-        fontFamily: fontFamily,
-        fontWeight: .w400,
-        fontVariations: [FontVariation('wght', regularFontWeight)],
-      ),
-    );
-  }
-
   /// [customFont] 为当前激活的自定义字体，由调用方（FontRepository.getActiveFont）解析注入。
   Future<void> buildTheme({Font? customFont}) async {
     await findDynamicColor();
-
-    final accent = resolveAccent();
-    final lightColorScheme = AppColorScheme.resolve(.light, accent);
-    final darkColorScheme = AppColorScheme.resolve(.dark, accent);
 
     // 每次重建先归零字体状态：从自定义字体切回「系统」时才能立即生效（否则残留旧家族，
     // 须重启才恢复系统字体）。
@@ -224,59 +131,66 @@ class ThemeManager {
       );
     }
 
-    final lightTextTheme = buildTextTheme(lightColorScheme);
-    final darkTextTheme = buildTextTheme(darkColorScheme);
+    final accent = resolveAccent();
+    final font = MuiFontConfig(family: fontFamily, wghtAxis: wghtAxisMap);
+    _textSize = await _resolveTextSize();
 
-    final lightTypography = buildTypography(lightColorScheme);
-    final darkTypography = buildTypography(darkColorScheme);
+    _lightMui = MuiThemeData(
+      brightness: .light,
+      accent: accent,
+      font: font,
+      textSize: _textSize,
+    );
+    _darkMui = MuiThemeData(
+      brightness: .dark,
+      accent: accent,
+      font: font,
+      textSize: _textSize,
+    );
+    _lightTheme = materialThemeFrom(_lightMui!);
+    _darkTheme = materialThemeFrom(_darkMui!);
+  }
 
-    _lightTheme = buildThemeData(
-      lightColorScheme,
-      lightTextTheme,
-      lightTypography,
-      fontFamily,
-      wghtAxisMap,
-      .light,
+  /// KV → 字号档。老用户第一次进来时从连续的 [MoodiaryKVs.fontScale] 迁到最近的档
+  /// 并写回，之后不再走这条路。
+  Future<MuiTextSize> _resolveTextSize() async {
+    final stored = MoodiaryKVs.textSize.get()!;
+    if (stored >= 0 && stored < MuiTextSize.values.length) {
+      return MuiTextSize.values[stored];
+    }
+    final migrated = MuiTextSize.fromLegacyScale(
+      MoodiaryKVs.fontScale.get() ?? 1.0,
     );
-    _darkTheme = buildThemeData(
-      darkColorScheme,
-      darkTextTheme,
-      darkTypography,
-      fontFamily,
-      wghtAxisMap,
-      .dark,
-    );
+    await MoodiaryKVs.textSize.set(migrated.index);
+    return migrated;
   }
 
   /// KV → 强调色来源。system 档在取不到壁纸色时静默回落到无彩，
   /// 不写回 KV —— 换台支持的设备就该自己恢复。
-  AccentPalette resolveAccent() {
+  MuiAccent resolveAccent() {
     final index = MoodiaryKVs.themeAccentMode.get()!;
     final mode = index >= 0 && index < ThemeAccentMode.values.length
         ? ThemeAccentMode.values[index]
         : ThemeAccentMode.neutral;
     return switch (mode) {
-      .neutral => const AccentPalette.neutral(),
-      .system => switch ((_systemPalette, _systemSeed)) {
-        (final palettes?, _) => AccentPalette.system(palettes),
-        (_, final seed?) => AccentPalette.seeded(seed),
-        _ => const AccentPalette.neutral(),
+      .neutral => const MuiAccent.neutral(),
+      .system => switch (_systemSeed) {
+        final seed? => MuiAccent.seeded(seed),
+        _ => const MuiAccent.neutral(),
       },
-      .custom => AccentPalette.seeded(
-        Color(MoodiaryKVs.themeAccentColor.get()!),
-      ),
+      .custom => MuiAccent.seeded(Color(MoodiaryKVs.themeAccentColor.get()!)),
     };
   }
 
   /// 编辑器 webview 的配色输入：**解析好的角色色表**，不是种子色。
   ///
   /// 原先下发 (seed, variant) 让 JS 侧用自己那份 material-color-utilities 再算一遍，
-  /// 等于两端各跑一套算法 —— [NeutralRamp] 的灰阶覆盖根本传不过去，两边库版本一漂
-  /// 还会静默不一致。现在 [ColorScheme] 是唯一真源，JS 只负责铺 CSS 变量。
+  /// 等于两端各跑一套算法 —— 灰阶覆盖根本传不过去，两边库版本一漂还会静默不一致。
+  /// 现在 [MuiColorScheme] 是唯一真源，JS 只负责铺 CSS 变量。
   Map<String, String> editorRoles(Brightness brightness) {
     final scheme = brightness == .light
-        ? lightTheme.colorScheme
-        : darkTheme.colorScheme;
+        ? lightMuiTheme.colors
+        : darkMuiTheme.colors;
     String hex(Color color) =>
         '#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
     return {
@@ -307,96 +221,14 @@ class ThemeManager {
     return (family: family, path: AppFiles.getRealPath('font', fileName));
   }
 
-  Typography buildTypography(ColorScheme colorScheme) {
-    return .material2021(
-      platform: defaultTargetPlatform,
-      colorScheme: colorScheme,
-    );
-  }
-
-  TextTheme buildTextTheme(ColorScheme colorScheme) {
-    final typography = buildTypography(colorScheme);
-    final textTheme = colorScheme.brightness == .light
-        ? typography.black
-        : typography.white;
-    return _applyFontVariations(textTheme);
-  }
-
-  ThemeData buildThemeData(
-    ColorScheme colorScheme,
-    TextTheme textTheme,
-    Typography typography,
-    String? fontFamily,
-    Map<String, double> wghtAxisMap,
-    Brightness brightness,
-  ) {
-    return ThemeData(
-      colorScheme: colorScheme,
-      materialTapTargetSize: .padded,
-      actionIconTheme: _actionIconTheme,
-      // SegmentedButton 选中态的 √（框架默认 Icons.check）。当前 5 处都写了
-      // showSelectedIcon: false，这里是给将来不写的那处兜底。
-      segmentedButtonTheme: const SegmentedButtonThemeData(
-        selectedIcon: Icon(LucideIcons.check),
-      ),
-      // 内容滚到顶栏下方时不再有任何视觉变化。要关的是**两件事**，缺一个都还会跳：
-      //   1. 底色：滚动态取的是 `colorScheme.surfaceContainer` 而非 `surface`
-      //      （app_bar.dart 的 scrolledUnderBackground）——把 backgroundColor 钉住，
-      //      两种状态就都用它；
-      //   2. 阴影：scrolledUnderElevation 默认 3，会投出一道影子。
-      // 注意**不是**改 surfaceTintColor —— Flutter 3.44 的 M3 默认值本来就是
-      // transparent（_AppBarDefaultsM3），设它等于没设（实测两者渲染结果完全一致）。
-      appBarTheme: AppBarTheme(
-        backgroundColor: colorScheme.surface,
-        scrolledUnderElevation: 0,
-      ),
-      // 兜住尚未迁到 showMoodiaryAlert 的原生弹窗（选择列表、进度、日期选择器），
-      // 让它们的圆角/标题/遮罩与新组件一致 —— M3 默认是 28 圆角 + headlineSmall(24sp)
-      // + black54，是全仓唯一不遵守 AppBorderRadius 的一处。
-      dialogTheme: DialogThemeData(
-        backgroundColor: colorScheme.surfaceContainerHigh,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.black.withValues(alpha: 0.24),
-        elevation: 8,
-        barrierColor: colorScheme.scrim.withValues(alpha: 0.32),
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppBorderRadius.xLargeBorderRadius,
-        ),
-        titleTextStyle: textTheme.titleLarge?.copyWith(
-          fontWeight: .w600,
-          color: colorScheme.onSurface,
-        ),
-        contentTextStyle: textTheme.bodyMedium?.copyWith(
-          color: colorScheme.onSurfaceVariant,
-        ),
-      ),
-      scrollbarTheme: ScrollbarThemeData(
-        thumbColor: .all(colorScheme.secondary.withValues(alpha: 0.4)),
-        thickness: .all(4.0),
-        radius: const .circular(2.0),
-        mainAxisMargin: 24.0,
-      ),
-      brightness: brightness,
-      fontFamily: fontFamily,
-      typography: typography,
-      textTheme: _applyFontVariations(textTheme),
-    );
-  }
-
-  /// 只负责拿到系统壁纸的色板；配色生成一律走 [AppColorScheme.resolve]。
+  /// 只负责拿到**系统主题色**这一个颜色；配色生成一律走 [MuiColorScheme.resolve]。
   Future<void> findDynamicColor() async {
     try {
       final corePalette = await DynamicColorPlugin.getCorePalette();
       if (corePalette != null) {
-        // 就地拆成本仓自己的 SystemPalettes：dynamic_color 的返回类型 CorePalette 在
-        // MCU 0.13.0 已废弃，别让它渗进仓里。
-        _systemPalette = SystemPalettes(
-          primary: corePalette.primary,
-          secondary: corePalette.secondary,
-          tertiary: corePalette.tertiary,
-          neutral: corePalette.neutral,
-          neutralVariant: corePalette.neutralVariant,
-        );
+        // 取 tone-40 当种子。dynamic_color 的返回类型 CorePalette 在 MCU 0.13.0
+        // 已废弃，就地拆出一个颜色，别让它渗进仓里。
+        _systemSeed = Color(corePalette.primary.get(40));
         return;
       }
     } on PlatformException {
@@ -406,8 +238,6 @@ class ThemeManager {
     try {
       final accentColor = await DynamicColorPlugin.getAccentColor();
       if (accentColor != null) {
-        // 这条通道（Windows / macOS / Linux）只给一个强调色，没有色板可端。
-        // 当成普通种子走 tonalSpot —— 只有一个颜色时本来就没有保真度可谈。
         _systemSeed = accentColor;
         return;
       }
@@ -418,9 +248,19 @@ class ThemeManager {
     logger.d('dynamic_color: Dynamic color not detected on this device.');
   }
 
-  (ThemeData, ThemeData) getThemeData() =>
-      (_lightTheme ?? .light(), _darkTheme ?? .dark());
+  (MuiThemeData, MuiThemeData) getMuiThemeData() =>
+      (lightMuiTheme, darkMuiTheme);
+
+  (ThemeData, ThemeData) getThemeData() => (lightTheme, darkTheme);
 }
+
+/// 字号档 index → 倍率。给**不依赖 mui** 的包用（编辑器把它透传给 webview 当
+/// `--app-font-scale`）。越界或未设置一律回落到基准档。
+double textSizeScaleOf(int index) =>
+    (index >= 0 && index < MuiTextSize.values.length
+            ? MuiTextSize.values[index]
+            : MuiTextSize.large)
+        .scale;
 
 extension ColorExt on Color {
   Brightness get brightness {

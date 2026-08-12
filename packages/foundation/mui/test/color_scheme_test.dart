@@ -1,0 +1,366 @@
+import 'package:flutter/widgets.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:material_color_utilities/material_color_utilities.dart' as mcu;
+import 'package:mui/mui.dart';
+
+/// 无彩档的结构性角色必须真的是灰、且与种子无关。[MuiColorScheme.resolve] 换掉
+/// 变体或往里加覆盖，这里就会红。
+const List<String> _structuralRoles = [
+  'surface',
+  'surfaceBright',
+  'surfaceDim',
+  'surfaceContainerLowest',
+  'surfaceContainerLow',
+  'surfaceContainer',
+  'surfaceContainerHigh',
+  'surfaceContainerHighest',
+  'onSurface',
+  'onSurfaceVariant',
+  'outline',
+  'outlineVariant',
+  'inverseSurface',
+  'onInverseSurface',
+];
+
+Map<String, int> _structuralOf(MuiColorScheme s) => {
+  'surface': s.surface.toARGB32(),
+  'surfaceBright': s.surfaceBright.toARGB32(),
+  'surfaceDim': s.surfaceDim.toARGB32(),
+  'surfaceContainerLowest': s.surfaceContainerLowest.toARGB32(),
+  'surfaceContainerLow': s.surfaceContainerLow.toARGB32(),
+  'surfaceContainer': s.surfaceContainer.toARGB32(),
+  'surfaceContainerHigh': s.surfaceContainerHigh.toARGB32(),
+  'surfaceContainerHighest': s.surfaceContainerHighest.toARGB32(),
+  'onSurface': s.onSurface.toARGB32(),
+  'onSurfaceVariant': s.onSurfaceVariant.toARGB32(),
+  'outline': s.outline.toARGB32(),
+  'outlineVariant': s.outlineVariant.toARGB32(),
+  'inverseSurface': s.inverseSurface.toARGB32(),
+  'onInverseSurface': s.onInverseSurface.toARGB32(),
+};
+
+bool _isGray(Color color) {
+  final argb = color.toARGB32();
+  final r = (argb >> 16) & 0xFF;
+  final g = (argb >> 8) & 0xFF;
+  final b = argb & 0xFF;
+  return r == g && g == b;
+}
+
+void main() {
+  group('MuiColorScheme.resolve', () {
+    for (final brightness in Brightness.values) {
+      final neutral = MuiColorScheme.resolve(
+        brightness,
+        const MuiAccent.neutral(),
+      );
+
+      test('$brightness 无彩档除 error 家族外全部是灰', () {
+        // error 四件套刻意保留语义红：灰度 UI 里它是唯一还能喊「出事了」的颜色。
+        final chromatic = {
+          neutral.error.toARGB32(),
+          neutral.onError.toARGB32(),
+          neutral.errorContainer.toARGB32(),
+          neutral.onErrorContainer.toARGB32(),
+        };
+        for (final entry in _structuralOf(neutral).entries) {
+          expect(
+            _isGray(Color(entry.value)),
+            isTrue,
+            reason: '${entry.key} 不是灰',
+          );
+        }
+        expect(_isGray(neutral.primary), isTrue);
+        expect(_isGray(neutral.secondary), isTrue);
+        expect(_isGray(neutral.tertiary), isTrue);
+        expect(_isGray(neutral.ring), isTrue);
+        expect(chromatic.length, greaterThan(1));
+      });
+
+      test('$brightness 强调色确实改变了 primary', () {
+        final accented = MuiColorScheme.resolve(
+          brightness,
+          const MuiAccent.seeded(Color(0xFF2E59A7)),
+        );
+        expect(accented.primary.toARGB32(), isNot(neutral.primary.toARGB32()));
+        expect(_isGray(accented.primary), isFalse);
+      });
+
+      test('$brightness 无彩档不受种子色影响', () {
+        expect(
+          _structuralOf(
+            MuiColorScheme.resolve(brightness, const MuiAccent.neutral()),
+          ),
+          _structuralOf(neutral),
+        );
+      });
+
+      test('$brightness ring 与 selection 有定义且 selection 半透明', () {
+        for (final accent in [
+          const MuiAccent.neutral(),
+          const MuiAccent.seeded(Color(0xFF2E59A7)),
+        ]) {
+          final s = MuiColorScheme.resolve(brightness, accent);
+          expect(s.ring.a, 1.0, reason: '焦点环必须不透明');
+          expect(s.selection.a, lessThan(1.0), reason: '选中底色必须半透明');
+        }
+      });
+    }
+
+    group('有彩档（系统与自定义共用）', () {
+      const seed = Color(0xFF2E59A7);
+
+      mcu.TonalPalette primaryPaletteOf(Brightness brightness) =>
+          mcu.SchemeTonalSpot(
+            sourceColorHct: mcu.Hct.fromInt(seed.toARGB32()),
+            isDark: brightness == Brightness.dark,
+            contrastLevel: 0,
+          ).primaryPalette;
+
+      test('on*Container 走 Tone 30/90，不是 legacy 的 Tone 10', () {
+        // dynamic_color 的 toColorScheme() 至 1.9.0 仍取 primary.get(10)，实测
+        // 对比度 13.2（近黑压浅块）。现代规范是 tone 30/90，对比度 7.2。
+        for (final brightness in Brightness.values) {
+          final scheme = MuiColorScheme.resolve(
+            brightness,
+            const MuiAccent.seeded(seed),
+          );
+          final palette = primaryPaletteOf(brightness);
+          final legacyTone = palette.get(brightness == .dark ? 90 : 10);
+          final modernTone = palette.get(brightness == .dark ? 90 : 30);
+          expect(
+            scheme.onPrimaryContainer.toARGB32(),
+            modernTone,
+            reason: '$brightness 的 onPrimaryContainer 不是 tone 30/90',
+          );
+          if (brightness == .light) {
+            expect(scheme.onPrimaryContainer.toARGB32(), isNot(legacyTone));
+          }
+        }
+      });
+
+      test('结构性角色跟着种子染色，不套用灰阶', () {
+        for (final brightness in Brightness.values) {
+          final scheme = MuiColorScheme.resolve(
+            brightness,
+            const MuiAccent.seeded(seed),
+          );
+          expect(
+            _structuralOf(scheme),
+            isNot(
+              _structuralOf(
+                MuiColorScheme.resolve(brightness, const MuiAccent.neutral()),
+              ),
+            ),
+            reason: '有彩档的表面色不该等于无彩档',
+          );
+          expect(_isGray(scheme.surface), isFalse, reason: 'surface 应带色相');
+          expect(_isGray(scheme.tertiary), isFalse, reason: 'tertiary 应带色相');
+          expect(scheme.surfaceTint, scheme.primary, reason: '高程染色应为 primary');
+        }
+      });
+
+      test('系统档与自定义档同一条路 —— 种子相同则结果逐字节相同', () {
+        // dynamic_color 只负责交出种子色；交出来之后与用户挑的颜色没有区别。
+        for (final brightness in Brightness.values) {
+          expect(
+            MuiColorScheme.resolve(brightness, const MuiAccent.seeded(seed)),
+            MuiColorScheme.resolve(brightness, MuiAccent.seeded(seed)),
+          );
+        }
+      });
+    });
+
+    test('结构性角色清单与断言辅助保持同步', () {
+      expect(
+        _structuralOf(
+          MuiColorScheme.resolve(.light, const MuiAccent.neutral()),
+        ).keys,
+        _structuralRoles,
+      );
+    });
+  });
+
+  group('值语义', () {
+    test('结构相同的两次构造相等 —— 否则主题每次都会通知', () {
+      final a = MuiThemeData(brightness: .light);
+      final b = MuiThemeData(brightness: .light);
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+    });
+
+    test('带 Map 字段（wghtAxis）仍然相等', () {
+      final a = MuiThemeData(
+        brightness: .light,
+        font: const MuiFontConfig(family: 'X', wghtAxis: {'Bold': 650}),
+      );
+      final b = MuiThemeData(
+        brightness: .light,
+        font: const MuiFontConfig(family: 'X', wghtAxis: {'Bold': 650}),
+      );
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+    });
+
+    test('任一 token 变化都会打破相等', () {
+      final base = MuiThemeData(brightness: .light);
+      expect(base, isNot(MuiThemeData(brightness: .dark)));
+      expect(
+        base,
+        isNot(MuiThemeData(brightness: .light, radii: const MuiRadii(lg: 20))),
+      );
+      expect(
+        base,
+        isNot(
+          MuiThemeData(brightness: .light, spacing: const MuiSpacing(xs: 5)),
+        ),
+      );
+      expect(
+        base,
+        isNot(
+          MuiThemeData(brightness: .light, borders: const MuiBorders(ring: 2)),
+        ),
+      );
+      expect(
+        base,
+        isNot(
+          MuiThemeData(
+            brightness: .light,
+            states: const MuiStateTokens(hoverOpacity: 0.2),
+          ),
+        ),
+      );
+    });
+
+    test('lerp 端点还原，中点在两端之间', () {
+      final light = MuiThemeData(brightness: .light);
+      final dark = MuiThemeData(brightness: .dark);
+      expect(MuiThemeData.lerp(light, dark, 0), light);
+      expect(MuiThemeData.lerp(light, dark, 1), dark);
+      final mid = MuiThemeData.lerp(light, dark, 0.5).colors.surface;
+      expect(mid, isNot(light.colors.surface));
+      expect(mid, isNot(dark.colors.surface));
+    });
+  });
+
+  group('MuiTypography', () {
+    MuiTypography typo({
+      MuiTextSize size = MuiTextSize.large,
+      MuiFontConfig font = const MuiFontConfig(),
+    }) => MuiTypography.resolve(
+      size: size,
+      font: font,
+      colors: MuiColorScheme.resolve(.light, const MuiAccent.neutral()),
+    );
+
+    test('字重与 fontVariations 一致 —— 只改一个在可变字体下会被吃掉', () {
+      const font = MuiFontConfig(
+        family: 'X',
+        wghtAxis: {'Regular': 380, 'Medium': 520, 'Bold': 680},
+      );
+      final t = typo(font: font);
+      expect(t.bodyMedium.onSurface.fontWeight, FontWeight.w400);
+      expect(t.bodyMedium.onSurface.fontVariations, [
+        const FontVariation('wght', 380),
+      ]);
+      expect(t.headlineLarge.onSurface.fontWeight, FontWeight.w700);
+      expect(t.headlineLarge.onSurface.fontVariations, [
+        const FontVariation('wght', 680),
+      ]);
+      expect(t.labelLarge.onSurface.fontVariations, [
+        const FontVariation('wght', 520),
+      ]);
+    });
+
+    test('改字重时 fontWeight 与 fontVariations 一起动', () {
+      const font = MuiFontConfig(wghtAxis: {'SemiBold': 610});
+      final role = typo(font: font).bodyMedium;
+      expect(role.onSurface.fontWeight, FontWeight.w400);
+      expect(role.semiBold.onSurface.fontWeight, FontWeight.w600);
+      expect(role.semiBold.onSurface.fontVariations, [
+        const FontVariation('wght', 610),
+      ]);
+      // 换字重不动几何。
+      expect(role.semiBold.onSurface.fontSize, role.onSurface.fontSize);
+      expect(role.semiBold.onSurface.height, role.onSurface.height);
+    });
+
+    test('链式取色只换颜色', () {
+      final colors = MuiColorScheme.resolve(.light, const MuiAccent.neutral());
+      final role = typo().titleLarge;
+      expect(role.onSurface.color, colors.onSurface);
+      expect(role.onSurfaceVariant.color, colors.onSurfaceVariant);
+      expect(role.error.color, colors.error);
+      // 色板之外的颜色走惯例 copyWith，不另开 API。
+      expect(
+        role.onSurface.copyWith(color: const Color(0xFF123456)).color,
+        const Color(0xFF123456),
+      );
+      expect(role.onSurfaceVariant.fontSize, role.onSurface.fontSize);
+      expect(role.onSurfaceVariant.letterSpacing, role.onSurface.letterSpacing);
+    });
+
+    test('large 是基准档，字号沿七档单调递增且落在半像素上', () {
+      for (final level in MuiTypography.levels) {
+        final sizes = MuiTextSize.values
+            .map((s) => typo(size: s).byLevel(level).onSurface.fontSize!)
+            .toList();
+        expect(
+          sizes,
+          orderedEquals(sizes.toList()..sort()),
+          reason: '$level 的字号不是单调的',
+        );
+        expect(
+          sizes[MuiTextSize.large.index],
+          typo().byLevel(level).onSurface.fontSize,
+        );
+        for (final v in sizes) {
+          expect(v * 2, v * 2 ~/ 1, reason: '$level 的 $v 不在半像素上');
+        }
+      }
+    });
+
+    test('large 档与 M3 基准逐级相同', () {
+      final t = typo();
+      expect(t.bodyMedium.onSurface.fontSize, 14);
+      expect(t.bodyMedium.onSurface.height, 1.43);
+      expect(t.bodyMedium.onSurface.letterSpacing, 0.25);
+      expect(t.displayLarge.onSurface.fontSize, 57);
+      expect(t.labelSmall.onSurface.fontSize, 11);
+    });
+
+    test('换档时 height 是比例所以不动，letterSpacing 跟着比例走', () {
+      final large = typo().bodyMedium.onSurface;
+      final big = typo(size: MuiTextSize.xxxLarge).bodyMedium.onSurface;
+      expect(big.height, large.height);
+      expect(big.fontSize, greaterThan(large.fontSize!));
+      expect(
+        big.letterSpacing,
+        closeTo(large.letterSpacing! * MuiTextSize.xxxLarge.scale, 1e-9),
+      );
+    });
+
+    test('旧 fontScale 映射到最近的档', () {
+      expect(MuiTextSize.fromLegacyScale(1.0), MuiTextSize.large);
+      expect(MuiTextSize.fromLegacyScale(0.8), MuiTextSize.xSmall);
+      expect(MuiTextSize.fromLegacyScale(0.9), MuiTextSize.small);
+      expect(MuiTextSize.fromLegacyScale(1.1), MuiTextSize.xLarge);
+      expect(MuiTextSize.fromLegacyScale(1.2), MuiTextSize.xxLarge);
+    });
+
+    test('全 15 级 inherit 为 false —— 投影到 material 时要整块替换', () {
+      final t = typo();
+      expect(MuiTypography.levels.length, 15);
+      for (final level in MuiTypography.levels) {
+        expect(t.byLevel(level).onSurface.inherit, isFalse, reason: level);
+      }
+    });
+
+    test('相等只看 (size, font, colors)', () {
+      expect(typo(), typo());
+      expect(typo().hashCode, typo().hashCode);
+      expect(typo(), isNot(typo(size: MuiTextSize.small)));
+      expect(typo(), isNot(typo(font: const MuiFontConfig(family: 'X'))));
+    });
+  });
+}

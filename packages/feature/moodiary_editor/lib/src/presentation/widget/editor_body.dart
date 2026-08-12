@@ -86,9 +86,9 @@ class _EditorBodyState extends State<EditorBody> {
     // web 侧据此切 CSS text-indent / --app-font-scale）。boot 首帧与运行时实时切换共用同一路径。
     return ValueListenableBuilder<bool>(
       valueListenable: MoodiaryKVs.firstLineIndent.getNotifier(),
-      builder: (context, firstLineIndent, _) => ValueListenableBuilder<double>(
-        valueListenable: MoodiaryKVs.fontScale.getNotifier(),
-        builder: (context, fontScale, _) => MoodiaryEditorView(
+      builder: (context, firstLineIndent, _) => ValueListenableBuilder<int>(
+        valueListenable: MoodiaryKVs.textSize.getNotifier(),
+        builder: (context, textSize, _) => MoodiaryEditorView(
           initialContent: _content,
           initialTitle: widget.initialTitle,
           onTitleChanged: widget.onTitleChanged,
@@ -98,7 +98,7 @@ class _EditorBodyState extends State<EditorBody> {
           editable: widget.editable && widget.type.isEditable,
           saveStatus: widget.saveStatus,
           firstLineIndent: firstLineIndent,
-          fontScale: fontScale,
+          fontScale: textSizeScaleOf(textSize),
           onChanged: (content) =>
               widget.onChanged(content, TiptapContent.parse(content).plainText),
           onOpenDiaryLink: widget.onOpenDiaryLink,

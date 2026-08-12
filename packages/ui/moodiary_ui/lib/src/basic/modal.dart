@@ -15,7 +15,7 @@ class Modal extends StatelessWidget {
         return Visibility(
           visible: animation.value > 0,
           child: ModalBarrier(
-            color: context.theme.colorScheme.surfaceContainer.withValues(
+            color: context.colorScheme.surfaceContainer.withValues(
               alpha: 0.6 * animation.value,
             ),
             barrierSemanticsDismissible: false,

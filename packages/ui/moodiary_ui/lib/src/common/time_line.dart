@@ -43,7 +43,7 @@ class TimeLineComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: TimeLinePainter(
-        lineColor: context.theme.colorScheme.outlineVariant,
+        lineColor: context.colorScheme.outlineVariant,
         actionColor: actionColor,
         lineWidth: 2.0,
       ),

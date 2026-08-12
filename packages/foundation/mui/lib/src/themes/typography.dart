@@ -1,0 +1,355 @@
+import 'package:flutter/widgets.dart';
+import 'package:mui/src/themes/color_scheme.dart';
+import 'package:mui/src/themes/value.dart';
+
+/// 字号档。
+///
+/// 取代旧的连续 `fontScale` —— **`MediaQuery.textScaler` 钉死为 1**，字号在主题里
+/// 就解析完。好处有三：
+///   * `theme.typography.bodyMedium.onSurface` 拿到的 `TextStyle` 已经是最终尺寸，
+///     不需要读 `MediaQuery` 才知道它多大（`TextPainter` / `CustomPaint` 路径不再特殊）；
+///   * 字号档不会再和 widget 局部的 `textScaler:` 相乘，出不了「缩放叠缩放」；
+///   * 档与档之间可以逐级手调，而不是被一个乘数绑死。
+///
+/// [scale] 取 iOS Dynamic Type 的档间步长（正文 14/15/16/17/19/21/23 相对 17 的比值），
+/// 只借步长，字号基准仍是 M3。
+enum MuiTextSize {
+  xSmall(0.82),
+  small(0.88),
+  medium(0.94),
+  large(1.0),
+  xLarge(1.12),
+  xxLarge(1.24),
+  xxxLarge(1.35);
+
+  const MuiTextSize(this.scale);
+
+  final double scale;
+
+  /// 旧 `fontScale` KV（0.8 / 0.9 / 1.0 / 1.1 / 1.2 五档）→ 最近的新档。
+  /// 只在从未写过 [MoodiaryKVs.textSize] 的老用户身上跑一次。
+  static MuiTextSize fromLegacyScale(double legacy) {
+    var best = MuiTextSize.large;
+    var delta = double.infinity;
+    for (final size in MuiTextSize.values) {
+      final d = (size.scale - legacy).abs();
+      if (d < delta) {
+        delta = d;
+        best = size;
+      }
+    }
+    return best;
+  }
+}
+
+/// 字体族 + 可变字体的 wght 轴实测值。
+///
+/// [wghtAxis] 由宿主从 ttf/otf 实读后注入（键为归一化后的字重名）；读不到就回落到
+/// 标准档。[family] 为 null 表示用平台默认字体。
+@immutable
+class MuiFontConfig with MuiValue {
+  const MuiFontConfig({this.family, this.wghtAxis = const {}});
+
+  final String? family;
+  final Map<String, double> wghtAxis;
+
+  double get regular => wghtAxis['Regular'] ?? 400;
+  double get medium => wghtAxis['Medium'] ?? 500;
+  double get semiBold => wghtAxis['SemiBold'] ?? 600;
+  double get bold => wghtAxis['Bold'] ?? 700;
+
+  @override
+  List<Object?> get props => [family, wghtAxis];
+}
+
+/// 字重档。[value] 喂 `fontWeight`，[axis] 喂可变字体的 wght 轴。
+///
+/// 两者**必须同时设**：可变字体下 `fontVariations` 会吃掉后来的
+/// `copyWith(fontWeight:)`（`start_page.dart:225` 踩过）。所以字重只能经
+/// [MuiTextRole] 的四个 getter 改，裸 `copyWith(fontWeight:)` 由 CI 拦。
+enum MuiWeight {
+  regular(FontWeight.w400),
+  medium(FontWeight.w500),
+  semiBold(FontWeight.w600),
+  bold(FontWeight.w700);
+
+  const MuiWeight(this.value);
+
+  final FontWeight value;
+
+  double axis(MuiFontConfig font) => switch (this) {
+    .regular => font.regular,
+    .medium => font.medium,
+    .semiBold => font.semiBold,
+    .bold => font.bold,
+  };
+}
+
+/// 一个排版角色。链式读法：**先几何，再字重（可选），最后颜色**。
+///
+/// ```dart
+/// context.theme.typography.titleLarge.onSurfaceVariant
+/// context.theme.typography.bodyMedium.semiBold.primary
+/// ```
+///
+/// 刻意**不继承 `TextStyle`**：`TextStyle.operator ==` 头一句就是
+/// `if (other.runtimeType != runtimeType) return false`，子类因此永远不等于普通
+/// `TextStyle`，会静默破坏 `AnimatedDefaultTextStyle` 的补间判定与主题相等。
+/// 代价是 `Text(style: theme.typography.bodyMedium)` 编译不过 —— 这是**有意的**：
+/// 颜色必须显式指名，不许糊里糊涂继承。
+///
+/// 色板之外的颜色（分类哈希色、心情渐变这类业务语义色）不另开口子，
+/// 落到任一角色后按惯例 `copyWith`：
+/// `theme.typography.labelSmall.onSurface.copyWith(color: categoryColor)`。
+@immutable
+class MuiTextRole {
+  const MuiTextRole._(this._base, this._colors, this._font);
+
+  final TextStyle _base;
+  final MuiColorScheme _colors;
+  final MuiFontConfig _font;
+
+  MuiTextRole _weight(MuiWeight w) => MuiTextRole._(
+    _base.copyWith(
+      fontWeight: w.value,
+      fontVariations: [FontVariation('wght', w.axis(_font))],
+    ),
+    _colors,
+    _font,
+  );
+
+  MuiTextRole get regular => _weight(MuiWeight.regular);
+  MuiTextRole get medium => _weight(MuiWeight.medium);
+  MuiTextRole get semiBold => _weight(MuiWeight.semiBold);
+  MuiTextRole get bold => _weight(MuiWeight.bold);
+
+  TextStyle get onSurface => _base.copyWith(color: _colors.onSurface);
+  TextStyle get onSurfaceVariant =>
+      _base.copyWith(color: _colors.onSurfaceVariant);
+  TextStyle get outline => _base.copyWith(color: _colors.outline);
+
+  TextStyle get primary => _base.copyWith(color: _colors.primary);
+  TextStyle get onPrimary => _base.copyWith(color: _colors.onPrimary);
+  TextStyle get onPrimaryContainer =>
+      _base.copyWith(color: _colors.onPrimaryContainer);
+
+  TextStyle get secondary => _base.copyWith(color: _colors.secondary);
+  TextStyle get onSecondary => _base.copyWith(color: _colors.onSecondary);
+  TextStyle get onSecondaryContainer =>
+      _base.copyWith(color: _colors.onSecondaryContainer);
+
+  TextStyle get tertiary => _base.copyWith(color: _colors.tertiary);
+  TextStyle get onTertiary => _base.copyWith(color: _colors.onTertiary);
+  TextStyle get onTertiaryContainer =>
+      _base.copyWith(color: _colors.onTertiaryContainer);
+
+  TextStyle get error => _base.copyWith(color: _colors.error);
+  TextStyle get onError => _base.copyWith(color: _colors.onError);
+  TextStyle get onErrorContainer =>
+      _base.copyWith(color: _colors.onErrorContainer);
+
+  TextStyle get onInverseSurface =>
+      _base.copyWith(color: _colors.onInverseSurface);
+  TextStyle get inversePrimary => _base.copyWith(color: _colors.inversePrimary);
+}
+
+/// 排版表。角色名与 M3 `TextTheme` 逐级同名 —— 桥的投影是 1:1，
+/// 197 处 `context.textTheme.*` 零改名。
+///
+/// 几何手抄 M3 2021。实测 `englishLike2021 == dense2021 == tall2021`
+/// （`typography.dart:2096/2114/2132` 三块逐字段相同），所以一套对 zh 与 en 都成立，
+/// 不需要按 `ScriptCategory` 分档。
+@immutable
+class MuiTypography with MuiValue {
+  const MuiTypography._({
+    required this.size,
+    required this.font,
+    required this.colors,
+    required this.displayLarge,
+    required this.displayMedium,
+    required this.displaySmall,
+    required this.headlineLarge,
+    required this.headlineMedium,
+    required this.headlineSmall,
+    required this.titleLarge,
+    required this.titleMedium,
+    required this.titleSmall,
+    required this.bodyLarge,
+    required this.bodyMedium,
+    required this.bodySmall,
+    required this.labelLarge,
+    required this.labelMedium,
+    required this.labelSmall,
+  });
+
+  final MuiTextSize size;
+  final MuiFontConfig font;
+  final MuiColorScheme colors;
+
+  final MuiTextRole displayLarge;
+  final MuiTextRole displayMedium;
+  final MuiTextRole displaySmall;
+  final MuiTextRole headlineLarge;
+  final MuiTextRole headlineMedium;
+  final MuiTextRole headlineSmall;
+  final MuiTextRole titleLarge;
+  final MuiTextRole titleMedium;
+  final MuiTextRole titleSmall;
+  final MuiTextRole bodyLarge;
+  final MuiTextRole bodyMedium;
+  final MuiTextRole bodySmall;
+  final MuiTextRole labelLarge;
+  final MuiTextRole labelMedium;
+  final MuiTextRole labelSmall;
+
+  /// 15 个角色由这三者**确定性地**算出，所以相等只比这三个。
+  /// 多比 15 份 `TextStyle` 既慢又不会给出不同答案。
+  @override
+  List<Object?> get props => [size, font, colors];
+
+  /// 每一级的字重档。字重只在这里定一次，见 [MuiWeight]。
+  static const Map<String, MuiWeight> _weights = {
+    'displayLarge': .medium,
+    'displayMedium': .medium,
+    'displaySmall': .medium,
+    'headlineLarge': .bold,
+    'headlineMedium': .semiBold,
+    'headlineSmall': .medium,
+    'titleLarge': .semiBold,
+    'titleMedium': .medium,
+    'titleSmall': .medium,
+    'bodyLarge': .regular,
+    'bodyMedium': .regular,
+    'bodySmall': .regular,
+    'labelLarge': .medium,
+    'labelMedium': .medium,
+    'labelSmall': .regular,
+  };
+
+  /// M3 2021 的基准几何（[MuiTextSize.large] 档）：fontSize / height / letterSpacing。
+  /// [height] 是**比例**不是绝对行高，所以换档时它不用动。
+  static const Map<String, (double, double, double)> _geometry = {
+    'displayLarge': (57, 1.12, -0.25),
+    'displayMedium': (45, 1.16, 0),
+    'displaySmall': (36, 1.22, 0),
+    'headlineLarge': (32, 1.25, 0),
+    'headlineMedium': (28, 1.29, 0),
+    'headlineSmall': (24, 1.33, 0),
+    'titleLarge': (22, 1.27, 0),
+    'titleMedium': (16, 1.50, 0.15),
+    'titleSmall': (14, 1.43, 0.1),
+    'bodyLarge': (16, 1.50, 0.5),
+    'bodyMedium': (14, 1.43, 0.25),
+    'bodySmall': (12, 1.33, 0.4),
+    'labelLarge': (14, 1.43, 0.1),
+    'labelMedium': (12, 1.33, 0.5),
+    'labelSmall': (11, 1.45, 0.5),
+  };
+
+  static MuiTextRole _role(
+    String name,
+    MuiTextSize size,
+    MuiFontConfig font,
+    MuiColorScheme colors,
+  ) {
+    final (baseSize, height, spacing) = _geometry[name]!;
+    final weight = _weights[name]!;
+    // 落到半个逻辑像素上：不取整会得到 11.638 这种值，取整则 xSmall 与 small
+    // 在小字号级别会撞成同一个数。
+    final scaled = (baseSize * size.scale * 2).round() / 2;
+    return MuiTextRole._(
+      TextStyle(
+        inherit: false,
+        color: colors.onSurface,
+        fontFamily: font.family,
+        fontSize: scaled,
+        height: height,
+        // 字距按同一比例走，否则大字号档的字距会相对变紧。
+        letterSpacing: spacing * size.scale,
+        fontWeight: weight.value,
+        fontVariations: [FontVariation('wght', weight.axis(font))],
+        textBaseline: .alphabetic,
+        leadingDistribution: .even,
+      ),
+      colors,
+      font,
+    );
+  }
+
+  factory MuiTypography.resolve({
+    required MuiTextSize size,
+    required MuiFontConfig font,
+    required MuiColorScheme colors,
+  }) {
+    MuiTextRole r(String name) => _role(name, size, font, colors);
+    return MuiTypography._(
+      size: size,
+      font: font,
+      colors: colors,
+      displayLarge: r('displayLarge'),
+      displayMedium: r('displayMedium'),
+      displaySmall: r('displaySmall'),
+      headlineLarge: r('headlineLarge'),
+      headlineMedium: r('headlineMedium'),
+      headlineSmall: r('headlineSmall'),
+      titleLarge: r('titleLarge'),
+      titleMedium: r('titleMedium'),
+      titleSmall: r('titleSmall'),
+      bodyLarge: r('bodyLarge'),
+      bodyMedium: r('bodyMedium'),
+      bodySmall: r('bodySmall'),
+      labelLarge: r('labelLarge'),
+      labelMedium: r('labelMedium'),
+      labelSmall: r('labelSmall'),
+    );
+  }
+
+  /// 全部 15 级的角色名，供投影与测试遍历。
+  static const List<String> levels = [
+    'displayLarge',
+    'displayMedium',
+    'displaySmall',
+    'headlineLarge',
+    'headlineMedium',
+    'headlineSmall',
+    'titleLarge',
+    'titleMedium',
+    'titleSmall',
+    'bodyLarge',
+    'bodyMedium',
+    'bodySmall',
+    'labelLarge',
+    'labelMedium',
+    'labelSmall',
+  ];
+
+  MuiTextRole byLevel(String level) => switch (level) {
+    'displayLarge' => displayLarge,
+    'displayMedium' => displayMedium,
+    'displaySmall' => displaySmall,
+    'headlineLarge' => headlineLarge,
+    'headlineMedium' => headlineMedium,
+    'headlineSmall' => headlineSmall,
+    'titleLarge' => titleLarge,
+    'titleMedium' => titleMedium,
+    'titleSmall' => titleSmall,
+    'bodyLarge' => bodyLarge,
+    'bodyMedium' => bodyMedium,
+    'bodySmall' => bodySmall,
+    'labelLarge' => labelLarge,
+    'labelMedium' => labelMedium,
+    'labelSmall' => labelSmall,
+    _ => throw ArgumentError.value(level, 'level', '不是 M3 的排版角色'),
+  };
+
+  static MuiTypography lerp(MuiTypography a, MuiTypography b, double t) {
+    if (identical(a, b)) return a;
+    // 排版由 (size, font, colors) 确定，所以补间只要拿插值后的色板重解析一次。
+    // 逐级 TextStyle.lerp 会算 15 次却得到同样的结果。
+    return MuiTypography.resolve(
+      size: t < 0.5 ? a.size : b.size,
+      font: t < 0.5 ? a.font : b.font,
+      colors: MuiColorScheme.lerp(a.colors, b.colors, t),
+    );
+  }
+}

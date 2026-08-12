@@ -237,7 +237,7 @@ class _RecordSheetState extends State<RecordSheet> {
                       decoration: BoxDecoration(
                         shape: .circle,
                         border: .all(
-                          color: context.theme.colorScheme.outline,
+                          color: context.colorScheme.outline,
                           width: 4,
                         ),
                       ),
@@ -297,7 +297,7 @@ class _Waveform extends StatelessWidget {
       // 快照副本：painter 若持有会被原地 mutate 的原列表，shouldRepaint 永远比不出差异。
       painter: _WaveformPainter(
         .of(amplitudes),
-        color: context.theme.colorScheme.primary,
+        color: context.colorScheme.primary,
       ),
       size: Size(amplitudes.length * _WaveformPainter.stride, 100),
     );

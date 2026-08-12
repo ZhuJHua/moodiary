@@ -1,0 +1,25 @@
+name: mui
+description: "Another material design ui"
+version: 0.0.1
+publish_to: none
+
+resolution: workspace
+
+environment:
+  sdk: ">=3.12.0"
+  flutter: ">=3.44.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  lucide_icons_flutter: 3.1.15
+  flutter_svg: 2.3.0
+  cached_network_image_ce: 4.10.0
+  # 与 Flutter SDK 的 packages/flutter/pubspec.yaml 同钉，改前先核对那边。
+  # 纯 Dart 包（唯一依赖 collection），不违反「mui 不碰 material」。
+  material_color_utilities: 0.13.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  moodiary_lint: 0.0.1

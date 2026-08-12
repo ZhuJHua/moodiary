@@ -5,6 +5,7 @@ import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_settings_controller.freezed.dart';
@@ -17,7 +18,7 @@ final appInitialLocaleProvider = Provider<Locale>(
 );
 
 /// 全局应用设置。业务侧改完 KV 后调 [AppSettingsController.bumpTheme] / [bumpLocale]，
-/// 根 widget `ref.watch` 即刷新 MaterialApp 的 theme / locale / themeMode / textScaler。
+/// 根 widget `ref.watch` 即刷新根节点的 theme / locale / themeMode / textScaler。
 /// 收进 provider 而非直接读 KV：主题色 KV 无 defaultValue 不能 `getNotifier()`，
 /// 且主题 / locale 重建是异步的。
 @Riverpod(keepAlive: true)
@@ -25,12 +26,15 @@ class AppSettingsController extends _$AppSettingsController {
   @override
   AppSettings build() {
     final (lightTheme, darkTheme) = ThemeManager().getThemeData();
+    final (lightMui, darkMui) = ThemeManager().getMuiThemeData();
     return AppSettings(
       lightTheme: lightTheme,
       darkTheme: darkTheme,
+      lightMuiTheme: lightMui,
+      darkMuiTheme: darkMui,
       themeMode: ThemeMode.values[MoodiaryKVs.themeMode.get()!],
       locale: ref.read(appInitialLocaleProvider),
-      fontScale: MoodiaryKVs.fontScale.get() ?? 1.0,
+      textSize: ThemeManager().textSize,
     );
   }
 
@@ -39,19 +43,25 @@ class AppSettingsController extends _$AppSettingsController {
       customFont: await FontRepository.get().getActiveFont(),
     );
     final (lightTheme, darkTheme) = ThemeManager().getThemeData();
+    final (lightMui, darkMui) = ThemeManager().getMuiThemeData();
+    // 两份主题必须在同一次 copyWith 里换掉：分开更新会露出「material 已切、
+    // mui 未切」的一帧。
     state = state.copyWith(
       lightTheme: lightTheme,
       darkTheme: darkTheme,
+      lightMuiTheme: lightMui,
+      darkMuiTheme: darkMui,
       themeMode: ThemeMode.values[MoodiaryKVs.themeMode.get()!],
-      fontScale: MoodiaryKVs.fontScale.get() ?? 1.0,
+      textSize: ThemeManager().textSize,
     );
   }
 
-  /// 字号：即时刷新根 textScaler（无需重建 ThemeData，字号不进 ThemeData），再落 KV。
-  /// 先改 state 后持久化：全局生效不等平台通道写盘。
-  Future<void> setFontScale(double value) async {
-    state = state.copyWith(fontScale: value);
-    await MoodiaryKVs.fontScale.set(value);
+  /// 字号档。与旧的 textScaler 方案不同，**字号现在解析进主题**，所以换档必须重建
+  /// 主题（[bumpTheme] 会把 mui 与 material 两份一起换）。档是离散的 7 个、
+  /// 不像旧滑块那样连续提交，重建开销可以接受。
+  Future<void> setTextSize(MuiTextSize value) async {
+    await MoodiaryKVs.textSize.set(value.index);
+    await bumpTheme();
   }
 
   Future<void> bumpLocale() async {
@@ -75,8 +85,10 @@ abstract class AppSettings with _$AppSettings {
   const factory AppSettings({
     required ThemeData lightTheme,
     required ThemeData darkTheme,
+    required MuiThemeData lightMuiTheme,
+    required MuiThemeData darkMuiTheme,
     required ThemeMode themeMode,
     required Locale locale,
-    required double fontScale,
+    required MuiTextSize textSize,
   }) = _AppSettings;
 }

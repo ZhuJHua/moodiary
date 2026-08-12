@@ -4,6 +4,7 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 /// 自定义强调色。页面主体就是**这个种子生成出来的真实色板** —— 每格底色即该角色的色、
 /// 文字用它配对的 on 色，所以「这个色上放字读不读得清」是直接看出来的，不必另做预览。
@@ -35,9 +36,9 @@ class _AccentPageState extends ConsumerState<AccentPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = AppColorScheme.resolve(
+    final scheme = MuiColorScheme.resolve(
       context.theme.brightness,
-      AccentPalette.seeded(_seed),
+      MuiAccent.seeded(_seed),
     );
 
     return Scaffold(
@@ -186,7 +187,11 @@ class _SeedCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(LucideIcons.pipette, size: 18, color: scheme.onSurfaceVariant),
+              Icon(
+                LucideIcons.pipette,
+                size: 18,
+                color: scheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),

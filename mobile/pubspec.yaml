@@ -27,6 +27,7 @@ dependencies:
   moodiary_models: 0.0.1
   moodiary_l10n: 0.0.1
   moodiary_core: 0.0.1
+  mui: 0.0.1
   moodiary_data: 0.0.1
   moodiary_migration: 0.0.1
   moodiary_preferences: 0.0.1

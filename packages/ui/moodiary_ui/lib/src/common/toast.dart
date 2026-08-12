@@ -30,7 +30,7 @@ class Toast {
           message: message,
           icon: Icon(
             LucideIcons.info,
-            color: context.theme.colorScheme.onSurfaceVariant,
+            color: context.colorScheme.onSurfaceVariant,
             size: 24,
           ),
         );
@@ -56,7 +56,7 @@ class Toast {
             child: CircularProgressIndicator(
               padding: .zero,
               strokeWidth: 2.5,
-              color: context.theme.colorScheme.onSurfaceVariant,
+              color: context.colorScheme.onSurfaceVariant,
             ),
           ),
         );
@@ -81,7 +81,7 @@ class Toast {
           message: message ?? context.l10n.toastError,
           icon: Icon(
             LucideIcons.circleX,
-            color: context.theme.colorScheme.onSurfaceVariant,
+            color: context.colorScheme.onSurfaceVariant,
             size: 24,
           ),
         );
@@ -106,7 +106,7 @@ class Toast {
           message: message ?? context.l10n.toastSuccess,
           icon: Icon(
             LucideIcons.circleCheck,
-            color: context.theme.colorScheme.onSurfaceVariant,
+            color: context.colorScheme.onSurfaceVariant,
             size: 24,
           ),
         );
@@ -136,7 +136,7 @@ class Toast {
             message,
             textAlign: .center,
             style: context.textTheme.titleSmall?.copyWith(
-              color: context.theme.colorScheme.onSurfaceVariant,
+              color: context.colorScheme.onSurfaceVariant,
             ),
           ),
         ),
@@ -145,7 +145,7 @@ class Toast {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: context.theme.colorScheme.surfaceContainerHighest.withValues(
+        color: context.colorScheme.surfaceContainerHighest.withValues(
           alpha: 0.9,
         ),
         borderRadius: AppBorderRadius.mediumBorderRadius,

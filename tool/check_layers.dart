@@ -204,8 +204,89 @@ List<String> _checkRustLayers() {
   return out;
 }
 
+/// mui 的存在理由就是「不用 material」。这条闸门没有 baseline，也不该有例外：
+/// 一旦破了口子，包里就会长出对 `Colors` / `Durations` / `ThemeData` 的引用，
+/// 而那三样恰恰是 mui 必须自建的东西（见 mui/src/themes/tokens.dart）。
+const String _muiRoot = 'packages/foundation/mui/lib';
+final RegExp _muiForbiddenRe = RegExp(
+  r'''^\s*(?:import|export)\s+['"]package:flutter/(material|cupertino)\.dart['"]''',
+  multiLine: true,
+);
+
+List<String> _checkMuiPurity() {
+  final dir = Directory(_muiRoot);
+  if (!dir.existsSync()) return const [];
+
+  final out = <String>[];
+  for (final entity in dir.listSync(recursive: true)) {
+    if (entity is! File || !entity.path.endsWith('.dart')) continue;
+    final rel = entity.path.replaceAll('\\', '/');
+    final content = entity.readAsStringSync();
+    for (final m in _muiForbiddenRe.allMatches(content)) {
+      out.add('$rel -> package:flutter/${m.group(1)}.dart');
+    }
+  }
+  out.sort();
+  return out;
+}
+
+/// `ThemeData` 只许在桥里构造一次。共存期 material 主题是 [MuiThemeData] 的
+/// 只读投影，多一个构造点就多一条绕过真源的路，而配色漂移是最难查的一类 bug。
+///
+/// 第三方作用域的主题不算（`AssetPicker.themeData(...).copyWith(...)` 之流走的是
+/// 那个包自己的构造器，不匹配这条正则）。
+const String _themeDataBridge =
+    'packages/core/moodiary_core/lib/src/theme/mui_material_bridge.dart';
+final RegExp _themeDataRe = RegExp(r'(^|[^A-Za-z0-9_])ThemeData\s*\(');
+
+List<String> _checkThemeDataConstruction() {
+  final out = <String>[];
+  for (final root in ['mobile/lib', 'packages']) {
+    final dir = Directory(root);
+    if (!dir.existsSync()) continue;
+    for (final entity in dir.listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final rel = entity.path.replaceAll('\\', '/');
+      if (!rel.contains('/lib/') || rel == _themeDataBridge) continue;
+      final content = entity.readAsStringSync();
+      for (final line in content.split('\n')) {
+        // 只看构造调用，跳过类型标注与返回类型（`ThemeData foo(` 不匹配）。
+        if (_themeDataRe.hasMatch(line) && !line.contains('ThemeData(),')) {
+          out.add('$rel: ${line.trim()}');
+        }
+      }
+    }
+  }
+  out.sort();
+  return out;
+}
+
 void main(List<String> args) {
   final update = args.contains('--update-baseline');
+  final themeViolations = _checkThemeDataConstruction();
+  if (themeViolations.isEmpty) {
+    stdout.writeln('✅ ThemeData 只在主题桥里构造。');
+  } else {
+    stderr.writeln('❌ 桥之外出现了 ${themeViolations.length} 处 ThemeData 构造：');
+    for (final v in themeViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → material 主题必须由 materialThemeFrom(MuiThemeData) 单向投影。');
+    exit(1);
+  }
+
+  final muiViolations = _checkMuiPurity();
+  if (muiViolations.isEmpty) {
+    stdout.writeln('✅ mui 零 material/cupertino import。');
+  } else {
+    stderr.writeln('❌ mui 引入了 material/cupertino ${muiViolations.length} 处：');
+    for (final v in muiViolations) {
+      stderr.writeln('  ✗ $v');
+    }
+    stderr.writeln('  → mui 只能依赖 package:flutter/widgets.dart 及以下，无例外。');
+    exit(1);
+  }
+
   final pkgViolations = _checkPackageLayers();
   if (pkgViolations.isEmpty) {
     stdout.writeln('✅ 包级依赖方向检查通过。');

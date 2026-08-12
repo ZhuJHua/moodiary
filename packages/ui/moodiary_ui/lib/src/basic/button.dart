@@ -110,7 +110,7 @@ class PageBackButton extends StatelessWidget {
       child: IconButton(
         onPressed: onBack ?? () => Navigator.maybePop(context),
         icon: const Icon(LucideIcons.arrowLeft),
-        color: color ?? context.theme.colorScheme.onSurface,
+        color: color ?? context.colorScheme.onSurface,
         tooltip: context.l10n.back,
       ),
     );

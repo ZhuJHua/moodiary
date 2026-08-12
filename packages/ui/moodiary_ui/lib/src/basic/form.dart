@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 
-const double _kFieldRadiusFocusWidth = 1.5;
 const double kMoodiaryFieldHeight = 48;
 
 /// 圆角填充式输入框。取代仓内并存的三种写法（OutlineInputBorder 默认 4 圆角 /
@@ -115,13 +114,6 @@ class _MoodiaryFieldState extends State<MoodiaryField> {
     final scheme = context.colorScheme;
     final multiline = widget.maxLines > 1 && !widget.obscureText;
 
-    OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
-      borderRadius: AppBorderRadius.mediumBorderRadius,
-      borderSide: color == Colors.transparent
-          ? .none
-          : BorderSide(color: color, width: width),
-    );
-
     final field = TextField(
       controller: widget.controller,
       focusNode: widget.focusNode,
@@ -137,24 +129,17 @@ class _MoodiaryFieldState extends State<MoodiaryField> {
       onSubmitted: widget.onSubmitted,
       onChanged: widget.onChanged,
       style: context.textTheme.bodyLarge?.copyWith(color: scheme.onSurface),
+      // 圆角填充式外观（filled / fillColor / contentPadding / 六种边框）已经整段
+      // 搬进 `inputDecorationTheme`，见 core 的 mui_material_bridge.dart。
+      // 这里只留**每个实例各不相同**的部分。
       decoration: InputDecoration(
         hintText: widget.hintText,
         errorText: widget.errorText,
-        filled: true,
-        isDense: true,
         counterText: '',
-        fillColor: scheme.surfaceContainerHighest,
         constraints: multiline
             ? null
             : BoxConstraints(minHeight: widget.minHeight),
-        contentPadding: const .symmetric(horizontal: 16, vertical: 13),
         suffixIcon: _buildTrailing(scheme),
-        border: border(Colors.transparent, 0),
-        enabledBorder: border(Colors.transparent, 0),
-        disabledBorder: border(Colors.transparent, 0),
-        focusedBorder: border(scheme.primary, _kFieldRadiusFocusWidth),
-        errorBorder: border(scheme.error, 1),
-        focusedErrorBorder: border(scheme.error, _kFieldRadiusFocusWidth),
       ),
     );
 

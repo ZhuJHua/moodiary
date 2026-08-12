@@ -42,14 +42,14 @@ void showPopupWidget({
           CustomPaint(
             size: const Size(12, 6),
             painter: _TrianglePainter(
-              color: context.theme.colorScheme.surfaceContainer,
+              color: context.colorScheme.surfaceContainer,
               size: const Size(12, 6),
             ),
           ),
           Container(
             padding: const .all(6.0),
             decoration: BoxDecoration(
-              color: context.theme.colorScheme.surfaceContainer,
+              color: context.colorScheme.surfaceContainer,
               borderRadius: AppBorderRadius.mediumBorderRadius,
             ),
             child: child,

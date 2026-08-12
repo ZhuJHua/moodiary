@@ -15,6 +15,7 @@ dependencies:
 
   moodiary_l10n: 0.0.1
   moodiary_models: 0.0.1
+  mui: 0.0.1
   moodiary_rust: 0.0.1
   moodiary_utils: 0.0.1
 
@@ -36,8 +37,6 @@ dependencies:
   fc_native_video_thumbnail: 3.0.1
 
   dynamic_color: 1.9.0
-  # 与 Flutter SDK 的 packages/flutter/pubspec.yaml 同钉，改前先核对那边。
-  material_color_utilities: 0.13.0
   logger: 2.7.0
   lucide_icons_flutter: 3.1.15
 

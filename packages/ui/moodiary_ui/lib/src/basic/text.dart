@@ -29,12 +29,12 @@ class AdaptiveText extends StatelessWidget {
     var textStyle = style;
     if (isTileTitle == true) {
       textStyle = textTheme.bodyLarge?.copyWith(
-        color: context.theme.colorScheme.onSurface,
+        color: context.colorScheme.onSurface,
       );
     }
     if (isTileSubtitle == true) {
       textStyle = textTheme.bodyMedium?.copyWith(
-        color: context.theme.colorScheme.onSurfaceVariant,
+        color: context.colorScheme.onSurfaceVariant,
       );
     }
     if (isTitle == true) {
@@ -42,7 +42,7 @@ class AdaptiveText extends StatelessWidget {
     }
     if (isPrimaryTitle == true) {
       textStyle = textTheme.titleLarge?.copyWith(
-        color: context.theme.colorScheme.primary,
+        color: context.colorScheme.primary,
       );
     }
     return LayoutBuilder(

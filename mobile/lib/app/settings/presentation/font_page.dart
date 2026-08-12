@@ -5,39 +5,36 @@ import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
+import 'package:mui/mui.dart';
 
 class FontPage extends ConsumerStatefulWidget {
   const FontPage({super.key});
 
-  static const _fontScales = <double>[0.8, 0.9, 1.0, 1.1, 1.2];
-
-  static String _scaleLabel(double scale) => switch (scale) {
-    0.8 => '超小',
-    0.9 => '小',
-    1.0 => '标准',
-    1.1 => '大',
-    1.2 => '超大',
-    _ => '标准',
+  static String sizeLabel(MuiTextSize size) => switch (size) {
+    .xSmall => '超小',
+    .small => '小',
+    .medium => '偏小',
+    .large => '标准',
+    .xLarge => '大',
+    .xxLarge => '超大',
+    .xxxLarge => '特大',
   };
-
-  static List<double> get scales => _fontScales;
-  static String scaleLabel(double scale) => _scaleLabel(scale);
 
   @override
   ConsumerState<FontPage> createState() => _FontPageState();
 }
 
 class _FontPageState extends ConsumerState<FontPage> {
-  /// 拖动中的临时字号：仅驱动本页滑块 + 预览。松手才提交全局（根 textScaler 换值会
-  /// 重排所有存活路由的文本，逐档提交会整段拖动都在掉帧）。
-  double? _dragScale;
+  /// 拖动中的临时档：仅驱动本页滑块 + 预览。松手才提交全局 —— 换档会重建整套主题
+  /// 并重排所有存活路由的文本，逐档提交会整段拖动都在掉帧。
+  MuiTextSize? _dragSize;
 
-  Future<void> _commitScale(double value) async {
+  Future<void> _commitSize(MuiTextSize value) async {
     // 先提交（state 即时生效、KV 落盘后 notifier 推给编辑器），再清临时值——
     // 此时 KV 通知已送达本页 builder，滑块无缝接到全局值，不回跳。
     // 仅当临时值仍是本次提交值才清：await 期间若已开始新一轮拖动，不抢它的值。
-    await ref.read(appSettingsControllerProvider.notifier).setFontScale(value);
-    if (mounted && _dragScale == value) setState(() => _dragScale = null);
+    await ref.read(appSettingsControllerProvider.notifier).setTextSize(value);
+    if (mounted && _dragSize == value) setState(() => _dragSize = null);
   }
 
   @override
@@ -48,10 +45,14 @@ class _FontPageState extends ConsumerState<FontPage> {
       body: ValueListenableBuilder<String>(
         valueListenable: MoodiaryKVs.customFont.getNotifier(),
         builder: (context, currentFamily, _) {
-          return ValueListenableBuilder<double>(
-            valueListenable: MoodiaryKVs.fontScale.getNotifier(),
-            builder: (context, currentScale, _) {
-              final scale = _dragScale ?? currentScale;
+          return ValueListenableBuilder<int>(
+            valueListenable: MoodiaryKVs.textSize.getNotifier(),
+            builder: (context, storedIndex, _) {
+              final size =
+                  _dragSize ??
+                  (storedIndex >= 0 && storedIndex < MuiTextSize.values.length
+                      ? MuiTextSize.values[storedIndex]
+                      : MuiTextSize.large);
               return ListView(
                 padding: const .all(8),
                 children: [
@@ -74,11 +75,11 @@ class _FontPageState extends ConsumerState<FontPage> {
                     margin: .zero,
                     child: Padding(
                       padding: const .fromLTRB(16, 8, 16, 12),
-                      child: _FontScaleSlider(
-                        value: scale,
+                      child: _TextSizeSlider(
+                        value: size,
                         // 拖动中只动本页（滑块 + 预览）；松手提交全局并推给编辑器。
-                        onChanged: (v) => setState(() => _dragScale = v),
-                        onChangeEnd: _commitScale,
+                        onChanged: (v) => setState(() => _dragSize = v),
+                        onChangeEnd: _commitSize,
                       ),
                     ),
                   ),
@@ -89,7 +90,7 @@ class _FontPageState extends ConsumerState<FontPage> {
                     margin: .zero,
                     child: Padding(
                       padding: const .all(16),
-                      child: _Preview(fontFamily: currentFamily, scale: scale),
+                      child: _Preview(fontFamily: currentFamily, size: size),
                     ),
                   ),
                 ],
@@ -321,24 +322,24 @@ class _AddFontCard extends StatelessWidget {
   }
 }
 
-class _FontScaleSlider extends StatelessWidget {
-  final double value;
-  final ValueChanged<double> onChanged;
-  final ValueChanged<double> onChangeEnd;
+class _TextSizeSlider extends StatelessWidget {
+  final MuiTextSize value;
+  final ValueChanged<MuiTextSize> onChanged;
+  final ValueChanged<MuiTextSize> onChangeEnd;
 
-  const _FontScaleSlider({
+  const _TextSizeSlider({
     required this.value,
     required this.onChanged,
     required this.onChangeEnd,
   });
 
-  static double _snap(double v) =>
-      FontPage.scales.reduce((a, b) => (a - v).abs() < (b - v).abs() ? a : b);
+  static MuiTextSize _snap(double v) =>
+      MuiTextSize.values[v.round().clamp(0, MuiTextSize.values.length - 1)];
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
-    final label = FontPage.scaleLabel(value);
+    final label = FontPage.sizeLabel(value);
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -350,10 +351,9 @@ class _FontScaleSlider extends StatelessWidget {
             ),
             Expanded(
               child: Slider(
-                value: value,
-                min: FontPage.scales.first,
-                max: FontPage.scales.last,
-                divisions: FontPage.scales.length - 1,
+                value: value.index.toDouble(),
+                max: (MuiTextSize.values.length - 1).toDouble(),
+                divisions: MuiTextSize.values.length - 1,
                 label: label,
                 onChanged: (v) {
                   final closest = _snap(v);
@@ -385,9 +385,9 @@ class _FontScaleSlider extends StatelessWidget {
 
 class _Preview extends StatelessWidget {
   final String fontFamily;
-  final double scale;
+  final MuiTextSize size;
 
-  const _Preview({required this.fontFamily, required this.scale});
+  const _Preview({required this.fontFamily, required this.size});
 
   static const _poem =
       '黄水塘里游着白鸭，\n'
@@ -405,27 +405,24 @@ class _Preview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
     final family = fontFamily.isEmpty ? null : fontFamily;
+    // 按选中档**现算一份排版**：字号已经解析进主题，预览不能再靠 textScaler 放大，
+    // 否则松手提交后尺寸会和预览对不上。
+    final typography = MuiTypography.resolve(
+      size: size,
+      font: MuiFontConfig(family: family, wghtAxis: theme.font.wghtAxis),
+      colors: theme.colors,
+    );
     return Column(
       crossAxisAlignment: .start,
       children: [
         Text(
           '八月的忧愁',
-          style: context.textTheme.titleLarge?.copyWith(
-            height: 2,
-            fontFamily: family,
-          ),
-          textScaler: .linear(scale),
+          style: typography.titleLarge.onSurface.copyWith(height: 2),
         ),
         const SizedBox(height: 8),
-        Text(
-          _poem,
-          style: context.textTheme.bodyMedium?.copyWith(
-            height: 2,
-            fontFamily: family,
-          ),
-          textScaler: .linear(scale),
-        ),
+        Text(_poem, style: typography.bodyMedium.onSurface.copyWith(height: 2)),
       ],
     );
   }

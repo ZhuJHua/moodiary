@@ -586,7 +586,10 @@ class _GraphCanvasState extends State<GraphCanvas>
   @override
   Widget build(BuildContext context) {
     final dir = Directionality.of(context);
-    final factor = MediaQuery.textScalerOf(context).scale(12) / 12;
+    // 字号档已解析进主题、textScaler 恒为 1，所以缩放系数从主题反推：
+    // labelSmall 的基准字号是 11。
+    final factor =
+        (Theme.of(context).textTheme.labelSmall?.fontSize ?? 11) / 11;
     if (_labelColor != widget.palette.label ||
         _labelDir != dir ||
         _labelFactor != factor) {

@@ -212,7 +212,7 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
         borderRadius: outerRadius,
         border: widget.showBorder
             ? .all(
-                color: context.theme.colorScheme.outline.withValues(alpha: 0.6),
+                color: context.colorScheme.outline.withValues(alpha: 0.6),
                 width: borderWidth,
               )
             : null,
@@ -287,11 +287,11 @@ class _ErrorPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: context.theme.colorScheme.errorContainer,
+      color: context.colorScheme.errorContainer,
       child: Center(
         child: Icon(
           LucideIcons.circleAlert,
-          color: context.theme.colorScheme.onErrorContainer,
+          color: context.colorScheme.onErrorContainer,
         ),
       ),
     );
@@ -304,11 +304,11 @@ class _LoadingPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: context.theme.colorScheme.surfaceContainer,
+      color: context.colorScheme.surfaceContainer,
       child: Center(
         child: Icon(
           LucideIcons.image,
-          color: context.theme.colorScheme.onSurfaceVariant,
+          color: context.colorScheme.onSurfaceVariant,
         ),
       ),
     );

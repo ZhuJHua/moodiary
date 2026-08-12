@@ -46,7 +46,7 @@ class OptionDialog extends StatelessWidget {
             (entry) => _buildOption(
               option: entry.key,
               onTap: entry.value,
-              colorScheme: context.theme.colorScheme,
+              colorScheme: context.colorScheme,
             ),
           )
           .toList(),

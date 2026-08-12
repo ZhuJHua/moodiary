@@ -33,7 +33,7 @@ final class CacheControllerProvider
   CacheController create() => CacheController();
 }
 
-String _$cacheControllerHash() => r'0f881da4cb4d50730ab16791901c58caf3144f63';
+String _$cacheControllerHash() => r'76d3c5c243c972cff98105bacce57d2d0132a477';
 
 abstract class _$CacheController extends $AsyncNotifier<CacheUsage> {
   FutureOr<CacheUsage> build();

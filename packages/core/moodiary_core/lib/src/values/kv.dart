@@ -63,6 +63,12 @@ enum MoodiaryKVs<T extends Object> {
   /// 这个只管单张卡片的配色。
   dynamicColor<bool>(defaultValue: true),
   fontTheme<int>(defaultValue: 0),
+
+  /// 字号档（`MuiTextSize` 的 index）。-1 = 从未设置过，启动时由 [fontScale] 迁移
+  /// 一次并写回。字号不再是渲染期的缩放倍率，而是解析进主题的一组尺寸。
+  textSize<int>(defaultValue: -1),
+
+  /// 老的连续字号倍率。已被 [textSize] 取代，只在迁移时读一次；新代码别用。
   fontScale<double>(defaultValue: 1.0),
   customFont<String>(defaultValue: ''),
 

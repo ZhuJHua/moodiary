@@ -9,7 +9,7 @@ part of 'app_settings_controller.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// 全局应用设置。业务侧改完 KV 后调 [AppSettingsController.bumpTheme] / [bumpLocale]，
-/// 根 widget `ref.watch` 即刷新 MaterialApp 的 theme / locale / themeMode / textScaler。
+/// 根 widget `ref.watch` 即刷新根节点的 theme / locale / themeMode / textScaler。
 /// 收进 provider 而非直接读 KV：主题色 KV 无 defaultValue 不能 `getNotifier()`，
 /// 且主题 / locale 重建是异步的。
 
@@ -17,13 +17,13 @@ part of 'app_settings_controller.dart';
 final appSettingsControllerProvider = AppSettingsControllerProvider._();
 
 /// 全局应用设置。业务侧改完 KV 后调 [AppSettingsController.bumpTheme] / [bumpLocale]，
-/// 根 widget `ref.watch` 即刷新 MaterialApp 的 theme / locale / themeMode / textScaler。
+/// 根 widget `ref.watch` 即刷新根节点的 theme / locale / themeMode / textScaler。
 /// 收进 provider 而非直接读 KV：主题色 KV 无 defaultValue 不能 `getNotifier()`，
 /// 且主题 / locale 重建是异步的。
 final class AppSettingsControllerProvider
     extends $NotifierProvider<AppSettingsController, AppSettings> {
   /// 全局应用设置。业务侧改完 KV 后调 [AppSettingsController.bumpTheme] / [bumpLocale]，
-  /// 根 widget `ref.watch` 即刷新 MaterialApp 的 theme / locale / themeMode / textScaler。
+  /// 根 widget `ref.watch` 即刷新根节点的 theme / locale / themeMode / textScaler。
   /// 收进 provider 而非直接读 KV：主题色 KV 无 defaultValue 不能 `getNotifier()`，
   /// 且主题 / locale 重建是异步的。
   AppSettingsControllerProvider._()
@@ -54,10 +54,10 @@ final class AppSettingsControllerProvider
 }
 
 String _$appSettingsControllerHash() =>
-    r'd750e04b04114b8cd0f97488111d4def66632770';
+    r'c409b366302c496c3a0820423913572902e23ab8';
 
 /// 全局应用设置。业务侧改完 KV 后调 [AppSettingsController.bumpTheme] / [bumpLocale]，
-/// 根 widget `ref.watch` 即刷新 MaterialApp 的 theme / locale / themeMode / textScaler。
+/// 根 widget `ref.watch` 即刷新根节点的 theme / locale / themeMode / textScaler。
 /// 收进 provider 而非直接读 KV：主题色 KV 无 defaultValue 不能 `getNotifier()`，
 /// 且主题 / locale 重建是异步的。
 

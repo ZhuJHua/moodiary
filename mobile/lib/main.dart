@@ -17,6 +17,7 @@ import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show FlutterSmartDialog;
+import 'package:mui/mui.dart';
 
 Future<Locale> _initSystem() async {
   final rustInit = RustLib.init();
@@ -120,14 +121,24 @@ class Moodiary extends ConsumerWidget {
       onGenerateTitle: (context) => context.l10n.appName,
       routerConfig: router,
       builder: (context, child) {
-        // 字号套在 SmartDialog **外面**：init() 会自建 Overlay，把传入的 child 放进
-        // entry[0]，而 toast / loading 是与之平级的兄弟 entry —— 包在里面的话那些
-        // 浮层吃不到字号缩放。
+        // 字号与 MuiTheme 都套在 SmartDialog **外面**：init() 会自建 Overlay，把传入的
+        // child 放进 entry[0]，而 toast / loading 是与之平级的兄弟 entry —— 包在里面
+        // 的话那些浮层既吃不到字号缩放，也读不到 mui 配色（toast.dart 的 builder 要取色）。
+        final brightness = switch (settings.themeMode) {
+          .light => Brightness.light,
+          .dark => Brightness.dark,
+          .system => MediaQuery.platformBrightnessOf(context),
+        };
+        // 字号档已经解析进主题（见 MuiTextSize），所以这里把缩放**钉死为 1**：
+        // 再乘一次会与主题里的尺寸叠加，局部 `textScaler:` 覆盖也会失去参照。
         return MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: .linear(settings.fontScale)),
-          child: FlutterSmartDialog.init()(context, child!),
+          data: MediaQuery.of(context).copyWith(textScaler: .noScaling),
+          child: MuiAnimatedTheme(
+            data: brightness == .light
+                ? settings.lightMuiTheme
+                : settings.darkMuiTheme,
+            child: FlutterSmartDialog.init()(context, child!),
+          ),
         );
       },
       theme: settings.lightTheme,
