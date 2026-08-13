@@ -5,9 +5,8 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/find_locale.dart';
-import 'package:intl/intl.dart';
 import 'package:moodiary/app/di/service_di.dart';
+import 'package:moodiary/app/locale.dart';
 import 'package:moodiary/app/router/router.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -17,7 +16,7 @@ import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 
-Future<Locale> _initSystem() async {
+Future<void> _initSystem() async {
   final rustInit = RustLib.init();
   await injectBasicService();
   // 版本迁移钩子：在基础存储就位后、主题/服务初始化前运行（旧版内联在 KV.init）。
@@ -29,7 +28,11 @@ Future<Locale> _initSystem() async {
     logger.e('version migration failed', error: e, stackTrace: s);
   }
   unawaited(_platFormOption());
-  final localeFuture = _findLanguage();
+  // 复数解析器只要在 runApp（第一次取串）之前登记上即可，与 setLocale 的先后无关；
+  // 串行是因为两者都在改 LocaleSettings 的同一份 translationMap。
+  final localeFuture = setupPluralResolvers().then(
+    (_) => applyStoredLanguage(),
+  );
   // registerService 会立刻打到 Rust，必须先等桥就绪。
   await rustInit;
   await Future.wait([
@@ -48,27 +51,6 @@ Future<Locale> _initSystem() async {
     ),
   );
   applyDeviceOrientationLock();
-  return localeFuture;
-}
-
-Future<Locale> _findLanguage() async {
-  Language language = Language.values.firstWhere(
-    (e) => e.languageCode == MoodiaryKVs.language.get()!,
-    orElse: () => Language.system,
-  );
-  if (language == .system) {
-    final systemLocale = await findSystemLocale();
-    final systemLanguageCode = systemLocale.contains('_')
-        ? systemLocale.split('_').first
-        : systemLocale;
-    language = Language.values.firstWhere(
-      (e) => e.languageCode == systemLanguageCode,
-      orElse: () => Language.english,
-    );
-  }
-  final locale = Locale(language.languageCode);
-  Intl.defaultLocale = locale.languageCode;
-  return locale;
 }
 
 Future<void> _platFormOption() async {
@@ -85,7 +67,7 @@ String _resolveInitialLocation() {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final locale = await _initSystem();
+  await _initSystem();
   buildRouter(initialLocation: _resolveInitialLocation());
 
   FlutterError.onError = (details) {
@@ -101,10 +83,11 @@ void main() async {
     return true;
   };
 
+  // 两棵翻译树各要一个 provider：App 的字串在 moodiary_l10n，mui 组件自己那十来个
+  // 通用词在 mui。两者共享 slang 的 `GlobalLocaleState` 单例，所以只需在一处切语言。
   runApp(
-    ProviderScope(
-      overrides: [appInitialLocaleProvider.overrideWithValue(locale)],
-      child: const Moodiary(),
+    TranslationProvider(
+      child: const MuiTranslationScope(child: ProviderScope(child: Moodiary())),
     ),
   );
 }
@@ -159,22 +142,16 @@ class Moodiary extends ConsumerWidget {
       },
       theme: settings.lightTheme,
       darkTheme: settings.darkTheme,
-      locale: settings.locale,
+      locale: TranslationProvider.of(context).flutterLocale,
       themeMode: settings.themeMode,
-      // **不能用 `AppLocalizations.localizationsDelegates`**：gen-l10n 生成的那份里
-      // 带的是 flutter_localizations 的 GlobalMaterialLocalizations，给出的是
+      // App 与 mui 的文案都走 slang，不再需要 delegate；这里只剩 material 组件自己的
+      // 那份。**必须用 material_ui 自带的 GlobalMaterialLocalizations**（`delegates`
+      // 里已含 cupertino/widgets 两条）：flutter_localizations 的同名类给出的是
       // **legacy** MaterialLocalizations 类型，material_ui 的 widget 认不得它，
       // 中文下会退化成「locale zh is not supported」并让日期选择器一类直接抛。
-      // material_ui 自带一份同名的，`delegates` 里已含 cupertino/widgets 两条。
-      //
-      // 生成文件会被覆盖，所以这个列表只能手写在这里。
       // legacy 子树的那份由根部的 MaterialUiCompatibilityBridge 自己注入。
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        MuiLocalizations.delegate,
-        ...GlobalMaterialLocalizations.delegates,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [...GlobalMaterialLocalizations.delegates],
+      supportedLocales: AppLocaleUtils.supportedLocales,
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary/app/locale.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:mui/mui.dart';
 
 class LanguageDialog extends ConsumerWidget {
@@ -23,7 +23,7 @@ class LanguageDialog extends ConsumerWidget {
             selected: current == lang,
             onTap: () async {
               await MoodiaryKVs.language.set(lang.languageCode);
-              ref.read(appSettingsControllerProvider.notifier).bumpLocale();
+              await applyStoredLanguage();
               if (context.mounted) Navigator.of(context).pop();
             },
           ),

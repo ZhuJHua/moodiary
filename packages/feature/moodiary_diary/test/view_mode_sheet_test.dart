@@ -44,22 +44,25 @@ void main() {
   tearDown(() => getIt.unregister<IKVStorage>());
 
   Widget host() {
-    return MuiTheme(
-      data: _mui,
-      child: MaterialApp(
-        locale: const Locale('zh'),
-        localizationsDelegates: const [
-          ...AppLocalizations.localizationsDelegates,
-          // material_ui 的 widget 要它自己那份 MaterialLocalizations。
-          ...GlobalMaterialLocalizations.delegates,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => Center(
-              child: TextButton(
-                onPressed: () => ViewModeSheet.show(context),
-                child: const Text('open'),
+    return TranslationProvider(
+      child: MuiTranslationScope(
+        child: MuiTheme(
+          data: _mui,
+          child: MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: const [
+              // material_ui 的 widget 要它自己那份 MaterialLocalizations。
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => Center(
+                  child: TextButton(
+                    onPressed: () => ViewModeSheet.show(context),
+                    child: const Text('open'),
+                  ),
+                ),
               ),
             ),
           ),

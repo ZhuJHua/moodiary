@@ -1840,7 +1840,7 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
     final hasReasoning = widget.reasoning.isNotEmpty;
     final label = widget.active
         ? l10n.assistantThinking
-        : l10n.assistantThoughtFor(_durationText());
+        : l10n.assistantThoughtFor(duration: _durationText());
 
     final header = InkWell(
       borderRadius: .circular(12),

@@ -206,7 +206,7 @@ class _RecordSheetState extends State<RecordSheet> {
     );
   }
 
-  Widget _buildBody(BuildContext context, AppLocalizations l10n) {
+  Widget _buildBody(BuildContext context, Translations l10n) {
     return Column(
       mainAxisSize: .min,
       children: [

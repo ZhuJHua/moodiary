@@ -27,17 +27,20 @@ Widget wrap({
       (ref) async => (byCategory: byCategory, total: total),
     ),
   ],
-  child: MuiTheme(
-    data: _mui,
-    child: const MaterialApp(
-      localizationsDelegates: [
-        ...AppLocalizations.localizationsDelegates,
-        // material_ui 的 widget 要它自己那份 MaterialLocalizations。
-        ...GlobalMaterialLocalizations.delegates,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      locale: Locale('zh'),
-      home: Scaffold(body: CategoryDrawer()),
+  child: TranslationProvider(
+    child: MuiTranslationScope(
+      child: MuiTheme(
+        data: _mui,
+        child: MaterialApp(
+          localizationsDelegates: const [
+            // material_ui 的 widget 要它自己那份 MaterialLocalizations。
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          supportedLocales: AppLocaleUtils.supportedLocales,
+          locale: const Locale('zh'),
+          home: const Scaffold(body: CategoryDrawer()),
+        ),
+      ),
     ),
   ),
 );
@@ -103,19 +106,22 @@ void main() {
         child: Builder(
           builder: (context) {
             container = ProviderScope.containerOf(context);
-            return MuiTheme(
-              data: _mui,
-              child: MaterialApp(
-                localizationsDelegates: const [
-                  ...AppLocalizations.localizationsDelegates,
-                  ...GlobalMaterialLocalizations.delegates,
-                ],
-                supportedLocales: AppLocalizations.supportedLocales,
-                locale: const Locale('zh'),
-                home: Scaffold(
-                  key: key,
-                  drawer: const CategoryDrawer(),
-                  body: const SizedBox.expand(),
+            return TranslationProvider(
+              child: MuiTranslationScope(
+                child: MuiTheme(
+                  data: _mui,
+                  child: MaterialApp(
+                    localizationsDelegates: const [
+                      ...GlobalMaterialLocalizations.delegates,
+                    ],
+                    supportedLocales: AppLocaleUtils.supportedLocales,
+                    locale: const Locale('zh'),
+                    home: Scaffold(
+                      key: key,
+                      drawer: const CategoryDrawer(),
+                      body: const SizedBox.expand(),
+                    ),
+                  ),
                 ),
               ),
             );
@@ -165,19 +171,22 @@ void main() {
         child: Builder(
           builder: (context) {
             container = ProviderScope.containerOf(context);
-            return MuiTheme(
-              data: _mui,
-              child: MaterialApp(
-                localizationsDelegates: const [
-                  ...AppLocalizations.localizationsDelegates,
-                  ...GlobalMaterialLocalizations.delegates,
-                ],
-                supportedLocales: AppLocalizations.supportedLocales,
-                locale: const Locale('zh'),
-                home: Scaffold(
-                  key: key,
-                  drawer: const CategoryDrawer(),
-                  body: const SizedBox.expand(),
+            return TranslationProvider(
+              child: MuiTranslationScope(
+                child: MuiTheme(
+                  data: _mui,
+                  child: MaterialApp(
+                    localizationsDelegates: const [
+                      ...GlobalMaterialLocalizations.delegates,
+                    ],
+                    supportedLocales: AppLocaleUtils.supportedLocales,
+                    locale: const Locale('zh'),
+                    home: Scaffold(
+                      key: key,
+                      drawer: const CategoryDrawer(),
+                      body: const SizedBox.expand(),
+                    ),
+                  ),
                 ),
               ),
             );
@@ -208,17 +217,20 @@ void main() {
                 Completer<({Map<String, int> byCategory, int total})>().future,
           ),
         ],
-        child: MuiTheme(
-          data: _mui,
-          child: const MaterialApp(
-            localizationsDelegates: [
-              ...AppLocalizations.localizationsDelegates,
-              // material_ui 的 widget 要它自己那份 MaterialLocalizations。
-              ...GlobalMaterialLocalizations.delegates,
-            ],
-            supportedLocales: AppLocalizations.supportedLocales,
-            locale: Locale('zh'),
-            home: Scaffold(body: CategoryDrawer()),
+        child: TranslationProvider(
+          child: MuiTranslationScope(
+            child: MuiTheme(
+              data: _mui,
+              child: MaterialApp(
+                localizationsDelegates: const [
+                  // material_ui 的 widget 要它自己那份 MaterialLocalizations。
+                  ...GlobalMaterialLocalizations.delegates,
+                ],
+                supportedLocales: AppLocaleUtils.supportedLocales,
+                locale: const Locale('zh'),
+                home: const Scaffold(body: CategoryDrawer()),
+              ),
+            ),
           ),
         ),
       ),

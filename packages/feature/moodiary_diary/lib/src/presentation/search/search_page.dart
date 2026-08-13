@@ -113,10 +113,12 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                 child: Row(
                   mainAxisSize: .min,
                   children: [
-                    Text(context.l10n.diarySearchResult(state.totalCount)),
+                    Text(
+                      context.l10n.diarySearchResult(count: state.totalCount),
+                    ),
                     if (state.elapsed != null)
                       Text(
-                        ' · ${context.l10n.diarySearchTime(state.elapsed!.inMilliseconds)}',
+                        ' · ${context.l10n.diarySearchTime(ms: state.elapsed!.inMilliseconds)}',
                         style:
                             context.theme.typography.bodySmall.onSurfaceVariant,
                       ),

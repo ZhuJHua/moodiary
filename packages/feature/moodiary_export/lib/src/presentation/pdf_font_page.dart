@@ -59,7 +59,7 @@ class _PdfFontPageState extends State<PdfFontPage> {
       if (mounted) Navigator.of(context).pop(fileName);
     } catch (e) {
       await toast.dismiss();
-      toast.error(message: l10n.exportImportFailed('$e'));
+      toast.error(message: l10n.exportImportFailed(error: '$e'));
     }
   }
 

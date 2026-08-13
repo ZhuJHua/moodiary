@@ -178,14 +178,7 @@
   "syncConfigClearConfirmTitle": "Clear settings?",
   "syncConfigClearConfirmMessage": "Syncing with this backend stops. Diaries on this device are untouched.",
   "syncConfigCleared": "Settings cleared",
-  "syncFieldRequired": "{field} is required",
-  "@syncFieldRequired": {
-    "placeholders": {
-      "field": {
-        "type": "String"
-      }
-    }
-  },
+  "syncFieldRequired": "{field: String} is required",
   "syncFieldOptional": "Optional",
   "syncFieldInvalidUrl": "That address doesn't look right",
   "diarySettingRichText": "Rich text",
@@ -293,9 +286,18 @@
   "diaryCount": "{count} Words",
   "dataSync": "Data sync",
   "diaryType": "Type",
-  "mediaImageCount": "{count, plural, =1 {# Photo} other {# Photos}}",
-  "mediaAudioCount": "{count, plural, =1 {# Audio} other {# Audios}}",
-  "mediaVideoCount": "{count, plural, =1 {# Video} other {# Videos}}",
+  "mediaImageCount(plural, param=count)": {
+    "one": "{count} Photo",
+    "other": "{count} Photos"
+  },
+  "mediaAudioCount(plural, param=count)": {
+    "one": "{count} Audio",
+    "other": "{count} Audios"
+  },
+  "mediaVideoCount(plural, param=count)": {
+    "one": "{count} Video",
+    "other": "{count} Videos"
+  },
   "toastSuccess": "Success",
   "toastError": "Error",
   "toastLoading": "Loading",
@@ -490,7 +492,10 @@
   "graphFilterEmpty": "No links match these filters",
   "graphClearFilter": "Clear filters",
   "graphLocal": "Local graph",
-  "graphDepthHops": "{count, plural, =1 {# hop} other {# hops}}",
+  "graphDepthHops(plural, param=count)": {
+    "one": "{count} hop",
+    "other": "{count} hops"
+  },
   "graphOutgoing": "Outgoing",
   "graphIncoming": "Incoming",
   "graphOutgoingCount": "{count} outgoing",
@@ -536,7 +541,10 @@
   "videoPlayerBrightness": "Brightness",
   "videoPlayerVolume": "Volume",
   "videoPlayerSpeedBoost": "Playing at {speed}×",
-  "diaryTimelineMonthCount": "{count, plural, =1{1 entry} other{{count} entries}}",
+  "diaryTimelineMonthCount(plural, param=count)": {
+    "one": "1 entry",
+    "other": "{count} entries"
+  },
   "exportPageTitle": "Import & export",
   "exportSectionExport": "Export",
   "exportSectionBackup": "Backup",

@@ -709,7 +709,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
 
   /// 底栏。scrim 由 0xB8 三档换成 0x94 五档并收成定高（横 78 / 竖 104）+ 安全区：
   /// 五个 stop 是为了压色带，定高是为了不再靠 padding 把渐变撑到画面下三分之一。
-  Widget _buildBottomBar(AppLocalizations l10n) {
+  Widget _buildBottomBar(Translations l10n) {
     final inset = MediaQuery.paddingOf(context);
     final size = MediaQuery.sizeOf(context);
     final barHeight = size.width > size.height ? 78.0 : 104.0;
@@ -770,7 +770,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
     );
   }
 
-  Widget _buildScrubber(AppLocalizations l10n) {
+  Widget _buildScrubber(Translations l10n) {
     final accent = context.theme.colors.primary;
     return Row(
       children: [
@@ -1047,7 +1047,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
                           const SizedBox(width: 8),
                           Text(
                             l10n.videoPlayerSpeedBoost(
-                              _kBoostSpeed.toStringAsFixed(0),
+                              speed: _kBoostSpeed.toStringAsFixed(0),
                             ),
                             style: context
                                 .theme

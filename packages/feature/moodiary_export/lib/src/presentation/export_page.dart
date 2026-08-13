@@ -100,10 +100,10 @@ class _ImportSection extends StatelessWidget {
     try {
       final summary = await IBackupArchive.get().import(file.path);
       await toast.dismiss();
-      toast.success(message: l10n.exportRestoreDone(summary));
+      toast.success(message: l10n.exportRestoreDone(summary: summary));
     } catch (e) {
       await toast.dismiss();
-      toast.error(message: l10n.exportRestoreFailed('$e'));
+      toast.error(message: l10n.exportRestoreFailed(error: '$e'));
     }
   }
 
@@ -116,7 +116,7 @@ class _ImportSection extends StatelessWidget {
       await toast.dismiss();
     } catch (e) {
       await toast.dismiss();
-      toast.error(message: l10n.exportFailed('$e'));
+      toast.error(message: l10n.exportFailed(error: '$e'));
       return;
     }
     await _share(zipPath, 'application/zip', l10n.exportBackupReady);
@@ -169,7 +169,7 @@ Future<void> _share(String path, String mime, String successMessage) async {
   }
 }
 
-Future<void> shareExported(String path, AppLocalizations l10n) async {
+Future<void> shareExported(String path, Translations l10n) async {
   final mime = switch (path.split('.').last.toLowerCase()) {
     'md' => 'text/markdown',
     'docx' =>

@@ -78,7 +78,9 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                       ),
                       const Spacer(),
                       Text(
-                        context.l10n.categorySwitcherCount(categories.length),
+                        context.l10n.categorySwitcherCount(
+                          count: categories.length,
+                        ),
                         style: context.theme.typography.labelSmall.outline,
                       ),
                     ],
@@ -237,7 +239,7 @@ class _Header extends StatelessWidget {
             Padding(
               padding: const .only(top: 2),
               child: Text(
-                context.l10n.diarySearchResult(total!),
+                context.l10n.diarySearchResult(count: total!),
                 style: context.theme.typography.labelMedium.onSurfaceVariant,
               ),
             ),

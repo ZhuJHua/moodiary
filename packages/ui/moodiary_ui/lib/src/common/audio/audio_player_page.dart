@@ -231,7 +231,7 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
     );
   }
 
-  Widget _buildBottomBar(AppLocalizations l10n, ColorScheme scheme) {
+  Widget _buildBottomBar(Translations l10n, ColorScheme scheme) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20,

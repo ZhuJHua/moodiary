@@ -55,14 +55,14 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
     final url = _urlCtl.text.trim();
     final uri = Uri.tryParse(url);
     final urlError = url.isEmpty
-        ? l10n.syncFieldRequired(l10n.webdavOptionServer)
+        ? l10n.syncFieldRequired(field: l10n.webdavOptionServer)
         : (uri == null ||
               !(uri.isScheme('http') || uri.isScheme('https')) ||
               uri.host.isEmpty)
         ? l10n.syncFieldInvalidUrl
         : null;
     final userError = _userCtl.text.trim().isEmpty
-        ? l10n.syncFieldRequired(l10n.webdavOptionUsername)
+        ? l10n.syncFieldRequired(field: l10n.webdavOptionUsername)
         : null;
     setState(() {
       _urlError = urlError;

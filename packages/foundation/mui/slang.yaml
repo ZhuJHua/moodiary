@@ -1,0 +1,20 @@
+# mui 组件自己要用的那十来个通用词。生成命令：dart tool/task.dart l10n。
+#
+# 类名/枚举名必须与 App 那份（moodiary_l10n）区分开：slang 生成的
+# TranslationProvider / LocaleSettings / AppLocaleUtils 三个类名在生成器里是硬编码的，
+# 只有下面这三项可配。所以生成物**不进 mui.dart barrel**，对外只露 MuiTranslationScope。
+base_locale: zh
+fallback_strategy: base_locale
+
+input_directory: lib/src/l10n/i18n
+input_file_pattern: .i18n.json
+output_directory: lib/src/l10n/i18n
+output_file_name: mui_strings.g.dart
+
+translate_var: muiL10n
+class_name: MuiTranslations
+enum_name: MuiAppLocale
+
+flat_map: false
+timestamp: false
+statistics: false

@@ -185,7 +185,7 @@ class _PresetCard extends StatelessWidget {
         leading: ProviderLogo(logoUrl: preset.logoUrl, name: name),
         title: Text(name),
         subtitle: Text(
-          l10n.llmPickerModelCount(preset.models.length),
+          l10n.llmPickerModelCount(count: preset.models.length),
           maxLines: 1,
           overflow: .ellipsis,
         ),
@@ -238,7 +238,7 @@ class _UpdatedFooter extends StatelessWidget {
     final parts = <String>[l10n.llmPickerDataSource];
     if (at > 0) {
       final time = TimeFormat.listDateTime(.fromMillisecondsSinceEpoch(at));
-      parts.add(l10n.llmPickerUpdatedAt(time));
+      parts.add(l10n.llmPickerUpdatedAt(time: time));
     }
     return Padding(
       padding: const .symmetric(vertical: 12),

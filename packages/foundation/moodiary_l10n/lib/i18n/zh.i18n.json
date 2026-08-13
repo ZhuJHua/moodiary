@@ -178,14 +178,7 @@
   "syncConfigClearConfirmTitle": "清除配置？",
   "syncConfigClearConfirmMessage": "清除后将停止与该后端同步，本地日记不受影响。",
   "syncConfigCleared": "已清除配置",
-  "syncFieldRequired": "{field}不能为空",
-  "@syncFieldRequired": {
-    "placeholders": {
-      "field": {
-        "type": "String"
-      }
-    }
-  },
+  "syncFieldRequired": "{field: String}不能为空",
   "syncFieldOptional": "可留空",
   "syncFieldInvalidUrl": "地址格式不正确",
   "diarySettingRichText": "富文本",
@@ -293,9 +286,15 @@
   "diaryCount": "{count} 字",
   "dataSync": "数据同步",
   "diaryType": "类型",
-  "mediaImageCount": "{count} 张照片",
-  "mediaAudioCount": "{count} 段音频",
-  "mediaVideoCount": "{count} 段视频",
+  "mediaImageCount(plural, param=count)": {
+    "other": "{count} 张照片"
+  },
+  "mediaAudioCount(plural, param=count)": {
+    "other": "{count} 段音频"
+  },
+  "mediaVideoCount(plural, param=count)": {
+    "other": "{count} 段视频"
+  },
   "toastSuccess": "成功",
   "toastError": "出错了",
   "toastLoading": "加载中",
@@ -490,7 +489,9 @@
   "graphFilterEmpty": "当前筛选下没有链接",
   "graphClearFilter": "清除筛选",
   "graphLocal": "关系图",
-  "graphDepthHops": "{count} 跳",
+  "graphDepthHops(plural, param=count)": {
+    "other": "{count} 跳"
+  },
   "graphOutgoing": "出链",
   "graphIncoming": "入链",
   "graphOutgoingCount": "{count} 条出链",
@@ -535,21 +536,9 @@
   "videoPlayerProgress": "播放进度",
   "videoPlayerBrightness": "亮度",
   "videoPlayerVolume": "音量",
-  "videoPlayerSpeedBoost": "{speed}× 倍速播放中",
-  "@videoPlayerSpeedBoost": {
-    "placeholders": {
-      "speed": {
-        "type": "String"
-      }
-    }
-  },
-  "diaryTimelineMonthCount": "{count} 篇",
-  "@diaryTimelineMonthCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
+  "videoPlayerSpeedBoost": "{speed: String}× 倍速播放中",
+  "diaryTimelineMonthCount(plural, param=count)": {
+    "other": "{count} 篇"
   },
   "exportPageTitle": "导入与导出",
   "exportSectionExport": "导出",

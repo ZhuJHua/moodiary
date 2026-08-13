@@ -241,7 +241,7 @@ class _AssistantProviderEditPageState
     );
   }
 
-  Widget _buildModelSelector(AppLocalizations l10n) {
+  Widget _buildModelSelector(Translations l10n) {
     final all = _presetModels;
     if (all.isEmpty) return const SizedBox.shrink();
     final toolModels = all.where((m) => m.toolCall).toList();
@@ -308,7 +308,7 @@ class _AssistantProviderEditPageState
     );
   }
 
-  Widget _buildCapabilities(AppLocalizations l10n) {
+  Widget _buildCapabilities(Translations l10n) {
     return Column(
       crossAxisAlignment: .start,
       children: [

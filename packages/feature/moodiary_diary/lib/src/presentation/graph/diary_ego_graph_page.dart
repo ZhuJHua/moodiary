@@ -263,11 +263,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
     }
   }
 
-  Widget _buildBody(
-    MuiThemeData theme,
-    AppLocalizations l10n,
-    GraphScene scene,
-  ) {
+  Widget _buildBody(MuiThemeData theme, Translations l10n, GraphScene scene) {
     final cs = theme.colors;
     final center = scene.centerIndex ?? 0;
     final bottomSafe = MediaQuery.viewPaddingOf(context).bottom;
@@ -298,13 +294,13 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
               _Legend(
                 color: cs.tertiary,
                 label: l10n.graphIncomingCount(
-                  _countAtCenter(scene, out: false),
+                  count: _countAtCenter(scene, out: false),
                 ),
               ),
               _Legend(
                 color: cs.primary,
                 label: l10n.graphOutgoingCount(
-                  _countAtCenter(scene, out: true),
+                  count: _countAtCenter(scene, out: true),
                 ),
               ),
             ],

@@ -80,7 +80,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
     });
   }
 
-  ExportScope? _build(AppLocalizations l10n) => switch (_kind) {
+  ExportScope? _build(Translations l10n) => switch (_kind) {
     .all => const AllDiariesScope(),
     .category =>
       _categoryIds.isEmpty
@@ -91,7 +91,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
     .picked => _pickedIds.isEmpty ? null : PickedScope({..._pickedIds}),
   };
 
-  String _categoryLabel(AppLocalizations l10n) {
+  String _categoryLabel(Translations l10n) {
     final names = _categoryIds.map((id) {
       if (id == null || id.isEmpty) return l10n.exportUncategorized;
       return _categories
@@ -102,7 +102,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
     }).toList();
     return names.length <= 2
         ? names.join('、')
-        : l10n.exportCategoryCount(names.length);
+        : l10n.exportCategoryCount(count: names.length);
   }
 
   @override
@@ -162,7 +162,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
     );
   }
 
-  String _kindLabel(AppLocalizations l10n, _ScopeKind kind) => switch (kind) {
+  String _kindLabel(Translations l10n, _ScopeKind kind) => switch (kind) {
     .all => l10n.exportScopeAll,
     .category => l10n.exportScopeByCategory,
     .dateRange => l10n.exportScopeByDate,
@@ -170,10 +170,11 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
   };
 
   /// 只有「全部」需要带篇数，其余选项自解释。
-  Widget? _kindHint(AppLocalizations l10n, _ScopeKind kind) =>
-      kind == .all ? Text(l10n.exportScopeAllHint(_diaries.length)) : null;
+  Widget? _kindHint(Translations l10n, _ScopeKind kind) => kind == .all
+      ? Text(l10n.exportScopeAllHint(count: _diaries.length))
+      : null;
 
-  Widget _categoryList(AppLocalizations l10n) {
+  Widget _categoryList(Translations l10n) {
     final scheme = context.theme.colors;
     final uncategorized = _diaries.where((d) {
       final id = d.categoryId;
@@ -189,7 +190,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
             CheckboxListTile(
               value: _categoryIds.contains(null),
               title: Text(l10n.exportUncategorized),
-              subtitle: Text(l10n.exportEntryCount(uncategorized)),
+              subtitle: Text(l10n.exportEntryCount(count: uncategorized)),
               onChanged: (v) => setState(() {
                 v == true ? _categoryIds.add(null) : _categoryIds.remove(null);
               }),
@@ -200,7 +201,9 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
               title: Text(category.categoryName),
               subtitle: Text(
                 l10n.exportEntryCount(
-                  _diaries.where((d) => d.categoryId == category.id).length,
+                  count: _diaries
+                      .where((d) => d.categoryId == category.id)
+                      .length,
                 ),
               ),
               onChanged: (v) => setState(() {
@@ -214,7 +217,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
     );
   }
 
-  Widget _rangeTile(AppLocalizations l10n) {
+  Widget _rangeTile(Translations l10n) {
     final scheme = context.theme.colors;
     final range = _range;
     return Card.filled(
@@ -226,7 +229,10 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
         title: l10n.exportDateRange,
         subtitle: range == null
             ? l10n.exportTapToPick
-            : l10n.exportDateRangeValue(_date(range.start), _date(range.end)),
+            : l10n.exportDateRangeValue(
+                from: _date(range.start),
+                to: _date(range.end),
+              ),
         leading: const Icon(LucideIcons.calendarRange),
         trailing: const Icon(LucideIcons.chevronRight),
         onTap: _pickRange,
@@ -254,7 +260,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
     if (picked != null) setState(() => _range = picked);
   }
 
-  Widget _diaryList(AppLocalizations l10n) {
+  Widget _diaryList(Translations l10n) {
     final scheme = context.theme.colors;
     return Card.filled(
       color: scheme.surfaceContainerLow,

@@ -10,28 +10,31 @@ void main() {
   testWidgets('editor returns entered name and picked color', (t) async {
     CategoryDraft? result;
     await t.pumpWidget(
-      MuiTheme(
-        data: _mui,
-        child: MaterialApp(
-          locale: const Locale('zh'),
-          localizationsDelegates: const [
-            ...AppLocalizations.localizationsDelegates,
-            // material_ui 的 widget 要它自己那份 MaterialLocalizations。
-            ...GlobalMaterialLocalizations.delegates,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: Center(
-                child: ElevatedButton(
-                  onPressed: () async {
-                    result = await showCategoryEditor(
-                      context,
-                      initialName: '',
-                      initialColor: null,
-                    );
-                  },
-                  child: const Text('open'),
+      TranslationProvider(
+        child: MuiTranslationScope(
+          child: MuiTheme(
+            data: _mui,
+            child: MaterialApp(
+              locale: const Locale('zh'),
+              localizationsDelegates: const [
+                // material_ui 的 widget 要它自己那份 MaterialLocalizations。
+                ...GlobalMaterialLocalizations.delegates,
+              ],
+              supportedLocales: AppLocaleUtils.supportedLocales,
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: Center(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        result = await showCategoryEditor(
+                          context,
+                          initialName: '',
+                          initialColor: null,
+                        );
+                      },
+                      child: const Text('open'),
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -67,7 +67,7 @@ class _AssistantProviderListPageState
     final ok = await MAlert.confirm(
       context,
       title: l10n.modelProviderDeleteTitle,
-      message: l10n.modelProviderDeleteContent(provider.name),
+      message: l10n.modelProviderDeleteContent(name: provider.name),
       confirmLabel: l10n.diaryDelete,
       isDestructive: true,
     );

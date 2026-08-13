@@ -237,7 +237,7 @@ class _FilterTitle extends ConsumerWidget {
         if (count != null) ...[
           const SizedBox(width: 8),
           Text(
-            context.l10n.diarySearchResult(count),
+            context.l10n.diarySearchResult(count: count),
             style: context.theme.typography.labelSmall.onSurfaceVariant,
           ),
         ],

@@ -74,7 +74,9 @@ class _S3FormSheetState extends State<S3FormSheet> {
   bool _validate() {
     final l10n = context.l10n;
     String? required(TextEditingController controller, String field) =>
-        controller.text.trim().isEmpty ? l10n.syncFieldRequired(field) : null;
+        controller.text.trim().isEmpty
+        ? l10n.syncFieldRequired(field: field)
+        : null;
 
     final endpointError = required(_endpointCtl, l10n.s3OptionEndpoint);
     final bucketError = required(_bucketCtl, l10n.s3OptionBucket);

@@ -36,9 +36,9 @@ IconData _typeIcon(MediaType t) => switch (t) {
 };
 
 String _countLabel(BuildContext c, MediaType t, int n) => switch (t) {
-  .image => c.l10n.mediaImageCount(n),
-  .audio => c.l10n.mediaAudioCount(n),
-  .video => c.l10n.mediaVideoCount(n),
+  .image => c.l10n.mediaImageCount(count: n),
+  .audio => c.l10n.mediaAudioCount(count: n),
+  .video => c.l10n.mediaVideoCount(count: n),
 };
 
 class _MobileMediaPage extends ConsumerStatefulWidget {
@@ -122,7 +122,10 @@ Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
   final confirmed = await MAlert.confirm(
     context,
     title: l10n.mediaCleanupConfirmTitle,
-    message: l10n.mediaCleanupConfirmMessage(report.count, report.readableSize),
+    message: l10n.mediaCleanupConfirmMessage(
+      count: report.count,
+      size: report.readableSize,
+    ),
     isDestructive: true,
   );
   if (!confirmed) return;
@@ -138,7 +141,7 @@ Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
   // 用调用方仍有效的 ref 刷新媒体库（controller 的 ref 此时可能已被 autoDispose 回收）。
   if (context.mounted) ref.invalidate(mediaDiariesProvider);
   await toast.dismiss();
-  toast.success(message: l10n.mediaCleanupDone(report.count));
+  toast.success(message: l10n.mediaCleanupDone(count: report.count));
 }
 
 /// 3 列网格的常量（内边距 / 间距 / 列数），用于按屏宽算出缩略图降采样宽度。

@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/services.dart';
 import 'package:mui/mui.dart';
 
+import '../../l10n/mui_l10n.dart';
+
 /// 起手色板。**不是**主题预置档 —— 点一格等于往自定义色里填一个值，落库的是 ARGB
 /// 而不是索引，所以改动这张表不会动到任何人已经选好的颜色。
 /// 前三格是中性锚点，其余沿用仓里那套传统色的色值。

@@ -1,5 +1,5 @@
 name: moodiary_l10n
-description: "Moodiary localization (foundation) — gen-l10n AppLocalizations + the BuildContext.l10n helper."
+description: "Moodiary localization (foundation) — slang 生成的 Translations + BuildContext.l10n。"
 version: 0.0.1
 publish_to: none
 
@@ -12,14 +12,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
+  # slang_flutter 自带 slang，并提供 TranslationProvider / flutterLocale / supportedLocales。
+  slang_flutter: 4.19.0
   intl: 0.20.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-
-flutter:
-  generate: true
+  # `dart run slang` 的 CLI 入口（生成、analyze、migrate 都在这里）。
+  slang: 4.19.0

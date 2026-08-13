@@ -26,7 +26,8 @@ dart tool/task.dart build-apk / build-ios  # 只有 android/ios 两个目标
 # Code Gen (after model/router/provider changes)
 dart tool/task.dart build-runner   # build_runner build（2.16.0 起 --delete-conflicting-outputs 已移除）
 dart tool/task.dart gen-rust       # regenerate Rust FFI bindings
-dart tool/task.dart gen            # gen-rust + rebuild editor asset
+dart tool/task.dart l10n           # slang 文案生成（改了 i18n/*.json 必跑）
+dart tool/task.dart gen            # gen-rust + l10n + rebuild editor asset
 dart tool/task.dart editor         # rebuild editor asset only (needs corepack on PATH)
 
 # Lint & Test
@@ -59,7 +60,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
   packages/
     foundation/              # leaf layer — no internal deps
       moodiary_lint/         #   shared analyzer options
-      moodiary_l10n/         #   localization (ARB + gen-l10n)
+      moodiary_l10n/         #   localization (slang，见下)
       moodiary_router/       #   typed route primitives over go_router
       moodiary_rust/         #   Rust FFI package (cargo workspace in rust/, built by hook/build.dart)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
@@ -116,7 +117,8 @@ Flutter 3.47 把 Material 拆成独立包 `material_ui`，SDK 内的
 
 组件：material_ui 够用的直接用（`Switch` / `Scaffold` / `AppBar`…），不够用的才在 mui 里补，
 命名一律 `M` 开头（`MMenuButton`、`MAlert.show(...)`）。mui 是**零 `moodiary_*` 依赖**的
-foundation 叶子包，所以它自带 `MuiLocalizations`（十来个通用词），不吃 App 的文案包。
+foundation 叶子包，所以它自带一份 slang 文案（十来个通用词），不吃 App 的文案包 —— 见下面
+「i18n」一节。
 
 **共存期的两个硬点**：
 
@@ -125,15 +127,56 @@ foundation 叶子包，所以它自带 `MuiLocalizations`（十来个通用词�
    platform / visualDensity / colorScheme / textTheme 四项，**25 个组件子主题不过桥** ——
    第三方 widget 保留我们的配色与排版，但组件级样式回落 Material 默认。它出厂即
    `@Deprecated`，依赖全部迁移后摘掉。
-2. `localizationsDelegates` **不能用 gen-l10n 的 `AppLocalizations.localizationsDelegates`**：
-   那份带的是 `flutter_localizations` 的 `GlobalMaterialLocalizations`，给出 **legacy**
+2. `localizationsDelegates` 里**只剩 material_ui 自带的 `GlobalMaterialLocalizations.delegates`**
+   （已含 cupertino/widgets）。不能用 `flutter_localizations` 的同名类：那份给出 **legacy**
    类型，material_ui 的 widget 认不得，中文下会退化并让日期选择器一类直接抛。
-   要用 material_ui 自带的 `GlobalMaterialLocalizations.delegates`（已含 cupertino/widgets）。
-   生成文件会被覆盖，所以列表手写在 `main.dart`。
+   我们自己的文案走 slang，不再有 delegate。
 
 > 官方的 `dart fix --code=migrate_design_widgets` **当前不生效**：转换规则在 SDK 里
 > （`fix_data/fix_material/fix_material.yaml`），但 `material.dart` 还没标 `@Deprecated`，
 > 数据驱动 fix 挂不上诊断。实测加了 material_ui 依赖也一样 `Nothing to fix!`。
+
+### i18n —— slang，不是 gen-l10n
+
+文案由 **slang 4.19** 生成，`flutter_localizations` 退回只服务 material 组件自己的字串
+（且它不会从依赖图消失：material_ui 与 slang_flutter 都依赖它）。
+
+全仓有**两份**互不相干的 slang 产物，各自 `slang.yaml`：
+
+| | 源文件 | 产物 | 符号 |
+|---|---|---|---|
+| App | `moodiary_l10n/lib/i18n/{zh,en}.i18n.json` | `strings.g.dart` | `Translations` / `AppLocale` / `l10n` |
+| mui | `mui/lib/src/l10n/i18n/{zh,en}.i18n.json` | `mui_strings.g.dart` | `MuiTranslations` / `MuiAppLocale` / `muiL10n` |
+
+- **取串按有没有 context 分**：widget 里用 `context.l10n.xxx`（依赖 `TranslationProvider`，
+  切语言自动重建）；service / 导出 / 回调里用顶层的 `l10n.xxx`（**不会重建**）。
+- **参数是具名的**：`l10n.diarySearchResult(count: n)`。gen-l10n 时代的位置参数已全部改完。
+- **语种真源是 slang 的 `GlobalLocaleState` 单例**，跨包共享 —— `applyStoredLanguage()`
+  调一次 `LocaleSettings.setLocale`，App 与 mui 两棵树一起刷新。KV 里只存偏好枚举。
+  `MaterialApp.locale` 从 `TranslationProvider.of(context).flutterLocale` 取。
+- 改了 `*.i18n.json` **必须跑 `dart tool/task.dart l10n`**（产物是提交的，且没有闸门兜底）。
+  `dart run slang analyze` 只能信它的「缺失键」那一半：它的「未使用」检测只扫当前包的
+  `lib/`，而生成物本身就在那儿，于是全仓死键（如 `graphDepthHops`）也报 0。
+
+四个不报错的坑：
+
+1. **`TranslationProvider` / `LocaleSettings` / `AppLocaleUtils` 三个类名在生成器里是硬编码的**，
+   只有 `class_name` / `enum_name` / `translate_var` 可配。所以 mui 的生成物**不进 barrel**，
+   对外只露 `MuiTranslationScope`（裸导出会和 App 那份撞成 ambiguous import）。
+2. **复数是英文的需求，中文被顺带拖进来**：slang 要求同一个键在所有语种里节点形状一致，
+   所以 `1 entry / 2 entries` 这类键的中文侧也是复数节点（只有 `other`）。而 slang 的内置
+   复数规则表里没有 zh（只有 ar cs de en es fr he it ja pl ru sv uk vi），渲染中文时**每次
+   都走一遍 `print`** 再用兜底（`log.error` 就是裸 print，release 也打）。`setupPluralResolvers()`
+   就是来说「zh 一律取 other」的，在 `runApp` 之前登记即可（与 `setLocale` 先后无关，
+   但它不会通知已挂载的 provider）。
+3. **非 base 语种的翻译类是 deferred import**（`lazy: true`），所以一律用异步的
+   `setLocale`，别用 `setLocaleSync`（它绕开 `loadLibrary()`）。
+4. `timestamp` 与 `flat_map` 默认都是 `true`：前者让提交的产物每次生成都有噪声 diff，
+   后者多生成一份全量 `Map<String, String>`。两个都在 `slang.yaml` 里关掉了。
+
+> slang 自带的 `dart run slang migrate arb` **不能用**：它按 camelCase 把键强行拆成嵌套路径
+> （`accentCustomTitle` → `accent.custom.title`），既改掉全部调用点，又会在
+> `accentCustom` / `accentCustomTitle` 这种前缀重叠上直接抛异常。当年是脚本平铺转的。
 
 ### Rust Workspace
 

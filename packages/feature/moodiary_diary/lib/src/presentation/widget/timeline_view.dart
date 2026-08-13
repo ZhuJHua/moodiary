@@ -205,7 +205,7 @@ class _MonthHeaderDelegate extends SliverPersistentHeaderDelegate {
           if (count != null) ...[
             const SizedBox(width: 8),
             Text(
-              context.l10n.diaryTimelineMonthCount(count!),
+              context.l10n.diaryTimelineMonthCount(count: count!),
               style: context.theme.typography.labelSmall.onSurfaceVariant,
             ),
           ],

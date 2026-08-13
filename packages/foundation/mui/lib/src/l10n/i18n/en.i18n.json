@@ -1,0 +1,9 @@
+{
+  "ok": "OK",
+  "cancel": "Cancel",
+  "back": "Back",
+  "colorPickerTitle": "Pick a color",
+  "toastLoading": "Loading",
+  "toastSuccess": "Success",
+  "toastError": "Error"
+}

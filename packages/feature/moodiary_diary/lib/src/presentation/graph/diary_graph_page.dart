@@ -384,7 +384,10 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                         opacity: _selected == null ? 1 : 0,
                         duration: const Duration(milliseconds: 160),
                         child: Text(
-                          l10n.graphCount(scene.edgeCount, scene.nodeCount),
+                          l10n.graphCount(
+                            nodes: scene.edgeCount,
+                            edges: scene.nodeCount,
+                          ),
                           style: theme.typography.labelSmall.onSurfaceVariant,
                         ),
                       ),

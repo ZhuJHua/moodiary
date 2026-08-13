@@ -21,20 +21,23 @@ void main() {
   }
 
   Widget host(ToolPermissionCoordinator coordinator, String surfaceId) {
-    return MuiTheme(
-      data: _mui,
-      child: MaterialApp(
-        locale: const Locale('zh'),
-        localizationsDelegates: const [
-          ...AppLocalizations.localizationsDelegates,
-          ...GlobalMaterialLocalizations.delegates,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: genui.Surface(
-            surfaceContext: coordinator.surfaces.contextFor(surfaceId),
-            actionDelegate: ToolPermissionActionDelegate(
-              coordinator.handleAction,
+    return TranslationProvider(
+      child: MuiTranslationScope(
+        child: MuiTheme(
+          data: _mui,
+          child: MaterialApp(
+            locale: const Locale('zh'),
+            localizationsDelegates: const [
+              ...GlobalMaterialLocalizations.delegates,
+            ],
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            home: Scaffold(
+              body: genui.Surface(
+                surfaceContext: coordinator.surfaces.contextFor(surfaceId),
+                actionDelegate: ToolPermissionActionDelegate(
+                  coordinator.handleAction,
+                ),
+              ),
             ),
           ),
         ),

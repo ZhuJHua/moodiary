@@ -60,7 +60,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
         : _settings.copyWith(docx: next),
   );
 
-  String _titleOf(AppLocalizations l10n) => switch (widget.format) {
+  String _titleOf(Translations l10n) => switch (widget.format) {
     .markdown => l10n.exportTitleMarkdown,
     .docx => l10n.exportTitleDocx,
     .pdf => l10n.exportTitlePdf,
@@ -111,7 +111,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
                     Text(
                       _scopeCount == null
                           ? l10n.exportCounting
-                          : l10n.exportEntryCount(_scopeCount!),
+                          : l10n.exportEntryCount(count: _scopeCount!),
                       style: theme.typography.bodySmall.onSurfaceVariant,
                     ),
                     const Icon(LucideIcons.chevronRight),
@@ -161,8 +161,12 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final value = await MAlert.prompt(
       context,
       title: l10n.exportFileNameTemplate,
-      // 花括号是模板语法本身，作为字面量传进占位符 —— gen-l10n 的 ICU 不支持转义花括号。
-      message: l10n.exportFileNameTemplateHint('{date}', '{id}', '{title}'),
+      // 花括号是模板语法本身，作为字面量传进占位符 —— 文案里的 `{x}` 会被 slang 当参数吃掉。
+      message: l10n.exportFileNameTemplateHint(
+        date: '{date}',
+        title: '{title}',
+        id: '{id}',
+      ),
       initialValue: _common.nameTemplate,
       validator: (v) => v.trim().isEmpty ? l10n.exportTemplateEmpty : null,
     );
@@ -215,7 +219,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     );
   }
 
-  static String _mediaLabel(AppLocalizations l10n, ExportMediaPolicy policy) =>
+  static String _mediaLabel(Translations l10n, ExportMediaPolicy policy) =>
       switch (policy) {
         .embed => l10n.exportMediaEmbed,
         .placeholder => l10n.exportMediaPlaceholder,
@@ -223,13 +227,13 @@ class _FormatExportPageState extends State<FormatExportPage> {
       };
 
   /// 范围描述：成句的部分走 l10n，分类名 / 日期区间这类用户数据由 scope 自己带。
-  String _scopeLabel(AppLocalizations l10n) {
+  String _scopeLabel(Translations l10n) {
     final detail = _scope.detail;
     return switch (_scope.kind) {
       .all => l10n.exportScopeAll,
       .category => detail ?? l10n.exportScopeByCategory,
       .dateRange => detail ?? l10n.exportScopeByDate,
-      .picked => l10n.exportScopePickedLabel(_scopeCount ?? 0),
+      .picked => l10n.exportScopePickedLabel(count: _scopeCount ?? 0),
     };
   }
 
@@ -333,7 +337,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
               SettingListTile(
                 title: l10n.exportFontSize,
                 subtitle: l10n.exportFontSizeValue(
-                  layout.fontSizePt.toStringAsFixed(0),
+                  size: layout.fontSizePt.toStringAsFixed(0),
                 ),
                 leading: const Icon(LucideIcons.aLargeSmall),
                 trailing: const Icon(LucideIcons.chevronRight),
@@ -342,7 +346,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
               SettingListTile(
                 title: l10n.exportLineSpacing,
                 subtitle: l10n.exportLineSpacingValue(
-                  layout.lineSpacing.toStringAsFixed(1),
+                  value: layout.lineSpacing.toStringAsFixed(1),
                 ),
                 leading: const Icon(LucideIcons.alignJustify),
                 trailing: const Icon(LucideIcons.chevronRight),
@@ -405,7 +409,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
       title: l10n.exportFontSize,
       values: const [9.0, 10.0, 11.0, 12.0, 14.0, 16.0],
       current: _layout.fontSizePt,
-      label: (v) => l10n.exportFontSizeValue(v.toStringAsFixed(0)),
+      label: (v) => l10n.exportFontSizeValue(size: v.toStringAsFixed(0)),
     );
     if (picked != null) _updateLayout(_layout.copyWith(fontSizePt: picked));
   }
@@ -416,7 +420,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
       title: l10n.exportLineSpacing,
       values: const [1.0, 1.15, 1.5, 1.75, 2.0],
       current: _layout.lineSpacing,
-      label: (v) => l10n.exportLineSpacingValue(v.toStringAsFixed(2)),
+      label: (v) => l10n.exportLineSpacingValue(value: v.toStringAsFixed(2)),
     );
     if (picked != null) _updateLayout(_layout.copyWith(lineSpacing: picked));
   }
@@ -492,7 +496,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
                           ? l10n.exportCounting
                           : (count == 0
                                 ? l10n.exportScopeEmpty
-                                : l10n.exportRunButton(count))),
+                                : l10n.exportRunButton(count: count))),
               ),
             ),
           ),
@@ -501,16 +505,16 @@ class _FormatExportPageState extends State<FormatExportPage> {
     );
   }
 
-  Widget _progressBar(ExportProgress progress, AppLocalizations l10n) {
+  Widget _progressBar(ExportProgress progress, Translations l10n) {
     final label = switch (progress.phase) {
       .converting => l10n.exportProgressConverting(
-        progress.done,
-        progress.total,
+        done: progress.done,
+        total: progress.total,
       ),
       .writing when progress.total == 0 => l10n.exportProgressWriting,
       .writing => l10n.exportProgressWritingCount(
-        progress.done,
-        progress.total,
+        done: progress.done,
+        total: progress.total,
       ),
       // 收尾阶段切不开，只能给不确定进度条。
       .serializing => l10n.exportProgressSerializing,
@@ -581,7 +585,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
         },
       );
     } catch (e) {
-      toast.error(message: l10n.exportFailed('$e'));
+      toast.error(message: l10n.exportFailed(error: '$e'));
     } finally {
       token.dispose();
       if (mounted) {
@@ -594,17 +598,14 @@ class _FormatExportPageState extends State<FormatExportPage> {
     }
   }
 
-  Future<void> _reportAndShare(
-    ExportOutcome outcome,
-    AppLocalizations l10n,
-  ) async {
+  Future<void> _reportAndShare(ExportOutcome outcome, Translations l10n) async {
     final notes = [
       if (outcome.skippedMedia > 0)
-        l10n.exportSkippedMedia(outcome.skippedMedia),
+        l10n.exportSkippedMedia(count: outcome.skippedMedia),
       if (outcome.unsupportedNodes.isNotEmpty)
         l10n.exportUnsupportedNodes(
-          outcome.unsupportedNodes.length,
-          outcome.unsupportedNodes.join('、'),
+          count: outcome.unsupportedNodes.length,
+          types: outcome.unsupportedNodes.join('、'),
         ),
     ];
     if (notes.isNotEmpty && mounted) {

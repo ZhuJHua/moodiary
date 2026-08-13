@@ -14,18 +14,20 @@ void main() {
         ),
       ),
     );
-    return MuiTheme(
-      data: _mui,
-      child: MaterialApp(
-        locale: const Locale('zh'),
-        localizationsDelegates: const [
-          MuiLocalizations.delegate,
-          // material_ui 自带的那份（不是 flutter_localizations 的），
-          // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
-          ...GlobalMaterialLocalizations.delegates,
-        ],
-        supportedLocales: MuiLocalizations.supportedLocales,
-        home: Scaffold(body: body),
+    return MuiTranslationScope(
+      child: MuiTheme(
+        data: _mui,
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: const [
+            // material_ui 自带的那份（不是 flutter_localizations 的），
+            // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
+            // mui 自己的通用词走 slang，不再有 delegate。
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          supportedLocales: const [Locale('zh'), Locale('en')],
+          home: Scaffold(body: body),
+        ),
       ),
     );
   }
@@ -366,18 +368,20 @@ void main() {
   });
 
   group('MField', () {
-    Widget fieldHost(Widget child) => MuiTheme(
-      data: _mui,
-      child: MaterialApp(
-        locale: const Locale('zh'),
-        localizationsDelegates: const [
-          MuiLocalizations.delegate,
-          // material_ui 自带的那份（不是 flutter_localizations 的），
-          // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
-          ...GlobalMaterialLocalizations.delegates,
-        ],
-        supportedLocales: MuiLocalizations.supportedLocales,
-        home: Scaffold(body: child),
+    Widget fieldHost(Widget child) => MuiTranslationScope(
+      child: MuiTheme(
+        data: _mui,
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: const [
+            // material_ui 自带的那份（不是 flutter_localizations 的），
+            // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
+            // mui 自己的通用词走 slang，不再有 delegate。
+            ...GlobalMaterialLocalizations.delegates,
+          ],
+          supportedLocales: const [Locale('zh'), Locale('en')],
+          home: Scaffold(body: child),
+        ),
       ),
     );
 
