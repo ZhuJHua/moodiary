@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 18 shared packages under `packages/` across four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later — the packages are already layered for it, but no desktop target exists in the tree today.
+Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 20 shared packages under `packages/` across four dependency layers, consumed by the single Flutter app **`mobile/`** (Android + iOS, pub name `moodiary`). The root `pubspec.yaml` is a pure coordinator (workspace + Melos config, no app code). A desktop app will be rebuilt later — the packages are already layered for it, but no desktop target exists in the tree today.
 
 ## Tech Stack
 
@@ -63,6 +63,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_router/       #   typed route primitives over go_router
       moodiary_rust/         #   Rust FFI package (cargo workspace in rust/, built by hook/build.dart)
       moodiary_utils/        #   pure utils + content converters (tiptap/markdown/quill)
+      mui/                   #   设计系统：material_ui 的**补充**（详见下）
     core/                    # → foundation; internal order models → core → data,migration → preferences
       moodiary_models/       #   domain: Isar @Collection + Freezed DTOs
       moodiary_core/         #   infra: Isar/KV/SecureKV + theme + exceptions
@@ -70,8 +71,9 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_migration/    #   one-shot legacy data migration
       moodiary_preferences/  #   preference state
     ui/                      # → core/foundation
-      moodiary_ui/           #   business-agnostic reusable widgets
+      moodiary_ui/           #   只剩够不着 mui 的 8 个组件（要 core 基建或 riverpod）
     feature/                 # → ui/core/foundation (features never import each other)
+      moodiary_export/       #   导出 Markdown/Word/PDF + 本地备份导入
       moodiary_editor/       #   TipTap webview editor (complete)
       moodiary_diary/        #   diary CRUD/search/category/calendar/map/recycle
       moodiary_sync/         #   sync engine + UI
@@ -88,6 +90,50 @@ Path convention: unqualified `lib/...` refers to `mobile/lib/...`; `packages/` a
 Cross-package DAG is strictly upper → lower: `foundation → core → ui → feature → apps`. Features never import each other (the one kept exception is `diary → editor`); shared logic sinks to lower layers, cross-feature composition happens in the app layer. pub only guarantees acyclicity, so **direction is enforced by `tool/check_layers.dart`**, which reads every pubspec's `moodiary_*` deps (no baseline — must stay at zero). Melos `categories:` are filter/grouping only.
 
 In-app layering within `mobile/lib` (same script): `gen → core → data → component → feature/<x> → app → main.dart`. Baseline is **zero violations**.
+
+### mui —— material 的补充，不是替代
+
+Flutter 3.47 把 Material 拆成独立包 `material_ui`，SDK 内的
+`package:flutter/material.dart` 将于 2026-11 弃用。全仓的规矩因此是：
+
+**material 只经 `package:mui/mui.dart` 出。业务代码 import mui，不 import material。**
+由 `tool/check_layers.dart` 零基线守住，名单外出现一处 legacy import 就红。名单目前 4 条
+（wechat 的三个 picker 文件 + assistant 的 chat 页），都是第三方 API 只认 legacy 类型。
+
+主题是**一棵树**：
+
+- **`ColorScheme` 是配色真源，`TextTheme` 是排版真源**，mui 不再自建色板。
+  `context.theme.colors` 返回的就是 material 的 `ColorScheme` 本体。
+- `ThemeData` 装不下的东西收在单个 `MuiTokens extends ThemeExtension`：七张 token 表
+  （圆角/间距/动效/描边/投影/状态）、`onMedia`，以及 **`MuiFontConfig`**——可变字体的 wght
+  轴值只有宿主读过 ttf 才知道，`ThemeData` 没有槽位放它，漏了 `.emphasized` 会静默出错字重。
+- `buildMuiTheme()` 是**全仓唯一构造 `ThemeData` 的地方**（闸门钉住），
+  25 个组件子主题都在里面。
+- `context.theme` 是 `Theme.of(context)` 的只读派生视图，按 `ThemeData` 实例 memoize。
+  取用写法：`context.theme.typography.titleSmall.emphasized.primary`。
+- **没有 `MuiAnimatedTheme`**：`MaterialApp` 已经把 `builder` 包在 `AnimatedTheme` 里，
+  深浅切换的过渡是免费的。
+
+组件：material_ui 够用的直接用（`Switch` / `Scaffold` / `AppBar`…），不够用的才在 mui 里补，
+命名一律 `M` 开头（`MMenuButton`、`MAlert.show(...)`）。mui 是**零 `moodiary_*` 依赖**的
+foundation 叶子包，所以它自带 `MuiLocalizations`（十来个通用词），不吃 App 的文案包。
+
+**共存期的两个硬点**：
+
+1. `MaterialUiCompatibilityBridge` 挂在 `MaterialApp.builder`、**套在 `FlutterSmartDialog.init()`
+   外面**（init 自建 Overlay，toast/loading 是与 child 平级的兄弟 entry）。它只映射
+   platform / visualDensity / colorScheme / textTheme 四项，**25 个组件子主题不过桥** ——
+   第三方 widget 保留我们的配色与排版，但组件级样式回落 Material 默认。它出厂即
+   `@Deprecated`，依赖全部迁移后摘掉。
+2. `localizationsDelegates` **不能用 gen-l10n 的 `AppLocalizations.localizationsDelegates`**：
+   那份带的是 `flutter_localizations` 的 `GlobalMaterialLocalizations`，给出 **legacy**
+   类型，material_ui 的 widget 认不得，中文下会退化并让日期选择器一类直接抛。
+   要用 material_ui 自带的 `GlobalMaterialLocalizations.delegates`（已含 cupertino/widgets）。
+   生成文件会被覆盖，所以列表手写在 `main.dart`。
+
+> 官方的 `dart fix --code=migrate_design_widgets` **当前不生效**：转换规则在 SDK 里
+> （`fix_data/fix_material/fix_material.yaml`），但 `material.dart` 还没标 `@Deprecated`，
+> 数据驱动 fix 挂不上诊断。实测加了 material_ui 依赖也一样 `Nothing to fix!`。
 
 ### Rust Workspace
 

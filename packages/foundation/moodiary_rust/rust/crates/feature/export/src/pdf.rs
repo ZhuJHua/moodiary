@@ -663,11 +663,11 @@ mod tests {
     use crate::fixture;
     use std::io::Read;
 
-    /// 仓内自带的 TrueType（moodiary_ui 打包的 Dosis）。不用系统字体：macOS 上的
+    /// 仓内自带的 TrueType（mui 打包的 Dosis）。不用系统字体：macOS 上的
     /// 中日韩字体都是 .ttc，CI 上更没有。
     pub(super) fn font_path() -> String {
         let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-        dir.join("../../../../../../ui/moodiary_ui/assets/fonts/Dosis.ttf")
+        dir.join("../../../../../mui/assets/fonts/Dosis.ttf")
             .canonicalize()
             .expect("测试字体不见了")
             .to_string_lossy()
