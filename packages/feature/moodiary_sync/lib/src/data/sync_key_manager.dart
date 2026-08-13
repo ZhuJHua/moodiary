@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show listEquals, visibleForTesting;
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -123,7 +124,7 @@ class SyncKeyManager {
         pCost: keyfile.kdfParallelism,
       );
     } catch (e) {
-      throw SyncException('密钥派生失败：$e');
+      throw SyncException(l10n.sync.errKdf(error: '$e'));
     }
     try {
       return await aeadDecrypt(
@@ -131,7 +132,7 @@ class SyncKeyManager {
         data: base64Decode(keyfile.wrappedDekB64),
       );
     } catch (_) {
-      throw const SyncException('密码不正确，无法解开密钥文件');
+      throw SyncException(l10n.sync.errWrongKeyPassword);
     }
   }
 

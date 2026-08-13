@@ -521,7 +521,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                 _appendDelta(needApiKeyText);
                 _refreshReady();
               } else {
-                _appendDelta('\n（出错：$e）');
+                _appendDelta(l10n.assistant.streamError(error: '$e'));
               }
               // 落库：屏幕上已经有这半截回复 + 出错标记，不存的话重进会话就凭空少一段。
               // 空回复由 _finalizeStreaming 自己剔除。
@@ -540,7 +540,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             },
           );
     } catch (e) {
-      _appendDelta('（请求失败：$e）');
+      _appendDelta(l10n.assistant.requestFailed(error: '$e'));
       _finalizeStreaming(persist: false);
       if (mounted) setState(() => _sending = false);
     }
@@ -638,7 +638,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
           (
             id: m.id,
             fromUser: m.authorId == kAssistantUserId,
-            text: m.text.isEmpty ? '[图片]' : m.text,
+            text: m.text.isEmpty ? l10n.assistant.imagePlaceholder : m.text,
           ),
     ];
 

@@ -1,4 +1,5 @@
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -50,7 +51,7 @@ Future<SyncStats> syncStats(Ref ref) async {
 
   final backend = IRemoteSyncBackend.get();
   if (!backend.isReady) {
-    remoteError = '尚未配置同步后端';
+    remoteError = l10n.sync.errNoBackend;
   } else {
     try {
       final bytes = await backend.readObject(SyncKeys.manifestPath);
@@ -62,7 +63,7 @@ Future<SyncStats> syncStats(Ref ref) async {
       } else {
         final decoded = await (await SyncCipher.current()).decode(bytes);
         if (decoded is! Map<String, dynamic>) {
-          remoteError = '远端 manifest 格式异常';
+          remoteError = l10n.sync.errManifestBroken;
         } else {
           final manifest = SyncManifest.fromJson(decoded);
           int countByPrefix(String prefix) => manifest.entries.entries

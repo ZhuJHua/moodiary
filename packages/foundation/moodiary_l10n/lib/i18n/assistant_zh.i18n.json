@@ -130,5 +130,13 @@
   "modelProviderCapabilities": "模型能力",
   "modelProviderCapabilitiesHint": "按模型实际能力开启，决定是否启用工具、深度思考、发送图片。",
   "modelProviderSearchModelHint": "搜索模型",
-  "modelProviderNoModelMatch": "无匹配模型"
+  "modelProviderNoModelMatch": "无匹配模型",
+  "summaryLoading": "加载中…",
+  "summaryNoProvider": "未配置模型供应商",
+  "summaryKeySet": "Key 已配置",
+  "summaryKeyUnset": "Key 未配置",
+  "summaryTitle": "AI 助手配置",
+  "streamError": "\n（出错：{error}）",
+  "requestFailed": "（请求失败：{error}）",
+  "imagePlaceholder": "[图片]"
 }

@@ -14,6 +14,7 @@ dependencies:
     sdk: flutter
 
   moodiary_core: 0.0.1
+  moodiary_l10n: 0.0.1
   moodiary_data: 0.0.1
   moodiary_models: 0.0.1
   # AppSettings 持有 ThemeData，类型必须与 mui 产出的同源。

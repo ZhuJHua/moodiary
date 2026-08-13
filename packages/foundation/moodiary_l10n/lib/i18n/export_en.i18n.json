@@ -83,5 +83,7 @@
   "progressConverting": "Converting {done}/{total}",
   "progressWriting": "Laying out…",
   "progressWritingCount": "Laying out {done}/{total}",
-  "progressSerializing": "Writing file…"
+  "progressSerializing": "Writing file…",
+  "mediaVideo": "Video",
+  "mediaAudio": "Audio"
 }

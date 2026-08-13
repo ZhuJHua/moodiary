@@ -130,5 +130,13 @@
   "modelProviderCapabilities": "Model capabilities",
   "modelProviderCapabilitiesHint": "Enable what this model supports — controls tools, thinking, and image sending.",
   "modelProviderSearchModelHint": "Search models",
-  "modelProviderNoModelMatch": "No matching models"
+  "modelProviderNoModelMatch": "No matching models",
+  "summaryLoading": "Loading…",
+  "summaryNoProvider": "No model provider configured",
+  "summaryKeySet": "Key set",
+  "summaryKeyUnset": "No key",
+  "summaryTitle": "AI assistant setup",
+  "streamError": "\n(error: {error})",
+  "requestFailed": "(request failed: {error})",
+  "imagePlaceholder": "[image]"
 }

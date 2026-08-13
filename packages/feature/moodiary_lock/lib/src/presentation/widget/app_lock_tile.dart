@@ -42,7 +42,7 @@ class _AppLockTileState extends State<AppLockTile> {
   Future<void> _toggleBiometric(bool value) async {
     if (value) {
       // 开启前先验证一次，确认设备已录入且本人可用。
-      final ok = await BiometricAuth.check();
+      final ok = await BiometricAuth.check(reason: l10n.lock.biometricReason);
       if (!ok) return;
       await MoodiaryKVs.supportBiometrics.set(true);
     } else {
@@ -212,7 +212,9 @@ class _RemovePasswordSheetState extends State<RemovePasswordSheet> {
   }
 
   Future<void> _onBiometric() async {
-    if (await BiometricAuth.check()) await _disable();
+    if (await BiometricAuth.check(reason: l10n.lock.biometricReason)) {
+      await _disable();
+    }
   }
 
   @override
@@ -295,7 +297,8 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
   }
 
   Future<void> _onBiometric() async {
-    if (_phase == .verify && await BiometricAuth.check()) {
+    if (_phase == .verify &&
+        await BiometricAuth.check(reason: l10n.lock.biometricReason)) {
       _toEnterNew();
     }
   }

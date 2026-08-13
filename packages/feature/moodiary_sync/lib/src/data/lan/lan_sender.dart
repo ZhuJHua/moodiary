@@ -3,6 +3,7 @@ import 'dart:io' show File;
 import 'dart:typed_data';
 
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/impl/local_archive.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -54,7 +55,10 @@ class LanSendResult {
       return '发送完成，对方已是最新';
     }
     final base = '发送完成：日记 $diaryCount 条 · 分类 $categoryCount 条';
-    final extra = [if (failed > 0) '$failed 条失败', ?warning].join('；');
+    final extra = [
+      if (failed > 0) l10n.sync.warnFailedCount(count: failed),
+      ?warning,
+    ].join('；');
     return extra.isEmpty ? base : '$base（$extra）';
   }
 }
@@ -183,16 +187,16 @@ class LanSender {
     try {
       decoded = jsonDecode(utf8.decode(body));
     } catch (_) {
-      throw const SyncException('对方不是 Moodiary 局域网接收端');
+      throw SyncException(l10n.sync.errNotReceiver);
     }
     if (decoded is! Map<String, dynamic> ||
         decoded['app'] != 'moodiary' ||
         decoded['salt'] is! String ||
         decoded['challenge'] is! String) {
-      throw const SyncException('对方设备未在接收，请确认已打开「局域网接收」');
+      throw SyncException(l10n.sync.errReceiverOffline);
     }
     if (decoded['proto'] != lanProtoVersion) {
-      throw const SyncException('版本不兼容，请将两台设备的 Moodiary 升级到同一版本');
+      throw SyncException(l10n.sync.errVersionMismatch);
     }
     return decoded;
   }

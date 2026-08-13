@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show listEquals;
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/sync_provider.dart';
@@ -87,7 +88,7 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       final bytes = await client.readObject(key: key);
       return bytes.isEmpty ? null : bytes;
     } catch (e) {
-      throw SyncException('读取远端对象失败（$key）：$e');
+      throw SyncException(l10n.sync.errReadRemote(key: key, error: '$e'));
     }
   }
 
@@ -106,7 +107,7 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       final client = await _client();
       return await client.readObjectToFile(key: key, filePath: filePath);
     } catch (e) {
-      throw SyncException('读取远端对象失败（$key）：$e');
+      throw SyncException(l10n.sync.errReadRemote(key: key, error: '$e'));
     }
   }
 
@@ -122,7 +123,7 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
       final client = await _client();
       return await client.createExclusive(key: key, data: bytes);
     } catch (e) {
-      throw SyncException('条件创建远端对象失败（$key）：$e');
+      throw SyncException(l10n.sync.errCreateRemote(key: key, error: '$e'));
     }
   }
 
@@ -150,19 +151,19 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
 
   @override
   Future<SyncReport> pushAll() async {
-    if (!isReady) throw const SyncException('请先完成 WebDAV 配置');
+    if (!isReady) throw SyncException(l10n.sync.errWebdavConfig);
     return IncrementalSyncEngine(this).push();
   }
 
   @override
   Future<SyncReport> pullAll() async {
-    if (!isReady) throw const SyncException('请先完成 WebDAV 配置');
+    if (!isReady) throw SyncException(l10n.sync.errWebdavConfig);
     return IncrementalSyncEngine(this).pull();
   }
 
   @override
   Future<SyncReport> syncAll() async {
-    if (!isReady) throw const SyncException('请先完成 WebDAV 配置');
+    if (!isReady) throw SyncException(l10n.sync.errWebdavConfig);
     return IncrementalSyncEngine(this).sync();
   }
 

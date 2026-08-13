@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/incremental_engine.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -30,10 +31,16 @@ class ReCipherReport {
 
   @override
   String toString() {
-    final base =
-        '日记 $diaryCount + 分类 $categoryCount + 媒体信息 $mediaInfoCount + '
-        '媒体 $mediaCount（耗时 ${elapsed.inMilliseconds}ms）';
-    return failed == 0 ? base : '$base\n$failed 个对象失败已跳过';
+    final base = l10n.sync.reCipherSummary(
+      diary: diaryCount,
+      category: categoryCount,
+      mediaInfo: mediaInfoCount,
+      media: mediaCount,
+      ms: elapsed.inMilliseconds,
+    );
+    return failed == 0
+        ? base
+        : l10n.sync.reCipherFailedSuffix(base: base, failed: failed);
   }
 }
 
@@ -107,7 +114,7 @@ class CloudReCipher {
     }
     final mfDecoded = await from.decode(mfBytes);
     if (mfDecoded is! Map<String, dynamic>) {
-      throw const SyncException('远端 manifest 格式异常，无法重新加密');
+      throw SyncException(l10n.sync.errManifestReCipher);
     }
     final manifest = SyncManifest.fromJson(mfDecoded);
 
@@ -137,7 +144,7 @@ class CloudReCipher {
     // 媒体引用在改写 diary 时还会补收（见 _collectMediaRefs），total 待后补媒体数。
     int total = diaryIds.length + categoryIds.length + mediaInfoIds.length;
     void emitProgress(String label) => onProgress?.call(done, total, label);
-    emitProgress('准备');
+    emitProgress(l10n.sync.stepPrepare);
 
     // JSON 对象改写无需理解内容：decode 的 Map 原样用新 cipher 编回。
     // [onDecoded] 在改写成功后拿到原始 JSON（日记循环用它补收媒体引用）。
@@ -187,7 +194,7 @@ class CloudReCipher {
         );
       }
       done++;
-      emitProgress('日记 $id');
+      emitProgress(l10n.sync.stepDiary(id: id));
     }
 
     // 改写 category JSON
@@ -208,7 +215,7 @@ class CloudReCipher {
         );
       }
       done++;
-      emitProgress('分类 $id');
+      emitProgress(l10n.sync.stepCategory(id: id));
     }
 
     // 改写 mediainfo JSON（漏掉 = 改密码后媒体元数据对象永久解不开）
@@ -229,7 +236,7 @@ class CloudReCipher {
         );
       }
       done++;
-      emitProgress('媒体信息 $id');
+      emitProgress(l10n.sync.stepMediaInfo(id: id));
     }
 
     // 改写媒体文件（manifest 并集 + diary JSON 补收的并集）
@@ -254,11 +261,11 @@ class CloudReCipher {
         );
       }
       done++;
-      emitProgress('媒体 $ref');
+      emitProgress(l10n.sync.stepMedia(ref: ref));
     }
 
     // 改写 manifest。必须在所有对象改写后执行；密钥正确性由后续 pull 的 auth tag 兜底。
-    emitProgress('写回 manifest');
+    emitProgress(l10n.sync.stepManifest);
     // token 含 deviceId + 微秒 + 进程内序号，避免同微秒并发写时回读校验误判通过。
     final token =
         'recipher:${MoodiaryKVs.syncDeviceId.get() ?? ''}:'
@@ -276,7 +283,7 @@ class CloudReCipher {
         ? SyncManifest.fromJson(verifyDecoded).writeToken
         : null;
     if (verifyToken != token) {
-      throw const SyncException('manifest 写入被其它设备并发覆盖，已中止重新加密');
+      throw SyncException(l10n.sync.errManifestRace);
     }
 
     sw.stop();

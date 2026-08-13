@@ -7,19 +7,20 @@ class SyncPendingSummaryCard extends StatelessWidget {
 
   final int updateCount;
 
+  /// 文案由调用方给：mui 是零业务依赖的设计系统包，取不到 App 的文案，
+  /// 也不该把「同步」这类领域词收进自己那十来个通用词里。
+  final String Function(int newCount, int updateCount) label;
+
   const SyncPendingSummaryCard({
     super.key,
     required this.newCount,
     required this.updateCount,
+    required this.label,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    final parts = [
-      if (newCount > 0) '$newCount 篇待下载',
-      if (updateCount > 0) '$updateCount 篇待更新',
-    ].join(' · ');
     return Card.filled(
       color: scheme.surfaceContainerLow,
       margin: .zero,
@@ -39,7 +40,7 @@ class SyncPendingSummaryCard extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '云端同步中：$parts',
+                label(newCount, updateCount),
                 style: context.theme.typography.bodyMedium.onSurfaceVariant,
               ),
             ),
@@ -51,7 +52,9 @@ class SyncPendingSummaryCard extends StatelessWidget {
 }
 
 class SyncPendingBadge extends StatelessWidget {
-  const SyncPendingBadge({super.key});
+  final String label;
+
+  const SyncPendingBadge({super.key, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +75,7 @@ class SyncPendingBadge extends StatelessWidget {
           ),
           const SizedBox(width: 3),
           Text(
-            '同步中',
+            label,
             style: context.theme.typography.labelSmall.onTertiaryContainer,
           ),
         ],
@@ -84,7 +87,9 @@ class SyncPendingBadge extends StatelessWidget {
 /// 本地有改动、尚未上行同步的「待同步」角标。与 [SyncPendingBadge]（pull 侧「同步中」）
 /// 同形不同色以区分；同一卡片上「同步中」优先。
 class SyncDirtyBadge extends StatelessWidget {
-  const SyncDirtyBadge({super.key});
+  final String label;
+
+  const SyncDirtyBadge({super.key, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +110,7 @@ class SyncDirtyBadge extends StatelessWidget {
           ),
           const SizedBox(width: 3),
           Text(
-            '待同步',
+            label,
             style: context.theme.typography.labelSmall.onSecondaryContainer,
           ),
         ],

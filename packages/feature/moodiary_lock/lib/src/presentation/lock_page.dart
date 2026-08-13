@@ -62,7 +62,7 @@ class _LockPageState extends ConsumerState<LockPage>
   Future<void> _tryBiometric() async {
     if (_isLocked || _unlocked) return;
     if (!_supportBio) return;
-    final ok = await BiometricAuth.check();
+    final ok = await BiometricAuth.check(reason: l10n.lock.biometricReason);
     if (!mounted || !ok) return;
     _unlock();
   }

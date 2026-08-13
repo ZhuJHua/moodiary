@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 
 /// 远端 `keys.json`（明文 JSON）—— 信封加密的「信封」：
@@ -39,25 +40,28 @@ class SyncKeyfile {
     final version = json['version'];
     if (version is! int || version > currentVersion) {
       throw SyncException(
-        '远端密钥文件版本不兼容（v$version，本机支持 ≤ v$currentVersion），请升级客户端',
+        l10n.sync.errKeyfileVersion(
+          version: version,
+          supported: currentVersion,
+        ),
       );
     }
     final kdf = json['kdf'];
     final salt = json['salt'];
     final wrapped = json['wrapped'];
     if (kdf is! Map || salt is! String || wrapped is! String) {
-      throw const SyncException('远端密钥文件已损坏（字段缺失）');
+      throw SyncException(l10n.sync.errKeyfileFields);
     }
     final m = kdf['mKiB'];
     final t = kdf['t'];
     final p = kdf['p'];
     if (m is! int || t is! int || p is! int) {
-      throw const SyncException('远端密钥文件已损坏（KDF 参数缺失）');
+      throw SyncException(l10n.sync.errKeyfileKdfMissing);
     }
     // keys.json 是不可信输入：不设上限的话，恶意文件可用超大 mKiB 让每次解锁
     // 尝试直接 OOM（Argon2 按 mKiB 分配内存）。上限取移动端可承受的宽裕值。
     if (m < 8 * p || m > 256 * 1024 || t < 1 || t > 16 || p < 1 || p > 8) {
-      throw const SyncException('远端密钥文件的 KDF 参数超出允许范围');
+      throw SyncException(l10n.sync.errKeyfileKdfRange);
     }
     return SyncKeyfile(
       version: version,
@@ -74,10 +78,10 @@ class SyncKeyfile {
     try {
       decoded = jsonDecode(utf8.decode(bytes));
     } catch (e) {
-      throw SyncException('远端密钥文件解析失败：$e');
+      throw SyncException(l10n.sync.errKeyfileParse(error: '$e'));
     }
     if (decoded is! Map<String, dynamic>) {
-      throw const SyncException('远端密钥文件已损坏（非 JSON 对象）');
+      throw SyncException(l10n.sync.errKeyfileCorrupt);
     }
     return .fromJson(decoded);
   }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 
@@ -52,15 +53,15 @@ class _AssistantSummaryTileState extends State<AssistantSummaryTile> {
   Widget build(BuildContext context) {
     final active = _active;
     final subtitle = !_loaded
-        ? '加载中…'
+        ? context.l10n.assistant.summaryLoading
         : active == null
-        ? '未配置模型供应商'
+        ? context.l10n.assistant.summaryNoProvider
         : '${active.name} · ${active.model} · '
-              '${_keyConfigured ? 'Key 已配置' : 'Key 未配置'}';
+              '${_keyConfigured ? context.l10n.assistant.summaryKeySet : context.l10n.assistant.summaryKeyUnset}';
     return SettingListTile(
       isFirst: true,
       isLast: true,
-      title: 'AI 助手配置',
+      title: context.l10n.assistant.summaryTitle,
       subtitle: subtitle,
       leading: const Icon(LucideIcons.bot),
       trailing: const Icon(LucideIcons.chevronRight),

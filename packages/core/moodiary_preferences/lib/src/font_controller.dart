@@ -1,5 +1,6 @@
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -28,10 +29,10 @@ class FontController extends _$FontController {
     final xFile = await FontManager.pickFont();
     if (xFile == null) return null;
     final fontName = await FontManager.getFontName(filePath: xFile.path);
-    if (fontName == null || fontName.isEmpty) return '字体名称获取失败';
+    if (fontName == null || fontName.isEmpty) return l10n.app.fontNameFailed;
     final current = state.value ?? const <Font>[];
     if (current.any((e) => e.fontFamily == fontName)) {
-      return '字体已存在';
+      return l10n.app.fontExists;
     }
     final fontFileName = '$fontName${p.extension(xFile.path)}';
     final newPath = AppFiles.getRealPath('font', fontFileName);

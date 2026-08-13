@@ -1,3 +1,5 @@
+import 'package:moodiary_l10n/moodiary_l10n.dart';
+
 import 'export_doc.dart';
 
 enum MarkdownDialect {
@@ -195,7 +197,9 @@ class MarkdownWriter {
         buf.writeln();
 
       case IrBlock_Media(:final kind, :final filename):
-        final label = kind == 'video' ? '视频' : '音频';
+        final label = kind == 'video'
+            ? l10n.export.mediaVideo
+            : l10n.export.mediaAudio;
         final target = o.mediaMode == .relative
             ? '${o.assetsDir}/$filename'
             : filename;

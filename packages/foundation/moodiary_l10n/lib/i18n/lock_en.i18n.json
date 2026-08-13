@@ -24,5 +24,6 @@
   "confirmNew": "Confirm the new password",
   "prompt": "Enter your password",
   "attemptsLeft": "Wrong password, {count} attempts left",
-  "cooldown": "Too many attempts, wait {seconds}s"
+  "cooldown": "Too many attempts, wait {seconds}s",
+  "biometricReason": "Verify it is you"
 }

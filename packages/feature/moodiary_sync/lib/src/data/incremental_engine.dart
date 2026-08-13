@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/media_refs.dart';
@@ -215,7 +216,7 @@ class IncrementalSyncEngine {
           diaryCount: 0,
           categoryCount: 0,
           elapsed: sw.elapsed,
-          warning: '远端为空（尚未上传任何备份）',
+          warning: l10n.sync.warnRemoteEmpty,
         ),
         null,
       );
@@ -651,8 +652,8 @@ class IncrementalSyncEngine {
       },
     );
     final warnings = [
-      if (failed > 0) '$failed 个条目同步失败已跳过',
-      if (stopped) '已手动停止，剩余条目将在下次同步继续',
+      if (failed > 0) l10n.sync.warnFailedSkipped(count: failed),
+      if (stopped) l10n.sync.warnStopped,
     ].join('\n');
     return (
       SyncReport(
@@ -1114,7 +1115,7 @@ class IncrementalSyncEngine {
     );
     final warnings = [
       if (failed > 0) '$failed 个条目上传失败已跳过',
-      if (stopped) '已手动停止，剩余条目将在下次同步继续',
+      if (stopped) l10n.sync.warnStopped,
     ].join('\n');
     return SyncReport(
       diaryCount: diaryChanged,
@@ -1170,7 +1171,7 @@ class IncrementalSyncEngine {
     // 远端 manifest 损坏。绝不能当作「远端为空」返回 null —— 那会让 push 用本地
     // 重建 manifest、丢掉仅存在于远端的条目（契约一）。宁可抛错中止本次同步。
     if (decoded is! Map<String, dynamic>) {
-      throw const SyncException('远端 manifest 已损坏（非 JSON 对象），已中止同步以防丢失远端条目');
+      throw SyncException(l10n.sync.errManifestCorrupt);
     }
     return .fromJson(decoded);
   }
@@ -1195,7 +1196,7 @@ class IncrementalSyncEngine {
       eagerError: false,
     );
     if (results.any((r) => r == false)) {
-      throw const SyncException('部分媒体文件上传失败，已跳过此日记');
+      throw SyncException(l10n.sync.errMediaUpload);
     }
     return [
       for (var i = 0; i < entries.length; i++)

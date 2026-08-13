@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_logger.dart';
@@ -251,7 +252,7 @@ class RemoteLease {
         await Future.delayed(_retryDelay);
       }
     }
-    throw const SyncException('另一台设备正在同步，请稍后再试');
+    throw SyncException(l10n.sync.errLocked);
   }
 
   /// 条件写探测：锁已在本机手中，再次条件创建**必须**被 412 拒绝，否则服务器

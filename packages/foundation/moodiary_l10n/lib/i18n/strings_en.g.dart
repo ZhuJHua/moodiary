@@ -186,6 +186,8 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get resetFailed => 'The reset failed';
 	@override String get cacheClear => 'Clear the cache';
 	@override String get cacheCleared => 'Cache cleared';
+	@override String get fontNameFailed => 'Could not read the font name';
+	@override String get fontExists => 'That font is already installed';
 }
 
 // Path: assistant
@@ -327,6 +329,14 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get modelProviderCapabilitiesHint => 'Enable what this model supports — controls tools, thinking, and image sending.';
 	@override String get modelProviderSearchModelHint => 'Search models';
 	@override String get modelProviderNoModelMatch => 'No matching models';
+	@override String get summaryLoading => 'Loading…';
+	@override String get summaryNoProvider => 'No model provider configured';
+	@override String get summaryKeySet => 'Key set';
+	@override String get summaryKeyUnset => 'No key';
+	@override String get summaryTitle => 'AI assistant setup';
+	@override String streamError({required Object error}) => '\n(error: ${error})';
+	@override String requestFailed({required Object error}) => '(request failed: ${error})';
+	@override String get imagePlaceholder => '[image]';
 }
 
 // Path: common
@@ -647,6 +657,8 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get progressWriting => 'Laying out…';
 	@override String progressWritingCount({required Object done, required Object total}) => 'Laying out ${done}/${total}';
 	@override String get progressSerializing => 'Writing file…';
+	@override String get mediaVideo => 'Video';
+	@override String get mediaAudio => 'Audio';
 }
 
 // Path: lock
@@ -682,6 +694,7 @@ class _Translations$lock$en extends Translations$lock$zh {
 	@override String get prompt => 'Enter your password';
 	@override String attemptsLeft({required Object count}) => 'Wrong password, ${count} attempts left';
 	@override String cooldown({required Object seconds}) => 'Too many attempts, wait ${seconds}s';
+	@override String get biometricReason => 'Verify it is you';
 }
 
 // Path: media
@@ -951,6 +964,49 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get keyProcessing => 'Working on the remote data';
 	@override String get keyPreparing => 'Preparing';
 	@override String get lanReceiveHint => 'The sender usually finds this device on its own; the address above can also be typed in by hand. Keep this page open while receiving.';
+	@override String get errKeyfileCorrupt => 'The remote key file is corrupt (not a JSON object)';
+	@override String get errKeyfileKdfMissing => 'The remote key file is corrupt (KDF parameters missing)';
+	@override String get errKeyfileKdfRange => 'The remote key file\'s KDF parameters are out of the allowed range';
+	@override String errKeyfileParse({required Object error}) => 'Could not parse the remote key file: ${error}';
+	@override String get errKeyfileFields => 'The remote key file is corrupt (fields missing)';
+	@override String errKeyfileVersion({required Object version, required Object supported}) => 'The remote key file is too new (v${version}; this build supports up to v${supported}). Update the app.';
+	@override String get errManifestCorrupt => 'The remote manifest is corrupt (not a JSON object). Sync was stopped so remote entries are not lost.';
+	@override String get errManifestReCipher => 'The remote manifest is malformed and cannot be re-encrypted';
+	@override String get errManifestRace => 'Another device overwrote the manifest while it was being written; re-encryption was stopped';
+	@override String get errNotBackup => 'Not a Moodiary backup file';
+	@override String errBackupParse({required Object error}) => 'Could not parse the backup file: ${error}';
+	@override String get errNotReceiver => 'That host is not a Moodiary receiver';
+	@override String get errVersionMismatch => 'Version mismatch — update Moodiary on both devices to the same version';
+	@override String get errReceiverOffline => 'The other device is not receiving. Make sure its Receive page is open.';
+	@override String get errS3Config => 'Finish the S3 configuration first';
+	@override String get errWebdavConfig => 'Finish the WebDAV configuration first';
+	@override String get errWrongKeyPassword => 'Wrong password — the key file could not be unlocked';
+	@override String errKdf({required Object error}) => 'Key derivation failed: ${error}';
+	@override String get errLocked => 'Another device is syncing right now — try again shortly';
+	@override String get errMediaUpload => 'Some media files failed to upload, so this entry was skipped';
+	@override String get errNoUserKey => 'The remote files are encrypted but no user key is configured';
+	@override String errReadRemote({required Object key, required Object error}) => 'Could not read the remote object (${key}): ${error}';
+	@override String errCreateRemote({required Object key, required Object error}) => 'Could not create the remote object (${key}): ${error}';
+	@override String get errNoBackend => 'No sync backend configured';
+	@override String get errManifestBroken => 'The remote manifest is malformed';
+	@override String uploading({required Object backend}) => 'Uploading / exporting: ${backend}';
+	@override String downloading({required Object backend}) => 'Downloading / importing: ${backend}';
+	@override String syncing({required Object backend}) => 'Syncing: ${backend}';
+	@override String pendingSummary({required Object parts}) => 'Syncing from the cloud: ${parts}';
+	@override String pendingNew({required Object count}) => '${count} to download';
+	@override String pendingUpdate({required Object count}) => '${count} to update';
+	@override String get warnRemoteEmpty => 'The remote is empty — nothing has been uploaded yet';
+	@override String warnFailedSkipped({required Object count}) => '${count} items failed and were skipped';
+	@override String get warnStopped => 'Stopped by you — the rest will continue on the next sync';
+	@override String warnFailedCount({required Object count}) => '${count} failed';
+	@override String reCipherSummary({required Object diary, required Object category, required Object mediaInfo, required Object media, required Object ms}) => '${diary} entries + ${category} categories + ${mediaInfo} media records + ${media} files (${ms}ms)';
+	@override String reCipherFailedSuffix({required Object base, required Object failed}) => '${base}\n${failed} objects failed and were skipped';
+	@override String get stepPrepare => 'Preparing';
+	@override String stepDiary({required Object id}) => 'Entry ${id}';
+	@override String stepCategory({required Object id}) => 'Category ${id}';
+	@override String stepMediaInfo({required Object id}) => 'Media record ${id}';
+	@override String stepMedia({required Object ref}) => 'Media ${ref}';
+	@override String get stepManifest => 'Writing the manifest';
 }
 
 // Path: ui

@@ -1,3 +1,4 @@
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_cancellation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -15,7 +16,7 @@ class SyncController extends _$SyncController {
   SyncState build() => const .idle();
 
   Future<void> push(SyncBackend backend) async {
-    state = .syncing(label: '上传 / 导出中：${backend.displayName}');
+    state = .syncing(label: l10n.sync.uploading(backend: backend.displayName));
     try {
       final report = await backend.pushAll();
       state = .success(message: report.toString());
@@ -27,7 +28,9 @@ class SyncController extends _$SyncController {
   }
 
   Future<void> pull(SyncBackend backend) async {
-    state = .syncing(label: '下载 / 导入中：${backend.displayName}');
+    state = .syncing(
+      label: l10n.sync.downloading(backend: backend.displayName),
+    );
     try {
       final report = await backend.pullAll();
       state = .success(message: report.toString());
@@ -40,7 +43,7 @@ class SyncController extends _$SyncController {
 
   /// 双向同步（pull 后 push，云后端专用）。引擎侧在同一把锁内原子完成。
   Future<void> sync(IRemoteSyncBackend backend) async {
-    state = .syncing(label: '同步中：${backend.displayName}');
+    state = .syncing(label: l10n.sync.syncing(backend: backend.displayName));
     try {
       final report = await backend.syncAll();
       state = .success(message: report.toString());

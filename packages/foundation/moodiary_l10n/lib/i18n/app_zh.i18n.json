@@ -130,5 +130,7 @@
   "resetRunning": "正在重置...",
   "resetFailed": "重置失败",
   "cacheClear": "清理缓存",
-  "cacheCleared": "清理成功"
+  "cacheCleared": "清理成功",
+  "fontNameFailed": "字体名称获取失败",
+  "fontExists": "字体已存在"
 }

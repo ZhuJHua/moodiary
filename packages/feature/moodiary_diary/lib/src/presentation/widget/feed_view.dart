@@ -111,6 +111,17 @@ class DiaryFeedView extends ConsumerWidget {
                   child: SyncPendingSummaryCard(
                     newCount: pending.newDiaryIds.length,
                     updateCount: pending.updateDiaryIds.length,
+                    label: (newCount, updateCount) =>
+                        context.l10n.sync.pendingSummary(
+                          parts: [
+                            if (newCount > 0)
+                              context.l10n.sync.pendingNew(count: newCount),
+                            if (updateCount > 0)
+                              context.l10n.sync.pendingUpdate(
+                                count: updateCount,
+                              ),
+                          ].join(' · '),
+                        ),
                   ),
                 ),
                 Expanded(child: body),

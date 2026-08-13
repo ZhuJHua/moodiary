@@ -130,5 +130,7 @@
   "resetRunning": "Resetting…",
   "resetFailed": "The reset failed",
   "cacheClear": "Clear the cache",
-  "cacheCleared": "Cache cleared"
+  "cacheCleared": "Cache cleared",
+  "fontNameFailed": "Could not read the font name",
+  "fontExists": "That font is already installed"
 }

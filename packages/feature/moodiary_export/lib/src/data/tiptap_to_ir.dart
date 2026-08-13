@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:moodiary_l10n/moodiary_l10n.dart';
+
 import 'export_doc.dart';
 
 /// 媒体裸文件名 → 绝对路径。`kind` 取 `image` / `audio` / `video` / `thumbnail`，
@@ -319,7 +321,9 @@ class TiptapToIr {
           final id = attrs['id'];
           push(
             irSpan(
-              label is String && label.isNotEmpty ? label : '未命名日记',
+              label is String && label.isNotEmpty
+                  ? label
+                  : l10n.common.untitled,
               diaryLinkId: id is String && id.isNotEmpty ? id : null,
             ),
           );

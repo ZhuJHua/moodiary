@@ -452,6 +452,12 @@ class Translations$app$zh {
 
 	/// zh: '清理成功'
 	String get cacheCleared => '清理成功';
+
+	/// zh: '字体名称获取失败'
+	String get fontNameFailed => '字体名称获取失败';
+
+	/// zh: '字体已存在'
+	String get fontExists => '字体已存在';
 }
 
 // Path: assistant
@@ -857,6 +863,30 @@ class Translations$assistant$zh {
 
 	/// zh: '无匹配模型'
 	String get modelProviderNoModelMatch => '无匹配模型';
+
+	/// zh: '加载中…'
+	String get summaryLoading => '加载中…';
+
+	/// zh: '未配置模型供应商'
+	String get summaryNoProvider => '未配置模型供应商';
+
+	/// zh: 'Key 已配置'
+	String get summaryKeySet => 'Key 已配置';
+
+	/// zh: 'Key 未配置'
+	String get summaryKeyUnset => 'Key 未配置';
+
+	/// zh: 'AI 助手配置'
+	String get summaryTitle => 'AI 助手配置';
+
+	/// zh: ' （出错：{error}）'
+	String streamError({required Object error}) => '\n（出错：${error}）';
+
+	/// zh: '（请求失败：{error}）'
+	String requestFailed({required Object error}) => '（请求失败：${error}）';
+
+	/// zh: '[图片]'
+	String get imagePlaceholder => '[图片]';
 }
 
 // Path: common
@@ -1738,6 +1768,12 @@ class Translations$export$zh {
 
 	/// zh: '正在生成文件…'
 	String get progressSerializing => '正在生成文件…';
+
+	/// zh: '视频'
+	String get mediaVideo => '视频';
+
+	/// zh: '音频'
+	String get mediaAudio => '音频';
 }
 
 // Path: lock
@@ -1825,6 +1861,9 @@ class Translations$lock$zh {
 
 	/// zh: '尝试次数过多，请等待 {seconds} 秒'
 	String cooldown({required Object seconds}) => '尝试次数过多，请等待 ${seconds} 秒';
+
+	/// zh: '安全验证'
+	String get biometricReason => '安全验证';
 }
 
 // Path: media
@@ -2539,6 +2578,135 @@ class Translations$sync$zh {
 
 	/// zh: '发送方通常会自动发现本机，也可手动输入上方地址。接收期间请保持本页打开。'
 	String get lanReceiveHint => '发送方通常会自动发现本机，也可手动输入上方地址。接收期间请保持本页打开。';
+
+	/// zh: '远端密钥文件已损坏（非 JSON 对象）'
+	String get errKeyfileCorrupt => '远端密钥文件已损坏（非 JSON 对象）';
+
+	/// zh: '远端密钥文件已损坏（KDF 参数缺失）'
+	String get errKeyfileKdfMissing => '远端密钥文件已损坏（KDF 参数缺失）';
+
+	/// zh: '远端密钥文件的 KDF 参数超出允许范围'
+	String get errKeyfileKdfRange => '远端密钥文件的 KDF 参数超出允许范围';
+
+	/// zh: '远端密钥文件解析失败：{error}'
+	String errKeyfileParse({required Object error}) => '远端密钥文件解析失败：${error}';
+
+	/// zh: '远端密钥文件已损坏（字段缺失）'
+	String get errKeyfileFields => '远端密钥文件已损坏（字段缺失）';
+
+	/// zh: '远端密钥文件版本不兼容（v{version}，本机支持 ≤ v{supported}），请升级客户端'
+	String errKeyfileVersion({required Object version, required Object supported}) => '远端密钥文件版本不兼容（v${version}，本机支持 ≤ v${supported}），请升级客户端';
+
+	/// zh: '远端 manifest 已损坏（非 JSON 对象），已中止同步以防丢失远端条目'
+	String get errManifestCorrupt => '远端 manifest 已损坏（非 JSON 对象），已中止同步以防丢失远端条目';
+
+	/// zh: '远端 manifest 格式异常，无法重新加密'
+	String get errManifestReCipher => '远端 manifest 格式异常，无法重新加密';
+
+	/// zh: 'manifest 写入被其它设备并发覆盖，已中止重新加密'
+	String get errManifestRace => 'manifest 写入被其它设备并发覆盖，已中止重新加密';
+
+	/// zh: '不是有效的 Moodiary 备份文件'
+	String get errNotBackup => '不是有效的 Moodiary 备份文件';
+
+	/// zh: '备份文件解析失败：{error}'
+	String errBackupParse({required Object error}) => '备份文件解析失败：${error}';
+
+	/// zh: '对方不是 Moodiary 局域网接收端'
+	String get errNotReceiver => '对方不是 Moodiary 局域网接收端';
+
+	/// zh: '版本不兼容，请将两台设备的 Moodiary 升级到同一版本'
+	String get errVersionMismatch => '版本不兼容，请将两台设备的 Moodiary 升级到同一版本';
+
+	/// zh: '对方设备未在接收，请确认已打开「局域网接收」'
+	String get errReceiverOffline => '对方设备未在接收，请确认已打开「局域网接收」';
+
+	/// zh: '请先完成 S3 配置'
+	String get errS3Config => '请先完成 S3 配置';
+
+	/// zh: '请先完成 WebDAV 配置'
+	String get errWebdavConfig => '请先完成 WebDAV 配置';
+
+	/// zh: '密码不正确，无法解开密钥文件'
+	String get errWrongKeyPassword => '密码不正确，无法解开密钥文件';
+
+	/// zh: '密钥派生失败：{error}'
+	String errKdf({required Object error}) => '密钥派生失败：${error}';
+
+	/// zh: '另一台设备正在同步，请稍后再试'
+	String get errLocked => '另一台设备正在同步，请稍后再试';
+
+	/// zh: '部分媒体文件上传失败，已跳过此日记'
+	String get errMediaUpload => '部分媒体文件上传失败，已跳过此日记';
+
+	/// zh: '远端文件已加密，但当前未配置用户密钥'
+	String get errNoUserKey => '远端文件已加密，但当前未配置用户密钥';
+
+	/// zh: '读取远端对象失败（{key}）：{error}'
+	String errReadRemote({required Object key, required Object error}) => '读取远端对象失败（${key}）：${error}';
+
+	/// zh: '条件创建远端对象失败（{key}）：{error}'
+	String errCreateRemote({required Object key, required Object error}) => '条件创建远端对象失败（${key}）：${error}';
+
+	/// zh: '尚未配置同步后端'
+	String get errNoBackend => '尚未配置同步后端';
+
+	/// zh: '远端 manifest 格式异常'
+	String get errManifestBroken => '远端 manifest 格式异常';
+
+	/// zh: '上传 / 导出中：{backend}'
+	String uploading({required Object backend}) => '上传 / 导出中：${backend}';
+
+	/// zh: '下载 / 导入中：{backend}'
+	String downloading({required Object backend}) => '下载 / 导入中：${backend}';
+
+	/// zh: '同步中：{backend}'
+	String syncing({required Object backend}) => '同步中：${backend}';
+
+	/// zh: '云端同步中：{parts}'
+	String pendingSummary({required Object parts}) => '云端同步中：${parts}';
+
+	/// zh: '{count} 篇待下载'
+	String pendingNew({required Object count}) => '${count} 篇待下载';
+
+	/// zh: '{count} 篇待更新'
+	String pendingUpdate({required Object count}) => '${count} 篇待更新';
+
+	/// zh: '远端为空（尚未上传任何备份）'
+	String get warnRemoteEmpty => '远端为空（尚未上传任何备份）';
+
+	/// zh: '{count} 个条目同步失败已跳过'
+	String warnFailedSkipped({required Object count}) => '${count} 个条目同步失败已跳过';
+
+	/// zh: '已手动停止，剩余条目将在下次同步继续'
+	String get warnStopped => '已手动停止，剩余条目将在下次同步继续';
+
+	/// zh: '{count} 条失败'
+	String warnFailedCount({required Object count}) => '${count} 条失败';
+
+	/// zh: '日记 {diary} + 分类 {category} + 媒体信息 {mediaInfo} + 媒体 {media}（耗时 {ms}ms）'
+	String reCipherSummary({required Object diary, required Object category, required Object mediaInfo, required Object media, required Object ms}) => '日记 ${diary} + 分类 ${category} + 媒体信息 ${mediaInfo} + 媒体 ${media}（耗时 ${ms}ms）';
+
+	/// zh: '{base} {failed} 个对象失败已跳过'
+	String reCipherFailedSuffix({required Object base, required Object failed}) => '${base}\n${failed} 个对象失败已跳过';
+
+	/// zh: '准备'
+	String get stepPrepare => '准备';
+
+	/// zh: '日记 {id}'
+	String stepDiary({required Object id}) => '日记 ${id}';
+
+	/// zh: '分类 {id}'
+	String stepCategory({required Object id}) => '分类 ${id}';
+
+	/// zh: '媒体信息 {id}'
+	String stepMediaInfo({required Object id}) => '媒体信息 ${id}';
+
+	/// zh: '媒体 {ref}'
+	String stepMedia({required Object ref}) => '媒体 ${ref}';
+
+	/// zh: '写回 manifest'
+	String get stepManifest => '写回 manifest';
 }
 
 // Path: ui

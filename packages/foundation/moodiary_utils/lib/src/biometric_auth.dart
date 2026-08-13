@@ -3,9 +3,11 @@ import 'package:local_auth/local_auth.dart';
 class BiometricAuth {
   static final LocalAuthentication _authentication = LocalAuthentication();
 
-  static Future<bool> check() async {
+  /// [reason] 是系统弹窗里显示给用户的那句话，由调用方给 —— foundation 是叶子层，
+  /// 拿不到 `moodiary_l10n`。
+  static Future<bool> check({required String reason}) async {
     return await _authentication.authenticate(
-      localizedReason: '安全验证',
+      localizedReason: reason,
       biometricOnly: true,
       sensitiveTransaction: true,
       persistAcrossBackgrounding: true,

@@ -83,5 +83,7 @@
   "progressConverting": "正在转换 {done}/{total}",
   "progressWriting": "正在排版…",
   "progressWritingCount": "正在排版 {done}/{total}",
-  "progressSerializing": "正在生成文件…"
+  "progressSerializing": "正在生成文件…",
+  "mediaVideo": "视频",
+  "mediaAudio": "音频"
 }

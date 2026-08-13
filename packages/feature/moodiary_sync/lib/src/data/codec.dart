@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_key_manager.dart';
@@ -38,7 +39,7 @@ class SyncCipher {
     try {
       return jsonDecode(utf8.decode(plain));
     } catch (e) {
-      throw SyncException('备份文件解析失败：$e');
+      throw SyncException(l10n.sync.errBackupParse(error: '$e'));
     }
   }
 
@@ -73,7 +74,7 @@ class SyncCipher {
       return;
     }
     if (!encrypted) {
-      throw const SyncException('远端文件已加密，但当前未配置用户密钥');
+      throw SyncException(l10n.sync.errNoUserKey);
     }
     try {
       await rust.Aes.decryptFile(
@@ -129,7 +130,7 @@ class SyncCipher {
   Future<Uint8List> _maybeDecrypt(Uint8List bytes) async {
     if (!SyncCipher.isCipherText(bytes)) return bytes;
     if (!encrypted) {
-      throw const SyncException('远端文件已加密，但当前未配置用户密钥');
+      throw SyncException(l10n.sync.errNoUserKey);
     }
     try {
       final magicLen = utf8.encode(magic).length;

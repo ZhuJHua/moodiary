@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_sync/src/data/codec.dart';
@@ -290,7 +291,7 @@ class LocalArchive {
     int? concurrency,
   }) async {
     if (!await File(p.join(dir, SyncKeys.manifestPath)).exists()) {
-      throw const SyncException('不是有效的 Moodiary 备份文件');
+      throw SyncException(l10n.sync.errNotBackup);
     }
     final engine = IncrementalSyncEngine(
       LocalArchiveBackend(dir),
