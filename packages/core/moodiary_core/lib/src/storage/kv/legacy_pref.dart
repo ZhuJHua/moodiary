@@ -13,6 +13,15 @@ final class LegacyPrefsKVSource implements IKVSource {
   static Set<String> get _ownKeys =>
       MoodiaryKVs.values.map((e) => e.name).toSet();
 
+  /// 2.7.3 写过、HEAD 枚举里已不存在的敏感键：WebDAV 凭据（明文 `[url, user, password]`）
+  /// 与腾讯地图 key。它们不迁移（同步引擎已重写），但清理名单必须带上——只按 HEAD 键名
+  /// 清会把这份明文密码永久留在旧仓库里。
+  static const Set<String> _legacySensitiveKeys = {
+    'webDavOption',
+    'tencentId',
+    'tencentKey',
+  };
+
   late final SharedPreferencesWithCache _prefs;
 
   Future<void> init() async {
@@ -37,6 +46,7 @@ final class LegacyPrefsKVSource implements IKVSource {
   /// **allowList 必须显式给**：不传时 iOS 侧遍历的是 `dictionaryRepresentation()`，
   /// 那里面混着 NSGlobalDomain（AppleLanguages、键盘设置…）和别的插件写的键，
   /// 一句 `clear()` 会把它们一并删掉。
-  static Future<void> clearStore() =>
-      SharedPreferencesAsync().clear(allowList: _ownKeys);
+  static Future<void> clearStore() => SharedPreferencesAsync().clear(
+    allowList: {..._ownKeys, ..._legacySensitiveKeys},
+  );
 }

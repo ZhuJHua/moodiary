@@ -41,5 +41,11 @@ Future<void> resetAllData() async {
     LegacyPrefsKVSource.clearStore(),
     AppFiles.resetUserMediaDirs(),
     AppFiles.clearCache(),
+    // 2.8.0 升级留下的两处日记明文档案，重置必须一并清掉：
+    // 强制迁移为每篇旧日记写的 sidecar 原文备份，与跨引擎迁移前的整库快照。
+    AppFiles.deleteDir(AppFiles.getRealPath('migration_backup', '')),
+    AppFiles.deleteFile(
+      AppFiles.getRealPath('database', 'default.isar.v273bak'),
+    ),
   ]);
 }
