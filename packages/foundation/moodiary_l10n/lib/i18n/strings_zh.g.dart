@@ -2564,6 +2564,9 @@ class Translations$sync$zh {
 	/// zh: '不是有效的 Moodiary 备份文件'
 	String get errNotBackup => '不是有效的 Moodiary 备份文件';
 
+	/// zh: '这是 2.8.0 之前版本的备份，新版不支持导入；请先在旧版本中恢复，再升级到新版'
+	String get errLegacyBackup => '这是 2.8.0 之前版本的备份，新版不支持导入；请先在旧版本中恢复，再升级到新版';
+
 	/// zh: '备份文件解析失败：{error}'
 	String errBackupParse({required Object error}) => '备份文件解析失败：${error}';
 

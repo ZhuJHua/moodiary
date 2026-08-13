@@ -291,6 +291,12 @@ class LocalArchive {
     int? concurrency,
   }) async {
     if (!await File(p.join(dir, SyncKeys.manifestPath)).exists()) {
+      // 2.8.0 之前的「导出」是整个数据目录打包（database/default.isar + 媒体目录），
+      // 新引擎**有意不支持导入**（已拍板）：识别出老布局时给出明确指引，
+      // 而不是笼统的「不是备份文件」。
+      if (await File(p.join(dir, 'database', 'default.isar')).exists()) {
+        throw SyncException(l10n.sync.errLegacyBackup);
+      }
       throw SyncException(l10n.sync.errNotBackup);
     }
     final engine = IncrementalSyncEngine(

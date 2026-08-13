@@ -199,6 +199,7 @@
   "errManifestReCipher": "远端 manifest 格式异常，无法重新加密",
   "errManifestRace": "manifest 写入被其它设备并发覆盖，已中止重新加密",
   "errNotBackup": "不是有效的 Moodiary 备份文件",
+  "errLegacyBackup": "这是 2.8.0 之前版本的备份，新版不支持导入；请先在旧版本中恢复，再升级到新版",
   "errBackupParse": "备份文件解析失败：{error}",
   "errNotReceiver": "对方不是 Moodiary 局域网接收端",
   "errVersionMismatch": "版本不兼容，请将两台设备的 Moodiary 升级到同一版本",

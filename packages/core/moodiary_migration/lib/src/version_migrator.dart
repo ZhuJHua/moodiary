@@ -79,6 +79,8 @@ class VersionMigrator {
       // 不能默认继承——重置为关。同步引擎已整体重写，旧 WebDAV 配置（prefs 里的
       // webDavOption）**有意不迁移**，由用户在同步页重新配置；旧仓库里那份由
       // 「重置全部数据」的 clearStore 负责清。
+      // 旧主题强调色（prefs 的 color/colorType）同样**有意不映射**：配色已重做为
+      // 灰度/壁纸/自定义三态，升级后回落默认灰度，由用户重新选择。
       MoodiaryKVs.autoSync.set(false);
       // 跨引擎（isar 4.0.0-dev → isar_plus）迁移前留一份快照，出问题可回滚。
       await _backupDatabaseOnce();

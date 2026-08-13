@@ -959,6 +959,7 @@ class _Translations$sync$en extends Translations$sync$zh {
 	@override String get errManifestReCipher => 'The remote manifest is malformed and cannot be re-encrypted';
 	@override String get errManifestRace => 'Another device overwrote the manifest while it was being written; re-encryption was stopped';
 	@override String get errNotBackup => 'Not a Moodiary backup file';
+	@override String get errLegacyBackup => 'This backup was created by a version older than 2.8.0 and cannot be imported. Restore it in the old version first, then upgrade.';
 	@override String errBackupParse({required Object error}) => 'Could not parse the backup file: ${error}';
 	@override String get errNotReceiver => 'That host is not a Moodiary receiver';
 	@override String get errVersionMismatch => 'Version mismatch — update Moodiary on both devices to the same version';
