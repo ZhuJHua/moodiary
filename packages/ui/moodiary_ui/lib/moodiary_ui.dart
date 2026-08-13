@@ -9,7 +9,6 @@ library;
 // 组件与主题都从 mui 出，业务代码只需 import 本包或 mui。
 export 'package:mui/mui.dart';
 
-export 'src/basic/image.dart';
 export 'src/common/async_value.dart';
 export 'src/common/audio/audio_player_page.dart';
 export 'src/common/audio_player.dart';

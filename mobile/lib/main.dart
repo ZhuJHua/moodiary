@@ -15,7 +15,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
-import 'package:mui/mui.dart';
+import 'package:moodiary_ui/moodiary_ui.dart';
 
 Future<Locale> _initSystem() async {
   final rustInit = RustLib.init();
@@ -147,7 +147,13 @@ class Moodiary extends ConsumerWidget {
           // 出厂即 @Deprecated 是官方在表态「这是临时物」，依赖迁完就摘。
           // ignore: deprecated_member_use
           child: MaterialUiCompatibilityBridge(
-            child: FlutterSmartDialog.init()(context, child!),
+            // 后台隐私遮罩包在**最外层**：它自建 Overlay，把遮罩作为独立 entry
+            // 叠在整个 App 之上。套在 SmartDialog 外面，切后台时连 toast / loading
+            // 一起糊掉——那些浮层是 SmartDialog 自建 Overlay 的兄弟 entry，
+            // 包在里面就盖不住。
+            child: FrostedGlassOverlayComponent(
+              child: FlutterSmartDialog.init()(context, child!),
+            ),
           ),
         );
       },
