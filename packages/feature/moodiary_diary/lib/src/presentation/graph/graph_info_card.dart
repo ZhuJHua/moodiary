@@ -53,7 +53,7 @@ class GraphInfoCard extends StatelessWidget {
       child: Semantics(
         button: true,
         label: l10n.graphOpenDiary,
-        child: MoodiaryGlassSurface(
+        child: MGlassSurface(
           shape: const RoundedRectangleBorder(
             borderRadius: AppBorderRadius.xLargeBorderRadius,
           ),

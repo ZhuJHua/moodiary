@@ -65,7 +65,7 @@ class _AssistantProviderListPageState
 
   Future<void> _delete(LlmProvider provider) async {
     final l10n = context.l10n;
-    final ok = await showMoodiaryConfirm(
+    final ok = await MAlert.confirm(
       context,
       title: l10n.modelProviderDeleteTitle,
       message: l10n.modelProviderDeleteContent(provider.name),
@@ -221,16 +221,16 @@ class _ProviderCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                MoodiaryMenuButton<String>(
+                MMenuButton<String>(
                   tooltip: l10n.more,
                   onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
                   entries: [
-                    MoodiaryMenuEntry(
+                    MMenuEntry(
                       value: 'edit',
                       label: l10n.diaryEdit,
                       icon: LucideIcons.squarePen,
                     ),
-                    MoodiaryMenuEntry(
+                    MMenuEntry(
                       value: 'delete',
                       label: l10n.diaryDelete,
                       icon: LucideIcons.trash2,

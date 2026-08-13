@@ -75,7 +75,7 @@ Future<bool> applyUserKeyChange({
 
     if (hasRemote) {
       if (!context.mounted) return false;
-      final confirmed = await showMoodiaryConfirm(
+      final confirmed = await MAlert.confirm(
         context,
         title: '加密云端已有数据',
         message: '检测到当前同步后端已存在数据。确认后会生成随机数据密钥并加密云端的日记、分类与媒体文件；该密钥由你的密码封装存放在云端。',
@@ -129,7 +129,7 @@ Future<bool> applyUserKeyChange({
 
   // ── 关闭加密（dek != null && target == null） ──
   if (!context.mounted) return false;
-  final confirmed = await showMoodiaryConfirm(
+  final confirmed = await MAlert.confirm(
     context,
     title: '解密云端数据',
     message: '关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？',

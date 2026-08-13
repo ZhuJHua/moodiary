@@ -38,7 +38,7 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
   }
 
   Future<void> _confirmAndRepair() async {
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: '数据修复',
       message:
@@ -81,7 +81,7 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
       ],
       '搜索索引已重建（${report.reindexed} 篇）。',
     ];
-    await showMoodiaryNotice(
+    await MAlert.notice(
       context,
       title: '修复完成',
       message: lines.join('\n'),

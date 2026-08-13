@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 

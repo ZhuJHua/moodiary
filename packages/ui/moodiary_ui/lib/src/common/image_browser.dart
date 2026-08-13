@@ -5,12 +5,8 @@ import 'dart:ui' as ui;
 import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:dismissible_page/dismissible_page.dart';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/src/basic/action_bar.dart';
-import 'package:moodiary_ui/src/basic/sheet.dart';
-import 'package:moodiary_ui/src/common/toast.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:path/path.dart' as p;
@@ -20,7 +16,7 @@ import 'package:photo_view/photo_view.dart';
 /// Hero 飞入飞出（传 [heroPrefix] 启用，缩略图侧 tag 须为 `'$heroPrefix-<image>'`）。
 /// 底部操作：保存到相册 / 图片信息（分辨率、大小、格式、修改时间）。
 /// [images] 每项为本地绝对路径或 http(s) 外链。
-class MoodiaryImageBrowser extends StatefulWidget {
+class MImageBrowser extends StatefulWidget {
   final List<String> images;
   final int initialIndex;
   final String? heroPrefix;
@@ -30,7 +26,7 @@ class MoodiaryImageBrowser extends StatefulWidget {
   /// 必须与缩略图侧完全一致（同路径 FileImage + 同 width）才会命中缓存。
   final int? placeholderCacheWidth;
 
-  const MoodiaryImageBrowser({
+  const MImageBrowser({
     super.key,
     required this.images,
     this.initialIndex = 0,
@@ -46,7 +42,7 @@ class MoodiaryImageBrowser extends StatefulWidget {
     int? placeholderCacheWidth,
   }) {
     return context.pushTransparentRoute(
-      MoodiaryImageBrowser(
+      MImageBrowser(
         images: images,
         initialIndex: initialIndex,
         heroPrefix: heroPrefix,
@@ -56,10 +52,10 @@ class MoodiaryImageBrowser extends StatefulWidget {
   }
 
   @override
-  State<MoodiaryImageBrowser> createState() => _MoodiaryImageBrowserState();
+  State<MImageBrowser> createState() => _MImageBrowserState();
 }
 
-class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
+class _MImageBrowserState extends State<MImageBrowser> {
   late final PageController _pageController = PageController(
     initialPage: widget.initialIndex,
   );
@@ -293,12 +289,12 @@ class _MoodiaryImageBrowserState extends State<MoodiaryImageBrowser> {
   Future<void> _showInfo() async {
     final info = await _loadInfo(widget.images[_current]);
     if (!mounted) return;
-    await showMoodiarySheet<void>(
+    await MSheet.show<void>(
       context,
-      builder: (sheetContext) => MoodiarySheetScaffold<void>(
+      builder: (sheetContext) => MSheetScaffold<void>(
         title: sheetContext.l10n.imageBrowserInfo,
         icon: LucideIcons.info,
-        actions: [MoodiaryAction(label: sheetContext.l10n.ok, isPrimary: true)],
+        actions: [MAction(label: sheetContext.l10n.ok, isPrimary: true)],
         child: _ImageInfoSheet(info: info),
       ),
     );

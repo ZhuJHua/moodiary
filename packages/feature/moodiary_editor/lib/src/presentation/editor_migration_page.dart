@@ -46,7 +46,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   Future<void> _migrateAll() async {
     final pending = _pending;
     if (pending == null || pending.isEmpty) return;
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: '迁移到新编辑器',
       message:
@@ -95,7 +95,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   }
 
   Future<void> _revert(({MigrationBackup backup, Diary? diary}) item) async {
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: '回退迁移',
       message:

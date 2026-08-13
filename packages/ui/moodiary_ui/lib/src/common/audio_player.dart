@@ -27,7 +27,7 @@ class AudioProgress {
 }
 
 /// 单实例音频控制器：全程只持有一个 [AudioPlayer]，同一时刻只播一条；原生解码器在首次
-/// 播放时才真正初始化（点了再建）。当前唯一宿主是全屏播放页（MoodiaryAudioPlayerPage），
+/// 播放时才真正初始化（点了再建）。当前唯一宿主是全屏播放页（MAudioPlayerPage），
 /// 页面生命周期即控制器生命周期。
 class AudioPlaybackController {
   final _player = AudioPlayer();

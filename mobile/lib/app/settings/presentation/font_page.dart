@@ -117,7 +117,7 @@ class _FontPicker extends ConsumerWidget {
     Font font,
   ) async {
     HapticFeedback.selectionClick();
-    final ok = await showMoodiaryConfirm(
+    final ok = await MAlert.confirm(
       context,
       title: '删除字体',
       message: '确认删除字体「${font.fontFamily}」吗？',

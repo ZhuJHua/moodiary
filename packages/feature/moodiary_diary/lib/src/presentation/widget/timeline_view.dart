@@ -12,7 +12,6 @@ import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 /// 时间线视图：左侧一条真正的轴——圆点与线段都取心情色，滑动即读一段情绪走向。
 ///
@@ -135,7 +134,7 @@ class DiaryTimelineView extends ConsumerWidget {
                 ),
               );
 
-              body = MoodiaryRefresh(
+              body = MRefresh(
                 onLoadMore: () => ref.read(provider.notifier).loadMore(),
                 onRefresh: () => ref.read(provider.notifier).refresh(),
                 child: CustomScrollView(

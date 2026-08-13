@@ -211,14 +211,14 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
     BuildContext context,
     SyncProviderType current,
   ) async {
-    final picked = await showMoodiaryPickerSheet<SyncProviderType>(
+    final picked = await MSheet.picker<SyncProviderType>(
       context,
       title: '同步方式',
       icon: LucideIcons.arrowRightLeft,
       selected: current,
       options: [
         for (final t in SyncProviderType.values)
-          MoodiarySheetOption(value: t, label: t.label),
+          MSheetOption(value: t, label: t.label),
       ],
     );
     if (picked == null || picked == current) return;
@@ -365,19 +365,19 @@ class _AutoSyncSection extends StatelessWidget {
       if (_pollPresets[i] <= current) index = i;
     }
     // 只在按下「确定」时落盘，「取消」就是真的取消。
-    final picked = await showMoodiarySheet<int>(
+    final picked = await MSheet.show<int>(
       context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
           final seconds = _pollPresets[index];
           final tooFrequent = seconds < _frequentThreshold;
-          return MoodiarySheetScaffold<int>(
+          return MSheetScaffold<int>(
             title: '轮询间隔',
             subtitle: _fmtInterval(seconds),
             icon: LucideIcons.timer,
             actions: [
-              MoodiaryAction(label: ctx.l10n.cancel),
-              MoodiaryAction(
+              MAction(label: ctx.l10n.cancel),
+              MAction(
                 label: ctx.l10n.ok,
                 value: _pollPresets[index],
                 isPrimary: true,
@@ -451,17 +451,17 @@ class _NetworkSection extends StatelessWidget {
 
   Future<void> _editConcurrency(BuildContext context, int current) async {
     double value = current.clamp(1, 16).toDouble();
-    final picked = await showMoodiarySheet<int>(
+    final picked = await MSheet.show<int>(
       context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
-          return MoodiarySheetScaffold<int>(
+          return MSheetScaffold<int>(
             title: '并发请求数',
             subtitle: '${value.round()}',
             icon: LucideIcons.server,
             actions: [
-              MoodiaryAction(label: ctx.l10n.cancel),
-              MoodiaryAction(
+              MAction(label: ctx.l10n.cancel),
+              MAction(
                 label: ctx.l10n.ok,
                 value: value.round(),
                 isPrimary: true,

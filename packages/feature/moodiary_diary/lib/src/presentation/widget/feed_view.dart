@@ -49,7 +49,7 @@ class DiaryFeedView extends ConsumerWidget {
             } else {
               final selNotifier = ref.read(diarySelectionProvider.notifier);
               final sort = DiarySort.getType(MoodiaryKVs.homeSortMode.get()!);
-              body = MoodiaryRefresh(
+              body = MRefresh(
                 onLoadMore: () => ref.read(provider.notifier).loadMore(),
                 onRefresh: () => ref.read(provider.notifier).refresh(),
                 child: ListView.separated(

@@ -14,7 +14,6 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'diary_ego_graph_page.g.dart';

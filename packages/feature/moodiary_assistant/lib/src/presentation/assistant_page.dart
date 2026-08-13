@@ -261,7 +261,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   Future<void> _showDisclaimer() async {
     final l10n = context.l10n;
-    final agreed = await showMoodiaryConfirm(
+    final agreed = await MAlert.confirm(
       context,
       icon: LucideIcons.shieldAlert,
       title: l10n.assistantDisclaimerTitle,
@@ -1064,10 +1064,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               usedTokens: _lastTurnInputTokens,
               contextLimit: _contextLimit,
             ),
-          MoodiaryMenuButton<String>(
+          MMenuButton<String>(
             tooltip: l10n.assistantMenuTooltip,
             entries: [
-              MoodiaryMenuEntry(
+              MMenuEntry(
                 value: 'compact',
                 label: l10n.assistantCompactNow,
                 icon: LucideIcons.foldVertical,
@@ -1181,16 +1181,16 @@ class _CompactionNoticeChip extends StatelessWidget {
   }
 
   void _showSheet(BuildContext context) {
-    showMoodiarySheet<void>(
+    MSheet.show<void>(
       context,
       builder: (sheetContext) {
         final l10n = sheetContext.l10n;
-        return MoodiarySheetScaffold<void>(
+        return MSheetScaffold<void>(
           title: l10n.assistantCompactionSheetTitle,
           icon: LucideIcons.chevronsUpDown,
           actions: [
-            MoodiaryAction(label: l10n.cancel),
-            MoodiaryAction(
+            MAction(label: l10n.cancel),
+            MAction(
               label: l10n.assistantCompactionRestore,
               isPrimary: true,
               onPressed: () {
@@ -2082,7 +2082,7 @@ class _SessionCard extends StatelessWidget {
 
   Future<void> _confirmDelete(BuildContext context) async {
     final l10n = context.l10n;
-    final ok = await showMoodiaryConfirm(
+    final ok = await MAlert.confirm(
       context,
       title: l10n.assistantSessionDelete,
       message: session.title,
@@ -2137,11 +2137,11 @@ class _SessionCard extends StatelessWidget {
                 : scheme.onSurfaceVariant,
           ),
         ),
-        trailing: MoodiaryMenuButton<String>(
+        trailing: MMenuButton<String>(
           tooltip: l10n.more,
           onSelected: (_) => _confirmDelete(context),
           entries: [
-            MoodiaryMenuEntry(
+            MMenuEntry(
               value: 'delete',
               label: l10n.assistantSessionDelete,
               icon: LucideIcons.trash2,

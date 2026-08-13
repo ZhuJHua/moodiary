@@ -89,7 +89,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
     AsyncValue<List<Diary>> async,
   ) async {
     final picked = _selected.toList();
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: '批量移入回收站？',
       message: '共 ${picked.length} 条日记将被移入回收站，可在「回收站」内恢复。',

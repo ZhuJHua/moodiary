@@ -10,7 +10,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 import 'hop_history.dart';
 
@@ -326,7 +325,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   }
 
   Future<void> _onAddTag(Diary current) async {
-    final tag = await showMoodiaryPrompt(
+    final tag = await MAlert.prompt(
       context,
       title: '添加标签',
       hintText: '标签名',
@@ -370,7 +369,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
 
   Future<void> _showDetails(Diary diary) async {
     FocusManager.instance.primaryFocus?.unfocus();
-    await showMoodiarySheet<void>(
+    await MSheet.show<void>(
       context,
       builder: (_) => _DetailSheet(
         diary: diary,
@@ -1274,10 +1273,10 @@ class _DetailSheet extends ConsumerWidget {
             data: (c) => c?.categoryName ?? '未知分类',
             orElse: () => '加载中…',
           );
-    return MoodiarySheetScaffold<void>(
+    return MSheetScaffold<void>(
       title: '日记信息',
       icon: LucideIcons.info,
-      actions: [MoodiaryAction(label: context.l10n.ok, isPrimary: true)],
+      actions: [MAction(label: context.l10n.ok, isPrimary: true)],
       child: Column(
         mainAxisSize: .min,
         crossAxisAlignment: .stretch,

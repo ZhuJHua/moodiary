@@ -4,7 +4,6 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 class RecyclePage extends ConsumerWidget {
   const RecyclePage({super.key});
@@ -71,7 +70,7 @@ class RecyclePage extends ConsumerWidget {
     WidgetRef ref,
     Diary diary,
   ) async {
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: '彻底删除？',
       message: '此操作不可恢复，日记将永久消失。',
@@ -90,7 +89,7 @@ class RecyclePage extends ConsumerWidget {
   }
 
   Future<void> _onClear(BuildContext context, WidgetRef ref, int total) async {
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: '清空回收站？',
       message: '将永久删除 $total 条日记。此操作不可恢复。',

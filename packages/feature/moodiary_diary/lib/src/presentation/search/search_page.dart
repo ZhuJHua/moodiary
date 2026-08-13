@@ -149,7 +149,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 
   Widget _dateChip(BuildContext context, DiarySearchState state) {
-    return MoodiaryMenuButton<DateRangePreset>(
+    return MMenuButton<DateRangePreset>(
       selected: state.datePreset,
       onSelected: (preset) async {
         if (preset == .custom) {
@@ -175,7 +175,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
       },
       entries: [
         for (final p in DateRangePreset.values)
-          MoodiaryMenuEntry(value: p, label: _dateLabel(context, p)),
+          MMenuEntry(value: p, label: _dateLabel(context, p)),
       ],
       child: _FilterChip(
         icon: LucideIcons.calendar,
@@ -199,14 +199,14 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                   .firstWhereOrNull((c) => c.id == state.categoryId)
                   ?.categoryName ??
               context.l10n.searchCategoryAll);
-    return MoodiaryMenuButton<String>(
+    return MMenuButton<String>(
       // 空串 = 全部分类（null 语义留给「未选择」，故用空串表达「全部」）。
       selected: state.categoryId ?? '',
       onSelected: (id) => _controller.setCategory(id.isEmpty ? null : id),
       entries: [
-        MoodiaryMenuEntry(value: '', label: context.l10n.searchCategoryAll),
+        MMenuEntry(value: '', label: context.l10n.searchCategoryAll),
         for (final c in categories)
-          MoodiaryMenuEntry(value: c.id, label: c.categoryName),
+          MMenuEntry(value: c.id, label: c.categoryName),
       ],
       child: _FilterChip(
         icon: LucideIcons.folder,
@@ -217,12 +217,12 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 
   Widget _sortChip(BuildContext context, DiarySearchState state) {
-    return MoodiaryMenuButton<SearchSort>(
+    return MMenuButton<SearchSort>(
       selected: state.sort,
       onSelected: _controller.setSort,
       entries: [
         for (final s in SearchSort.values)
-          MoodiaryMenuEntry(value: s, label: _sortLabel(context, s)),
+          MMenuEntry(value: s, label: _sortLabel(context, s)),
       ],
       child: _FilterChip(
         icon: LucideIcons.arrowUpDown,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_ui/src/basic/loading.dart';
+import 'package:mui/mui.dart';
 
 extension AsyncValueExtension<T> on AsyncValue<T> {
   Widget buildLoading({
@@ -17,7 +17,7 @@ extension AsyncValueExtension<T> on AsyncValue<T> {
         logger.e('Error', error: e, stackTrace: s);
         return Center(child: Text('Error: $e'));
       },
-      loading: loading ?? () => const MoodiaryLoading(),
+      loading: loading ?? () => const MLoading(),
     );
   }
 

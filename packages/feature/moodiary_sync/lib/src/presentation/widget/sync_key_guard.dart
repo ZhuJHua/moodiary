@@ -67,7 +67,7 @@ Future<bool> ensureSyncKeyReady({
 
   if (!context.mounted) return false;
   List<int>? unwrappedDek;
-  final entered = await showMoodiaryPrompt(
+  final entered = await MAlert.prompt(
     context,
     title: '远端备份已加密',
     message: hasLocalKey

@@ -159,7 +159,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Future<void> _editNameTemplate() async {
     final l10n = context.l10n;
-    final value = await showMoodiaryPrompt(
+    final value = await MAlert.prompt(
       context,
       title: l10n.exportFileNameTemplate,
       // 花括号是模板语法本身，作为字面量传进占位符 —— gen-l10n 的 ICU 不支持转义花括号。
@@ -236,12 +236,12 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Future<void> _pickMedia() async {
     final l10n = context.l10n;
-    final picked = await showMoodiaryAlert<ExportMediaPolicy>(
+    final picked = await MAlert.show<ExportMediaPolicy>(
       context,
       title: l10n.exportMedia,
       actions: [
         for (final policy in ExportMediaPolicy.values)
-          MoodiaryAction(
+          MAction(
             label: _mediaLabel(l10n, policy),
             value: policy,
             isPrimary: policy == _common.media,
@@ -373,7 +373,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Future<void> _editFontName({required bool eastAsia}) async {
     final l10n = context.l10n;
-    final value = await showMoodiaryPrompt(
+    final value = await MAlert.prompt(
       context,
       title: eastAsia ? l10n.exportEastAsiaFont : l10n.exportAsciiFont,
       message: l10n.exportFontNameHint,
@@ -437,12 +437,12 @@ class _FormatExportPageState extends State<FormatExportPage> {
     required List<T> values,
     required T current,
     required String Function(T) label,
-  }) => showMoodiaryAlert<T>(
+  }) => MAlert.show<T>(
     context,
     title: title,
     actions: [
       for (final value in values)
-        MoodiaryAction(
+        MAction(
           label: label(value),
           value: value,
           isPrimary: value == current,
@@ -613,7 +613,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
         ),
     ];
     if (notes.isNotEmpty && mounted) {
-      await showMoodiaryNotice(
+      await MAlert.notice(
         context,
         title: l10n.exportPartialTitle,
         message: notes.join('\n'),

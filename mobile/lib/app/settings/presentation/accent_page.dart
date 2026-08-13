@@ -22,7 +22,7 @@ class _AccentPageState extends ConsumerState<AccentPage> {
   late Color _seed = Color(MoodiaryKVs.themeAccentColor.get()!);
 
   Future<void> _pick() async {
-    final picked = await showMoodiaryColorPicker(context, initialColor: _seed);
+    final picked = await MColorPicker.show(context, initialColor: _seed);
     if (picked != null) setState(() => _seed = picked);
   }
 
@@ -55,7 +55,7 @@ class _AccentPageState extends ConsumerState<AccentPage> {
           children: [
             _SeedCard(seed: _seed, onTap: _pick),
             const SizedBox(height: 20),
-            MoodiarySwatchRow(
+            MSwatchRow(
               selected: _seed,
               onSelected: (color) => setState(() => _seed = color),
             ),

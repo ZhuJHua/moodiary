@@ -150,7 +150,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
   Future<void> _deleteSelected() async {
     final ids = ref.read(diarySelectionProvider);
     if (ids.isEmpty) return;
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: '删除所选日记？',
       message: '已选 ${ids.length} 篇，将移入回收站，可在回收站恢复。',

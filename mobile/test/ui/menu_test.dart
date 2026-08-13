@@ -9,23 +9,23 @@ void main() {
   Widget host({
     required ValueChanged<String> onSelected,
     String? selected,
-    List<MoodiaryMenuEntry<String>>? entries,
+    List<MMenuEntry<String>>? entries,
   }) {
     return MuiTheme(
       data: _mui,
       child: MaterialApp(
         home: Scaffold(
           body: Center(
-            child: MoodiaryMenuButton<String>(
+            child: MMenuButton<String>(
               tooltip: 'more',
               selected: selected,
               onSelected: onSelected,
               entries:
                   entries ??
                   const [
-                    MoodiaryMenuEntry(value: 'a', label: 'Apple'),
-                    MoodiaryMenuEntry(value: 'b', label: 'Banana'),
-                    MoodiaryMenuEntry(
+                    MMenuEntry(value: 'a', label: 'Apple'),
+                    MMenuEntry(value: 'b', label: 'Banana'),
+                    MMenuEntry(
                       value: 'c',
                       label: 'Cherry',
                       icon: LucideIcons.trash2,
@@ -97,8 +97,8 @@ void main() {
       host(
         onSelected: (v) => picked = v,
         entries: const [
-          MoodiaryMenuEntry(value: 'a', label: 'Apple'),
-          MoodiaryMenuEntry(value: 'b', label: 'Banana', enabled: false),
+          MMenuEntry(value: 'a', label: 'Apple'),
+          MMenuEntry(value: 'b', label: 'Banana', enabled: false),
         ],
       ),
     );

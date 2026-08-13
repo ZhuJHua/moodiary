@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons, MoodiaryField;
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 import 'package:record/record.dart';
@@ -214,7 +213,7 @@ class _RecordSheetState extends State<RecordSheet> {
       children: [
         // 名称输入框只在录制开始后出现:未开始时保持一颗录制键的极简形态。
         if (_started) ...[
-          MoodiaryField(
+          MField(
             controller: _nameController,
             label: l10n.audioNameLabel,
             textInputAction: .done,

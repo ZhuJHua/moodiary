@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 import 'package:mui/mui.dart';
 
 /// 条目的同步状态：内联进元信息行，不用会盖住内容的角标。

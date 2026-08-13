@@ -33,7 +33,7 @@ class ResetDataTile extends StatelessWidget {
   }
 
   Future<void> _confirmAndReset(BuildContext context) async {
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: '重置所有数据',
       message:

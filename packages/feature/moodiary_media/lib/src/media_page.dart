@@ -8,7 +8,6 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 import 'media_controller.dart';
 import 'media_video_viewer.dart';
@@ -63,12 +62,12 @@ class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
       body: Column(
         children: [
           const SizedBox(height: 4),
-          MoodiaryChipBar<MediaType>(
+          MChipBar<MediaType>(
             selected: _type,
             onSelected: (t) => setState(() => _type = t),
             items: [
               for (final t in MediaType.values)
-                MoodiaryChipData(
+                MChipData(
                   value: t,
                   label: _typeLabel(context, t),
                   icon: _typeIcon(t),
@@ -121,7 +120,7 @@ Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
   }
 
   if (!context.mounted) return;
-  final confirmed = await showMoodiaryConfirm(
+  final confirmed = await MAlert.confirm(
     context,
     title: l10n.mediaCleanupConfirmTitle,
     message: l10n.mediaCleanupConfirmMessage(report.count, report.readableSize),
@@ -172,7 +171,7 @@ class _MediaBody extends ConsumerWidget {
         final group = buildMediaGroup(diaries, type);
         if (group.isEmpty) return _Empty();
         final cacheWidth = _thumbCacheWidth(context);
-        return MoodiaryRefresh(
+        return MRefresh(
           onLoadMore: () => ref.read(provider.notifier).loadMore(),
           onRefresh: () => ref.read(provider.notifier).refresh(),
           child: CustomScrollView(
@@ -344,10 +343,10 @@ class _AudioTile extends ConsumerWidget {
     WidgetRef ref,
     MediaInfo? info,
   ) async {
-    final action = await showMoodiaryMenu<_AudioTileAction>(
+    final action = await MMenu.show<_AudioTileAction>(
       anchorContext: context,
       entries: [
-        MoodiaryMenuEntry(
+        MMenuEntry(
           value: .rename,
           label: context.l10n.mediaRename,
           icon: LucideIcons.pencilLine,
@@ -355,7 +354,7 @@ class _AudioTile extends ConsumerWidget {
       ],
     );
     if (action != .rename || !context.mounted) return;
-    final input = await showMoodiaryPrompt(
+    final input = await MAlert.prompt(
       context,
       title: context.l10n.mediaRename,
       initialValue: info?.name ?? '',
@@ -395,7 +394,7 @@ class _AudioTile extends ConsumerWidget {
         customBorder: const RoundedRectangleBorder(
           borderRadius: AppBorderRadius.largeBorderRadius,
         ),
-        onTap: () => MoodiaryAudioPlayerPage.showByName(
+        onTap: () => MAudioPlayerPage.showByName(
           context,
           name: name,
           title: displayName,
@@ -495,7 +494,7 @@ class _Thumb extends StatelessWidget {
   }
 }
 
-/// 媒体库图片 Hero tag 前缀（与 [MoodiaryImageBrowser] 的约定：`'$prefix-<路径>'`）。
+/// 媒体库图片 Hero tag 前缀（与 [MImageBrowser] 的约定：`'$prefix-<路径>'`）。
 const String _kImageHeroPrefix = 'media';
 
 class _ImageTile extends StatelessWidget {
@@ -514,7 +513,7 @@ class _ImageTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final path = AppFiles.getRealPath('image', names[index]);
     return GestureDetector(
-      onTap: () => MoodiaryImageBrowser.show(
+      onTap: () => MImageBrowser.show(
         context,
         images: [for (final name in names) AppFiles.getRealPath('image', name)],
         initialIndex: index,

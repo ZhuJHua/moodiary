@@ -1,5 +1,5 @@
 name: moodiary_ui
-description: "Moodiary shared UI kit (product) — business-agnostic reusable widgets (basic + common) plus the global toast."
+description: "Moodiary UI 层：够不着 mui 的那几个组件——需要 core 基建（AppFiles / IHttpClient / MediaManager / MoodiaryKVs / logger）或 riverpod。业务无关的组件都在 package:mui。"
 version: 0.0.1
 publish_to: none
 
@@ -16,40 +16,18 @@ dependencies:
   moodiary_core: 0.0.1
   moodiary_l10n: 0.0.1
   moodiary_utils: 0.0.1
-  moodiary_rust: 0.0.1
   mui: 0.0.1
 
   flutter_riverpod: 3.4.2
-  flutter_smart_dialog: 5.1.1
-  lucide_icons_flutter: 3.1.15
-  expressive_refresh: 0.1.2
   path: 1.9.1
 
   cached_network_image_ce: 4.10.0
-  flutter_svg: 2.3.0
 
   photo_view: 0.15.0
   dismissible_page: 1.0.2
-
-  video_player: 2.14.0
   audioplayers: 6.8.1
-  screen_brightness: 2.1.11
-  volume_controller: 3.6.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-
-flutter:
-  # 和风天气图标字体。跟着 qweather_icon.dart 走：谁用图标谁带字体，
-  # 调用方（含将来的桌面端）不需要自己在 pubspec 里再声明一遍。
-  fonts:
-    - family: qweather
-      fonts:
-        - asset: assets/fonts/qweather-icons.ttf
-    # 文件类型角标用的圆角西文字体（Dosis，OFL-1.1，见同目录 Dosis-OFL.txt）。
-    # 可变字体（wght 200–800），字重由 FontVariation 指定，见 file_type_icon.dart。
-    - family: Dosis
-      fonts:
-        - asset: assets/fonts/Dosis.ttf

@@ -4,7 +4,6 @@ import 'package:moodiary_assistant/src/application/tool_permission_coordinator.d
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
 import 'package:mui/mui.dart';
 
 final genui.Catalog assistantGenUiCatalog = genui.Catalog([

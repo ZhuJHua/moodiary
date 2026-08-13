@@ -16,7 +16,6 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show FlutterSmartDialog;
 import 'package:mui/mui.dart';
 
 Future<Locale> _initSystem() async {
@@ -141,7 +140,12 @@ class Moodiary extends ConsumerWidget {
       darkTheme: settings.darkTheme,
       locale: settings.locale,
       themeMode: settings.themeMode,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      // mui 自带一小份通用词（确认/取消/返回/toast…），组件库不反过来依赖 App 的
+      // 文案包。不注册这一条不会崩，但那几个词会静默回落到英文。
+      localizationsDelegates: const [
+        ...AppLocalizations.localizationsDelegates,
+        MuiLocalizations.delegate,
+      ],
       supportedLocales: AppLocalizations.supportedLocales,
     );
   }

@@ -12,7 +12,7 @@ class S3FormSheet extends StatefulWidget {
   State<S3FormSheet> createState() => _S3FormSheetState();
 
   static Future<bool?> show(BuildContext context) {
-    return showMoodiarySheet<bool>(
+    return MSheet.show<bool>(
       context,
       builder: (_) => const S3FormSheet(),
     );
@@ -119,7 +119,7 @@ class _S3FormSheetState extends State<S3FormSheet> {
 
   Future<void> _clear() async {
     final l10n = context.l10n;
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: l10n.syncConfigClearConfirmTitle,
       message: l10n.syncConfigClearConfirmMessage,
@@ -143,13 +143,13 @@ class _S3FormSheetState extends State<S3FormSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return MoodiarySheetScaffold<bool>(
+    return MSheetScaffold<bool>(
       title: l10n.backupSyncS3,
       subtitle: _configured ? _savedBucket : l10n.backupSyncWebdavNoOption,
       icon: LucideIcons.database,
       actions: [
-        MoodiaryAction(label: l10n.cancel, value: false, enabled: !_saving),
-        MoodiaryAction(
+        MAction(label: l10n.cancel, value: false, enabled: !_saving),
+        MAction(
           label: l10n.save,
           isPrimary: true,
           busy: _saving,
@@ -162,8 +162,8 @@ class _S3FormSheetState extends State<S3FormSheet> {
         mainAxisSize: .min,
         spacing: 14,
         children: [
-          MoodiaryFormSection(l10n.syncSectionConnection),
-          MoodiaryField(
+          MFormSection(l10n.syncSectionConnection),
+          MField(
             controller: _endpointCtl,
             label: l10n.s3OptionEndpoint,
             errorText: _endpointError,
@@ -172,29 +172,29 @@ class _S3FormSheetState extends State<S3FormSheet> {
             textInputAction: .next,
             onChanged: _normalizeEndpoint,
           ),
-          MoodiaryField(
+          MField(
             controller: _bucketCtl,
             label: l10n.s3OptionBucket,
             errorText: _bucketError,
             enabled: !_saving,
             textInputAction: .next,
           ),
-          MoodiaryField(
+          MField(
             controller: _regionCtl,
             label: l10n.s3OptionRegion,
             hintText: l10n.syncFieldOptional,
             enabled: !_saving,
             textInputAction: .next,
           ),
-          MoodiaryFormSection(l10n.syncSectionCredentials),
-          MoodiaryField(
+          MFormSection(l10n.syncSectionCredentials),
+          MField(
             controller: _accessKeyCtl,
             label: l10n.s3OptionAccessKey,
             errorText: _accessKeyError,
             enabled: !_saving,
             textInputAction: .next,
           ),
-          MoodiaryField(
+          MField(
             controller: _secretKeyCtl,
             label: l10n.s3OptionSecretKey,
             errorText: _secretKeyError,
@@ -202,14 +202,14 @@ class _S3FormSheetState extends State<S3FormSheet> {
             obscureText: true,
             onSubmitted: (_) => _save(),
           ),
-          MoodiaryFormSection(l10n.syncSectionOptions),
-          MoodiarySwitchField(
+          MFormSection(l10n.syncSectionOptions),
+          MSwitchField(
             label: l10n.s3OptionUseSsl,
             value: _useSSL,
             onChanged: _saving ? null : (v) => setState(() => _useSSL = v),
           ),
           if (_configured)
-            MoodiaryDangerRow(
+            MDangerRow(
               label: l10n.syncConfigClear,
               onPressed: _saving ? null : _clear,
             ),

@@ -32,20 +32,11 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show DeviceOrientation, HapticFeedback;
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-import '../../basic/loading.dart';
-import 'video_ambient_controller.dart';
-import 'video_ambient_port_impl.dart';
-import 'video_chrome_controller.dart';
-import 'video_playback_controller.dart';
-import 'video_playback_port.dart';
-import 'video_playback_state.dart';
-import 'video_player_port_impl.dart';
 
 typedef VideoSurfaceBuilder = Widget Function(VideoPlaybackPort port);
 
@@ -63,8 +54,8 @@ Widget defaultVideoSurfaceBuilder(VideoPlaybackPort port) =>
     ? port.buildSurface()
     : const SizedBox.shrink();
 
-class MoodiaryVideoPlayerPage extends StatefulWidget {
-  const MoodiaryVideoPlayerPage({
+class MVideoPlayerPage extends StatefulWidget {
+  const MVideoPlayerPage({
     super.key,
     required this.videoPath,
     this.coverPath,
@@ -108,7 +99,7 @@ class MoodiaryVideoPlayerPage extends StatefulWidget {
         barrierColor: Colors.black,
         transitionDuration: Durations.medium2,
         reverseTransitionDuration: Durations.medium1,
-        pageBuilder: (_, _, _) => MoodiaryVideoPlayerPage(
+        pageBuilder: (_, _, _) => MVideoPlayerPage(
           videoPath: videoPath,
           coverPath: coverPath,
           initialAspect: initialAspect,
@@ -180,13 +171,13 @@ class MoodiaryVideoPlayerPage extends StatefulWidget {
   }
 
   @override
-  State<MoodiaryVideoPlayerPage> createState() =>
-      _MoodiaryVideoPlayerPageState();
+  State<MVideoPlayerPage> createState() =>
+      _MVideoPlayerPageState();
 }
 
-class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
+class _MVideoPlayerPageState extends State<MVideoPlayerPage>
     with WidgetsBindingObserver {
-  late final MoodiaryVideoPlaybackController _player;
+  late final MVideoPlaybackController _player;
   final _chrome = VideoChromeController();
   final _ambient = VideoAmbientController(ports: defaultVideoAmbientPorts());
 
@@ -230,7 +221,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
   @override
   void initState() {
     super.initState();
-    _player = MoodiaryVideoPlaybackController(
+    _player = MVideoPlaybackController(
       source: .file(widget.videoPath),
       portFactory: videoPlayerPortFactory,
       initialAspect: widget.initialAspect,
@@ -877,7 +868,7 @@ class _MoodiaryVideoPlayerPageState extends State<MoodiaryVideoPlayerPage>
           ),
         ),
         _ when state.isBusy => const Center(
-          child: MoodiaryLoading(color: Colors.white),
+          child: MLoading(color: Colors.white),
         ),
         VideoCompleted() || VideoReady() => Center(
           child: _RoundIcon(

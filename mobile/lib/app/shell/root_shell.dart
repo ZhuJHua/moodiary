@@ -10,24 +10,24 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_media/moodiary_media.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart'
-    show LucideIcons, MoodiaryNavAction, MoodiaryNavBar, MoodiaryNavDestination;
+    show LucideIcons, MNavAction, MNavBar, MNavDestination;
 
 /// 三个 tab —— 设置不在这儿，入口在分类抽屉底部（胶囊只装得下三个，加上右边那颗
 /// 动作按钮正好一行）。枚举顺序即胶囊里的顺序，也是 `_pages` 的顺序。
 enum _ShellTab { diary, media, assistant }
 
-List<MoodiaryNavDestination> _navDestinations(BuildContext context) {
+List<MNavDestination> _navDestinations(BuildContext context) {
   final l10n = context.l10n;
   return [
-    MoodiaryNavDestination(
+    MNavDestination(
       icon: const Icon(LucideIcons.bookText),
       label: l10n.homeNavigatorDiary,
     ),
-    MoodiaryNavDestination(
+    MNavDestination(
       icon: const Icon(LucideIcons.image),
       label: l10n.homeNavigatorMedia,
     ),
-    MoodiaryNavDestination(
+    MNavDestination(
       icon: const Icon(LucideIcons.astroid),
       label: l10n.homeNavigatorAssistant,
     ),
@@ -65,15 +65,15 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
 
   /// 右边那颗按钮跟着 tab 换功能。媒体页没有自己的「创建」——它是逛出来的，所以
   /// 和日记页共用写日记；只有助手页换成开新对话（那颗 FAB 因此撤掉了）。
-  MoodiaryNavAction _navAction(BuildContext context) {
+  MNavAction _navAction(BuildContext context) {
     final l10n = context.l10n;
     return switch (_tab) {
-      .assistant => MoodiaryNavAction(
+      .assistant => MNavAction(
         icon: const Icon(LucideIcons.messageCirclePlus),
         tooltip: l10n.assistantNewChat,
         onPressed: () => const AssistantConversationRoute().push(context),
       ),
-      .diary || .media => MoodiaryNavAction(
+      .diary || .media => MNavAction(
         icon: const Icon(LucideIcons.pencilLine),
         tooltip: l10n.homePageAddDiaryButton,
         onPressed: _newDiary,
@@ -97,7 +97,7 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
       drawer: drawerUsable ? const CategoryDrawer() : null,
       drawerEnableOpenDragGesture: drawerUsable,
       body: IndexedStack(index: _tab.index, children: _pages),
-      bottomNavigationBar: MoodiaryNavBar(
+      bottomNavigationBar: MNavBar(
         selectedIndex: _tab.index,
         onDestinationSelected: (i) =>
             setState(() => _tab = _ShellTab.values[i]),

@@ -9,7 +9,7 @@ class ViewModeSheet extends StatefulWidget {
   const ViewModeSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showMoodiarySheet<void>(
+    return MSheet.show<void>(
       context,
       builder: (_) => const ViewModeSheet(),
     );
@@ -84,13 +84,13 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final showModes = ViewModeSheet._showModes;
-    return MoodiarySheetScaffold<void>(
+    return MSheetScaffold<void>(
       // 标题跟着内容走：只有排序时就别再叫「视图模式」。
       title: showModes ? l10n.diaryPageViewModeButton : l10n.diarySortTitle,
       icon: LucideIcons.arrowDownUp,
       actions: [
-        MoodiaryAction(label: l10n.cancel),
-        MoodiaryAction(label: l10n.ok, isPrimary: true, onPressed: _apply),
+        MAction(label: l10n.cancel),
+        MAction(label: l10n.ok, isPrimary: true, onPressed: _apply),
       ],
       child: Column(
         mainAxisSize: .min,
@@ -110,12 +110,12 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
               onSelectionChanged: (value) => _pickMode(value.first),
             ),
             const SizedBox(height: 20),
-            MoodiaryFormSection(l10n.diarySortTitle),
+            MFormSection(l10n.diarySortTitle),
             const SizedBox(height: 10),
           ],
           for (final sort in _availableSorts)
-            MoodiarySheetOptionTile<int>(
-              option: MoodiarySheetOption(
+            MSheetOptionTile<int>(
+              option: MSheetOption(
                 value: sort.number,
                 label: _sortLabel(context, sort),
                 icon: _sortIcon(sort),

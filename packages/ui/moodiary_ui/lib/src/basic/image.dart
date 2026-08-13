@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
@@ -93,7 +92,7 @@ class _ImageState {
   });
 }
 
-class MoodiaryImage extends StatefulWidget {
+class MImage extends StatefulWidget {
   final String imagePath;
   final int size;
   final BoxFit? fit;
@@ -103,7 +102,7 @@ class MoodiaryImage extends StatefulWidget {
   final bool showBorder;
   final EdgeInsets? padding;
 
-  const MoodiaryImage({
+  const MImage({
     super.key,
     required this.imagePath,
     required this.size,
@@ -116,10 +115,10 @@ class MoodiaryImage extends StatefulWidget {
   });
 
   @override
-  State<MoodiaryImage> createState() => _MoodiaryImageState();
+  State<MImage> createState() => _MImageState();
 }
 
-class _MoodiaryImageState extends State<MoodiaryImage> {
+class _MImageState extends State<MImage> {
   late final _loadState = ValueNotifier(_ImageLoadState.loading);
 
   late _ImageState _imageState;
@@ -137,7 +136,7 @@ class _MoodiaryImageState extends State<MoodiaryImage> {
   }
 
   @override
-  void didUpdateWidget(covariant MoodiaryImage oldWidget) {
+  void didUpdateWidget(covariant MImage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.imagePath != oldWidget.imagePath ||
         widget.size != oldWidget.size) {

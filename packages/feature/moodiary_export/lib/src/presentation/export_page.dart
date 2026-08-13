@@ -89,7 +89,7 @@ class _ImportSection extends StatelessWidget {
     final file = await IFilePicker.get().pickFile(allowedExtensions: ['zip']);
     if (file == null || !context.mounted) return;
 
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: l10n.exportRestoreFromBackup,
       message: l10n.exportRestoreConfirmMessage,

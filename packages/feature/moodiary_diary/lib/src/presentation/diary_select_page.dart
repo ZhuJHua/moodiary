@@ -8,7 +8,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
-import 'package:mui/mui.dart';
 
 /// 单页日记选择器：搜索 + 列表，点选一篇后经 `context.pop(diary)` 返回给调用方。
 /// 供「发送日记给 AI」使用，但本身与助手解耦（只返回 [Diary]）。
@@ -89,7 +88,7 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
     return async.buildLoading(
       data: (list) {
         if (list.isEmpty) return _Empty();
-        return MoodiaryRefresh(
+        return MRefresh(
           onLoadMore: () => ref.read(provider.notifier).loadMore(),
           child: ListView.separated(
             padding: const .all(12),
@@ -110,7 +109,7 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
       future: _searchFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == .waiting) {
-          return const Center(child: MoodiaryLoading());
+          return const Center(child: MLoading());
         }
         final list = snapshot.data ?? const <Diary>[];
         if (list.isEmpty) return _Empty();

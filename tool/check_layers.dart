@@ -249,27 +249,28 @@ List<String> _checkMuiPurity() {
 /// 例外是**按文件**放行的，每一条都得有理由；行级 baseline 刻意不做，
 /// 那会变成一张只增不减的欠条。
 const Map<String, String> _themeAllowlist = {
-  'packages/foundation/mui/lib/': 'mui 自己就是色板与 token 的定义处',
-  'packages/foundation/mui/lib/src/themes/build.dart':
-      '唯一的 material 投影点，按定义要落到绝对值',
+  // 只放行主题层本身 —— mui 的 41 个组件跟业务代码一样要守这条闸门。
+  'packages/foundation/mui/lib/src/themes/': 'mui 的主题层就是色板与 token 的定义处',
   'mobile/lib/app/picker/': '第三方 AssetPicker/CameraPicker 自建 ThemeData，够不着 mui',
   'packages/feature/moodiary_share/lib/src/presentation/templates/':
       '分享卡片是固定设计稿（纸/墨配色），要导出成图片，不能跟随 App 主题',
-  'packages/ui/moodiary_ui/lib/src/common/env_badge.dart': '开发环境角标，固定红',
-  'packages/ui/moodiary_ui/lib/src/common/video/': '播放器暗房：控件叠在任意画面上，白色前景是对的',
+  'packages/foundation/mui/lib/src/components/common/env_badge.dart': '开发环境角标，固定红',
+  'packages/foundation/mui/lib/src/components/common/video/':
+      '播放器暗房：控件叠在任意画面上，白色前景是对的',
+  'packages/ui/moodiary_ui/lib/src/common/video/': '播放器暗房，同上（页面本体够不着 mui）',
   'packages/ui/moodiary_ui/lib/src/common/image_browser.dart': '图片浏览暗房，同上',
   'packages/core/moodiary_core/lib/src/values/colors.dart':
       '心情色带与分享卡片底色：业务语义色，全 App 唯一刻意不跟主题走的两组',
-  'packages/ui/moodiary_ui/lib/src/common/category_color.dart':
+  'packages/foundation/mui/lib/src/components/common/category_color.dart':
       '分类哈希色板 + 由它派生前景色的唯一算处',
-  'packages/ui/moodiary_ui/lib/src/common/color_picker.dart': '取色器本体展示的就是任意颜色',
-  'packages/ui/moodiary_ui/lib/src/common/file_type_icon.dart':
+  'packages/foundation/mui/lib/src/components/common/color_picker.dart':
+      '取色器本体展示的就是任意颜色',
+  'packages/foundation/mui/lib/src/components/common/file_type_icon.dart':
       'Dosis 角标：字号由轮廓几何反算并钉死 noScaling，不走排版档',
-  'packages/ui/moodiary_ui/lib/src/basic/expand_tap_area.dart': 'debugPaint 的辅助色',
+  'packages/foundation/mui/lib/src/components/basic/expand_tap_area.dart': 'debugPaint 的辅助色',
   'mobile/lib/app/settings/presentation/widget/accent_sheet.dart':
       '配色档预览：白→黑的色块本身就是要展示的内容',
 };
-
 final List<(RegExp, String)> _themeBans = [
   (
     RegExp(r'(^|[^A-Za-z0-9_.])Colors\.(?!transparent)'),

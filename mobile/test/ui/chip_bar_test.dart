@@ -16,18 +16,18 @@ void main() {
       data: _mui,
       child: MaterialApp(
         home: Scaffold(
-          body: MoodiaryChipBar<String?>(
+          body: MChipBar<String?>(
             selected: selected,
             onSelected: onSelected,
             trailing: trailing,
             items: const [
-              MoodiaryChipData(value: null, label: 'All'),
-              MoodiaryChipData(
+              MChipData(value: null, label: 'All'),
+              MChipData(
                 value: 'a',
                 label: 'Work',
                 accentColor: Colors.red,
               ),
-              MoodiaryChipData(value: 'b', label: 'Life'),
+              MChipData(value: 'b', label: 'Life'),
             ],
           ),
         ),

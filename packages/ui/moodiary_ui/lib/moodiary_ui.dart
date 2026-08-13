@@ -1,52 +1,19 @@
+/// Moodiary 的 UI 层。
+///
+/// 业务无关的组件已经全部搬进 `package:mui`（本包转发它，调用方一个 import 就够）；
+/// 留在这里的是**够不着 mui 的那几个**——它们要 core 的基建（AppFiles / IHttpClient /
+/// MediaManager / MoodiaryKVs / logger）或 riverpod，而 mui 是零 moodiary_* 依赖的
+/// foundation 叶子包。
 library;
 
-// UI 依赖的 owner 包：toast/弹层与图标库由 ui 转发，core 保持 headless。
-export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-export 'package:lucide_icons_flutter/lucide_icons.dart';
+// 组件与主题都从 mui 出，业务代码只需 import 本包或 mui。
+export 'package:mui/mui.dart';
 
-export 'src/basic/action_bar.dart';
-export 'src/basic/alert.dart';
-export 'src/basic/bubble.dart';
-export 'src/basic/button.dart';
-export 'src/basic/clipper.dart';
-export 'src/basic/dialog.dart';
-export 'src/basic/expand_tap_area.dart';
-export 'src/basic/fix_scroll.dart';
-export 'src/basic/form.dart';
 export 'src/basic/image.dart';
-export 'src/basic/keepalive.dart';
-export 'src/basic/keyboard_listener.dart';
-export 'src/basic/loading.dart';
-export 'src/basic/marquee.dart';
-export 'src/basic/menu.dart';
-export 'src/basic/modal.dart';
-export 'src/basic/network_image.dart';
-export 'src/basic/popup.dart';
-export 'src/basic/pull_to_refresh.dart';
-export 'src/basic/sheet.dart';
-export 'src/basic/text.dart';
 export 'src/common/async_value.dart';
 export 'src/common/audio/audio_player_page.dart';
 export 'src/common/audio_player.dart';
-export 'src/common/category_color.dart';
-export 'src/common/chip_bar.dart';
-export 'src/common/color_picker.dart';
-export 'src/common/env_badge.dart';
-export 'src/common/file_type_icon.dart';
 export 'src/common/frosted_glass_overlay.dart';
 export 'src/common/image_browser.dart';
-export 'src/common/lock_pin_pad.dart';
 export 'src/common/mood_icon.dart';
-export 'src/common/nav_bar.dart';
-export 'src/common/qweather_icon.dart';
-export 'src/common/setting_tile.dart';
-export 'src/common/sync_pending_indicator.dart';
-export 'src/common/time_line.dart';
-export 'src/common/toast.dart';
-export 'src/common/video/video_chrome_controller.dart';
 export 'src/common/video/video_fullscreen_page.dart';
-export 'src/common/video/video_playback_controller.dart';
-export 'src/common/video/video_playback_port.dart';
-export 'src/common/video/video_playback_state.dart';
-export 'src/glass/glass_config.dart';
-export 'src/glass/glass_surface.dart';

@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -12,7 +11,7 @@ import '../audio_player.dart';
 /// 音频全屏播放页 —— 普通主题页面（跟随深 / 浅色，配色全走 colorScheme），不是
 /// 视频那种纯黑「暗室」：AppBar 关闭键、唱盘 + 名称居中、底部刮擦条 + 播放键。
 /// 手势取子集：横拖刮擦、双击播放 / 暂停；关闭走 AppBar 或系统返回。进入即自动播放。
-class MoodiaryAudioPlayerPage extends StatefulWidget {
+class MAudioPlayerPage extends StatefulWidget {
   final String audioPath;
 
   /// 显示名（调用方已做默认名兜底）。
@@ -24,7 +23,7 @@ class MoodiaryAudioPlayerPage extends StatefulWidget {
   /// 表内已知总时长：进场即显示，不必等播放器初始化回报。
   final Duration? knownDuration;
 
-  const MoodiaryAudioPlayerPage({
+  const MAudioPlayerPage({
     super.key,
     required this.audioPath,
     required this.title,
@@ -49,7 +48,7 @@ class MoodiaryAudioPlayerPage extends StatefulWidget {
         PageRouteBuilder<void>(
           transitionDuration: Durations.medium2,
           reverseTransitionDuration: Durations.medium1,
-          pageBuilder: (_, _, _) => MoodiaryAudioPlayerPage(
+          pageBuilder: (_, _, _) => MAudioPlayerPage(
             audioPath: audioPath,
             title: title,
             subtitle: subtitle,
@@ -82,11 +81,11 @@ class MoodiaryAudioPlayerPage extends StatefulWidget {
   }
 
   @override
-  State<MoodiaryAudioPlayerPage> createState() =>
-      _MoodiaryAudioPlayerPageState();
+  State<MAudioPlayerPage> createState() =>
+      _MAudioPlayerPageState();
 }
 
-class _MoodiaryAudioPlayerPageState extends State<MoodiaryAudioPlayerPage>
+class _MAudioPlayerPageState extends State<MAudioPlayerPage>
     with SingleTickerProviderStateMixin {
   final AudioPlaybackController _controller = AudioPlaybackController();
 

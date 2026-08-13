@@ -23,17 +23,17 @@ class CategoryPickerSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(orderedCategoriesProvider);
-    return MoodiarySheetScaffold<_PickerResult>(
+    return MSheetScaffold<_PickerResult>(
       title: '选择分类',
       icon: LucideIcons.folder,
-      actions: [MoodiaryAction(label: context.l10n.cancel)],
+      actions: [MAction(label: context.l10n.cancel)],
       child: async.buildLoading(
         data: (categories) => Column(
           mainAxisSize: .min,
           crossAxisAlignment: .stretch,
           children: [
-            MoodiarySheetOptionTile<String?>(
-              option: const MoodiarySheetOption<String?>(
+            MSheetOptionTile<String?>(
+              option: const MSheetOption<String?>(
                 value: null,
                 label: '不分类',
               ),
@@ -41,8 +41,8 @@ class CategoryPickerSheet extends ConsumerWidget {
               onTap: () => _pick(context, null),
             ),
             for (final c in categories)
-              MoodiarySheetOptionTile<String?>(
-                option: MoodiarySheetOption<String?>(
+              MSheetOptionTile<String?>(
+                option: MSheetOption<String?>(
                   value: c.id,
                   label: c.categoryName,
                 ),
@@ -60,7 +60,7 @@ class CategoryPickerSheet extends ConsumerWidget {
     required BuildContext context,
     required String? currentCategoryId,
   }) async {
-    final result = await showMoodiarySheet<_PickerResult>(
+    final result = await MSheet.show<_PickerResult>(
       context,
       builder: (_) => CategoryPickerSheet(currentCategoryId: currentCategoryId),
     );

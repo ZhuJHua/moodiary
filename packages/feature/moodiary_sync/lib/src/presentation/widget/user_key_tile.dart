@@ -42,7 +42,7 @@ class UserKeyTile extends ConsumerWidget {
     WidgetRef ref,
     bool hasExistingKey,
   ) async {
-    await showMoodiarySheet<void>(
+    await MSheet.show<void>(
       context,
       builder: (ctx) => _KeyManageSheet(
         hasExistingKey: hasExistingKey,
@@ -162,13 +162,13 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return MoodiarySheetScaffold<void>(
+    return MSheetScaffold<void>(
       title: '加密管理',
       subtitle: widget.hasExistingKey ? '已开启' : '未开启',
       icon: LucideIcons.key,
       actions: [
-        MoodiaryAction(label: context.l10n.cancel, enabled: !_verifying),
-        MoodiaryAction(
+        MAction(label: context.l10n.cancel, enabled: !_verifying),
+        MAction(
           label: context.l10n.save,
           isPrimary: true,
           enabled: !_verifying,
@@ -183,7 +183,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
         spacing: 14,
         children: [
           if (widget.hasExistingKey)
-            MoodiaryField(
+            MField(
               controller: _currentKeyController,
               label: '当前密码',
               errorText: _currentError,
@@ -208,7 +208,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
                       onPressed: _verifying ? null : _verifyCurrent,
                     ),
             ),
-          MoodiaryField(
+          MField(
             controller: _newKeyController,
             label: widget.hasExistingKey ? '新密码' : '加密密码',
             errorText: _newError,
@@ -216,7 +216,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
             enabled: !_verifying,
             textInputAction: .next,
           ),
-          MoodiaryField(
+          MField(
             controller: _confirmKeyController,
             label: '确认密码',
             errorText: _confirmError,
@@ -224,7 +224,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
             enabled: !_verifying,
           ),
           if (widget.onRemove != null)
-            MoodiaryDangerRow(
+            MDangerRow(
               label: '关闭加密',
               icon: LucideIcons.shieldOff,
               onPressed: _verifying ? null : _remove,

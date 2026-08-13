@@ -89,14 +89,14 @@ class _SyncLogPageState extends State<SyncLogPage> {
     for (final day in days) {
       if (_sameDay(day, _selectedDay)) selected = day;
     }
-    final picked = await showMoodiaryPickerSheet<DateTime>(
+    final picked = await MSheet.picker<DateTime>(
       context,
       title: '选择日期',
       icon: LucideIcons.calendarDays,
       selected: selected,
       options: [
         for (final day in days)
-          MoodiarySheetOption(
+          MSheetOption(
             value: day,
             label:
                 TimeFormat.isoDate(day) + (_sameDay(day, today) ? '（今天）' : ''),
@@ -112,7 +112,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
   }
 
   Future<void> _onClearLogs() async {
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: '清空日志',
       message: '将删除内存中的事件流和按天滚动的所有 jsonl 文件，操作不可恢复。',
@@ -415,14 +415,14 @@ class _EventTile extends StatelessWidget {
       'message': event.message,
       'payload': ?event.payload,
     });
-    showMoodiarySheet<void>(
+    MSheet.show<void>(
       context,
-      builder: (ctx) => MoodiarySheetScaffold<void>(
+      builder: (ctx) => MSheetScaffold<void>(
         title: '事件详情',
         subtitle: event.kind.name,
         icon: LucideIcons.fileJson,
         actions: [
-          MoodiaryAction(
+          MAction(
             label: '复制',
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: pretty));
@@ -431,7 +431,7 @@ class _EventTile extends StatelessWidget {
               toast.success(message: '已复制到剪贴板');
             },
           ),
-          MoodiaryAction(label: ctx.l10n.ok, isPrimary: true),
+          MAction(label: ctx.l10n.ok, isPrimary: true),
         ],
         child: SelectableText(
           pretty,

@@ -19,7 +19,7 @@ import 'package:mui/mui.dart';
 /// 「同步状态」底部弹窗：配置标签 / 当前状态与进度 / 数据概览 / 立即同步
 /// （同步中可停止）/ 查看日志入口。日志本身见 [SyncLogPage]。
 Future<void> showSyncStatusSheet(BuildContext context) async {
-  final result = await showMoodiarySheet<String>(
+  final result = await MSheet.show<String>(
     context,
     builder: (_) => const _SyncStatusSheet(),
   );
@@ -105,8 +105,8 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
     final running = state is SyncRunning;
 
     // 「立即同步 / 停止同步」自行接管点击：同步跑起来后弹窗要留着看进度，不能关。
-    MoodiarySheetScaffold<String> buildSheet(bool stopping) {
-      return MoodiarySheetScaffold<String>(
+    MSheetScaffold<String> buildSheet(bool stopping) {
+      return MSheetScaffold<String>(
         title: '同步状态',
         // 后端与加密是背景事实不是状态，降到副标题，别跟「同步失败」抢同一级视觉。
         subtitle: '${backend.type.label} · ${encryption ? '已加密' : '未加密'}',
@@ -114,12 +114,12 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
             ? LucideIcons.cloud
             : LucideIcons.database,
         actions: [
-          const MoodiaryAction(
+          const MAction(
             label: '查看日志',
             value: _SyncStatusSheet.resultViewLog,
           ),
           if (!running)
-            MoodiaryAction(
+            MAction(
               label: '立即同步',
               isPrimary: true,
               enabled: backend.isReady,
@@ -135,7 +135,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
               },
             )
           else
-            MoodiaryAction(
+            MAction(
               label: stopping ? '正在停止…' : '停止同步',
               isPrimary: true,
               enabled: !stopping,
@@ -158,7 +158,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Expanded(child: MoodiaryFormSection('数据概览')),
+                const Expanded(child: MFormSection('数据概览')),
                 IconButton(
                   tooltip: '刷新数据概览',
                   icon: const Icon(LucideIcons.rotateCw),

@@ -14,7 +14,6 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'diary_graph_page.g.dart';
@@ -338,16 +337,16 @@ class _GraphViewState extends ConsumerState<_GraphView> {
       children: [
         Padding(
           padding: const .only(top: 8, bottom: 8),
-          child: MoodiaryChipBar<String?>(
+          child: MChipBar<String?>(
             selected: _categoryId,
             onSelected: (v) => setState(() {
               _categoryId = v;
               _invalidate();
             }),
             items: [
-              MoodiaryChipData(value: null, label: l10n.categoryAll),
+              MChipData(value: null, label: l10n.categoryAll),
               for (final c in categories)
-                MoodiaryChipData(
+                MChipData(
                   value: c.id,
                   label: c.categoryName,
                   // chip 上的分类色圆点与画布节点色一一对应，筛选条本身就是图例。
@@ -462,7 +461,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
 
   Future<void> _openViewSheet() async {
     final l10n = context.l10n;
-    await showMoodiarySheet<void>(
+    await MSheet.show<void>(
       context,
       builder: (sheetContext) => StatefulBuilder(
         builder: (sheetContext, setSheet) {
@@ -479,10 +478,10 @@ class _GraphViewState extends ConsumerState<_GraphView> {
             }
           }
 
-          return MoodiarySheetScaffold<void>(
+          return MSheetScaffold<void>(
             title: l10n.graphStyle,
             icon: LucideIcons.chartNetwork,
-            actions: [MoodiaryAction(label: l10n.ok, isPrimary: true)],
+            actions: [MAction(label: l10n.ok, isPrimary: true)],
             child: Column(
               mainAxisSize: .min,
               crossAxisAlignment: .stretch,
@@ -568,7 +567,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                MoodiarySwitchField(
+                MSwitchField(
                   label: l10n.graphShowLabels,
                   value: _showLabels,
                   onChanged: (v) => apply(() => _showLabels = v),

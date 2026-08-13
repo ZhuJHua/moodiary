@@ -256,7 +256,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
 
   Future<void> _recordAudio(BuildContext sheetContext) async {
     Navigator.of(sheetContext).pop();
-    final result = await showMoodiarySheet<RecordSaveResult>(
+    final result = await MSheet.show<RecordSaveResult>(
       context,
       builder: (_) => const RecordSheet(),
     );
@@ -296,14 +296,14 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
             ? src
             : AppFiles.getRealPath('image', src),
     ];
-    MoodiaryImageBrowser.show(context, images: resolved, initialIndex: index);
+    MImageBrowser.show(context, images: resolved, initialIndex: index);
   }
 
   /// 正文视频交接给原生播放器。路径解析、封面比例预读、锁方向都在 showByName 里
   /// （与媒体库那条路共用同一份），这里只负责把退出位置带回去给编辑器回灌。
   Future<Duration?> _openVideoFullscreen(String name, Duration position) async {
     Duration? exitAt;
-    await MoodiaryVideoPlayerPage.showByName(
+    await MVideoPlayerPage.showByName(
       context,
       name: name,
       startAt: position,
@@ -367,7 +367,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       mediaNameResolver: (name) async =>
           (await MediaInfoRepository.get().getMediaInfoByFileName(name))?.name,
       audioDefaultName: context.l10n.audioDefaultName,
-      loadingBuilder: (_) => const MoodiaryLoading(),
+      loadingBuilder: (_) => const MLoading(),
     );
   }
 }

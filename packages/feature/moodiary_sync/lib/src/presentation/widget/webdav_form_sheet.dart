@@ -12,7 +12,7 @@ class WebDavFormSheet extends StatefulWidget {
   State<WebDavFormSheet> createState() => _WebDavFormSheetState();
 
   static Future<bool?> show(BuildContext context) {
-    return showMoodiarySheet<bool>(
+    return MSheet.show<bool>(
       context,
       builder: (_) => const WebDavFormSheet(),
     );
@@ -95,7 +95,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
 
   Future<void> _clear() async {
     final l10n = context.l10n;
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: l10n.syncConfigClearConfirmTitle,
       message: l10n.syncConfigClearConfirmMessage,
@@ -119,15 +119,15 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return MoodiarySheetScaffold<bool>(
+    return MSheetScaffold<bool>(
       title: l10n.backupSyncWebdav,
       subtitle: _configured
           ? (_savedHost ?? l10n.backupSyncWebdavOption)
           : l10n.backupSyncWebdavNoOption,
       icon: LucideIcons.cloud,
       actions: [
-        MoodiaryAction(label: l10n.cancel, value: false, enabled: !_saving),
-        MoodiaryAction(
+        MAction(label: l10n.cancel, value: false, enabled: !_saving),
+        MAction(
           label: l10n.save,
           isPrimary: true,
           busy: _saving,
@@ -140,7 +140,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
         mainAxisSize: .min,
         spacing: 14,
         children: [
-          MoodiaryField(
+          MField(
             controller: _urlCtl,
             label: l10n.webdavOptionServer,
             errorText: _urlError,
@@ -148,14 +148,14 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
             keyboardType: .url,
             textInputAction: .next,
           ),
-          MoodiaryField(
+          MField(
             controller: _userCtl,
             label: l10n.webdavOptionUsername,
             errorText: _userError,
             enabled: !_saving,
             textInputAction: .next,
           ),
-          MoodiaryField(
+          MField(
             controller: _passCtl,
             label: l10n.webdavOptionPassword,
             enabled: !_saving,
@@ -163,7 +163,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
             onSubmitted: (_) => _save(),
           ),
           if (_configured)
-            MoodiaryDangerRow(
+            MDangerRow(
               label: l10n.syncConfigClear,
               onPressed: _saving ? null : _clear,
             ),

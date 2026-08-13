@@ -6,7 +6,6 @@ import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
-import 'package:mui/mui.dart';
 
 class CategoryManagerPage extends ConsumerStatefulWidget {
   const CategoryManagerPage({super.key});
@@ -189,7 +188,7 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
   }
 
   Future<void> _onDelete(Category category) async {
-    final confirmed = await showMoodiaryConfirm(
+    final confirmed = await MAlert.confirm(
       context,
       title: '删除分类？',
       message: '"${category.categoryName}" 下若仍有日记将无法删除。本操作不会影响日记本身。',
@@ -324,7 +323,7 @@ class _CategoryTile extends StatelessWidget {
         trailing: Row(
           mainAxisSize: .min,
           children: [
-            MoodiaryMenuButton<String>(
+            MMenuButton<String>(
               tooltip: context.l10n.more,
               onSelected: (key) {
                 switch (key) {
@@ -335,12 +334,12 @@ class _CategoryTile extends StatelessWidget {
                 }
               },
               entries: const [
-                MoodiaryMenuEntry(
+                MMenuEntry(
                   value: 'rename',
                   label: '重命名',
                   icon: LucideIcons.squarePen,
                 ),
-                MoodiaryMenuEntry(
+                MMenuEntry(
                   value: 'delete',
                   label: '删除',
                   icon: LucideIcons.trash2,
@@ -391,12 +390,12 @@ Future<CategoryDraft?> showCategoryEditor(
   // 内容区的实时编辑结果，按钮只负责回答「确认还是取消」。
   final draft = _CategoryDraft(name: initialName, color: initialColor);
   final contentKey = GlobalKey<_CategoryEditorContentState>();
-  final confirmed = await showMoodiaryAlert<bool>(
+  final confirmed = await MAlert.show<bool>(
     context,
     content: _CategoryEditorContent(key: contentKey, draft: draft),
     actions: [
-      MoodiaryAction(label: context.l10n.cancel, value: false),
-      MoodiaryAction(
+      MAction(label: context.l10n.cancel, value: false),
+      MAction(
         label: context.l10n.ok,
         value: true,
         isPrimary: true,

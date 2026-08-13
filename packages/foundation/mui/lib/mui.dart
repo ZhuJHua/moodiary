@@ -11,6 +11,12 @@
 /// 组件层面同理：material 够用的直接用，不够用的才在本包里补，命名一律 `M` 开头。
 library;
 
+// owner 包转发：toast/浮层宿主与图标库由 mui 出，调用方不必各自 import。
+export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+export 'package:lucide_icons_flutter/lucide_icons.dart';
+
+export 'src/components.dart';
+export 'src/l10n/mui_localizations.dart';
 export 'src/themes/build.dart';
 export 'src/themes/color_scheme.dart';
 export 'src/themes/mui_tokens.dart';

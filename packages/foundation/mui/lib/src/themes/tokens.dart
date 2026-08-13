@@ -249,3 +249,15 @@ class MuiStateTokens with MuiValue {
         dragOpacity: lerpDouble(a.dragOpacity, b.dragOpacity, t)!,
       );
 }
+
+/// 编译期常量圆角。数值与 [MuiRadii] 的默认档一致，但那一份是**可按主题配置**的
+/// 运行期值，`const RoundedRectangleBorder(...)` 这类上下文用不了，所以另留一份常量。
+/// 改任一边记得同步。
+abstract final class MuiRadius {
+  static const BorderRadius sm = BorderRadius.all(Radius.circular(8));
+  static const BorderRadius md = BorderRadius.all(Radius.circular(12));
+  static const BorderRadius lg = BorderRadius.all(Radius.circular(16));
+
+  /// 弹窗一类的大面积浮层。比 [lg] 更圆，用来替代 M3 弹窗默认的 28。
+  static const BorderRadius xl = BorderRadius.all(Radius.circular(24));
+}

@@ -19,7 +19,32 @@ dependencies:
   # 纯 Dart 包（唯一依赖 collection），不违反「mui 不碰 material」。
   material_color_utilities: 0.13.0
 
+  # 迁入的组件带来的依赖：toast 走 smart_dialog、下拉刷新走 expressive_refresh、
+  # 视频端口实现要 video_player 与两个系统能力插件。
+  flutter_smart_dialog: 5.1.1
+  expressive_refresh: 0.1.2
+  video_player: 2.14.0
+  screen_brightness: 2.1.11
+  volume_controller: 3.6.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # 仅测试用：zh 语种下 Scaffold/弹窗要 GlobalMaterialLocalizations，
+  # 生产侧由宿主 App 注册。
+  flutter_localizations:
+    sdk: flutter
   moodiary_lint: 0.0.1
+
+flutter:
+  # 和风天气图标字体。跟着 qweather_icon.dart 走：谁用图标谁带字体，
+  # 调用方不需要自己在 pubspec 里再声明一遍。
+  fonts:
+    - family: qweather
+      fonts:
+        - asset: assets/fonts/qweather-icons.ttf
+    # 文件类型角标用的圆角西文字体（Dosis，OFL-1.1，见同目录 Dosis-OFL.txt）。
+    # 可变字体（wght 200–800），字重由 FontVariation 指定，见 file_type_icon.dart。
+    - family: Dosis
+      fonts:
+        - asset: assets/fonts/Dosis.ttf

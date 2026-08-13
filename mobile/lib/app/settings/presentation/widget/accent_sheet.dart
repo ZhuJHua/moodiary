@@ -14,7 +14,7 @@ class AccentSheet extends ConsumerWidget {
   const AccentSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showMoodiarySheet<void>(
+    return MSheet.show<void>(
       context,
       builder: (_) => const AccentSheet(),
     );
@@ -30,7 +30,7 @@ class AccentSheet extends ConsumerWidget {
       ThemeAccentMode.custom,
     ];
 
-    return MoodiarySheetScaffold<void>(
+    return MSheetScaffold<void>(
       title: context.l10n.accentTitle,
       icon: LucideIcons.palette,
       // 选中态自己订阅 KV：弹窗页面被路由缓存（builder 只跑一次），本 widget 若不

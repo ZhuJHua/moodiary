@@ -16,14 +16,14 @@ class _AppLockTileState extends State<AppLockTile> {
   late final Future<bool> _bioSupported = BiometricAuth.canCheckBiometrics();
 
   Future<void> _onTapLock(bool currentlyOn) async {
-    final confirm = await showMoodiaryConfirm(
+    final confirm = await MAlert.confirm(
       context,
       title: '应用锁',
       message: currentlyOn ? '关闭后启动将不再需要密码。' : '开启后，每次启动应用都需要输入密码。',
       confirmLabel: currentlyOn ? '去关闭' : '去设置',
     );
     if (!confirm || !mounted) return;
-    await showMoodiarySheet<void>(
+    await MSheet.show<void>(
       context,
       builder: (_) =>
           currentlyOn ? const RemovePasswordSheet() : const SetPasswordSheet(),
@@ -31,7 +31,7 @@ class _AppLockTileState extends State<AppLockTile> {
   }
 
   Future<void> _changePassword() async {
-    await showMoodiarySheet<void>(
+    await MSheet.show<void>(
       context,
       builder: (_) => const ChangePasswordSheet(),
     );
@@ -120,7 +120,7 @@ class _SheetScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MoodiarySheetScaffold<void>(
+    return MSheetScaffold<void>(
       child: Padding(padding: const .symmetric(vertical: 8), child: child),
     );
   }

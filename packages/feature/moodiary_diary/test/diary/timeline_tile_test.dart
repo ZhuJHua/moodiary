@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';
 import 'package:moodiary_diary/src/presentation/widget/timeline_tile.dart';
 import 'package:moodiary_models/moodiary_models.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons, qweatherIcon;
 import 'package:mui/mui.dart';
 
 final _mui = buildMuiTheme(brightness: Brightness.light);
