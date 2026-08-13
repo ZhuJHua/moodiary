@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_sync/src/application/sync_controller.dart';
 import 'package:moodiary_sync/src/application/sync_stats_controller.dart';
@@ -106,17 +107,25 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
     // 「立即同步 / 停止同步」自行接管点击：同步跑起来后弹窗要留着看进度，不能关。
     MSheetScaffold<String> buildSheet(bool stopping) {
       return MSheetScaffold<String>(
-        title: '同步状态',
+        title: context.l10n.sync.statusTitle,
         // 后端与加密是背景事实不是状态，降到副标题，别跟「同步失败」抢同一级视觉。
-        subtitle: '${backend.type.label} · ${encryption ? '已加密' : '未加密'}',
+        subtitle: context.l10n.sync.statusSubtitle(
+          backend: backend.type.label,
+          encryption: encryption
+              ? context.l10n.sync.encrypted
+              : context.l10n.sync.notEncrypted,
+        ),
         icon: backend.type == .webdav
             ? LucideIcons.cloud
             : LucideIcons.database,
         actions: [
-          const MAction(label: '查看日志', value: _SyncStatusSheet.resultViewLog),
+          MAction(
+            label: context.l10n.sync.viewLog,
+            value: _SyncStatusSheet.resultViewLog,
+          ),
           if (!running)
             MAction(
-              label: '立即同步',
+              label: context.l10n.sync.syncNow,
               isPrimary: true,
               enabled: backend.isReady,
               onPressed: () async {
@@ -132,7 +141,9 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
             )
           else
             MAction(
-              label: stopping ? '正在停止…' : '停止同步',
+              label: stopping
+                  ? context.l10n.sync.stopping
+                  : context.l10n.sync.stop,
               isPrimary: true,
               enabled: !stopping,
               onPressed: () => ref.read(syncControllerProvider.notifier).stop(),
@@ -154,9 +165,9 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Expanded(child: MFormSection('数据概览')),
+                Expanded(child: MFormSection(context.l10n.sync.overview)),
                 IconButton(
-                  tooltip: '刷新数据概览',
+                  tooltip: context.l10n.sync.overviewRefresh,
                   icon: const Icon(LucideIcons.rotateCw),
                   iconSize: 16,
                   visualDensity: .compact,
@@ -208,7 +219,7 @@ class _StateCard extends StatelessWidget {
       _ => null,
     };
     if (remote == null || remote == 0) return null;
-    return '远端有 $remote 篇日记待拉取';
+    return l10n.sync.pendingPull(count: remote);
   }
 
   @override
@@ -256,19 +267,19 @@ class _StateCard extends StatelessWidget {
     return switch (state) {
       SyncSuccess(:final message) => _Line(
         icon: LucideIcons.circleCheck,
-        title: '同步完成',
+        title: l10n.sync.statusDone,
         detail: message,
       ),
       SyncError(:final message) => _Line(
         icon: LucideIcons.triangleAlert,
-        title: '同步失败',
+        title: l10n.sync.statusFailed,
         detail: message,
         warn: true,
       ),
-      _ when !configured => const _Line(
+      _ when !configured => _Line(
         icon: LucideIcons.unplug,
-        title: '未配置同步后端',
-        detail: '去「备份与同步」填一个',
+        title: l10n.sync.statusNoBackend,
+        detail: l10n.sync.statusNoBackendDetail,
         warn: true,
       ),
       _ => ValueListenableBuilder(
@@ -278,14 +289,16 @@ class _StateCard extends StatelessWidget {
                 icon: LucideIcons.circleCheck,
                 // 只说「同步过」这个事实：两侧条目数相等也不代表内容一致，
                 // 差异由下面的对照表用颜色说。
-                title: '已同步',
+                title: l10n.sync.statusSynced,
                 detail:
-                    '上次同步 '
-                    '${TimeFormat.listDateTime(.fromMillisecondsSinceEpoch(millis))}',
+                    l10n.sync.statusLastSync +
+                    TimeFormat.listDateTime(
+                      .fromMillisecondsSinceEpoch(millis),
+                    ),
               )
             : _Line(
                 icon: LucideIcons.clock,
-                title: '尚未同步',
+                title: l10n.sync.statusNever,
                 detail: _pendingHint(),
               ),
       ),
@@ -430,25 +443,30 @@ class _StatsTable extends StatelessWidget {
           child: Row(
             children: [
               const Spacer(),
-              _head(context, '本地'),
-              _head(context, '远端'),
+              _head(context, context.l10n.sync.columnLocal),
+              _head(context, context.l10n.sync.columnRemote),
             ],
           ),
         ),
         _row(
           context,
-          label: '日记',
+          label: context.l10n.sync.rowDiary,
           local: value?.localDiaries,
           remote: value?.remoteDiaries,
         ),
         _row(
           context,
-          label: '分类',
+          label: context.l10n.sync.rowCategory,
           local: value?.localCategories,
           remote: value?.remoteCategories,
         ),
         // 本地媒体没有统计口径（SyncStats 只数日记与分类），宁可留空也不编。
-        _row(context, label: '媒体', local: null, remote: value?.remoteMedia),
+        _row(
+          context,
+          label: context.l10n.sync.rowMedia,
+          local: null,
+          remote: value?.remoteMedia,
+        ),
         if (error != null)
           Padding(
             padding: const .fromLTRB(16, 8, 16, 0),

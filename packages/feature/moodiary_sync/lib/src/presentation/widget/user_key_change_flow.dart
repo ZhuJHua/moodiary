@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/application/re_cipher.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
@@ -55,7 +56,7 @@ Future<bool> applyUserKeyChange({
       }
     }
     if (context.mounted) {
-      toast.success(message: '密码已更换（数据密钥不变，云端无需重新加密）');
+      toast.success(message: l10n.sync.keyChanged);
     }
     return true;
   }
@@ -76,9 +77,9 @@ Future<bool> applyUserKeyChange({
       if (!context.mounted) return false;
       final confirmed = await MAlert.confirm(
         context,
-        title: '加密云端已有数据',
-        message: '检测到当前同步后端已存在数据。确认后会生成随机数据密钥并加密云端的日记、分类与媒体文件；该密钥由你的密码封装存放在云端。',
-        confirmLabel: '继续',
+        title: l10n.sync.keyEncryptCloudTitle,
+        message: l10n.sync.keyEncryptCloudMessage,
+        confirmLabel: l10n.sync.keyContinue,
         barrierDismissible: false,
       );
       if (!confirmed) return false;
@@ -99,7 +100,7 @@ Future<bool> applyUserKeyChange({
         if (id != null) await SyncKeyManager.clearPendingUpload(id);
       } catch (e) {
         if (context.mounted) {
-          toast.error(message: '密钥文件写入云端失败，已取消：$e');
+          toast.error(message: l10n.sync.keyWriteFailed(error: '$e'));
         }
         return false;
       }
@@ -118,10 +119,10 @@ Future<bool> applyUserKeyChange({
         to: .withKey(newDek),
       );
       if (report != null && context.mounted) {
-        toast.success(message: '云端已加密：$report');
+        toast.success(message: l10n.sync.keyCloudEncrypted(report: report));
       }
     } else if (context.mounted) {
-      toast.success(message: '加密已开启');
+      toast.success(message: l10n.sync.keyEncryptionOn);
     }
     return true;
   }
@@ -130,9 +131,9 @@ Future<bool> applyUserKeyChange({
   if (!context.mounted) return false;
   final confirmed = await MAlert.confirm(
     context,
-    title: '解密云端数据',
-    message: '关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？',
-    confirmLabel: '继续',
+    title: l10n.sync.keyDecryptTitle,
+    message: l10n.sync.keyDecryptMessage,
+    confirmLabel: l10n.sync.keyContinue,
     barrierDismissible: false,
   );
   if (!confirmed) return false;
@@ -159,7 +160,7 @@ Future<bool> applyUserKeyChange({
   }
   await SyncKeyManager.clearDek();
   ref.invalidate(syncDekControllerProvider);
-  if (context.mounted) toast.success(message: '加密已关闭');
+  if (context.mounted) toast.success(message: l10n.sync.keyEncryptionOff);
   return true;
 }
 
@@ -194,11 +195,15 @@ Future<ReCipherReport?> _runWithProgress(
 
   if (result == null) return null;
   if (result.error != null) {
-    if (context.mounted) toast.error(message: '重新加密失败：${result.error}');
+    if (context.mounted) {
+      toast.error(
+        message: l10n.sync.keyReCipherFailed(error: '${result.error}'),
+      );
+    }
     return null;
   }
   if (result.report == null) {
-    if (context.mounted) toast.info(message: '远端为空，仅保存本地密钥');
+    if (context.mounted) toast.info(message: l10n.sync.keyRemoteEmpty);
   }
   return result.report;
 }
@@ -215,7 +220,7 @@ class _RecipherDialog extends StatefulWidget {
 class _RecipherDialogState extends State<_RecipherDialog> {
   int _done = 0;
   int _total = 0;
-  String _label = '准备';
+  String _label = l10n.sync.keyPreparing;
 
   @override
   void initState() {
@@ -246,7 +251,7 @@ class _RecipherDialogState extends State<_RecipherDialog> {
     return PopScope(
       canPop: false,
       child: AlertDialog(
-        title: const Text('正在处理云端数据'),
+        title: Text(context.l10n.sync.keyProcessing),
         content: Column(
           mainAxisSize: .min,
           crossAxisAlignment: .stretch,

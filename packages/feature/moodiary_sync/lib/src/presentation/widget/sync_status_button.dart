@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/application/sync_controller.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_status_sheet.dart';
 import 'package:mui/mui.dart';
@@ -12,7 +13,9 @@ class SyncStatusButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final running = ref.watch(syncControllerProvider) is SyncRunning;
     return IconButton(
-      tooltip: running ? '正在同步' : '同步状态',
+      tooltip: running
+          ? context.l10n.sync.statusRunning
+          : context.l10n.sync.statusTitle,
       icon: running
           ? const SizedBox(
               width: 18,

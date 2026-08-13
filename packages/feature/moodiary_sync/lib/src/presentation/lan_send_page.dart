@@ -1,4 +1,5 @@
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/lan/lan_discovery.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/lan/lan_sender.dart';
@@ -52,11 +53,11 @@ class _LanSendPageState extends State<LanSendPage> {
     final target = _hostController.text.trim();
     final pin = _pinController.text.trim();
     if (target.isEmpty) {
-      toast.info(message: '请先选择接收设备');
+      toast.info(message: l10n.sync.lanPickDevice);
       return;
     }
     if (pin.length != 6) {
-      toast.info(message: '请输入 6 位配对码');
+      toast.info(message: l10n.sync.lanNeedPin);
       return;
     }
     final String host;
@@ -66,7 +67,7 @@ class _LanSendPageState extends State<LanSendPage> {
       host = target.substring(0, colonIdx);
       final parsed = int.tryParse(target.substring(colonIdx + 1));
       if (parsed == null || parsed <= 0 || parsed > 65535) {
-        toast.info(message: '地址格式不正确');
+        toast.info(message: l10n.sync.lanBadAddress);
         return;
       }
       port = parsed;
@@ -115,16 +116,16 @@ class _LanSendPageState extends State<LanSendPage> {
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
     return Scaffold(
-      appBar: AppBar(title: const Text('局域网发送')),
+      appBar: AppBar(title: Text(context.l10n.sync.lanSendTitle)),
       body: ListView(
         padding: const .fromLTRB(20, 8, 20, 32),
         children: [
           Text(
-            '只发送对方缺少的内容，按最后修改时间自动合并，重复发送不会产生重复数据。',
+            context.l10n.sync.lanSendIntro,
             style: context.theme.typography.bodySmall.onSurfaceVariant,
           ),
           const SizedBox(height: 20),
-          _sectionLabel(context, '附近的设备'),
+          _sectionLabel(context, context.l10n.sync.lanNearbyDevices),
           ValueListenableBuilder(
             valueListenable: _browser.peers,
             builder: (context, peers, _) => _PeerList(
@@ -136,13 +137,13 @@ class _LanSendPageState extends State<LanSendPage> {
             ),
           ),
           const SizedBox(height: 20),
-          _sectionLabel(context, '接收方地址'),
+          _sectionLabel(context, context.l10n.sync.lanReceiverAddress),
           TextField(
             controller: _hostController,
             enabled: !_running,
             keyboardType: .url,
             decoration: InputDecoration(
-              hintText: '选择上方设备后自动填写',
+              hintText: context.l10n.sync.lanAddressHint,
               prefixIcon: const Icon(LucideIcons.network),
               filled: true,
               fillColor: scheme.surfaceContainerHigh,
@@ -157,12 +158,12 @@ class _LanSendPageState extends State<LanSendPage> {
             ),
           ),
           const SizedBox(height: 20),
-          _sectionLabel(context, '配对码'),
+          _sectionLabel(context, context.l10n.sync.lanPin),
           LanPinInput(controller: _pinController, enabled: !_running),
           const SizedBox(height: 6),
           Center(
             child: Text(
-              '输入接收页显示的 6 位数字',
+              context.l10n.sync.lanPinHint,
               style: context.theme.typography.bodySmall.outline,
             ),
           ),
@@ -175,7 +176,7 @@ class _LanSendPageState extends State<LanSendPage> {
                 shape: RoundedRectangleBorder(borderRadius: .circular(16)),
               ),
               icon: const Icon(LucideIcons.send),
-              label: const Text('发送'),
+              label: Text(context.l10n.sync.lanSendAction),
             ),
           ),
           const SizedBox(height: 20),
@@ -230,7 +231,7 @@ class _PeerList extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '正在搜索，请在接收设备上打开「接收」页',
+                context.l10n.sync.lanSearching,
                 style: context.theme.typography.bodySmall.onSurfaceVariant,
               ),
             ),
@@ -357,10 +358,10 @@ class _ProgressCard extends StatelessWidget {
     final typography = context.theme.typography;
     final phase = progress?.phase ?? .connecting;
     final label = switch (phase) {
-      .connecting => '正在连接…',
-      .packing => '正在准备数据…',
-      .uploading => '正在发送',
-      .applying => '等待对方保存…',
+      .connecting => context.l10n.sync.lanConnecting,
+      .packing => context.l10n.sync.lanPacking,
+      .uploading => context.l10n.sync.lanUploading,
+      .applying => context.l10n.sync.lanApplying,
     };
     final sent = progress?.sent ?? 0;
     final total = progress?.total;

@@ -90,7 +90,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
     }
     final picked = await MSheet.picker<DateTime>(
       context,
-      title: '选择日期',
+      title: l10n.sync.logPickDate,
       icon: LucideIcons.calendarDays,
       selected: selected,
       options: [
@@ -98,7 +98,8 @@ class _SyncLogPageState extends State<SyncLogPage> {
           MSheetOption(
             value: day,
             label:
-                TimeFormat.isoDate(day) + (_sameDay(day, today) ? '（今天）' : ''),
+                TimeFormat.isoDate(day) +
+                (_sameDay(day, today) ? l10n.sync.logTodaySuffix : ''),
             icon: _sameDay(day, today)
                 ? LucideIcons.calendarCheck
                 : LucideIcons.calendarDays,
@@ -113,9 +114,9 @@ class _SyncLogPageState extends State<SyncLogPage> {
   Future<void> _onClearLogs() async {
     final confirmed = await MAlert.confirm(
       context,
-      title: '清空日志',
-      message: '将删除内存中的事件流和按天滚动的所有 jsonl 文件，操作不可恢复。',
-      confirmLabel: '清空',
+      title: l10n.sync.logClear,
+      message: l10n.sync.logClearMessage,
+      confirmLabel: l10n.diary.recycleClearConfirm,
       isDestructive: true,
     );
     if (!confirmed) return;
@@ -128,15 +129,15 @@ class _SyncLogPageState extends State<SyncLogPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('同步日志'),
+        title: Text(context.l10n.sync.logTitle),
         actions: [
           IconButton(
-            tooltip: '按日期筛选',
+            tooltip: context.l10n.sync.logFilterByDate,
             icon: const Icon(LucideIcons.calendarDays),
             onPressed: _pickDay,
           ),
           IconButton(
-            tooltip: '清空日志',
+            tooltip: context.l10n.sync.logClear,
             icon: const Icon(LucideIcons.eraser),
             onPressed: _onClearLogs,
           ),
@@ -150,13 +151,15 @@ class _SyncLogPageState extends State<SyncLogPage> {
             child: Row(
               children: [
                 Text(
-                  _viewingToday ? '今天' : TimeFormat.isoDate(_selectedDay),
+                  _viewingToday
+                      ? context.l10n.sync.logToday
+                      : TimeFormat.isoDate(_selectedDay),
                   style: context.theme.typography.labelLarge.onSurfaceVariant,
                 ),
                 const Spacer(),
                 if (!_loading)
                   Text(
-                    '${_events.length} 条',
+                    context.l10n.sync.logEventCount(count: _events.length),
                     style: context.theme.typography.bodySmall.outline,
                   ),
               ],
@@ -190,7 +193,7 @@ class _EventList extends StatelessWidget {
             Icon(LucideIcons.cloudSync, size: 40, color: scheme.outline),
             const SizedBox(height: 12),
             Text(
-              '该日期暂无同步事件',
+              context.l10n.sync.logEmpty,
               textAlign: .center,
               style: context.theme.typography.bodyMedium.onSurfaceVariant,
             ),
@@ -246,29 +249,30 @@ const _kindIcon = <SyncEventKind, IconData>{
   .error: LucideIcons.circleAlert,
 };
 
-const _kindLabel = <SyncEventKind, String>{
-  .syncStart: '同步开始',
-  .syncEnd: '同步结束',
-  .manifestRead: '读取清单',
-  .manifestWrite: '写回清单',
-  .diaryUpload: '上传日记',
-  .diaryDownload: '下载日记',
-  .diarySkip: '跳过日记',
-  .diaryTombstonePush: '推送日记删除',
-  .diaryTombstonePull: '同步日记删除',
-  .categoryUpload: '上传分类',
-  .categoryDownload: '下载分类',
-  .categorySkip: '跳过分类',
-  .categoryTombstonePush: '推送分类删除',
-  .categoryTombstonePull: '同步分类删除',
-  .mediaUpload: '上传媒体',
-  .mediaDownload: '下载媒体',
-  .mediaSkip: '跳过媒体',
-  .mediaDelete: '删除媒体',
-  .lockAcquire: '获取同步锁',
-  .lockRelease: '释放同步锁',
-  .error: '错误',
-};
+Map<SyncEventKind, String> _kindLabel(Translations l10n) =>
+    <SyncEventKind, String>{
+      .syncStart: l10n.sync.kindSyncStart,
+      .syncEnd: l10n.sync.kindSyncEnd,
+      .manifestRead: l10n.sync.kindManifestRead,
+      .manifestWrite: l10n.sync.kindManifestWrite,
+      .diaryUpload: l10n.sync.kindDiaryUpload,
+      .diaryDownload: l10n.sync.kindDiaryDownload,
+      .diarySkip: l10n.sync.kindDiarySkip,
+      .diaryTombstonePush: l10n.sync.kindDiaryTombstonePush,
+      .diaryTombstonePull: l10n.sync.kindDiaryTombstonePull,
+      .categoryUpload: l10n.sync.kindCategoryUpload,
+      .categoryDownload: l10n.sync.kindCategoryDownload,
+      .categorySkip: l10n.sync.kindCategorySkip,
+      .categoryTombstonePush: l10n.sync.kindCategoryTombstonePush,
+      .categoryTombstonePull: l10n.sync.kindCategoryTombstonePull,
+      .mediaUpload: l10n.sync.kindMediaUpload,
+      .mediaDownload: l10n.sync.kindMediaDownload,
+      .mediaSkip: l10n.sync.kindMediaSkip,
+      .mediaDelete: l10n.sync.kindMediaDelete,
+      .lockAcquire: l10n.sync.kindLockAcquire,
+      .lockRelease: l10n.sync.kindLockRelease,
+      .error: l10n.sync.kindError,
+    };
 
 class _EventGroupTile extends StatefulWidget {
   /// 同 kind 的连续事件，最新在前。
@@ -322,7 +326,10 @@ class _EventGroupTileState extends State<_EventGroupTile> {
         child: Icon(LucideIcons.chevronDown, size: 20, color: scheme.outline),
       ),
       title: Text(
-        '${_kindLabel[kind] ?? kind.name} · ${events.length} 条',
+        context.l10n.sync.logGroupCount(
+          kind: _kindLabel(context.l10n)[kind] ?? kind.name,
+          count: events.length,
+        ),
         style: hasError
             ? typography.bodyMedium.error
             : typography.bodyMedium.onSurface,
@@ -418,17 +425,17 @@ class _EventTile extends StatelessWidget {
     MSheet.show<void>(
       context,
       builder: (ctx) => MSheetScaffold<void>(
-        title: '事件详情',
+        title: l10n.sync.logDetail,
         subtitle: event.kind.name,
         icon: LucideIcons.fileJson,
         actions: [
           MAction(
-            label: '复制',
+            label: l10n.sync.logCopy,
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: pretty));
               if (!ctx.mounted) return;
               Navigator.of(ctx).pop();
-              toast.success(message: '已复制到剪贴板');
+              toast.success(message: l10n.share.copied);
             },
           ),
           MAction(label: ctx.l10n.common.ok, isPrimary: true),

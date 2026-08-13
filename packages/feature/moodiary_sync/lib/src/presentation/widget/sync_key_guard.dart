@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/application/user_key_controller.dart';
 import 'package:moodiary_sync/src/data/codec.dart';
 import 'package:moodiary_sync/src/data/model/manifest.dart';
@@ -59,7 +60,7 @@ Future<bool> ensureSyncKeyReady({
   }
   if (keyfile == null) {
     if (context.mounted) {
-      toast.error(message: '远端数据已加密但缺少密钥文件（keys.json），无法解密。请清空远端数据后重新上传。');
+      toast.error(message: l10n.sync.keyGuardMissing);
     }
     return false;
   }
@@ -68,17 +69,17 @@ Future<bool> ensureSyncKeyReady({
   List<int>? unwrappedDek;
   final entered = await MAlert.prompt(
     context,
-    title: '远端备份已加密',
+    title: l10n.sync.keyGuardTitle,
     message: hasLocalKey
-        ? '当前设备的密钥无法解密远端数据。请输入与原设备一致的加密密码，验证通过后开始同步。'
-        : '远端数据已加密。请输入与原设备一致的加密密码，验证通过后开始同步。',
-    hintText: '加密密码',
-    confirmLabel: '验证并保存',
+        ? l10n.sync.keyGuardMessageMismatch
+        : l10n.sync.keyGuardMessage,
+    hintText: l10n.sync.keyGuardHint,
+    confirmLabel: l10n.sync.keyGuardConfirm,
     obscureText: true,
     // 保持 trim：旧实现校验与落盘用的都是 trim 后的串，改成原文会让首尾带空格的
     // 密码解不开已有的 keyfile。
     barrierDismissible: false,
-    validator: (value) => value.isEmpty ? '请输入密码' : null,
+    validator: (value) => value.isEmpty ? l10n.sync.keyNeedPassword : null,
     onSubmit: (passphrase) async {
       try {
         final dek = await SyncKeyManager.unwrapDek(
@@ -90,7 +91,7 @@ Future<bool> ensureSyncKeyReady({
         unwrappedDek = dek;
         return null;
       } catch (_) {
-        return '密码不正确，无法解密远端数据';
+        return l10n.sync.keyGuardWrong;
       }
     },
   );
@@ -103,6 +104,6 @@ Future<bool> ensureSyncKeyReady({
   final backendId = backend.persistentBackendId;
   if (backendId != null) await SyncKeyManager.clearPendingUpload(backendId);
   ref.invalidate(syncDekControllerProvider);
-  toast.success(message: '密钥已配置');
+  toast.success(message: l10n.sync.keyConfigured);
   return true;
 }

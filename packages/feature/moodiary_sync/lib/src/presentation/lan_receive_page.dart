@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/lan/lan_discovery.dart';
 import 'package:moodiary_sync/src/data/lan/lan_protocol.dart';
 import 'package:moodiary_sync/src/data/lan/lan_receiver.dart';
@@ -41,7 +42,7 @@ class _LanReceivePageState extends State<LanReceivePage> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _startError = '无法启动接收：$e');
+      setState(() => _startError = l10n.sync.lanStartFailed(error: '$e'));
     }
   }
 
@@ -60,7 +61,7 @@ class _LanReceivePageState extends State<LanReceivePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('局域网接收')),
+      appBar: AppBar(title: Text(context.l10n.sync.lanReceiveTitle)),
       body: _startError != null
           ? Center(
               child: Padding(
@@ -84,7 +85,7 @@ class _LanReceivePageState extends State<LanReceivePage> {
                   const SizedBox(height: 28),
                   Center(
                     child: Text(
-                      '配对码',
+                      context.l10n.sync.lanPin,
                       style:
                           context.theme.typography.labelLarge.onSurfaceVariant,
                     ),
@@ -92,12 +93,13 @@ class _LanReceivePageState extends State<LanReceivePage> {
                   const SizedBox(height: 10),
                   LanPinBoxes(
                     pin: _service.pin,
-                    onTap: () => _copy(_service.pin, '配对码已复制'),
+                    onTap: () =>
+                        _copy(_service.pin, context.l10n.sync.lanPinCopied),
                   ),
                   const SizedBox(height: 6),
                   Center(
                     child: Text(
-                      '在发送设备上输入 · 轻点复制',
+                      context.l10n.sync.lanPinHelp,
                       style: context.theme.typography.bodySmall.outline,
                     ),
                   ),
@@ -105,7 +107,8 @@ class _LanReceivePageState extends State<LanReceivePage> {
                   _AddressCard(
                     ips: _ips,
                     port: _service.port,
-                    onCopy: (address) => _copy(address, '地址已复制'),
+                    onCopy: (address) =>
+                        _copy(address, context.l10n.sync.lanAddressCopied),
                   ),
                 ],
               ),
@@ -145,10 +148,15 @@ class _StatusLine extends StatelessWidget {
 
   static String _summary(SyncReport report) {
     if (report.diaryCount == 0 && report.categoryCount == 0) {
-      return '内容已是最新，没有变更';
+      return l10n.sync.lanUpToDate;
     }
-    final base = '日记 ${report.diaryCount} 条 · 分类 ${report.categoryCount} 条';
-    return report.failed > 0 ? '$base（${report.failed} 条失败）' : base;
+    final base = l10n.sync.lanReceived(
+      diary: report.diaryCount,
+      category: report.categoryCount,
+    );
+    return report.failed > 0
+        ? l10n.sync.lanReceivedFailed(base: base, failed: report.failed)
+        : base;
   }
 
   @override
@@ -156,14 +164,17 @@ class _StatusLine extends StatelessWidget {
     final typography = context.theme.typography;
     final child = switch (state) {
       LanReceiveWaiting() => Text(
-        '等待发送方连接…',
+        context.l10n.sync.lanWaiting,
         key: const ValueKey('waiting'),
         style: typography.titleMedium.onSurface,
       ),
       LanReceiveReceiving(:final received, :final total) => Column(
         key: const ValueKey('receiving'),
         children: [
-          Text('正在接收', style: typography.titleMedium.onSurface),
+          Text(
+            context.l10n.sync.lanReceiving,
+            style: typography.titleMedium.onSurface,
+          ),
           const SizedBox(height: 12),
           SizedBox(
             width: 220,
@@ -183,14 +194,17 @@ class _StatusLine extends StatelessWidget {
         ],
       ),
       LanReceiveImporting() => Text(
-        '正在保存…',
+        context.l10n.sync.lanSaving,
         key: const ValueKey('importing'),
         style: typography.titleMedium.onSurface,
       ),
       LanReceiveDone(:final report) => Column(
         key: const ValueKey('done'),
         children: [
-          Text('接收完成', style: typography.titleMedium.onSurface),
+          Text(
+            context.l10n.sync.lanDone,
+            style: typography.titleMedium.onSurface,
+          ),
           const SizedBox(height: 6),
           Text(
             _summary(report),
@@ -198,17 +212,26 @@ class _StatusLine extends StatelessWidget {
             style: typography.bodyMedium.onSurfaceVariant,
           ),
           const SizedBox(height: 4),
-          Text('可继续接收，配对码不变', style: typography.bodySmall.outline),
+          Text(
+            context.l10n.sync.lanDoneHint,
+            style: typography.bodySmall.outline,
+          ),
         ],
       ),
       LanReceiveFailed(:final message) => Column(
         key: const ValueKey('failed'),
         children: [
-          Text('接收失败', style: typography.titleMedium.error),
+          Text(
+            context.l10n.sync.lanFailed,
+            style: typography.titleMedium.error,
+          ),
           const SizedBox(height: 6),
           Text(message, textAlign: .center, style: typography.bodySmall.error),
           const SizedBox(height: 4),
-          Text('配对码不变，对方可直接重试', style: typography.bodySmall.outline),
+          Text(
+            context.l10n.sync.lanFailedHint,
+            style: typography.bodySmall.outline,
+          ),
         ],
       ),
     };
@@ -243,10 +266,16 @@ class _AddressCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: .start,
         children: [
-          Text('本机地址', style: typography.labelLarge.onSurfaceVariant),
+          Text(
+            context.l10n.sync.lanLocalAddress,
+            style: typography.labelLarge.onSurfaceVariant,
+          ),
           const SizedBox(height: 10),
           if (ips.isEmpty)
-            Text('未连接 Wi-Fi，无法获取本机地址', style: typography.bodyMedium.error)
+            Text(
+              context.l10n.sync.lanNoWifi,
+              style: typography.bodyMedium.error,
+            )
           else
             Wrap(
               spacing: 8,
@@ -261,7 +290,7 @@ class _AddressCard extends StatelessWidget {
             ),
           const SizedBox(height: 10),
           Text(
-            '发送方通常会自动发现本机，也可手动输入上方地址。接收期间请保持本页打开。',
+            context.l10n.sync.lanReceiveHint,
             style: typography.bodySmall.outline,
           ),
         ],

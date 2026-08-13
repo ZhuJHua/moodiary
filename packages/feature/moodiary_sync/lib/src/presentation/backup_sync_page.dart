@@ -23,17 +23,17 @@ class BackupSyncPage extends ConsumerWidget {
     ref.listen<SyncState>(syncControllerProvider, (prev, next) {
       switch (next) {
         case SyncSuccess(:final message):
-          toast.success(message: '完成：$message');
+          toast.success(message: l10n.sync.doneToast(message: message));
           ref.read(syncControllerProvider.notifier).reset();
         case SyncError(:final message):
-          toast.error(message: '失败：$message');
+          toast.error(message: l10n.sync.failedToast(message: message));
           ref.read(syncControllerProvider.notifier).reset();
         default:
       }
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('备份与同步')),
+      appBar: AppBar(title: Text(context.l10n.sync.pageTitle)),
       body: ListView(
         padding: const .symmetric(horizontal: 8, vertical: 8),
         children: const [
@@ -70,16 +70,16 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
   Future<void> _testConnection() async {
     final backend = IRemoteSyncBackend.get();
     if (!backend.isReady) {
-      toast.info(message: '请先完成配置');
+      toast.info(message: l10n.sync.configureFirst);
       return;
     }
-    toast.loading(message: '正在测试连接...');
+    toast.loading(message: l10n.sync.testing);
     final err = await backend.testConnection();
     await toast.dismiss();
     if (err == null) {
-      toast.success(message: '连接成功');
+      toast.success(message: l10n.sync.connectOk);
     } else {
-      toast.error(message: '连接失败：$err');
+      toast.error(message: l10n.sync.connectFailed(error: err));
     }
   }
 
@@ -92,7 +92,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '云端同步'),
+        SettingTitleTile(title: context.l10n.sync.cloudSection),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -100,7 +100,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
             children: [
               SettingListTile(
                 isFirst: true,
-                title: '同步方式',
+                title: context.l10n.sync.method,
                 leading: const Icon(LucideIcons.arrowRightLeft),
                 trailing: Text(
                   current.label,
@@ -109,11 +109,13 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                 onTap: () => _pickProvider(context, current),
               ),
               SettingListTile(
-                title: '${current.label} 配置',
+                title: context.l10n.sync.methodConfig(name: current.label),
                 leading: Icon(
                   current == .webdav ? LucideIcons.cloud : LucideIcons.database,
                 ),
-                subtitle: configured ? '已配置' : '未配置（点击设置）',
+                subtitle: configured
+                    ? context.l10n.common.configured
+                    : context.l10n.sync.notConfiguredTap,
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () async {
                   final ok = current == .webdav
@@ -131,7 +133,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                 },
               ),
               SettingListTile(
-                title: '测试连接',
+                title: context.l10n.sync.testConnection,
                 leading: const Icon(LucideIcons.plugZap),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: configured ? _testConnection : null,
@@ -146,8 +148,12 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                       valueListenable: SyncCancellation.instance.listenable,
                       builder: (context, stopping, _) {
                         return SettingListTile(
-                          title: stopping ? '正在停止…' : '停止同步',
-                          subtitle: stopping ? '等待当前条目完成后收尾' : '正在后台同步，点击停止',
+                          title: stopping
+                              ? context.l10n.sync.stopping
+                              : context.l10n.sync.stop,
+                          subtitle: stopping
+                              ? context.l10n.sync.stoppingSubtitle
+                              : context.l10n.sync.stopSubtitle,
                           leading: const Icon(LucideIcons.circleStop),
                           trailing: const SizedBox(
                             width: 16,
@@ -160,17 +166,21 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
                                   ref
                                       .read(syncControllerProvider.notifier)
                                       .stop();
-                                  toast.info(message: '将在当前条目完成后停止');
+                                  toast.info(message: l10n.sync.willStop);
                                 },
                         );
                       },
                     );
                   }
                   return SettingListTile(
-                    title: '立即同步',
+                    title: context.l10n.sync.syncNow,
                     subtitle: millis > 0
-                        ? '上次同步：${TimeFormat.listDateTime(.fromMillisecondsSinceEpoch(millis))}'
-                        : '尚未同步',
+                        ? context.l10n.sync.lastSync(
+                            time: TimeFormat.listDateTime(
+                              .fromMillisecondsSinceEpoch(millis),
+                            ),
+                          )
+                        : context.l10n.sync.neverSynced,
                     leading: const Icon(LucideIcons.refreshCw),
                     trailing: const Icon(LucideIcons.chevronRight),
                     onTap: configured
@@ -193,8 +203,8 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
               ),
               SettingListTile(
                 isLast: true,
-                title: '同步日志',
-                subtitle: '按日期查看同步事件',
+                title: context.l10n.sync.logEntry,
+                subtitle: context.l10n.sync.logEntrySubtitle,
                 leading: const Icon(LucideIcons.history),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => const SyncLogRoute().push(context),
@@ -212,7 +222,7 @@ class _RemoteSectionState extends ConsumerState<_RemoteSection> {
   ) async {
     final picked = await MSheet.picker<SyncProviderType>(
       context,
-      title: '同步方式',
+      title: l10n.sync.method,
       icon: LucideIcons.arrowRightLeft,
       selected: current,
       options: [
@@ -234,7 +244,7 @@ class _LanSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '局域网同步'),
+        SettingTitleTile(title: context.l10n.sync.lanSection),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -242,16 +252,16 @@ class _LanSection extends StatelessWidget {
             children: [
               SettingListTile(
                 isFirst: true,
-                title: '发送',
-                subtitle: '发送日记到同一 Wi-Fi 下的设备',
+                title: context.l10n.sync.lanSend,
+                subtitle: context.l10n.sync.lanSendSubtitle,
                 leading: const Icon(LucideIcons.radioTower),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => const LanSendRoute().push(context),
               ),
               SettingListTile(
                 isLast: true,
-                title: '接收',
-                subtitle: '等待其它设备发送到本机',
+                title: context.l10n.sync.lanReceive,
+                subtitle: context.l10n.sync.lanReceiveSubtitle,
                 leading: const Icon(LucideIcons.wifi),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => const LanReceiveRoute().push(context),
@@ -273,7 +283,7 @@ class _EncryptionSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '加密'),
+        SettingTitleTile(title: context.l10n.sync.encryptionSection),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -295,10 +305,12 @@ class _AutoSyncSection extends StatelessWidget {
   static const int _frequentThreshold = 30;
 
   static String _fmtInterval(int seconds) {
-    if (seconds < 60) return '$seconds 秒';
+    if (seconds < 60) return l10n.sync.seconds(count: seconds);
     final m = seconds ~/ 60;
     final s = seconds % 60;
-    return s == 0 ? '$m 分钟' : '$m 分 $s 秒';
+    return s == 0
+        ? l10n.sync.minutes(count: m)
+        : l10n.sync.minutesSeconds(minutes: m, seconds: s);
   }
 
   @override
@@ -307,7 +319,7 @@ class _AutoSyncSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '自动同步'),
+        SettingTitleTile(title: context.l10n.sync.autoSection),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -318,8 +330,8 @@ class _AutoSyncSection extends StatelessWidget {
                 children: [
                   SettingSwitchListTile(
                     isFirst: true,
-                    title: '自动同步',
-                    subtitle: '日记变更后自动推送，并定时拉取其它设备的变更',
+                    title: context.l10n.sync.autoSync,
+                    subtitle: context.l10n.sync.autoSyncSubtitle,
                     secondary: const Icon(LucideIcons.refreshCw),
                     value: enabled,
                     onChanged: (v) => MoodiaryKVs.autoSync.set(v),
@@ -329,8 +341,8 @@ class _AutoSyncSection extends StatelessWidget {
                     builder: (context, seconds, _) {
                       return SettingListTile(
                         isLast: true,
-                        title: '轮询间隔',
-                        subtitle: '每隔此时间在后台拉取其它设备的变更',
+                        title: context.l10n.sync.pollInterval,
+                        subtitle: context.l10n.sync.pollIntervalSubtitle,
                         leading: const Icon(LucideIcons.timer),
                         trailing: Text(
                           _fmtInterval(seconds),
@@ -371,7 +383,7 @@ class _AutoSyncSection extends StatelessWidget {
           final seconds = _pollPresets[index];
           final tooFrequent = seconds < _frequentThreshold;
           return MSheetScaffold<int>(
-            title: '轮询间隔',
+            title: l10n.sync.pollInterval,
             subtitle: _fmtInterval(seconds),
             icon: LucideIcons.timer,
             actions: [
@@ -387,10 +399,7 @@ class _AutoSyncSection extends StatelessWidget {
               crossAxisAlignment: .start,
               children: [
                 Text(
-                  '每隔此时间在后台跑一次双向同步。间隔越短，与其它设备的变更同步越及时；'
-                  '但每次轮询都会抢占远端锁、读取清单并发起网络请求 —— 间隔过短会显著'
-                  '增加流量与耗电，还可能触发 WebDAV / S3 服务端限流甚至临时封禁。'
-                  '建议不低于 30 秒。',
+                  l10n.sync.pollIntervalNote,
                   style: tooFrequent
                       ? ctx.theme.typography.bodySmall.error
                       : ctx.theme.typography.bodySmall.onSurfaceVariant,
@@ -422,7 +431,7 @@ class _NetworkSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '网络'),
+        SettingTitleTile(title: context.l10n.sync.networkSection),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -432,8 +441,8 @@ class _NetworkSection extends StatelessWidget {
               return SettingListTile(
                 isFirst: true,
                 isLast: true,
-                title: '并发请求数',
-                subtitle: '同步时同时进行的网络请求上限，弱网或服务端限流时调小',
+                title: context.l10n.sync.concurrency,
+                subtitle: context.l10n.sync.concurrencySubtitle,
                 leading: const Icon(LucideIcons.server),
                 trailing: Text(
                   '$value',
@@ -455,7 +464,7 @@ class _NetworkSection extends StatelessWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
           return MSheetScaffold<int>(
-            title: '并发请求数',
+            title: l10n.sync.concurrency,
             subtitle: '${value.round()}',
             icon: LucideIcons.server,
             actions: [
@@ -471,7 +480,7 @@ class _NetworkSection extends StatelessWidget {
               crossAxisAlignment: .start,
               children: [
                 Text(
-                  '默认 8。值越大同步越快，但可能触发 WebDAV / S3 服务端限流或连接拒绝。',
+                  l10n.sync.concurrencyNote,
                   style: ctx.theme.typography.bodySmall.onSurfaceVariant,
                 ),
                 Slider(

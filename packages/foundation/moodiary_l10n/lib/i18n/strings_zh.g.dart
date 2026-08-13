@@ -2038,6 +2038,507 @@ class Translations$sync$zh {
 
 	/// zh: '地址格式不正确'
 	String get fieldInvalidUrl => '地址格式不正确';
+
+	/// zh: '备份与同步'
+	String get pageTitle => '备份与同步';
+
+	/// zh: '云端同步'
+	String get cloudSection => '云端同步';
+
+	/// zh: '同步方式'
+	String get method => '同步方式';
+
+	/// zh: '{name} 配置'
+	String methodConfig({required Object name}) => '${name} 配置';
+
+	/// zh: '未配置（点击设置）'
+	String get notConfiguredTap => '未配置（点击设置）';
+
+	/// zh: '测试连接'
+	String get testConnection => '测试连接';
+
+	/// zh: '正在测试连接...'
+	String get testing => '正在测试连接...';
+
+	/// zh: '连接成功'
+	String get connectOk => '连接成功';
+
+	/// zh: '连接失败：{error}'
+	String connectFailed({required Object error}) => '连接失败：${error}';
+
+	/// zh: '请先完成配置'
+	String get configureFirst => '请先完成配置';
+
+	/// zh: '完成：{message}'
+	String doneToast({required Object message}) => '完成：${message}';
+
+	/// zh: '失败：{message}'
+	String failedToast({required Object message}) => '失败：${message}';
+
+	/// zh: '正在停止…'
+	String get stopping => '正在停止…';
+
+	/// zh: '停止同步'
+	String get stop => '停止同步';
+
+	/// zh: '等待当前条目完成后收尾'
+	String get stoppingSubtitle => '等待当前条目完成后收尾';
+
+	/// zh: '正在后台同步，点击停止'
+	String get stopSubtitle => '正在后台同步，点击停止';
+
+	/// zh: '将在当前条目完成后停止'
+	String get willStop => '将在当前条目完成后停止';
+
+	/// zh: '立即同步'
+	String get syncNow => '立即同步';
+
+	/// zh: '上次同步：{time}'
+	String lastSync({required Object time}) => '上次同步：${time}';
+
+	/// zh: '尚未同步'
+	String get neverSynced => '尚未同步';
+
+	/// zh: '同步日志'
+	String get logEntry => '同步日志';
+
+	/// zh: '按日期查看同步事件'
+	String get logEntrySubtitle => '按日期查看同步事件';
+
+	/// zh: '局域网同步'
+	String get lanSection => '局域网同步';
+
+	/// zh: '发送'
+	String get lanSend => '发送';
+
+	/// zh: '发送日记到同一 Wi-Fi 下的设备'
+	String get lanSendSubtitle => '发送日记到同一 Wi-Fi 下的设备';
+
+	/// zh: '接收'
+	String get lanReceive => '接收';
+
+	/// zh: '等待其它设备发送到本机'
+	String get lanReceiveSubtitle => '等待其它设备发送到本机';
+
+	/// zh: '加密'
+	String get encryptionSection => '加密';
+
+	/// zh: '自动同步'
+	String get autoSection => '自动同步';
+
+	/// zh: '自动同步'
+	String get autoSync => '自动同步';
+
+	/// zh: '日记变更后自动推送，并定时拉取其它设备的变更'
+	String get autoSyncSubtitle => '日记变更后自动推送，并定时拉取其它设备的变更';
+
+	/// zh: '轮询间隔'
+	String get pollInterval => '轮询间隔';
+
+	/// zh: '每隔此时间在后台拉取其它设备的变更'
+	String get pollIntervalSubtitle => '每隔此时间在后台拉取其它设备的变更';
+
+	/// zh: '每隔此时间在后台跑一次双向同步。间隔越短，与其它设备的变更同步越及时；但每次轮询都会抢占远端锁、读取清单并发起网络请求 —— 间隔过短会显著增加流量与耗电，还可能触发 WebDAV / S3 服务端限流甚至临时封禁。建议不低于 30 秒。'
+	String get pollIntervalNote => '每隔此时间在后台跑一次双向同步。间隔越短，与其它设备的变更同步越及时；但每次轮询都会抢占远端锁、读取清单并发起网络请求 —— 间隔过短会显著增加流量与耗电，还可能触发 WebDAV / S3 服务端限流甚至临时封禁。建议不低于 30 秒。';
+
+	/// zh: '网络'
+	String get networkSection => '网络';
+
+	/// zh: '并发请求数'
+	String get concurrency => '并发请求数';
+
+	/// zh: '同步时同时进行的网络请求上限，弱网或服务端限流时调小'
+	String get concurrencySubtitle => '同步时同时进行的网络请求上限，弱网或服务端限流时调小';
+
+	/// zh: '默认 8。值越大同步越快，但可能触发 WebDAV / S3 服务端限流或连接拒绝。'
+	String get concurrencyNote => '默认 8。值越大同步越快，但可能触发 WebDAV / S3 服务端限流或连接拒绝。';
+
+	/// zh: '{count} 秒'
+	String seconds({required Object count}) => '${count} 秒';
+
+	/// zh: '{count} 分钟'
+	String minutes({required Object count}) => '${count} 分钟';
+
+	/// zh: '{minutes} 分 {seconds} 秒'
+	String minutesSeconds({required Object minutes, required Object seconds}) => '${minutes} 分 ${seconds} 秒';
+
+	/// zh: '同步日志'
+	String get logTitle => '同步日志';
+
+	/// zh: '选择日期'
+	String get logPickDate => '选择日期';
+
+	/// zh: '按日期筛选'
+	String get logFilterByDate => '按日期筛选';
+
+	/// zh: '今天'
+	String get logToday => '今天';
+
+	/// zh: '（今天）'
+	String get logTodaySuffix => '（今天）';
+
+	/// zh: '清空日志'
+	String get logClear => '清空日志';
+
+	/// zh: '将删除内存中的事件流和按天滚动的所有 jsonl 文件，操作不可恢复。'
+	String get logClearMessage => '将删除内存中的事件流和按天滚动的所有 jsonl 文件，操作不可恢复。';
+
+	/// zh: '{count} 条'
+	String logEventCount({required Object count}) => '${count} 条';
+
+	/// zh: '该日期暂无同步事件'
+	String get logEmpty => '该日期暂无同步事件';
+
+	/// zh: '{kind} · {count} 条'
+	String logGroupCount({required Object kind, required Object count}) => '${kind} · ${count} 条';
+
+	/// zh: '事件详情'
+	String get logDetail => '事件详情';
+
+	/// zh: '复制'
+	String get logCopy => '复制';
+
+	/// zh: '同步开始'
+	String get kindSyncStart => '同步开始';
+
+	/// zh: '同步结束'
+	String get kindSyncEnd => '同步结束';
+
+	/// zh: '读取清单'
+	String get kindManifestRead => '读取清单';
+
+	/// zh: '写回清单'
+	String get kindManifestWrite => '写回清单';
+
+	/// zh: '上传日记'
+	String get kindDiaryUpload => '上传日记';
+
+	/// zh: '下载日记'
+	String get kindDiaryDownload => '下载日记';
+
+	/// zh: '跳过日记'
+	String get kindDiarySkip => '跳过日记';
+
+	/// zh: '推送日记删除'
+	String get kindDiaryTombstonePush => '推送日记删除';
+
+	/// zh: '同步日记删除'
+	String get kindDiaryTombstonePull => '同步日记删除';
+
+	/// zh: '上传分类'
+	String get kindCategoryUpload => '上传分类';
+
+	/// zh: '下载分类'
+	String get kindCategoryDownload => '下载分类';
+
+	/// zh: '跳过分类'
+	String get kindCategorySkip => '跳过分类';
+
+	/// zh: '推送分类删除'
+	String get kindCategoryTombstonePush => '推送分类删除';
+
+	/// zh: '同步分类删除'
+	String get kindCategoryTombstonePull => '同步分类删除';
+
+	/// zh: '上传媒体'
+	String get kindMediaUpload => '上传媒体';
+
+	/// zh: '下载媒体'
+	String get kindMediaDownload => '下载媒体';
+
+	/// zh: '跳过媒体'
+	String get kindMediaSkip => '跳过媒体';
+
+	/// zh: '删除媒体'
+	String get kindMediaDelete => '删除媒体';
+
+	/// zh: '获取同步锁'
+	String get kindLockAcquire => '获取同步锁';
+
+	/// zh: '释放同步锁'
+	String get kindLockRelease => '释放同步锁';
+
+	/// zh: '错误'
+	String get kindError => '错误';
+
+	/// zh: '同步状态'
+	String get statusTitle => '同步状态';
+
+	/// zh: '{backend} · {encryption}'
+	String statusSubtitle({required Object backend, required Object encryption}) => '${backend} · ${encryption}';
+
+	/// zh: '已加密'
+	String get encrypted => '已加密';
+
+	/// zh: '未加密'
+	String get notEncrypted => '未加密';
+
+	/// zh: '查看日志'
+	String get viewLog => '查看日志';
+
+	/// zh: '数据概览'
+	String get overview => '数据概览';
+
+	/// zh: '刷新数据概览'
+	String get overviewRefresh => '刷新数据概览';
+
+	/// zh: '远端有 {count} 篇日记待拉取'
+	String pendingPull({required Object count}) => '远端有 ${count} 篇日记待拉取';
+
+	/// zh: '同步完成'
+	String get statusDone => '同步完成';
+
+	/// zh: '同步失败'
+	String get statusFailed => '同步失败';
+
+	/// zh: '未配置同步后端'
+	String get statusNoBackend => '未配置同步后端';
+
+	/// zh: '去「备份与同步」填一个'
+	String get statusNoBackendDetail => '去「备份与同步」填一个';
+
+	/// zh: '已同步'
+	String get statusSynced => '已同步';
+
+	/// zh: '上次同步 '
+	String get statusLastSync => '上次同步 ';
+
+	/// zh: '尚未同步'
+	String get statusNever => '尚未同步';
+
+	/// zh: '本地'
+	String get columnLocal => '本地';
+
+	/// zh: '远端'
+	String get columnRemote => '远端';
+
+	/// zh: '日记'
+	String get rowDiary => '日记';
+
+	/// zh: '分类'
+	String get rowCategory => '分类';
+
+	/// zh: '媒体'
+	String get rowMedia => '媒体';
+
+	/// zh: '正在同步'
+	String get statusRunning => '正在同步';
+
+	/// zh: '局域网发送'
+	String get lanSendTitle => '局域网发送';
+
+	/// zh: '只发送对方缺少的内容，按最后修改时间自动合并，重复发送不会产生重复数据。'
+	String get lanSendIntro => '只发送对方缺少的内容，按最后修改时间自动合并，重复发送不会产生重复数据。';
+
+	/// zh: '附近的设备'
+	String get lanNearbyDevices => '附近的设备';
+
+	/// zh: '接收方地址'
+	String get lanReceiverAddress => '接收方地址';
+
+	/// zh: '选择上方设备后自动填写'
+	String get lanAddressHint => '选择上方设备后自动填写';
+
+	/// zh: '配对码'
+	String get lanPin => '配对码';
+
+	/// zh: '输入接收页显示的 6 位数字'
+	String get lanPinHint => '输入接收页显示的 6 位数字';
+
+	/// zh: '发送'
+	String get lanSendAction => '发送';
+
+	/// zh: '请先选择接收设备'
+	String get lanPickDevice => '请先选择接收设备';
+
+	/// zh: '请输入 6 位配对码'
+	String get lanNeedPin => '请输入 6 位配对码';
+
+	/// zh: '地址格式不正确'
+	String get lanBadAddress => '地址格式不正确';
+
+	/// zh: '正在搜索，请在接收设备上打开「接收」页'
+	String get lanSearching => '正在搜索，请在接收设备上打开「接收」页';
+
+	/// zh: '正在连接…'
+	String get lanConnecting => '正在连接…';
+
+	/// zh: '正在准备数据…'
+	String get lanPacking => '正在准备数据…';
+
+	/// zh: '正在发送'
+	String get lanUploading => '正在发送';
+
+	/// zh: '等待对方保存…'
+	String get lanApplying => '等待对方保存…';
+
+	/// zh: '局域网接收'
+	String get lanReceiveTitle => '局域网接收';
+
+	/// zh: '无法启动接收：{error}'
+	String lanStartFailed({required Object error}) => '无法启动接收：${error}';
+
+	/// zh: '配对码已复制'
+	String get lanPinCopied => '配对码已复制';
+
+	/// zh: '在发送设备上输入 · 轻点复制'
+	String get lanPinHelp => '在发送设备上输入 · 轻点复制';
+
+	/// zh: '地址已复制'
+	String get lanAddressCopied => '地址已复制';
+
+	/// zh: '内容已是最新，没有变更'
+	String get lanUpToDate => '内容已是最新，没有变更';
+
+	/// zh: '日记 {diary} 条 · 分类 {category} 条'
+	String lanReceived({required Object diary, required Object category}) => '日记 ${diary} 条 · 分类 ${category} 条';
+
+	/// zh: '{base}（{failed} 条失败）'
+	String lanReceivedFailed({required Object base, required Object failed}) => '${base}（${failed} 条失败）';
+
+	/// zh: '等待发送方连接…'
+	String get lanWaiting => '等待发送方连接…';
+
+	/// zh: '正在接收'
+	String get lanReceiving => '正在接收';
+
+	/// zh: '正在保存…'
+	String get lanSaving => '正在保存…';
+
+	/// zh: '接收完成'
+	String get lanDone => '接收完成';
+
+	/// zh: '可继续接收，配对码不变'
+	String get lanDoneHint => '可继续接收，配对码不变';
+
+	/// zh: '接收失败'
+	String get lanFailed => '接收失败';
+
+	/// zh: '配对码不变，对方可直接重试'
+	String get lanFailedHint => '配对码不变，对方可直接重试';
+
+	/// zh: '本机地址'
+	String get lanLocalAddress => '本机地址';
+
+	/// zh: '未连接 Wi-Fi，无法获取本机地址'
+	String get lanNoWifi => '未连接 Wi-Fi，无法获取本机地址';
+
+	/// zh: '远端数据已加密但缺少密钥文件（keys.json），无法解密。请清空远端数据后重新上传。'
+	String get keyGuardMissing => '远端数据已加密但缺少密钥文件（keys.json），无法解密。请清空远端数据后重新上传。';
+
+	/// zh: '远端备份已加密'
+	String get keyGuardTitle => '远端备份已加密';
+
+	/// zh: '当前设备的密钥无法解密远端数据。请输入与原设备一致的加密密码，验证通过后开始同步。'
+	String get keyGuardMessageMismatch => '当前设备的密钥无法解密远端数据。请输入与原设备一致的加密密码，验证通过后开始同步。';
+
+	/// zh: '远端数据已加密。请输入与原设备一致的加密密码，验证通过后开始同步。'
+	String get keyGuardMessage => '远端数据已加密。请输入与原设备一致的加密密码，验证通过后开始同步。';
+
+	/// zh: '加密密码'
+	String get keyGuardHint => '加密密码';
+
+	/// zh: '验证并保存'
+	String get keyGuardConfirm => '验证并保存';
+
+	/// zh: '请输入密码'
+	String get keyNeedPassword => '请输入密码';
+
+	/// zh: '密码不正确，无法解密远端数据'
+	String get keyGuardWrong => '密码不正确，无法解密远端数据';
+
+	/// zh: '密钥已配置'
+	String get keyConfigured => '密钥已配置';
+
+	/// zh: '端到端加密'
+	String get e2eTitle => '端到端加密';
+
+	/// zh: '已开启'
+	String get e2eOn => '已开启';
+
+	/// zh: '未开启'
+	String get e2eOff => '未开启';
+
+	/// zh: '管理加密'
+	String get e2eManage => '管理加密';
+
+	/// zh: '密码不正确'
+	String get keyWrong => '密码不正确';
+
+	/// zh: '验证成功'
+	String get keyVerified => '验证成功';
+
+	/// zh: '请先验证当前密码'
+	String get keyVerifyFirst => '请先验证当前密码';
+
+	/// zh: '两次输入的密码不一致'
+	String get keyMismatch => '两次输入的密码不一致';
+
+	/// zh: '加密管理'
+	String get keyManageTitle => '加密管理';
+
+	/// zh: '当前密码'
+	String get keyCurrent => '当前密码';
+
+	/// zh: '验证'
+	String get keyVerify => '验证';
+
+	/// zh: '新密码'
+	String get keyNew => '新密码';
+
+	/// zh: '加密密码'
+	String get keyPassword => '加密密码';
+
+	/// zh: '确认密码'
+	String get keyConfirm => '确认密码';
+
+	/// zh: '关闭加密'
+	String get keyTurnOff => '关闭加密';
+
+	/// zh: '密码已更换（数据密钥不变，云端无需重新加密）'
+	String get keyChanged => '密码已更换（数据密钥不变，云端无需重新加密）';
+
+	/// zh: '加密云端已有数据'
+	String get keyEncryptCloudTitle => '加密云端已有数据';
+
+	/// zh: '检测到当前同步后端已存在数据。确认后会生成随机数据密钥并加密云端的日记、分类与媒体文件；该密钥由你的密码封装存放在云端。'
+	String get keyEncryptCloudMessage => '检测到当前同步后端已存在数据。确认后会生成随机数据密钥并加密云端的日记、分类与媒体文件；该密钥由你的密码封装存放在云端。';
+
+	/// zh: '继续'
+	String get keyContinue => '继续';
+
+	/// zh: '密钥文件写入云端失败，已取消：{error}'
+	String keyWriteFailed({required Object error}) => '密钥文件写入云端失败，已取消：${error}';
+
+	/// zh: '云端已加密：{report}'
+	String keyCloudEncrypted({required Object report}) => '云端已加密：${report}';
+
+	/// zh: '加密已开启'
+	String get keyEncryptionOn => '加密已开启';
+
+	/// zh: '解密云端数据'
+	String get keyDecryptTitle => '解密云端数据';
+
+	/// zh: '关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？'
+	String get keyDecryptMessage => '关闭加密后，云端的日记、分类与媒体文件会被解密回明文，密钥文件将被删除。确认要继续吗？';
+
+	/// zh: '加密已关闭'
+	String get keyEncryptionOff => '加密已关闭';
+
+	/// zh: '重新加密失败：{error}'
+	String keyReCipherFailed({required Object error}) => '重新加密失败：${error}';
+
+	/// zh: '远端为空，仅保存本地密钥'
+	String get keyRemoteEmpty => '远端为空，仅保存本地密钥';
+
+	/// zh: '正在处理云端数据'
+	String get keyProcessing => '正在处理云端数据';
+
+	/// zh: '准备'
+	String get keyPreparing => '准备';
+
+	/// zh: '发送方通常会自动发现本机，也可手动输入上方地址。接收期间请保持本页打开。'
+	String get lanReceiveHint => '发送方通常会自动发现本机，也可手动输入上方地址。接收期间请保持本页打开。';
 }
 
 // Path: ui

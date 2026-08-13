@@ -25,11 +25,11 @@ class UserKeyTile extends ConsumerWidget {
     return SettingListTile(
       isFirst: isFirst,
       isLast: isLast,
-      title: '端到端加密',
+      title: context.l10n.sync.e2eTitle,
       leading: const Icon(LucideIcons.key),
-      subtitle: hasKey ? '已开启' : '未开启',
+      subtitle: hasKey ? context.l10n.sync.e2eOn : context.l10n.sync.e2eOff,
       trailing: IconButton.filled(
-        tooltip: '管理加密',
+        tooltip: context.l10n.sync.e2eManage,
         icon: Icon(LucideIcons.settings, color: scheme.onPrimary),
         onPressed: () => _showKeyManageSheet(context, ref, hasKey),
       ),
@@ -128,18 +128,20 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
     setState(() {
       _verifying = false;
       _currentVerified = ok;
-      _currentError = ok ? null : '密码不正确';
+      _currentError = ok ? null : l10n.sync.keyWrong;
     });
-    if (ok) toast.success(message: '验证成功');
+    if (ok) toast.success(message: l10n.sync.keyVerified);
   }
 
   bool _validate() {
     final currentError = widget.hasExistingKey && !_currentVerified
-        ? '请先验证当前密码'
+        ? l10n.sync.keyVerifyFirst
         : null;
-    final newError = _newKeyController.text.trim().isEmpty ? '请输入密码' : null;
+    final newError = _newKeyController.text.trim().isEmpty
+        ? l10n.sync.keyNeedPassword
+        : null;
     final confirmError = _confirmKeyController.text != _newKeyController.text
-        ? '两次输入的密码不一致'
+        ? l10n.sync.keyMismatch
         : null;
     setState(() {
       _currentError = currentError;
@@ -152,7 +154,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
   /// 关闭加密须先验证当前密码，防止拿到已解锁设备者直接解除加密。
   void _remove() {
     if (!_currentVerified) {
-      setState(() => _currentError = '请先验证当前密码');
+      setState(() => _currentError = l10n.sync.keyVerifyFirst);
       return;
     }
     widget.onRemove!();
@@ -162,8 +164,10 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
     return MSheetScaffold<void>(
-      title: '加密管理',
-      subtitle: widget.hasExistingKey ? '已开启' : '未开启',
+      title: context.l10n.sync.keyManageTitle,
+      subtitle: widget.hasExistingKey
+          ? context.l10n.sync.e2eOn
+          : context.l10n.sync.e2eOff,
       icon: LucideIcons.key,
       actions: [
         MAction(label: context.l10n.common.cancel, enabled: !_verifying),
@@ -184,7 +188,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
           if (widget.hasExistingKey)
             MField(
               controller: _currentKeyController,
-              label: '当前密码',
+              label: context.l10n.sync.keyCurrent,
               errorText: _currentError,
               obscureText: true,
               enabled: !_verifying,
@@ -195,7 +199,7 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
               trailing: _currentVerified
                   ? Icon(LucideIcons.circleCheck, color: scheme.primary)
                   : IconButton(
-                      tooltip: '验证',
+                      tooltip: context.l10n.sync.keyVerify,
                       icon: _verifying
                           ? const SizedBox(
                               width: 16,
@@ -209,7 +213,9 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
             ),
           MField(
             controller: _newKeyController,
-            label: widget.hasExistingKey ? '新密码' : '加密密码',
+            label: widget.hasExistingKey
+                ? context.l10n.sync.keyNew
+                : context.l10n.sync.keyPassword,
             errorText: _newError,
             obscureText: true,
             enabled: !_verifying,
@@ -217,14 +223,14 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
           ),
           MField(
             controller: _confirmKeyController,
-            label: '确认密码',
+            label: context.l10n.sync.keyConfirm,
             errorText: _confirmError,
             obscureText: true,
             enabled: !_verifying,
           ),
           if (widget.onRemove != null)
             MDangerRow(
-              label: '关闭加密',
+              label: context.l10n.sync.keyTurnOff,
               icon: LucideIcons.shieldOff,
               onPressed: _verifying ? null : _remove,
             ),
