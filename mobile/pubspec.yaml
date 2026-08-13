@@ -4,8 +4,8 @@ publish_to: "none"
 version: 2.7.4+93
 
 environment:
-  sdk: ">=3.12.0"
-  flutter: ">=3.44.0"
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
 
 resolution: workspace
 
@@ -33,7 +33,7 @@ dependencies:
   moodiary_preferences: 0.0.1
   moodiary_ui: 0.0.1
 
-  flutter_riverpod: 3.3.2
+  flutter_riverpod: 3.4.2
 
   gap: 3.0.1
 
@@ -48,7 +48,7 @@ dependencies:
   flutter_displaymode: 0.7.0
   url_launcher: 6.3.2
 
-  intl: 0.20.2
+  intl: 0.20.3
   fpdart: 1.2.0
 
   # App 自身不画 Cupertino 图标，但 go_router / webview_flutter / wechat_assets_picker
@@ -61,7 +61,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: 2.15.1
+  build_runner: 2.16.0
   flutter_gen_runner: 5.15.0
 
   flutter_native_splash: 2.4.8

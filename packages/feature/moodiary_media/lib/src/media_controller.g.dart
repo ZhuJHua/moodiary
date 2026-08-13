@@ -68,7 +68,7 @@ final class MediaDiariesProvider
   }
 }
 
-String _$mediaDiariesHash() => r'4e0b7e858289a703e9acbc7d6683d665545a689a';
+String _$mediaDiariesHash() => r'7d247b162773311d6c6dd7eeb3b0bfe6a101e601';
 
 /// 媒体库分页数据源：按 [MediaType] 加载含该类型媒体的在册日记（时间倒序）。
 /// 每类一个 family 实例，各自维护 offset / noMore，互不干扰。展示用的按日期分组
@@ -180,7 +180,7 @@ final class MediaCleanupControllerProvider
 }
 
 String _$mediaCleanupControllerHash() =>
-    r'4c99840532202e857bbaa217e15903cbddd36f69';
+    r'25654d4c742f078645f946163285fbfd3611d86d';
 
 /// 媒体清理：找出 / 删除未被任何日记引用的孤儿媒体文件。[scan] 只扫描不删除；
 /// [clean] 只删文件——刷新（失效 [mediaDiariesProvider]）由调用方用自身有效 ref 触发，

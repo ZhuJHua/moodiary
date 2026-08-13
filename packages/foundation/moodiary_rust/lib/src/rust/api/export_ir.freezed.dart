@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'export_ir.dart';
@@ -9,6 +9,7 @@ part of 'export_ir.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -217,7 +218,7 @@ return table(_that.rows);case _:
 
 
 class IrBlock_Paragraph extends IrBlock {
-  const IrBlock_Paragraph({required final  List<IrSpan> spans}): _spans = spans,super._();
+  const IrBlock_Paragraph({required  List<IrSpan> spans}): _spans = spans,super._();
   
 
  final  List<IrSpan> _spans;
@@ -289,7 +290,7 @@ as List<IrSpan>,
 
 
 class IrBlock_Heading extends IrBlock {
-  const IrBlock_Heading({required this.level, required final  List<IrSpan> spans}): _spans = spans,super._();
+  const IrBlock_Heading({required this.level, required  List<IrSpan> spans}): _spans = spans,super._();
   
 
  final  int level;
@@ -363,7 +364,7 @@ as List<IrSpan>,
 
 
 class IrBlock_List extends IrBlock {
-  const IrBlock_List({required this.ordered, required this.start, required final  List<IrListItem> items}): _items = items,super._();
+  const IrBlock_List({required this.ordered, required this.start, required  List<IrListItem> items}): _items = items,super._();
   
 
  final  bool ordered;
@@ -439,7 +440,7 @@ as List<IrListItem>,
 
 
 class IrBlock_Quote extends IrBlock {
-  const IrBlock_Quote({required final  List<IrBlock> children}): _children = children,super._();
+  const IrBlock_Quote({required  List<IrBlock> children}): _children = children,super._();
   
 
  final  List<IrBlock> _children;
@@ -757,7 +758,7 @@ as String?,
 
 
 class IrBlock_Table extends IrBlock {
-  const IrBlock_Table({required final  List<IrRow> rows}): _rows = rows,super._();
+  const IrBlock_Table({required  List<IrRow> rows}): _rows = rows,super._();
   
 
  final  List<IrRow> _rows;

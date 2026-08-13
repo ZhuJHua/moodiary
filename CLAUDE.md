@@ -6,8 +6,9 @@ Moodiary — a Flutter + Rust diary app. **Layered pub-workspace monorepo**: 18 
 
 ## Tech Stack
 
-- **Flutter 3.44.0** (FVM, `.fvmrc`)
-- **Rust** (pinned in `packages/foundation/moodiary_rust/rust/rust-toolchain.toml`), `flutter_rust_bridge` 2.13.0-beta.5 — native lib built & bundled via Native Assets build hooks (`rustup` required)
+- **Flutter 3.47.0 / Dart 3.13.0** (FVM, `.fvmrc`)
+- **Rust** (pinned in `packages/foundation/moodiary_rust/rust/rust-toolchain.toml`), `flutter_rust_bridge` 2.13.0-beta.6 — native lib built & bundled via Native Assets build hooks (`rustup` required)
+- **Android**: AGP 9.1.0 / Gradle 9.3.1 / KGP 2.4.0，内置 Kotlin（`android.builtInKotlin=true`）；daemon JVM 由 `gradle-daemon-jvm.properties` 钉在 21
 - **Riverpod** (dev) + code gen, **go_router**, **get_it**, **Isar**, **Freezed** + **json_serializable**
 
 ## Commands
@@ -23,7 +24,7 @@ dart tool/task.dart build-apk / build-ios  # 只有 android/ios 两个目标
 # Extra flutter flags go after --:  dart tool/task.dart run -- --release
 
 # Code Gen (after model/router/provider changes)
-dart tool/task.dart build-runner   # build_runner build --delete-conflicting-outputs
+dart tool/task.dart build-runner   # build_runner build（2.16.0 起 --delete-conflicting-outputs 已移除）
 dart tool/task.dart gen-rust       # regenerate Rust FFI bindings
 dart tool/task.dart gen            # gen-rust + rebuild editor asset
 dart tool/task.dart editor         # rebuild editor asset only (needs corepack on PATH)

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'diary.dart';
@@ -9,6 +9,7 @@ part of 'diary.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -66,7 +67,7 @@ class _$DiaryCopyWithImpl<$Res>
 /// Create a copy of Diary
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? categoryId = freezed,Object? title = null,Object? content = null,Object? contentText = null,Object? time = null,Object? lastModified = null,Object? show = null,Object? mood = null,Object? weather = null,Object? imageName = null,Object? audioName = null,Object? videoName = null,Object? tags = null,Object? position = null,Object? type = null,Object? imageColor = freezed,Object? aspect = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(Diary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
 as String?,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -226,7 +227,7 @@ return $default(_that.id,_that.categoryId,_that.title,_that.content,_that.conten
 @JsonSerializable()
 
 class _Diary extends Diary {
-  const _Diary({required this.id, @Index() this.categoryId, required this.title, required this.content, required this.contentText, @Index()@UtcDateTimeConverter() required this.time, @UtcDateTimeConverter() required this.lastModified, @Index() required this.show, required this.mood, required final  List<String> weather, required final  List<String> imageName, required final  List<String> audioName, required final  List<String> videoName, required final  List<String> tags, required final  List<String> position, required this.type, this.imageColor, this.aspect}): _weather = weather,_imageName = imageName,_audioName = audioName,_videoName = videoName,_tags = tags,_position = position,super._();
+  const _Diary({required this.id, @Index() this.categoryId, required this.title, required this.content, required this.contentText, @Index()@UtcDateTimeConverter() required this.time, @UtcDateTimeConverter() required this.lastModified, @Index() required this.show, required this.mood, required  List<String> weather, required  List<String> imageName, required  List<String> audioName, required  List<String> videoName, required  List<String> tags, required  List<String> position, required this.type, this.imageColor, this.aspect}): _weather = weather,_imageName = imageName,_audioName = audioName,_videoName = videoName,_tags = tags,_position = position,super._();
   factory _Diary.fromJson(Map<String, dynamic> json) => _$DiaryFromJson(json);
 
 @override final  String id;

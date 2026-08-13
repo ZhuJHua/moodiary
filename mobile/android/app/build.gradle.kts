@@ -22,6 +22,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
 
+    // AGP 9 起 buildFeatures 默认全关；debug buildType 与 beta flavor 用 resValue 注入
+    // app_name，必须显式打开。
+    buildFeatures {
+        resValues = true
+    }
+
     signingConfigs {
         create("config") {
             storeFile = file("key.jks")

@@ -172,7 +172,7 @@ final class IoTestHttpClient extends IHttpClient {
       });
       if (body != null) req.add(body.bytes);
       final resp = await req.close();
-      return _finish(resp, throwOnStatus);
+      return await _finish(resp, throwOnStatus);
     } on io.SocketException catch (e) {
       throw HttpException(.connection, e.message);
     }
@@ -207,7 +207,7 @@ final class IoTestHttpClient extends IHttpClient {
         }),
       );
       final resp = await req.close();
-      return _finish(resp, throwOnStatus);
+      return await _finish(resp, throwOnStatus);
     } on io.SocketException catch (e) {
       throw HttpException(.connection, e.message);
     }

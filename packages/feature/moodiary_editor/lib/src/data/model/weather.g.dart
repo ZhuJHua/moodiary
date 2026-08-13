@@ -21,11 +21,11 @@ _WeatherResponse _$WeatherResponseFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$WeatherResponseToJson(_WeatherResponse instance) =>
     <String, dynamic>{
-      'code': ?instance.code,
-      'updateTime': ?instance.updateTime,
-      'fxLink': ?instance.fxLink,
-      'now': ?instance.now,
-      'refer': ?instance.refer,
+      'code': instance.code,
+      'updateTime': instance.updateTime,
+      'fxLink': instance.fxLink,
+      'now': instance.now,
+      'refer': instance.refer,
     };
 
 _Refer _$ReferFromJson(Map<String, dynamic> json) => _Refer(
@@ -38,8 +38,8 @@ _Refer _$ReferFromJson(Map<String, dynamic> json) => _Refer(
 );
 
 Map<String, dynamic> _$ReferToJson(_Refer instance) => <String, dynamic>{
-  'sources': ?instance.sources,
-  'license': ?instance.license,
+  'sources': instance.sources,
+  'license': instance.license,
 };
 
 _Now _$NowFromJson(Map<String, dynamic> json) => _Now(
@@ -61,19 +61,19 @@ _Now _$NowFromJson(Map<String, dynamic> json) => _Now(
 );
 
 Map<String, dynamic> _$NowToJson(_Now instance) => <String, dynamic>{
-  'obsTime': ?instance.obsTime,
-  'temp': ?instance.temp,
-  'feelsLike': ?instance.feelsLike,
-  'icon': ?instance.icon,
-  'text': ?instance.text,
-  'wind360': ?instance.wind360,
-  'windDir': ?instance.windDir,
-  'windScale': ?instance.windScale,
-  'windSpeed': ?instance.windSpeed,
-  'humidity': ?instance.humidity,
-  'precip': ?instance.precip,
-  'pressure': ?instance.pressure,
-  'vis': ?instance.vis,
-  'cloud': ?instance.cloud,
-  'dew': ?instance.dew,
+  'obsTime': instance.obsTime,
+  'temp': instance.temp,
+  'feelsLike': instance.feelsLike,
+  'icon': instance.icon,
+  'text': instance.text,
+  'wind360': instance.wind360,
+  'windDir': instance.windDir,
+  'windScale': instance.windScale,
+  'windSpeed': instance.windSpeed,
+  'humidity': instance.humidity,
+  'precip': instance.precip,
+  'pressure': instance.pressure,
+  'vis': instance.vis,
+  'cloud': instance.cloud,
+  'dew': instance.dew,
 };

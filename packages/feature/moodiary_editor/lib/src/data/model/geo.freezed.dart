@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'geo.dart';
@@ -9,6 +9,7 @@ part of 'geo.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -66,7 +67,7 @@ class _$GeoResponseCopyWithImpl<$Res>
 /// Create a copy of GeoResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = freezed,Object? location = freezed,Object? refer = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(GeoResponse(
 code: freezed == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String?,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
 as List<Location>?,refer: freezed == refer ? _self.refer : refer // ignore: cast_nullable_to_non_nullable
@@ -223,7 +224,7 @@ return $default(_that.code,_that.location,_that.refer);case _:
 @JsonSerializable()
 
 class _GeoResponse implements GeoResponse {
-  const _GeoResponse({this.code, final  List<Location>? location, this.refer}): _location = location;
+  const _GeoResponse({this.code,  List<Location>? location, this.refer}): _location = location;
   factory _GeoResponse.fromJson(Map<String, dynamic> json) => _$GeoResponseFromJson(json);
 
 @override final  String? code;
@@ -367,7 +368,7 @@ class _$ReferCopyWithImpl<$Res>
 /// Create a copy of Refer
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? sources = freezed,Object? license = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(Refer(
 sources: freezed == sources ? _self.sources : sources // ignore: cast_nullable_to_non_nullable
 as List<String>?,license: freezed == license ? _self.license : license // ignore: cast_nullable_to_non_nullable
 as List<String>?,
@@ -511,7 +512,7 @@ return $default(_that.sources,_that.license);case _:
 @JsonSerializable()
 
 class _Refer implements Refer {
-  const _Refer({final  List<String>? sources, final  List<String>? license}): _sources = sources,_license = license;
+  const _Refer({ List<String>? sources,  List<String>? license}): _sources = sources,_license = license;
   factory _Refer.fromJson(Map<String, dynamic> json) => _$ReferFromJson(json);
 
  final  List<String>? _sources;
@@ -649,7 +650,7 @@ class _$LocationCopyWithImpl<$Res>
 /// Create a copy of Location
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? name = freezed,Object? id = freezed,Object? lat = freezed,Object? lon = freezed,Object? adm2 = freezed,Object? adm1 = freezed,Object? country = freezed,Object? tz = freezed,Object? utcOffset = freezed,Object? isDst = freezed,Object? type = freezed,Object? rank = freezed,Object? fxLink = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(Location(
 name: freezed == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String?,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String?,lat: freezed == lat ? _self.lat : lat // ignore: cast_nullable_to_non_nullable

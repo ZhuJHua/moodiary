@@ -18,9 +18,9 @@ _GeoResponse _$GeoResponseFromJson(Map<String, dynamic> json) => _GeoResponse(
 
 Map<String, dynamic> _$GeoResponseToJson(_GeoResponse instance) =>
     <String, dynamic>{
-      'code': ?instance.code,
-      'location': ?instance.location,
-      'refer': ?instance.refer,
+      'code': instance.code,
+      'location': instance.location,
+      'refer': instance.refer,
     };
 
 _Refer _$ReferFromJson(Map<String, dynamic> json) => _Refer(
@@ -33,8 +33,8 @@ _Refer _$ReferFromJson(Map<String, dynamic> json) => _Refer(
 );
 
 Map<String, dynamic> _$ReferToJson(_Refer instance) => <String, dynamic>{
-  'sources': ?instance.sources,
-  'license': ?instance.license,
+  'sources': instance.sources,
+  'license': instance.license,
 };
 
 _Location _$LocationFromJson(Map<String, dynamic> json) => _Location(
@@ -54,17 +54,17 @@ _Location _$LocationFromJson(Map<String, dynamic> json) => _Location(
 );
 
 Map<String, dynamic> _$LocationToJson(_Location instance) => <String, dynamic>{
-  'name': ?instance.name,
-  'id': ?instance.id,
-  'lat': ?instance.lat,
-  'lon': ?instance.lon,
-  'adm2': ?instance.adm2,
-  'adm1': ?instance.adm1,
-  'country': ?instance.country,
-  'tz': ?instance.tz,
-  'utcOffset': ?instance.utcOffset,
-  'isDst': ?instance.isDst,
-  'type': ?instance.type,
-  'rank': ?instance.rank,
-  'fxLink': ?instance.fxLink,
+  'name': instance.name,
+  'id': instance.id,
+  'lat': instance.lat,
+  'lon': instance.lon,
+  'adm2': instance.adm2,
+  'adm1': instance.adm1,
+  'country': instance.country,
+  'tz': instance.tz,
+  'utcOffset': instance.utcOffset,
+  'isDst': instance.isDst,
+  'type': instance.type,
+  'rank': instance.rank,
+  'fxLink': instance.fxLink,
 };

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'weather.dart';
@@ -9,6 +9,7 @@ part of 'weather.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -66,7 +67,7 @@ class _$WeatherResponseCopyWithImpl<$Res>
 /// Create a copy of WeatherResponse
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = freezed,Object? updateTime = freezed,Object? fxLink = freezed,Object? now = freezed,Object? refer = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(WeatherResponse(
 code: freezed == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String?,updateTime: freezed == updateTime ? _self.updateTime : updateTime // ignore: cast_nullable_to_non_nullable
 as String?,fxLink: freezed == fxLink ? _self.fxLink : fxLink // ignore: cast_nullable_to_non_nullable
@@ -389,7 +390,7 @@ class _$ReferCopyWithImpl<$Res>
 /// Create a copy of Refer
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? sources = freezed,Object? license = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(Refer(
 sources: freezed == sources ? _self.sources : sources // ignore: cast_nullable_to_non_nullable
 as List<String>?,license: freezed == license ? _self.license : license // ignore: cast_nullable_to_non_nullable
 as List<String>?,
@@ -533,7 +534,7 @@ return $default(_that.sources,_that.license);case _:
 @JsonSerializable()
 
 class _Refer implements Refer {
-  const _Refer({final  List<String>? sources, final  List<String>? license}): _sources = sources,_license = license;
+  const _Refer({ List<String>? sources,  List<String>? license}): _sources = sources,_license = license;
   factory _Refer.fromJson(Map<String, dynamic> json) => _$ReferFromJson(json);
 
  final  List<String>? _sources;
@@ -671,7 +672,7 @@ class _$NowCopyWithImpl<$Res>
 /// Create a copy of Now
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? obsTime = freezed,Object? temp = freezed,Object? feelsLike = freezed,Object? icon = freezed,Object? text = freezed,Object? wind360 = freezed,Object? windDir = freezed,Object? windScale = freezed,Object? windSpeed = freezed,Object? humidity = freezed,Object? precip = freezed,Object? pressure = freezed,Object? vis = freezed,Object? cloud = freezed,Object? dew = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(Now(
 obsTime: freezed == obsTime ? _self.obsTime : obsTime // ignore: cast_nullable_to_non_nullable
 as String?,temp: freezed == temp ? _self.temp : temp // ignore: cast_nullable_to_non_nullable
 as String?,feelsLike: freezed == feelsLike ? _self.feelsLike : feelsLike // ignore: cast_nullable_to_non_nullable

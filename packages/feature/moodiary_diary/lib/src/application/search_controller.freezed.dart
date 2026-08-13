@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'search_controller.dart';
@@ -9,6 +9,7 @@ part of 'search_controller.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -63,7 +64,7 @@ class _$DiarySearchStateCopyWithImpl<$Res>
 /// Create a copy of DiarySearchState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? results = null,Object? queryList = null,Object? isSearching = null,Object? elapsed = freezed,Object? query = null,Object? categoryId = freezed,Object? datePreset = null,Object? customStart = freezed,Object? customEnd = freezed,Object? sort = null,}) {
-  return _then(_self.copyWith(
+  return _then(DiarySearchState(
 results: null == results ? _self.results : results // ignore: cast_nullable_to_non_nullable
 as List<Diary>,queryList: null == queryList ? _self.queryList : queryList // ignore: cast_nullable_to_non_nullable
 as List<String>,isSearching: null == isSearching ? _self.isSearching : isSearching // ignore: cast_nullable_to_non_nullable
@@ -215,7 +216,7 @@ return $default(_that.results,_that.queryList,_that.isSearching,_that.elapsed,_t
 
 
 class _DiarySearchState extends DiarySearchState {
-  const _DiarySearchState({final  List<Diary> results = const [], final  List<String> queryList = const [], this.isSearching = false, this.elapsed, this.query = '', this.categoryId, this.datePreset = DateRangePreset.all, this.customStart, this.customEnd, this.sort = SearchSort.relevance}): _results = results,_queryList = queryList,super._();
+  const _DiarySearchState({ List<Diary> results = const [],  List<String> queryList = const [], this.isSearching = false, this.elapsed, this.query = '', this.categoryId, this.datePreset = DateRangePreset.all, this.customStart, this.customEnd, this.sort = SearchSort.relevance}): _results = results,_queryList = queryList,super._();
   
 
  final  List<Diary> _results;

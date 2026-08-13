@@ -3,7 +3,7 @@ description: "Moodiary monorepo root — pub workspace + Melos coordinator (no a
 publish_to: "none"
 
 environment:
-  sdk: ">=3.12.0"
+  sdk: ">=3.13.0"
 
 workspace:
   - mobile
@@ -37,7 +37,7 @@ melos:
       description: 构建编辑器单文件资源
 
 dev_dependencies:
-  melos: ^8.1.0
+  melos: ^8.2.2
 
 dependency_overrides:
   cli_util: 0.5.2

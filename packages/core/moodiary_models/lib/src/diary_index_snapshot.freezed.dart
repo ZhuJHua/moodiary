@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'diary_index_snapshot.dart';
@@ -9,6 +9,7 @@ part of 'diary_index_snapshot.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -63,7 +64,7 @@ class _$DiaryIndexSnapshotCopyWithImpl<$Res>
 /// Create a copy of DiaryIndexSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? diaryIsarId = null,Object? cutTokens = null,Object? cutFreqs = null,Object? cutForSearchTokens = null,Object? cutForSearchFreqs = null,Object? titleTokens = null,Object? titleFreqs = null,Object? linkToIds = null,Object? contentChars = null,}) {
-  return _then(_self.copyWith(
+  return _then(DiaryIndexSnapshot(
 diaryIsarId: null == diaryIsarId ? _self.diaryIsarId : diaryIsarId // ignore: cast_nullable_to_non_nullable
 as int,cutTokens: null == cutTokens ? _self.cutTokens : cutTokens // ignore: cast_nullable_to_non_nullable
 as List<String>,cutFreqs: null == cutFreqs ? _self.cutFreqs : cutFreqs // ignore: cast_nullable_to_non_nullable
@@ -214,7 +215,7 @@ return $default(_that.diaryIsarId,_that.cutTokens,_that.cutFreqs,_that.cutForSea
 
 
 class _DiaryIndexSnapshot extends DiaryIndexSnapshot {
-  const _DiaryIndexSnapshot({@Id() required this.diaryIsarId, required final  List<String> cutTokens, required final  List<int> cutFreqs, required final  List<String> cutForSearchTokens, required final  List<int> cutForSearchFreqs, required final  List<String> titleTokens, required final  List<int> titleFreqs, required final  List<String> linkToIds, required this.contentChars}): _cutTokens = cutTokens,_cutFreqs = cutFreqs,_cutForSearchTokens = cutForSearchTokens,_cutForSearchFreqs = cutForSearchFreqs,_titleTokens = titleTokens,_titleFreqs = titleFreqs,_linkToIds = linkToIds,super._();
+  const _DiaryIndexSnapshot({@Id() required this.diaryIsarId, required  List<String> cutTokens, required  List<int> cutFreqs, required  List<String> cutForSearchTokens, required  List<int> cutForSearchFreqs, required  List<String> titleTokens, required  List<int> titleFreqs, required  List<String> linkToIds, required this.contentChars}): _cutTokens = cutTokens,_cutFreqs = cutFreqs,_cutForSearchTokens = cutForSearchTokens,_cutForSearchFreqs = cutForSearchFreqs,_titleTokens = titleTokens,_titleFreqs = titleFreqs,_linkToIds = linkToIds,super._();
   
 
 @override@Id() final  int diaryIsarId;

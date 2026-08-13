@@ -215,12 +215,8 @@ final Map<String, Future<void> Function(List<String> rest)> _tasks = {
   'check-layers': (_) => _checkLayers(),
   'deps': (rest) => _run('fvm', ['dart', 'tool/dep_graph.dart', ...rest]),
   'test': (rest) => _flutter(['test', ...rest]),
-  'build-runner': (_) => _dartApp([
-    'run',
-    'build_runner',
-    'build',
-    '--delete-conflicting-outputs',
-  ]),
+  // build_runner 2.16.0 移除了 --delete-conflicting-outputs（默认行为已内建）。
+  'build-runner': (_) => _dartApp(['run', 'build_runner', 'build']),
   // 代码生成：Rust FFI 绑定；`gen` = 绑定 + 编辑器资源（melos bootstrap 的 post hook）。
   'gen-rust': (_) => _genRust(),
   'gen': (_) async {

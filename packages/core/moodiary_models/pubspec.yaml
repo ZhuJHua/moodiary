@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.12.0"
-  flutter: ">=3.44.0"
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
 
 dependencies:
   flutter:
@@ -24,6 +24,6 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   moodiary_lint: 0.0.1
-  build_runner: 2.15.1
-  freezed: 3.2.6-dev.1
+  build_runner: 2.16.0
+  freezed: 4.0.0-dev.3
   json_serializable: 6.14.1

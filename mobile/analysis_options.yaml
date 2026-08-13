@@ -13,3 +13,5 @@ analyzer:
     - "android/**"
     - "windows/**"
     - "macos/**"
+    - web/**
+    - linux/**

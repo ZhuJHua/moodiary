@@ -6,8 +6,8 @@ publish_to: none
 resolution: workspace
 
 environment:
-  sdk: ">=3.12.0"
-  flutter: ">=3.44.0"
+  sdk: ">=3.13.0"
+  flutter: ">=3.47.0"
 
 dependencies:
   flutter:
@@ -21,7 +21,7 @@ dependencies:
   moodiary_utils: 0.0.1
   mui: 0.0.1
 
-  flutter_riverpod: 3.3.2
+  flutter_riverpod: 3.4.2
   path: 1.9.1
   share_plus: 13.3.0
 

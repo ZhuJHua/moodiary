@@ -57,7 +57,7 @@ final class EditControllerProvider
   }
 }
 
-String _$editControllerHash() => r'd0744e5544a96bf2ffdd359c40d621454cc6e13c';
+String _$editControllerHash() => r'ddd3e9eb0838c5d8b62af5f1a6a709a1776994fc';
 
 /// 编辑页状态机。`changeXxx` 改本地 `state`，落库走 [autoSave]。新建延迟落库：
 /// 空白不创建，有内容才 insert，写了又清空则丢弃。
