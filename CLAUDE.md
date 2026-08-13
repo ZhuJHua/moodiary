@@ -155,8 +155,15 @@ foundation 叶子包，所以它自带一份 slang 文案（十来个通用词�
   调一次 `LocaleSettings.setLocale`，App 与 mui 两棵树一起刷新。KV 里只存偏好枚举。
   `MaterialApp.locale` 从 `TranslationProvider.of(context).flutterLocale` 取。
 - 改了 `*.i18n.json` **必须跑 `dart tool/task.dart l10n`**（产物是提交的，且没有闸门兜底）。
-  `dart run slang analyze` 只能信它的「缺失键」那一半：它的「未使用」检测只扫当前包的
-  `lib/`，而生成物本身就在那儿，于是全仓死键（如 `graphDepthHops`）也报 0。
+- 查死键要开 `--full`（不开只比对语种间差集），并把源码目录指回仓库 —— 默认只扫当前包的
+  `lib/`，那里一个调用点都没有。在 `moodiary_l10n` 下跑，约 9 秒：
+
+  ```bash
+  dart run slang analyze --full --source-dirs=../../../packages,../../../mobile
+  ```
+
+  它是**去空白后的子串匹配**，所以 mui 的 `muiL10n.back` 里含 `l10n.back`，会让 App 侧同名
+  的死键假装被用了。取名时别让别的变量以 `translate_var` 收尾。
 
 四个不报错的坑：
 
