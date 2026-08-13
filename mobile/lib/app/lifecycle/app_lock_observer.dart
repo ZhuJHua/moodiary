@@ -10,7 +10,9 @@ import 'package:mui/mui.dart';
 /// 归属 app 生命周期层（非 feature）：直接读命令式的 `router` 全局。`moodiary_lock`
 /// 已下沉为包，本观察器仍留 app 侧（策略属 app 组合面），跳过位置由路由契约构造。
 class AppLockObserver extends StatefulWidget {
-  const AppLockObserver({super.key});
+  final Widget child;
+
+  const AppLockObserver({super.key, required this.child});
 
   @override
   State<AppLockObserver> createState() => _AppLockObserverState();
@@ -67,5 +69,5 @@ class _AppLockObserverState extends State<AppLockObserver>
   }
 
   @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
+  Widget build(BuildContext context) => widget.child;
 }

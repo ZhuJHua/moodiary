@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary/app/di/service_di.dart';
+import 'package:moodiary/app/lifecycle/app_lock_observer.dart';
 import 'package:moodiary/app/locale.dart';
 import 'package:moodiary/app/router/router.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -144,7 +145,11 @@ class Moodiary extends ConsumerWidget {
             // 一起糊掉——那些浮层是 SmartDialog 自建 Overlay 的兄弟 entry，
             // 包在里面就盖不住。
             child: FrostedGlassOverlayComponent(
-              child: FlutterSmartDialog.init()(context, child!),
+              // 「立即锁定」观察器：lock + lockNow 开启时退后台压锁屏页。
+              // 透明包装、不渲染任何内容，挂在 builder 里保证覆盖所有路由。
+              child: AppLockObserver(
+                child: FlutterSmartDialog.init()(context, child!),
+              ),
             ),
           ),
         );
