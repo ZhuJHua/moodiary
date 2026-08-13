@@ -45,15 +45,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '更多'
 	String get more => '更多';
 
-	/// zh: '返回'
-	String get back => '返回';
-
-	/// zh: '应用'
-	String get apply => '应用';
-
-	/// zh: '提示'
-	String get hint => '提示';
-
 	/// zh: '主题色'
 	String get accentTitle => '主题色';
 
@@ -78,209 +69,17 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '语义'
 	String get accentGroupSemantic => '语义';
 
-	/// zh: '选择颜色'
-	String get colorPickerTitle => '选择颜色';
-
 	/// zh: '选取的颜色'
 	String get accentSeed => '选取的颜色';
 
 	/// zh: '保存'
 	String get save => '保存';
 
-	/// zh: '祝你今天愉快'
-	String get hopeYouHappyToday => '祝你今天愉快';
-
 	/// zh: 'Moodiary'
 	String get appName => 'Moodiary';
 
-	/// zh: '欢迎使用'
-	String get startTitle1 => '欢迎使用';
-
-	/// zh: 'Moodiary'
-	String get startTitle2 => 'Moodiary';
-
-	/// zh: '无广告、无社交的私密日记本'
-	String get startTitle3 => '无广告、无社交的私密日记本';
-
-	/// zh: '感谢下载本产品！在正式使用前，希望您能阅读并理解我们的'
-	String get welcome1 => '感谢下载本产品！在正式使用前，希望您能阅读并理解我们的';
-
-	/// zh: '《隐私政策》'
-	String get welcome2 => '《隐私政策》';
-
-	/// zh: '和'
-	String get welcome3 => '和';
-
-	/// zh: '《用户协议》'
-	String get welcome4 => '《用户协议》';
-
-	/// zh: '。我们一向尊重并会严格保护您在使用本产品时的合法权益不受到任何侵犯。用户开始使用本产品将视为已经接受本协议，如果您不能接受本协议中的全部条款，请勿开始使用本产品。'
-	String get welcome5 => '。我们一向尊重并会严格保护您在使用本产品时的合法权益不受到任何侵犯。用户开始使用本产品将视为已经接受本协议，如果您不能接受本协议中的全部条款，请勿开始使用本产品。';
-
-	/// zh: '退出'
-	String get startChoice1 => '退出';
-
-	/// zh: '开始'
-	String get startChoice2 => '开始';
-
-	/// zh: '权限授予'
-	String get permission1 => '权限授予';
-
-	/// zh: '为了更好的使用体验，我们需要以下权限'
-	String get permission2 => '为了更好的使用体验，我们需要以下权限';
-
-	/// zh: '• 定位权限（用于获取天气）'
-	String get permission3 => '• 定位权限（用于获取天气）';
-
-	/// zh: '分享'
-	String get shareTitle => '分享';
-
-	/// zh: '© Moodiary'
-	String get shareName => '© Moodiary';
-
-	/// zh: '功能'
-	String get settingFunction => '功能';
-
-	/// zh: '分类管理'
-	String get settingFunctionCategoryManage => '分类管理';
-
-	/// zh: '分析统计'
-	String get settingFunctionAnalysis => '分析统计';
-
-	/// zh: '足迹地图'
-	String get settingFunctionTrailMap => '足迹地图';
-
 	/// zh: '智能助手'
 	String get settingFunctionAIAssistant => '智能助手';
-
-	/// zh: '备份与同步'
-	String get settingDataSyncAndBackup => '备份与同步';
-
-	/// zh: '仪表盘'
-	String get settingDashboard => '仪表盘';
-
-	/// zh: '数据'
-	String get settingData => '数据';
-
-	/// zh: '回收站'
-	String get settingRecycle => '回收站';
-
-	/// zh: '清理缓存'
-	String get settingClean => '清理缓存';
-
-	/// zh: '显示与个性'
-	String get settingDisplay => '显示与个性';
-
-	/// zh: '日记设置'
-	String get settingDiary => '日记设置';
-
-	/// zh: '主题模式'
-	String get settingThemeMode => '主题模式';
-
-	/// zh: '配色方案'
-	String get settingColor => '配色方案';
-
-	/// zh: '首页卡片自动轮播'
-	String get settingAutoPlay => '首页卡片自动轮播';
-
-	/// zh: '首页卡片动态配色'
-	String get settingDynamicColor => '首页卡片动态配色';
-
-	/// zh: '图片质量'
-	String get settingImageQuality => '图片质量';
-
-	/// zh: '只对修改后的图片生效'
-	String get settingImageQualityDes => '只对修改后的图片生效';
-
-	/// zh: '字体大小'
-	String get settingFontSize => '字体大小';
-
-	/// zh: '字体样式'
-	String get settingFontStyle => '字体样式';
-
-	/// zh: '侧边栏显示天气'
-	String get settingWeather => '侧边栏显示天气';
-
-	/// zh: '隐私与安全'
-	String get settingPrivacy => '隐私与安全';
-
-	/// zh: '本地化'
-	String get settingLocal => '本地化';
-
-	/// zh: '开启后关闭所有云端功能'
-	String get settingLocalDes => '开启后关闭所有云端功能';
-
-	/// zh: '密码'
-	String get settingLock => '密码';
-
-	/// zh: '数字'
-	String get settingLockTypeNumber => '数字';
-
-	/// zh: '关闭'
-	String get settingLockClose => '关闭';
-
-	/// zh: '系统支持生物识别'
-	String get settingLockSupportBiometricsDes => '系统支持生物识别';
-
-	/// zh: '系统不支持生物识别'
-	String get settingLockNotSupportBiometricsDes => '系统不支持生物识别';
-
-	/// zh: '已开启'
-	String get settingLockOpen => '已开启';
-
-	/// zh: '未开启'
-	String get settingLockNotOpen => '未开启';
-
-	/// zh: '立即锁定'
-	String get settingLockNow => '立即锁定';
-
-	/// zh: '离开应用时立即锁定应用'
-	String get settingLockNowDes => '离开应用时立即锁定应用';
-
-	/// zh: '请选择密码类型'
-	String get settingLockChooseLockType => '请选择密码类型';
-
-	/// zh: '已经开启密码，重新设置请先关闭'
-	String get settingLockResetLock => '已经开启密码，重新设置请先关闭';
-
-	/// zh: '后台隐私保护'
-	String get settingBackendPrivacyProtection => '后台隐私保护';
-
-	/// zh: '应用处于后台时，隐藏应用内容'
-	String get settingBackendPrivacyProtectionDes => '应用处于后台时，隐藏应用内容';
-
-	/// zh: '私有密钥'
-	String get settingUserKey => '私有密钥';
-
-	/// zh: '可用于数据加密'
-	String get settingUserKeyDes => '可用于数据加密';
-
-	/// zh: '设置密钥'
-	String get settingUserKeySet => '设置密钥';
-
-	/// zh: '⚠️ 密钥设置后无法获取，请妥善保管，如果您需要在其他设备上使用加密数据，请确保使用相同的密钥。'
-	String get settingUserKeySetDes => '⚠️ 密钥设置后无法获取，请妥善保管，如果您需要在其他设备上使用加密数据，请确保使用相同的密钥。';
-
-	/// zh: '重置密钥'
-	String get settingUserKeyReset => '重置密钥';
-
-	/// zh: '确定要重置密钥吗？'
-	String get settingUserKeyResetDes => '确定要重置密钥吗？';
-
-	/// zh: '已设置'
-	String get settingUserKeyHasSet => '已设置';
-
-	/// zh: '未设置'
-	String get settingUserKeyNotSet => '未设置';
-
-	/// zh: '更多'
-	String get settingMore => '更多';
-
-	/// zh: '实验室'
-	String get settingLab => '实验室';
-
-	/// zh: '关于'
-	String get settingAbout => '关于';
 
 	/// zh: '语言'
 	String get settingLanguage => '语言';
@@ -294,65 +93,8 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: 'English'
 	String get settingLanguageEnglish => 'English';
 
-	/// zh: '首页标题名称'
-	String get settingHomepageName => '首页标题名称';
-
-	/// zh: '跟随系统'
-	String get themeModeSystem => '跟随系统';
-
-	/// zh: '浅色模式'
-	String get themeModeLight => '浅色模式';
-
-	/// zh: '深色模式'
-	String get themeModeDark => '深色模式';
-
-	/// zh: '摩卡慕斯'
-	String get specialColorNameMochaMousse => '摩卡慕斯';
-
-	/// zh: '默认'
-	String get fontNameDefault => '默认';
-
-	/// zh: '低(720p)'
-	String get qualityLow => '低(720p)';
-
-	/// zh: '中(1080p)'
-	String get qualityMedium => '中(1080p)';
-
-	/// zh: '高(1440p)'
-	String get qualityHigh => '高(1440p)';
-
-	/// zh: '原图'
-	String get qualityOriginal => '原图';
-
-	/// zh: '请输入密码'
-	String get lockEnterPassword => '请输入密码';
-
-	/// zh: '请设置密码'
-	String get lockSetPassword => '请设置密码';
-
-	/// zh: '请确认密码'
-	String get lockConfirmPassword => '请确认密码';
-
-	/// zh: '更新日志'
-	String get sidebarUpdateLog => '更新日志';
-
-	/// zh: '关于应用'
-	String get sidebarAbout => '关于应用';
-
-	/// zh: '隐私政策'
-	String get sidebarPrivacy => '隐私政策';
-
-	/// zh: 'BUG反馈'
-	String get sidebarBug => 'BUG反馈';
-
-	/// zh: '检查更新'
-	String get sidebarCheckUpdate => '检查更新';
-
 	/// zh: '日记'
 	String get homeNavigatorDiary => '日记';
-
-	/// zh: '日历'
-	String get homeNavigatorCalendar => '日历';
 
 	/// zh: '媒体'
 	String get homeNavigatorMedia => '媒体';
@@ -366,47 +108,11 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '新建日记'
 	String get homePageAddDiaryButton => '新建日记';
 
-	/// zh: '富文本'
-	String get homeNewDiaryRichText => '富文本';
-
-	/// zh: 'Markdown'
-	String get homeNewDiaryMarkdown => 'Markdown';
-
-	/// zh: '日记'
-	String get homeNewDiaryTiptap => '日记';
-
-	/// zh: '纯文本'
-	String get homeNewDiaryPlainText => '纯文本';
-
 	/// zh: '这里一片荒芜'
 	String get diaryTabViewEmpty => '这里一片荒芜';
 
-	/// zh: '搜索'
-	String get diaryPageSearchButton => '搜索';
-
 	/// zh: '视图模式'
 	String get diaryPageViewModeButton => '视图模式';
-
-	/// zh: '关于'
-	String get aboutTitle => '关于';
-
-	/// zh: '检查更新'
-	String get aboutUpdate => '检查更新';
-
-	/// zh: '查看源码'
-	String get aboutSource => '查看源码';
-
-	/// zh: '用户协议'
-	String get aboutUserAgreement => '用户协议';
-
-	/// zh: '隐私政策'
-	String get aboutPrivacyPolicy => '隐私政策';
-
-	/// zh: 'BUG 反馈'
-	String get aboutBugReport => 'BUG 反馈';
-
-	/// zh: '捐助我们'
-	String get aboutDonate => '捐助我们';
 
 	/// zh: '媒体库'
 	String get mediaTitle => '媒体库';
@@ -441,12 +147,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '已清理 {count} 个文件'
 	String mediaCleanupDone({required Object count}) => '已清理 ${count} 个文件';
 
-	/// zh: '备份与同步'
-	String get backupSyncTitle => '备份与同步';
-
-	/// zh: '局域网传输'
-	String get backupSyncLocal => '局域网传输';
-
 	/// zh: 'WebDAV'
 	String get backupSyncWebdav => 'WebDAV';
 
@@ -455,36 +155,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '已配置'
 	String get backupSyncWebdavOption => '已配置';
-
-	/// zh: '布局异常'
-	String get layoutErrorToast => '布局异常';
-
-	/// zh: '出错了，请联系开发者'
-	String get errorToast => '出错了，请联系开发者';
-
-	/// zh: '使用天数'
-	String get dashboardUseDays => '使用天数';
-
-	/// zh: '日记数'
-	String get dashboardTotalDiary => '日记数';
-
-	/// zh: '媒体数'
-	String get dashboardTotalMedia => '媒体数';
-
-	/// zh: '总字数'
-	String get dashboardTotalText => '总字数';
-
-	/// zh: '分类数'
-	String get dashboardTotalCategory => '分类数';
-
-	/// zh: '添加分类'
-	String get categoryManageAdd => '添加分类';
-
-	/// zh: '编辑分类'
-	String get categoryManageEdit => '编辑分类';
-
-	/// zh: '分类名称'
-	String get categoryManageName => '分类名称';
 
 	/// zh: '无分类'
 	String get categoryNoCategory => '无分类';
@@ -497,27 +167,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '颜色'
 	String get categoryColorLabel => '颜色';
-
-	/// zh: '连通性'
-	String get backupSyncWebDAVConnectivity => '连通性';
-
-	/// zh: '启动时同步'
-	String get webdavSyncWhenStartUp => '启动时同步';
-
-	/// zh: '启动应用时自动同步'
-	String get webdavSyncWhenStartUpDes => '启动应用时自动同步';
-
-	/// zh: '更改后同步'
-	String get webdavSyncAfterChange => '更改后同步';
-
-	/// zh: '更改数据后自动同步'
-	String get webdavSyncAfterChangeDes => '更改数据后自动同步';
-
-	/// zh: '加密'
-	String get webdavSyncEncryption => '加密';
-
-	/// zh: '加密同步数据，需要设置私有密钥'
-	String get webdavSyncEncryptionDes => '加密同步数据，需要设置私有密钥';
 
 	/// zh: '服务器地址'
 	String get webdavOptionServer => '服务器地址';
@@ -578,72 +227,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '地址格式不正确'
 	String get syncFieldInvalidUrl => '地址格式不正确';
-
-	/// zh: '富文本'
-	String get diarySettingRichText => '富文本';
-
-	/// zh: '支持更多样式及附件，让内容呈现更丰富'
-	String get diarySettingRichTextDes => '支持更多样式及附件，让内容呈现更丰富';
-
-	/// zh: '日记页显示头图'
-	String get diarySettingShowHeaderImage => '日记页显示头图';
-
-	/// zh: '纯文本'
-	String get diarySettingPlainText => '纯文本';
-
-	/// zh: '去除多余样式，享受更纯粹的写作体验'
-	String get diarySettingPlainTextDes => '去除多余样式，享受更纯粹的写作体验';
-
-	/// zh: '自动首行缩进'
-	String get diarySettingFirstLineIndent => '自动首行缩进';
-
-	/// zh: '通用'
-	String get diarySettingCommon => '通用';
-
-	/// zh: '日记的基本设置'
-	String get diarySettingCommonDes => '日记的基本设置';
-
-	/// zh: '自动获取天气'
-	String get diarySettingAutoGetWeather => '自动获取天气';
-
-	/// zh: '自动设置分类'
-	String get diarySettingAutoSetCategory => '自动设置分类';
-
-	/// zh: '显示写作时间'
-	String get diarySettingShowWritingTime => '显示写作时间';
-
-	/// zh: '显示字数统计'
-	String get diarySettingShowWriteCount => '显示字数统计';
-
-	/// zh: '日记页动态配色'
-	String get diarySettingDynamicColor => '日记页动态配色';
-
-	/// zh: '使用基于封面的配色'
-	String get diarySettingDynamicColorDes => '使用基于封面的配色';
-
-	/// zh: '系统字体'
-	String get fontStyleSystem => '系统字体';
-
-	/// zh: '字体大小'
-	String get fontStyleSize => '字体大小';
-
-	/// zh: '超小'
-	String get fontSizeSuperSmall => '超小';
-
-	/// zh: '小'
-	String get fontSizeSmall => '小';
-
-	/// zh: '标准'
-	String get fontSizeStandard => '标准';
-
-	/// zh: '大'
-	String get fontSizeLarge => '大';
-
-	/// zh: '超大'
-	String get fontSizeSuperLarge => '超大';
-
-	/// zh: '删除字体 {fontName} 后，将无法恢复，确定删除吗？'
-	String fontDeleteDes({required Object fontName}) => '删除字体 ${fontName} 后，将无法恢复，确定删除吗？';
 
 	/// zh: '请开启定位权限'
 	String get noticeEnableLocation => '请开启定位权限';
@@ -708,51 +291,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '暂无搜索历史'
 	String get searchHistoryEmpty => '暂无搜索历史';
 
-	/// zh: 'WebDAV 设置'
-	String get webdavDashboardSetting => 'WebDAV 设置';
-
-	/// zh: '本地日记数'
-	String get webdavDashboardLocalDiaryCount => '本地日记数';
-
-	/// zh: '远程日记数'
-	String get webdavDashboardRemoteDiaryCount => '远程日记数';
-
-	/// zh: '待上传'
-	String get webdavDashboardWaitingForUpload => '待上传';
-
-	/// zh: '待下载'
-	String get webdavDashboardWaitingForDownload => '待下载';
-
-	/// zh: '上传'
-	String get webdavDashboardUpload => '上传';
-
-	/// zh: '下载'
-	String get webdavDashboardDownload => '下载';
-
-	/// zh: '当前任务队列'
-	String get webdavDashboardCurrentTaskQueue => '当前任务队列';
-
-	/// zh: '空闲'
-	String get webdavDashboardTaskEmpty => '空闲';
-
-	/// zh: '同步中'
-	String get webdavDashboardTaskSync => '同步中';
-
-	/// zh: '连接失败'
-	String get webdavDashboardConnectionError => '连接失败';
-
-	/// zh: '同步成功'
-	String get webdavSyncSuccess => '同步成功';
-
-	/// zh: '获取配置失败'
-	String get webdavSyncGetConfigError => '获取配置失败';
-
-	/// zh: '发现新版本'
-	String get updateFound => '发现新版本';
-
-	/// zh: '前往更新'
-	String get updateToGoNow => '前往更新';
-
 	/// zh: '选择图片'
 	String get editPickImage => '选择图片';
 
@@ -761,12 +299,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '相册'
 	String get editPickImageFromGallery => '相册';
-
-	/// zh: '网络'
-	String get editPickImageFromWeb => '网络';
-
-	/// zh: '涂鸦'
-	String get editPickImageFromDraw => '涂鸦';
 
 	/// zh: '选择视频'
 	String get editPickVideo => '选择视频';
@@ -786,83 +318,11 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '音频文件'
 	String get editPickAudioFromFile => '音频文件';
 
-	/// zh: '日期和时间'
-	String get editDateAndTime => '日期和时间';
-
-	/// zh: '天气'
-	String get editWeather => '天气';
-
 	/// zh: '分类'
 	String get editCategory => '分类';
 
-	/// zh: '标签'
-	String get editTag => '标签';
-
-	/// zh: '添加标签'
-	String get editAddTag => '添加标签';
-
-	/// zh: '标签已存在'
-	String get editAddTagAlreadyExist => '标签已存在';
-
-	/// zh: '标签不能为空'
-	String get editAddTagCannotEmpty => '标签不能为空';
-
-	/// zh: '心情'
-	String get editMood => '心情';
-
-	/// zh: '时间'
-	String get editTime => '时间';
-
-	/// zh: '字数'
-	String get editCount => '字数';
-
-	/// zh: '标题'
-	String get editTitle => '标题';
-
 	/// zh: '正文'
 	String get editContent => '正文';
-
-	/// zh: '缩进'
-	String get editIndent => '缩进';
-
-	/// zh: '再按一次退出'
-	String get backAgainToExit => '再按一次退出';
-
-	/// zh: '取消选择'
-	String get cancelSelect => '取消选择';
-
-	/// zh: '图片获取失败'
-	String get imageFetchError => '图片获取失败';
-
-	/// zh: '图片获取中'
-	String get imageFetching => '图片获取中';
-
-	/// zh: '保存成功'
-	String get editSaveSuccess => '保存成功';
-
-	/// zh: '保存失败'
-	String get editSaveFailed => '保存失败';
-
-	/// zh: '修改成功'
-	String get editChangeSuccess => '修改成功';
-
-	/// zh: '定位失败'
-	String get locationError => '定位失败';
-
-	/// zh: '天气获取失败'
-	String get weatherError => '天气获取失败';
-
-	/// zh: '天气获取中'
-	String get weatherFetching => '天气获取中';
-
-	/// zh: '天气获取成功'
-	String get weatherSuccess => '天气获取成功';
-
-	/// zh: '确定保存吗'
-	String get sureToSave => '确定保存吗';
-
-	/// zh: '选择颜色'
-	String get drawPickColor => '选择颜色';
 
 	/// zh: '音频文件错误'
 	String get audioFileError => '音频文件错误';
@@ -882,18 +342,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '编辑'
 	String get diaryEdit => '编辑';
 
-	/// zh: '分享'
-	String get diaryShare => '分享';
-
-	/// zh: '{count} 字'
-	String diaryCount({required Object count}) => '${count} 字';
-
-	/// zh: '数据同步'
-	String get dataSync => '数据同步';
-
-	/// zh: '类型'
-	String get diaryType => '类型';
-
 	/// zh: '(other) {{count} 张照片}'
 	String mediaImageCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
 		other: '${count} 张照片',
@@ -908,54 +356,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	String mediaVideoCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
 		other: '${count} 段视频',
 	);
-
-	/// zh: '成功'
-	String get toastSuccess => '成功';
-
-	/// zh: '出错了'
-	String get toastError => '出错了';
-
-	/// zh: '加载中'
-	String get toastLoading => '加载中';
-
-	/// zh: '请先配置 {name}'
-	String genQrCodeError1({required Object name}) => '请先配置 ${name}';
-
-	/// zh: '生成二维码'
-	String get genQrCodeTooltip => '生成二维码';
-
-	/// zh: '二维码无效'
-	String get qrCodeInvalid => '二维码无效';
-
-	/// zh: '输入'
-	String get inputTooltip => '输入';
-
-	/// zh: '输入方式'
-	String get inputMethodTitle => '输入方式';
-
-	/// zh: '扫描二维码'
-	String get inputMethodScanQrCode => '扫描二维码';
-
-	/// zh: '手动输入'
-	String get inputMethodHandelInput => '手动输入';
-
-	/// zh: '请从对应控制台获取密钥'
-	String get getKeyFromConsole => '请从对应控制台获取密钥';
-
-	/// zh: '已配置'
-	String get hasOption => '已配置';
-
-	/// zh: '未配置'
-	String get noOption => '未配置';
-
-	/// zh: '和风天气'
-	String get labQweather => '和风天气';
-
-	/// zh: '天地图'
-	String get labTianditu => '天地图';
-
-	/// zh: '腾讯云'
-	String get labTencentCloud => '腾讯云';
 
 	/// zh: '时间线'
 	String get diaryViewModeTimeline => '时间线';
@@ -1035,12 +435,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '新对话'
 	String get assistantNewChat => '新对话';
 
-	/// zh: '历史会话'
-	String get assistantHistory => '历史会话';
-
-	/// zh: '历史会话'
-	String get assistantHistoryTitle => '历史会话';
-
 	/// zh: '还没有历史会话'
 	String get assistantHistoryEmpty => '还没有历史会话';
 
@@ -1061,9 +455,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '已深度思考 {duration} 秒'
 	String assistantThoughtFor({required Object duration}) => '已深度思考 ${duration} 秒';
-
-	/// zh: '输入 {input} · 输出 {output} tokens'
-	String assistantTokenUsage({required Object input, required Object output}) => '输入 ${input} · 输出 ${output} tokens';
 
 	/// zh: '工具'
 	String get assistantSectionTool => '工具';
@@ -1272,9 +663,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '新增'
 	String get modelProviderAdd => '新增';
 
-	/// zh: '使用中'
-	String get modelProviderActive => '使用中';
-
 	/// zh: '缺少 Key'
 	String get modelProviderNoKey => '缺少 Key';
 
@@ -1304,9 +692,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '例如 DeepSeek / 本地 Ollama'
 	String get modelProviderNameHint => '例如 DeepSeek / 本地 Ollama';
-
-	/// zh: '协议类型'
-	String get modelProviderProtocol => '协议类型';
 
 	/// zh: 'baseUrl'
 	String get modelProviderBaseUrl => 'baseUrl';
@@ -1407,20 +792,11 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '日记不存在或已删除'
 	String get diaryLinkNotFound => '日记不存在或已删除';
 
-	/// zh: '反向链接'
-	String get backlinks => '反向链接';
-
 	/// zh: '知识图谱'
 	String get knowledgeGraph => '知识图谱';
 
-	/// zh: '还没有双链关系'
-	String get graphEmpty => '还没有双链关系';
-
 	/// zh: '{nodes} 篇 · {edges} 条链接'
 	String graphCount({required Object nodes, required Object edges}) => '${nodes} 篇 · ${edges} 条链接';
-
-	/// zh: '全部分类'
-	String get graphFilterAllCategories => '全部分类';
 
 	/// zh: '全部时间'
 	String get graphTimeAll => '全部时间';
@@ -1436,9 +812,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '打开日记'
 	String get graphOpenDiary => '打开日记';
-
-	/// zh: '{count} 条链接'
-	String graphNodeLinks({required Object count}) => '${count} 条链接';
 
 	/// zh: '布局风格'
 	String get graphStyle => '布局风格';
@@ -1491,11 +864,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '关系图'
 	String get graphLocal => '关系图';
 
-	/// zh: '(other) {{count} 跳}'
-	String graphDepthHops({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
-		other: '${count} 跳',
-	);
-
 	/// zh: '出链'
 	String get graphOutgoing => '出链';
 
@@ -1513,12 +881,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '回到中心'
 	String get graphBackToCenter => '回到中心';
-
-	/// zh: '已省略 {count} 个远端节点'
-	String graphTruncated({required Object count}) => '已省略 ${count} 个远端节点';
-
-	/// zh: '打开总图谱'
-	String get graphOpenFullGraph => '打开总图谱';
 
 	/// zh: '链接'
 	String get graphLinks => '链接';
