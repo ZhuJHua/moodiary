@@ -42,9 +42,9 @@ class _AccentPageState extends ConsumerState<AccentPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.accentCustomTitle),
+        title: Text(context.l10n.app.accentCustomTitle),
         actions: [
-          TextButton(onPressed: _save, child: Text(context.l10n.save)),
+          TextButton(onPressed: _save, child: Text(context.l10n.common.save)),
           const SizedBox(width: 8),
         ],
       ),
@@ -58,7 +58,7 @@ class _AccentPageState extends ConsumerState<AccentPage> {
               selected: _seed,
               onSelected: (color) => setState(() => _seed = color),
             ),
-            _GroupLabel(context.l10n.accentGroupAccent),
+            _GroupLabel(context.l10n.app.accentGroupAccent),
             _TokenGrid(
               columns: 2,
               tokens: [
@@ -90,7 +90,7 @@ class _AccentPageState extends ConsumerState<AccentPage> {
                 ),
               ],
             ),
-            _GroupLabel(context.l10n.accentGroupSurface),
+            _GroupLabel(context.l10n.app.accentGroupSurface),
             _TokenGrid(
               columns: 4,
               tokens: [
@@ -112,7 +112,7 @@ class _AccentPageState extends ConsumerState<AccentPage> {
                 ),
               ],
             ),
-            _GroupLabel(context.l10n.accentGroupSemantic),
+            _GroupLabel(context.l10n.app.accentGroupSemantic),
             _TokenGrid(
               columns: 2,
               tokens: [
@@ -171,7 +171,7 @@ class _SeedCard extends StatelessWidget {
                   mainAxisSize: .min,
                   children: [
                     Text(
-                      context.l10n.accentSeed,
+                      context.l10n.app.accentSeed,
                       style:
                           context.theme.typography.labelSmall.onSurfaceVariant,
                     ),

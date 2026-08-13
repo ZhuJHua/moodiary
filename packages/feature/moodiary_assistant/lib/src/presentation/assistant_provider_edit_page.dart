@@ -186,7 +186,7 @@ class _AssistantProviderEditPageState
     }
 
     if (mounted) {
-      toast.success(message: l10n.modelProviderSaved);
+      toast.success(message: l10n.assistant.modelProviderSaved);
       Navigator.of(context).pop(true);
     }
   }
@@ -266,15 +266,17 @@ class _AssistantProviderEditPageState
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: _SectionLabel(text: l10n.modelProviderPickModel)),
+            Expanded(
+              child: _SectionLabel(text: l10n.assistant.modelProviderPickModel),
+            ),
             if (filterable)
               TextButton(
                 onPressed: () =>
                     setState(() => _showAllModels = !_showAllModels),
                 child: Text(
                   _showAllModels
-                      ? l10n.modelProviderShowToolOnly
-                      : l10n.modelProviderShowAll,
+                      ? l10n.assistant.modelProviderShowToolOnly
+                      : l10n.assistant.modelProviderShowAll,
                 ),
               ),
           ],
@@ -283,7 +285,9 @@ class _AssistantProviderEditPageState
           const SizedBox(height: 8),
           TextField(
             onChanged: (v) => setState(() => _modelQuery = v),
-            decoration: _searchDecoration(l10n.modelProviderSearchModelHint),
+            decoration: _searchDecoration(
+              l10n.assistant.modelProviderSearchModelHint,
+            ),
           ),
         ],
         const SizedBox(height: 8),
@@ -292,7 +296,7 @@ class _AssistantProviderEditPageState
             padding: const .symmetric(vertical: 16),
             child: Center(
               child: Text(
-                l10n.modelProviderNoModelMatch,
+                l10n.assistant.modelProviderNoModelMatch,
                 style: context.theme.typography.bodySmall.onSurfaceVariant,
               ),
             ),
@@ -313,29 +317,29 @@ class _AssistantProviderEditPageState
       crossAxisAlignment: .start,
       children: [
         const SizedBox(height: 18),
-        _SectionLabel(text: l10n.modelProviderCapabilities),
+        _SectionLabel(text: l10n.assistant.modelProviderCapabilities),
         Padding(
           padding: const .only(left: 4, top: 2, bottom: 2),
           child: Text(
-            l10n.modelProviderCapabilitiesHint,
+            l10n.assistant.modelProviderCapabilitiesHint,
             style: context.theme.typography.bodySmall.onSurfaceVariant,
           ),
         ),
         _CapabilitySwitch(
           icon: LucideIcons.wrench,
-          label: l10n.modelProviderBadgeTools,
+          label: l10n.assistant.tool,
           value: _toolCall,
           onChanged: (v) => setState(() => _toolCall = v),
         ),
         _CapabilitySwitch(
           icon: LucideIcons.brain,
-          label: l10n.modelProviderBadgeReasoning,
+          label: l10n.assistant.modelProviderBadgeReasoning,
           value: _reasoning,
           onChanged: (v) => setState(() => _reasoning = v),
         ),
         _CapabilitySwitch(
           icon: LucideIcons.image,
-          label: l10n.modelProviderBadgeVision,
+          label: l10n.assistant.modelProviderBadgeVision,
           value: _attachment,
           onChanged: (v) => setState(() => _attachment = v),
         ),
@@ -350,7 +354,9 @@ class _AssistantProviderEditPageState
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _isNew ? l10n.modelProviderEditNew : l10n.modelProviderEditEdit,
+          _isNew
+              ? l10n.assistant.modelProviderEditNew
+              : l10n.assistant.modelProviderEditEdit,
         ),
         actions: [
           Padding(
@@ -368,7 +374,7 @@ class _AssistantProviderEditPageState
                   )
                 : TextButton(
                     onPressed: _loaded ? _save : null,
-                    child: Text(l10n.save),
+                    child: Text(l10n.common.save),
                   ),
           ),
         ],
@@ -384,22 +390,22 @@ class _AssistantProviderEditPageState
                   padding: const .all(16),
                   children: [
                     _LabeledField(
-                      label: l10n.modelProviderName,
+                      label: l10n.common.name,
                       child: TextFormField(
                         controller: _name,
                         textInputAction: .next,
                         decoration: _fieldDecoration(
-                          hint: l10n.modelProviderNameHint,
+                          hint: l10n.assistant.modelProviderNameHint,
                           icon: LucideIcons.idCard,
                         ),
                         validator: (v) => (v ?? '').trim().isEmpty
-                            ? l10n.modelProviderNeedName
+                            ? l10n.assistant.modelProviderNeedName
                             : null,
                       ),
                     ),
                     const SizedBox(height: 18),
                     _LabeledField(
-                      label: l10n.modelProviderBaseUrl,
+                      label: l10n.assistant.modelProviderBaseUrl,
                       child: IgnorePointer(
                         ignoring: locked,
                         child: TextFormField(
@@ -408,7 +414,7 @@ class _AssistantProviderEditPageState
                           readOnly: locked,
                           enableInteractiveSelection: !locked,
                           decoration: _fieldDecoration(
-                            hint: l10n.modelProviderBaseUrlHint,
+                            hint: l10n.assistant.modelProviderBaseUrlHint,
                             icon: LucideIcons.link,
                             suffixIcon: locked
                                 ? const Icon(LucideIcons.lock, size: 18)
@@ -419,14 +425,14 @@ class _AssistantProviderEditPageState
                     ),
                     const SizedBox(height: 18),
                     _LabeledField(
-                      label: l10n.modelProviderApiKey,
+                      label: l10n.assistant.modelProviderApiKey,
                       child: TextFormField(
                         controller: _apiKey,
                         obscureText: _obscureKey,
                         decoration: _fieldDecoration(
                           hint: _keyConfigured
-                              ? l10n.modelProviderApiKeyHintSet
-                              : l10n.modelProviderApiKeyHintUnset,
+                              ? l10n.assistant.modelProviderApiKeyHintSet
+                              : l10n.assistant.modelProviderApiKeyHintUnset,
                           icon: LucideIcons.key,
                           suffixIcon: IconButton(
                             onPressed: () =>
@@ -446,17 +452,17 @@ class _AssistantProviderEditPageState
                         child: TextButton.icon(
                           onPressed: _openApiKeyUrl,
                           icon: const Icon(LucideIcons.externalLink, size: 18),
-                          label: Text(l10n.modelProviderGetApiKey),
+                          label: Text(l10n.assistant.modelProviderGetApiKey),
                         ),
                       ),
                     const SizedBox(height: 18),
                     _LabeledField(
-                      label: l10n.modelProviderModel,
+                      label: l10n.assistant.modelProviderModel,
                       child: TextFormField(
                         controller: _model,
                         decoration: _fieldDecoration(icon: LucideIcons.cpu),
                         validator: (v) => (v ?? '').trim().isEmpty
-                            ? l10n.modelProviderNeedModel
+                            ? l10n.assistant.modelProviderNeedModel
                             : null,
                       ),
                     ),
@@ -528,11 +534,17 @@ class _ModelTile extends StatelessWidget {
     final l10n = context.l10n;
     final badges = <Widget>[
       if (model.toolCall)
-        _Badge(icon: LucideIcons.wrench, text: l10n.modelProviderBadgeTools),
+        _Badge(icon: LucideIcons.wrench, text: l10n.assistant.tool),
       if (model.reasoning)
-        _Badge(icon: LucideIcons.brain, text: l10n.modelProviderBadgeReasoning),
+        _Badge(
+          icon: LucideIcons.brain,
+          text: l10n.assistant.modelProviderBadgeReasoning,
+        ),
       if (model.attachment)
-        _Badge(icon: LucideIcons.image, text: l10n.modelProviderBadgeVision),
+        _Badge(
+          icon: LucideIcons.image,
+          text: l10n.assistant.modelProviderBadgeVision,
+        ),
       if (_formatContext(model.contextLimit) case final ctx?)
         _Badge(icon: LucideIcons.chevronsUpDown, text: ctx),
       if (_formatPrice(model.inputCost, model.outputCost) case final price?)

@@ -1,0 +1,22 @@
+{
+  "accentTitle": "主题色",
+  "accentNeutral": "默认",
+  "accentSystem": "壁纸取色",
+  "accentCustomTitle": "自定义配色",
+  "accentGroupAccent": "强调",
+  "accentGroupSurface": "表面",
+  "accentGroupSemantic": "语义",
+  "accentSeed": "选取的颜色",
+  "language": "语言",
+  "homeNavigatorDiary": "日记",
+  "homeNavigatorAssistant": "助手",
+  "homePageAddDiaryButton": "新建日记",
+  "noticeEnablePhotoPermission": "请前往设置中开启相册权限",
+  "noticeEnableCameraPermission": "请前往设置中开启相机权限",
+  "pickerRecentAlbum": "最近",
+  "categoryDeletedReset": "分类已被删除，已切回全部",
+  "homeNavigatorSetting": "设置",
+  "languageSystem": "跟随系统",
+  "languageSimplifiedChinese": "简体中文",
+  "languageEnglish": "English"
+}

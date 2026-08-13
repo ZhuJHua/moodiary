@@ -166,9 +166,9 @@ class _KeyManageSheetState extends State<_KeyManageSheet> {
       subtitle: widget.hasExistingKey ? '已开启' : '未开启',
       icon: LucideIcons.key,
       actions: [
-        MAction(label: context.l10n.cancel, enabled: !_verifying),
+        MAction(label: context.l10n.common.cancel, enabled: !_verifying),
         MAction(
-          label: context.l10n.save,
+          label: context.l10n.common.save,
           isPrimary: true,
           enabled: !_verifying,
           onPressed: () {

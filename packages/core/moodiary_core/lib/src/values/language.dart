@@ -15,11 +15,11 @@ extension LanguageExtension on Language {
   String l10nText(BuildContext context) {
     switch (this) {
       case .system:
-        return context.l10n.settingLanguageSystem;
+        return context.l10n.app.languageSystem;
       case .chinese:
-        return context.l10n.settingLanguageSimpleChinese;
+        return context.l10n.app.languageSimplifiedChinese;
       case .english:
-        return context.l10n.settingLanguageEnglish;
+        return context.l10n.app.languageEnglish;
     }
   }
 }

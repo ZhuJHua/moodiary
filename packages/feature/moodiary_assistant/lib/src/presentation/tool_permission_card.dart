@@ -143,7 +143,7 @@ class _ToolPermissionCardView extends StatelessWidget {
                           .onSurface,
                     ),
                     Text(
-                      l10n.assistantToolPermissionTitle,
+                      l10n.assistant.toolPermissionTitle,
                       style:
                           context.theme.typography.bodySmall.onSurfaceVariant,
                     ),
@@ -160,7 +160,7 @@ class _ToolPermissionCardView extends StatelessWidget {
           ),
           if (dangerous && pending) ...[
             const SizedBox(height: 12),
-            _DangerNote(text: l10n.assistantToolPermissionDangerNote),
+            _DangerNote(text: l10n.assistant.toolPermissionDangerNote),
           ],
           const SizedBox(height: 12),
           AnimatedSize(
@@ -248,19 +248,19 @@ class _PendingActions extends StatelessWidget {
         TextButton(
           onPressed: () => onAction(toolPermissionActionDeny),
           style: TextButton.styleFrom(foregroundColor: scheme.onSurfaceVariant),
-          child: Text(l10n.assistantToolDeny),
+          child: Text(l10n.assistant.toolDeny),
         ),
         TextButton(
           onPressed: () => onAction(toolPermissionActionAllowAlways),
           style: dangerous
               ? TextButton.styleFrom(foregroundColor: scheme.error)
               : null,
-          child: Text(l10n.assistantToolAllowAlways),
+          child: Text(l10n.assistant.toolAllowAlways),
         ),
         FilledButton(
           onPressed: () => onAction(toolPermissionActionAllowOnce),
           style: FilledButton.styleFrom(visualDensity: .compact),
-          child: Text(l10n.assistantToolAllowOnce),
+          child: Text(l10n.assistant.toolAllowOnce),
         ),
       ],
     );
@@ -281,25 +281,25 @@ class _DecisionBadge extends StatelessWidget {
         LucideIcons.circleCheck,
         scheme.secondaryContainer,
         scheme.onSecondaryContainer,
-        l10n.assistantToolStatusAllowedOnce,
+        l10n.assistant.toolStatusAllowedOnce,
       ),
       .allowedAlways => (
         LucideIcons.badgeCheck,
         scheme.secondaryContainer,
         scheme.onSecondaryContainer,
-        l10n.assistantToolAlwaysAllowedHint,
+        l10n.assistant.toolAlwaysAllowedHint,
       ),
       .denied => (
         LucideIcons.circleX,
         scheme.errorContainer,
         scheme.onErrorContainer,
-        l10n.assistantToolStatusDenied,
+        l10n.assistant.toolStatusDenied,
       ),
       .canceled || .pending => (
         LucideIcons.timerOff,
         scheme.surfaceContainerHigh,
         scheme.onSurfaceVariant,
-        l10n.assistantToolStatusCanceled,
+        l10n.assistant.toolStatusCanceled,
       ),
     };
     return Container(

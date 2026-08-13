@@ -142,7 +142,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
                 mainAxisAlignment: .spaceBetween,
                 children: [
                   IconButton(
-                    tooltip: context.l10n.imageBrowserInfo,
+                    tooltip: context.l10n.ui.imageBrowserInfo,
                     icon: const Icon(LucideIcons.info, color: Colors.white),
                     style: IconButton.styleFrom(
                       backgroundColor: Colors.black38,
@@ -150,7 +150,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
                     onPressed: _showInfo,
                   ),
                   IconButton(
-                    tooltip: context.l10n.imageBrowserSave,
+                    tooltip: context.l10n.ui.imageBrowserSave,
                     icon: const Icon(
                       LucideIcons.imageDown,
                       color: Colors.white,
@@ -265,10 +265,10 @@ class _MImageBrowserState extends State<MImageBrowser> {
       }
       final ok = await MediaManager.saveToGallery(path: path, type: .image);
       ok
-          ? toast.success(message: l10n.imageBrowserSaved)
-          : toast.error(message: l10n.imageBrowserSaveFailed);
+          ? toast.success(message: l10n.ui.imageBrowserSaved)
+          : toast.error(message: l10n.ui.imageBrowserSaveFailed);
     } catch (_) {
-      toast.error(message: l10n.imageBrowserSaveFailed);
+      toast.error(message: l10n.ui.imageBrowserSaveFailed);
     } finally {
       if (tempPath != null) {
         try {
@@ -291,9 +291,9 @@ class _MImageBrowserState extends State<MImageBrowser> {
     await MSheet.show<void>(
       context,
       builder: (sheetContext) => MSheetScaffold<void>(
-        title: sheetContext.l10n.imageBrowserInfo,
+        title: sheetContext.l10n.ui.imageBrowserInfo,
         icon: LucideIcons.info,
-        actions: [MAction(label: sheetContext.l10n.ok, isPrimary: true)],
+        actions: [MAction(label: sheetContext.l10n.common.ok, isPrimary: true)],
         child: _ImageInfoSheet(info: info),
       ),
     );
@@ -371,15 +371,15 @@ class _ImageInfoSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final rows = <(String, String)>[
-      if (info.name != null) (l10n.imageBrowserInfoName, info.name!),
-      if (info.url != null) (l10n.imageBrowserInfoUrl, info.url!),
+      if (info.name != null) (l10n.common.fileName, info.name!),
+      if (info.url != null) (l10n.ui.imageBrowserInfoUrl, info.url!),
       if (info.resolution != null)
-        (l10n.imageBrowserInfoResolution, info.resolution!),
-      if (info.size != null) (l10n.imageBrowserInfoSize, info.size!),
-      if (info.format != null) (l10n.imageBrowserInfoFormat, info.format!),
+        (l10n.ui.imageBrowserInfoResolution, info.resolution!),
+      if (info.size != null) (l10n.ui.imageBrowserInfoSize, info.size!),
+      if (info.format != null) (l10n.ui.imageBrowserInfoFormat, info.format!),
       if (info.modified != null)
         (
-          l10n.imageBrowserInfoModified,
+          l10n.ui.imageBrowserInfoModified,
           TimeFormat.fullDateTime(info.modified!),
         ),
     ];

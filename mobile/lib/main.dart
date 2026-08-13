@@ -99,7 +99,7 @@ class Moodiary extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(appSettingsControllerProvider);
     return MaterialApp.router(
-      onGenerateTitle: (context) => context.l10n.appName,
+      onGenerateTitle: (context) => context.l10n.common.appName,
       routerConfig: router,
       builder: (context, child) {
         // 主题不再由这里注入：`MaterialApp` 内部已经用 AnimatedTheme 把 `theme` /

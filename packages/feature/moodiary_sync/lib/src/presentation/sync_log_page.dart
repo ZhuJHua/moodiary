@@ -431,7 +431,7 @@ class _EventTile extends StatelessWidget {
               toast.success(message: '已复制到剪贴板');
             },
           ),
-          MAction(label: ctx.l10n.ok, isPrimary: true),
+          MAction(label: ctx.l10n.common.ok, isPrimary: true),
         ],
         child: SelectableText(
           pretty,

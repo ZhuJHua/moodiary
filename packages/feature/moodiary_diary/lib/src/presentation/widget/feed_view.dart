@@ -44,7 +44,7 @@ class DiaryFeedView extends ConsumerWidget {
             final dirty = SyncDirtyTracker.instance.listenable.value;
             Widget body;
             if (diaries.isEmpty) {
-              body = Center(child: Text(context.l10n.diaryTabViewEmpty));
+              body = Center(child: Text(context.l10n.diary.tabViewEmpty));
             } else {
               final selNotifier = ref.read(diarySelectionProvider.notifier);
               final sort = DiarySort.getType(MoodiaryKVs.homeSortMode.get()!);

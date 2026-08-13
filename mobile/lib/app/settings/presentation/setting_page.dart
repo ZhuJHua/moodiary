@@ -97,7 +97,7 @@ class _DataSection extends StatelessWidget {
                 onTap: () => _openSetting(context, const BackupSyncRoute()),
               ),
               SettingListTile(
-                title: context.l10n.exportPageTitle,
+                title: context.l10n.export.pageTitle,
                 leading: Icon(
                   LucideIcons.fileOutput,
                   color: scheme.onSurfaceVariant,
@@ -218,15 +218,15 @@ class _DisplaySection extends ConsumerWidget {
                       ? ThemeAccentMode.values[index]
                       : ThemeAccentMode.neutral;
                   return SettingListTile(
-                    title: context.l10n.accentTitle,
+                    title: context.l10n.app.accentTitle,
                     leading: Icon(
                       LucideIcons.palette,
                       color: scheme.onSurfaceVariant,
                     ),
                     trailing: Text(switch (mode) {
-                      .neutral => context.l10n.accentNeutral,
-                      .system => context.l10n.accentSystem,
-                      .custom => context.l10n.accentCustom,
+                      .neutral => context.l10n.app.accentNeutral,
+                      .system => context.l10n.app.accentSystem,
+                      .custom => context.l10n.common.custom,
                     }, style: context.theme.typography.bodySmall.primary),
                     onTap: () => AccentSheet.show(context),
                   );

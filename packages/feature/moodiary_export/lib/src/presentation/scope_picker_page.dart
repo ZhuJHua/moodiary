@@ -93,16 +93,16 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
 
   String _categoryLabel(Translations l10n) {
     final names = _categoryIds.map((id) {
-      if (id == null || id.isEmpty) return l10n.exportUncategorized;
+      if (id == null || id.isEmpty) return l10n.export.uncategorized;
       return _categories
               .where((c) => c.id == id)
               .map((c) => c.categoryName)
               .firstOrNull ??
-          l10n.exportDeletedCategory;
+          l10n.export.deletedCategory;
     }).toList();
     return names.length <= 2
         ? names.join('、')
-        : l10n.exportCategoryCount(count: names.length);
+        : l10n.common.categoryCount(count: names.length);
   }
 
   @override
@@ -112,7 +112,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
     final built = _build(l10n);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.exportSelectDiaries)),
+      appBar: AppBar(title: Text(l10n.export.selectDiaries)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -154,7 +154,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
                 ? null
                 : () => Navigator.of(context).pop(built),
             child: Text(
-              built == null ? l10n.exportNothingSelected : l10n.exportConfirm,
+              built == null ? l10n.export.nothingSelected : l10n.export.confirm,
             ),
           ),
         ),
@@ -163,15 +163,15 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
   }
 
   String _kindLabel(Translations l10n, _ScopeKind kind) => switch (kind) {
-    .all => l10n.exportScopeAll,
-    .category => l10n.exportScopeByCategory,
-    .dateRange => l10n.exportScopeByDate,
-    .picked => l10n.exportScopePicked,
+    .all => l10n.export.scopeAll,
+    .category => l10n.export.scopeByCategory,
+    .dateRange => l10n.export.scopeByDate,
+    .picked => l10n.export.scopePicked,
   };
 
   /// 只有「全部」需要带篇数，其余选项自解释。
   Widget? _kindHint(Translations l10n, _ScopeKind kind) => kind == .all
-      ? Text(l10n.exportScopeAllHint(count: _diaries.length))
+      ? Text(l10n.export.entryCount(count: _diaries.length))
       : null;
 
   Widget _categoryList(Translations l10n) {
@@ -189,8 +189,8 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
           if (uncategorized > 0)
             CheckboxListTile(
               value: _categoryIds.contains(null),
-              title: Text(l10n.exportUncategorized),
-              subtitle: Text(l10n.exportEntryCount(count: uncategorized)),
+              title: Text(l10n.export.uncategorized),
+              subtitle: Text(l10n.export.entryCount(count: uncategorized)),
               onChanged: (v) => setState(() {
                 v == true ? _categoryIds.add(null) : _categoryIds.remove(null);
               }),
@@ -200,7 +200,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
               value: _categoryIds.contains(category.id),
               title: Text(category.categoryName),
               subtitle: Text(
-                l10n.exportEntryCount(
+                l10n.export.entryCount(
                   count: _diaries
                       .where((d) => d.categoryId == category.id)
                       .length,
@@ -226,10 +226,10 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
       child: SettingListTile(
         isFirst: true,
         isLast: true,
-        title: l10n.exportDateRange,
+        title: l10n.export.dateRange,
         subtitle: range == null
-            ? l10n.exportTapToPick
-            : l10n.exportDateRangeValue(
+            ? l10n.export.tapToPick
+            : l10n.export.dateRangeValue(
                 from: _date(range.start),
                 to: _date(range.end),
               ),
@@ -270,7 +270,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
           CheckboxListTile(
             value: _pickedIds.length == _diaries.length && _diaries.isNotEmpty,
             tristate: true,
-            title: Text(l10n.exportSelectAll),
+            title: Text(l10n.export.selectAll),
             onChanged: (_) => setState(() {
               if (_pickedIds.length == _diaries.length) {
                 _pickedIds.clear();
@@ -286,7 +286,7 @@ class _ScopePickerPageState extends State<ScopePickerPage> {
             CheckboxListTile(
               value: _pickedIds.contains(diary.id),
               title: Text(
-                diary.title.trim().isEmpty ? l10n.exportUntitled : diary.title,
+                diary.title.trim().isEmpty ? l10n.common.untitled : diary.title,
                 maxLines: 1,
                 overflow: .ellipsis,
               ),

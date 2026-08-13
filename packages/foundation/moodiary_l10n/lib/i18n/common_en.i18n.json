@@ -1,0 +1,19 @@
+{
+  "ok": "OK",
+  "cancel": "Cancel",
+  "more": "More",
+  "custom": "Custom",
+  "save": "Save",
+  "media": "Media",
+  "audio": "Audio",
+  "video": "Video",
+  "category": "Category",
+  "name": "Name",
+  "delete": "Delete",
+  "untitled": "Untitled",
+  "retry": "Retry",
+  "categoryCount": "{count} categories",
+  "fileName": "File name",
+  "close": "Close",
+  "appName": "Moodiary"
+}

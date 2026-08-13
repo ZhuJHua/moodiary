@@ -15,7 +15,7 @@ class LanguageDialog extends ConsumerWidget {
       orElse: () => Language.system,
     );
     return SimpleDialog(
-      title: Text(context.l10n.settingLanguage),
+      title: Text(context.l10n.app.language),
       children: [
         for (final lang in Language.values)
           _Option(

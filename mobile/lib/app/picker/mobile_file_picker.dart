@@ -114,7 +114,7 @@ class MobileFilePicker implements IFilePicker {
       );
     } on StateError {
       if (context.mounted) {
-        toast.error(message: context.l10n.noticeEnablePhotoPermission);
+        toast.error(message: context.l10n.app.noticeEnablePhotoPermission);
       }
       return const [];
     }
@@ -139,7 +139,7 @@ class MobileFilePicker implements IFilePicker {
             ),
             // Android 的「全部照片」虚拟相册固定叫 Recent，不随系统语言；按 app 语言本地化。
             pathNameBuilder: (path) =>
-                path.isAll ? l10n.pickerRecentAlbum : path.name,
+                path.isAll ? l10n.app.pickerRecentAlbum : path.name,
           ),
         );
     return _toXFiles(assets ?? const []);
@@ -168,7 +168,7 @@ class MobileFilePicker implements IFilePicker {
     } catch (e) {
       logger.d('CameraPicker failed: $e');
       if (context.mounted) {
-        toast.error(message: context.l10n.noticeEnableCameraPermission);
+        toast.error(message: context.l10n.app.noticeEnableCameraPermission);
       }
       return null;
     }

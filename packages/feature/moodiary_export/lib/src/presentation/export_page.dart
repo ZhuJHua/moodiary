@@ -19,7 +19,7 @@ class ExportPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.exportPageTitle)),
+      appBar: AppBar(title: Text(context.l10n.export.pageTitle)),
       body: ListView(
         // 与其它设置页一致：左右 8、上下 8，再补底部安全区。
         padding: .fromLTRB(8, 8, 8, 8 + MediaQuery.paddingOf(context).bottom),
@@ -42,7 +42,7 @@ class _ExportSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        SettingTitleTile(title: context.l10n.exportSectionExport),
+        SettingTitleTile(title: context.l10n.export.sectionExport),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -56,7 +56,7 @@ class _ExportSection extends StatelessWidget {
                 onTap: () => _open(context, .markdown),
               ),
               SettingListTile(
-                title: context.l10n.exportFormatDocx,
+                title: context.l10n.export.formatDocx,
                 leading: const FileTypeIcon('DOCX'),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _open(context, .docx),
@@ -90,36 +90,36 @@ class _ImportSection extends StatelessWidget {
 
     final confirmed = await MAlert.confirm(
       context,
-      title: l10n.exportRestoreFromBackup,
-      message: l10n.exportRestoreConfirmMessage,
-      confirmLabel: l10n.exportRestoreConfirmLabel,
+      title: l10n.export.restoreFromBackup,
+      message: l10n.export.restoreConfirmMessage,
+      confirmLabel: l10n.export.restoreConfirmLabel,
     );
     if (!confirmed) return;
 
-    toast.loading(message: l10n.exportRestoring);
+    toast.loading(message: l10n.export.restoring);
     try {
       final summary = await IBackupArchive.get().import(file.path);
       await toast.dismiss();
-      toast.success(message: l10n.exportRestoreDone(summary: summary));
+      toast.success(message: l10n.export.restoreDone(summary: summary));
     } catch (e) {
       await toast.dismiss();
-      toast.error(message: l10n.exportRestoreFailed(error: '$e'));
+      toast.error(message: l10n.export.restoreFailed(error: '$e'));
     }
   }
 
   Future<void> _exportBackup(BuildContext context) async {
     final l10n = context.l10n;
-    toast.loading(message: l10n.exportPackingBackup);
+    toast.loading(message: l10n.export.packingBackup);
     final String zipPath;
     try {
       zipPath = await IBackupArchive.get().export();
       await toast.dismiss();
     } catch (e) {
       await toast.dismiss();
-      toast.error(message: l10n.exportFailed(error: '$e'));
+      toast.error(message: l10n.export.failed(error: '$e'));
       return;
     }
-    await _share(zipPath, 'application/zip', l10n.exportBackupReady);
+    await _share(zipPath, 'application/zip', l10n.export.backupReady);
   }
 
   @override
@@ -128,7 +128,7 @@ class _ImportSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        SettingTitleTile(title: context.l10n.exportSectionBackup),
+        SettingTitleTile(title: context.l10n.export.sectionBackup),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -136,16 +136,16 @@ class _ImportSection extends StatelessWidget {
             children: [
               SettingListTile(
                 isFirst: true,
-                title: context.l10n.exportBackupExport,
-                subtitle: context.l10n.exportBackupExportSubtitle,
+                title: context.l10n.export.backupExport,
+                subtitle: context.l10n.export.backupExportSubtitle,
                 leading: const Icon(LucideIcons.archive),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _exportBackup(context),
               ),
               SettingListTile(
                 isLast: true,
-                title: context.l10n.exportRestoreFromBackup,
-                subtitle: context.l10n.exportBackupRestoreSubtitle,
+                title: context.l10n.export.restoreFromBackup,
+                subtitle: context.l10n.export.backupRestoreSubtitle,
                 leading: const Icon(LucideIcons.archiveRestore),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () => _restoreBackup(context),
@@ -179,8 +179,8 @@ Future<void> shareExported(String path, Translations l10n) async {
     _ => 'application/octet-stream',
   };
   if (!File(path).existsSync()) {
-    toast.error(message: l10n.exportArtifactMissing);
+    toast.error(message: l10n.export.artifactMissing);
     return;
   }
-  await _share(path, mime, l10n.exportGenerated);
+  await _share(path, mime, l10n.export.generated);
 }

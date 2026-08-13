@@ -81,7 +81,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           onSubmitted: (_) => _searchNow(),
           decoration: InputDecoration(
             border: .none,
-            hintText: context.l10n.diarySearch,
+            hintText: context.l10n.diary.search,
             suffixIcon: ValueListenableBuilder(
               valueListenable: _textController,
               builder: (context, value, _) {
@@ -114,11 +114,11 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
                   mainAxisSize: .min,
                   children: [
                     Text(
-                      context.l10n.diarySearchResult(count: state.totalCount),
+                      context.l10n.diary.searchResult(count: state.totalCount),
                     ),
                     if (state.elapsed != null)
                       Text(
-                        ' · ${context.l10n.diarySearchTime(ms: state.elapsed!.inMilliseconds)}',
+                        ' · ${context.l10n.diary.searchTime(ms: state.elapsed!.inMilliseconds)}',
                         style:
                             context.theme.typography.bodySmall.onSurfaceVariant,
                       ),
@@ -195,17 +195,17 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
           error: (_, _) => const <Category>[],
         );
     final label = state.categoryId == null
-        ? context.l10n.searchCategoryAll
+        ? context.l10n.diary.allCategories
         : (categories
                   .firstWhereOrNull((c) => c.id == state.categoryId)
                   ?.categoryName ??
-              context.l10n.searchCategoryAll);
+              context.l10n.diary.allCategories);
     return MMenuButton<String>(
       // 空串 = 全部分类（null 语义留给「未选择」，故用空串表达「全部」）。
       selected: state.categoryId ?? '',
       onSelected: (id) => _controller.setCategory(id.isEmpty ? null : id),
       entries: [
-        MMenuEntry(value: '', label: context.l10n.searchCategoryAll),
+        MMenuEntry(value: '', label: context.l10n.diary.allCategories),
         for (final c in categories)
           MMenuEntry(value: c.id, label: c.categoryName),
       ],
@@ -234,11 +234,11 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 
   String _dateLabel(BuildContext context, DateRangePreset p) => switch (p) {
-    .all => context.l10n.searchRangeAll,
-    .last7Days => context.l10n.searchRange7d,
-    .last30Days => context.l10n.searchRange30d,
-    .thisYear => context.l10n.searchRangeYear,
-    .custom => context.l10n.searchRangeCustom,
+    .all => context.l10n.diary.rangeAll,
+    .last7Days => context.l10n.diary.rangeLast7,
+    .last30Days => context.l10n.diary.rangeLast30,
+    .thisYear => context.l10n.diary.rangeThisYear,
+    .custom => context.l10n.common.custom,
   };
 
   String _dateChipLabel(BuildContext context, DiarySearchState state) {
@@ -252,9 +252,9 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
   }
 
   String _sortLabel(BuildContext context, SearchSort s) => switch (s) {
-    .relevance => context.l10n.searchSortRelevance,
-    .timeDesc => context.l10n.searchSortNewest,
-    .timeAsc => context.l10n.searchSortOldest,
+    .relevance => context.l10n.diary.searchSortRelevance,
+    .timeDesc => context.l10n.diary.searchSortNewest,
+    .timeAsc => context.l10n.diary.searchSortOldest,
   };
 
   // ── 主体（历史 / 结果 / 空 / 加载） ──────────────────────────────────────
@@ -299,7 +299,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
       context,
       key: 'empty',
       icon: LucideIcons.searchX,
-      text: context.l10n.searchNoResult,
+      text: context.l10n.diary.searchNoResult,
     );
   }
 
@@ -315,7 +315,7 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
             context,
             key: 'history-empty',
             icon: LucideIcons.history,
-            text: context.l10n.searchHistoryEmpty,
+            text: context.l10n.diary.searchHistoryEmpty,
           );
         }
         return SingleChildScrollView(
@@ -326,14 +326,14 @@ class _DiarySearchPageState extends ConsumerState<DiarySearchPage> {
               Row(
                 children: [
                   Text(
-                    context.l10n.searchHistory,
+                    context.l10n.diary.searchHistory,
                     style: context.theme.typography.labelLarge.onSurfaceVariant,
                   ),
                   const Spacer(),
                   TextButton.icon(
                     onPressed: _controller.clearHistory,
                     icon: const Icon(LucideIcons.eraser, size: 18),
-                    label: Text(context.l10n.searchHistoryClear),
+                    label: Text(context.l10n.diary.searchHistoryClear),
                   ),
                 ],
               ),

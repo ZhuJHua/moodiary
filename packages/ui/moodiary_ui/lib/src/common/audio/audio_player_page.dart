@@ -169,7 +169,7 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
       appBar: AppBar(
         backgroundColor: scheme.surface,
         leading: IconButton(
-          tooltip: l10n.audioPlayerClose,
+          tooltip: l10n.common.close,
           icon: const Icon(LucideIcons.x),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
@@ -255,7 +255,7 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
               _ScrubBar(
                 fraction: fraction,
                 dragging: draft != null,
-                semanticLabel: l10n.audioPlayerProgress,
+                semanticLabel: l10n.ui.playbackProgress,
                 onSeek: (f) =>
                     _controller.seek(f, fallbackTotal: widget.knownDuration),
               ),
@@ -265,9 +265,7 @@ class _MAudioPlayerPageState extends State<MAudioPlayerPage>
                   // 播完回到起点显示播放键，点按即重播（toggle 内部处理 completed）。
                   IconButton.filled(
                     onPressed: () => _controller.toggle(widget.audioPath),
-                    tooltip: p.playing
-                        ? l10n.audioPlayerPause
-                        : l10n.audioPlayerPlay,
+                    tooltip: p.playing ? l10n.ui.pause : l10n.ui.play,
                     iconSize: 24,
                     icon: Icon(
                       p.playing ? LucideIcons.pause : LucideIcons.play,

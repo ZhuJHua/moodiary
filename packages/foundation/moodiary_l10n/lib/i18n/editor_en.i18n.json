@@ -1,0 +1,14 @@
+{
+  "noticeEnableLocation": "Please enable location permission",
+  "noticeEnableLocation2": "Please go to settings to enable location permissions",
+  "pickFromGallery": "Album",
+  "audioFileError": "Audio file error",
+  "pickImage": "Select image",
+  "pickImageFromCamera": "Taking photos",
+  "pickVideo": "Select video",
+  "pickVideoFromCamera": "Video",
+  "pickAudio": "Select audio",
+  "pickAudioFromRecord": "Recording",
+  "pickAudioFromFile": "File Audio",
+  "content": "Text"
+}

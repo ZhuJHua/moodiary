@@ -205,14 +205,14 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
               if (!_popCenter()) Navigator.of(context).pop();
             },
           ),
-          title: Text(l10n.graphLocal),
+          title: Text(l10n.diary.graphLocal),
         ),
         body: async.buildLoading(
           data: (graph) {
             if (graph.isEmpty) {
               return Center(
                 child: Text(
-                  l10n.graphNoLocalLinks,
+                  l10n.diary.graphNoLocalLinks,
                   style: theme.typography.bodyMedium.onSurfaceVariant,
                 ),
               );
@@ -222,7 +222,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
             if (scene.nodeCount <= 1) {
               return Center(
                 child: Text(
-                  l10n.graphNoLocalLinks,
+                  l10n.diary.graphNoLocalLinks,
                   style: theme.typography.bodyMedium.onSurfaceVariant,
                 ),
               );
@@ -293,13 +293,13 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
             children: [
               _Legend(
                 color: cs.tertiary,
-                label: l10n.graphIncomingCount(
+                label: l10n.diary.graphIncomingCount(
                   count: _countAtCenter(scene, out: false),
                 ),
               ),
               _Legend(
                 color: cs.primary,
-                label: l10n.graphOutgoingCount(
+                label: l10n.diary.graphOutgoingCount(
                   count: _countAtCenter(scene, out: true),
                 ),
               ),
@@ -317,7 +317,7 @@ class _DiaryEgoGraphPageState extends ConsumerState<DiaryEgoGraphPage>
               curve: Curves.easeOut,
               child: FloatingActionButton.small(
                 heroTag: null,
-                tooltip: l10n.graphBackToCenter,
+                tooltip: l10n.diary.graphBackToCenter,
                 elevation: 2,
                 backgroundColor: cs.surfaceContainerHigh,
                 foregroundColor: cs.onSurfaceVariant,

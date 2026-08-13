@@ -19,15 +19,15 @@ List<MNavDestination> _navDestinations(BuildContext context) {
   return [
     MNavDestination(
       icon: const Icon(LucideIcons.bookText),
-      label: l10n.homeNavigatorDiary,
+      label: l10n.app.homeNavigatorDiary,
     ),
     MNavDestination(
       icon: const Icon(LucideIcons.image),
-      label: l10n.homeNavigatorMedia,
+      label: l10n.common.media,
     ),
     MNavDestination(
       icon: const Icon(LucideIcons.astroid),
-      label: l10n.homeNavigatorAssistant,
+      label: l10n.app.homeNavigatorAssistant,
     ),
   ];
 }
@@ -68,12 +68,12 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
     return switch (_tab) {
       .assistant => MNavAction(
         icon: const Icon(LucideIcons.messageCirclePlus),
-        tooltip: l10n.assistantNewChat,
+        tooltip: l10n.assistant.newChat,
         onPressed: () => const AssistantConversationRoute().push(context),
       ),
       .diary || .media => MNavAction(
         icon: const Icon(LucideIcons.pencilLine),
-        tooltip: l10n.homePageAddDiaryButton,
+        tooltip: l10n.app.homePageAddDiaryButton,
         onPressed: _newDiary,
       ),
     };

@@ -24,9 +24,9 @@ class MediaPage extends StatelessWidget {
 }
 
 String _typeLabel(BuildContext c, MediaType t) => switch (t) {
-  .image => c.l10n.mediaTypeImage,
-  .audio => c.l10n.mediaTypeAudio,
-  .video => c.l10n.mediaTypeVideo,
+  .image => c.l10n.media.typeImage,
+  .audio => c.l10n.common.audio,
+  .video => c.l10n.common.video,
 };
 
 IconData _typeIcon(MediaType t) => switch (t) {
@@ -36,9 +36,9 @@ IconData _typeIcon(MediaType t) => switch (t) {
 };
 
 String _countLabel(BuildContext c, MediaType t, int n) => switch (t) {
-  .image => c.l10n.mediaImageCount(count: n),
-  .audio => c.l10n.mediaAudioCount(count: n),
-  .video => c.l10n.mediaVideoCount(count: n),
+  .image => c.l10n.media.imageCount(count: n),
+  .audio => c.l10n.media.audioCount(count: n),
+  .video => c.l10n.media.videoCount(count: n),
 };
 
 class _MobileMediaPage extends ConsumerStatefulWidget {
@@ -55,7 +55,7 @@ class _MobileMediaPageState extends ConsumerState<_MobileMediaPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.mediaTitle),
+        title: Text(context.l10n.media.title),
         actions: [_CleanupButton()],
       ),
       body: Column(
@@ -90,7 +90,7 @@ class _CleanupButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
-      tooltip: context.l10n.mediaDeleteUseLessFile,
+      tooltip: context.l10n.media.deleteUseLessFile,
       icon: const Icon(LucideIcons.brushCleaning),
       onPressed: () => runMediaCleanup(context, ref),
     );
@@ -102,7 +102,7 @@ Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
   final l10n = context.l10n;
   final notifier = ref.read(mediaCleanupControllerProvider.notifier);
 
-  toast.loading(message: l10n.mediaCleanupScanning);
+  toast.loading(message: l10n.media.cleanupScanning);
   final MediaCleanupReport report;
   try {
     report = await notifier.scan();
@@ -114,15 +114,15 @@ Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
   await toast.dismiss();
 
   if (report.isEmpty) {
-    toast.info(message: l10n.mediaCleanupEmpty);
+    toast.info(message: l10n.media.cleanupEmpty);
     return;
   }
 
   if (!context.mounted) return;
   final confirmed = await MAlert.confirm(
     context,
-    title: l10n.mediaCleanupConfirmTitle,
-    message: l10n.mediaCleanupConfirmMessage(
+    title: l10n.media.cleanupConfirmTitle,
+    message: l10n.media.cleanupConfirmMessage(
       count: report.count,
       size: report.readableSize,
     ),
@@ -141,7 +141,7 @@ Future<void> runMediaCleanup(BuildContext context, WidgetRef ref) async {
   // 用调用方仍有效的 ref 刷新媒体库（controller 的 ref 此时可能已被 autoDispose 回收）。
   if (context.mounted) ref.invalidate(mediaDiariesProvider);
   await toast.dismiss();
-  toast.success(message: l10n.mediaCleanupDone(count: report.count));
+  toast.success(message: l10n.media.cleanupDone(count: report.count));
 }
 
 /// 3 列网格的常量（内边距 / 间距 / 列数），用于按屏宽算出缩略图降采样宽度。
@@ -350,7 +350,7 @@ class _AudioTile extends ConsumerWidget {
       entries: [
         MMenuEntry(
           value: .rename,
-          label: context.l10n.mediaRename,
+          label: context.l10n.media.rename,
           icon: LucideIcons.pencilLine,
         ),
       ],
@@ -358,9 +358,9 @@ class _AudioTile extends ConsumerWidget {
     if (action != .rename || !context.mounted) return;
     final input = await MAlert.prompt(
       context,
-      title: context.l10n.mediaRename,
+      title: context.l10n.media.rename,
       initialValue: info?.name ?? '',
-      hintText: context.l10n.audioNameLabel,
+      hintText: context.l10n.common.name,
     );
     if (input == null) return;
     // 清空即回落默认名（存 null，默认名不落盘）；全字段重建、刷 lastModified。
@@ -384,7 +384,7 @@ class _AudioTile extends ConsumerWidget {
     if (info?.durationMs == null) {
       Future.microtask(() => _backfillMediaInfo(name));
     }
-    final displayName = info?.name ?? context.l10n.audioDefaultName;
+    final displayName = info?.name ?? context.l10n.common.audio;
     final durationMs = info?.durationMs;
     return Material(
       color: scheme.surfaceContainer,
@@ -587,7 +587,7 @@ class _Empty extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            context.l10n.mediaEmpty,
+            context.l10n.media.empty,
             style: theme.typography.bodyMedium.onSurfaceVariant,
           ),
         ],

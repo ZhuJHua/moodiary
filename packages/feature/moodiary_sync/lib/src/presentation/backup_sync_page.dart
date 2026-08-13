@@ -375,9 +375,9 @@ class _AutoSyncSection extends StatelessWidget {
             subtitle: _fmtInterval(seconds),
             icon: LucideIcons.timer,
             actions: [
-              MAction(label: ctx.l10n.cancel),
+              MAction(label: ctx.l10n.common.cancel),
               MAction(
-                label: ctx.l10n.ok,
+                label: ctx.l10n.common.ok,
                 value: _pollPresets[index],
                 isPrimary: true,
               ),
@@ -459,9 +459,9 @@ class _NetworkSection extends StatelessWidget {
             subtitle: '${value.round()}',
             icon: LucideIcons.server,
             actions: [
-              MAction(label: ctx.l10n.cancel),
+              MAction(label: ctx.l10n.common.cancel),
               MAction(
-                label: ctx.l10n.ok,
+                label: ctx.l10n.common.ok,
                 value: value.round(),
                 isPrimary: true,
               ),

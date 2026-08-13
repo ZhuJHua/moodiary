@@ -28,9 +28,10 @@ class _AssistantProviderPickerPageState
     try {
       await ref.read(llmProviderPresetControllerProvider.notifier).refresh();
       if (!mounted) return;
-      toast.success(message: context.l10n.llmPickerRefreshed);
+      toast.success(message: context.l10n.assistant.llmPickerRefreshed);
     } catch (_) {
-      if (mounted) toast.error(message: context.l10n.llmPickerLoadFailed);
+      if (mounted)
+        toast.error(message: context.l10n.assistant.llmPickerLoadFailed);
     } finally {
       if (mounted) setState(() => _refreshing = false);
     }
@@ -62,10 +63,10 @@ class _AssistantProviderPickerPageState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.llmPickerTitle),
+        title: Text(l10n.assistant.llmPickerTitle),
         actions: [
           IconButton(
-            tooltip: l10n.llmPickerRefresh,
+            tooltip: l10n.assistant.llmPickerRefresh,
             onPressed: _refreshing ? null : _refresh,
             icon: _refreshing
                 ? const SizedBox(
@@ -86,7 +87,7 @@ class _AssistantProviderPickerPageState
             TextField(
               onChanged: (v) => setState(() => _query = v),
               decoration: InputDecoration(
-                hintText: l10n.llmPickerSearchHint,
+                hintText: l10n.assistant.llmPickerSearchHint,
                 prefixIcon: const Icon(LucideIcons.search),
                 filled: true,
                 isDense: true,
@@ -110,7 +111,7 @@ class _AssistantProviderPickerPageState
               padding: const .only(top: 32),
               child: Center(
                 child: Text(
-                  l10n.llmPickerEmpty,
+                  l10n.assistant.llmPickerEmpty,
                   style: context.theme.typography.bodyMedium.onSurfaceVariant,
                 ),
               ),
@@ -149,11 +150,11 @@ class _CustomTile extends StatelessWidget {
           child: const Icon(LucideIcons.slidersHorizontal, size: 20),
         ),
         title: Text(
-          l10n.llmPickerCustom,
+          l10n.common.custom,
           style: context.theme.typography.titleMedium.onSecondaryContainer,
         ),
         subtitle: Text(
-          l10n.llmPickerCustomDes,
+          l10n.assistant.llmPickerCustomDes,
           style: context.theme.typography.bodySmall.onSecondaryContainer,
         ),
         trailing: Icon(
@@ -185,7 +186,7 @@ class _PresetCard extends StatelessWidget {
         leading: ProviderLogo(logoUrl: preset.logoUrl, name: name),
         title: Text(name),
         subtitle: Text(
-          l10n.llmPickerModelCount(count: preset.models.length),
+          l10n.assistant.llmPickerModelCount(count: preset.models.length),
           maxLines: 1,
           overflow: .ellipsis,
         ),
@@ -212,14 +213,14 @@ class _InlineError extends StatelessWidget {
           Icon(LucideIcons.cloudOff, size: 40, color: scheme.outline),
           const SizedBox(height: 12),
           Text(
-            l10n.llmPickerLoadFailed,
+            l10n.assistant.llmPickerLoadFailed,
             style: context.theme.typography.bodyMedium.onSurfaceVariant,
           ),
           const SizedBox(height: 12),
           FilledButton.tonalIcon(
             onPressed: onRetry,
             icon: const Icon(LucideIcons.rotateCw),
-            label: Text(l10n.llmPickerRetry),
+            label: Text(l10n.common.retry),
           ),
         ],
       ),
@@ -235,10 +236,10 @@ class _UpdatedFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final parts = <String>[l10n.llmPickerDataSource];
+    final parts = <String>[l10n.assistant.llmPickerDataSource];
     if (at > 0) {
       final time = TimeFormat.listDateTime(.fromMillisecondsSinceEpoch(at));
-      parts.add(l10n.llmPickerUpdatedAt(time: time));
+      parts.add(l10n.assistant.llmPickerUpdatedAt(time: time));
     }
     return Padding(
       padding: const .symmetric(vertical: 12),

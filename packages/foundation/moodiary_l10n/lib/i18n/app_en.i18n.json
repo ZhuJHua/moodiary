@@ -1,0 +1,22 @@
+{
+  "accentTitle": "Accent color",
+  "accentNeutral": "Default",
+  "accentSystem": "From wallpaper",
+  "accentCustomTitle": "Custom accent",
+  "accentGroupAccent": "Accent",
+  "accentGroupSurface": "Surface",
+  "accentGroupSemantic": "Semantic",
+  "accentSeed": "Picked",
+  "language": "Language",
+  "homeNavigatorDiary": "Diary",
+  "homeNavigatorAssistant": "Assistant",
+  "homePageAddDiaryButton": "Create a diary",
+  "noticeEnablePhotoPermission": "Please go to settings to enable photo library permissions",
+  "noticeEnableCameraPermission": "Please go to settings to enable camera permissions",
+  "pickerRecentAlbum": "Recent",
+  "categoryDeletedReset": "Category deleted, showing all diaries",
+  "homeNavigatorSetting": "Setting",
+  "languageSystem": "Follow System",
+  "languageSimplifiedChinese": "简体中文",
+  "languageEnglish": "English"
+}

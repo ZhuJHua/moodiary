@@ -44,12 +44,12 @@ class _PdfFontPageState extends State<PdfFontPage> {
     final picked = await FontManager.pickFont();
     if (picked == null) return;
 
-    toast.loading(message: l10n.exportImportingFont);
+    toast.loading(message: l10n.export.importingFont);
     try {
       final name = await FontManager.getFontName(filePath: picked.path);
       if (name == null) {
         await toast.dismiss();
-        toast.error(message: l10n.exportFontNameUnreadable);
+        toast.error(message: l10n.export.fontNameUnreadable);
         return;
       }
       final fileName = '$name${p.extension(picked.path)}';
@@ -59,7 +59,7 @@ class _PdfFontPageState extends State<PdfFontPage> {
       if (mounted) Navigator.of(context).pop(fileName);
     } catch (e) {
       await toast.dismiss();
-      toast.error(message: l10n.exportImportFailed(error: '$e'));
+      toast.error(message: l10n.export.importFailed(error: '$e'));
     }
   }
 
@@ -69,7 +69,7 @@ class _PdfFontPageState extends State<PdfFontPage> {
     final theme = context.theme;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.exportPdfFontPageTitle)),
+      appBar: AppBar(title: Text(l10n.export.pdfFontPageTitle)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -80,7 +80,7 @@ class _PdfFontPageState extends State<PdfFontPage> {
                   Column(
                     crossAxisAlignment: .stretch,
                     children: [
-                      SettingTitleTile(title: l10n.exportImportedFonts),
+                      SettingTitleTile(title: l10n.export.importedFonts),
                       Card.filled(
                         color: theme.colors.surfaceContainerLow,
                         margin: .zero,
@@ -101,7 +101,7 @@ class _PdfFontPageState extends State<PdfFontPage> {
                     ),
                     onPressed: _import,
                     icon: const Icon(LucideIcons.fileUp),
-                    label: Text(l10n.exportImportFont),
+                    label: Text(l10n.export.importFont),
                   ),
                 ),
               ],
@@ -124,12 +124,12 @@ class _PdfFontPageState extends State<PdfFontPage> {
           Icon(LucideIcons.type, size: 30, color: theme.colors.primary),
           const SizedBox(height: 10),
           Text(
-            l10n.exportNoPdfFontTitle,
+            l10n.export.noPdfFontTitle,
             style: theme.typography.titleSmall.onSurface,
           ),
           const SizedBox(height: 6),
           Text(
-            l10n.exportNoPdfFontMessage,
+            l10n.export.noPdfFontMessage,
             textAlign: .center,
             style: theme.typography.bodySmall.onSurfaceVariant,
           ),

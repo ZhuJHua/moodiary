@@ -61,7 +61,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       if (!categories.any((c) => c.id == id)) {
         ref.read(homeDiaryFilterProvider.notifier).reset();
         ref.read(diarySelectionProvider.notifier).clear();
-        toast.info(message: context.l10n.categoryDeletedReset);
+        toast.info(message: context.l10n.app.categoryDeletedReset);
       }
     });
 
@@ -107,7 +107,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       leading: ValueListenableBuilder(
         valueListenable: SyncPendingTracker.instance.listenable,
         builder: (context, pending, _) => IconButton(
-          tooltip: context.l10n.categoryAllCategory,
+          tooltip: context.l10n.diary.allCategories,
           onPressed: widget.onOpenDrawer,
           icon: Badge(
             // 有新建但还没同步上去的分类时点一下 —— 抽屉里才看得到详情。
@@ -121,7 +121,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
       title: _FilterTitle(filter: filter),
       actions: [
         IconButton(
-          tooltip: context.l10n.diarySearch,
+          tooltip: context.l10n.diary.search,
           icon: const Icon(LucideIcons.search),
           onPressed: () => const DiarySearchRoute().push(context),
         ),
@@ -133,7 +133,7 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
           builder: (context, homeViewMode, _) {
             final viewModeType = ViewModeType.getType(homeViewMode);
             return IconButton(
-              tooltip: context.l10n.diaryPageViewModeButton,
+              tooltip: context.l10n.diary.pageViewModeButton,
               icon: Icon(switch (viewModeType) {
                 .timeline => LucideIcons.gitCommitVertical,
                 .feed => LucideIcons.layoutList,
@@ -194,9 +194,9 @@ class _FilterTitle extends ConsumerWidget {
         : ref.watch(categoryByIdProvider(filter.categoryId));
 
     final (String label, Color? dot, int? count) = switch (filter) {
-      _ when filter.isAll => (context.l10n.appName, null, null),
+      _ when filter.isAll => (context.l10n.common.appName, null, null),
       _ when filter.uncategorized => (
-        context.l10n.categoryNoCategory,
+        context.l10n.diary.categoryNoCategory,
         null,
         counts == null
             ? null
@@ -204,7 +204,7 @@ class _FilterTitle extends ConsumerWidget {
                   counts.byCategory.values.fold<int>(0, (a, b) => a + b),
       ),
       _ => (
-        category?.categoryName ?? context.l10n.appName,
+        category?.categoryName ?? context.l10n.common.appName,
         category == null
             ? null
             : categoryColorOf(colorValue: category.color, id: category.id),
@@ -237,7 +237,7 @@ class _FilterTitle extends ConsumerWidget {
         if (count != null) ...[
           const SizedBox(width: 8),
           Text(
-            context.l10n.diarySearchResult(count: count),
+            context.l10n.diary.searchResult(count: count),
             style: context.theme.typography.labelSmall.onSurfaceVariant,
           ),
         ],

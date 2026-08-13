@@ -6,12 +6,14 @@ base_locale: zh
 fallback_strategy: base_locale
 
 input_directory: lib/i18n
+# 一个 feature 一份文件（<namespace>_<locale>.i18n.json），删 feature 就删文件。
+namespaces: true
 input_file_pattern: .i18n.json
 output_directory: lib/i18n
 output_file_name: strings.g.dart
 
-# 生成 `l10n` 顶层变量与 `context.l10n`，与旧的 BuildContext.l10n 同名，
-# 全仓 200+ 处调用因此一处不用改。
+# 生成 `l10n` 顶层变量与 `context.l10n`。namespaces 让键按 feature 分文件，
+# 取串写成 `l10n.diary.searchResult`；通用词在 common_*.i18n.json。
 translate_var: l10n
 class_name: Translations
 enum_name: AppLocale

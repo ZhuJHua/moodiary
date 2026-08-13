@@ -18,7 +18,7 @@ class AssistantSettingPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.assistantSettingTitle)),
+      appBar: AppBar(title: Text(context.l10n.assistant.settingTitle)),
       body: ListView(
         padding: const .symmetric(horizontal: 8, vertical: 8),
         children: const [
@@ -53,7 +53,7 @@ class _Note extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                context.l10n.assistantSettingNote,
+                context.l10n.assistant.settingNote,
                 style: context.theme.typography.bodySmall.onSurfaceVariant,
               ),
             ),
@@ -73,7 +73,7 @@ class _ProviderSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        SettingTitleTile(title: context.l10n.modelProviderTitle),
+        SettingTitleTile(title: context.l10n.assistant.modelProviderTitle),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -132,14 +132,14 @@ class _ProviderEntryTileState extends State<_ProviderEntryTile> {
     final l10n = context.l10n;
     final active = _active;
     final subtitle = !_loaded
-        ? l10n.assistantProviderEntryLoading
+        ? l10n.assistant.providerEntryLoading
         : active == null
-        ? l10n.assistantProviderEntryEmpty
+        ? l10n.assistant.providerEntryEmpty
         : '${active.name} · ${active.model}';
     return SettingListTile(
       isFirst: true,
       isLast: true,
-      title: l10n.modelProviderTitle,
+      title: l10n.assistant.modelProviderTitle,
       subtitle: subtitle,
       leading: const Icon(LucideIcons.cloud),
       trailing: const Icon(LucideIcons.chevronRight),
@@ -176,19 +176,19 @@ class _SoulSectionState extends State<_SoulSection> {
     final subtitle = _customized == null
         ? ''
         : _customized!
-        ? l10n.assistantSoulTileSubtitleCustom
-        : l10n.assistantSoulTileSubtitleDefault;
+        ? l10n.assistant.soulTileSubtitleCustom
+        : l10n.assistant.soulTileSubtitleDefault;
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        SettingTitleTile(title: l10n.assistantSectionSoul),
+        SettingTitleTile(title: l10n.assistant.sectionSoul),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
           child: SettingListTile(
             isFirst: true,
             isLast: true,
-            title: l10n.assistantSoulTileTitle,
+            title: l10n.assistant.soulTileTitle,
             subtitle: subtitle,
             leading: const Icon(LucideIcons.heart),
             trailing: const Icon(LucideIcons.chevronRight),
@@ -221,7 +221,7 @@ class _ToolSectionState extends State<_ToolSection> {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        SettingTitleTile(title: l10n.assistantSectionTool),
+        SettingTitleTile(title: l10n.assistant.tool),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -241,7 +241,7 @@ class _ToolSectionState extends State<_ToolSection> {
         Padding(
           padding: const .fromLTRB(16, 8, 16, 0),
           child: Text(
-            l10n.assistantToolSectionNote,
+            l10n.assistant.toolSectionNote,
             style: context.theme.typography.bodySmall.onSurfaceVariant,
           ),
         ),
@@ -251,7 +251,7 @@ class _ToolSectionState extends State<_ToolSection> {
             child: TextButton.icon(
               onPressed: _resetGrants,
               icon: const Icon(LucideIcons.rotateCcwKey),
-              label: Text(l10n.assistantToolResetGrants),
+              label: Text(l10n.assistant.toolResetGrants),
             ),
           ),
       ],
@@ -262,7 +262,7 @@ class _ToolSectionState extends State<_ToolSection> {
     await MoodiaryKVs.assistantAlwaysAllowedTools.set(const []);
     if (!mounted) return;
     setState(() {});
-    toast.success(message: context.l10n.assistantToolResetGrantsDone);
+    toast.success(message: context.l10n.assistant.toolResetGrantsDone);
   }
 
   Widget _toolTile(
@@ -292,7 +292,7 @@ class _ToolSectionState extends State<_ToolSection> {
                   Padding(
                     padding: const .only(right: 6),
                     child: Tooltip(
-                      message: context.l10n.assistantToolAlwaysAllowedHint,
+                      message: context.l10n.assistant.toolAlwaysAllowedHint,
                       child: Icon(
                         LucideIcons.shieldCheck,
                         size: 18,
@@ -320,7 +320,7 @@ class _ReadOnlyBadge extends StatelessWidget {
         borderRadius: .circular(8),
       ),
       child: Text(
-        context.l10n.assistantToolReadOnlyBadge,
+        context.l10n.assistant.toolReadOnlyBadge,
         style: context.theme.typography.labelSmall.onSecondaryContainer,
       ),
     );
@@ -340,7 +340,7 @@ class _DangerBadge extends StatelessWidget {
         borderRadius: .circular(8),
       ),
       child: Text(
-        context.l10n.assistantToolDangerBadge,
+        context.l10n.assistant.toolDangerBadge,
         style: context.theme.typography.labelSmall.onErrorContainer,
       ),
     );

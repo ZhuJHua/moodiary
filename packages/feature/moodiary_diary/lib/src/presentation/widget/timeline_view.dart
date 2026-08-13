@@ -44,7 +44,7 @@ class DiaryTimelineView extends ConsumerWidget {
             final dirty = SyncDirtyTracker.instance.listenable.value;
             Widget body;
             if (diaries.isEmpty) {
-              body = Center(child: Text(context.l10n.diaryTabViewEmpty));
+              body = Center(child: Text(context.l10n.diary.tabViewEmpty));
             } else {
               final sort = DiarySort.getType(MoodiaryKVs.homeSortMode.get()!);
               // 篇数走独立聚合查询：列表分页加载，从中数只能数出「加载到哪儿了」。
@@ -205,7 +205,7 @@ class _MonthHeaderDelegate extends SliverPersistentHeaderDelegate {
           if (count != null) ...[
             const SizedBox(width: 8),
             Text(
-              context.l10n.diaryTimelineMonthCount(count: count!),
+              context.l10n.diary.timelineMonthCount(count: count!),
               style: context.theme.typography.labelSmall.onSurfaceVariant,
             ),
           ],

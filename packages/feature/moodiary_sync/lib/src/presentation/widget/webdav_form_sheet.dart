@@ -55,14 +55,14 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
     final url = _urlCtl.text.trim();
     final uri = Uri.tryParse(url);
     final urlError = url.isEmpty
-        ? l10n.syncFieldRequired(field: l10n.webdavOptionServer)
+        ? l10n.sync.fieldRequired(field: l10n.sync.webdavOptionServer)
         : (uri == null ||
               !(uri.isScheme('http') || uri.isScheme('https')) ||
               uri.host.isEmpty)
-        ? l10n.syncFieldInvalidUrl
+        ? l10n.sync.fieldInvalidUrl
         : null;
     final userError = _userCtl.text.trim().isEmpty
-        ? l10n.syncFieldRequired(field: l10n.webdavOptionUsername)
+        ? l10n.sync.fieldRequired(field: l10n.sync.webdavOptionUsername)
         : null;
     setState(() {
       _urlError = urlError;
@@ -93,9 +93,9 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
     final l10n = context.l10n;
     final confirmed = await MAlert.confirm(
       context,
-      title: l10n.syncConfigClearConfirmTitle,
-      message: l10n.syncConfigClearConfirmMessage,
-      confirmLabel: l10n.syncConfigClear,
+      title: l10n.sync.configClearConfirmTitle,
+      message: l10n.sync.configClearConfirmMessage,
+      confirmLabel: l10n.sync.configClear,
       isDestructive: true,
     );
     if (!confirmed || !mounted) return;
@@ -109,22 +109,22 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
     }
     if (!mounted) return;
     Navigator.of(context).pop(true);
-    toast.success(message: l10n.syncConfigCleared);
+    toast.success(message: l10n.sync.configCleared);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return MSheetScaffold<bool>(
-      title: l10n.backupSyncWebdav,
+      title: l10n.sync.backupSyncWebdav,
       subtitle: _configured
-          ? (_savedHost ?? l10n.backupSyncWebdavOption)
-          : l10n.backupSyncWebdavNoOption,
+          ? (_savedHost ?? l10n.sync.backupSyncWebdavOption)
+          : l10n.sync.backupSyncWebdavNoOption,
       icon: LucideIcons.cloud,
       actions: [
-        MAction(label: l10n.cancel, value: false, enabled: !_saving),
+        MAction(label: l10n.common.cancel, value: false, enabled: !_saving),
         MAction(
-          label: l10n.save,
+          label: l10n.common.save,
           isPrimary: true,
           busy: _saving,
           enabled: !_saving,
@@ -138,7 +138,7 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
         children: [
           MField(
             controller: _urlCtl,
-            label: l10n.webdavOptionServer,
+            label: l10n.sync.webdavOptionServer,
             errorText: _urlError,
             enabled: !_saving,
             keyboardType: .url,
@@ -146,21 +146,21 @@ class _WebDavFormSheetState extends State<WebDavFormSheet> {
           ),
           MField(
             controller: _userCtl,
-            label: l10n.webdavOptionUsername,
+            label: l10n.sync.webdavOptionUsername,
             errorText: _userError,
             enabled: !_saving,
             textInputAction: .next,
           ),
           MField(
             controller: _passCtl,
-            label: l10n.webdavOptionPassword,
+            label: l10n.sync.webdavOptionPassword,
             enabled: !_saving,
             obscureText: true,
             onSubmitted: (_) => _save(),
           ),
           if (_configured)
             MDangerRow(
-              label: l10n.syncConfigClear,
+              label: l10n.sync.configClear,
               onPressed: _saving ? null : _clear,
             ),
         ],

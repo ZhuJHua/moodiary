@@ -1,0 +1,14 @@
+{
+  "noticeEnableLocation": "请开启定位权限",
+  "noticeEnableLocation2": "请前往设置中开启定位权限",
+  "pickFromGallery": "相册",
+  "audioFileError": "音频文件错误",
+  "pickImage": "选择图片",
+  "pickImageFromCamera": "拍照",
+  "pickVideo": "选择视频",
+  "pickVideoFromCamera": "录像",
+  "pickAudio": "选择音频",
+  "pickAudioFromRecord": "录音",
+  "pickAudioFromFile": "音频文件",
+  "content": "正文"
+}

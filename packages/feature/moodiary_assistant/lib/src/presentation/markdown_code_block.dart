@@ -63,7 +63,7 @@ class _MarkdownCodeBlockState extends State<MarkdownCodeBlock> {
                   size: 15,
                 ),
                 label: Text(
-                  _copied ? l10n.assistantCopied : l10n.assistantCopyTooltip,
+                  _copied ? l10n.assistant.copied : l10n.assistant.copyTooltip,
                 ),
               ),
             ],

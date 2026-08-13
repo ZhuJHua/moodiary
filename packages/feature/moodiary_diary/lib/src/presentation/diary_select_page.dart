@@ -52,7 +52,7 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
     final colors = context.theme.colors;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.assistantSelectDiaryTitle),
+        title: Text(l10n.diary.assistantSelectDiaryTitle),
         bottom: PreferredSize(
           preferredSize: const .fromHeight(60),
           child: Padding(
@@ -62,7 +62,7 @@ class _DiarySelectPageState extends ConsumerState<DiarySelectPage> {
               onChanged: _onQueryChanged,
               textInputAction: .search,
               decoration: InputDecoration(
-                hintText: l10n.assistantSelectDiarySearchHint,
+                hintText: l10n.diary.assistantSelectDiarySearchHint,
                 prefixIcon: const Icon(LucideIcons.search),
                 filled: true,
                 fillColor: colors.surfaceContainerHigh,
@@ -133,7 +133,7 @@ class _Empty extends StatelessWidget {
       child: Padding(
         padding: const .all(24),
         child: Text(
-          context.l10n.assistantSelectDiaryEmpty,
+          context.l10n.diary.assistantSelectDiaryEmpty,
           textAlign: .center,
           style: context.theme.typography.bodyMedium.onSurfaceVariant,
         ),
@@ -168,7 +168,7 @@ class _DiarySelectTile extends StatelessWidget {
             mainAxisSize: .min,
             children: [
               Text(
-                title.isEmpty ? l10n.assistantDiaryUntitled : title,
+                title.isEmpty ? l10n.common.untitled : title,
                 maxLines: 1,
                 overflow: .ellipsis,
                 style: typo.titleSmall.onSurface,

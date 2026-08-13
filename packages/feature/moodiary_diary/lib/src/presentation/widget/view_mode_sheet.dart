@@ -32,14 +32,14 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
       : DiarySort.values;
 
   String _label(BuildContext context, ViewModeType type) => switch (type) {
-    .timeline => context.l10n.diaryViewModeTimeline,
-    .feed => context.l10n.diaryViewModeFeed,
+    .timeline => context.l10n.diary.viewModeTimeline,
+    .feed => context.l10n.diary.viewModeFeed,
   };
 
   String _sortLabel(BuildContext context, DiarySort sort) => switch (sort) {
-    .timeDesc => context.l10n.diarySortNewestFirst,
-    .timeAsc => context.l10n.diarySortOldestFirst,
-    .lastModifiedDesc => context.l10n.diarySortModifiedFirst,
+    .timeDesc => context.l10n.diary.sortNewestFirst,
+    .timeAsc => context.l10n.diary.sortOldestFirst,
+    .lastModifiedDesc => context.l10n.diary.sortModifiedFirst,
   };
 
   IconData _sortIcon(DiarySort sort) => switch (sort) {
@@ -82,11 +82,11 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
     final showModes = ViewModeSheet._showModes;
     return MSheetScaffold<void>(
       // 标题跟着内容走：只有排序时就别再叫「视图模式」。
-      title: showModes ? l10n.diaryPageViewModeButton : l10n.diarySortTitle,
+      title: showModes ? l10n.diary.pageViewModeButton : l10n.diary.sortTitle,
       icon: LucideIcons.arrowDownUp,
       actions: [
-        MAction(label: l10n.cancel),
-        MAction(label: l10n.ok, isPrimary: true, onPressed: _apply),
+        MAction(label: l10n.common.cancel),
+        MAction(label: l10n.common.ok, isPrimary: true, onPressed: _apply),
       ],
       child: Column(
         mainAxisSize: .min,
@@ -106,7 +106,7 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
               onSelectionChanged: (value) => _pickMode(value.first),
             ),
             const SizedBox(height: 20),
-            MFormSection(l10n.diarySortTitle),
+            MFormSection(l10n.diary.sortTitle),
             const SizedBox(height: 10),
           ],
           for (final sort in _availableSorts)

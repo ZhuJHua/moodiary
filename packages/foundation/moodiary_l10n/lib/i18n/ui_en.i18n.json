@@ -1,0 +1,19 @@
+{
+  "imageBrowserSave": "Save to gallery",
+  "imageBrowserSaved": "Saved to gallery",
+  "imageBrowserSaveFailed": "Save failed",
+  "imageBrowserInfo": "Image info",
+  "imageBrowserInfoUrl": "URL",
+  "imageBrowserInfoResolution": "Resolution",
+  "imageBrowserInfoSize": "Size",
+  "imageBrowserInfoFormat": "Format",
+  "imageBrowserInfoModified": "Modified",
+  "videoPlayerLoadFailed": "Couldn't load this video",
+  "play": "Play",
+  "pause": "Pause",
+  "playbackProgress": "Playback progress",
+  "videoPlayerReplay": "Replay",
+  "videoPlayerBrightness": "Brightness",
+  "videoPlayerVolume": "Volume",
+  "videoPlayerSpeedBoost": "Playing at {speed}×"
+}

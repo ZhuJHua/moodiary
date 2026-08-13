@@ -27,7 +27,7 @@ class AccentSheet extends ConsumerWidget {
     ];
 
     return MSheetScaffold<void>(
-      title: context.l10n.accentTitle,
+      title: context.l10n.app.accentTitle,
       icon: LucideIcons.palette,
       // 选中态自己订阅 KV：弹窗页面被路由缓存（builder 只跑一次），本 widget 若不
       // 依赖任何会变的 InheritedWidget 就永远不重建，对勾会冻在打开时的那一格。
@@ -141,9 +141,9 @@ class _AccentModeRow extends StatelessWidget {
   }
 
   String _label(BuildContext context) => switch (mode) {
-    .neutral => context.l10n.accentNeutral,
-    .system => context.l10n.accentSystem,
-    .custom => context.l10n.accentCustom,
+    .neutral => context.l10n.app.accentNeutral,
+    .system => context.l10n.app.accentSystem,
+    .custom => context.l10n.common.custom,
   };
 
   Widget _swatch(BuildContext context) {

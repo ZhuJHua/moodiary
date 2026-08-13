@@ -21,11 +21,11 @@ class GeoRepository {
     if (permission == .denied) {
       permission = await Geolocator.requestPermission();
       if (permission == .denied && context.mounted) {
-        toast.info(message: context.l10n.noticeEnableLocation);
+        toast.info(message: context.l10n.editor.noticeEnableLocation);
         return null;
       }
       if (permission == .deniedForever && context.mounted) {
-        toast.info(message: context.l10n.noticeEnableLocation2);
+        toast.info(message: context.l10n.editor.noticeEnableLocation2);
         return null;
       }
     }

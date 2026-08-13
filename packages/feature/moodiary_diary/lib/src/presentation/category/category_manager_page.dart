@@ -220,7 +220,7 @@ class _SearchField extends StatelessWidget {
         onChanged: onChanged,
         textInputAction: .search,
         decoration: InputDecoration(
-          hintText: context.l10n.categorySearchHint,
+          hintText: context.l10n.diary.categorySearchHint,
           prefixIcon: const Icon(LucideIcons.search),
           filled: true,
           isDense: true,
@@ -241,7 +241,7 @@ class _NoMatch extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(
-        context.l10n.categoryNoMatch,
+        context.l10n.diary.categoryNoMatch,
         style: context.theme.typography.bodyMedium.onSurfaceVariant,
       ),
     );
@@ -323,7 +323,7 @@ class _CategoryTile extends StatelessWidget {
           mainAxisSize: .min,
           children: [
             MMenuButton<String>(
-              tooltip: context.l10n.more,
+              tooltip: context.l10n.common.more,
               onSelected: (key) {
                 switch (key) {
                   case 'rename':
@@ -393,9 +393,9 @@ Future<CategoryDraft?> showCategoryEditor(
     context,
     content: _CategoryEditorContent(key: contentKey, draft: draft),
     actions: [
-      MAction(label: context.l10n.cancel, value: false),
+      MAction(label: context.l10n.common.cancel, value: false),
       MAction(
-        label: context.l10n.ok,
+        label: context.l10n.common.ok,
         value: true,
         isPrimary: true,
         // 空名不放行：就地亮红字并留住弹窗，而不是关掉再 toast 骂人。
@@ -483,7 +483,7 @@ class _CategoryEditorContentState extends State<_CategoryEditorContent> {
         ),
         const SizedBox(height: 16),
         Text(
-          context.l10n.categoryColorLabel,
+          context.l10n.diary.categoryColorLabel,
           style: context.theme.typography.labelMedium.onSurfaceVariant,
         ),
         const SizedBox(height: 8),

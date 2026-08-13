@@ -75,13 +75,13 @@ class _S3FormSheetState extends State<S3FormSheet> {
     final l10n = context.l10n;
     String? required(TextEditingController controller, String field) =>
         controller.text.trim().isEmpty
-        ? l10n.syncFieldRequired(field: field)
+        ? l10n.sync.fieldRequired(field: field)
         : null;
 
-    final endpointError = required(_endpointCtl, l10n.s3OptionEndpoint);
-    final bucketError = required(_bucketCtl, l10n.s3OptionBucket);
-    final accessKeyError = required(_accessKeyCtl, l10n.s3OptionAccessKey);
-    final secretKeyError = required(_secretKeyCtl, l10n.s3OptionSecretKey);
+    final endpointError = required(_endpointCtl, l10n.sync.s3OptionEndpoint);
+    final bucketError = required(_bucketCtl, l10n.sync.s3OptionBucket);
+    final accessKeyError = required(_accessKeyCtl, l10n.sync.s3OptionAccessKey);
+    final secretKeyError = required(_secretKeyCtl, l10n.sync.s3OptionSecretKey);
     setState(() {
       _endpointError = endpointError;
       _bucketError = bucketError;
@@ -119,9 +119,9 @@ class _S3FormSheetState extends State<S3FormSheet> {
     final l10n = context.l10n;
     final confirmed = await MAlert.confirm(
       context,
-      title: l10n.syncConfigClearConfirmTitle,
-      message: l10n.syncConfigClearConfirmMessage,
-      confirmLabel: l10n.syncConfigClear,
+      title: l10n.sync.configClearConfirmTitle,
+      message: l10n.sync.configClearConfirmMessage,
+      confirmLabel: l10n.sync.configClear,
       isDestructive: true,
     );
     if (!confirmed || !mounted) return;
@@ -135,20 +135,20 @@ class _S3FormSheetState extends State<S3FormSheet> {
     }
     if (!mounted) return;
     Navigator.of(context).pop(true);
-    toast.success(message: l10n.syncConfigCleared);
+    toast.success(message: l10n.sync.configCleared);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return MSheetScaffold<bool>(
-      title: l10n.backupSyncS3,
-      subtitle: _configured ? _savedBucket : l10n.backupSyncWebdavNoOption,
+      title: l10n.sync.backupSyncS3,
+      subtitle: _configured ? _savedBucket : l10n.sync.backupSyncWebdavNoOption,
       icon: LucideIcons.database,
       actions: [
-        MAction(label: l10n.cancel, value: false, enabled: !_saving),
+        MAction(label: l10n.common.cancel, value: false, enabled: !_saving),
         MAction(
-          label: l10n.save,
+          label: l10n.common.save,
           isPrimary: true,
           busy: _saving,
           enabled: !_saving,
@@ -160,10 +160,10 @@ class _S3FormSheetState extends State<S3FormSheet> {
         mainAxisSize: .min,
         spacing: 14,
         children: [
-          MFormSection(l10n.syncSectionConnection),
+          MFormSection(l10n.sync.sectionConnection),
           MField(
             controller: _endpointCtl,
-            label: l10n.s3OptionEndpoint,
+            label: l10n.sync.s3OptionEndpoint,
             errorText: _endpointError,
             enabled: !_saving,
             keyboardType: .url,
@@ -172,43 +172,43 @@ class _S3FormSheetState extends State<S3FormSheet> {
           ),
           MField(
             controller: _bucketCtl,
-            label: l10n.s3OptionBucket,
+            label: l10n.sync.s3OptionBucket,
             errorText: _bucketError,
             enabled: !_saving,
             textInputAction: .next,
           ),
           MField(
             controller: _regionCtl,
-            label: l10n.s3OptionRegion,
-            hintText: l10n.syncFieldOptional,
+            label: l10n.sync.s3OptionRegion,
+            hintText: l10n.sync.fieldOptional,
             enabled: !_saving,
             textInputAction: .next,
           ),
-          MFormSection(l10n.syncSectionCredentials),
+          MFormSection(l10n.sync.sectionCredentials),
           MField(
             controller: _accessKeyCtl,
-            label: l10n.s3OptionAccessKey,
+            label: l10n.sync.s3OptionAccessKey,
             errorText: _accessKeyError,
             enabled: !_saving,
             textInputAction: .next,
           ),
           MField(
             controller: _secretKeyCtl,
-            label: l10n.s3OptionSecretKey,
+            label: l10n.sync.s3OptionSecretKey,
             errorText: _secretKeyError,
             enabled: !_saving,
             obscureText: true,
             onSubmitted: (_) => _save(),
           ),
-          MFormSection(l10n.syncSectionOptions),
+          MFormSection(l10n.sync.sectionOptions),
           MSwitchField(
-            label: l10n.s3OptionUseSsl,
+            label: l10n.sync.s3OptionUseSsl,
             value: _useSSL,
             onChanged: _saving ? null : (v) => setState(() => _useSSL = v),
           ),
           if (_configured)
             MDangerRow(
-              label: l10n.syncConfigClear,
+              label: l10n.sync.configClear,
               onPressed: _saving ? null : _clear,
             ),
         ],

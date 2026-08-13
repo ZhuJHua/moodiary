@@ -214,7 +214,7 @@ class _RecordSheetState extends State<RecordSheet> {
         if (_started) ...[
           MField(
             controller: _nameController,
-            label: l10n.audioNameLabel,
+            label: l10n.common.name,
             textInputAction: .done,
           ),
           const SizedBox(height: 16),
@@ -265,7 +265,7 @@ class _RecordSheetState extends State<RecordSheet> {
           Row(
             mainAxisAlignment: .spaceEvenly,
             children: [
-              TextButton(onPressed: _cancel, child: Text(l10n.cancel)),
+              TextButton(onPressed: _cancel, child: Text(l10n.common.cancel)),
               FilledButton(
                 onPressed: _pauseOrResume,
                 child: AnimatedSwitcher(
@@ -276,7 +276,10 @@ class _RecordSheetState extends State<RecordSheet> {
                   ),
                 ),
               ),
-              TextButton(onPressed: _stopAndSave, child: Text(l10n.save)),
+              TextButton(
+                onPressed: _stopAndSave,
+                child: Text(l10n.common.save),
+              ),
             ],
           ),
         ],

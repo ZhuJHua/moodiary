@@ -25,7 +25,7 @@ class CategoryPickerSheet extends ConsumerWidget {
     return MSheetScaffold<_PickerResult>(
       title: '选择分类',
       icon: LucideIcons.folder,
-      actions: [MAction(label: context.l10n.cancel)],
+      actions: [MAction(label: context.l10n.common.cancel)],
       child: async.buildLoading(
         data: (categories) => Column(
           mainAxisSize: .min,

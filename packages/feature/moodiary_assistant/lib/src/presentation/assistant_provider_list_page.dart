@@ -66,26 +66,26 @@ class _AssistantProviderListPageState
     final l10n = context.l10n;
     final ok = await MAlert.confirm(
       context,
-      title: l10n.modelProviderDeleteTitle,
-      message: l10n.modelProviderDeleteContent(name: provider.name),
-      confirmLabel: l10n.diaryDelete,
+      title: l10n.assistant.modelProviderDeleteTitle,
+      message: l10n.assistant.modelProviderDeleteContent(name: provider.name),
+      confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
     if (!ok) return;
     await _repo.deleteProvider(provider.id);
-    toast.success(message: l10n.modelProviderDeleted);
+    toast.success(message: l10n.assistant.modelProviderDeleted);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.modelProviderTitle)),
+      appBar: AppBar(title: Text(l10n.assistant.modelProviderTitle)),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'assistantProviderFab',
         onPressed: () => const AssistantProviderPickerRoute().push(context),
         icon: const Icon(LucideIcons.plus),
-        label: Text(l10n.modelProviderAdd),
+        label: Text(l10n.assistant.modelProviderAdd),
       ),
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
@@ -212,7 +212,7 @@ class _ProviderCard extends StatelessWidget {
                       if (!hasKey) ...[
                         const SizedBox(height: 8),
                         _Badge(
-                          text: l10n.modelProviderNoKey,
+                          text: l10n.assistant.modelProviderNoKey,
                           color: scheme.errorContainer,
                           onColor: scheme.onErrorContainer,
                         ),
@@ -221,17 +221,17 @@ class _ProviderCard extends StatelessWidget {
                   ),
                 ),
                 MMenuButton<String>(
-                  tooltip: l10n.more,
+                  tooltip: l10n.common.more,
                   onSelected: (v) => v == 'edit' ? onEdit() : onDelete(),
                   entries: [
                     MMenuEntry(
                       value: 'edit',
-                      label: l10n.diaryEdit,
+                      label: l10n.assistant.diaryEdit,
                       icon: LucideIcons.squarePen,
                     ),
                     MMenuEntry(
                       value: 'delete',
-                      label: l10n.diaryDelete,
+                      label: l10n.common.delete,
                       icon: LucideIcons.trash2,
                       isDestructive: true,
                     ),
@@ -292,12 +292,12 @@ class _EmptyState extends StatelessWidget {
           Icon(LucideIcons.cloudOff, size: 48, color: scheme.outline),
           const SizedBox(height: 12),
           Text(
-            l10n.modelProviderEmptyTitle,
+            l10n.assistant.modelProviderEmptyTitle,
             style: context.theme.typography.titleMedium.onSurface,
           ),
           const SizedBox(height: 4),
           Text(
-            l10n.modelProviderEmptyHint,
+            l10n.assistant.modelProviderEmptyHint,
             style: context.theme.typography.bodySmall.outline,
           ),
         ],

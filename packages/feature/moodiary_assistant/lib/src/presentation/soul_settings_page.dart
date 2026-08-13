@@ -42,7 +42,7 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
     await SoulRepository.get().write(_controller.text);
     if (!mounted) return;
     setState(() => _saving = false);
-    toast.success(message: context.l10n.assistantSoulSaved);
+    toast.success(message: context.l10n.assistant.soulSaved);
     Navigator.of(context).maybePop();
   }
 
@@ -50,7 +50,7 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
     await SoulRepository.get().resetToDefault();
     if (!mounted) return;
     _controller.text = defaultSoul;
-    toast.success(message: context.l10n.assistantSoulResetDone);
+    toast.success(message: context.l10n.assistant.soulResetDone);
   }
 
   @override
@@ -59,11 +59,11 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
     final scheme = context.theme.colors;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.assistantSoulPageTitle),
+        title: Text(l10n.assistant.soulPageTitle),
         actions: [
           TextButton(
             onPressed: (_loaded && !_saving) ? _save : null,
-            child: Text(l10n.assistantSoulSave),
+            child: Text(l10n.common.save),
           ),
         ],
       ),
@@ -85,7 +85,7 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              l10n.assistantSoulNote,
+                              l10n.assistant.soulNote,
                               style: context
                                   .theme
                                   .typography
@@ -107,7 +107,7 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
                       maxLength: soulMaxChars,
                       keyboardType: .multiline,
                       decoration: InputDecoration(
-                        hintText: l10n.assistantSoulEditorHint,
+                        hintText: l10n.assistant.soulEditorHint,
                         alignLabelWithHint: true,
                         border: const OutlineInputBorder(),
                         filled: true,
@@ -121,7 +121,7 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
                     child: TextButton.icon(
                       onPressed: _reset,
                       icon: const Icon(LucideIcons.rotateCcw),
-                      label: Text(l10n.assistantSoulReset),
+                      label: Text(l10n.assistant.soulReset),
                     ),
                   ),
                 ],

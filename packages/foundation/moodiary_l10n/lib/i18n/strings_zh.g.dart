@@ -35,15 +35,24 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	Translations $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => Translations(meta: meta ?? this.$meta);
 
 	// Translations
+	late final Translations$app$zh app = Translations$app$zh.internal(_root);
+	late final Translations$assistant$zh assistant = Translations$assistant$zh.internal(_root);
+	late final Translations$common$zh common = Translations$common$zh.internal(_root);
+	late final Translations$diary$zh diary = Translations$diary$zh.internal(_root);
+	late final Translations$editor$zh editor = Translations$editor$zh.internal(_root);
+	late final Translations$export$zh export = Translations$export$zh.internal(_root);
+	late final Translations$media$zh media = Translations$media$zh.internal(_root);
+	late final Translations$sync$zh sync = Translations$sync$zh.internal(_root);
+	late final Translations$ui$zh ui = Translations$ui$zh.internal(_root);
+}
 
-	/// zh: '确认'
-	String get ok => '确认';
+// Path: app
+class Translations$app$zh {
+	Translations$app$zh.internal(this._root);
 
-	/// zh: '取消'
-	String get cancel => '取消';
+	final Translations _root; // ignore: unused_field
 
-	/// zh: '更多'
-	String get more => '更多';
+	// Translations
 
 	/// zh: '主题色'
 	String get accentTitle => '主题色';
@@ -53,9 +62,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '壁纸取色'
 	String get accentSystem => '壁纸取色';
-
-	/// zh: '自定义'
-	String get accentCustom => '自定义';
 
 	/// zh: '自定义配色'
 	String get accentCustomTitle => '自定义配色';
@@ -72,167 +78,17 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '选取的颜色'
 	String get accentSeed => '选取的颜色';
 
-	/// zh: '保存'
-	String get save => '保存';
-
-	/// zh: 'Moodiary'
-	String get appName => 'Moodiary';
-
-	/// zh: '智能助手'
-	String get settingFunctionAIAssistant => '智能助手';
-
 	/// zh: '语言'
-	String get settingLanguage => '语言';
-
-	/// zh: '跟随系统'
-	String get settingLanguageSystem => '跟随系统';
-
-	/// zh: '简体中文'
-	String get settingLanguageSimpleChinese => '简体中文';
-
-	/// zh: 'English'
-	String get settingLanguageEnglish => 'English';
+	String get language => '语言';
 
 	/// zh: '日记'
 	String get homeNavigatorDiary => '日记';
-
-	/// zh: '媒体'
-	String get homeNavigatorMedia => '媒体';
-
-	/// zh: '设置'
-	String get homeNavigatorSetting => '设置';
 
 	/// zh: '助手'
 	String get homeNavigatorAssistant => '助手';
 
 	/// zh: '新建日记'
 	String get homePageAddDiaryButton => '新建日记';
-
-	/// zh: '这里一片荒芜'
-	String get diaryTabViewEmpty => '这里一片荒芜';
-
-	/// zh: '视图模式'
-	String get diaryPageViewModeButton => '视图模式';
-
-	/// zh: '媒体库'
-	String get mediaTitle => '媒体库';
-
-	/// zh: '图片'
-	String get mediaTypeImage => '图片';
-
-	/// zh: '音频'
-	String get mediaTypeAudio => '音频';
-
-	/// zh: '视频'
-	String get mediaTypeVideo => '视频';
-
-	/// zh: '清理无用文件'
-	String get mediaDeleteUseLessFile => '清理无用文件';
-
-	/// zh: '这里还没有媒体'
-	String get mediaEmpty => '这里还没有媒体';
-
-	/// zh: '正在扫描无用文件'
-	String get mediaCleanupScanning => '正在扫描无用文件';
-
-	/// zh: '没有发现无用文件'
-	String get mediaCleanupEmpty => '没有发现无用文件';
-
-	/// zh: '清理无用文件'
-	String get mediaCleanupConfirmTitle => '清理无用文件';
-
-	/// zh: '发现 {count} 个未被任何日记引用的文件（{size}），确认清理？此操作不可恢复。'
-	String mediaCleanupConfirmMessage({required Object count, required Object size}) => '发现 ${count} 个未被任何日记引用的文件（${size}），确认清理？此操作不可恢复。';
-
-	/// zh: '已清理 {count} 个文件'
-	String mediaCleanupDone({required Object count}) => '已清理 ${count} 个文件';
-
-	/// zh: 'WebDAV'
-	String get backupSyncWebdav => 'WebDAV';
-
-	/// zh: '未配置'
-	String get backupSyncWebdavNoOption => '未配置';
-
-	/// zh: '已配置'
-	String get backupSyncWebdavOption => '已配置';
-
-	/// zh: '无分类'
-	String get categoryNoCategory => '无分类';
-
-	/// zh: '全部分类'
-	String get categoryAllCategory => '全部分类';
-
-	/// zh: '全部'
-	String get categoryAll => '全部';
-
-	/// zh: '颜色'
-	String get categoryColorLabel => '颜色';
-
-	/// zh: '服务器地址'
-	String get webdavOptionServer => '服务器地址';
-
-	/// zh: '用户名'
-	String get webdavOptionUsername => '用户名';
-
-	/// zh: '密码'
-	String get webdavOptionPassword => '密码';
-
-	/// zh: 'S3 / MinIO'
-	String get backupSyncS3 => 'S3 / MinIO';
-
-	/// zh: 'Endpoint'
-	String get s3OptionEndpoint => 'Endpoint';
-
-	/// zh: 'Region'
-	String get s3OptionRegion => 'Region';
-
-	/// zh: 'Bucket'
-	String get s3OptionBucket => 'Bucket';
-
-	/// zh: 'Access Key'
-	String get s3OptionAccessKey => 'Access Key';
-
-	/// zh: 'Secret Key'
-	String get s3OptionSecretKey => 'Secret Key';
-
-	/// zh: '使用 HTTPS'
-	String get s3OptionUseSsl => '使用 HTTPS';
-
-	/// zh: '连接'
-	String get syncSectionConnection => '连接';
-
-	/// zh: '凭证'
-	String get syncSectionCredentials => '凭证';
-
-	/// zh: '选项'
-	String get syncSectionOptions => '选项';
-
-	/// zh: '清除配置'
-	String get syncConfigClear => '清除配置';
-
-	/// zh: '清除配置？'
-	String get syncConfigClearConfirmTitle => '清除配置？';
-
-	/// zh: '清除后将停止与该后端同步，本地日记不受影响。'
-	String get syncConfigClearConfirmMessage => '清除后将停止与该后端同步，本地日记不受影响。';
-
-	/// zh: '已清除配置'
-	String get syncConfigCleared => '已清除配置';
-
-	/// zh: '{field: String}不能为空'
-	String syncFieldRequired({required String field}) => '${field}不能为空';
-
-	/// zh: '可留空'
-	String get syncFieldOptional => '可留空';
-
-	/// zh: '地址格式不正确'
-	String get syncFieldInvalidUrl => '地址格式不正确';
-
-	/// zh: '请开启定位权限'
-	String get noticeEnableLocation => '请开启定位权限';
-
-	/// zh: '请前往设置中开启定位权限'
-	String get noticeEnableLocation2 => '请前往设置中开启定位权限';
 
 	/// zh: '请前往设置中开启相册权限'
 	String get noticeEnablePhotoPermission => '请前往设置中开启相册权限';
@@ -243,419 +99,305 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '最近'
 	String get pickerRecentAlbum => '最近';
 
-	/// zh: '搜索'
-	String get diarySearch => '搜索';
+	/// zh: '分类已被删除，已切回全部'
+	String get categoryDeletedReset => '分类已被删除，已切回全部';
 
-	/// zh: '共有 {count} 篇'
-	String diarySearchResult({required Object count}) => '共有 ${count} 篇';
+	/// zh: '设置'
+	String get homeNavigatorSetting => '设置';
 
-	/// zh: '耗时 {ms}ms'
-	String diarySearchTime({required Object ms}) => '耗时 ${ms}ms';
+	/// zh: '跟随系统'
+	String get languageSystem => '跟随系统';
 
-	/// zh: '全部时间'
-	String get searchRangeAll => '全部时间';
+	/// zh: '简体中文'
+	String get languageSimplifiedChinese => '简体中文';
 
-	/// zh: '近 7 天'
-	String get searchRange7d => '近 7 天';
+	/// zh: 'English'
+	String get languageEnglish => 'English';
+}
 
-	/// zh: '近 30 天'
-	String get searchRange30d => '近 30 天';
+// Path: assistant
+class Translations$assistant$zh {
+	Translations$assistant$zh.internal(this._root);
 
-	/// zh: '今年'
-	String get searchRangeYear => '今年';
+	final Translations _root; // ignore: unused_field
 
-	/// zh: '自定义'
-	String get searchRangeCustom => '自定义';
+	// Translations
 
-	/// zh: '全部分类'
-	String get searchCategoryAll => '全部分类';
-
-	/// zh: '相关度'
-	String get searchSortRelevance => '相关度';
-
-	/// zh: '最新'
-	String get searchSortNewest => '最新';
-
-	/// zh: '最早'
-	String get searchSortOldest => '最早';
-
-	/// zh: '没有匹配的日记'
-	String get searchNoResult => '没有匹配的日记';
-
-	/// zh: '搜索历史'
-	String get searchHistory => '搜索历史';
-
-	/// zh: '清空'
-	String get searchHistoryClear => '清空';
-
-	/// zh: '暂无搜索历史'
-	String get searchHistoryEmpty => '暂无搜索历史';
-
-	/// zh: '选择图片'
-	String get editPickImage => '选择图片';
-
-	/// zh: '拍照'
-	String get editPickImageFromCamera => '拍照';
-
-	/// zh: '相册'
-	String get editPickImageFromGallery => '相册';
-
-	/// zh: '选择视频'
-	String get editPickVideo => '选择视频';
-
-	/// zh: '录像'
-	String get editPickVideoFromCamera => '录像';
-
-	/// zh: '相册'
-	String get editPickVideoFromGallery => '相册';
-
-	/// zh: '选择音频'
-	String get editPickAudio => '选择音频';
-
-	/// zh: '录音'
-	String get editPickAudioFromRecord => '录音';
-
-	/// zh: '音频文件'
-	String get editPickAudioFromFile => '音频文件';
-
-	/// zh: '分类'
-	String get editCategory => '分类';
-
-	/// zh: '正文'
-	String get editContent => '正文';
-
-	/// zh: '音频文件错误'
-	String get audioFileError => '音频文件错误';
-
-	/// zh: '名称'
-	String get audioNameLabel => '名称';
-
-	/// zh: '音频'
-	String get audioDefaultName => '音频';
-
-	/// zh: '重命名'
-	String get mediaRename => '重命名';
-
-	/// zh: '删除'
-	String get diaryDelete => '删除';
+	/// zh: '智能助手'
+	String get settingFunctionAIAssistant => '智能助手';
 
 	/// zh: '编辑'
 	String get diaryEdit => '编辑';
 
-	/// zh: '(other) {{count} 张照片}'
-	String mediaImageCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
-		other: '${count} 张照片',
-	);
-
-	/// zh: '(other) {{count} 段音频}'
-	String mediaAudioCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
-		other: '${count} 段音频',
-	);
-
-	/// zh: '(other) {{count} 段视频}'
-	String mediaVideoCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
-		other: '${count} 段视频',
-	);
-
-	/// zh: '时间线'
-	String get diaryViewModeTimeline => '时间线';
-
-	/// zh: '信息流'
-	String get diaryViewModeFeed => '信息流';
-
 	/// zh: '配置'
-	String get assistantConfigTooltip => '配置';
+	String get configTooltip => '配置';
 
 	/// zh: '你好，我是 Moodiary 助手，有什么可以帮你的吗？'
-	String get assistantWelcome => '你好，我是 Moodiary 助手，有什么可以帮你的吗？';
+	String get welcome => '你好，我是 Moodiary 助手，有什么可以帮你的吗？';
 
 	/// zh: '说点什么...'
-	String get assistantInputHint => '说点什么...';
+	String get inputHint => '说点什么...';
 
 	/// zh: '尚未配置可用的模型供应商，点击前往配置。'
-	String get assistantNotConfiguredBanner => '尚未配置可用的模型供应商，点击前往配置。';
+	String get notConfiguredBanner => '尚未配置可用的模型供应商，点击前往配置。';
 
 	/// zh: '请先在「模型供应商」中添加并选择一个可用的供应商。'
-	String get assistantNeedProvider => '请先在「模型供应商」中添加并选择一个可用的供应商。';
+	String get needProvider => '请先在「模型供应商」中添加并选择一个可用的供应商。';
 
 	/// zh: '请先在「模型供应商」中填写 API Key。'
-	String get assistantNeedApiKey => '请先在「模型供应商」中填写 API Key。';
+	String get needApiKey => '请先在「模型供应商」中填写 API Key。';
 
 	/// zh: 'AI 助手配置'
-	String get assistantSettingTitle => 'AI 助手配置';
+	String get settingTitle => 'AI 助手配置';
 
 	/// zh: '助手基于 rig 构建。在「模型供应商」里自定义任意数量的服务商（OpenAI / Anthropic 兼容端点），自由切换激活项。API Key 仅保存在本机安全存储。'
-	String get assistantSettingNote => '助手基于 rig 构建。在「模型供应商」里自定义任意数量的服务商（OpenAI / Anthropic 兼容端点），自由切换激活项。API Key 仅保存在本机安全存储。';
+	String get settingNote => '助手基于 rig 构建。在「模型供应商」里自定义任意数量的服务商（OpenAI / Anthropic 兼容端点），自由切换激活项。API Key 仅保存在本机安全存储。';
 
 	/// zh: '人格'
-	String get assistantSectionSoul => '人格';
+	String get sectionSoul => '人格';
 
 	/// zh: '自定义人格（SOUL）'
-	String get assistantSoulTileTitle => '自定义人格（SOUL）';
+	String get soulTileTitle => '自定义人格（SOUL）';
 
 	/// zh: '使用默认人格'
-	String get assistantSoulTileSubtitleDefault => '使用默认人格';
+	String get soulTileSubtitleDefault => '使用默认人格';
 
 	/// zh: '已自定义'
-	String get assistantSoulTileSubtitleCustom => '已自定义';
+	String get soulTileSubtitleCustom => '已自定义';
 
 	/// zh: '自定义人格'
-	String get assistantSoulPageTitle => '自定义人格';
+	String get soulPageTitle => '自定义人格';
 
 	/// zh: '这段文字只影响助手的语气与风格，会叠加在内置的安全与工具规则之上，不能改变助手被允许做的事。留空即恢复默认人格。'
-	String get assistantSoulNote => '这段文字只影响助手的语气与风格，会叠加在内置的安全与工具规则之上，不能改变助手被允许做的事。留空即恢复默认人格。';
+	String get soulNote => '这段文字只影响助手的语气与风格，会叠加在内置的安全与工具规则之上，不能改变助手被允许做的事。留空即恢复默认人格。';
 
 	/// zh: '用 Markdown 描述你想要的助手人格：语气、说话方式、关注点……'
-	String get assistantSoulEditorHint => '用 Markdown 描述你想要的助手人格：语气、说话方式、关注点……';
-
-	/// zh: '保存'
-	String get assistantSoulSave => '保存';
+	String get soulEditorHint => '用 Markdown 描述你想要的助手人格：语气、说话方式、关注点……';
 
 	/// zh: '已保存人格'
-	String get assistantSoulSaved => '已保存人格';
+	String get soulSaved => '已保存人格';
 
 	/// zh: '重置为默认'
-	String get assistantSoulReset => '重置为默认';
+	String get soulReset => '重置为默认';
 
 	/// zh: '已重置为默认人格'
-	String get assistantSoulResetDone => '已重置为默认人格';
+	String get soulResetDone => '已重置为默认人格';
 
 	/// zh: '加载中…'
-	String get assistantProviderEntryLoading => '加载中…';
+	String get providerEntryLoading => '加载中…';
 
 	/// zh: '尚未添加供应商，点击去添加'
-	String get assistantProviderEntryEmpty => '尚未添加供应商，点击去添加';
+	String get providerEntryEmpty => '尚未添加供应商，点击去添加';
 
 	/// zh: '已复制'
-	String get assistantCopied => '已复制';
+	String get copied => '已复制';
 
 	/// zh: '复制'
-	String get assistantCopyTooltip => '复制';
+	String get copyTooltip => '复制';
 
 	/// zh: '新对话'
-	String get assistantNewChat => '新对话';
+	String get newChat => '新对话';
 
 	/// zh: '还没有历史会话'
-	String get assistantHistoryEmpty => '还没有历史会话';
-
-	/// zh: '删除'
-	String get assistantSessionDelete => '删除';
+	String get historyEmpty => '还没有历史会话';
 
 	/// zh: '停止生成'
-	String get assistantStop => '停止生成';
+	String get stop => '停止生成';
 
 	/// zh: '重新回答'
-	String get assistantRegenerate => '重新回答';
+	String get regenerate => '重新回答';
 
 	/// zh: '深度思考'
-	String get assistantThinkingToggle => '深度思考';
+	String get thinkingToggle => '深度思考';
 
 	/// zh: '思考中…'
-	String get assistantThinking => '思考中…';
+	String get thinking => '思考中…';
 
 	/// zh: '已深度思考 {duration} 秒'
-	String assistantThoughtFor({required Object duration}) => '已深度思考 ${duration} 秒';
+	String thoughtFor({required Object duration}) => '已深度思考 ${duration} 秒';
 
 	/// zh: '工具'
-	String get assistantSectionTool => '工具';
+	String get tool => '工具';
 
 	/// zh: '助手会根据对话内容自动调用下列工具。只读工具直接执行；涉及写入或删除的工具会先请你确认。'
-	String get assistantToolSectionNote => '助手会根据对话内容自动调用下列工具。只读工具直接执行；涉及写入或删除的工具会先请你确认。';
+	String get toolSectionNote => '助手会根据对话内容自动调用下列工具。只读工具直接执行；涉及写入或删除的工具会先请你确认。';
 
 	/// zh: '查询日记'
-	String get assistantToolQueryTitle => '查询日记';
+	String get toolQueryTitle => '查询日记';
 
 	/// zh: '按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。'
-	String get assistantToolQueryDes => '按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。';
+	String get toolQueryDes => '按关键词、时间范围或分类查询你的本地日记，用于回答涉及过往经历、情绪记录的问题。';
 
 	/// zh: '读取日记全文'
-	String get assistantToolGetTitle => '读取日记全文';
+	String get toolGetTitle => '读取日记全文';
 
 	/// zh: '按 id 读取某篇日记的完整内容。'
-	String get assistantToolGetDes => '按 id 读取某篇日记的完整内容。';
+	String get toolGetDes => '按 id 读取某篇日记的完整内容。';
 
 	/// zh: '日记概览'
-	String get assistantToolOverviewTitle => '日记概览';
+	String get toolOverviewTitle => '日记概览';
 
 	/// zh: '统计日记总数、各分类篇数与时间跨度。'
-	String get assistantToolOverviewDes => '统计日记总数、各分类篇数与时间跨度。';
+	String get toolOverviewDes => '统计日记总数、各分类篇数与时间跨度。';
 
 	/// zh: '创建日记'
-	String get assistantToolCreateTitle => '创建日记';
+	String get toolCreateTitle => '创建日记';
 
 	/// zh: '按你的请求把内容保存为一篇新的本地日记。'
-	String get assistantToolCreateDes => '按你的请求把内容保存为一篇新的本地日记。';
+	String get toolCreateDes => '按你的请求把内容保存为一篇新的本地日记。';
 
 	/// zh: '修改日记'
-	String get assistantToolUpdateTitle => '修改日记';
+	String get toolUpdateTitle => '修改日记';
 
 	/// zh: '按你的要求修改某篇日记的标题、正文、心情或归类。'
-	String get assistantToolUpdateDes => '按你的要求修改某篇日记的标题、正文、心情或归类。';
+	String get toolUpdateDes => '按你的要求修改某篇日记的标题、正文、心情或归类。';
 
 	/// zh: '删除日记'
-	String get assistantToolDeleteTitle => '删除日记';
+	String get toolDeleteTitle => '删除日记';
 
 	/// zh: '把指定日记移入回收站（可在回收站恢复）。'
-	String get assistantToolDeleteDes => '把指定日记移入回收站（可在回收站恢复）。';
+	String get toolDeleteDes => '把指定日记移入回收站（可在回收站恢复）。';
 
 	/// zh: '查看分类'
-	String get assistantToolListCategoriesTitle => '查看分类';
+	String get toolListCategoriesTitle => '查看分类';
 
 	/// zh: '列出你的全部日记分类。'
-	String get assistantToolListCategoriesDes => '列出你的全部日记分类。';
+	String get toolListCategoriesDes => '列出你的全部日记分类。';
 
 	/// zh: '创建分类'
-	String get assistantToolCreateCategoryTitle => '创建分类';
+	String get toolCreateCategoryTitle => '创建分类';
 
 	/// zh: '新建一个日记分类。'
-	String get assistantToolCreateCategoryDes => '新建一个日记分类。';
+	String get toolCreateCategoryDes => '新建一个日记分类。';
 
 	/// zh: '重命名分类'
-	String get assistantToolUpdateCategoryTitle => '重命名分类';
+	String get toolUpdateCategoryTitle => '重命名分类';
 
 	/// zh: '修改某个分类的名称。'
-	String get assistantToolUpdateCategoryDes => '修改某个分类的名称。';
+	String get toolUpdateCategoryDes => '修改某个分类的名称。';
 
 	/// zh: '删除分类'
-	String get assistantToolDeleteCategoryTitle => '删除分类';
+	String get toolDeleteCategoryTitle => '删除分类';
 
 	/// zh: '删除一个分类（仅当其下没有日记时）。'
-	String get assistantToolDeleteCategoryDes => '删除一个分类（仅当其下没有日记时）。';
+	String get toolDeleteCategoryDes => '删除一个分类（仅当其下没有日记时）。';
 
 	/// zh: '查看记忆'
-	String get assistantToolListMemoriesTitle => '查看记忆';
+	String get toolListMemoriesTitle => '查看记忆';
 
 	/// zh: '列出助手保存的关于你的长期记忆（偏好、主题、目标等）。'
-	String get assistantToolListMemoriesDes => '列出助手保存的关于你的长期记忆（偏好、主题、目标等）。';
+	String get toolListMemoriesDes => '列出助手保存的关于你的长期记忆（偏好、主题、目标等）。';
 
 	/// zh: '记住事实'
-	String get assistantToolRememberTitle => '记住事实';
+	String get toolRememberTitle => '记住事实';
 
 	/// zh: '把关于你的一条长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。'
-	String get assistantToolRememberDes => '把关于你的一条长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。';
+	String get toolRememberDes => '把关于你的一条长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。';
 
 	/// zh: '更新记忆'
-	String get assistantToolUpdateMemoryTitle => '更新记忆';
+	String get toolUpdateMemoryTitle => '更新记忆';
 
 	/// zh: '修改某条已保存记忆的内容。'
-	String get assistantToolUpdateMemoryDes => '修改某条已保存记忆的内容。';
+	String get toolUpdateMemoryDes => '修改某条已保存记忆的内容。';
 
 	/// zh: '删除记忆'
-	String get assistantToolForgetTitle => '删除记忆';
+	String get toolForgetTitle => '删除记忆';
 
 	/// zh: '删除某条已保存的记忆。'
-	String get assistantToolForgetDes => '删除某条已保存的记忆。';
+	String get toolForgetDes => '删除某条已保存的记忆。';
 
 	/// zh: '已折叠较早的消息以节省上下文'
-	String get assistantCompactionNotice => '已折叠较早的消息以节省上下文';
+	String get compactionNotice => '已折叠较早的消息以节省上下文';
 
 	/// zh: '上下文摘要'
-	String get assistantCompactionSheetTitle => '上下文摘要';
+	String get compactionSheetTitle => '上下文摘要';
 
 	/// zh: '为节省上下文，较早的消息已折叠成下面的摘要发送给模型。完整消息仍保留在本会话中，可随时向上翻看。'
-	String get assistantCompactionSheetNote => '为节省上下文，较早的消息已折叠成下面的摘要发送给模型。完整消息仍保留在本会话中，可随时向上翻看。';
+	String get compactionSheetNote => '为节省上下文，较早的消息已折叠成下面的摘要发送给模型。完整消息仍保留在本会话中，可随时向上翻看。';
 
 	/// zh: '恢复完整历史'
-	String get assistantCompactionRestore => '恢复完整历史';
-
-	/// zh: '更多'
-	String get assistantMenuTooltip => '更多';
+	String get compactionRestore => '恢复完整历史';
 
 	/// zh: '立即压缩上下文'
-	String get assistantCompactNow => '立即压缩上下文';
+	String get compactNow => '立即压缩上下文';
 
 	/// zh: '已压缩较早的对话'
-	String get assistantCompactionDone => '已压缩较早的对话';
+	String get compactionDone => '已压缩较早的对话';
 
 	/// zh: '暂无可压缩的内容'
-	String get assistantCompactionNothing => '暂无可压缩的内容';
+	String get compactionNothing => '暂无可压缩的内容';
 
 	/// zh: '上下文占用'
-	String get assistantContextUsageLabel => '上下文占用';
+	String get contextUsageLabel => '上下文占用';
 
 	/// zh: '危险'
-	String get assistantToolDangerBadge => '危险';
+	String get toolDangerBadge => '危险';
 
 	/// zh: '只读'
-	String get assistantToolReadOnlyBadge => '只读';
+	String get toolReadOnlyBadge => '只读';
 
 	/// zh: '助手请求执行操作'
-	String get assistantToolPermissionTitle => '助手请求执行操作';
+	String get toolPermissionTitle => '助手请求执行操作';
 
 	/// zh: '这是危险操作，会修改或删除你的数据，请谨慎确认。'
-	String get assistantToolPermissionDangerNote => '这是危险操作，会修改或删除你的数据，请谨慎确认。';
+	String get toolPermissionDangerNote => '这是危险操作，会修改或删除你的数据，请谨慎确认。';
 
 	/// zh: '允许一次'
-	String get assistantToolAllowOnce => '允许一次';
+	String get toolAllowOnce => '允许一次';
 
 	/// zh: '始终允许'
-	String get assistantToolAllowAlways => '始终允许';
+	String get toolAllowAlways => '始终允许';
 
 	/// zh: '拒绝'
-	String get assistantToolDeny => '拒绝';
+	String get toolDeny => '拒绝';
 
 	/// zh: '已设为始终允许'
-	String get assistantToolAlwaysAllowedHint => '已设为始终允许';
+	String get toolAlwaysAllowedHint => '已设为始终允许';
 
 	/// zh: '已允许本次执行'
-	String get assistantToolStatusAllowedOnce => '已允许本次执行';
+	String get toolStatusAllowedOnce => '已允许本次执行';
 
 	/// zh: '已拒绝执行'
-	String get assistantToolStatusDenied => '已拒绝执行';
+	String get toolStatusDenied => '已拒绝执行';
 
 	/// zh: '已取消'
-	String get assistantToolStatusCanceled => '已取消';
+	String get toolStatusCanceled => '已取消';
 
 	/// zh: '重置已授权的工具'
-	String get assistantToolResetGrants => '重置已授权的工具';
+	String get toolResetGrants => '重置已授权的工具';
 
 	/// zh: '已重置工具授权'
-	String get assistantToolResetGrantsDone => '已重置工具授权';
+	String get toolResetGrantsDone => '已重置工具授权';
 
 	/// zh: '使用前必读'
-	String get assistantDisclaimerTitle => '使用前必读';
+	String get disclaimerTitle => '使用前必读';
 
 	/// zh: 'Moodiary 助手由第三方大语言模型驱动，使用前请知悉： • AI 生成的内容可能不准确、不完整甚至具有误导性，请勿将其作为医疗、心理、法律、财务等专业建议，或任何重要决策的依据。 • 发送消息后，你输入的内容会被发送给你所配置的模型供应商；当助手调用日记工具时，相关的本地日记摘要也会一并发送以生成回复。是否信任该供应商由你自行判断。 • 你的 API Key 仅保存在本机安全存储，不会上传到 Moodiary 的服务器。 继续使用即代表你已知悉并接受以上风险。'
-	String get assistantDisclaimerContent => 'Moodiary 助手由第三方大语言模型驱动，使用前请知悉：\n\n• AI 生成的内容可能不准确、不完整甚至具有误导性，请勿将其作为医疗、心理、法律、财务等专业建议，或任何重要决策的依据。\n\n• 发送消息后，你输入的内容会被发送给你所配置的模型供应商；当助手调用日记工具时，相关的本地日记摘要也会一并发送以生成回复。是否信任该供应商由你自行判断。\n\n• 你的 API Key 仅保存在本机安全存储，不会上传到 Moodiary 的服务器。\n\n继续使用即代表你已知悉并接受以上风险。';
+	String get disclaimerContent => 'Moodiary 助手由第三方大语言模型驱动，使用前请知悉：\n\n• AI 生成的内容可能不准确、不完整甚至具有误导性，请勿将其作为医疗、心理、法律、财务等专业建议，或任何重要决策的依据。\n\n• 发送消息后，你输入的内容会被发送给你所配置的模型供应商；当助手调用日记工具时，相关的本地日记摘要也会一并发送以生成回复。是否信任该供应商由你自行判断。\n\n• 你的 API Key 仅保存在本机安全存储，不会上传到 Moodiary 的服务器。\n\n继续使用即代表你已知悉并接受以上风险。';
 
 	/// zh: '同意并继续'
-	String get assistantDisclaimerAgree => '同意并继续';
+	String get disclaimerAgree => '同意并继续';
 
 	/// zh: '暂不使用'
-	String get assistantDisclaimerDecline => '暂不使用';
+	String get disclaimerDecline => '暂不使用';
 
 	/// zh: '需先同意免责声明才能使用助手'
-	String get assistantDisclaimerGateTitle => '需先同意免责声明才能使用助手';
+	String get disclaimerGateTitle => '需先同意免责声明才能使用助手';
 
 	/// zh: '查看免责声明'
-	String get assistantDisclaimerGateAction => '查看免责声明';
-
-	/// zh: '工具'
-	String get assistantToolPanelTitle => '工具';
+	String get disclaimerGateAction => '查看免责声明';
 
 	/// zh: '发送日记'
-	String get assistantToolSendDiary => '发送日记';
+	String get toolSendDiary => '发送日记';
 
 	/// zh: '发送图片'
-	String get assistantToolSendImage => '发送图片';
+	String get toolSendImage => '发送图片';
 
 	/// zh: '[图片]'
-	String get assistantImageMessageLabel => '[图片]';
-
-	/// zh: '选择日记'
-	String get assistantSelectDiaryTitle => '选择日记';
-
-	/// zh: '搜索日记'
-	String get assistantSelectDiarySearchHint => '搜索日记';
-
-	/// zh: '没有可发送的日记'
-	String get assistantSelectDiaryEmpty => '没有可发送的日记';
-
-	/// zh: '无标题'
-	String get assistantDiaryUntitled => '无标题';
+	String get imageMessageLabel => '[图片]';
 
 	/// zh: '这是我的一篇日记，请阅读后帮我分析或回应：'
-	String get assistantSendDiaryLead => '这是我的一篇日记，请阅读后帮我分析或回应：';
+	String get sendDiaryLead => '这是我的一篇日记，请阅读后帮我分析或回应：';
 
 	/// zh: '模型供应商'
 	String get modelProviderTitle => '模型供应商';
@@ -686,9 +428,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '编辑供应商'
 	String get modelProviderEditEdit => '编辑供应商';
-
-	/// zh: '名称'
-	String get modelProviderName => '名称';
 
 	/// zh: '例如 DeepSeek / 本地 Ollama'
 	String get modelProviderNameHint => '例如 DeepSeek / 本地 Ollama';
@@ -726,9 +465,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '选择供应商'
 	String get llmPickerTitle => '选择供应商';
 
-	/// zh: '自定义'
-	String get llmPickerCustom => '自定义';
-
 	/// zh: '手动填写供应商配置'
 	String get llmPickerCustomDes => '手动填写供应商配置';
 
@@ -740,9 +476,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '加载失败'
 	String get llmPickerLoadFailed => '加载失败';
-
-	/// zh: '重试'
-	String get llmPickerRetry => '重试';
 
 	/// zh: '{count} 个模型'
 	String llmPickerModelCount({required Object count}) => '${count} 个模型';
@@ -768,9 +501,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '仅工具可用'
 	String get modelProviderShowToolOnly => '仅工具可用';
 
-	/// zh: '工具'
-	String get modelProviderBadgeTools => '工具';
-
 	/// zh: '推理'
 	String get modelProviderBadgeReasoning => '推理';
 
@@ -788,24 +518,156 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '无匹配模型'
 	String get modelProviderNoModelMatch => '无匹配模型';
+}
+
+// Path: common
+class Translations$common$zh {
+	Translations$common$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '确认'
+	String get ok => '确认';
+
+	/// zh: '取消'
+	String get cancel => '取消';
+
+	/// zh: '更多'
+	String get more => '更多';
+
+	/// zh: '自定义'
+	String get custom => '自定义';
+
+	/// zh: '保存'
+	String get save => '保存';
+
+	/// zh: '媒体'
+	String get media => '媒体';
+
+	/// zh: '音频'
+	String get audio => '音频';
+
+	/// zh: '视频'
+	String get video => '视频';
+
+	/// zh: '分类'
+	String get category => '分类';
+
+	/// zh: '名称'
+	String get name => '名称';
+
+	/// zh: '删除'
+	String get delete => '删除';
+
+	/// zh: '无标题'
+	String get untitled => '无标题';
+
+	/// zh: '重试'
+	String get retry => '重试';
+
+	/// zh: '{count} 个分类'
+	String categoryCount({required Object count}) => '${count} 个分类';
+
+	/// zh: '文件名'
+	String get fileName => '文件名';
+
+	/// zh: '关闭'
+	String get close => '关闭';
+
+	/// zh: 'Moodiary'
+	String get appName => 'Moodiary';
+}
+
+// Path: diary
+class Translations$diary$zh {
+	Translations$diary$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '这里一片荒芜'
+	String get tabViewEmpty => '这里一片荒芜';
+
+	/// zh: '视图模式'
+	String get pageViewModeButton => '视图模式';
+
+	/// zh: '无分类'
+	String get categoryNoCategory => '无分类';
+
+	/// zh: '全部分类'
+	String get allCategories => '全部分类';
+
+	/// zh: '全部'
+	String get categoryAll => '全部';
+
+	/// zh: '颜色'
+	String get categoryColorLabel => '颜色';
+
+	/// zh: '搜索'
+	String get search => '搜索';
+
+	/// zh: '共有 {count} 篇'
+	String searchResult({required Object count}) => '共有 ${count} 篇';
+
+	/// zh: '耗时 {ms}ms'
+	String searchTime({required Object ms}) => '耗时 ${ms}ms';
+
+	/// zh: '全部时间'
+	String get rangeAll => '全部时间';
+
+	/// zh: '近 30 天'
+	String get rangeLast30 => '近 30 天';
+
+	/// zh: '今年'
+	String get rangeThisYear => '今年';
+
+	/// zh: '相关度'
+	String get searchSortRelevance => '相关度';
+
+	/// zh: '最新'
+	String get searchSortNewest => '最新';
+
+	/// zh: '最早'
+	String get searchSortOldest => '最早';
+
+	/// zh: '没有匹配的日记'
+	String get searchNoResult => '没有匹配的日记';
+
+	/// zh: '搜索历史'
+	String get searchHistory => '搜索历史';
+
+	/// zh: '清空'
+	String get searchHistoryClear => '清空';
+
+	/// zh: '暂无搜索历史'
+	String get searchHistoryEmpty => '暂无搜索历史';
+
+	/// zh: '时间线'
+	String get viewModeTimeline => '时间线';
+
+	/// zh: '信息流'
+	String get viewModeFeed => '信息流';
+
+	/// zh: '选择日记'
+	String get assistantSelectDiaryTitle => '选择日记';
+
+	/// zh: '搜索日记'
+	String get assistantSelectDiarySearchHint => '搜索日记';
+
+	/// zh: '没有可发送的日记'
+	String get assistantSelectDiaryEmpty => '没有可发送的日记';
 
 	/// zh: '日记不存在或已删除'
-	String get diaryLinkNotFound => '日记不存在或已删除';
+	String get linkNotFound => '日记不存在或已删除';
 
 	/// zh: '知识图谱'
 	String get knowledgeGraph => '知识图谱';
 
 	/// zh: '{nodes} 篇 · {edges} 条链接'
 	String graphCount({required Object nodes, required Object edges}) => '${nodes} 篇 · ${edges} 条链接';
-
-	/// zh: '全部时间'
-	String get graphTimeAll => '全部时间';
-
-	/// zh: '近 30 天'
-	String get graphTimeLast30 => '近 30 天';
-
-	/// zh: '今年'
-	String get graphTimeThisYear => '今年';
 
 	/// zh: '近一年'
 	String get graphTimeLast365 => '近一年';
@@ -830,9 +692,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '着色'
 	String get graphColorBy => '着色';
-
-	/// zh: '分类'
-	String get graphColorByCategory => '分类';
 
 	/// zh: '时间'
 	String get graphColorByTime => '时间';
@@ -888,9 +747,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '这篇日记还没有关联'
 	String get graphNoLocalLinks => '这篇日记还没有关联';
 
-	/// zh: '{count} 个分类'
-	String categorySwitcherCount({required Object count}) => '${count} 个分类';
-
 	/// zh: '搜索分类'
 	String get categorySearchHint => '搜索分类';
 
@@ -907,19 +763,474 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	String get categoryManageEntry => '管理分类';
 
 	/// zh: '排序'
-	String get diarySortTitle => '排序';
+	String get sortTitle => '排序';
 
 	/// zh: '最新在前'
-	String get diarySortNewestFirst => '最新在前';
+	String get sortNewestFirst => '最新在前';
 
 	/// zh: '最早在前'
-	String get diarySortOldestFirst => '最早在前';
+	String get sortOldestFirst => '最早在前';
 
 	/// zh: '最近修改在前'
-	String get diarySortModifiedFirst => '最近修改在前';
+	String get sortModifiedFirst => '最近修改在前';
 
-	/// zh: '分类已被删除，已切回全部'
-	String get categoryDeletedReset => '分类已被删除，已切回全部';
+	/// zh: '(other) {{count} 篇}'
+	String timelineMonthCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 篇',
+	);
+
+	/// zh: '近 7 天'
+	String get rangeLast7 => '近 7 天';
+}
+
+// Path: editor
+class Translations$editor$zh {
+	Translations$editor$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '请开启定位权限'
+	String get noticeEnableLocation => '请开启定位权限';
+
+	/// zh: '请前往设置中开启定位权限'
+	String get noticeEnableLocation2 => '请前往设置中开启定位权限';
+
+	/// zh: '相册'
+	String get pickFromGallery => '相册';
+
+	/// zh: '音频文件错误'
+	String get audioFileError => '音频文件错误';
+
+	/// zh: '选择图片'
+	String get pickImage => '选择图片';
+
+	/// zh: '拍照'
+	String get pickImageFromCamera => '拍照';
+
+	/// zh: '选择视频'
+	String get pickVideo => '选择视频';
+
+	/// zh: '录像'
+	String get pickVideoFromCamera => '录像';
+
+	/// zh: '选择音频'
+	String get pickAudio => '选择音频';
+
+	/// zh: '录音'
+	String get pickAudioFromRecord => '录音';
+
+	/// zh: '音频文件'
+	String get pickAudioFromFile => '音频文件';
+
+	/// zh: '正文'
+	String get content => '正文';
+}
+
+// Path: export
+class Translations$export$zh {
+	Translations$export$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '导入与导出'
+	String get pageTitle => '导入与导出';
+
+	/// zh: '导出'
+	String get sectionExport => '导出';
+
+	/// zh: '备份'
+	String get sectionBackup => '备份';
+
+	/// zh: 'DOCX'
+	String get formatDocx => 'DOCX';
+
+	/// zh: '导出备份'
+	String get backupExport => '导出备份';
+
+	/// zh: '打包全部日记与媒体'
+	String get backupExportSubtitle => '打包全部日记与媒体';
+
+	/// zh: '从备份恢复'
+	String get restoreFromBackup => '从备份恢复';
+
+	/// zh: '按修改时间合并'
+	String get backupRestoreSubtitle => '按修改时间合并';
+
+	/// zh: '备份与本地数据按最后修改时间合并，较新的条目覆盖较旧的。'
+	String get restoreConfirmMessage => '备份与本地数据按最后修改时间合并，较新的条目覆盖较旧的。';
+
+	/// zh: '恢复'
+	String get restoreConfirmLabel => '恢复';
+
+	/// zh: '正在恢复…'
+	String get restoring => '正在恢复…';
+
+	/// zh: '恢复完成：{summary}'
+	String restoreDone({required Object summary}) => '恢复完成：${summary}';
+
+	/// zh: '恢复失败：{error}'
+	String restoreFailed({required Object error}) => '恢复失败：${error}';
+
+	/// zh: '正在打包备份…'
+	String get packingBackup => '正在打包备份…';
+
+	/// zh: '备份已生成'
+	String get backupReady => '备份已生成';
+
+	/// zh: '导出失败：{error}'
+	String failed({required Object error}) => '导出失败：${error}';
+
+	/// zh: '产物不见了，请重试'
+	String get artifactMissing => '产物不见了，请重试';
+
+	/// zh: '已生成'
+	String get generated => '已生成';
+
+	/// zh: '导出为 Markdown'
+	String get titleMarkdown => '导出为 Markdown';
+
+	/// zh: '导出为 DOCX'
+	String get titleDocx => '导出为 DOCX';
+
+	/// zh: '导出为 PDF'
+	String get titlePdf => '导出为 PDF';
+
+	/// zh: '范围'
+	String get sectionScope => '范围';
+
+	/// zh: '选择日记'
+	String get selectDiaries => '选择日记';
+
+	/// zh: '统计中…'
+	String get counting => '统计中…';
+
+	/// zh: '{count} 篇'
+	String entryCount({required Object count}) => '${count} 篇';
+
+	/// zh: '合并成一个文件'
+	String get mergeIntoOneFile => '合并成一个文件';
+
+	/// zh: '关闭后每篇一个文件'
+	String get mergeSubtitle => '关闭后每篇一个文件';
+
+	/// zh: '文件名模板'
+	String get fileNameTemplate => '文件名模板';
+
+	/// zh: '可用占位符：{date} 日期、{title} 标题、{id} 日记 id'
+	String fileNameTemplateHint({required Object date, required Object title, required Object id}) => '可用占位符：${date} 日期、${title} 标题、${id} 日记 id';
+
+	/// zh: '模板不能为空'
+	String get templateEmpty => '模板不能为空';
+
+	/// zh: '内容'
+	String get sectionContent => '内容';
+
+	/// zh: '标题'
+	String get includeTitle => '标题';
+
+	/// zh: '日期、天气与位置'
+	String get includeMeta => '日期、天气与位置';
+
+	/// zh: '内嵌图片'
+	String get mediaEmbed => '内嵌图片';
+
+	/// zh: '只写占位文字'
+	String get mediaPlaceholder => '只写占位文字';
+
+	/// zh: '不含媒体'
+	String get mediaNone => '不含媒体';
+
+	/// zh: 'GitHub 风味'
+	String get markdownGfm => 'GitHub 风味';
+
+	/// zh: '支持表格与任务清单'
+	String get markdownGfmSubtitle => '支持表格与任务清单';
+
+	/// zh: '写入 Front Matter'
+	String get markdownFrontMatter => '写入 Front Matter';
+
+	/// zh: '在文件开头记录日期、分类等信息'
+	String get markdownFrontMatterSubtitle => '在文件开头记录日期、分类等信息';
+
+	/// zh: '排版'
+	String get sectionLayout => '排版';
+
+	/// zh: '字体'
+	String get font => '字体';
+
+	/// zh: '中文字体'
+	String get eastAsiaFont => '中文字体';
+
+	/// zh: '西文字体'
+	String get asciiFont => '西文字体';
+
+	/// zh: '还没有选择字体'
+	String get noFontSelected => '还没有选择字体';
+
+	/// zh: '字号'
+	String get fontSize => '字号';
+
+	/// zh: '{size} pt'
+	String fontSizeValue({required Object size}) => '${size} pt';
+
+	/// zh: '行距'
+	String get lineSpacing => '行距';
+
+	/// zh: '{value} 倍'
+	String lineSpacingValue({required Object value}) => '${value} 倍';
+
+	/// zh: '首行缩进两字符'
+	String get firstLineIndent => '首行缩进两字符';
+
+	/// zh: '纸张'
+	String get paper => '纸张';
+
+	/// zh: '填写字体名，如「宋体」「Georgia」。'
+	String get fontNameHint => '填写字体名，如「宋体」「Georgia」。';
+
+	/// zh: '字体名不能为空'
+	String get fontNameEmpty => '字体名不能为空';
+
+	/// zh: '这个范围里没有日记'
+	String get scopeEmpty => '这个范围里没有日记';
+
+	/// zh: '已取消导出'
+	String get cancelled => '已取消导出';
+
+	/// zh: '请先选择一个字体'
+	String get pickFontFirst => '请先选择一个字体';
+
+	/// zh: '导出 {count} 篇'
+	String runButton({required Object count}) => '导出 ${count} 篇';
+
+	/// zh: '导出完成，但有几处没带上'
+	String get partialTitle => '导出完成，但有几处没带上';
+
+	/// zh: '{count} 个媒体文件找不到，已跳过'
+	String skippedMedia({required Object count}) => '${count} 个媒体文件找不到，已跳过';
+
+	/// zh: '有 {count} 种内容这个版本还导不出：{types}'
+	String unsupportedNodes({required Object count, required Object types}) => '有 ${count} 种内容这个版本还导不出：${types}';
+
+	/// zh: '全部日记'
+	String get scopeAll => '全部日记';
+
+	/// zh: '按分类'
+	String get scopeByCategory => '按分类';
+
+	/// zh: '按时间'
+	String get scopeByDate => '按时间';
+
+	/// zh: '手动挑选'
+	String get scopePicked => '手动挑选';
+
+	/// zh: '已选 {count} 篇'
+	String scopePickedLabel({required Object count}) => '已选 ${count} 篇';
+
+	/// zh: '时间区间'
+	String get dateRange => '时间区间';
+
+	/// zh: '点击选择'
+	String get tapToPick => '点击选择';
+
+	/// zh: '{from} 至 {to}'
+	String dateRangeValue({required Object from, required Object to}) => '${from} 至 ${to}';
+
+	/// zh: '全选'
+	String get selectAll => '全选';
+
+	/// zh: '还没有选择'
+	String get nothingSelected => '还没有选择';
+
+	/// zh: '确定'
+	String get confirm => '确定';
+
+	/// zh: '未分类'
+	String get uncategorized => '未分类';
+
+	/// zh: '已删除分类'
+	String get deletedCategory => '已删除分类';
+
+	/// zh: 'PDF 字体'
+	String get pdfFontPageTitle => 'PDF 字体';
+
+	/// zh: '已导入的字体'
+	String get importedFonts => '已导入的字体';
+
+	/// zh: '导入字体'
+	String get importFont => '导入字体';
+
+	/// zh: '正在导入…'
+	String get importingFont => '正在导入…';
+
+	/// zh: '导入失败：{error}'
+	String importFailed({required Object error}) => '导入失败：${error}';
+
+	/// zh: '读不出字体名，文件可能已损坏'
+	String get fontNameUnreadable => '读不出字体名，文件可能已损坏';
+
+	/// zh: '还没有可用于 PDF 的字体'
+	String get noPdfFontTitle => '还没有可用于 PDF 的字体';
+
+	/// zh: '导入一个 .ttf 字体后可在此选择。'
+	String get noPdfFontMessage => '导入一个 .ttf 字体后可在此选择。';
+
+	/// zh: '正在转换 {done}/{total}'
+	String progressConverting({required Object done, required Object total}) => '正在转换 ${done}/${total}';
+
+	/// zh: '正在排版…'
+	String get progressWriting => '正在排版…';
+
+	/// zh: '正在排版 {done}/{total}'
+	String progressWritingCount({required Object done, required Object total}) => '正在排版 ${done}/${total}';
+
+	/// zh: '正在生成文件…'
+	String get progressSerializing => '正在生成文件…';
+}
+
+// Path: media
+class Translations$media$zh {
+	Translations$media$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '媒体库'
+	String get title => '媒体库';
+
+	/// zh: '图片'
+	String get typeImage => '图片';
+
+	/// zh: '清理无用文件'
+	String get deleteUseLessFile => '清理无用文件';
+
+	/// zh: '这里还没有媒体'
+	String get empty => '这里还没有媒体';
+
+	/// zh: '正在扫描无用文件'
+	String get cleanupScanning => '正在扫描无用文件';
+
+	/// zh: '没有发现无用文件'
+	String get cleanupEmpty => '没有发现无用文件';
+
+	/// zh: '清理无用文件'
+	String get cleanupConfirmTitle => '清理无用文件';
+
+	/// zh: '发现 {count} 个未被任何日记引用的文件（{size}），确认清理？此操作不可恢复。'
+	String cleanupConfirmMessage({required Object count, required Object size}) => '发现 ${count} 个未被任何日记引用的文件（${size}），确认清理？此操作不可恢复。';
+
+	/// zh: '已清理 {count} 个文件'
+	String cleanupDone({required Object count}) => '已清理 ${count} 个文件';
+
+	/// zh: '重命名'
+	String get rename => '重命名';
+
+	/// zh: '(other) {{count} 张照片}'
+	String imageCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 张照片',
+	);
+
+	/// zh: '(other) {{count} 段音频}'
+	String audioCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 段音频',
+	);
+
+	/// zh: '(other) {{count} 段视频}'
+	String videoCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
+		other: '${count} 段视频',
+	);
+}
+
+// Path: sync
+class Translations$sync$zh {
+	Translations$sync$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: 'WebDAV'
+	String get backupSyncWebdav => 'WebDAV';
+
+	/// zh: '未配置'
+	String get backupSyncWebdavNoOption => '未配置';
+
+	/// zh: '已配置'
+	String get backupSyncWebdavOption => '已配置';
+
+	/// zh: '服务器地址'
+	String get webdavOptionServer => '服务器地址';
+
+	/// zh: '用户名'
+	String get webdavOptionUsername => '用户名';
+
+	/// zh: '密码'
+	String get webdavOptionPassword => '密码';
+
+	/// zh: 'S3 / MinIO'
+	String get backupSyncS3 => 'S3 / MinIO';
+
+	/// zh: 'Endpoint'
+	String get s3OptionEndpoint => 'Endpoint';
+
+	/// zh: 'Region'
+	String get s3OptionRegion => 'Region';
+
+	/// zh: 'Bucket'
+	String get s3OptionBucket => 'Bucket';
+
+	/// zh: 'Access Key'
+	String get s3OptionAccessKey => 'Access Key';
+
+	/// zh: 'Secret Key'
+	String get s3OptionSecretKey => 'Secret Key';
+
+	/// zh: '使用 HTTPS'
+	String get s3OptionUseSsl => '使用 HTTPS';
+
+	/// zh: '连接'
+	String get sectionConnection => '连接';
+
+	/// zh: '凭证'
+	String get sectionCredentials => '凭证';
+
+	/// zh: '选项'
+	String get sectionOptions => '选项';
+
+	/// zh: '清除配置'
+	String get configClear => '清除配置';
+
+	/// zh: '清除配置？'
+	String get configClearConfirmTitle => '清除配置？';
+
+	/// zh: '清除后将停止与该后端同步，本地日记不受影响。'
+	String get configClearConfirmMessage => '清除后将停止与该后端同步，本地日记不受影响。';
+
+	/// zh: '已清除配置'
+	String get configCleared => '已清除配置';
+
+	/// zh: '{field: String}不能为空'
+	String fieldRequired({required String field}) => '${field}不能为空';
+
+	/// zh: '可留空'
+	String get fieldOptional => '可留空';
+
+	/// zh: '地址格式不正确'
+	String get fieldInvalidUrl => '地址格式不正确';
+}
+
+// Path: ui
+class Translations$ui$zh {
+	Translations$ui$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
 
 	/// zh: '保存到相册'
 	String get imageBrowserSave => '保存到相册';
@@ -932,9 +1243,6 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '图片信息'
 	String get imageBrowserInfo => '图片信息';
-
-	/// zh: '文件名'
-	String get imageBrowserInfoName => '文件名';
 
 	/// zh: '链接'
 	String get imageBrowserInfoUrl => '链接';
@@ -954,35 +1262,17 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	/// zh: '视频加载失败'
 	String get videoPlayerLoadFailed => '视频加载失败';
 
-	/// zh: '重试'
-	String get videoPlayerRetry => '重试';
-
-	/// zh: '关闭'
-	String get videoPlayerClose => '关闭';
-
-	/// zh: '关闭'
-	String get audioPlayerClose => '关闭';
-
 	/// zh: '播放'
-	String get audioPlayerPlay => '播放';
+	String get play => '播放';
 
 	/// zh: '暂停'
-	String get audioPlayerPause => '暂停';
+	String get pause => '暂停';
 
 	/// zh: '播放进度'
-	String get audioPlayerProgress => '播放进度';
-
-	/// zh: '播放'
-	String get videoPlayerPlay => '播放';
-
-	/// zh: '暂停'
-	String get videoPlayerPause => '暂停';
+	String get playbackProgress => '播放进度';
 
 	/// zh: '重播'
 	String get videoPlayerReplay => '重播';
-
-	/// zh: '播放进度'
-	String get videoPlayerProgress => '播放进度';
 
 	/// zh: '亮度'
 	String get videoPlayerBrightness => '亮度';
@@ -992,288 +1282,4 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 
 	/// zh: '{speed: String}× 倍速播放中'
 	String videoPlayerSpeedBoost({required String speed}) => '${speed}× 倍速播放中';
-
-	/// zh: '(other) {{count} 篇}'
-	String diaryTimelineMonthCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
-		other: '${count} 篇',
-	);
-
-	/// zh: '导入与导出'
-	String get exportPageTitle => '导入与导出';
-
-	/// zh: '导出'
-	String get exportSectionExport => '导出';
-
-	/// zh: '备份'
-	String get exportSectionBackup => '备份';
-
-	/// zh: 'DOCX'
-	String get exportFormatDocx => 'DOCX';
-
-	/// zh: '导出备份'
-	String get exportBackupExport => '导出备份';
-
-	/// zh: '打包全部日记与媒体'
-	String get exportBackupExportSubtitle => '打包全部日记与媒体';
-
-	/// zh: '从备份恢复'
-	String get exportRestoreFromBackup => '从备份恢复';
-
-	/// zh: '按修改时间合并'
-	String get exportBackupRestoreSubtitle => '按修改时间合并';
-
-	/// zh: '备份与本地数据按最后修改时间合并，较新的条目覆盖较旧的。'
-	String get exportRestoreConfirmMessage => '备份与本地数据按最后修改时间合并，较新的条目覆盖较旧的。';
-
-	/// zh: '恢复'
-	String get exportRestoreConfirmLabel => '恢复';
-
-	/// zh: '正在恢复…'
-	String get exportRestoring => '正在恢复…';
-
-	/// zh: '恢复完成：{summary}'
-	String exportRestoreDone({required Object summary}) => '恢复完成：${summary}';
-
-	/// zh: '恢复失败：{error}'
-	String exportRestoreFailed({required Object error}) => '恢复失败：${error}';
-
-	/// zh: '正在打包备份…'
-	String get exportPackingBackup => '正在打包备份…';
-
-	/// zh: '备份已生成'
-	String get exportBackupReady => '备份已生成';
-
-	/// zh: '导出失败：{error}'
-	String exportFailed({required Object error}) => '导出失败：${error}';
-
-	/// zh: '产物不见了，请重试'
-	String get exportArtifactMissing => '产物不见了，请重试';
-
-	/// zh: '已生成'
-	String get exportGenerated => '已生成';
-
-	/// zh: '导出为 Markdown'
-	String get exportTitleMarkdown => '导出为 Markdown';
-
-	/// zh: '导出为 DOCX'
-	String get exportTitleDocx => '导出为 DOCX';
-
-	/// zh: '导出为 PDF'
-	String get exportTitlePdf => '导出为 PDF';
-
-	/// zh: '范围'
-	String get exportSectionScope => '范围';
-
-	/// zh: '选择日记'
-	String get exportSelectDiaries => '选择日记';
-
-	/// zh: '统计中…'
-	String get exportCounting => '统计中…';
-
-	/// zh: '{count} 篇'
-	String exportEntryCount({required Object count}) => '${count} 篇';
-
-	/// zh: '合并成一个文件'
-	String get exportMergeIntoOneFile => '合并成一个文件';
-
-	/// zh: '关闭后每篇一个文件'
-	String get exportMergeSubtitle => '关闭后每篇一个文件';
-
-	/// zh: '文件名'
-	String get exportFileName => '文件名';
-
-	/// zh: '文件名模板'
-	String get exportFileNameTemplate => '文件名模板';
-
-	/// zh: '可用占位符：{date} 日期、{title} 标题、{id} 日记 id'
-	String exportFileNameTemplateHint({required Object date, required Object title, required Object id}) => '可用占位符：${date} 日期、${title} 标题、${id} 日记 id';
-
-	/// zh: '模板不能为空'
-	String get exportTemplateEmpty => '模板不能为空';
-
-	/// zh: '内容'
-	String get exportSectionContent => '内容';
-
-	/// zh: '标题'
-	String get exportIncludeTitle => '标题';
-
-	/// zh: '日期、天气与位置'
-	String get exportIncludeMeta => '日期、天气与位置';
-
-	/// zh: '媒体'
-	String get exportMedia => '媒体';
-
-	/// zh: '内嵌图片'
-	String get exportMediaEmbed => '内嵌图片';
-
-	/// zh: '只写占位文字'
-	String get exportMediaPlaceholder => '只写占位文字';
-
-	/// zh: '不含媒体'
-	String get exportMediaNone => '不含媒体';
-
-	/// zh: 'GitHub 风味'
-	String get exportMarkdownGfm => 'GitHub 风味';
-
-	/// zh: '支持表格与任务清单'
-	String get exportMarkdownGfmSubtitle => '支持表格与任务清单';
-
-	/// zh: '写入 Front Matter'
-	String get exportMarkdownFrontMatter => '写入 Front Matter';
-
-	/// zh: '在文件开头记录日期、分类等信息'
-	String get exportMarkdownFrontMatterSubtitle => '在文件开头记录日期、分类等信息';
-
-	/// zh: '排版'
-	String get exportSectionLayout => '排版';
-
-	/// zh: '字体'
-	String get exportFont => '字体';
-
-	/// zh: '中文字体'
-	String get exportEastAsiaFont => '中文字体';
-
-	/// zh: '西文字体'
-	String get exportAsciiFont => '西文字体';
-
-	/// zh: '还没有选择字体'
-	String get exportNoFontSelected => '还没有选择字体';
-
-	/// zh: '字号'
-	String get exportFontSize => '字号';
-
-	/// zh: '{size} pt'
-	String exportFontSizeValue({required Object size}) => '${size} pt';
-
-	/// zh: '行距'
-	String get exportLineSpacing => '行距';
-
-	/// zh: '{value} 倍'
-	String exportLineSpacingValue({required Object value}) => '${value} 倍';
-
-	/// zh: '首行缩进两字符'
-	String get exportFirstLineIndent => '首行缩进两字符';
-
-	/// zh: '纸张'
-	String get exportPaper => '纸张';
-
-	/// zh: '填写字体名，如「宋体」「Georgia」。'
-	String get exportFontNameHint => '填写字体名，如「宋体」「Georgia」。';
-
-	/// zh: '字体名不能为空'
-	String get exportFontNameEmpty => '字体名不能为空';
-
-	/// zh: '这个范围里没有日记'
-	String get exportScopeEmpty => '这个范围里没有日记';
-
-	/// zh: '已取消导出'
-	String get exportCancelled => '已取消导出';
-
-	/// zh: '取消'
-	String get exportCancel => '取消';
-
-	/// zh: '请先选择一个字体'
-	String get exportPickFontFirst => '请先选择一个字体';
-
-	/// zh: '导出 {count} 篇'
-	String exportRunButton({required Object count}) => '导出 ${count} 篇';
-
-	/// zh: '导出完成，但有几处没带上'
-	String get exportPartialTitle => '导出完成，但有几处没带上';
-
-	/// zh: '{count} 个媒体文件找不到，已跳过'
-	String exportSkippedMedia({required Object count}) => '${count} 个媒体文件找不到，已跳过';
-
-	/// zh: '有 {count} 种内容这个版本还导不出：{types}'
-	String exportUnsupportedNodes({required Object count, required Object types}) => '有 ${count} 种内容这个版本还导不出：${types}';
-
-	/// zh: '全部日记'
-	String get exportScopeAll => '全部日记';
-
-	/// zh: '按分类'
-	String get exportScopeByCategory => '按分类';
-
-	/// zh: '按时间'
-	String get exportScopeByDate => '按时间';
-
-	/// zh: '手动挑选'
-	String get exportScopePicked => '手动挑选';
-
-	/// zh: '{count} 篇'
-	String exportScopeAllHint({required Object count}) => '${count} 篇';
-
-	/// zh: '已选 {count} 篇'
-	String exportScopePickedLabel({required Object count}) => '已选 ${count} 篇';
-
-	/// zh: '时间区间'
-	String get exportDateRange => '时间区间';
-
-	/// zh: '点击选择'
-	String get exportTapToPick => '点击选择';
-
-	/// zh: '{from} 至 {to}'
-	String exportDateRangeValue({required Object from, required Object to}) => '${from} 至 ${to}';
-
-	/// zh: '全选'
-	String get exportSelectAll => '全选';
-
-	/// zh: '还没有选择'
-	String get exportNothingSelected => '还没有选择';
-
-	/// zh: '确定'
-	String get exportConfirm => '确定';
-
-	/// zh: '未分类'
-	String get exportUncategorized => '未分类';
-
-	/// zh: '已删除分类'
-	String get exportDeletedCategory => '已删除分类';
-
-	/// zh: '{count} 个分类'
-	String exportCategoryCount({required Object count}) => '${count} 个分类';
-
-	/// zh: '无标题'
-	String get exportUntitled => '无标题';
-
-	/// zh: 'PDF 字体'
-	String get exportPdfFontPageTitle => 'PDF 字体';
-
-	/// zh: '已导入的字体'
-	String get exportImportedFonts => '已导入的字体';
-
-	/// zh: '导入字体'
-	String get exportImportFont => '导入字体';
-
-	/// zh: '正在导入…'
-	String get exportImportingFont => '正在导入…';
-
-	/// zh: '导入失败：{error}'
-	String exportImportFailed({required Object error}) => '导入失败：${error}';
-
-	/// zh: '读不出字体名，文件可能已损坏'
-	String get exportFontNameUnreadable => '读不出字体名，文件可能已损坏';
-
-	/// zh: '还没有可用于 PDF 的字体'
-	String get exportNoPdfFontTitle => '还没有可用于 PDF 的字体';
-
-	/// zh: '导入一个 .ttf 字体后可在此选择。'
-	String get exportNoPdfFontMessage => '导入一个 .ttf 字体后可在此选择。';
-
-	/// zh: '视频'
-	String get exportMediaKindVideo => '视频';
-
-	/// zh: '音频'
-	String get exportMediaKindAudio => '音频';
-
-	/// zh: '正在转换 {done}/{total}'
-	String exportProgressConverting({required Object done, required Object total}) => '正在转换 ${done}/${total}';
-
-	/// zh: '正在排版…'
-	String get exportProgressWriting => '正在排版…';
-
-	/// zh: '正在排版 {done}/{total}'
-	String exportProgressWritingCount({required Object done, required Object total}) => '正在排版 ${done}/${total}';
-
-	/// zh: '正在生成文件…'
-	String get exportProgressSerializing => '正在生成文件…';
 }

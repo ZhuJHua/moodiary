@@ -1,0 +1,19 @@
+{
+  "ok": "确认",
+  "cancel": "取消",
+  "more": "更多",
+  "custom": "自定义",
+  "save": "保存",
+  "media": "媒体",
+  "audio": "音频",
+  "video": "视频",
+  "category": "分类",
+  "name": "名称",
+  "delete": "删除",
+  "untitled": "无标题",
+  "retry": "重试",
+  "categoryCount": "{count} 个分类",
+  "fileName": "文件名",
+  "close": "关闭",
+  "appName": "Moodiary"
+}

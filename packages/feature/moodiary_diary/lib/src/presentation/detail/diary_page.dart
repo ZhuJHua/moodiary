@@ -670,7 +670,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       final target = await DiaryRepository.get().getDiaryByBusinessId(id);
       if (!mounted) return;
       if (target == null) {
-        toast.error(message: context.l10n.diaryLinkNotFound);
+        toast.error(message: context.l10n.diary.linkNotFound);
         return;
       }
       await _hopTo(target);
@@ -1052,7 +1052,10 @@ class _LinksPanelState extends State<_LinksPanel> {
               children: [
                 Icon(LucideIcons.link, size: 18, color: colors.primary),
                 const SizedBox(width: 8),
-                Text(context.l10n.graphLinks, style: typo.titleSmall.onSurface),
+                Text(
+                  context.l10n.diary.graphLinks,
+                  style: typo.titleSmall.onSurface,
+                ),
                 const SizedBox(width: 8),
                 if (_out.isNotEmpty)
                   _CountPill(
@@ -1072,7 +1075,7 @@ class _LinksPanelState extends State<_LinksPanel> {
                 ],
                 const Spacer(),
                 IconButton(
-                  tooltip: context.l10n.graphLocal,
+                  tooltip: context.l10n.diary.graphLocal,
                   iconSize: 20,
                   visualDensity: .compact,
                   icon: const Icon(LucideIcons.waypoints),
@@ -1098,11 +1101,15 @@ class _LinksPanelState extends State<_LinksPanel> {
     final typo = context.theme.typography;
     final rows = <({String? header, Diary? diary, bool outgoing})>[
       if (_out.isNotEmpty) ...[
-        (header: context.l10n.graphOutgoing, diary: null, outgoing: true),
+        (header: context.l10n.diary.graphOutgoing, diary: null, outgoing: true),
         for (final d in _out) (header: null, diary: d, outgoing: true),
       ],
       if (_in.isNotEmpty) ...[
-        (header: context.l10n.graphIncoming, diary: null, outgoing: false),
+        (
+          header: context.l10n.diary.graphIncoming,
+          diary: null,
+          outgoing: false,
+        ),
         for (final d in _in) (header: null, diary: d, outgoing: false),
       ],
     ];
@@ -1275,7 +1282,7 @@ class _DetailSheet extends ConsumerWidget {
     return MSheetScaffold<void>(
       title: '日记信息',
       icon: LucideIcons.info,
-      actions: [MAction(label: context.l10n.ok, isPrimary: true)],
+      actions: [MAction(label: context.l10n.common.ok, isPrimary: true)],
       child: Column(
         mainAxisSize: .min,
         crossAxisAlignment: .stretch,

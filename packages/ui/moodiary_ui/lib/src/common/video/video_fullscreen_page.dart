@@ -689,7 +689,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
                   left: 8,
                   child: _RoundIcon(
                     icon: LucideIcons.x,
-                    tooltip: l10n.videoPlayerClose,
+                    tooltip: l10n.common.close,
                     onTap: _close,
                   ),
                 ),
@@ -747,10 +747,8 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
                           ? LucideIcons.pause
                           : LucideIcons.play),
                 tooltip: completed
-                    ? l10n.videoPlayerReplay
-                    : (state.isPlayIntent
-                          ? l10n.videoPlayerPause
-                          : l10n.videoPlayerPlay),
+                    ? l10n.ui.videoPlayerReplay
+                    : (state.isPlayIntent ? l10n.ui.pause : l10n.ui.play),
                 filled: false,
                 onTap: () {
                   _chrome.keep();
@@ -778,7 +776,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
           child: _ScrubBar(
             progress: _player.progress,
             accent: accent,
-            semanticLabel: l10n.videoPlayerProgress,
+            semanticLabel: l10n.ui.playbackProgress,
             onBegin: (at) {
               _unpinChrome?.call();
               _unpinChrome = _chrome.pin();
@@ -845,7 +843,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
               ),
               const SizedBox(height: 10),
               Text(
-                l10n.videoPlayerLoadFailed,
+                l10n.ui.videoPlayerLoadFailed,
                 style: context.theme.typography.bodySmall.onSurface.copyWith(
                   color: Colors.white70,
                 ),
@@ -858,7 +856,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
                     foregroundColor: Colors.white,
                     side: const BorderSide(color: Colors.white38),
                   ),
-                  child: Text(l10n.videoPlayerRetry),
+                  child: Text(l10n.common.retry),
                 ),
               ],
             ],
@@ -873,8 +871,8 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
                 ? LucideIcons.rotateCcw
                 : LucideIcons.play,
             tooltip: state is VideoCompleted
-                ? l10n.videoPlayerReplay
-                : l10n.videoPlayerPlay,
+                ? l10n.ui.videoPlayerReplay
+                : l10n.ui.play,
             big: true,
             onTap: () {
               _chrome.keep();
@@ -1046,7 +1044,7 @@ class _MVideoPlayerPageState extends State<MVideoPlayerPage>
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            l10n.videoPlayerSpeedBoost(
+                            l10n.ui.videoPlayerSpeedBoost(
                               speed: _kBoostSpeed.toStringAsFixed(0),
                             ),
                             style: context
@@ -1456,8 +1454,8 @@ class _AmbientBar extends StatelessWidget {
     final isBrightness = level.channel == .brightness;
     final value = level.value.clamp(0.0, 1.0);
     final label = isBrightness
-        ? l10n.videoPlayerBrightness
-        : l10n.videoPlayerVolume;
+        ? l10n.ui.videoPlayerBrightness
+        : l10n.ui.videoPlayerVolume;
 
     return Center(
       // 与刮擦时间码共用同一个槽位（正中偏上 34dp）：同一时刻只会出现一张，

@@ -76,20 +76,20 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       context: context,
       builder: (sheetContext) {
         return SimpleDialog(
-          title: Text(context.l10n.editPickImage),
+          title: Text(context.l10n.editor.pickImage),
           children: [
             SimpleDialogOption(
               onPressed: () => _pickFromGallery(sheetContext),
               child: _DialogRow(
                 icon: LucideIcons.images,
-                label: context.l10n.editPickImageFromGallery,
+                label: context.l10n.editor.pickFromGallery,
               ),
             ),
             SimpleDialogOption(
               onPressed: () => _pickFromCamera(sheetContext),
               child: _DialogRow(
                 icon: LucideIcons.camera,
-                label: context.l10n.editPickImageFromCamera,
+                label: context.l10n.editor.pickImageFromCamera,
               ),
             ),
           ],
@@ -160,20 +160,20 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       context: context,
       builder: (sheetContext) {
         return SimpleDialog(
-          title: Text(context.l10n.editPickVideo),
+          title: Text(context.l10n.editor.pickVideo),
           children: [
             SimpleDialogOption(
               onPressed: () => _pickVideo(sheetContext, fromCamera: false),
               child: _DialogRow(
                 icon: LucideIcons.images,
-                label: context.l10n.editPickVideoFromGallery,
+                label: context.l10n.editor.pickFromGallery,
               ),
             ),
             SimpleDialogOption(
               onPressed: () => _pickVideo(sheetContext, fromCamera: true),
               child: _DialogRow(
                 icon: LucideIcons.camera,
-                label: context.l10n.editPickVideoFromCamera,
+                label: context.l10n.editor.pickVideoFromCamera,
               ),
             ),
           ],
@@ -202,20 +202,20 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       context: context,
       builder: (sheetContext) {
         return SimpleDialog(
-          title: Text(context.l10n.editPickAudio),
+          title: Text(context.l10n.editor.pickAudio),
           children: [
             SimpleDialogOption(
               onPressed: () => _pickAudioFile(sheetContext),
               child: _DialogRow(
                 icon: LucideIcons.fileAudio,
-                label: context.l10n.editPickAudioFromFile,
+                label: context.l10n.editor.pickAudioFromFile,
               ),
             ),
             SimpleDialogOption(
               onPressed: () => _recordAudio(sheetContext),
               child: _DialogRow(
                 icon: LucideIcons.mic,
-                label: context.l10n.editPickAudioFromRecord,
+                label: context.l10n.editor.pickAudioFromRecord,
               ),
             ),
           ],
@@ -239,7 +239,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       final duration = await probeAudioDuration(path);
       if (duration == null) {
         await AppFiles.deleteFile(path);
-        if (mounted) toast.error(message: context.l10n.audioFileError);
+        if (mounted) toast.error(message: context.l10n.editor.audioFileError);
         return;
       }
       await _saveMediaInfo(
@@ -249,7 +249,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       );
       await _controller.insertAudio(name);
     } catch (_) {
-      if (mounted) toast.error(message: context.l10n.audioFileError);
+      if (mounted) toast.error(message: context.l10n.editor.audioFileError);
     }
   }
 
@@ -340,7 +340,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
     return MoodiaryEditor(
       controller: _controller,
       readOnly: !widget.editable,
-      placeholder: context.l10n.editContent,
+      placeholder: context.l10n.editor.content,
       initialContent: widget.initialContent,
       initialTitle: widget.initialTitle,
       onChanged: widget.onChanged,
@@ -365,7 +365,7 @@ class _MoodiaryEditorViewState extends State<MoodiaryEditorView> {
       mediaResolver: appMediaResolver,
       mediaNameResolver: (name) async =>
           (await MediaInfoRepository.get().getMediaInfoByFileName(name))?.name,
-      audioDefaultName: context.l10n.audioDefaultName,
+      audioDefaultName: context.l10n.common.audio,
       loadingBuilder: (_) => const MLoading(),
     );
   }

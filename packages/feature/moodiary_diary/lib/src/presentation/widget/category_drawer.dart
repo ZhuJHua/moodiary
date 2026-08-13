@@ -69,7 +69,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                   child: Row(
                     children: [
                       Text(
-                        context.l10n.editCategory,
+                        context.l10n.common.category,
                         style: context
                             .theme
                             .typography
@@ -78,7 +78,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                       ),
                       const Spacer(),
                       Text(
-                        context.l10n.categorySwitcherCount(
+                        context.l10n.common.categoryCount(
                           count: categories.length,
                         ),
                         style: context.theme.typography.labelSmall.outline,
@@ -90,7 +90,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                   Padding(
                     padding: const .fromLTRB(12, 0, 12, 8),
                     child: SearchBar(
-                      hintText: context.l10n.categorySearchHint,
+                      hintText: context.l10n.diary.categorySearchHint,
                       leading: const Icon(LucideIcons.search, size: 20),
                       constraints: const BoxConstraints(minHeight: 42),
                       elevation: const WidgetStatePropertyAll(0),
@@ -108,7 +108,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                       // 不上查询，混在结果里会和下面的「没有匹配的分类」自相矛盾。
                       if (query.isEmpty)
                         _Tile(
-                          label: context.l10n.categoryAllDiary,
+                          label: context.l10n.diary.categoryAllDiary,
                           count: total,
                           selected: filter.isAll,
                           leading: _Swatch.all(scheme: colors),
@@ -132,7 +132,8 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                       if (query.isEmpty)
                         for (var i = 0; i < pending.newCategoryIds.length; i++)
                           _PendingTile(
-                            label: context.l10n.categorySyncingPlaceholder,
+                            label:
+                                context.l10n.diary.categorySyncingPlaceholder,
                           ),
                       if (visible.isEmpty && query.isNotEmpty)
                         Padding(
@@ -141,7 +142,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                             vertical: 12,
                           ),
                           child: Text(
-                            context.l10n.categoryNoMatch,
+                            context.l10n.diary.categoryNoMatch,
                             style: context
                                 .theme
                                 .typography
@@ -157,7 +158,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                 // 「未分类」不是一个分类，是「缺少分类」——所以放在分隔线以下、
                 // 和管理入口一组，而不是混进分类列表里。
                 _Tile(
-                  label: context.l10n.categoryNoCategory,
+                  label: context.l10n.diary.categoryNoCategory,
                   count: uncategorized,
                   selected: filter.uncategorized,
                   leading: _Swatch.none(scheme: colors),
@@ -184,7 +185,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                           ),
                           label: Align(
                             alignment: .centerLeft,
-                            child: Text(context.l10n.categoryManageEntry),
+                            child: Text(context.l10n.diary.categoryManageEntry),
                           ),
                           style: FilledButton.styleFrom(
                             minimumSize: const .fromHeight(44),
@@ -196,7 +197,7 @@ class _CategoryDrawerState extends ConsumerState<CategoryDrawer> {
                       // 设置从底栏挪进来了：底栏只剩三个 tab，而抽屉本来就是「离开当前
                       // 内容去别处」的那一栏。
                       IconButton.filledTonal(
-                        tooltip: context.l10n.homeNavigatorSetting,
+                        tooltip: context.l10n.app.homeNavigatorSetting,
                         onPressed: () {
                           Navigator.of(context).pop();
                           const SettingRoute().push(context);
@@ -232,14 +233,14 @@ class _Header extends StatelessWidget {
         crossAxisAlignment: .start,
         children: [
           Text(
-            context.l10n.appName,
+            context.l10n.common.appName,
             style: context.theme.typography.titleLarge.emphasized.onSurface,
           ),
           if (total != null)
             Padding(
               padding: const .only(top: 2),
               child: Text(
-                context.l10n.diarySearchResult(count: total!),
+                context.l10n.diary.searchResult(count: total!),
                 style: context.theme.typography.labelMedium.onSurfaceVariant,
               ),
             ),

@@ -153,7 +153,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   }
 
   TextMessage _welcome() =>
-      _chat.assistantMessage(context.l10n.assistantWelcome);
+      _chat.assistantMessage(context.l10n.assistant.welcome);
 
   Future<void> _refreshReady() async {
     final provider = await LlmProviderRepository.get().getActiveProvider();
@@ -266,10 +266,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final agreed = await MAlert.confirm(
       context,
       icon: LucideIcons.shieldAlert,
-      title: l10n.assistantDisclaimerTitle,
-      message: l10n.assistantDisclaimerContent,
-      confirmLabel: l10n.assistantDisclaimerAgree,
-      cancelLabel: l10n.assistantDisclaimerDecline,
+      title: l10n.assistant.disclaimerTitle,
+      message: l10n.assistant.disclaimerContent,
+      confirmLabel: l10n.assistant.disclaimerAgree,
+      cancelLabel: l10n.assistant.disclaimerDecline,
       barrierDismissible: false,
     );
     if (agreed) {
@@ -369,7 +369,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         !_disclaimerAccepted) {
       return;
     }
-    final imageLabel = context.l10n.assistantImageMessageLabel;
+    final imageLabel = context.l10n.assistant.imageMessageLabel;
     final gen = ++_generation;
     // 用户开启了新一轮对话：放弃上一次失败重生成遗留的旧回复（保留在库里，不删）。
     _staleReplyIds = [];
@@ -479,7 +479,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     );
     if (!mounted || gen != _generation) return;
     if (request == null) {
-      _appendDelta(l10n.assistantNeedProvider);
+      _appendDelta(l10n.assistant.needProvider);
       _finalizeStreaming(persist: false);
       await _refreshReady();
       if (mounted && gen == _generation) setState(() => _sending = false);
@@ -493,7 +493,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       if (!mounted || gen != _generation) return;
     }
 
-    final needApiKeyText = l10n.assistantNeedApiKey;
+    final needApiKeyText = l10n.assistant.needApiKey;
     var errored = false;
     try {
       _streamSub = AssistantService.get()
@@ -615,9 +615,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (!mounted) return;
     setState(() => _compacting = false);
     if (updated != null) {
-      toast.success(message: l10n.assistantCompactionDone);
+      toast.success(message: l10n.assistant.compactionDone);
     } else {
-      toast.info(message: l10n.assistantCompactionNothing);
+      toast.info(message: l10n.assistant.compactionNothing);
     }
   }
 
@@ -875,7 +875,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final title = diary.title.trim();
     final header = title.isEmpty ? date : '$date · $title';
     final body = diary.contentText.trim();
-    return '${l10n.assistantSendDiaryLead}\n\n【$header】\n$body';
+    return '${l10n.assistant.sendDiaryLead}\n\n【$header】\n$body';
   }
 
   /// 点击消息列表时收起键盘与工具面板（焦点从输入框移开）。
@@ -984,7 +984,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       onStop: _stop,
       onTool: _toggleToolPanel,
       toolIcon: LucideIcons.plus,
-      toolTooltip: context.l10n.assistantToolPanelTitle,
+      toolTooltip: context.l10n.assistant.tool,
       thinking: _thinking,
       showThinking: _canThink,
       onToggleThinking: _toggleThinking,
@@ -1031,13 +1031,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               children: [
                 _ToolPanelItem(
                   icon: LucideIcons.bookOpen,
-                  label: l10n.assistantToolSendDiary,
+                  label: l10n.assistant.toolSendDiary,
                   onTap: _pickAndSendDiary,
                 ),
                 if (_canSendImage)
                   _ToolPanelItem(
                     icon: LucideIcons.image,
-                    label: l10n.assistantToolSendImage,
+                    label: l10n.assistant.toolSendImage,
                     onTap: _pickImage,
                   ),
               ],
@@ -1059,7 +1059,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text(_session?.title ?? l10n.assistantNewChat),
+        title: Text(_session?.title ?? l10n.assistant.newChat),
         actions: [
           if (_lastTurnInputTokens > 0 && _contextLimit > 0)
             _ContextUsagePill(
@@ -1067,11 +1067,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               contextLimit: _contextLimit,
             ),
           MMenuButton<String>(
-            tooltip: l10n.assistantMenuTooltip,
+            tooltip: l10n.common.more,
             entries: [
               MMenuEntry(
                 value: 'compact',
-                label: l10n.assistantCompactNow,
+                label: l10n.assistant.compactNow,
                 icon: LucideIcons.foldVertical,
                 enabled: _session != null && !_compacting && !_sending,
               ),
@@ -1116,7 +1116,7 @@ class _ContextUsagePill extends StatelessWidget {
     }
     return Tooltip(
       message:
-          '${context.l10n.assistantContextUsageLabel} $percent% · '
+          '${context.l10n.assistant.contextUsageLabel} $percent% · '
           '$usedTokens / $contextLimit',
       child: Center(
         child: Container(
@@ -1170,7 +1170,7 @@ class _CompactionNoticeChip extends StatelessWidget {
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
-                    context.l10n.assistantCompactionNotice,
+                    context.l10n.assistant.compactionNotice,
                     style: context.theme.typography.labelSmall.onSurfaceVariant,
                   ),
                 ),
@@ -1188,12 +1188,12 @@ class _CompactionNoticeChip extends StatelessWidget {
       builder: (sheetContext) {
         final l10n = sheetContext.l10n;
         return MSheetScaffold<void>(
-          title: l10n.assistantCompactionSheetTitle,
+          title: l10n.assistant.compactionSheetTitle,
           icon: LucideIcons.chevronsUpDown,
           actions: [
-            MAction(label: l10n.cancel),
+            MAction(label: l10n.common.cancel),
             MAction(
-              label: l10n.assistantCompactionRestore,
+              label: l10n.assistant.compactionRestore,
               isPrimary: true,
               onPressed: () {
                 Navigator.of(sheetContext).pop();
@@ -1206,7 +1206,7 @@ class _CompactionNoticeChip extends StatelessWidget {
             crossAxisAlignment: .stretch,
             children: [
               Text(
-                l10n.assistantCompactionSheetNote,
+                l10n.assistant.compactionSheetNote,
                 style: sheetContext.theme.typography.bodySmall.onSurfaceVariant,
               ),
               const SizedBox(height: 12),
@@ -1240,7 +1240,7 @@ class _DisclaimerGate extends StatelessWidget {
             Icon(LucideIcons.shield, size: 56, color: scheme.primary),
             const SizedBox(height: 16),
             Text(
-              l10n.assistantDisclaimerGateTitle,
+              l10n.assistant.disclaimerGateTitle,
               textAlign: .center,
               style: context.theme.typography.titleMedium.onSurface,
             ),
@@ -1248,7 +1248,7 @@ class _DisclaimerGate extends StatelessWidget {
             FilledButton.tonalIcon(
               onPressed: onReview,
               icon: const Icon(LucideIcons.fileText),
-              label: Text(l10n.assistantDisclaimerGateAction),
+              label: Text(l10n.assistant.disclaimerGateAction),
             ),
           ],
         ),
@@ -1277,7 +1277,7 @@ class _NotConfiguredBanner extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  context.l10n.assistantNotConfiguredBanner,
+                  context.l10n.assistant.notConfiguredBanner,
                   style: context.theme.typography.bodyMedium.onErrorContainer,
                 ),
               ),
@@ -1357,7 +1357,7 @@ class _AssistantComposer extends StatelessWidget {
                     maxLines: 6,
                     textInputAction: .send,
                     decoration: InputDecoration(
-                      hintText: l10n.assistantInputHint,
+                      hintText: l10n.assistant.inputHint,
                       border: .none,
                       isCollapsed: true,
                     ),
@@ -1391,7 +1391,7 @@ class _AssistantComposer extends StatelessWidget {
                       builder: (context, value, _) {
                         if (sending) {
                           return IconButton.filled(
-                            tooltip: l10n.assistantStop,
+                            tooltip: l10n.assistant.stop,
                             onPressed: onStop,
                             icon: const Icon(LucideIcons.square),
                             visualDensity: .compact,
@@ -1453,7 +1453,7 @@ class _ThinkingToggle extends StatelessWidget {
               Icon(LucideIcons.brain, size: 16, color: fg),
               const SizedBox(width: 6),
               Text(
-                l10n.assistantThinkingToggle,
+                l10n.assistant.thinkingToggle,
                 style:
                     (enabled
                             ? context.theme.typography.labelMedium.emphasized
@@ -1646,7 +1646,7 @@ class _UserBubble extends StatelessWidget {
         content,
         _BubbleActionButton(
           icon: LucideIcons.rotateCw,
-          label: context.l10n.assistantRegenerate,
+          label: context.l10n.assistant.regenerate,
           onTap: onRetry!,
         ),
       ],
@@ -1762,16 +1762,16 @@ class _AssistantBubble extends StatelessWidget {
           children: [
             _BubbleActionButton(
               icon: LucideIcons.copy,
-              label: l10n.assistantCopyTooltip,
+              label: l10n.assistant.copyTooltip,
               onTap: () async {
                 await Clipboard.setData(ClipboardData(text: text));
-                toast.success(message: l10n.assistantCopied);
+                toast.success(message: l10n.assistant.copied);
               },
             ),
             if (onRegenerate != null)
               _BubbleActionButton(
                 icon: LucideIcons.rotateCw,
-                label: l10n.assistantRegenerate,
+                label: l10n.assistant.regenerate,
                 onTap: onRegenerate!,
               ),
             if (hasTokens)
@@ -1839,8 +1839,8 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
     final l10n = context.l10n;
     final hasReasoning = widget.reasoning.isNotEmpty;
     final label = widget.active
-        ? l10n.assistantThinking
-        : l10n.assistantThoughtFor(duration: _durationText());
+        ? l10n.assistant.thinking
+        : l10n.assistant.thoughtFor(duration: _durationText());
 
     final header = InkWell(
       borderRadius: .circular(12),
@@ -1957,10 +1957,10 @@ class AssistantSessionListPage extends StatelessWidget {
     final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settingFunctionAIAssistant),
+        title: Text(l10n.assistant.settingFunctionAIAssistant),
         actions: [
           IconButton(
-            tooltip: l10n.assistantConfigTooltip,
+            tooltip: l10n.assistant.configTooltip,
             icon: const Icon(LucideIcons.settings),
             onPressed: () => const AssistantSettingRoute().push(context),
           ),
@@ -2060,7 +2060,7 @@ class _EmptySessions extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            context.l10n.assistantHistoryEmpty,
+            context.l10n.assistant.historyEmpty,
             style: context.theme.typography.bodyMedium.onSurfaceVariant,
           ),
         ],
@@ -2086,9 +2086,9 @@ class _SessionCard extends StatelessWidget {
     final l10n = context.l10n;
     final ok = await MAlert.confirm(
       context,
-      title: l10n.assistantSessionDelete,
+      title: l10n.common.delete,
       message: session.title,
-      confirmLabel: l10n.assistantSessionDelete,
+      confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
     if (ok) onDelete();
@@ -2140,12 +2140,12 @@ class _SessionCard extends StatelessWidget {
           ),
         ),
         trailing: MMenuButton<String>(
-          tooltip: l10n.more,
+          tooltip: l10n.common.more,
           onSelected: (_) => _confirmDelete(context),
           entries: [
             MMenuEntry(
               value: 'delete',
-              label: l10n.assistantSessionDelete,
+              label: l10n.common.delete,
               icon: LucideIcons.trash2,
               isDestructive: true,
             ),

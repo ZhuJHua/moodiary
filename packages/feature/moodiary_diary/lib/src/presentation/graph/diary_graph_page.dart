@@ -43,7 +43,7 @@ class DiaryGraphPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(diaryGraphProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.knowledgeGraph)),
+      appBar: AppBar(title: Text(context.l10n.diary.knowledgeGraph)),
       body: async.buildLoading(
         data: (graph) =>
             graph.isEmpty ? const GraphEmptyState() : _GraphView(graph: graph),
@@ -71,14 +71,14 @@ class GraphEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            context.l10n.graphEmptyTitle,
+            context.l10n.diary.graphEmptyTitle,
             style: theme.typography.titleMedium.onSurface,
           ),
           const SizedBox(height: 8),
           Padding(
             padding: const .symmetric(horizontal: 40),
             child: Text(
-              context.l10n.graphEmptyDesc,
+              context.l10n.diary.graphEmptyDesc,
               textAlign: .center,
               style: theme.typography.bodySmall.onSurfaceVariant,
             ),
@@ -86,7 +86,7 @@ class GraphEmptyState extends StatelessWidget {
           const SizedBox(height: 24),
           FilledButton.tonal(
             onPressed: () => const NewDiaryRoute(type: 'tiptap').push(context),
-            child: Text(context.l10n.graphEmptyAction),
+            child: Text(context.l10n.diary.graphEmptyAction),
           ),
         ],
       ),
@@ -343,7 +343,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
               _invalidate();
             }),
             items: [
-              MChipData(value: null, label: l10n.categoryAll),
+              MChipData(value: null, label: l10n.diary.categoryAll),
               for (final c in categories)
                 MChipData(
                   value: c.id,
@@ -384,7 +384,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                         opacity: _selected == null ? 1 : 0,
                         duration: const Duration(milliseconds: 160),
                         child: Text(
-                          l10n.graphCount(
+                          l10n.diary.graphCount(
                             nodes: scene.edgeCount,
                             edges: scene.nodeCount,
                           ),
@@ -405,7 +405,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                               duration: const Duration(milliseconds: 200),
                               curve: Curves.easeOut,
                               child: _MiniFab(
-                                tooltip: l10n.graphResetCamera,
+                                tooltip: l10n.diary.graphResetCamera,
                                 icon: LucideIcons.focus,
                                 onTap: _canvas.fit,
                               ),
@@ -413,7 +413,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                           ),
                           const SizedBox(height: 10),
                           _MiniFab(
-                            tooltip: l10n.graphView,
+                            tooltip: l10n.diary.graphView,
                             icon: LucideIcons.slidersHorizontal,
                             onTap: _openViewSheet,
                           ),
@@ -481,15 +481,15 @@ class _GraphViewState extends ConsumerState<_GraphView> {
           }
 
           return MSheetScaffold<void>(
-            title: l10n.graphStyle,
+            title: l10n.diary.graphStyle,
             icon: LucideIcons.chartNetwork,
-            actions: [MAction(label: l10n.ok, isPrimary: true)],
+            actions: [MAction(label: l10n.common.ok, isPrimary: true)],
             child: Column(
               mainAxisSize: .min,
               crossAxisAlignment: .stretch,
               children: [
                 _SheetGroup(
-                  label: l10n.graphTimeAll,
+                  label: l10n.diary.rangeAll,
                   icon: LucideIcons.clock,
                   child: SegmentedButton<_TimeFilter>(
                     showSelectedIcon: false,
@@ -497,19 +497,19 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                     segments: [
                       ButtonSegment(
                         value: _TimeFilter.all,
-                        label: Text(l10n.graphTimeAll),
+                        label: Text(l10n.diary.rangeAll),
                       ),
                       ButtonSegment(
                         value: _TimeFilter.last30,
-                        label: Text(l10n.graphTimeLast30),
+                        label: Text(l10n.diary.rangeLast30),
                       ),
                       ButtonSegment(
                         value: _TimeFilter.thisYear,
-                        label: Text(l10n.graphTimeThisYear),
+                        label: Text(l10n.diary.rangeThisYear),
                       ),
                       ButtonSegment(
                         value: _TimeFilter.last365,
-                        label: Text(l10n.graphTimeLast365),
+                        label: Text(l10n.diary.graphTimeLast365),
                       ),
                     ],
                     onSelectionChanged: (v) =>
@@ -518,7 +518,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                 ),
                 const SizedBox(height: 20),
                 _SheetGroup(
-                  label: l10n.graphStyle,
+                  label: l10n.diary.graphStyle,
                   icon: LucideIcons.chartNetwork,
                   child: SegmentedButton<GraphDensity>(
                     showSelectedIcon: false,
@@ -526,15 +526,15 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                     segments: [
                       ButtonSegment(
                         value: GraphDensity.sparse,
-                        label: Text(l10n.graphStyleSparse),
+                        label: Text(l10n.diary.graphStyleSparse),
                       ),
                       ButtonSegment(
                         value: GraphDensity.normal,
-                        label: Text(l10n.graphStyleNormal),
+                        label: Text(l10n.diary.graphStyleNormal),
                       ),
                       ButtonSegment(
                         value: GraphDensity.dense,
-                        label: Text(l10n.graphStyleDense),
+                        label: Text(l10n.diary.graphStyleDense),
                       ),
                     ],
                     onSelectionChanged: (v) => apply(() {
@@ -545,7 +545,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                 ),
                 const SizedBox(height: 20),
                 _SheetGroup(
-                  label: l10n.graphColorBy,
+                  label: l10n.diary.graphColorBy,
                   icon: LucideIcons.palette,
                   child: SegmentedButton<GraphColorMode>(
                     showSelectedIcon: false,
@@ -553,15 +553,15 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                     segments: [
                       ButtonSegment(
                         value: GraphColorMode.category,
-                        label: Text(l10n.graphColorByCategory),
+                        label: Text(l10n.common.category),
                       ),
                       ButtonSegment(
                         value: GraphColorMode.time,
-                        label: Text(l10n.graphColorByTime),
+                        label: Text(l10n.diary.graphColorByTime),
                       ),
                       ButtonSegment(
                         value: GraphColorMode.plain,
-                        label: Text(l10n.graphColorByPlain),
+                        label: Text(l10n.diary.graphColorByPlain),
                       ),
                     ],
                     onSelectionChanged: (v) =>
@@ -570,7 +570,7 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                 ),
                 const SizedBox(height: 20),
                 MSwitchField(
-                  label: l10n.graphShowLabels,
+                  label: l10n.diary.graphShowLabels,
                   value: _showLabels,
                   onChanged: (v) => apply(() => _showLabels = v),
                 ),
@@ -656,13 +656,13 @@ class _FilteredEmpty extends StatelessWidget {
           Icon(LucideIcons.filterX, size: 40, color: theme.colors.outline),
           const SizedBox(height: 12),
           Text(
-            context.l10n.graphFilterEmpty,
+            context.l10n.diary.graphFilterEmpty,
             style: theme.typography.bodyMedium.onSurfaceVariant,
           ),
           const SizedBox(height: 8),
           TextButton(
             onPressed: onClear,
-            child: Text(context.l10n.graphClearFilter),
+            child: Text(context.l10n.diary.graphClearFilter),
           ),
         ],
       ),

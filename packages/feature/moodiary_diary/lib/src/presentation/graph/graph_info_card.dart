@@ -51,7 +51,7 @@ class GraphInfoCard extends StatelessWidget {
       // 「玻璃效果」开关走 —— 关掉后退成实色，而不是变成一层看不清字的半透明。
       child: Semantics(
         button: true,
-        label: l10n.graphOpenDiary,
+        label: l10n.diary.graphOpenDiary,
         child: MGlassSurface(
           shape: const RoundedRectangleBorder(
             borderRadius: AppBorderRadius.xLargeBorderRadius,
@@ -126,7 +126,7 @@ class GraphInfoCard extends StatelessWidget {
                     ),
                     if (onCenter != null)
                       IconButton(
-                        tooltip: l10n.graphSetAsCenter,
+                        tooltip: l10n.diary.graphSetAsCenter,
                         iconSize: 20,
                         visualDensity: .compact,
                         icon: Icon(

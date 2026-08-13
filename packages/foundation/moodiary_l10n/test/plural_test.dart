@@ -10,24 +10,24 @@ void main() {
 
   test('中文只有 other 一种形式', () async {
     await LocaleSettings.setLocale(AppLocale.zh);
-    expect(l10n.diaryTimelineMonthCount(count: 1), '1 篇');
-    expect(l10n.diaryTimelineMonthCount(count: 5), '5 篇');
-    expect(l10n.mediaImageCount(count: 1), '1 张照片');
+    expect(l10n.diary.timelineMonthCount(count: 1), '1 篇');
+    expect(l10n.diary.timelineMonthCount(count: 5), '5 篇');
+    expect(l10n.media.imageCount(count: 1), '1 张照片');
   });
 
   test('英文走 CLDR 单复数', () async {
     await LocaleSettings.setLocale(AppLocale.en);
-    expect(l10n.diaryTimelineMonthCount(count: 1), '1 entry');
-    expect(l10n.diaryTimelineMonthCount(count: 2), '2 entries');
-    expect(l10n.mediaImageCount(count: 1), '1 Photo');
-    expect(l10n.mediaImageCount(count: 3), '3 Photos');
+    expect(l10n.diary.timelineMonthCount(count: 1), '1 entry');
+    expect(l10n.diary.timelineMonthCount(count: 2), '2 entries');
+    expect(l10n.media.imageCount(count: 1), '1 Photo');
+    expect(l10n.media.imageCount(count: 3), '3 Photos');
   });
 
   test('渲染中文复数不再落到 slang 的兜底（那条 print 每次都打，release 也打）', () async {
     await LocaleSettings.setLocale(AppLocale.zh);
     final printed = <String>[];
     runZoned(
-      () => l10n.diaryTimelineMonthCount(count: 3),
+      () => l10n.diary.timelineMonthCount(count: 3),
       zoneSpecification: ZoneSpecification(
         print: (_, _, _, line) => printed.add(line),
       ),
@@ -38,8 +38,8 @@ void main() {
   test('语种由 GlobalLocaleState 持有，切了就跟着变', () async {
     await LocaleSettings.setLocale(AppLocale.zh);
     expect(LocaleSettings.currentLocale, AppLocale.zh);
-    expect(l10n.ok, '确认');
+    expect(l10n.common.ok, '确认');
     await LocaleSettings.setLocale(AppLocale.en);
-    expect(l10n.ok, 'OK');
+    expect(l10n.common.ok, 'OK');
   });
 }

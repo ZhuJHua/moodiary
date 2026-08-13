@@ -61,9 +61,9 @@ class _FormatExportPageState extends State<FormatExportPage> {
   );
 
   String _titleOf(Translations l10n) => switch (widget.format) {
-    .markdown => l10n.exportTitleMarkdown,
-    .docx => l10n.exportTitleDocx,
-    .pdf => l10n.exportTitlePdf,
+    .markdown => l10n.export.titleMarkdown,
+    .docx => l10n.export.titleDocx,
+    .pdf => l10n.export.titlePdf,
   };
 
   @override
@@ -94,7 +94,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        SettingTitleTile(title: l10n.exportSectionScope),
+        SettingTitleTile(title: l10n.export.sectionScope),
         Card.filled(
           color: theme.colors.surfaceContainerLow,
           margin: .zero,
@@ -102,7 +102,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
             children: [
               SettingListTile(
                 isFirst: true,
-                title: l10n.exportSelectDiaries,
+                title: l10n.export.selectDiaries,
                 subtitle: _scopeLabel(l10n),
                 leading: const Icon(LucideIcons.calendarRange),
                 trailing: Row(
@@ -110,8 +110,8 @@ class _FormatExportPageState extends State<FormatExportPage> {
                   children: [
                     Text(
                       _scopeCount == null
-                          ? l10n.exportCounting
-                          : l10n.exportEntryCount(count: _scopeCount!),
+                          ? l10n.export.counting
+                          : l10n.export.entryCount(count: _scopeCount!),
                       style: theme.typography.bodySmall.onSurfaceVariant,
                     ),
                     const Icon(LucideIcons.chevronRight),
@@ -121,8 +121,8 @@ class _FormatExportPageState extends State<FormatExportPage> {
               ),
               SwitchListTile(
                 value: _common.merge,
-                title: Text(l10n.exportMergeIntoOneFile),
-                subtitle: Text(l10n.exportMergeSubtitle),
+                title: Text(l10n.export.mergeIntoOneFile),
+                subtitle: Text(l10n.export.mergeSubtitle),
                 secondary: const Icon(LucideIcons.package),
                 onChanged: (v) => _update(
                   _settings.copyWith(common: _common.copyWith(merge: v)),
@@ -131,7 +131,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
               if (!_common.merge)
                 SettingListTile(
                   isLast: true,
-                  title: l10n.exportFileName,
+                  title: l10n.common.fileName,
                   subtitle: _common.nameTemplate,
                   leading: const Icon(LucideIcons.type),
                   trailing: const Icon(LucideIcons.chevronRight),
@@ -160,15 +160,15 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final l10n = context.l10n;
     final value = await MAlert.prompt(
       context,
-      title: l10n.exportFileNameTemplate,
+      title: l10n.export.fileNameTemplate,
       // 花括号是模板语法本身，作为字面量传进占位符 —— 文案里的 `{x}` 会被 slang 当参数吃掉。
-      message: l10n.exportFileNameTemplateHint(
+      message: l10n.export.fileNameTemplateHint(
         date: '{date}',
         title: '{title}',
         id: '{id}',
       ),
       initialValue: _common.nameTemplate,
-      validator: (v) => v.trim().isEmpty ? l10n.exportTemplateEmpty : null,
+      validator: (v) => v.trim().isEmpty ? l10n.export.templateEmpty : null,
     );
     if (value == null) return;
     _update(_settings.copyWith(common: _common.copyWith(nameTemplate: value)));
@@ -182,7 +182,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        SettingTitleTile(title: l10n.exportSectionContent),
+        SettingTitleTile(title: l10n.export.sectionContent),
         Card.filled(
           color: theme.colors.surfaceContainerLow,
           margin: .zero,
@@ -190,7 +190,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
             children: [
               SwitchListTile(
                 value: _common.includeTitle,
-                title: Text(l10n.exportIncludeTitle),
+                title: Text(l10n.export.includeTitle),
                 secondary: const Icon(LucideIcons.heading),
                 onChanged: (v) => _update(
                   _settings.copyWith(common: _common.copyWith(includeTitle: v)),
@@ -198,7 +198,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
               ),
               SwitchListTile(
                 value: _common.includeMeta,
-                title: Text(l10n.exportIncludeMeta),
+                title: Text(l10n.export.includeMeta),
                 secondary: const Icon(LucideIcons.info),
                 onChanged: (v) => _update(
                   _settings.copyWith(common: _common.copyWith(includeMeta: v)),
@@ -206,7 +206,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
               ),
               SettingListTile(
                 isLast: true,
-                title: l10n.exportMedia,
+                title: l10n.common.media,
                 subtitle: _mediaLabel(l10n, _common.media),
                 leading: const Icon(LucideIcons.image),
                 trailing: const Icon(LucideIcons.chevronRight),
@@ -221,19 +221,19 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   static String _mediaLabel(Translations l10n, ExportMediaPolicy policy) =>
       switch (policy) {
-        .embed => l10n.exportMediaEmbed,
-        .placeholder => l10n.exportMediaPlaceholder,
-        .none => l10n.exportMediaNone,
+        .embed => l10n.export.mediaEmbed,
+        .placeholder => l10n.export.mediaPlaceholder,
+        .none => l10n.export.mediaNone,
       };
 
   /// 范围描述：成句的部分走 l10n，分类名 / 日期区间这类用户数据由 scope 自己带。
   String _scopeLabel(Translations l10n) {
     final detail = _scope.detail;
     return switch (_scope.kind) {
-      .all => l10n.exportScopeAll,
-      .category => detail ?? l10n.exportScopeByCategory,
-      .dateRange => detail ?? l10n.exportScopeByDate,
-      .picked => l10n.exportScopePickedLabel(count: _scopeCount ?? 0),
+      .all => l10n.export.scopeAll,
+      .category => detail ?? l10n.export.scopeByCategory,
+      .dateRange => detail ?? l10n.export.scopeByDate,
+      .picked => l10n.export.scopePickedLabel(count: _scopeCount ?? 0),
     };
   }
 
@@ -241,7 +241,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final l10n = context.l10n;
     final picked = await MAlert.show<ExportMediaPolicy>(
       context,
-      title: l10n.exportMedia,
+      title: l10n.common.media,
       actions: [
         for (final policy in ExportMediaPolicy.values)
           MAction(
@@ -272,8 +272,8 @@ class _FormatExportPageState extends State<FormatExportPage> {
             children: [
               SwitchListTile(
                 value: md.dialect == .gfm,
-                title: Text(l10n.exportMarkdownGfm),
-                subtitle: Text(l10n.exportMarkdownGfmSubtitle),
+                title: Text(l10n.export.markdownGfm),
+                subtitle: Text(l10n.export.markdownGfmSubtitle),
                 secondary: const Icon(LucideIcons.fileJson),
                 onChanged: (v) => _update(
                   _settings.copyWith(
@@ -283,8 +283,8 @@ class _FormatExportPageState extends State<FormatExportPage> {
               ),
               SwitchListTile(
                 value: md.frontMatter,
-                title: Text(l10n.exportMarkdownFrontMatter),
-                subtitle: Text(l10n.exportMarkdownFrontMatterSubtitle),
+                title: Text(l10n.export.markdownFrontMatter),
+                subtitle: Text(l10n.export.markdownFrontMatterSubtitle),
                 secondary: const Icon(LucideIcons.fileInput),
                 onChanged: (v) => _update(
                   _settings.copyWith(markdown: md.copyWith(frontMatter: v)),
@@ -308,7 +308,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        SettingTitleTile(title: l10n.exportSectionLayout),
+        SettingTitleTile(title: l10n.export.sectionLayout),
         Card.filled(
           color: theme.colors.surfaceContainerLow,
           margin: .zero,
@@ -316,9 +316,9 @@ class _FormatExportPageState extends State<FormatExportPage> {
             children: [
               SettingListTile(
                 isFirst: true,
-                title: isPdf ? l10n.exportFont : l10n.exportEastAsiaFont,
+                title: isPdf ? l10n.export.font : l10n.export.eastAsiaFont,
                 subtitle: isPdf && layout.eastAsiaFont.isEmpty
-                    ? l10n.exportNoFontSelected
+                    ? l10n.export.noFontSelected
                     : layout.eastAsiaFont,
                 leading: const Icon(LucideIcons.type),
                 trailing: const Icon(LucideIcons.chevronRight),
@@ -328,15 +328,15 @@ class _FormatExportPageState extends State<FormatExportPage> {
               ),
               if (!isPdf)
                 SettingListTile(
-                  title: l10n.exportAsciiFont,
+                  title: l10n.export.asciiFont,
                   subtitle: layout.asciiFont,
                   leading: const Icon(LucideIcons.type),
                   trailing: const Icon(LucideIcons.chevronRight),
                   onTap: () => _editFontName(eastAsia: false),
                 ),
               SettingListTile(
-                title: l10n.exportFontSize,
-                subtitle: l10n.exportFontSizeValue(
+                title: l10n.export.fontSize,
+                subtitle: l10n.export.fontSizeValue(
                   size: layout.fontSizePt.toStringAsFixed(0),
                 ),
                 leading: const Icon(LucideIcons.aLargeSmall),
@@ -344,8 +344,8 @@ class _FormatExportPageState extends State<FormatExportPage> {
                 onTap: _pickFontSize,
               ),
               SettingListTile(
-                title: l10n.exportLineSpacing,
-                subtitle: l10n.exportLineSpacingValue(
+                title: l10n.export.lineSpacing,
+                subtitle: l10n.export.lineSpacingValue(
                   value: layout.lineSpacing.toStringAsFixed(1),
                 ),
                 leading: const Icon(LucideIcons.alignJustify),
@@ -354,14 +354,14 @@ class _FormatExportPageState extends State<FormatExportPage> {
               ),
               SwitchListTile(
                 value: layout.firstLineIndent,
-                title: Text(l10n.exportFirstLineIndent),
+                title: Text(l10n.export.firstLineIndent),
                 secondary: const Icon(LucideIcons.indentIncrease),
                 onChanged: (v) =>
                     _updateLayout(layout.copyWith(firstLineIndent: v)),
               ),
               SettingListTile(
                 isLast: true,
-                title: l10n.exportPaper,
+                title: l10n.export.paper,
                 subtitle: layout.paper.label,
                 leading: const Icon(LucideIcons.layoutTemplate),
                 trailing: const Icon(LucideIcons.chevronRight),
@@ -378,10 +378,10 @@ class _FormatExportPageState extends State<FormatExportPage> {
     final l10n = context.l10n;
     final value = await MAlert.prompt(
       context,
-      title: eastAsia ? l10n.exportEastAsiaFont : l10n.exportAsciiFont,
-      message: l10n.exportFontNameHint,
+      title: eastAsia ? l10n.export.eastAsiaFont : l10n.export.asciiFont,
+      message: l10n.export.fontNameHint,
       initialValue: eastAsia ? _layout.eastAsiaFont : _layout.asciiFont,
-      validator: (v) => v.trim().isEmpty ? l10n.exportFontNameEmpty : null,
+      validator: (v) => v.trim().isEmpty ? l10n.export.fontNameEmpty : null,
     );
     if (value == null) return;
     _updateLayout(
@@ -406,10 +406,10 @@ class _FormatExportPageState extends State<FormatExportPage> {
   Future<void> _pickFontSize() async {
     final l10n = context.l10n;
     final picked = await _pickFrom<double>(
-      title: l10n.exportFontSize,
+      title: l10n.export.fontSize,
       values: const [9.0, 10.0, 11.0, 12.0, 14.0, 16.0],
       current: _layout.fontSizePt,
-      label: (v) => l10n.exportFontSizeValue(size: v.toStringAsFixed(0)),
+      label: (v) => l10n.export.fontSizeValue(size: v.toStringAsFixed(0)),
     );
     if (picked != null) _updateLayout(_layout.copyWith(fontSizePt: picked));
   }
@@ -417,17 +417,17 @@ class _FormatExportPageState extends State<FormatExportPage> {
   Future<void> _pickLineSpacing() async {
     final l10n = context.l10n;
     final picked = await _pickFrom<double>(
-      title: l10n.exportLineSpacing,
+      title: l10n.export.lineSpacing,
       values: const [1.0, 1.15, 1.5, 1.75, 2.0],
       current: _layout.lineSpacing,
-      label: (v) => l10n.exportLineSpacingValue(value: v.toStringAsFixed(2)),
+      label: (v) => l10n.export.lineSpacingValue(value: v.toStringAsFixed(2)),
     );
     if (picked != null) _updateLayout(_layout.copyWith(lineSpacing: picked));
   }
 
   Future<void> _pickPaper() async {
     final picked = await _pickFrom<ExportPaper>(
-      title: context.l10n.exportPaper,
+      title: context.l10n.export.paper,
       values: ExportPaper.values,
       current: _layout.paper,
       label: (v) => v.label,
@@ -491,12 +491,12 @@ class _FormatExportPageState extends State<FormatExportPage> {
                   : const Icon(LucideIcons.download),
               label: Text(
                 _running
-                    ? l10n.exportCancel
+                    ? l10n.common.cancel
                     : (count == null
-                          ? l10n.exportCounting
+                          ? l10n.export.counting
                           : (count == 0
-                                ? l10n.exportScopeEmpty
-                                : l10n.exportRunButton(count: count))),
+                                ? l10n.export.scopeEmpty
+                                : l10n.export.runButton(count: count))),
               ),
             ),
           ),
@@ -507,17 +507,17 @@ class _FormatExportPageState extends State<FormatExportPage> {
 
   Widget _progressBar(ExportProgress progress, Translations l10n) {
     final label = switch (progress.phase) {
-      .converting => l10n.exportProgressConverting(
+      .converting => l10n.export.progressConverting(
         done: progress.done,
         total: progress.total,
       ),
-      .writing when progress.total == 0 => l10n.exportProgressWriting,
-      .writing => l10n.exportProgressWritingCount(
+      .writing when progress.total == 0 => l10n.export.progressWriting,
+      .writing => l10n.export.progressWritingCount(
         done: progress.done,
         total: progress.total,
       ),
       // 收尾阶段切不开，只能给不确定进度条。
-      .serializing => l10n.exportProgressSerializing,
+      .serializing => l10n.export.progressSerializing,
     };
     return Padding(
       padding: const .only(bottom: 10),
@@ -548,7 +548,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
   String? _pdfBlockedReason() {
     if (widget.format != .pdf) return null;
     if (_settings.pdf.eastAsiaFont.isEmpty) {
-      return context.l10n.exportPickFontFirst;
+      return context.l10n.export.pickFontFirst;
     }
     return null;
   }
@@ -569,9 +569,9 @@ class _FormatExportPageState extends State<FormatExportPage> {
         format: widget.format,
         scope: _scope,
         settings: _settings,
-        untitledLabel: l10n.exportUntitled,
-        videoLabel: l10n.exportMediaKindVideo,
-        audioLabel: l10n.exportMediaKindAudio,
+        untitledLabel: l10n.common.untitled,
+        videoLabel: l10n.common.video,
+        audioLabel: l10n.common.audio,
         onProgress: (progress) {
           if (mounted) setState(() => _progress = progress);
         },
@@ -580,12 +580,12 @@ class _FormatExportPageState extends State<FormatExportPage> {
     } on ExportException catch (e) {
       toast.error(
         message: switch (e.error) {
-          .emptyScope => l10n.exportScopeEmpty,
-          .cancelled => l10n.exportCancelled,
+          .emptyScope => l10n.export.scopeEmpty,
+          .cancelled => l10n.export.cancelled,
         },
       );
     } catch (e) {
-      toast.error(message: l10n.exportFailed(error: '$e'));
+      toast.error(message: l10n.export.failed(error: '$e'));
     } finally {
       token.dispose();
       if (mounted) {
@@ -601,9 +601,9 @@ class _FormatExportPageState extends State<FormatExportPage> {
   Future<void> _reportAndShare(ExportOutcome outcome, Translations l10n) async {
     final notes = [
       if (outcome.skippedMedia > 0)
-        l10n.exportSkippedMedia(count: outcome.skippedMedia),
+        l10n.export.skippedMedia(count: outcome.skippedMedia),
       if (outcome.unsupportedNodes.isNotEmpty)
-        l10n.exportUnsupportedNodes(
+        l10n.export.unsupportedNodes(
           count: outcome.unsupportedNodes.length,
           types: outcome.unsupportedNodes.join('、'),
         ),
@@ -611,7 +611,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     if (notes.isNotEmpty && mounted) {
       await MAlert.notice(
         context,
-        title: l10n.exportPartialTitle,
+        title: l10n.export.partialTitle,
         message: notes.join('\n'),
       );
     }
