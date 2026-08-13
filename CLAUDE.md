@@ -145,8 +145,16 @@ foundation 叶子包，所以它自带一份 slang 文案（十来个通用词�
 
 | | 源文件 | 产物 | 符号 |
 |---|---|---|---|
-| App | `moodiary_l10n/lib/i18n/{zh,en}.i18n.json` | `strings.g.dart` | `Translations` / `AppLocale` / `l10n` |
+| App | `moodiary_l10n/lib/i18n/<ns>_{zh,en}.i18n.json` | `strings.g.dart` | `Translations` / `AppLocale` / `l10n` |
 | mui | `mui/lib/src/l10n/i18n/{zh,en}.i18n.json` | `mui_strings.g.dart` | `MuiTranslations` / `MuiAppLocale` / `muiL10n` |
+
+App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域含义的基础词）+
+`app` / `diary` / `assistant` / `export` / `sync` / `media` / `editor` / `ui` / `lock` /
+`onboarding` / `share`。取串写成 `l10n.diary.searchResult`；**删 feature 就删它那两个文件**。
+
+**feature 包不各自装 slang**（只有 mui 例外，因为它是零 `moodiary_*` 依赖的对外叶子包）：
+每份 slang 都会生成自己的 `TranslationProvider`，得在 `main.dart` 手工逐个嵌套，
+漏挂是**运行时抛**而不是编译错。namespace 已经给到分域的全部好处，不必付这个代价。
 
 - **取串按有没有 context 分**：widget 里用 `context.l10n.xxx`（依赖 `TranslationProvider`，
   切语言自动重建）；service / 导出 / 回调里用顶层的 `l10n.xxx`（**不会重建**）。
@@ -180,6 +188,16 @@ foundation 叶子包，所以它自带一份 slang 文案（十来个通用词�
    `setLocale`，别用 `setLocaleSync`（它绕开 `loadLibrary()`）。
 4. `timestamp` 与 `flat_map` 默认都是 `true`：前者让提交的产物每次生成都有噪声 diff，
    后者多生成一份全量 `Map<String, String>`。两个都在 `slang.yaml` 里关掉了。
+
+**哪些中文字面量该留着**（扫描器会一直报它们，别每次都重新判断一遍）：
+
+- **同步引擎的日志行**：事件按天写成 jsonl 落盘，message 已烤进历史记录；翻译只影响新条目，
+  日志页会中英混排。日志页自己的标题 / 筛选 / 分组名是 UI，已翻。
+- **助手的工具描述与系统提示词**（`moodiary_assistant/lib/src/data/`）：读者是模型不是用户，
+  措辞是对着模型调出来的。
+- **不是文案的字符串**：`'宋体'` 是字体族名、`'『压测』'` 是压测日记的标题标记（翻了就认不出
+  历史数据）、ICP 备案号是法律标识、`logger.e` / `assert` 的文字进的是日志文件。
+- **`agreement_page` / `privacy_page` 里内联的用户协议与隐私政策全文**：法律文本，机翻不算数。
 
 > slang 自带的 `dart run slang migrate arb` **不能用**：它按 camelCase 把键强行拆成嵌套路径
 > （`accentCustomTitle` → `accent.custom.title`），既改掉全部调用点，又会在
