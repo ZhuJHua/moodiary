@@ -175,10 +175,17 @@ class ExportService {
     Map<String, String> categories,
     _MediaStage media,
   ) async {
-    // 旧 markdown / richText 日记先转成 tiptap 文档，走同一条遍历。
+    // 旧 markdown / richText 日记先转成 tiptap 文档，走同一条遍历。转换器按 type 分派
+    // （与 EditorMigrationService 同构）：richText 是 `[` 开头的 Quill Delta 数组，喂给
+    // markdown 解析器只会得到「整段转义 JSON 文本 + 零媒体」的坏产物。
     var content = diary.content;
     if (!TiptapContent.parse(content).isDoc) {
-      content = MarkdownToTiptap.convert(content) ?? content;
+      content =
+          switch (DiaryType.fromValue(diary.type)) {
+            .richText => QuillDeltaToTiptap.convert(content),
+            _ => MarkdownToTiptap.convert(content),
+          } ??
+          content;
     }
 
     final doc = TiptapToIr.convert(
