@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
+import 'package:material_ui/material_ui.dart';
 
 Color debugPaintExpandAreaColor = const Color(0xFFFF0000)
     .withValues(alpha: 0.03);

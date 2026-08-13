@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
@@ -17,7 +18,7 @@ class CacheUsageTile extends ConsumerWidget {
       isFirst: isFirst,
       isLast: isLast,
       leading: Icon(LucideIcons.brushCleaning, color: scheme.onSurfaceVariant),
-      title: '清理缓存',
+      title: context.l10n.app.cacheClear,
       trailing: Text(
         async.when(
           data: (u) => u.display,
@@ -32,6 +33,6 @@ class CacheUsageTile extends ConsumerWidget {
 
   Future<void> _clear(BuildContext context, WidgetRef ref) async {
     await ref.read(cacheControllerProvider.notifier).clear();
-    toast.success(message: '清理成功');
+    toast.success(message: l10n.app.cacheCleared);
   }
 }

@@ -50,7 +50,7 @@ class SettingListPageMobile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('设置')),
+      appBar: AppBar(title: Text(context.l10n.app.settingsTitle)),
       body: const _SettingSectionList(),
     );
   }
@@ -65,14 +65,14 @@ class _DataSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '数据'),
+        SettingTitleTile(title: context.l10n.app.sectionData),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
           child: Column(
             children: [
               SettingListTile(
-                title: '回收站',
+                title: context.l10n.app.recycle,
                 isFirst: true,
                 leading: Icon(
                   LucideIcons.trash,
@@ -85,7 +85,7 @@ class _DataSection extends StatelessWidget {
                 onTap: () => _openSetting(context, const RecycleRoute()),
               ),
               SettingListTile(
-                title: '数据同步与备份',
+                title: context.l10n.app.syncBackup,
                 leading: Icon(
                   LucideIcons.refreshCw,
                   color: scheme.onSurfaceVariant,
@@ -109,7 +109,7 @@ class _DataSection extends StatelessWidget {
                 onTap: () => _openSetting(context, const ExportRoute()),
               ),
               SettingListTile(
-                title: '分类管理',
+                title: context.l10n.app.categoryManager,
                 leading: Icon(
                   LucideIcons.folders,
                   color: scheme.onSurfaceVariant,
@@ -122,7 +122,7 @@ class _DataSection extends StatelessWidget {
                     _openSetting(context, const CategoryManagerRoute()),
               ),
               SettingListTile(
-                title: '足迹地图',
+                title: context.l10n.app.mapTitle,
                 leading: Icon(LucideIcons.map, color: scheme.onSurfaceVariant),
                 trailing: Icon(
                   LucideIcons.chevronRight,
@@ -131,8 +131,8 @@ class _DataSection extends StatelessWidget {
                 onTap: () => _openSetting(context, const MapRoute()),
               ),
               SettingListTile(
-                title: '迁移到新编辑器',
-                subtitle: '把旧日记（富文本 / Markdown）转换为新编辑器以便编辑',
+                title: context.l10n.app.editorMigration,
+                subtitle: context.l10n.app.editorMigrationSubtitle,
                 leading: Icon(
                   LucideIcons.wandSparkles,
                   color: scheme.onSurfaceVariant,
@@ -159,7 +159,11 @@ class _DataSection extends StatelessWidget {
 class _DisplaySection extends ConsumerWidget {
   const _DisplaySection();
 
-  static const _themeModeLabels = ['跟随系统', '浅色', '深色'];
+  static List<String> _themeModeLabels(Translations l10n) => [
+    l10n.app.themeModeSystem,
+    l10n.app.themeModeLight,
+    l10n.app.themeModeDark,
+  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -168,14 +172,14 @@ class _DisplaySection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '显示'),
+        SettingTitleTile(title: context.l10n.app.sectionDisplay),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
           child: Column(
             children: [
               SettingListTile(
-                title: '日记设置',
+                title: context.l10n.app.diarySettings,
                 isFirst: true,
                 leading: Icon(
                   LucideIcons.fileText,
@@ -191,16 +195,13 @@ class _DisplaySection extends ConsumerWidget {
                 valueListenable: MoodiaryKVs.themeMode.getNotifier(),
                 builder: (context, mode, _) {
                   return SettingListTile(
-                    title: '主题模式',
+                    title: context.l10n.app.themeMode,
                     leading: Icon(
                       LucideIcons.contrast,
                       color: scheme.onSurfaceVariant,
                     ),
                     trailing: Text(
-                      _themeModeLabels[mode.clamp(
-                        0,
-                        _themeModeLabels.length - 1,
-                      )],
+                      _themeModeLabels(context.l10n)[mode.clamp(0, 2)],
                       style: context.theme.typography.bodySmall.primary,
                     ),
                     onTap: () => showDialog(
@@ -234,7 +235,7 @@ class _DisplaySection extends ConsumerWidget {
               ),
               SettingListTile(
                 isLast: true,
-                title: '字体样式',
+                title: context.l10n.app.fontStyle,
                 leading: Icon(LucideIcons.type, color: scheme.onSurfaceVariant),
                 trailing: Icon(
                   LucideIcons.chevronRight,
@@ -259,7 +260,7 @@ class _PrivacySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '隐私'),
+        SettingTitleTile(title: context.l10n.app.sectionPrivacy),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -271,8 +272,8 @@ class _PrivacySection extends StatelessWidget {
                 builder: (context, on, _) {
                   return SettingSwitchListTile(
                     isLast: true,
-                    title: '后台隐私保护',
-                    subtitle: '退到后台时遮罩内容',
+                    title: context.l10n.app.backgroundPrivacy,
+                    subtitle: context.l10n.app.backgroundPrivacySubtitle,
                     secondary: Icon(
                       LucideIcons.eyeOff,
                       color: scheme.onSurfaceVariant,
@@ -305,7 +306,7 @@ class _MoreSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '更多'),
+        SettingTitleTile(title: context.l10n.app.sectionMore),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -313,7 +314,7 @@ class _MoreSection extends ConsumerWidget {
             children: [
               SettingListTile(
                 isFirst: true,
-                title: '关于',
+                title: context.l10n.app.about,
                 leading: Icon(LucideIcons.info, color: scheme.onSurfaceVariant),
                 trailing: Icon(
                   LucideIcons.chevronRight,
@@ -322,7 +323,7 @@ class _MoreSection extends ConsumerWidget {
                 onTap: () => _openSetting(context, const AboutRoute()),
               ),
               SettingListTile(
-                title: '语言',
+                title: context.l10n.app.language,
                 leading: Icon(
                   LucideIcons.languages,
                   color: scheme.onSurfaceVariant,
@@ -338,7 +339,7 @@ class _MoreSection extends ConsumerWidget {
               ),
               SettingListTile(
                 isLast: true,
-                title: '第三方服务',
+                title: context.l10n.app.services,
                 leading: Icon(
                   LucideIcons.waypoints,
                   color: scheme.onSurfaceVariant,

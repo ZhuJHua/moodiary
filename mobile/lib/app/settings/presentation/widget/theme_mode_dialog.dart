@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:mui/mui.dart';
 
@@ -12,24 +13,24 @@ class ThemeModeDialog extends ConsumerWidget {
       valueListenable: MoodiaryKVs.themeMode.getNotifier(),
       builder: (context, mode, _) {
         return SimpleDialog(
-          title: const Text('主题模式'),
+          title: Text(context.l10n.app.themeMode),
           children: [
             _Option(
               selected: mode == 0,
               icon: LucideIcons.sunMoon,
-              label: '跟随系统',
+              label: context.l10n.app.themeModeSystem,
               onTap: () => _select(context, ref, 0),
             ),
             _Option(
               selected: mode == 1,
               icon: LucideIcons.sun,
-              label: '浅色',
+              label: context.l10n.app.themeModeLight,
               onTap: () => _select(context, ref, 1),
             ),
             _Option(
               selected: mode == 2,
               icon: LucideIcons.moon,
-              label: '深色',
+              label: context.l10n.app.themeModeDark,
               onTap: () => _select(context, ref, 2),
             ),
           ],

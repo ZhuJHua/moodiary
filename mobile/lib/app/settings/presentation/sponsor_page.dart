@@ -1,3 +1,4 @@
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -15,21 +16,20 @@ class SponsorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Scaffold(
-      appBar: AppBar(title: const Text('赞助')),
+      appBar: AppBar(title: Text(context.l10n.app.aboutSponsor)),
       body: ListView(
         padding: const .all(24),
         children: [
           Icon(LucideIcons.heart, size: 48, color: theme.colors.primary),
           const SizedBox(height: 12),
           Text(
-            '感谢您的考虑！',
+            context.l10n.app.sponsorThanks,
             textAlign: .center,
             style: theme.typography.headlineSmall.onSurface,
           ),
           const SizedBox(height: 8),
           Text(
-            'Moodiary 是开源软件，由开发者业余维护。'
-            '如果您喜欢这款应用，可通过下面的链接支持作者继续维护。',
+            context.l10n.app.sponsorBody,
             textAlign: .center,
             style: theme.typography.bodyMedium.onSurfaceVariant,
           ),
@@ -44,7 +44,7 @@ class SponsorPage extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () => _open(context, 'https://afdian.com/a/ZhuJHua'),
             icon: const Icon(LucideIcons.externalLink),
-            label: const Text('爱发电'),
+            label: Text(context.l10n.app.sponsorAfdian),
           ),
         ],
       ),

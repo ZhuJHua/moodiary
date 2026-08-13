@@ -3,10 +3,10 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import '../frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
+
+import '../frb_generated.dart';
 part 'assistant.freezed.dart';
 
 /// Dart 取消订阅会令 `sink.add` 失败，循环随即中断并取消在途请求。

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 
@@ -40,8 +41,8 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
       isFirst: widget.isFirst,
       isLast: widget.isLast,
       leading: const Icon(LucideIcons.gauge),
-      title: '压测数据（调试）',
-      subtitle: '批量生成或清除随机双链日记，用于图谱性能测试',
+      title: context.l10n.app.stressTitle,
+      subtitle: context.l10n.app.stressSubtitle,
       trailing: _busy
           ? const SizedBox(
               width: 20,
@@ -56,14 +57,16 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
   Future<void> _openMenu() async {
     final action = await MAlert.show<String>(
       context,
-      title: '压测数据',
-      message:
-          '用于知识图谱等极限性能测试。每篇随机链接 $_minLinks–$_maxLinks 篇其它日记，'
-          '标题以「$_prefix」开头，可一键清除。',
-      actions: const [
-        MAction(label: '取消'),
-        MAction(label: '清除压测', value: 'clear'),
-        MAction(label: '生成', value: 'gen', isPrimary: true),
+      title: l10n.app.stressDialogTitle,
+      message: l10n.app.stressDialogMessage(
+        min: _minLinks,
+        max: _maxLinks,
+        prefix: _prefix,
+      ),
+      actions: [
+        MAction(label: l10n.common.cancel),
+        MAction(label: l10n.app.stressClear, value: 'clear'),
+        MAction(label: l10n.app.stressGenerate, value: 'gen', isPrimary: true),
       ],
     );
     if (!mounted) return;
@@ -75,16 +78,16 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
 
     final input = await MAlert.prompt(
       context,
-      title: '生成数量',
+      title: l10n.app.stressCountTitle,
       initialValue: '$_defaultTotal',
       hintText: '$_minTotal–$_maxTotal',
-      confirmLabel: '生成',
+      confirmLabel: l10n.app.stressGenerate,
       keyboardType: .number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       validator: (value) {
         final total = int.tryParse(value);
         return (total == null || total < _minTotal || total > _maxTotal)
-            ? '数量需在 $_minTotal–$_maxTotal 之间'
+            ? l10n.app.stressCountRange(min: _minTotal, max: _maxTotal)
             : null;
       },
     );
@@ -99,7 +102,7 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
     final now = DateTime.now();
     String idFor(int i) => 'stress-$base-$i';
     final progress = ValueNotifier<double>(0);
-    _showProgress(progress, '正在生成', total);
+    _showProgress(progress, l10n.app.stressGenerating, total);
     var ok = true;
     try {
       for (var start = 0; start < total; start += _chunk) {
@@ -115,13 +118,15 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
     } catch (e, s) {
       ok = false;
       logger.e('生成压测数据失败', error: e, stackTrace: s);
-      if (mounted) toast.error(message: '生成失败');
+      if (mounted) toast.error(message: l10n.app.stressGenerateFailed);
     } finally {
       _dismissProgress();
       progress.dispose();
       if (mounted) setState(() => _busy = false);
     }
-    if (ok && mounted) toast.success(message: '已生成 $total 篇双链日记');
+    if (ok && mounted) {
+      toast.success(message: l10n.app.stressGenerated(count: total));
+    }
   }
 
   Diary _makeDiary(
@@ -190,10 +195,10 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
       ];
       count = ids.length;
       if (ids.isEmpty) {
-        if (mounted) toast.info(message: '没有压测日记');
+        if (mounted) toast.info(message: l10n.app.stressEmpty);
         return;
       }
-      _showProgress(progress, '正在清除', ids.length);
+      _showProgress(progress, l10n.app.stressClearing, ids.length);
       for (var start = 0; start < ids.length; start += _chunk) {
         final end = min(start + _chunk, ids.length);
         await DiaryRepository.get().deleteDiariesByIsarIds(
@@ -204,14 +209,16 @@ class _StressTestTileState extends ConsumerState<StressTestTile> {
       }
     } catch (e, s) {
       logger.e('清除压测数据失败', error: e, stackTrace: s);
-      if (mounted) toast.error(message: '清除失败');
+      if (mounted) toast.error(message: l10n.app.stressClearFailed);
       return;
     } finally {
       _dismissProgress();
       progress.dispose();
       if (mounted) setState(() => _busy = false);
     }
-    if (mounted && count > 0) toast.success(message: '已清除 $count 篇压测日记');
+    if (mounted && count > 0) {
+      toast.success(message: l10n.app.stressCleared(count: count));
+    }
   }
 
   void _showProgress(ValueNotifier<double> progress, String title, int total) {

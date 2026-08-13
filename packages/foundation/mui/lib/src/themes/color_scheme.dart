@@ -1,4 +1,3 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:material_color_utilities/material_color_utilities.dart'
     show
         DynamicColor,
@@ -7,6 +6,7 @@ import 'package:material_color_utilities/material_color_utilities.dart'
         MaterialDynamicColors,
         SchemeMonochrome,
         SchemeTonalSpot;
+import 'package:material_ui/material_ui.dart';
 
 /// 强调色来源。只有两种取色路径：给了种子就走 [SchemeTonalSpot]，没给就走
 /// [SchemeMonochrome]。

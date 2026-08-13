@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:mui/mui.dart';
 
 class DiarySettingPage extends ConsumerWidget {
@@ -8,30 +9,45 @@ class DiarySettingPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('日记偏好')),
+      appBar: AppBar(title: Text(context.l10n.app.diaryPrefsTitle)),
       body: ListView(
         padding: const .symmetric(vertical: 8),
-        children: const [
-          _Section('编辑器'),
-          _KvSwitchTile(kv: .firstLineIndent, title: '首行缩进'),
+        children: [
+          _Section(context.l10n.app.diaryPrefsEditor),
+          _KvSwitchTile(
+            kv: .firstLineIndent,
+            title: context.l10n.app.firstLineIndent,
+          ),
           _KvSwitchTile(
             kv: .autoCategory,
-            title: '保存时自动归类',
-            subtitle: '根据上次写作位置 / 标签推测分类',
+            title: context.l10n.app.autoCategory,
+            subtitle: context.l10n.app.autoCategorySubtitle,
           ),
-          _KvSwitchTile(kv: .showWritingTime, title: '展示写作时长'),
-          _KvSwitchTile(kv: .showWordCount, title: '展示字数统计'),
-          _Section('日记展示'),
-          _KvSwitchTile(kv: .diaryHeader, title: '列表卡片显示头图'),
-          _KvSwitchTile(kv: .dynamicColor, title: '基于封面动态配色'),
-          _Section('媒体'),
+          _KvSwitchTile(
+            kv: .showWritingTime,
+            title: context.l10n.app.showWritingTime,
+          ),
+          _KvSwitchTile(
+            kv: .showWordCount,
+            title: context.l10n.app.showWordCount,
+          ),
+          _Section(context.l10n.app.diaryPrefsDisplay),
+          _KvSwitchTile(
+            kv: .diaryHeader,
+            title: context.l10n.app.cardHeaderImage,
+          ),
+          _KvSwitchTile(
+            kv: .dynamicColor,
+            title: context.l10n.app.dynamicColor,
+          ),
+          _Section(context.l10n.app.diaryPrefsMedia),
           _KvSwitchTile(
             kv: .imageOptimize,
-            title: '图片优化',
-            subtitle: '压缩尺寸并统一转为 WebP；关闭则保存原图',
+            title: context.l10n.app.imageOptimize,
+            subtitle: context.l10n.app.imageOptimizeSubtitle,
           ),
-          _Section('天气'),
-          _KvSwitchTile(kv: .autoWeather, title: '保存日记时自动获取天气'),
+          _Section(context.l10n.app.diaryPrefsWeather),
+          _KvSwitchTile(kv: .autoWeather, title: context.l10n.app.autoWeather),
         ],
       ),
     );

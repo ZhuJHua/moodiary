@@ -15,5 +15,7 @@
   "categoryCount": "{count} categories",
   "fileName": "File name",
   "close": "Close",
-  "appName": "Moodiary"
+  "appName": "Moodiary",
+  "configured": "Configured",
+  "notConfigured": "Not configured"
 }

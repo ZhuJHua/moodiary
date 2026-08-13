@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
@@ -20,15 +21,15 @@ class _FontPageState extends ConsumerState<FontPage> {
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
     return Scaffold(
-      appBar: AppBar(title: const Text('字体')),
+      appBar: AppBar(title: Text(context.l10n.app.fontTitle)),
       body: ValueListenableBuilder<String>(
         valueListenable: MoodiaryKVs.customFont.getNotifier(),
         builder: (context, currentFamily, _) => ListView(
           padding: const .all(8),
           children: [
-            const SettingTitleTile(
-              title: '字体',
-              subtitle: '导入 ttf / otf 字体，长按可删除',
+            SettingTitleTile(
+              title: context.l10n.app.fontTitle,
+              subtitle: context.l10n.app.fontImportSubtitle,
             ),
             Card.filled(
               color: scheme.surfaceContainerLow,
@@ -39,9 +40,9 @@ class _FontPageState extends ConsumerState<FontPage> {
               ),
             ),
             const SizedBox(height: 4),
-            const SettingTitleTile(
-              title: '预览',
-              subtitle: '字号跟随系统设置，App 内不再单独提供',
+            SettingTitleTile(
+              title: context.l10n.app.fontPreview,
+              subtitle: context.l10n.app.fontPreviewSubtitle,
             ),
             Card.filled(
               color: scheme.surfaceContainerLow,
@@ -74,7 +75,7 @@ class _FontPicker extends ConsumerWidget {
         spacing: 12,
         children: [
           _FontCard(
-            label: '系统',
+            label: context.l10n.app.fontSystem,
             family: '',
             selected: currentFamily.isEmpty,
             onTap: () =>
@@ -117,9 +118,9 @@ class _FontPicker extends ConsumerWidget {
     HapticFeedback.selectionClick();
     final ok = await MAlert.confirm(
       context,
-      title: '删除字体',
-      message: '确认删除字体「${font.fontFamily}」吗？',
-      confirmLabel: '删除',
+      title: l10n.app.fontDeleteTitle,
+      message: l10n.app.fontDeleteMessage(name: font.fontFamily),
+      confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
     if (!ok) return;
@@ -206,7 +207,7 @@ class _FontCard extends StatelessWidget {
                         borderRadius: .circular(999),
                       ),
                       child: Text(
-                        '可变',
+                        context.l10n.app.fontVariable,
                         // 徽标属 UI 装饰，不随字号偏好缩放（0.8 档会低于可读下限）。
                         textScaler: .noScaling,
                         style: context.theme.typography.labelSmall.onTertiary
@@ -269,7 +270,7 @@ class _AddFontCard extends StatelessWidget {
           width: 72,
           child: Center(
             child: AdaptiveText(
-              '添加',
+              context.l10n.app.fontAdd,
               style: context.theme.typography.labelSmall.onSurfaceVariant,
               maxWidth: 72,
             ),
@@ -284,20 +285,6 @@ class _Preview extends StatelessWidget {
   final String fontFamily;
 
   const _Preview({required this.fontFamily});
-
-  static const _poem =
-      '黄水塘里游着白鸭，\n'
-      '高粱梗油青的刚高过头，\n'
-      '这跳动的心怎样安插，\n'
-      '田里一窄条路，八月里这忧愁？\n'
-      '天是昨夜雨洗过的，山岗\n'
-      '照着太阳又留一片影；\n'
-      '羊跟着放羊的转进村庄，\n'
-      '一大棵树荫下罩着井，又像是心！\n'
-      '从没有人说过八月什么话，\n'
-      '夏天过去了，也不到秋天。\n'
-      '但我望着田垄，土墙上的瓜，\n'
-      '仍不明白生活同梦怎样的连牵。';
 
   @override
   Widget build(BuildContext context) {
@@ -315,11 +302,14 @@ class _Preview extends StatelessWidget {
       crossAxisAlignment: .start,
       children: [
         Text(
-          '八月的忧愁',
+          context.l10n.app.fontPreviewTitle,
           style: typography.titleLarge.onSurface.copyWith(height: 2),
         ),
         const SizedBox(height: 8),
-        Text(_poem, style: typography.bodyMedium.onSurface.copyWith(height: 2)),
+        Text(
+          context.l10n.app.fontPreviewText,
+          style: typography.bodyMedium.onSurface.copyWith(height: 2),
+        ),
       ],
     );
   }

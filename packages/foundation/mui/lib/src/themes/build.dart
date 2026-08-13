@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mui/src/themes/color_scheme.dart';
 import 'package:mui/src/themes/mui_tokens.dart';
 import 'package:mui/src/themes/tokens.dart';

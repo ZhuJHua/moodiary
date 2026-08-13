@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:moodiary/gen/assets.gen.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -62,7 +63,7 @@ class _AboutPageState extends State<AboutPage> {
         ? '...'
         : '${_packageInfo!.version}+${_packageInfo!.buildNumber}';
     return Scaffold(
-      appBar: AppBar(title: const Text('关于')),
+      appBar: AppBar(title: Text(context.l10n.app.about)),
       body: SingleChildScrollView(
         padding: const .all(16),
         child: Column(
@@ -84,13 +85,13 @@ class _AboutPageState extends State<AboutPage> {
                       LucideIcons.refreshCw,
                       color: scheme.onSurfaceVariant,
                     ),
-                    title: '检查更新',
+                    title: context.l10n.app.aboutCheckUpdate,
                     trailing: Text(
                       appVersion,
                       style: context.theme.typography.bodySmall.primary,
                     ),
                     onTap: () {
-                      toast.info(message: '当前已是最新版本');
+                      toast.info(message: l10n.app.aboutUpToDate);
                     },
                   ),
                   SettingListTile(
@@ -98,7 +99,7 @@ class _AboutPageState extends State<AboutPage> {
                       LucideIcons.code,
                       color: scheme.onSurfaceVariant,
                     ),
-                    title: '源码仓库',
+                    title: context.l10n.app.aboutSource,
                     trailing: Icon(
                       LucideIcons.chevronRight,
                       color: scheme.onSurfaceVariant,
@@ -110,7 +111,7 @@ class _AboutPageState extends State<AboutPage> {
                       LucideIcons.scrollText,
                       color: scheme.onSurfaceVariant,
                     ),
-                    title: '用户协议',
+                    title: context.l10n.onboarding.userAgreement,
                     trailing: Icon(
                       LucideIcons.chevronRight,
                       color: scheme.onSurfaceVariant,
@@ -122,7 +123,7 @@ class _AboutPageState extends State<AboutPage> {
                       LucideIcons.shieldAlert,
                       color: scheme.onSurfaceVariant,
                     ),
-                    title: '隐私政策',
+                    title: context.l10n.onboarding.privacyPolicy,
                     trailing: Icon(
                       LucideIcons.chevronRight,
                       color: scheme.onSurfaceVariant,
@@ -134,7 +135,7 @@ class _AboutPageState extends State<AboutPage> {
                       LucideIcons.bug,
                       color: scheme.onSurfaceVariant,
                     ),
-                    title: '反馈 / 答疑',
+                    title: context.l10n.app.aboutFeedback,
                     trailing: Icon(
                       LucideIcons.chevronRight,
                       color: scheme.onSurfaceVariant,
@@ -147,7 +148,7 @@ class _AboutPageState extends State<AboutPage> {
                       LucideIcons.handCoins,
                       color: scheme.onSurfaceVariant,
                     ),
-                    title: '赞助',
+                    title: context.l10n.app.aboutSponsor,
                     trailing: Icon(
                       LucideIcons.chevronRight,
                       color: scheme.onSurfaceVariant,

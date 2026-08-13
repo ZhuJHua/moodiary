@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 
 /// 重推导预览/媒体引用、清除失效分类引用并重建索引。幂等，可反复执行。
@@ -23,8 +24,8 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
       isFirst: widget.isFirst,
       isLast: widget.isLast,
       leading: const Icon(LucideIcons.bandage),
-      title: '数据修复',
-      subtitle: '检查并修正卡片预览、媒体引用与失效分类',
+      title: context.l10n.app.repairTitle,
+      subtitle: context.l10n.app.repairSubtitle,
       trailing: _repairing
           ? const SizedBox(
               width: 20,
@@ -39,11 +40,9 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
   Future<void> _confirmAndRepair() async {
     final confirmed = await MAlert.confirm(
       context,
-      title: '数据修复',
-      message:
-          '将扫描全部日记，按正文重新生成卡片预览、媒体引用，并清理失效的分类引用，'
-          '最后重建搜索索引。\n\n该操作只修正可从正文重算的衍生数据，不会改动你的正文内容。',
-      confirmLabel: '开始修复',
+      title: l10n.app.repairTitle,
+      message: l10n.app.repairMessage,
+      confirmLabel: l10n.app.repairStart,
     );
     if (!confirmed) return;
     await _repair();
@@ -51,7 +50,7 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
 
   Future<void> _repair() async {
     setState(() => _repairing = true);
-    toast.loading(message: '正在修复数据...');
+    toast.loading(message: l10n.app.repairRunning);
     try {
       final report = await DiaryRepository.get().repairData();
       await toast.dismiss();
@@ -60,7 +59,7 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
     } catch (e, s) {
       await toast.dismiss();
       logger.e('数据修复失败', error: e, stackTrace: s);
-      if (mounted) toast.error(message: '数据修复失败');
+      if (mounted) toast.error(message: l10n.app.repairFailed);
     } finally {
       if (mounted) setState(() => _repairing = false);
     }
@@ -68,23 +67,25 @@ class _DataRepairTileState extends ConsumerState<DataRepairTile> {
 
   Future<void> _showResult(DiaryRepairReport report) async {
     final lines = <String>[
-      '共扫描 ${report.scanned} 篇日记。',
+      l10n.app.repairScanned(count: report.scanned),
       if (!report.hasFix)
-        '所有数据正常，无需修复。'
+        l10n.app.repairAllGood
       else ...[
-        '修复 ${report.changed} 篇：',
-        if (report.contentTextFixed > 0) '· 卡片预览 ${report.contentTextFixed} 篇',
-        if (report.mediaFixed > 0) '· 媒体引用 ${report.mediaFixed} 篇',
+        l10n.app.repairFixed(count: report.changed),
+        if (report.contentTextFixed > 0)
+          l10n.app.repairFixedPreview(count: report.contentTextFixed),
+        if (report.mediaFixed > 0)
+          l10n.app.repairFixedMedia(count: report.mediaFixed),
         if (report.orphanCategoryFixed > 0)
-          '· 失效分类 ${report.orphanCategoryFixed} 篇',
+          l10n.app.repairFixedOrphan(count: report.orphanCategoryFixed),
       ],
-      '搜索索引已重建（${report.reindexed} 篇）。',
+      l10n.app.repairReindexed(count: report.reindexed),
     ];
     await MAlert.notice(
       context,
-      title: '修复完成',
+      title: l10n.app.repairDoneTitle,
       message: lines.join('\n'),
-      closeLabel: '好',
+      closeLabel: l10n.app.repairOk,
     );
   }
 }

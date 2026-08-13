@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// 文件类型图标：lucide 的文件轮廓 + 写在纸面里的扩展名。
 ///

@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
 
@@ -22,9 +23,12 @@ class ResetDataTile extends StatelessWidget {
         ),
       ),
       leading: Icon(LucideIcons.trash2, color: scheme.error),
-      title: Text('重置所有数据', style: context.theme.typography.bodyLarge.error),
+      title: Text(
+        context.l10n.app.resetTitle,
+        style: context.theme.typography.bodyLarge.error,
+      ),
       subtitle: Text(
-        '清空全部日记、设置与媒体，不可恢复',
+        context.l10n.app.resetSubtitle,
         style: context.theme.typography.bodyMedium.onSurfaceVariant,
       ),
       onTap: () => _confirmAndReset(context),
@@ -34,12 +38,9 @@ class ResetDataTile extends StatelessWidget {
   Future<void> _confirmAndReset(BuildContext context) async {
     final confirmed = await MAlert.confirm(
       context,
-      title: '重置所有数据',
-      message:
-          '此操作将永久删除全部日记、分类、媒体文件、字体，以及所有设置'
-          '（包括同步配置、加密密钥、应用锁密码等），且无法恢复。\n\n'
-          '请确保已做好备份。确认后应用将自动关闭，请重新打开以完成重置。',
-      confirmLabel: '确认重置',
+      title: l10n.app.resetTitle,
+      message: l10n.app.resetMessage,
+      confirmLabel: l10n.app.resetConfirm,
       isDestructive: true,
       icon: LucideIcons.triangleAlert,
     );
@@ -48,7 +49,7 @@ class ResetDataTile extends StatelessWidget {
   }
 
   Future<void> _performReset() async {
-    toast.loading(message: '正在重置...');
+    toast.loading(message: l10n.app.resetRunning);
     try {
       await resetAllData();
       await toast.dismiss();
@@ -57,7 +58,7 @@ class ResetDataTile extends StatelessWidget {
     } catch (e, s) {
       await toast.dismiss();
       logger.e('重置数据失败', error: e, stackTrace: s);
-      toast.error(message: '重置失败');
+      toast.error(message: l10n.app.resetFailed);
     }
   }
 }

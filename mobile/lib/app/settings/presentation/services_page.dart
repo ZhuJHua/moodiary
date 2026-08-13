@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
 
@@ -10,7 +11,7 @@ class ServicesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('第三方服务')),
+      appBar: AppBar(title: Text(context.l10n.app.services)),
       body: ListView(
         padding: const .symmetric(horizontal: 8, vertical: 8),
         children: const [
@@ -45,8 +46,7 @@ class _Note extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '在此填入您自有的第三方服务凭证，启用 AI 助手、天气与地图等能力。'
-                '所有凭证仅保存在本机。',
+                context.l10n.app.servicesIntro,
                 style: context.theme.typography.bodySmall.onSurfaceVariant,
               ),
             ),
@@ -66,7 +66,7 @@ class _AiSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: 'AI 助手'),
+        SettingTitleTile(title: context.l10n.app.servicesAssistant),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -90,7 +90,7 @@ class _QweatherSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '和风天气'),
+        SettingTitleTile(title: context.l10n.app.servicesQweather),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -105,7 +105,7 @@ class _QweatherSection extends ConsumerWidget {
               _KvTile(
                 kv: .qweatherApiHost,
                 title: 'API Host',
-                subtitleWhenEmpty: 'devapi.qweather.com 或自定义',
+                subtitleWhenEmpty: context.l10n.app.servicesQweatherHostHint,
                 leading: Icon(
                   LucideIcons.server,
                   color: scheme.onSurfaceVariant,
@@ -129,7 +129,7 @@ class _TiandituSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        const SettingTitleTile(title: '天地图'),
+        SettingTitleTile(title: context.l10n.app.servicesTianditu),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
@@ -178,10 +178,12 @@ class _KvTile extends StatelessWidget {
           title: title,
           leading: leading,
           value: value,
-          subtitle: value.isEmpty ? (subtitleWhenEmpty ?? '未配置') : '已配置',
+          subtitle: value.isEmpty
+              ? (subtitleWhenEmpty ?? context.l10n.common.notConfigured)
+              : context.l10n.common.configured,
           onValue: (v) async {
             await kv.set(v);
-            toast.success(message: '已保存');
+            toast.success(message: l10n.app.servicesSaved);
           },
         );
       },

@@ -1,4 +1,5 @@
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:mui/mui.dart';
 
 class PrivacyPage extends StatelessWidget {
@@ -29,7 +30,7 @@ Moodiary 是一款离线优先的日记应用，您的内容默认仅保存在�
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('隐私政策')),
+      appBar: AppBar(title: Text(context.l10n.onboarding.privacyPolicy)),
       body: const Markdown(data: _text, selectable: true, padding: .all(16)),
     );
   }

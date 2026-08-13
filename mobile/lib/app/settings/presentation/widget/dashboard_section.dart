@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
 
@@ -20,19 +21,44 @@ class DashboardSection extends ConsumerWidget {
           children: [
             Row(
               children: [
-                _Metric(label: '使用天数', value: stats?.useDays),
-                _Metric(label: '日记总数', value: stats?.diaryCount),
-                _Metric(label: '总字数', value: stats?.wordCount),
-                _Metric(label: '分类数', value: stats?.categoryCount),
+                _Metric(
+                  label: context.l10n.app.dashUseDays,
+                  value: stats?.useDays,
+                ),
+                _Metric(
+                  label: context.l10n.app.dashDiaryCount,
+                  value: stats?.diaryCount,
+                ),
+                _Metric(
+                  label: context.l10n.app.dashWordCount,
+                  value: stats?.wordCount,
+                ),
+                _Metric(
+                  label: context.l10n.app.dashCategoryCount,
+                  value: stats?.categoryCount,
+                ),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                _Metric(label: '连续打卡', value: stats?.streakDays),
-                _Metric(label: '本月新增', value: stats?.thisMonthCount),
-                _Metric(label: '平均心情', value: stats?.averageMood, suffix: '%'),
-                _Metric(label: '标签数', value: stats?.tagCount),
+                _Metric(
+                  label: context.l10n.app.dashStreak,
+                  value: stats?.streakDays,
+                ),
+                _Metric(
+                  label: context.l10n.app.dashThisMonth,
+                  value: stats?.thisMonthCount,
+                ),
+                _Metric(
+                  label: context.l10n.app.dashAverageMood,
+                  value: stats?.averageMood,
+                  suffix: '%',
+                ),
+                _Metric(
+                  label: context.l10n.app.dashTagCount,
+                  value: stats?.tagCount,
+                ),
               ],
             ),
           ],

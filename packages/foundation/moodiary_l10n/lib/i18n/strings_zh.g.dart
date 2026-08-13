@@ -116,6 +116,342 @@ class Translations$app$zh {
 
 	/// zh: 'English'
 	String get languageEnglish => 'English';
+
+	/// zh: '设置'
+	String get settingsTitle => '设置';
+
+	/// zh: '数据'
+	String get sectionData => '数据';
+
+	/// zh: '回收站'
+	String get recycle => '回收站';
+
+	/// zh: '数据同步与备份'
+	String get syncBackup => '数据同步与备份';
+
+	/// zh: '分类管理'
+	String get categoryManager => '分类管理';
+
+	/// zh: '足迹地图'
+	String get mapTitle => '足迹地图';
+
+	/// zh: '迁移到新编辑器'
+	String get editorMigration => '迁移到新编辑器';
+
+	/// zh: '把旧日记（富文本 / Markdown）转换为新编辑器以便编辑'
+	String get editorMigrationSubtitle => '把旧日记（富文本 / Markdown）转换为新编辑器以便编辑';
+
+	/// zh: '显示'
+	String get sectionDisplay => '显示';
+
+	/// zh: '日记设置'
+	String get diarySettings => '日记设置';
+
+	/// zh: '主题模式'
+	String get themeMode => '主题模式';
+
+	/// zh: '字体样式'
+	String get fontStyle => '字体样式';
+
+	/// zh: '隐私'
+	String get sectionPrivacy => '隐私';
+
+	/// zh: '后台隐私保护'
+	String get backgroundPrivacy => '后台隐私保护';
+
+	/// zh: '退到后台时遮罩内容'
+	String get backgroundPrivacySubtitle => '退到后台时遮罩内容';
+
+	/// zh: '更多'
+	String get sectionMore => '更多';
+
+	/// zh: '关于'
+	String get about => '关于';
+
+	/// zh: '第三方服务'
+	String get services => '第三方服务';
+
+	/// zh: '跟随系统'
+	String get themeModeSystem => '跟随系统';
+
+	/// zh: '浅色'
+	String get themeModeLight => '浅色';
+
+	/// zh: '深色'
+	String get themeModeDark => '深色';
+
+	/// zh: '已选 {count}'
+	String homeSelected({required Object count}) => '已选 ${count}';
+
+	/// zh: '删除所选日记？'
+	String get homeDeleteTitle => '删除所选日记？';
+
+	/// zh: '已选 {count} 篇，将移入回收站，可在回收站恢复。'
+	String homeDeleteMessage({required Object count}) => '已选 ${count} 篇，将移入回收站，可在回收站恢复。';
+
+	/// zh: '没有可删除的日记'
+	String get homeNothingToDelete => '没有可删除的日记';
+
+	/// zh: '已移入回收站（{count} 篇）'
+	String homeMovedToRecycle({required Object count}) => '已移入回收站（${count} 篇）';
+
+	/// zh: '检查更新'
+	String get aboutCheckUpdate => '检查更新';
+
+	/// zh: '当前已是最新版本'
+	String get aboutUpToDate => '当前已是最新版本';
+
+	/// zh: '源码仓库'
+	String get aboutSource => '源码仓库';
+
+	/// zh: '反馈 / 答疑'
+	String get aboutFeedback => '反馈 / 答疑';
+
+	/// zh: '赞助'
+	String get aboutSponsor => '赞助';
+
+	/// zh: '感谢您的考虑！'
+	String get sponsorThanks => '感谢您的考虑！';
+
+	/// zh: 'Moodiary 是开源软件，由开发者业余维护。如果您喜欢这款应用，可通过下面的链接支持作者继续维护。'
+	String get sponsorBody => 'Moodiary 是开源软件，由开发者业余维护。如果您喜欢这款应用，可通过下面的链接支持作者继续维护。';
+
+	/// zh: '爱发电'
+	String get sponsorAfdian => '爱发电';
+
+	/// zh: '字体'
+	String get fontTitle => '字体';
+
+	/// zh: '导入 ttf / otf 字体，长按可删除'
+	String get fontImportSubtitle => '导入 ttf / otf 字体，长按可删除';
+
+	/// zh: '预览'
+	String get fontPreview => '预览';
+
+	/// zh: '字号跟随系统设置，App 内不再单独提供'
+	String get fontPreviewSubtitle => '字号跟随系统设置，App 内不再单独提供';
+
+	/// zh: '系统'
+	String get fontSystem => '系统';
+
+	/// zh: '删除字体'
+	String get fontDeleteTitle => '删除字体';
+
+	/// zh: '确认删除字体「{name}」吗？'
+	String fontDeleteMessage({required Object name}) => '确认删除字体「${name}」吗？';
+
+	/// zh: '可变'
+	String get fontVariable => '可变';
+
+	/// zh: '添加'
+	String get fontAdd => '添加';
+
+	/// zh: '八月的忧愁'
+	String get fontPreviewTitle => '八月的忧愁';
+
+	/// zh: '黄水塘里游着白鸭， 高粱梗油青的刚高过头， 这跳动的心怎样安插， 田里一窄条路，八月里这忧愁？ 天是昨夜雨洗过的，山岗 照着太阳又留一片影； 羊跟着放羊的转进村庄， 一大棵树荫下罩着井，又像是心！ 从没有人说过八月什么话， 夏天过去了，也不到秋天。 但我望着田垄，土墙上的瓜， 仍不明白生活同梦怎样的连牵。'
+	String get fontPreviewText => '黄水塘里游着白鸭，\n高粱梗油青的刚高过头，\n这跳动的心怎样安插，\n田里一窄条路，八月里这忧愁？\n天是昨夜雨洗过的，山岗\n照着太阳又留一片影；\n羊跟着放羊的转进村庄，\n一大棵树荫下罩着井，又像是心！\n从没有人说过八月什么话，\n夏天过去了，也不到秋天。\n但我望着田垄，土墙上的瓜，\n仍不明白生活同梦怎样的连牵。';
+
+	/// zh: '日记偏好'
+	String get diaryPrefsTitle => '日记偏好';
+
+	/// zh: '编辑器'
+	String get diaryPrefsEditor => '编辑器';
+
+	/// zh: '首行缩进'
+	String get firstLineIndent => '首行缩进';
+
+	/// zh: '保存时自动归类'
+	String get autoCategory => '保存时自动归类';
+
+	/// zh: '根据上次写作位置 / 标签推测分类'
+	String get autoCategorySubtitle => '根据上次写作位置 / 标签推测分类';
+
+	/// zh: '展示写作时长'
+	String get showWritingTime => '展示写作时长';
+
+	/// zh: '展示字数统计'
+	String get showWordCount => '展示字数统计';
+
+	/// zh: '日记展示'
+	String get diaryPrefsDisplay => '日记展示';
+
+	/// zh: '列表卡片显示头图'
+	String get cardHeaderImage => '列表卡片显示头图';
+
+	/// zh: '基于封面动态配色'
+	String get dynamicColor => '基于封面动态配色';
+
+	/// zh: '媒体'
+	String get diaryPrefsMedia => '媒体';
+
+	/// zh: '图片优化'
+	String get imageOptimize => '图片优化';
+
+	/// zh: '压缩尺寸并统一转为 WebP；关闭则保存原图'
+	String get imageOptimizeSubtitle => '压缩尺寸并统一转为 WebP；关闭则保存原图';
+
+	/// zh: '天气'
+	String get diaryPrefsWeather => '天气';
+
+	/// zh: '保存日记时自动获取天气'
+	String get autoWeather => '保存日记时自动获取天气';
+
+	/// zh: '在此填入您自有的第三方服务凭证，启用 AI 助手、天气与地图等能力。所有凭证仅保存在本机。'
+	String get servicesIntro => '在此填入您自有的第三方服务凭证，启用 AI 助手、天气与地图等能力。所有凭证仅保存在本机。';
+
+	/// zh: 'AI 助手'
+	String get servicesAssistant => 'AI 助手';
+
+	/// zh: '和风天气'
+	String get servicesQweather => '和风天气';
+
+	/// zh: 'devapi.qweather.com 或自定义'
+	String get servicesQweatherHostHint => 'devapi.qweather.com 或自定义';
+
+	/// zh: '天地图'
+	String get servicesTianditu => '天地图';
+
+	/// zh: '已保存'
+	String get servicesSaved => '已保存';
+
+	/// zh: '使用天数'
+	String get dashUseDays => '使用天数';
+
+	/// zh: '日记总数'
+	String get dashDiaryCount => '日记总数';
+
+	/// zh: '总字数'
+	String get dashWordCount => '总字数';
+
+	/// zh: '分类数'
+	String get dashCategoryCount => '分类数';
+
+	/// zh: '连续打卡'
+	String get dashStreak => '连续打卡';
+
+	/// zh: '本月新增'
+	String get dashThisMonth => '本月新增';
+
+	/// zh: '平均心情'
+	String get dashAverageMood => '平均心情';
+
+	/// zh: '标签数'
+	String get dashTagCount => '标签数';
+
+	/// zh: '压测数据（调试）'
+	String get stressTitle => '压测数据（调试）';
+
+	/// zh: '批量生成或清除随机双链日记，用于图谱性能测试'
+	String get stressSubtitle => '批量生成或清除随机双链日记，用于图谱性能测试';
+
+	/// zh: '压测数据'
+	String get stressDialogTitle => '压测数据';
+
+	/// zh: '用于知识图谱等极限性能测试。每篇随机链接 {min}–{max} 篇其它日记，标题以「{prefix}」开头，可一键清除。'
+	String stressDialogMessage({required Object min, required Object max, required Object prefix}) => '用于知识图谱等极限性能测试。每篇随机链接 ${min}–${max} 篇其它日记，标题以「${prefix}」开头，可一键清除。';
+
+	/// zh: '清除压测'
+	String get stressClear => '清除压测';
+
+	/// zh: '生成'
+	String get stressGenerate => '生成';
+
+	/// zh: '生成数量'
+	String get stressCountTitle => '生成数量';
+
+	/// zh: '数量需在 {min}–{max} 之间'
+	String stressCountRange({required Object min, required Object max}) => '数量需在 ${min}–${max} 之间';
+
+	/// zh: '正在生成'
+	String get stressGenerating => '正在生成';
+
+	/// zh: '生成失败'
+	String get stressGenerateFailed => '生成失败';
+
+	/// zh: '已生成 {count} 篇双链日记'
+	String stressGenerated({required Object count}) => '已生成 ${count} 篇双链日记';
+
+	/// zh: '没有压测日记'
+	String get stressEmpty => '没有压测日记';
+
+	/// zh: '正在清除'
+	String get stressClearing => '正在清除';
+
+	/// zh: '清除失败'
+	String get stressClearFailed => '清除失败';
+
+	/// zh: '已清除 {count} 篇压测日记'
+	String stressCleared({required Object count}) => '已清除 ${count} 篇压测日记';
+
+	/// zh: '数据修复'
+	String get repairTitle => '数据修复';
+
+	/// zh: '检查并修正卡片预览、媒体引用与失效分类'
+	String get repairSubtitle => '检查并修正卡片预览、媒体引用与失效分类';
+
+	/// zh: '将扫描全部日记，按正文重新生成卡片预览、媒体引用，并清理失效的分类引用，最后重建搜索索引。 该操作只修正可从正文重算的衍生数据，不会改动你的正文内容。'
+	String get repairMessage => '将扫描全部日记，按正文重新生成卡片预览、媒体引用，并清理失效的分类引用，最后重建搜索索引。\n\n该操作只修正可从正文重算的衍生数据，不会改动你的正文内容。';
+
+	/// zh: '开始修复'
+	String get repairStart => '开始修复';
+
+	/// zh: '正在修复数据...'
+	String get repairRunning => '正在修复数据...';
+
+	/// zh: '数据修复失败'
+	String get repairFailed => '数据修复失败';
+
+	/// zh: '共扫描 {count} 篇日记。'
+	String repairScanned({required Object count}) => '共扫描 ${count} 篇日记。';
+
+	/// zh: '所有数据正常，无需修复。'
+	String get repairAllGood => '所有数据正常，无需修复。';
+
+	/// zh: '修复 {count} 篇：'
+	String repairFixed({required Object count}) => '修复 ${count} 篇：';
+
+	/// zh: '· 卡片预览 {count} 篇'
+	String repairFixedPreview({required Object count}) => '· 卡片预览 ${count} 篇';
+
+	/// zh: '· 媒体引用 {count} 篇'
+	String repairFixedMedia({required Object count}) => '· 媒体引用 ${count} 篇';
+
+	/// zh: '· 失效分类 {count} 篇'
+	String repairFixedOrphan({required Object count}) => '· 失效分类 ${count} 篇';
+
+	/// zh: '搜索索引已重建（{count} 篇）。'
+	String repairReindexed({required Object count}) => '搜索索引已重建（${count} 篇）。';
+
+	/// zh: '修复完成'
+	String get repairDoneTitle => '修复完成';
+
+	/// zh: '好'
+	String get repairOk => '好';
+
+	/// zh: '重置所有数据'
+	String get resetTitle => '重置所有数据';
+
+	/// zh: '清空全部日记、设置与媒体，不可恢复'
+	String get resetSubtitle => '清空全部日记、设置与媒体，不可恢复';
+
+	/// zh: '此操作将永久删除全部日记、分类、媒体文件、字体，以及所有设置（包括同步配置、加密密钥、应用锁密码等），且无法恢复。 请确保已做好备份。确认后应用将自动关闭，请重新打开以完成重置。'
+	String get resetMessage => '此操作将永久删除全部日记、分类、媒体文件、字体，以及所有设置（包括同步配置、加密密钥、应用锁密码等），且无法恢复。\n\n请确保已做好备份。确认后应用将自动关闭，请重新打开以完成重置。';
+
+	/// zh: '确认重置'
+	String get resetConfirm => '确认重置';
+
+	/// zh: '正在重置...'
+	String get resetRunning => '正在重置...';
+
+	/// zh: '重置失败'
+	String get resetFailed => '重置失败';
+
+	/// zh: '清理缓存'
+	String get cacheClear => '清理缓存';
+
+	/// zh: '清理成功'
+	String get cacheCleared => '清理成功';
 }
 
 // Path: assistant
@@ -581,6 +917,12 @@ class Translations$common$zh {
 
 	/// zh: 'Moodiary'
 	String get appName => 'Moodiary';
+
+	/// zh: '已配置'
+	String get configured => '已配置';
+
+	/// zh: '未配置'
+	String get notConfigured => '未配置';
 }
 
 // Path: diary

@@ -86,14 +86,14 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
   PreferredSizeWidget _selectionAppBar(BuildContext context, int count) {
     return AppBar(
       leading: IconButton(
-        tooltip: '取消',
+        tooltip: context.l10n.common.cancel,
         icon: const Icon(LucideIcons.x),
         onPressed: () => ref.read(diarySelectionProvider.notifier).clear(),
       ),
-      title: Text('已选 $count'),
+      title: Text(context.l10n.app.homeSelected(count: count)),
       actions: [
         IconButton(
-          tooltip: '删除',
+          tooltip: context.l10n.common.delete,
           icon: const Icon(LucideIcons.trash2),
           onPressed: count == 0 ? null : _deleteSelected,
         ),
@@ -151,9 +151,9 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
     if (ids.isEmpty) return;
     final confirmed = await MAlert.confirm(
       context,
-      title: '删除所选日记？',
-      message: '已选 ${ids.length} 篇，将移入回收站，可在回收站恢复。',
-      confirmLabel: '删除',
+      title: l10n.app.homeDeleteTitle,
+      message: l10n.app.homeDeleteMessage(count: ids.length),
+      confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
     if (!confirmed) return;
@@ -171,9 +171,9 @@ class _DiaryListViewState extends ConsumerState<_DiaryListView> {
     // 一篇都没删掉时别报成功：选中集合与当前列表对不上时 softDeleteByIds 会返回 0，
     // 弹绿色的「已移入回收站（0 篇）」等于骗人。
     if (n == 0) {
-      toast.info(message: '没有可删除的日记');
+      toast.info(message: l10n.app.homeNothingToDelete);
     } else {
-      toast.success(message: '已移入回收站（$n 篇）');
+      toast.success(message: l10n.app.homeMovedToRecycle(count: n));
     }
   }
 }

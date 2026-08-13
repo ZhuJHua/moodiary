@@ -1,4 +1,5 @@
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:mui/mui.dart';
 
 class AgreementPage extends StatelessWidget {
@@ -31,7 +32,7 @@ github.com/ZhuJHua/moodiary
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('用户协议')),
+      appBar: AppBar(title: Text(context.l10n.onboarding.userAgreement)),
       body: const Markdown(data: _text, selectable: true, padding: .all(16)),
     );
   }
