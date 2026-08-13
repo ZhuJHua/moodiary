@@ -18,6 +18,10 @@ class VersionMigrator {
   /// 唯一挂不进这里的迁移是 2.8.0 的 SharedPreferences → MMKV 搬迁：判版本用的
   /// `appVersion` 自己就存在 KV 里，搬完之前读不到，所以它留在 `MmkvKVStorage.init`。
   static Future<void> run() async {
+    // prefs→MMKV 搬迁本次被跳过（旧仓库暂时打不开）：appVersion 此刻必为 null，
+    // 往下走会把老用户误判成全新安装（searchIndexBackfilled 置 true 后旧仓库里
+    // 没有这个键、永远改不回来）。本次什么都不写，下次启动搬迁成功后再判。
+    if (MmkvKVStorage.legacyMigrationPending) return;
     final packageInfo = await AppInfo.getPackageInfo();
     final currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
     final appVersion = MoodiaryKVs.appVersion.get();

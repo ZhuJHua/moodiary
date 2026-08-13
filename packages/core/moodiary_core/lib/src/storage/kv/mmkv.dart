@@ -25,6 +25,11 @@ final class MmkvKVStorage extends IKVStorage {
   /// 「已从 SharedPreferences 搬迁过」的标记。不属于 [MoodiaryKVs]，加前缀避免撞名。
   static const _migratedKey = '__migrated_from_prefs';
 
+  /// 本次启动旧仓库打不开、搬迁被跳过（留待下次重试）时为 true。
+  /// VersionMigrator 据此**本次什么都不写**：此刻 appVersion 读出来是 null，
+  /// 不守这道门会把老用户当全新安装（searchIndexBackfilled 被永久置 true）。
+  static bool legacyMigrationPending = false;
+
   late final MMKV _mmkv;
 
   @override
@@ -119,6 +124,8 @@ final class MmkvKVStorage extends IKVStorage {
       await legacy.init();
     } catch (e, s) {
       // 旧仓库打不开就不置标记，下次启动再试；代价只是一次插件调用。
+      // 同时亮起 pending：VersionMigrator 本次不得把 appVersion==null 当全新安装。
+      legacyMigrationPending = true;
       logger.e('KV 迁移：旧仓库打不开，本次跳过', error: e, stackTrace: s);
       return;
     }
