@@ -290,9 +290,8 @@ abstract final class AssistantToolRegistry {
     final limit = _parseLimit(input['limit']);
     // 起止日期按本地日历解释；结束日以次日零点作排他上界，从而包含整个结束日。
     final start = _parseDate(input['startDate']);
-    final endExclusive = _parseDate(
-      input['endDate'],
-    )?.add(const Duration(days: 1));
+    final endExclusive = _parseDate(input['endDate'])
+        ?.add(const Duration(days: 1));
 
     final repo = DiaryRepository.get();
     List<Diary> results;

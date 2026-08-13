@@ -109,7 +109,11 @@ class EditorLocalServer {
       try {
         return .json({'name': await resolver(name)});
       } catch (e) {
-        _log('mediainfo request failed: ${request.path}', error: e, level: 1000);
+        _log(
+          'mediainfo request failed: ${request.path}',
+          error: e,
+          level: 1000,
+        );
         return .text(500, 'mediainfo request failed');
       }
     }
@@ -225,8 +229,7 @@ class EditorLocalServer {
   /// 编辑器页面 URL，boot 数据经 base64url 挂在 query 上。仅在 [ensureStarted] 完成后可用。
   Uri pageUri(Map<String, dynamic> boot) {
     final encoded = base64Url.encode(utf8.encode(jsonEncode(boot)));
-    return Uri.parse(
-      'http://localhost:$_port/index.html',
-    ).replace(queryParameters: {'boot': encoded});
+    return Uri.parse('http://localhost:$_port/index.html')
+        .replace(queryParameters: {'boot': encoded});
   }
 }

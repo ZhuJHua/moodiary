@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 import 'diary.dart';
 
 part 'diary_event.freezed.dart';

@@ -83,7 +83,9 @@ class LanBrowser {
       case BonsoirDiscoveryServiceFoundEvent(:final service):
         final resolver = _discovery?.serviceResolver;
         if (resolver != null) {
-          unawaited(Future.sync(() => service.resolve(resolver)).catchError((_) {}));
+          unawaited(
+            Future.sync(() => service.resolve(resolver)).catchError((_) {}),
+          );
         }
       case BonsoirDiscoveryServiceResolvedEvent(:final service) ||
           BonsoirDiscoveryServiceUpdatedEvent(:final service):

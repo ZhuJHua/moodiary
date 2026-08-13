@@ -12,8 +12,9 @@ class FakeRustLibApi implements RustLibApi {
   final Future<TokenizeResult> Function(String text) _tokenize;
 
   @override
-  Future<TokenizeResult> crateApiTextTokenizerTokenize({required String text}) =>
-      _tokenize(text);
+  Future<TokenizeResult> crateApiTextTokenizerTokenize({
+    required String text,
+  }) => _tokenize(text);
 
   @override
   Future<List<TokenizeResult>> crateApiTextTokenizerTokenizeBatch({
@@ -21,9 +22,8 @@ class FakeRustLibApi implements RustLibApi {
   }) async => [for (final text in texts) await _tokenize(text)];
 
   @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError(
-    'FakeRustLibApi 未桩接 ${invocation.memberName}',
-  );
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('FakeRustLibApi 未桩接 ${invocation.memberName}');
 }
 
 bool _installed = false;

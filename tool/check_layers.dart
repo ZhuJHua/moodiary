@@ -400,9 +400,7 @@ void main(List<String> args) {
       '✅ material 只经 mui 出（legacy import 仅名单内 ${_legacyMaterialAllowlist.length} 处）。',
     );
   } else {
-    stderr.writeln(
-      '❌ 名单外的 legacy material import ${muiViolations.length} 处：',
-    );
+    stderr.writeln('❌ 名单外的 legacy material import ${muiViolations.length} 处：');
     for (final v in muiViolations) {
       stderr.writeln('  ✗ $v');
     }

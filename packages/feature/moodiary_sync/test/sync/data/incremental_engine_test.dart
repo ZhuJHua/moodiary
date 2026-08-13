@@ -46,7 +46,8 @@ void main() {
       logger: logger,
       diaryStore: diaries ?? FakeDiaryStore(const [], tombstoneStore),
       categoryStore: categories ?? FakeCategoryStore(const [], tombstoneStore),
-      mediaInfoStore: mediaInfos ?? FakeMediaInfoStore(const [], tombstoneStore),
+      mediaInfoStore:
+          mediaInfos ?? FakeMediaInfoStore(const [], tombstoneStore),
       tombstoneStore: tombstoneStore,
       mediaFiles: media ?? FakeMediaFiles(),
       cipherProvider: () async => SyncCipher.plaintext,
@@ -684,81 +685,70 @@ void main() {
     );
   });
 
-  group(
-    'multi-backend tombstone (never lose a deletion before all backends)',
-    () {
-      test(
-        'hard-deletes only after EVERY configured backend received the tombstone',
-        () async {
-          // 两个云后端都已配置。
-          await configureBackend(.webdav);
-          await configureBackend(.s3);
+  group('multi-backend tombstone (never lose a deletion before all backends)', () {
+    test(
+      'hard-deletes only after EVERY configured backend received the tombstone',
+      () async {
+        // 两个云后端都已配置。
+        await configureBackend(.webdav);
+        await configureBackend(.s3);
 
-          final webdav = FakeRemoteBackend(backendId: 'webdav');
-          final s3 = FakeRemoteBackend(backendId: 's3');
+        final webdav = FakeRemoteBackend(backendId: 'webdav');
+        final s3 = FakeRemoteBackend(backendId: 's3');
 
-          // 两个远端都已有 a 的普通条目。
-          await seedRemote(
-            webdav,
-            diaries: [buildDiary(id: 'a', modifiedMs: 100)],
-          );
-          await seedRemote(s3, diaries: [buildDiary(id: 'a', modifiedMs: 100)]);
+        // 两个远端都已有 a 的普通条目。
+        await seedRemote(
+          webdav,
+          diaries: [buildDiary(id: 'a', modifiedMs: 100)],
+        );
+        await seedRemote(s3, diaries: [buildDiary(id: 'a', modifiedMs: 100)]);
 
-          // 本地把 a 删除（行已硬删，墓碑行承载删除事实）。共享同一墓碑表
-          // （同一台设备切换后端）。
-          final tombstones = FakeTombstoneStore([
-            buildDiaryTombstone('a', modifiedMs: 200),
-          ]);
-          final local = FakeDiaryStore(const [], tombstones);
+        // 本地把 a 删除（行已硬删，墓碑行承载删除事实）。共享同一墓碑表
+        // （同一台设备切换后端）。
+        final tombstones = FakeTombstoneStore([
+          buildDiaryTombstone('a', modifiedMs: 200),
+        ]);
+        final local = FakeDiaryStore(const [], tombstones);
 
-          // 推到 webdav：仅覆盖 webdav，未覆盖全部 → 墓碑行不得清除。
-          await engineOn(webdav, diaries: local).push();
-          expect(
-            tombstones.rows.containsKey('d:a'),
-            isTrue,
-            reason: 'tombstone 未覆盖 s3 前不得清除墓碑行',
-          );
-          expect(tombstones.rows['d:a']!.pushedBackends, contains('webdav'));
-          expect(webdav.manifest()!.entries['d:a']!.deleted, isTrue);
+        // 推到 webdav：仅覆盖 webdav，未覆盖全部 → 墓碑行不得清除。
+        await engineOn(webdav, diaries: local).push();
+        expect(
+          tombstones.rows.containsKey('d:a'),
+          isTrue,
+          reason: 'tombstone 未覆盖 s3 前不得清除墓碑行',
+        );
+        expect(tombstones.rows['d:a']!.pushedBackends, contains('webdav'));
+        expect(webdav.manifest()!.entries['d:a']!.deleted, isTrue);
 
-          // 切到 s3 再推：现在两后端都覆盖 → 清除墓碑行。
-          await engineOn(s3, diaries: local).push();
-          expect(
-            tombstones.rows.containsKey('d:a'),
-            isFalse,
-            reason: '所有已配置后端都收到 tombstone 后才清除墓碑行',
-          );
-          expect(s3.manifest()!.entries['d:a']!.deleted, isTrue);
-        },
-      );
-    },
-  );
+        // 切到 s3 再推：现在两后端都覆盖 → 清除墓碑行。
+        await engineOn(s3, diaries: local).push();
+        expect(
+          tombstones.rows.containsKey('d:a'),
+          isFalse,
+          reason: '所有已配置后端都收到 tombstone 后才清除墓碑行',
+        );
+        expect(s3.manifest()!.entries['d:a']!.deleted, isTrue);
+      },
+    );
+  });
 
   group(
     'regression — corrupt remote manifest must not rebuild from zero (fix [1])',
     () {
-      test(
-        'a present-but-non-object manifest aborts push instead of dropping entries',
-        () async {
-          final backend = FakeRemoteBackend();
-          // 远端 manifest 被外部写成 JSON 数组（合法 JSON 但不是对象）。
-          backend.objects[SyncKeys.manifestPath] = jsonBytes(<dynamic>[]);
-          final store = FakeDiaryStore([
-            buildDiary(id: 'local', modifiedMs: 1),
-          ]);
+      test('a present-but-non-object manifest aborts push instead of dropping entries', () async {
+        final backend = FakeRemoteBackend();
+        // 远端 manifest 被外部写成 JSON 数组（合法 JSON 但不是对象）。
+        backend.objects[SyncKeys.manifestPath] = jsonBytes(<dynamic>[]);
+        final store = FakeDiaryStore([buildDiary(id: 'local', modifiedMs: 1)]);
 
-          await expectLater(
-            engineOn(backend, diaries: store).push(),
-            throwsA(isA<SyncException>()),
-          );
-          // 关键：绝不能把 manifest 重建/覆盖掉。
-          expect(backend.opCount('write', SyncKeys.manifestPath), 0);
-          expect(
-            backend.objects[SyncKeys.manifestPath],
-            jsonBytes(<dynamic>[]),
-          );
-        },
-      );
+        await expectLater(
+          engineOn(backend, diaries: store).push(),
+          throwsA(isA<SyncException>()),
+        );
+        // 关键：绝不能把 manifest 重建/覆盖掉。
+        expect(backend.opCount('write', SyncKeys.manifestPath), 0);
+        expect(backend.objects[SyncKeys.manifestPath], jsonBytes(<dynamic>[]));
+      });
     },
   );
 

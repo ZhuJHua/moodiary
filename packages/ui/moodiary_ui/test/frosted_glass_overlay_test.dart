@@ -2,9 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 
 void main() {
-  Widget host(Widget child) => MaterialApp(
-    home: FrostedGlassOverlayComponent(child: child),
-  );
+  Widget host(Widget child) =>
+      MaterialApp(home: FrostedGlassOverlayComponent(child: child));
 
   testWidgets('App 分支照常渲染 —— entry 挂错整屏会白', (tester) async {
     await tester.pumpWidget(host(const Text('app')));

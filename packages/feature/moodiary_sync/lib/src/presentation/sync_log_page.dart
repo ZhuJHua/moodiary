@@ -151,8 +151,7 @@ class _SyncLogPageState extends State<SyncLogPage> {
               children: [
                 Text(
                   _viewingToday ? '今天' : TimeFormat.isoDate(_selectedDay),
-                  style:
-                      context.theme.typography.labelLarge.onSurfaceVariant,
+                  style: context.theme.typography.labelLarge.onSurfaceVariant,
                 ),
                 const Spacer(),
                 if (!_loading)
@@ -324,7 +323,9 @@ class _EventGroupTileState extends State<_EventGroupTile> {
       ),
       title: Text(
         '${_kindLabel[kind] ?? kind.name} · ${events.length} 条',
-        style: hasError ? typography.bodyMedium.error : typography.bodyMedium.onSurface,
+        style: hasError
+            ? typography.bodyMedium.error
+            : typography.bodyMedium.onSurface,
       ),
       subtitle: Text(
         range,

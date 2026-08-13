@@ -237,7 +237,8 @@ class IncrementalSyncEngine {
       for (final c in await categoryRepo.getAllCategoriesForSync()) c.id: c,
     };
     final localMediaInfos = {
-      for (final a in await mediaInfoRepo.getAllMediaInfosForSync()) a.fileName: a,
+      for (final a in await mediaInfoRepo.getAllMediaInfosForSync())
+        a.fileName: a,
     };
     // 本地墓碑快照：远端活跃条目 vs 本地删除做 LWW 时要用（删除更晚则不下载）。
     final tombstones = _TombstoneBatch(await _tombstoneStore.getAll());
@@ -558,7 +559,9 @@ class IncrementalSyncEngine {
             );
             return;
           }
-          final bytes = await backend.readObject(SyncKeys.mediaInfoObjectPath(id));
+          final bytes = await backend.readObject(
+            SyncKeys.mediaInfoObjectPath(id),
+          );
           if (bytes == null) return;
           final decoded = await (await _cipher()).decode(bytes);
           if (decoded is! Map<String, dynamic>) return;
@@ -1423,8 +1426,6 @@ class IncrementalSyncEngine {
     await dir.create(recursive: true);
     return File(p.join(dir.path, '$tag-${uuidV7()}.tmp'));
   }
-
-
 
   Future<void> _deleteLocalMedia(Diary diary) async {
     final entries = collectDiaryMediaEntries(diary);

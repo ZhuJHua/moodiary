@@ -177,21 +177,21 @@ class AppFiles {
     final orphans = <(String type, Set<String> names)>[
       (
         MediaType.image.value,
-        (await getDirFileName(
-          MediaType.image.value,
-        )).toSet().difference(usedImages),
+        (await getDirFileName(MediaType.image.value))
+            .toSet()
+            .difference(usedImages),
       ),
       (
         MediaType.audio.value,
-        (await getDirFileName(
-          MediaType.audio.value,
-        )).toSet().difference(usedAudios),
+        (await getDirFileName(MediaType.audio.value))
+            .toSet()
+            .difference(usedAudios),
       ),
       (
         MediaType.video.value,
-        (await getDirFileName(
-          MediaType.video.value,
-        )).toSet().difference(usedVideos),
+        (await getDirFileName(MediaType.video.value))
+            .toSet()
+            .difference(usedVideos),
       ),
     ];
 
@@ -226,15 +226,12 @@ class AppFiles {
       schemas: [DiarySchema, CategorySchema],
       directory: dir,
     );
-    final imageFiles = (await AppFiles.getDirFileName(
-      MediaType.image.value,
-    )).toSet();
-    final audioFiles = (await AppFiles.getDirFileName(
-      MediaType.audio.value,
-    )).toSet();
-    final videoFiles = (await AppFiles.getDirFileName(
-      MediaType.video.value,
-    )).toSet();
+    final imageFiles = (await AppFiles.getDirFileName(MediaType.image.value))
+        .toSet();
+    final audioFiles = (await AppFiles.getDirFileName(MediaType.audio.value))
+        .toSet();
+    final videoFiles = (await AppFiles.getDirFileName(MediaType.video.value))
+        .toSet();
 
     final usedImages = <String>{};
     final usedAudios = <String>{};

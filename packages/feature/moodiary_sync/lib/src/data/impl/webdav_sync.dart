@@ -104,10 +104,7 @@ class WebDavSyncBackend implements IRemoteSyncBackend {
   Future<bool> readObjectToFile(String key, String filePath) async {
     try {
       final client = await _client();
-      return await client.readObjectToFile(
-        key: key,
-        filePath: filePath,
-      );
+      return await client.readObjectToFile(key: key, filePath: filePath);
     } catch (e) {
       throw SyncException('读取远端对象失败（$key）：$e');
     }

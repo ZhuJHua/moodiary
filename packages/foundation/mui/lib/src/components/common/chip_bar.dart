@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:mui/mui.dart';
 
-
 /// 圆角胶囊筛选条的单个条目。[accentColor] 提供时以小圆点 + 选中态着色（分类色）；
 /// [icon] 提供时改为前置图标（媒体类型等）；二者皆空则纯文字。
 class MChipData<T> {

@@ -155,9 +155,6 @@ abstract final class MAlert {
   }
 }
 
-
-
-
 // ─────────────────────────── 路由 ───────────────────────────
 
 Future<T?> _push<T>(
@@ -578,10 +575,7 @@ class _PromptBodyState extends State<_PromptBody> {
           height: _kActionHeight,
           gap: _kActionGap,
           actions: [
-            MAction(
-              label: widget.cancelLabel ?? l10n.cancel,
-              enabled: !_busy,
-            ),
+            MAction(label: widget.cancelLabel ?? l10n.cancel, enabled: !_busy),
             MAction(
               label: widget.confirmLabel ?? l10n.ok,
               isPrimary: !widget.isDestructive,

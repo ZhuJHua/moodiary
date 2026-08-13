@@ -293,9 +293,8 @@ class MediaManager {
   }
 
   static Future<int> getColorScheme(ImageProvider imageProvider) async {
-    final color = (await ColorScheme.fromImageProvider(
-      provider: imageProvider,
-    )).primary;
+    final color = (await ColorScheme.fromImageProvider(provider: imageProvider))
+        .primary;
     return ((color.a * 255).toInt() << 24) |
         ((color.r * 255).toInt() << 16) |
         ((color.g * 255).toInt() << 8) |

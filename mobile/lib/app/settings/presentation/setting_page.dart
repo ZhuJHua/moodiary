@@ -223,14 +223,11 @@ class _DisplaySection extends ConsumerWidget {
                       LucideIcons.palette,
                       color: scheme.onSurfaceVariant,
                     ),
-                    trailing: Text(
-                      switch (mode) {
-                        .neutral => context.l10n.accentNeutral,
-                        .system => context.l10n.accentSystem,
-                        .custom => context.l10n.accentCustom,
-                      },
-                      style: context.theme.typography.bodySmall.primary,
-                    ),
+                    trailing: Text(switch (mode) {
+                      .neutral => context.l10n.accentNeutral,
+                      .system => context.l10n.accentSystem,
+                      .custom => context.l10n.accentCustom,
+                    }, style: context.theme.typography.bodySmall.primary),
                     onTap: () => AccentSheet.show(context),
                   );
                 },

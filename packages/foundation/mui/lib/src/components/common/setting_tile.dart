@@ -1,6 +1,5 @@
 import 'package:mui/mui.dart';
 
-
 class SettingTitleTile extends StatelessWidget {
   const SettingTitleTile({super.key, required this.title, this.subtitle});
 

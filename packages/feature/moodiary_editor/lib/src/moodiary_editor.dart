@@ -589,7 +589,9 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
   }
 
   Future<void> _setTheme() async {
-    await _run('window.MoodiaryBridge.setTheme(${jsonEncode(_themePayload())})');
+    await _run(
+      'window.MoodiaryBridge.setTheme(${jsonEncode(_themePayload())})',
+    );
   }
 
   Future<void> _setContent(String content) async {

@@ -23,9 +23,7 @@ class SyncPendingSummaryCard extends StatelessWidget {
     return Card.filled(
       color: scheme.surfaceContainerLow,
       margin: .zero,
-      shape: const RoundedRectangleBorder(
-        borderRadius: MuiRadius.md,
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: MuiRadius.md),
       child: Padding(
         padding: const .symmetric(horizontal: 16, vertical: 12),
         child: Row(

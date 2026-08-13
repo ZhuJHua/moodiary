@@ -13,10 +13,7 @@ class AccentSheet extends ConsumerWidget {
   const AccentSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return MSheet.show<void>(
-      context,
-      builder: (_) => const AccentSheet(),
-    );
+    return MSheet.show<void>(context, builder: (_) => const AccentSheet());
   }
 
   @override

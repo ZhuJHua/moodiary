@@ -140,9 +140,9 @@ class LanSender {
         throwOnStatus: false,
       );
       _ensureOk(resp.statusCode, resp.data);
-      final report =
-          jsonDecode(utf8.decode(await _crypto.decrypt(key, resp.data!)))
-              as Map<String, dynamic>;
+      final report = jsonDecode(
+        utf8.decode(await _crypto.decrypt(key, resp.data!)),
+      ) as Map<String, dynamic>;
       return LanSendResult(
         entryCount: count,
         diaryCount: report['diaryCount'] is int

@@ -23,9 +23,7 @@ class MGlassSurface extends StatelessWidget {
   const MGlassSurface({
     super.key,
     required this.child,
-    this.shape = const RoundedRectangleBorder(
-      borderRadius: MuiRadius.lg,
-    ),
+    this.shape = const RoundedRectangleBorder(borderRadius: MuiRadius.lg),
     this.tint,
     this.borderColor,
     this.shadows,

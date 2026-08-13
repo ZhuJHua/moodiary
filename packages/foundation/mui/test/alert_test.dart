@@ -103,7 +103,10 @@ void main() {
 
       expect(find.byIcon(LucideIcons.triangleAlert), findsOneWidget);
       expect(backgroundOf(tester, '删除'), _mui.colorScheme.error);
-      expect(backgroundOf(tester, '取消'), _mui.colorScheme.surfaceContainerHighest);
+      expect(
+        backgroundOf(tester, '取消'),
+        _mui.colorScheme.surfaceContainerHighest,
+      );
     });
 
     testWidgets('非破坏性确认用 primary 色且不加图标', (tester) async {

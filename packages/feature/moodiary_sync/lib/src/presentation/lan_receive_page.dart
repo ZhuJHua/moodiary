@@ -85,7 +85,8 @@ class _LanReceivePageState extends State<LanReceivePage> {
                   Center(
                     child: Text(
                       '配对码',
-                      style: context.theme.typography.labelLarge.onSurfaceVariant,
+                      style:
+                          context.theme.typography.labelLarge.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -205,11 +206,7 @@ class _StatusLine extends StatelessWidget {
         children: [
           Text('接收失败', style: typography.titleMedium.error),
           const SizedBox(height: 6),
-          Text(
-            message,
-            textAlign: .center,
-            style: typography.bodySmall.error,
-          ),
+          Text(message, textAlign: .center, style: typography.bodySmall.error),
           const SizedBox(height: 4),
           Text('配对码不变，对方可直接重试', style: typography.bodySmall.outline),
         ],

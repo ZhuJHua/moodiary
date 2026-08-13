@@ -80,8 +80,7 @@ class MAudioPlayerPage extends StatefulWidget {
   }
 
   @override
-  State<MAudioPlayerPage> createState() =>
-      _MAudioPlayerPageState();
+  State<MAudioPlayerPage> createState() => _MAudioPlayerPageState();
 }
 
 class _MAudioPlayerPageState extends State<MAudioPlayerPage>

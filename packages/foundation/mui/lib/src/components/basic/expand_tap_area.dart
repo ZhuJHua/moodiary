@@ -2,9 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 
-Color debugPaintExpandAreaColor = const Color(
-  0xFFFF0000,
-).withValues(alpha: 0.03);
+Color debugPaintExpandAreaColor = const Color(0xFFFF0000)
+    .withValues(alpha: 0.03);
 
 Color debugPaintClipAreaColor = const Color(0xFF0000FF).withValues(alpha: 0.02);
 

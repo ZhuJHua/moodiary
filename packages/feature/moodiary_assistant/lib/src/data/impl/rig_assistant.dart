@@ -77,13 +77,13 @@ class RigAssistantService implements AssistantService {
 
     await for (final event in stream) {
       yield switch (event) {
-        rust.RigStreamEvent_TextDelta(:final field0) => AssistantStreamEvent
-            .text(field0),
+        rust.RigStreamEvent_TextDelta(:final field0) =>
+          AssistantStreamEvent.text(field0),
         rust.RigStreamEvent_ReasoningDelta(:final field0) =>
           AssistantStreamEvent.reasoning(field0),
         // 工具调用不在气泡里展示，但用作「思考阶段结束」的信号（冻结思考计时）。
-        rust.RigStreamEvent_ToolCall(:final field0) => AssistantStreamEvent
-            .tool(field0),
+        rust.RigStreamEvent_ToolCall(:final field0) =>
+          AssistantStreamEvent.tool(field0),
         rust.RigStreamEvent_Usage(:final inputTokens, :final outputTokens) =>
           AssistantStreamEvent.usage(inputTokens, outputTokens),
       };

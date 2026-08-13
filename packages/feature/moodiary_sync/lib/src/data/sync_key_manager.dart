@@ -11,21 +11,19 @@ import 'package:moodiary_sync/src/data/sync.dart';
 import 'package:moodiary_sync/src/data/sync_keyfile.dart';
 
 /// KDF 原语签名（可注入：宿主单测无 Rust FFI，用纯 Dart 假实现）。
-typedef DeriveKeyFn =
-    Future<List<int>> Function({
-      required String salt,
-      required String passphrase,
-      required int mCostKib,
-      required int tCost,
-      required int pCost,
-    });
+typedef DeriveKeyFn = Future<List<int>> Function({
+  required String salt,
+  required String passphrase,
+  required int mCostKib,
+  required int tCost,
+  required int pCost,
+});
 
 /// AEAD 原语签名（加密 = 12B nonce + 密文 + 16B tag，解密失败抛异常）。
-typedef AeadFn =
-    Future<List<int>> Function({
-      required List<int> key,
-      required List<int> data,
-    });
+typedef AeadFn = Future<List<int>> Function({
+  required List<int> key,
+  required List<int> data,
+});
 
 /// 同步密钥管理 —— 信封加密的编排中枢。
 ///

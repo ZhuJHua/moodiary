@@ -180,7 +180,8 @@ void main() {
           },
         ]),
       );
-      final cell = (result.blocks.single as IrBlock_Table).rows.single.cells.single;
+      final cell =
+          (result.blocks.single as IrBlock_Table).rows.single.cells.single;
       expect(cell.colspan, 1);
       expect(cell.rowspan, 1);
       expect(cell.header, isTrue);

@@ -448,11 +448,11 @@ final class FakeMediaFiles implements SyncMediaFiles {
     await drop(oldDiary.audioName, newDiary.audioName, 'audio');
     await drop(oldDiary.videoName, newDiary.videoName, 'video');
   }
+
   /// 纯内存实现，Rust 看不见 —— 引擎据此回退字节路径。路径式分支的覆盖见
   /// media_file_path_test.dart，那里用生产的 DiskSyncMediaFiles 配临时目录。
   @override
   String? realPath(String type, String filename) => null;
-
 }
 
 // ─────────────────────── env setup ───────────────────────

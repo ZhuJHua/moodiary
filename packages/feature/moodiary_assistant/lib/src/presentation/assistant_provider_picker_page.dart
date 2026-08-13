@@ -42,9 +42,8 @@ class _AssistantProviderPickerPageState
   }
 
   Future<void> _openPreset(LlmProviderPreset preset) async {
-    final saved = await AssistantProviderEditRoute(
-      presetId: preset.id,
-    ).push<bool>(context);
+    final saved = await AssistantProviderEditRoute(presetId: preset.id)
+        .push<bool>(context);
     if (saved == true && mounted) Navigator.of(context).pop();
   }
 

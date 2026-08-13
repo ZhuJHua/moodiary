@@ -23,7 +23,10 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      MuiTheme(data: _mui, child: MaterialApp.router(routerConfig: router)),
+      MuiTheme(
+        data: _mui,
+        child: MaterialApp.router(routerConfig: router),
+      ),
     );
 
     unawaited(router.push<void>('/probe/a'));

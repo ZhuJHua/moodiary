@@ -53,9 +53,8 @@ abstract final class MMenu {
           from: anchorContext,
           to: navigator.context,
         ),
-        barrierLabelText: MaterialLocalizations.of(
-          anchorContext,
-        ).modalBarrierDismissLabel,
+        barrierLabelText: MaterialLocalizations.of(anchorContext)
+            .modalBarrierDismissLabel,
       ),
     );
   }
@@ -358,9 +357,8 @@ class _MMenuLayout extends SingleChildLayoutDelegate {
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    return BoxConstraints.loose(
-      constraints.biggest,
-    ).deflate(const EdgeInsets.all(_kMenuScreenPadding) + screenPadding);
+    return BoxConstraints.loose(constraints.biggest)
+        .deflate(const EdgeInsets.all(_kMenuScreenPadding) + screenPadding);
   }
 
   @override

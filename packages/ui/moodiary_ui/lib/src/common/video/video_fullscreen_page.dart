@@ -36,7 +36,6 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-
 typedef VideoSurfaceBuilder = Widget Function(VideoPlaybackPort port);
 
 /// 全屏横拖刮擦的换算：毫秒 / 像素。
@@ -170,8 +169,7 @@ class MVideoPlayerPage extends StatefulWidget {
   }
 
   @override
-  State<MVideoPlayerPage> createState() =>
-      _MVideoPlayerPageState();
+  State<MVideoPlayerPage> createState() => _MVideoPlayerPageState();
 }
 
 class _MVideoPlayerPageState extends State<MVideoPlayerPage>

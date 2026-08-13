@@ -304,9 +304,8 @@ class _MImageBrowserState extends State<MImageBrowser> {
       // 外链：图已在屏上（provider 命中缓存），只补分辨率。
       String? resolution;
       try {
-        final size = await MediaManager.getImageSize(
-          _providerOf(image),
-        ).timeout(const Duration(seconds: 3));
+        final size = await MediaManager.getImageSize(_providerOf(image))
+            .timeout(const Duration(seconds: 3));
         resolution = '${size.width.toInt()} × ${size.height.toInt()}';
       } catch (_) {}
       return _ImageInfoData(url: image, resolution: resolution);

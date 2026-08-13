@@ -60,6 +60,5 @@ class MGlass extends InheritedWidget {
       const MGlassConfig();
 
   @override
-  bool updateShouldNotify(MGlass oldWidget) =>
-      config != oldWidget.config;
+  bool updateShouldNotify(MGlass oldWidget) => config != oldWidget.config;
 }

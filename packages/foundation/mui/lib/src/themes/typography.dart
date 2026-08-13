@@ -119,7 +119,6 @@ class MuiTextRole {
   TextStyle get onMedia => _base.copyWith(color: _onMedia);
 }
 
-
 /// 每一级的默认字重 —— **M3 2021 的原值**，与 `Typography.englishLike2021` 逐级相同
 /// （`typography.dart:2096`）：15 级里 10 级 Regular，只有 title 的 medium/small
 /// 与三个 label 是 Medium。M3 里没有 600/700。
@@ -251,21 +250,60 @@ class MuiTypography with MuiValue {
   /// 可变字体的 wght 轴实测值。[MuiTextRole.emphasized] 靠它设 `fontVariations`。
   final MuiFontConfig font;
 
-  late final MuiTextRole displayLarge = _role('displayLarge', _textTheme.displayLarge);
-  late final MuiTextRole displayMedium = _role('displayMedium', _textTheme.displayMedium);
-  late final MuiTextRole displaySmall = _role('displaySmall', _textTheme.displaySmall);
-  late final MuiTextRole headlineLarge = _role('headlineLarge', _textTheme.headlineLarge);
-  late final MuiTextRole headlineMedium = _role('headlineMedium', _textTheme.headlineMedium);
-  late final MuiTextRole headlineSmall = _role('headlineSmall', _textTheme.headlineSmall);
-  late final MuiTextRole titleLarge = _role('titleLarge', _textTheme.titleLarge);
-  late final MuiTextRole titleMedium = _role('titleMedium', _textTheme.titleMedium);
-  late final MuiTextRole titleSmall = _role('titleSmall', _textTheme.titleSmall);
+  late final MuiTextRole displayLarge = _role(
+    'displayLarge',
+    _textTheme.displayLarge,
+  );
+  late final MuiTextRole displayMedium = _role(
+    'displayMedium',
+    _textTheme.displayMedium,
+  );
+  late final MuiTextRole displaySmall = _role(
+    'displaySmall',
+    _textTheme.displaySmall,
+  );
+  late final MuiTextRole headlineLarge = _role(
+    'headlineLarge',
+    _textTheme.headlineLarge,
+  );
+  late final MuiTextRole headlineMedium = _role(
+    'headlineMedium',
+    _textTheme.headlineMedium,
+  );
+  late final MuiTextRole headlineSmall = _role(
+    'headlineSmall',
+    _textTheme.headlineSmall,
+  );
+  late final MuiTextRole titleLarge = _role(
+    'titleLarge',
+    _textTheme.titleLarge,
+  );
+  late final MuiTextRole titleMedium = _role(
+    'titleMedium',
+    _textTheme.titleMedium,
+  );
+  late final MuiTextRole titleSmall = _role(
+    'titleSmall',
+    _textTheme.titleSmall,
+  );
   late final MuiTextRole bodyLarge = _role('bodyLarge', _textTheme.bodyLarge);
-  late final MuiTextRole bodyMedium = _role('bodyMedium', _textTheme.bodyMedium);
+  late final MuiTextRole bodyMedium = _role(
+    'bodyMedium',
+    _textTheme.bodyMedium,
+  );
   late final MuiTextRole bodySmall = _role('bodySmall', _textTheme.bodySmall);
-  late final MuiTextRole labelLarge = _role('labelLarge', _textTheme.labelLarge);
-  late final MuiTextRole labelMedium = _role('labelMedium', _textTheme.labelMedium);
-  late final MuiTextRole labelSmall = _role('labelSmall', _textTheme.labelSmall);
+  late final MuiTextRole labelLarge = _role(
+    'labelLarge',
+    _textTheme.labelLarge,
+  );
+  late final MuiTextRole labelMedium = _role(
+    'labelMedium',
+    _textTheme.labelMedium,
+  );
+  late final MuiTextRole labelSmall = _role(
+    'labelSmall',
+    _textTheme.labelSmall,
+  );
 
   /// 回落到 M3 基准值的两种情形，都来自「宿主的 `ThemeData` 不是 mui 建的」：
   ///   * [style] 为 null —— 那一级压根没填；

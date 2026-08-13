@@ -11,10 +11,7 @@ class S3FormSheet extends StatefulWidget {
   State<S3FormSheet> createState() => _S3FormSheetState();
 
   static Future<bool?> show(BuildContext context) {
-    return MSheet.show<bool>(
-      context,
-      builder: (_) => const S3FormSheet(),
-    );
+    return MSheet.show<bool>(context, builder: (_) => const S3FormSheet());
   }
 }
 

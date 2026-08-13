@@ -21,11 +21,7 @@ void main() {
             trailing: trailing,
             items: const [
               MChipData(value: null, label: 'All'),
-              MChipData(
-                value: 'a',
-                label: 'Work',
-                accentColor: Colors.red,
-              ),
+              MChipData(value: 'a', label: 'Work', accentColor: Colors.red),
               MChipData(value: 'b', label: 'Life'),
             ],
           ),

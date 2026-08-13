@@ -184,9 +184,7 @@ class MActionButton<T> extends StatelessWidget {
         minimumSize: .fromHeight(height),
         padding: const .symmetric(horizontal: 12),
         textStyle: textStyle,
-        shape: const RoundedRectangleBorder(
-          borderRadius: MuiRadius.md,
-        ),
+        shape: const RoundedRectangleBorder(borderRadius: MuiRadius.md),
       ),
       // 转圈期间按钮通常已被禁用，颜色只能显式给——否则会被 disabledForegroundColor 吃掉。
       child: action.busy

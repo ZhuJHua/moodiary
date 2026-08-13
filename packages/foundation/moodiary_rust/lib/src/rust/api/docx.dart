@@ -6,6 +6,7 @@
 import '../frb_generated.dart';
 import 'cancel.dart';
 import 'export_ir.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 Future<void> writeDocx({

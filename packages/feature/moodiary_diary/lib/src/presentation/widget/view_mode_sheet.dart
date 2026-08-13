@@ -8,10 +8,7 @@ class ViewModeSheet extends StatefulWidget {
   const ViewModeSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return MSheet.show<void>(
-      context,
-      builder: (_) => const ViewModeSheet(),
-    );
+    return MSheet.show<void>(context, builder: (_) => const ViewModeSheet());
   }
 
   /// 只剩一种模式时不画模式切换——一格的选择器没有意义。加回第二种布局时自动出现。

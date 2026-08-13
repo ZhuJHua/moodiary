@@ -24,7 +24,7 @@ String buildLocation(String path, [Map<String, String?> query = const {}]) {
   query.forEach((key, value) {
     if (value != null) params[key] = value;
   });
-  return Uri.parse(
-    path,
-  ).replace(queryParameters: params.isEmpty ? null : params).toString();
+  return Uri.parse(path)
+      .replace(queryParameters: params.isEmpty ? null : params)
+      .toString();
 }

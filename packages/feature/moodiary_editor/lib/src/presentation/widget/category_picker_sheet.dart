@@ -32,10 +32,7 @@ class CategoryPickerSheet extends ConsumerWidget {
           crossAxisAlignment: .stretch,
           children: [
             MSheetOptionTile<String?>(
-              option: const MSheetOption<String?>(
-                value: null,
-                label: '不分类',
-              ),
+              option: const MSheetOption<String?>(value: null, label: '不分类'),
               selected: currentCategoryId == null,
               onTap: () => _pick(context, null),
             ),

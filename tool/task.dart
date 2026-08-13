@@ -84,9 +84,10 @@ const _rustPkgDir = 'packages/foundation/moodiary_rust';
 /// CLI 是整条链上唯一不由仓库钉版本的东西，而它默认开着 auto_upgrade_dependency ——
 /// 版本不一致时会反过来把 Cargo.toml / pubspec.yaml / lock 的钉版本改成它自己的。
 Future<void> _assertCodegenVersion() async {
-  final pinned = RegExp(r'^\s*flutter_rust_bridge:\s*(\S+)\s*$', multiLine: true)
-      .firstMatch(File('$_rustPkgDir/pubspec.yaml').readAsStringSync())
-      ?.group(1);
+  final pinned = RegExp(
+    r'^\s*flutter_rust_bridge:\s*(\S+)\s*$',
+    multiLine: true,
+  ).firstMatch(File('$_rustPkgDir/pubspec.yaml').readAsStringSync())?.group(1);
   if (pinned == null) {
     stderr.writeln('✗ 读不到 $_rustPkgDir/pubspec.yaml 里的 flutter_rust_bridge 版本');
     exit(1);
@@ -103,9 +104,9 @@ Future<void> _assertCodegenVersion() async {
     );
     exit(1);
   }
-  final actual = RegExp(
-    r'(\d+\.\S+)',
-  ).firstMatch('${r.stdout}'.trim())?.group(1);
+  final actual = RegExp(r'(\d+\.\S+)')
+      .firstMatch('${r.stdout}'.trim())
+      ?.group(1);
   if (actual != pinned) {
     stderr.writeln(
       '✗ codegen 版本不一致：CLI = ${actual ?? '未知'}，pubspec 钉的是 $pinned。\n'
@@ -176,7 +177,6 @@ Future<void> _genRust() async {
   // codegen 产出坏文件时依然 exit 0 并打印 Done!，只能自己验一遍。
   await _run('fvm', ['dart', 'analyze', _genRustOutDir]);
 }
-
 
 Future<void> _checkLayers() => _run('fvm', ['dart', 'tool/check_layers.dart']);
 

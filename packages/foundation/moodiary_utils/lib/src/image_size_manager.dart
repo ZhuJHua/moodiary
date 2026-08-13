@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:image_size_getter/file_input.dart';
 import 'package:image_size_getter/image_size_getter.dart';
+
 import 'lru.dart';
 
 /// 图片宽高 / 宽高比的统一读取入口。从文件头元数据解析宽高（不解码整图），

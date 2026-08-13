@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
+
 import 'assistant_provider_type.dart';
 
 part 'llm_provider.freezed.dart';

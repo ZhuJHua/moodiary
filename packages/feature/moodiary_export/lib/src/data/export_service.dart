@@ -242,9 +242,8 @@ class ExportService {
         buffer.writeln('---');
         buffer.writeln();
       }
-      File(
-        p.join(outDir.path, '${_stamp()}.md'),
-      ).writeAsStringSync(buffer.toString());
+      File(p.join(outDir.path, '${_stamp()}.md'))
+          .writeAsStringSync(buffer.toString());
     } else {
       final used = <String>{};
       for (final doc in docs) {
@@ -254,9 +253,8 @@ class ExportService {
           used,
           untitledLabel,
         );
-        File(
-          p.join(outDir.path, name),
-        ).writeAsStringSync(MarkdownWriter.write(doc, options));
+        File(p.join(outDir.path, name))
+            .writeAsStringSync(MarkdownWriter.write(doc, options));
       }
     }
 

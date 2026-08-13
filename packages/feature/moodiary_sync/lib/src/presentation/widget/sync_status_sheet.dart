@@ -113,10 +113,7 @@ class _SyncStatusSheetState extends ConsumerState<_SyncStatusSheet> {
             ? LucideIcons.cloud
             : LucideIcons.database,
         actions: [
-          const MAction(
-            label: '查看日志',
-            value: _SyncStatusSheet.resultViewLog,
-          ),
+          const MAction(label: '查看日志', value: _SyncStatusSheet.resultViewLog),
           if (!running)
             MAction(
               label: '立即同步',

@@ -333,7 +333,10 @@ class _PeerTile extends StatelessWidget {
                   ),
                 ),
                 if (selected)
-                  Icon(LucideIcons.circleCheck, color: scheme.onPrimaryContainer),
+                  Icon(
+                    LucideIcons.circleCheck,
+                    color: scheme.onPrimaryContainer,
+                  ),
               ],
             ),
           ),
@@ -423,7 +426,9 @@ class _ResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
     // 成功走 primary、失败走 error —— 灰度档下没有绿色可用于「成功」。
-    final background = success ? scheme.primaryContainer : scheme.errorContainer;
+    final background = success
+        ? scheme.primaryContainer
+        : scheme.errorContainer;
     final style = success
         ? context.theme.typography.bodyMedium.onPrimaryContainer
         : context.theme.typography.bodyMedium.onErrorContainer;

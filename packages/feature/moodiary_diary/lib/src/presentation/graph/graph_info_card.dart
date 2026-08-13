@@ -138,9 +138,8 @@ class GraphInfoCard extends StatelessWidget {
                     Icon(LucideIcons.chevronRight, color: cs.onSurfaceVariant),
                     if (onClose != null)
                       IconButton(
-                        tooltip: MaterialLocalizations.of(
-                          context,
-                        ).closeButtonTooltip,
+                        tooltip: MaterialLocalizations.of(context)
+                            .closeButtonTooltip,
                         iconSize: 20,
                         visualDensity: .compact,
                         icon: Icon(LucideIcons.x, color: cs.onSurfaceVariant),

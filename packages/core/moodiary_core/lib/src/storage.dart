@@ -47,14 +47,10 @@ abstract class IKVStorage {
 
   KVNotifier<T> getNotifier<T extends Object>(String key, T defaultValue) {
     return _notifiers.putIfAbsent(
-          key,
-          () => KVNotifier<T>._(
-            get<T>(key) ?? defaultValue,
-            storage: this,
-            key: key,
-          ),
-        )
-        as KVNotifier<T>;
+      key,
+      () =>
+          KVNotifier<T>._(get<T>(key) ?? defaultValue, storage: this, key: key),
+    ) as KVNotifier<T>;
   }
 }
 

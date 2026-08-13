@@ -186,9 +186,9 @@ Future<ReCipherReport?> _runWithProgress(
     barrierDismissible: false,
     useRootNavigator: true,
     builder: (ctx) => _RecipherDialog(
-      start: (onProgress) => CloudReCipher(
-        backend,
-      ).run(from: from, to: to, onProgress: onProgress),
+      start: (onProgress) =>
+          CloudReCipher(backend)
+              .run(from: from, to: to, onProgress: onProgress),
     ),
   );
 

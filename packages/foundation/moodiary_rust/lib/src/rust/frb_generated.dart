@@ -18,11 +18,14 @@ import 'api/s3.dart';
 import 'api/text.dart';
 import 'api/webdav.dart';
 import 'api/zip.dart';
+
 import 'dart:async';
 import 'dart:convert';
+
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API

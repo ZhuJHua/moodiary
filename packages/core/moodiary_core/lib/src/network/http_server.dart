@@ -82,8 +82,9 @@ class HttpServerResponse {
       HttpServerResponse.text(404, 'not found');
 }
 
-typedef HttpServerHandler =
-    Future<HttpServerResponse> Function(HttpServerRequest request);
+typedef HttpServerHandler = Future<HttpServerResponse> Function(
+  HttpServerRequest request,
+);
 
 /// 应用内 HTTP 服务的统一端口。默认实现走 Rust(hyper)，见 `RustHttpServer`。
 /// 路由与业务在调用方的 [HttpServerHandler] 里；传输层（监听、请求体落盘、

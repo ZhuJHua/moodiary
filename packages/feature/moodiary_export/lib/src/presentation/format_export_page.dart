@@ -441,11 +441,7 @@ class _FormatExportPageState extends State<FormatExportPage> {
     title: title,
     actions: [
       for (final value in values)
-        MAction(
-          label: label(value),
-          value: value,
-          isPrimary: value == current,
-        ),
+        MAction(label: label(value), value: value, isPrimary: value == current),
     ],
   );
 

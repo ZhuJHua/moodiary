@@ -175,10 +175,9 @@ void main() {
       timeMs: atMs(100).millisecondsSinceEpoch,
       pushedBackends: const [],
     );
-    final sender = FakeMediaInfoStore(
-      [buildMediaInfo(fileName: 'audio-1.m4a', modifiedMs: 100)],
-      tombstones,
-    );
+    final sender = FakeMediaInfoStore([
+      buildMediaInfo(fileName: 'audio-1.m4a', modifiedMs: 100),
+    ], tombstones);
     final report = await engineOn(
       backend,
       mediaInfos: sender,
@@ -236,9 +235,7 @@ void main() {
         sink: sink,
         diaries: const [],
         categories: const [],
-        mediaInfos: [
-          buildMediaInfo(fileName: 'audio-1.m4a', modifiedMs: 100),
-        ],
+        mediaInfos: [buildMediaInfo(fileName: 'audio-1.m4a', modifiedMs: 100)],
         tombstones: const [],
         mediaBaseDir: '/nonexistent',
         remote: remote,

@@ -159,7 +159,9 @@ ThemeData buildMuiTheme({
     filledButtonTheme: FilledButtonThemeData(
       style: ButtonStyle(shape: buttonShape),
     ),
-    textButtonTheme: TextButtonThemeData(style: ButtonStyle(shape: buttonShape)),
+    textButtonTheme: TextButtonThemeData(
+      style: ButtonStyle(shape: buttonShape),
+    ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: ButtonStyle(shape: buttonShape),
     ),
@@ -169,7 +171,9 @@ ThemeData buildMuiTheme({
         elevation: const WidgetStatePropertyAll(0),
       ),
     ),
-    iconButtonTheme: IconButtonThemeData(style: ButtonStyle(shape: buttonShape)),
+    iconButtonTheme: IconButtonThemeData(
+      style: ButtonStyle(shape: buttonShape),
+    ),
 
     // SegmentedButton 选中态的 √（框架默认 Icons.check）。当前调用点都写了
     // showSelectedIcon: false，这里是给将来不写的那处兜底。
@@ -275,14 +279,15 @@ ThemeData buildMuiTheme({
     ),
 
     tooltipTheme: TooltipThemeData(
-      decoration: BoxDecoration(color: cs.inverseSurface, borderRadius: smRadius),
+      decoration: BoxDecoration(
+        color: cs.inverseSurface,
+        borderRadius: smRadius,
+      ),
       textStyle: text.bodySmall?.copyWith(color: cs.onInverseSurface),
     ),
 
     scrollbarTheme: ScrollbarThemeData(
-      thumbColor: WidgetStatePropertyAll(
-        cs.secondary.withValues(alpha: 0.4),
-      ),
+      thumbColor: WidgetStatePropertyAll(cs.secondary.withValues(alpha: 0.4)),
       thickness: const WidgetStatePropertyAll(4.0),
       radius: const Radius.circular(2.0),
       mainAxisMargin: 24.0,

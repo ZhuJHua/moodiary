@@ -89,7 +89,9 @@ void main() {
     await putLocal('image', 'b.jpg', payload);
     await engineOn(
       remote,
-      FakeDiaryStore([buildDiary(id: 'd2', images: const ['b.jpg'])]),
+      FakeDiaryStore([
+        buildDiary(id: 'd2', images: const ['b.jpg']),
+      ]),
     ).push();
     // 清掉本地那份，强制走下载。
     await File(p.join(root.path, 'image', 'b.jpg')).delete();
@@ -105,7 +107,9 @@ void main() {
     final backend = FakeRemoteBackend();
     await engineOn(
       backend,
-      FakeDiaryStore([buildDiary(id: 'd3', images: const ['c.jpg'])]),
+      FakeDiaryStore([
+        buildDiary(id: 'd3', images: const ['c.jpg']),
+      ]),
     ).push();
     // 模拟「流式 PUT 中途断网，服务端留下 0 字节对象」。
     await putLocal('image', 'c.jpg', const [1, 2, 3]);
@@ -157,7 +161,9 @@ void main() {
     final backend = FakeRemoteBackend();
     await engineOn(
       backend,
-      FakeDiaryStore([buildDiary(id: 'd5', images: const ['e.jpg'])]),
+      FakeDiaryStore([
+        buildDiary(id: 'd5', images: const ['e.jpg']),
+      ]),
     ).push();
 
     final tempDir = Directory(p.join(cacheRoot.path, 'sync-media'));

@@ -50,10 +50,7 @@ bool _isGray(Color color) {
 void main() {
   group('resolveColorScheme', () {
     for (final brightness in Brightness.values) {
-      final neutral = resolveColorScheme(
-        brightness,
-        const MuiAccent.neutral(),
-      );
+      final neutral = resolveColorScheme(brightness, const MuiAccent.neutral());
 
       test('$brightness 无彩档除 error 家族外全部是灰', () {
         // error 四件套刻意保留语义红：灰度 UI 里它是唯一还能喊「出事了」的颜色。
@@ -74,9 +71,9 @@ void main() {
         expect(_isGray(neutral.secondary), isTrue);
         expect(_isGray(neutral.tertiary), isTrue);
         // 焦点环/光标派生自 primary，无彩档下也必须是灰。
-        final cursor = buildMuiTheme(
-          brightness: brightness,
-        ).textSelectionTheme.cursorColor!;
+        final cursor = buildMuiTheme(brightness: brightness)
+            .textSelectionTheme
+            .cursorColor!;
         expect(_isGray(cursor), isTrue);
         expect(chromatic.length, greaterThan(1));
       });
@@ -181,9 +178,8 @@ void main() {
 
     test('结构性角色清单与断言辅助保持同步', () {
       expect(
-        _structuralOf(
-          resolveColorScheme(.light, const MuiAccent.neutral()),
-        ).keys,
+        _structuralOf(resolveColorScheme(.light, const MuiAccent.neutral()))
+            .keys,
         _structuralRoles,
       );
     });
@@ -252,9 +248,8 @@ void main() {
 
   group('MuiTypography', () {
     MuiTypography typo({MuiFontConfig font = const MuiFontConfig()}) =>
-        MuiTheme.viewOf(
-          buildMuiTheme(brightness: Brightness.light, font: font),
-        ).typography;
+        MuiTheme.viewOf(buildMuiTheme(brightness: Brightness.light, font: font))
+            .typography;
 
     test('字重与 fontVariations 一致 —— 只改一个在可变字体下会被吃掉', () {
       const font = MuiFontConfig(

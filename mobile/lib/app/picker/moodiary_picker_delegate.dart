@@ -291,9 +291,8 @@ class MoodiaryPickerDelegate
         PhotoManager.openSetting();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-        ).add(EdgeInsets.only(bottom: bottomPadding)),
+        padding: const EdgeInsets.symmetric(horizontal: 12)
+            .add(EdgeInsets.only(bottom: bottomPadding)),
         height: permissionLimitedBarHeight + bottomPadding,
         color: _cs.surfaceContainerHigh,
         child: Row(

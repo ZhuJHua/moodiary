@@ -81,7 +81,9 @@ class MediaInfoRepository {
     bool fromSync = false,
   }) async {
     // 复活闸门：同 key 的同步墓碑连带清除（同步下载 / 重建同名文件场景）。
-    final tombstoneId = fastHash(SyncTombstone.mediaInfoKey(mediaInfo.fileName));
+    final tombstoneId = fastHash(
+      SyncTombstone.mediaInfoKey(mediaInfo.fileName),
+    );
     await _isar.writeAsync((isar) {
       isar.mediaInfos.put(mediaInfo);
       isar.syncTombstones.delete(tombstoneId);

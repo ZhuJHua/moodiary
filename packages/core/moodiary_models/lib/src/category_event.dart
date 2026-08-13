@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 import 'category.dart';
 
 part 'category_event.freezed.dart';

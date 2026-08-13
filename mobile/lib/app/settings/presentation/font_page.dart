@@ -9,7 +9,6 @@ import 'package:mui/mui.dart';
 class FontPage extends ConsumerStatefulWidget {
   const FontPage({super.key});
 
-
   @override
   ConsumerState<FontPage> createState() => _FontPageState();
 }

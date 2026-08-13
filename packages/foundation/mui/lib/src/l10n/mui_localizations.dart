@@ -70,7 +70,8 @@ class MuiLocalizationsZh extends MuiLocalizations {
   String get toastError => '出错了';
 }
 
-class _MuiLocalizationsDelegate extends LocalizationsDelegate<MuiLocalizations> {
+class _MuiLocalizationsDelegate
+    extends LocalizationsDelegate<MuiLocalizations> {
   const _MuiLocalizationsDelegate();
 
   /// 一律接受：未支持的语种在 [load] 里回落到英文，而不是让整个 `Localizations`

@@ -444,9 +444,7 @@ void main() {
       final controller = TextEditingController(text: 'moodiary');
       addTearDown(controller.dispose);
       await tester.pumpWidget(
-        fieldHost(
-          MField(controller: controller, label: '用户名', enabled: false),
-        ),
+        fieldHost(MField(controller: controller, label: '用户名', enabled: false)),
       );
       expect(find.byIcon(LucideIcons.x), findsNothing);
     });

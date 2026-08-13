@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+
 import 'assistant_provider_type.dart';
 import 'llm_model_preset.dart';
 

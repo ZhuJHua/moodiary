@@ -86,7 +86,10 @@ class _AssistantSoulPageState extends State<AssistantSoulPage> {
                           Expanded(
                             child: Text(
                               l10n.assistantSoulNote,
-                              style: context.theme.typography.bodySmall
+                              style: context
+                                  .theme
+                                  .typography
+                                  .bodySmall
                                   .onSurfaceVariant,
                             ),
                           ),

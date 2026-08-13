@@ -11,10 +11,7 @@ class WebDavFormSheet extends StatefulWidget {
   State<WebDavFormSheet> createState() => _WebDavFormSheetState();
 
   static Future<bool?> show(BuildContext context) {
-    return MSheet.show<bool>(
-      context,
-      builder: (_) => const WebDavFormSheet(),
-    );
+    return MSheet.show<bool>(context, builder: (_) => const WebDavFormSheet());
   }
 }
 
