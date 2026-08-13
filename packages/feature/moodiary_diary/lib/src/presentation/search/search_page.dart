@@ -435,7 +435,7 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '升级后需重建索引，旧日记正文才能被搜索到',
+                  context.l10n.diary.searchReindexHint,
                   style:
                       context.theme.typography.bodySmall.onSecondaryContainer,
                 ),
@@ -451,7 +451,10 @@ class _SearchIndexBannerState extends State<_SearchIndexBanner> {
                   ),
                 )
               else
-                TextButton(onPressed: _rebuild, child: const Text('重建')),
+                TextButton(
+                  onPressed: _rebuild,
+                  child: Text(context.l10n.diary.searchReindex),
+                ),
             ],
           ),
         );

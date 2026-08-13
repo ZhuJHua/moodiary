@@ -23,7 +23,7 @@ class CategoryPickerSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(orderedCategoriesProvider);
     return MSheetScaffold<_PickerResult>(
-      title: '选择分类',
+      title: context.l10n.editor.pickCategory,
       icon: LucideIcons.folder,
       actions: [MAction(label: context.l10n.common.cancel)],
       child: async.buildLoading(
@@ -32,7 +32,10 @@ class CategoryPickerSheet extends ConsumerWidget {
           crossAxisAlignment: .stretch,
           children: [
             MSheetOptionTile<String?>(
-              option: const MSheetOption<String?>(value: null, label: '不分类'),
+              option: MSheetOption<String?>(
+                value: null,
+                label: context.l10n.editor.noCategory,
+              ),
               selected: currentCategoryId == null,
               onTap: () => _pick(context, null),
             ),

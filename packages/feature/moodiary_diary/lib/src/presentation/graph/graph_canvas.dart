@@ -4,7 +4,6 @@ import 'dart:ui' as ui show Vertices;
 
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-
 import 'package:moodiary_diary/src/presentation/graph/graph_scene.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_style.dart';
 import 'package:mui/mui.dart';

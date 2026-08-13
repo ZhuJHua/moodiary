@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -12,13 +13,13 @@ class RecyclePage extends ConsumerWidget {
     final async = ref.watch(recycleBinDiariesProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('回收站'),
+        title: Text(context.l10n.diary.recycleTitle),
         actions: [
           async.maybeWhen(
             data: (list) => list.isEmpty
                 ? const SizedBox.shrink()
                 : IconButton(
-                    tooltip: '清空回收站',
+                    tooltip: context.l10n.diary.recycleClear,
                     icon: const Icon(LucideIcons.eraser),
                     onPressed: () => _onClear(context, ref, list.length),
                   ),
@@ -58,9 +59,9 @@ class RecyclePage extends ConsumerWidget {
         .read(recycleBinDiariesProvider.notifier)
         .restore(diary);
     if (ok) {
-      toast.success(message: '已恢复');
+      toast.success(message: l10n.diary.recycleRestored);
     } else {
-      toast.error(message: '恢复失败');
+      toast.error(message: l10n.diary.recycleRestoreFailed);
     }
   }
 
@@ -71,9 +72,9 @@ class RecyclePage extends ConsumerWidget {
   ) async {
     final confirmed = await MAlert.confirm(
       context,
-      title: '彻底删除？',
-      message: '此操作不可恢复，日记将永久消失。',
-      confirmLabel: '彻底删除',
+      title: l10n.diary.recyclePurgeTitle,
+      message: l10n.diary.recyclePurgeMessage,
+      confirmLabel: l10n.diary.recyclePurgeConfirm,
       isDestructive: true,
     );
     if (!confirmed) return;
@@ -81,23 +82,23 @@ class RecyclePage extends ConsumerWidget {
         .read(recycleBinDiariesProvider.notifier)
         .permanentDelete(diary.isarId);
     if (ok) {
-      toast.success(message: '已永久删除');
+      toast.success(message: l10n.diary.recyclePurged);
     } else {
-      toast.error(message: '删除失败');
+      toast.error(message: l10n.diary.recyclePurgeFailed);
     }
   }
 
   Future<void> _onClear(BuildContext context, WidgetRef ref, int total) async {
     final confirmed = await MAlert.confirm(
       context,
-      title: '清空回收站？',
-      message: '将永久删除 $total 条日记。此操作不可恢复。',
-      confirmLabel: '清空',
+      title: l10n.diary.recycleClearTitle,
+      message: l10n.diary.recycleClearMessage(count: total),
+      confirmLabel: l10n.diary.recycleClearConfirm,
       isDestructive: true,
     );
     if (!confirmed) return;
     final count = await ref.read(recycleBinDiariesProvider.notifier).clear();
-    toast.success(message: '已清空 $count 条');
+    toast.success(message: l10n.diary.recycleCleared(count: count));
   }
 }
 
@@ -114,7 +115,10 @@ class _Empty extends StatelessWidget {
             color: context.theme.colors.onSurfaceVariant,
           ),
           const SizedBox(height: 12),
-          Text('回收站为空', style: context.theme.typography.titleMedium.onSurface),
+          Text(
+            context.l10n.diary.recycleEmpty,
+            style: context.theme.typography.titleMedium.onSurface,
+          ),
         ],
       ),
     );
@@ -144,7 +148,7 @@ class _RecycleTile extends StatelessWidget {
           crossAxisAlignment: .start,
           children: [
             Text(
-              diary.title.isEmpty ? '(无标题)' : diary.title,
+              diary.title.isEmpty ? context.l10n.common.untitled : diary.title,
               style: typo.titleMedium.onSurface,
               maxLines: 1,
               overflow: .ellipsis,
@@ -170,14 +174,14 @@ class _RecycleTile extends StatelessWidget {
                 TextButton.icon(
                   onPressed: onRestore,
                   icon: const Icon(LucideIcons.undo2),
-                  label: const Text('恢复'),
+                  label: Text(context.l10n.diary.recycleRestore),
                 ),
                 const SizedBox(width: 4),
                 TextButton.icon(
                   onPressed: onDelete,
                   style: TextButton.styleFrom(foregroundColor: colors.error),
                   icon: const Icon(LucideIcons.trash2),
-                  label: const Text('彻底删除'),
+                  label: Text(context.l10n.diary.recyclePurgeConfirm),
                 ),
               ],
             ),

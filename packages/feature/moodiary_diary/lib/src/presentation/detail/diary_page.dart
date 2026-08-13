@@ -326,9 +326,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
   Future<void> _onAddTag(Diary current) async {
     final tag = await MAlert.prompt(
       context,
-      title: '添加标签',
-      hintText: '标签名',
-      confirmLabel: '添加',
+      title: l10n.diary.addTag,
+      hintText: l10n.diary.tagNameHint,
+      confirmLabel: l10n.diary.add,
     );
     if (tag == null || tag.isEmpty || !mounted) return;
     if (current.tags.contains(tag)) return;
@@ -355,11 +355,13 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     final result = await notifier.fetchWeather(context);
     if (!mounted) return;
     if (result == null) {
-      toast.error(message: '获取天气失败：请检查实验室内的和风天气配置');
+      toast.error(message: l10n.diary.weatherFailed);
     } else {
       toast.success(
-        message:
-            '已获取天气：${result.length >= 3 ? result[2] : ''} ${result.length >= 2 ? result[1] : ''}°C',
+        message: l10n.diary.weatherFetched(
+          weather: result.length >= 3 ? result[2] : '',
+          temperature: result.length >= 2 ? result[1] : '',
+        ),
       );
       _dirty = true;
       _scheduleAutoSave();
@@ -431,17 +433,17 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
               ? Row(
                   children: [
                     IconButton(
-                      tooltip: '主页',
+                      tooltip: context.l10n.diary.home,
                       icon: const Icon(LucideIcons.house),
                       onPressed: () => Navigator.of(context).pop(),
                     ),
                     IconButton(
-                      tooltip: '后退',
+                      tooltip: context.l10n.diary.goBack,
                       icon: const Icon(LucideIcons.arrowLeft),
                       onPressed: _hops.atRoot ? null : () => _goHistory(-1),
                     ),
                     IconButton(
-                      tooltip: '前进',
+                      tooltip: context.l10n.diary.goForward,
                       icon: const Icon(LucideIcons.arrowRight),
                       onPressed: _hops.peek(1) == null
                           ? null
@@ -455,7 +457,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
             // 编辑态：✓ 保存并退回只读预览（自动保存仍在，这个是显式入口）。
             if (diary != null && _mode == .edit)
               IconButton(
-                tooltip: '保存',
+                tooltip: context.l10n.common.save,
                 icon: const Icon(LucideIcons.check),
                 onPressed: _saveAndExit,
               ),
@@ -464,20 +466,20 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
                 _mode == .read &&
                 DiaryType.fromValue(diary.type).isEditable)
               IconButton(
-                tooltip: '编辑',
+                tooltip: context.l10n.diary.edit,
                 icon: const Icon(LucideIcons.squarePen),
                 onPressed: _enterEdit,
               ),
             // 分享仅在只读预览态显示（编辑态不出现）。
             if (diary != null && _mode == .read)
               IconButton(
-                tooltip: '分享',
+                tooltip: context.l10n.diary.share,
                 icon: const Icon(LucideIcons.share),
                 onPressed: () => ShareRoute(diaryId: diary.id).push(context),
               ),
             if (headings.isNotEmpty)
               IconButton(
-                tooltip: '目录',
+                tooltip: context.l10n.diary.outline,
                 icon: const Icon(LucideIcons.tableOfContents),
                 onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
               ),
@@ -521,7 +523,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       if (showWords)
         _pillSeg(
           LucideIcons.text,
-          '${diary.contentText.runes.length} 字',
+          context.l10n.diary.wordCount(count: diary.contentText.runes.length),
           typo.bodySmall.onSurfaceVariant,
         ),
       if (showTime)
@@ -583,17 +585,28 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
               child: CircularProgressIndicator(strokeWidth: 1.6),
             ),
             const SizedBox(width: 4),
-            Text('保存中', style: typo.bodySmall.onSurfaceVariant),
+            Text(
+              context.l10n.diary.saving,
+              style: typo.bodySmall.onSurfaceVariant,
+            ),
           ],
         );
       case 'saved':
-        return _pillSeg(LucideIcons.circleCheck, '已保存', typo.bodySmall.primary);
+        return _pillSeg(
+          LucideIcons.circleCheck,
+          context.l10n.diary.saved,
+          typo.bodySmall.primary,
+        );
       case 'failed':
-        return _pillSeg(LucideIcons.circleAlert, '未保存', typo.bodySmall.error);
+        return _pillSeg(
+          LucideIcons.circleAlert,
+          context.l10n.diary.unsaved,
+          typo.bodySmall.error,
+        );
       default:
         return _pillSeg(
           LucideIcons.cloudCheck,
-          '自动保存',
+          context.l10n.diary.autoSaved,
           typo.bodySmall.onSurfaceVariant,
         );
     }
@@ -613,10 +626,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
       await _flushAutoSave();
       if (!mounted) return;
       if (_saveStatus != 'saved') {
-        toast.error(message: '保存失败');
+        toast.error(message: l10n.diary.saveFailed);
         return;
       }
-      toast.success(message: '已保存');
+      toast.success(message: l10n.diary.saved);
     }
     if (!mounted) return;
     setState(() => _mode = .read);
@@ -728,7 +741,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage>
     await _flushAutoSave();
     if (!mounted) return false;
     if (_saveStatus == 'failed') {
-      toast.error(message: '保存失败');
+      toast.error(message: l10n.diary.saveFailed);
       return false;
     }
     return true;
@@ -869,7 +882,10 @@ class _TocDrawer extends StatelessWidget {
                     color: colors.primary,
                   ),
                   const SizedBox(width: 10),
-                  Text('目录', style: typo.titleMedium.emphasized.onSurface),
+                  Text(
+                    context.l10n.diary.outline,
+                    style: typo.titleMedium.emphasized.onSurface,
+                  ),
                   const Spacer(),
                   Container(
                     padding: const .symmetric(horizontal: 8, vertical: 2),
@@ -895,7 +911,9 @@ class _TocDrawer extends StatelessWidget {
                     itemBuilder: (context, i) {
                       final h = headings[i];
                       final isActive = active == i;
-                      final label = h.text.trim().isEmpty ? '(无标题)' : h.text;
+                      final label = h.text.trim().isEmpty
+                          ? context.l10n.common.untitled
+                          : h.text;
                       final level1 = h.level <= 1;
                       final base = level1 ? typo.bodyMedium : typo.bodySmall;
                       final weighted = (isActive || level1)
@@ -1274,13 +1292,13 @@ class _DetailSheet extends ConsumerWidget {
       getCategoryProvider(id: diary.categoryId ?? ''),
     );
     final categoryLabel = diary.categoryId == null
-        ? '不分类'
+        ? context.l10n.editor.noCategory
         : categoryAsync.maybeWhen(
-            data: (c) => c?.categoryName ?? '未知分类',
-            orElse: () => '加载中…',
+            data: (c) => c?.categoryName ?? context.l10n.diary.unknownCategory,
+            orElse: () => context.l10n.diary.loading,
           );
     return MSheetScaffold<void>(
-      title: '日记信息',
+      title: context.l10n.diary.infoTitle,
       icon: LucideIcons.info,
       actions: [MAction(label: context.l10n.common.ok, isPrimary: true)],
       child: Column(
@@ -1289,7 +1307,7 @@ class _DetailSheet extends ConsumerWidget {
         children: [
           SettingListTile(
             isFirst: true,
-            title: '日期与时间',
+            title: context.l10n.diary.infoDateTime,
             subtitle: dateLabel,
             trailing: Row(
               mainAxisSize: .min,
@@ -1307,17 +1325,17 @@ class _DetailSheet extends ConsumerWidget {
             ),
           ),
           SettingListTile(
-            title: '天气',
+            title: context.l10n.diary.infoWeather,
             subtitle: hasWeather
                 ? '${diary.weather[2]} ${diary.weather[1]}°C'
-                : '未获取',
+                : context.l10n.diary.weatherNotFetched,
             trailing: IconButton.filledTonal(
               onPressed: onFetchWeather,
               icon: const Icon(LucideIcons.mapPin),
             ),
           ),
           SettingListTile(
-            title: '分类',
+            title: context.l10n.common.category,
             subtitle: categoryLabel,
             trailing: IconButton.filledTonal(
               onPressed: onPickCategory,
@@ -1325,7 +1343,7 @@ class _DetailSheet extends ConsumerWidget {
             ),
           ),
           SettingListTile(
-            title: '标签',
+            title: context.l10n.diary.infoTags,
             subtitle: diary.tags.isEmpty
                 ? null
                 : Padding(
@@ -1351,7 +1369,7 @@ class _DetailSheet extends ConsumerWidget {
           ),
           SettingListTile(
             isLast: true,
-            title: '心情',
+            title: context.l10n.diary.infoMood,
             subtitle: _MoodSlider(provider: provider, onChanged: onChangeMood),
           ),
         ],

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -18,7 +19,7 @@ class AnalysePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(allShownDiariesProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('数据分析')),
+      appBar: AppBar(title: Text(context.l10n.diary.analyseTitle)),
       body: async.buildLoading(
         data: (diaries) => _AnalyseBody(diaries: diaries),
       ),
@@ -33,7 +34,7 @@ class _AnalyseBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (diaries.isEmpty) {
-      return const Center(child: Text('暂无日记，去写一篇吧！'));
+      return Center(child: Text(context.l10n.diary.analyseEmpty));
     }
     final now = DateTime.now();
     final thisMonth = diaries
@@ -49,19 +50,27 @@ class _AnalyseBody extends StatelessWidget {
       children: [
         _StatGrid(
           items: [
-            ('日记总数', diaries.length.toString(), LucideIcons.book),
-            ('本月', thisMonth.toString(), LucideIcons.calendarDays),
             (
-              '心情均值',
+              context.l10n.diary.analyseTotal,
+              diaries.length.toString(),
+              LucideIcons.book,
+            ),
+            (
+              context.l10n.diary.analyseThisMonth,
+              thisMonth.toString(),
+              LucideIcons.calendarDays,
+            ),
+            (
+              context.l10n.diary.analyseMoodAverage,
               '${(moodAvg * 100).toStringAsFixed(0)}%',
               LucideIcons.smile,
             ),
-            ('连续天数', '$streak', LucideIcons.flame),
+            (context.l10n.diary.analyseStreak, '$streak', LucideIcons.flame),
           ],
         ),
         const SizedBox(height: 24),
         Text(
-          '近 6 个月写作量',
+          context.l10n.diary.analyseLast6Months,
           style: context.theme.typography.titleMedium.onSurface,
         ),
         const SizedBox(height: 12),
@@ -78,7 +87,7 @@ class _AnalyseBody extends StatelessWidget {
     return [
       for (final m in months)
         (
-          '${m.month}月',
+          l10n.diary.analyseMonth(month: m.month),
           diaries.where((d) => _sameMonth(d.time.toLocal(), m)).length,
         ),
     ];

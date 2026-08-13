@@ -1,5 +1,6 @@
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_editor/src/data/editor_migration_service.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
@@ -47,14 +48,9 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
     if (pending == null || pending.isEmpty) return;
     final confirmed = await MAlert.confirm(
       context,
-      title: '迁移到新编辑器',
-      message:
-          '将 ${pending.length} 篇旧编辑器日记转换为新编辑器格式。'
-          '\n\n· 文字、标题、列表、引用、代码、图片、音频、视频都会保留；'
-          '\n· 文字颜色 / 高亮 / 对齐无法在新格式中表示，会被丢弃；'
-          '\n· 迁移只改变本机的存储格式，不会作为编辑同步到其他设备（多设备请分别迁移）；'
-          '\n· 转换前会备份原文，可随时回退。',
-      confirmLabel: '开始迁移',
+      title: l10n.editor.migrationTitle,
+      message: l10n.editor.migrationMessage(count: pending.length),
+      confirmLabel: l10n.editor.migrationStart,
     );
     if (!confirmed) return;
     setState(() {
@@ -73,8 +69,11 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       if (!mounted) return;
       toast.success(
         message: report.failed == 0
-            ? '已迁移 ${report.migrated} 篇'
-            : '迁移 ${report.migrated} 篇，${report.failed} 篇失败（已跳过，原文未动）',
+            ? l10n.editor.migrationDone(count: report.migrated)
+            : l10n.editor.migrationPartial(
+                count: report.migrated,
+                failed: report.failed,
+              ),
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -87,7 +86,9 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       final ok = await EditorMigrationService.migrate(diary);
       await _load();
       if (!mounted) return;
-      ok ? toast.success(message: '已迁移') : toast.error(message: '该篇解析失败，已跳过');
+      ok
+          ? toast.success(message: l10n.editor.migrationOneDone)
+          : toast.error(message: l10n.editor.migrationOneFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -96,11 +97,9 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   Future<void> _revert(({MigrationBackup backup, Diary? diary}) item) async {
     final confirmed = await MAlert.confirm(
       context,
-      title: '回退迁移',
-      message:
-          '将这篇恢复为迁移前的旧编辑器格式，并删除备份。'
-          '\n\n注意：迁移之后对该篇做的修改会丢失。',
-      confirmLabel: '回退',
+      title: l10n.editor.rollbackTitle,
+      message: l10n.editor.rollbackMessage,
+      confirmLabel: l10n.editor.rollbackConfirm,
     );
     if (!confirmed) return;
     setState(() => _busy = true);
@@ -108,7 +107,9 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
       final ok = await EditorMigrationService.revert(item.backup.id);
       await _load();
       if (!mounted) return;
-      ok ? toast.success(message: '已回退') : toast.error(message: '回退失败');
+      ok
+          ? toast.success(message: l10n.editor.rollbackDone)
+          : toast.error(message: l10n.editor.rollbackFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -118,18 +119,20 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
   Widget build(BuildContext context) {
     final pending = _pending;
     return Scaffold(
-      appBar: AppBar(title: const Text('迁移到新编辑器')),
+      appBar: AppBar(title: Text(context.l10n.editor.migrationTitle)),
       bottomNavigationBar: _bottomBar(pending),
       body: pending == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const .symmetric(vertical: 8),
               children: [
-                _section('待迁移（${pending.length}）'),
+                _section(
+                  context.l10n.editor.migrationPending(count: pending.length),
+                ),
                 if (pending.isEmpty)
-                  const Padding(
-                    padding: .fromLTRB(16, 8, 16, 16),
-                    child: Text('没有需要迁移的旧编辑器日记 🎉'),
+                  Padding(
+                    padding: const .fromLTRB(16, 8, 16, 16),
+                    child: Text(context.l10n.editor.migrationEmpty),
                   )
                 else
                   for (final d in pending)
@@ -138,25 +141,31 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
                       title: Text(_label(d), maxLines: 1, overflow: .ellipsis),
                       subtitle: Text(_date(d.time)),
                       trailing: IconButton(
-                        tooltip: '迁移这一篇',
+                        tooltip: context.l10n.editor.migrateThisOne,
                         icon: const Icon(LucideIcons.arrowRight),
                         onPressed: _busy ? null : () => _migrateOne(d),
                       ),
                     ),
                 if (_backups.isNotEmpty) ...[
-                  _section('已迁移（可回退）'),
+                  _section(context.l10n.editor.migrationMigrated),
                   for (final item in _backups)
                     ListTile(
                       leading: const Icon(LucideIcons.history),
                       title: Text(
-                        item.diary == null ? '(已删除)' : _label(item.diary!),
+                        item.diary == null
+                            ? context.l10n.editor.diaryDeleted
+                            : _label(item.diary!),
                         maxLines: 1,
                         overflow: .ellipsis,
                       ),
-                      subtitle: Text('迁移于 ${_date(item.backup.savedAt)}'),
+                      subtitle: Text(
+                        context.l10n.editor.migratedAt(
+                          date: _date(item.backup.savedAt),
+                        ),
+                      ),
                       trailing: TextButton(
                         onPressed: _busy ? null : () => _revert(item),
-                        child: const Text('回退'),
+                        child: Text(context.l10n.editor.rollbackConfirm),
                       ),
                     ),
                 ],
@@ -178,13 +187,20 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
                     value: _total == 0 ? null : _done / _total,
                   ),
                   const SizedBox(height: 6),
-                  Text('正在迁移 $_done / $_total'),
+                  Text(
+                    context.l10n.editor.migrationProgress(
+                      done: _done,
+                      total: _total,
+                    ),
+                  ),
                 ],
               )
             : FilledButton.icon(
                 onPressed: _migrateAll,
                 icon: const Icon(LucideIcons.wandSparkles),
-                label: Text('全部迁移（${pending.length}）'),
+                label: Text(
+                  context.l10n.editor.migrateAll(count: pending.length),
+                ),
               ),
       ),
     );
@@ -201,7 +217,7 @@ class _EditorMigrationPageState extends State<EditorMigrationPage> {
     final t = d.title.trim();
     if (t.isNotEmpty) return t;
     final c = d.contentText.trim();
-    if (c.isEmpty) return '(空日记)';
+    if (c.isEmpty) return l10n.editor.emptyDiary;
     return c.length > 30 ? '${c.substring(0, 30)}…' : c;
   }
 

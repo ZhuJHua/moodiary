@@ -24,7 +24,7 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
         ref.watch(categoryDiaryCountsProvider).value?.byCategory ??
         const <String, int>{};
     return Scaffold(
-      appBar: AppBar(title: const Text('分类管理')),
+      appBar: AppBar(title: Text(context.l10n.diary.categoryManagerTitle)),
       floatingActionButton: FloatingActionButton(
         heroTag: 'categoryManagerFab',
         onPressed: _onAddCategory,
@@ -150,9 +150,9 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
         );
     if (!mounted) return;
     if (ok) {
-      toast.success(message: '已创建「${draft.name}」');
+      toast.success(message: l10n.diary.categoryCreated(name: draft.name));
     } else {
-      toast.error(message: '创建失败');
+      toast.error(message: l10n.diary.categoryCreateFailed);
     }
   }
 
@@ -180,18 +180,18 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
         );
     if (!mounted) return;
     if (ok) {
-      toast.success(message: '已重命名为「${draft.name}」');
+      toast.success(message: l10n.diary.categoryRenamed(name: draft.name));
     } else {
-      toast.error(message: '重命名失败');
+      toast.error(message: l10n.diary.categoryRenameFailed);
     }
   }
 
   Future<void> _onDelete(Category category) async {
     final confirmed = await MAlert.confirm(
       context,
-      title: '删除分类？',
-      message: '"${category.categoryName}" 下若仍有日记将无法删除。本操作不会影响日记本身。',
-      confirmLabel: '删除',
+      title: l10n.diary.categoryDeleteTitle,
+      message: l10n.diary.categoryDeleteMessage(name: category.categoryName),
+      confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
     if (!confirmed) return;
@@ -200,9 +200,9 @@ class _CategoryManagerPageState extends ConsumerState<CategoryManagerPage> {
         .deleteCategory(category.id);
     if (!mounted) return;
     if (ok) {
-      toast.success(message: '已删除');
+      toast.success(message: l10n.diary.categoryDeleted);
     } else {
-      toast.error(message: '分类下仍有日记，删除失败');
+      toast.error(message: l10n.diary.categoryDeleteBlocked);
     }
   }
 }
@@ -264,12 +264,15 @@ class _Empty extends StatelessWidget {
             color: context.theme.colors.onSurfaceVariant,
           ),
           const SizedBox(height: 12),
-          Text('暂无分类', style: context.theme.typography.titleMedium.onSurface),
+          Text(
+            context.l10n.diary.categoryEmpty,
+            style: context.theme.typography.titleMedium.onSurface,
+          ),
           const SizedBox(height: 8),
           FilledButton.icon(
             onPressed: onAdd,
             icon: const Icon(LucideIcons.plus),
-            label: const Text('新建分类'),
+            label: Text(context.l10n.diary.categoryNew),
           ),
         ],
       ),
@@ -316,7 +319,9 @@ class _CategoryTile extends StatelessWidget {
           style: context.theme.typography.titleMedium.onSurface,
         ),
         subtitle: Text(
-          count > 0 ? '$count 篇日记' : '暂无日记',
+          count > 0
+              ? context.l10n.diary.categoryDiaryCount(count: count)
+              : context.l10n.diary.categoryNoDiary,
           style: context.theme.typography.labelSmall.onSurfaceVariant,
         ),
         trailing: Row(
@@ -332,15 +337,15 @@ class _CategoryTile extends StatelessWidget {
                     onDelete();
                 }
               },
-              entries: const [
+              entries: [
                 MMenuEntry(
                   value: 'rename',
-                  label: '重命名',
+                  label: context.l10n.diary.rename,
                   icon: LucideIcons.squarePen,
                 ),
                 MMenuEntry(
                   value: 'delete',
-                  label: '删除',
+                  label: context.l10n.common.delete,
                   icon: LucideIcons.trash2,
                   isDestructive: true,
                 ),
@@ -378,7 +383,7 @@ class CategoryDraft {
   const CategoryDraft({required this.name, required this.color});
 }
 
-const _emptyNameError = '分类名称不能为空';
+String get _emptyNameError => l10n.diary.categoryNameEmpty;
 
 Future<CategoryDraft?> showCategoryEditor(
   BuildContext context, {
@@ -466,7 +471,7 @@ class _CategoryEditorContentState extends State<_CategoryEditorContent> {
           }),
           style: context.theme.typography.bodyLarge.onSurface,
           decoration: InputDecoration(
-            hintText: '分类名称',
+            hintText: context.l10n.diary.categoryNameHint,
             errorText: _edited && widget.draft.name.trim().isEmpty
                 ? _emptyNameError
                 : null,

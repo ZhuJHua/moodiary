@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
@@ -31,7 +32,7 @@ class MapPage extends ConsumerWidget {
     final async = ref.watch(diariesWithPositionProvider);
     final tiandituKey = MoodiaryKVs.tiandituKey.get() ?? '';
     return Scaffold(
-      appBar: AppBar(title: const Text('足迹')),
+      appBar: AppBar(title: Text(context.l10n.diary.mapTitle)),
       body: async.buildLoading(
         data: (diaries) {
           final initialCenter = diaries.isNotEmpty

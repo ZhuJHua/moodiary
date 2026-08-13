@@ -4,6 +4,7 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:mui/mui.dart';
 
 import 'editor_local_server.dart';
@@ -252,10 +253,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
     // 非支持平台（Linux）：给错误占位而非崩溃。
     if (!_platformSupported) {
       if (mounted) {
-        setState(
-          () => _loadError =
-              '当前平台暂不支持编辑器 / Editor not supported on this platform.',
-        );
+        setState(() => _loadError = l10n.editor.unsupportedPlatform);
       }
       return;
     }
@@ -679,7 +677,7 @@ class _MoodiaryEditorState extends State<MoodiaryEditor> {
               child: Padding(
                 padding: const .all(24),
                 child: Text(
-                  '编辑器加载失败 / Failed to load editor.\n$loadError',
+                  context.l10n.editor.loadFailed(error: loadError),
                   textAlign: .center,
                 ),
               ),

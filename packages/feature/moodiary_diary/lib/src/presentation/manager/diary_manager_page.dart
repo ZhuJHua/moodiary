@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -23,11 +24,15 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selected.isEmpty ? '日记管理' : '已选 ${_selected.length}'),
+        title: Text(
+          _selected.isEmpty
+              ? context.l10n.diary.managerTitle
+              : context.l10n.diary.managerSelected(count: _selected.length),
+        ),
         actions: [
           if (_selected.isNotEmpty)
             IconButton(
-              tooltip: '批量移入回收站',
+              tooltip: context.l10n.diary.managerBatchRecycle,
               icon: const Icon(LucideIcons.trash2),
               onPressed: () => _onBatchSoftDelete(provider, async),
             ),
@@ -47,7 +52,7 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
             child: async.buildLoading(
               data: (diaries) {
                 if (diaries.isEmpty) {
-                  return const Center(child: Text('当前筛选下没有日记'));
+                  return Center(child: Text(context.l10n.diary.managerEmpty));
                 }
                 return ListView.separated(
                   itemBuilder: (context, index) {
@@ -56,7 +61,9 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
                     return CheckboxListTile(
                       value: picked,
                       title: Text(
-                        d.title.isEmpty ? '(无标题)' : d.title,
+                        d.title.isEmpty
+                            ? context.l10n.common.untitled
+                            : d.title,
                         maxLines: 1,
                         overflow: .ellipsis,
                       ),
@@ -90,9 +97,9 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
     final picked = _selected.toList();
     final confirmed = await MAlert.confirm(
       context,
-      title: '批量移入回收站？',
-      message: '共 ${picked.length} 条日记将被移入回收站，可在「回收站」内恢复。',
-      confirmLabel: '移入回收站',
+      title: l10n.diary.managerRecycleTitle,
+      message: l10n.diary.managerRecycleMessage(count: picked.length),
+      confirmLabel: l10n.diary.managerRecycleConfirm,
       isDestructive: true,
     );
     if (!confirmed) return;
@@ -110,7 +117,9 @@ class _DiaryManagerPageState extends ConsumerState<DiaryManagerPage> {
     }
     if (!mounted) return;
     setState(_selected.clear);
-    toast.success(message: '已移入回收站 $ok / ${picked.length}');
+    toast.success(
+      message: l10n.diary.managerRecycled(done: ok, total: picked.length),
+    );
   }
 }
 
@@ -135,7 +144,7 @@ class _FilterBar extends StatelessWidget {
           padding: const .symmetric(horizontal: 12, vertical: 8),
           children: [
             ChoiceChip(
-              label: const Text('全部'),
+              label: Text(context.l10n.diary.managerAll),
               selected: current == null,
               onSelected: (_) => onChanged(null),
             ),

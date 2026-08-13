@@ -784,6 +784,234 @@ class Translations$diary$zh {
 
 	/// zh: '近 7 天'
 	String get rangeLast7 => '近 7 天';
+
+	/// zh: '分类管理'
+	String get categoryManagerTitle => '分类管理';
+
+	/// zh: '已创建「{name}」'
+	String categoryCreated({required Object name}) => '已创建「${name}」';
+
+	/// zh: '创建失败'
+	String get categoryCreateFailed => '创建失败';
+
+	/// zh: '已重命名为「{name}」'
+	String categoryRenamed({required Object name}) => '已重命名为「${name}」';
+
+	/// zh: '重命名失败'
+	String get categoryRenameFailed => '重命名失败';
+
+	/// zh: '删除分类？'
+	String get categoryDeleteTitle => '删除分类？';
+
+	/// zh: '「{name}」下若仍有日记将无法删除。本操作不会影响日记本身。'
+	String categoryDeleteMessage({required Object name}) => '「${name}」下若仍有日记将无法删除。本操作不会影响日记本身。';
+
+	/// zh: '已删除'
+	String get categoryDeleted => '已删除';
+
+	/// zh: '分类下仍有日记，删除失败'
+	String get categoryDeleteBlocked => '分类下仍有日记，删除失败';
+
+	/// zh: '暂无分类'
+	String get categoryEmpty => '暂无分类';
+
+	/// zh: '新建分类'
+	String get categoryNew => '新建分类';
+
+	/// zh: '{count} 篇日记'
+	String categoryDiaryCount({required Object count}) => '${count} 篇日记';
+
+	/// zh: '暂无日记'
+	String get categoryNoDiary => '暂无日记';
+
+	/// zh: '重命名'
+	String get rename => '重命名';
+
+	/// zh: '分类名称'
+	String get categoryNameHint => '分类名称';
+
+	/// zh: '分类名称不能为空'
+	String get categoryNameEmpty => '分类名称不能为空';
+
+	/// zh: '回收站'
+	String get recycleTitle => '回收站';
+
+	/// zh: '清空回收站'
+	String get recycleClear => '清空回收站';
+
+	/// zh: '已恢复'
+	String get recycleRestored => '已恢复';
+
+	/// zh: '恢复失败'
+	String get recycleRestoreFailed => '恢复失败';
+
+	/// zh: '彻底删除？'
+	String get recyclePurgeTitle => '彻底删除？';
+
+	/// zh: '此操作不可恢复，日记将永久消失。'
+	String get recyclePurgeMessage => '此操作不可恢复，日记将永久消失。';
+
+	/// zh: '彻底删除'
+	String get recyclePurgeConfirm => '彻底删除';
+
+	/// zh: '已永久删除'
+	String get recyclePurged => '已永久删除';
+
+	/// zh: '删除失败'
+	String get recyclePurgeFailed => '删除失败';
+
+	/// zh: '清空回收站？'
+	String get recycleClearTitle => '清空回收站？';
+
+	/// zh: '将永久删除 {count} 条日记。此操作不可恢复。'
+	String recycleClearMessage({required Object count}) => '将永久删除 ${count} 条日记。此操作不可恢复。';
+
+	/// zh: '清空'
+	String get recycleClearConfirm => '清空';
+
+	/// zh: '已清空 {count} 条'
+	String recycleCleared({required Object count}) => '已清空 ${count} 条';
+
+	/// zh: '回收站为空'
+	String get recycleEmpty => '回收站为空';
+
+	/// zh: '恢复'
+	String get recycleRestore => '恢复';
+
+	/// zh: '日记管理'
+	String get managerTitle => '日记管理';
+
+	/// zh: '已选 {count}'
+	String managerSelected({required Object count}) => '已选 ${count}';
+
+	/// zh: '批量移入回收站'
+	String get managerBatchRecycle => '批量移入回收站';
+
+	/// zh: '当前筛选下没有日记'
+	String get managerEmpty => '当前筛选下没有日记';
+
+	/// zh: '批量移入回收站？'
+	String get managerRecycleTitle => '批量移入回收站？';
+
+	/// zh: '共 {count} 条日记将被移入回收站，可在「回收站」内恢复。'
+	String managerRecycleMessage({required Object count}) => '共 ${count} 条日记将被移入回收站，可在「回收站」内恢复。';
+
+	/// zh: '移入回收站'
+	String get managerRecycleConfirm => '移入回收站';
+
+	/// zh: '已移入回收站 {done} / {total}'
+	String managerRecycled({required Object done, required Object total}) => '已移入回收站 ${done} / ${total}';
+
+	/// zh: '全部'
+	String get managerAll => '全部';
+
+	/// zh: '足迹'
+	String get mapTitle => '足迹';
+
+	/// zh: '数据分析'
+	String get analyseTitle => '数据分析';
+
+	/// zh: '暂无日记，去写一篇吧！'
+	String get analyseEmpty => '暂无日记，去写一篇吧！';
+
+	/// zh: '日记总数'
+	String get analyseTotal => '日记总数';
+
+	/// zh: '本月'
+	String get analyseThisMonth => '本月';
+
+	/// zh: '心情均值'
+	String get analyseMoodAverage => '心情均值';
+
+	/// zh: '连续天数'
+	String get analyseStreak => '连续天数';
+
+	/// zh: '近 6 个月写作量'
+	String get analyseLast6Months => '近 6 个月写作量';
+
+	/// zh: '{month}月'
+	String analyseMonth({required Object month}) => '${month}月';
+
+	/// zh: '添加标签'
+	String get addTag => '添加标签';
+
+	/// zh: '标签名'
+	String get tagNameHint => '标签名';
+
+	/// zh: '添加'
+	String get add => '添加';
+
+	/// zh: '获取天气失败：请检查实验室内的和风天气配置'
+	String get weatherFailed => '获取天气失败：请检查实验室内的和风天气配置';
+
+	/// zh: '已获取天气：{weather} {temperature}°C'
+	String weatherFetched({required Object weather, required Object temperature}) => '已获取天气：${weather} ${temperature}°C';
+
+	/// zh: '主页'
+	String get home => '主页';
+
+	/// zh: '后退'
+	String get goBack => '后退';
+
+	/// zh: '前进'
+	String get goForward => '前进';
+
+	/// zh: '编辑'
+	String get edit => '编辑';
+
+	/// zh: '分享'
+	String get share => '分享';
+
+	/// zh: '目录'
+	String get outline => '目录';
+
+	/// zh: '{count} 字'
+	String wordCount({required Object count}) => '${count} 字';
+
+	/// zh: '保存中'
+	String get saving => '保存中';
+
+	/// zh: '已保存'
+	String get saved => '已保存';
+
+	/// zh: '未保存'
+	String get unsaved => '未保存';
+
+	/// zh: '保存失败'
+	String get saveFailed => '保存失败';
+
+	/// zh: '未知分类'
+	String get unknownCategory => '未知分类';
+
+	/// zh: '加载中…'
+	String get loading => '加载中…';
+
+	/// zh: '日记信息'
+	String get infoTitle => '日记信息';
+
+	/// zh: '日期与时间'
+	String get infoDateTime => '日期与时间';
+
+	/// zh: '天气'
+	String get infoWeather => '天气';
+
+	/// zh: '未获取'
+	String get weatherNotFetched => '未获取';
+
+	/// zh: '标签'
+	String get infoTags => '标签';
+
+	/// zh: '心情'
+	String get infoMood => '心情';
+
+	/// zh: '升级后需重建索引，旧日记正文才能被搜索到'
+	String get searchReindexHint => '升级后需重建索引，旧日记正文才能被搜索到';
+
+	/// zh: '重建'
+	String get searchReindex => '重建';
+
+	/// zh: '自动保存'
+	String get autoSaved => '自动保存';
 }
 
 // Path: editor
@@ -829,6 +1057,81 @@ class Translations$editor$zh {
 
 	/// zh: '正文'
 	String get content => '正文';
+
+	/// zh: '当前平台暂不支持编辑器'
+	String get unsupportedPlatform => '当前平台暂不支持编辑器';
+
+	/// zh: '编辑器加载失败 {error}'
+	String loadFailed({required Object error}) => '编辑器加载失败\n${error}';
+
+	/// zh: '选择分类'
+	String get pickCategory => '选择分类';
+
+	/// zh: '不分类'
+	String get noCategory => '不分类';
+
+	/// zh: '迁移到新编辑器'
+	String get migrationTitle => '迁移到新编辑器';
+
+	/// zh: '将 {count} 篇旧编辑器日记转换为新编辑器格式。 · 文字、标题、列表、引用、代码、图片、音频、视频都会保留； · 文字颜色 / 高亮 / 对齐无法在新格式中表示，会被丢弃； · 迁移只改变本机的存储格式，不会作为编辑同步到其他设备（多设备请分别迁移）； · 转换前会备份原文，可随时回退。'
+	String migrationMessage({required Object count}) => '将 ${count} 篇旧编辑器日记转换为新编辑器格式。\n\n· 文字、标题、列表、引用、代码、图片、音频、视频都会保留；\n· 文字颜色 / 高亮 / 对齐无法在新格式中表示，会被丢弃；\n· 迁移只改变本机的存储格式，不会作为编辑同步到其他设备（多设备请分别迁移）；\n· 转换前会备份原文，可随时回退。';
+
+	/// zh: '开始迁移'
+	String get migrationStart => '开始迁移';
+
+	/// zh: '已迁移 {count} 篇'
+	String migrationDone({required Object count}) => '已迁移 ${count} 篇';
+
+	/// zh: '迁移 {count} 篇，{failed} 篇失败（已跳过，原文未动）'
+	String migrationPartial({required Object count, required Object failed}) => '迁移 ${count} 篇，${failed} 篇失败（已跳过，原文未动）';
+
+	/// zh: '已迁移'
+	String get migrationOneDone => '已迁移';
+
+	/// zh: '该篇解析失败，已跳过'
+	String get migrationOneFailed => '该篇解析失败，已跳过';
+
+	/// zh: '回退迁移'
+	String get rollbackTitle => '回退迁移';
+
+	/// zh: '将这篇恢复为迁移前的旧编辑器格式，并删除备份。 注意：迁移之后对该篇做的修改会丢失。'
+	String get rollbackMessage => '将这篇恢复为迁移前的旧编辑器格式，并删除备份。\n\n注意：迁移之后对该篇做的修改会丢失。';
+
+	/// zh: '回退'
+	String get rollbackConfirm => '回退';
+
+	/// zh: '已回退'
+	String get rollbackDone => '已回退';
+
+	/// zh: '回退失败'
+	String get rollbackFailed => '回退失败';
+
+	/// zh: '待迁移（{count}）'
+	String migrationPending({required Object count}) => '待迁移（${count}）';
+
+	/// zh: '没有需要迁移的旧编辑器日记 🎉'
+	String get migrationEmpty => '没有需要迁移的旧编辑器日记 🎉';
+
+	/// zh: '迁移这一篇'
+	String get migrateThisOne => '迁移这一篇';
+
+	/// zh: '已迁移（可回退）'
+	String get migrationMigrated => '已迁移（可回退）';
+
+	/// zh: '(已删除)'
+	String get diaryDeleted => '(已删除)';
+
+	/// zh: '迁移于 {date}'
+	String migratedAt({required Object date}) => '迁移于 ${date}';
+
+	/// zh: '正在迁移 {done} / {total}'
+	String migrationProgress({required Object done, required Object total}) => '正在迁移 ${done} / ${total}';
+
+	/// zh: '全部迁移（{count}）'
+	String migrateAll({required Object count}) => '全部迁移（${count}）';
+
+	/// zh: '(空日记)'
+	String get emptyDiary => '(空日记)';
 }
 
 // Path: export
