@@ -5,5 +5,9 @@
   "colorPickerTitle": "Pick a color",
   "toastLoading": "Loading",
   "toastSuccess": "Success",
-  "toastError": "Error"
+  "toastError": "Error",
+  "configured": "Configured",
+  "notConfigured": "Not configured",
+  "input": "Enter",
+  "save": "Save"
 }

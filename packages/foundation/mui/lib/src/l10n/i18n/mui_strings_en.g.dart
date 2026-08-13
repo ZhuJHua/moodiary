@@ -40,4 +40,8 @@ class MuiTranslationsEn extends MuiTranslations with BaseTranslations<MuiAppLoca
 	@override String get toastLoading => 'Loading';
 	@override String get toastSuccess => 'Success';
 	@override String get toastError => 'Error';
+	@override String get configured => 'Configured';
+	@override String get notConfigured => 'Not configured';
+	@override String get input => 'Enter';
+	@override String get save => 'Save';
 }

@@ -1,3 +1,4 @@
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
@@ -36,7 +37,7 @@ class MinimalShareCard extends StatelessWidget {
           Container(width: 32, height: 4, color: accent),
           const SizedBox(height: 18),
           Text(
-            diary.title.isEmpty ? '(无标题)' : diary.title,
+            diary.title.isEmpty ? context.l10n.common.untitled : diary.title,
             style: TextStyle(
               fontSize: 22,
               fontWeight: .w700,
@@ -64,7 +65,9 @@ class MinimalShareCard extends StatelessWidget {
                   borderRadius: .circular(20),
                 ),
                 child: Text(
-                  '心情 ${(diary.mood * 100).toStringAsFixed(0)}%',
+                  context.l10n.share.mood(
+                    value: (diary.mood * 100).toStringAsFixed(0),
+                  ),
                   style: TextStyle(
                     fontSize: 12,
                     color: dark ? accent.withValues(alpha: 0.95) : accent,

@@ -1,4 +1,5 @@
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
@@ -17,9 +18,11 @@ class _AppLockTileState extends State<AppLockTile> {
   Future<void> _onTapLock(bool currentlyOn) async {
     final confirm = await MAlert.confirm(
       context,
-      title: '应用锁',
-      message: currentlyOn ? '关闭后启动将不再需要密码。' : '开启后，每次启动应用都需要输入密码。',
-      confirmLabel: currentlyOn ? '去关闭' : '去设置',
+      title: l10n.lock.title,
+      message: currentlyOn ? l10n.lock.turnOffMessage : l10n.lock.turnOnMessage,
+      confirmLabel: currentlyOn
+          ? l10n.lock.turnOffAction
+          : l10n.lock.turnOnAction,
     );
     if (!confirm || !mounted) return;
     await MSheet.show<void>(
@@ -57,17 +60,17 @@ class _AppLockTileState extends State<AppLockTile> {
           children: [
             SettingListTile(
               isFirst: true,
-              title: '应用锁',
+              title: context.l10n.lock.title,
               leading: const Icon(LucideIcons.lock),
               trailing: Text(
-                lock ? '已开启' : '未开启',
+                lock ? context.l10n.lock.enabled : context.l10n.lock.disabled,
                 style: theme.typography.bodySmall.primary,
               ),
               onTap: () => _onTapLock(lock),
             ),
             if (lock)
               SettingListTile(
-                title: '修改密码',
+                title: context.l10n.lock.changePassword,
                 leading: const Icon(LucideIcons.keyRound),
                 onTap: _changePassword,
               ),
@@ -76,8 +79,8 @@ class _AppLockTileState extends State<AppLockTile> {
                 valueListenable: MoodiaryKVs.lockNow.getNotifier(),
                 builder: (context, lockNow, _) {
                   return SettingSwitchListTile(
-                    title: '立即锁定',
-                    subtitle: '退到后台后再回来需重新解锁',
+                    title: context.l10n.lock.lockNow,
+                    subtitle: context.l10n.lock.lockNowSubtitle,
                     secondary: const Icon(LucideIcons.lockKeyhole),
                     value: lockNow,
                     onChanged: (v) => MoodiaryKVs.lockNow.set(v),
@@ -94,8 +97,8 @@ class _AppLockTileState extends State<AppLockTile> {
                         .getNotifier(),
                     builder: (context, bio, _) {
                       return SettingSwitchListTile(
-                        title: '生物识别解锁',
-                        subtitle: '用指纹 / 面容快速解锁',
+                        title: context.l10n.lock.biometric,
+                        subtitle: context.l10n.lock.biometricSubtitle,
                         secondary: const Icon(LucideIcons.fingerprint),
                         value: bio,
                         onChanged: _toggleBiometric,
@@ -151,11 +154,11 @@ class _SetPasswordSheetState extends State<SetPasswordSheet> {
       await MoodiaryKVs.password.set(pin);
       if (!mounted) return;
       Navigator.of(context).pop();
-      toast.success(message: '已开启应用锁');
+      toast.success(message: context.l10n.lock.turnedOn);
     } else {
       setState(() {
         _first = null;
-        _error = '两次输入不一致，请重新设置';
+        _error = context.l10n.lock.mismatch;
       });
       _pad.reject();
     }
@@ -166,7 +169,9 @@ class _SetPasswordSheetState extends State<SetPasswordSheet> {
     return _SheetScaffold(
       child: LockPinPad(
         controller: _pad,
-        title: _first == null ? '设置密码' : '确认密码',
+        title: _first == null
+            ? context.l10n.lock.setPassword
+            : context.l10n.lock.confirmPassword,
         error: _error,
         onCompleted: _onCompleted,
       ),
@@ -194,14 +199,14 @@ class _RemovePasswordSheetState extends State<RemovePasswordSheet> {
     await MoodiaryKVs.lockNow.set(false);
     if (!mounted) return;
     Navigator.of(context).pop();
-    toast.success(message: '已关闭应用锁');
+    toast.success(message: context.l10n.lock.turnedOff);
   }
 
   void _onCompleted(String pin) {
     if (pin == (MoodiaryKVs.password.get() ?? '')) {
       _disable();
     } else {
-      setState(() => _error = '密码错误');
+      setState(() => _error = context.l10n.lock.wrongPassword);
       _pad.reject();
     }
   }
@@ -215,7 +220,7 @@ class _RemovePasswordSheetState extends State<RemovePasswordSheet> {
     return _SheetScaffold(
       child: LockPinPad(
         controller: _pad,
-        title: '输入密码以关闭',
+        title: context.l10n.lock.enterToTurnOff,
         error: _error,
         showBiometric: _supportBio,
         onBiometric: _onBiometric,
@@ -243,9 +248,9 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
   bool get _supportBio => MoodiaryKVs.supportBiometrics.get() == true;
 
   String get _title => switch (_phase) {
-    .verify => '输入当前密码',
-    .enterNew => '设置新密码',
-    .confirmNew => '确认新密码',
+    .verify => context.l10n.lock.verifyCurrent,
+    .enterNew => context.l10n.lock.enterNew,
+    .confirmNew => context.l10n.lock.confirmNew,
   };
 
   void _toEnterNew() {
@@ -262,7 +267,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
         if (pin == (MoodiaryKVs.password.get() ?? '')) {
           _toEnterNew();
         } else {
-          setState(() => _error = '密码错误');
+          setState(() => _error = context.l10n.lock.wrongPassword);
           _pad.reject();
         }
       case .enterNew:
@@ -277,12 +282,12 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
           await MoodiaryKVs.password.set(pin);
           if (!mounted) return;
           Navigator.of(context).pop();
-          toast.success(message: '密码已修改');
+          toast.success(message: context.l10n.lock.passwordChanged);
         } else {
           setState(() {
             _newPin = null;
             _phase = .enterNew;
-            _error = '两次输入不一致，请重新设置';
+            _error = context.l10n.lock.mismatch;
           });
           _pad.reject();
         }

@@ -1,0 +1,13 @@
+{
+  "welcomeTitle": "欢迎使用 Moodiary",
+  "welcomeBody": "一本离线优先的私密日记，数据默认只留在你的设备上。",
+  "moodTitle": "记录每一种情绪",
+  "moodBody": "心情、分类、标签随心组织，写作时长与字数实时可见。",
+  "ownershipTitle": "数据始终归你掌控",
+  "ownershipBody": "一键导出 JSON 备份，也可开启 WebDAV / S3 云同步，端到端加密可选。",
+  "skip": "跳过",
+  "next": "下一步",
+  "start": "开始记录",
+  "userAgreement": "用户协议",
+  "privacyPolicy": "隐私政策"
+}

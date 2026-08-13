@@ -56,4 +56,16 @@ class MuiTranslations with BaseTranslations<MuiAppLocale, MuiTranslations> {
 
 	/// zh: '出错了'
 	String get toastError => '出错了';
+
+	/// zh: '已配置'
+	String get configured => '已配置';
+
+	/// zh: '未配置'
+	String get notConfigured => '未配置';
+
+	/// zh: '输入'
+	String get input => '输入';
+
+	/// zh: '保存'
+	String get save => '保存';
 }

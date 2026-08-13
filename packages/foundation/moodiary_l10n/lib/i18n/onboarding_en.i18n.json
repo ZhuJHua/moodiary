@@ -1,0 +1,13 @@
+{
+  "welcomeTitle": "Welcome to Moodiary",
+  "welcomeBody": "An offline-first private journal. Your entries stay on your device by default.",
+  "moodTitle": "Capture every mood",
+  "moodBody": "Organise with moods, categories and tags; writing time and word count update as you type.",
+  "ownershipTitle": "Your data stays yours",
+  "ownershipBody": "Export a JSON backup in one tap, or turn on WebDAV / S3 sync with optional end-to-end encryption.",
+  "skip": "Skip",
+  "next": "Next",
+  "start": "Start writing",
+  "userAgreement": "Terms of use",
+  "privacyPolicy": "Privacy policy"
+}

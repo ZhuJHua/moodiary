@@ -1,5 +1,7 @@
 import 'package:mui/mui.dart';
 
+import '../../l10n/mui_l10n.dart';
+
 class SettingTitleTile extends StatelessWidget {
   const SettingTitleTile({super.key, required this.title, this.subtitle});
 
@@ -242,9 +244,13 @@ class SettingInputTile extends StatelessWidget {
       isLast: isLast,
       title: title,
       leading: leading,
-      subtitle: subtitle ?? (hasValue ? '已配置' : '未配置'),
+      subtitle:
+          subtitle ??
+          (hasValue
+              ? context.muiL10n.configured
+              : context.muiL10n.notConfigured),
       trailing: IconButton.filled(
-        tooltip: '输入',
+        tooltip: context.muiL10n.input,
         icon: Icon(LucideIcons.squarePen, color: scheme.onPrimary),
         onPressed: () => _showInputDialog(context),
       ),
@@ -258,7 +264,7 @@ class SettingInputTile extends StatelessWidget {
       initialValue: value,
       hintText: hintText,
       obscureText: obscureText,
-      confirmLabel: '保存',
+      confirmLabel: context.muiL10n.save,
     );
     if (result != null && result.isNotEmpty) onValue?.call(result);
   }

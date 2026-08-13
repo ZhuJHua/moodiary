@@ -1,3 +1,4 @@
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
@@ -50,7 +51,9 @@ class NoteShareCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    diary.title.isEmpty ? '(无标题)' : diary.title,
+                    diary.title.isEmpty
+                        ? context.l10n.common.untitled
+                        : diary.title,
                     style: TextStyle(
                       fontSize: 21,
                       fontWeight: .w700,
@@ -69,7 +72,9 @@ class NoteShareCard extends StatelessWidget {
                       Icon(LucideIcons.heart, size: 13, color: inkSoft),
                       const SizedBox(width: 5),
                       Text(
-                        '心情 ${(diary.mood * 100).toStringAsFixed(0)}%',
+                        context.l10n.share.mood(
+                          value: (diary.mood * 100).toStringAsFixed(0),
+                        ),
                         style: TextStyle(fontSize: 12, color: inkSoft),
                       ),
                       const Spacer(),

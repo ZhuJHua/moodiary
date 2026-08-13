@@ -39,7 +39,10 @@ class TranslationsEn extends Translations with BaseTranslations<AppLocale, Trans
 	@override late final _Translations$diary$en diary = _Translations$diary$en._(_root);
 	@override late final _Translations$editor$en editor = _Translations$editor$en._(_root);
 	@override late final _Translations$export$en export = _Translations$export$en._(_root);
+	@override late final _Translations$lock$en lock = _Translations$lock$en._(_root);
 	@override late final _Translations$media$en media = _Translations$media$en._(_root);
+	@override late final _Translations$onboarding$en onboarding = _Translations$onboarding$en._(_root);
+	@override late final _Translations$share$en share = _Translations$share$en._(_root);
 	@override late final _Translations$sync$en sync = _Translations$sync$en._(_root);
 	@override late final _Translations$ui$en ui = _Translations$ui$en._(_root);
 }
@@ -431,6 +434,41 @@ class _Translations$export$en extends Translations$export$zh {
 	@override String get progressSerializing => 'Writing file…';
 }
 
+// Path: lock
+class _Translations$lock$en extends Translations$lock$zh {
+	_Translations$lock$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'App lock';
+	@override String get enabled => 'On';
+	@override String get disabled => 'Off';
+	@override String get turnOnMessage => 'The app will ask for your password every time it starts.';
+	@override String get turnOffMessage => 'Starting the app will no longer ask for a password.';
+	@override String get turnOnAction => 'Set up';
+	@override String get turnOffAction => 'Turn off';
+	@override String get changePassword => 'Change password';
+	@override String get lockNow => 'Lock now';
+	@override String get lockNowSubtitle => 'Require unlocking again after leaving the app';
+	@override String get biometric => 'Biometric unlock';
+	@override String get biometricSubtitle => 'Unlock with a fingerprint or your face';
+	@override String get turnedOn => 'App lock is on';
+	@override String get turnedOff => 'App lock is off';
+	@override String get passwordChanged => 'Password changed';
+	@override String get setPassword => 'Set a password';
+	@override String get confirmPassword => 'Confirm the password';
+	@override String get mismatch => 'The two entries do not match, please start over';
+	@override String get wrongPassword => 'Wrong password';
+	@override String get enterToTurnOff => 'Enter your password to turn it off';
+	@override String get verifyCurrent => 'Enter your current password';
+	@override String get enterNew => 'Set a new password';
+	@override String get confirmNew => 'Confirm the new password';
+	@override String get prompt => 'Enter your password';
+	@override String attemptsLeft({required Object count}) => 'Wrong password, ${count} attempts left';
+	@override String cooldown({required Object seconds}) => 'Too many attempts, wait ${seconds}s';
+}
+
 // Path: media
 class _Translations$media$en extends Translations$media$zh {
 	_Translations$media$en._(TranslationsEn root) : this._root = root, super.internal(root);
@@ -460,6 +498,45 @@ class _Translations$media$en extends Translations$media$zh {
 		one: '${count} Video',
 		other: '${count} Videos',
 	);
+}
+
+// Path: onboarding
+class _Translations$onboarding$en extends Translations$onboarding$zh {
+	_Translations$onboarding$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get welcomeTitle => 'Welcome to Moodiary';
+	@override String get welcomeBody => 'An offline-first private journal. Your entries stay on your device by default.';
+	@override String get moodTitle => 'Capture every mood';
+	@override String get moodBody => 'Organise with moods, categories and tags; writing time and word count update as you type.';
+	@override String get ownershipTitle => 'Your data stays yours';
+	@override String get ownershipBody => 'Export a JSON backup in one tap, or turn on WebDAV / S3 sync with optional end-to-end encryption.';
+	@override String get skip => 'Skip';
+	@override String get next => 'Next';
+	@override String get start => 'Start writing';
+	@override String get userAgreement => 'Terms of use';
+	@override String get privacyPolicy => 'Privacy policy';
+}
+
+// Path: share
+class _Translations$share$en extends Translations$share$zh {
+	_Translations$share$en._(TranslationsEn root) : this._root = root, super.internal(root);
+
+	final TranslationsEn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Share';
+	@override String get empty => 'Nothing to share';
+	@override String get copyText => 'Copy text';
+	@override String get exportImage => 'Export image';
+	@override String get copied => 'Copied to clipboard';
+	@override String get subject => 'Shared from Moodiary';
+	@override String imageSaved({required Object path}) => 'Image saved to ${path} (path copied)';
+	@override String mood({required Object value}) => 'Mood ${value}%';
+	@override String get templateMinimal => 'Minimal';
+	@override String get templateNote => 'Note';
 }
 
 // Path: sync

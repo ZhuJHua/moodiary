@@ -30,8 +30,7 @@ class _AssistantProviderPickerPageState
       if (!mounted) return;
       toast.success(message: context.l10n.assistant.llmPickerRefreshed);
     } catch (_) {
-      if (mounted)
-        toast.error(message: context.l10n.assistant.llmPickerLoadFailed);
+      if (mounted) toast.error(message: l10n.assistant.llmPickerLoadFailed);
     } finally {
       if (mounted) setState(() => _refreshing = false);
     }

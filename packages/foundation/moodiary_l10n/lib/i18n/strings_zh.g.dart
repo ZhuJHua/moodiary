@@ -41,7 +41,10 @@ class Translations with BaseTranslations<AppLocale, Translations> {
 	late final Translations$diary$zh diary = Translations$diary$zh.internal(_root);
 	late final Translations$editor$zh editor = Translations$editor$zh.internal(_root);
 	late final Translations$export$zh export = Translations$export$zh.internal(_root);
+	late final Translations$lock$zh lock = Translations$lock$zh.internal(_root);
 	late final Translations$media$zh media = Translations$media$zh.internal(_root);
+	late final Translations$onboarding$zh onboarding = Translations$onboarding$zh.internal(_root);
+	late final Translations$share$zh share = Translations$share$zh.internal(_root);
 	late final Translations$sync$zh sync = Translations$sync$zh.internal(_root);
 	late final Translations$ui$zh ui = Translations$ui$zh.internal(_root);
 }
@@ -1092,6 +1095,93 @@ class Translations$export$zh {
 	String get progressSerializing => '正在生成文件…';
 }
 
+// Path: lock
+class Translations$lock$zh {
+	Translations$lock$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '应用锁'
+	String get title => '应用锁';
+
+	/// zh: '已开启'
+	String get enabled => '已开启';
+
+	/// zh: '未开启'
+	String get disabled => '未开启';
+
+	/// zh: '开启后，每次启动应用都需要输入密码。'
+	String get turnOnMessage => '开启后，每次启动应用都需要输入密码。';
+
+	/// zh: '关闭后启动将不再需要密码。'
+	String get turnOffMessage => '关闭后启动将不再需要密码。';
+
+	/// zh: '去设置'
+	String get turnOnAction => '去设置';
+
+	/// zh: '去关闭'
+	String get turnOffAction => '去关闭';
+
+	/// zh: '修改密码'
+	String get changePassword => '修改密码';
+
+	/// zh: '立即锁定'
+	String get lockNow => '立即锁定';
+
+	/// zh: '退到后台后再回来需重新解锁'
+	String get lockNowSubtitle => '退到后台后再回来需重新解锁';
+
+	/// zh: '生物识别解锁'
+	String get biometric => '生物识别解锁';
+
+	/// zh: '用指纹 / 面容快速解锁'
+	String get biometricSubtitle => '用指纹 / 面容快速解锁';
+
+	/// zh: '已开启应用锁'
+	String get turnedOn => '已开启应用锁';
+
+	/// zh: '已关闭应用锁'
+	String get turnedOff => '已关闭应用锁';
+
+	/// zh: '密码已修改'
+	String get passwordChanged => '密码已修改';
+
+	/// zh: '设置密码'
+	String get setPassword => '设置密码';
+
+	/// zh: '确认密码'
+	String get confirmPassword => '确认密码';
+
+	/// zh: '两次输入不一致，请重新设置'
+	String get mismatch => '两次输入不一致，请重新设置';
+
+	/// zh: '密码错误'
+	String get wrongPassword => '密码错误';
+
+	/// zh: '输入密码以关闭'
+	String get enterToTurnOff => '输入密码以关闭';
+
+	/// zh: '输入当前密码'
+	String get verifyCurrent => '输入当前密码';
+
+	/// zh: '设置新密码'
+	String get enterNew => '设置新密码';
+
+	/// zh: '确认新密码'
+	String get confirmNew => '确认新密码';
+
+	/// zh: '请输入密码'
+	String get prompt => '请输入密码';
+
+	/// zh: '密码错误，还可重试 {count} 次'
+	String attemptsLeft({required Object count}) => '密码错误，还可重试 ${count} 次';
+
+	/// zh: '尝试次数过多，请等待 {seconds} 秒'
+	String cooldown({required Object seconds}) => '尝试次数过多，请等待 ${seconds} 秒';
+}
+
 // Path: media
 class Translations$media$zh {
 	Translations$media$zh.internal(this._root);
@@ -1144,6 +1234,87 @@ class Translations$media$zh {
 	String videoCount({required num count}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('zh'))(count,
 		other: '${count} 段视频',
 	);
+}
+
+// Path: onboarding
+class Translations$onboarding$zh {
+	Translations$onboarding$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '欢迎使用 Moodiary'
+	String get welcomeTitle => '欢迎使用 Moodiary';
+
+	/// zh: '一本离线优先的私密日记，数据默认只留在你的设备上。'
+	String get welcomeBody => '一本离线优先的私密日记，数据默认只留在你的设备上。';
+
+	/// zh: '记录每一种情绪'
+	String get moodTitle => '记录每一种情绪';
+
+	/// zh: '心情、分类、标签随心组织，写作时长与字数实时可见。'
+	String get moodBody => '心情、分类、标签随心组织，写作时长与字数实时可见。';
+
+	/// zh: '数据始终归你掌控'
+	String get ownershipTitle => '数据始终归你掌控';
+
+	/// zh: '一键导出 JSON 备份，也可开启 WebDAV / S3 云同步，端到端加密可选。'
+	String get ownershipBody => '一键导出 JSON 备份，也可开启 WebDAV / S3 云同步，端到端加密可选。';
+
+	/// zh: '跳过'
+	String get skip => '跳过';
+
+	/// zh: '下一步'
+	String get next => '下一步';
+
+	/// zh: '开始记录'
+	String get start => '开始记录';
+
+	/// zh: '用户协议'
+	String get userAgreement => '用户协议';
+
+	/// zh: '隐私政策'
+	String get privacyPolicy => '隐私政策';
+}
+
+// Path: share
+class Translations$share$zh {
+	Translations$share$zh.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// zh: '分享'
+	String get title => '分享';
+
+	/// zh: '没有可分享的日记'
+	String get empty => '没有可分享的日记';
+
+	/// zh: '复制文本'
+	String get copyText => '复制文本';
+
+	/// zh: '导出图片'
+	String get exportImage => '导出图片';
+
+	/// zh: '已复制到剪贴板'
+	String get copied => '已复制到剪贴板';
+
+	/// zh: '来自 Moodiary 的分享'
+	String get subject => '来自 Moodiary 的分享';
+
+	/// zh: '已生成图片：{path}（路径已复制）'
+	String imageSaved({required Object path}) => '已生成图片：${path}（路径已复制）';
+
+	/// zh: '心情 {value}%'
+	String mood({required Object value}) => '心情 ${value}%';
+
+	/// zh: '简约'
+	String get templateMinimal => '简约';
+
+	/// zh: '便签'
+	String get templateNote => '便签';
 }
 
 // Path: sync

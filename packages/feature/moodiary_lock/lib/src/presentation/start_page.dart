@@ -1,12 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
 class _StartSlide {
   final IconData icon;
-  final String title;
-  final String body;
+
+  /// 文案是取串函数而不是字面量：这份列表是顶层常量，拿不到 `BuildContext`。
+  final String Function(Translations l10n) title;
+  final String Function(Translations l10n) body;
+
   const _StartSlide({
     required this.icon,
     required this.title,
@@ -17,20 +21,23 @@ class _StartSlide {
 const _slides = <_StartSlide>[
   _StartSlide(
     icon: LucideIcons.bookOpen,
-    title: '欢迎使用 Moodiary',
-    body: '一本离线优先的私密日记，数据默认只留在你的设备上。',
+    title: _welcomeTitle,
+    body: _welcomeBody,
   ),
-  _StartSlide(
-    icon: LucideIcons.smile,
-    title: '记录每一种情绪',
-    body: '心情、分类、标签随心组织，写作时长与字数实时可见。',
-  ),
+  _StartSlide(icon: LucideIcons.smile, title: _moodTitle, body: _moodBody),
   _StartSlide(
     icon: LucideIcons.cloudCheck,
-    title: '数据始终归你掌控',
-    body: '一键导出 JSON 备份，也可开启 WebDAV / S3 云同步，端到端加密可选。',
+    title: _ownershipTitle,
+    body: _ownershipBody,
   ),
 ];
+
+String _welcomeTitle(Translations l10n) => l10n.onboarding.welcomeTitle;
+String _welcomeBody(Translations l10n) => l10n.onboarding.welcomeBody;
+String _moodTitle(Translations l10n) => l10n.onboarding.moodTitle;
+String _moodBody(Translations l10n) => l10n.onboarding.moodBody;
+String _ownershipTitle(Translations l10n) => l10n.onboarding.ownershipTitle;
+String _ownershipBody(Translations l10n) => l10n.onboarding.ownershipBody;
 
 class StartPage extends ConsumerStatefulWidget {
   const StartPage({super.key});
@@ -100,7 +107,7 @@ class _StartPageState extends ConsumerState<StartPage> {
                         style: TextButton.styleFrom(
                           foregroundColor: scheme.onSurfaceVariant,
                         ),
-                        child: const Text('跳过'),
+                        child: Text(context.l10n.onboarding.skip),
                       ),
                     ),
                   ),
@@ -143,7 +150,11 @@ class _StartPageState extends ConsumerState<StartPage> {
                     textStyle:
                         theme.typography.titleMedium.emphasized.onPrimary,
                   ),
-                  child: Text(isLast ? '开始记录' : '下一步'),
+                  child: Text(
+                    isLast
+                        ? context.l10n.onboarding.start
+                        : context.l10n.onboarding.next,
+                  ),
                 ),
               ),
             ),
@@ -157,7 +168,7 @@ class _StartPageState extends ConsumerState<StartPage> {
                     style: TextButton.styleFrom(
                       foregroundColor: scheme.onSurfaceVariant,
                     ),
-                    child: const Text('用户协议'),
+                    child: Text(context.l10n.onboarding.userAgreement),
                   ),
                   Text('·', style: theme.typography.labelLarge.outline),
                   TextButton(
@@ -165,7 +176,7 @@ class _StartPageState extends ConsumerState<StartPage> {
                     style: TextButton.styleFrom(
                       foregroundColor: scheme.onSurfaceVariant,
                     ),
-                    child: const Text('隐私政策'),
+                    child: Text(context.l10n.onboarding.privacyPolicy),
                   ),
                 ],
               ),
@@ -218,14 +229,14 @@ class _SlideView extends StatelessWidget {
           ),
           const SizedBox(height: 40),
           Text(
-            slide.title,
+            slide.title(context.l10n),
             textAlign: .center,
             style: theme.typography.headlineMedium.emphasized.onSurface
                 .copyWith(height: 1.15),
           ),
           const SizedBox(height: 14),
           Text(
-            slide.body,
+            slide.body(context.l10n),
             textAlign: .center,
             style: theme.typography.bodyLarge.onSurfaceVariant.copyWith(
               height: 1.55,

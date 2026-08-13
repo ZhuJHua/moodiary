@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -81,7 +82,7 @@ class _LockPageState extends ConsumerState<LockPage>
 
   void _startCooldown() {
     _cooldownLeft = _cooldownSeconds;
-    _error = '尝试次数过多，请等待 $_cooldownLeft 秒';
+    _error = context.l10n.lock.cooldown(seconds: _cooldownLeft);
     setState(() {});
     _cooldownTimer?.cancel();
     _cooldownTimer = .periodic(const Duration(seconds: 1), (timer) {
@@ -96,7 +97,7 @@ class _LockPageState extends ConsumerState<LockPage>
           _failCount = 0;
           _error = null;
         } else {
-          _error = '尝试次数过多，请等待 $_cooldownLeft 秒';
+          _error = context.l10n.lock.cooldown(seconds: _cooldownLeft);
         }
       });
     });
@@ -147,7 +148,7 @@ class _LockPageState extends ConsumerState<LockPage>
     if (!mounted) return;
     setState(() {
       _pin = '';
-      _error = '密码错误，还可重试 $remaining 次';
+      _error = context.l10n.lock.attemptsLeft(count: remaining);
     });
   }
 
@@ -201,7 +202,10 @@ class _LockPageState extends ConsumerState<LockPage>
                         ),
                 ),
                 const SizedBox(height: 24),
-                Text('请输入密码', style: theme.typography.titleMedium.onSurface),
+                Text(
+                  context.l10n.lock.prompt,
+                  style: theme.typography.titleMedium.onSurface,
+                ),
                 const SizedBox(height: 24),
                 AnimatedBuilder(
                   animation: _shake,

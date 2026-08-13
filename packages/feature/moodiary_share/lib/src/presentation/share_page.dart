@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
@@ -49,7 +50,7 @@ class _SharePageState extends ConsumerState<SharePage> {
       d.contentText,
     ].join('\n');
     await Clipboard.setData(ClipboardData(text: text));
-    toast.success(message: '已复制到剪贴板');
+    toast.success(message: l10n.share.copied);
   }
 
   Future<void> _exportImage() async {
@@ -74,12 +75,12 @@ class _SharePageState extends ConsumerState<SharePage> {
         await SharePlus.instance.share(
           ShareParams(
             files: [XFile(filePath, mimeType: 'image/png')],
-            text: '来自 Moodiary 的分享',
+            text: l10n.share.subject,
           ),
         );
       } catch (_) {
         await Clipboard.setData(ClipboardData(text: filePath));
-        toast.info(message: '已生成图片：$filePath（路径已复制）');
+        toast.info(message: l10n.share.imageSaved(path: filePath));
       }
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -90,11 +91,14 @@ class _SharePageState extends ConsumerState<SharePage> {
   Widget build(BuildContext context) {
     final diaryAsync = ref.watch(_shareDiaryProvider(widget.diaryId));
     return Scaffold(
-      appBar: AppBar(title: const Text('分享'), scrolledUnderElevation: 0),
+      appBar: AppBar(
+        title: Text(context.l10n.share.title),
+        scrolledUnderElevation: 0,
+      ),
       body: diaryAsync.buildLoading(
         data: (diary) {
           if (diary == null) {
-            return const Center(child: Text('没有可分享的日记'));
+            return Center(child: Text(context.l10n.share.empty));
           }
           final brightness = _brightness ?? context.theme.brightness;
           return SafeArea(
@@ -160,7 +164,7 @@ class _SharePageState extends ConsumerState<SharePage> {
                 itemCount: kShareTemplates.length,
                 separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (context, i) => ChoiceChip(
-                  label: Text(kShareTemplates[i].name),
+                  label: Text(kShareTemplates[i].label(context.l10n)),
                   selected: _selected == i,
                   onSelected: (_) => setState(() => _selected = i),
                 ),
@@ -207,7 +211,7 @@ class _SharePageState extends ConsumerState<SharePage> {
                 onPressed: () => _copy(diary),
                 style: shape(),
                 icon: const Icon(LucideIcons.copy),
-                label: const Text('复制文本'),
+                label: Text(context.l10n.share.copyText),
               ),
             ),
           ),
@@ -225,7 +229,7 @@ class _SharePageState extends ConsumerState<SharePage> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(LucideIcons.share),
-                label: const Text('导出图片'),
+                label: Text(context.l10n.share.exportImage),
               ),
             ),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 import 'minimal_card.dart';
@@ -11,12 +12,14 @@ const double kShareCardWidth = 360;
 /// 新增模版 = 往 [kShareTemplates] 里加一项，其余代码零改动。
 class ShareCardTemplate {
   final String id;
-  final String name;
+
+  /// 模版列表是顶层常量、拿不到 `BuildContext`，所以名称是个取串函数而不是字面量。
+  final String Function(Translations l10n) label;
   final Widget Function(Diary diary, Brightness brightness) builder;
 
   const ShareCardTemplate({
     required this.id,
-    required this.name,
+    required this.label,
     required this.builder,
   });
 }
@@ -25,12 +28,12 @@ class ShareCardTemplate {
 final List<ShareCardTemplate> kShareTemplates = [
   ShareCardTemplate(
     id: 'minimal',
-    name: '简约',
+    label: (l10n) => l10n.share.templateMinimal,
     builder: (d, b) => MinimalShareCard(diary: d, brightness: b),
   ),
   ShareCardTemplate(
     id: 'note',
-    name: '便签',
+    label: (l10n) => l10n.share.templateNote,
     builder: (d, b) => NoteShareCard(diary: d, brightness: b),
   ),
 ];

@@ -1,0 +1,12 @@
+{
+  "title": "Share",
+  "empty": "Nothing to share",
+  "copyText": "Copy text",
+  "exportImage": "Export image",
+  "copied": "Copied to clipboard",
+  "subject": "Shared from Moodiary",
+  "imageSaved": "Image saved to {path} (path copied)",
+  "mood": "Mood {value}%",
+  "templateMinimal": "Minimal",
+  "templateNote": "Note"
+}
