@@ -36,8 +36,11 @@ class VersionMigrator {
 
   static Future<void> merge({required String lastAppVersion}) async {
     // 语义化版本比较：`2.10.0 > 2.9.0` 这类按字典序会判错的场景必须走 semver。
-    // 入参形如 `2.7.3+123`（version+build），build 元数据在 semver 比较中被忽略。
-    final lastVersion = Version.parse(lastAppVersion);
+    // 入参形如 `2.7.3+123`（version+build），build 元数据在 semver 比较中被忽略；
+    // pre-release 则必须剥掉——beta 渠道的 versionName 带 `-beta` 后缀，semver 里
+    // `2.8.0-beta < 2.8.0` 恒真，不剥会让 2.8.0 迁移每次冷启动重跑一遍。
+    final parsed = Version.parse(lastAppVersion);
+    final lastVersion = Version(parsed.major, parsed.minor, parsed.patch);
     bool below(String version) => lastVersion < Version.parse(version);
 
     if (below('2.4.8')) {
@@ -69,7 +72,9 @@ class VersionMigrator {
 
     if (below('2.8.0')) {
       // 2.7.3 的 autoSync 属旧备份引擎；新引擎启动后 ~30s 即全量推送、且未配 DEK 时为明文，
-      // 不能默认继承——重置为关，由用户在同步页重新确认。服务器配置（webDavOption）保留。
+      // 不能默认继承——重置为关。同步引擎已整体重写，旧 WebDAV 配置（prefs 里的
+      // webDavOption）**有意不迁移**，由用户在同步页重新配置；旧仓库里那份由
+      // 「重置全部数据」的 clearStore 负责清。
       MoodiaryKVs.autoSync.set(false);
       // 跨引擎（isar 4.0.0-dev → isar_plus）迁移前留一份快照，出问题可回滚。
       await _backupDatabaseOnce();
