@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mui/src/themes/theme_data.dart';
 
 /// 派生视图的缓存，键是 [ThemeData] 实例本身。

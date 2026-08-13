@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/mui.dart';
 
@@ -22,9 +20,9 @@ void main() {
         locale: const Locale('zh'),
         localizationsDelegates: const [
           MuiLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
+          // material_ui 自带的那份（不是 flutter_localizations 的），
+          // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
+          ...GlobalMaterialLocalizations.delegates,
         ],
         supportedLocales: MuiLocalizations.supportedLocales,
         home: Scaffold(body: body),
@@ -374,9 +372,9 @@ void main() {
         locale: const Locale('zh'),
         localizationsDelegates: const [
           MuiLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
+          // material_ui 自带的那份（不是 flutter_localizations 的），
+          // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
+          ...GlobalMaterialLocalizations.delegates,
         ],
         supportedLocales: MuiLocalizations.supportedLocales,
         home: Scaffold(body: child),

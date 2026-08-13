@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';

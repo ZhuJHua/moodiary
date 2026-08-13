@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mui/src/themes/mui_tokens.dart';
 import 'package:mui/src/themes/tokens.dart';
 import 'package:mui/src/themes/typography.dart';

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary/app/home/diary_home_page.dart' show DiaryHomePage;
 import 'package:moodiary_assistant/moodiary_assistant.dart'
@@ -9,8 +8,7 @@ import 'package:moodiary_editor/moodiary_editor.dart' show openNewDiaryEditor;
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_media/moodiary_media.dart';
 import 'package:moodiary_router/moodiary_router.dart';
-import 'package:moodiary_ui/moodiary_ui.dart'
-    show LucideIcons, MNavAction, MNavBar, MNavDestination;
+import 'package:mui/mui.dart';
 
 /// 三个 tab —— 设置不在这儿，入口在分类抽屉底部（胶囊只装得下三个，加上右边那颗
 /// 动作按钮正好一行）。枚举顺序即胶囊里的顺序，也是 `_pages` 的顺序。

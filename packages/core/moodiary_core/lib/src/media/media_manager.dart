@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:cross_file/cross_file.dart';
 import 'package:fc_native_video_thumbnail/fc_native_video_thumbnail.dart';
-import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
 import 'package:heif_converter/heif_converter.dart';
 import 'package:mime/mime.dart';
@@ -13,6 +12,7 @@ import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_core/src/values/media_type.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
 import 'package:moodiary_utils/moodiary_utils.dart';
+import 'package:mui/mui.dart';
 import 'package:path/path.dart';
 import 'package:pool/pool.dart';
 

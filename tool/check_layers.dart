@@ -206,28 +206,42 @@ List<String> _checkRustLayers() {
   return out;
 }
 
-/// mui 的定位已从「替代 material」改成「**补充** material」（2026-08-13）：
-/// 配色是 `ColorScheme`、排版是 `TextTheme`，本包不再自建一套，所以 material
-/// 不但允许而且是前提。
+/// Flutter 3.47 把 material 拆成独立包 `material_ui`；SDK 内的
+/// `package:flutter/material.dart` 将于 2026-11 正式弃用。
 ///
-/// 仍然禁 cupertino：全仓零 cupertino import，mui 不该是第一个开口子的地方。
-const String _muiRoot = 'packages/foundation/mui/lib';
-final RegExp _muiForbiddenRe = RegExp(
-  r'''^\s*(?:import|export)\s+['"]package:flutter/(cupertino)\.dart['"]''',
+/// 全仓的规矩：**material 只经 `package:mui/mui.dart` 出**。业务代码 import mui，
+/// mui 内部 import material_ui。直接 import legacy material 的只剩下面这几处 ——
+/// 它们要把主题喂给尚未迁移的第三方包，那些包的 API 只认 legacy 类型。
+///
+/// 无 baseline：名单之外出现一处就红。名单只会随第三方迁移而缩短。
+const Map<String, String> _legacyMaterialAllowlist = {
+  'mobile/lib/app/picker/mobile_file_picker.dart':
+      'wechat_assets_picker/camera_picker 的 themeData 只吃 legacy ThemeData',
+  'mobile/lib/app/picker/moodiary_picker_delegate.dart': '同上，picker 的委托',
+  'mobile/lib/app/picker/moodiary_camera_picker_state.dart': '同上，相机 picker',
+  'packages/feature/moodiary_assistant/lib/src/presentation/assistant_page.dart':
+      'flutter_chat_ui 的 .fromThemeData 只吃 legacy ThemeData',
+};
+
+final RegExp _legacyMaterialRe = RegExp(
+  r"""^\s*(?:import|export)\s+['"]package:flutter/material\.dart['"]""",
   multiLine: true,
 );
 
-List<String> _checkMuiPurity() {
-  final dir = Directory(_muiRoot);
-  if (!dir.existsSync()) return const [];
-
+List<String> _checkLegacyMaterial() {
   final out = <String>[];
-  for (final entity in dir.listSync(recursive: true)) {
-    if (entity is! File || !entity.path.endsWith('.dart')) continue;
-    final rel = entity.path.replaceAll('\\', '/');
-    final content = entity.readAsStringSync();
-    for (final m in _muiForbiddenRe.allMatches(content)) {
-      out.add('$rel -> package:flutter/${m.group(1)}.dart');
+  for (final root in ['mobile/lib', 'packages']) {
+    final dir = Directory(root);
+    if (!dir.existsSync()) continue;
+    for (final entity in dir.listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final rel = entity.path.replaceAll('\\', '/');
+      if (!rel.contains('/lib/') && !rel.startsWith('mobile/lib')) continue;
+      if (rel.endsWith('.g.dart') || rel.endsWith('.freezed.dart')) continue;
+      if (_legacyMaterialAllowlist.containsKey(rel)) continue;
+      if (_legacyMaterialRe.hasMatch(entity.readAsStringSync())) {
+        out.add('$rel -> package:flutter/material.dart');
+      }
     }
   }
   out.sort();
@@ -254,7 +268,8 @@ const Map<String, String> _themeAllowlist = {
   'mobile/lib/app/picker/': '第三方 AssetPicker/CameraPicker 自建 ThemeData，够不着 mui',
   'packages/feature/moodiary_share/lib/src/presentation/templates/':
       '分享卡片是固定设计稿（纸/墨配色），要导出成图片，不能跟随 App 主题',
-  'packages/foundation/mui/lib/src/components/common/env_badge.dart': '开发环境角标，固定红',
+  'packages/foundation/mui/lib/src/components/common/env_badge.dart':
+      '开发环境角标，固定红',
   'packages/foundation/mui/lib/src/components/common/video/':
       '播放器暗房：控件叠在任意画面上，白色前景是对的',
   'packages/ui/moodiary_ui/lib/src/common/video/': '播放器暗房，同上（页面本体够不着 mui）',
@@ -267,7 +282,8 @@ const Map<String, String> _themeAllowlist = {
       '取色器本体展示的就是任意颜色',
   'packages/foundation/mui/lib/src/components/common/file_type_icon.dart':
       'Dosis 角标：字号由轮廓几何反算并钉死 noScaling，不走排版档',
-  'packages/foundation/mui/lib/src/components/basic/expand_tap_area.dart': 'debugPaint 的辅助色',
+  'packages/foundation/mui/lib/src/components/basic/expand_tap_area.dart':
+      'debugPaint 的辅助色',
   'mobile/lib/app/settings/presentation/widget/accent_sheet.dart':
       '配色档预览：白→黑的色块本身就是要展示的内容',
 };
@@ -311,7 +327,8 @@ List<String> _checkThemePurity() {
         final line = lines[i];
         if (line.trimLeft().startsWith('//')) continue;
         for (final (re, hint) in _themeBans) {
-          if (re.hasMatch(line)) out.add('$rel:${i + 1}: $hint\n      ${line.trim()}');
+          if (re.hasMatch(line))
+            out.add('$rel:${i + 1}: $hint\n      ${line.trim()}');
         }
       }
     }
@@ -377,15 +394,21 @@ void main(List<String> args) {
     exit(1);
   }
 
-  final muiViolations = _checkMuiPurity();
+  final muiViolations = _checkLegacyMaterial();
   if (muiViolations.isEmpty) {
-    stdout.writeln('✅ mui 零 cupertino import。');
+    stdout.writeln(
+      '✅ material 只经 mui 出（legacy import 仅名单内 ${_legacyMaterialAllowlist.length} 处）。',
+    );
   } else {
-    stderr.writeln('❌ mui 引入了 material/cupertino ${muiViolations.length} 处：');
+    stderr.writeln(
+      '❌ 名单外的 legacy material import ${muiViolations.length} 处：',
+    );
     for (final v in muiViolations) {
       stderr.writeln('  ✗ $v');
     }
-    stderr.writeln('  → mui 可以用 material，但不许碰 cupertino。');
+    stderr.writeln(
+      '  → 业务代码请 import package:mui/mui.dart；确需 legacy 的加进 _legacyMaterialAllowlist 并写明理由。',
+    );
     exit(1);
   }
 

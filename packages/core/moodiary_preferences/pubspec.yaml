@@ -16,6 +16,8 @@ dependencies:
   moodiary_core: 0.0.1
   moodiary_data: 0.0.1
   moodiary_models: 0.0.1
+  # AppSettings 持有 ThemeData，类型必须与 mui 产出的同源。
+  mui: 0.0.1
 
   flutter_riverpod: 3.4.2
   riverpod_annotation: 4.0.6

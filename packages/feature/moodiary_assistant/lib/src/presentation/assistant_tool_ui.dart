@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:mui/mui.dart';
 
 ({IconData icon, String title, String description}) assistantToolDisplay(
   BuildContext context,

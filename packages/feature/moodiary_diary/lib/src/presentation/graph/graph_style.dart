@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:mui/mui.dart';
 
 /// 节点着色维度（总图可切，ego 图固定按分类）。
 enum GraphColorMode { category, time, plain }

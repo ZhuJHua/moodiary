@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:mui/mui.dart';
 
 class Modal extends StatelessWidget {

@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_diary/src/presentation/graph/graph_style.dart';
 import 'package:moodiary_models/moodiary_models.dart';

@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_sync/src/application/sync_controller.dart';
 import 'package:moodiary_sync/src/presentation/widget/sync_status_sheet.dart';
-import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons;
+import 'package:mui/mui.dart';
 
 /// AppBar 同步入口：自监听 [syncControllerProvider]，运行中转圈，点击弹出状态面板。
 /// 供两端 app 直接 `const SyncStatusButton()` 组合，无需宿主接线。

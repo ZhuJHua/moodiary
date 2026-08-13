@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:mui/mui.dart';
 
 /// 悬浮胶囊底栏的固定尺寸。改这里就等于改版式，别在调用方另写字面量。

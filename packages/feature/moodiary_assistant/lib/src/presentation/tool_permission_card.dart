@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:genui/genui.dart' as genui;
 import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';

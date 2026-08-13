@@ -12,6 +12,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Flutter 3.47 把 material 拆成独立包；SDK 内的 package:flutter/material.dart
+  # 将于 2026-11 正式弃用。mui 是全仓唯一 import 它的地方。
+  material_ui: 1.0.0
   lucide_icons_flutter: 3.1.15
   flutter_svg: 2.3.0
   cached_network_image_ce: 4.10.0
@@ -29,10 +32,6 @@ dependencies:
 
 dev_dependencies:
   flutter_test:
-    sdk: flutter
-  # 仅测试用：zh 语种下 Scaffold/弹窗要 GlobalMaterialLocalizations，
-  # 生产侧由宿主 App 注册。
-  flutter_localizations:
     sdk: flutter
   moodiary_lint: 0.0.1
 

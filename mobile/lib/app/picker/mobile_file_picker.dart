@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart' as fp;
-import 'package:flutter/material.dart';
+// wechat 的两个 picker 仍是 legacy material。这一段专门给它们造 legacy
+// ThemeData —— 靠根部的 MaterialUiCompatibilityBridge 把 App 配色映射过来。
+import 'package:flutter/material.dart' as legacy;
 import 'package:moodiary/app/picker/moodiary_camera_picker_state.dart';
 import 'package:moodiary/app/picker/moodiary_picker_delegate.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -59,8 +61,8 @@ class MobileFilePicker implements IFilePicker {
   /// 相册胶囊 = focusColor……以包内置灰黑模板为底，仅覆盖取色槽位；textTheme 一并
   /// 透传（自定义字体同款）。bodyLarge 例外：包内只有预览页确认按钮文字与它绑定，
   /// 该按钮底色是强调色，故置为 onPrimary。
-  ThemeData _pickerTheme(BuildContext context) {
-    final theme = Theme.of(context);
+  legacy.ThemeData _pickerTheme(BuildContext context) {
+    final theme = legacy.Theme.of(context);
     final cs = theme.colorScheme;
     final base = AssetPicker.themeData(
       cs.primary,
@@ -86,7 +88,7 @@ class MobileFilePicker implements IFilePicker {
       appBarTheme: base.appBarTheme.copyWith(
         backgroundColor: cs.surface,
         foregroundColor: cs.onSurface,
-        iconTheme: IconThemeData(color: cs.onSurface),
+        iconTheme: legacy.IconThemeData(color: cs.onSurface),
       ),
       bottomAppBarTheme: base.bottomAppBarTheme.copyWith(
         color: cs.surfaceContainer,

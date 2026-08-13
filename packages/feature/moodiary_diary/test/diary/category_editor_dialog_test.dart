@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_diary/src/presentation/category/category_manager_page.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
@@ -15,7 +14,11 @@ void main() {
         data: _mui,
         child: MaterialApp(
           locale: const Locale('zh'),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: const [
+            ...AppLocalizations.localizationsDelegates,
+            // material_ui 的 widget 要它自己那份 MaterialLocalizations。
+            ...GlobalMaterialLocalizations.delegates,
+          ],
           supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) => Scaffold(

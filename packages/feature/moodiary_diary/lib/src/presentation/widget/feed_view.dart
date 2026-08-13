@@ -1,7 +1,6 @@
 /// @docImport 'package:moodiary_diary/src/application/diary_stamp.dart';
 library;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';

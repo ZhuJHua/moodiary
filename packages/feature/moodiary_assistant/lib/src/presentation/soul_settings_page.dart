@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/soul_repository.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';

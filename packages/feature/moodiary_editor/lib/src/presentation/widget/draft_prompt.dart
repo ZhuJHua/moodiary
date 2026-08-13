@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
+import 'package:mui/mui.dart';
 
 /// 连点 FAB 会压入两个无 id 的 `/diary-new`，它们归一到同一个 EditController、串写同一条
 /// 草稿而错乱；用此闸门保证同一时刻只有一个新建页在途。

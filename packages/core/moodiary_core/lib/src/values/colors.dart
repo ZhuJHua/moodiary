@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:mui/mui.dart';
 
 class AppColor {
   /// 心情色带的两端（低 → 高）。灰度 UI 下这是屏幕上少数几处有彩色之一 ——

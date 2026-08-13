@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart' show SynchronousFuture;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// mui 组件自己要用的那十来个通用词。
 ///

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -31,7 +30,11 @@ Widget wrap({
   child: MuiTheme(
     data: _mui,
     child: const MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: [
+        ...AppLocalizations.localizationsDelegates,
+        // material_ui 的 widget 要它自己那份 MaterialLocalizations。
+        ...GlobalMaterialLocalizations.delegates,
+      ],
       supportedLocales: AppLocalizations.supportedLocales,
       locale: Locale('zh'),
       home: Scaffold(body: CategoryDrawer()),
@@ -103,8 +106,10 @@ void main() {
             return MuiTheme(
               data: _mui,
               child: MaterialApp(
-                localizationsDelegates:
-                    AppLocalizations.localizationsDelegates,
+                localizationsDelegates: const [
+                  ...AppLocalizations.localizationsDelegates,
+                  ...GlobalMaterialLocalizations.delegates,
+                ],
                 supportedLocales: AppLocalizations.supportedLocales,
                 locale: const Locale('zh'),
                 home: Scaffold(
@@ -163,8 +168,10 @@ void main() {
             return MuiTheme(
               data: _mui,
               child: MaterialApp(
-                localizationsDelegates:
-                    AppLocalizations.localizationsDelegates,
+                localizationsDelegates: const [
+                  ...AppLocalizations.localizationsDelegates,
+                  ...GlobalMaterialLocalizations.delegates,
+                ],
                 supportedLocales: AppLocalizations.supportedLocales,
                 locale: const Locale('zh'),
                 home: Scaffold(
@@ -204,7 +211,11 @@ void main() {
         child: MuiTheme(
           data: _mui,
           child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: [
+              ...AppLocalizations.localizationsDelegates,
+              // material_ui 的 widget 要它自己那份 MaterialLocalizations。
+              ...GlobalMaterialLocalizations.delegates,
+            ],
             supportedLocales: AppLocalizations.supportedLocales,
             locale: Locale('zh'),
             home: Scaffold(body: CategoryDrawer()),

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:mui/mui.dart';
 
 /// 同步进行中的聚合提示卡。不为每篇远端日记插入独立占位 —— manifest 只有 LWW 时间戳，

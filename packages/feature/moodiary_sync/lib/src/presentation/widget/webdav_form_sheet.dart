@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_sync/src/data/impl/webdav_sync.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';

@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:chat_bottom_container/chat_bottom_container.dart';
-import 'package:flutter/material.dart';
+// flutter_chat_ui 仍是 legacy material，它的 .fromThemeData 只认 legacy
+// ThemeData；配色由根部的 MaterialUiCompatibilityBridge 映射过来。
+import 'package:flutter/material.dart' as legacy;
 import 'package:flutter/services.dart';
 import 'package:flutter_chat_core/flutter_chat_core.dart' hide DateFormat;
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
@@ -889,7 +891,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       chatController: _chat,
       currentUserId: kAssistantUserId,
       resolveUser: (id) async => User(id: id),
-      theme: .fromThemeData(Theme.of(context)),
+      theme: .fromThemeData(legacy.Theme.of(context)),
       builders: Builders(
         textMessageBuilder: _buildTextMessage,
         customMessageBuilder: _buildCustomMessage,

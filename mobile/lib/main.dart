@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -133,18 +132,41 @@ class Moodiary extends ConsumerWidget {
         // 全靠这一层，否则会沿用上一个页面留下的明暗。
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value: systemOverlayStyleOf(brightness),
-          child: FlutterSmartDialog.init()(context, child!),
+          // 自有代码已全量切到 material_ui，但依赖图里还有 40+ 个包在读
+          // legacy 的 `Theme.of`（chat_ui、wechat picker、smart_dialog…）。
+          // 桥接把 modern ThemeData 映射成 legacy 挂在同一棵树上，那些 widget
+          // 因此还能拿到我们的配色与排版。
+          //
+          // 注意它**只映射 platform / visualDensity / colorScheme / textTheme**
+          // 四项，25 个组件子主题（水波纹关闭、lucide 返回键、输入框装饰…）不过桥，
+          // 所以第三方 widget 的组件级样式会回落到 Material 默认。
+          //
+          // 位置有唯一正确答案：套在 SmartDialog 外面。init() 会自建 Overlay，
+          // toast / loading 是与 child 平级的兄弟 entry，包在里面就吃不到主题。
+          //
+          // 出厂即 @Deprecated 是官方在表态「这是临时物」，依赖迁完就摘。
+          // ignore: deprecated_member_use
+          child: MaterialUiCompatibilityBridge(
+            child: FlutterSmartDialog.init()(context, child!),
+          ),
         );
       },
       theme: settings.lightTheme,
       darkTheme: settings.darkTheme,
       locale: settings.locale,
       themeMode: settings.themeMode,
-      // mui 自带一小份通用词（确认/取消/返回/toast…），组件库不反过来依赖 App 的
-      // 文案包。不注册这一条不会崩，但那几个词会静默回落到英文。
+      // **不能用 `AppLocalizations.localizationsDelegates`**：gen-l10n 生成的那份里
+      // 带的是 flutter_localizations 的 GlobalMaterialLocalizations，给出的是
+      // **legacy** MaterialLocalizations 类型，material_ui 的 widget 认不得它，
+      // 中文下会退化成「locale zh is not supported」并让日期选择器一类直接抛。
+      // material_ui 自带一份同名的，`delegates` 里已含 cupertino/widgets 两条。
+      //
+      // 生成文件会被覆盖，所以这个列表只能手写在这里。
+      // legacy 子树的那份由根部的 MaterialUiCompatibilityBridge 自己注入。
       localizationsDelegates: const [
-        ...AppLocalizations.localizationsDelegates,
+        AppLocalizations.delegate,
         MuiLocalizations.delegate,
+        ...GlobalMaterialLocalizations.delegates,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
     );

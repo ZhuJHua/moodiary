@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_editor/src/data/model/weather.dart';
+import 'package:mui/mui.dart';
 
 /// 和风天气「实时天气」仓储：按经纬度取 `[icon, temp, text]` 三元组。
 class WeatherRepository {

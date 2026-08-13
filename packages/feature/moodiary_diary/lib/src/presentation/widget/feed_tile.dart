@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_diary/src/application/diary_stamp.dart';
 import 'package:moodiary_diary/src/presentation/widget/diary_tile_frame.dart';

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:mui/mui.dart';
 
 /// 后台隐私保护遮罩。自给自足：内部监听生命周期、仅当 [MoodiaryKVs.backendPrivacy]
 /// 为 true 时启用，放到 Stack 顶层即可，无需传 key 或回调。

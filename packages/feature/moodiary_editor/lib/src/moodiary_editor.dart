@@ -4,7 +4,6 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/material.dart';
 import 'package:mui/mui.dart';
 
 import 'editor_local_server.dart';

@@ -1,5 +1,5 @@
 import 'package:expressive_refresh/expressive_refresh.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// 下拉刷新（[ExpressiveRefreshIndicator]，M3 Expressive 动画）+ 预加载式上拉加载。
 ///

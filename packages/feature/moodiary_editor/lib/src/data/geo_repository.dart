@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_editor/src/data/model/geo.dart';
