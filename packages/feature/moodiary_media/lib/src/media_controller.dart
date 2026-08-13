@@ -104,11 +104,19 @@ class MediaCleanupController extends _$MediaCleanupController {
 
   Future<void> clean(MediaCleanupReport report) async {
     await AppFiles.deleteOrphanMedia(report);
-    // MediaInfo 行对账：文件已不存在的行一律删除（写墓碑，随同步扩散）。
+    // MediaInfo 行对账：只删「无日记引用 + 本机无文件」的悬空行（写墓碑，随同步扩散）。
     // 覆盖两条路径——刚删掉的孤儿音频，以及日记永久删除时文件先没了、孤儿
     // 扫描永远扫不到的悬空行（行否则无任何回收通道）。
+    //
+    // **被引用的行文件缺失时必须保留**：多设备下「文件还没从远端下载下来」与
+    // 「文件已不存在」在本机不可区分（媒体下载失败只记日志、pull 照常推进），
+    // 按文件存在性删行会把用户手工起的名字做成墓碑推向全网、永久抹掉——
+    // 本表是名字的唯一事实源，media_page 的懒补行防的就是同一类事故。
+    final used = await DiaryRepository.get().collectReferencedMedia();
+    final referenced = {...used.images, ...used.audios, ...used.videos};
     final rows = await MediaInfoRepository.get().getAllMediaInfos().run();
     for (final row in rows.getOrElse((_) => const [])) {
+      if (referenced.contains(row.fileName)) continue;
       final file = File(AppFiles.getRealPath(row.mediaType, row.fileName));
       if (!await file.exists()) {
         await MediaInfoRepository.get().deleteAMediaInfo(row.fileName).run();
