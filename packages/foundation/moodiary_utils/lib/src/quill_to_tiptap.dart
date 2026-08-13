@@ -21,6 +21,13 @@ class QuillDeltaToTiptap {
     } catch (_) {
       return null;
     }
+    // 「恰好是 JSON 数组」的裸文本（`["买菜","做饭"]`、`[2026]`）不是 Delta：
+    // 循环会把非 Map op 全部跳过、产出只剩空段落的"合法"文档，正文静默清空。
+    // 返回 null 让调用方走纯文本兜底链。空数组是合法的空 Delta，放行。
+    if (ops.isNotEmpty &&
+        !ops.any((op) => op is Map && op.containsKey('insert'))) {
+      return null;
+    }
 
     // 1) 解析为「行」：文本 op 按 \n 切，换行处用行级属性（header/list/blockquote/code-block）收行。
     final lines = <_Line>[];
@@ -145,14 +152,23 @@ class QuillDeltaToTiptap {
           listItems = [];
           listType = type;
         }
+        // listItem / taskItem(nested) 的 schema 是 `paragraph block*`：首子必须是段落，
+        // 列表行只有 embed 时补一个空段落（与 markdown 转换器同款防护）。
+        final itemContent =
+            produced.isNotEmpty && produced.first['type'] != 'paragraph'
+            ? [
+                {'type': 'paragraph'},
+                ...produced,
+              ]
+            : produced;
         listItems!.add(
           isCheck
               ? {
                   'type': 'taskItem',
                   'attrs': {'checked': list == 'checked'},
-                  'content': produced,
+                  'content': itemContent,
                 }
-              : {'type': 'listItem', 'content': produced},
+              : {'type': 'listItem', 'content': itemContent},
         );
       } else if (la['blockquote'] == true) {
         flushList();

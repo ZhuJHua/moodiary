@@ -239,7 +239,7 @@ void main() {
       );
     });
 
-    test('有序列表里的图片：保留为该 listItem 内的 image 节点', () {
+    test('有序列表里的图片：保留为 image 节点，首子补空段落满足 schema', () {
       final c = content([
         {'insert': 'one'},
         {
@@ -258,7 +258,9 @@ void main() {
       expect(c[0]['type'], 'orderedList');
       final items = c[0]['content'] as List;
       expect(items.length, 2);
+      // listItem 的 schema 是 `paragraph block*`：首子必须是段落，媒体随后。
       expect(items[1]['content'], [
+        {'type': 'paragraph'},
         {
           'type': 'image',
           'attrs': {'src': 'image-x.jpg'},

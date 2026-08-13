@@ -206,4 +206,124 @@ void main() {
       expect(c.links, isEmpty);
     });
   });
+
+  group('TiptapContent — 外链不入媒体引用', () {
+    test('http/https/data 开头的 image src 不进 images', () {
+      final c = TiptapContent.parse(
+        _doc([
+          {
+            'type': 'image',
+            'attrs': {'src': 'https://example.com/a.png'},
+          },
+          {
+            'type': 'image',
+            'attrs': {'src': 'data:image/png;base64,xxxx'},
+          },
+          {
+            'type': 'image',
+            'attrs': {'src': 'image-local.png'},
+          },
+        ]),
+      );
+      expect(c.media.images, ['image-local.png']);
+    });
+  });
+
+  group('TiptapContent.wrapPlainText', () {
+    test('逐行成段、文字原样保留', () {
+      final c = TiptapContent.parse(
+        TiptapContent.wrapPlainText('第一行\n第二行 "带引号" & <符号>'),
+      );
+      expect(c.isDoc, isTrue);
+      expect(c.plainText, '第一行\n第二行 "带引号" & <符号>');
+    });
+
+    test('空文本给单个空段落，仍是合法文档', () {
+      final c = TiptapContent.parse(TiptapContent.wrapPlainText(''));
+      expect(c.isDoc, isTrue);
+      expect(c.plainText, '');
+    });
+  });
+
+  group('TiptapContent.ensureMedia — 媒体守恒', () {
+    test('缺失的媒体以一等节点追加到文末，字段重算只增不减', () {
+      final doc = _doc([
+        _p([_text('正文')]),
+        {
+          'type': 'image',
+          'attrs': {'src': 'image-kept.png'},
+        },
+      ]);
+      final ensured = TiptapContent.ensureMedia(
+        doc,
+        images: ['image-kept.png', 'image-lost.png'],
+        audios: ['audio-lost.m4a'],
+        videos: ['video-lost.mp4'],
+      );
+      final media = TiptapContent.parse(ensured).media;
+      expect(media.images, ['image-kept.png', 'image-lost.png']);
+      expect(media.audios, ['audio-lost.m4a']);
+      expect(media.videos, ['video-lost.mp4']);
+    });
+
+    test('全部在场时原样返回（字节不变）', () {
+      final doc = _doc([
+        {
+          'type': 'image',
+          'attrs': {'src': 'image-a.png'},
+        },
+      ]);
+      expect(
+        TiptapContent.ensureMedia(doc, images: ['image-a.png'], audios: [], videos: []),
+        same(doc),
+      );
+    });
+
+    test('整篇被判成代码块（缩进日记）时图片引用救得回来', () {
+      // MarkdownToTiptap 对全文 4 空格缩进的产物：单个 codeBlock，图片成了字面文本。
+      final doc = _doc([
+        {
+          'type': 'codeBlock',
+          'content': [_text('今天天气很好。\n![](image-aaa.png)')],
+        },
+      ]);
+      final media = TiptapContent.parse(
+        TiptapContent.ensureMedia(doc, images: ['image-aaa.png'], audios: [], videos: []),
+      ).media;
+      expect(media.images, ['image-aaa.png']);
+    });
+
+    test('非 doc 输入原样返回，不抛出', () {
+      expect(
+        TiptapContent.ensureMedia('not a doc', images: ['image-a.png'], audios: [], videos: []),
+        'not a doc',
+      );
+    });
+
+    test('空串与重复名安全（去重、忽略空名）', () {
+      final doc = _doc([_p([_text('x')])]);
+      final media = TiptapContent.parse(
+        TiptapContent.ensureMedia(
+          doc,
+          images: ['', 'image-a.png', 'image-a.png'],
+          audios: [],
+          videos: [],
+        ),
+      ).media;
+      expect(media.images, ['image-a.png']);
+    });
+
+    test('外链不参与守恒：media 收集时排除，不会被反复判缺失追加', () {
+      final doc = _doc([_p([_text('x')])]);
+      expect(
+        TiptapContent.ensureMedia(
+          doc,
+          images: ['https://example.com/a.png'],
+          audios: [],
+          videos: [],
+        ),
+        same(doc),
+      );
+    });
+  });
 }

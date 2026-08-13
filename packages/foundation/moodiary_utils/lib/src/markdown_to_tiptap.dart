@@ -24,7 +24,12 @@ class MarkdownToTiptap {
 
   static String? convert(String markdown) {
     try {
-      final nodes = md.Document(extensionSet: .gitHubFlavored).parse(markdown);
+      // encodeHtml 默认为 true，会在解析期就把 " & < > 转义成 HTML 实体写进
+      // md.Text.text——产物是 JSON 文档不是 HTML，落库就成了字面量 `&quot;`。
+      final nodes = md.Document(
+        extensionSet: .gitHubFlavored,
+        encodeHtml: false,
+      ).parse(markdown);
       final content = _blocks(nodes);
       if (content.isEmpty) content.add({'type': 'paragraph'});
       return jsonEncode({'type': 'doc', 'content': content});
@@ -280,9 +285,17 @@ class MarkdownToTiptap {
       kids[0] = md.Text((kids.first as md.Text).text.trimLeft());
     }
     var content = _blocks(kids);
+    // listItem / taskItem(nested) 的 schema 是 `paragraph block*`：首子必须是段落。
+    // `- ![](img)` 这类首子是媒体的项若不补，产物 schema 非法（编辑器选中该媒体按
+    // 回车会在 createParagraphNear 抛异常）。
     if (content.isEmpty) {
       content = [
         {'type': 'paragraph'},
+      ];
+    } else if (content.first['type'] != 'paragraph') {
+      content = [
+        {'type': 'paragraph'},
+        ...content,
       ];
     }
     if (task) {

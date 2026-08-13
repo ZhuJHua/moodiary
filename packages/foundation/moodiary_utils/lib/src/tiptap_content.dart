@@ -117,7 +117,10 @@ class TiptapContent {
       if (attrs is Map) {
         if (type == 'image') {
           final s = attrs['src'];
-          if (s is String && s.isNotEmpty) images.add(s);
+          // 外链（手打 markdown 迁移来的 http 图）不是本地文件名：进了 imageName 会被
+          // 封面 / 媒体库当本地路径去读，必然裂图。按 scheme 排除（web 侧 isLocalMedia
+          // 是前缀白名单，取向一致但口径不同——这里只拦确定的链接形态）。
+          if (s is String && s.isNotEmpty && !_isExternalSrc(s)) images.add(s);
         } else if (type == 'audio') {
           final f = attrs['filename'];
           if (f is String && f.isNotEmpty) audios.add(f);
@@ -200,6 +203,77 @@ class TiptapContent {
 
     walk(doc);
     return out;
+  }
+
+  static bool _isExternalSrc(String src) =>
+      src.startsWith('http://') ||
+      src.startsWith('https://') ||
+      src.startsWith('data:');
+
+  /// 把一段裸纯文本包成最小合法 TipTap 文档（逐行成段；空文本给单个空段落）。
+  /// 迁移的最后一级兜底：converter 全部失败时宁可掉格式，也不能丢字。
+  static String wrapPlainText(String text) {
+    final content = [
+      for (final line in const LineSplitter().convert(text))
+        {
+          'type': 'paragraph',
+          if (line.isNotEmpty)
+            'content': [
+              {'type': 'text', 'text': line},
+            ],
+        },
+    ];
+    if (content.isEmpty) content.add({'type': 'paragraph'});
+    return jsonEncode({'type': 'doc', 'content': content});
+  }
+
+  /// 媒体守恒：确保 [docJson] 里出现 [images]/[audios]/[videos] 的每一个本地文件名，
+  /// 缺失的以一等媒体节点追加到文末，返回补齐后的 JSON（无缺失原样返回）。
+  ///
+  /// 迁移用：转换器把媒体引用弄丢（缩进整篇成代码块、≤2.4 的附件式媒体不在正文里…）时，
+  /// 落库后按正文重算的 imageName 会净减少，「清理无用文件」随即把真实文件当孤儿删掉。
+  /// 该函数保证迁移后的媒体字段 ⊇ 迁移前，引用只增不减。
+  static String ensureMedia(
+    String docJson, {
+    required List<String> images,
+    required List<String> audios,
+    required List<String> videos,
+  }) {
+    final parsed = TiptapContent.parse(docJson);
+    final doc = parsed._doc;
+    if (doc == null) return docJson;
+
+    final present = parsed.media;
+    // 外链不参与守恒：`media` 收集时排除了它们，不过滤会被反复判成缺失重复追加。
+    final missing = <Map<String, dynamic>>[
+      for (final name in {...images})
+        if (name.isNotEmpty &&
+            !_isExternalSrc(name) &&
+            !present.images.contains(name))
+          {
+            'type': 'image',
+            'attrs': {'src': name},
+          },
+      for (final name in {...audios})
+        if (name.isNotEmpty && !present.audios.contains(name))
+          {
+            'type': 'audio',
+            'attrs': {'filename': name},
+          },
+      for (final name in {...videos})
+        if (name.isNotEmpty && !present.videos.contains(name))
+          {
+            'type': 'video',
+            'attrs': {'filename': name},
+          },
+    ];
+    if (missing.isEmpty) return docJson;
+
+    final content = doc['content'];
+    return jsonEncode({
+      ...doc,
+      'content': [...(content is List ? content : const []), ...missing],
+    });
   }
 
   /// 收集一个块内的内联文本（不补块级换行，供标题文本用）。

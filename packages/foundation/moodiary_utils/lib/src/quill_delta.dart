@@ -17,7 +17,15 @@ class QuillDelta {
     }
   }
 
-  static bool isDelta(String deltaJson) => ops(deltaJson) != null;
+  /// 合法 Delta：顶层是数组，且（空数组，或至少一个带 `insert` 键的 Map op）。
+  /// 只查顶层数组会把「恰好是 JSON 数组的裸文本」误判成 Delta，
+  /// 下游转换会把这类正文静默清空。
+  static bool isDelta(String deltaJson) {
+    final parsed = ops(deltaJson);
+    if (parsed == null) return false;
+    return parsed.isEmpty ||
+        parsed.any((op) => op is Map && op.containsKey('insert'));
+  }
 
   /// 纯文本镜像：拼接所有字符串 `insert`，embed（Map insert）不产出文本。
   /// 与 flutter_quill `Document.toPlainText()` 的差别仅在于不补文档末尾换行，

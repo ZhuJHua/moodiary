@@ -43,6 +43,10 @@ void main() {
       expect(QuillDelta.isDelta('[]'), isTrue);
       expect(QuillDelta.isDelta('裸文本'), isFalse);
       expect(QuillDelta.isDelta('{"ops":[]}'), isFalse);
+      // 恰好是 JSON 数组的裸文本：没有任何带 insert 的 Map op，不算 Delta。
+      expect(QuillDelta.isDelta('["买菜","做饭"]'), isFalse);
+      expect(QuillDelta.isDelta('[2026]'), isFalse);
+      expect(QuillDelta.isDelta('[{"a":1}]'), isFalse);
     });
   });
 

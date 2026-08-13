@@ -178,5 +178,56 @@ void main() {
       expect(QuillDeltaToTiptap.convert('not json'), isNull);
       expect(QuillDeltaToTiptap.convert('{"a":1}'), isNull);
     });
+
+    test('恰好是 JSON 数组的裸文本不是 Delta：返回 null 走纯文本兜底，不产空文档', () {
+      expect(QuillDeltaToTiptap.convert('["买菜","做饭"]'), isNull);
+      expect(QuillDeltaToTiptap.convert('[2026]'), isNull);
+      expect(QuillDeltaToTiptap.convert('[{"a":1}]'), isNull);
+    });
+
+    test('空数组是合法的空 Delta，产出空段落文档', () {
+      final doc = jsonDecode(QuillDeltaToTiptap.convert('[]')!);
+      expect(doc['content'], [
+        {'type': 'paragraph'},
+      ]);
+    });
+
+    test('列表行只有 embed 时 listItem 首子补空段落（schema paragraph block*）', () {
+      final delta = jsonEncode([
+        {
+          'insert': {'image': 'image-a.png'},
+        },
+        {
+          'insert': '\n',
+          'attributes': {'list': 'bullet'},
+        },
+      ]);
+      final doc = jsonDecode(QuillDeltaToTiptap.convert(delta)!);
+      final item = (doc['content'] as List)
+          .cast<Map<String, dynamic>>()
+          .firstWhere((b) => b['type'] == 'bulletList')['content'][0];
+      final content = (item['content'] as List).cast<Map<String, dynamic>>();
+      expect(content.first['type'], 'paragraph');
+      expect(content.any((n) => n['type'] == 'image'), isTrue);
+    });
+
+    test('任务列表行只有 embed 时 taskItem 首子同样补段落', () {
+      final delta = jsonEncode([
+        {
+          'insert': {'audio': 'audio-b.m4a'},
+        },
+        {
+          'insert': '\n',
+          'attributes': {'list': 'unchecked'},
+        },
+      ]);
+      final doc = jsonDecode(QuillDeltaToTiptap.convert(delta)!);
+      final item = (doc['content'] as List)
+          .cast<Map<String, dynamic>>()
+          .firstWhere((b) => b['type'] == 'taskList')['content'][0];
+      final content = (item['content'] as List).cast<Map<String, dynamic>>();
+      expect(content.first['type'], 'paragraph');
+      expect(content.any((n) => n['type'] == 'audio'), isTrue);
+    });
   });
 }
