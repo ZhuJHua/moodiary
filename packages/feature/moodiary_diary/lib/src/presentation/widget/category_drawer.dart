@@ -362,12 +362,12 @@ class _Swatch extends StatelessWidget {
 
   const _Swatch({this.color}) : gradient = null, hollow = false;
 
-  _Swatch.all({required MuiColorScheme scheme})
+  _Swatch.all({required ColorScheme scheme})
     : color = null,
       hollow = false,
       gradient = LinearGradient(colors: [scheme.primary, scheme.tertiary]);
 
-  const _Swatch.none({required MuiColorScheme scheme})
+  const _Swatch.none({required ColorScheme scheme})
     : color = null,
       gradient = null,
       hollow = true;

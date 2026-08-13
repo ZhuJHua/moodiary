@@ -1570,7 +1570,7 @@ class _ComposerImagePreview extends StatelessWidget {
   }
 }
 
-Widget _brokenImage(MuiColorScheme scheme, double size) => Container(
+Widget _brokenImage(ColorScheme scheme, double size) => Container(
   width: size,
   height: size,
   color: scheme.surfaceContainerHighest,

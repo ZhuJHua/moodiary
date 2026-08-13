@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_color_utilities/material_color_utilities.dart' as mcu;
 import 'package:mui/mui.dart';
 
-/// 无彩档的结构性角色必须真的是灰、且与种子无关。[MuiColorScheme.resolve] 换掉
+/// 无彩档的结构性角色必须真的是灰、且与种子无关。[resolveColorScheme] 换掉
 /// 变体或往里加覆盖，这里就会红。
 const List<String> _structuralRoles = [
   'surface',
@@ -23,7 +23,7 @@ const List<String> _structuralRoles = [
   'onInverseSurface',
 ];
 
-Map<String, int> _structuralOf(MuiColorScheme s) => {
+Map<String, int> _structuralOf(ColorScheme s) => {
   'surface': s.surface.toARGB32(),
   'surfaceBright': s.surfaceBright.toARGB32(),
   'surfaceDim': s.surfaceDim.toARGB32(),
@@ -49,9 +49,9 @@ bool _isGray(Color color) {
 }
 
 void main() {
-  group('MuiColorScheme.resolve', () {
+  group('resolveColorScheme', () {
     for (final brightness in Brightness.values) {
-      final neutral = MuiColorScheme.resolve(
+      final neutral = resolveColorScheme(
         brightness,
         const MuiAccent.neutral(),
       );
@@ -74,12 +74,16 @@ void main() {
         expect(_isGray(neutral.primary), isTrue);
         expect(_isGray(neutral.secondary), isTrue);
         expect(_isGray(neutral.tertiary), isTrue);
-        expect(_isGray(neutral.ring), isTrue);
+        // 焦点环/光标派生自 primary，无彩档下也必须是灰。
+        final cursor = buildMuiTheme(
+          brightness: brightness,
+        ).textSelectionTheme.cursorColor!;
+        expect(_isGray(cursor), isTrue);
         expect(chromatic.length, greaterThan(1));
       });
 
       test('$brightness 强调色确实改变了 primary', () {
-        final accented = MuiColorScheme.resolve(
+        final accented = resolveColorScheme(
           brightness,
           const MuiAccent.seeded(Color(0xFF2E59A7)),
         );
@@ -90,7 +94,7 @@ void main() {
       test('$brightness 无彩档不受种子色影响', () {
         expect(
           _structuralOf(
-            MuiColorScheme.resolve(brightness, const MuiAccent.neutral()),
+            resolveColorScheme(brightness, const MuiAccent.neutral()),
           ),
           _structuralOf(neutral),
         );
@@ -101,9 +105,13 @@ void main() {
           const MuiAccent.neutral(),
           const MuiAccent.seeded(Color(0xFF2E59A7)),
         ]) {
-          final s = MuiColorScheme.resolve(brightness, accent);
-          expect(s.ring.a, 1.0, reason: '焦点环必须不透明');
-          expect(s.selection.a, lessThan(1.0), reason: '选中底色必须半透明');
+          final t = buildMuiTheme(brightness: brightness, accent: accent);
+          expect(t.textSelectionTheme.cursorColor!.a, 1.0, reason: '光标必须不透明');
+          expect(
+            t.textSelectionTheme.selectionColor!.a,
+            lessThan(1.0),
+            reason: '选中底色必须半透明',
+          );
         }
       });
     }
@@ -122,7 +130,7 @@ void main() {
         // dynamic_color 的 toColorScheme() 至 1.9.0 仍取 primary.get(10)，实测
         // 对比度 13.2（近黑压浅块）。现代规范是 tone 30/90，对比度 7.2。
         for (final brightness in Brightness.values) {
-          final scheme = MuiColorScheme.resolve(
+          final scheme = resolveColorScheme(
             brightness,
             const MuiAccent.seeded(seed),
           );
@@ -142,7 +150,7 @@ void main() {
 
       test('结构性角色跟着种子染色，不套用灰阶', () {
         for (final brightness in Brightness.values) {
-          final scheme = MuiColorScheme.resolve(
+          final scheme = resolveColorScheme(
             brightness,
             const MuiAccent.seeded(seed),
           );
@@ -150,7 +158,7 @@ void main() {
             _structuralOf(scheme),
             isNot(
               _structuralOf(
-                MuiColorScheme.resolve(brightness, const MuiAccent.neutral()),
+                resolveColorScheme(brightness, const MuiAccent.neutral()),
               ),
             ),
             reason: '有彩档的表面色不该等于无彩档',
@@ -165,8 +173,8 @@ void main() {
         // dynamic_color 只负责交出种子色；交出来之后与用户挑的颜色没有区别。
         for (final brightness in Brightness.values) {
           expect(
-            MuiColorScheme.resolve(brightness, const MuiAccent.seeded(seed)),
-            MuiColorScheme.resolve(brightness, MuiAccent.seeded(seed)),
+            resolveColorScheme(brightness, const MuiAccent.seeded(seed)),
+            resolveColorScheme(brightness, MuiAccent.seeded(seed)),
           );
         }
       });
@@ -175,7 +183,7 @@ void main() {
     test('结构性角色清单与断言辅助保持同步', () {
       expect(
         _structuralOf(
-          MuiColorScheme.resolve(.light, const MuiAccent.neutral()),
+          resolveColorScheme(.light, const MuiAccent.neutral()),
         ).keys,
         _structuralRoles,
       );
@@ -184,72 +192,70 @@ void main() {
 
   group('值语义', () {
     test('结构相同的两次构造相等 —— 否则主题每次都会通知', () {
-      final a = MuiThemeData(brightness: .light);
-      final b = MuiThemeData(brightness: .light);
+      final a = buildMuiTheme(brightness: Brightness.light);
+      final b = buildMuiTheme(brightness: Brightness.light);
       expect(a, b);
       expect(a.hashCode, b.hashCode);
     });
 
     test('带 Map 字段（wghtAxis）仍然相等', () {
-      final a = MuiThemeData(
-        brightness: .light,
-        font: const MuiFontConfig(family: 'X', wghtAxis: {'Bold': 650}),
-      );
-      final b = MuiThemeData(
-        brightness: .light,
-        font: const MuiFontConfig(family: 'X', wghtAxis: {'Bold': 650}),
-      );
+      const font = MuiFontConfig(family: 'X', wghtAxis: {'Bold': 650});
+      final a = buildMuiTheme(brightness: Brightness.light, font: font);
+      final b = buildMuiTheme(brightness: Brightness.light, font: font);
       expect(a, b);
       expect(a.hashCode, b.hashCode);
     });
 
     test('任一 token 变化都会打破相等', () {
-      final base = MuiThemeData(brightness: .light);
-      expect(base, isNot(MuiThemeData(brightness: .dark)));
-      expect(
-        base,
-        isNot(MuiThemeData(brightness: .light, radii: const MuiRadii(lg: 20))),
-      );
-      expect(
-        base,
-        isNot(
-          MuiThemeData(brightness: .light, spacing: const MuiSpacing(xs: 5)),
+      final base = buildMuiTheme(brightness: Brightness.light);
+      expect(base, isNot(buildMuiTheme(brightness: Brightness.dark)));
+      for (final variant in [
+        buildMuiTheme(
+          brightness: Brightness.light,
+          radii: const MuiRadii(lg: 20),
         ),
-      );
-      expect(
-        base,
-        isNot(
-          MuiThemeData(brightness: .light, borders: const MuiBorders(ring: 2)),
+        buildMuiTheme(
+          brightness: Brightness.light,
+          spacing: const MuiSpacing(xs: 5),
         ),
-      );
-      expect(
-        base,
-        isNot(
-          MuiThemeData(
-            brightness: .light,
-            states: const MuiStateTokens(hoverOpacity: 0.2),
-          ),
+        buildMuiTheme(
+          brightness: Brightness.light,
+          borders: const MuiBorders(ring: 2),
         ),
-      );
+        buildMuiTheme(
+          brightness: Brightness.light,
+          states: const MuiStateTokens(hoverOpacity: 0.2),
+        ),
+      ]) {
+        expect(base, isNot(variant));
+      }
     });
 
-    test('lerp 端点还原，中点在两端之间', () {
-      final light = MuiThemeData(brightness: .light);
-      final dark = MuiThemeData(brightness: .dark);
-      expect(MuiThemeData.lerp(light, dark, 0), light);
-      expect(MuiThemeData.lerp(light, dark, 1), dark);
-      final mid = MuiThemeData.lerp(light, dark, 0.5).colors.surface;
-      expect(mid, isNot(light.colors.surface));
-      expect(mid, isNot(dark.colors.surface));
+    test('MuiTokens 深浅两档都挂上了 —— 否则 ThemeData.lerp 不插值', () {
+      final light = buildMuiTheme(brightness: Brightness.light);
+      final dark = buildMuiTheme(brightness: Brightness.dark);
+      expect(light.extension<MuiTokens>(), isNotNull);
+      expect(dark.extension<MuiTokens>(), isNotNull);
+
+      final mid = ThemeData.lerp(light, dark, 0.5);
+      expect(mid.extension<MuiTokens>(), isNotNull);
+      expect(mid.colorScheme.surface, isNot(light.colorScheme.surface));
+      expect(mid.colorScheme.surface, isNot(dark.colorScheme.surface));
+    });
+
+    test('第三方自建 ThemeData 取到兜底 token，不抛', () {
+      final view = MuiTheme.viewOf(ThemeData(brightness: Brightness.light));
+      expect(view.radii.md, const MuiRadii().md);
+      expect(view.onMedia, const Color(0xFFFFFFFF));
+      expect(view.typography.bodyMedium.onSurface.fontSize, isNotNull);
     });
   });
 
   group('MuiTypography', () {
     MuiTypography typo({MuiFontConfig font = const MuiFontConfig()}) =>
-        MuiTypography.resolve(
-          font: font,
-          colors: MuiColorScheme.resolve(.light, const MuiAccent.neutral()),
-        );
+        MuiTheme.viewOf(
+          buildMuiTheme(brightness: Brightness.light, font: font),
+        ).typography;
 
     test('字重与 fontVariations 一致 —— 只改一个在可变字体下会被吃掉', () {
       const font = MuiFontConfig(
@@ -313,7 +319,7 @@ void main() {
     });
 
     test('链式取色只换颜色', () {
-      final colors = MuiColorScheme.resolve(.light, const MuiAccent.neutral());
+      final colors = resolveColorScheme(.light, const MuiAccent.neutral());
       final role = typo().titleLarge;
       expect(role.onSurface.color, colors.onSurface);
       expect(role.onSurfaceVariant.color, colors.onSurfaceVariant);

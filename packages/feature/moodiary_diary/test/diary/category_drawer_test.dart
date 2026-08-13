@@ -11,7 +11,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 
-final _mui = MuiThemeData(brightness: Brightness.light);
+final _mui = buildMuiTheme(brightness: Brightness.light);
 
 Category cat(String id, String name) =>
     Category(id: id, categoryName: name, lastModified: DateTime(2026));

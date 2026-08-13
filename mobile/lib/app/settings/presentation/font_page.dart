@@ -306,9 +306,12 @@ class _Preview extends StatelessWidget {
     final theme = context.theme;
     final family = fontFamily.isEmpty ? null : fontFamily;
     // 预览的是**这个字体**，不是当前主题字体，所以现算一份排版换掉 family。
-    final typography = MuiTypography.resolve(
-      font: MuiFontConfig(family: family, wghtAxis: theme.font.wghtAxis),
-      colors: theme.colors,
+    final font = MuiFontConfig(family: family, wghtAxis: theme.font.wghtAxis);
+    final typography = MuiTypography(
+      buildTextTheme(font, theme.colors.onSurface),
+      theme.colors,
+      theme.onMedia,
+      font,
     );
     return Column(
       crossAxisAlignment: .start,

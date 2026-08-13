@@ -36,7 +36,6 @@ export 'src/storage/kv/pref.dart';
 export 'src/storage/kv/secure.dart';
 export 'src/theme/app_color_scheme.dart';
 export 'src/theme/font_manager.dart';
-export 'src/theme/mui_material_bridge.dart';
 export 'src/theme/theme_manager.dart';
 export 'src/values/colors.dart';
 export 'src/values/diary_sort.dart';

@@ -234,7 +234,7 @@ class _MoodiaryAudioPlayerPageState extends State<MoodiaryAudioPlayerPage>
     );
   }
 
-  Widget _buildBottomBar(AppLocalizations l10n, MuiColorScheme scheme) {
+  Widget _buildBottomBar(AppLocalizations l10n, ColorScheme scheme) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20,

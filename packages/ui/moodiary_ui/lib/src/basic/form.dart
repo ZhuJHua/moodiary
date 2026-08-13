@@ -89,7 +89,7 @@ class _MoodiaryFieldState extends State<MoodiaryField> {
     if (mounted) setState(() {});
   }
 
-  Widget? _buildTrailing(MuiColorScheme scheme) {
+  Widget? _buildTrailing(ColorScheme scheme) {
     if (widget.trailing != null) return widget.trailing;
     if (!widget.enabled) return null;
     if (widget.obscureText) {

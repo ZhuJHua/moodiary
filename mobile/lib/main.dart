@@ -121,29 +121,20 @@ class Moodiary extends ConsumerWidget {
       onGenerateTitle: (context) => context.l10n.appName,
       routerConfig: router,
       builder: (context, child) {
-        // MuiTheme 套在 SmartDialog **外面**：init() 会自建 Overlay，把传入的 child
-        // 放进 entry[0]，而 toast / loading 是与之平级的兄弟 entry —— 包在里面的话
-        // 那些浮层读不到 mui 配色（toast.dart 的 builder 要取色）。
+        // 主题不再由这里注入：`MaterialApp` 内部已经用 AnimatedTheme 把 `theme` /
+        // `darkTheme` 补间好挂在 builder **上方**，`context.theme` 直接派生自
+        // `Theme.of`，深浅切换的过渡因此是免费的。
         final brightness = switch (settings.themeMode) {
           .light => Brightness.light,
           .dark => Brightness.dark,
           .system => MediaQuery.platformBrightnessOf(context),
         };
-        final muiTheme = brightness == .light
-            ? settings.lightMuiTheme
-            : settings.darkMuiTheme;
-        // 字号跟随系统无障碍设置：主题里的 15 级是**基准**尺寸，缩放由
-        // MediaQuery.textScaler 在渲染期施加，App 内不再有自己的字号档。
-        //
         // 状态栏/导航栏图标的兜底。AppBar 自带的那层注解覆盖在它上面、只管有
         // AppBar 的页面；没有 AppBar 的页面（详情、图片浏览、相机、视频全屏）
         // 全靠这一层，否则会沿用上一个页面留下的明暗。
         return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: systemOverlayStyleFrom(muiTheme),
-          child: MuiAnimatedTheme(
-            data: muiTheme,
-            child: FlutterSmartDialog.init()(context, child!),
-          ),
+          value: systemOverlayStyleOf(brightness),
+          child: FlutterSmartDialog.init()(context, child!),
         );
       },
       theme: settings.lightTheme,

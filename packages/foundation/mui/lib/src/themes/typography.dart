@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
-import 'package:flutter/widgets.dart';
-import 'package:mui/src/themes/color_scheme.dart';
+import 'package:flutter/material.dart';
 import 'package:mui/src/themes/value.dart';
 
 /// 字体族 + 可变字体的 wght 轴实测值。
@@ -70,16 +69,22 @@ enum MuiWeight {
 /// `theme.typography.labelSmall.onSurface.copyWith(color: categoryColor)`。
 @immutable
 class MuiTextRole {
-  const MuiTextRole._(this._base, this._colors, this._emphasis);
+  const MuiTextRole._(this._base, this._colors, this._onMedia, this._emphasis);
 
   final TextStyle _base;
-  final MuiColorScheme _colors;
+
+  /// material 的色板本身就是配色真源，这里直接持有它，不再包一层。
+  final ColorScheme _colors;
+
+  /// M3 没有的那一个角色，来自 `MuiTokens`。
+  final Color _onMedia;
 
   /// 预解析好的强调档，与 [_base] 只差字重。
   final TextStyle _emphasis;
 
   /// 同尺寸的强调档 —— 唯一的字重入口。幂等（`emphasized.emphasized` 不再加重）。
-  MuiTextRole get emphasized => MuiTextRole._(_emphasis, _colors, _emphasis);
+  MuiTextRole get emphasized =>
+      MuiTextRole._(_emphasis, _colors, _onMedia, _emphasis);
 
   TextStyle get onSurface => _base.copyWith(color: _colors.onSurface);
   TextStyle get onSurfaceVariant =>
@@ -110,193 +115,184 @@ class MuiTextRole {
       _base.copyWith(color: _colors.onInverseSurface);
   TextStyle get inversePrimary => _base.copyWith(color: _colors.inversePrimary);
 
-  /// 叠在图片/视频上的文字，见 [MuiColorScheme.onMedia]。
-  TextStyle get onMedia => _base.copyWith(color: _colors.onMedia);
+  /// 叠在图片/视频上的文字，见 `MuiTokens.onMedia`。
+  TextStyle get onMedia => _base.copyWith(color: _onMedia);
 }
 
-/// 排版表。角色名与 M3 `TextTheme` 逐级同名 —— 桥的投影是 1:1，
-/// 197 处 `context.textTheme.*` 零改名。
+
+/// 每一级的默认字重 —— **M3 2021 的原值**，与 `Typography.englishLike2021` 逐级相同
+/// （`typography.dart:2096`）：15 级里 10 级 Regular，只有 title 的 medium/small
+/// 与三个 label 是 Medium。M3 里没有 600/700。
+const Map<String, MuiWeight> _weights = {
+  'displayLarge': .regular,
+  'displayMedium': .regular,
+  'displaySmall': .regular,
+  'headlineLarge': .regular,
+  'headlineMedium': .regular,
+  'headlineSmall': .regular,
+  'titleLarge': .regular,
+  'titleMedium': .medium,
+  'titleSmall': .medium,
+  'bodyLarge': .regular,
+  'bodyMedium': .regular,
+  'bodySmall': .regular,
+  'labelLarge': .medium,
+  'labelMedium': .medium,
+  'labelSmall': .medium,
+};
+
+/// M3 2021 的几何，与 `Typography.englishLike2021` 逐级逐字段相同：
+/// fontSize / height / letterSpacing。height 是**比例**不是绝对行高。
 ///
-/// 几何手抄 M3 2021。实测 `englishLike2021 == dense2021 == tall2021`
-/// （`typography.dart:2096/2114/2132` 三块逐字段相同），所以一套对 zh 与 en 都成立，
-/// 不需要按 `ScriptCategory` 分档。
+/// 字号**不在这里缩放** —— 跟随系统字体大小，由 `MediaQuery.textScaler` 在渲染期
+/// 施加，这是平台无障碍设置的唯一入口。
+const Map<String, (double, double, double)> _geometry = {
+  'displayLarge': (57, 1.12, -0.25),
+  'displayMedium': (45, 1.16, 0),
+  'displaySmall': (36, 1.22, 0),
+  'headlineLarge': (32, 1.25, 0),
+  'headlineMedium': (28, 1.29, 0),
+  'headlineSmall': (24, 1.33, 0),
+  'titleLarge': (22, 1.27, 0),
+  'titleMedium': (16, 1.50, 0.15),
+  'titleSmall': (14, 1.43, 0.1),
+  'bodyLarge': (16, 1.50, 0.5),
+  'bodyMedium': (14, 1.43, 0.25),
+  'bodySmall': (12, 1.33, 0.4),
+  'labelLarge': (14, 1.43, 0.1),
+  'labelMedium': (12, 1.33, 0.5),
+  'labelSmall': (11, 1.45, 0.5),
+};
+
+/// 强调档按**光学尺寸**分两级：22px 及以上用 Bold，其余用 SemiBold。
+///
+/// 取自 iOS HIG 的做法（Large Title / Title 1 / Title 2 的 emphasized 是 Bold，
+/// Title 3 及以下是 Semibold）。字越大越需要更强的字重反差才看得出加重，
+/// 而正文尺寸上 Bold 会显得脏。M3 2021 本身没有定义强调档。
+MuiWeight _emphasisOf(double baseSize) =>
+    baseSize >= 22 ? MuiWeight.bold : MuiWeight.semiBold;
+
+/// 平台默认字体族，逐平台抄 material 的 `Typography._withPlatform`
+/// （`typography.dart:219`）。
+///
+/// **不能留空**：`fontFamily` 为 null 时由引擎自行回退，中文环境下西文与数字常常
+/// 落到 CJK 字体自带的拉丁字形上 —— 那套字形为了塞进方块字的字宽被压窄，
+/// 观感就是「英文和数字被压扁」。material 从来没留过这个空。
+String? _platformFamily(double baseSize) => switch (defaultTargetPlatform) {
+  TargetPlatform.android ||
+  TargetPlatform.fuchsia ||
+  TargetPlatform.linux => 'Roboto',
+  TargetPlatform.iOS =>
+    baseSize >= 22 ? 'CupertinoSystemDisplay' : 'CupertinoSystemText',
+  TargetPlatform.macOS => '.AppleSystemUIFont',
+  TargetPlatform.windows => 'Segoe UI',
+};
+
+TextStyle _styleOf(String name, MuiWeight weight, MuiFontConfig font, Color c) {
+  final (baseSize, height, spacing) = _geometry[name]!;
+  return TextStyle(
+    inherit: false,
+    color: c,
+    // 宿主选了自定义字体就用它，否则回落到平台默认族（不是留空）。
+    fontFamily: font.family ?? _platformFamily(baseSize),
+    fontSize: baseSize,
+    height: height,
+    letterSpacing: spacing,
+    fontWeight: weight.value,
+    fontVariations: [FontVariation('wght', weight.axis(font))],
+    textBaseline: TextBaseline.alphabetic,
+    leadingDistribution: TextLeadingDistribution.even,
+  );
+}
+
+/// 喂给 `ThemeData.textTheme` 的 15 级排版。
+///
+/// 全部 `inherit: false`，所以它会**整块替换**而不是 merge 掉默认排版
+/// （`TextStyle.merge` 遇到 `inherit == false` 直接返回对方）。连带地
+/// `ThemeData.localize` 那条按 `ScriptCategory` 换几何的路径变成空操作 —— 这是好事：
+/// 实测 `englishLike2021 == dense2021 == tall2021`，本来就没有分档。
+TextTheme buildTextTheme(MuiFontConfig font, Color color) {
+  TextStyle s(String name) => _styleOf(name, _weights[name]!, font, color);
+  return TextTheme(
+    displayLarge: s('displayLarge'),
+    displayMedium: s('displayMedium'),
+    displaySmall: s('displaySmall'),
+    headlineLarge: s('headlineLarge'),
+    headlineMedium: s('headlineMedium'),
+    headlineSmall: s('headlineSmall'),
+    titleLarge: s('titleLarge'),
+    titleMedium: s('titleMedium'),
+    titleSmall: s('titleSmall'),
+    bodyLarge: s('bodyLarge'),
+    bodyMedium: s('bodyMedium'),
+    bodySmall: s('bodySmall'),
+    labelLarge: s('labelLarge'),
+    labelMedium: s('labelMedium'),
+    labelSmall: s('labelSmall'),
+  );
+}
+
+/// 排版的取用门面。**真源是 `ThemeData.textTheme`** —— 这一层只负责把
+/// material 的 15 个裸 `TextStyle` 包成可链式取色的 [MuiTextRole]，
+/// 并按光学尺寸算出强调档。
+///
+/// 换句话说：几何与字重存在 [TextTheme] 里，`.emphasized` 与 `.<颜色角色>`
+/// 是 material 表达不出来的那部分表达力，由这里补。
+///
+/// 逐级**懒算**：用不到的级别不构造，主题动画每帧只付实际读到的那一两级。
 @immutable
 class MuiTypography with MuiValue {
-  const MuiTypography._({
-    required this.font,
-    required this.colors,
-    required this.displayLarge,
-    required this.displayMedium,
-    required this.displaySmall,
-    required this.headlineLarge,
-    required this.headlineMedium,
-    required this.headlineSmall,
-    required this.titleLarge,
-    required this.titleMedium,
-    required this.titleSmall,
-    required this.bodyLarge,
-    required this.bodyMedium,
-    required this.bodySmall,
-    required this.labelLarge,
-    required this.labelMedium,
-    required this.labelSmall,
-  });
+  MuiTypography(this._textTheme, this._colors, this._onMedia, this.font);
 
+  final TextTheme _textTheme;
+  final ColorScheme _colors;
+  final Color _onMedia;
+
+  /// 可变字体的 wght 轴实测值。[MuiTextRole.emphasized] 靠它设 `fontVariations`。
   final MuiFontConfig font;
-  final MuiColorScheme colors;
 
-  final MuiTextRole displayLarge;
-  final MuiTextRole displayMedium;
-  final MuiTextRole displaySmall;
-  final MuiTextRole headlineLarge;
-  final MuiTextRole headlineMedium;
-  final MuiTextRole headlineSmall;
-  final MuiTextRole titleLarge;
-  final MuiTextRole titleMedium;
-  final MuiTextRole titleSmall;
-  final MuiTextRole bodyLarge;
-  final MuiTextRole bodyMedium;
-  final MuiTextRole bodySmall;
-  final MuiTextRole labelLarge;
-  final MuiTextRole labelMedium;
-  final MuiTextRole labelSmall;
+  late final MuiTextRole displayLarge = _role('displayLarge', _textTheme.displayLarge);
+  late final MuiTextRole displayMedium = _role('displayMedium', _textTheme.displayMedium);
+  late final MuiTextRole displaySmall = _role('displaySmall', _textTheme.displaySmall);
+  late final MuiTextRole headlineLarge = _role('headlineLarge', _textTheme.headlineLarge);
+  late final MuiTextRole headlineMedium = _role('headlineMedium', _textTheme.headlineMedium);
+  late final MuiTextRole headlineSmall = _role('headlineSmall', _textTheme.headlineSmall);
+  late final MuiTextRole titleLarge = _role('titleLarge', _textTheme.titleLarge);
+  late final MuiTextRole titleMedium = _role('titleMedium', _textTheme.titleMedium);
+  late final MuiTextRole titleSmall = _role('titleSmall', _textTheme.titleSmall);
+  late final MuiTextRole bodyLarge = _role('bodyLarge', _textTheme.bodyLarge);
+  late final MuiTextRole bodyMedium = _role('bodyMedium', _textTheme.bodyMedium);
+  late final MuiTextRole bodySmall = _role('bodySmall', _textTheme.bodySmall);
+  late final MuiTextRole labelLarge = _role('labelLarge', _textTheme.labelLarge);
+  late final MuiTextRole labelMedium = _role('labelMedium', _textTheme.labelMedium);
+  late final MuiTextRole labelSmall = _role('labelSmall', _textTheme.labelSmall);
 
-  /// 15 个角色由这两者**确定性地**算出，所以相等只比这两个。
-  /// 多比 15 份 `TextStyle` 既慢又不会给出不同答案。
-  @override
-  List<Object?> get props => [font, colors];
-
-  /// 每一级的默认字重 —— **M3 2021 的原值**，与 `Typography.englishLike2021`
-  /// 逐级相同（`typography.dart:2096`）：15 级里 10 级 Regular，只有 title 的
-  /// medium/small 与三个 label 是 Medium。M3 里没有 600/700。
+  /// 回落到 M3 基准值的两种情形，都来自「宿主的 `ThemeData` 不是 mui 建的」：
+  ///   * [style] 为 null —— 那一级压根没填；
+  ///   * [style] 有值但 `fontSize` 为 null —— **裸 `ThemeData` 在 `MaterialApp`
+  ///     之外就是这样**：`textTheme` 此时只有 `typography.black` 的颜色，几何要等
+  ///     `ThemeData.localize` 把 `englishLike` 合进来才有。第三方自建主题的子树
+  ///     （wechat picker 等）会走到这条。
   ///
-  /// 这张表以前是本仓 mui 之前那套自定义字重（display 500 / headlineLarge 700 /
-  /// titleLarge 600…），既不是 M3、内部也不自洽（titleLarge 600 但 titleSmall 500、
-  /// labelMedium 500 但 labelSmall 400），于是调用点一路用 `.semiBold` 打补丁。
-  static const Map<String, MuiWeight> _weights = {
-    'displayLarge': .regular,
-    'displayMedium': .regular,
-    'displaySmall': .regular,
-    'headlineLarge': .regular,
-    'headlineMedium': .regular,
-    'headlineSmall': .regular,
-    'titleLarge': .regular,
-    'titleMedium': .medium,
-    'titleSmall': .medium,
-    'bodyLarge': .regular,
-    'bodyMedium': .regular,
-    'bodySmall': .regular,
-    'labelLarge': .medium,
-    'labelMedium': .medium,
-    'labelSmall': .medium,
-  };
-
-  /// 强调档按**光学尺寸**分两级：22px 及以上用 Bold，其余用 SemiBold。
-  ///
-  /// 取自 iOS HIG 的做法（Large Title / Title 1 / Title 2 的 emphasized 是 Bold，
-  /// Title 3 及以下是 Semibold）。理由是字越大越需要更强的字重反差才看得出加重，
-  /// 而正文尺寸上 Bold 会显得脏。M3 2021 本身没有定义强调档。
-  static MuiWeight _emphasisOf(double baseSize) =>
-      baseSize >= 22 ? MuiWeight.bold : MuiWeight.semiBold;
-
-  /// 平台默认字体族，逐平台抄 material 的 `Typography._withPlatform`
-  /// （`typography.dart:219`）：android/fuchsia/linux 用 Roboto、windows 用 Segoe UI、
-  /// macOS 用 `.AppleSystemUIFont`、iOS 按光学尺寸分 Display 与 Text 两个别名。
-  ///
-  /// **不能留空**：`fontFamily` 为 null 时由引擎自行回退，中文环境下西文与数字常常
-  /// 落到 CJK 字体自带的拉丁字形上 —— 那套字形为了塞进方块字的字宽被压窄，
-  /// 观感就是「英文和数字被压扁」。material 从来没留过这个空。
-  ///
-  /// iOS 的分界同样是 22px，与 [_emphasisOf] 撞在一起纯属巧合：一个是苹果的
-  /// 光学尺寸切换点，一个是 HIG 的强调字重切换点。
-  static String? _platformFamily(double baseSize) =>
-      switch (defaultTargetPlatform) {
-        TargetPlatform.android ||
-        TargetPlatform.fuchsia ||
-        TargetPlatform.linux => 'Roboto',
-        TargetPlatform.iOS =>
-          baseSize >= 22 ? 'CupertinoSystemDisplay' : 'CupertinoSystemText',
-        TargetPlatform.macOS => '.AppleSystemUIFont',
-        TargetPlatform.windows => 'Segoe UI',
-      };
-
-  /// M3 2021 的几何，与 `Typography.englishLike2021` 逐级逐字段相同
-  /// （`typography.dart:2096`，由 `theme_projection_test` 对拍）：
-  /// fontSize / height / letterSpacing。[height] 是**比例**不是绝对行高。
-  ///
-  /// 字号**不在这里缩放** —— 跟随系统字体大小，由 `MediaQuery.textScaler`
-  /// 在渲染期施加，这是平台无障碍设置的唯一入口。
-  static const Map<String, (double, double, double)> _geometry = {
-    'displayLarge': (57, 1.12, -0.25),
-    'displayMedium': (45, 1.16, 0),
-    'displaySmall': (36, 1.22, 0),
-    'headlineLarge': (32, 1.25, 0),
-    'headlineMedium': (28, 1.29, 0),
-    'headlineSmall': (24, 1.33, 0),
-    'titleLarge': (22, 1.27, 0),
-    'titleMedium': (16, 1.50, 0.15),
-    'titleSmall': (14, 1.43, 0.1),
-    'bodyLarge': (16, 1.50, 0.5),
-    'bodyMedium': (14, 1.43, 0.25),
-    'bodySmall': (12, 1.33, 0.4),
-    'labelLarge': (14, 1.43, 0.1),
-    'labelMedium': (12, 1.33, 0.5),
-    'labelSmall': (11, 1.45, 0.5),
-  };
-
-  static MuiTextRole _role(
-    String name,
-    MuiFontConfig font,
-    MuiColorScheme colors,
-  ) {
-    final (baseSize, height, spacing) = _geometry[name]!;
-    TextStyle styleOf(MuiWeight weight) => TextStyle(
-      inherit: false,
-      color: colors.onSurface,
-      // 宿主选了自定义字体就用它，否则回落到平台默认族（不是留空）。
-      fontFamily: font.family ?? _platformFamily(baseSize),
-      fontSize: baseSize,
-      height: height,
-      letterSpacing: spacing,
-      fontWeight: weight.value,
-      fontVariations: [FontVariation('wght', weight.axis(font))],
-      textBaseline: .alphabetic,
-      leadingDistribution: .even,
-    );
+  /// 颜色不用管：链式取色的 getter 一律 `copyWith(color:)` 覆盖。
+  MuiTextRole _role(String name, TextStyle? style) {
+    final base = style?.fontSize == null
+        ? _styleOf(name, _weights[name]!, font, _colors.onSurface)
+        : style!;
+    final weight = _emphasisOf(base.fontSize ?? _geometry[name]!.$1);
     return MuiTextRole._(
-      styleOf(_weights[name]!),
-      colors,
-      styleOf(_emphasisOf(baseSize)),
+      base,
+      _colors,
+      _onMedia,
+      // fontWeight 与 fontVariations 必须同时设：可变字体下只改前者会被后者吃掉。
+      base.copyWith(
+        fontWeight: weight.value,
+        fontVariations: [FontVariation('wght', weight.axis(font))],
+      ),
     );
   }
 
-  factory MuiTypography.resolve({
-    required MuiFontConfig font,
-    required MuiColorScheme colors,
-  }) {
-    MuiTextRole r(String name) => _role(name, font, colors);
-    return MuiTypography._(
-      font: font,
-      colors: colors,
-      displayLarge: r('displayLarge'),
-      displayMedium: r('displayMedium'),
-      displaySmall: r('displaySmall'),
-      headlineLarge: r('headlineLarge'),
-      headlineMedium: r('headlineMedium'),
-      headlineSmall: r('headlineSmall'),
-      titleLarge: r('titleLarge'),
-      titleMedium: r('titleMedium'),
-      titleSmall: r('titleSmall'),
-      bodyLarge: r('bodyLarge'),
-      bodyMedium: r('bodyMedium'),
-      bodySmall: r('bodySmall'),
-      labelLarge: r('labelLarge'),
-      labelMedium: r('labelMedium'),
-      labelSmall: r('labelSmall'),
-    );
-  }
-
-  /// 全部 15 级的角色名，供投影与测试遍历。
+  /// 全部 15 级的角色名，供测试遍历。
   static const List<String> levels = [
     'displayLarge',
     'displayMedium',
@@ -334,13 +330,7 @@ class MuiTypography with MuiValue {
     _ => throw ArgumentError.value(level, 'level', '不是 M3 的排版角色'),
   };
 
-  static MuiTypography lerp(MuiTypography a, MuiTypography b, double t) {
-    if (identical(a, b)) return a;
-    // 排版由 (font, colors) 确定，所以补间只要拿插值后的色板重解析一次。
-    // 逐级 TextStyle.lerp 会算 15 次却得到同样的结果。
-    return MuiTypography.resolve(
-      font: t < 0.5 ? a.font : b.font,
-      colors: MuiColorScheme.lerp(a.colors, b.colors, t),
-    );
-  }
+  /// 15 个角色由这四者**确定性地**算出，所以相等只比这四个。
+  @override
+  List<Object?> get props => [_textTheme, _colors, _onMedia, font];
 }

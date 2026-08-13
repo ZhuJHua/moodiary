@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:mui/mui.dart';
 
 /// 节点着色维度（总图可切，ego 图固定按分类）。
 enum GraphColorMode { category, time, plain }
@@ -150,7 +149,7 @@ class GraphPalette {
     required this.incoming,
   });
 
-  factory GraphPalette.of(MuiColorScheme cs, {required int edgeCount}) {
+  factory GraphPalette.of(ColorScheme cs, {required int edgeCount}) {
     final dark = cs.brightness == .dark;
     final dense = edgeCount > 3000;
     final edgeAlpha = dense ? (dark ? 0.08 : 0.09) : (dark ? 0.16 : 0.18);

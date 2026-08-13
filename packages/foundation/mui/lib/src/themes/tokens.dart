@@ -249,33 +249,3 @@ class MuiStateTokens with MuiValue {
         dragOpacity: lerpDouble(a.dragOpacity, b.dragOpacity, t)!,
       );
 }
-
-/// 图标默认尺寸与颜色。lucide 的统一入口。
-@immutable
-class MuiIconThemeData with MuiValue {
-  const MuiIconThemeData({
-    required this.color,
-    this.size = 20,
-    this.smallSize = 18,
-    this.largeSize = 24,
-  });
-
-  final Color color;
-  final double size;
-  final double smallSize;
-  final double largeSize;
-
-  @override
-  List<Object?> get props => [color, size, smallSize, largeSize];
-
-  static MuiIconThemeData lerp(
-    MuiIconThemeData a,
-    MuiIconThemeData b,
-    double t,
-  ) => MuiIconThemeData(
-    color: Color.lerp(a.color, b.color, t)!,
-    size: lerpDouble(a.size, b.size, t)!,
-    smallSize: lerpDouble(a.smallSize, b.smallSize, t)!,
-    largeSize: lerpDouble(a.largeSize, b.largeSize, t)!,
-  );
-}

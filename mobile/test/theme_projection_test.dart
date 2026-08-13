@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:mui/mui.dart';
 
 Map<String, TextStyle?> _levels(TextTheme t) => {
@@ -46,8 +45,8 @@ void main() {
       //
       // 在真实渲染树里比，而不是比构造出的对象 —— 差异藏在 ThemeData 的
       // `typography.black.merge(textTheme)` 与 `ThemeData.localize` 两层里。
-      final mui = MuiThemeData(brightness: brightness);
-      final projected = materialThemeFrom(mui);
+      final mui = buildMuiTheme(brightness: brightness);
+      final projected = mui;
       final m3 = _levels(
         Typography.material2021(
           platform: TargetPlatform.android,
@@ -82,10 +81,11 @@ void main() {
     });
 
     testWidgets('$brightness 强调档：只加字重，几何一动不动', (tester) async {
-      final mui = MuiThemeData(brightness: brightness);
+      final mui = buildMuiTheme(brightness: brightness);
       for (final level in MuiTypography.levels) {
-        final base = mui.typography.byLevel(level).onSurface;
-        final emphasized = mui.typography.byLevel(level).emphasized.onSurface;
+        final typography = MuiTheme.viewOf(mui).typography;
+        final base = typography.byLevel(level).onSurface;
+        final emphasized = typography.byLevel(level).emphasized.onSurface;
         expect(emphasized.fontSize, base.fontSize, reason: '$level 字号被改了');
         expect(emphasized.height, base.height, reason: '$level 行高被改了');
         expect(
@@ -118,7 +118,7 @@ void main() {
       late TextStyle style;
       await tester.pumpWidget(
         MaterialApp(
-          theme: materialThemeFrom(MuiThemeData(brightness: .light)),
+          theme: buildMuiTheme(brightness: Brightness.light),
           home: Builder(
             builder: (context) {
               style = DefaultTextStyle.of(context).style;
@@ -135,13 +135,12 @@ void main() {
   testWidgets('链式用法：context.theme.typography.titleLarge.onSurfaceVariant', (
     tester,
   ) async {
-    final mui = MuiThemeData(brightness: .light);
+    final mui = buildMuiTheme(brightness: Brightness.light);
     late TextStyle style;
     late TextStyle emphasized;
     await tester.pumpWidget(
       MaterialApp(
-        theme: materialThemeFrom(mui),
-        builder: (context, child) => MuiAnimatedTheme(data: mui, child: child!),
+        theme: mui,
         home: Builder(
           builder: (context) {
             style = context.theme.typography.titleLarge.onSurfaceVariant;
@@ -151,24 +150,23 @@ void main() {
         ),
       ),
     );
-    expect(style.color, mui.colors.onSurfaceVariant);
+    expect(style.color, mui.colorScheme.onSurfaceVariant);
     expect(style.fontSize, 22);
     expect(style.fontWeight, FontWeight.w400);
 
-    expect(emphasized.color, mui.colors.primary);
+    expect(emphasized.color, mui.colorScheme.primary);
     expect(emphasized.fontSize, 14);
     // 字重两条路必须一起动，否则可变字体下 fontWeight 会被 fontVariations 吃掉。
     expect(emphasized.fontWeight, FontWeight.w600);
     expect(emphasized.fontVariations, [const FontVariation('wght', 600)]);
   });
 
-  testWidgets('MuiTheme 能穿过 MaterialApp.builder 传到路由子树', (tester) async {
-    final mui = MuiThemeData(brightness: .light);
+  testWidgets('context.theme 直接派生自 MaterialApp 的 theme，无需额外注入', (tester) async {
+    final mui = buildMuiTheme(brightness: Brightness.light);
     late MuiThemeData seen;
     await tester.pumpWidget(
       MaterialApp(
-        theme: materialThemeFrom(mui),
-        builder: (context, child) => MuiAnimatedTheme(data: mui, child: child!),
+        theme: mui,
         home: Builder(
           builder: (context) {
             seen = MuiTheme.of(context);
@@ -177,7 +175,11 @@ void main() {
         ),
       ),
     );
-    expect(seen, mui);
+    // 不比 ThemeData 实例本身：MaterialApp 会先跑一遍 `ThemeData.localize`
+    // 与 typography 合并，树里拿到的是**加工过**的那份。要比的是配色与
+    // MuiTokens 原样传到了子树。
+    expect(seen.colors, mui.colorScheme);
+    expect(seen.tokens, mui.extension<MuiTokens>());
     // 无彩档就是标准 SchemeMonochrome，不写死色值。
     expect(
       seen.colors.surface,

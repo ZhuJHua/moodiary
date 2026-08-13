@@ -62,7 +62,7 @@ GraphScene _scene(
   GraphColorMode mode = .category,
   bool dark = false,
 }) {
-  final colors = MuiColorScheme.resolve(
+  final colors = resolveColorScheme(
     dark ? Brightness.dark : Brightness.light,
     const MuiAccent.neutral(),
   );
@@ -84,16 +84,16 @@ Future<void> _pumpCanvas(
   bool dark = false,
   bool showLabels = true,
 }) async {
-  final mui = MuiThemeData(brightness: dark ? .dark : .light);
+  final mui = buildMuiTheme(brightness: dark ? .dark : .light);
   await tester.pumpWidget(
     MaterialApp(
-      theme: materialThemeFrom(mui),
+      theme: mui,
       builder: (context, child) => MuiTheme(data: mui, child: child!),
       home: Scaffold(
         body: GraphCanvas(
           scene: scene,
           frame: frame,
-          palette: .of(mui.colors, edgeCount: scene.edgeCount),
+          palette: .of(mui.colorScheme, edgeCount: scene.edgeCount),
           selected: selected,
           showLabels: showLabels,
           egoDirections: dirs,
@@ -190,7 +190,7 @@ void main() {
     });
 
     test('分类色向主色 harmonize，无分类回落主题色', () {
-      final cs = MuiColorScheme.resolve(
+      final cs = resolveColorScheme(
         Brightness.light,
         const MuiAccent.neutral(),
       );

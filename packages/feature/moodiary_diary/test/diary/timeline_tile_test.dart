@@ -7,7 +7,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_ui/moodiary_ui.dart' show LucideIcons, qweatherIcon;
 import 'package:mui/mui.dart';
 
-final _mui = MuiThemeData(brightness: Brightness.light);
+final _mui = buildMuiTheme(brightness: Brightness.light);
 
 Diary diary({
   String title = 'T',

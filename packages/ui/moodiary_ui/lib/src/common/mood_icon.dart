@@ -70,7 +70,7 @@ class MoodIconComponent extends StatelessWidget {
         painter: EmotionCurvePainter(
           value,
           strokeWidth: 4.0,
-          color: context.theme.colors.onMedia,
+          color: context.theme.onMedia,
         ),
       ),
     );

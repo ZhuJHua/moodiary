@@ -36,10 +36,10 @@ class MoodiaryGlassSurface extends StatelessWidget {
 
   /// 默认投影。底栏那颗动作按钮不是玻璃却要跟胶囊同款，所以抽出来共用 ——
   /// 两边各写一份迟早会飘。
-  static List<BoxShadow> defaultShadows(MuiColorScheme colors) => [
+  static List<BoxShadow> defaultShadows(ColorScheme colors) => [
     BoxShadow(
       color: colors.shadow.withValues(
-        alpha: colors.brightness == .dark ? 0.42 : 0.12,
+        alpha: colors.brightness == Brightness.dark ? 0.42 : 0.12,
       ),
       blurRadius: 24,
       offset: const Offset(0, 8),

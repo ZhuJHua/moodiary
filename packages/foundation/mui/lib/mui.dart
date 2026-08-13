@@ -1,15 +1,19 @@
 /// mui —— Another Material Design UI。
 ///
-/// Material Design 血统，但不是 Material：本包**只依赖 `package:flutter/widgets.dart`
-/// 及以下**，零 `material` / `cupertino` import，由 `tool/check_layers.dart` 零基线守住。
+/// 定位是 material 的**补充**，不是替代：配色用 [ColorScheme]、排版用 [TextTheme]，
+/// 本包不再自建一套色板。mui 只提供 material 表达不出来的那部分 ——
 ///
-/// 与 material 长期共存期间，`MuiThemeData` 是配色与排版的唯一真源，
-/// material 的 `ThemeData` 由 core 的 `mui_material_bridge.dart` 单向投影而来。
+///   * `context.theme.typography.<级>.emphasized.<颜色角色>` 的链式取用；
+///   * `MuiTokens`（圆角/间距/动效/描边/投影/状态 + onMedia），挂在
+///     `ThemeData.extensions` 上；
+///   * `buildMuiTheme`，全仓唯一构造 [ThemeData] 的地方。
+///
+/// 组件层面同理：material 够用的直接用，不够用的才在本包里补，命名一律 `M` 开头。
 library;
 
+export 'src/themes/build.dart';
 export 'src/themes/color_scheme.dart';
-export 'src/themes/component_theme.dart';
-export 'src/themes/state_colors.dart';
+export 'src/themes/mui_tokens.dart';
 export 'src/themes/theme.dart';
 export 'src/themes/theme_data.dart';
 export 'src/themes/tokens.dart';

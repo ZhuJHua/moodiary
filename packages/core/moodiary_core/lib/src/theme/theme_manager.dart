@@ -5,26 +5,20 @@ import 'package:moodiary_core/src/app_logger.dart';
 import 'package:moodiary_core/src/files/app_files.dart';
 import 'package:moodiary_core/src/theme/app_color_scheme.dart';
 import 'package:moodiary_core/src/theme/font_manager.dart';
-import 'package:moodiary_core/src/theme/mui_material_bridge.dart';
 import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:mui/mui.dart';
 
 /// 主题的构建入口。
 ///
-/// [MuiThemeData] 是真源，[ThemeData] 是它经 `mui_material_bridge.dart` 得到的
-/// 只读投影。两者在 [buildTheme] 里**同一次**算出并一起替换 —— 分开更新会出现
-/// 「material 已切、mui 未切」的一帧。
+/// 只负责**取参数**（系统取色、自定义字体、KV 读档）并调 mui 的 [buildMuiTheme]；
+/// 主题本身是一棵 material 的 [ThemeData]，mui 的那部分挂在它的 `MuiTokens` 扩展上。
 class ThemeManager {
   ThemeManager._();
 
   static final ThemeManager instance = ._();
 
   factory ThemeManager() => instance;
-
-  MuiThemeData? _lightMui;
-
-  MuiThemeData? _darkMui;
 
   ThemeData? _lightTheme;
 
@@ -40,14 +34,11 @@ class ThemeManager {
   /// 最大能漂到 ΔE 34（红变褐红）。
   Color? _systemSeed;
 
-  MuiThemeData get lightMuiTheme =>
-      _lightMui ?? MuiThemeData(brightness: .light);
+  ThemeData get lightTheme =>
+      _lightTheme ?? buildMuiTheme(brightness: Brightness.light);
 
-  MuiThemeData get darkMuiTheme => _darkMui ?? MuiThemeData(brightness: .dark);
-
-  ThemeData get lightTheme => _lightTheme ?? materialThemeFrom(lightMuiTheme);
-
-  ThemeData get darkTheme => _darkTheme ?? materialThemeFrom(darkMuiTheme);
+  ThemeData get darkTheme =>
+      _darkTheme ?? buildMuiTheme(brightness: Brightness.dark);
 
   /// 供设置页画那枚系统色块用。
   Color? get systemAccentSeed => _systemSeed;
@@ -129,10 +120,16 @@ class ThemeManager {
     final accent = resolveAccent();
     final font = MuiFontConfig(family: fontFamily, wghtAxis: wghtAxisMap);
 
-    _lightMui = MuiThemeData(brightness: .light, accent: accent, font: font);
-    _darkMui = MuiThemeData(brightness: .dark, accent: accent, font: font);
-    _lightTheme = materialThemeFrom(_lightMui!);
-    _darkTheme = materialThemeFrom(_darkMui!);
+    _lightTheme = buildMuiTheme(
+      brightness: Brightness.light,
+      accent: accent,
+      font: font,
+    );
+    _darkTheme = buildMuiTheme(
+      brightness: Brightness.dark,
+      accent: accent,
+      font: font,
+    );
   }
 
   /// KV → 强调色来源。system 档在取不到壁纸色时静默回落到无彩，
@@ -156,11 +153,11 @@ class ThemeManager {
   ///
   /// 原先下发 (seed, variant) 让 JS 侧用自己那份 material-color-utilities 再算一遍，
   /// 等于两端各跑一套算法 —— 灰阶覆盖根本传不过去，两边库版本一漂还会静默不一致。
-  /// 现在 [MuiColorScheme] 是唯一真源，JS 只负责铺 CSS 变量。
+  /// 现在 [ColorScheme] 是唯一真源，JS 只负责铺 CSS 变量。
   Map<String, String> editorRoles(Brightness brightness) {
     final scheme = brightness == .light
-        ? lightMuiTheme.colors
-        : darkMuiTheme.colors;
+        ? lightTheme.colorScheme
+        : darkTheme.colorScheme;
     String hex(Color color) =>
         '#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
     return {
@@ -191,7 +188,7 @@ class ThemeManager {
     return (family: family, path: AppFiles.getRealPath('font', fileName));
   }
 
-  /// 只负责拿到**系统主题色**这一个颜色；配色生成一律走 [MuiColorScheme.resolve]。
+  /// 只负责拿到**系统主题色**这一个颜色；配色生成一律走 [resolveColorScheme]。
   Future<void> findDynamicColor() async {
     try {
       final corePalette = await DynamicColorPlugin.getCorePalette();
@@ -217,9 +214,6 @@ class ThemeManager {
 
     logger.d('dynamic_color: Dynamic color not detected on this device.');
   }
-
-  (MuiThemeData, MuiThemeData) getMuiThemeData() =>
-      (lightMuiTheme, darkMuiTheme);
 
   (ThemeData, ThemeData) getThemeData() => (lightTheme, darkTheme);
 }

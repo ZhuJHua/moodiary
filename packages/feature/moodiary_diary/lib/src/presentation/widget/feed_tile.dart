@@ -438,7 +438,7 @@ class _VideoScrim extends StatelessWidget {
           child: Icon(
             LucideIcons.circlePlay,
             size: 14,
-            color: context.theme.colors.onMedia,
+            color: context.theme.onMedia,
           ),
         ),
       ],

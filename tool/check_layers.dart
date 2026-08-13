@@ -1,5 +1,5 @@
 // 分层依赖检查：只能上层依赖下层，同层不互相依赖。另外三段无 baseline 的主题闸门
-// （ThemeData 只在桥里构造 / mui 零 material / 业务代码零色板外颜色，见 _themeBans）
+// （ThemeData 只在 mui 的 build.dart 里构造 / mui 零 cupertino / 业务代码零色板外颜色）
 // 也挂在这里跑。依赖检查本身分三段——
 //   1) 包级：各 pubspec 的 moodiary_* 依赖（foundation → core → ui → feature → apps）。
 //      pub 只保证依赖图无环、不保证方向，这段补上方向约束。无 baseline，必须零违规。
@@ -206,12 +206,14 @@ List<String> _checkRustLayers() {
   return out;
 }
 
-/// mui 的存在理由就是「不用 material」。这条闸门没有 baseline，也不该有例外：
-/// 一旦破了口子，包里就会长出对 `Colors` / `Durations` / `ThemeData` 的引用，
-/// 而那三样恰恰是 mui 必须自建的东西（见 mui/src/themes/tokens.dart）。
+/// mui 的定位已从「替代 material」改成「**补充** material」（2026-08-13）：
+/// 配色是 `ColorScheme`、排版是 `TextTheme`，本包不再自建一套，所以 material
+/// 不但允许而且是前提。
+///
+/// 仍然禁 cupertino：全仓零 cupertino import，mui 不该是第一个开口子的地方。
 const String _muiRoot = 'packages/foundation/mui/lib';
 final RegExp _muiForbiddenRe = RegExp(
-  r'''^\s*(?:import|export)\s+['"]package:flutter/(material|cupertino)\.dart['"]''',
+  r'''^\s*(?:import|export)\s+['"]package:flutter/(cupertino)\.dart['"]''',
   multiLine: true,
 );
 
@@ -248,7 +250,7 @@ List<String> _checkMuiPurity() {
 /// 那会变成一张只增不减的欠条。
 const Map<String, String> _themeAllowlist = {
   'packages/foundation/mui/lib/': 'mui 自己就是色板与 token 的定义处',
-  'packages/core/moodiary_core/lib/src/theme/mui_material_bridge.dart':
+  'packages/foundation/mui/lib/src/themes/build.dart':
       '唯一的 material 投影点，按定义要落到绝对值',
   'mobile/lib/app/picker/': '第三方 AssetPicker/CameraPicker 自建 ThemeData，够不着 mui',
   'packages/feature/moodiary_share/lib/src/presentation/templates/':
@@ -323,7 +325,7 @@ List<String> _checkThemePurity() {
 /// 第三方作用域的主题不算（`AssetPicker.themeData(...).copyWith(...)` 之流走的是
 /// 那个包自己的构造器，不匹配这条正则）。
 const String _themeDataBridge =
-    'packages/core/moodiary_core/lib/src/theme/mui_material_bridge.dart';
+    'packages/foundation/mui/lib/src/themes/build.dart';
 final RegExp _themeDataRe = RegExp(r'(^|[^A-Za-z0-9_])ThemeData\s*\(');
 
 List<String> _checkThemeDataConstruction() {
@@ -352,7 +354,7 @@ void main(List<String> args) {
   final update = args.contains('--update-baseline');
   final themeViolations = _checkThemeDataConstruction();
   if (themeViolations.isEmpty) {
-    stdout.writeln('✅ ThemeData 只在主题桥里构造。');
+    stdout.writeln('✅ ThemeData 只在 mui 的 buildMuiTheme 里构造。');
   } else {
     stderr.writeln('❌ 桥之外出现了 ${themeViolations.length} 处 ThemeData 构造：');
     for (final v in themeViolations) {
@@ -364,7 +366,7 @@ void main(List<String> args) {
 
   final themePurity = _checkThemePurity();
   if (themePurity.isEmpty) {
-    stdout.writeln('✅ 业务代码的颜色与排版都来自 mui 色板。');
+    stdout.writeln('✅ 业务代码的颜色与排版都来自主题。');
   } else {
     stderr.writeln('❌ 色板外的颜色/排版 ${themePurity.length} 处：');
     for (final v in themePurity) {
@@ -376,13 +378,13 @@ void main(List<String> args) {
 
   final muiViolations = _checkMuiPurity();
   if (muiViolations.isEmpty) {
-    stdout.writeln('✅ mui 零 material/cupertino import。');
+    stdout.writeln('✅ mui 零 cupertino import。');
   } else {
     stderr.writeln('❌ mui 引入了 material/cupertino ${muiViolations.length} 处：');
     for (final v in muiViolations) {
       stderr.writeln('  ✗ $v');
     }
-    stderr.writeln('  → mui 只能依赖 package:flutter/widgets.dart 及以下，无例外。');
+    stderr.writeln('  → mui 可以用 material，但不许碰 cupertino。');
     exit(1);
   }
 

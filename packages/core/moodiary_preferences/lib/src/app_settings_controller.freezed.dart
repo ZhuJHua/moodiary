@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AppSettings {
 
- ThemeData get lightTheme; ThemeData get darkTheme; MuiThemeData get lightMuiTheme; MuiThemeData get darkMuiTheme; ThemeMode get themeMode; Locale get locale;
+ ThemeData get lightTheme; ThemeData get darkTheme; ThemeMode get themeMode; Locale get locale;
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -26,16 +26,16 @@ $AppSettingsCopyWith<AppSettings> get copyWith => _$AppSettingsCopyWithImpl<AppS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.lightTheme, lightTheme) || other.lightTheme == lightTheme)&&(identical(other.darkTheme, darkTheme) || other.darkTheme == darkTheme)&&(identical(other.lightMuiTheme, lightMuiTheme) || other.lightMuiTheme == lightMuiTheme)&&(identical(other.darkMuiTheme, darkMuiTheme) || other.darkMuiTheme == darkMuiTheme)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.locale, locale) || other.locale == locale));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppSettings&&(identical(other.lightTheme, lightTheme) || other.lightTheme == lightTheme)&&(identical(other.darkTheme, darkTheme) || other.darkTheme == darkTheme)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.locale, locale) || other.locale == locale));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,lightTheme,darkTheme,lightMuiTheme,darkMuiTheme,themeMode,locale);
+int get hashCode => Object.hash(runtimeType,lightTheme,darkTheme,themeMode,locale);
 
 @override
 String toString() {
-  return 'AppSettings(lightTheme: $lightTheme, darkTheme: $darkTheme, lightMuiTheme: $lightMuiTheme, darkMuiTheme: $darkMuiTheme, themeMode: $themeMode, locale: $locale)';
+  return 'AppSettings(lightTheme: $lightTheme, darkTheme: $darkTheme, themeMode: $themeMode, locale: $locale)';
 }
 
 
@@ -46,7 +46,7 @@ abstract mixin class $AppSettingsCopyWith<$Res>  {
   factory $AppSettingsCopyWith(AppSettings value, $Res Function(AppSettings) _then) = _$AppSettingsCopyWithImpl;
 @useResult
 $Res call({
- ThemeData lightTheme, ThemeData darkTheme, MuiThemeData lightMuiTheme, MuiThemeData darkMuiTheme, ThemeMode themeMode, Locale locale
+ ThemeData lightTheme, ThemeData darkTheme, ThemeMode themeMode, Locale locale
 });
 
 
@@ -63,13 +63,11 @@ class _$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lightTheme = null,Object? darkTheme = null,Object? lightMuiTheme = null,Object? darkMuiTheme = null,Object? themeMode = null,Object? locale = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? lightTheme = null,Object? darkTheme = null,Object? themeMode = null,Object? locale = null,}) {
   return _then(AppSettings(
 lightTheme: null == lightTheme ? _self.lightTheme : lightTheme // ignore: cast_nullable_to_non_nullable
 as ThemeData,darkTheme: null == darkTheme ? _self.darkTheme : darkTheme // ignore: cast_nullable_to_non_nullable
-as ThemeData,lightMuiTheme: null == lightMuiTheme ? _self.lightMuiTheme : lightMuiTheme // ignore: cast_nullable_to_non_nullable
-as MuiThemeData,darkMuiTheme: null == darkMuiTheme ? _self.darkMuiTheme : darkMuiTheme // ignore: cast_nullable_to_non_nullable
-as MuiThemeData,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
+as ThemeData,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as ThemeMode,locale: null == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
 as Locale,
   ));
@@ -156,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ThemeData lightTheme,  ThemeData darkTheme,  MuiThemeData lightMuiTheme,  MuiThemeData darkMuiTheme,  ThemeMode themeMode,  Locale locale)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ThemeData lightTheme,  ThemeData darkTheme,  ThemeMode themeMode,  Locale locale)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.lightTheme,_that.darkTheme,_that.lightMuiTheme,_that.darkMuiTheme,_that.themeMode,_that.locale);case _:
+return $default(_that.lightTheme,_that.darkTheme,_that.themeMode,_that.locale);case _:
   return orElse();
 
 }
@@ -177,10 +175,10 @@ return $default(_that.lightTheme,_that.darkTheme,_that.lightMuiTheme,_that.darkM
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ThemeData lightTheme,  ThemeData darkTheme,  MuiThemeData lightMuiTheme,  MuiThemeData darkMuiTheme,  ThemeMode themeMode,  Locale locale)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ThemeData lightTheme,  ThemeData darkTheme,  ThemeMode themeMode,  Locale locale)  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings():
-return $default(_that.lightTheme,_that.darkTheme,_that.lightMuiTheme,_that.darkMuiTheme,_that.themeMode,_that.locale);case _:
+return $default(_that.lightTheme,_that.darkTheme,_that.themeMode,_that.locale);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +195,10 @@ return $default(_that.lightTheme,_that.darkTheme,_that.lightMuiTheme,_that.darkM
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ThemeData lightTheme,  ThemeData darkTheme,  MuiThemeData lightMuiTheme,  MuiThemeData darkMuiTheme,  ThemeMode themeMode,  Locale locale)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ThemeData lightTheme,  ThemeData darkTheme,  ThemeMode themeMode,  Locale locale)?  $default,) {final _that = this;
 switch (_that) {
 case _AppSettings() when $default != null:
-return $default(_that.lightTheme,_that.darkTheme,_that.lightMuiTheme,_that.darkMuiTheme,_that.themeMode,_that.locale);case _:
+return $default(_that.lightTheme,_that.darkTheme,_that.themeMode,_that.locale);case _:
   return null;
 
 }
@@ -212,13 +210,11 @@ return $default(_that.lightTheme,_that.darkTheme,_that.lightMuiTheme,_that.darkM
 
 
 class _AppSettings implements AppSettings {
-  const _AppSettings({required this.lightTheme, required this.darkTheme, required this.lightMuiTheme, required this.darkMuiTheme, required this.themeMode, required this.locale});
+  const _AppSettings({required this.lightTheme, required this.darkTheme, required this.themeMode, required this.locale});
   
 
 @override final  ThemeData lightTheme;
 @override final  ThemeData darkTheme;
-@override final  MuiThemeData lightMuiTheme;
-@override final  MuiThemeData darkMuiTheme;
 @override final  ThemeMode themeMode;
 @override final  Locale locale;
 
@@ -232,16 +228,16 @@ _$AppSettingsCopyWith<_AppSettings> get copyWith => __$AppSettingsCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.lightTheme, lightTheme) || other.lightTheme == lightTheme)&&(identical(other.darkTheme, darkTheme) || other.darkTheme == darkTheme)&&(identical(other.lightMuiTheme, lightMuiTheme) || other.lightMuiTheme == lightMuiTheme)&&(identical(other.darkMuiTheme, darkMuiTheme) || other.darkMuiTheme == darkMuiTheme)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.locale, locale) || other.locale == locale));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AppSettings&&(identical(other.lightTheme, lightTheme) || other.lightTheme == lightTheme)&&(identical(other.darkTheme, darkTheme) || other.darkTheme == darkTheme)&&(identical(other.themeMode, themeMode) || other.themeMode == themeMode)&&(identical(other.locale, locale) || other.locale == locale));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,lightTheme,darkTheme,lightMuiTheme,darkMuiTheme,themeMode,locale);
+int get hashCode => Object.hash(runtimeType,lightTheme,darkTheme,themeMode,locale);
 
 @override
 String toString() {
-  return 'AppSettings(lightTheme: $lightTheme, darkTheme: $darkTheme, lightMuiTheme: $lightMuiTheme, darkMuiTheme: $darkMuiTheme, themeMode: $themeMode, locale: $locale)';
+  return 'AppSettings(lightTheme: $lightTheme, darkTheme: $darkTheme, themeMode: $themeMode, locale: $locale)';
 }
 
 
@@ -252,7 +248,7 @@ abstract mixin class _$AppSettingsCopyWith<$Res> implements $AppSettingsCopyWith
   factory _$AppSettingsCopyWith(_AppSettings value, $Res Function(_AppSettings) _then) = __$AppSettingsCopyWithImpl;
 @override @useResult
 $Res call({
- ThemeData lightTheme, ThemeData darkTheme, MuiThemeData lightMuiTheme, MuiThemeData darkMuiTheme, ThemeMode themeMode, Locale locale
+ ThemeData lightTheme, ThemeData darkTheme, ThemeMode themeMode, Locale locale
 });
 
 
@@ -269,13 +265,11 @@ class __$AppSettingsCopyWithImpl<$Res>
 
 /// Create a copy of AppSettings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lightTheme = null,Object? darkTheme = null,Object? lightMuiTheme = null,Object? darkMuiTheme = null,Object? themeMode = null,Object? locale = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? lightTheme = null,Object? darkTheme = null,Object? themeMode = null,Object? locale = null,}) {
   return _then(_AppSettings(
 lightTheme: null == lightTheme ? _self.lightTheme : lightTheme // ignore: cast_nullable_to_non_nullable
 as ThemeData,darkTheme: null == darkTheme ? _self.darkTheme : darkTheme // ignore: cast_nullable_to_non_nullable
-as ThemeData,lightMuiTheme: null == lightMuiTheme ? _self.lightMuiTheme : lightMuiTheme // ignore: cast_nullable_to_non_nullable
-as MuiThemeData,darkMuiTheme: null == darkMuiTheme ? _self.darkMuiTheme : darkMuiTheme // ignore: cast_nullable_to_non_nullable
-as MuiThemeData,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
+as ThemeData,themeMode: null == themeMode ? _self.themeMode : themeMode // ignore: cast_nullable_to_non_nullable
 as ThemeMode,locale: null == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
 as Locale,
   ));

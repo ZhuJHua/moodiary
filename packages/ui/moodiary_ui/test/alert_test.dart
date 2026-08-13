@@ -3,12 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
 
-final _mui = MuiThemeData(brightness: Brightness.light);
+final _mui = buildMuiTheme(brightness: Brightness.light);
 
 void main() {
   /// 弹窗内部取 `context.l10n` 的默认「取消 / 确认」，所以宿主必须装 delegate。
@@ -24,7 +23,7 @@ void main() {
     return MuiTheme(
       data: _mui,
       child: MaterialApp(
-        theme: materialThemeFrom(_mui),
+        theme: _mui,
         locale: const Locale('zh'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -101,8 +100,8 @@ void main() {
       await open(tester);
 
       expect(find.byIcon(LucideIcons.triangleAlert), findsOneWidget);
-      expect(backgroundOf(tester, '删除'), _mui.colors.error);
-      expect(backgroundOf(tester, '取消'), _mui.colors.surfaceContainerHighest);
+      expect(backgroundOf(tester, '删除'), _mui.colorScheme.error);
+      expect(backgroundOf(tester, '取消'), _mui.colorScheme.surfaceContainerHighest);
     });
 
     testWidgets('非破坏性确认用 primary 色且不加图标', (tester) async {
@@ -115,7 +114,7 @@ void main() {
       await open(tester);
 
       expect(find.byIcon(LucideIcons.triangleAlert), findsNothing);
-      expect(backgroundOf(tester, '开始修复'), _mui.colors.primary);
+      expect(backgroundOf(tester, '开始修复'), _mui.colorScheme.primary);
     });
 
     testWidgets('barrierDismissible: false 时点遮罩不关闭', (tester) async {

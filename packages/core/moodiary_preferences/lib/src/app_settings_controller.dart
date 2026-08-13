@@ -5,7 +5,6 @@ import 'package:intl/find_locale.dart';
 import 'package:intl/intl.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
-import 'package:mui/mui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_settings_controller.freezed.dart';
@@ -26,12 +25,9 @@ class AppSettingsController extends _$AppSettingsController {
   @override
   AppSettings build() {
     final (lightTheme, darkTheme) = ThemeManager().getThemeData();
-    final (lightMui, darkMui) = ThemeManager().getMuiThemeData();
     return AppSettings(
       lightTheme: lightTheme,
       darkTheme: darkTheme,
-      lightMuiTheme: lightMui,
-      darkMuiTheme: darkMui,
       themeMode: ThemeMode.values[MoodiaryKVs.themeMode.get()!],
       locale: ref.read(appInitialLocaleProvider),
     );
@@ -42,14 +38,9 @@ class AppSettingsController extends _$AppSettingsController {
       customFont: await FontRepository.get().getActiveFont(),
     );
     final (lightTheme, darkTheme) = ThemeManager().getThemeData();
-    final (lightMui, darkMui) = ThemeManager().getMuiThemeData();
-    // 两份主题必须在同一次 copyWith 里换掉：分开更新会露出「material 已切、
-    // mui 未切」的一帧。
     state = state.copyWith(
       lightTheme: lightTheme,
       darkTheme: darkTheme,
-      lightMuiTheme: lightMui,
-      darkMuiTheme: darkMui,
       themeMode: ThemeMode.values[MoodiaryKVs.themeMode.get()!],
     );
   }
@@ -75,8 +66,6 @@ abstract class AppSettings with _$AppSettings {
   const factory AppSettings({
     required ThemeData lightTheme,
     required ThemeData darkTheme,
-    required MuiThemeData lightMuiTheme,
-    required MuiThemeData darkMuiTheme,
     required ThemeMode themeMode,
     required Locale locale,
   }) = _AppSettings;

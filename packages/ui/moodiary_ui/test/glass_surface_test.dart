@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
 
 const _boundaryKey = ValueKey('probe');
 const _capsuleSize = Size(300, 60);
 
-final _mui = MuiThemeData(brightness: Brightness.dark);
+final _mui = buildMuiTheme(brightness: Brightness.dark);
 
 Widget _harness(List<BoxShadow>? shadows) {
   return MuiTheme(
     data: _mui,
     child: MaterialApp(
-      theme: materialThemeFrom(_mui),
+      theme: _mui,
       home: RepaintBoundary(
         key: _boundaryKey,
         child: Container(

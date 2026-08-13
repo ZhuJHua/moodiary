@@ -4,7 +4,7 @@ import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
 
-final _mui = MuiThemeData(brightness: Brightness.light);
+final _mui = buildMuiTheme(brightness: Brightness.light);
 
 void main() {
   /// 弹窗内部取 `context.l10n` 的默认「取消」，所以宿主必须装 delegate。

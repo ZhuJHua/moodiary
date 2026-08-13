@@ -36,7 +36,7 @@ class _AccentPageState extends ConsumerState<AccentPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = MuiColorScheme.resolve(
+    final scheme = resolveColorScheme(
       context.theme.brightness,
       MuiAccent.seeded(_seed),
     );
