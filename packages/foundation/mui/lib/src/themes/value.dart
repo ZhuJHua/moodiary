@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 ///
 /// 元素级比较对 `Map` / `List` 做一层展开：Dart 的集合相等是**身份**比较，
 /// 直接扔进 `listEquals` 会让结构相同的两份主题判不相等，进而让
-/// `MuiTheme` 每次都通知、`MuiAnimatedTheme` 每次都重启补间。
+/// `ThemeData` 每次都判定为变了、`AnimatedTheme` 每次都重启补间。
 mixin MuiValue {
   List<Object?> get props;
 

@@ -128,7 +128,7 @@ class _MFieldState extends State<MField> {
       onChanged: widget.onChanged,
       style: context.theme.typography.bodyLarge.onSurface,
       // 圆角填充式外观（filled / fillColor / contentPadding / 六种边框）已经整段
-      // 搬进 `inputDecorationTheme`，见 core 的 mui_material_bridge.dart。
+      // 搬进 `inputDecorationTheme`，见 mui 的 themes/build.dart。
       // 这里只留**每个实例各不相同**的部分。
       decoration: InputDecoration(
         hintText: widget.hintText,

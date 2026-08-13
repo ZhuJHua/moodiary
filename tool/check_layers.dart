@@ -378,7 +378,7 @@ void main(List<String> args) {
     for (final v in themeViolations) {
       stderr.writeln('  ✗ $v');
     }
-    stderr.writeln('  → material 主题必须由 materialThemeFrom(MuiThemeData) 单向投影。');
+    stderr.writeln('  → ThemeData 只能由 mui 的 buildMuiTheme() 构造。');
     exit(1);
   }
 

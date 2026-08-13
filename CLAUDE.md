@@ -71,7 +71,7 @@ moodiary/                    # root = workspace + Melos coordinator (no app code
       moodiary_migration/    #   one-shot legacy data migration
       moodiary_preferences/  #   preference state
     ui/                      # → core/foundation
-      moodiary_ui/           #   只剩够不着 mui 的 8 个组件（要 core 基建或 riverpod）
+      moodiary_ui/           #   只剩够不着 mui 的 7 个组件（要 core 基建或 riverpod）
     feature/                 # → ui/core/foundation (features never import each other)
       moodiary_export/       #   导出 Markdown/Word/PDF + 本地备份导入
       moodiary_editor/       #   TipTap webview editor (complete)
