@@ -25,8 +25,6 @@
   "syncBackup": "Sync and backup",
   "categoryManager": "Categories",
   "mapTitle": "Trail map",
-  "editorMigration": "Migrate to the new editor",
-  "editorMigrationSubtitle": "Convert old entries (rich text / Markdown) so they can be edited again",
   "sectionDisplay": "Display",
   "diarySettings": "Entry preferences",
   "themeMode": "Theme",

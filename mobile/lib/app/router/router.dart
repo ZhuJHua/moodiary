@@ -3,7 +3,8 @@ import 'package:moodiary/app/settings/setting_routes.dart';
 import 'package:moodiary/app/shell/root_shell.dart' show MobileRootShell;
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_diary/moodiary_diary.dart';
-import 'package:moodiary_editor/moodiary_editor.dart' show editorRoutes;
+import 'package:moodiary_editor/moodiary_editor.dart'
+    show EditorMigrationService, editorRoutes;
 import 'package:moodiary_export/moodiary_export.dart' show exportRoutes;
 import 'package:moodiary_lock/moodiary_lock.dart';
 import 'package:moodiary_router/moodiary_router.dart';
@@ -33,6 +34,9 @@ GoRouter createMobileRouter({
   initialLocation: initialLocation,
   navigatorKey: navigatorKey ?? moodiaryNavigationKey,
   observers: [FlutterSmartDialog.observer, moodiaryRouteObserver],
+  // 强制迁移闸门：存在旧格式日记时，除锁屏外一切目的地重定向到迁移页——首启初始
+  // 路由、解锁后的 go('/')、深链全走这里，成功前进不了主界面。
+  redirect: (context, state) => migrationGateRedirect(state.matchedLocation),
   // errorPageBuilder 而不是 errorBuilder：后者交给 go_router 包 Page，会落到没有
   // 转场的那条分支（同 MoodiaryGoRoute 的原因）。
   errorPageBuilder: (context, state) => MaterialPage(
@@ -43,6 +47,17 @@ GoRouter createMobileRouter({
 
 @visibleForTesting
 List<RouteBase> buildMobileRoutes() => _mobileRoutes();
+
+/// 强制迁移闸门的重定向决策：迁移未完成时只放行锁屏与迁移页本身。
+@visibleForTesting
+String? migrationGateRedirect(String matchedLocation) {
+  if (!EditorMigrationService.requiresMigration) return null;
+  if (matchedLocation == EditorMigrationRoute.path ||
+      matchedLocation == LockRoute.path) {
+    return null;
+  }
+  return EditorMigrationRoute.path;
+}
 
 /// 各 feature 自带路由片段（`xRoutes()`）+ app 侧组合：首页 shell、以及跨 feature 的
 /// 助手→选日记页绑定（契约在 moodiary_router / moodiary_assistant，页面归 diary，故 app 绑定）。

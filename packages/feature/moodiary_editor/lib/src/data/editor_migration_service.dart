@@ -7,24 +7,33 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:path/path.dart' as p;
 
-/// 「迁移到 tiptap」服务：把旧的 richText(Quill Delta) 与 markdown 文本日记转换为 tiptap 文档 JSON。
+/// 强制迁移服务：把旧的 richText(Quill Delta) 与 markdown 文本日记转换为 tiptap 文档 JSON。
+/// 2.8.0 起迁移是启动闸门（见 app 路由的 redirect）：存在旧格式日记就进不了主界面。
 ///
-/// - richText → JSON：[QuillDeltaToTiptap]（纯 Dart，直接产出节点树，图片/音频/视频还原为一等节点）。
-/// - markdown → JSON：[MarkdownToTiptap]（纯 Dart，`markdown` 包 GFM 解析，无需无头 webview）。
-/// - 转换后用 [DiaryContent]（tiptap 分支走 JSON 解析）重算 contentText 与媒体名，再经
-///   [DiaryRepository.updateADiary] 落库（自动重建搜索索引）。媒体文件本身不动（文件名不变）。
-/// - 迁移是纯本机行为：不 bump lastModified、不推送（多设备各自迁移）；回退则按真实编辑
-///   对待（bump + 推送）。
-/// - 可回退：转换前把原始 content + type 备份成 sidecar JSON（`migration_backup/<id>.json`）。
+/// - richText → JSON：[QuillDeltaToTiptap]；markdown → JSON：[MarkdownToTiptap]。均为纯 Dart。
+/// - **迁移是全函数**：转换失败逐级降级到纯文本包装（宁可掉格式不丢字），闸门因此必然收敛。
+/// - **媒体守恒**：[TiptapContent.ensureMedia] 保证迁移后的媒体字段 ⊇ 迁移前
+///   （缩进整篇成代码块、≤2.4 附件式媒体不在正文里等场景，引用只增不减，
+///   否则「清理无用文件」会把真实文件当孤儿删掉）。
+/// - **可断点续跑**：逐篇独立事务，转换前先写 sidecar 备份（`migration_backup/<id>.json`）；
+///   中途杀进程只留一份多余备份，已迁移的不再入列，下次启动闸门重新收敛。
+/// - 迁移是纯本机行为：不 bump lastModified、事件走 fromSync（多设备各自迁移，
+///   LWW 两侧都不视为更新）。
 class EditorMigrationService {
   const EditorMigrationService._();
+
+  /// 启动闸门：存在旧格式日记时为 true，路由 redirect 据此把一切页面重定向到迁移页。
+  /// 由组合根在版本迁移后 [refreshRequiresMigration] 置位，迁移页完成后清零。
+  static bool requiresMigration = false;
+
+  static Future<void> refreshRequiresMigration() async {
+    requiresMigration = await DiaryRepository.get().hasLegacyFormatDiaries();
+  }
 
   static const String _backupType = 'migration_backup';
 
   static String _backupPath(String id) =>
       AppFiles.getRealPath(_backupType, '$id.json');
-
-  static String _backupDir() => p.dirname(_backupPath('_'));
 
   static Future<void> _writeBackup(Diary diary) async {
     final path = _backupPath(diary.id);
@@ -40,28 +49,43 @@ class EditorMigrationService {
   }
 
   /// 待迁移：所有非 tiptap 日记（richText + 旧 markdown，含回收站）。
-  static Future<List<Diary>> pendingDiaries() async {
-    final repo = DiaryRepository.get();
-    final all = await repo.getAllDiaries(); // 含回收站
-    return all.where((d) => DiaryType.fromValue(d.type) != .tiptap).toList();
-  }
+  static Future<List<Diary>> pendingDiaries() =>
+      DiaryRepository.get().getLegacyFormatDiaries();
 
-  /// 把一篇内容转成 tiptap JSON（不落库）。richText / markdown 均为纯 Dart。失败返回 null。
-  static String? _toJson(Diary diary) {
+  /// 一篇内容 → tiptap JSON。逐级降级、必然产出合法文档：
+  /// 转换器 → 纯文本再走 markdown 解析（与只读渲染路径一致）→ 逐行包段落。
+  static String _toJson(Diary diary) {
     switch (DiaryType.fromValue(diary.type)) {
       case .tiptap:
-        return null; // 已是 tiptap
+        return diary.content;
       case .richText:
-        return QuillDeltaToTiptap.convert(diary.content);
+        final converted = QuillDeltaToTiptap.convert(diary.content);
+        if (converted != null) return converted;
+        // 不是合法 Delta（极老版本的裸文本残留）：与 EditorBody 的只读渲染同一条兜底链。
+        // plainText 对「恰好是 JSON 数组的裸文本」会给出空串（op 全非 Map 被跳过），
+        // 原文非空而提取为空时回退原文——强制迁移里一个字都不能静默丢。
+        var plain = QuillDelta.plainText(diary.content) ?? diary.content;
+        if (plain.trim().isEmpty && diary.content.trim().isNotEmpty) {
+          plain = diary.content;
+        }
+        return MarkdownToTiptap.convert(plain) ??
+            TiptapContent.wrapPlainText(plain);
       case .markdown:
-        return MarkdownToTiptap.convert(diary.content);
+        return MarkdownToTiptap.convert(diary.content) ??
+            TiptapContent.wrapPlainText(diary.content);
     }
   }
 
-  /// 迁移一篇：转 JSON → 备份原文 → 重算 contentText/媒体 → 落库为 tiptap。失败（解析失败）跳过、不动数据。
+  /// 迁移一篇：转 JSON（必成）→ 媒体守恒 → 备份原文 → 重算 contentText/媒体 → 落库。
+  /// 已是 tiptap 返回 false（无事可做）。
   static Future<bool> migrate(Diary diary) async {
-    final json = _toJson(diary);
-    if (json == null || json.isEmpty) return false;
+    if (DiaryType.fromValue(diary.type) == .tiptap) return false;
+    final json = TiptapContent.ensureMedia(
+      _toJson(diary),
+      images: diary.imageName,
+      audios: diary.audioName,
+      videos: diary.videoName,
+    );
 
     await _writeBackup(diary);
 
@@ -77,17 +101,22 @@ class EditorMigrationService {
       audioName: media.audios,
       videoName: media.videos,
     );
-    // 迁移是纯本机的格式转换：不动 lastModified（LWW 两侧都不视为更新，批量迁移不会
-    // 覆盖他端更新的编辑），事件走 fromSync（远端持有同时间戳的等价旧格式副本，不标
-    // 脏、不触发推送）。多设备各自迁移一次；正文首次真实编辑后按普通编辑同步收敛。
+    // 不动 lastModified（LWW 两侧都不视为更新，批量迁移不会覆盖他端更新的编辑），
+    // 事件走 fromSync（远端持有同时间戳的等价旧格式副本，不标脏、不触发推送）。
+    // 索引：升级用户的倒排本就是空的、等「重建索引」一次性回填，逐篇 inline 会让
+    // posting 行随已迁移篇数线性变长地整行重写（O(N²)），skip 掉；已回填过的
+    // （多设备 pull 带回旧格式行的窄场景）保持 inline，迁移完即可搜。
     await DiaryRepository.get().updateADiary(
       newDiary: newDiary,
       fromSync: true,
+      index: MoodiaryKVs.searchIndexBackfilled.get() ?? false
+          ? .inline
+          : .skip,
     );
     return true;
   }
 
-  /// 批量迁移，逐篇回调进度。结束后释放无头转换 webview。
+  /// 批量迁移，逐篇回调进度。逐篇独立事务，抛错计 failed 继续，可整体重跑。
   static Future<MigrationReport> migrateAll(
     List<Diary> diaries, {
     void Function(int done, int total)? onProgress,
@@ -96,95 +125,20 @@ class EditorMigrationService {
     var failed = 0;
     for (var i = 0; i < diaries.length; i++) {
       try {
-        if (await migrate(diaries[i])) {
-          migrated++;
-        } else {
-          failed++;
-        }
-      } catch (_) {
+        if (await migrate(diaries[i])) migrated++;
+      } catch (e, s) {
+        logger.e('migrate diary failed', error: e, stackTrace: s);
         failed++;
       }
       onProgress?.call(i + 1, diaries.length);
     }
     return MigrationReport(migrated: migrated, failed: failed);
   }
-
-  /// 可回退列表：已备份（已迁移）的日记 id 及备份时间。
-  static Future<List<MigrationBackup>> backups() async {
-    final dir = Directory(_backupDir());
-    if (!await dir.exists()) return [];
-    final out = <MigrationBackup>[];
-    await for (final entity in dir.list()) {
-      if (entity is! File || !entity.path.endsWith('.json')) continue;
-      try {
-        final data =
-            jsonDecode(await entity.readAsString()) as Map<String, dynamic>;
-        final id = data['id'];
-        if (id is! String) continue;
-        out.add(
-          MigrationBackup(
-            id: id,
-            savedAt:
-                DateTime.tryParse(data['savedAt'] as String? ?? '') ?? .now(),
-          ),
-        );
-      } catch (_) {
-        /* 损坏的备份文件忽略 */
-      }
-    }
-    out.sort((a, b) => b.savedAt.compareTo(a.savedAt));
-    return out;
-  }
-
-  /// 回退一篇：从备份还原原始 content 与 type（markdown/richText），删除备份。注意：迁移后对该篇的
-  /// 编辑会被丢弃（还原为迁移前的内容）。
-  static Future<bool> revert(String id) async {
-    final file = File(_backupPath(id));
-    if (!await file.exists()) return false;
-    final Map<String, dynamic> data;
-    try {
-      data = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-    } catch (_) {
-      return false;
-    }
-    final content = data['content'];
-    if (content is! String) return false;
-    final diary = await DiaryRepository.get().getDiaryByBusinessId(id);
-    if (diary == null) {
-      await file.delete();
-      return false;
-    }
-    final restored = diary.copyWith(
-      content: content,
-      type: (data['type'] as String?) ?? DiaryType.richText.value,
-    );
-    final derived = DiaryContent.of(restored);
-    final media = derived.media;
-    final newDiary = restored.copyWith(
-      contentText: derived.plainText,
-      imageName: media.images,
-      audioName: media.audios,
-      videoName: media.videos,
-      // 与迁移不同，回退按真实内容编辑对待（bump + 正常推送）：弹窗已警告「迁移后的
-      // 修改会丢失」。若不 bump，已推送过迁移后编辑的场景会留下同时间戳异内容的永久分歧。
-      lastModified: .now(),
-    );
-    await DiaryRepository.get().updateADiary(newDiary: newDiary);
-    await file.delete();
-    return true;
-  }
 }
 
-/// 批量迁移结果。
+/// 批量迁移结果。[failed] 只计 I/O / 落库异常——格式转换本身必成（逐级兜底）。
 class MigrationReport {
   final int migrated;
   final int failed;
   const MigrationReport({required this.migrated, required this.failed});
-}
-
-/// 一条可回退备份。
-class MigrationBackup {
-  final String id;
-  final DateTime savedAt;
-  const MigrationBackup({required this.id, required this.savedAt});
 }

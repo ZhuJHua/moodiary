@@ -202,8 +202,9 @@ class DiarySettingRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
+/// 强制迁移页（启动闸门）。不再挂在设置下：存在旧格式日记时由路由 redirect 全局兜底进入。
 class EditorMigrationRoute extends MoodiaryRouteBase {
-  static const String path = '/setting/editor_migration';
+  static const String path = '/migration';
   const EditorMigrationRoute();
   @override
   String get location => path;

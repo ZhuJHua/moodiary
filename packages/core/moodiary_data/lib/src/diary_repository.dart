@@ -598,6 +598,26 @@ class DiaryRepository {
     return await _isar.diarys.where().findAllAsync();
   }
 
+  /// 旧编辑器格式（一切非 tiptap，含回收站）的日记——强制迁移的工作集。正常只有
+  /// richText / markdown 两种（更老的 'text' 已由 VersionMigrator 翻成 richText），
+  /// 用非等值而不是枚举等值：异常 type 值渲染时按 richText 兜底，迁移也必须带上。
+  Future<List<Diary>> getLegacyFormatDiaries() async {
+    return _isar.diarys
+        .where()
+        .not()
+        .typeEqualTo(DiaryType.tiptap.value)
+        .findAllAsync();
+  }
+
+  /// 是否存在旧编辑器格式日记（启动闸门用，短路查询不物化整表）。
+  Future<bool> hasLegacyFormatDiaries() async {
+    return !await _isar.diarys
+        .where()
+        .not()
+        .typeEqualTo(DiaryType.tiptap.value)
+        .isEmptyAsync();
+  }
+
   Future<List<Diary>> getAllDiariesSorted() async {
     return _isar.diarys
         .where()

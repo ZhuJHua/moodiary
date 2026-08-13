@@ -135,12 +135,6 @@ class Translations$app$zh {
 	/// zh: '足迹地图'
 	String get mapTitle => '足迹地图';
 
-	/// zh: '迁移到新编辑器'
-	String get editorMigration => '迁移到新编辑器';
-
-	/// zh: '把旧日记（富文本 / Markdown）转换为新编辑器以便编辑'
-	String get editorMigrationSubtitle => '把旧日记（富文本 / Markdown）转换为新编辑器以便编辑';
-
 	/// zh: '显示'
 	String get sectionDisplay => '显示';
 
@@ -1451,65 +1445,20 @@ class Translations$editor$zh {
 	/// zh: '迁移到新编辑器'
 	String get migrationTitle => '迁移到新编辑器';
 
-	/// zh: '将 {count} 篇旧编辑器日记转换为新编辑器格式。 · 文字、标题、列表、引用、代码、图片、音频、视频都会保留； · 文字颜色 / 高亮 / 对齐无法在新格式中表示，会被丢弃； · 迁移只改变本机的存储格式，不会作为编辑同步到其他设备（多设备请分别迁移）； · 转换前会备份原文，可随时回退。'
-	String migrationMessage({required Object count}) => '将 ${count} 篇旧编辑器日记转换为新编辑器格式。\n\n· 文字、标题、列表、引用、代码、图片、音频、视频都会保留；\n· 文字颜色 / 高亮 / 对齐无法在新格式中表示，会被丢弃；\n· 迁移只改变本机的存储格式，不会作为编辑同步到其他设备（多设备请分别迁移）；\n· 转换前会备份原文，可随时回退。';
+	/// zh: '转换前会自动备份原文；中途退出不丢数据，下次启动会继续。'
+	String get migrationNote => '转换前会自动备份原文；中途退出不丢数据，下次启动会继续。';
 
-	/// zh: '开始迁移'
-	String get migrationStart => '开始迁移';
+	/// zh: '{count} 篇迁移失败，请重试'
+	String migrationFailedCount({required Object count}) => '${count} 篇迁移失败，请重试';
 
-	/// zh: '已迁移 {count} 篇'
-	String migrationDone({required Object count}) => '已迁移 ${count} 篇';
+	/// zh: '迁移出错，请重试'
+	String get migrationError => '迁移出错，请重试';
 
-	/// zh: '迁移 {count} 篇，{failed} 篇失败（已跳过，原文未动）'
-	String migrationPartial({required Object count, required Object failed}) => '迁移 ${count} 篇，${failed} 篇失败（已跳过，原文未动）';
-
-	/// zh: '已迁移'
-	String get migrationOneDone => '已迁移';
-
-	/// zh: '该篇解析失败，已跳过'
-	String get migrationOneFailed => '该篇解析失败，已跳过';
-
-	/// zh: '回退迁移'
-	String get rollbackTitle => '回退迁移';
-
-	/// zh: '将这篇恢复为迁移前的旧编辑器格式，并删除备份。 注意：迁移之后对该篇做的修改会丢失。'
-	String get rollbackMessage => '将这篇恢复为迁移前的旧编辑器格式，并删除备份。\n\n注意：迁移之后对该篇做的修改会丢失。';
-
-	/// zh: '回退'
-	String get rollbackConfirm => '回退';
-
-	/// zh: '已回退'
-	String get rollbackDone => '已回退';
-
-	/// zh: '回退失败'
-	String get rollbackFailed => '回退失败';
-
-	/// zh: '待迁移（{count}）'
-	String migrationPending({required Object count}) => '待迁移（${count}）';
-
-	/// zh: '没有需要迁移的旧编辑器日记 🎉'
-	String get migrationEmpty => '没有需要迁移的旧编辑器日记 🎉';
-
-	/// zh: '迁移这一篇'
-	String get migrateThisOne => '迁移这一篇';
-
-	/// zh: '已迁移（可回退）'
-	String get migrationMigrated => '已迁移（可回退）';
-
-	/// zh: '(已删除)'
-	String get diaryDeleted => '(已删除)';
-
-	/// zh: '迁移于 {date}'
-	String migratedAt({required Object date}) => '迁移于 ${date}';
+	/// zh: '重试'
+	String get migrationRetry => '重试';
 
 	/// zh: '正在迁移 {done} / {total}'
 	String migrationProgress({required Object done, required Object total}) => '正在迁移 ${done} / ${total}';
-
-	/// zh: '全部迁移（{count}）'
-	String migrateAll({required Object count}) => '全部迁移（${count}）';
-
-	/// zh: '(空日记)'
-	String get emptyDiary => '(空日记)';
 }
 
 // Path: export

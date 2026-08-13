@@ -75,8 +75,12 @@ class _EditorBodyState extends State<EditorBody> {
     final converted = QuillDeltaToTiptap.convert(widget.initialContent);
     if (converted != null) return converted;
     // 不是合法 Delta（极老版本的裸文本残留）：按纯文本兜底，宁可掉格式也要能看。
-    final plain =
+    // plainText 对「恰好是 JSON 数组的裸文本」给空串，原文非空时回退原文。
+    var plain =
         QuillDelta.plainText(widget.initialContent) ?? widget.initialContent;
+    if (plain.trim().isEmpty && widget.initialContent.trim().isNotEmpty) {
+      plain = widget.initialContent;
+    }
     return MarkdownToTiptap.convert(plain) ?? plain;
   }
 

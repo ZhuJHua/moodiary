@@ -80,8 +80,6 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get syncBackup => 'Sync and backup';
 	@override String get categoryManager => 'Categories';
 	@override String get mapTitle => 'Trail map';
-	@override String get editorMigration => 'Migrate to the new editor';
-	@override String get editorMigrationSubtitle => 'Convert old entries (rich text / Markdown) so they can be edited again';
 	@override String get sectionDisplay => 'Display';
 	@override String get diarySettings => 'Entry preferences';
 	@override String get themeMode => 'Theme';
@@ -545,26 +543,11 @@ class _Translations$editor$en extends Translations$editor$zh {
 	@override String get pickCategory => 'Pick a category';
 	@override String get noCategory => 'No category';
 	@override String get migrationTitle => 'Migrate to the new editor';
-	@override String migrationMessage({required Object count}) => 'Convert ${count} entries from the old editor to the new format.\n\n· Text, headings, lists, quotes, code, images, audio and video are kept;\n· Text colour, highlighting and alignment cannot be expressed in the new format and will be dropped;\n· Migration only changes the storage format on this device — it is not synced as an edit, so migrate each device separately;\n· The original is backed up first and can be restored at any time.';
-	@override String get migrationStart => 'Start';
-	@override String migrationDone({required Object count}) => 'Migrated ${count} entries';
-	@override String migrationPartial({required Object count, required Object failed}) => 'Migrated ${count} entries, ${failed} failed (skipped, originals untouched)';
-	@override String get migrationOneDone => 'Migrated';
-	@override String get migrationOneFailed => 'This entry could not be parsed and was skipped';
-	@override String get rollbackTitle => 'Roll back the migration';
-	@override String get rollbackMessage => 'Restore this entry to the old editor format and delete the backup.\n\nNote: any edits made after the migration will be lost.';
-	@override String get rollbackConfirm => 'Roll back';
-	@override String get rollbackDone => 'Rolled back';
-	@override String get rollbackFailed => 'Roll back failed';
-	@override String migrationPending({required Object count}) => 'To migrate (${count})';
-	@override String get migrationEmpty => 'No old-editor entries left 🎉';
-	@override String get migrateThisOne => 'Migrate this entry';
-	@override String get migrationMigrated => 'Migrated (can roll back)';
-	@override String get diaryDeleted => '(deleted)';
-	@override String migratedAt({required Object date}) => 'Migrated on ${date}';
+	@override String get migrationNote => 'Originals are backed up before conversion. Quitting is safe — migration resumes on next launch.';
+	@override String migrationFailedCount({required Object count}) => '${count} entries failed to migrate. Please retry.';
+	@override String get migrationError => 'Migration hit an error. Please retry.';
+	@override String get migrationRetry => 'Retry';
 	@override String migrationProgress({required Object done, required Object total}) => 'Migrating ${done} / ${total}';
-	@override String migrateAll({required Object count}) => 'Migrate all (${count})';
-	@override String get emptyDiary => '(empty entry)';
 }
 
 // Path: export

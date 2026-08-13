@@ -25,8 +25,6 @@
   "syncBackup": "数据同步与备份",
   "categoryManager": "分类管理",
   "mapTitle": "足迹地图",
-  "editorMigration": "迁移到新编辑器",
-  "editorMigrationSubtitle": "把旧日记（富文本 / Markdown）转换为新编辑器以便编辑",
   "sectionDisplay": "显示",
   "diarySettings": "日记设置",
   "themeMode": "主题模式",

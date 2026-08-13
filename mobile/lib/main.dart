@@ -10,6 +10,8 @@ import 'package:moodiary/app/locale.dart';
 import 'package:moodiary/app/router/router.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_editor/moodiary_editor.dart'
+    show EditorMigrationService;
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_migration/moodiary_migration.dart';
 import 'package:moodiary_preferences/moodiary_preferences.dart';
@@ -26,6 +28,13 @@ Future<void> _initSystem() async {
     await VersionMigrator.run();
   } catch (e, s) {
     logger.e('version migration failed', error: e, stackTrace: s);
+  }
+  // 强制迁移闸门探测：存在旧格式日记时路由 redirect 把一切目的地引到迁移页。
+  // 探测失败按无迁移放行（读路径本就能即时转换渲染旧格式，只是不落库），别把启动卡死。
+  try {
+    await EditorMigrationService.refreshRequiresMigration();
+  } catch (e, s) {
+    logger.e('migration gate probe failed', error: e, stackTrace: s);
   }
   unawaited(_platFormOption());
   // 复数解析器只要在 runApp（第一次取串）之前登记上即可，与 setLocale 的先后无关；

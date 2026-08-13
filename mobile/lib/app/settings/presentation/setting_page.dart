@@ -130,20 +130,6 @@ class _DataSection extends StatelessWidget {
                 ),
                 onTap: () => _openSetting(context, const MapRoute()),
               ),
-              SettingListTile(
-                title: context.l10n.app.editorMigration,
-                subtitle: context.l10n.app.editorMigrationSubtitle,
-                leading: Icon(
-                  LucideIcons.wandSparkles,
-                  color: scheme.onSurfaceVariant,
-                ),
-                trailing: Icon(
-                  LucideIcons.chevronRight,
-                  color: scheme.onSurfaceVariant,
-                ),
-                onTap: () =>
-                    _openSetting(context, const EditorMigrationRoute()),
-              ),
               const DataRepairTile(),
               // 压测入口随图谱一起暂隐藏(StressTestTile,打磨期再放出)。
               const CacheUsageTile(),
