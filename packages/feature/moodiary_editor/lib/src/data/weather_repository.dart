@@ -18,15 +18,22 @@ class WeatherRepository {
     required BuildContext context,
     required LatLng position,
   }) async {
+    // key / host 任一未配置就短路：和风的 API Host 是 per-key 专属的（2.8.0 新增配置，
+    // 升级用户为空），拼出来的 `https://null/...` 只会白打一发必败请求。
+    final host = MoodiaryKVs.qweatherApiHost.get();
+    final key = MoodiaryKVs.qweatherKey.get();
+    if (host == null || host.isEmpty || key == null || key.isEmpty) {
+      return null;
+    }
     final local = Localizations.localeOf(context);
     final parameters = {
       'location':
           '${double.parse(position.longitude.toStringAsFixed(2))},${double.parse(position.latitude.toStringAsFixed(2))}',
-      'key': MoodiaryKVs.qweatherKey.get(),
+      'key': key,
       'lang': local,
     };
     final res = await _http.get(
-      'https://${MoodiaryKVs.qweatherApiHost.get()}/v7/weather/now',
+      'https://$host/v7/weather/now',
       query: parameters,
     );
     final weather = await compute(
