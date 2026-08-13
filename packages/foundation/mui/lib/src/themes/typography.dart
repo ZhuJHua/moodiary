@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/widgets.dart';
 import 'package:mui/src/themes/color_scheme.dart';
 import 'package:mui/src/themes/value.dart';
@@ -197,6 +199,27 @@ class MuiTypography with MuiValue {
   static MuiWeight _emphasisOf(double baseSize) =>
       baseSize >= 22 ? MuiWeight.bold : MuiWeight.semiBold;
 
+  /// 平台默认字体族，逐平台抄 material 的 `Typography._withPlatform`
+  /// （`typography.dart:219`）：android/fuchsia/linux 用 Roboto、windows 用 Segoe UI、
+  /// macOS 用 `.AppleSystemUIFont`、iOS 按光学尺寸分 Display 与 Text 两个别名。
+  ///
+  /// **不能留空**：`fontFamily` 为 null 时由引擎自行回退，中文环境下西文与数字常常
+  /// 落到 CJK 字体自带的拉丁字形上 —— 那套字形为了塞进方块字的字宽被压窄，
+  /// 观感就是「英文和数字被压扁」。material 从来没留过这个空。
+  ///
+  /// iOS 的分界同样是 22px，与 [_emphasisOf] 撞在一起纯属巧合：一个是苹果的
+  /// 光学尺寸切换点，一个是 HIG 的强调字重切换点。
+  static String? _platformFamily(double baseSize) =>
+      switch (defaultTargetPlatform) {
+        TargetPlatform.android ||
+        TargetPlatform.fuchsia ||
+        TargetPlatform.linux => 'Roboto',
+        TargetPlatform.iOS =>
+          baseSize >= 22 ? 'CupertinoSystemDisplay' : 'CupertinoSystemText',
+        TargetPlatform.macOS => '.AppleSystemUIFont',
+        TargetPlatform.windows => 'Segoe UI',
+      };
+
   /// M3 2021 的几何，与 `Typography.englishLike2021` 逐级逐字段相同
   /// （`typography.dart:2096`，由 `theme_projection_test` 对拍）：
   /// fontSize / height / letterSpacing。[height] 是**比例**不是绝对行高。
@@ -230,7 +253,8 @@ class MuiTypography with MuiValue {
     TextStyle styleOf(MuiWeight weight) => TextStyle(
       inherit: false,
       color: colors.onSurface,
-      fontFamily: font.family,
+      // 宿主选了自定义字体就用它，否则回落到平台默认族（不是留空）。
+      fontFamily: font.family ?? _platformFamily(baseSize),
       fontSize: baseSize,
       height: height,
       letterSpacing: spacing,

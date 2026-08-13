@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -103,6 +104,16 @@ void main() {
       expect(theme.textTheme.labelSmall!.fontSize, 11);
     });
 
+    test('字体族与 material 自己的 Typography 一致 —— 留空会让西文落到 CJK 字形上', () {
+      final m3 = Typography.material2021(
+        platform: defaultTargetPlatform,
+        colorScheme: theme.colorScheme,
+      ).black;
+      expect(theme.textTheme.bodyMedium!.fontFamily, m3.bodyMedium!.fontFamily);
+      expect(theme.textTheme.titleLarge!.fontFamily, m3.titleLarge!.fontFamily);
+      expect(theme.textTheme.bodyMedium!.fontFamily, isNotNull);
+    });
+
     test('顶栏滚动态不变色不投影', () {
       expect(theme.appBarTheme.backgroundColor, theme.colorScheme.surface);
       expect(theme.appBarTheme.scrolledUnderElevation, 0);
@@ -117,7 +128,10 @@ void main() {
       expect(theme.primaryIconTheme.color, cs.onPrimary);
       expect(theme.hintColor, cs.onSurfaceVariant);
       expect(theme.unselectedWidgetColor, cs.onSurfaceVariant);
-      expect(theme.disabledColor.a, closeTo(const MuiStateTokens().disabledOpacity, 0.01));
+      expect(
+        theme.disabledColor.a,
+        closeTo(const MuiStateTokens().disabledOpacity, 0.01),
+      );
       expect(theme.shadowColor, cs.shadow);
       // 分隔线：SDK 的 M3 缺省是 outline，规范里是 outlineVariant，重了一档。
       expect(theme.dividerColor, cs.outlineVariant);

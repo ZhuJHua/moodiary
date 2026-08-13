@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_color_utilities/material_color_utilities.dart' as mcu;
@@ -333,6 +334,47 @@ void main() {
       expect(t.bodyMedium.onSurface.letterSpacing, 0.25);
       expect(t.displayLarge.onSurface.fontSize, 57);
       expect(t.labelSmall.onSurface.fontSize, 11);
+    });
+
+    test('字体族逐平台与 material 对齐，iOS 按 22px 切光学尺寸', () {
+      const expected = {
+        TargetPlatform.android: 'Roboto',
+        TargetPlatform.fuchsia: 'Roboto',
+        TargetPlatform.linux: 'Roboto',
+        TargetPlatform.windows: 'Segoe UI',
+        TargetPlatform.macOS: '.AppleSystemUIFont',
+      };
+      for (final entry in expected.entries) {
+        debugDefaultTargetPlatformOverride = entry.key;
+        final t = typo();
+        for (final level in MuiTypography.levels) {
+          expect(
+            t.byLevel(level).onSurface.fontFamily,
+            entry.value,
+            reason: '${entry.key} 的 $level 字体族不对',
+          );
+        }
+      }
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      final ios = typo();
+      for (final level in MuiTypography.levels) {
+        final style = ios.byLevel(level).onSurface;
+        expect(
+          style.fontFamily,
+          style.fontSize! >= 22
+              ? 'CupertinoSystemDisplay'
+              : 'CupertinoSystemText',
+          reason: 'iOS 的 $level 光学尺寸选错了',
+        );
+      }
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('宿主给了自定义字体就盖掉平台默认', () {
+      final t = typo(font: const MuiFontConfig(family: 'X'));
+      for (final level in MuiTypography.levels) {
+        expect(t.byLevel(level).onSurface.fontFamily, 'X', reason: level);
+      }
     });
 
     test('全 15 级 inherit 为 false —— 投影到 material 时要整块替换', () {
