@@ -458,6 +458,12 @@ class Translations$app$zh {
 
 	/// zh: '字体已存在'
 	String get fontExists => '字体已存在';
+
+	/// zh: '页面不存在'
+	String get routeErrorTitle => '页面不存在';
+
+	/// zh: '返回首页'
+	String get routeErrorBackHome => '返回首页';
 }
 
 // Path: assistant

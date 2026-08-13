@@ -132,5 +132,7 @@
   "cacheClear": "清理缓存",
   "cacheCleared": "清理成功",
   "fontNameFailed": "字体名称获取失败",
-  "fontExists": "字体已存在"
+  "fontExists": "字体已存在",
+  "routeErrorTitle": "页面不存在",
+  "routeErrorBackHome": "返回首页"
 }

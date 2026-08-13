@@ -9,6 +9,7 @@ export 'components/basic/clipper.dart';
 export 'components/basic/dialog.dart';
 export 'components/basic/expand_tap_area.dart';
 export 'components/basic/fix_scroll.dart';
+export 'components/basic/hero.dart';
 export 'components/basic/form.dart';
 export 'components/basic/keepalive.dart';
 export 'components/basic/keyboard_listener.dart';

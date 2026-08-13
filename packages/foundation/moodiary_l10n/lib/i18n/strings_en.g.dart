@@ -188,6 +188,8 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get cacheCleared => 'Cache cleared';
 	@override String get fontNameFailed => 'Could not read the font name';
 	@override String get fontExists => 'That font is already installed';
+	@override String get routeErrorTitle => 'Page not found';
+	@override String get routeErrorBackHome => 'Back to home';
 }
 
 // Path: assistant

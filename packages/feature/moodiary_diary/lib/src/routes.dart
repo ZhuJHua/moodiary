@@ -12,7 +12,7 @@ import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 
 List<RouteBase> diaryRoutes() => [
-  GoRoute(
+  MoodiaryGoRoute(
     path: NewDiaryRoute.path,
     builder: (context, state) {
       final route = NewDiaryRoute.fromState(state);
@@ -23,7 +23,7 @@ List<RouteBase> diaryRoutes() => [
       );
     },
   ),
-  GoRoute(
+  MoodiaryGoRoute(
     path: DiaryRoute.path,
     builder: (context, state) {
       final route = DiaryRoute.fromState(state);
@@ -34,22 +34,22 @@ List<RouteBase> diaryRoutes() => [
       );
     },
   ),
-  GoRoute(
+  MoodiaryGoRoute(
     path: DiarySearchRoute.path,
     builder: (_, _) => const DiarySearchPage(),
   ),
-  GoRoute(path: RecycleRoute.path, builder: (_, _) => const RecyclePage()),
-  GoRoute(
+  MoodiaryGoRoute(path: RecycleRoute.path, builder: (_, _) => const RecyclePage()),
+  MoodiaryGoRoute(
     path: CategoryManagerRoute.path,
     builder: (_, _) => const CategoryManagerPage(),
   ),
-  GoRoute(path: MapRoute.path, builder: (_, _) => const MapPage()),
-  GoRoute(
+  MoodiaryGoRoute(path: MapRoute.path, builder: (_, _) => const MapPage()),
+  MoodiaryGoRoute(
     path: DiaryManagerRoute.path,
     builder: (_, _) => const DiaryManagerPage(),
   ),
-  GoRoute(path: AnalyseRoute.path, builder: (_, _) => const AnalysePage()),
-  GoRoute(
+  MoodiaryGoRoute(path: AnalyseRoute.path, builder: (_, _) => const AnalysePage()),
+  MoodiaryGoRoute(
     path: DiaryGraphRoute.path,
     builder: (_, state) {
       final id = DiaryGraphRoute.fromState(state).diaryId;

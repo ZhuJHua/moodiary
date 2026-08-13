@@ -132,5 +132,7 @@
   "cacheClear": "Clear the cache",
   "cacheCleared": "Cache cleared",
   "fontNameFailed": "Could not read the font name",
-  "fontExists": "That font is already installed"
+  "fontExists": "That font is already installed",
+  "routeErrorTitle": "Page not found",
+  "routeErrorBackHome": "Back to home"
 }

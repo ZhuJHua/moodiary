@@ -226,7 +226,7 @@ class _MImageBrowserState extends State<MImageBrowser> {
       ),
     );
     if (!hero) return page;
-    return Hero(tag: '${widget.heroPrefix}-$image', child: page);
+    return MHero(tag: '${widget.heroPrefix}-$image', child: page);
   }
 
   ImageProvider? _placeholderOf(String image) {
