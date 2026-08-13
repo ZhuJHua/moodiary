@@ -303,6 +303,20 @@ class _MediaSliver extends StatelessWidget {
 /// 会话内已尝试过懒补行的文件名，避免探测失败的历史音频（ADTS 裸流）反复重试。
 final Set<String> _backfillAttempted = {};
 
+/// 探测串行链：升级用户整页音频都缺行，build 里逐 tile 触发；`probeAudioDuration`
+/// 每次 `Isolate.run` 起新 isolate，不串行的话快速滚动一屏能同时起几十个。
+Future<void> _backfillChain = Future.value();
+
+void _scheduleBackfill(String name) {
+  if (!_backfillAttempted.add(name)) return;
+  _backfillChain = _backfillChain
+      .then((_) => _backfillMediaInfo(name))
+      .catchError(
+        (Object e, StackTrace s) =>
+            logger.e('audio backfill failed: $name', error: e, stackTrace: s),
+      );
+}
+
 /// 历史音频懒补行：没有 MediaInfo 行（或行内缺时长）时后台探测一次时长写库。
 /// 探测不到（历史 Android 录音）就不落行——没有可存的事实，改名时再建行。
 ///
@@ -311,7 +325,6 @@ final Set<String> _backfillAttempted = {};
 /// epoch 0——任何真实用户写入都能压过它；已有行只补时长、保留原 lastModified
 /// ——不推进时钟就不会覆盖任何人（其它设备各自本地探测即可）。
 Future<void> _backfillMediaInfo(String name) async {
-  if (!_backfillAttempted.add(name)) return;
   final duration = await probeAudioDuration(
     AppFiles.getRealPath('audio', name),
   );
@@ -381,8 +394,11 @@ class _AudioTile extends ConsumerWidget {
     final theme = context.theme;
     final scheme = theme.colors;
     final info = ref.watch(mediaInfoByFileNameProvider(name));
-    if (info?.durationMs == null) {
-      Future.microtask(() => _backfillMediaInfo(name));
+    // 控制器就绪前 provider 对所有 tile 都给 null，此时触发探测全是浪费
+    // （行里往往已有时长）；等首次加载完成后再按真实缺口补。
+    final infoReady = ref.watch(mediaInfoControllerProvider).hasValue;
+    if (infoReady && info?.durationMs == null) {
+      _scheduleBackfill(name);
     }
     final displayName = info?.name ?? context.l10n.common.audio;
     final durationMs = info?.durationMs;
