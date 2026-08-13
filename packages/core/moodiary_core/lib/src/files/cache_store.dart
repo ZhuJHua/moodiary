@@ -37,7 +37,7 @@ class CacheStore {
   ) async {
     final newData = await fetchData();
     if (newData != null) {
-      await IKVStorage.get().set<List<String>>(
+      IKVStorage.get().set<List<String>>(
         key,
         newData..add(DateTime.now().millisecondsSinceEpoch.toString()),
       );

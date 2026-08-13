@@ -259,7 +259,7 @@ class _ToolSectionState extends State<_ToolSection> {
   }
 
   Future<void> _resetGrants() async {
-    await MoodiaryKVs.assistantAlwaysAllowedTools.set(const []);
+    MoodiaryKVs.assistantAlwaysAllowedTools.set(const []);
     if (!mounted) return;
     setState(() {});
     toast.success(message: context.l10n.assistant.toolResetGrantsDone);

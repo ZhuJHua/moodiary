@@ -62,7 +62,7 @@ class AutoSyncWatcher {
     _diarySub ??= DiaryRepository.get().diaryEvents.listen((event) {
       // 云 pull 落库的变更远端已持有：不标脏、不置待推标记、不排推送。
       if (event.fromSync) return;
-      unawaited(MoodiaryKVs.syncPendingLocal.set(true));
+      MoodiaryKVs.syncPendingLocal.set(true);
       switch (event) {
         case DiaryCreated(:final diary) || DiaryUpdated(:final diary):
           // 本地有改动 → 标记卡片「待同步」。
@@ -80,12 +80,12 @@ class AutoSyncWatcher {
     });
     _categorySub ??= CategoryRepository.get().categoryEvents.listen((event) {
       if (event.fromSync) return;
-      unawaited(MoodiaryKVs.syncPendingLocal.set(true));
+      MoodiaryKVs.syncPendingLocal.set(true);
       _onLocalChange();
     });
     _mediaInfoSub ??= MediaInfoRepository.get().mediaInfoEvents.listen((event) {
       if (event.fromSync) return;
-      unawaited(MoodiaryKVs.syncPendingLocal.set(true));
+      MoodiaryKVs.syncPendingLocal.set(true);
       _onLocalChange();
     });
     _syncSub ??= SyncLogger.get().events.listen(_onSyncEvent);
@@ -234,7 +234,7 @@ class AutoSyncWatcher {
   /// 不清标记。
   Future<void> _runAutoSync(
     Future<SyncReport> Function(IRemoteSyncBackend) op, {
-    Future<void> Function()? onSuccess,
+    void Function()? onSuccess,
   }) async {
     if (_syncing) return;
     if (!getIt.isRegistered<IRemoteSyncBackend>()) return;
@@ -246,9 +246,9 @@ class AutoSyncWatcher {
       final report = await op(backend);
       if (report.failed == 0 && !report.cancelled) {
         if (!_dirtyDuringSync) {
-          await MoodiaryKVs.syncPendingLocal.set(false);
+          MoodiaryKVs.syncPendingLocal.set(false);
         }
-        await onSuccess?.call();
+        onSuccess?.call();
       }
     } catch (e, st) {
       logger.e('auto-sync failed', error: e, stackTrace: st);

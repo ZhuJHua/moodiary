@@ -58,7 +58,7 @@ class _AssistantProviderListPageState
   }
 
   Future<void> _setActive(LlmProvider provider) async {
-    await MoodiaryKVs.assistantActiveProviderId.set(provider.id);
+    MoodiaryKVs.assistantActiveProviderId.set(provider.id);
     if (mounted) setState(() => _activeId = provider.id);
   }
 

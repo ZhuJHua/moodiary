@@ -44,10 +44,8 @@ class LlmPresetRepository {
     try {
       final body = await _fetchBody();
       final normalized = await compute(_normalize, body);
-      await MoodiaryKVs.llmPresetCache.set(normalized);
-      await MoodiaryKVs.llmPresetCacheAt.set(
-        DateTime.now().millisecondsSinceEpoch,
-      );
+      MoodiaryKVs.llmPresetCache.set(normalized);
+      MoodiaryKVs.llmPresetCacheAt.set(DateTime.now().millisecondsSinceEpoch);
       return _decodeCache(normalized);
     } catch (e) {
       final cached = MoodiaryKVs.llmPresetCache.get() ?? '';

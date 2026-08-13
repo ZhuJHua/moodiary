@@ -42,7 +42,7 @@ class ThemeModeDialog extends ConsumerWidget {
   /// 写 KV 后必须调 [AppSettingsController.bumpTheme] 让控制器重读 themeMode 并刷新
   /// MaterialApp（state 不是直接 watch KV，详见 app_settings_controller.dart）。
   Future<void> _select(BuildContext context, WidgetRef ref, int value) async {
-    await MoodiaryKVs.themeMode.set(value);
+    MoodiaryKVs.themeMode.set(value);
     await ref.read(appSettingsControllerProvider.notifier).bumpTheme();
     if (context.mounted) Navigator.of(context).pop();
   }

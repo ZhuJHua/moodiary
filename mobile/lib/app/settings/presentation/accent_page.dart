@@ -27,8 +27,8 @@ class _AccentPageState extends ConsumerState<AccentPage> {
 
   Future<void> _save() async {
     final navigator = Navigator.of(context);
-    await MoodiaryKVs.themeAccentColor.set(_seed.toARGB32());
-    await MoodiaryKVs.themeAccentMode.set(ThemeAccentMode.custom.index);
+    MoodiaryKVs.themeAccentColor.set(_seed.toARGB32());
+    MoodiaryKVs.themeAccentMode.set(ThemeAccentMode.custom.index);
     await ref.read(appSettingsControllerProvider.notifier).bumpTheme();
     navigator.pop();
   }

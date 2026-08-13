@@ -179,7 +179,7 @@ class IncrementalSyncEngine {
   Future<SyncReport> pull({bool markSynced = true}) async {
     final report = await _exclusive(_pull);
     if (markSynced && report.failed == 0 && !report.cancelled) {
-      await _markSynced();
+      _markSynced();
     }
     return report;
   }
@@ -672,7 +672,7 @@ class IncrementalSyncEngine {
   /// 本地 → 远端。先比 manifest 算 diff，逐条上传 / 改 tombstone，最后写回 manifest。
   Future<SyncReport> push() async {
     final report = await _exclusive(_push);
-    if (report.failed == 0 && !report.cancelled) await _markSynced();
+    if (report.failed == 0 && !report.cancelled) _markSynced();
     return report;
   }
 
@@ -720,13 +720,13 @@ class IncrementalSyncEngine {
         cancelled: pushed.cancelled,
       );
     });
-    if (report.failed == 0 && !report.cancelled) await _markSynced();
+    if (report.failed == 0 && !report.cancelled) _markSynced();
     return report;
   }
 
   /// 记录一次同步成功完成的时间。仅当无异常**且无失败条目**才调用 ——
   /// 部分失败的同步不算成功，不该推进 UI 的「上次同步」。
-  static Future<void> _markSynced() =>
+  static void _markSynced() =>
       MoodiaryKVs.lastSyncTime.set(DateTime.now().millisecondsSinceEpoch);
 
   static int _writeSeq = 0;

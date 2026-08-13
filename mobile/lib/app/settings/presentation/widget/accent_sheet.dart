@@ -69,7 +69,7 @@ class AccentSheet extends ConsumerWidget {
       router.push(const AccentRoute().location);
       return;
     }
-    await MoodiaryKVs.themeAccentMode.set(mode.index);
+    MoodiaryKVs.themeAccentMode.set(mode.index);
     await ref.read(appSettingsControllerProvider.notifier).bumpTheme();
   }
 }

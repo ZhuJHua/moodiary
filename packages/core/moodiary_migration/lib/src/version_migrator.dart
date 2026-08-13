@@ -12,8 +12,11 @@ final _schemas = [DiarySchema, CategorySchema, FontSchema];
 
 class VersionMigrator {
   /// 版本号比对触发数据迁移钩子并写回当前版本号。须在 KV / Isar 初始化后由组合根
-  /// （`main.dart`）调用——此前内联在 `SharedPreferencesKVStorage.init`，现上移以解除
-  /// core → merge 反向依赖。
+  /// （`main.dart`）调用——此前内联在 KV 实现的 `init`，现上移以解除 core → merge
+  /// 反向依赖。
+  ///
+  /// 唯一挂不进这里的迁移是 2.8.0 的 SharedPreferences → MMKV 搬迁：判版本用的
+  /// `appVersion` 自己就存在 KV 里，搬完之前读不到，所以它留在 `MmkvKVStorage.init`。
   static Future<void> run() async {
     final packageInfo = await AppInfo.getPackageInfo();
     final currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
@@ -24,10 +27,10 @@ class VersionMigrator {
     // 全文 / 双链倒排索引首次引入于 2.8.0：全新安装（appVersion==null）的新日记走增量索引，
     // 直接置「已回填」，免搜索页的升级提示；从旧版升级则保持 false，由提示引导用户手动重建一次。
     if (appVersion == null) {
-      await MoodiaryKVs.searchIndexBackfilled.set(true);
+      MoodiaryKVs.searchIndexBackfilled.set(true);
     }
     if (kDebugMode || appVersion == null || appVersion != currentVersion) {
-      await MoodiaryKVs.appVersion.set(currentVersion);
+      MoodiaryKVs.appVersion.set(currentVersion);
     }
   }
 
@@ -56,7 +59,7 @@ class VersionMigrator {
     }
 
     if (below('2.7.3')) {
-      await MoodiaryKVs.customFont.set('');
+      MoodiaryKVs.customFont.set('');
       final allFont = await FontManager.getAllFonts();
       await compute(_mergeToV2_7_3, {
         'database': AppFiles.getRealPath('database', ''),
@@ -67,7 +70,7 @@ class VersionMigrator {
     if (below('2.8.0')) {
       // 2.7.3 的 autoSync 属旧备份引擎；新引擎启动后 ~30s 即全量推送、且未配 DEK 时为明文，
       // 不能默认继承——重置为关，由用户在同步页重新确认。服务器配置（webDavOption）保留。
-      await MoodiaryKVs.autoSync.set(false);
+      MoodiaryKVs.autoSync.set(false);
       // 跨引擎（isar 4.0.0-dev → isar_plus）迁移前留一份快照，出问题可回滚。
       await _backupDatabaseOnce();
       await compute(_mergeToV2_8_0, AppFiles.getRealPath('database', ''));

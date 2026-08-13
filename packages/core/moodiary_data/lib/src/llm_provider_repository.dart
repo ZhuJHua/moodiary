@@ -49,7 +49,7 @@ class LlmProviderRepository {
     });
     await removeKey(id);
     if (MoodiaryKVs.assistantActiveProviderId.get() == id) {
-      await MoodiaryKVs.assistantActiveProviderId.set('');
+      MoodiaryKVs.assistantActiveProviderId.set('');
     }
     _events.add(null);
   }

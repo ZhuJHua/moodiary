@@ -1209,7 +1209,7 @@ class DiaryRepository {
       isar.searchStats.put(statsRow);
     });
     // 任何一次全量重建都完成了升级后的一次性回填（搜索页提示据此收起）。
-    await MoodiaryKVs.searchIndexBackfilled.set(true);
+    MoodiaryKVs.searchIndexBackfilled.set(true);
     return snapshots.length;
   }
 

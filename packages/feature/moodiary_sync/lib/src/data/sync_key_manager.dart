@@ -160,8 +160,8 @@ class SyncKeyManager {
     await MoodiarySecureKVs.syncDek.remove();
     _dekCache = null;
     _dekLoaded = true;
-    await MoodiaryKVs.syncKeyfileCache.set('');
-    await MoodiaryKVs.syncKeyfilePendingBackends.set(const <String>[]);
+    MoodiaryKVs.syncKeyfileCache.set('');
+    MoodiaryKVs.syncKeyfilePendingBackends.set(const <String>[]);
   }
 
   static Future<SyncCipher> currentCipher() async => .withKey(await loadDek());
@@ -188,7 +188,7 @@ class SyncKeyManager {
     }
   }
 
-  static Future<void> cacheKeyfile(SyncKeyfile keyfile) =>
+  static void cacheKeyfile(SyncKeyfile keyfile) =>
       MoodiaryKVs.syncKeyfileCache.set(jsonEncode(keyfile.toJson()));
 
   static List<String> pendingUploadBackends() =>
@@ -196,12 +196,12 @@ class SyncKeyManager {
 
   static Future<void> markPendingUpload(Iterable<String> backendIds) async {
     final merged = {...pendingUploadBackends(), ...backendIds};
-    await MoodiaryKVs.syncKeyfilePendingBackends.set(merged.toList());
+    MoodiaryKVs.syncKeyfilePendingBackends.set(merged.toList());
   }
 
   static Future<void> clearPendingUpload(String backendId) async {
     final rest = pendingUploadBackends().where((b) => b != backendId).toList();
-    await MoodiaryKVs.syncKeyfilePendingBackends.set(rest);
+    MoodiaryKVs.syncKeyfilePendingBackends.set(rest);
   }
 
   // ── 远端 keyfile ──

@@ -3,17 +3,18 @@ import 'package:moodiary_core/src/files/app_files.dart';
 import 'package:moodiary_core/src/platform_service.dart';
 import 'package:moodiary_core/src/storage.dart';
 import 'package:moodiary_core/src/storage/database/isar.dart';
-import 'package:moodiary_core/src/storage/kv/pref.dart';
+import 'package:moodiary_core/src/storage/kv/legacy_pref.dart';
+import 'package:moodiary_core/src/storage/kv/mmkv.dart';
 import 'package:moodiary_core/src/storage/kv/secure.dart';
 
 /// 基础设施层一次性初始化入口。
 ///
-/// 路径 + 业务目录是后续存储的前置（Isar 要求 database 目录存在；KV.init 经
-/// VersionMigrator 读 applicationSupportPath），故先串行就位，再并发三条独立存储。
+/// 路径 + 业务目录是后续存储的前置（Isar 要求 database 目录存在；MMKV 的 rootDir 取
+/// applicationSupportPath），故先串行就位，再并发三条独立存储。
 /// 不在此调用 RustLib.init / ThemeManager / registerService——那些含业务/UI 决策，
 /// 由 main.dart 显式调用以便启动期定制。
 Future<void> injectBasicService() async {
-  getIt.registerSingleton<IKVStorage>(SharedPreferencesKVStorage());
+  getIt.registerSingleton<IKVStorage>(MmkvKVStorage());
   getIt.registerSingleton<ISecureKVStorage>(FlutterSecureStorageKVStorage());
 
   await PlatformService.get().init();
@@ -32,9 +33,12 @@ Future<void> injectBasicService() async {
 Future<void> resetAllData() async {
   // 先清空数据库集合（保持 Isar 句柄有效），再并发清空其余存储与文件。
   await IsarDatabase.get().clear();
+  IKVStorage.get().clear();
   await Future.wait([
-    IKVStorage.get().clear(),
     ISecureKVStorage.get().clear(),
+    // 2.8.0 的 KV 迁移是复制而非搬移，旧 SharedPreferences 仓库里还留着一份
+    // 密码 / API key，不一并清掉就绕过了这次重置。
+    LegacyPrefsKVSource.clearStore(),
     AppFiles.resetUserMediaDirs(),
     AppFiles.clearCache(),
   ]);

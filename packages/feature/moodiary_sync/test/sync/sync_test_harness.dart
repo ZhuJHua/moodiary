@@ -32,19 +32,19 @@ final class MemoryKVStorage extends IKVStorage {
   T? get<T extends Object>(String key) => data[key] as T?;
 
   @override
-  Future<void> set<T extends Object>(String key, T value) async {
+  void set<T extends Object>(String key, T value) {
     data[key] = value;
-    await super.set(key, value);
+    super.set(key, value);
   }
 
   @override
-  Future<void> remove(String key) async {
+  void remove(String key) {
     data.remove(key);
-    await super.remove(key);
+    super.remove(key);
   }
 
   @override
-  Future<void> clear() async => data.clear();
+  void clear() => data.clear();
 }
 
 /// 内存 SecureKV，实现 [ISecureKVStorage]。
@@ -470,7 +470,7 @@ setUpSyncEnv() async {
   final logger = await SyncLogger.create();
   getIt.registerSingleton<SyncLogger>(logger);
   // 预置设备 id：RemoteLease 无此值时会调 uuidV4()（Rust），测试环境不可用。
-  await MoodiaryKVs.syncDeviceId.set('test-device');
+  MoodiaryKVs.syncDeviceId.set('test-device');
   SyncCancellation.instance.reset();
   SyncPendingTracker.instance.clear();
   RemoteLease.resetCasProbeCache();

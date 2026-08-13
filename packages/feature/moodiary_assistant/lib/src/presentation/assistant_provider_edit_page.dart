@@ -181,7 +181,7 @@ class _AssistantProviderEditPageState
     if (_isNew) {
       final activeId = MoodiaryKVs.assistantActiveProviderId.get() ?? '';
       if (activeId.isEmpty) {
-        await MoodiaryKVs.assistantActiveProviderId.set(id);
+        MoodiaryKVs.assistantActiveProviderId.set(id);
       }
     }
 

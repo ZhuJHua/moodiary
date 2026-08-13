@@ -98,7 +98,7 @@ Future<bool> ensureSyncKeyReady({
   if (entered == null || unwrappedDek == null) return false;
 
   await SyncKeyManager.storeDek(unwrappedDek!);
-  await SyncKeyManager.cacheKeyfile(keyfile);
+  SyncKeyManager.cacheKeyfile(keyfile);
   // 其余已配置后端也需要 keyfile（本后端已有，出清单）。
   await SyncKeyManager.markPendingUpload(configuredCloudBackendIds());
   final backendId = backend.persistentBackendId;

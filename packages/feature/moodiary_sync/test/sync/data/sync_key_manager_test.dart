@@ -171,10 +171,10 @@ void main() {
     test('cacheKeyfile 往返；损坏缓存按不存在处理', () async {
       final dek = SyncKeyManager.generateDek();
       final kf = await SyncKeyManager.wrapDek(dek: dek, passphrase: 'p');
-      await SyncKeyManager.cacheKeyfile(kf);
+      SyncKeyManager.cacheKeyfile(kf);
       expect(SyncKeyManager.cachedKeyfile()?.wrappedDekB64, kf.wrappedDekB64);
 
-      await MoodiaryKVs.syncKeyfileCache.set('not-json');
+      MoodiaryKVs.syncKeyfileCache.set('not-json');
       expect(SyncKeyManager.cachedKeyfile(), isNull);
     });
   });
@@ -196,7 +196,7 @@ void main() {
 
       final dek = SyncKeyManager.generateDek();
       final kf = await SyncKeyManager.wrapDek(dek: dek, passphrase: 'p');
-      await SyncKeyManager.cacheKeyfile(kf);
+      SyncKeyManager.cacheKeyfile(kf);
       await SyncKeyManager.markPendingUpload(['webdav']);
 
       await SyncKeyManager.uploadPendingKeyfile(backend);
@@ -238,7 +238,7 @@ void main() {
       final dek = SyncKeyManager.generateDek();
       await SyncKeyManager.storeDek(dek);
       final kf = await SyncKeyManager.wrapDek(dek: dek, passphrase: 'p');
-      await SyncKeyManager.cacheKeyfile(kf);
+      SyncKeyManager.cacheKeyfile(kf);
 
       final backend = FakeRemoteBackend();
       backend.beforeOp = (op, key) => throw const SyncException('offline');
@@ -261,7 +261,7 @@ void main() {
         dek: SyncKeyManager.generateDek(),
         passphrase: 'p',
       );
-      await SyncKeyManager.cacheKeyfile(other);
+      SyncKeyManager.cacheKeyfile(other);
       expect(await SyncKeyManager.verifyPassphrase('p'), isFalse);
     });
   });

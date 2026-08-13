@@ -116,7 +116,7 @@ class RemoteLease {
     final existing = MoodiaryKVs.syncDeviceId.get();
     if (existing != null && existing.isNotEmpty) return existing;
     final id = uuidV4();
-    await MoodiaryKVs.syncDeviceId.set(id);
+    MoodiaryKVs.syncDeviceId.set(id);
     return id;
   }
 

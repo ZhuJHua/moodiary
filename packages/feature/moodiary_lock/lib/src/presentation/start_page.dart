@@ -65,8 +65,8 @@ class _StartPageState extends ConsumerState<StartPage> {
     return (_pageController.page ?? _page.toDouble()) - index;
   }
 
-  Future<void> _enter() async {
-    await MoodiaryKVs.firstStart.set(false);
+  void _enter() {
+    MoodiaryKVs.firstStart.set(false);
     if (!mounted) return;
     const DiaryHomeRoute().go(context);
   }

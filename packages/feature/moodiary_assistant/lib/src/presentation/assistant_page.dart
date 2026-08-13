@@ -273,7 +273,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       barrierDismissible: false,
     );
     if (agreed) {
-      await MoodiaryKVs.assistantDisclaimerAccepted.set(true);
+      MoodiaryKVs.assistantDisclaimerAccepted.set(true);
       if (!mounted) return;
       setState(() => _disclaimerAccepted = true);
       await _refreshReady();
@@ -312,7 +312,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       if (s != null) _session = s.copyWith(thinking: next);
     });
     // 更新「新会话默认」（最后一次用的）；已存在的会话则把模式落到会话本身。
-    unawaited(MoodiaryKVs.assistantThinkingEnabled.set(next));
+    MoodiaryKVs.assistantThinkingEnabled.set(next);
     final s = _session;
     if (s != null) unawaited(ChatRepository.get().upsertSession(s));
   }
@@ -331,7 +331,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (!mounted) return false;
     final decision = await _permissions.request(tool);
     if (decision == .allowAlways) {
-      await MoodiaryKVs.assistantAlwaysAllowedTools.set([...always, tool.id]);
+      MoodiaryKVs.assistantAlwaysAllowedTools.set([...always, tool.id]);
     }
     return decision == .allowOnce || decision == .allowAlways;
   }

@@ -74,7 +74,7 @@ class _LanSendPageState extends State<LanSendPage> {
     } else {
       host = target;
     }
-    await MoodiaryKVs.lanSendTarget.set(target);
+    MoodiaryKVs.lanSendTarget.set(target);
 
     setState(() {
       _running = true;

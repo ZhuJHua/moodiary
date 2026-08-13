@@ -153,20 +153,18 @@ class DiarySearchController extends _$DiarySearchController {
   static const _historyMax = 12;
 
   /// 把当前查询记入搜索历史（最近在前、去重、截断到上限）。
-  Future<void> recordHistory() async {
+  void recordHistory() {
     final q = state.query.trim();
     if (q.isEmpty) return;
     final hist = MoodiaryKVs.searchHistory.get() ?? const <String>[];
     final next = [q, ...hist.where((e) => e != q)].take(_historyMax).toList();
-    await MoodiaryKVs.searchHistory.set(next);
+    MoodiaryKVs.searchHistory.set(next);
   }
 
-  Future<void> removeHistory(String q) async {
+  void removeHistory(String q) {
     final hist = MoodiaryKVs.searchHistory.get() ?? const <String>[];
-    await MoodiaryKVs.searchHistory.set(hist.where((e) => e != q).toList());
+    MoodiaryKVs.searchHistory.set(hist.where((e) => e != q).toList());
   }
 
-  Future<void> clearHistory() async {
-    await MoodiaryKVs.searchHistory.set(const <String>[]);
-  }
+  void clearHistory() => MoodiaryKVs.searchHistory.set(const <String>[]);
 }

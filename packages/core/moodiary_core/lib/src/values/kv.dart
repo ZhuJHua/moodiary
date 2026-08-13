@@ -129,12 +129,16 @@ enum MoodiaryKVs<T extends Object> {
 
   T? get() => IKVStorage.get().get<T>(name) ?? defaultValue;
 
-  Future<void> set(T value) async {
-    await IKVStorage.get().set<T>(name, value);
-  }
+  void set(T value) => IKVStorage.get().set<T>(name, value);
 
-  Future<void> remove() async {
-    await IKVStorage.get().remove(name);
+  void remove() => IKVStorage.get().remove(name);
+
+  /// 把本键的值从 [source] 搬进 [into]，类型由 [T] 决定；源里没有就跳过。
+  /// 换 KV 后端时用——泛型只有在 enum 自己的实例方法里才绑得住，
+  /// 迁移代码那边拿不到每个键的静态类型。
+  void copyFrom(IKVSource source, {required IKVStorage into}) {
+    final value = source.get<T>(name);
+    if (value != null) into.set<T>(name, value);
   }
 
   KVNotifier<T> getNotifier() {

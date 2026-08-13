@@ -22,6 +22,6 @@ enum SyncProviderType {
   static SyncProviderType current() =>
       fromValue(MoodiaryKVs.syncProvider.get());
 
-  static Future<void> setCurrent(SyncProviderType type) =>
+  static void setCurrent(SyncProviderType type) =>
       MoodiaryKVs.syncProvider.set(type.value);
 }

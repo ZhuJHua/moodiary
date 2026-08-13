@@ -61,7 +61,7 @@ class FontController extends _$FontController {
   }
 
   Future<void> setActive(Font? font) async {
-    await MoodiaryKVs.customFont.set(font?.fontFamily ?? '');
+    MoodiaryKVs.customFont.set(font?.fontFamily ?? '');
     await ref.read(appSettingsControllerProvider.notifier).bumpTheme();
   }
 }

@@ -35,19 +35,19 @@ class _MemoryKV extends IKVStorage {
   T? get<T extends Object>(String key) => _store[key] as T?;
 
   @override
-  Future<void> set<T extends Object>(String key, T value) async {
+  void set<T extends Object>(String key, T value) {
     _store[key] = value;
-    await super.set(key, value);
+    super.set(key, value);
   }
 
   @override
-  Future<void> remove(String key) async {
+  void remove(String key) {
     _store.remove(key);
-    await super.remove(key);
+    super.remove(key);
   }
 
   @override
-  Future<void> clear() async => _store.clear();
+  void clear() => _store.clear();
 }
 
 Diary makeDiary(

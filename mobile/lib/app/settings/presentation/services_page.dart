@@ -182,7 +182,7 @@ class _KvTile extends StatelessWidget {
               ? (subtitleWhenEmpty ?? context.l10n.common.notConfigured)
               : context.l10n.common.configured,
           onValue: (v) async {
-            await kv.set(v);
+            kv.set(v);
             toast.success(message: l10n.app.servicesSaved);
           },
         );

@@ -43,7 +43,7 @@ Future<bool> applyUserKeyChange({
   // ── 改密码：重包 keyfile，数据零重写 ──
   if (dek != null && target != null) {
     final keyfile = await SyncKeyManager.wrapDek(dek: dek, passphrase: target);
-    await SyncKeyManager.cacheKeyfile(keyfile);
+    SyncKeyManager.cacheKeyfile(keyfile);
     // 所有已配置后端都需要新信封；活跃后端立即写，其余（含写失败的）走补传清单。
     await SyncKeyManager.markPendingUpload(configuredCloudBackendIds());
     if (backendReady) {
@@ -106,7 +106,7 @@ Future<bool> applyUserKeyChange({
       }
     }
     await SyncKeyManager.storeDek(newDek);
-    await SyncKeyManager.cacheKeyfile(keyfile);
+    SyncKeyManager.cacheKeyfile(keyfile);
     ref.invalidate(syncDekControllerProvider);
 
     if (hasRemote) {

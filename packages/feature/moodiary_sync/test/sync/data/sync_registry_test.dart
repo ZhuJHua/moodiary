@@ -26,12 +26,12 @@ void main() {
 
   group('registerRemoteSync', () {
     test('registers the backend that matches the current provider', () async {
-      await SyncProviderType.setCurrent(.webdav);
+      SyncProviderType.setCurrent(.webdav);
       await registerRemoteSync();
       expect(getIt<IRemoteSyncBackend>().type, SyncProviderType.webdav);
 
       // 切换 provider → 重新注册为对应后端（单注册不残留旧实例）。
-      await SyncProviderType.setCurrent(.s3);
+      SyncProviderType.setCurrent(.s3);
       await registerRemoteSync();
       expect(getIt<IRemoteSyncBackend>().type, SyncProviderType.s3);
       expect(getIt.isRegistered<IRemoteSyncBackend>(), isTrue);

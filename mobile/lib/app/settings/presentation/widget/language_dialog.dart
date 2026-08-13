@@ -22,7 +22,7 @@ class LanguageDialog extends ConsumerWidget {
             label: lang.l10nText(context),
             selected: current == lang,
             onTap: () async {
-              await MoodiaryKVs.language.set(lang.languageCode);
+              MoodiaryKVs.language.set(lang.languageCode);
               await applyStoredLanguage();
               if (context.mounted) Navigator.of(context).pop();
             },

@@ -929,7 +929,7 @@ void main() {
           backend,
           cats: [buildCategory(id: 'c1', modifiedMs: 1000)],
         );
-        await MoodiaryKVs.lastSyncTime.set(0); // 清掉 seed push 推进的时间
+        MoodiaryKVs.lastSyncTime.set(0); // 清掉 seed push 推进的时间
 
         final localCats = FakeCategoryStore()..insertSucceeds = false;
         final report = await engineOn(backend, categories: localCats).pull();

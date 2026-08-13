@@ -70,9 +70,9 @@ class _ViewModeSheetState extends State<ViewModeSheet> {
     });
   }
 
-  Future<void> _apply() async {
-    await MoodiaryKVs.homeViewMode.set(_mode);
-    await MoodiaryKVs.homeSortMode.set(_sort);
+  void _apply() {
+    MoodiaryKVs.homeViewMode.set(_mode);
+    MoodiaryKVs.homeSortMode.set(_sort);
     if (mounted) Navigator.of(context).pop();
   }
 

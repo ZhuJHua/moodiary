@@ -62,7 +62,7 @@ class _RemoteSection extends ConsumerStatefulWidget {
 
 class _RemoteSectionState extends ConsumerState<_RemoteSection> {
   Future<void> _switchProvider(SyncProviderType type) async {
-    await SyncProviderType.setCurrent(type);
+    SyncProviderType.setCurrent(type);
     await registerRemoteSync();
     if (mounted) setState(() {});
   }
@@ -418,7 +418,7 @@ class _AutoSyncSection extends StatelessWidget {
         },
       ),
     );
-    if (picked != null) await MoodiaryKVs.syncPollInterval.set(picked);
+    if (picked != null) MoodiaryKVs.syncPollInterval.set(picked);
   }
 }
 
@@ -497,6 +497,6 @@ class _NetworkSection extends StatelessWidget {
         },
       ),
     );
-    if (picked != null) await MoodiaryKVs.syncConcurrency.set(picked);
+    if (picked != null) MoodiaryKVs.syncConcurrency.set(picked);
   }
 }

@@ -44,9 +44,9 @@ class _AppLockTileState extends State<AppLockTile> {
       // 开启前先验证一次，确认设备已录入且本人可用。
       final ok = await BiometricAuth.check(reason: l10n.lock.biometricReason);
       if (!ok) return;
-      await MoodiaryKVs.supportBiometrics.set(true);
+      MoodiaryKVs.supportBiometrics.set(true);
     } else {
-      await MoodiaryKVs.supportBiometrics.set(false);
+      MoodiaryKVs.supportBiometrics.set(false);
     }
   }
 
@@ -150,8 +150,8 @@ class _SetPasswordSheetState extends State<SetPasswordSheet> {
       return;
     }
     if (pin == _first) {
-      await MoodiaryKVs.lock.set(true);
-      await MoodiaryKVs.password.set(pin);
+      MoodiaryKVs.lock.set(true);
+      MoodiaryKVs.password.set(pin);
       if (!mounted) return;
       Navigator.of(context).pop();
       toast.success(message: context.l10n.lock.turnedOn);
@@ -193,10 +193,10 @@ class _RemovePasswordSheetState extends State<RemovePasswordSheet> {
   bool get _supportBio => MoodiaryKVs.supportBiometrics.get() == true;
 
   Future<void> _disable() async {
-    await MoodiaryKVs.lock.set(false);
-    await MoodiaryKVs.password.remove();
-    await MoodiaryKVs.supportBiometrics.set(false);
-    await MoodiaryKVs.lockNow.set(false);
+    MoodiaryKVs.lock.set(false);
+    MoodiaryKVs.password.remove();
+    MoodiaryKVs.supportBiometrics.set(false);
+    MoodiaryKVs.lockNow.set(false);
     if (!mounted) return;
     Navigator.of(context).pop();
     toast.success(message: context.l10n.lock.turnedOff);
@@ -281,7 +281,7 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
         _pad.clear();
       case .confirmNew:
         if (pin == _newPin) {
-          await MoodiaryKVs.password.set(pin);
+          MoodiaryKVs.password.set(pin);
           if (!mounted) return;
           Navigator.of(context).pop();
           toast.success(message: context.l10n.lock.passwordChanged);

@@ -220,6 +220,35 @@ App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域�
 > （`accentCustomTitle` → `accent.custom.title`），既改掉全部调用点，又会在
 > `accentCustom` / `accentCustomTitle` 这种前缀重叠上直接抛异常。当年是脚本平铺转的。
 
+### KV —— MMKV，且是同步的
+
+2.8.0 起本地 KV 落在 **MMKV**（`mmkv: 2.4.1`），后端换掉之后接口跟着变了形：
+
+**`IKVStorage.set` / `remove` / `clear` 返回 `void`，不是 `Future`。** MMKV 是 mmap +
+增量 append，没有平台通道往返可等，落盘交给内核。由此 `KVNotifier` 的监听者在赋值当帧
+就收到通知（旧后端要等一个平台往返，开关类 UI 肉眼可见地滞后）。`init` 仍是异步的
+（要等平台侧给出 rootDir），`ISecureKVStorage` 也保持全异步——那边是真的钥匙串调用。
+
+后端实现在 `moodiary_core/lib/src/storage/kv/mmkv.dart`，四个不报错的点：
+
+1. **「没有值」得靠 `containsKey` 判**：`decodeBool` / `decodeInt` 一类不返回 null，
+   取不到就给 defaultValue，直接读会把「没设过」和「设成了 false / 0」混为一谈。
+2. **MMKV 没有字符串数组类型**：`List<String>` 存成 JSON 文本。解不出来当作没有值
+   （回退 defaultValue），不让一格坏数据把整条读取路径带崩。
+3. **mmapID（`moodiary`）与 rootDir（`applicationSupport/mmkv`）改了就等于弃数据。**
+   rootDir 是显式钉的：MMKV 默认落 `${Documents}/mmkv`，而 iOS 的 Documents 用户在
+   「文件」App 里看得见、还会进 iCloud 备份。
+4. **加键只能用那五种类型**（int / bool / double / String / List&lt;String&gt;）：类型分派是
+   `switch (T)` 加一个抛异常的 default，多加一种不会有编译错误，只会在运行时炸。
+   `moodiary_core/test/kv_migration_test.dart` 里有条闸门守着。
+
+**SharedPreferences → MMKV 的一次性搬迁在 `MmkvKVStorage.init` 里，不在 `VersionMigrator`**：
+判版本用的 `appVersion` 自己就存在 KV 里，搬完之前读不到，挂到 VersionMigrator 会把老用户
+误判成全新安装。搬迁是**复制不是搬移**（旧仓库留着，回滚到 2.7.x 还能读到原值），代价是
+密码 / API key 多留一份，由 `resetAllData` 里的 `LegacyPrefsKVSource.clearStore()` 负责清；
+`MmkvKVStorage.clear()` 会把「已迁移」标记补回去，否则重置之后的那次启动会把旧值又搬回来。
+`shared_preferences` 依赖只为这次搬迁留着，迁移窗口过后连同 `legacy_pref.dart` 一起删。
+
 ### Rust Workspace
 
 `packages/foundation/moodiary_rust/rust/` is both the cargo workspace root **and** the bridge package `moodiary_rust` — that shape is load-bearing: the Native Assets hook runs `cargo build --manifest-path rust/Cargo.toml --package moodiary_rust` and requires `Cargo.toml` + `rust-toolchain.toml` at `hook/build.dart`'s `cratePath`, so keeping `rust/` as the root means the hook and `flutter_rust_bridge.yaml` need no changes.
