@@ -38,14 +38,19 @@ class VersionMigrator {
     }
   }
 
-  static Future<void> merge({required String lastAppVersion}) async {
-    // 语义化版本比较：`2.10.0 > 2.9.0` 这类按字典序会判错的场景必须走 semver。
-    // 入参形如 `2.7.3+123`（version+build），build 元数据在 semver 比较中被忽略；
-    // pre-release 则必须剥掉——beta 渠道的 versionName 带 `-beta` 后缀，semver 里
-    // `2.8.0-beta < 2.8.0` 恒真，不剥会让 2.8.0 迁移每次冷启动重跑一遍。
+  /// [lastAppVersion]（形如 `2.7.3+73`，可能带 `-beta` 等 pre-release）是否低于闸门
+  /// [gate]。语义化比较：`2.10.0 > 2.9.0` 按字典序会判错，必须走 semver；build 元数据
+  /// semver 本就忽略；pre-release 则显式剥掉——beta 渠道的 versionName 带 `-beta`
+  /// 后缀，semver 里 `2.8.0-beta < 2.8.0` 恒真，不剥会让迁移每次冷启动重跑一遍。
+  @visibleForTesting
+  static bool versionBelow(String lastAppVersion, String gate) {
     final parsed = Version.parse(lastAppVersion);
-    final lastVersion = Version(parsed.major, parsed.minor, parsed.patch);
-    bool below(String version) => lastVersion < Version.parse(version);
+    final normalized = Version(parsed.major, parsed.minor, parsed.patch);
+    return normalized < Version.parse(gate);
+  }
+
+  static Future<void> merge({required String lastAppVersion}) async {
+    bool below(String version) => versionBelow(lastAppVersion, version);
 
     if (below('2.4.8')) {
       await compute(_mergeToV2_4_8, AppFiles.getRealPath('database', ''));
@@ -87,6 +92,11 @@ class VersionMigrator {
       await compute(_mergeToV2_8_0, AppFiles.getRealPath('database', ''));
     }
   }
+
+  /// 测试直通：宿主测试的 `ISAR_TEST_DYLIB` 库路径只在主 isolate 注册过，
+  /// compute 子 isolate 解析不到原生库，集成测试改在主 isolate 直接驱动本步骤。
+  @visibleForTesting
+  static void debugMergeToV280(String dir) => _mergeToV2_8_0(dir);
 }
 
 /// 2.8.0 迁移前对数据库文件做一次性快照备份（`default.isar.v273bak`）：跨引擎迁移 / 写回
