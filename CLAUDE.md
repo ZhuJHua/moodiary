@@ -205,10 +205,12 @@ App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域�
    但它不会通知已挂载的 provider）。
 3. **非 base 语种的翻译类默认是 deferred import**（`lazy: true`），所以 App 那份一律用
    异步的 `setLocale`，别用 `setLocaleSync`（它绕开 `loadLibrary()`）。
-   **mui 那份必须 `lazy: false`**：deferred 的翻译类只有**它自己那份** `setLocale` 才会
-   `loadLibrary()`，而没人会去调它——`translationMap` 于是只有 base(zh)，
-   `translationMap[currentLocale] ?? translationMap[baseLocale]` 一路回落，
-   英文用户在每个 mui 组件里看到中文，且冷启动必现、进设置改一次语言才好。
+   **mui 那份必须 `lazy: false`**，因为**我们在 `runApp` 之前就切语种**：那时一个
+   `TranslationProvider` 都还没构造（GlobalKey 在 `BaseTranslationProvider` 的构造器里
+   才注册），`updateProviderState` 遍历的是空集合。App 那棵没事——它自己那份 `setLocale`
+   会 `await loadLocale`；mui 那棵没人替它调，`translationMap` 里只有 base(zh)，
+   `map[current] ?? map[base]` 一路回落，英文用户在每个 mui 组件里看到中文，冷启动必现、
+   进设置改一次语言才好（那时 provider 已挂载，`updateState` 会补上 `loadLocale`）。
    闸门在 `mui/test/l10n_test.dart`。
 4. `timestamp` 与 `flat_map` 默认都是 `true`：前者让提交的产物每次生成都有噪声 diff，
    后者多生成一份全量 `Map<String, String>`。两个都在 `slang.yaml` 里关掉了。

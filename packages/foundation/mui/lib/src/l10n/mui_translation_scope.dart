@@ -14,8 +14,9 @@ import 'i18n/mui_strings.g.dart' as i18n;
 /// `LocaleSettings.setLocale`，它会遍历所有已注册的 TranslationProvider（含这棵）
 /// 逐个 `updateState`。
 ///
-/// **这条只在 `slang.yaml` 里 `lazy: false` 时成立**：默认的 deferred 产物只有
-/// mui 自己那份 `setLocale` 才会 `loadLibrary()`，没人调，英文就一路回落成中文。
+/// **前提是 `slang.yaml` 里的 `lazy: false`**：宿主在 `runApp` 之前就切语种，那时
+/// 本 widget 还没构造、GlobalKey 还没注册，那一轮通知谁也收不到；若产物是默认的
+/// deferred，这棵树就再没机会加载非 base 语种，英文一路回落成中文。
 /// 闸门在 `test/l10n_test.dart`。
 class MuiTranslationScope extends StatelessWidget {
   const MuiTranslationScope({super.key, required this.child});

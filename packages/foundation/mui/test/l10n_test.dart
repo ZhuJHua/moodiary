@@ -3,17 +3,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mui/src/l10n/i18n/mui_strings.g.dart';
 
 void main() {
-  /// mui 的语种是被动跟随的：宿主 App 调**它自己那份** `LocaleSettings.setLocale`，
+  /// mui 的语种是被动跟随的：宿主调**它自己那份** `LocaleSettings.setLocale`，
   /// slang_flutter 的 `_GlobalKeyHandler` 是进程级单例，会遍历所有已注册的
-  /// TranslationProvider（含 mui 的）逐个 `updateState`。
+  /// TranslationProvider（含 mui 的）逐个 `updateState`，那里也会 `loadLocale`。
   ///
-  /// 但那条路只在 mui 的 `translationMap` 已经装满时才成立 —— slang 默认
-  /// `lazy: true` 会把非 base 语种做成 deferred import，而 deferred 的翻译类只有
-  /// **mui 自己那份** `setLocale` 才会 `loadLibrary()`。没人调过，于是
-  /// `translationMap[currentLocale] ?? translationMap[baseLocale]` 一路回落到 zh：
-  /// 英文用户在每个 mui 组件里看到中文，冷启动必现。
+  /// 可宿主是在 `runApp` **之前**切语种的，那时一个 provider 都还没构造（GlobalKey 在
+  /// `BaseTranslationProvider` 的构造器里才注册），那一轮通知落空。若产物是默认的
+  /// deferred（`lazy: true`），mui 这棵树就再没机会加载非 base 语种，
+  /// `translationMap[current] ?? translationMap[base]` 一路回落到 zh —— 英文用户在每个
+  /// mui 组件里看到中文，冷启动必现，进设置改一次语言才好。
   ///
-  /// 所以 `slang.yaml` 里钉了 `lazy: false`。这条断言就是那颗钉子。
+  /// 所以 `slang.yaml` 里钉了 `lazy: false`，让它与启动顺序无关。这条断言就是那颗钉子。
   test('所有语种在构造时就已装载，不依赖任何人调 mui 自己的 setLocale', () {
     expect(
       LocaleSettings.instance.translationMap.keys,

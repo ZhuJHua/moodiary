@@ -6,13 +6,15 @@
 base_locale: zh
 fallback_strategy: base_locale
 
-# 关掉 slang 默认的 lazy —— 非 base 语种默认是 deferred import，而 deferred 的翻译类
-# **只有它自己那份 LocaleSettings.setLocale 才会 loadLibrary()**。
-# 语种真源 GlobalLocaleState 是跨包共享的，可 translationMap 是每份产物各自的：
-# App 调 setLocale 只填了 App 的那张表，mui 这张永远只有 base(zh)，于是
-# `translationMap[currentLocale] ?? translationMap[baseLocale]` 一路回落 ——
-# 英文用户在每个 mui 组件里看到的都是中文，且冷启动必现。
-# 这里一共十来个词，全量编进来不值一提，换掉的是整整一类「忘了同步两棵树」的坑。
+# 关掉 slang 默认的 lazy。多实例跨包共享语种是 slang 官方支持的用法，已挂载的
+# TranslationProvider 会在 updateState 里自己 loadLocale —— 但**我们在 runApp 之前就
+# 切语种**（applyStoredLanguage），那时 provider 的 GlobalKey 还没注册（它在
+# BaseTranslationProvider 的构造器里才 register），updateProviderState 遍历的是空集合。
+# App 那棵没事：它自己那份 setLocale 会 await loadLocale。mui 这棵没人替它调，
+# translationMap 里就只有 base(zh)，`map[current] ?? map[base]` 一路回落成中文。
+#
+# 不 lazy 之后表在构造时就填满，跟启动顺序彻底解耦。deferred 在移动端本来也不 defer
+# （只有 dart2js / dart2wasm 会真的切块按需下载），十来个词全量编进来不值一提。
 lazy: false
 
 input_directory: lib/src/l10n/i18n
