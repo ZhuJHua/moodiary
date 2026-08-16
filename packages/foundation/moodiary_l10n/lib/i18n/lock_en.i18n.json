@@ -17,6 +17,7 @@
   "setPassword": "Set a password",
   "confirmPassword": "Confirm the password",
   "mismatch": "The two entries do not match, please start over",
+  "saveFailed": "Could not save the password, please try again",
   "wrongPassword": "Wrong password",
   "enterToTurnOff": "Enter your password to turn it off",
   "verifyCurrent": "Enter your current password",

@@ -6,6 +6,7 @@ import 'package:moodiary_core/src/app_logger.dart';
 import 'package:moodiary_core/src/platform_service.dart';
 import 'package:moodiary_core/src/storage.dart';
 import 'package:moodiary_core/src/storage/kv/legacy_pref.dart';
+import 'package:moodiary_core/src/storage/kv/secret_migration.dart';
 import 'package:moodiary_core/src/values/kv.dart';
 import 'package:path/path.dart';
 
@@ -45,8 +46,12 @@ final class MmkvKVStorage extends IKVStorage {
 
     await _migrateFromPrefsOnce();
 
-    final firstStart = get<bool>(MoodiaryKVs.firstStart.name) ?? true;
-    set<bool>(MoodiaryKVs.firstStart.name, firstStart);
+    // 搬迁被跳过时 MMKV 还是空的，这里读出来必然是 null；写死成 true 会**持久化**成
+    // 「全新安装」，把老用户送进引导页。本次什么都不写，等搬迁成功那次再定。
+    if (!legacyMigrationPending) {
+      final firstStart = get<bool>(MoodiaryKVs.firstStart.name) ?? true;
+      set<bool>(MoodiaryKVs.firstStart.name, firstStart);
+    }
   }
 
   @override
@@ -108,14 +113,21 @@ final class MmkvKVStorage extends IKVStorage {
     }
   }
 
-  /// 2.8.0 一次性迁移：把 2.7.x 落在 SharedPreferences 里的配置搬进 MMKV。
+  /// 2.8.0 一次性迁移：读旧仓库 → 机密进 SecureKV、明文进 MMKV → 删掉旧仓库 → 置标记。
   ///
   /// 只能发生在这里，不能挂进 `VersionMigrator`：判版本用的 `appVersion` 自己就存在
   /// KV 里，搬迁完成前那一格是空的，版本比对会把老用户误判成全新安装。
   ///
-  /// 逐键 try/catch —— 某个键在历史版本里换过类型时 `getInt` / `getBool` 会抛
-  /// TypeError，丢一格配置可以接受，卡死整轮迁移不行。旧仓库**不删**：回滚到 2.7.x
-  /// 还能读到原值，代价只是密码一类多留一份，由「重置全部数据」负责清。
+  /// **整轮共用一个标记，中途失败就整轮重来。** 所以顺序是先机密后明文：机密要写钥匙串，
+  /// 是唯一可能整体失败的一步，让它在任何东西落地之前失败，重试才是干净的。反过来先搬
+  /// 明文的话，重试会拿旧仓库的值覆盖掉用户在这中间改过的配置。
+  ///
+  /// 明文那趟逐键 try/catch —— 某个键在历史版本里换过类型时 `getInt` / `getBool` 会抛
+  /// TypeError，丢一格配置可以接受，卡死整轮迁移不行。
+  ///
+  /// 搬完**直接删掉旧仓库**：那里躺着明文 PIN / API Key / WebDAV 密码，留着就是留一份
+  /// 副本在系统备份里。两个平台都不允许降级安装，卸载重装又等于清数据，没有回滚路径
+  /// 需要照顾。
   Future<void> _migrateFromPrefsOnce() async {
     if (_mmkv.containsKey(_migratedKey)) return;
 
@@ -130,6 +142,16 @@ final class MmkvKVStorage extends IKVStorage {
       return;
     }
 
+    try {
+      await SecretKVMigration.run(legacy);
+    } catch (e, s) {
+      // 钥匙串这次不可用（设备锁定 / Keystore 故障）：什么都还没落地，整轮重来。
+      // 这里若放行，应用锁会变成「开着但没有密码」，用户直接进不去。
+      legacyMigrationPending = true;
+      logger.e('KV 迁移：机密搬迁失败，本次整轮跳过', error: e, stackTrace: s);
+      return;
+    }
+
     for (final kv in MoodiaryKVs.values) {
       try {
         kv.copyFrom(legacy, into: this);
@@ -138,6 +160,13 @@ final class MmkvKVStorage extends IKVStorage {
       }
     }
 
+    // 清旧仓库只是收尾，值已经全部落地了。失败也必须置标记 —— 不置的话下次启动会
+    // 整轮重跑，拿旧仓库的值盖掉用户这一程改过的配置，那比留着旧仓库更糟。
+    try {
+      await LegacyPrefsKVSource.clearStore();
+    } catch (e, s) {
+      logger.e('KV 迁移：旧仓库清理失败，值已搬完照常放行', error: e, stackTrace: s);
+    }
     _mmkv.encodeBool(_migratedKey, true);
   }
 }

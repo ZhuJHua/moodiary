@@ -83,6 +83,7 @@
   "servicesQweatherHostHint": "devapi.qweather.com 或自定义",
   "servicesTianditu": "天地图",
   "servicesSaved": "已保存",
+  "servicesSaveFailed": "保存失败，请重试",
   "dashUseDays": "使用天数",
   "dashDiaryCount": "日记总数",
   "dashWordCount": "总字数",

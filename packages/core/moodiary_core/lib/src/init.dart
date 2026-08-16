@@ -20,11 +20,11 @@ Future<void> injectBasicService() async {
   await PlatformService.get().init();
   await AppFiles.initCreateDir();
 
-  await Future.wait([
-    IKVStorage.get().init(),
-    ISecureKVStorage.get().init(),
-    IsarDatabase.get().init(),
-  ]);
+  // SecureKV 必须先就位：KV 的 init 里那次 2.8.0 搬迁会把三个机密写进它。
+  // 这一步只是构造 FlutterSecureStorage，没有 I/O，串行不花时间。
+  await ISecureKVStorage.get().init();
+
+  await Future.wait([IKVStorage.get().init(), IsarDatabase.get().init()]);
 }
 
 /// 重置所有应用数据，恢复到「全新安装」状态（Isar 集合 / KV / SecureKV / 媒体 / 缓存）。
@@ -36,8 +36,8 @@ Future<void> resetAllData() async {
   IKVStorage.get().clear();
   await Future.wait([
     ISecureKVStorage.get().clear(),
-    // 2.8.0 的 KV 迁移是复制而非搬移，旧 SharedPreferences 仓库里还留着一份
-    // 密码 / API key，不一并清掉就绕过了这次重置。
+    // 2.8.0 的搬迁自己会删旧仓库，但重置可能发生在搬迁完成之前 —— 那时旧仓库还在，
+    // 不清就会被下次启动的搬迁原样搬回来，重置成了摆设。
     LegacyPrefsKVSource.clearStore(),
     AppFiles.resetUserMediaDirs(),
     AppFiles.clearCache(),

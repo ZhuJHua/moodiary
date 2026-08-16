@@ -309,6 +309,9 @@ class Translations$app$zh {
 	/// zh: '已保存'
 	String get servicesSaved => '已保存';
 
+	/// zh: '保存失败，请重试'
+	String get servicesSaveFailed => '保存失败，请重试';
+
 	/// zh: '使用天数'
 	String get dashUseDays => '使用天数';
 
@@ -1792,6 +1795,9 @@ class Translations$lock$zh {
 
 	/// zh: '两次输入不一致，请重新设置'
 	String get mismatch => '两次输入不一致，请重新设置';
+
+	/// zh: '密码保存失败，请重试'
+	String get saveFailed => '密码保存失败，请重试';
 
 	/// zh: '密码错误'
 	String get wrongPassword => '密码错误';

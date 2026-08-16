@@ -87,13 +87,12 @@ enum MoodiaryKVs<T extends Object> {
 
   lock<bool>(defaultValue: false),
   lockNow<bool>(defaultValue: false),
-  password<String>(),
   supportBiometrics<bool>(defaultValue: false),
   backendPrivacy<bool>(defaultValue: false),
 
-  qweatherKey<String>(),
+  /// 和风的 API Host 是 per-key 专属的，但它本身不是凭据（凭据是
+  /// [MoodiarySecureKVs.qweatherKey]），留在明文 KV。
   qweatherApiHost<String>(),
-  tiandituKey<String>(),
 
   /// 当前激活的 Provider id（对应 `LlmProvider.id`）。空表示未选 / 回退列表首个。
   assistantActiveProviderId<String>(defaultValue: ''),
@@ -166,7 +165,17 @@ enum MoodiarySecureKVs {
   webDavOption,
 
   /// S3 连接配置，JSON 数组，索引见 `S3SyncBackend`。含 secretKey，故进 SecureKV。
-  s3Option;
+  s3Option,
+
+  /// 应用锁 PIN 的 **Argon2id PHC 串**，不是原文。
+  /// **别直接读写这个键，走 `AppLockPin`** —— 直接 `set(pin)` 会静默存进明文。
+  password,
+
+  /// 和风天气 API Key（配套的 host 不是凭据，仍在 [MoodiaryKVs.qweatherApiHost]）。
+  qweatherKey,
+
+  /// 天地图 API Key。
+  tiandituKey;
 
   Future<String?> get() => ISecureKVStorage.get().get(name);
 

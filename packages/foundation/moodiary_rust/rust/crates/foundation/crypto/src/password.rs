@@ -1,4 +1,5 @@
-//! Argon2id 密码哈希。目前同步层未使用，保留供未来场景（应用锁等）。
+//! Argon2id 密码哈希（PHC 字符串，盐随机生成并写在串里）。应用锁 PIN 用它，
+//! Dart 侧入口是 `AppLockPin`。同步的信封加密走的是 `aes::derive_key`，不是这里。
 
 use anyhow::{Result, anyhow};
 use argon2::{PasswordHasher as _, PasswordVerifier as _};

@@ -138,6 +138,7 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get servicesQweatherHostHint => 'devapi.qweather.com, or your own';
 	@override String get servicesTianditu => 'Tianditu';
 	@override String get servicesSaved => 'Saved';
+	@override String get servicesSaveFailed => 'Could not save, please try again';
 	@override String get dashUseDays => 'Days used';
 	@override String get dashDiaryCount => 'Entries';
 	@override String get dashWordCount => 'Words';
@@ -671,6 +672,7 @@ class _Translations$lock$en extends Translations$lock$zh {
 	@override String get setPassword => 'Set a password';
 	@override String get confirmPassword => 'Confirm the password';
 	@override String get mismatch => 'The two entries do not match, please start over';
+	@override String get saveFailed => 'Could not save the password, please try again';
 	@override String get wrongPassword => 'Wrong password';
 	@override String get enterToTurnOff => 'Enter your password to turn it off';
 	@override String get verifyCurrent => 'Enter your current password';

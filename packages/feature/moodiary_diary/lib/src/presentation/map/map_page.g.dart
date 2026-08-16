@@ -8,43 +8,50 @@ part of 'map_page.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// 底图需要的两样东西一起等：天地图的 tk 在 SecureKV 里，读它是一次异步的
+/// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
 
-@ProviderFor(diariesWithPosition)
-final diariesWithPositionProvider = DiariesWithPositionProvider._();
+@ProviderFor(mapData)
+final mapDataProvider = MapDataProvider._();
 
-final class DiariesWithPositionProvider
+/// 底图需要的两样东西一起等：天地图的 tk 在 SecureKV 里，读它是一次异步的
+/// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
+
+final class MapDataProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Diary>>,
-          List<Diary>,
-          FutureOr<List<Diary>>
+          AsyncValue<({List<Diary> diaries, String tiandituKey})>,
+          ({List<Diary> diaries, String tiandituKey}),
+          FutureOr<({List<Diary> diaries, String tiandituKey})>
         >
-    with $FutureModifier<List<Diary>>, $FutureProvider<List<Diary>> {
-  DiariesWithPositionProvider._()
+    with
+        $FutureModifier<({List<Diary> diaries, String tiandituKey})>,
+        $FutureProvider<({List<Diary> diaries, String tiandituKey})> {
+  /// 底图需要的两样东西一起等：天地图的 tk 在 SecureKV 里，读它是一次异步的
+  /// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
+  MapDataProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'diariesWithPositionProvider',
+        name: r'mapDataProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$diariesWithPositionHash();
+  String debugGetCreateSourceHash() => _$mapDataHash();
 
   @$internal
   @override
-  $FutureProviderElement<List<Diary>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  $FutureProviderElement<({List<Diary> diaries, String tiandituKey})>
+  $createElement($ProviderPointer pointer) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<Diary>> create(Ref ref) {
-    return diariesWithPosition(ref);
+  FutureOr<({List<Diary> diaries, String tiandituKey})> create(Ref ref) {
+    return mapData(ref);
   }
 }
 
-String _$diariesWithPositionHash() =>
-    r'65a8cddfa50cc97e40f227102239d4f51ea483b7';
+String _$mapDataHash() => r'c28439251c97c95a6aeddf617efd2e220ce7b5be';

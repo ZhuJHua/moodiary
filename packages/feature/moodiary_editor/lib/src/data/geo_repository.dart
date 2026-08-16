@@ -40,10 +40,11 @@ class GeoRepository {
     if (position != null && context.mounted) {
       // key / host 任一未配置就短路（与 WeatherRepository 同因）。
       final host = MoodiaryKVs.qweatherApiHost.get();
-      final key = MoodiaryKVs.qweatherKey.get();
+      final key = await MoodiarySecureKVs.qweatherKey.get();
       if (host == null || host.isEmpty || key == null || key.isEmpty) {
         return null;
       }
+      if (!context.mounted) return null;
       final local = Localizations.localeOf(context);
       final parameters = {
         'location':

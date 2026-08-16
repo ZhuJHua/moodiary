@@ -38,6 +38,9 @@ class _LockPageState extends ConsumerState<LockPage>
   bool _unlocked = false;
   String? _error;
   int _failCount = 0;
+
+  /// 校验在飞中。纯闸门，不参与渲染，所以不走 setState。
+  bool _verifying = false;
   int _cooldownLeft = 0;
   Timer? _cooldownTimer;
 
@@ -104,7 +107,7 @@ class _LockPageState extends ConsumerState<LockPage>
   }
 
   void _onDigit(String d) {
-    if (_isLocked || _unlocked) return;
+    if (_isLocked || _unlocked || _verifying) return;
     if (_pin.length >= _pinLength) return;
     HapticFeedback.selectionClick();
     setState(() {
@@ -118,7 +121,9 @@ class _LockPageState extends ConsumerState<LockPage>
   }
 
   void _onBackspace() {
-    if (_isLocked || _unlocked || _pin.isEmpty) return;
+    // _verifying 也要挡：校验现在是异步的（Argon2 要跑一会儿），退格后再补一位会
+    // 起第二个 _verify，两次各记一次失败，五次机会实际上不到五次。
+    if (_isLocked || _unlocked || _verifying || _pin.isEmpty) return;
     HapticFeedback.selectionClick();
     setState(() {
       _pin = _pin.substring(0, _pin.length - 1);
@@ -126,8 +131,12 @@ class _LockPageState extends ConsumerState<LockPage>
   }
 
   Future<void> _verify() async {
-    final stored = MoodiaryKVs.password.get() ?? '';
-    if (_pin == stored) {
+    if (_verifying) return;
+    _verifying = true;
+    final matched = await AppLockPin.verify(_pin);
+    _verifying = false;
+    if (!mounted) return;
+    if (matched) {
       _failCount = 0;
       _unlock();
       return;

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/moodiary_assistant.dart';
 import 'package:moodiary_core/moodiary_core.dart';
+import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
@@ -96,7 +97,7 @@ class _QweatherSection extends ConsumerWidget {
           margin: .zero,
           child: Column(
             children: [
-              _KvTile(
+              _SecretKvTile(
                 kv: .qweatherKey,
                 title: 'API Key',
                 leading: Icon(LucideIcons.key, color: scheme.onSurfaceVariant),
@@ -135,7 +136,7 @@ class _TiandituSection extends ConsumerWidget {
           margin: .zero,
           child: Column(
             children: [
-              _KvTile(
+              _SecretKvTile(
                 kv: .tiandituKey,
                 title: 'API Key',
                 leading: Icon(LucideIcons.map, color: scheme.onSurfaceVariant),
@@ -155,7 +156,6 @@ class _KvTile extends StatelessWidget {
   final String title;
   final Widget? leading;
   final String? subtitleWhenEmpty;
-  final bool isFirst;
   final bool isLast;
 
   const _KvTile({
@@ -163,7 +163,6 @@ class _KvTile extends StatelessWidget {
     required this.title,
     this.leading,
     this.subtitleWhenEmpty,
-    this.isFirst = false,
     this.isLast = false,
   });
 
@@ -173,7 +172,6 @@ class _KvTile extends StatelessWidget {
       valueListenable: kv.getNotifierOr(''),
       builder: (context, value, _) {
         return SettingInputTile(
-          isFirst: isFirst,
           isLast: isLast,
           title: title,
           leading: leading,
@@ -186,6 +184,54 @@ class _KvTile extends StatelessWidget {
             toast.success(message: l10n.app.servicesSaved);
           },
         );
+      },
+    );
+  }
+}
+
+/// 同 [_KvTile]，但值在 SecureKV 里：读是异步的、也没有 [KVNotifier]，
+/// 所以走 `secretKvProvider` 并在写完 invalidate。
+class _SecretKvTile extends ConsumerWidget {
+  final MoodiarySecureKVs kv;
+  final String title;
+  final Widget? leading;
+  final bool isFirst;
+  final bool isLast;
+
+  const _SecretKvTile({
+    required this.kv,
+    required this.title,
+    this.leading,
+    this.isFirst = false,
+    this.isLast = false,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 钥匙串读的这一小段空窗按「未配置」渲染，与真的没配一致，不闪骨架。
+    final value = ref.watch(secretKvProvider(kv)).value ?? '';
+    return SettingInputTile(
+      isFirst: isFirst,
+      isLast: isLast,
+      title: title,
+      leading: leading,
+      value: value,
+      subtitle: value.isEmpty
+          ? context.l10n.common.notConfigured
+          : context.l10n.common.configured,
+      onValue: (v) async {
+        // 写钥匙串会抛（设备锁定 / Keystore 故障）；吞掉的话磁贴还显示旧值，
+        // 看起来像存成功了。ref 在 await 之后用，先确认还挂着。
+        try {
+          await kv.set(v);
+        } catch (e, s) {
+          logger.e('保存 $kv 失败', error: e, stackTrace: s);
+          toast.error(message: l10n.app.servicesSaveFailed);
+          return;
+        }
+        if (!context.mounted) return;
+        ref.invalidate(secretKvProvider(kv));
+        toast.success(message: l10n.app.servicesSaved);
       },
     );
   }

@@ -83,6 +83,7 @@
   "servicesQweatherHostHint": "devapi.qweather.com, or your own",
   "servicesTianditu": "Tianditu",
   "servicesSaved": "Saved",
+  "servicesSaveFailed": "Could not save, please try again",
   "dashUseDays": "Days used",
   "dashDiaryCount": "Entries",
   "dashWordCount": "Words",

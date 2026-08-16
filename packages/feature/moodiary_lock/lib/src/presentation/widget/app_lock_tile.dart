@@ -114,6 +114,18 @@ class _AppLockTileState extends State<AppLockTile> {
   }
 }
 
+/// 写 PIN，成功返回 true。写钥匙串会抛（设备锁定 / Keystore 故障），两个调用点都得
+/// 在失败时留在原地报错 —— 各自要复位的状态不同，所以只共用「试着写 + 记日志」这半。
+Future<bool> savePin(String pin) async {
+  try {
+    await AppLockPin.set(pin);
+    return true;
+  } catch (e, s) {
+    logger.e('应用锁：写入 PIN 失败', error: e, stackTrace: s);
+    return false;
+  }
+}
+
 /// PIN 键盘自己就是完整版式：输满即完成，没有需要确认的中间态，所以不给动作条。
 class _SheetScaffold extends StatelessWidget {
   final Widget child;
@@ -150,8 +162,19 @@ class _SetPasswordSheetState extends State<SetPasswordSheet> {
       return;
     }
     if (pin == _first) {
+      // **PIN 必须先落地再开闸。** 反过来的话，写钥匙串失败（或进程在这中间被杀）
+      // 就留下「lock=true 但没有密码」—— verify 对任何输入都返回 false，生物识别
+      // 默认关着也够不到，用户只能重装。
+      if (!await savePin(pin)) {
+        if (!mounted) return;
+        setState(() {
+          _first = null;
+          _error = context.l10n.lock.saveFailed;
+        });
+        _pad.reject();
+        return;
+      }
       MoodiaryKVs.lock.set(true);
-      MoodiaryKVs.password.set(pin);
       if (!mounted) return;
       Navigator.of(context).pop();
       toast.success(message: context.l10n.lock.turnedOn);
@@ -194,7 +217,7 @@ class _RemovePasswordSheetState extends State<RemovePasswordSheet> {
 
   Future<void> _disable() async {
     MoodiaryKVs.lock.set(false);
-    MoodiaryKVs.password.remove();
+    await AppLockPin.clear();
     MoodiaryKVs.supportBiometrics.set(false);
     MoodiaryKVs.lockNow.set(false);
     if (!mounted) return;
@@ -202,9 +225,11 @@ class _RemovePasswordSheetState extends State<RemovePasswordSheet> {
     toast.success(message: context.l10n.lock.turnedOff);
   }
 
-  void _onCompleted(String pin) {
-    if (pin == (MoodiaryKVs.password.get() ?? '')) {
-      _disable();
+  Future<void> _onCompleted(String pin) async {
+    final matched = await AppLockPin.verify(pin);
+    if (!mounted) return;
+    if (matched) {
+      await _disable();
     } else {
       setState(() => _error = context.l10n.lock.wrongPassword);
       _pad.reject();
@@ -266,7 +291,9 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
   Future<void> _onCompleted(String pin) async {
     switch (_phase) {
       case .verify:
-        if (pin == (MoodiaryKVs.password.get() ?? '')) {
+        final matched = await AppLockPin.verify(pin);
+        if (!mounted) return;
+        if (matched) {
           _toEnterNew();
         } else {
           setState(() => _error = context.l10n.lock.wrongPassword);
@@ -281,7 +308,17 @@ class _ChangePasswordSheetState extends State<ChangePasswordSheet> {
         _pad.clear();
       case .confirmNew:
         if (pin == _newPin) {
-          MoodiaryKVs.password.set(pin);
+          // 写失败时旧 PIN 原样还在，别报「已修改」骗用户。
+          if (!await savePin(pin)) {
+            if (!mounted) return;
+            setState(() {
+              _newPin = null;
+              _phase = .enterNew;
+              _error = context.l10n.lock.saveFailed;
+            });
+            _pad.reject();
+            return;
+          }
           if (!mounted) return;
           Navigator.of(context).pop();
           toast.success(message: context.l10n.lock.passwordChanged);

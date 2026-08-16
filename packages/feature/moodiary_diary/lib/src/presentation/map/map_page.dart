@@ -11,10 +11,18 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'map_page.g.dart';
 
+/// 底图需要的两样东西一起等：天地图的 tk 在 SecureKV 里，读它是一次异步的
+/// 钥匙串调用。分开 watch 会让底图先按「无 tk」建成 OSM 单层、再重建成天地图双层。
 @riverpod
-Future<List<Diary>> diariesWithPosition(Ref ref) async {
+Future<({List<Diary> diaries, String tiandituKey})> mapData(Ref ref) async {
   final all = await DiaryRepository.get().getAllDiariesSorted();
-  return all.where((d) => d.position.length >= 2).toList();
+  final key = await ref.watch(
+    secretKvProvider(MoodiarySecureKVs.tiandituKey).future,
+  );
+  return (
+    diaries: all.where((d) => d.position.length >= 2).toList(),
+    tiandituKey: key ?? '',
+  );
 }
 
 class MapPage extends ConsumerWidget {
@@ -29,12 +37,12 @@ class MapPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(diariesWithPositionProvider);
-    final tiandituKey = MoodiaryKVs.tiandituKey.get() ?? '';
+    final async = ref.watch(mapDataProvider);
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.diary.mapTitle)),
       body: async.buildLoading(
-        data: (diaries) {
+        data: (data) {
+          final (:diaries, :tiandituKey) = data;
           final initialCenter = diaries.isNotEmpty
               ? _parseLatLng(diaries.first.position)
               : const LatLng(39.9, 116.4);

@@ -1,52 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 
-/// 内存 KV，只为把 [MoodiaryKVs] 的读写接上。
-final class _MemoryKVStorage extends IKVStorage {
-  final Map<String, Object> data = {};
-
-  @override
-  Future<void> init() async {}
-
-  @override
-  T? get<T extends Object>(String key) => data[key] as T?;
-
-  @override
-  void set<T extends Object>(String key, T value) {
-    data[key] = value;
-    super.set(key, value);
-  }
-
-  @override
-  void remove(String key) {
-    data.remove(key);
-    super.remove(key);
-  }
-
-  @override
-  void clear() => data.clear();
-}
-
-/// 旧后端的替身：只读，且能模拟「这一格类型对不上」时抛异常的行为。
-final class _MemorySource implements IKVSource {
-  final Map<String, Object> data = {};
-  final Set<String> throwingKeys = {};
-
-  @override
-  T? get<T extends Object>(String key) {
-    if (throwingKeys.contains(key)) throw TypeError();
-    return data[key] as T?;
-  }
-}
+import 'support/memory_kv.dart';
 
 void main() {
   group('MoodiaryKVs.copyFrom', () {
-    late _MemorySource source;
-    late _MemoryKVStorage target;
+    late MemoryKVSource source;
+    late MemoryKVStorage target;
 
     setUp(() {
-      source = _MemorySource();
-      target = _MemoryKVStorage();
+      source = MemoryKVSource();
+      target = MemoryKVStorage();
     });
 
     test('五种值类型都能原样搬过去', () {
