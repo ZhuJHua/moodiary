@@ -385,8 +385,8 @@ class _GraphViewState extends ConsumerState<_GraphView> {
                         duration: const Duration(milliseconds: 160),
                         child: Text(
                           l10n.diary.graphCount(
-                            nodes: scene.edgeCount,
-                            edges: scene.nodeCount,
+                            nodes: scene.nodeCount,
+                            edges: scene.edgeCount,
                           ),
                           style: theme.typography.labelSmall.onSurfaceVariant,
                         ),
