@@ -44,6 +44,40 @@ void main() {
     expect(await AppLockPin.verify('1234'), isFalse);
   });
 
+  /// 「应用锁开没开」是「有没有凭据」的派生态，没有第二个开关能与它分叉。
+  group('enabled', () {
+    test('跟着凭据的有无走', () async {
+      await AppLockPin.load();
+      expect(AppLockPin.enabled.value, isFalse);
+
+      await AppLockPin.set('1234');
+      expect(AppLockPin.enabled.value, isTrue);
+
+      await AppLockPin.clear();
+      expect(AppLockPin.enabled.value, isFalse);
+    });
+
+    test('load 能从已有凭据恢复（冷启动路径）', () async {
+      secure.data[MoodiarySecureKVs.password.name] = r'$argon2id$fake$1234';
+
+      await AppLockPin.load();
+
+      expect(AppLockPin.enabled.value, isTrue);
+    });
+
+    /// 读不出凭据按未开启处理。永久锁死的代价远大于此 —— 应用锁本就不保护静态数据，
+    /// 能拿到 App 文件的人直接读 Isar 就行，它挡的只是「顺手打开」。
+    test('钥匙串读失败时按未开启处理，不把用户挡在门外', () async {
+      await AppLockPin.set('1234');
+      expect(AppLockPin.enabled.value, isTrue);
+
+      secure.failingReads.add(MoodiarySecureKVs.password.name);
+      await AppLockPin.load();
+
+      expect(AppLockPin.enabled.value, isFalse);
+    });
+  });
+
   /// 搬迁把 2.7.3 的 PIN 原样挪进钥匙串（那样 KV 初始化不必等 Rust 桥），
   /// 哈希推迟到这里 —— 所以这条分支是搬迁后每个开锁用户的必经之路，不是历史包袱。
   group('2.7.3 搬过来的明文原件', () {

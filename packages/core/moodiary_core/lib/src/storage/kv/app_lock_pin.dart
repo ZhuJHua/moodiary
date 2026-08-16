@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, ValueNotifier, visibleForTesting;
 import 'package:moodiary_core/src/app_logger.dart';
 import 'package:moodiary_core/src/values/kv.dart';
 import 'package:moodiary_rust/moodiary_rust.dart' as rust;
@@ -29,10 +30,49 @@ final class AppLockPin {
   /// Argon2 的 PHC 串一律以 `$argon2` 开头；不是这个形状的就是 2.7.3 的明文原件。
   static bool isHashed(String stored) => stored.startsWith(r'$argon2');
 
-  static Future<void> set(String pin) async =>
-      MoodiarySecureKVs.password.set(await hasher(pin));
+  static final ValueNotifier<bool> _enabled = ValueNotifier(false);
 
-  static Future<void> clear() => MoodiarySecureKVs.password.remove();
+  /// 应用锁是否开启 = **有没有凭据**，没有第二个开关。
+  ///
+  /// 早先这里是独立的 `MoodiaryKVs.lock`，与凭据分处两个仓库：MMKV 是普通文件，
+  /// 恢复备份照样带过来；而钥匙串的密文靠 Keystore 私钥解，那把钥匙不进备份、
+  /// 换机恢复或系统升级后可能失效。两者一旦分叉就是「锁开着但没有密码」——
+  /// 校验对任何输入都返回 false，用户永久进不去自己的日记，只能卸载重装。
+  ///
+  /// 现在读不出凭据就是「没开锁」（fail-open）。代价很小：应用锁从来没保护静态数据，
+  /// 能拿到 App 文件的人本就能直接读 Isar，它挡的只是「捡到你解锁的手机的人顺手打开」。
+  /// 拿永久锁死换这点不划算。
+  ///
+  /// 同步读是给路由与生命周期回调用的（SecureKV 是异步的），进程内一份，
+  /// 由 [load] 在启动时装载、[set] / [clear] 维护 —— 不落盘，所以不会再分叉。
+  static ValueListenable<bool> get enabled => _enabled;
+
+  /// 在 SecureKV 就绪后、决定初始路由之前调一次。
+  static Future<void> load() async {
+    final stored = await _read();
+    _enabled.value = stored != null && stored.isNotEmpty;
+  }
+
+  static Future<void> set(String pin) async {
+    await MoodiarySecureKVs.password.set(await hasher(pin));
+    _enabled.value = true;
+  }
+
+  static Future<void> clear() async {
+    await MoodiarySecureKVs.password.remove();
+    _enabled.value = false;
+  }
+
+  /// 读凭据。读失败（设备锁定、Keystore 损坏）与「没设过」一样按 null 处理 ——
+  /// 见 [enabled] 上关于 fail-open 的取舍。
+  static Future<String?> _read() async {
+    try {
+      return await MoodiarySecureKVs.password.get();
+    } catch (e, s) {
+      logger.e('应用锁：凭据读取失败，按未开启处理', error: e, stackTrace: s);
+      return null;
+    }
+  }
 
   /// 校验 PIN。没设过密码时恒为 false —— 别让「没有密码」变成「任何输入都放行」。
   ///
@@ -42,7 +82,7 @@ final class AppLockPin {
   /// 没有错误提示、不计次、也不进冷却。当作「不匹配」处理，至少走的是正常的失败路径。
   static Future<bool> verify(String pin) async {
     try {
-      final stored = await MoodiarySecureKVs.password.get();
+      final stored = await _read();
       if (stored == null || stored.isEmpty) return false;
       if (!isHashed(stored)) {
         // 2.7.3 的明文原件：搬迁只把它原样挪进钥匙串，哈希推迟到这里做。

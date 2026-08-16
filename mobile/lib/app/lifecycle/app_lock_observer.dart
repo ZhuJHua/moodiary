@@ -53,7 +53,7 @@ class _AppLockObserverState extends State<AppLockObserver>
       return;
     }
     if (_locking) return;
-    if (MoodiaryKVs.lock.get() != true || MoodiaryKVs.lockNow.get() != true) {
+    if (!AppLockPin.enabled.value || MoodiaryKVs.lockNow.get() != true) {
       return;
     }
     final location = router.routerDelegate.currentConfiguration.uri.path;

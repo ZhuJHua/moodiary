@@ -22,6 +22,9 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 Future<void> _initSystem() async {
   final rustInit = RustLib.init();
   await injectBasicService();
+  // 应用锁的开关是「有没有凭据」的派生态，读一次钥匙串装进内存；
+  // 路由与生命周期回调都是同步的，够不着异步的 SecureKV。
+  await AppLockPin.load();
   // 版本迁移钩子：在基础存储就位后、主题/服务初始化前运行（旧版内联在 KV.init）。
   // 用 try/catch 包裹：迁移抛异常时只记日志、不阻断启动——否则 appVersion 不推进，
   // 每次启动都在同一步崩，陷入永久崩溃循环把用户锁在数据外。步骤幂等，下次启动重试。
@@ -70,7 +73,8 @@ Future<void> _platFormOption() async {
 }
 
 String _resolveInitialLocation() {
-  if (MoodiaryKVs.lock.get() == true) return '/lock';
+  // AppLockPin.load() 已在 _initSystem 里跑过，这里读的是进程内那份。
+  if (AppLockPin.enabled.value) return '/lock';
   if (MoodiaryKVs.firstStart.get() == true) return '/start';
   return '/';
 }

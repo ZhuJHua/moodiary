@@ -285,6 +285,15 @@ PHC 串（`rust.Argon2.hash`，盐随机且写在串里），不是原文。钥�
 常常就是手机解锁 PIN）。原语可注入（`AppLockPin.hasher` / `verifier`），宿主单测没有
 Rust FFI，同 `SyncKeyManager` 的做法。
 
+**「应用锁开没开」= 有没有凭据**（`AppLockPin.enabled`），没有独立的 `lock` 开关。
+那个开关早先在 MMKV 而凭据在钥匙串，两边存活条件不同：MMKV 是普通文件、恢复备份照样
+带过来，钥匙串的密文却要 Keystore 私钥来解，而那把钥匙不进备份。一旦分叉就是「锁开着
+但没有密码」——校验对任何输入都 false，用户永久进不去，只能卸载重装。现在读不出凭据
+就是没开锁（fail-open）：应用锁本就不保护静态数据，能拿到 App 文件的人直接读 Isar 就行。
+`enabled` 是进程内的 `ValueListenable`（路由与生命周期回调都是同步的，够不着异步的
+SecureKV），由 `main.dart` 里的 `AppLockPin.load()` 装载，不落盘所以不会再分叉。
+**因此搬迁只在旧 `lock` 为真时才搬 PIN** —— 否则等于替关着锁的用户把锁打开。
+
 **搬迁把 PIN 原样挪过去，哈希推迟到 `verify` 头一次比对时就地做**（`isHashed` 分辨）。
 不在搬迁里哈希是有原因的：那会让 KV 初始化依赖 Rust 桥先就绪，等于让一次性迁移的需求
 永久钉死 `main.dart` 的启动顺序，而那个顺序只有注释守着 —— 谁调换一下，`Argon2.hash`

@@ -26,16 +26,21 @@ final class MemoryKVStorage extends IKVStorage {
   void clear() => data.clear();
 }
 
-/// 内存 SecureKV。[failingKeys] 里的键写入时抛，用来模拟钥匙串不可用。
+/// 内存 SecureKV。[failingKeys] / [failingReads] 里的键写入 / 读取时抛，
+/// 用来模拟钥匙串不可用（设备锁定、Keystore 失效）。
 final class MemorySecureKVStorage implements ISecureKVStorage {
   final Map<String, String> data = {};
   final Set<String> failingKeys = {};
+  final Set<String> failingReads = {};
 
   @override
   Future<void> init() async {}
 
   @override
-  Future<String?> get(String key) async => data[key];
+  Future<String?> get(String key) async {
+    if (failingReads.contains(key)) throw StateError('keychain unavailable');
+    return data[key];
+  }
 
   @override
   Future<void> set(String key, String value) async {

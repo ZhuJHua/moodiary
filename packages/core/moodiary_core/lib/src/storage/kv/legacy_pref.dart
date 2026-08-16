@@ -21,6 +21,9 @@ final class LegacyPrefsKVSource implements IKVSource {
   /// 让「搬迁读的键必然在 allowList 里」由构造成立，而不是靠一条测试去断言。
   static Set<String> get _legacyKeys => {
     ...SecretKVMigration.movedKeys,
+    // 旧的应用锁开关。2.8.0 起「开没开」= 有没有凭据（AppLockPin.enabled），这个键
+    // 已从 MoodiaryKVs 删除，但搬迁要读它来决定那把 PIN 该不该搬。
+    'lock',
     // 不迁移（同步引擎已重写 / 已换供应商），但清理时必须带上：都含明文凭据
     'webDavOption',
     'tencentId',

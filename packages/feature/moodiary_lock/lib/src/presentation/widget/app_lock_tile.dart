@@ -54,7 +54,7 @@ class _AppLockTileState extends State<AppLockTile> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return ValueListenableBuilder(
-      valueListenable: MoodiaryKVs.lock.getNotifier(),
+      valueListenable: AppLockPin.enabled,
       builder: (context, lock, _) {
         return Column(
           children: [
@@ -162,9 +162,8 @@ class _SetPasswordSheetState extends State<SetPasswordSheet> {
       return;
     }
     if (pin == _first) {
-      // **PIN 必须先落地再开闸。** 反过来的话，写钥匙串失败（或进程在这中间被杀）
-      // 就留下「lock=true 但没有密码」—— verify 对任何输入都返回 false，生物识别
-      // 默认关着也够不到，用户只能重装。
+      // 写成功即等于开锁：`AppLockPin.enabled` 就是「有没有凭据」，没有第二个开关
+      // 要同步，也就没有「锁开着但没有密码」那种把用户挡在门外的中间态。
       if (!await savePin(pin)) {
         if (!mounted) return;
         setState(() {
@@ -174,7 +173,6 @@ class _SetPasswordSheetState extends State<SetPasswordSheet> {
         _pad.reject();
         return;
       }
-      MoodiaryKVs.lock.set(true);
       if (!mounted) return;
       Navigator.of(context).pop();
       toast.success(message: context.l10n.lock.turnedOn);
@@ -216,7 +214,6 @@ class _RemovePasswordSheetState extends State<RemovePasswordSheet> {
   bool get _supportBio => MoodiaryKVs.supportBiometrics.get() == true;
 
   Future<void> _disable() async {
-    MoodiaryKVs.lock.set(false);
     await AppLockPin.clear();
     MoodiaryKVs.supportBiometrics.set(false);
     MoodiaryKVs.lockNow.set(false);

@@ -85,7 +85,8 @@ enum MoodiaryKVs<T extends Object> {
   showWritingTime<bool>(defaultValue: true),
   showWordCount<bool>(defaultValue: true),
 
-  lock<bool>(defaultValue: false),
+  /// 「退到后台再回来需重新解锁」。**应用锁本身开没开不在这里** ——
+  /// 那是「有没有凭据」的派生态，见 `AppLockPin.enabled`。
   lockNow<bool>(defaultValue: false),
   supportBiometrics<bool>(defaultValue: false),
   backendPrivacy<bool>(defaultValue: false),

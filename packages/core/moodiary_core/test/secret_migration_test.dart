@@ -18,6 +18,7 @@ void main() {
 
   group('SecretKVMigration', () {
     test('三个键原样搬进 SecureKV', () async {
+      legacy.data['lock'] = true;
       legacy.data['password'] = '1234';
       legacy.data['qweatherKey'] = 'qw-key';
       legacy.data['tiandituKey'] = 'td-key';
@@ -43,13 +44,36 @@ void main() {
     /// 吞掉的话应用锁会变成「开着但没有密码」，用户直接进不去。
     test('钥匙串写失败时上抛，不吞', () async {
       secure.failingKeys.add('password');
+      legacy.data['lock'] = true;
       legacy.data['password'] = '1234';
 
       expect(() => SecretKVMigration.run(legacy), throwsStateError);
     });
 
+    /// 2.8.0 起「应用锁开没开」= 有没有凭据，旧的 lock 开关已删。所以关着锁的用户
+    /// 那把残留 PIN 一定不能搬 —— 搬了等于替他把锁打开，而他可能早忘了那四位数。
+    test('旧的 lock 是关的 → 不搬 PIN，但另外两个照搬', () async {
+      legacy.data['lock'] = false;
+      legacy.data['password'] = '1234';
+      legacy.data['qweatherKey'] = 'qw-key';
+
+      await SecretKVMigration.run(legacy);
+
+      expect(await MoodiarySecureKVs.password.get(), isNull);
+      expect(await MoodiarySecureKVs.qweatherKey.get(), 'qw-key');
+    });
+
+    test('旧仓库压根没有 lock 这个键 → 同样不搬 PIN', () async {
+      legacy.data['password'] = '1234';
+
+      await SecretKVMigration.run(legacy);
+
+      expect(await MoodiarySecureKVs.password.get(), isNull);
+    });
+
     /// 机密排在明文之前搬，所以失败时旧仓库还在、MMKV 还没被写过，重跑是干净的。
     test('重跑幂等', () async {
+      legacy.data['lock'] = true;
       legacy.data['password'] = '1234';
 
       await SecretKVMigration.run(legacy);

@@ -27,7 +27,14 @@ final class SecretKVMigration {
   static Set<String> get movedKeys => _moved.keys.toSet();
 
   static Future<void> run(IKVSource legacy) async {
+    // 2.8.0 起「应用锁开没开」= 有没有凭据（`AppLockPin.enabled`），旧的 `lock` 开关
+    // 已删。所以关着锁的用户那把 PIN 一定不能搬 —— 搬了等于替他把锁打开，而他可能
+    // 早就忘了那四位数。2.7.x 的关锁流程是 lock=false 与删 password 一起做的，
+    // 只有「两次写之间进程被杀」那道窄缝会留下孤儿密码，这里一并挡掉。
+    final lockWasOn = legacy.get<bool>('lock') == true;
+
     for (final MapEntry(key: name, value: target) in _moved.entries) {
+      if (target == MoodiarySecureKVs.password && !lockWasOn) continue;
       final value = legacy.get<String>(name);
       if (value == null || value.isEmpty) continue;
       await target.set(value);
