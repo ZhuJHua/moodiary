@@ -6,6 +6,15 @@
 base_locale: zh
 fallback_strategy: base_locale
 
+# 关掉 slang 默认的 lazy —— 非 base 语种默认是 deferred import，而 deferred 的翻译类
+# **只有它自己那份 LocaleSettings.setLocale 才会 loadLibrary()**。
+# 语种真源 GlobalLocaleState 是跨包共享的，可 translationMap 是每份产物各自的：
+# App 调 setLocale 只填了 App 的那张表，mui 这张永远只有 base(zh)，于是
+# `translationMap[currentLocale] ?? translationMap[baseLocale]` 一路回落 ——
+# 英文用户在每个 mui 组件里看到的都是中文，且冷启动必现。
+# 这里一共十来个词，全量编进来不值一提，换掉的是整整一类「忘了同步两棵树」的坑。
+lazy: false
+
 input_directory: lib/src/l10n/i18n
 input_file_pattern: .i18n.json
 output_directory: lib/src/l10n/i18n

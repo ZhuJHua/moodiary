@@ -13,7 +13,7 @@ import 'package:slang/generated.dart';
 import 'package:slang_flutter/slang_flutter.dart';
 export 'package:slang_flutter/slang_flutter.dart';
 
-import 'mui_strings_en.g.dart' deferred as l_en;
+import 'mui_strings_en.g.dart' as l_en;
 part 'mui_strings_zh.g.dart';
 
 /// Supported locales.
@@ -42,21 +42,11 @@ enum MuiAppLocale with BaseAppLocale<MuiAppLocale, MuiTranslations> {
 		PluralResolver? cardinalResolver,
 		PluralResolver? ordinalResolver,
 	}) async {
-		switch (this) {
-			case MuiAppLocale.zh:
-				return MuiTranslationsZh(
-					overrides: overrides,
-					cardinalResolver: cardinalResolver,
-					ordinalResolver: ordinalResolver,
-				);
-			case MuiAppLocale.en:
-				await l_en.loadLibrary();
-				return l_en.MuiTranslationsEn(
-					overrides: overrides,
-					cardinalResolver: cardinalResolver,
-					ordinalResolver: ordinalResolver,
-				);
-		}
+		return buildSync(
+			overrides: overrides,
+			cardinalResolver: cardinalResolver,
+			ordinalResolver: ordinalResolver,
+		);
 	}
 
 	@override
@@ -128,7 +118,7 @@ extension BuildContextTranslationsExtension on BuildContext {
 class LocaleSettings extends BaseFlutterLocaleSettings<MuiAppLocale, MuiTranslations> {
 	LocaleSettings._() : super(
 		utils: AppLocaleUtils.instance,
-		lazy: true,
+		lazy: false,
 	);
 
 	static final instance = LocaleSettings._();

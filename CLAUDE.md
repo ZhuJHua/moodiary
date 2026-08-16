@@ -177,7 +177,9 @@ App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域�
   切语言自动重建）；service / 导出 / 回调里用顶层的 `l10n.xxx`（**不会重建**）。
 - **参数是具名的**：`l10n.diarySearchResult(count: n)`。gen-l10n 时代的位置参数已全部改完。
 - **语种真源是 slang 的 `GlobalLocaleState` 单例**，跨包共享 —— `applyStoredLanguage()`
-  调一次 `LocaleSettings.setLocale`，App 与 mui 两棵树一起刷新。KV 里只存偏好枚举。
+  调一次 App 那份 `LocaleSettings.setLocale`，App 与 mui 两棵树一起刷新（slang_flutter
+  的 `_GlobalKeyHandler` 也是进程级单例，会遍历所有已注册 provider 逐个 `updateState`）。
+  **但这一条挂在 mui 的 `lazy: false` 上**，见下面第 3 点。KV 里只存偏好枚举。
   `MaterialApp.locale` 从 `TranslationProvider.of(context).flutterLocale` 取。
 - 改了 `*.i18n.json` **必须跑 `dart tool/task.dart l10n`**（产物是提交的，且没有闸门兜底）。
 - 查死键要开 `--full`（不开只比对语种间差集），并把源码目录指回仓库 —— 默认只扫当前包的
@@ -201,8 +203,13 @@ App 那份按 **namespace 一个 feature 一份文件**：`common`（无领域�
    都走一遍 `print`** 再用兜底（`log.error` 就是裸 print，release 也打）。`setupPluralResolvers()`
    就是来说「zh 一律取 other」的，在 `runApp` 之前登记即可（与 `setLocale` 先后无关，
    但它不会通知已挂载的 provider）。
-3. **非 base 语种的翻译类是 deferred import**（`lazy: true`），所以一律用异步的
-   `setLocale`，别用 `setLocaleSync`（它绕开 `loadLibrary()`）。
+3. **非 base 语种的翻译类默认是 deferred import**（`lazy: true`），所以 App 那份一律用
+   异步的 `setLocale`，别用 `setLocaleSync`（它绕开 `loadLibrary()`）。
+   **mui 那份必须 `lazy: false`**：deferred 的翻译类只有**它自己那份** `setLocale` 才会
+   `loadLibrary()`，而没人会去调它——`translationMap` 于是只有 base(zh)，
+   `translationMap[currentLocale] ?? translationMap[baseLocale]` 一路回落，
+   英文用户在每个 mui 组件里看到中文，且冷启动必现、进设置改一次语言才好。
+   闸门在 `mui/test/l10n_test.dart`。
 4. `timestamp` 与 `flat_map` 默认都是 `true`：前者让提交的产物每次生成都有噪声 diff，
    后者多生成一份全量 `Map<String, String>`。两个都在 `slang.yaml` 里关掉了。
 
