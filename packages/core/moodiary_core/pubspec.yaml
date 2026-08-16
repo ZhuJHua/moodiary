@@ -23,7 +23,6 @@ dependencies:
   isar_plus: 1.3.9
   isar_plus_flutter_libs: 1.3.9
   mmkv: 2.4.1
-  # 仅为 2.8.0 的一次性 KV 迁移保留（MMKV 之前的存储后端），迁移窗口过后可移除。
   shared_preferences: 2.5.5
   flutter_secure_storage: 11.0.0
 
@@ -33,7 +32,7 @@ dependencies:
   pool: 1.5.2
   cross_file: 0.3.5+4
   mime: 2.0.0
-  file_picker: 12.0.0-beta.7
+  file_picker: 12.0.0
   heif_converter: 1.0.7
   gal: 2.3.3
   fc_native_video_thumbnail: 3.0.1

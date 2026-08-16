@@ -27,7 +27,7 @@ dependencies:
   riverpod_annotation: 4.0.6
   gpt_markdown: 1.1.8
   genui: 0.10.2
-  a2ui_core: 0.1.0
+  a2ui_core: 0.1.1
   json_schema_builder: 0.1.6
   flutter_chat_ui: 2.11.1
   flutter_chat_core: 2.9.0
