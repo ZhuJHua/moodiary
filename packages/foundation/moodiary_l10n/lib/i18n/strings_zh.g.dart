@@ -366,9 +366,6 @@ class Translations$app$zh {
 	/// zh: '日历'
 	String get meCalendar => '日历';
 
-	/// zh: '还没做'
-	String get meCalendarPending => '还没做';
-
 	/// zh: '功能'
 	String get sectionFeature => '功能';
 
@@ -1402,6 +1399,21 @@ class Translations$diary$zh {
 
 	/// zh: '自动保存'
 	String get autoSaved => '自动保存';
+
+	/// zh: '日历'
+	String get calendarTitle => '日历';
+
+	/// zh: '回到今天'
+	String get calendarBackToToday => '回到今天';
+
+	/// zh: '这天没有写'
+	String get calendarEmptyDay => '这天没有写';
+
+	/// zh: '还没有日记'
+	String get calendarNoEntryYet => '还没有日记';
+
+	/// zh: '选一天看看'
+	String get calendarPickDay => '选一天看看';
 }
 
 // Path: editor

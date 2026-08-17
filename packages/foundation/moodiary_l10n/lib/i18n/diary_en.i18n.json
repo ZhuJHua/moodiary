@@ -133,5 +133,10 @@
   "infoMood": "Mood",
   "searchReindexHint": "Rebuild the index after upgrading so older entries become searchable",
   "searchReindex": "Rebuild",
-  "autoSaved": "Autosaved"
+  "autoSaved": "Autosaved",
+  "calendarTitle": "Calendar",
+  "calendarBackToToday": "Today",
+  "calendarEmptyDay": "Nothing written that day",
+  "calendarNoEntryYet": "No entries yet",
+  "calendarPickDay": "Pick a day"
 }

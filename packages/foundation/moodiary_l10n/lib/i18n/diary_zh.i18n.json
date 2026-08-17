@@ -132,5 +132,10 @@
   "infoMood": "心情",
   "searchReindexHint": "升级后需重建索引，旧日记正文才能被搜索到",
   "searchReindex": "重建",
-  "autoSaved": "自动保存"
+  "autoSaved": "自动保存",
+  "calendarTitle": "日历",
+  "calendarBackToToday": "回到今天",
+  "calendarEmptyDay": "这天没有写",
+  "calendarNoEntryYet": "还没有日记",
+  "calendarPickDay": "选一天看看"
 }

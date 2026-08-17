@@ -157,7 +157,6 @@ class _Translations$app$en extends Translations$app$zh {
 	@override String get meSectionRecall => 'Revisit';
 	@override String get meSectionManage => 'Manage';
 	@override String get meCalendar => 'Calendar';
-	@override String get meCalendarPending => 'Not built yet';
 	@override String get sectionFeature => 'Features';
 	@override String get assistantEntry => 'AI assistant';
 	@override String get stressTitle => 'Stress-test data (debug)';
@@ -523,6 +522,11 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get searchReindexHint => 'Rebuild the index after upgrading so older entries become searchable';
 	@override String get searchReindex => 'Rebuild';
 	@override String get autoSaved => 'Autosaved';
+	@override String get calendarTitle => 'Calendar';
+	@override String get calendarBackToToday => 'Today';
+	@override String get calendarEmptyDay => 'Nothing written that day';
+	@override String get calendarNoEntryYet => 'No entries yet';
+	@override String get calendarPickDay => 'Pick a day';
 }
 
 // Path: editor

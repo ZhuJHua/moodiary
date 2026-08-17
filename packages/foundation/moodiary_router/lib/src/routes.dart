@@ -131,6 +131,14 @@ class MediaRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
+/// 月历回顾。与地图、知识图谱同级，都是「同一批日记的另一个投影」。
+class CalendarRoute extends MoodiaryRouteBase {
+  static const String path = '/calendar';
+  const CalendarRoute();
+  @override
+  String get location => path;
+}
+
 /// 知识图谱。[diaryId] 为空 = 总图谱；给定则打开以该篇为中心的局部关系图。
 class DiaryGraphRoute extends MoodiaryRouteBase {
   static const String path = '/graph';

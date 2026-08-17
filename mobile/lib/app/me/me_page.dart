@@ -390,14 +390,10 @@ class _RecallGrid extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(
-              // TODO(calendar): 日历视图还没有页面。做的时候直接用
-              // DashboardStats.byDay —— 月网格要的就是同一份日粒度聚合，
-              // 补一个 CalendarRoute + 月历页即可，这里把 onTap 接上就行。
               child: _RecallTile(
                 icon: LucideIcons.calendarDays,
                 label: l10n.app.meCalendar,
-                subtitle: l10n.app.meCalendarPending,
-                onTap: null,
+                onTap: () => const CalendarRoute().push(context),
               ),
             ),
           ],
@@ -410,14 +406,12 @@ class _RecallGrid extends StatelessWidget {
 class _RecallTile extends StatelessWidget {
   final IconData icon;
   final String label;
-  final String? subtitle;
   final VoidCallback? onTap;
 
   const _RecallTile({
     required this.icon,
     required this.label,
     required this.onTap,
-    this.subtitle,
   });
 
   @override
@@ -445,8 +439,6 @@ class _RecallTile extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(label, style: typo.bodyMedium.onSurface.copyWith(color: fg)),
-              if (subtitle != null)
-                Text(subtitle!, style: typo.labelSmall.outline),
             ],
           ),
         ),

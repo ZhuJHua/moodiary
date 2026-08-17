@@ -1,3 +1,4 @@
+import 'package:moodiary_diary/src/presentation/calendar/calendar_page.dart';
 import 'package:moodiary_diary/src/presentation/category/category_manager_page.dart';
 import 'package:moodiary_diary/src/presentation/detail/diary_page.dart'
     show DiaryPage;
@@ -46,6 +47,10 @@ List<RouteBase> diaryRoutes() => [
     builder: (_, _) => const CategoryManagerPage(),
   ),
   MoodiaryGoRoute(path: MapRoute.path, builder: (_, _) => const MapPage()),
+  MoodiaryGoRoute(
+    path: CalendarRoute.path,
+    builder: (_, _) => const CalendarPage(),
+  ),
   MoodiaryGoRoute(
     path: DiaryManagerRoute.path,
     builder: (_, _) => const DiaryManagerPage(),
