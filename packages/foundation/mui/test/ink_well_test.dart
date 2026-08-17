@@ -234,4 +234,21 @@ void main() {
     await gesture.up();
     await tester.pump(const Duration(milliseconds: 80));
   });
+
+  testWidgets('固定高度下子节点撑满，不被顶到上边', (tester) async {
+    // Stack 默认的 loose fit + topStart 对齐会让「父级给固定高度、child 比它矮」的
+    // 调用点（MChipBar 的 height: 32 胶囊）内容贴到上边。passthrough 把约束原样透下去。
+    await tester.pumpWidget(
+      host(
+        SizedBox(
+          height: 32,
+          child: MInkWell(
+            onTap: () {},
+            child: const Row(mainAxisSize: .min, children: [Text('胶囊')]),
+          ),
+        ),
+      ),
+    );
+    expect(tester.getSize(find.byType(Row)).height, 32);
+  });
 }

@@ -204,6 +204,12 @@ class _MInkWellState extends State<MInkWell> implements _MInkWellPressedHost {
         widget.overlayColor ??
         scheme.onSurface.withValues(alpha: context.theme.states.pressedOpacity);
     return Stack(
+      // **必须是 passthrough。** 默认的 `StackFit.loose` 会把外面的约束放松后再给
+      // child，加上默认的 topStart 对齐，于是「父级给了固定高度、child 比它矮」的调用点
+      // （胶囊筛选条 `MChipBar` 那种 `height: 32` 的）内容会被顶到上边而不是居中 ——
+      // 换掉 InkWell 之前没有这一层 Stack，child 拿的就是父级的紧约束。
+      // passthrough 把约束原样透给非定位子节点，布局与「没有这层 Stack」完全一致。
+      fit: .passthrough,
       children: [
         child,
         Positioned.fill(
