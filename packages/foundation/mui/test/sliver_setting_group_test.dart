@@ -61,17 +61,18 @@ void main() {
         .radii
         .lg;
 
-    /// 首末项各包一层圆角 [Material]（水波由祖先 Material 画，外面套裁剪盖不住它，
-    /// 只有这一层能收住）。中间项不包，省一层。
+    /// 首末项各包一层 [ClipRRect]。中间项不包，省一层。
+    ///
+    /// 只数组直接包的那一层 —— [MInkWell] 自己在没有 borderRadius 时不建 ClipRRect，
+    /// 所以这里数到的就是组包的。
     List<BorderRadius> radiiOf(WidgetTester tester) => tester
-        .widgetList<Material>(
+        .widgetList<ClipRRect>(
           find.descendant(
             of: find.byType(MSliverSettingGroup),
-            matching: find.byType(Material),
+            matching: find.byType(ClipRRect),
           ),
         )
-        .where((m) => m.type == MaterialType.transparency)
-        .map((m) => m.borderRadius! as BorderRadius)
+        .map((c) => c.borderRadius as BorderRadius)
         .toList();
 
     testWidgets('首项只圆上面、末项只圆下面，中间项不包', (tester) async {
@@ -87,15 +88,13 @@ void main() {
       expect(radiiOf(tester).single, BorderRadius.all(Radius.circular(lg)));
     });
 
-    testWidgets('包的是 Material 而不是 ClipRRect —— 后者裁不住水波', (tester) async {
+    testWidgets('按压反馈是 MInkWell 的自绘遮罩，不吃 material 水波', (tester) async {
       await tester.pumpWidget(_host(itemCount: 2));
-      expect(
-        find.descendant(
-          of: find.byType(MSliverSettingGroup),
-          matching: find.byType(ClipRRect),
-        ),
-        findsNothing,
-      );
+      expect(find.byType(MInkWell), findsNWidgets(2));
+      // 一个 InkWell 都不该有 —— 它的高亮画在祖先 Material 上，组包的 ClipRRect
+      // 收不住。
+      expect(find.byType(InkWell), findsNothing);
+      expect(find.byType(ListTile), findsNothing);
     });
   });
 }
