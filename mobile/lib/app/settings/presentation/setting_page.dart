@@ -3,11 +3,12 @@ import 'package:fpdart/fpdart.dart';
 import 'package:gap/gap.dart';
 import 'package:moodiary/app/settings/presentation/widget/accent_sheet.dart';
 import 'package:moodiary/app/settings/presentation/widget/cache_usage_tile.dart';
-import 'package:moodiary/app/settings/presentation/widget/dashboard_section.dart';
 import 'package:moodiary/app/settings/presentation/widget/data_repair_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/language_dialog.dart';
 import 'package:moodiary/app/settings/presentation/widget/reset_data_tile.dart';
 import 'package:moodiary/app/settings/presentation/widget/theme_mode_dialog.dart';
+import 'package:moodiary_assistant/moodiary_assistant.dart'
+    show AssistantSettingRoute;
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_lock/moodiary_lock.dart';
@@ -32,10 +33,10 @@ class _SettingSectionList extends StatelessWidget {
       // 现在没人吃这个 inset 了 —— 不补的话最后一行会压在手势条 / 三键导航底下。
       padding: .fromLTRB(8, 8, 8, 8 + MediaQuery.paddingOf(context).bottom),
       children: [
-        const DashboardSection(),
-        const _DataSection(),
+        const _FeatureSection(),
         const _DisplaySection(),
         const _PrivacySection(),
+        const _DataSection(),
         const _MoreSection(),
       ].intersperse(const Gap(4.0)).toList(),
     );
@@ -56,6 +57,57 @@ class SettingListPageMobile extends StatelessWidget {
   }
 }
 
+/// 功能开关式的子页。「日记设置」与「智能助手」是同一类东西 —— 某个功能自己的偏好，
+/// 平级摆在一起。
+class _FeatureSection extends StatelessWidget {
+  const _FeatureSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.theme.colors;
+    return Column(
+      crossAxisAlignment: .stretch,
+      children: [
+        SettingTitleTile(title: context.l10n.app.sectionFeature),
+        Card.filled(
+          color: scheme.surfaceContainerLow,
+          margin: .zero,
+          child: Column(
+            children: [
+              SettingListTile(
+                title: context.l10n.app.diarySettings,
+                isFirst: true,
+                leading: Icon(
+                  LucideIcons.fileText,
+                  color: scheme.onSurfaceVariant,
+                ),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
+                onTap: () => _openSetting(context, const DiarySettingRoute()),
+              ),
+              SettingListTile(
+                isLast: true,
+                title: context.l10n.app.assistantEntry,
+                leading: Icon(LucideIcons.bot, color: scheme.onSurfaceVariant),
+                trailing: Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant,
+                ),
+                onTap: () =>
+                    _openSetting(context, const AssistantSettingRoute()),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 只剩维护动作 —— 回收站 / 分类管理 / 导出 / 同步、以及足迹地图都归「我的」了，
+/// 那些操作的是内容，不是偏好。
 class _DataSection extends StatelessWidget {
   const _DataSection();
 
@@ -69,71 +121,12 @@ class _DataSection extends StatelessWidget {
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
-          child: Column(
+          child: const Column(
             children: [
-              SettingListTile(
-                title: context.l10n.app.recycle,
-                isFirst: true,
-                leading: Icon(
-                  LucideIcons.trash,
-                  color: scheme.onSurfaceVariant,
-                ),
-                trailing: Icon(
-                  LucideIcons.chevronRight,
-                  color: scheme.onSurfaceVariant,
-                ),
-                onTap: () => _openSetting(context, const RecycleRoute()),
-              ),
-              SettingListTile(
-                title: context.l10n.app.syncBackup,
-                leading: Icon(
-                  LucideIcons.refreshCw,
-                  color: scheme.onSurfaceVariant,
-                ),
-                trailing: Icon(
-                  LucideIcons.chevronRight,
-                  color: scheme.onSurfaceVariant,
-                ),
-                onTap: () => _openSetting(context, const BackupSyncRoute()),
-              ),
-              SettingListTile(
-                title: context.l10n.export.pageTitle,
-                leading: Icon(
-                  LucideIcons.fileOutput,
-                  color: scheme.onSurfaceVariant,
-                ),
-                trailing: Icon(
-                  LucideIcons.chevronRight,
-                  color: scheme.onSurfaceVariant,
-                ),
-                onTap: () => _openSetting(context, const ExportRoute()),
-              ),
-              SettingListTile(
-                title: context.l10n.app.categoryManager,
-                leading: Icon(
-                  LucideIcons.folders,
-                  color: scheme.onSurfaceVariant,
-                ),
-                trailing: Icon(
-                  LucideIcons.chevronRight,
-                  color: scheme.onSurfaceVariant,
-                ),
-                onTap: () =>
-                    _openSetting(context, const CategoryManagerRoute()),
-              ),
-              SettingListTile(
-                title: context.l10n.app.mapTitle,
-                leading: Icon(LucideIcons.map, color: scheme.onSurfaceVariant),
-                trailing: Icon(
-                  LucideIcons.chevronRight,
-                  color: scheme.onSurfaceVariant,
-                ),
-                onTap: () => _openSetting(context, const MapRoute()),
-              ),
-              const DataRepairTile(),
+              DataRepairTile(isFirst: true),
               // 压测入口随图谱一起暂隐藏(StressTestTile,打磨期再放出)。
-              const CacheUsageTile(),
-              const ResetDataTile(isLast: true),
+              CacheUsageTile(),
+              ResetDataTile(isLast: true),
             ],
           ),
         ),
@@ -164,23 +157,11 @@ class _DisplaySection extends ConsumerWidget {
           margin: .zero,
           child: Column(
             children: [
-              SettingListTile(
-                title: context.l10n.app.diarySettings,
-                isFirst: true,
-                leading: Icon(
-                  LucideIcons.fileText,
-                  color: scheme.onSurfaceVariant,
-                ),
-                trailing: Icon(
-                  LucideIcons.chevronRight,
-                  color: scheme.onSurfaceVariant,
-                ),
-                onTap: () => _openSetting(context, const DiarySettingRoute()),
-              ),
               ValueListenableBuilder(
                 valueListenable: MoodiaryKVs.themeMode.getNotifier(),
                 builder: (context, mode, _) {
                   return SettingListTile(
+                    isFirst: true,
                     title: context.l10n.app.themeMode,
                     leading: Icon(
                       LucideIcons.contrast,

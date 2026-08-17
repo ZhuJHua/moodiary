@@ -50,6 +50,14 @@ class TimeFormat {
   static String mediumDate(DateTime time) =>
       DateFormat.yMMMd().format(time.toLocal());
 
+  /// 无年份短日期——热力图选中某天后的详情行。
+  static String monthDay(DateTime time) =>
+      DateFormat.MMMd().format(time.toLocal());
+
+  /// 月份缩写——热力图网格上方的列标签。
+  static String monthAbbr(DateTime time) =>
+      DateFormat.MMM().format(time.toLocal());
+
   /// 固定 `yyyy-MM-dd`——机器可读、不随语言变化：LLM 工具输出、wikilink
   /// 候选、日志日期标签。
   static String isoDate(DateTime time) {

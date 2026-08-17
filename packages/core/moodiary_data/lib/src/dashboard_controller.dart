@@ -7,35 +7,52 @@ part 'dashboard_controller.g.dart';
 
 @riverpod
 class DashboardController extends _$DashboardController {
+  /// 有日记变更但还没重算。见 [refreshIfStale]。
+  bool _stale = false;
+
   @override
   Future<DashboardStats> build() async {
-    // 日记 / 分类变更即失效重算，保持看板实时（新增/删除日记后数量、字数等随之更新）。
-    // 本 provider autoDispose，仅设置页可见时存活，故重算开销可控。
-    final diarySub = DiaryRepository.get().diaryEvents.listen(
-      (_) => ref.invalidateSelf(),
-    );
-    final catSub = CategoryRepository.get().categoryEvents.listen(
-      (_) => ref.invalidateSelf(),
-    );
+    // 事件**只置脏、不重算**：本控制器服务的「我的」页是底栏的一格，会长期留在
+    // IndexedStack 里。而这里是全表拉 + 内存聚合，isar_plus 的读查询又不走索引全靠
+    // 扫描 —— 跟着每次写入重算等于每写一篇日记扫一次库。
+    final diarySub = DiaryRepository.get().diaryEvents.listen(_markStale);
+    final catSub = CategoryRepository.get().categoryEvents.listen(_markStale);
     ref.onDispose(diarySub.cancel);
     ref.onDispose(catSub.cancel);
 
+    _stale = false;
+    return _compute();
+  }
+
+  void _markStale(void _) => _stale = true;
+
+  /// 页面重新可见时调一次；没有脏数据就是空操作。由根壳在切到「我的」tab 时触发 ——
+  /// IndexedStack 不提供可见性回调，只能由持有 tab 状态的那层来说。
+  Future<void> refreshIfStale() async {
+    if (!_stale) return;
+    _stale = false;
+    state = AsyncData(await _compute());
+  }
+
+  Future<DashboardStats> _compute() async {
     final diaries = await DiaryRepository.get().getAllDiaries();
     final cats =
         (await CategoryRepository.get().getAllCategoriesForSync().run())
             .getOrElse((_) => const <Category>[]);
 
-    final visibleDiaries = diaries.where((d) => d.show).toList(growable: false);
+    final visible = diaries.where((d) => d.show).toList(growable: false);
+    final byDay = _aggregateByDay(visible);
 
     return DashboardStats(
       useDays: _useDays(),
-      diaryCount: visibleDiaries.length,
-      wordCount: _wordCount(visibleDiaries),
+      diaryCount: visible.length,
+      wordCount: _wordCount(visible),
       categoryCount: cats.length,
-      streakDays: _streakDays(visibleDiaries),
-      thisMonthCount: _thisMonthCount(visibleDiaries),
-      averageMood: _averageMood(visibleDiaries),
-      tagCount: _tagCount(visibleDiaries),
+      streakDays: _streakDays(byDay.keys),
+      thisMonthCount: _thisMonthCount(visible),
+      tagCount: _tagCount(visible),
+      byDay: byDay,
+      lastYearCount: _lastYearCount(byDay),
     );
   }
 
@@ -55,21 +72,41 @@ class DashboardController extends _$DashboardController {
     return sum;
   }
 
-  /// 连续打卡：从当前自然日向前，每天至少一篇即计 1，遇到空日停止。
-  int _streakDays(List<Diary> diaries) {
-    if (diaries.isEmpty) return 0;
-    final dates = <String>{};
+  /// 日粒度聚合 + 分级。key 归一到**本地**当天零点：模型里的 time 是绝对时刻（UTC），
+  /// 分桶前必须 toLocal，否则东八区凌晨写的日记会掉到前一天。
+  Map<DateTime, DayWriting> _aggregateByDay(List<Diary> diaries) {
+    final counts = <DateTime, int>{};
+    final words = <DateTime, int>{};
     for (final d in diaries) {
-      final local = d.time.toLocal();
-      dates.add(_ymd(local));
+      final t = d.time.toLocal();
+      final day = DateTime(t.year, t.month, t.day);
+      counts[day] = (counts[day] ?? 0) + 1;
+      words[day] = (words[day] ?? 0) + d.contentText.length;
     }
+    if (counts.isEmpty) return const {};
+
+    final levelOf = heatmapLevelResolver(words.values);
+    return {
+      for (final day in counts.keys)
+        day: DayWriting(
+          count: counts[day]!,
+          words: words[day]!,
+          level: levelOf(counts[day]!, words[day]!),
+        ),
+    };
+  }
+
+  /// 连续打卡：从当前自然日向前，每天至少一篇即计 1，遇到空日停止。
+  int _streakDays(Iterable<DateTime> days) {
+    if (days.isEmpty) return 0;
+    final set = days.toSet();
     var streak = 0;
-    var cursor = DateTime.now();
-    // 今天还没写则从昨天起算，避免清晨打开计数为 0
-    if (!dates.contains(_ymd(cursor))) {
+    var cursor = _today();
+    // 今天还没写则从昨天起算，避免清晨打开计数为 0。
+    if (!set.contains(cursor)) {
       cursor = cursor.subtract(const Duration(days: 1));
     }
-    while (dates.contains(_ymd(cursor))) {
+    while (set.contains(cursor)) {
       streak++;
       cursor = cursor.subtract(const Duration(days: 1));
     }
@@ -86,15 +123,13 @@ class DashboardController extends _$DashboardController {
     return count;
   }
 
-  /// 0~100 整数表示百分比，便于 UI 显示「68%」。
-  int _averageMood(List<Diary> diaries) {
-    if (diaries.isEmpty) return 0;
-    var sum = 0.0;
-    for (final d in diaries) {
-      sum += d.mood;
-    }
-    final avg = sum / diaries.length;
-    return (avg.clamp(0.0, 1.0) * 100).round();
+  int _lastYearCount(Map<DateTime, DayWriting> byDay) {
+    final from = _today().subtract(const Duration(days: 364));
+    var sum = 0;
+    byDay.forEach((day, w) {
+      if (!day.isBefore(from)) sum += w.count;
+    });
+    return sum;
   }
 
   int _tagCount(List<Diary> diaries) {
@@ -105,8 +140,58 @@ class DashboardController extends _$DashboardController {
     return unique.length;
   }
 
-  String _ymd(DateTime t) =>
-      '${t.year}-${t.month.toString().padLeft(2, '0')}-${t.day.toString().padLeft(2, '0')}';
+  static DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+}
+
+/// 热力图色阶的分级器：给出「某天写了 count 篇、共 words 字」时该落第几级（1–4）。
+///
+/// 依据是**当天字数在用户自己分布里的分位数**，不是篇数 —— 日记的绝大多数日子非 0 即 1，
+/// 按篇数分级会让五级退化成二值，热力图就成了打卡表。分位数是相对自己的，写短句的人和
+/// 写长文的人都能看到梯度。
+///
+/// 两种情况退回按篇数：**有效日太少**（分位数没有意义，新用户点亮的第一格也该有中等
+/// 深度，比一格浅灰更像「记了一笔」），或**字数没有分布**（p25 == p75，比如每天都写
+/// 同样长度的一句话 —— 此时按字数分会把所有格子压成同一级）。
+int Function(int count, int words) heatmapLevelResolver(
+  Iterable<int> dailyWords,
+) {
+  int byCount(int count, int _) => switch (count) {
+    <= 1 => 2,
+    2 => 3,
+    _ => 4,
+  };
+
+  final sorted = dailyWords.toList()..sort();
+  if (sorted.length < 8) return byCount;
+
+  int at(double q) => sorted[((sorted.length - 1) * q).round()];
+  final p25 = at(0.25), p50 = at(0.5), p75 = at(0.75);
+  if (p75 <= p25) return byCount;
+
+  return (_, w) => switch (w) {
+    _ when w < p25 => 1,
+    _ when w < p50 => 2,
+    _ when w < p75 => 3,
+    _ => 4,
+  };
+}
+
+/// 某一天的写作量。只有写过的日子才有条目 —— 没写的日子不进表，热力图查不到即为空格。
+class DayWriting {
+  final int count;
+  final int words;
+
+  /// 热力图色阶，1–4。0 不会出现（它表示「这天不在表里」）。
+  final int level;
+
+  const DayWriting({
+    required this.count,
+    required this.words,
+    required this.level,
+  });
 }
 
 class DashboardStats {
@@ -116,10 +201,14 @@ class DashboardStats {
   final int categoryCount;
   final int streakDays;
   final int thisMonthCount;
-
-  /// 平均心情，0~100 整数（百分比）。
-  final int averageMood;
   final int tagCount;
+
+  /// 日粒度聚合，key 是**本地**当天零点。没写的日子不在表里。
+  final Map<DateTime, DayWriting> byDay;
+
+  /// 近 365 天的篇数合计。热力图标题用它而不是 [diaryCount] —— 标题的数字必须和格子
+  /// 对得上，否则读者会去数格子然后发现对不上。
+  final int lastYearCount;
 
   const DashboardStats({
     required this.useDays,
@@ -128,7 +217,8 @@ class DashboardStats {
     required this.categoryCount,
     required this.streakDays,
     required this.thisMonthCount,
-    required this.averageMood,
     required this.tagCount,
+    required this.byDay,
+    required this.lastYearCount,
   });
 }

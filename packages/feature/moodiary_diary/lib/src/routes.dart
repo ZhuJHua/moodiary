@@ -1,4 +1,3 @@
-import 'package:moodiary_diary/src/presentation/analyse/analyse_page.dart';
 import 'package:moodiary_diary/src/presentation/category/category_manager_page.dart';
 import 'package:moodiary_diary/src/presentation/detail/diary_page.dart'
     show DiaryPage;
@@ -38,7 +37,10 @@ List<RouteBase> diaryRoutes() => [
     path: DiarySearchRoute.path,
     builder: (_, _) => const DiarySearchPage(),
   ),
-  MoodiaryGoRoute(path: RecycleRoute.path, builder: (_, _) => const RecyclePage()),
+  MoodiaryGoRoute(
+    path: RecycleRoute.path,
+    builder: (_, _) => const RecyclePage(),
+  ),
   MoodiaryGoRoute(
     path: CategoryManagerRoute.path,
     builder: (_, _) => const CategoryManagerPage(),
@@ -48,7 +50,6 @@ List<RouteBase> diaryRoutes() => [
     path: DiaryManagerRoute.path,
     builder: (_, _) => const DiaryManagerPage(),
   ),
-  MoodiaryGoRoute(path: AnalyseRoute.path, builder: (_, _) => const AnalysePage()),
   MoodiaryGoRoute(
     path: DiaryGraphRoute.path,
     builder: (_, state) {

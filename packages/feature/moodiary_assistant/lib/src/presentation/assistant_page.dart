@@ -13,6 +13,7 @@ import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/soul_repository.dart';
+import 'package:moodiary_assistant/src/presentation/assistant_summary_tile.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/tool_permission_card.dart';
@@ -2131,25 +2132,40 @@ class AssistantSessionListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.assistant.settingFunctionAIAssistant),
-        actions: [
-          IconButton(
-            tooltip: l10n.assistant.configTooltip,
-            icon: const Icon(LucideIcons.settings),
-            onPressed: () => const AssistantSettingRoute().push(context),
-          ),
-        ],
-      ),
+      // 顶栏那颗 ⚙ 撤掉了：全 App 的 ⚙ 现在只有一个含义（全局设置，在「我的」tab 的
+      // 底栏动作按钮上），助手自己的配置归 `设置 → 智能助手`。取而代之的是下面这行
+      // 摘要 —— 它比一个齿轮多给一条信息：你现在用的是哪个模型。
+      appBar: AppBar(title: Text(l10n.assistant.settingFunctionAIAssistant)),
       // 「新对话」不在本页了 —— 本页是根壳的一个 tab，入口是底栏胶囊右边那颗按钮
       // （站在助手 tab 上它就是新对话）。
-      body: _SessionListView(
-        currentId: null,
-        onSelect: (session) =>
-            AssistantConversationRoute(sessionId: session.id).push(context),
-        onDelete: (session) => ChatRepository.get().deleteSession(session.id),
-        // 根壳开了 extendBody，底栏整条带高已折进 padding.bottom，直接读来让开。
-        padding: .fromLTRB(12, 8, 12, 8 + MediaQuery.paddingOf(context).bottom),
+      body: Column(
+        children: [
+          Padding(
+            padding: const .fromLTRB(12, 4, 12, 8),
+            child: Card.filled(
+              color: context.theme.colors.surfaceContainerLow,
+              margin: .zero,
+              child: const AssistantSummaryTile(),
+            ),
+          ),
+          Expanded(
+            child: _SessionListView(
+              currentId: null,
+              onSelect: (session) =>
+                  AssistantConversationRoute(sessionId: session.id)
+                      .push(context),
+              onDelete: (session) =>
+                  ChatRepository.get().deleteSession(session.id),
+              // 根壳开了 extendBody，底栏整条带高已折进 padding.bottom，直接读来让开。
+              padding: .fromLTRB(
+                12,
+                0,
+                12,
+                8 + MediaQuery.paddingOf(context).bottom,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

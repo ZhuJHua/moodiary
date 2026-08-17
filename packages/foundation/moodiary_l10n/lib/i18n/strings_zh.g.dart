@@ -315,26 +315,65 @@ class Translations$app$zh {
 	/// zh: '使用天数'
 	String get dashUseDays => '使用天数';
 
-	/// zh: '日记总数'
-	String get dashDiaryCount => '日记总数';
-
 	/// zh: '总字数'
 	String get dashWordCount => '总字数';
 
 	/// zh: '分类数'
 	String get dashCategoryCount => '分类数';
 
-	/// zh: '连续打卡'
-	String get dashStreak => '连续打卡';
-
-	/// zh: '本月新增'
-	String get dashThisMonth => '本月新增';
-
-	/// zh: '平均心情'
-	String get dashAverageMood => '平均心情';
-
 	/// zh: '标签数'
 	String get dashTagCount => '标签数';
+
+	/// zh: '我的'
+	String get homeNavigatorMe => '我的';
+
+	/// zh: '我的'
+	String get meTitle => '我的';
+
+	/// zh: '过去一年'
+	String get meYearLabel => '过去一年';
+
+	/// zh: '本月 {count} 篇'
+	String meThisMonth({required Object count}) => '本月 ${count} 篇';
+
+	/// zh: '连续 {count} 天'
+	String meStreak({required Object count}) => '连续 ${count} 天';
+
+	/// zh: '点一个格子看那天'
+	String get meHeatmapHint => '点一个格子看那天';
+
+	/// zh: '写下第一篇，点亮第一格'
+	String get meHeatmapEmpty => '写下第一篇，点亮第一格';
+
+	/// zh: '写作热力图'
+	String get meHeatmapSemantics => '写作热力图';
+
+	/// zh: '没有记录'
+	String get meDayNothing => '没有记录';
+
+	/// zh: '少'
+	String get meLegendLess => '少';
+
+	/// zh: '多'
+	String get meLegendMore => '多';
+
+	/// zh: '回顾'
+	String get meSectionRecall => '回顾';
+
+	/// zh: '管理'
+	String get meSectionManage => '管理';
+
+	/// zh: '日历'
+	String get meCalendar => '日历';
+
+	/// zh: '还没做'
+	String get meCalendarPending => '还没做';
+
+	/// zh: '功能'
+	String get sectionFeature => '功能';
+
+	/// zh: '智能助手'
+	String get assistantEntry => '智能助手';
 
 	/// zh: '压测数据（调试）'
 	String get stressTitle => '压测数据（调试）';
@@ -476,9 +515,6 @@ class Translations$assistant$zh {
 
 	/// zh: '编辑'
 	String get diaryEdit => '编辑';
-
-	/// zh: '配置'
-	String get configTooltip => '配置';
 
 	/// zh: '说点什么...'
 	String get inputHint => '说点什么...';
@@ -1285,30 +1321,6 @@ class Translations$diary$zh {
 
 	/// zh: '足迹'
 	String get mapTitle => '足迹';
-
-	/// zh: '数据分析'
-	String get analyseTitle => '数据分析';
-
-	/// zh: '暂无日记，去写一篇吧！'
-	String get analyseEmpty => '暂无日记，去写一篇吧！';
-
-	/// zh: '日记总数'
-	String get analyseTotal => '日记总数';
-
-	/// zh: '本月'
-	String get analyseThisMonth => '本月';
-
-	/// zh: '心情均值'
-	String get analyseMoodAverage => '心情均值';
-
-	/// zh: '连续天数'
-	String get analyseStreak => '连续天数';
-
-	/// zh: '近 6 个月写作量'
-	String get analyseLast6Months => '近 6 个月写作量';
-
-	/// zh: '{month}月'
-	String analyseMonth({required Object month}) => '${month}月';
 
 	/// zh: '添加标签'
 	String get addTag => '添加标签';

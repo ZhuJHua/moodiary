@@ -122,9 +122,11 @@ class MapRoute extends MoodiaryRouteBase {
   String get location => path;
 }
 
-class AnalyseRoute extends MoodiaryRouteBase {
-  static const String path = '/analyse';
-  const AnalyseRoute();
+/// 媒体库。2.8.0 前它只是底栏的一格、连路由都没有；降级进「我的 · 回顾」后才需要
+/// 一条路径。
+class MediaRoute extends MoodiaryRouteBase {
+  static const String path = '/media';
+  const MediaRoute();
   @override
   String get location => path;
 }

@@ -1,18 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary/app/home/diary_home_page.dart' show DiaryHomePage;
+import 'package:moodiary/app/me/me_page.dart' show MePage;
 import 'package:moodiary_assistant/moodiary_assistant.dart'
     show AssistantConversationRoute, AssistantSessionListPage;
 import 'package:moodiary_diary/moodiary_diary.dart'
     show CategoryDrawer, diarySelectionProvider, homeDiaryFilterProvider;
 import 'package:moodiary_editor/moodiary_editor.dart' show openNewDiaryEditor;
 import 'package:moodiary_l10n/moodiary_l10n.dart';
-import 'package:moodiary_media/moodiary_media.dart';
 import 'package:moodiary_router/moodiary_router.dart';
 import 'package:mui/mui.dart';
 
-/// 三个 tab —— 设置不在这儿，入口在分类抽屉底部（胶囊只装得下三个，加上右边那颗
-/// 动作按钮正好一行）。枚举顺序即胶囊里的顺序，也是 `_pages` 的顺序。
-enum _ShellTab { diary, media, assistant }
+/// 三个 tab —— 媒体库不在这儿了，它是「同一批日记的另一个投影」，和地图、知识图谱
+/// 一起收进了「我的 · 回顾」。枚举顺序即胶囊里的顺序，也是 `_pageFor` 的顺序。
+enum _ShellTab { diary, assistant, me }
 
 List<MNavDestination> _navDestinations(BuildContext context) {
   final l10n = context.l10n;
@@ -22,12 +22,12 @@ List<MNavDestination> _navDestinations(BuildContext context) {
       label: l10n.app.homeNavigatorDiary,
     ),
     MNavDestination(
-      icon: const Icon(LucideIcons.image),
-      label: l10n.common.media,
-    ),
-    MNavDestination(
       icon: const Icon(LucideIcons.astroid),
       label: l10n.app.homeNavigatorAssistant,
+    ),
+    MNavDestination(
+      icon: const Icon(LucideIcons.circleUser),
+      label: l10n.app.homeNavigatorMe,
     ),
   ];
 }
@@ -42,15 +42,18 @@ class MobileRootShell extends ConsumerStatefulWidget {
 class _MobileRootShellState extends ConsumerState<MobileRootShell> {
   _ShellTab _tab = .diary;
 
-  /// 分类抽屉挂在**本层**的 Scaffold 上才盖得住底部导航条；首页在 IndexedStack 里，
+  /// 分类抽屉挂在**本层**的 Scaffold 上才盖得住底部导航条；首页在 stack 里，
   /// 它自己那层 Scaffold 的抽屉只能覆盖内容区。首页拿不到本层的 ScaffoldState
   /// （Scaffold.of 会取到内层那个），所以用 key 显式开。
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  late final _pages = [
+  /// 只建一次。三个 widget 实例逐帧复用，壳因为多选态重建时
+  /// `Element.updateChild` 会因为 `identical` 直接短路，三个 tab 都不跟着重建。
+  /// 顺序必须与 [_ShellTab] 一致 —— stack 是按位置寻址的。
+  late final List<Widget> _pages = [
     DiaryHomePage(onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer()),
-    const MediaPage(),
     const AssistantSessionListPage(),
+    const MePage(),
   ];
 
   void _newDiary() {
@@ -61,20 +64,28 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
     openNewDiaryEditor(context, .tiptap, categoryId: categoryId);
   }
 
-  /// 右边那颗按钮跟着 tab 换功能。媒体页没有自己的「创建」——它是逛出来的，所以
-  /// 和日记页共用写日记；只有助手页换成开新对话（那颗 FAB 因此撤掉了）。
+  /// 右边那颗按钮 = 当前 tab 的主动作，三个 tab 各一个：写日记 / 新对话 / 设置。
+  ///
+  /// 它**永远存在** —— 胶囊是 `Expanded`，动作按钮一旦为 null 胶囊就会变宽，
+  /// 选中药丸的位置整体跳一下。「我的」页本来也没有「创建」这回事，那一格正好给设置，
+  /// 于是设置在三个 tab 里有了一个位置固定、一屏可达的入口。
   MNavAction _navAction(BuildContext context) {
     final l10n = context.l10n;
     return switch (_tab) {
+      .diary => MNavAction(
+        icon: const Icon(LucideIcons.pencilLine),
+        tooltip: l10n.app.homePageAddDiaryButton,
+        onPressed: _newDiary,
+      ),
       .assistant => MNavAction(
         icon: const Icon(LucideIcons.messageCirclePlus),
         tooltip: l10n.assistant.newChat,
         onPressed: () => const AssistantConversationRoute().push(context),
       ),
-      .diary || .media => MNavAction(
-        icon: const Icon(LucideIcons.pencilLine),
-        tooltip: l10n.app.homePageAddDiaryButton,
-        onPressed: _newDiary,
+      .me => MNavAction(
+        icon: const Icon(LucideIcons.settings),
+        tooltip: l10n.app.settingsTitle,
+        onPressed: () => const SettingRoute().push(context),
       ),
     };
   }
@@ -94,7 +105,9 @@ class _MobileRootShellState extends ConsumerState<MobileRootShell> {
       // 抽屉只服务日记页：其它 tab 上既不给入口，也不让边缘手势划出来。
       drawer: drawerUsable ? const CategoryDrawer() : null,
       drawerEnableOpenDragGesture: drawerUsable,
-      body: IndexedStack(index: _tab.index, children: _pages),
+      // 懒建：裸 IndexedStack 会把三个 tab 都 build 出来，冷启动时「我的」页就已经去
+      // 扫库了。没进过的那格先占位，切过去才建；建过之后一直留着，State 不丢。
+      body: MLazyIndexedStack(index: _tab.index, children: _pages),
       bottomNavigationBar: MNavBar(
         selectedIndex: _tab.index,
         onDestinationSelected: (i) =>
