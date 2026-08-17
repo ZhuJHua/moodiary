@@ -1,23 +1,19 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:chat_bottom_container/chat_bottom_container.dart';
-// flutter_chat_ui 仍是 legacy material，它的 .fromThemeData 只认 legacy
-// ThemeData；配色由根部的 MaterialUiCompatibilityBridge 映射过来。
-import 'package:flutter/material.dart' as legacy;
 import 'package:flutter/services.dart';
-import 'package:flutter_chat_core/flutter_chat_core.dart' hide DateFormat;
-import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:genui/genui.dart' as genui;
 import 'package:gpt_markdown/gpt_markdown.dart';
+import 'package:moodiary_assistant/src/application/chat_controller.dart';
+import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/application/context_compaction_controller.dart';
-import 'package:moodiary_assistant/src/application/isar_chat_controller.dart';
 import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
 import 'package:moodiary_assistant/src/data/soul_repository.dart';
+import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/tool_permission_card.dart';
 import 'package:moodiary_assistant/src/routes.dart';
@@ -29,7 +25,16 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-enum _ToolPanel { tools }
+/// 「+」菜单里的两项。
+enum _ComposerTool { diary, image }
+
+/// 控制条右侧那两颗按钮（「+」与发送 / 停止）的直径。
+///
+/// 它们撑起整条的高度；左边的思考胶囊保持自己的高度，靠底对齐把底边对齐到同一条线上。
+const double _kComposerControlSize = 40;
+
+/// 面板内壁到控件的留白。与 [_kComposerControlSize] 一起决定同心圆角的收缩量。
+const double _kComposerPadding = 8;
 
 Widget _codeBlock(
   BuildContext context,
@@ -51,14 +56,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   final _inputController = TextEditingController();
   final _inputFocusNode = FocusNode();
   final _chatScroll = ScrollController();
+  final _listKey = GlobalKey<AssistantChatListState>();
 
-  late final IsarChatController _chat;
-
-  final _panelController = ChatBottomPanelContainerController<_ToolPanel>();
+  late final AssistantChatController _chat;
 
   StreamSubscription<AssistantStreamEvent>? _streamSub;
 
-  TextMessage? _streamingMessage;
+  AssistantTurn? _streamingMessage;
 
   /// 思考模式流式状态（每轮生成开始时由 [_resetThinkingState] 重置）。
   DateTime? _reasoningStart;
@@ -102,6 +106,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   /// 「立即压缩」进行中，避免重复触发。
   bool _compacting = false;
 
+  /// 悬浮输入面板的实测高度：列表底部留白与「回到底部」按钮的位置都读它。
+  double _composerHeight = 0;
+
   ChatSession? _session;
 
   bool _disclaimerAccepted = false;
@@ -109,7 +116,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   @override
   void initState() {
     super.initState();
-    _chat = IsarChatController();
+    _chat = AssistantChatController();
     _permissions = ToolPermissionCoordinator(
       catalog: assistantGenUiCatalog,
       onCardCreated: _insertPermissionCard,
@@ -133,12 +140,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     super.didChangeDependencies();
     if (_initialized) return;
     _initialized = true;
+    // 新会话就是一张空列表 —— 不再合成欢迎语。它从前还会作为一条真正的
+    // assistant 轮次进 `_buildHistory` 一起发给模型。
     final id = widget.initialSessionId;
-    if (id != null) {
-      _loadSessionById(id);
-    } else {
-      _chat.setMessages([_welcome()]);
-    }
+    if (id != null) _loadSessionById(id);
   }
 
   @override
@@ -151,9 +156,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _chat.dispose();
     super.dispose();
   }
-
-  TextMessage _welcome() =>
-      _chat.assistantMessage(context.l10n.assistant.welcome);
 
   Future<void> _refreshReady() async {
     final provider = await LlmProviderRepository.get().getActiveProvider();
@@ -233,7 +235,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     });
     // 会话若已压缩，按水位重新合成压缩提示 chip（完整消息仍在库里、照常展示）。
     _syncCompactionNotice();
-    _jumpToBottomSoon();
+    _listKey.currentState?.pinToBottom();
   }
 
   Future<ChatSession?> _ensureSession(String firstUserText) async {
@@ -324,6 +326,17 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _thinkingActive = false;
   }
 
+  /// surface 没了的授权卡要**移出列表**，不能只渲染成空 widget ——
+  /// 零高度的隐形项会一直贡献条目间距（凭空的空隙），还会把
+  /// `maxScrollExtent` 的平均高度外推带偏，而那正是补跳循环在对抗的估计值。
+  void _pruneDeadPermissionCards() {
+    final active = _permissions.surfaces.activeSurfaceIds;
+    _chat.removeWhere(
+      (item) =>
+          item is AssistantPermissionCard && !active.contains(item.surfaceId),
+    );
+  }
+
   Future<bool> _requestToolPermission(AssistantTool tool) async {
     final always =
         MoodiaryKVs.assistantAlwaysAllowedTools.get() ?? const <String>[];
@@ -338,24 +351,32 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   Future<void> _insertPermissionCard(String surfaceId) async {
     if (!mounted) return;
-    final card = _chat.permissionCard(surfaceId);
+    final card = AssistantPermissionCard(surfaceId);
     final streaming = _streamingMessage;
-    final msgs = _chat.messages;
+    final items = _chat.items;
     final placeholderIsLast =
-        streaming != null && msgs.isNotEmpty && msgs.last.id == streaming.id;
+        streaming != null && items.isNotEmpty && items.last.id == streaming.id;
     if (placeholderIsLast && streaming.text.isEmpty) {
-      await _chat.insertMessage(card, index: msgs.length - 1);
+      _chat.insertAt(items.length - 1, card);
     } else {
-      if (streaming != null && streaming.text.isNotEmpty) {
-        final settled = _chat.settled(streaming);
-        await _chat.updateMessage(streaming, settled);
+      AssistantTurn? toPersist;
+      _chat.batch(() {
+        if (streaming != null && streaming.text.isNotEmpty) {
+          final settled = streaming.settled;
+          _chat.replace(settled);
+          _chat.endStreaming();
+          toPersist = settled;
+        }
+        _chat.add(card);
+        final next = AssistantTurn.assistant('', streaming: true);
+        _chat.beginStreaming(next);
+        _streamingMessage = next;
+      });
+      final settled = toPersist;
+      if (settled != null) {
         await _chat.persist(settled);
         _purgeStaleReplies();
       }
-      await _chat.insertMessage(card);
-      final next = _chat.assistantMessage('', streaming: true);
-      await _chat.insertMessage(next);
-      _streamingMessage = next;
       // 已定稿上一段回复，新气泡的思考从零计（避免把上一段的思考挪到新气泡）。
       _resetThinkingState();
     }
@@ -374,17 +395,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     // 用户开启了新一轮对话：放弃上一次失败重生成遗留的旧回复（保留在库里，不删）。
     _staleReplyIds = [];
 
-    if (_panelController.currentPanelType == .other) {
-      _panelController.updatePanelType(.none);
-    }
-
     final base = DateTime.timestamp();
-    final userMsg = _chat.userMessage(
+    final userMsg = AssistantTurn.user(
       text,
-      imageName: imageName,
+      imageName: imageName ?? '',
       createdAt: base,
     );
-    await _chat.insertMessage(userMsg);
+    _chat.add(userMsg);
     _inputController.clear();
     setState(() {
       _sending = true;
@@ -406,27 +423,31 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _streamSub?.cancel();
     _streamSub = null;
     _permissions.reset();
+    _pruneDeadPermissionCards();
     _streamingMessage = null;
 
-    final msgs = _chat.messages;
+    final items = _chat.items;
     var lastUserIdx = -1;
-    for (var i = msgs.length - 1; i >= 0; i--) {
-      final m = msgs[i];
-      if (m is TextMessage && m.authorId == kAssistantUserId) {
+    for (var i = items.length - 1; i >= 0; i--) {
+      final m = items[i];
+      if (m is AssistantTurn && m.fromUser) {
         lastUserIdx = i;
         break;
       }
     }
     if (lastUserIdx == -1) return;
-    final userMsg = msgs[lastUserIdx] as TextMessage;
+    final userMsg = items[lastUserIdx] as AssistantTurn;
 
     setState(() => _sending = true);
     // 旧回复先只从内存移除，落库删除推迟到新回复落库后（_purgeStaleReplies），避免重新生成失败时连旧答案一起丢掉。
-    final trailing = msgs.sublist(lastUserIdx + 1).toList();
-    for (final m in trailing) {
-      await _chat.removeMessage(m);
-      if (m is TextMessage) _staleReplyIds.add(m.id);
-    }
+    final trailing = items.sublist(lastUserIdx + 1).toList();
+    // 一次性删完再发一次通知：逐条删会发 N 次通知、触发 N 轮补跳互相 abort，肉眼是抖。
+    _chat.batch(() {
+      for (final m in trailing) {
+        _chat.remove(m);
+        if (m is AssistantTurn) _staleReplyIds.add(m.id);
+      }
+    });
     if (!mounted || gen != _generation) return;
 
     await _generate(
@@ -440,9 +461,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   Future<void> _generate({
     required int gen,
     required String sessionSeedText,
-    required TextMessage userMessage,
+    required AssistantTurn userMessage,
     required DateTime placeholderAt,
   }) async {
+    // 发送与重新回答都从这里进，所以强制跟随放这一层。
+    // 特别是「重新回答」：它删掉尾部回复会让 RangeMaintainingScrollPhysics 在布局里
+    // 静默 clamp（走 correctPixels，不发通知），位置其实已经在底部而标志位还是旧的。
+    _listKey.currentState?.pinToBottom();
     final l10n = context.l10n;
     final localeTag = Localizations.localeOf(context).toLanguageTag();
     // 稳定前缀（身份/护栏/SOUL/工具目录）逐轮字节一致以命中缓存；易变文本另拼到外发消息。
@@ -462,12 +487,12 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     );
 
     _resetThinkingState();
-    final placeholder = _chat.assistantMessage(
+    final placeholder = AssistantTurn.assistant(
       '',
       streaming: true,
       createdAt: placeholderAt,
     );
-    await _chat.insertMessage(placeholder);
+    _chat.beginStreaming(placeholder);
     _streamingMessage = placeholder;
 
     final history = _buildHistory();
@@ -552,18 +577,15 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         <
           ({String id, AssistantRole role, String content, String? imagePath})
         >[];
-    for (final m in _chat.messages) {
-      if (m is! TextMessage) continue;
-      final imageName = IsarChatController.imageNameOf(m);
-      final hasImage = imageName.isNotEmpty;
+    for (final m in _chat.items) {
+      if (m is! AssistantTurn) continue;
+      final hasImage = m.imageName.isNotEmpty;
       if (m.text.isEmpty && !hasImage) continue;
       raw.add((
         id: m.id,
-        role: m.authorId == kAssistantUserId
-            ? AssistantRole.user
-            : AssistantRole.assistant,
+        role: m.fromUser ? AssistantRole.user : AssistantRole.assistant,
         content: m.text,
-        imagePath: hasImage ? AppFiles.getRealPath('image', imageName) : null,
+        imagePath: hasImage ? AppFiles.getRealPath('image', m.imageName) : null,
       ));
     }
 
@@ -632,12 +654,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (!mounted || _session?.id != session.id) return null;
 
     final ordered = <CompactionMessage>[
-      for (final m in _chat.messages)
-        if (m is TextMessage &&
-            (m.text.isNotEmpty || IsarChatController.imageNameOf(m).isNotEmpty))
+      for (final m in _chat.items)
+        if (m is AssistantTurn && !m.isEmpty)
           (
             id: m.id,
-            fromUser: m.authorId == kAssistantUserId,
+            fromUser: m.fromUser,
             text: m.text.isEmpty ? l10n.assistant.imagePlaceholder : m.text,
           ),
     ];
@@ -676,17 +697,17 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   /// 按当前会话压缩水位，把提示 chip 对齐到边界：移除旧的、在水位消息后插入新的。
   void _syncCompactionNotice() {
-    for (final m in List<Message>.of(_chat.messages)) {
-      if (m is CustomMessage && m.metadata?[kCompactionNoticeKey] == true) {
-        _chat.removeMessage(m);
-      }
-    }
-    final session = _session;
-    final watermark = session?.compactedUpToMessageId;
-    if (session?.compactedSummary == null || watermark == null) return;
-    final idx = _chat.messages.indexWhere((m) => m.id == watermark);
-    if (idx < 0) return;
-    _chat.insertMessage(_chat.compactionNotice(watermark), index: idx + 1);
+    // 整段包进 batch：删旧 chip + 插新 chip 是一次逻辑改动，分两次通知会让
+    // 列表在一轮结束的瞬间抖一下 —— 而那正是用户翻历史的时刻。
+    _chat.batch(() {
+      _chat.removeWhere((m) => m is AssistantCompactionNotice);
+      final session = _session;
+      final watermark = session?.compactedUpToMessageId;
+      if (session?.compactedSummary == null || watermark == null) return;
+      final idx = _chat.indexOfId(watermark);
+      if (idx < 0) return;
+      _chat.insertAt(idx + 1, AssistantCompactionNotice(watermark));
+    });
   }
 
   /// 撤销压缩：清空会话的摘要 / 水位（Isar 消息未动，整段历史恢复逐字发送）。
@@ -720,10 +741,16 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _streamingMessage = null;
     if (cur == null) return;
     if (cur.text.isEmpty) {
-      _chat.removeMessage(cur);
+      _chat.batch(() {
+        _chat.remove(cur);
+        _chat.endStreaming();
+      });
     } else {
-      final settled = _chat.settled(cur);
-      _chat.updateMessage(cur, settled);
+      final settled = cur.settled;
+      _chat.batch(() {
+        _chat.replace(settled);
+        _chat.endStreaming();
+      });
       if (persist) {
         _chat.persist(settled);
         _purgeStaleReplies();
@@ -736,9 +763,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (_staleReplyIds.isEmpty) return;
     final ids = _staleReplyIds;
     _staleReplyIds = [];
-    final repo = ChatRepository.get();
     for (final id in ids) {
-      unawaited(repo.deleteMessage(id));
+      unawaited(_chat.deleteMessage(id));
     }
   }
 
@@ -767,12 +793,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (inputTokens > 0) _lastTurnInputTokens = inputTokens;
     final cur = _streamingMessage;
     if (cur == null || (inputTokens <= 0 && outputTokens <= 0)) return;
-    final next = _chat.applyUsage(
-      cur,
+    final next = cur.copyWith(
       inputTokens: inputTokens,
       outputTokens: outputTokens,
     );
-    _chat.updateMessage(cur, next);
+    _chat.updateStreaming(next);
     _streamingMessage = next;
   }
 
@@ -806,45 +831,22 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   }
 
   /// 把当前思考状态（正文 + 思考正文 / 时长 / 是否进行中）刷进流式消息并更新引用。
-  void _syncReasoning(TextMessage message) {
+  void _syncReasoning(AssistantTurn message) {
     var next = message;
     if (_streamingReasoning.isNotEmpty) {
-      next = _chat.applyReasoning(
-        next,
+      next = next.copyWith(
         reasoning: _streamingReasoning,
         thinkingMillis: _liveThinkingMillis(),
-        active: _thinkingActive,
+        thinkingActive: _thinkingActive,
       );
     }
-    final cur = _streamingMessage;
-    if (cur == null) return;
-    _chat.updateMessage(cur, next);
+    if (_streamingMessage == null) return;
+    _chat.updateStreaming(next);
     _streamingMessage = next;
-  }
-
-  void _jumpToBottomSoon() {
-    for (final d in const [
-      Duration(milliseconds: 16),
-      Duration(milliseconds: 180),
-    ]) {
-      Future.delayed(d, () {
-        if (!mounted || !_chatScroll.hasClients) return;
-        _chatScroll.jumpTo(_chatScroll.position.maxScrollExtent);
-      });
-    }
-  }
-
-  void _toggleToolPanel() {
-    if (_panelController.currentPanelType == .other) {
-      _panelController.updatePanelType(.keyboard);
-    } else {
-      _panelController.updatePanelType(.other, data: .tools);
-    }
   }
 
   Future<void> _pickAndSendDiary() async {
     if (_sending) return;
-    _panelController.updatePanelType(.none);
     _inputFocusNode.unfocus();
     final diary = await const AssistantDiaryPickerRoute().push<Diary>(context);
     if (diary == null || !mounted) return;
@@ -854,7 +856,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   /// 相册选一张图，经 MediaManager 转码/压缩存进 image 目录，挂到输入框待发（可再配文字）。
   Future<void> _pickImage() async {
     if (_sending) return;
-    _panelController.updatePanelType(.none);
     _inputFocusNode.unfocus();
     final files = await IFilePicker.get().pickImages(context, maxAssets: 1);
     if (files.isEmpty || !mounted) return;
@@ -880,89 +881,62 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   /// 点击消息列表时收起键盘与工具面板（焦点从输入框移开）。
   void _dismissComposer() {
-    if (_panelController.currentPanelType == .other) {
-      _panelController.updatePanelType(.none);
-    }
     if (_inputFocusNode.hasFocus) _inputFocusNode.unfocus();
   }
 
   Widget _buildChat() {
-    return Chat(
-      chatController: _chat,
-      currentUserId: kAssistantUserId,
-      resolveUser: (id) async => User(id: id),
-      theme: .fromThemeData(legacy.Theme.of(context)),
-      builders: Builders(
-        textMessageBuilder: _buildTextMessage,
-        customMessageBuilder: _buildCustomMessage,
-        composerBuilder: (_) => const SizedBox.shrink(),
-        // 只为换图标：ScrollToBottom 默认 Icons.keyboard_arrow_down。
-        scrollToBottomBuilder: (context, animation, onPressed) =>
-            ScrollToBottom(
-              animation: animation,
-              onPressed: onPressed,
-              icon: const Icon(LucideIcons.chevronDown, size: 22),
-            ),
-        chatAnimatedListBuilder: (context, itemBuilder) => ChatAnimatedList(
-          itemBuilder: itemBuilder,
-          scrollController: _chatScroll,
-          handleSafeArea: false,
-          topPadding: 8,
-          bottomPadding: 8,
-          physics: const AlwaysScrollableScrollPhysics(),
-        ),
-      ),
+    return AssistantChatList(
+      key: _listKey,
+      controller: _chat,
+      scrollController: _chatScroll,
+      itemBuilder: _buildItem,
+      scrollToBottomBuilder: _buildScrollToBottom,
+      onPointerDown: _dismissComposer,
+      bottomPadding: _composerHeight + 8,
     );
   }
 
-  Widget _buildTextMessage(
-    BuildContext context,
-    TextMessage message,
-    int index, {
-    required bool isSentByMe,
-    MessageGroupStatus? groupStatus,
-  }) {
-    final isLast =
-        _chat.messages.isNotEmpty && _chat.messages.last.id == message.id;
-    if (isSentByMe) {
+  Widget _buildItem(BuildContext context, AssistantChatItem item, int index) {
+    return switch (item) {
+      AssistantTurn() => _buildTurn(item),
+      AssistantCompactionNotice() => _CompactionNoticeChip(
+        summary: _session?.compactedSummary ?? '',
+        onRestore: _restoreFullHistory,
+      ),
+      AssistantPermissionCard(:final surfaceId) => _buildPermissionCard(
+        context,
+        surfaceId,
+      ),
+    };
+  }
+
+  Widget _buildTurn(AssistantTurn turn) {
+    final items = _chat.items;
+    final isLast = items.isNotEmpty && items.last.id == turn.id;
+    if (turn.fromUser) {
       // 用户消息落在末尾（首个 token 前被停止 / 本轮未产出回复）时也给出重试入口。
       return _UserBubble(
-        text: message.text,
-        imageName: IsarChatController.imageNameOf(message),
+        text: turn.text,
+        imageName: turn.imageName,
         onRetry: (!_sending && isLast) ? _regenerate : null,
       );
     }
-    final hasUserTurn = _chat.messages.any(
-      (m) => m is TextMessage && m.authorId == kAssistantUserId,
-    );
+    final hasUserTurn = items.any((m) => m is AssistantTurn && m.fromUser);
     return _AssistantBubble(
-      text: message.text,
-      reasoning: IsarChatController.reasoningOf(message),
-      thinkingMillis: IsarChatController.thinkingMillisOf(message),
-      thinkingActive: IsarChatController.isThinking(message),
-      inputTokens: IsarChatController.inputTokensOf(message),
-      outputTokens: IsarChatController.outputTokensOf(message),
-      streaming: IsarChatController.isStreaming(message),
+      text: turn.text,
+      reasoning: turn.reasoning,
+      thinkingMillis: turn.thinkingMillis,
+      thinkingActive: turn.thinkingActive,
+      inputTokens: turn.inputTokens,
+      outputTokens: turn.outputTokens,
+      streaming: turn.streaming,
       onRegenerate: (!_sending && isLast && hasUserTurn) ? _regenerate : null,
     );
   }
 
-  Widget _buildCustomMessage(
-    BuildContext context,
-    CustomMessage message,
-    int index, {
-    required bool isSentByMe,
-    MessageGroupStatus? groupStatus,
-  }) {
-    if (message.metadata?[kCompactionNoticeKey] == true) {
-      return _CompactionNoticeChip(
-        summary: _session?.compactedSummary ?? '',
-        onRestore: _restoreFullHistory,
-      );
-    }
-    final surfaceId = message.metadata?[kPermissionSurfaceKey] as String?;
-    if (surfaceId == null ||
-        !_permissions.surfaces.activeSurfaceIds.contains(surfaceId)) {
+  Widget _buildPermissionCard(BuildContext context, String surfaceId) {
+    // 兜底：surface 已经被 reset 掉但卡片还没剪掉的那一帧（build 里不能改列表）。
+    if (!_permissions.surfaces.activeSurfaceIds.contains(surfaceId)) {
       return const SizedBox.shrink();
     }
     final maxWidth = MediaQuery.sizeOf(context).width * 0.82;
@@ -975,6 +949,36 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     );
   }
 
+  /// 回到底部：悬在输入区正上方、居中。
+  Widget _buildScrollToBottom(
+    BuildContext context,
+    bool visible,
+    VoidCallback onTap,
+  ) {
+    return Positioned(
+      left: 0,
+      right: 0,
+      // 悬在输入面板正上方。
+      bottom: _composerHeight + 8,
+      child: Center(
+        child: AnimatedSlide(
+          offset: visible ? .zero : const Offset(0, 0.6),
+          duration: Durations.short4,
+          curve: Easing.standard,
+          child: AnimatedOpacity(
+            opacity: visible ? 1 : 0,
+            duration: Durations.short4,
+            // 隐藏时不能还挡着最后一条气泡的点击。
+            child: IgnorePointer(
+              ignoring: !visible,
+              child: _ScrollToBottomButton(onTap: onTap),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildConversation(BuildContext context) {
     final composer = _AssistantComposer(
       controller: _inputController,
@@ -982,9 +986,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       sending: _sending,
       onSend: () => _submit(_inputController.text),
       onStop: _stop,
-      onTool: _toggleToolPanel,
-      toolIcon: LucideIcons.plus,
-      toolTooltip: context.l10n.assistant.tool,
+      usedTokens: _lastTurnInputTokens,
+      contextLimit: _contextLimit,
+      onSendDiary: _pickAndSendDiary,
+      onSendImage: _canSendImage ? _pickImage : null,
       thinking: _thinking,
       showThinking: _canThink,
       onToggleThinking: _toggleThinking,
@@ -995,56 +1000,27 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     return Column(
       children: [
         if (!_ready) _NotConfiguredBanner(onTap: _openSettings),
+        // 消息列表铺满，输入面板浮在它上面 —— 内容从面板底下穿过去。
         Expanded(
-          child: Listener(
-            behavior: .translucent,
-            onPointerDown: (_) => _dismissComposer(),
-            child: _buildChat(),
+          child: Stack(
+            children: [
+              Positioned.fill(child: _buildChat()),
+              Positioned(
+                // 缺了 left/right，Positioned 在横向就不受约束，Column 会缩成内容宽。
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _SizeReporter(
+                  onHeight: (height) {
+                    if (mounted) setState(() => _composerHeight = height);
+                  },
+                  child: composer,
+                ),
+              ),
+            ],
           ),
-        ),
-        composer,
-        ChatBottomPanelContainer<_ToolPanel>(
-          controller: _panelController,
-          inputFocusNode: _inputFocusNode,
-          panelBgColor: context.theme.colors.surfaceContainer,
-          otherPanelWidget: (_) => _buildToolPanel(context),
         ),
       ],
-    );
-  }
-
-  Widget _buildToolPanel(BuildContext context) {
-    final l10n = context.l10n;
-    final kb = _panelController.keyboardHeight;
-    final height = kb > 0 ? kb : 300.0;
-    return SizedBox(
-      height: height,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const .fromLTRB(20, 18, 20, 8),
-          child: Align(
-            alignment: .topLeft,
-            child: Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                _ToolPanelItem(
-                  icon: LucideIcons.bookOpen,
-                  label: l10n.assistant.toolSendDiary,
-                  onTap: _pickAndSendDiary,
-                ),
-                if (_canSendImage)
-                  _ToolPanelItem(
-                    icon: LucideIcons.image,
-                    label: l10n.assistant.toolSendImage,
-                    onTap: _pickImage,
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -1057,15 +1033,12 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         : _buildConversation(context);
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      // 键盘由 Scaffold 抬：浮起来的输入面板贴在 body 底边，body 一缩它就跟着上来。
+      // （原先是 false + ChatBottomPanelContainer 自己垫键盘高度，那套已经拆掉。）
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(_session?.title ?? l10n.assistant.newChat),
         actions: [
-          if (_lastTurnInputTokens > 0 && _contextLimit > 0)
-            _ContextUsagePill(
-              usedTokens: _lastTurnInputTokens,
-              contextLimit: _contextLimit,
-            ),
           MMenuButton<String>(
             tooltip: l10n.common.more,
             entries: [
@@ -1091,12 +1064,17 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   }
 }
 
-/// AppBar 上下文占用指示：输入 token 占模型窗口百分比，接近/达到压缩阈值时变黄/变红。
-class _ContextUsagePill extends StatelessWidget {
+/// 上下文占用指示：一枚小圆环，挂在「+」左边。
+///
+/// 输入 token 占模型窗口的比例，接近 / 达到压缩阈值时转黄、转红。具体数字进 tooltip ——
+/// 输入区寸土寸金，常驻一个百分比数字太吵。
+class _ContextUsageRing extends StatelessWidget {
   final int usedTokens;
   final int contextLimit;
 
-  const _ContextUsagePill({
+  static const double _diameter = 18;
+
+  const _ContextUsageRing({
     required this.usedTokens,
     required this.contextLimit,
   });
@@ -1118,18 +1096,19 @@ class _ContextUsagePill extends StatelessWidget {
       message:
           '${context.l10n.assistant.contextUsageLabel} $percent% · '
           '$usedTokens / $contextLimit',
-      child: Center(
-        child: Container(
-          margin: const .only(right: 4),
-          padding: const .symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: .circular(12),
-          ),
-          child: Text(
-            '$percent%',
-            style: context.theme.typography.labelSmall.emphasized.onSurface
-                .copyWith(color: color),
+      // 控制条是底对齐的（迁就矮一截的思考胶囊），圆环只有 18 —— 装进一个和右边
+      // 按钮等高的盒子里居中，视觉上才和它们在同一条水平线上。
+      child: SizedBox(
+        height: _kComposerControlSize,
+        child: Center(
+          child: SizedBox.square(
+            dimension: _diameter,
+            child: CircularProgressIndicator(
+              value: ratio.clamp(0.0, 1.0),
+              strokeWidth: 2.5,
+              color: color,
+              backgroundColor: scheme.onSurfaceVariant.withValues(alpha: 0.18),
+            ),
           ),
         ),
       ),
@@ -1150,7 +1129,7 @@ class _CompactionNoticeChip extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const .symmetric(vertical: 8),
-        child: InkWell(
+        child: MInkWell(
           borderRadius: .circular(20),
           onTap: () => _showSheet(context),
           child: Container(
@@ -1267,7 +1246,7 @@ class _NotConfiguredBanner extends StatelessWidget {
     final scheme = context.theme.colors;
     return Material(
       color: scheme.errorContainer,
-      child: InkWell(
+      child: MInkWell(
         onTap: onTap,
         child: Padding(
           padding: const .all(12),
@@ -1295,9 +1274,15 @@ class _AssistantComposer extends StatelessWidget {
   final bool sending;
   final VoidCallback onSend;
   final VoidCallback onStop;
-  final VoidCallback onTool;
-  final IconData toolIcon;
-  final String toolTooltip;
+
+  /// 上下文占用。两者都 > 0 才显示那枚圆环（还没拿到用量数据时不占位）。
+  final int usedTokens;
+  final int contextLimit;
+
+  final VoidCallback onSendDiary;
+
+  /// null 表示当前模型不支持图片附件，菜单里就不出这一项。
+  final VoidCallback? onSendImage;
   final bool thinking;
   final bool showThinking;
   final VoidCallback onToggleThinking;
@@ -1310,9 +1295,10 @@ class _AssistantComposer extends StatelessWidget {
     required this.sending,
     required this.onSend,
     required this.onStop,
-    required this.onTool,
-    required this.toolIcon,
-    required this.toolTooltip,
+    required this.usedTokens,
+    required this.contextLimit,
+    required this.onSendDiary,
+    required this.onSendImage,
     required this.thinking,
     required this.showThinking,
     required this.onToggleThinking,
@@ -1320,110 +1306,236 @@ class _AssistantComposer extends StatelessWidget {
     required this.onRemoveImage,
   });
 
+  /// 输入区的最大行数随系统字号收缩。
+  ///
+  /// App 内的字号设置已经整个删掉、只跟系统走，所以 2.0× 是可达的 —— 那时 6 行
+  /// 正文加上图片预览能占到 500px，而面板现在是浮在列表上的，盖住的是对话本身。
+  int _maxLines(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+    if (scale >= 1.6) return 3;
+    if (scale >= 1.3) return 4;
+    return 6;
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
     final l10n = context.l10n;
-    return Material(
-      color: scheme.surfaceContainer,
-      child: SafeArea(
-        top: false,
-        bottom: false,
-        child: Padding(
-          padding: const .fromLTRB(12, 6, 12, 8),
-          child: Container(
-            decoration: BoxDecoration(
+    const radius = MuiRadius.xl;
+    // 底部安全区现在归自己让。用 `paddingOf` 而不是 `viewPaddingOf`：
+    // Scaffold 开了 resizeToAvoidBottomInset，键盘弹起时 padding.bottom 会归零
+    // （那段已经被 viewInsets 吃掉、body 整体抬了上来），正好不该再让第二次。
+    return SafeArea(
+      top: false,
+      bottom: false,
+      child: Padding(
+        padding: .fromLTRB(12, 0, 12, 8 + MediaQuery.paddingOf(context).bottom),
+        // 面板得自己吃掉点击：输入框与按钮行之间那几 px 缝隙一旦漏下去就打在
+        // 列表上，正打字时按到就收键盘。跟 mui 的底栏一样显式声明，不靠
+        // Material 的 absorbHitTest 顺带兜住。
+        child: GestureDetector(
+          behavior: .opaque,
+          child: DecoratedBox(
+            // 底色 / 发丝边 / 投影一个 ShapeDecoration 全包了，不需要再叠一层
+            // Material —— 面板内部的按钮各自带 Material，水波不依赖这里。
+            // 不透明元素可以直接让 ShapeDecoration 画投影；玻璃面那边要自绘挖空，
+            // 是因为投影会被 BackdropFilter 当背景采走。
+            decoration: ShapeDecoration(
               color: scheme.surfaceContainerHigh,
-              borderRadius: .circular(24),
+              shape: RoundedRectangleBorder(
+                borderRadius: radius,
+                side: BorderSide(
+                  color: scheme.outlineVariant,
+                  // 一个物理像素，与玻璃面同一条规矩：写死 0.5 在 3x 屏上是 1.5 个
+                  // 物理像素，粗得能看出来。
+                  width: 1 / MediaQuery.devicePixelRatioOf(context),
+                ),
+              ),
+              shadows: MGlassSurface.defaultShadows(scheme),
             ),
-            padding: const .fromLTRB(8, 8, 8, 8),
-            child: Column(
-              mainAxisSize: .min,
-              crossAxisAlignment: .stretch,
-              children: [
-                if (pendingImageName != null)
-                  _ComposerImagePreview(
-                    imageName: pendingImageName!,
-                    onRemove: onRemoveImage,
-                  ),
-                // 文字输入区：独占上方，向上增高。
-                Padding(
-                  padding: const .fromLTRB(8, 2, 8, 6),
-                  child: TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    enabled: !sending,
-                    minLines: 1,
-                    maxLines: 6,
-                    textInputAction: .send,
-                    decoration: InputDecoration(
+            child: Padding(
+              padding: const .all(_kComposerPadding),
+              child: Column(
+                mainAxisSize: .min,
+                crossAxisAlignment: .stretch,
+                children: [
+                  if (pendingImageName != null)
+                    _ComposerImagePreview(
+                      imageName: pendingImageName!,
+                      onRemove: onRemoveImage,
+                    ),
+                  // 文字输入区：独占上方，向上增高。无背景 —— 面板本身就是容器了。
+                  Padding(
+                    padding: const .fromLTRB(8, 2, 8, 6),
+                    child: MField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      enabled: !sending,
+                      maxLines: _maxLines(context),
+                      variant: .plain,
+                      showClear: false,
+                      textInputAction: .send,
                       hintText: l10n.assistant.inputHint,
-                      border: .none,
-                      isCollapsed: true,
+                      onSubmitted: (_) => onSend(),
                     ),
-                    onSubmitted: (_) => onSend(),
                   ),
-                ),
-                // 底部控制条：左「深度思考」（模型支持推理才显示），右「+」与发送 / 停止一组。
-                Row(
-                  children: [
-                    if (showThinking)
-                      _ThinkingToggle(
-                        enabled: thinking,
-                        onTap: onToggleThinking,
-                      ),
-                    const Spacer(),
-                    IconButton(
-                      tooltip: toolTooltip,
-                      onPressed: sending ? null : onTool,
-                      icon: Icon(toolIcon),
-                      color: scheme.onSurfaceVariant,
-                      visualDensity: .compact,
-                      constraints: const BoxConstraints(
-                        minWidth: 38,
-                        minHeight: 38,
-                      ),
-                      padding: .zero,
-                    ),
-                    const SizedBox(width: 4),
-                    ValueListenableBuilder<TextEditingValue>(
-                      valueListenable: controller,
-                      builder: (context, value, _) {
-                        if (sending) {
-                          return IconButton.filled(
-                            tooltip: l10n.assistant.stop,
-                            onPressed: onStop,
-                            icon: const Icon(LucideIcons.square),
-                            visualDensity: .compact,
-                            constraints: const BoxConstraints(
-                              minWidth: 40,
-                              minHeight: 40,
-                            ),
-                            padding: .zero,
-                          );
-                        }
-                        final canSend =
-                            value.text.trim().isNotEmpty ||
-                            pendingImageName != null;
-                        return IconButton.filled(
-                          onPressed: canSend ? onSend : null,
-                          icon: const Icon(LucideIcons.arrowUp),
-                          visualDensity: .compact,
-                          constraints: const BoxConstraints(
-                            minWidth: 40,
-                            minHeight: 40,
+                  // 底部控制条：左「深度思考」（模型支持推理才显示），右「+」与发送 / 停止一组。
+                  //
+                  // 底对齐而不是居中：思考胶囊比右边那两颗按钮矮，居中会让它多浮起来
+                  // 半个高度差，底边距就不再等于左边距（都该是面板的 8），看着脱离
+                  // 面板的角。底对齐之后四个角一致，而胶囊保持自己的高度。
+                  Row(
+                    crossAxisAlignment: .end,
+                    children: [
+                      if (showThinking)
+                        _ThinkingToggle(
+                          enabled: thinking,
+                          onTap: onToggleThinking,
+                        ),
+                      const Spacer(),
+                      if (usedTokens > 0 && contextLimit > 0) ...[
+                        _ContextUsageRing(
+                          usedTokens: usedTokens,
+                          contextLimit: contextLimit,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      // 锚点贴着屏幕底，MMenu 会自己算出 preferAbove 向上弹。
+                      MMenuButton<_ComposerTool>(
+                        tooltip: l10n.assistant.tool,
+                        entries: [
+                          MMenuEntry(
+                            value: .diary,
+                            label: l10n.assistant.toolSendDiary,
+                            icon: LucideIcons.bookOpen,
+                            enabled: !sending,
                           ),
-                          padding: .zero,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
+                          if (onSendImage != null)
+                            MMenuEntry(
+                              value: .image,
+                              label: l10n.assistant.toolSendImage,
+                              icon: LucideIcons.image,
+                              enabled: !sending,
+                            ),
+                        ],
+                        onSelected: (tool) => switch (tool) {
+                          _ComposerTool.diary => onSendDiary(),
+                          _ComposerTool.image => onSendImage?.call(),
+                        },
+                        child: SizedBox.square(
+                          dimension: _kComposerControlSize,
+                          child: Icon(
+                            LucideIcons.plus,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: controller,
+                        builder: (context, value, _) {
+                          if (sending) {
+                            return MCircleButton(
+                              tooltip: l10n.assistant.stop,
+                              onPressed: onStop,
+                              size: _kComposerControlSize,
+                              icon: const Icon(LucideIcons.square),
+                            );
+                          }
+                          final canSend =
+                              value.text.trim().isNotEmpty ||
+                              pendingImageName != null;
+                          return MCircleButton(
+                            tooltip: l10n.assistant.send,
+                            onPressed: canSend ? onSend : null,
+                            size: _kComposerControlSize,
+                            icon: const Icon(LucideIcons.arrowUp),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 把 [child] 的高度报给外面。用来让消息列表给悬浮输入面板让出底部空间。
+///
+/// 走 [SizeChangedLayoutNotifier] 而不是「在 initState / didUpdateWidget 里各测一次」：
+/// 后者要把所有会改高度的原因**列全**才对，而输入框长出一行是重排不是重建，
+/// 系统字号和语言变化也不经过 didUpdateWidget —— 漏一个就是最后一条气泡永久压在
+/// 面板底下，且没有任何报错。notifier 不管原因，只管「重排了」。
+class _SizeReporter extends StatefulWidget {
+  final Widget child;
+  final ValueChanged<double> onHeight;
+
+  const _SizeReporter({required this.child, required this.onHeight});
+
+  @override
+  State<_SizeReporter> createState() => _SizeReporterState();
+}
+
+class _SizeReporterState extends State<_SizeReporter> {
+  final _key = GlobalKey();
+  double _last = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    // notifier 不为首次布局发通知，所以初值要自己测一次。
+    _schedule();
+  }
+
+  void _schedule() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final box = _key.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) return;
+      final height = box.size.height;
+      // 阈值兼作循环闸门：报高度会让外面 setState，别让它抖回来。
+      if ((height - _last).abs() < 0.5) return;
+      _last = height;
+      widget.onHeight(height);
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // NotificationListener 必须在 notifier **之上** —— 通知是往上冒的。
+    return NotificationListener<SizeChangedLayoutNotification>(
+      onNotification: (_) {
+        _schedule();
+        return true;
+      },
+      child: SizeChangedLayoutNotifier(
+        child: KeyedSubtree(key: _key, child: widget.child),
+      ),
+    );
+  }
+}
+
+/// 回到底部。浮在输入面板上方的小圆片。
+class _ScrollToBottomButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ScrollToBottomButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return MCircleButton(
+      tooltip: context.l10n.assistant.scrollToBottom,
+      onPressed: onTap,
+      tone: .plain,
+      size: 36,
+      elevated: true,
+      icon: const Icon(LucideIcons.chevronDown),
     );
   }
 }
@@ -1439,11 +1551,17 @@ class _ThinkingToggle extends StatelessWidget {
     final scheme = context.theme.colors;
     final l10n = context.l10n;
     final fg = enabled ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
-    return Material(
-      color: enabled ? scheme.secondaryContainer : scheme.surfaceContainerHigh,
-      shape: const StadiumBorder(),
-      clipBehavior: .antiAlias,
-      child: InkWell(
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        // 关闭态**不能**用 surfaceContainerHigh —— 那正是面板自己的底色，
+        // 胶囊会整个消失，只剩图标和文字飘着。高一档才看得出这是个容器。
+        color: enabled
+            ? scheme.secondaryContainer
+            : scheme.surfaceContainerHighest,
+        shape: const StadiumBorder(),
+      ),
+      child: MInkWell(
+        shape: const StadiumBorder(),
         onTap: onTap,
         child: Padding(
           padding: const .symmetric(horizontal: 12, vertical: 6),
@@ -1469,53 +1587,6 @@ class _ThinkingToggle extends StatelessWidget {
   }
 }
 
-class _ToolPanelItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _ToolPanelItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return SizedBox(
-      width: 64,
-      child: Column(
-        mainAxisSize: .min,
-        children: [
-          Material(
-            color: scheme.surfaceContainerHighest,
-            borderRadius: .circular(18),
-            clipBehavior: .antiAlias,
-            child: InkWell(
-              onTap: onTap,
-              child: SizedBox(
-                width: 64,
-                height: 64,
-                child: Icon(icon, color: scheme.primary, size: 28),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: .ellipsis,
-            textAlign: .center,
-            style: context.theme.typography.labelSmall.onSurfaceVariant,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 输入框上方的待发图片预览（缩略图 + 右上角移除）。
 class _ComposerImagePreview extends StatelessWidget {
   final String imageName;
   final VoidCallback onRemove;
@@ -1536,7 +1607,12 @@ class _ComposerImagePreview extends StatelessWidget {
           clipBehavior: .none,
           children: [
             ClipRRect(
-              borderRadius: .circular(12),
+              // 同心圆角：面板内壁是 xl(24)，缩略图离内壁 8（面板 padding）+ 8
+              // （这层自己的 padding）= 16，所以取 24 − 16 = 8。
+              borderRadius: MuiRadius.inside(
+                MuiRadius.xl,
+                _kComposerPadding * 2,
+              ),
               child: Image.file(
                 File(AppFiles.getRealPath('image', imageName)),
                 width: 72,
@@ -1833,8 +1909,13 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
     return (secs < 0.1 ? 0.1 : secs).toStringAsFixed(1);
   }
 
-  @override
-  Widget build(BuildContext context) {
+  /// 整块。[measuring] 为真时用于离屏量高度：去掉 [SelectionArea]（它不占尺寸，
+  /// 却要一个 Overlay 才立得起来）。
+  Widget _block(
+    BuildContext context, {
+    required bool expanded,
+    bool measuring = false,
+  }) {
     final scheme = context.theme.colors;
     final l10n = context.l10n;
     final hasReasoning = widget.reasoning.isNotEmpty;
@@ -1842,9 +1923,9 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
         ? l10n.assistant.thinking
         : l10n.assistant.thoughtFor(duration: _durationText());
 
-    final header = InkWell(
+    final header = MInkWell(
       borderRadius: .circular(12),
-      onTap: hasReasoning ? () => setState(() => _expanded = !_expanded) : null,
+      onTap: hasReasoning && !measuring ? _toggle : null,
       child: Padding(
         padding: const .symmetric(horizontal: 10, vertical: 7),
         child: Row(
@@ -1873,7 +1954,7 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
             if (hasReasoning) ...[
               const SizedBox(width: 2),
               Icon(
-                _expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
+                expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
                 size: 18,
                 color: scheme.onSurfaceVariant,
               ),
@@ -1883,34 +1964,128 @@ class _ThinkingBlockState extends State<_ThinkingBlock> {
       ),
     );
 
+    Widget body = Padding(
+      padding: const .fromLTRB(12, 0, 12, 10),
+      child: GptMarkdown(
+        widget.reasoning,
+        style: context.theme.typography.bodySmall.onSurfaceVariant,
+        codeBuilder: _codeBlock,
+      ),
+    );
+    if (!measuring) body = SelectionArea(child: body);
+
     return Container(
       margin: const .only(bottom: 6),
       constraints: BoxConstraints(
         maxWidth: MediaQuery.sizeOf(context).width * 0.82,
       ),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh,
+        color: context.theme.colors.surfaceContainerHigh,
         borderRadius: .circular(12),
       ),
       child: Column(
         crossAxisAlignment: .start,
         mainAxisSize: .min,
-        children: [
-          header,
-          if (_expanded && hasReasoning)
-            Padding(
-              padding: const .fromLTRB(12, 0, 12, 10),
-              child: SelectionArea(
-                child: GptMarkdown(
-                  widget.reasoning,
-                  style: context.theme.typography.bodySmall.onSurfaceVariant,
-                  codeBuilder: _codeBlock,
-                ),
-              ),
-            ),
-        ],
+        children: [header, if (expanded && hasReasoning) body],
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) => _block(context, expanded: _expanded);
+
+  /// 展开 / 收起，并把视口补偿回去，让它**向下**展开。
+  ///
+  /// 思考块落在中心线**上方**那一组，而那组的条目是从中心线往上累加的 ——
+  /// 某条长高时它的下沿不动、上沿往上顶，看起来就是向上展开。
+  ///
+  /// 补偿量必须在重建**之前**拿到，否则只能「先展开一帧、再 post-frame 量完补回来」，
+  /// 中间那一帧就是肉眼看到的闪。所以离屏把两个状态各量一次取差值，再让
+  /// `correctPixels` 与 `setState` 落在同一帧。
+  ///
+  /// post-frame 还会再校一次残差：量准了残差为零、什么都不会发生；量歪了最多退化成
+  /// 一次纠正，而不会把列表甩到内容之外。
+  void _toggle() {
+    final expanding = !_expanded;
+    final position = Scrollable.maybeOf(context)?.position;
+    final before = _topOf();
+    final delta = position == null ? null : _measureDelta(context);
+
+    setState(() => _expanded = expanding);
+
+    if (position == null || delta == null || delta <= 0.5) return;
+    // 补偿会把位置带离底部；`correctPixels` 是静默的，不说一声的话列表下一条
+    // metrics 通知就把人拽回去。
+    AssistantChatList.maybeOf(context)?.releaseFollow();
+
+    // 夹住上界。收起时正向那一组没动，所以**当前的 max 就是收起后的 max**，
+    // 夹得准。这一夹是为了让「从底部展开、再收起」精确落回底部 ——
+    // 差哪怕几像素，跟随状态就会被判回 true，随后那条 metrics 通知补跳一次，
+    // 而那一跳在本帧画完之后才生效，就是肉眼看到的闪。
+    //
+    // 展开方向不夹下界：负向那组会多出 delta，新的 min 比当前更负。
+    final raw = position.pixels + (expanding ? -delta : delta);
+    final lower = expanding
+        ? position.minScrollExtent - delta
+        : position.minScrollExtent;
+    position.correctPixels(raw.clamp(lower, position.maxScrollExtent));
+    if (before != null) _settleResidual(position, before);
+  }
+
+  /// 兜底：布局落定后看看自己的顶边有没有真的停在原处，差多少补多少；
+  /// 最后按落定的位置重新判断跟随状态。
+  void _settleResidual(ScrollPosition position, double before) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final now = _topOf();
+      if (now != null) {
+        final residual = now - before;
+        if (residual.abs() >= 1) {
+          position.jumpTo(
+            (position.pixels + residual).clamp(
+              position.minScrollExtent,
+              position.maxScrollExtent,
+            ),
+          );
+        }
+      }
+      // 位置是静默改的，列表自己看不见 —— 不同步一次的话，收起后明明已经回到
+      // 底部，「回到底部」按钮还会一直挂着。
+      AssistantChatList.maybeOf(context)?.syncFollowFromPosition();
+    });
+  }
+
+  double? _topOf() {
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero).dy;
+  }
+
+  /// 离屏量「展开态高度 − 收起态高度」。
+  ///
+  /// **必须量整块、且给足宽度**：块本身是 `Column(mainAxisSize: .min)`，收起时它的
+  /// 宽度就是那行窄标题。拿当时的宽度去量正文，markdown 会在一个远比实际窄的宽度上
+  /// 换行，量出来的高度大得离谱 —— 补偿跟着偏，长内容甚至会把列表甩到内容之外。
+  double? _measureDelta(BuildContext context) {
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return null;
+    // 用这块在真实树里**拿到的那份约束**，不要拿屏幕宽度去猜：列表条目外面是
+    // `Align`（松约束），块自己的 maxWidth 才会生效；换成紧约束时那个 maxWidth 会被
+    // `enforce` 夹掉、完全失效。两边的约束不一致，量出来就是另一个换行结果。
+    final view = Size(box.constraints.maxWidth, double.infinity);
+    // 只补 `InheritedLocaleData`，不能补 `TranslationProvider` —— 后者的构造器把 key
+    // 设成了 slang 那个按 base locale 缓存的**进程级单例** GlobalKey，再建一份就会和
+    // App 根部那份撞成「同一个 GlobalKey 挂了两处」，整棵子树报错变灰。
+    Widget wrap(Widget child) => InheritedLocaleData<AppLocale, Translations>(
+      translations: TranslationProvider.of(context).translations,
+      child: child,
+    );
+    double measure(bool expanded) => getWidgetSizeOffScreen(
+      context: context,
+      viewSize: view,
+      widget: wrap(_block(context, expanded: expanded, measuring: true)),
+    ).height;
+    return measure(true) - measure(false);
   }
 }
 
@@ -1928,7 +2103,7 @@ class _BubbleActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return InkWell(
+    return MInkWell(
       borderRadius: .circular(8),
       onTap: onTap,
       child: Padding(

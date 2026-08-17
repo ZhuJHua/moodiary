@@ -480,11 +480,14 @@ class Translations$assistant$zh {
 	/// zh: '配置'
 	String get configTooltip => '配置';
 
-	/// zh: '你好，我是 Moodiary 助手，有什么可以帮你的吗？'
-	String get welcome => '你好，我是 Moodiary 助手，有什么可以帮你的吗？';
-
 	/// zh: '说点什么...'
 	String get inputHint => '说点什么...';
+
+	/// zh: '回到底部'
+	String get scrollToBottom => '回到底部';
+
+	/// zh: '发送'
+	String get send => '发送';
 
 	/// zh: '尚未配置可用的模型供应商，点击前往配置。'
 	String get notConfiguredBanner => '尚未配置可用的模型供应商，点击前往配置。';

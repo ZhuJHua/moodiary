@@ -201,8 +201,9 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get settingFunctionAIAssistant => 'AI Assistant';
 	@override String get diaryEdit => 'Edit';
 	@override String get configTooltip => 'Settings';
-	@override String get welcome => 'Hi, I\'m the Moodiary assistant. How can I help you?';
 	@override String get inputHint => 'Say something...';
+	@override String get scrollToBottom => 'Scroll to bottom';
+	@override String get send => 'Send';
 	@override String get notConfiguredBanner => 'No model provider configured yet. Tap to set up.';
 	@override String get needProvider => 'Please add and select an available provider in Model Providers first.';
 	@override String get needApiKey => 'Please set the API Key in Model Providers first.';

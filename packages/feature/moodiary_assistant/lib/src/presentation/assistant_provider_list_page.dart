@@ -140,7 +140,7 @@ class _ProviderCard extends StatelessWidget {
             : scheme.surfaceContainerLow,
         borderRadius: AppBorderRadius.mediumBorderRadius,
         clipBehavior: .antiAlias,
-        child: InkWell(
+        child: MInkWell(
           onTap: onTap,
           child: Container(
             decoration: BoxDecoration(

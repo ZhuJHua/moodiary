@@ -3,8 +3,6 @@ allprojects {
         google()
         mavenCentral()
         gradlePluginPortal()
-        // chat_bottom_container 的原生键盘高度库经 JitPack 分发
-        maven { url = uri("https://jitpack.io") }
     }
 }
 

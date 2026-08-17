@@ -219,8 +219,6 @@ const Map<String, String> _legacyMaterialAllowlist = {
       'wechat_assets_picker/camera_picker 的 themeData 只吃 legacy ThemeData',
   'mobile/lib/app/picker/moodiary_picker_delegate.dart': '同上，picker 的委托',
   'mobile/lib/app/picker/moodiary_camera_picker_state.dart': '同上，相机 picker',
-  'packages/feature/moodiary_assistant/lib/src/presentation/assistant_page.dart':
-      'flutter_chat_ui 的 .fromThemeData 只吃 legacy ThemeData',
 };
 
 final RegExp _legacyMaterialRe = RegExp(

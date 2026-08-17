@@ -557,7 +557,7 @@ class _ModelTile extends StatelessWidget {
         color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
         borderRadius: AppBorderRadius.mediumBorderRadius,
         clipBehavior: .antiAlias,
-        child: InkWell(
+        child: MInkWell(
           onTap: onTap,
           child: Stack(
             children: [
