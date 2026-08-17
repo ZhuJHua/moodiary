@@ -25,6 +25,9 @@ const double _kSwipeVelocity = 180;
 /// 与 `MHeatmap` / `MNavBar` 同一个理由：网格是图表不是正文。下半屏的日记列表不受此限。
 const double _kCellMaxTextScale = 1.15;
 
+/// 格子顶部那一行的定高。取 18 = 今天那颗药丸的直径，于是有没有药丸都不改变版式。
+const double _kHeaderHeight = 18;
+
 /// 一个月的网格几何：前面空几格、这个月有几天。
 ///
 /// 两处都别自己算：
@@ -410,9 +413,15 @@ class _DayCell extends StatelessWidget {
 /// 的角标在 320dp 上就贴到一起了，字号放大档更是直接叠上。Row + [Spacer] 让重叠在结构上
 /// 不可能发生，挤不下时日期自己省略。
 ///
-/// 「今天」是日期外面一圈描边，**用的就是数字本身的颜色** —— 底下可能是任意一张照片，
-/// 任何固定色都会在某些图上消失。原先画在格子底部中间的那条短横已经删了：文字格的标题
-/// 铺满下半格，那条线正压在第二行上。
+/// 「今天」是**填充药丸**，不是描边：灰底上的灰描边几乎不说话，而这是整屏唯一需要一眼
+/// 找到的格子。配色两套 —— 落在封面上时是 `onMedia` 底 + `scrim` 字（白片黑字，压得住
+/// 任意画面），否则是 `primary` 底 + `onPrimary` 字。**不能两处都用 primary**：灰度档的
+/// primary 是纯黑，压在同样深色的 scrim 条上就没了。
+///
+/// 整行**定高 [_kHeaderHeight]**，今天与别的日子版式完全一致 —— 否则文字格里那两行标题
+/// 会因为今天多出的药丸高度被挤掉一行。
+///
+/// 原先画在格子底部中间的那条短横已经删了：文字格的标题铺满下半格，那条线正压在第二行上。
 class _CellHeader extends StatelessWidget {
   final DateTime day;
 
@@ -440,24 +449,39 @@ class _CellHeader extends StatelessWidget {
                 : typo.labelSmall.onSurfaceVariant)
             .copyWith(fontFeatures: const [.tabularFigures()]);
 
+    final colors = context.theme.colors;
     Widget date = Text('${day.day}', maxLines: 1, style: style);
     if (isToday) {
       date = Container(
-        padding: const .symmetric(horizontal: 4, vertical: 1),
-        decoration: BoxDecoration(
-          border: Border.all(color: style.color!, width: 1.2),
-          borderRadius: .circular(9),
+        constraints: const BoxConstraints(minWidth: _kHeaderHeight),
+        height: _kHeaderHeight,
+        alignment: .center,
+        // 一位数时是正圆，两位数横向长一点点 —— 用药丸而不是钉死的正圆，
+        // 免得字号档或字体度量稍宽就被裁掉半个数字。
+        padding: const .symmetric(horizontal: 3),
+        decoration: ShapeDecoration(
+          shape: const StadiumBorder(),
+          color: onCover ? context.theme.onMedia : colors.primary,
         ),
-        child: date,
+        child: Text(
+          '${day.day}',
+          maxLines: 1,
+          style: style.copyWith(
+            color: onCover ? colors.scrim : colors.onPrimary,
+          ),
+        ),
       );
     }
 
-    final row = Row(
-      children: [
-        Flexible(child: date),
-        const Spacer(),
-        if (count > 1) Text('$count', style: style),
-      ],
+    final row = SizedBox(
+      height: _kHeaderHeight,
+      child: Row(
+        children: [
+          Flexible(child: date),
+          const Spacer(),
+          if (count > 1) Text('$count', style: style),
+        ],
+      ),
     );
 
     if (!onCover) return row;
@@ -469,10 +493,7 @@ class _CellHeader extends StatelessWidget {
         gradient: LinearGradient(
           begin: .topCenter,
           end: .bottomCenter,
-          colors: [
-            context.theme.colors.scrim.withValues(alpha: 0.55),
-            Colors.transparent,
-          ],
+          colors: [colors.scrim.withValues(alpha: 0.55), Colors.transparent],
         ),
       ),
       child: row,
