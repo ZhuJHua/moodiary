@@ -50,49 +50,51 @@ class _AppLockTileState extends State<AppLockTile> {
     }
   }
 
+  /// 本组件在 [MSliverSettingGroup] 眼里是**一项**，但自己展开成 1–4 行，行数还随
+  /// 上锁状态与设备是否支持生物识别变 —— 所以内部分隔线由自己插。
+  ///
+  /// 生物识别那一行是否存在取决于一个 Future，**必须在拼列表之前解出来**：留在行内用
+  /// `SizedBox.shrink()` 占位的话，它上面那条分隔线会挂在一行看不见的东西上，变成组尾
+  /// 一条悬空的线。
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     return ValueListenableBuilder(
       valueListenable: AppLockPin.enabled,
       builder: (context, lock, _) {
-        return Column(
-          children: [
-            SettingListTile(
-              isFirst: true,
-              title: context.l10n.lock.title,
-              leading: const Icon(LucideIcons.lock),
-              trailing: Text(
-                lock ? context.l10n.lock.enabled : context.l10n.lock.disabled,
-                style: theme.typography.bodySmall.primary,
-              ),
-              onTap: () => _onTapLock(lock),
-            ),
-            if (lock)
+        return FutureBuilder<bool>(
+          future: _bioSupported,
+          builder: (context, snapshot) {
+            final rows = <Widget>[
               SettingListTile(
-                title: context.l10n.lock.changePassword,
-                leading: const Icon(LucideIcons.keyRound),
-                onTap: _changePassword,
+                title: context.l10n.lock.title,
+                leading: const Icon(LucideIcons.lock),
+                trailing: Text(
+                  lock ? context.l10n.lock.enabled : context.l10n.lock.disabled,
+                  style: theme.typography.bodySmall.primary,
+                ),
+                onTap: () => _onTapLock(lock),
               ),
-            if (lock)
-              ValueListenableBuilder(
-                valueListenable: MoodiaryKVs.lockNow.getNotifier(),
-                builder: (context, lockNow, _) {
-                  return SettingSwitchListTile(
-                    title: context.l10n.lock.lockNow,
-                    subtitle: context.l10n.lock.lockNowSubtitle,
-                    secondary: const Icon(LucideIcons.lockKeyhole),
-                    value: lockNow,
-                    onChanged: (v) => MoodiaryKVs.lockNow.set(v),
-                  );
-                },
-              ),
-            if (lock)
-              FutureBuilder<bool>(
-                future: _bioSupported,
-                builder: (context, snapshot) {
-                  if (snapshot.data != true) return const SizedBox.shrink();
-                  return ValueListenableBuilder(
+              if (lock) ...[
+                SettingListTile(
+                  title: context.l10n.lock.changePassword,
+                  leading: const Icon(LucideIcons.keyRound),
+                  onTap: _changePassword,
+                ),
+                ValueListenableBuilder(
+                  valueListenable: MoodiaryKVs.lockNow.getNotifier(),
+                  builder: (context, lockNow, _) {
+                    return SettingSwitchListTile(
+                      title: context.l10n.lock.lockNow,
+                      subtitle: context.l10n.lock.lockNowSubtitle,
+                      secondary: const Icon(LucideIcons.lockKeyhole),
+                      value: lockNow,
+                      onChanged: (v) => MoodiaryKVs.lockNow.set(v),
+                    );
+                  },
+                ),
+                if (snapshot.data == true)
+                  ValueListenableBuilder(
                     valueListenable: MoodiaryKVs.supportBiometrics
                         .getNotifier(),
                     builder: (context, bio, _) {
@@ -104,10 +106,18 @@ class _AppLockTileState extends State<AppLockTile> {
                         onChanged: _toggleBiometric,
                       );
                     },
-                  );
-                },
-              ),
-          ],
+                  ),
+              ],
+            ];
+            return Column(
+              children: [
+                for (var i = 0; i < rows.length; i++) ...[
+                  if (i > 0) const MSettingDivider(),
+                  rows[i],
+                ],
+              ],
+            );
+          },
         );
       },
     );

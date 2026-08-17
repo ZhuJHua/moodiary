@@ -147,13 +147,16 @@ ThemeData buildMuiTheme({
     focusColor: cs.onSurface.withValues(alpha: states.focusOpacity),
 
     // 只动形状，**不动填充色** —— 在这里改底色会一次性重涂全仓每一张卡片。
+    // 卡片**不描边**，分组只靠填充色。描边与容器阶梯是两套各自够用的手段，叠在一起
+    // 会让每一组内容都框起来，页面读成一张表格。
+    //
+    // 注意 `Card` 是 `shape ?? cardTheme.shape ?? 变体默认`（card.dart:264），所以这条
+    // shape 会盖掉 `Card.outlined` 自带的那道边 —— 本仓的卡片一律 filled，别用
+    // `.outlined`（用了也不会有边）。半径必须显式给：变体默认是 12，我们的 lg 是 16。
     cardTheme: CardThemeData(
       elevation: 0,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: lgRadius,
-        side: BorderSide(color: cs.outlineVariant, width: borders.hairline),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: lgRadius),
     ),
 
     filledButtonTheme: FilledButtonThemeData(

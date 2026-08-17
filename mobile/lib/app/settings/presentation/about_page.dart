@@ -74,7 +74,9 @@ class _AboutPageState extends State<AboutPage> {
               systemVersion: _systemVersion,
             ),
             const SizedBox(height: 32),
-            Card.outlined(
+            // 全仓卡片一律 filled：cardTheme 的 shape 会盖掉 `.outlined` 自带的那道边，
+            // 写 `.outlined` 只是名不副实。
+            Card.filled(
               color: scheme.surfaceContainerLow,
               margin: .zero,
               child: Column(

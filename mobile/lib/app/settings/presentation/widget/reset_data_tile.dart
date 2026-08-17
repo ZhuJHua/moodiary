@@ -15,22 +15,16 @@ class ResetDataTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return ListTile(
-      shape: RoundedRectangleBorder(
-        borderRadius: .vertical(
-          top: isFirst ? const .circular(12) : .zero,
-          bottom: isLast ? const .circular(12) : .zero,
-        ),
-      ),
+    // 走 SettingListTile 而不是裸 ListTile：圆角与组内分隔线都归它管，自绘就漏掉了。
+    return SettingListTile(
+      isFirst: isFirst,
+      isLast: isLast,
       leading: Icon(LucideIcons.trash2, color: scheme.error),
       title: Text(
         context.l10n.app.resetTitle,
         style: context.theme.typography.bodyLarge.error,
       ),
-      subtitle: Text(
-        context.l10n.app.resetSubtitle,
-        style: context.theme.typography.bodyMedium.onSurfaceVariant,
-      ),
+      subtitle: context.l10n.app.resetSubtitle,
       onTap: () => _confirmAndReset(context),
     );
   }

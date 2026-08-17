@@ -34,6 +34,24 @@ class SettingTitleTile extends StatelessWidget {
   }
 }
 
+/// 设置组内两项之间的分隔线。
+///
+/// `thickness: 0` 在 Skia 里就是 hairline —— **恰好一个设备像素**，见 divider.dart 对
+/// thickness 的注释。别改成 `1 / devicePixelRatio`：那条线按逻辑像素排版，落点多半不在
+/// 设备像素边界上，会跨两行各画一半，反而显出一条更宽更灰的边。
+///
+/// 缩进与 [ListTile] 默认的横向 contentPadding 对齐，线两端因此不顶到卡片侧边。
+///
+/// 正常情况下不用手写它 —— [MSliverSettingGroup] 会在项与项之间自动插。只有**自己就是
+/// 一组多行的复合项**（比如应用锁那一块）才需要用它隔开自己内部的行。
+class MSettingDivider extends StatelessWidget {
+  const MSettingDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      const Divider(height: 0, thickness: 0, indent: 16, endIndent: 16);
+}
+
 class SettingListTile extends StatelessWidget {
   const SettingListTile({
     super.key,
@@ -85,13 +103,15 @@ class SettingListTile extends StatelessWidget {
     );
     final theme = context.theme;
     final selectedFg = theme.colors.onSecondaryContainer;
-    // 兼容历史用法：传入 Text 时取其文本，按 tile 默认样式渲染。
+    // 兼容历史用法：传入**不带样式**的 Text 时取其文本，按 tile 默认样式渲染。
+    // 带了 style 的原样放行 —— 否则「重置数据」那种 error 色标题会被悄悄套回
+    // onSurface，红色没了也不报错。
     var realTitle = title;
     var realSubtitle = subtitle;
-    if (title is Text) {
+    if (title is Text && (title as Text).style == null) {
       realTitle = (title as Text).data;
     }
-    if (subtitle is Text) {
+    if (subtitle is Text && (subtitle as Text).style == null) {
       realSubtitle = (subtitle as Text).data;
     }
     return ListTile(
@@ -169,12 +189,13 @@ class SettingSwitchListTile extends StatelessWidget {
       'subtitle must be a String or a Widget',
     );
     final theme = context.theme;
+    // 同 [SettingListTile]：带样式的 Text 原样放行。
     var realTitle = title;
     var realSubtitle = subtitle;
-    if (title is Text) {
+    if (title is Text && (title as Text).style == null) {
       realTitle = (title as Text).data;
     }
-    if (subtitle is Text) {
+    if (subtitle is Text && (subtitle as Text).style == null) {
       realSubtitle = (subtitle as Text).data;
     }
     return SwitchListTile(
