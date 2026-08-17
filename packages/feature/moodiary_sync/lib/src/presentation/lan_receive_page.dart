@@ -311,7 +311,7 @@ class _AddressChip extends StatelessWidget {
     return Material(
       color: scheme.surfaceContainerHigh,
       borderRadius: .circular(10),
-      child: InkWell(
+      child: MInkWell(
         borderRadius: .circular(10),
         onTap: () => onCopy(address),
         child: Padding(

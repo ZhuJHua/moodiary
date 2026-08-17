@@ -279,7 +279,7 @@ class _Tile extends StatelessWidget {
         color: selected ? colors.secondaryContainer : Colors.transparent,
         borderRadius: const .all(.circular(28)),
         clipBehavior: .antiAlias,
-        child: InkWell(
+        child: MInkWell(
           onTap: onTap,
           child: Padding(
             padding: const .symmetric(horizontal: 14, vertical: 12),

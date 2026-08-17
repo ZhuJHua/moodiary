@@ -114,7 +114,6 @@ class _LanSendPageState extends State<LanSendPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.sync.lanSendTitle)),
       body: ListView(
@@ -142,19 +141,12 @@ class _LanSendPageState extends State<LanSendPage> {
             controller: _hostController,
             enabled: !_running,
             keyboardType: .url,
+            // 圆角与聚焦环整段交给主题：原先只写了 border / focusedBorder 而漏了
+            // enabledBorder，于是未聚焦时主题的 12 胜出、聚焦时自己的 14 胜出，
+            // 一点就跳一下。
             decoration: InputDecoration(
               hintText: context.l10n.sync.lanAddressHint,
               prefixIcon: const Icon(LucideIcons.network),
-              filled: true,
-              fillColor: scheme.surfaceContainerHigh,
-              border: OutlineInputBorder(
-                borderRadius: .circular(14),
-                borderSide: .none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: .circular(14),
-                borderSide: BorderSide(color: scheme.primary, width: 2),
-              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -281,65 +273,56 @@ class _PeerTile extends StatelessWidget {
         color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
         borderRadius: .circular(16),
       ),
-      child: Material(
-        color: Colors.transparent,
+      child: MInkWell(
         borderRadius: .circular(16),
-        child: InkWell(
-          borderRadius: .circular(16),
-          onTap: enabled ? () => onPick(peer) : null,
-          child: Padding(
-            padding: const .all(12),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: .circle,
-                    color: selected
-                        ? scheme.primary
-                        : scheme.surfaceContainerHigh,
-                  ),
-                  child: Icon(
-                    LucideIcons.smartphone,
-                    size: 20,
-                    color: selected
-                        ? scheme.onPrimary
-                        : scheme.onSurfaceVariant,
-                  ),
+        onTap: enabled ? () => onPick(peer) : null,
+        child: Padding(
+          padding: const .all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: .circle,
+                  color: selected
+                      ? scheme.primary
+                      : scheme.surfaceContainerHigh,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: .start,
-                    children: [
-                      Text(
-                        peer.name,
-                        maxLines: 1,
-                        overflow: .ellipsis,
-                        style: selected
-                            ? typography.titleSmall.onPrimaryContainer
-                            : typography.titleSmall.onSurface,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        address,
-                        style:
-                            (selected
-                                    ? typography.bodySmall.onPrimaryContainer
-                                    : typography.bodySmall.onSurfaceVariant)
-                                .copyWith(fontFamily: 'monospace'),
-                      ),
-                    ],
-                  ),
+                child: Icon(
+                  LucideIcons.smartphone,
+                  size: 20,
+                  color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
                 ),
-                if (selected)
-                  Icon(
-                    LucideIcons.circleCheck,
-                    color: scheme.onPrimaryContainer,
-                  ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: .start,
+                  children: [
+                    Text(
+                      peer.name,
+                      maxLines: 1,
+                      overflow: .ellipsis,
+                      style: selected
+                          ? typography.titleSmall.onPrimaryContainer
+                          : typography.titleSmall.onSurface,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      address,
+                      style:
+                          (selected
+                                  ? typography.bodySmall.onPrimaryContainer
+                                  : typography.bodySmall.onSurfaceVariant)
+                              .copyWith(fontFamily: 'monospace'),
+                    ),
+                  ],
+                ),
+              ),
+              if (selected)
+                Icon(LucideIcons.circleCheck, color: scheme.onPrimaryContainer),
+            ],
           ),
         ),
       ),

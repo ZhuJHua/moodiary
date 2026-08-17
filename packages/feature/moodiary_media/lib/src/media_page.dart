@@ -408,8 +408,8 @@ class _AudioTile extends ConsumerWidget {
         borderRadius: AppBorderRadius.largeBorderRadius,
         side: BorderSide(color: scheme.outlineVariant),
       ),
-      child: InkWell(
-        customBorder: const RoundedRectangleBorder(
+      child: MInkWell(
+        shape: const RoundedRectangleBorder(
           borderRadius: AppBorderRadius.largeBorderRadius,
         ),
         onTap: () => MAudioPlayerPage.showByName(

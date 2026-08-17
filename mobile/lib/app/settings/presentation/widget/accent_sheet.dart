@@ -101,7 +101,7 @@ class _AccentModeRow extends StatelessWidget {
               width: selected ? 1.5 : 1,
             ),
           ),
-          child: InkWell(
+          child: MInkWell(
             borderRadius: AppBorderRadius.mediumBorderRadius,
             onTap: onTap,
             child: Padding(

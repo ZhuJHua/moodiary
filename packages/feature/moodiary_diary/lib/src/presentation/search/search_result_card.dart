@@ -34,7 +34,7 @@ class SearchResultCard extends StatelessWidget {
       color: scheme.surfaceContainerHigh,
       borderRadius: .circular(16),
       clipBehavior: .antiAlias,
-      child: InkWell(
+      child: MInkWell(
         onTap: () {
           onTap?.call();
           DiaryRoute(

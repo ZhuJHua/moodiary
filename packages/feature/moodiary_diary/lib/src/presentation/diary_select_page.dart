@@ -158,7 +158,7 @@ class _DiarySelectTile extends StatelessWidget {
     return Card.filled(
       color: colors.surfaceContainerLow,
       margin: .zero,
-      child: InkWell(
+      child: MInkWell(
         borderRadius: AppBorderRadius.mediumBorderRadius,
         onTap: onTap,
         child: Padding(

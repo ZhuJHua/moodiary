@@ -60,95 +60,89 @@ class GraphInfoCard extends StatelessWidget {
           // 图谱画布本身线条就多，实色描边会跟着一起抢。
           shadows: const [],
           borderColor: cs.outlineVariant.withValues(alpha: 0.45),
-          child: Material(
-            type: .transparency,
-            child: InkWell(
-              onTap: onOpen,
-              child: Padding(
-                padding: const .fromLTRB(14, 11, 4, 11),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 11,
-                      height: 11,
-                      decoration: BoxDecoration(color: accent, shape: .circle),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: .start,
-                        mainAxisSize: .min,
-                        children: [
-                          Text(
-                            title,
-                            maxLines: 1,
-                            overflow: .ellipsis,
-                            style: theme
-                                .typography
-                                .titleSmall
-                                .emphasized
-                                .onSurface,
-                          ),
-                          const SizedBox(height: 3),
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  TimeFormat.longDate(node.time),
-                                  maxLines: 1,
-                                  overflow: .ellipsis,
-                                  style: theme
-                                      .typography
-                                      .labelSmall
-                                      .onSurfaceVariant,
-                                ),
-                              ),
-                              if (outgoing > 0) ...[
-                                const SizedBox(width: 8),
-                                _LinkChip(
-                                  color: cs.primary,
-                                  icon: LucideIcons.arrowUpRight,
-                                  count: outgoing,
-                                ),
-                              ],
-                              if (incoming > 0) ...[
-                                const SizedBox(width: 6),
-                                _LinkChip(
-                                  color: cs.tertiary,
-                                  icon: LucideIcons.arrowDownLeft,
-                                  count: incoming,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (onCenter != null)
-                      IconButton(
-                        tooltip: l10n.diary.graphSetAsCenter,
-                        iconSize: 20,
-                        visualDensity: .compact,
-                        icon: Icon(
-                          LucideIcons.crosshair,
-                          color: cs.onSurfaceVariant,
+          child: MInkWell(
+            onTap: onOpen,
+            child: Padding(
+              padding: const .fromLTRB(14, 11, 4, 11),
+              child: Row(
+                children: [
+                  Container(
+                    width: 11,
+                    height: 11,
+                    decoration: BoxDecoration(color: accent, shape: .circle),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: .start,
+                      mainAxisSize: .min,
+                      children: [
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: .ellipsis,
+                          style:
+                              theme.typography.titleSmall.emphasized.onSurface,
                         ),
-                        onPressed: onCenter,
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                TimeFormat.longDate(node.time),
+                                maxLines: 1,
+                                overflow: .ellipsis,
+                                style: theme
+                                    .typography
+                                    .labelSmall
+                                    .onSurfaceVariant,
+                              ),
+                            ),
+                            if (outgoing > 0) ...[
+                              const SizedBox(width: 8),
+                              _LinkChip(
+                                color: cs.primary,
+                                icon: LucideIcons.arrowUpRight,
+                                count: outgoing,
+                              ),
+                            ],
+                            if (incoming > 0) ...[
+                              const SizedBox(width: 6),
+                              _LinkChip(
+                                color: cs.tertiary,
+                                icon: LucideIcons.arrowDownLeft,
+                                count: incoming,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (onCenter != null)
+                    IconButton(
+                      tooltip: l10n.diary.graphSetAsCenter,
+                      iconSize: 20,
+                      visualDensity: .compact,
+                      icon: Icon(
+                        LucideIcons.crosshair,
+                        color: cs.onSurfaceVariant,
                       ),
-                    Icon(LucideIcons.chevronRight, color: cs.onSurfaceVariant),
-                    if (onClose != null)
-                      IconButton(
-                        tooltip: MaterialLocalizations.of(context)
-                            .closeButtonTooltip,
-                        iconSize: 20,
-                        visualDensity: .compact,
-                        icon: Icon(LucideIcons.x, color: cs.onSurfaceVariant),
-                        onPressed: onClose,
-                      )
-                    else
-                      const SizedBox(width: 8),
-                  ],
-                ),
+                      onPressed: onCenter,
+                    ),
+                  Icon(LucideIcons.chevronRight, color: cs.onSurfaceVariant),
+                  if (onClose != null)
+                    IconButton(
+                      tooltip: MaterialLocalizations.of(context)
+                          .closeButtonTooltip,
+                      iconSize: 20,
+                      visualDensity: .compact,
+                      icon: Icon(LucideIcons.x, color: cs.onSurfaceVariant),
+                      onPressed: onClose,
+                    )
+                  else
+                    const SizedBox(width: 8),
+                ],
               ),
             ),
           ),

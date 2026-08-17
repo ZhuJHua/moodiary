@@ -142,13 +142,15 @@ class _SeedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return Material(
-      color: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: AppBorderRadius.largeBorderRadius,
-        side: BorderSide(color: scheme.outlineVariant),
+    // 这层不是为了托水波 —— 它画着那圈描边，所以留着，只是换成不带 ink 的形态。
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: RoundedRectangleBorder(
+          borderRadius: AppBorderRadius.largeBorderRadius,
+          side: BorderSide(color: scheme.outlineVariant),
+        ),
       ),
-      child: InkWell(
+      child: MInkWell(
         borderRadius: AppBorderRadius.largeBorderRadius,
         onTap: onTap,
         child: Padding(

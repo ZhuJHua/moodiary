@@ -1570,30 +1570,27 @@ class _RoundIcon extends StatelessWidget {
     final touch = math.max(size, _kMinTouch);
     return Tooltip(
       message: tooltip,
-      // Material 必须撑到命中尺寸：水波纹画在最近的 Material 上，交给外面 Scaffold 那层的话
-      // 会画在视频纹理**底下**，等于没有反馈。
-      child: Material(
-        color: Colors.transparent,
+      // 原先这里垫着一层 Material：水波画在最近的 Material 上，交给外面 Scaffold
+      // 那层会画在视频纹理**底下**，等于没有反馈。MInkWell 的按压遮罩画在自己
+      // 子树里，与背景无关，所以那一层撤掉了。
+      child: MInkWell(
         shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          // 认领长按，免得按住关闭键被外面那个全屏手势当成「长按倍速」。
-          onLongPress: () {},
-          child: SizedBox(
-            width: touch,
-            height: touch,
-            child: Center(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: .circle,
-                  color: filled ? Colors.black38 : Colors.transparent,
-                ),
-                child: SizedBox(
-                  width: size,
-                  height: size,
-                  child: Icon(icon, color: Colors.white, size: big ? 30 : 21),
-                ),
+        onTap: onTap,
+        // 认领长按，免得按住关闭键被外面那个全屏手势当成「长按倍速」。
+        onLongPress: () {},
+        child: SizedBox(
+          width: touch,
+          height: touch,
+          child: Center(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                shape: .circle,
+                color: filled ? Colors.black38 : Colors.transparent,
+              ),
+              child: SizedBox(
+                width: size,
+                height: size,
+                child: Icon(icon, color: Colors.white, size: big ? 30 : 21),
               ),
             ),
           ),

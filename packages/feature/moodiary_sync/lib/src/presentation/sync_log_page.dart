@@ -363,52 +363,49 @@ class _EventTile extends StatelessWidget {
     final icon = _kindIcon[event.kind] ?? LucideIcons.circleDot;
     final hasPayload = event.payload != null && event.payload!.isNotEmpty;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: .circular(10),
-        onTap: hasPayload ? () => _showPayloadSheet(context) : null,
-        child: Padding(
-          padding: const .symmetric(horizontal: 10, vertical: 7),
-          child: Row(
-            crossAxisAlignment: .start,
-            children: [
-              Padding(
-                padding: const .only(top: 1),
-                child: Icon(icon, size: 18, color: iconColor),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: .start,
-                  children: [
-                    Text(
-                      event.message,
-                      style: isError
-                          ? typography.bodyMedium.error
-                          : typography.bodyMedium.onSurface,
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      TimeFormat.timeHms(event.at),
-                      style: typography.bodySmall.outline.copyWith(
-                        fontFeatures: const [.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (hasPayload)
-                Padding(
-                  padding: const .only(top: 2),
-                  child: Icon(
-                    LucideIcons.chevronRight,
-                    size: 16,
-                    color: scheme.outline,
+    return MInkWell(
+      borderRadius: .circular(10),
+      onTap: hasPayload ? () => _showPayloadSheet(context) : null,
+      child: Padding(
+        padding: const .symmetric(horizontal: 10, vertical: 7),
+        child: Row(
+          crossAxisAlignment: .start,
+          children: [
+            Padding(
+              padding: const .only(top: 1),
+              child: Icon(icon, size: 18, color: iconColor),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: .start,
+                children: [
+                  Text(
+                    event.message,
+                    style: isError
+                        ? typography.bodyMedium.error
+                        : typography.bodyMedium.onSurface,
                   ),
+                  const SizedBox(height: 1),
+                  Text(
+                    TimeFormat.timeHms(event.at),
+                    style: typography.bodySmall.outline.copyWith(
+                      fontFeatures: const [.tabularFigures()],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (hasPayload)
+              Padding(
+                padding: const .only(top: 2),
+                child: Icon(
+                  LucideIcons.chevronRight,
+                  size: 16,
+                  color: scheme.outline,
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );

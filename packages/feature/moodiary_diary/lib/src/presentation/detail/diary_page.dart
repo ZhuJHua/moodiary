@@ -930,50 +930,48 @@ class _TocDrawer extends StatelessWidget {
                           top: 1,
                           bottom: 1,
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: .circular(12),
-                            onTap: () => onTap(i),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 180),
-                              curve: Curves.easeOut,
-                              padding: const .symmetric(
-                                horizontal: 12,
-                                vertical: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isActive
-                                    ? colors.secondaryContainer
-                                    : Colors.transparent,
-                                borderRadius: .circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  if (h.level > 1) ...[
-                                    Container(
-                                      width: 5,
-                                      height: 5,
-                                      margin: const .only(right: 10),
-                                      decoration: BoxDecoration(
-                                        shape: .circle,
-                                        color: isActive
-                                            ? colors.onSecondaryContainer
-                                            : colors.onSurfaceVariant
-                                                  .withValues(alpha: 0.5),
-                                      ),
-                                    ),
-                                  ],
-                                  Expanded(
-                                    child: Text(
-                                      label,
-                                      maxLines: 2,
-                                      overflow: .ellipsis,
-                                      style: labelStyle,
+                        child: MInkWell(
+                          borderRadius: .circular(12),
+                          onTap: () => onTap(i),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            curve: Curves.easeOut,
+                            padding: const .symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? colors.secondaryContainer
+                                  : Colors.transparent,
+                              borderRadius: .circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                if (h.level > 1) ...[
+                                  Container(
+                                    width: 5,
+                                    height: 5,
+                                    margin: const .only(right: 10),
+                                    decoration: BoxDecoration(
+                                      shape: .circle,
+                                      color: isActive
+                                          ? colors.onSecondaryContainer
+                                          : colors.onSurfaceVariant.withValues(
+                                              alpha: 0.5,
+                                            ),
                                     ),
                                   ),
                                 ],
-                              ),
+                                Expanded(
+                                  child: Text(
+                                    label,
+                                    maxLines: 2,
+                                    overflow: .ellipsis,
+                                    style: labelStyle,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),

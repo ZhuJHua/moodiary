@@ -67,11 +67,11 @@ class DiaryTileFrame extends StatelessWidget {
             width: 1.5,
           ),
         ),
-        child: InkWell(
+        child: MInkWell(
           borderRadius: borderRadius,
-          // 无边框的连续流里，扩散水波比高亮更吵；只留一层轻微的按压高亮。
-          splashFactory: NoSplash.splashFactory,
-          highlightColor: colors.onSurface.withValues(alpha: 0.06),
+          // 无边框的连续流里高亮要更轻一档，否则整张卡都在闪。
+          // （水波本来就没有：MInkWell 画的是一层遮罩，不是扩散动画。）
+          overlayColor: colors.onSurface.withValues(alpha: 0.06),
           onTap: onTap,
           onLongPress: onLongPress,
           child: Padding(padding: padding, child: child),
