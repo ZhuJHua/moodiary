@@ -21,6 +21,10 @@ const int _kGridRows = 6;
 /// 认定为一次翻月的横扫速度。
 const double _kSwipeVelocity = 180;
 
+/// 格子里的字号上限。格子是定死的 46×54，日期与篇数跟着系统字号涨到 1.6× 就会互相顶。
+/// 与 `MHeatmap` / `MNavBar` 同一个理由：网格是图表不是正文。下半屏的日记列表不受此限。
+const double _kCellMaxTextScale = 1.15;
+
 /// 一个月的网格几何：前面空几格、这个月有几天。
 ///
 /// 两处都别自己算：
@@ -296,30 +300,33 @@ class _MonthGrid extends StatelessWidget {
 
     return Padding(
       padding: const .symmetric(horizontal: _kGridPadding, vertical: 4),
-      child: GridView.count(
-        crossAxisCount: 7,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: _kCellGap,
-        crossAxisSpacing: _kCellGap,
-        childAspectRatio: _kCellAspect,
-        children: [
-          for (var i = 0; i < leading; i++) const SizedBox.shrink(),
-          for (var d = 1; d <= days; d++)
-            () {
-              final day = DateTime(month.year, month.month, d);
-              return _DayCell(
-                day: day,
-                writing: byDay?[day],
-                isToday: day == today,
-                isSelected: day == selected,
-                onTap: () => onSelect(day),
-              );
-            }(),
-          // 补满六行，见 [_kGridRows]。
-          for (var i = leading + days; i < _kGridRows * 7; i++)
-            const SizedBox.shrink(),
-        ],
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: _kCellMaxTextScale,
+        child: GridView.count(
+          crossAxisCount: 7,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: _kCellGap,
+          crossAxisSpacing: _kCellGap,
+          childAspectRatio: _kCellAspect,
+          children: [
+            for (var i = 0; i < leading; i++) const SizedBox.shrink(),
+            for (var d = 1; d <= days; d++)
+              () {
+                final day = DateTime(month.year, month.month, d);
+                return _DayCell(
+                  day: day,
+                  writing: byDay?[day],
+                  isToday: day == today,
+                  isSelected: day == selected,
+                  onTap: () => onSelect(day),
+                );
+              }(),
+            // 补满六行，见 [_kGridRows]。
+            for (var i = leading + days; i < _kGridRows * 7; i++)
+              const SizedBox.shrink(),
+          ],
+        ),
       ),
     );
   }
@@ -348,11 +355,19 @@ class _DayCell extends StatelessWidget {
 
     Widget content;
     if (w == null) {
-      content = _DateBadge(day: day, onCover: false, muted: true);
+      content = Padding(
+        padding: const .fromLTRB(4, 3, 4, 3),
+        child: Column(
+          crossAxisAlignment: .stretch,
+          children: [
+            _CellHeader(day: day, count: 0, onCover: false, isToday: isToday),
+          ],
+        ),
+      );
     } else if (w.coverName != null) {
-      content = _CoverCell(writing: w, day: day);
+      content = _CoverCell(writing: w, day: day, isToday: isToday);
     } else {
-      content = _TextCell(writing: w, day: day);
+      content = _TextCell(writing: w, day: day, isToday: isToday);
     }
 
     // 格子画的是图和数字，读屏拿不到任何东西 —— 日期与篇数只能显式给。
@@ -377,7 +392,6 @@ class _DayCell extends StatelessWidget {
     ColorScheme colors,
     BorderRadius radius,
   ) {
-    final w = writing;
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,
@@ -385,43 +399,98 @@ class _DayCell extends StatelessWidget {
             ? Border.all(color: colors.onSurface, width: 2)
             : null,
       ),
-      child: MInkWell(
-        borderRadius: radius,
-        onTap: onTap,
-        child: Stack(
-          fit: .expand,
-          children: [
-            content,
-            // 今天：底部一条短横。选中态已经有描边，两者可以叠。
-            if (isToday)
-              Align(
-                alignment: .bottomCenter,
-                child: Container(
-                  width: 12,
-                  height: 2,
-                  margin: const .only(bottom: 3),
-                  decoration: BoxDecoration(
-                    // 盖在封面上时前景不能用主题色 —— 封面是任意画面。
-                    color: w?.coverName != null
-                        ? context.theme.onMedia
-                        : colors.primary,
-                    borderRadius: .circular(2),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
+      child: MInkWell(borderRadius: radius, onTap: onTap, child: content),
     );
   }
 }
 
-/// 有封面：整格铺图，日期压在左上角。
+/// 格子顶部那一行：左边日期、右边篇数。
+///
+/// **必须是 Row，不能是两个 Align。** 格子只有 `(360−16−18)/7 ≈ 46.6` 宽，两个绝对定位
+/// 的角标在 320dp 上就贴到一起了，字号放大档更是直接叠上。Row + [Spacer] 让重叠在结构上
+/// 不可能发生，挤不下时日期自己省略。
+///
+/// 「今天」是日期外面一圈描边，**用的就是数字本身的颜色** —— 底下可能是任意一张照片，
+/// 任何固定色都会在某些图上消失。原先画在格子底部中间的那条短横已经删了：文字格的标题
+/// 铺满下半格，那条线正压在第二行上。
+class _CellHeader extends StatelessWidget {
+  final DateTime day;
+
+  /// 0 = 那天没写。>1 才显示篇数。
+  final int count;
+  final bool onCover;
+  final bool isToday;
+
+  const _CellHeader({
+    required this.day,
+    required this.count,
+    required this.onCover,
+    required this.isToday,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final typo = context.theme.typography;
+    // 盖在封面上时前景走 onMedia —— 封面是任意画面，主题的 on* 角色在这里不成立。
+    final style =
+        (onCover
+                ? typo.labelSmall.emphasized.onMedia
+                : count == 0
+                ? typo.labelSmall.outline
+                : typo.labelSmall.onSurfaceVariant)
+            .copyWith(fontFeatures: const [.tabularFigures()]);
+
+    Widget date = Text('${day.day}', maxLines: 1, style: style);
+    if (isToday) {
+      date = Container(
+        padding: const .symmetric(horizontal: 4, vertical: 1),
+        decoration: BoxDecoration(
+          border: Border.all(color: style.color!, width: 1.2),
+          borderRadius: .circular(9),
+        ),
+        child: date,
+      );
+    }
+
+    final row = Row(
+      children: [
+        Flexible(child: date),
+        const Spacer(),
+        if (count > 1) Text('$count', style: style),
+      ],
+    );
+
+    if (!onCover) return row;
+    // 照片上直接放字读不出来。顶部一条渐变 scrim 同时托住日期和篇数，
+    // 比两个各自带底的小药丸干净。
+    return Container(
+      padding: const .fromLTRB(4, 2, 4, 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: .topCenter,
+          end: .bottomCenter,
+          colors: [
+            context.theme.colors.scrim.withValues(alpha: 0.55),
+            Colors.transparent,
+          ],
+        ),
+      ),
+      child: row,
+    );
+  }
+}
+
+/// 有封面：整格铺图，顶部一条 scrim 托住日期与篇数。
 class _CoverCell extends StatelessWidget {
   final DayWriting writing;
   final DateTime day;
+  final bool isToday;
 
-  const _CoverCell({required this.writing, required this.day});
+  const _CoverCell({
+    required this.writing,
+    required this.day,
+    required this.isToday,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -445,10 +514,17 @@ class _CoverCell extends StatelessWidget {
           filterQuality: .low,
           gaplessPlayback: true,
           errorBuilder: (context, _, _) =>
-              _TextCell(writing: writing, day: day),
+              _TextCell(writing: writing, day: day, isToday: isToday),
         ),
-        _DateBadge(day: day, onCover: true, muted: false),
-        if (writing.count > 1) _CountBadge(count: writing.count),
+        Align(
+          alignment: .topCenter,
+          child: _CellHeader(
+            day: day,
+            count: writing.count,
+            onCover: true,
+            isToday: isToday,
+          ),
+        ),
       ],
     );
   }
@@ -459,8 +535,13 @@ class _CoverCell extends StatelessWidget {
 class _TextCell extends StatelessWidget {
   final DayWriting writing;
   final DateTime day;
+  final bool isToday;
 
-  const _TextCell({required this.writing, required this.day});
+  const _TextCell({
+    required this.writing,
+    required this.day,
+    required this.isToday,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -477,16 +558,11 @@ class _TextCell extends StatelessWidget {
         child: Column(
           crossAxisAlignment: .start,
           children: [
-            Row(
-              children: [
-                _DateBadge(day: day, onCover: false, muted: false),
-                const Spacer(),
-                if (writing.count > 1)
-                  Text(
-                    '${writing.count}',
-                    style: context.theme.typography.labelSmall.onSurfaceVariant,
-                  ),
-              ],
+            _CellHeader(
+              day: day,
+              count: writing.count,
+              onCover: false,
+              isToday: isToday,
             ),
             if (categoryId != null)
               Container(
@@ -508,83 +584,6 @@ class _TextCell extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DateBadge extends StatelessWidget {
-  final DateTime day;
-  final bool onCover;
-  final bool muted;
-
-  const _DateBadge({
-    required this.day,
-    required this.onCover,
-    required this.muted,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final typo = context.theme.typography;
-    // 盖在封面上时前景走 onMedia —— 封面是任意画面，主题的 on* 角色在这里不成立。
-    final base = onCover
-        ? typo.labelSmall.emphasized.onMedia
-        : muted
-        ? typo.labelSmall.outline
-        : typo.labelSmall.onSurfaceVariant;
-    final text = Text(
-      '${day.day}',
-      style: base.copyWith(fontFeatures: const [.tabularFigures()]),
-    );
-
-    if (!onCover) {
-      if (!muted) return text;
-      return Align(
-        alignment: .topLeft,
-        child: Padding(padding: const .fromLTRB(6, 4, 0, 0), child: text),
-      );
-    }
-    return Align(
-      alignment: .topLeft,
-      child: Container(
-        margin: const .all(3),
-        padding: const .symmetric(horizontal: 3, vertical: 1),
-        decoration: BoxDecoration(
-          color: colors.scrim.withValues(alpha: 0.4),
-          borderRadius: .circular(4),
-        ),
-        child: text,
-      ),
-    );
-  }
-}
-
-/// 一天多篇时右上角的篇数。与信息流的 `+N` 蒙版同一套：scrim 底 + onMedia 字。
-class _CountBadge extends StatelessWidget {
-  final int count;
-
-  const _CountBadge({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: .topRight,
-      child: Container(
-        margin: const .all(3),
-        constraints: const BoxConstraints(minWidth: 15),
-        height: 15,
-        alignment: .center,
-        padding: const .symmetric(horizontal: 3),
-        decoration: BoxDecoration(
-          color: context.theme.colors.scrim.withValues(alpha: 0.5),
-          borderRadius: .circular(8),
-        ),
-        child: Text(
-          '$count',
-          style: context.theme.typography.labelSmall.emphasized.onMedia,
         ),
       ),
     );
