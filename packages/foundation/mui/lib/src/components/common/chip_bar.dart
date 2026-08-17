@@ -148,63 +148,57 @@ class _MChipBarState<T> extends State<MChipBar<T>> {
         curve: Curves.easeOut,
         height: widget.height,
         decoration: ShapeDecoration(color: bg, shape: const StadiumBorder()),
-        child: Material(
-          type: .transparency,
+        // 裁剪交给 MInkWell 自己（它的按压遮罩要跟着胶囊形状收边），
+        // 不再为了托住水波而垫一层 Material。
+        child: MInkWell(
           shape: const StadiumBorder(),
-          clipBehavior: .antiAlias,
-          child: InkWell(
-            onTap: () {
-              HapticFeedback.selectionClick();
-              widget.onSelected(item.value);
-            },
-            child: Padding(
-              padding: const .symmetric(horizontal: 13),
-              child: Row(
-                mainAxisSize: .min,
-                children: [
-                  if (item.icon != null) ...[
-                    Icon(item.icon, size: 16, color: fg),
-                    const SizedBox(width: 6),
-                  ] else if (color != null) ...[
-                    AnimatedContainer(
-                      duration: Durations.short4,
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(color: color, shape: .circle),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 140),
-                    child: AnimatedDefaultTextStyle(
-                      duration: Durations.short4,
-                      // 选中态配色：无强调色走 onSecondaryContainer，业务强调色
-                      // （分类色）在其上 copyWith 覆盖，对齐 bg 那侧的 fg 计算。
-                      style: selected
-                          ? (color == null
-                                ? context
-                                      .theme
-                                      .typography
-                                      .labelMedium
-                                      .emphasized
-                                      .onSecondaryContainer
-                                : context
-                                      .theme
-                                      .typography
-                                      .labelMedium
-                                      .emphasized
-                                      .onSecondaryContainer
-                                      .copyWith(color: fg))
-                          : context
-                                .theme
-                                .typography
-                                .labelMedium
-                                .onSurfaceVariant,
-                      child: Text(item.label, maxLines: 1, overflow: .ellipsis),
-                    ),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            widget.onSelected(item.value);
+          },
+          child: Padding(
+            padding: const .symmetric(horizontal: 13),
+            child: Row(
+              mainAxisSize: .min,
+              children: [
+                if (item.icon != null) ...[
+                  Icon(item.icon, size: 16, color: fg),
+                  const SizedBox(width: 6),
+                ] else if (color != null) ...[
+                  AnimatedContainer(
+                    duration: Durations.short4,
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(color: color, shape: .circle),
                   ),
+                  const SizedBox(width: 6),
                 ],
-              ),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 140),
+                  child: AnimatedDefaultTextStyle(
+                    duration: Durations.short4,
+                    // 选中态配色：无强调色走 onSecondaryContainer，业务强调色
+                    // （分类色）在其上 copyWith 覆盖，对齐 bg 那侧的 fg 计算。
+                    style: selected
+                        ? (color == null
+                              ? context
+                                    .theme
+                                    .typography
+                                    .labelMedium
+                                    .emphasized
+                                    .onSecondaryContainer
+                              : context
+                                    .theme
+                                    .typography
+                                    .labelMedium
+                                    .emphasized
+                                    .onSecondaryContainer
+                                    .copyWith(color: fg))
+                        : context.theme.typography.labelMedium.onSurfaceVariant,
+                    child: Text(item.label, maxLines: 1, overflow: .ellipsis),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

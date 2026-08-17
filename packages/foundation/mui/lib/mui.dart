@@ -20,6 +20,7 @@ export 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 export 'package:lucide_icons_flutter/lucide_icons.dart';
 
 export 'src/components.dart';
+export 'src/foundation/offscreen_size.dart';
 export 'src/l10n/mui_translation_scope.dart';
 export 'src/themes/build.dart';
 export 'src/themes/color_scheme.dart';

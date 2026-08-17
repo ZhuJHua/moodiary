@@ -88,7 +88,7 @@ class MMenuButton<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final button = InkWell(
+    final button = MInkWell(
       onTap: () => _open(context),
       borderRadius: MuiRadius.lg,
       child: child,
@@ -289,10 +289,8 @@ class _MMenuItem<T> extends StatelessWidget {
         color: selected ? scheme.secondaryContainer : Colors.transparent,
         borderRadius: MuiRadius.md,
         clipBehavior: .antiAlias,
-        child: InkWell(
+        child: MInkWell(
           onTap: entry.enabled ? onTap : null,
-          autofocus: autofocus && entry.enabled,
-          focusColor: scheme.onSurface.withValues(alpha: 0.08),
           child: Padding(
             padding: .fromLTRB(showLeadingSlot ? 12 : 14, 10, 12, 10),
             child: Row(

@@ -173,7 +173,7 @@ class MSheetOptionTile<T> extends StatelessWidget {
                 ? BorderSide(color: scheme.primary, width: 1.5)
                 : .none,
           ),
-          child: InkWell(
+          child: MInkWell(
             onTap: option.enabled ? onTap : null,
             child: Opacity(
               opacity: option.enabled ? 1 : 0.4,

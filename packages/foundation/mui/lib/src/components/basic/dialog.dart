@@ -19,7 +19,7 @@ class OptionDialog extends StatelessWidget {
           borderRadius: MuiRadius.md,
           color: theme.colors.secondaryContainer,
         ),
-        child: InkWell(
+        child: MInkWell(
           borderRadius: MuiRadius.md,
           onTap: () {
             onTap.call();

@@ -3,13 +3,30 @@ import 'package:mui/mui.dart';
 
 const double kMoodiaryFieldHeight = 48;
 
+/// 输入框的外观档。
+enum MFieldVariant {
+  /// 圆角填充式：底色 / 内边距 / 六条边框全部来自 `inputDecorationTheme`。
+  filled,
+
+  /// 无背景：宿主自己画了容器（聊天输入面板、AppBar 里的搜索框），
+  /// 字直接落在宿主的面上。
+  ///
+  /// **必须同时撤掉六条边框，只撤 `border` 不管用** —— `InputDecorator` 先解析
+  /// 状态边框（enabled / focused / disabled / error / focusedError），
+  /// 只有它们全为 null 才回落到 `decoration.border`，而主题把五条都填满了。
+  /// 同理 `filled: false` 也漏不得：`applyDefaults` 是 `filled ?? theme.filled`，
+  /// 不写就继承 true。这两个坑合起来的症状是「写了 border: .none 却还有个药丸」。
+  plain,
+}
+
 /// 圆角填充式输入框。取代仓内并存的三种写法（OutlineInputBorder 默认 4 圆角 /
 /// 裸下划线 / 从不 filled），圆角与按钮同为 [MuiRadius.md]。
 ///
 /// 字段名由 [label] 承担，静态置于框上方 —— 多字段表单里所有标签共用一条左基线，
 /// 比会浮动的 M3 label 好扫。弹层标题已经点明唯一字段时（单输入弹窗）省略 [label]。
 ///
-/// 尾部槽位一次只出现一个，优先级：[trailing] > 密码眼睛（[obscureText]）> 清除键。
+/// 尾部槽位一次只出现一个，优先级：[trailing] > 密码眼睛（[obscureText]）> 清除键
+/// （[showClear] 只管最后这一个，关掉它不影响眼睛）。
 class MField extends StatefulWidget {
   final TextEditingController controller;
   final String? label;
@@ -28,6 +45,14 @@ class MField extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
   final ValueChanged<String>? onChanged;
   final Widget? trailing;
+  final MFieldVariant variant;
+
+  /// 关掉内置清除键（[trailing] 与密码眼睛不受影响）。聊天输入框、并排的数值格
+  /// 都不该有它。
+  final bool showClear;
+
+  /// 覆盖主题的内边距。[MFieldVariant.plain] 下不传即为零。
+  final EdgeInsetsGeometry? contentPadding;
 
   const MField({
     super.key,
@@ -48,6 +73,9 @@ class MField extends StatefulWidget {
     this.onSubmitted,
     this.onChanged,
     this.trailing,
+    this.variant = MFieldVariant.filled,
+    this.showClear = true,
+    this.contentPadding,
   });
 
   @override
@@ -97,13 +125,19 @@ class _MFieldState extends State<MField> {
         onPressed: () => setState(() => _obscured = !_obscured),
       );
     }
+    if (!widget.showClear) return null;
     if (widget.controller.text.isEmpty) return null;
     return IconButton(
       icon: const Icon(LucideIcons.x, size: 18),
       color: scheme.onSurfaceVariant,
       visualDensity: .compact,
       tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
-      onPressed: widget.controller.clear,
+      // 清空后要**手动**补一次 onChanged：`TextField.onChanged` 只在用户输入时触发，
+      // 程序改 controller 不算。少了这一句，「清除」会让搜索类页面停在旧结果上。
+      onPressed: () {
+        widget.controller.clear();
+        widget.onChanged?.call('');
+      },
     );
   }
 
@@ -111,6 +145,8 @@ class _MFieldState extends State<MField> {
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
     final multiline = widget.maxLines > 1 && !widget.obscureText;
+    final plain = widget.variant == MFieldVariant.plain;
+    final InputBorder? noBorder = plain ? InputBorder.none : null;
 
     final field = TextField(
       controller: widget.controller,
@@ -134,10 +170,24 @@ class _MFieldState extends State<MField> {
         hintText: widget.hintText,
         errorText: widget.errorText,
         counterText: '',
-        constraints: multiline
+        // plain 档不给最小高度：宿主已经决定了这块地方多高。
+        constraints: multiline || plain
             ? null
             : BoxConstraints(minHeight: widget.minHeight),
         suffixIcon: _buildTrailing(scheme),
+        // 下面六项在 filled 档全传 null，也就是照旧继承主题。
+        // 见 [MFieldVariant.plain] 上的注释：六条边框缺一条都白撤。
+        filled: plain ? false : null,
+        isCollapsed: plain ? true : null,
+        contentPadding: plain
+            ? (widget.contentPadding ?? EdgeInsets.zero)
+            : widget.contentPadding,
+        border: noBorder,
+        enabledBorder: noBorder,
+        disabledBorder: noBorder,
+        focusedBorder: noBorder,
+        errorBorder: noBorder,
+        focusedErrorBorder: noBorder,
       ),
     );
 
@@ -205,7 +255,7 @@ class MSwitchField extends StatelessWidget {
       color: scheme.surfaceContainerHighest,
       borderRadius: MuiRadius.md,
       clipBehavior: .antiAlias,
-      child: InkWell(
+      child: MInkWell(
         onTap: onChanged == null ? null : () => onChanged!(!value),
         child: Padding(
           padding: const .fromLTRB(16, 6, 10, 6),
@@ -247,7 +297,7 @@ class MDangerRow extends StatelessWidget {
       color: scheme.error.withValues(alpha: 0.08),
       borderRadius: MuiRadius.md,
       clipBehavior: .antiAlias,
-      child: InkWell(
+      child: MInkWell(
         onTap: onPressed,
         child: SizedBox(
           height: 44,

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/widgets.dart';
@@ -260,4 +261,23 @@ abstract final class MuiRadius {
 
   /// 弹窗一类的大面积浮层。比 [lg] 更圆，用来替代 M3 弹窗默认的 28。
   static const BorderRadius xl = BorderRadius.all(Radius.circular(24));
+
+  /// 同心圆角：**内层半径 = 外层半径 − 两者之间的间距**。
+  ///
+  /// 两条弧线只有在圆心重合时才处处等距。直接沿用外层半径，内层的弧会比外层
+  /// 更"鼓"、在角上顶出去；内层用直角，则会在角落留下一块楔形空白。两种都是
+  /// 一眼能看出别扭、却说不上来哪里不对的那类问题。
+  ///
+  /// [inset] 是内层元素到外层内壁的距离（外层 padding 加上内层自己的 margin）。
+  /// 结果夹到 0 —— 间距大过外层半径时，内层就该是直角。
+  static BorderRadius inside(BorderRadius outer, double inset) {
+    Radius shrink(Radius r) =>
+        Radius.elliptical(math.max(0, r.x - inset), math.max(0, r.y - inset));
+    return BorderRadius.only(
+      topLeft: shrink(outer.topLeft),
+      topRight: shrink(outer.topRight),
+      bottomLeft: shrink(outer.bottomLeft),
+      bottomRight: shrink(outer.bottomRight),
+    );
+  }
 }

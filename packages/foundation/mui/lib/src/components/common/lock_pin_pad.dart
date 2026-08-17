@@ -238,8 +238,8 @@ class _NumButton extends StatelessWidget {
     return Material(
       color: scheme.surfaceContainerHighest,
       shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
+      child: MInkWell(
+        shape: const CircleBorder(),
         onTap: onTap,
         child: SizedBox(
           width: size,
@@ -269,8 +269,8 @@ class _IconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      customBorder: const CircleBorder(),
+    return MInkWell(
+      shape: const CircleBorder(),
       onTap: onTap,
       child: SizedBox(
         width: size,

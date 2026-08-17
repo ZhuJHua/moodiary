@@ -431,7 +431,7 @@ class _PickerField extends StatelessWidget {
       onChanged: onChanged,
       onSubmitted: onChanged,
       // 清除键在三列并排时会把数字挤没。
-      trailing: const SizedBox.shrink(),
+      showClear: false,
     );
   }
 }
@@ -452,7 +452,7 @@ class _ModeButton extends StatelessWidget {
       child: Material(
         color: scheme.surfaceContainerHighest,
         borderRadius: MuiRadius.md,
-        child: InkWell(
+        child: MInkWell(
           borderRadius: MuiRadius.md,
           onTap: onTap,
           child: SizedBox(
@@ -526,7 +526,7 @@ class MSwatchRow extends StatelessWidget {
                 child: Material(
                   color: swatch,
                   borderRadius: MuiRadius.sm,
-                  child: InkWell(
+                  child: MInkWell(
                     borderRadius: MuiRadius.sm,
                     onTap: () => onSelected(swatch),
                     child: swatch.toARGB32() == selected.toARGB32()
@@ -539,7 +539,8 @@ class MSwatchRow extends StatelessWidget {
                                 ? Colors.black
                                 : Colors.white,
                           )
-                        : null,
+                        // 未选中的格子也要撑满，否则 MInkWell 只有图标那么大。
+                        : const SizedBox.expand(),
                   ),
                 ),
               ),

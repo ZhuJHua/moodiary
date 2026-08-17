@@ -405,6 +405,80 @@ void main() {
       expect(find.byIcon(LucideIcons.x), findsNothing);
     });
 
+    // 只撤 `border` 是没用的：InputDecorator 先解析五条状态边框，主题把它们填满了，
+    // `decoration.border` 根本读不到。这条闸门钉的就是「六条一条都不能漏」。
+    testWidgets('plain 档撤掉填充与全部六条边框', (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        fieldHost(MField(controller: controller, variant: MFieldVariant.plain)),
+      );
+
+      final decoration = tester
+          .widget<TextField>(find.byType(TextField))
+          .decoration!;
+      expect(decoration.filled, isFalse);
+      expect(decoration.isCollapsed, isTrue);
+      expect(decoration.contentPadding, EdgeInsets.zero);
+      for (final border in [
+        decoration.border,
+        decoration.enabledBorder,
+        decoration.disabledBorder,
+        decoration.focusedBorder,
+        decoration.errorBorder,
+        decoration.focusedErrorBorder,
+      ]) {
+        expect(border, InputBorder.none);
+      }
+    });
+
+    // filled 档必须继续把这些交给主题（传 null），否则等于在组件里复刻一份色板。
+    testWidgets('filled 档不覆盖主题的填充与边框', (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(fieldHost(MField(controller: controller)));
+
+      final decoration = tester
+          .widget<TextField>(find.byType(TextField))
+          .decoration!;
+      expect(decoration.filled, isNull);
+      expect(decoration.isCollapsed, isNull);
+      expect(decoration.contentPadding, isNull);
+      expect(decoration.enabledBorder, isNull);
+      expect(decoration.focusedBorder, isNull);
+    });
+
+    testWidgets('showClear: false 收起清除键但留下密码眼睛', (tester) async {
+      final controller = TextEditingController(text: '255');
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        fieldHost(MField(controller: controller, showClear: false)),
+      );
+      expect(find.byIcon(LucideIcons.x), findsNothing);
+
+      await tester.pumpWidget(
+        fieldHost(
+          MField(controller: controller, showClear: false, obscureText: true),
+        ),
+      );
+      expect(find.byIcon(LucideIcons.eyeOff), findsOneWidget);
+    });
+
+    // controller.clear() 不触发 TextField.onChanged，搜索类页面会停在旧结果上。
+    testWidgets('清除键补发一次 onChanged', (tester) async {
+      final controller = TextEditingController(text: 'moodiary');
+      addTearDown(controller.dispose);
+      final seen = <String>[];
+      await tester.pumpWidget(
+        fieldHost(MField(controller: controller, onChanged: seen.add)),
+      );
+
+      await tester.tap(find.byIcon(LucideIcons.x));
+      await tester.pump();
+      expect(controller.text, isEmpty);
+      expect(seen, ['']);
+    });
+
     testWidgets('密码框给眼睛不给清除键，点了切换明文', (tester) async {
       final controller = TextEditingController(text: 'secret');
       addTearDown(controller.dispose);
