@@ -36,7 +36,6 @@ final DiarySchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'tags', type: IsarType.stringList),
       IsarPropertySchema(name: 'position', type: IsarType.stringList),
       IsarPropertySchema(name: 'type', type: IsarType.string),
-      IsarPropertySchema(name: 'imageColor', type: IsarType.long),
       IsarPropertySchema(name: 'aspect', type: IsarType.double),
     ],
     indexes: [
@@ -139,8 +138,7 @@ int serializeDiary(IsarWriter writer, Diary object) {
     IsarCore.endList(writer, listWriter);
   }
   IsarCore.writeString(writer, 16, object.type);
-  IsarCore.writeLong(writer, 17, object.imageColor ?? -9223372036854775808);
-  IsarCore.writeDouble(writer, 18, object.aspect ?? double.nan);
+  IsarCore.writeDouble(writer, 17, object.aspect ?? double.nan);
   return object.isarId;
 }
 
@@ -288,18 +286,9 @@ Diary deserializeDiary(IsarReader reader) {
   }
   final String _type;
   _type = IsarCore.readString(reader, 16) ?? '';
-  final int? _imageColor;
-  {
-    final value = IsarCore.readLong(reader, 17);
-    if (value == -9223372036854775808) {
-      _imageColor = null;
-    } else {
-      _imageColor = value;
-    }
-  }
   final double? _aspect;
   {
-    final value = IsarCore.readDouble(reader, 18);
+    final value = IsarCore.readDouble(reader, 17);
     if (value.isNaN) {
       _aspect = null;
     } else {
@@ -323,7 +312,6 @@ Diary deserializeDiary(IsarReader reader) {
     tags: _tags,
     position: _position,
     type: _type,
-    imageColor: _imageColor,
     aspect: _aspect,
   );
   return object;
@@ -478,16 +466,7 @@ dynamic deserializeDiaryProp(IsarReader reader, int property) {
       return IsarCore.readString(reader, 16) ?? '';
     case 17:
       {
-        final value = IsarCore.readLong(reader, 17);
-        if (value == -9223372036854775808) {
-          return null;
-        } else {
-          return value;
-        }
-      }
-    case 18:
-      {
-        final value = IsarCore.readDouble(reader, 18);
+        final value = IsarCore.readDouble(reader, 17);
         if (value.isNaN) {
           return null;
         } else {
@@ -512,7 +491,6 @@ sealed class _DiaryUpdate {
     bool? show,
     double? mood,
     String? type,
-    int? imageColor,
     double? aspect,
   });
 }
@@ -535,7 +513,6 @@ class _DiaryUpdateImpl implements _DiaryUpdate {
     Object? show = ignore,
     Object? mood = ignore,
     Object? type = ignore,
-    Object? imageColor = ignore,
     Object? aspect = ignore,
   }) {
     return collection.updateProperties(
@@ -551,8 +528,7 @@ class _DiaryUpdateImpl implements _DiaryUpdate {
             if (show != ignore) 8: show as bool?,
             if (mood != ignore) 9: mood as double?,
             if (type != ignore) 16: type as String?,
-            if (imageColor != ignore) 17: imageColor as int?,
-            if (aspect != ignore) 18: aspect as double?,
+            if (aspect != ignore) 17: aspect as double?,
           },
         ) >
         0;
@@ -572,7 +548,6 @@ sealed class _DiaryUpdateAll {
     bool? show,
     double? mood,
     String? type,
-    int? imageColor,
     double? aspect,
   });
 }
@@ -595,7 +570,6 @@ class _DiaryUpdateAllImpl implements _DiaryUpdateAll {
     Object? show = ignore,
     Object? mood = ignore,
     Object? type = ignore,
-    Object? imageColor = ignore,
     Object? aspect = ignore,
   }) {
     return collection.updateProperties(isarId, {
@@ -609,8 +583,7 @@ class _DiaryUpdateAllImpl implements _DiaryUpdateAll {
       if (show != ignore) 8: show as bool?,
       if (mood != ignore) 9: mood as double?,
       if (type != ignore) 16: type as String?,
-      if (imageColor != ignore) 17: imageColor as int?,
-      if (aspect != ignore) 18: aspect as double?,
+      if (aspect != ignore) 17: aspect as double?,
     });
   }
 }
@@ -633,7 +606,6 @@ sealed class _DiaryQueryUpdate {
     bool? show,
     double? mood,
     String? type,
-    int? imageColor,
     double? aspect,
   });
 }
@@ -656,7 +628,6 @@ class _DiaryQueryUpdateImpl implements _DiaryQueryUpdate {
     Object? show = ignore,
     Object? mood = ignore,
     Object? type = ignore,
-    Object? imageColor = ignore,
     Object? aspect = ignore,
   }) {
     return query.updateProperties(limit: limit, {
@@ -670,8 +641,7 @@ class _DiaryQueryUpdateImpl implements _DiaryQueryUpdate {
       if (show != ignore) 8: show as bool?,
       if (mood != ignore) 9: mood as double?,
       if (type != ignore) 16: type as String?,
-      if (imageColor != ignore) 17: imageColor as int?,
-      if (aspect != ignore) 18: aspect as double?,
+      if (aspect != ignore) 17: aspect as double?,
     });
   }
 }
@@ -700,7 +670,6 @@ class _DiaryQueryBuilderUpdateImpl implements _DiaryQueryUpdate {
     Object? show = ignore,
     Object? mood = ignore,
     Object? type = ignore,
-    Object? imageColor = ignore,
     Object? aspect = ignore,
   }) {
     final q = query.build();
@@ -716,8 +685,7 @@ class _DiaryQueryBuilderUpdateImpl implements _DiaryQueryUpdate {
         if (show != ignore) 8: show as bool?,
         if (mood != ignore) 9: mood as double?,
         if (type != ignore) 16: type as String?,
-        if (imageColor != ignore) 17: imageColor as int?,
-        if (aspect != ignore) 18: aspect as double?,
+        if (aspect != ignore) 17: aspect as double?,
       });
     } finally {
       q.close();
@@ -3006,87 +2974,15 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageColorIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const IsNullCondition(property: 17));
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageColorIsNotNull() {
-    return QueryBuilder.apply(not(), (query) {
-      return query.addFilterCondition(const IsNullCondition(property: 17));
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageColorEqualTo(
-    int? value,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        EqualCondition(property: 17, value: value),
-      );
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageColorGreaterThan(
-    int? value,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        GreaterCondition(property: 17, value: value),
-      );
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterFilterCondition>
-  imageColorGreaterThanOrEqualTo(int? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        GreaterOrEqualCondition(property: 17, value: value),
-      );
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageColorLessThan(
-    int? value,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        LessCondition(property: 17, value: value),
-      );
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageColorLessThanOrEqualTo(
-    int? value,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        LessOrEqualCondition(property: 17, value: value),
-      );
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterFilterCondition> imageColorBetween(
-    int? lower,
-    int? upper,
-  ) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        BetweenCondition(property: 17, lower: lower, upper: upper),
-      );
-    });
-  }
-
   QueryBuilder<Diary, Diary, QAfterFilterCondition> aspectIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const IsNullCondition(property: 18));
+      return query.addFilterCondition(const IsNullCondition(property: 17));
     });
   }
 
   QueryBuilder<Diary, Diary, QAfterFilterCondition> aspectIsNotNull() {
     return QueryBuilder.apply(not(), (query) {
-      return query.addFilterCondition(const IsNullCondition(property: 18));
+      return query.addFilterCondition(const IsNullCondition(property: 17));
     });
   }
 
@@ -3096,7 +2992,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 18, value: value, epsilon: epsilon),
+        EqualCondition(property: 17, value: value, epsilon: epsilon),
       );
     });
   }
@@ -3107,7 +3003,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(property: 18, value: value, epsilon: epsilon),
+        GreaterCondition(property: 17, value: value, epsilon: epsilon),
       );
     });
   }
@@ -3118,7 +3014,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(property: 18, value: value, epsilon: epsilon),
+        GreaterOrEqualCondition(property: 17, value: value, epsilon: epsilon),
       );
     });
   }
@@ -3129,7 +3025,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 18, value: value, epsilon: epsilon),
+        LessCondition(property: 17, value: value, epsilon: epsilon),
       );
     });
   }
@@ -3140,7 +3036,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(property: 18, value: value, epsilon: epsilon),
+        LessOrEqualCondition(property: 17, value: value, epsilon: epsilon),
       );
     });
   }
@@ -3153,7 +3049,7 @@ extension DiaryQueryFilter on QueryBuilder<Diary, Diary, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 18,
+          property: 17,
           lower: lower,
           upper: upper,
 
@@ -3323,27 +3219,15 @@ extension DiaryQuerySortBy on QueryBuilder<Diary, Diary, QSortBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByImageColor() {
+  QueryBuilder<Diary, Diary, QAfterSortBy> sortByAspect() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(17);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByImageColorDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(17, sort: Sort.desc);
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterSortBy> sortByAspect() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(18);
-    });
-  }
-
   QueryBuilder<Diary, Diary, QAfterSortBy> sortByAspectDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(18, sort: Sort.desc);
+      return query.addSortBy(17, sort: Sort.desc);
     });
   }
 }
@@ -3505,27 +3389,15 @@ extension DiaryQuerySortThenBy on QueryBuilder<Diary, Diary, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByImageColor() {
+  QueryBuilder<Diary, Diary, QAfterSortBy> thenByAspect() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(17);
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByImageColorDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(17, sort: Sort.desc);
-    });
-  }
-
-  QueryBuilder<Diary, Diary, QAfterSortBy> thenByAspect() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(18);
-    });
-  }
-
   QueryBuilder<Diary, Diary, QAfterSortBy> thenByAspectDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(18, sort: Sort.desc);
+      return query.addSortBy(17, sort: Sort.desc);
     });
   }
 }
@@ -3639,15 +3511,9 @@ extension DiaryQueryWhereDistinct on QueryBuilder<Diary, Diary, QDistinct> {
     });
   }
 
-  QueryBuilder<Diary, Diary, QAfterDistinct> distinctByImageColor() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(17);
-    });
-  }
-
   QueryBuilder<Diary, Diary, QAfterDistinct> distinctByAspect() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(18);
+      return query.addDistinctBy(17);
     });
   }
 }
@@ -3755,15 +3621,9 @@ extension DiaryQueryProperty1 on QueryBuilder<Diary, Diary, QProperty> {
     });
   }
 
-  QueryBuilder<Diary, int?, QAfterProperty> imageColorProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(17);
-    });
-  }
-
   QueryBuilder<Diary, double?, QAfterProperty> aspectProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(18);
+      return query.addProperty(17);
     });
   }
 }
@@ -3871,15 +3731,9 @@ extension DiaryQueryProperty2<R> on QueryBuilder<Diary, R, QAfterProperty> {
     });
   }
 
-  QueryBuilder<Diary, (R, int?), QAfterProperty> imageColorProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(17);
-    });
-  }
-
   QueryBuilder<Diary, (R, double?), QAfterProperty> aspectProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(18);
+      return query.addProperty(17);
     });
   }
 }
@@ -3988,15 +3842,9 @@ extension DiaryQueryProperty3<R1, R2>
     });
   }
 
-  QueryBuilder<Diary, (R1, R2, int?), QOperations> imageColorProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(17);
-    });
-  }
-
   QueryBuilder<Diary, (R1, R2, double?), QOperations> aspectProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(18);
+      return query.addProperty(17);
     });
   }
 }
@@ -4032,7 +3880,6 @@ _Diary _$DiaryFromJson(Map<String, dynamic> json) => _Diary(
       .map((e) => e as String)
       .toList(),
   type: json['type'] as String,
-  imageColor: (json['imageColor'] as num?)?.toInt(),
   aspect: (json['aspect'] as num?)?.toDouble(),
 );
 
@@ -4053,6 +3900,5 @@ Map<String, dynamic> _$DiaryToJson(_Diary instance) => <String, dynamic>{
   'tags': instance.tags,
   'position': instance.position,
   'type': instance.type,
-  'imageColor': instance.imageColor,
   'aspect': instance.aspect,
 };

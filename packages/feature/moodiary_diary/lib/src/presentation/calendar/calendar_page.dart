@@ -14,6 +14,13 @@ const double _kCellAspect = 46 / 54;
 const double _kCellGap = 3;
 const double _kGridPadding = 8;
 
+/// 网格**恒定六行**。一个月按前导空格能占 4–6 行（2 月 1 号是周日时只要 4 行，
+/// 8 月 1 号是周六时要 6 行），行数跟着月份变的话，翻月时整个下半屏会上下弹。
+const int _kGridRows = 6;
+
+/// 认定为一次翻月的横扫速度。
+const double _kSwipeVelocity = 180;
+
 /// 一个月的网格几何：前面空几格、这个月有几天。
 ///
 /// 两处都别自己算：
@@ -57,15 +64,46 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
   static DateTime _monthOf(DateTime d) => DateTime(d.year, d.month);
 
+  /// 新月从哪一侧滑进来。+1 = 往后翻。
+  int _slideDir = 1;
+
   void _shiftMonth(int delta) {
-    setState(() => _month = DateTime(_month.year, _month.month + delta));
+    final month = DateTime(_month.year, _month.month + delta);
+    setState(() {
+      _slideDir = delta;
+      _month = month;
+      _selected = _pickDayIn(month);
+    });
   }
 
   void _backToToday() {
+    final month = _monthOf(_today());
     setState(() {
-      _month = _monthOf(_today());
+      _slideDir = month.isBefore(_month) ? -1 : 1;
+      _month = month;
       _selected = _today();
     });
+  }
+
+  /// 换月后选中日**必须落在当月**：否则网格里一个高亮都没有，下半屏却还挂着上个月
+  /// 某天的日记，看起来像是没翻动。
+  ///
+  /// 优先保留同一个日号（翻月对比同一天是常见动作）；那天没写就退到当月第一个写过的
+  /// 日子，好让下半屏有东西可看；整月都空才停在同号。
+  DateTime _pickDayIn(DateTime month) {
+    final byDay = ref.read(dashboardControllerProvider).value?.byDay;
+    final days = monthGeometry(month).days;
+    final sameDom = DateTime(
+      month.year,
+      month.month,
+      _selected.day.clamp(1, days),
+    );
+    if (byDay == null || byDay.containsKey(sameDom)) return sameDom;
+    for (var d = 1; d <= days; d++) {
+      final day = DateTime(month.year, month.month, d);
+      if (byDay.containsKey(day)) return day;
+    }
+    return sameDom;
   }
 
   void _syncDayEntries(DayWriting? writing) {
@@ -104,12 +142,45 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             onNext: () => _shiftMonth(1),
           ),
           const _WeekdayHeader(),
-          _MonthGrid(
-            month: _month,
-            byDay: byDay,
-            selected: _selected,
-            today: _today(),
-            onSelect: (d) => setState(() => _selected = d),
+          // 横扫翻月。用 GestureDetector 而不是 PageView：网格是定高的，
+          // PageView 还要维护无限页与两侧预建，为一个翻页动作不值当。
+          GestureDetector(
+            onHorizontalDragEnd: (details) {
+              final v = details.primaryVelocity ?? 0;
+              if (v.abs() < _kSwipeVelocity) return;
+              _shiftMonth(v < 0 ? 1 : -1);
+            },
+            child: AnimatedSwitcher(
+              duration: Durations.medium2,
+              switchInCurve: Easing.emphasizedDecelerate,
+              switchOutCurve: Easing.emphasizedAccelerate,
+              transitionBuilder: (child, animation) {
+                // 进场的从 _slideDir 那一侧来，退场的往反方向走。退场那个的 key
+                // 已经不是当前月份了，据此分辨。
+                final incoming = child.key == ValueKey(_month);
+                final dx = (incoming ? _slideDir : -_slideDir) * 0.1;
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween(
+                      begin: Offset(dx, 0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey(_month),
+                child: _MonthGrid(
+                  month: _month,
+                  byDay: byDay,
+                  selected: _selected,
+                  today: _today(),
+                  onSelect: (d) => setState(() => _selected = d),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 4),
           Expanded(
@@ -245,6 +316,9 @@ class _MonthGrid extends StatelessWidget {
                 onTap: () => onSelect(day),
               );
             }(),
+          // 补满六行，见 [_kGridRows]。
+          for (var i = leading + days; i < _kGridRows * 7; i++)
+            const SizedBox.shrink(),
         ],
       ),
     );
@@ -281,6 +355,29 @@ class _DayCell extends StatelessWidget {
       content = _TextCell(writing: w, day: day);
     }
 
+    // 格子画的是图和数字，读屏拿不到任何东西 —— 日期与篇数只能显式给。
+    // 子树里那些日期数字、标题节选会和这里的 label 打架，整个排除掉。
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: [
+        TimeFormat.monthDay(day),
+        if (w == null)
+          context.l10n.diary.calendarEmptyDay
+        else
+          context.l10n.diary.timelineMonthCount(count: w.count),
+      ].join(' · '),
+      child: ExcludeSemantics(child: _cell(context, content, colors, radius)),
+    );
+  }
+
+  Widget _cell(
+    BuildContext context,
+    Widget content,
+    ColorScheme colors,
+    BorderRadius radius,
+  ) {
+    final w = writing;
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: radius,

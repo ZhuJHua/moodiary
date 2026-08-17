@@ -427,7 +427,6 @@ abstract final class AssistantToolRegistry {
       tags: const [],
       position: const [],
       type: converted.type,
-      imageColor: null,
       aspect: null,
     );
     await DiaryRepository.get().insertADiary(diary);

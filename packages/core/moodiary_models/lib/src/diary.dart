@@ -28,7 +28,6 @@ abstract class Diary with _$Diary {
     required List<String> tags,
     required List<String> position,
     required String type,
-    int? imageColor,
     double? aspect,
   }) = _Diary;
 
@@ -52,7 +51,6 @@ abstract class Diary with _$Diary {
     required List<String> tags,
     required List<String> position,
     required DiaryType type,
-    int? imageColor,
     double? aspect,
   }) {
     return Diary(
@@ -72,7 +70,6 @@ abstract class Diary with _$Diary {
       tags: tags,
       position: position,
       type: type.value,
-      imageColor: imageColor,
       aspect: aspect,
     );
   }
