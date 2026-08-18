@@ -101,9 +101,6 @@ enum MoodiaryKVs<T extends Object> {
   /// 用户是否已同意 AI 助手免责声明。未同意前助手不可用。
   assistantDisclaimerAccepted<bool>(defaultValue: false),
 
-  /// 已被用户「始终允许」的助手工具 id 列表，命中后不再弹权限框。
-  assistantAlwaysAllowedTools<List<String>>(),
-
   /// 新建 AI 会话的默认思考强度；每个会话的实际档位存于 ChatSession.reasoningEffort。
   /// 空串表示关闭思考。
   assistantReasoningEffort<String>(defaultValue: ''),

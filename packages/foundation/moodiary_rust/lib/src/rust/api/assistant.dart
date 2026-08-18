@@ -127,8 +127,19 @@ sealed class RigStreamEvent with _$RigStreamEvent {
       RigStreamEvent_TextDelta;
   const factory RigStreamEvent.reasoningDelta(String field0) =
       RigStreamEvent_ReasoningDelta;
+
+  /// 只作「思考阶段结束」的信号；要展示工具调用请用下面两个。
   const factory RigStreamEvent.toolCall(String field0) =
       RigStreamEvent_ToolCall;
+  const factory RigStreamEvent.toolStarted({
+    required String callId,
+    required String name,
+    required String argsJson,
+  }) = RigStreamEvent_ToolStarted;
+  const factory RigStreamEvent.toolFinished({
+    required String callId,
+    required String result,
+  }) = RigStreamEvent_ToolFinished;
   const factory RigStreamEvent.usage({
     required int inputTokens,
     required int outputTokens,

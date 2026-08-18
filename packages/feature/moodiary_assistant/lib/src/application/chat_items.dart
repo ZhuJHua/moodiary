@@ -34,6 +34,9 @@ final class AssistantTurn extends AssistantChatItem {
   final int inputTokens;
   final int outputTokens;
 
+  /// 本轮的工具调用，按发生顺序。空表示这一轮没调工具。
+  final List<AssistantToolCall> toolCalls;
+
   /// 瞬态：正在流式接收。不落库。
   final bool streaming;
 
@@ -50,6 +53,7 @@ final class AssistantTurn extends AssistantChatItem {
     this.thinkingMillis = 0,
     this.inputTokens = 0,
     this.outputTokens = 0,
+    this.toolCalls = const [],
     this.streaming = false,
     this.thinkingActive = false,
   });
@@ -88,6 +92,7 @@ final class AssistantTurn extends AssistantChatItem {
     thinkingMillis: m.thinkingMillis ?? 0,
     inputTokens: m.inputTokens ?? 0,
     outputTokens: m.outputTokens ?? 0,
+    toolCalls: m.toolCalls,
   );
 
   ChatMessage toRecord(String sessionId) => ChatMessage(
@@ -102,10 +107,15 @@ final class AssistantTurn extends AssistantChatItem {
     imageName: imageName.isEmpty ? null : imageName,
     inputTokens: inputTokens == 0 ? null : inputTokens,
     outputTokens: outputTokens == 0 ? null : outputTokens,
+    toolCalls: toolCalls,
   );
 
-  /// 正文与图片都没有 —— 这样的气泡不落库，也不进发给模型的历史。
-  bool get isEmpty => text.isEmpty && imageName.isEmpty;
+  /// 正文、图片、工具调用都没有 —— 这样的气泡不落库，也不进发给模型的历史。
+  ///
+  /// **工具调用要算进来**：一轮「查了日记但没说话」也是发生过的事，丢掉的话
+  /// 历史里就只剩用户那句问话，看着像助手没反应。
+  bool get isEmpty =>
+      text.isEmpty && imageName.isEmpty && toolCalls.isEmpty;
 
   /// 定稿：只清两个瞬态标记，思考正文 / 耗时 / 用量全部留下。
   ///
@@ -120,6 +130,7 @@ final class AssistantTurn extends AssistantChatItem {
     int? thinkingMillis,
     int? inputTokens,
     int? outputTokens,
+    List<AssistantToolCall>? toolCalls,
     bool? streaming,
     bool? thinkingActive,
   }) => AssistantTurn(
@@ -132,20 +143,12 @@ final class AssistantTurn extends AssistantChatItem {
     thinkingMillis: thinkingMillis ?? this.thinkingMillis,
     inputTokens: inputTokens ?? this.inputTokens,
     outputTokens: outputTokens ?? this.outputTokens,
+    toolCalls: toolCalls ?? this.toolCalls,
     streaming: streaming ?? this.streaming,
     thinkingActive: thinkingActive ?? this.thinkingActive,
   );
 }
 
-/// 工具授权卡。id 就是 genui 的 surfaceId，不落库。
-final class AssistantPermissionCard extends AssistantChatItem {
-  final String surfaceId;
-
-  const AssistantPermissionCard(this.surfaceId);
-
-  @override
-  String get id => surfaceId;
-}
 
 /// 上下文压缩提示 chip，不落库 —— 每次载入会话时按水位重新合成。
 final class AssistantCompactionNotice extends AssistantChatItem {

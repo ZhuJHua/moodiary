@@ -216,8 +216,6 @@ class _ToolSectionState extends State<_ToolSection> {
     final scheme = context.theme.colors;
     final l10n = context.l10n;
     const tools = AssistantTool.values;
-    final always =
-        MoodiaryKVs.assistantAlwaysAllowedTools.get() ?? const <String>[];
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -233,7 +231,6 @@ class _ToolSectionState extends State<_ToolSection> {
                   tools[i],
                   isFirst: i == 0,
                   isLast: i == tools.length - 1,
-                  alwaysAllowed: always.contains(tools[i].id),
                 ),
             ],
           ),
@@ -245,24 +242,8 @@ class _ToolSectionState extends State<_ToolSection> {
             style: context.theme.typography.bodySmall.onSurfaceVariant,
           ),
         ),
-        if (always.isNotEmpty)
-          Align(
-            alignment: .centerStart,
-            child: TextButton.icon(
-              onPressed: _resetGrants,
-              icon: const Icon(LucideIcons.rotateCcwKey),
-              label: Text(l10n.assistant.toolResetGrants),
-            ),
-          ),
       ],
     );
-  }
-
-  Future<void> _resetGrants() async {
-    MoodiaryKVs.assistantAlwaysAllowedTools.set(const []);
-    if (!mounted) return;
-    setState(() {});
-    toast.success(message: context.l10n.assistant.toolResetGrantsDone);
   }
 
   Widget _toolTile(
@@ -270,79 +251,15 @@ class _ToolSectionState extends State<_ToolSection> {
     AssistantTool tool, {
     required bool isFirst,
     required bool isLast,
-    required bool alwaysAllowed,
   }) {
-    final scheme = context.theme.colors;
     final display = assistantToolDisplay(context, tool);
-    final readOnly = !tool.needsApproval;
-    final hasTrailing = readOnly || alwaysAllowed || tool.dangerous;
     return SettingListTile(
       isFirst: isFirst,
       isLast: isLast,
       leading: Icon(display.icon),
       title: display.title,
       subtitle: display.description,
-      trailing: !hasTrailing
-          ? null
-          : Row(
-              mainAxisSize: .min,
-              children: [
-                if (readOnly) const _ReadOnlyBadge(),
-                if (alwaysAllowed)
-                  Padding(
-                    padding: const .only(right: 6),
-                    child: Tooltip(
-                      message: context.l10n.assistant.toolAlwaysAllowedHint,
-                      child: Icon(
-                        LucideIcons.shieldCheck,
-                        size: 18,
-                        color: scheme.primary,
-                      ),
-                    ),
-                  ),
-                if (tool.dangerous) const _DangerBadge(),
-              ],
-            ),
     );
   }
 }
 
-class _ReadOnlyBadge extends StatelessWidget {
-  const _ReadOnlyBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Container(
-      padding: const .symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: scheme.secondaryContainer,
-        borderRadius: .circular(8),
-      ),
-      child: Text(
-        context.l10n.assistant.toolReadOnlyBadge,
-        style: context.theme.typography.labelSmall.onSecondaryContainer,
-      ),
-    );
-  }
-}
-
-class _DangerBadge extends StatelessWidget {
-  const _DangerBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Container(
-      padding: const .symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: scheme.errorContainer,
-        borderRadius: .circular(8),
-      ),
-      child: Text(
-        context.l10n.assistant.toolDangerBadge,
-        style: context.theme.typography.labelSmall.onErrorContainer,
-      ),
-    );
-  }
-}

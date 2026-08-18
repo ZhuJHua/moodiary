@@ -4,16 +4,22 @@
 use std::sync::Arc;
 
 use anyhow::Result;
+use std::future::Future;
 use futures::StreamExt;
-use rig::OneOrMany;
-use rig::agent::{Agent, AgentBuilder, MultiTurnStreamItem};
 use rig::client::completion::CompletionClient;
 use rig::completion::message::{ImageMediaType, MimeType, UserContent};
-use rig::completion::{CompletionModel, GetTokenUsage, Message};
+use rig::completion::Message;
 use rig::providers::{anthropic, openai};
-use rig::streaming::{StreamedAssistantContent, StreamingChat};
-use rig::tool::{ToolDyn, ToolError};
-use rig::wasm_compat::{WasmBoxedFuture, WasmCompatSend};
+use rig::streaming::StreamedAssistantContent;
+use rig::wasm_compat::WasmCompatSend;
+use rig_agent::agent::hook::{
+    AgentHook, HookContext, ToolCall as HookToolCall, ToolCallAction, ToolResultAction,
+    ToolResultEvent,
+};
+use rig_agent::agent::{Agent, AgentBuilder, MultiTurnStreamItem};
+use rig_agent::client::AgentClientExt;
+use rig_agent::streaming::StreamingChat;
+use rig_agent::tool::{DynamicTool, ToolExecutionError, ToolOutput};
 
 /// 协议标识，与 Dart 的 `AssistantProviderType.id` 一一对应。
 pub const PROTOCOL_OPENAI_COMPLETIONS: &str = "openai-completions";
@@ -65,8 +71,21 @@ pub enum RigStreamEvent {
     TextDelta(String),
     /// 思考 / 推理增量。
     ReasoningDelta(String),
-    /// 载荷是工具名。
+    /// 载荷是工具名。只用作「思考阶段结束」的信号（模型开始调工具了）。
     ToolCall(String),
+    /// 一次工具调用**开始执行**。`call_id` 与 [`RigStreamEvent::ToolFinished`]
+    /// 对应，用来把参数和结果配成一对。
+    ///
+    /// rig 0.40 拿不到这个 —— 那时只有个工具名。0.42 起
+    /// `ToolExecutionCommitted` 给出了实际执行的那次调用（含参数），
+    /// 「把工具调用显示在对话里」才成为可能。
+    ToolStarted {
+        call_id: String,
+        name: String,
+        args_json: String,
+    },
+    /// 一次工具调用的结果。
+    ToolFinished { call_id: String, result: String },
     /// 本轮聚合用量（含内部工具轮次）。
     Usage {
         input_tokens: u32,
@@ -83,50 +102,105 @@ pub type ToolDispatch =
 /// 流式事件出口：返回 false 表示下游已取消订阅，循环随即中断。
 pub type EmitFn = Arc<dyn Fn(RigStreamEvent) -> bool + Send + Sync>;
 
-struct ProxyTool {
-    name: String,
-    description: String,
-    parameters: serde_json::Value,
-    dispatch: ToolDispatch,
-}
-
-impl ToolDyn for ProxyTool {
-    fn name(&self) -> String {
-        self.name.clone()
-    }
-
-    fn description(&self) -> String {
-        self.description.clone()
-    }
-
-    fn parameters(&self) -> serde_json::Value {
-        self.parameters.clone()
-    }
-
-    fn call(&self, args: String) -> WasmBoxedFuture<'_, Result<String, ToolError>> {
-        let dispatch = self.dispatch.clone();
-        let name = self.name.clone();
-        Box::pin(async move {
-            // 任何失败都以文本形式回灌模型（不抛错），让对话能优雅继续。
-            Ok(dispatch(name, args).await)
-        })
-    }
-}
-
+/// 把 Dart 传来的工具定义包成 rig 的运行时工具。
+///
+/// 0.42 起 rig 的对象安全分发是私有的，运行时才知道名字与回调的工具一律走
+/// [`DynamicTool`]（0.40 时代那个自实现 `ToolDyn` 的 `ProxyTool` 没有了）。
+///
 /// schema 解析失败的工具会被跳过。
-fn build_tools(tools: Vec<RigToolDef>, dispatch: &ToolDispatch) -> Vec<Box<dyn ToolDyn>> {
+fn build_tools(tools: Vec<RigToolDef>, dispatch: &ToolDispatch) -> Vec<DynamicTool> {
     tools
         .into_iter()
         .filter_map(|t| {
-            let parameters = serde_json::from_str(&t.parameters_json).ok()?;
-            Some(Box::new(ProxyTool {
-                name: t.name,
-                description: t.description,
+            let parameters: serde_json::Value =
+                serde_json::from_str(&t.parameters_json).ok()?;
+            let dispatch = dispatch.clone();
+            let name = t.name.clone();
+            Some(DynamicTool::new(
+                t.name,
+                t.description,
                 parameters,
-                dispatch: dispatch.clone(),
-            }) as Box<dyn ToolDyn>)
+                move |_context, arguments| {
+                    let dispatch = dispatch.clone();
+                    let name = name.clone();
+                    Box::pin(async move {
+                        // 任何失败都以文本形式回灌模型（不抛错），让对话能优雅继续。
+                        let text = dispatch(name, arguments.to_string()).await;
+                        Ok::<ToolOutput, ToolExecutionError>(ToolOutput::from(text))
+                    })
+                },
+            ))
         })
         .collect()
+}
+
+/// 工具生命周期的观测钩子 —— **rig 官方推荐的实时观测口子**。
+///
+/// 不走流式那条路是有原因的：`MultiTurnStreamItem::ToolExecutionCommitted` 的文档
+/// 明写「this is not a real-time start notification」，它和 `ToolResult` 是整批
+/// 结算之后一起下发的。照那条路做，「正在执行」那一态永远看不到 —— 工具跑三秒，
+/// 界面也是从空白直接跳到已完成。
+///
+/// 下游取消订阅时返回 `Stop`：工具可能带副作用，没人接收结果就不该再跑下去。
+struct ToolObserver {
+    emit: EmitFn,
+}
+
+impl AgentHook for ToolObserver {
+    fn on_tool_call(
+        &self,
+        _ctx: &HookContext,
+        event: HookToolCall<'_>,
+    ) -> impl Future<Output = ToolCallAction> + WasmCompatSend {
+        let alive = (self.emit)(RigStreamEvent::ToolStarted {
+            call_id: event.internal_call_id.to_string(),
+            name: event.tool_name.to_string(),
+            args_json: event.args.to_string(),
+        });
+        async move {
+            if alive {
+                ToolCallAction::Run
+            } else {
+                ToolCallAction::Stop("client unsubscribed".into())
+            }
+        }
+    }
+
+    fn on_tool_result(
+        &self,
+        _ctx: &HookContext,
+        event: ToolResultEvent<'_>,
+    ) -> impl Future<Output = ToolResultAction> + WasmCompatSend {
+        let alive = (self.emit)(RigStreamEvent::ToolFinished {
+            call_id: event.internal_call_id.to_string(),
+            result: event.raw_result.output().render(),
+        });
+        async move {
+            if alive {
+                ToolResultAction::Keep
+            } else {
+                ToolResultAction::Stop("client unsubscribed".into())
+            }
+        }
+    }
+}
+
+/// 把工具挂上去并收尾。
+///
+/// 0.42 的 `AgentBuilder` 是**类型状态**的：挂过工具之后类型会变成
+/// `AgentBuilder<WithBuilderTools>`，所以没法先 fold 再统一 build，只能分两支走。
+/// 也没有 `tools(Vec)` 了，一次一个。
+fn finish(builder: AgentBuilder, tools: Vec<DynamicTool>, emit: &EmitFn) -> Agent {
+    let builder = builder.add_hook(ToolObserver { emit: emit.clone() });
+    let mut iter = tools.into_iter();
+    let Some(first) = iter.next() else {
+        return builder.build();
+    };
+    let mut builder = builder.dynamic_tool(first);
+    for tool in iter {
+        builder = builder.dynamic_tool(tool);
+    }
+    builder.build()
 }
 
 fn split_history(history: Vec<RigChatMessage>) -> Result<(Message, Vec<Message>)> {
@@ -155,11 +229,7 @@ fn to_message(m: RigChatMessage) -> Message {
         parts.push(UserContent::text(m.content));
     }
     parts.push(UserContent::image_base64(m.image_base64, media_type, None));
-    match OneOrMany::many(parts) {
-        Ok(content) => Message::User { content },
-        // parts 至少含图片一项，理论不可达；兜底回退纯文本。
-        Err(_) => Message::user(String::new()),
-    }
+    Message::User { content: parts }
 }
 
 /// Anthropic Messages 的思考参数。**这里有一处很容易踩错**：
@@ -248,12 +318,11 @@ pub async fn rig_chat_stream(
                 .with_automatic_caching();
             let mut ab = AgentBuilder::new(model)
                 .preamble(&system_prompt)
-                .max_tokens(config.max_tokens as u64)
-                .tools(boxed_tools);
+                .max_tokens(config.max_tokens as u64);
             if let Some(params) = anthropic_reasoning_params(&config) {
                 ab = ab.additional_params(params);
             }
-            drive(ab.build(), prompt, prior, &emit, max_turns).await
+            drive(finish(ab, boxed_tools, &emit), prompt, prior, &emit, max_turns).await
         }
         PROTOCOL_OPENAI_RESPONSES => {
             let mut builder = openai::Client::builder().api_key(&config.api_key);
@@ -267,12 +336,11 @@ pub async fn rig_chat_stream(
             let mut ab = client
                 .agent(&config.model)
                 .preamble(&system_prompt)
-                .max_tokens(config.max_tokens as u64)
-                .tools(boxed_tools);
+                .max_tokens(config.max_tokens as u64);
             if let Some(params) = openai_responses_reasoning_params(&config) {
                 ab = ab.additional_params(params);
             }
-            drive(ab.build(), prompt, prior, &emit, max_turns).await
+            drive(finish(ab, boxed_tools, &emit), prompt, prior, &emit, max_turns).await
         }
         // 其余一律按 Chat Completions 处理（自定义端点通用性最好）。
         _ => {
@@ -287,27 +355,22 @@ pub async fn rig_chat_stream(
             let mut ab = client
                 .agent(&config.model)
                 .preamble(&system_prompt)
-                .max_tokens(config.max_tokens as u64)
-                .tools(boxed_tools);
+                .max_tokens(config.max_tokens as u64);
             if let Some(params) = openai_completions_reasoning_params(&config) {
                 ab = ab.additional_params(params);
             }
-            drive(ab.build(), prompt, prior, &emit, max_turns).await
+            drive(finish(ab, boxed_tools, &emit), prompt, prior, &emit, max_turns).await
         }
     }
 }
 
-async fn drive<M>(
-    agent: Agent<M>,
+async fn drive(
+    agent: Agent,
     prompt: Message,
     history: Vec<Message>,
     emit: &EmitFn,
     max_turns: u32,
-) -> Result<()>
-where
-    M: CompletionModel + 'static,
-    M::StreamingResponse: GetTokenUsage + WasmCompatSend + Clone + Unpin,
-{
+) -> Result<()> {
     // max_turns 是「含首个调用在内的模型调用总数」（rig 0.40 语义）。
     let mut stream = agent
         .stream_chat(prompt, history)

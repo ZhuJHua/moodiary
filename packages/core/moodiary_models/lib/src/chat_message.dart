@@ -2,11 +2,12 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:isar_plus/isar_plus.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
+import 'assistant_tool_call.dart';
+
 part 'chat_message.freezed.dart';
 part 'chat_message.g.dart';
 
-/// 一条会话消息（持久化）。仅存 user / assistant 的文本轮次；单次回复内部的工具调用
-/// 中间态不落库（由 rig 在内存内完成多轮）。
+/// 一条会话消息（持久化）。
 @freezed
 @Collection(ignore: {'copyWith'})
 abstract class ChatMessage with _$ChatMessage {
@@ -36,6 +37,12 @@ abstract class ChatMessage with _$ChatMessage {
 
     /// 本轮（assistant 回复）产生的输出 token 数。null 表示无用量数据。
     int? outputTokens,
+
+    /// 本轮用到的工具调用，按发生顺序。
+    ///
+    /// **必须落库**：不落的话工具调用只在本轮可见，重开会话就没了 —— 而且模型
+    /// 下一轮也看不到上一轮查到过什么（那正是它会重复调同一个工具的原因）。
+    @Default(<AssistantToolCall>[]) List<AssistantToolCall> toolCalls,
   }) = _ChatMessage;
 
   factory ChatMessage.create({

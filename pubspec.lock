@@ -9,14 +9,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "103.0.0"
-  a2ui_core:
-    dependency: transitive
-    description:
-      name: a2ui_core
-      sha256: "81cd97d82d58719e68856e901b8e8cae45be201ed7b1f9a0c9ba79226dc87208"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.1"
   analyzer:
     dependency: transitive
     description:
@@ -957,22 +949,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
-  genai_primitives:
-    dependency: transitive
-    description:
-      name: genai_primitives
-      sha256: "5a1e8c7ae9caf01aa609f59c54de47b73f51bf1ae95e0f679b7c7ab6948c4d9d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.4"
-  genui:
-    dependency: transitive
-    description:
-      name: genui
-      sha256: b6030eae45860224043a91a548e5458ef93a879604a9cfcb8aeec32cc6b39277
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.10.2"
   geoclue:
     dependency: transitive
     description:
@@ -1748,14 +1724,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.5.2"
-  preact_signals:
-    dependency: transitive
-    description:
-      name: preact_signals
-      sha256: ad45313c86b2228536a16d3dfc86da8263705d4acb4136c42907378de6910d8c
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.9.4"
   process:
     dependency: transitive
     description:
@@ -2465,14 +2433,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.0"
-  video_player_win:
-    dependency: transitive
-    description:
-      name: video_player_win
-      sha256: a4caca55ead1eb469d10060592e7ecdcbcd4493c6e2b63e4e666ff5446c790f1
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.2.2"
   visibility_detector:
     dependency: transitive
     description:

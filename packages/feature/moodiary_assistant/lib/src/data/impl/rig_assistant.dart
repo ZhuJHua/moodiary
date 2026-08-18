@@ -86,6 +86,18 @@ class RigAssistantService implements AssistantService {
         // 工具调用不在气泡里展示，但用作「思考阶段结束」的信号（冻结思考计时）。
         rust.RigStreamEvent_ToolCall(:final field0) =>
           AssistantStreamEvent.tool(field0),
+        rust.RigStreamEvent_ToolStarted(
+          :final callId,
+          :final name,
+          :final argsJson,
+        ) =>
+          AssistantStreamEvent.toolStarted(
+            callId: callId,
+            text: name,
+            argsJson: argsJson,
+          ),
+        rust.RigStreamEvent_ToolFinished(:final callId, :final result) =>
+          AssistantStreamEvent.toolFinished(callId: callId, text: result),
         rust.RigStreamEvent_Usage(
           :final inputTokens,
           :final outputTokens,
@@ -144,7 +156,6 @@ class RigAssistantService implements AssistantService {
     return dispatchAssistantTool(
       spec: AssistantToolRegistry.byId(name),
       toolName: name,
-      requester: request.onToolPermission,
       argsJson: argsJson,
     );
   }
@@ -154,25 +165,21 @@ class RigAssistantService implements AssistantService {
 Future<String> dispatchAssistantTool({
   required AssistantToolSpec? spec,
   required String toolName,
-  required ToolPermissionRequester? requester,
   required String argsJson,
 }) async {
-  if (spec == null) return '未知工具：$toolName。';
+  if (spec == null) return 'Failed: unknown tool "$toolName".';
 
   // 失败一律以文本回灌模型，让它自己纠正参数——而不是抛穿 FFI 中断整轮对话。
+  //
+  // **没有事前闸门**：三个删除都是可恢复的（日记进回收站、分类可重建、记忆软删），
+  // 事前确认对可逆操作是过度设计，代价是每次都要打断对话。误删走事后撤销。
   try {
-    // 只读工具直接执行；写入 / 破坏性工具先请用户确认。
-    if (spec.tool.needsApproval &&
-        requester != null &&
-        !await requester(spec.tool)) {
-      return '用户拒绝了执行「$toolName」操作。请不要重试，可换一种方式继续对话。';
-    }
-
     final trimmed = argsJson.trim();
     final raw = (trimmed.isEmpty || trimmed == 'null') ? '{}' : trimmed;
     final input = (jsonDecode(raw) as Map).cast<String, dynamic>();
     return await spec.run(input);
   } catch (e) {
-    return '工具「$toolName」执行失败：$e。请检查参数是否符合 schema，可调整后重试或换一种方式继续。';
+    return 'Failed: $toolName threw $e. Check the arguments against the schema, '
+        'then retry or take another route.';
   }
 }

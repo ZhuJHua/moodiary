@@ -251,7 +251,7 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get reasoningOff => 'No thinking';
 	@override String thoughtFor({required Object duration}) => 'Thought for ${duration}s';
 	@override String get tool => 'Tools';
-	@override String get toolSectionNote => 'The assistant uses the tools below automatically based on the conversation. Read-only tools run right away; tools that write or delete ask for your confirmation first.';
+	@override String get toolSectionNote => 'The assistant calls these tools on its own as the conversation needs them — you are not asked each time. Note what deletion does: a diary goes to the recycle bin, a saved fact is gone for good.';
 	@override String get toolQueryTitle => 'Query diaries';
 	@override String get toolQueryDes => 'Finds your local diaries by keyword, date range, or category to answer questions about past experiences and moods.';
 	@override String get toolGetTitle => 'Read full diary';
@@ -288,19 +288,6 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get compactionDone => 'Earlier messages compacted';
 	@override String get compactionNothing => 'Nothing to compact yet';
 	@override String get contextUsageLabel => 'Context used';
-	@override String get toolDangerBadge => 'Risky';
-	@override String get toolReadOnlyBadge => 'Read-only';
-	@override String get toolPermissionTitle => 'Tool permission requested';
-	@override String get toolPermissionDangerNote => 'This is a risky action that will modify or delete your data. Please confirm carefully.';
-	@override String get toolAllowOnce => 'Allow once';
-	@override String get toolAllowAlways => 'Always allow';
-	@override String get toolDeny => 'Deny';
-	@override String get toolAlwaysAllowedHint => 'Set to always allow';
-	@override String get toolStatusAllowedOnce => 'Allowed once';
-	@override String get toolStatusDenied => 'Denied';
-	@override String get toolStatusCanceled => 'Canceled';
-	@override String get toolResetGrants => 'Reset approved tools';
-	@override String get toolResetGrantsDone => 'Tool approvals reset';
 	@override String get disclaimerTitle => 'Before you start';
 	@override String get disclaimerContent => 'The Moodiary assistant is powered by third-party large language models. Please be aware:\n\n• AI-generated content may be inaccurate, incomplete, or even misleading. Do not rely on it as professional (medical, psychological, legal, or financial) advice, or as the basis for any important decision.\n\n• When you send a message, your input is sent to the model provider you configured. When the assistant uses the diary tools, relevant local diary excerpts are sent as well in order to generate a reply. It is up to you to decide whether to trust that provider.\n\n• Your API key is stored only in local secure storage and is never uploaded to Moodiary\'s servers.\n\nBy continuing, you acknowledge and accept the risks above.';
 	@override String get disclaimerAgree => 'Agree & continue';
@@ -365,6 +352,16 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get modelListEmpty => 'No models available yet';
 	@override String get modelDeprecated => 'Retired';
 	@override String get composerFullscreen => 'Full-screen editor';
+	@override String get toolDone => 'Done';
+	@override String get toolFailed => 'Failed';
+	@override String get toolNoMatch => 'No matches';
+	@override String toolMatched({required Object count}) => '${count} entries';
+	@override String toolRead({required Object count}) => '${count} in full';
+	@override String toolListed({required Object count}) => '${count} items';
+	@override String get toolUntitled => 'Untitled';
+	@override String get toolUpdated => 'Updated';
+	@override String get toolTrashed => 'Moved to recycle bin';
+	@override String get toolDeleted => 'Deleted';
 }
 
 // Path: common

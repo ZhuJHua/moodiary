@@ -30,6 +30,11 @@ final ChatMessageSchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'imageName', type: IsarType.string),
       IsarPropertySchema(name: 'inputTokens', type: IsarType.long),
       IsarPropertySchema(name: 'outputTokens', type: IsarType.long),
+      IsarPropertySchema(
+        name: 'toolCalls',
+        type: IsarType.objectList,
+        target: 'AssistantToolCall',
+      ),
     ],
     indexes: [
       IsarIndexSchema(
@@ -45,7 +50,7 @@ final ChatMessageSchema = IsarGeneratedSchema(
     deserialize: deserializeChatMessage,
     deserializeProperty: deserializeChatMessageProp,
   ),
-  getEmbeddedSchemas: () => [],
+  getEmbeddedSchemas: () => [AssistantToolCallSchema],
 );
 
 @isarProtected
@@ -78,6 +83,19 @@ int serializeChatMessage(IsarWriter writer, ChatMessage object) {
   }
   IsarCore.writeLong(writer, 9, object.inputTokens ?? -9223372036854775808);
   IsarCore.writeLong(writer, 10, object.outputTokens ?? -9223372036854775808);
+  {
+    final list = object.toolCalls;
+    final listWriter = IsarCore.beginList(writer, 11, list.length);
+    for (var i = 0; i < list.length; i++) {
+      {
+        final value = list[i];
+        final objectWriter = IsarCore.beginObject(listWriter, i);
+        serializeAssistantToolCall(objectWriter, value);
+        IsarCore.endObject(listWriter, objectWriter);
+      }
+    }
+    IsarCore.endList(writer, listWriter);
+  }
   return Isar.fastHash(object.id);
 }
 
@@ -137,6 +155,36 @@ ChatMessage deserializeChatMessage(IsarReader reader) {
       _outputTokens = value;
     }
   }
+  final List<AssistantToolCall> _toolCalls;
+  {
+    final length = IsarCore.readList(reader, 11, IsarCore.readerPtrPtr);
+    {
+      final reader = IsarCore.readerPtr;
+      if (reader.isNull) {
+        _toolCalls = const <AssistantToolCall>[];
+      } else {
+        final list = List<AssistantToolCall>.filled(
+          length,
+          AssistantToolCall(callId: '', name: ''),
+          growable: true,
+        );
+        for (var i = 0; i < length; i++) {
+          {
+            final objectReader = IsarCore.readObject(reader, i);
+            if (objectReader.isNull) {
+              list[i] = AssistantToolCall(callId: '', name: '');
+            } else {
+              final embedded = deserializeAssistantToolCall(objectReader);
+              IsarCore.freeReader(objectReader);
+              list[i] = embedded;
+            }
+          }
+        }
+        IsarCore.freeReader(reader);
+        _toolCalls = list;
+      }
+    }
+  }
   final object = ChatMessage(
     id: _id,
     sessionId: _sessionId,
@@ -148,6 +196,7 @@ ChatMessage deserializeChatMessage(IsarReader reader) {
     imageName: _imageName,
     inputTokens: _inputTokens,
     outputTokens: _outputTokens,
+    toolCalls: _toolCalls,
   );
   return object;
 }
@@ -204,6 +253,36 @@ dynamic deserializeChatMessageProp(IsarReader reader, int property) {
           return null;
         } else {
           return value;
+        }
+      }
+    case 11:
+      {
+        final length = IsarCore.readList(reader, 11, IsarCore.readerPtrPtr);
+        {
+          final reader = IsarCore.readerPtr;
+          if (reader.isNull) {
+            return const <AssistantToolCall>[];
+          } else {
+            final list = List<AssistantToolCall>.filled(
+              length,
+              AssistantToolCall(callId: '', name: ''),
+              growable: true,
+            );
+            for (var i = 0; i < length; i++) {
+              {
+                final objectReader = IsarCore.readObject(reader, i);
+                if (objectReader.isNull) {
+                  list[i] = AssistantToolCall(callId: '', name: '');
+                } else {
+                  final embedded = deserializeAssistantToolCall(objectReader);
+                  IsarCore.freeReader(objectReader);
+                  list[i] = embedded;
+                }
+              }
+            }
+            IsarCore.freeReader(reader);
+            return list;
+          }
         }
       }
     default:
@@ -1585,6 +1664,20 @@ extension ChatMessageQueryFilter
       );
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  toolCallsIsEmpty() {
+    return not().toolCallsIsNotEmpty();
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  toolCallsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterOrEqualCondition(property: 11, value: null),
+      );
+    });
+  }
 }
 
 extension ChatMessageQueryObject
@@ -2019,6 +2112,13 @@ extension ChatMessageQueryProperty1
       return query.addProperty(10);
     });
   }
+
+  QueryBuilder<ChatMessage, List<AssistantToolCall>, QAfterProperty>
+  toolCallsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
+    });
+  }
 }
 
 extension ChatMessageQueryProperty2<R>
@@ -2081,6 +2181,13 @@ extension ChatMessageQueryProperty2<R>
   QueryBuilder<ChatMessage, (R, int?), QAfterProperty> outputTokensProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(10);
+    });
+  }
+
+  QueryBuilder<ChatMessage, (R, List<AssistantToolCall>), QAfterProperty>
+  toolCallsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
     });
   }
 }
@@ -2151,6 +2258,13 @@ extension ChatMessageQueryProperty3<R1, R2>
       return query.addProperty(10);
     });
   }
+
+  QueryBuilder<ChatMessage, (R1, R2, List<AssistantToolCall>), QOperations>
+  toolCallsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
+    });
+  }
 }
 
 // **************************************************************************
@@ -2168,6 +2282,11 @@ _ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => _ChatMessage(
   imageName: json['imageName'] as String?,
   inputTokens: (json['inputTokens'] as num?)?.toInt(),
   outputTokens: (json['outputTokens'] as num?)?.toInt(),
+  toolCalls:
+      (json['toolCalls'] as List<dynamic>?)
+          ?.map((e) => AssistantToolCall.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <AssistantToolCall>[],
 );
 
 Map<String, dynamic> _$ChatMessageToJson(_ChatMessage instance) =>
@@ -2182,4 +2301,5 @@ Map<String, dynamic> _$ChatMessageToJson(_ChatMessage instance) =>
       'imageName': instance.imageName,
       'inputTokens': instance.inputTokens,
       'outputTokens': instance.outputTokens,
+      'toolCalls': instance.toolCalls,
     };

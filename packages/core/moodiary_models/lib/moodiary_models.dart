@@ -1,6 +1,7 @@
 library;
 
 export 'src/assistant_provider_type.dart';
+export 'src/assistant_tool_call.dart';
 export 'src/category.dart';
 export 'src/category_event.dart';
 export 'src/chat_message.dart';

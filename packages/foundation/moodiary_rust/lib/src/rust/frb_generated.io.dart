@@ -1971,12 +1971,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       wireObj.kind.ToolCall.field0 = pre_field0;
       return;
     }
+    if (apiObj is RigStreamEvent_ToolStarted) {
+      var pre_call_id = cst_encode_String(apiObj.callId);
+      var pre_name = cst_encode_String(apiObj.name);
+      var pre_args_json = cst_encode_String(apiObj.argsJson);
+      wireObj.tag = 3;
+      wireObj.kind.ToolStarted.call_id = pre_call_id;
+      wireObj.kind.ToolStarted.name = pre_name;
+      wireObj.kind.ToolStarted.args_json = pre_args_json;
+      return;
+    }
+    if (apiObj is RigStreamEvent_ToolFinished) {
+      var pre_call_id = cst_encode_String(apiObj.callId);
+      var pre_result = cst_encode_String(apiObj.result);
+      wireObj.tag = 4;
+      wireObj.kind.ToolFinished.call_id = pre_call_id;
+      wireObj.kind.ToolFinished.result = pre_result;
+      return;
+    }
     if (apiObj is RigStreamEvent_Usage) {
       var pre_input_tokens = cst_encode_u_32(apiObj.inputTokens);
       var pre_output_tokens = cst_encode_u_32(apiObj.outputTokens);
       var pre_cached_input_tokens = cst_encode_u_32(apiObj.cachedInputTokens);
       var pre_cache_write_tokens = cst_encode_u_32(apiObj.cacheWriteTokens);
-      wireObj.tag = 3;
+      wireObj.tag = 5;
       wireObj.kind.Usage.input_tokens = pre_input_tokens;
       wireObj.kind.Usage.output_tokens = pre_output_tokens;
       wireObj.kind.Usage.cached_input_tokens = pre_cached_input_tokens;
@@ -6036,6 +6054,20 @@ final class wire_cst_RigStreamEvent_ToolCall extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> field0;
 }
 
+final class wire_cst_RigStreamEvent_ToolStarted extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> call_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> args_json;
+}
+
+final class wire_cst_RigStreamEvent_ToolFinished extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> call_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> result;
+}
+
 final class wire_cst_RigStreamEvent_Usage extends ffi.Struct {
   @ffi.Uint32()
   external int input_tokens;
@@ -6056,6 +6088,10 @@ final class RigStreamEventKind extends ffi.Union {
   external wire_cst_RigStreamEvent_ReasoningDelta ReasoningDelta;
 
   external wire_cst_RigStreamEvent_ToolCall ToolCall;
+
+  external wire_cst_RigStreamEvent_ToolStarted ToolStarted;
+
+  external wire_cst_RigStreamEvent_ToolFinished ToolFinished;
 
   external wire_cst_RigStreamEvent_Usage Usage;
 }

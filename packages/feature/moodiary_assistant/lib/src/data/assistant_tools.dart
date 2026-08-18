@@ -1,11 +1,25 @@
+import 'dart:convert';
+
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
+import 'package:moodiary_l10n/moodiary_l10n.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 import 'package:moodiary_rust/moodiary_rust.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 
 typedef AssistantToolRun = Future<String> Function(Map<String, dynamic> input);
+
+/// 工具结果的失败前缀。**是个约定**：结果给模型看是英文，而界面上那一行要 i18n，
+/// 成败得有个不依赖语言的判据。
+const String _failurePrefix = 'Failed:';
+
+/// 把一次调用压成一行摘要，显示在对话里那条提示条上。
+///
+/// **由工具自己实现**：截断结果字符串得到的是「id=0198a… 【2026-08-11】…」这种
+/// 半截元数据，而工具自己知道该说「7 条 · 08-11 至 08-17」。
+typedef AssistantToolSummarize =
+    String Function(AssistantTool tool, Map<String, dynamic> input, String output);
 
 class AssistantToolSpec {
   final AssistantTool tool;
@@ -13,12 +27,26 @@ class AssistantToolSpec {
   final Map<String, dynamic> jsonSchema;
   final AssistantToolRun run;
 
+  /// 缺省时回落到结果的首行。
+  final AssistantToolSummarize? summarize;
+
   const AssistantToolSpec({
     required this.tool,
     required this.description,
     required this.jsonSchema,
     required this.run,
+    this.summarize,
   });
+
+  /// 这次调用显示成一行是什么样。
+  /// 这次调用显示成一行是什么样。**走 i18n，与给模型的英文结果无关** ——
+  /// 早先是截结果首行，结果英文化之后那条路会让用户看到英文。
+  String summaryOf(Map<String, dynamic> input, String output) {
+    if (output.startsWith(_failurePrefix)) return l10n.assistant.toolFailed;
+    final custom = summarize?.call(tool, input, output);
+    if (custom != null && custom.trim().isNotEmpty) return custom.trim();
+    return l10n.assistant.toolDone;
+  }
 
   String get id => tool.id;
 }
@@ -32,251 +60,401 @@ abstract final class AssistantToolRegistry {
 
   static const _maxFullContentLength = 4000;
 
+  /// getDiary 一次最多读几篇。再多就该先用 queryDiaries 收窄。
+  static const _maxBatchRead = 10;
+
+  /// 工具定义**一律英文**：读者是模型，不是用户。跨模型的指令服从度在英文上更稳，
+  /// 同样的意思也更省 token（这些描述每一轮都要重发）。
+  ///
+  /// 结果字符串同理 —— 但结果里夹带的用户数据（标题、正文、分类名）原样保留。
+  /// 给用户看的那一行由 [AssistantToolSpec.summarize] 单独产出，走 i18n。
   static const List<AssistantToolSpec> specs = [
     AssistantToolSpec(
       tool: .queryDiaries,
       description:
-          '查询 / 浏览用户的本地日记，所有参数均为可选过滤条件：关键词、分类、起止日期、排序、条数。'
-          '提供关键词时按相关度检索；留空则按时间 / 分类浏览。'
-          '每条结果含 id、日期、心情与正文摘要。当问题涉及用户写过的日记、过往经历、情绪记录，'
-          '或在修改 / 删除日记前需先定位目标时调用。',
+          'Search or browse the diaries stored on this device. Every argument is '
+          'an optional filter; with keywords it ranks by relevance, without them '
+          'it browses by date and/or category. '
+          'Results carry id, date, mood and a short excerpt — not the full text '
+          '(use getDiary for that) — and state the total number of matches, which '
+          'may exceed what is returned. Never present the returned rows as the '
+          'complete set when the total says otherwise. '
+          'Mood is 0.00 (low) to 1.00 (high); 0.50 is also the default for entries '
+          'whose mood was never set, so do not read emotion into it on its own. '
+          'Call this whenever the user asks about what they wrote, or to locate an '
+          'entry before editing or deleting it.',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'keywords': {
             'type': 'string',
-            'description': '空格分隔的检索关键词，例如 "旅行 海边"。留空则不按关键词、改为按下列条件浏览。',
+            'description':
+                'Space-separated search terms. Omit to browse by the filters below.',
           },
           'categoryId': {
             'type': 'string',
-            'description': '仅返回该分类下的日记（分类 id 取自 listCategories）。可留空。',
+            'description': 'Restrict to one category (id from listCategories).',
           },
           'startDate': {
             'type': 'string',
-            'description': '起始日期（含），格式 YYYY-MM-DD，按用户本地时区。可留空。',
+            'description': 'Inclusive start, YYYY-MM-DD in the user local time.',
           },
           'endDate': {
             'type': 'string',
-            'description': '结束日期（含），格式 YYYY-MM-DD，按用户本地时区。可留空。',
+            'description': 'Inclusive end, YYYY-MM-DD in the user local time.',
           },
           'sort': {
             'type': 'string',
             'enum': ['newest', 'oldest', 'modified', 'relevance'],
             'description':
-                '排序方式：newest 最新优先（默认）、oldest 最早优先、'
-                'modified 最近修改优先、relevance 相关度（仅在提供关键词时有效）。',
+                'Defaults to newest. relevance applies only with keywords.',
           },
           'limit': {
             'type': 'integer',
-            'description': '最多返回条数，默认 8，最大 20。',
+            'description': 'How many entries to return. Default 8, max 20.',
             'minimum': 1,
             'maximum': 20,
           },
         },
       },
       run: _queryDiaries,
+      summarize: _summarizeQuery,
     ),
     AssistantToolSpec(
       tool: .getDiary,
       description:
-          '按 id 读取单篇日记的完整内容（queryDiaries 只返回摘要）。'
-          '当需要日记全文来总结、引用或回答细节时调用。',
+          'Read the full text of diaries by id (queryDiaries returns excerpts only). '
+          'Pass every id you need in one call — never call this once per entry. '
+          'Max 10 per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': '目标日记的 id（来自 queryDiaries）。'},
+          'ids': {
+            'type': 'array',
+            'items': {'type': 'string'},
+            'description': 'Diary ids from queryDiaries. Max 10.',
+          },
         },
-        'required': ['id'],
+        'required': ['ids'],
       },
       run: _getDiary,
+      summarize: _summarizeGet,
     ),
     AssistantToolSpec(
       tool: .diaryOverview,
       description:
-          '返回日记的总体概况：总篇数、各分类的篇数、以及最早 / 最新日记的日期跨度。'
-          '当用户询问「一共写了多少篇」「哪个分类最多」「从什么时候开始记」等统计类问题时调用。',
+          'Aggregate stats: total entries, per-category counts, the date span, and '
+          'the mood distribution. Prefer this over counting query results yourself '
+          'for "how many", "which category", "since when" or mood-trend questions.',
       jsonSchema: {'type': 'object', 'properties': {}},
       run: _diaryOverview,
+      summarize: _summarizeOverview,
     ),
     AssistantToolSpec(
       tool: .createDiary,
       description:
-          '为用户创建一条新的本地日记并保存。当用户明确要求「记录 / 写一篇 / 创建日记」'
-          '或希望把某段内容存为日记时调用。正文支持 Markdown，可选填 categoryId（取自 listCategories）。',
+          'Save content as a new diary. Call this when the user asks you to write '
+          'one down or to keep something as an entry. The body is Markdown.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'title': {'type': 'string', 'description': '日记标题，可留空。'},
-          'content': {'type': 'string', 'description': '日记正文，支持 Markdown 格式。'},
+          'title': {'type': 'string', 'description': 'Optional title.'},
+          'content': {'type': 'string', 'description': 'Body, Markdown.'},
           'mood': {
             'type': 'number',
-            'description': '心情指数，0.0（低落）到 1.0（愉悦）之间，可选，默认 0.5。',
+            'description':
+                '0.00 (low) to 1.00 (high). Omit unless the user conveyed a mood.',
             'minimum': 0,
             'maximum': 1,
           },
           'categoryId': {
             'type': 'string',
-            'description': '归属分类 id（取自 listCategories），可留空。',
+            'description': 'Optional category id from listCategories.',
           },
         },
         'required': ['content'],
       },
       run: _createDiary,
+      summarize: _summarizeWrite,
     ),
     AssistantToolSpec(
       tool: .updateDiary,
       description:
-          '按 id 修改一篇已有日记。只更新提供的字段（title / content / mood / categoryId），'
-          '未提供的保持不变。调用前请先用 queryDiaries 拿到目标日记的 id。',
+          'Edit one diary by id. Only the fields you pass change; the rest are left '
+          'alone. Get the id from queryDiaries first.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': '目标日记的 id（来自 queryDiaries）。'},
-          'title': {'type': 'string', 'description': '新的标题，可选。'},
-          'content': {'type': 'string', 'description': '新的正文（Markdown），可选。'},
+          'id': {'type': 'string', 'description': 'Diary id from queryDiaries.'},
+          'title': {'type': 'string', 'description': 'New title.'},
+          'content': {'type': 'string', 'description': 'New body, Markdown.'},
           'mood': {
             'type': 'number',
-            'description': '新的心情指数 0.0~1.0，可选。',
+            'description': 'New mood, 0.00 to 1.00.',
             'minimum': 0,
             'maximum': 1,
           },
-          'categoryId': {'type': 'string', 'description': '新的归属分类 id，可选。'},
+          'categoryId': {'type': 'string', 'description': 'New category id.'},
         },
         'required': ['id'],
       },
       run: _updateDiary,
+      summarize: _summarizeWrite,
     ),
     AssistantToolSpec(
       tool: .deleteDiary,
       description:
-          '按 id 把一篇日记移入回收站（软删除，可在回收站恢复）。'
-          '调用前请先用 queryDiaries 确认目标日记的 id。',
+          'Move a diary to the recycle bin by id, where the user can restore it. '
+          'Get the id from queryDiaries first.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': '目标日记的 id（来自 queryDiaries）。'},
+          'id': {'type': 'string', 'description': 'Diary id from queryDiaries.'},
         },
         'required': ['id'],
       },
       run: _deleteDiary,
+      summarize: _summarizeWrite,
     ),
     AssistantToolSpec(
       tool: .listCategories,
       description:
-          '列出用户的全部日记分类（返回每个分类的 id 与名称）。在按分类创建 / 归类日记，'
-          '或修改 / 删除分类前调用以获取 id。',
+          'List every diary category with its id. Call this to get an id before '
+          'filing, renaming or deleting a category.',
       jsonSchema: {'type': 'object', 'properties': {}},
       run: _listCategories,
+      summarize: _summarizeList,
     ),
     AssistantToolSpec(
       tool: .createCategory,
-      description: '新建一个日记分类。当用户希望新增一个分类时调用。',
+      description: 'Add a diary category.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'name': {'type': 'string', 'description': '分类名称。'},
+          'name': {'type': 'string', 'description': 'Category name.'},
         },
         'required': ['name'],
       },
       run: _createCategory,
+      summarize: _summarizeWrite,
     ),
     AssistantToolSpec(
       tool: .updateCategory,
-      description: '按 id 重命名一个分类。调用前请先用 listCategories 获取目标分类的 id。',
+      description: 'Rename a category by id (from listCategories).',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'id': {
             'type': 'string',
-            'description': '目标分类的 id（来自 listCategories）。',
+            'description': 'Category id from listCategories.',
           },
-          'name': {'type': 'string', 'description': '新的分类名称。'},
+          'name': {'type': 'string', 'description': 'New name.'},
         },
         'required': ['id', 'name'],
       },
       run: _updateCategory,
+      summarize: _summarizeWrite,
     ),
     AssistantToolSpec(
       tool: .deleteCategory,
       description:
-          '按 id 删除一个分类（仅当该分类下没有任何日记时才会成功）。'
-          '调用前请先用 listCategories 获取 id。',
+          'Delete a category by id. Only succeeds while it holds no diaries — '
+          'move or refile them first.',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'id': {
             'type': 'string',
-            'description': '目标分类的 id（来自 listCategories）。',
+            'description': 'Category id from listCategories.',
           },
         },
         'required': ['id'],
       },
       run: _deleteCategory,
+      summarize: _summarizeWrite,
     ),
     AssistantToolSpec(
       tool: .listMemories,
       description:
-          '列出你已保存的关于用户的长期记忆（每条含 id、类别、内容）。'
-          '在修改（updateMemory）或删除（forgetFact）某条记忆前，先用它获取目标 id。',
+          'List the long-term facts you saved about the user, each with its id. '
+          'The facts themselves are already given to you every turn — call this '
+          'only when you need an id to revise or forget one.',
       jsonSchema: {'type': 'object', 'properties': {}},
       run: _listMemories,
+      summarize: _summarizeList,
     ),
     AssistantToolSpec(
       tool: .rememberFact,
       description:
-          '保存一条关于用户的长期事实（稳定的偏好、反复出现的主题或持续的目标），以便日后对话中记起。'
-          '仅在确有长期价值时使用，不要保存一次性细节或用户要求勿记的内容。',
+          'Save one durable fact about the user — a lasting preference, a recurring '
+          'theme, an ongoing goal. Not passing details, not one-off events, and '
+          'never anything they asked you to keep private.',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'category': {
             'type': 'string',
             'enum': ['preference', 'theme', 'goal', 'fact'],
-            'description': '记忆类别：preference 偏好 | theme 主题 | goal 目标 | fact 事实。',
+            'description': 'Which kind of fact this is.',
           },
-          'text': {'type': 'string', 'description': '要记住的事实，一句话简明陈述。'},
+          'text': {
+            'type': 'string',
+            'description': 'The fact, stated in one plain sentence.',
+          },
         },
         'required': ['category', 'text'],
       },
       run: _rememberFact,
+      summarize: _summarizeWrite,
     ),
     AssistantToolSpec(
       tool: .updateMemory,
-      description: '按 id 修改一条已保存的记忆内容。调用前请先用 listMemories 获取目标 id。',
+      description: 'Revise a saved fact by id (from listMemories).',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': '目标记忆的 id（来自 listMemories）。'},
-          'text': {'type': 'string', 'description': '新的记忆内容。'},
+          'id': {'type': 'string', 'description': 'Memory id from listMemories.'},
+          'text': {'type': 'string', 'description': 'The revised fact.'},
           'category': {
             'type': 'string',
             'enum': ['preference', 'theme', 'goal', 'fact'],
-            'description': '可选，更新记忆类别。',
+            'description': 'New kind, if it changed.',
           },
         },
         'required': ['id', 'text'],
       },
       run: _updateMemory,
+      summarize: _summarizeWrite,
     ),
     AssistantToolSpec(
       tool: .forgetFact,
-      description: '按 id 删除一条已保存的记忆。调用前请先用 listMemories 获取目标 id。',
+      description:
+          'Delete a saved fact by id (from listMemories). This is permanent.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': '目标记忆的 id（来自 listMemories）。'},
+          'id': {'type': 'string', 'description': 'Memory id from listMemories.'},
         },
         'required': ['id'],
       },
       run: _forgetFact,
+      summarize: _summarizeWrite,
     ),
   ];
+
+  /// 把一轮用过的工具压成一段记录，回灌进发给模型的历史。
+  ///
+  /// **回灌摘要不是完整结果。** 完整结果在当轮已经进过模型的上下文、答案正文就是
+  /// 从它写出来的；跨轮真正丢掉的只是「我已经查过了」这件事，摘要足够表达。逐轮
+  /// 重放完整结果的话，一次 queryDiaries 的两千字会在之后每一轮里再付一遍。
+  ///
+  /// 入参一并带上：模型据此能判断「这次的问题和上次查的是不是同一个范围」，
+  /// 要重查也知道该传什么。返回空串表示这一轮没有已完成的工具调用。
+  static String recordOf(List<AssistantToolCall> calls) {
+    final lines = <String>[];
+    for (final call in calls) {
+      if (!call.done) continue;
+      final spec = byId(call.name);
+      final args = call.argsJson.isEmpty ? '{}' : call.argsJson;
+      final summary = spec == null
+          ? ''
+          : spec.summaryOf(_decodeArgs(call.argsJson), call.result);
+      lines.add(
+        '- ${call.name}($args)${summary.isEmpty ? '' : ' → $summary'}',
+      );
+    }
+    return lines.isEmpty ? '' : '[tools already run]\n${lines.join('\n')}';
+  }
+
+  static Map<String, dynamic> _decodeArgs(String raw) {
+    if (raw.trim().isEmpty) return const {};
+    try {
+      final decoded = jsonDecode(raw);
+      return decoded is Map ? decoded.cast<String, dynamic>() : const {};
+    } catch (_) {
+      return const {};
+    }
+  }
 
   static AssistantToolSpec? byId(String id) {
     for (final spec in specs) {
       if (spec.id == id) return spec;
     }
     return null;
+  }
+
+  /// 查询的一行摘要：命中数 + 实际生效的筛选条件。
+  ///
+  /// 不从结果文本里截 —— 那开头是「共命中 47 篇，以下是前 8 篇…」，
+  /// 而提示条要的是「47 篇 · 08-11 至 08-17」这种能一眼扫过去的形状。
+  static String _summarizeQuery(
+    AssistantTool _,
+    Map<String, dynamic> input,
+    String output,
+  ) {
+    final hit = RegExp(r'^(\d+) matches').firstMatch(output);
+    if (hit == null) return l10n.assistant.toolNoMatch;
+    final count = int.tryParse(hit.group(1) ?? '') ?? 0;
+    final parts = <String>[
+      l10n.assistant.toolMatched(count: count),
+      ?_trimToNull(input['keywords']),
+      if (_trimToNull(input['startDate']) case final a?)
+        _trimToNull(input['endDate']) == null ? a : '$a – ${input['endDate']}',
+    ];
+    return parts.join(' · ');
+  }
+
+  static String _summarizeGet(
+    AssistantTool _,
+    Map<String, dynamic> input,
+    String _,
+  ) => l10n.assistant.toolRead(
+    count: _parseIds(input['ids'] ?? input['id']).length,
+  );
+
+  static String _summarizeOverview(
+    AssistantTool _,
+    Map<String, dynamic> _,
+    String output,
+  ) {
+    final hit = RegExp(r'^Total entries=(\d+)').firstMatch(output);
+    final count = int.tryParse(hit?.group(1) ?? '') ?? 0;
+    return l10n.assistant.toolMatched(count: count);
+  }
+
+  static String _summarizeList(
+    AssistantTool _,
+    Map<String, dynamic> _,
+    String output,
+  ) {
+    // 结果是「首行说明 + 每项一行」，减掉首行就是项数。
+    final lines = output.split('\n').where((e) => e.startsWith('- ')).length;
+    return l10n.assistant.toolListed(count: lines);
+  }
+
+  /// 写入类共用。摘要说的是**动了什么**，不是「已创建」—— 提示条前面那个类型词
+  /// （「创建日记」）已经说过动作了，再说一遍是废话。
+  /// 写入类共用。摘要说的是**动了什么**，不是「已创建」—— 提示条前面那个类型词
+  /// （「创建日记」）已经说过动作了，再说一遍是废话。
+  ///
+  /// 这里刻意逐处写全 `l10n.assistant.xxx`，不存局部别名：slang 的死键扫描是按
+  /// `l10n.` 前缀做子串匹配的，起个别名它就看不见，这几个键会被误报成未使用。
+  static String _summarizeWrite(
+    AssistantTool tool,
+    Map<String, dynamic> input,
+    String output,
+  ) {
+    return switch (tool) {
+      .createDiary =>
+        _trimToNull(input['title']) ?? l10n.assistant.toolUntitled,
+      .createCategory || .updateCategory =>
+        _trimToNull(input['name']) ?? l10n.assistant.toolDone,
+      .rememberFact || .updateMemory =>
+        _trimToNull(input['text']) ?? l10n.assistant.toolDone,
+      .deleteDiary => l10n.assistant.toolTrashed,
+      .deleteCategory || .forgetFact => l10n.assistant.toolDeleted,
+      _ => l10n.assistant.toolUpdated,
+    };
   }
 
   static Future<String> _queryDiaries(Map<String, dynamic> input) async {
@@ -326,54 +504,102 @@ abstract final class AssistantToolRegistry {
     }
 
     if (results.isEmpty) {
-      return _emptyQueryMessage(
+      return await _emptyQueryMessage(
         keywordsForDisplay,
         categoryId,
         start,
         endExclusive,
       );
     }
-    return _formatDiaryList(results.take(limit));
+    // **总数必须回传**：只给前 limit 条而不说还有多少，模型会把这几条当成全部，
+    // 然后对用户说「你这周只写了 8 篇」——一个由工具输出直接导致的错误结论。
+    return _formatDiaryList(results.take(limit), total: results.length);
   }
 
+  /// 批量读全文。**一次多篇**：总结一周日记要 7 篇，逐篇调用就是 7 轮往返，
+  /// 而每一轮都要把整段历史重发一遍。
   static Future<String> _getDiary(Map<String, dynamic> input) async {
-    final id = _trimToNull(input['id']);
-    if (id == null) return '读取失败：缺少日记 id。';
-
-    final diary = await DiaryRepository.get().getDiaryByBusinessId(id);
-    // 排除回收站
-    if (diary == null || !diary.show) {
-      return '读取失败：未找到 id=$id 的日记。';
+    final ids = _parseIds(input['ids'] ?? input['id']);
+    if (ids.isEmpty) {
+      return 'Failed: no diary id given. Get ids from queryDiaries first.';
     }
-    final title = diary.title.trim().isEmpty ? '(无标题)' : diary.title.trim();
+
+    final repo = DiaryRepository.get();
+    final chunks = <String>[];
+    final missing = <String>[];
+    for (final id in ids.take(_maxBatchRead)) {
+      final diary = await repo.getDiaryByBusinessId(id);
+      // 排除回收站
+      if (diary == null || !diary.show) {
+        missing.add(id);
+        continue;
+      }
+      chunks.add(_formatDiaryFull(diary));
+    }
+
+    final buffer = StringBuffer();
+    if (missing.isNotEmpty) {
+      buffer.writeln(
+        'Not found (deleted, or the id is wrong — recheck with queryDiaries): '
+        '${missing.join(', ')}',
+      );
+      if (chunks.isNotEmpty) buffer.writeln();
+    }
+    if (ids.length > _maxBatchRead) {
+      buffer.writeln('(Only the first $_maxBatchRead were read; call again for the rest.)');
+    }
+    buffer.write(chunks.join('\n\n---\n\n'));
+    final out = buffer.toString().trim();
+    return out.isEmpty ? 'Failed: none of those ids match a diary.' : out;
+  }
+
+  static String _formatDiaryFull(Diary diary) {
+    final title = diary.title.trim().isEmpty ? 'Untitled' : diary.title.trim();
     final buffer = StringBuffer()
       ..writeln('id=${diary.id}')
-      ..writeln('日期=${TimeFormat.isoDate(diary.time)}')
-      ..writeln('标题=$title')
-      ..writeln('心情=${diary.mood.toStringAsFixed(2)}');
+      ..writeln('date=${TimeFormat.isoDate(diary.time)}')
+      ..writeln('title=$title')
+      ..writeln('mood=${diary.mood.toStringAsFixed(2)}');
     if (diary.categoryId != null && diary.categoryId!.isNotEmpty) {
-      buffer.writeln('分类id=${diary.categoryId}');
+      buffer.writeln('categoryId=${diary.categoryId}');
     }
     if (diary.tags.isNotEmpty) {
-      buffer.writeln('标签=${diary.tags.join('、')}');
+      buffer.writeln('tags=${diary.tags.join(', ')}');
     }
     final text = diary.contentText.trim();
     buffer
-      ..writeln('正文:')
+      ..writeln('body:')
       ..writeln(
         text.isEmpty
-            ? '(空)'
+            ? '(empty)'
             : (text.length > _maxFullContentLength
-                  ? '${text.substring(0, _maxFullContentLength)}…'
+                  ? '${text.substring(0, _maxFullContentLength)}'
+                        '… (truncated, '
+                        '${text.length - _maxFullContentLength} more characters)'
                   : text),
       );
     return buffer.toString().trim();
   }
 
+  /// 兼容单个 id 与 id 数组两种传法 —— 模型偶尔会退回旧形状。
+  static List<String> _parseIds(Object? raw) {
+    final out = <String>{};
+    if (raw is String) {
+      final t = raw.trim();
+      if (t.isNotEmpty) out.add(t);
+    } else if (raw is List) {
+      for (final e in raw) {
+        final t = '$e'.trim();
+        if (t.isNotEmpty) out.add(t);
+      }
+    }
+    return out.toList();
+  }
+
   static Future<String> _diaryOverview(Map<String, dynamic> input) async {
     final repo = DiaryRepository.get();
     final counts = await repo.diaryCountByCategory();
-    if (counts.total == 0) return '目前还没有任何日记。';
+    if (counts.total == 0) return 'No diaries yet.';
 
     final cats = (await CategoryRepository.get().getAllCategories().run())
         .getOrElse((_) => const <Category>[]);
@@ -381,34 +607,53 @@ abstract final class AssistantToolRegistry {
     final newest = await repo.getDiaryByCategory(sort: .timeDesc, limit: 1);
     final oldest = await repo.getDiaryByCategory(sort: .timeAsc, limit: 1);
 
-    final buffer = StringBuffer()..writeln('日记总数=${counts.total}');
+    final buffer = StringBuffer()..writeln('Total entries=${counts.total}');
     if (newest.isNotEmpty && oldest.isNotEmpty) {
       buffer.writeln(
-        '时间跨度=${TimeFormat.isoDate(oldest.first.time)} ~ '
+        'span=${TimeFormat.isoDate(oldest.first.time)} ~ '
         '${TimeFormat.isoDate(newest.first.time)}',
       );
     }
     final categorized = counts.byCategory.values.fold<int>(0, (a, b) => a + b);
     final uncategorized = counts.total - categorized;
-    buffer.writeln('分类统计:');
+    buffer.writeln('by category:');
     if (counts.byCategory.isEmpty) {
-      buffer.writeln('- （全部未分类）');
+      buffer.writeln('- (all uncategorised)');
     } else {
       final entries = counts.byCategory.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
       for (final e in entries) {
-        final name = nameById[e.key] ?? '(已删除分类)';
-        buffer.writeln('- $name（id=${e.key}）：${e.value} 篇');
+        final name = nameById[e.key] ?? '(deleted category)';
+        buffer.writeln('- $name (id=${e.key}): ${e.value}');
       }
     }
-    if (uncategorized > 0) buffer.writeln('- 未分类：$uncategorized 篇');
+    if (uncategorized > 0) buffer.writeln('- uncategorised: $uncategorized');
+
+    // 心情分布：这是日记 App 的助手最常被问到的东西，概览里没有它，模型只能
+    // 去逐篇拉全文自己数 —— 那既慢又容易在 limit 上出错。
+    final moods = await repo.getDiaryByCategory(sort: .timeDesc, limit: 9999);
+    final rated = [
+      for (final d in moods)
+        if (d.mood != 0.5) d.mood,
+    ];
+    if (rated.isNotEmpty) {
+      final avg = rated.reduce((a, b) => a + b) / rated.length;
+      final low = rated.where((m) => m < 0.4).length;
+      final high = rated.where((m) => m > 0.6).length;
+      buffer
+        ..writeln('mood (0.00 low ~ 1.00 high; '
+            '${moods.length - rated.length} entries with no mood set are excluded):')
+        ..writeln('- mean=${avg.toStringAsFixed(2)}')
+        ..writeln('- low(<0.40)=$low, high(>0.60)=$high, '
+            'middle=${rated.length - low - high}');
+    }
     return buffer.toString().trim();
   }
 
   static Future<String> _createDiary(Map<String, dynamic> input) async {
     final title = (input['title'] as String?)?.trim() ?? '';
     final content = (input['content'] as String?)?.trim() ?? '';
-    if (content.isEmpty) return '创建失败：日记正文不能为空。';
+    if (content.isEmpty) return 'Failed: the body cannot be empty.';
 
     final mood = _parseMood(input['mood']) ?? 0.5;
     final categoryId = await _resolveCategoryId(input['categoryId']);
@@ -430,7 +675,8 @@ abstract final class AssistantToolRegistry {
       aspect: null,
     );
     await DiaryRepository.get().insertADiary(diary);
-    return '已创建日记「${title.isEmpty ? '(无标题)' : title}」（${TimeFormat.isoDate(diary.time)}），id=${diary.id}。';
+    return 'Created "${title.isEmpty ? 'Untitled' : title}" '
+        '(${TimeFormat.isoDate(diary.time)}), id=${diary.id}.';
   }
 
   static ({String content, String contentText, DiaryType type}) _toTiptap(
@@ -453,12 +699,12 @@ abstract final class AssistantToolRegistry {
 
   static Future<String> _updateDiary(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
-    if (id.isEmpty) return '修改失败：缺少日记 id。';
+    if (id.isEmpty) return 'Failed: no diary id given.';
 
     final repo = DiaryRepository.get();
     final existing = await repo.getDiaryByBusinessId(id);
     if (existing == null || !existing.show) {
-      return '修改失败：未找到 id=$id 的日记。';
+      return 'Failed: no diary with id=$id.';
     }
 
     var updated = existing;
@@ -490,7 +736,7 @@ abstract final class AssistantToolRegistry {
         final resolved = await _resolveCategoryId(rawCategory);
         // 传了非空但无效的 id 时报错、保持原归类不变，避免「无效 id 静默清空分类」。
         if (resolved == null) {
-          return '修改失败：未找到分类 id=$rawCategory（可先用 listCategories 确认）。';
+          return 'Failed: no category with id=$rawCategory (check listCategories).';
         }
         updated = updated.copyWith(categoryId: resolved);
       }
@@ -498,107 +744,109 @@ abstract final class AssistantToolRegistry {
     updated = updated.copyWith(lastModified: .timestamp());
 
     await repo.updateADiary(newDiary: updated);
-    final shown = updated.title.trim().isEmpty ? '(无标题)' : updated.title.trim();
-    return '已更新日记「$shown」（id=$id）。';
+    final shown = updated.title.trim().isEmpty ? 'Untitled' : updated.title.trim();
+    return 'Updated "$shown" (id=$id).';
   }
 
   static Future<String> _deleteDiary(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
-    if (id.isEmpty) return '删除失败：缺少日记 id。';
+    if (id.isEmpty) return 'Failed: no diary id given.';
 
     final repo = DiaryRepository.get();
     final existing = await repo.getDiaryByBusinessId(id);
     if (existing == null) {
-      return '删除失败：未找到 id=$id 的日记。';
+      return 'Failed: no diary with id=$id.';
     }
     final title = existing.title.trim().isEmpty
-        ? '(无标题)'
+        ? 'Untitled'
         : existing.title.trim();
     if (!existing.show) {
-      return '日记「$title」（id=$id）已在回收站中。';
+      return '"$title" (id=$id) is already in the recycle bin.';
     }
     // 软删=移入回收站(show=false)；勿用 deleteADiary(那是永久删除+删媒体)。
     await repo.updateADiary(
       newDiary: existing.copyWith(show: false, lastModified: .timestamp()),
     );
-    return '已将日记「$title」（id=$id）移入回收站。';
+    return 'Moved "$title" (id=$id) to the recycle bin.';
   }
 
   static Future<String> _listCategories(Map<String, dynamic> input) async {
     final cats = (await CategoryRepository.get().getAllCategories().run())
         .getOrElse((_) => const <Category>[]);
-    if (cats.isEmpty) return '当前还没有任何分类。';
+    if (cats.isEmpty) return 'No categories yet.';
     final buffer = StringBuffer();
     for (final c in cats) {
-      buffer.writeln('id=${c.id} 名称=${c.categoryName}');
+      buffer.writeln('id=${c.id} name=${c.categoryName}');
     }
     return buffer.toString().trim();
   }
 
   static Future<String> _createCategory(Map<String, dynamic> input) async {
     final name = (input['name'] as String?)?.trim() ?? '';
-    if (name.isEmpty) return '创建失败：分类名称不能为空。';
+    if (name.isEmpty) return 'Failed: the category name cannot be empty.';
     final category = Category.create(categoryName: name);
     final ok = (await CategoryRepository.get().insertACategory(category).run())
         .isRight();
-    return ok ? '已创建分类「$name」，id=${category.id}。' : '创建分类失败，请稍后再试。';
+    return ok ? 'Created category "$name", id=${category.id}.' : 'Failed: could not create the category.';
   }
 
   static Future<String> _updateCategory(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     final name = (input['name'] as String?)?.trim() ?? '';
-    if (id.isEmpty || name.isEmpty) return '修改失败：缺少分类 id 或名称。';
+    if (id.isEmpty || name.isEmpty) return 'Failed: category id and name are both required.';
 
     final repo = CategoryRepository.get();
     final existing = await repo.getCategoryById(id);
     if (existing == null) {
-      return '修改失败：未找到 id=$id 的分类。';
+      return 'Failed: no category with id=$id.';
     }
     final updated = existing.copyWith(
       categoryName: name,
       lastModified: .timestamp(),
     );
     final ok = (await repo.insertACategory(updated).run()).isRight();
-    return ok ? '已将分类重命名为「$name」（id=$id）。' : '修改分类失败，请稍后再试。';
+    return ok ? 'Renamed the category to "$name" (id=$id).' : 'Failed: could not rename the category.';
   }
 
   static Future<String> _deleteCategory(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
-    if (id.isEmpty) return '删除失败：缺少分类 id。';
+    if (id.isEmpty) return 'Failed: no category id given.';
     final ok = (await CategoryRepository.get().deleteACategory(id).run())
         .getOrElse((_) => false);
-    return ok ? '已删除分类（id=$id）。' : '删除失败：分类不存在，或其下仍有日记（请先移除 / 改归类后再删）。';
+    return ok
+        ? 'Deleted the category (id=$id).'
+        : 'Failed: the category does not exist, or it still holds diaries — refile them first.';
   }
 
   static const _validMemoryCategories = {'preference', 'theme', 'goal', 'fact'};
 
   static Future<String> _listMemories(Map<String, dynamic> input) async {
     final memories = await MemoryRepository.get().getAll();
-    if (memories.isEmpty) return '还没有保存任何关于用户的长期记忆。';
+    if (memories.isEmpty) return 'No saved facts yet.';
     final buffer = StringBuffer();
     for (final m in memories) {
-      buffer.writeln('id=${m.id} 类别=${m.category} 内容=${m.text}');
+      buffer.writeln('id=${m.id} kind=${m.category} text=${m.text}');
     }
     return buffer.toString().trim();
   }
 
   static Future<String> _rememberFact(Map<String, dynamic> input) async {
     final text = (input['text'] as String?)?.trim() ?? '';
-    if (text.isEmpty) return '保存失败：记忆内容不能为空。';
+    if (text.isEmpty) return 'Failed: the fact cannot be empty.';
     final rawCat = (input['category'] as String?)?.trim() ?? 'fact';
     final category = _validMemoryCategories.contains(rawCat) ? rawCat : 'fact';
     final entry = MemoryEntry.create(category: category, text: text);
     await MemoryRepository.get().put(entry);
-    return '已记住（$category）：$text（id=${entry.id}）。';
+    return 'Remembered ($category): $text (id=${entry.id}).';
   }
 
   static Future<String> _updateMemory(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     final text = (input['text'] as String?)?.trim() ?? '';
-    if (id.isEmpty || text.isEmpty) return '修改失败：缺少记忆 id 或内容。';
+    if (id.isEmpty || text.isEmpty) return 'Failed: memory id and text are both required.';
     final repo = MemoryRepository.get();
     final existing = await repo.get(id);
-    if (existing == null) return '修改失败：未找到 id=$id 的记忆。';
+    if (existing == null) return 'Failed: no memory with id=$id.';
     final rawCat = (input['category'] as String?)?.trim();
     final category = (rawCat != null && _validMemoryCategories.contains(rawCat))
         ? rawCat
@@ -610,14 +858,14 @@ abstract final class AssistantToolRegistry {
         updatedAt: .timestamp(),
       ),
     );
-    return '已更新记忆（id=$id）：$text。';
+    return 'Updated the memory (id=$id): $text.';
   }
 
   static Future<String> _forgetFact(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
-    if (id.isEmpty) return '删除失败：缺少记忆 id。';
+    if (id.isEmpty) return 'Failed: no memory id given.';
     final ok = await MemoryRepository.get().delete(id);
-    return ok ? '已删除记忆（id=$id）。' : '删除失败：未找到 id=$id 的记忆。';
+    return ok ? 'Deleted the memory (id=$id).' : 'Failed: no memory with id=$id.';
   }
 
   static Future<String?> _resolveCategoryId(Object? raw) async {
@@ -629,6 +877,16 @@ abstract final class AssistantToolRegistry {
 
   static double? _parseMood(Object? raw) =>
       raw is num ? raw.toDouble().clamp(0.0, 1.0).toDouble() : null;
+
+  /// 分类 id → 名字。查不到（已删）时返回 null，调用方自行降级。
+  static Future<String?> _categoryNameOf(String id) async {
+    final cats = (await CategoryRepository.get().getAllCategories().run())
+        .getOrElse((_) => const <Category>[]);
+    for (final c in cats) {
+      if (c.id == id) return c.categoryName;
+    }
+    return null;
+  }
 
   static String? _trimToNull(Object? raw) {
     final s = (raw as String?)?.trim();
@@ -676,21 +934,30 @@ abstract final class AssistantToolRegistry {
         _ => (a, b) => b.time.compareTo(a.time),
       };
 
-  static String _formatDiaryList(Iterable<Diary> diaries) {
+  static String _formatDiaryList(Iterable<Diary> diaries, {required int total}) {
+    final shown = diaries.length;
     final buffer = StringBuffer();
+    buffer.writeln(
+      shown < total
+          ? '$total matches; the first $shown follow. Raise limit or narrow the '
+                'filters for more.'
+          : '$total matches:',
+    );
     for (final diary in diaries) {
-      final title = diary.title.trim().isEmpty ? '(无标题)' : diary.title.trim();
+      final title = diary.title.trim().isEmpty ? 'Untitled' : diary.title.trim();
       final cat = diary.categoryId;
-      final catPart = (cat != null && cat.isNotEmpty) ? ' 分类id=$cat' : '';
+      final catPart = (cat != null && cat.isNotEmpty) ? ' categoryId=$cat' : '';
       buffer.writeln(
         'id=${diary.id} 【${TimeFormat.isoDate(diary.time)}】$title '
-        '心情=${diary.mood.toStringAsFixed(2)}$catPart',
+        'mood=${diary.mood.toStringAsFixed(2)}$catPart',
       );
       final text = diary.contentText.trim();
       if (text.isNotEmpty) {
         buffer.writeln(
           text.length > _maxExcerptLength
-              ? '${text.substring(0, _maxExcerptLength)}…'
+              // 明写「摘录」而不是只加个省略号：模型分不清「日记就这么短」和
+              // 「被我们截断了」，据此下结论就是编造。要全文请调 getDiary。
+              ? '${text.substring(0, _maxExcerptLength)}… (excerpt; full text via getDiary)'
               : text,
         );
       }
@@ -699,19 +966,25 @@ abstract final class AssistantToolRegistry {
     return buffer.toString().trim();
   }
 
-  static String _emptyQueryMessage(
+  static Future<String> _emptyQueryMessage(
     List<String> keywords,
     String? categoryId,
     DateTime? start,
     DateTime? endExclusive,
-  ) {
+  ) async {
+    // 吐 uuid 没用：模型没法在回复里跟用户说「分类 0198a…下没有日记」。
+    final categoryName = categoryId == null
+        ? null
+        : await _categoryNameOf(categoryId);
     final conds = <String>[
-      if (keywords.isNotEmpty) '关键词「${keywords.join(' ')}」',
-      if (categoryId != null) '分类 $categoryId',
-      if (start != null) '起 ${TimeFormat.isoDate(start)}',
+      if (keywords.isNotEmpty) 'keywords "${keywords.join(' ')}"',
+      if (categoryName != null) 'category "$categoryName"',
+      if (start != null) 'from ${TimeFormat.isoDate(start)}',
       if (endExclusive != null)
-        '止 ${TimeFormat.isoDate(endExclusive.subtract(const Duration(days: 1)))}',
+        'to ${TimeFormat.isoDate(endExclusive.subtract(const Duration(days: 1)))}',
     ];
-    return conds.isEmpty ? '还没有任何日记。' : '没有找到符合条件（${conds.join('，')}）的日记。';
+    return conds.isEmpty
+        ? 'No diaries yet.'
+        : 'No diaries match ${conds.join(', ')}.';
   }
 }

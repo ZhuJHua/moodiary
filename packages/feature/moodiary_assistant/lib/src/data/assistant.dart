@@ -45,8 +45,14 @@ class AssistantReasoning {
       effort = '';
 }
 
-/// 流式事件类别：text=正文增量，reasoning=思考增量，tool=工具调用（[text] 为工具名），usage=token 用量。
-enum AssistantStreamKind { text, reasoning, tool, usage }
+/// 流式事件类别。
+///
+/// - `text` / `reasoning`：正文与思考增量
+/// - `tool`：模型开始调工具（[AssistantStreamEvent.text] 是工具名）。只作
+///   「思考阶段结束」的信号，展示走下面两个
+/// - `toolStarted` / `toolFinished`：一次工具调用的开始与结果，靠 `callId` 配对
+/// - `usage`：token 用量
+enum AssistantStreamKind { text, reasoning, tool, toolStarted, toolFinished, usage }
 
 /// 一次流式回复中的单个增量。思考模式下 [reasoning] 与 [text] 交织到来。
 class AssistantStreamEvent {
@@ -61,6 +67,12 @@ class AssistantStreamEvent {
   /// 写入供应商缓存的输入 token（Anthropic 的 cache_creation）。
   final int cacheWriteTokens;
 
+  /// 工具事件的关联 id，把 toolStarted 与 toolFinished 配成一对。
+  final String callId;
+
+  /// toolStarted 时模型传的入参（原样 JSON）。
+  final String argsJson;
+
   const AssistantStreamEvent(
     this.kind,
     this.text, {
@@ -68,6 +80,8 @@ class AssistantStreamEvent {
     this.outputTokens = 0,
     this.cachedInputTokens = 0,
     this.cacheWriteTokens = 0,
+    this.callId = '',
+    this.argsJson = '',
   });
 
   const AssistantStreamEvent.text(this.text)
@@ -75,21 +89,49 @@ class AssistantStreamEvent {
       inputTokens = 0,
       outputTokens = 0,
       cachedInputTokens = 0,
-      cacheWriteTokens = 0;
+      cacheWriteTokens = 0,
+      callId = '',
+      argsJson = '';
 
   const AssistantStreamEvent.reasoning(this.text)
     : kind = .reasoning,
       inputTokens = 0,
       outputTokens = 0,
       cachedInputTokens = 0,
-      cacheWriteTokens = 0;
+      cacheWriteTokens = 0,
+      callId = '',
+      argsJson = '';
 
   const AssistantStreamEvent.tool(this.text)
     : kind = .tool,
       inputTokens = 0,
       outputTokens = 0,
       cachedInputTokens = 0,
-      cacheWriteTokens = 0;
+      cacheWriteTokens = 0,
+      callId = '',
+      argsJson = '';
+
+  /// 一次工具调用开始执行。[text] 是工具 id，[argsJson] 是模型传的入参。
+  const AssistantStreamEvent.toolStarted({
+    required this.callId,
+    required this.text,
+    required this.argsJson,
+  }) : kind = .toolStarted,
+       inputTokens = 0,
+       outputTokens = 0,
+       cachedInputTokens = 0,
+       cacheWriteTokens = 0;
+
+  /// 一次工具调用的结果。[text] 是结果文本。
+  const AssistantStreamEvent.toolFinished({
+    required this.callId,
+    required this.text,
+  }) : kind = .toolFinished,
+       argsJson = '',
+       inputTokens = 0,
+       outputTokens = 0,
+       cachedInputTokens = 0,
+       cacheWriteTokens = 0;
 
   const AssistantStreamEvent.usage(
     this.inputTokens,
@@ -97,10 +139,10 @@ class AssistantStreamEvent {
     this.cachedInputTokens = 0,
     this.cacheWriteTokens = 0,
   }) : kind = .usage,
-       text = '';
+       text = '',
+       callId = '',
+       argsJson = '';
 }
-
-typedef ToolPermissionRequester = Future<bool> Function(AssistantTool tool);
 
 class AssistantMessage {
   final AssistantRole role;
@@ -151,8 +193,6 @@ class AssistantChatRequest {
   /// 是否给模型挂载工具。模型不支持工具调用时应为 false（否则可能被供应商拒）。
   final bool tools;
 
-  final ToolPermissionRequester? onToolPermission;
-
   const AssistantChatRequest({
     required this.type,
     required this.baseUrl,
@@ -164,7 +204,6 @@ class AssistantChatRequest {
     required this.history,
     this.reasoning = const AssistantReasoning.off(),
     this.tools = true,
-    this.onToolPermission,
   });
 }
 

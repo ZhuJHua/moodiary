@@ -47,7 +47,17 @@ pub struct _RigToolDef {
 pub enum _RigStreamEvent {
     TextDelta(String),
     ReasoningDelta(String),
+    /// 只作「思考阶段结束」的信号；要展示工具调用请用下面两个。
     ToolCall(String),
+    ToolStarted {
+        call_id: String,
+        name: String,
+        args_json: String,
+    },
+    ToolFinished {
+        call_id: String,
+        result: String,
+    },
     Usage {
         input_tokens: u32,
         output_tokens: u32,

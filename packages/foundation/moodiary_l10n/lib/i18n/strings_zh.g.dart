@@ -630,8 +630,8 @@ class Translations$assistant$zh {
 	/// zh: '工具'
 	String get tool => '工具';
 
-	/// zh: '助手会根据对话内容自动调用下列工具。只读工具直接执行；涉及写入或删除的工具会先请你确认。'
-	String get toolSectionNote => '助手会根据对话内容自动调用下列工具。只读工具直接执行；涉及写入或删除的工具会先请你确认。';
+	/// zh: '助手会根据对话内容自动调用下列工具，无需你逐次确认。删除类操作请留意：日记会进回收站，记忆则是永久删除。'
+	String get toolSectionNote => '助手会根据对话内容自动调用下列工具，无需你逐次确认。删除类操作请留意：日记会进回收站，记忆则是永久删除。';
 
 	/// zh: '查询日记'
 	String get toolQueryTitle => '查询日记';
@@ -740,45 +740,6 @@ class Translations$assistant$zh {
 
 	/// zh: '上下文占用'
 	String get contextUsageLabel => '上下文占用';
-
-	/// zh: '危险'
-	String get toolDangerBadge => '危险';
-
-	/// zh: '只读'
-	String get toolReadOnlyBadge => '只读';
-
-	/// zh: '助手请求执行操作'
-	String get toolPermissionTitle => '助手请求执行操作';
-
-	/// zh: '这是危险操作，会修改或删除你的数据，请谨慎确认。'
-	String get toolPermissionDangerNote => '这是危险操作，会修改或删除你的数据，请谨慎确认。';
-
-	/// zh: '允许一次'
-	String get toolAllowOnce => '允许一次';
-
-	/// zh: '始终允许'
-	String get toolAllowAlways => '始终允许';
-
-	/// zh: '拒绝'
-	String get toolDeny => '拒绝';
-
-	/// zh: '已设为始终允许'
-	String get toolAlwaysAllowedHint => '已设为始终允许';
-
-	/// zh: '已允许本次执行'
-	String get toolStatusAllowedOnce => '已允许本次执行';
-
-	/// zh: '已拒绝执行'
-	String get toolStatusDenied => '已拒绝执行';
-
-	/// zh: '已取消'
-	String get toolStatusCanceled => '已取消';
-
-	/// zh: '重置已授权的工具'
-	String get toolResetGrants => '重置已授权的工具';
-
-	/// zh: '已重置工具授权'
-	String get toolResetGrantsDone => '已重置工具授权';
 
 	/// zh: '使用前必读'
 	String get disclaimerTitle => '使用前必读';
@@ -971,6 +932,36 @@ class Translations$assistant$zh {
 
 	/// zh: '全屏编辑'
 	String get composerFullscreen => '全屏编辑';
+
+	/// zh: '已完成'
+	String get toolDone => '已完成';
+
+	/// zh: '未成功'
+	String get toolFailed => '未成功';
+
+	/// zh: '无结果'
+	String get toolNoMatch => '无结果';
+
+	/// zh: '{count} 篇'
+	String toolMatched({required Object count}) => '${count} 篇';
+
+	/// zh: '{count} 篇全文'
+	String toolRead({required Object count}) => '${count} 篇全文';
+
+	/// zh: '{count} 项'
+	String toolListed({required Object count}) => '${count} 项';
+
+	/// zh: '无标题'
+	String get toolUntitled => '无标题';
+
+	/// zh: '已更新'
+	String get toolUpdated => '已更新';
+
+	/// zh: '已移入回收站'
+	String get toolTrashed => '已移入回收站';
+
+	/// zh: '已删除'
+	String get toolDeleted => '已删除';
 }
 
 // Path: common

@@ -2476,6 +2476,19 @@ const _: fn() = || {
         crate::api::assistant::RigStreamEvent::ToolCall(field0) => {
             let _: String = field0;
         }
+        crate::api::assistant::RigStreamEvent::ToolStarted {
+            call_id,
+            name,
+            args_json,
+        } => {
+            let _: String = call_id;
+            let _: String = name;
+            let _: String = args_json;
+        }
+        crate::api::assistant::RigStreamEvent::ToolFinished { call_id, result } => {
+            let _: String = call_id;
+            let _: String = result;
+        }
         crate::api::assistant::RigStreamEvent::Usage {
             input_tokens,
             output_tokens,
@@ -3908,6 +3921,24 @@ impl SseDecode for crate::api::assistant::RigStreamEvent {
                 return crate::api::assistant::RigStreamEvent::ToolCall(var_field0);
             }
             3 => {
+                let mut var_callId = <String>::sse_decode(deserializer);
+                let mut var_name = <String>::sse_decode(deserializer);
+                let mut var_argsJson = <String>::sse_decode(deserializer);
+                return crate::api::assistant::RigStreamEvent::ToolStarted {
+                    call_id: var_callId,
+                    name: var_name,
+                    args_json: var_argsJson,
+                };
+            }
+            4 => {
+                let mut var_callId = <String>::sse_decode(deserializer);
+                let mut var_result = <String>::sse_decode(deserializer);
+                return crate::api::assistant::RigStreamEvent::ToolFinished {
+                    call_id: var_callId,
+                    result: var_result,
+                };
+            }
+            5 => {
                 let mut var_inputTokens = <u32>::sse_decode(deserializer);
                 let mut var_outputTokens = <u32>::sse_decode(deserializer);
                 let mut var_cachedInputTokens = <u32>::sse_decode(deserializer);
@@ -4844,13 +4875,30 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::assistant::RigStre
             crate::api::assistant::RigStreamEvent::ToolCall(field0) => {
                 [2.into_dart(), field0.into_into_dart().into_dart()].into_dart()
             }
+            crate::api::assistant::RigStreamEvent::ToolStarted {
+                call_id,
+                name,
+                args_json,
+            } => [
+                3.into_dart(),
+                call_id.into_into_dart().into_dart(),
+                name.into_into_dart().into_dart(),
+                args_json.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
+            crate::api::assistant::RigStreamEvent::ToolFinished { call_id, result } => [
+                4.into_dart(),
+                call_id.into_into_dart().into_dart(),
+                result.into_into_dart().into_dart(),
+            ]
+            .into_dart(),
             crate::api::assistant::RigStreamEvent::Usage {
                 input_tokens,
                 output_tokens,
                 cached_input_tokens,
                 cache_write_tokens,
             } => [
-                3.into_dart(),
+                5.into_dart(),
                 input_tokens.into_into_dart().into_dart(),
                 output_tokens.into_into_dart().into_dart(),
                 cached_input_tokens.into_into_dart().into_dart(),
@@ -5879,13 +5927,28 @@ impl SseEncode for crate::api::assistant::RigStreamEvent {
                 <i32>::sse_encode(2, serializer);
                 <String>::sse_encode(field0, serializer);
             }
+            crate::api::assistant::RigStreamEvent::ToolStarted {
+                call_id,
+                name,
+                args_json,
+            } => {
+                <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(call_id, serializer);
+                <String>::sse_encode(name, serializer);
+                <String>::sse_encode(args_json, serializer);
+            }
+            crate::api::assistant::RigStreamEvent::ToolFinished { call_id, result } => {
+                <i32>::sse_encode(4, serializer);
+                <String>::sse_encode(call_id, serializer);
+                <String>::sse_encode(result, serializer);
+            }
             crate::api::assistant::RigStreamEvent::Usage {
                 input_tokens,
                 output_tokens,
                 cached_input_tokens,
                 cache_write_tokens,
             } => {
-                <i32>::sse_encode(3, serializer);
+                <i32>::sse_encode(5, serializer);
                 <u32>::sse_encode(input_tokens, serializer);
                 <u32>::sse_encode(output_tokens, serializer);
                 <u32>::sse_encode(cached_input_tokens, serializer);
@@ -6955,6 +7018,21 @@ mod io {
                     crate::api::assistant::RigStreamEvent::ToolCall(ans.field0.cst_decode())
                 }
                 3 => {
+                    let ans = unsafe { self.kind.ToolStarted };
+                    crate::api::assistant::RigStreamEvent::ToolStarted {
+                        call_id: ans.call_id.cst_decode(),
+                        name: ans.name.cst_decode(),
+                        args_json: ans.args_json.cst_decode(),
+                    }
+                }
+                4 => {
+                    let ans = unsafe { self.kind.ToolFinished };
+                    crate::api::assistant::RigStreamEvent::ToolFinished {
+                        call_id: ans.call_id.cst_decode(),
+                        result: ans.result.cst_decode(),
+                    }
+                }
+                5 => {
                     let ans = unsafe { self.kind.Usage };
                     crate::api::assistant::RigStreamEvent::Usage {
                         input_tokens: ans.input_tokens.cst_decode(),
@@ -8891,6 +8969,8 @@ mod io {
         TextDelta: wire_cst_RigStreamEvent_TextDelta,
         ReasoningDelta: wire_cst_RigStreamEvent_ReasoningDelta,
         ToolCall: wire_cst_RigStreamEvent_ToolCall,
+        ToolStarted: wire_cst_RigStreamEvent_ToolStarted,
+        ToolFinished: wire_cst_RigStreamEvent_ToolFinished,
         Usage: wire_cst_RigStreamEvent_Usage,
         nil__: (),
     }
@@ -8908,6 +8988,19 @@ mod io {
     #[derive(Clone, Copy)]
     pub struct wire_cst_RigStreamEvent_ToolCall {
         field0: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_RigStreamEvent_ToolStarted {
+        call_id: *mut wire_cst_list_prim_u_8_strict,
+        name: *mut wire_cst_list_prim_u_8_strict,
+        args_json: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_RigStreamEvent_ToolFinished {
+        call_id: *mut wire_cst_list_prim_u_8_strict,
+        result: *mut wire_cst_list_prim_u_8_strict,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

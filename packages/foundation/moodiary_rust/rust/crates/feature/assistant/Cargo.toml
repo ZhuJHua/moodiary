@@ -8,4 +8,5 @@ anyhow = { workspace = true }
 futures = { workspace = true }
 serde_json = { workspace = true }
 rig = { workspace = true }
+rig-agent = { workspace = true }
 moodiary-http = { workspace = true }

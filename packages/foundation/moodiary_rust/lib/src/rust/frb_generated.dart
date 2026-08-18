@@ -3696,6 +3696,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 2:
         return RigStreamEvent_ToolCall(dco_decode_String(raw[1]));
       case 3:
+        return RigStreamEvent_ToolStarted(
+          callId: dco_decode_String(raw[1]),
+          name: dco_decode_String(raw[2]),
+          argsJson: dco_decode_String(raw[3]),
+        );
+      case 4:
+        return RigStreamEvent_ToolFinished(
+          callId: dco_decode_String(raw[1]),
+          result: dco_decode_String(raw[2]),
+        );
+      case 5:
         return RigStreamEvent_Usage(
           inputTokens: dco_decode_u_32(raw[1]),
           outputTokens: dco_decode_u_32(raw[2]),
@@ -5129,6 +5140,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         var var_field0 = sse_decode_String(deserializer);
         return RigStreamEvent_ToolCall(var_field0);
       case 3:
+        var var_callId = sse_decode_String(deserializer);
+        var var_name = sse_decode_String(deserializer);
+        var var_argsJson = sse_decode_String(deserializer);
+        return RigStreamEvent_ToolStarted(
+          callId: var_callId,
+          name: var_name,
+          argsJson: var_argsJson,
+        );
+      case 4:
+        var var_callId = sse_decode_String(deserializer);
+        var var_result = sse_decode_String(deserializer);
+        return RigStreamEvent_ToolFinished(
+          callId: var_callId,
+          result: var_result,
+        );
+      case 5:
         var var_inputTokens = sse_decode_u_32(deserializer);
         var var_outputTokens = sse_decode_u_32(deserializer);
         var var_cachedInputTokens = sse_decode_u_32(deserializer);
@@ -7020,13 +7047,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case RigStreamEvent_ToolCall(field0: final field0):
         sse_encode_i_32(2, serializer);
         sse_encode_String(field0, serializer);
+      case RigStreamEvent_ToolStarted(
+        callId: final callId,
+        name: final name,
+        argsJson: final argsJson,
+      ):
+        sse_encode_i_32(3, serializer);
+        sse_encode_String(callId, serializer);
+        sse_encode_String(name, serializer);
+        sse_encode_String(argsJson, serializer);
+      case RigStreamEvent_ToolFinished(
+        callId: final callId,
+        result: final result,
+      ):
+        sse_encode_i_32(4, serializer);
+        sse_encode_String(callId, serializer);
+        sse_encode_String(result, serializer);
       case RigStreamEvent_Usage(
         inputTokens: final inputTokens,
         outputTokens: final outputTokens,
         cachedInputTokens: final cachedInputTokens,
         cacheWriteTokens: final cacheWriteTokens,
       ):
-        sse_encode_i_32(3, serializer);
+        sse_encode_i_32(5, serializer);
         sse_encode_u_32(inputTokens, serializer);
         sse_encode_u_32(outputTokens, serializer);
         sse_encode_u_32(cachedInputTokens, serializer);

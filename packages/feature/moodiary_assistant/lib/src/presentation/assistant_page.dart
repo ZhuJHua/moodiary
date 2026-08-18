@@ -1,24 +1,24 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:genui/genui.dart' as genui;
 import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/application/context_compaction_controller.dart';
-import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
+import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_assistant/src/data/soul_repository.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_summary_tile.dart';
+import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
 import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
-import 'package:moodiary_assistant/src/presentation/tool_permission_card.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -108,8 +108,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   /// 已选、待随下一条消息发送的图片文件名（image 目录内）。null 表示无待发图片。
   String? _pendingImageName;
 
-  late final ToolPermissionCoordinator _permissions;
-  late final ToolPermissionActionDelegate _permissionDelegate;
 
   final ContextCompactionController _compaction = ContextCompactionController();
 
@@ -133,13 +131,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   void initState() {
     super.initState();
     _chat = AssistantChatController();
-    _permissions = ToolPermissionCoordinator(
-      catalog: assistantGenUiCatalog,
-      onCardCreated: _insertPermissionCard,
-    );
-    _permissionDelegate = ToolPermissionActionDelegate(
-      _permissions.handleAction,
-    );
     _disclaimerAccepted =
         MoodiaryKVs.assistantDisclaimerAccepted.get() ?? false;
     _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get() ?? '';
@@ -168,7 +159,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _inputFocusNode.dispose();
     _chatScroll.dispose();
     _streamSub?.cancel();
-    _permissions.dispose();
     _chat.dispose();
     super.dispose();
   }
@@ -266,7 +256,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _generation++;
     _streamSub?.cancel();
     _streamSub = null;
-    _permissions.reset();
     _streamingMessage = null;
     _staleReplyIds = [];
     await _chat.loadSession(session.id);
@@ -375,7 +364,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         maxTokens: _maxTokens,
       ),
       tools: _canUseTools,
-      onToolPermission: _requestToolPermission,
     );
   }
 
@@ -384,62 +372,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _streamingReasoning = '';
     _thinkingMillis = 0;
     _thinkingActive = false;
-  }
-
-  /// surface 没了的授权卡要**移出列表**，不能只渲染成空 widget ——
-  /// 零高度的隐形项会一直贡献条目间距（凭空的空隙），还会把
-  /// `maxScrollExtent` 的平均高度外推带偏，而那正是补跳循环在对抗的估计值。
-  void _pruneDeadPermissionCards() {
-    final active = _permissions.surfaces.activeSurfaceIds;
-    _chat.removeWhere(
-      (item) =>
-          item is AssistantPermissionCard && !active.contains(item.surfaceId),
-    );
-  }
-
-  Future<bool> _requestToolPermission(AssistantTool tool) async {
-    final always =
-        MoodiaryKVs.assistantAlwaysAllowedTools.get() ?? const <String>[];
-    if (always.contains(tool.id)) return true;
-    if (!mounted) return false;
-    final decision = await _permissions.request(tool);
-    if (decision == .allowAlways) {
-      MoodiaryKVs.assistantAlwaysAllowedTools.set([...always, tool.id]);
-    }
-    return decision == .allowOnce || decision == .allowAlways;
-  }
-
-  Future<void> _insertPermissionCard(String surfaceId) async {
-    if (!mounted) return;
-    final card = AssistantPermissionCard(surfaceId);
-    final streaming = _streamingMessage;
-    final items = _chat.items;
-    final placeholderIsLast =
-        streaming != null && items.isNotEmpty && items.last.id == streaming.id;
-    if (placeholderIsLast && streaming.text.isEmpty) {
-      _chat.insertAt(items.length - 1, card);
-    } else {
-      AssistantTurn? toPersist;
-      _chat.batch(() {
-        if (streaming != null && streaming.text.isNotEmpty) {
-          final settled = streaming.settled;
-          _chat.replace(settled);
-          _chat.endStreaming();
-          toPersist = settled;
-        }
-        _chat.add(card);
-        final next = AssistantTurn.assistant('', streaming: true);
-        _chat.beginStreaming(next);
-        _streamingMessage = next;
-      });
-      final settled = toPersist;
-      if (settled != null) {
-        await _chat.persist(settled);
-        _purgeStaleReplies();
-      }
-      // 已定稿上一段回复，新气泡的思考从零计（避免把上一段的思考挪到新气泡）。
-      _resetThinkingState();
-    }
   }
 
   Future<void> _submit(String text) async {
@@ -482,8 +414,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final gen = ++_generation;
     _streamSub?.cancel();
     _streamSub = null;
-    _permissions.reset();
-    _pruneDeadPermissionCards();
     _streamingMessage = null;
 
     final items = _chat.items;
@@ -592,8 +522,12 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                 case .reasoning:
                   _appendReasoning(event.text);
                 case .tool:
-                  // 模型开始调用工具 → 思考阶段结束，冻结计时（不计入工具执行 / 授权等待）。
+                  // 模型开始调用工具 → 思考阶段结束，冻结计时（不计入工具执行时间）。
                   _freezeThinkingOnTool();
+                case .toolStarted:
+                  _applyToolStarted(event.callId, event.text, event.argsJson);
+                case .toolFinished:
+                  _applyToolFinished(event.callId, event.text);
                 case .usage:
                   _applyUsage(event.inputTokens, event.outputTokens);
               }
@@ -601,7 +535,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             onError: (Object e) {
               if (gen != _generation) return;
               errored = true;
-              _permissions.cancelPending();
               if (e is AssistantNotConfiguredException) {
                 _appendDelta(needApiKeyText);
                 _refreshReady();
@@ -640,11 +573,12 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     for (final m in _chat.items) {
       if (m is! AssistantTurn) continue;
       final hasImage = m.imageName.isNotEmpty;
-      if (m.text.isEmpty && !hasImage) continue;
+      final content = m.fromUser ? m.text : _withToolRecord(m);
+      if (content.isEmpty && !hasImage) continue;
       raw.add((
         id: m.id,
         role: m.fromUser ? AssistantRole.user : AssistantRole.assistant,
-        content: m.text,
+        content: content,
         imagePath: hasImage ? AppFiles.getRealPath('image', m.imageName) : null,
       ));
     }
@@ -683,6 +617,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       }
     }
     return result;
+  }
+
+  /// 把这一轮用过的工具补进 assistant 那条消息（见 [AssistantToolRegistry.recordOf]）。
+  String _withToolRecord(AssistantTurn turn) {
+    final record = AssistantToolRegistry.recordOf(turn.toolCalls);
+    if (record.isEmpty) return turn.text;
+    return turn.text.isEmpty ? record : '$record\n\n${turn.text}';
   }
 
   /// 每轮结束后按 token 阈值自动尝试压缩。
@@ -776,7 +717,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _generation++;
     _streamSub?.cancel();
     _streamSub = null;
-    _permissions.cancelPending();
     _finalizeStreaming(persist: true);
     setState(() => _sending = false);
   }
@@ -831,6 +771,35 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _thinkingActive = true;
     _streamingReasoning += delta;
     _syncReasoning(cur);
+  }
+
+  /// 一次工具调用开始执行：先挂一条未完成的记录（界面上是转圈那条）。
+  void _applyToolStarted(String callId, String name, String argsJson) {
+    final cur = _streamingMessage;
+    if (cur == null) return;
+    // 同一个 callId 重复上报就忽略，别把同一次调用画两条。
+    if (cur.toolCalls.any((c) => c.callId == callId)) return;
+    final next = cur.copyWith(
+      toolCalls: [
+        ...cur.toolCalls,
+        AssistantToolCall(callId: callId, name: name, argsJson: argsJson),
+      ],
+    );
+    _chat.updateStreaming(next);
+    _streamingMessage = next;
+  }
+
+  /// 工具结果回来了：就地把那一条标成完成。
+  void _applyToolFinished(String callId, String result) {
+    final cur = _streamingMessage;
+    if (cur == null) return;
+    final index = cur.toolCalls.indexWhere((c) => c.callId == callId);
+    if (index == -1) return;
+    final updated = [...cur.toolCalls];
+    updated[index] = updated[index].copyWith(result: result, done: true);
+    final next = cur.copyWith(toolCalls: updated);
+    _chat.updateStreaming(next);
+    _streamingMessage = next;
   }
 
   /// 本轮结束的 token 用量：写回当前流式消息（随后 settled 保留、落库）。
@@ -948,10 +917,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         summary: _session?.compactedSummary ?? '',
         onRestore: _restoreFullHistory,
       ),
-      AssistantPermissionCard(:final surfaceId) => _buildPermissionCard(
-        context,
-        surfaceId,
-      ),
     };
   }
 
@@ -974,23 +939,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       thinkingActive: turn.thinkingActive,
       inputTokens: turn.inputTokens,
       outputTokens: turn.outputTokens,
+      toolCalls: turn.toolCalls,
       streaming: turn.streaming,
       onRegenerate: (!_sending && isLast && hasUserTurn) ? _regenerate : null,
-    );
-  }
-
-  Widget _buildPermissionCard(BuildContext context, String surfaceId) {
-    // 兜底：surface 已经被 reset 掉但卡片还没剪掉的那一帧（build 里不能改列表）。
-    if (!_permissions.surfaces.activeSurfaceIds.contains(surfaceId)) {
-      return const SizedBox.shrink();
-    }
-    final maxWidth = MediaQuery.sizeOf(context).width * 0.82;
-    return Container(
-      constraints: BoxConstraints(maxWidth: maxWidth < 400 ? maxWidth : 400),
-      child: genui.Surface(
-        surfaceContext: _permissions.surfaces.contextFor(surfaceId),
-        actionDelegate: _permissionDelegate,
-      ),
     );
   }
 
@@ -1824,6 +1775,7 @@ class _AssistantBubble extends StatelessWidget {
   final bool thinkingActive;
   final int inputTokens;
   final int outputTokens;
+  final List<AssistantToolCall> toolCalls;
   final bool streaming;
   final VoidCallback? onRegenerate;
 
@@ -1834,6 +1786,7 @@ class _AssistantBubble extends StatelessWidget {
     required this.thinkingActive,
     required this.inputTokens,
     required this.outputTokens,
+    required this.toolCalls,
     required this.streaming,
     this.onRegenerate,
   });
@@ -1889,6 +1842,8 @@ class _AssistantBubble extends StatelessWidget {
                   codeBuilder: _codeBlock,
                 ),
         ),
+      // 工具调用排在思考之后、正文之前 —— 那正是它们发生的顺序。
+      for (final call in toolCalls) _toolNotice(context, call),
       ?bubble,
     ];
 
@@ -1960,6 +1915,43 @@ class _AssistantBubble extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// 一次工具调用渲染成一条提示条。与思考同一个组件。
+///
+/// 摘要由工具自己给（`AssistantToolSpec.summaryOf`）——截断结果字符串得到的是
+/// 半截元数据，工具自己才知道该说「7 条 · 08-11 至 08-17」。
+Widget _toolNotice(BuildContext context, AssistantToolCall call) {
+  final spec = AssistantToolRegistry.byId(call.name);
+  final display = spec == null
+      ? call.name
+      : assistantToolDisplay(context, spec.tool).title;
+  if (!call.done) {
+    // 还在跑：转圈，没有箭头（还没有下文可展开）。
+    return AssistantNotice(kind: display);
+  }
+  final input = _decodeArgs(call.argsJson);
+  return AssistantNotice(
+    icon: LucideIcons.wrench,
+    kind: display,
+    summary: spec?.summaryOf(input, call.result) ?? call.result,
+    detail: call.result.isEmpty
+        ? null
+        : (context) => SelectableText(
+            call.result,
+            style: context.theme.typography.bodySmall.onSurfaceVariant,
+          ),
+  );
+}
+
+Map<String, dynamic> _decodeArgs(String raw) {
+  if (raw.trim().isEmpty) return const {};
+  try {
+    final decoded = jsonDecode(raw);
+    return decoded is Map ? decoded.cast<String, dynamic>() : const {};
+  } catch (_) {
+    return const {};
   }
 }
 

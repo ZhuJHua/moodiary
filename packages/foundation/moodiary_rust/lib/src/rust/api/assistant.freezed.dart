@@ -56,13 +56,15 @@ extension RigStreamEventPatterns on RigStreamEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( RigStreamEvent_TextDelta value)?  textDelta,TResult Function( RigStreamEvent_ReasoningDelta value)?  reasoningDelta,TResult Function( RigStreamEvent_ToolCall value)?  toolCall,TResult Function( RigStreamEvent_Usage value)?  usage,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( RigStreamEvent_TextDelta value)?  textDelta,TResult Function( RigStreamEvent_ReasoningDelta value)?  reasoningDelta,TResult Function( RigStreamEvent_ToolCall value)?  toolCall,TResult Function( RigStreamEvent_ToolStarted value)?  toolStarted,TResult Function( RigStreamEvent_ToolFinished value)?  toolFinished,TResult Function( RigStreamEvent_Usage value)?  usage,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta() when textDelta != null:
 return textDelta(_that);case RigStreamEvent_ReasoningDelta() when reasoningDelta != null:
 return reasoningDelta(_that);case RigStreamEvent_ToolCall() when toolCall != null:
-return toolCall(_that);case RigStreamEvent_Usage() when usage != null:
+return toolCall(_that);case RigStreamEvent_ToolStarted() when toolStarted != null:
+return toolStarted(_that);case RigStreamEvent_ToolFinished() when toolFinished != null:
+return toolFinished(_that);case RigStreamEvent_Usage() when usage != null:
 return usage(_that);case _:
   return orElse();
 
@@ -81,13 +83,15 @@ return usage(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( RigStreamEvent_TextDelta value)  textDelta,required TResult Function( RigStreamEvent_ReasoningDelta value)  reasoningDelta,required TResult Function( RigStreamEvent_ToolCall value)  toolCall,required TResult Function( RigStreamEvent_Usage value)  usage,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( RigStreamEvent_TextDelta value)  textDelta,required TResult Function( RigStreamEvent_ReasoningDelta value)  reasoningDelta,required TResult Function( RigStreamEvent_ToolCall value)  toolCall,required TResult Function( RigStreamEvent_ToolStarted value)  toolStarted,required TResult Function( RigStreamEvent_ToolFinished value)  toolFinished,required TResult Function( RigStreamEvent_Usage value)  usage,}){
 final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta():
 return textDelta(_that);case RigStreamEvent_ReasoningDelta():
 return reasoningDelta(_that);case RigStreamEvent_ToolCall():
-return toolCall(_that);case RigStreamEvent_Usage():
+return toolCall(_that);case RigStreamEvent_ToolStarted():
+return toolStarted(_that);case RigStreamEvent_ToolFinished():
+return toolFinished(_that);case RigStreamEvent_Usage():
 return usage(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -102,13 +106,15 @@ return usage(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( RigStreamEvent_TextDelta value)?  textDelta,TResult? Function( RigStreamEvent_ReasoningDelta value)?  reasoningDelta,TResult? Function( RigStreamEvent_ToolCall value)?  toolCall,TResult? Function( RigStreamEvent_Usage value)?  usage,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( RigStreamEvent_TextDelta value)?  textDelta,TResult? Function( RigStreamEvent_ReasoningDelta value)?  reasoningDelta,TResult? Function( RigStreamEvent_ToolCall value)?  toolCall,TResult? Function( RigStreamEvent_ToolStarted value)?  toolStarted,TResult? Function( RigStreamEvent_ToolFinished value)?  toolFinished,TResult? Function( RigStreamEvent_Usage value)?  usage,}){
 final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta() when textDelta != null:
 return textDelta(_that);case RigStreamEvent_ReasoningDelta() when reasoningDelta != null:
 return reasoningDelta(_that);case RigStreamEvent_ToolCall() when toolCall != null:
-return toolCall(_that);case RigStreamEvent_Usage() when usage != null:
+return toolCall(_that);case RigStreamEvent_ToolStarted() when toolStarted != null:
+return toolStarted(_that);case RigStreamEvent_ToolFinished() when toolFinished != null:
+return toolFinished(_that);case RigStreamEvent_Usage() when usage != null:
 return usage(_that);case _:
   return null;
 
@@ -126,12 +132,14 @@ return usage(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  textDelta,TResult Function( String field0)?  reasoningDelta,TResult Function( String field0)?  toolCall,TResult Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)?  usage,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  textDelta,TResult Function( String field0)?  reasoningDelta,TResult Function( String field0)?  toolCall,TResult Function( String callId,  String name,  String argsJson)?  toolStarted,TResult Function( String callId,  String result)?  toolFinished,TResult Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)?  usage,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta() when textDelta != null:
 return textDelta(_that.field0);case RigStreamEvent_ReasoningDelta() when reasoningDelta != null:
 return reasoningDelta(_that.field0);case RigStreamEvent_ToolCall() when toolCall != null:
-return toolCall(_that.field0);case RigStreamEvent_Usage() when usage != null:
+return toolCall(_that.field0);case RigStreamEvent_ToolStarted() when toolStarted != null:
+return toolStarted(_that.callId,_that.name,_that.argsJson);case RigStreamEvent_ToolFinished() when toolFinished != null:
+return toolFinished(_that.callId,_that.result);case RigStreamEvent_Usage() when usage != null:
 return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);case _:
   return orElse();
 
@@ -150,12 +158,14 @@ return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  textDelta,required TResult Function( String field0)  reasoningDelta,required TResult Function( String field0)  toolCall,required TResult Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)  usage,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  textDelta,required TResult Function( String field0)  reasoningDelta,required TResult Function( String field0)  toolCall,required TResult Function( String callId,  String name,  String argsJson)  toolStarted,required TResult Function( String callId,  String result)  toolFinished,required TResult Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)  usage,}) {final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta():
 return textDelta(_that.field0);case RigStreamEvent_ReasoningDelta():
 return reasoningDelta(_that.field0);case RigStreamEvent_ToolCall():
-return toolCall(_that.field0);case RigStreamEvent_Usage():
+return toolCall(_that.field0);case RigStreamEvent_ToolStarted():
+return toolStarted(_that.callId,_that.name,_that.argsJson);case RigStreamEvent_ToolFinished():
+return toolFinished(_that.callId,_that.result);case RigStreamEvent_Usage():
 return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -170,12 +180,14 @@ return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  textDelta,TResult? Function( String field0)?  reasoningDelta,TResult? Function( String field0)?  toolCall,TResult? Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)?  usage,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  textDelta,TResult? Function( String field0)?  reasoningDelta,TResult? Function( String field0)?  toolCall,TResult? Function( String callId,  String name,  String argsJson)?  toolStarted,TResult? Function( String callId,  String result)?  toolFinished,TResult? Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)?  usage,}) {final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta() when textDelta != null:
 return textDelta(_that.field0);case RigStreamEvent_ReasoningDelta() when reasoningDelta != null:
 return reasoningDelta(_that.field0);case RigStreamEvent_ToolCall() when toolCall != null:
-return toolCall(_that.field0);case RigStreamEvent_Usage() when usage != null:
+return toolCall(_that.field0);case RigStreamEvent_ToolStarted() when toolStarted != null:
+return toolStarted(_that.callId,_that.name,_that.argsJson);case RigStreamEvent_ToolFinished() when toolFinished != null:
+return toolFinished(_that.callId,_that.result);case RigStreamEvent_Usage() when usage != null:
 return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);case _:
   return null;
 
@@ -375,6 +387,144 @@ class _$RigStreamEvent_ToolCallCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? field0 = null,}) {
   return _then(RigStreamEvent_ToolCall(
 null == field0 ? _self.field0 : field0 // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class RigStreamEvent_ToolStarted extends RigStreamEvent {
+  const RigStreamEvent_ToolStarted({required this.callId, required this.name, required this.argsJson}): super._();
+  
+
+ final  String callId;
+ final  String name;
+ final  String argsJson;
+
+/// Create a copy of RigStreamEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RigStreamEvent_ToolStartedCopyWith<RigStreamEvent_ToolStarted> get copyWith => _$RigStreamEvent_ToolStartedCopyWithImpl<RigStreamEvent_ToolStarted>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_ToolStarted&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.name, name) || other.name == name)&&(identical(other.argsJson, argsJson) || other.argsJson == argsJson));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,callId,name,argsJson);
+
+@override
+String toString() {
+  return 'RigStreamEvent.toolStarted(callId: $callId, name: $name, argsJson: $argsJson)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RigStreamEvent_ToolStartedCopyWith<$Res> implements $RigStreamEventCopyWith<$Res> {
+  factory $RigStreamEvent_ToolStartedCopyWith(RigStreamEvent_ToolStarted value, $Res Function(RigStreamEvent_ToolStarted) _then) = _$RigStreamEvent_ToolStartedCopyWithImpl;
+@useResult
+$Res call({
+ String callId, String name, String argsJson
+});
+
+
+
+
+}
+/// @nodoc
+class _$RigStreamEvent_ToolStartedCopyWithImpl<$Res>
+    implements $RigStreamEvent_ToolStartedCopyWith<$Res> {
+  _$RigStreamEvent_ToolStartedCopyWithImpl(this._self, this._then);
+
+  final RigStreamEvent_ToolStarted _self;
+  final $Res Function(RigStreamEvent_ToolStarted) _then;
+
+/// Create a copy of RigStreamEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? callId = null,Object? name = null,Object? argsJson = null,}) {
+  return _then(RigStreamEvent_ToolStarted(
+callId: null == callId ? _self.callId : callId // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,argsJson: null == argsJson ? _self.argsJson : argsJson // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class RigStreamEvent_ToolFinished extends RigStreamEvent {
+  const RigStreamEvent_ToolFinished({required this.callId, required this.result}): super._();
+  
+
+ final  String callId;
+ final  String result;
+
+/// Create a copy of RigStreamEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RigStreamEvent_ToolFinishedCopyWith<RigStreamEvent_ToolFinished> get copyWith => _$RigStreamEvent_ToolFinishedCopyWithImpl<RigStreamEvent_ToolFinished>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_ToolFinished&&(identical(other.callId, callId) || other.callId == callId)&&(identical(other.result, result) || other.result == result));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,callId,result);
+
+@override
+String toString() {
+  return 'RigStreamEvent.toolFinished(callId: $callId, result: $result)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RigStreamEvent_ToolFinishedCopyWith<$Res> implements $RigStreamEventCopyWith<$Res> {
+  factory $RigStreamEvent_ToolFinishedCopyWith(RigStreamEvent_ToolFinished value, $Res Function(RigStreamEvent_ToolFinished) _then) = _$RigStreamEvent_ToolFinishedCopyWithImpl;
+@useResult
+$Res call({
+ String callId, String result
+});
+
+
+
+
+}
+/// @nodoc
+class _$RigStreamEvent_ToolFinishedCopyWithImpl<$Res>
+    implements $RigStreamEvent_ToolFinishedCopyWith<$Res> {
+  _$RigStreamEvent_ToolFinishedCopyWithImpl(this._self, this._then);
+
+  final RigStreamEvent_ToolFinished _self;
+  final $Res Function(RigStreamEvent_ToolFinished) _then;
+
+/// Create a copy of RigStreamEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? callId = null,Object? result = null,}) {
+  return _then(RigStreamEvent_ToolFinished(
+callId: null == callId ? _self.callId : callId // ignore: cast_nullable_to_non_nullable
+as String,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
