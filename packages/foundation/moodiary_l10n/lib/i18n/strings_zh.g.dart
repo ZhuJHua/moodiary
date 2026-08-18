@@ -729,6 +729,15 @@ class Translations$assistant$zh {
 	/// zh: '删除已保存的记忆。'
 	String get toolForgetDes => '删除已保存的记忆。';
 
+	/// zh: '运行脚本'
+	String get toolJsTitle => '运行脚本';
+
+	/// zh: '在隔离环境里运行一小段 JavaScript 做计算，无法联网，也读不到你的日记。'
+	String get toolJsDes => '在隔离环境里运行一小段 JavaScript 做计算，无法联网，也读不到你的日记。';
+
+	/// zh: '无返回值'
+	String get toolJsEmpty => '无返回值';
+
 	/// zh: '已折叠较早的消息以节省上下文'
 	String get compactionNotice => '已折叠较早的消息以节省上下文';
 

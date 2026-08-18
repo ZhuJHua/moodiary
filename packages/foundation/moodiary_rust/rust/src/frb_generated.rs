@@ -51,7 +51,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0-beta.6";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 905724807;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -808451050;
 
 // Section: executor
 
@@ -2053,6 +2053,29 @@ fn wire__crate__api__zip__Zip_new_impl(
         },
     )
 }
+fn wire__crate__api__js__js_eval_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    code: impl CstDecode<String>,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::DcoCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "js_eval",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let api_code = code.cst_decode();
+            move |context| {
+                transform_result_dco::<_, _, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || {
+                        let output_ok = crate::api::js::js_eval(api_code)?;
+                        std::result::Result::Ok(output_ok)
+                    })(),
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__graph_layout__layout_graph_stream_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     node_count: impl CstDecode<u32>,
@@ -2418,6 +2441,12 @@ const _: fn() = || {
         let _: bool = IrSpan.code;
         let _: Option<String> = IrSpan.href;
         let _: Option<String> = IrSpan.diary_link_id;
+    }
+    {
+        let JsOutcome = None::<crate::api::js::JsOutcome>.unwrap();
+        let _: String = JsOutcome.value;
+        let _: Vec<String> = JsOutcome.logs;
+        let _: bool = JsOutcome.truncated;
     }
     {
         let KeyValue = None::<crate::api::http::KeyValue>.unwrap();
@@ -3511,6 +3540,20 @@ impl SseDecode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_i64::<NativeEndian>().unwrap() as _
+    }
+}
+
+impl SseDecode for crate::api::js::JsOutcome {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_value = <String>::sse_decode(deserializer);
+        let mut var_logs = <Vec<String>>::sse_decode(deserializer);
+        let mut var_truncated = <bool>::sse_decode(deserializer);
+        return crate::api::js::JsOutcome {
+            value: var_value,
+            logs: var_logs,
+            truncated: var_truncated,
+        };
     }
 }
 
@@ -4736,6 +4779,28 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::export_ir::IrSpan>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::js::JsOutcome> {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.0.value.into_into_dart().into_dart(),
+            self.0.logs.into_into_dart().into_dart(),
+            self.0.truncated.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for FrbWrapper<crate::api::js::JsOutcome>
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<crate::api::js::JsOutcome>>
+    for crate::api::js::JsOutcome
+{
+    fn into_into_dart(self) -> FrbWrapper<crate::api::js::JsOutcome> {
+        self.into()
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::http::KeyValue> {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -5608,6 +5673,15 @@ impl SseEncode for isize {
             .cursor
             .write_i64::<NativeEndian>(self as _)
             .unwrap();
+    }
+}
+
+impl SseEncode for crate::api::js::JsOutcome {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.value, serializer);
+        <Vec<String>>::sse_encode(self.logs, serializer);
+        <bool>::sse_encode(self.truncated, serializer);
     }
 }
 
@@ -6754,6 +6828,16 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::api::js::JsOutcome> for wire_cst_js_outcome {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::api::js::JsOutcome {
+            crate::api::js::JsOutcome {
+                value: self.value.cst_decode(),
+                logs: self.logs.cst_decode(),
+                truncated: self.truncated.cst_decode(),
+            }
+        }
+    }
     impl CstDecode<crate::api::http::KeyValue> for wire_cst_key_value {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> crate::api::http::KeyValue {
@@ -7307,6 +7391,20 @@ mod io {
         }
     }
     impl Default for wire_cst_ir_span {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_js_outcome {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                value: core::ptr::null_mut(),
+                logs: core::ptr::null_mut(),
+                truncated: Default::default(),
+            }
+        }
+    }
+    impl Default for wire_cst_js_outcome {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -7961,6 +8059,14 @@ mod io {
         file_path: *mut wire_cst_list_prim_u_8_strict,
     ) {
         wire__crate__api__zip__Zip_new_impl(port_, file_path)
+    }
+
+    #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__js__js_eval(
+        port_: i64,
+        code: *mut wire_cst_list_prim_u_8_strict,
+    ) {
+        wire__crate__api__js__js_eval_impl(port_, code)
     }
 
     #[unsafe(no_mangle)]
@@ -8790,6 +8896,13 @@ mod io {
         code: bool,
         href: *mut wire_cst_list_prim_u_8_strict,
         diary_link_id: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
+    pub struct wire_cst_js_outcome {
+        value: *mut wire_cst_list_prim_u_8_strict,
+        logs: *mut wire_cst_list_String,
+        truncated: bool,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

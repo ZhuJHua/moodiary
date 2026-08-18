@@ -447,6 +447,36 @@ abstract final class AssistantToolRegistry {
       run: _forgetFact,
       summarize: _summarizeWrite,
     ),
+    AssistantToolSpec(
+      // **不收 items**：脚本本来就该把全部逻辑写在一处。拆成多段各自求值反而更糟
+      // —— 每段一个独立 runtime，变量互相看不见。
+      tool: .runJavascript,
+      description:
+          'Run JavaScript (ES2023) to compute something — arithmetic across '
+          'many numbers, date math, grouping, sorting. The result is the value '
+          'of the LAST expression, so end with the value you want; you do not '
+          'need `return`. `console.log/info/warn/error` is captured separately. '
+          'Put all of it in one script: each call gets a fresh sandbox that '
+          'remembers nothing from the last one.\n'
+          'The sandbox is bare: no network, no filesystem, no timers, no '
+          'require, and NO access to the diaries — pass any data you need in as '
+          'literals in the code, having read it with the other tools first. '
+          'Runs are capped at a couple of seconds and a few MB; an endless loop '
+          'is killed, not waited for.',
+      jsonSchema: {
+        'type': 'object',
+        'properties': {
+          'code': {
+            'type': 'string',
+            'description':
+                'The script. Ends with the expression whose value you want.',
+          },
+        },
+        'required': ['code'],
+      },
+      run: _runJavascript,
+      summarize: _summarizeJavascript,
+    ),
   ];
 
   /// 把一轮用过的工具压成一段记录，回灌进发给模型的历史。
@@ -1114,6 +1144,51 @@ abstract final class AssistantToolRegistry {
       ),
     );
     return 'Updated the memory (id=$id): $text.';
+  }
+
+  /// 结果与 console 分开报，和 rikkahub 的 `eval_javascript` 同一个约定 —— 模型对它
+  /// 熟悉，而且混在一起时它分不清哪行是返回值。
+  ///
+  /// 抛异常一律进 `Failed:`。语法错误在这里既是「这次调用失败了」，也是「模型应该
+  /// 自己改了重来」的信号，两件事共用同一个前缀是有意的：模型看得懂原始报错。
+  static Future<String> _runJavascript(Map<String, dynamic> input) async {
+    final code = (input['code'] as String?)?.trim() ?? '';
+    if (code.isEmpty) return 'Failed: no code given.';
+    try {
+      final outcome = await jsEval(code: code);
+      final buffer = StringBuffer();
+      buffer.writeln(
+        outcome.value.isEmpty ? 'Result: (no value)' : 'Result: ${outcome.value}',
+      );
+      if (outcome.logs.isNotEmpty) {
+        buffer
+          ..writeln('Console:')
+          ..writeln(outcome.logs.join('\n'));
+      }
+      if (outcome.truncated) {
+        buffer.writeln('(output was truncated — print less)');
+      }
+      return buffer.toString().trim();
+    } catch (e) {
+      // 沙箱抛的是 JS 的原始报错（含超时与内存上限），原样回灌，模型据此改代码。
+      return 'Failed: $e';
+    }
+  }
+
+  /// 摘要给用户看的是**算出了什么**，不是那段代码 —— 代码是过程，值才是结论。
+  static String _summarizeJavascript(
+    AssistantTool _,
+    Map<String, dynamic> _,
+    String output,
+  ) {
+    final line = output
+        .split('\n')
+        .firstWhere((e) => e.startsWith('Result: '), orElse: () => '');
+    final value = line.replaceFirst('Result: ', '').trim();
+    if (value.isEmpty || value == '(no value)') {
+      return l10n.assistant.toolJsEmpty;
+    }
+    return value;
   }
 
   static Future<String> _forgetFact(Map<String, dynamic> input) =>

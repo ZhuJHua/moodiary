@@ -31,7 +31,9 @@ enum AssistantTool {
 
   updateMemory('updateMemory'),
 
-  forgetFact('forgetFact');
+  forgetFact('forgetFact'),
+
+  runJavascript('runJavascript');
 
   final String id;
 

@@ -8,6 +8,7 @@ pub mod graph_layout;
 pub mod http;
 pub mod http_server;
 pub mod image;
+pub mod js;
 pub mod pdf;
 pub mod s3;
 pub mod text;

@@ -19,6 +19,7 @@ export 'src/rust/api/graph_layout.dart';
 export 'src/rust/api/http.dart';
 export 'src/rust/api/http_server.dart';
 export 'src/rust/api/image.dart';
+export 'src/rust/api/js.dart';
 export 'src/rust/api/pdf.dart';
 export 'src/rust/api/s3.dart';
 export 'src/rust/api/text.dart';

@@ -323,6 +323,8 @@ rust/
   src/api/            # bridge = app layer: the ONLY place that knows about FRB
   crates/
     foundation/       # http (reqwest client + hyper server) / crypto / archive / media / text / font
+                      #   js —— QuickJS 沙箱（rquickjs）。三道闸门在 JsSandbox::new 一次装齐；
+                      #   **别开 rust-alloc**：那会让 set_memory_limit 静默变成 no-op
     core/             # doc (导出 IR，Dart export_doc.dart 的镜像)
     feature/          # sync (s3+webdav) / export (pdf+docx) / assistant (rig) / graph
 ```

@@ -13,6 +13,7 @@ import 'api/graph_layout.dart';
 import 'api/http.dart';
 import 'api/http_server.dart';
 import 'api/image.dart';
+import 'api/js.dart';
 import 'api/pdf.dart';
 import 'api/s3.dart';
 import 'api/text.dart';
@@ -448,6 +449,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 dco_decode_isize(dynamic raw);
+
+  @protected
+  JsOutcome dco_decode_js_outcome(dynamic raw);
 
   @protected
   KeyValue dco_decode_key_value(dynamic raw);
@@ -944,6 +948,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
+
+  @protected
+  JsOutcome sse_decode_js_outcome(SseDeserializer deserializer);
 
   @protected
   KeyValue sse_decode_key_value(SseDeserializer deserializer);
@@ -1871,6 +1878,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_js_outcome(
+    JsOutcome apiObj,
+    wire_cst_js_outcome wireObj,
+  ) {
+    wireObj.value = cst_encode_String(apiObj.value);
+    wireObj.logs = cst_encode_list_String(apiObj.logs);
+    wireObj.truncated = cst_encode_bool(apiObj.truncated);
+  }
+
+  @protected
   void cst_api_fill_to_wire_key_value(
     KeyValue apiObj,
     wire_cst_key_value wireObj,
@@ -2750,6 +2767,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_js_outcome(JsOutcome self, SseSerializer serializer);
 
   @protected
   void sse_encode_key_value(KeyValue self, SseSerializer serializer);
@@ -4442,6 +4462,27 @@ class RustLibWire implements BaseWire {
             void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
           >();
 
+  void wire__crate__api__js__js_eval(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> code,
+  ) {
+    return _wire__crate__api__js__js_eval(port_, code);
+  }
+
+  late final _wire__crate__api__js__js_evalPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >('frbgen_moodiary_rust_wire__crate__api__js__js_eval');
+  late final _wire__crate__api__js__js_eval = _wire__crate__api__js__js_evalPtr
+      .asFunction<
+        void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_strict>)
+      >();
+
   void wire__crate__api__graph_layout__layout_graph_stream(
     int port_,
     int node_count,
@@ -6040,6 +6081,15 @@ final class wire_cst_http_server_response extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> body;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> body_file_path;
+}
+
+final class wire_cst_js_outcome extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> value;
+
+  external ffi.Pointer<wire_cst_list_String> logs;
+
+  @ffi.Bool()
+  external bool truncated;
 }
 
 final class wire_cst_RigStreamEvent_TextDelta extends ffi.Struct {

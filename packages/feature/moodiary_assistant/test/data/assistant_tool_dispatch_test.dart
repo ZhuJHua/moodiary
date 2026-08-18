@@ -150,10 +150,45 @@ void main() {
       );
     });
 
+    test('脚本：报算出来的值，不报那段代码', () {
+      final spec = specOf(AssistantTool.runJavascript);
+      expect(
+        spec.summaryOf(const {'code': 'a.reduce((x,y)=>x+y,0)/a.length'}, 'Result: 0.62'),
+        '0.62',
+      );
+      expect(
+        spec.summaryOf(const {'code': 'console.log(1)'}, 'Result: (no value)\nConsole:\n[LOG] 1'),
+        '无返回值',
+      );
+    });
+
     test('失败一律走 Failed 前缀判定，不看语言', () {
       final line = specOf(AssistantTool.deleteDiary)
           .summaryOf(const {}, 'Failed: no diary id given.');
       expect(line, '未成功');
+    });
+  });
+
+  group('脚本工具的契约', () {
+    AssistantToolSpec spec() =>
+        AssistantToolRegistry.byId(AssistantTool.runJavascript.id)!;
+
+    test('入参是单个 code，不是 items —— 脚本该把逻辑写在一处', () {
+      final schema = spec().jsonSchema;
+      expect((schema['properties']! as Map).keys, ['code']);
+      expect(schema['required'], ['code']);
+    });
+
+    test('空代码不进沙箱', () async {
+      final out = await spec().run(const {'code': '   '});
+      expect(out, startsWith('Failed:'));
+    });
+
+    test('描述里必须写明沙箱够不到日记', () {
+      // 模型只能算它自己写进代码里的值；这条不写清楚它会去猜有没有全局的数据。
+      final description = spec().description.toLowerCase();
+      expect(description, contains('no network'));
+      expect(description, contains('no access to the diaries'));
     });
   });
 

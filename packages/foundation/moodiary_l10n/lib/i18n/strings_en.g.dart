@@ -284,6 +284,9 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get toolUpdateMemoryDes => 'Revise saved memories.';
 	@override String get toolForgetTitle => 'Forget a memory';
 	@override String get toolForgetDes => 'Delete saved memories.';
+	@override String get toolJsTitle => 'Run script';
+	@override String get toolJsDes => 'Run a short piece of JavaScript in isolation to compute something. No network, no access to your diaries.';
+	@override String get toolJsEmpty => 'No value returned';
 	@override String get compactionNotice => 'Earlier messages summarized to save context';
 	@override String get compactionSheetTitle => 'Context summary';
 	@override String get compactionSheetNote => 'To save context, earlier messages are folded into the summary below before being sent to the model. The full messages are kept in this conversation and you can still scroll back to them.';
