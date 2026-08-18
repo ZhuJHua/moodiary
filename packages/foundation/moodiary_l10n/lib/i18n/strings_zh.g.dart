@@ -876,8 +876,8 @@ class Translations$assistant$zh {
 	/// zh: '模型能力'
 	String get modelProviderCapabilities => '模型能力';
 
-	/// zh: '按模型实际能力开启，决定是否启用工具、深度思考、发送图片。'
-	String get modelProviderCapabilitiesHint => '按模型实际能力开启，决定是否启用工具、深度思考、发送图片。';
+	/// zh: '按模型实际能力开启，决定是否启用工具、思考模式、发送图片。'
+	String get modelProviderCapabilitiesHint => '按模型实际能力开启，决定是否启用工具、思考模式、发送图片。';
 
 	/// zh: '搜索模型'
 	String get modelProviderSearchModelHint => '搜索模型';

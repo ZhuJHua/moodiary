@@ -122,7 +122,7 @@
   "modelProviderBadgeReasoning": "推理",
   "modelProviderBadgeVision": "视觉",
   "modelProviderCapabilities": "模型能力",
-  "modelProviderCapabilitiesHint": "按模型实际能力开启，决定是否启用工具、深度思考、发送图片。",
+  "modelProviderCapabilitiesHint": "按模型实际能力开启，决定是否启用工具、思考模式、发送图片。",
   "modelProviderSearchModelHint": "搜索模型",
   "modelProviderNoModelMatch": "无匹配模型",
   "summaryLoading": "加载中…",
