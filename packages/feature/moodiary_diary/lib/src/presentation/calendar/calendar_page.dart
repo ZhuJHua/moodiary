@@ -497,8 +497,8 @@ class _DayCell extends StatelessWidget {
 /// 的角标在 320dp 上就贴到一起了，字号放大档更是直接叠上。Row + [Spacer] 让重叠在结构上
 /// 不可能发生，挤不下时日期自己省略。
 ///
-/// 「今天」只是把日期换成 `primary` 色，**不加任何形状**：46 宽的格子里，药丸或描边
-/// 既挤又吵，而颜色已经够认。封面格例外，见下面的说明。
+/// 「今天」= 日期用 `primary` 色 + 加粗，**不加任何形状**：46 宽的格子里，药丸或描边
+/// 既挤又吵。封面格只加粗不上色，见下面的说明。
 ///
 /// 整行定高 [_kHeaderHeight]，各种格子版式一致。
 class _CellHeader extends StatelessWidget {
@@ -520,23 +520,28 @@ class _CellHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final typo = context.theme.typography;
     // 盖在封面上时前景走 onMedia —— 封面是任意画面，主题的 on* 角色在这里不成立。
+    const tabular = [FontFeature.tabularFigures()];
+    // 常规档：篇数、以及不是今天的日期。
     final style =
         (onCover
-                ? typo.labelSmall.emphasized.onMedia
+                ? typo.labelSmall.onMedia
                 : count == 0
                 ? typo.labelSmall.outline
                 : typo.labelSmall.onSurfaceVariant)
-            .copyWith(fontFeatures: const [.tabularFigures()]);
+            .copyWith(fontFeatures: tabular);
 
-    final colors = context.theme.colors;
-    // 「今天」只换个颜色，不加任何形状 —— 药丸/描边那类标记在 46 宽的格子里既挤又吵。
+    // 今天 = primary + 粗。**封面上只加粗、不上色**：那儿的日期走 onMedia（恒定白），
+    // 换成 primary 在灰度档就是纯黑压在深色 scrim 上、直接消失，有彩档也比周围那些白
+    // 日期更暗，读起来像被禁用而不是「当前」。
     //
-    // 只对**没有封面**的格子生效：封面上是任意画面，日期走的是 onMedia（恒定白），
-    // 换成 primary 在灰度档就是纯黑压在深色 scrim 上，直接消失；有彩档也会比周围
-    // 那些白色日期更暗，读起来反而像被禁用。
-    final dateStyle = isToday && !onCover
-        ? style.copyWith(color: colors.primary)
-        : style;
+    // 加粗必须走 `.emphasized`，不能 `copyWith(fontWeight:)` —— 可变字体下 fontWeight
+    // 会被 fontVariations 吃掉，不报错也不生效。
+    final dateStyle = !isToday
+        ? style
+        : (onCover
+                  ? typo.labelSmall.emphasized.onMedia
+                  : typo.labelSmall.emphasized.primary)
+              .copyWith(fontFeatures: tabular);
 
     final row = SizedBox(
       height: _kHeaderHeight,
@@ -558,7 +563,10 @@ class _CellHeader extends StatelessWidget {
         gradient: LinearGradient(
           begin: .topCenter,
           end: .bottomCenter,
-          colors: [colors.scrim.withValues(alpha: 0.55), Colors.transparent],
+          colors: [
+            context.theme.colors.scrim.withValues(alpha: 0.55),
+            Colors.transparent,
+          ],
         ),
       ),
       child: row,
