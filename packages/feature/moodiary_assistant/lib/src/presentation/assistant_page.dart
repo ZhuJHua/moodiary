@@ -56,6 +56,13 @@ class AssistantPage extends ConsumerStatefulWidget {
   ConsumerState<AssistantPage> createState() => _AssistantPageState();
 }
 
+/// 会话标题：空表示还没生成出来，显示「新对话」。**别把这句存进库**——存了就等于把
+/// 生成当时的语种烤进历史记录。
+String _sessionTitle(ChatSession? session, Translations l10n) {
+  final title = session?.title.trim() ?? '';
+  return title.isEmpty ? l10n.assistant.newChat : title;
+}
+
 class _AssistantPageState extends ConsumerState<AssistantPage> {
   final _inputController = TextEditingController();
   final _inputFocusNode = FocusNode();
@@ -281,12 +288,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (existing != null) return existing;
     final provider = _provider;
     if (provider == null) return null;
-    // 兜底标题：立刻可用，历史列表里不会先空着。模型总结好之后就地换掉。
-    final title = firstUserText.length > 30
-        ? '${firstUserText.substring(0, 30)}…'
-        : firstUserText;
+    // 标题留空 → 界面显示「新对话」，模型总结好之后就地换掉。
     final session = ChatSession.create(
-      title: title,
       providerId: provider.id,
       model: _modelId,
       reasoningEffort: _reasoningLevel, // 定格：开始之后不再可改
@@ -1062,7 +1065,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       // （原先是 false + ChatBottomPanelContainer 自己垫键盘高度，那套已经拆掉。）
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: Text(_session?.title ?? l10n.assistant.newChat),
+        title: Text(_sessionTitle(_session, l10n)),
         actions: [
           MMenuButton<String>(
             tooltip: l10n.common.more,
@@ -2178,7 +2181,7 @@ class _SessionCard extends StatelessWidget {
     final ok = await MAlert.confirm(
       context,
       title: l10n.common.delete,
-      message: session.title,
+      message: _sessionTitle(session, l10n),
       confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
@@ -2215,7 +2218,7 @@ class _SessionCard extends StatelessWidget {
           ),
         ),
         title: Text(
-          session.title,
+          _sessionTitle(session, l10n),
           maxLines: 1,
           overflow: .ellipsis,
           style: context.theme.typography.titleSmall.onSurface.copyWith(

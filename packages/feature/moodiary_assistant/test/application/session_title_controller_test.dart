@@ -50,16 +50,12 @@ void main() {
     sortOrder: 0,
   );
 
-  ChatSession session({
-    String title = '第一条消息',
-    bool done = false,
-    String effort = '',
-  }) => ChatSession.create(
-    title: title,
-    providerId: 'p1',
-    model: 'm1',
-    reasoningEffort: effort,
-  ).copyWith(titleFromModel: done);
+  ChatSession session({String title = '', String effort = ''}) =>
+      ChatSession.create(
+        providerId: 'p1',
+        model: 'm1',
+        reasoningEffort: effort,
+      ).copyWith(title: title);
 
   void use(_FakeAssistant fake) {
     if (getIt.isRegistered<AssistantService>()) {
@@ -92,15 +88,14 @@ void main() {
   });
 
   group('生成', () {
-    test('拿到标题就换掉兜底，并钉上「已生成」', () async {
+    test('生成之前标题是空的，拿到才填上', () async {
       final updated = await run(_FakeAssistant(chunks: ['搬家', '后的疲惫']));
       expect(updated?.title, '搬家后的疲惫');
-      expect(updated?.titleFromModel, isTrue);
     });
 
-    test('已经生成过的不再跑第二次', () async {
+    test('已经有标题的不再跑第二次——空与否就是幂等位', () async {
       final fake = _FakeAssistant(chunks: ['x']);
-      final updated = await run(fake, from: session(done: true));
+      final updated = await run(fake, from: session(title: '搬家后的疲惫'));
       expect(updated, isNull);
       expect(fake.seen, isEmpty);
     });

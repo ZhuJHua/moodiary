@@ -34,7 +34,6 @@ final ChatSessionSchema = IsarGeneratedSchema(
         name: 'compactedInputTokensAtTrigger',
         type: IsarType.long,
       ),
-      IsarPropertySchema(name: 'titleFromModel', type: IsarType.bool),
     ],
     indexes: [],
   ),
@@ -89,7 +88,6 @@ int serializeChatSession(IsarWriter writer, ChatSession object) {
     11,
     object.compactedInputTokensAtTrigger ?? -9223372036854775808,
   );
-  IsarCore.writeBool(writer, 12, value: object.titleFromModel);
   return Isar.fastHash(object.id);
 }
 
@@ -160,8 +158,6 @@ ChatSession deserializeChatSession(IsarReader reader) {
       _compactedInputTokensAtTrigger = value;
     }
   }
-  final bool _titleFromModel;
-  _titleFromModel = IsarCore.readBool(reader, 12);
   final object = ChatSession(
     id: _id,
     title: _title,
@@ -174,7 +170,6 @@ ChatSession deserializeChatSession(IsarReader reader) {
     compactedUpToMessageId: _compactedUpToMessageId,
     compactedAt: _compactedAt,
     compactedInputTokensAtTrigger: _compactedInputTokensAtTrigger,
-    titleFromModel: _titleFromModel,
   );
   return object;
 }
@@ -241,8 +236,6 @@ dynamic deserializeChatSessionProp(IsarReader reader, int property) {
           return value;
         }
       }
-    case 12:
-      return IsarCore.readBool(reader, 12);
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -261,7 +254,6 @@ sealed class _ChatSessionUpdate {
     String? compactedUpToMessageId,
     DateTime? compactedAt,
     int? compactedInputTokensAtTrigger,
-    bool? titleFromModel,
   });
 }
 
@@ -283,7 +275,6 @@ class _ChatSessionUpdateImpl implements _ChatSessionUpdate {
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
     Object? compactedInputTokensAtTrigger = ignore,
-    Object? titleFromModel = ignore,
   }) {
     return collection.updateProperties(
           [id],
@@ -300,7 +291,6 @@ class _ChatSessionUpdateImpl implements _ChatSessionUpdate {
             if (compactedAt != ignore) 10: compactedAt as DateTime?,
             if (compactedInputTokensAtTrigger != ignore)
               11: compactedInputTokensAtTrigger as int?,
-            if (titleFromModel != ignore) 12: titleFromModel as bool?,
           },
         ) >
         0;
@@ -320,7 +310,6 @@ sealed class _ChatSessionUpdateAll {
     String? compactedUpToMessageId,
     DateTime? compactedAt,
     int? compactedInputTokensAtTrigger,
-    bool? titleFromModel,
   });
 }
 
@@ -342,7 +331,6 @@ class _ChatSessionUpdateAllImpl implements _ChatSessionUpdateAll {
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
     Object? compactedInputTokensAtTrigger = ignore,
-    Object? titleFromModel = ignore,
   }) {
     return collection.updateProperties(id, {
       if (title != ignore) 2: title as String?,
@@ -357,7 +345,6 @@ class _ChatSessionUpdateAllImpl implements _ChatSessionUpdateAll {
       if (compactedAt != ignore) 10: compactedAt as DateTime?,
       if (compactedInputTokensAtTrigger != ignore)
         11: compactedInputTokensAtTrigger as int?,
-      if (titleFromModel != ignore) 12: titleFromModel as bool?,
     });
   }
 }
@@ -380,7 +367,6 @@ sealed class _ChatSessionQueryUpdate {
     String? compactedUpToMessageId,
     DateTime? compactedAt,
     int? compactedInputTokensAtTrigger,
-    bool? titleFromModel,
   });
 }
 
@@ -402,7 +388,6 @@ class _ChatSessionQueryUpdateImpl implements _ChatSessionQueryUpdate {
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
     Object? compactedInputTokensAtTrigger = ignore,
-    Object? titleFromModel = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (title != ignore) 2: title as String?,
@@ -417,7 +402,6 @@ class _ChatSessionQueryUpdateImpl implements _ChatSessionQueryUpdate {
       if (compactedAt != ignore) 10: compactedAt as DateTime?,
       if (compactedInputTokensAtTrigger != ignore)
         11: compactedInputTokensAtTrigger as int?,
-      if (titleFromModel != ignore) 12: titleFromModel as bool?,
     });
   }
 }
@@ -447,7 +431,6 @@ class _ChatSessionQueryBuilderUpdateImpl implements _ChatSessionQueryUpdate {
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
     Object? compactedInputTokensAtTrigger = ignore,
-    Object? titleFromModel = ignore,
   }) {
     final q = query.build();
     try {
@@ -464,7 +447,6 @@ class _ChatSessionQueryBuilderUpdateImpl implements _ChatSessionQueryUpdate {
         if (compactedAt != ignore) 10: compactedAt as DateTime?,
         if (compactedInputTokensAtTrigger != ignore)
           11: compactedInputTokensAtTrigger as int?,
-        if (titleFromModel != ignore) 12: titleFromModel as bool?,
       });
     } finally {
       q.close();
@@ -1810,15 +1792,6 @@ extension ChatSessionQueryFilter
       );
     });
   }
-
-  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
-  titleFromModelEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        EqualCondition(property: 12, value: value),
-      );
-    });
-  }
 }
 
 extension ChatSessionQueryObject
@@ -1983,19 +1956,6 @@ extension ChatSessionQuerySortBy
       return query.addSortBy(11, sort: Sort.desc);
     });
   }
-
-  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByTitleFromModel() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(12);
-    });
-  }
-
-  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
-  sortByTitleFromModelDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(12, sort: Sort.desc);
-    });
-  }
 }
 
 extension ChatSessionQuerySortThenBy
@@ -2157,19 +2117,6 @@ extension ChatSessionQuerySortThenBy
       return query.addSortBy(11, sort: Sort.desc);
     });
   }
-
-  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByTitleFromModel() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(12);
-    });
-  }
-
-  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
-  thenByTitleFromModelDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(12, sort: Sort.desc);
-    });
-  }
 }
 
 extension ChatSessionQueryWhereDistinct
@@ -2244,13 +2191,6 @@ extension ChatSessionQueryWhereDistinct
       return query.addDistinctBy(11);
     });
   }
-
-  QueryBuilder<ChatSession, ChatSession, QAfterDistinct>
-  distinctByTitleFromModel() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(12);
-    });
-  }
 }
 
 extension ChatSessionQueryProperty1
@@ -2321,12 +2261,6 @@ extension ChatSessionQueryProperty1
   compactedInputTokensAtTriggerProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(11);
-    });
-  }
-
-  QueryBuilder<ChatSession, bool, QAfterProperty> titleFromModelProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(12);
     });
   }
 }
@@ -2401,13 +2335,6 @@ extension ChatSessionQueryProperty2<R>
   compactedInputTokensAtTriggerProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(11);
-    });
-  }
-
-  QueryBuilder<ChatSession, (R, bool), QAfterProperty>
-  titleFromModelProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(12);
     });
   }
 }
@@ -2487,13 +2414,6 @@ extension ChatSessionQueryProperty3<R1, R2>
       return query.addProperty(11);
     });
   }
-
-  QueryBuilder<ChatSession, (R1, R2, bool), QOperations>
-  titleFromModelProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(12);
-    });
-  }
 }
 
 // **************************************************************************
@@ -2502,7 +2422,7 @@ extension ChatSessionQueryProperty3<R1, R2>
 
 _ChatSession _$ChatSessionFromJson(Map<String, dynamic> json) => _ChatSession(
   id: json['id'] as String,
-  title: json['title'] as String,
+  title: json['title'] as String? ?? '',
   providerId: json['providerId'] as String,
   model: json['model'] as String,
   createdAt: DateTime.parse(json['createdAt'] as String),
@@ -2515,7 +2435,6 @@ _ChatSession _$ChatSessionFromJson(Map<String, dynamic> json) => _ChatSession(
       : DateTime.parse(json['compactedAt'] as String),
   compactedInputTokensAtTrigger: (json['compactedInputTokensAtTrigger'] as num?)
       ?.toInt(),
-  titleFromModel: json['titleFromModel'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
@@ -2531,5 +2450,4 @@ Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
       'compactedUpToMessageId': instance.compactedUpToMessageId,
       'compactedAt': instance.compactedAt?.toIso8601String(),
       'compactedInputTokensAtTrigger': instance.compactedInputTokensAtTrigger,
-      'titleFromModel': instance.titleFromModel,
     };

@@ -12,7 +12,12 @@ abstract class ChatSession with _$ChatSession {
   const factory ChatSession({
     @Id() required String id,
 
-    required String title,
+    /// 空串 = 还没生成过标题，界面显示「新对话」。**不存本地化后的文案**：那会把
+    /// 生成当时的语种烤进库里，换语言后老会话仍是旧语种。
+    ///
+    /// 也正是这一位在做幂等：空才生成，生成成功就永远非空。标题在列表里是定位锚点，
+    /// 自己变了会让人以为点错了会话；失败也不重来——没有手动刷新入口，重来只是白烧。
+    @Default('') String title,
 
     /// 建会话时生效的 [LlmProvider.id]（uuid，不是 [LlmProvider.presetId]）。
     ///
@@ -45,15 +50,9 @@ abstract class ChatSession with _$ChatSession {
     /// 触发压缩时该轮上报的输入 token 数（用于提示 / 调试）。
     int? compactedInputTokensAtTrigger,
 
-    /// [title] 是否已由模型总结过。false = 还是「第一条消息截断」那个兜底。
-    ///
-    /// 生成只发生一次：标题在历史列表里是定位锚点，自己变了会让人以为点错了会话。
-    /// 自动失败也不重排——没有手动刷新入口，重排只会反复烧 token。
-    @Default(false) bool titleFromModel,
   }) = _ChatSession;
 
   factory ChatSession.create({
-    required String title,
     required String providerId,
     required String model,
     String reasoningEffort = '',
@@ -61,7 +60,6 @@ abstract class ChatSession with _$ChatSession {
     final now = DateTime.timestamp();
     return ChatSession(
       id: uuidV7(),
-      title: title,
       providerId: providerId,
       model: model,
       createdAt: now,

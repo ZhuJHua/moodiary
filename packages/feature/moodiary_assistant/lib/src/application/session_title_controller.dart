@@ -15,12 +15,12 @@ import 'package:moodiary_models/moodiary_models.dart';
 /// **只喂用户那条消息，不等助手回复。** 回复对「这次会话在聊什么」几乎不添信息，
 /// 却要把标题压在主交互的关键路径上——列表里那一行会一直挂着截断的原话。
 ///
-/// 兜底（截断第一条消息）在建会话时就写好了，这里做的是把它**换掉**；任何一步不
-/// 成立都返回 null，保留兜底。生成只发生一次，见 [ChatSession.titleFromModel]。
+/// 没有兜底：标题在生成成功之前一直是空的，界面显示「新对话」。任何一步不成立都返回
+/// null，那就一直是「新对话」。生成只发生一次，见 [ChatSession.title]。
 class SessionTitleController {
   final Set<String> _inFlight = <String>{};
 
-  /// 返回带新标题的会话副本；已生成过 / 输入不合格 / 调用失败 / 超时一律返回 null。
+  /// 返回带新标题的会话副本；已有标题 / 输入不合格 / 调用失败 / 超时一律返回 null。
   Future<ChatSession?> maybeTitle({
     required ChatSession session,
     required String firstUserText,
@@ -29,7 +29,7 @@ class SessionTitleController {
     required String apiKey,
     Duration timeout = assistantTitleTimeout,
   }) async {
-    if (session.titleFromModel) return null;
+    if (session.title.isNotEmpty) return null;
     if (_inFlight.contains(session.id)) return null;
     final seed = firstUserText.trim();
     if (seed.isEmpty) return null;
@@ -57,7 +57,7 @@ class SessionTitleController {
             ? ''
             : normalizeSessionTitle(raw, maxBytes: assistantTitleMaxBytes);
         if (title.isNotEmpty) {
-          return session.copyWith(title: title, titleFromModel: true);
+          return session.copyWith(title: title);
         }
       }
       return null;
