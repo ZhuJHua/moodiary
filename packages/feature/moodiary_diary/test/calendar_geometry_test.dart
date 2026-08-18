@@ -35,4 +35,35 @@ void main() {
       expect(monthGeometry(noisy), monthGeometry(DateTime(2026, 8)));
     });
   });
+
+  group('页码 ↔ 月份', () {
+    final anchor = DateTime(2026, 8);
+
+    test('锚月落在锚页上，来回换算不掉精度', () {
+      for (var delta = -400; delta <= 400; delta++) {
+        final month = DateTime(anchor.year, anchor.month + delta);
+        final page = pageForMonth(anchor, month);
+        expect(monthForPage(anchor, page), month, reason: 'delta=$delta');
+      }
+    });
+
+    test('相邻页正好差一个月，跨年也是', () {
+      final page = pageForMonth(anchor, DateTime(2026, 12));
+      expect(monthForPage(anchor, page), DateTime(2026, 12));
+      expect(monthForPage(anchor, page + 1), DateTime(2027, 1));
+      expect(monthForPage(anchor, page - 12), DateTime(2025, 12));
+    });
+
+    test('往锚点之前翻不会差一整年', () {
+      // 手写 `~/ 12` 与 `% 12` 时这里会崩：Dart 的 % 对负数不是数学取模。
+      expect(
+        monthForPage(anchor, pageForMonth(anchor, anchor) - 8),
+        DateTime(2025, 12),
+      );
+      expect(
+        monthForPage(anchor, pageForMonth(anchor, anchor) - 20),
+        DateTime(2024, 12),
+      );
+    });
+  });
 }

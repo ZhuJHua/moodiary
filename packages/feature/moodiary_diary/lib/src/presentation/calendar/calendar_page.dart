@@ -18,14 +18,14 @@ const double _kGridPadding = 8;
 /// 8 月 1 号是周六时要 6 行），行数跟着月份变的话，翻月时整个下半屏会上下弹。
 const int _kGridRows = 6;
 
-/// 认定为一次翻月的横扫速度。
-const double _kSwipeVelocity = 180;
+/// 锚页。前面还剩 6000 个月（500 年）可以往回翻，往后不设界。
+const int _kAnchorPage = 6000;
 
 /// 格子里的字号上限。格子是定死的 46×54，日期与篇数跟着系统字号涨到 1.6× 就会互相顶。
 /// 与 `MHeatmap` / `MNavBar` 同一个理由：网格是图表不是正文。下半屏的日记列表不受此限。
 const double _kCellMaxTextScale = 1.15;
 
-/// 格子顶部那一行的定高。取 18 = 今天那颗药丸的直径，于是有没有药丸都不改变版式。
+/// 格子顶部那一行（日期 + 篇数）的定高。钉死它，各种格子的版式才一致。
 const double _kHeaderHeight = 18;
 
 /// 一个月的网格几何：前面空几格、这个月有几天。
@@ -39,6 +39,21 @@ const double _kHeaderHeight = 18;
   leading: DateTime(month.year, month.month).weekday % 7,
   days: DateTime(month.year, month.month + 1, 0).day,
 );
+
+/// 页码 ↔ 月份。[anchorMonth] 落在 [_kAnchorPage] 这一页上。
+///
+/// 月份加减一律交给 [DateTime] 自己归一（`month + n` 越界会自动进位到年），
+/// **别手写 `~/ 12` 与 `% 12`** —— 负数月份的取模在 Dart 里不是数学取模，跨到锚点之前
+/// 的年份会差一整年。
+@visibleForTesting
+DateTime monthForPage(DateTime anchorMonth, int page) =>
+    DateTime(anchorMonth.year, anchorMonth.month + page - _kAnchorPage);
+
+@visibleForTesting
+int pageForMonth(DateTime anchorMonth, DateTime month) =>
+    _kAnchorPage +
+    (month.year - anchorMonth.year) * 12 +
+    (month.month - anchorMonth.month);
 
 /// 月历回顾：一屏一个月，格子里是**那天的封面图**，下半屏是选中日的日记。
 ///
@@ -71,25 +86,58 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
   static DateTime _monthOf(DateTime d) => DateTime(d.year, d.month);
 
-  /// 新月从哪一侧滑进来。+1 = 往后翻。
-  int _slideDir = 1;
+  /// 翻月的锚：`_kAnchorPage` 这一页恒等于**打开这一页时的当月**。往前能翻 500 年，
+  /// 往后无限 —— [PageView.builder] 不给 itemCount 就没有后界。
+  late final DateTime _anchorMonth = _monthOf(_today());
+  late final PageController _pageCtl = PageController(
+    initialPage: _kAnchorPage,
+  );
 
-  void _shiftMonth(int delta) {
-    final month = DateTime(_month.year, _month.month + delta);
-    setState(() {
-      _slideDir = delta;
-      _month = month;
-      _selected = _pickDayIn(month);
-    });
+  DateTime _monthForPage(int page) => monthForPage(_anchorMonth, page);
+
+  int _pageForMonth(DateTime month) => pageForMonth(_anchorMonth, month);
+
+  @override
+  void dispose() {
+    _pageCtl.dispose();
+    super.dispose();
   }
 
+  /// 翻到某一页。**只动页面，不动选中日** —— 选中日等落位之后由
+  /// [_onSettled] 改，见那里的说明。
+  void _goToPage(int page) {
+    _pageCtl.animateToPage(
+      page,
+      duration: Durations.medium4,
+      curve: Easing.emphasizedDecelerate,
+    );
+  }
+
+  /// 月份滑到哪一页了。只更新标题 —— 它是个标签，跟着手指走才不会和网格错开。
+  void _onPageChanged(int page) {
+    setState(() => _month = _monthForPage(page));
+  }
+
+  /// **落位之后**才换选中日。滑动途中就改的话，手指还在拖、下半屏的日记已经换了一茬，
+  /// 而且中途路过的月份都会各触发一次取数。
+  void _onSettled() {
+    final target = _pendingToday ? _today() : _pickDayIn(_month);
+    _pendingToday = false;
+    if (target == _selected) return;
+    setState(() => _selected = target);
+  }
+
+  /// 「回到今天」按下之后那一次落位要选中今天，而不是按常规规则挑一天。
+  bool _pendingToday = false;
+
   void _backToToday() {
-    final month = _monthOf(_today());
-    setState(() {
-      _slideDir = month.isBefore(_month) ? -1 : 1;
-      _month = month;
-      _selected = _today();
-    });
+    _pendingToday = true;
+    _goToPage(_pageForMonth(_monthOf(_today())));
+    // 已经在当月时不会有滚动，也就等不到落位回调。
+    if (_pageCtl.hasClients &&
+        _pageCtl.page?.round() == _pageForMonth(_month)) {
+      _onSettled();
+    }
   }
 
   /// 换月后选中日**必须落在当月**：否则网格里一个高亮都没有，下半屏却还挂着上个月
@@ -145,49 +193,19 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           _MonthBar(
             month: _month,
             entryCount: _monthCount(byDay),
-            onPrev: () => _shiftMonth(-1),
-            onNext: () => _shiftMonth(1),
+            onPrev: () => _goToPage(_pageForMonth(_month) - 1),
+            onNext: () => _goToPage(_pageForMonth(_month) + 1),
           ),
           const _WeekdayHeader(),
-          // 横扫翻月。用 GestureDetector 而不是 PageView：网格是定高的，
-          // PageView 还要维护无限页与两侧预建，为一个翻页动作不值当。
-          GestureDetector(
-            onHorizontalDragEnd: (details) {
-              final v = details.primaryVelocity ?? 0;
-              if (v.abs() < _kSwipeVelocity) return;
-              _shiftMonth(v < 0 ? 1 : -1);
-            },
-            child: AnimatedSwitcher(
-              duration: Durations.medium2,
-              switchInCurve: Easing.emphasizedDecelerate,
-              switchOutCurve: Easing.emphasizedAccelerate,
-              transitionBuilder: (child, animation) {
-                // 进场的从 _slideDir 那一侧来，退场的往反方向走。退场那个的 key
-                // 已经不是当前月份了，据此分辨。
-                final incoming = child.key == ValueKey(_month);
-                final dx = (incoming ? _slideDir : -_slideDir) * 0.1;
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween(
-                      begin: Offset(dx, 0),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: KeyedSubtree(
-                key: ValueKey(_month),
-                child: _MonthGrid(
-                  month: _month,
-                  byDay: byDay,
-                  selected: _selected,
-                  today: _today(),
-                  onSelect: (d) => setState(() => _selected = d),
-                ),
-              ),
-            ),
+          _MonthPager(
+            controller: _pageCtl,
+            byDay: byDay,
+            selected: _selected,
+            today: _today(),
+            monthForPage: _monthForPage,
+            onPageChanged: _onPageChanged,
+            onSettled: _onSettled,
+            onSelect: (d) => setState(() => _selected = d),
           ),
           const SizedBox(height: 4),
           Expanded(
@@ -282,6 +300,72 @@ class _WeekdayHeader extends StatelessWidget {
 
 // ── 月网格 ────────────────────────────────────────────────────────────
 
+/// 横向翻月。
+///
+/// [PageView] 要一个定高，拿不到 `shrinkWrap` 那套 —— 好在网格是**恒定六行**，
+/// 高度由宽度算得出来：格宽 =（可用宽 − 6 个间隙）/ 7，格高 = 格宽 / [_kCellAspect]。
+///
+/// 两个回调分工是这一块的关键：[onPageChanged] 只改标题（它是个标签，得跟着手指走，
+/// 不然网格滑过去了标题还写着上个月）；真正的动作 —— 换选中日、重新取当天的日记 ——
+/// 等 [ScrollEndNotification] 落位之后再做。滑动途中就做的话，手指还在拖、下半屏已经
+/// 换了一茬，而且一次快滑路过的每个月都会各触发一次取数。
+class _MonthPager extends StatelessWidget {
+  final PageController controller;
+  final Map<DateTime, DayWriting>? byDay;
+  final DateTime selected;
+  final DateTime today;
+  final DateTime Function(int page) monthForPage;
+  final ValueChanged<int> onPageChanged;
+  final VoidCallback onSettled;
+  final ValueChanged<DateTime> onSelect;
+
+  const _MonthPager({
+    required this.controller,
+    required this.byDay,
+    required this.selected,
+    required this.today,
+    required this.monthForPage,
+    required this.onPageChanged,
+    required this.onSettled,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cell =
+            (constraints.maxWidth - _kGridPadding * 2 - _kCellGap * 6) / 7;
+        final height =
+            cell / _kCellAspect * _kGridRows + _kCellGap * (_kGridRows - 1) + 8;
+
+        return SizedBox(
+          height: height,
+          child: NotificationListener<ScrollEndNotification>(
+            // depth 0 = 分页器自己。格子里那个 GridView 关掉了滚动，但布局时照样会
+            // 冒泡通知上来，不筛掉的话每次重建都会被当成一次落位。
+            onNotification: (n) {
+              if (n.depth == 0) onSettled();
+              return false;
+            },
+            child: PageView.builder(
+              controller: controller,
+              onPageChanged: onPageChanged,
+              itemBuilder: (context, page) => _MonthGrid(
+                month: monthForPage(page),
+                byDay: byDay,
+                selected: selected,
+                today: today,
+                onSelect: onSelect,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _MonthGrid extends StatelessWidget {
   final DateTime month;
   final Map<DateTime, DayWriting>? byDay;
@@ -307,7 +391,7 @@ class _MonthGrid extends StatelessWidget {
         maxScaleFactor: _kCellMaxTextScale,
         child: GridView.count(
           crossAxisCount: 7,
-          shrinkWrap: true,
+          // 高度由 [_MonthPager] 给死，这里只管铺格子。
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: _kCellGap,
           crossAxisSpacing: _kCellGap,
@@ -413,15 +497,10 @@ class _DayCell extends StatelessWidget {
 /// 的角标在 320dp 上就贴到一起了，字号放大档更是直接叠上。Row + [Spacer] 让重叠在结构上
 /// 不可能发生，挤不下时日期自己省略。
 ///
-/// 「今天」是**填充药丸**，不是描边：灰底上的灰描边几乎不说话，而这是整屏唯一需要一眼
-/// 找到的格子。配色两套 —— 落在封面上时是 `onMedia` 底 + `scrim` 字（白片黑字，压得住
-/// 任意画面），否则是 `primary` 底 + `onPrimary` 字。**不能两处都用 primary**：灰度档的
-/// primary 是纯黑，压在同样深色的 scrim 条上就没了。
+/// 「今天」只是把日期换成 `primary` 色，**不加任何形状**：46 宽的格子里，药丸或描边
+/// 既挤又吵，而颜色已经够认。封面格例外，见下面的说明。
 ///
-/// 整行**定高 [_kHeaderHeight]**，今天与别的日子版式完全一致 —— 否则文字格里那两行标题
-/// 会因为今天多出的药丸高度被挤掉一行。
-///
-/// 原先画在格子底部中间的那条短横已经删了：文字格的标题铺满下半格，那条线正压在第二行上。
+/// 整行定高 [_kHeaderHeight]，各种格子版式一致。
 class _CellHeader extends StatelessWidget {
   final DateTime day;
 
@@ -450,34 +529,20 @@ class _CellHeader extends StatelessWidget {
             .copyWith(fontFeatures: const [.tabularFigures()]);
 
     final colors = context.theme.colors;
-    Widget date = Text('${day.day}', maxLines: 1, style: style);
-    if (isToday) {
-      date = Container(
-        constraints: const BoxConstraints(minWidth: _kHeaderHeight),
-        height: _kHeaderHeight,
-        alignment: .center,
-        // 一位数时是正圆，两位数横向长一点点 —— 用药丸而不是钉死的正圆，
-        // 免得字号档或字体度量稍宽就被裁掉半个数字。
-        padding: const .symmetric(horizontal: 3),
-        decoration: ShapeDecoration(
-          shape: const StadiumBorder(),
-          color: onCover ? context.theme.onMedia : colors.primary,
-        ),
-        child: Text(
-          '${day.day}',
-          maxLines: 1,
-          style: style.copyWith(
-            color: onCover ? colors.scrim : colors.onPrimary,
-          ),
-        ),
-      );
-    }
+    // 「今天」只换个颜色，不加任何形状 —— 药丸/描边那类标记在 46 宽的格子里既挤又吵。
+    //
+    // 只对**没有封面**的格子生效：封面上是任意画面，日期走的是 onMedia（恒定白），
+    // 换成 primary 在灰度档就是纯黑压在深色 scrim 上，直接消失；有彩档也会比周围
+    // 那些白色日期更暗，读起来反而像被禁用。
+    final dateStyle = isToday && !onCover
+        ? style.copyWith(color: colors.primary)
+        : style;
 
     final row = SizedBox(
       height: _kHeaderHeight,
       child: Row(
         children: [
-          Flexible(child: date),
+          Flexible(child: Text('${day.day}', maxLines: 1, style: dateStyle)),
           const Spacer(),
           if (count > 1) Text('$count', style: style),
         ],
