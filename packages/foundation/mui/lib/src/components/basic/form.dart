@@ -36,7 +36,17 @@ class MField extends StatefulWidget {
   final bool obscureText;
   final bool autofocus;
   final int? maxLength;
-  final int maxLines;
+
+  /// null = 不限行数，随内容一直长。与 [expands] 互斥。
+  final int? maxLines;
+
+  /// 撑满父级给的高度（全屏编辑器这类整页输入用）。
+  ///
+  /// 开了它就由父级决定高度：[maxLines] / [minHeight] 都不再生效，光标从顶部起
+  /// 排（否则单行内容会垂直居中浮在整页中间）。**父级必须给出有界高度**，
+  /// 放进无界的 Column / ListView 里会直接报约束错误。
+  final bool expands;
+
   final double minHeight;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
@@ -65,6 +75,7 @@ class MField extends StatefulWidget {
     this.autofocus = false,
     this.maxLength,
     this.maxLines = 1,
+    this.expands = false,
     this.minHeight = kMoodiaryFieldHeight,
     this.keyboardType,
     this.textInputAction,
@@ -76,7 +87,10 @@ class MField extends StatefulWidget {
     this.variant = MFieldVariant.filled,
     this.showClear = true,
     this.contentPadding,
-  });
+  }) : assert(
+         !expands || maxLines == null,
+         'expands 与 maxLines 互斥：撑满高度时行数由父级的高度决定',
+       );
 
   @override
   State<MField> createState() => _MFieldState();
@@ -144,7 +158,10 @@ class _MFieldState extends State<MField> {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    final multiline = widget.maxLines > 1 && !widget.obscureText;
+    // 密码框永远单行。除此之外「不限行数」与「撑满高度」都算多行。
+    final multiline =
+        !widget.obscureText &&
+        (widget.expands || (widget.maxLines ?? 2) > 1);
     final plain = widget.variant == MFieldVariant.plain;
     final InputBorder? noBorder = plain ? InputBorder.none : null;
 
@@ -155,8 +172,12 @@ class _MFieldState extends State<MField> {
       enabled: widget.enabled,
       obscureText: _obscured,
       maxLength: widget.maxLength,
-      maxLines: widget.obscureText ? 1 : widget.maxLines,
-      minLines: 1,
+      // expands 要求 maxLines 与 minLines 同时为 null，这是 TextField 的硬约定。
+      maxLines: widget.obscureText ? 1 : (widget.expands ? null : widget.maxLines),
+      minLines: widget.expands ? null : 1,
+      expands: widget.expands && !widget.obscureText,
+      // 撑满高度时不从中间起排。
+      textAlignVertical: widget.expands ? TextAlignVertical.top : null,
       keyboardType: widget.keyboardType,
       inputFormatters: widget.inputFormatters,
       textInputAction: widget.textInputAction ?? (multiline ? .newline : .done),

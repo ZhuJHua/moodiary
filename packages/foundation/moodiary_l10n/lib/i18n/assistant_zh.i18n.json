@@ -152,5 +152,6 @@
   "modelListUpdate": "更新列表",
   "modelListAdd": "手动添加",
   "modelListEmpty": "还没有可选模型",
-  "modelDeprecated": "已下线"
+  "modelDeprecated": "已下线",
+  "composerFullscreen": "全屏编辑"
 }

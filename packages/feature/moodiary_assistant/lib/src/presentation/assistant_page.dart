@@ -13,6 +13,7 @@ import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_assistant/src/data/soul_repository.dart';
+import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_summary_tile.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
@@ -27,8 +28,8 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:moodiary_utils/moodiary_utils.dart';
 import 'package:mui/mui.dart';
 
-/// 「+」菜单里的两项。
-enum _ComposerTool { diary, image }
+/// 「+」菜单里的三项。
+enum _ComposerTool { diary, image, fullscreen }
 
 /// 控制条右侧那两颗按钮（「+」与发送 / 停止）的直径。
 ///
@@ -80,6 +81,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   bool _sending = false;
   bool _ready = true;
   bool _initialized = false;
+
   /// 本次会话的思考档位。空串 = 关。
   String _reasoningLevel = '';
 
@@ -303,6 +305,23 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     return session;
   }
 
+  /// 全屏编辑：把输入框内容搬到一整页去改，回来再塞回控制器。
+  /// 取消（返回键 / 关闭）返回 null，此时一个字都不动。
+  Future<void> _openFullscreenComposer() async {
+    final edited = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _FullscreenComposerPage(text: _inputController.text),
+      ),
+    );
+    if (edited == null || !mounted) return;
+    _inputController
+      ..text = edited
+      // 光标落到末尾，回来就能接着写。
+      ..selection = TextSelection.collapsed(offset: edited.length);
+    _inputFocusNode.requestFocus();
+  }
+
   Future<void> _openSettings() async {
     await const AssistantSettingRoute().push(context);
     await _refreshReady();
@@ -349,7 +368,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       maxTokens: _maxTokens,
       history: history,
       reasoning: resolveReasoning(
-        level: _reasoningLevels.contains(_reasoningLevel) ? _reasoningLevel : '',
+        level: _reasoningLevels.contains(_reasoningLevel)
+            ? _reasoningLevel
+            : '',
         model: _activeModel,
         maxTokens: _maxTokens,
       ),
@@ -1014,6 +1035,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       contextLimit: _contextLimit,
       onSendDiary: _pickAndSendDiary,
       onSendImage: _canSendImage ? _pickImage : null,
+      onFullscreen: _openFullscreenComposer,
       modelLabel: _activeModel?.name ?? _modelId,
       reasoningLevel: _reasoningLevel,
       // 会话一开始就锁死：模型和强度都是定格进 ChatSession 的。
@@ -1150,39 +1172,12 @@ class _CompactionNoticeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Center(
-      child: Padding(
-        padding: const .symmetric(vertical: 8),
-        child: MInkWell(
-          borderRadius: .circular(20),
-          onTap: () => _showSheet(context),
-          child: Container(
-            padding: const .symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest,
-              borderRadius: .circular(20),
-            ),
-            child: Row(
-              mainAxisSize: .min,
-              children: [
-                Icon(
-                  LucideIcons.foldVertical,
-                  size: 16,
-                  color: scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    context.l10n.assistant.compactionNotice,
-                    style: context.theme.typography.labelSmall.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    // 和思考块同一个组件：一行、无容器、onSurfaceVariant。它不就地展开而是开弹窗
+    // （里面还有「恢复完整历史」这个动作），所以画的是**向右**箭头。
+    return AssistantNotice(
+      icon: LucideIcons.foldVertical,
+      kind: context.l10n.assistant.compactionNotice,
+      onTap: () => _showSheet(context),
     );
   }
 
@@ -1310,6 +1305,7 @@ class _AssistantComposer extends StatelessWidget {
   final VoidCallback? onSendImage;
   final String modelLabel;
   final String reasoningLevel;
+  final VoidCallback onFullscreen;
 
   /// null 表示会话已开始 —— chip 照常显示，但不可点。
   final VoidCallback? onPickModel;
@@ -1328,6 +1324,7 @@ class _AssistantComposer extends StatelessWidget {
     required this.onSendImage,
     required this.modelLabel,
     required this.reasoningLevel,
+    required this.onFullscreen,
     required this.onPickModel,
     required this.pendingImageName,
     required this.onRemoveImage,
@@ -1392,8 +1389,11 @@ class _AssistantComposer extends StatelessWidget {
                       onRemove: onRemoveImage,
                     ),
                   // 文字输入区：独占上方，向上增高。无背景 —— 面板本身就是容器了。
+                  //
+                  // 上内边距与左右取齐（都是面板的 8 再加这里的 8 = 16）。给 2 的话
+                  // 上是 10、左右是 16，整块文字看着往上贴。
                   Padding(
-                    padding: const .fromLTRB(8, 2, 8, 6),
+                    padding: const .fromLTRB(8, 8, 8, 6),
                     child: MField(
                       controller: controller,
                       focusNode: focusNode,
@@ -1451,10 +1451,16 @@ class _AssistantComposer extends StatelessWidget {
                               icon: LucideIcons.image,
                               enabled: !sending,
                             ),
+                          MMenuEntry(
+                            value: .fullscreen,
+                            label: l10n.assistant.composerFullscreen,
+                            icon: LucideIcons.maximize2,
+                          ),
                         ],
                         onSelected: (tool) => switch (tool) {
                           _ComposerTool.diary => onSendDiary(),
                           _ComposerTool.image => onSendImage?.call(),
+                          _ComposerTool.fullscreen => onFullscreen(),
                         },
                         child: SizedBox.square(
                           dimension: _kComposerControlSize,
@@ -1791,6 +1797,26 @@ String _compactTokens(int n) {
   return '${(n / 1000000).toStringAsFixed(1)}M';
 }
 
+/// 思考时长的短写：10 秒以上取整，以下保留一位。
+String _durationText(int millis) {
+  final secs = millis / 1000;
+  if (secs >= 10) return secs.toStringAsFixed(0);
+  return (secs < 0.1 ? 0.1 : secs).toStringAsFixed(1);
+}
+
+/// 从思考正文里取一行当摘要。[tail] 为真取最后一行（思考中，跟着长），
+/// 否则取第一行（结束了，要个稳定的开头）。Markdown 的标记符号先剥掉，
+/// 一行摘要里出现 `## ` 或 `- ` 只是噪声。
+String _reasoningPeek(String reasoning, {required bool tail}) {
+  final lines = [
+    for (final line in reasoning.split('\n'))
+      if (line.trim().isNotEmpty)
+        line.trim().replaceAll(RegExp(r'^[#>\-*\s]+'), ''),
+  ];
+  if (lines.isEmpty) return '';
+  return tail ? lines.last : lines.first;
+}
+
 class _AssistantBubble extends StatelessWidget {
   final String text;
   final String reasoning;
@@ -1820,40 +1846,23 @@ class _AssistantBubble extends StatelessWidget {
     final hasText = text.isNotEmpty;
     final showThinking = thinkingActive || reasoning.isNotEmpty;
 
-    final decoration = BoxDecoration(
-      color: scheme.surfaceContainerHighest,
-      borderRadius: const .only(
-        topLeft: .circular(16),
-        topRight: .circular(16),
-        bottomLeft: .circular(4),
-        bottomRight: .circular(16),
-      ),
-    );
-    final constraints = BoxConstraints(
-      maxWidth: MediaQuery.sizeOf(context).width * 0.82,
-    );
-
-    // 有正文→正文气泡；无正文未思考→转圈气泡；无正文但思考中/已思考→不显示气泡，交给思考块。
+    // 助手正文**不带气泡**：整段 Markdown 拿回全屏宽（列表、代码块在 82% 宽的
+    // 气泡里每行都被截短），而且页面上唯一带底色的东西就只剩用户自己发的那句 ——
+    // 「模型说的」与「过程信息」不再都装在盒子里、分不开。分层改由颜色承担：
+    // 正文 onSurface，过程提示 onSurfaceVariant。
     Widget? bubble;
     if (hasText) {
-      bubble = Container(
-        constraints: constraints,
-        padding: const .symmetric(horizontal: 14, vertical: 10),
-        decoration: decoration,
-        child: SelectionArea(
-          child: GptMarkdown(
-            text,
-            style: context.theme.typography.bodyMedium.onSurface,
-            codeBuilder: _codeBlock,
-          ),
+      bubble = SelectionArea(
+        child: GptMarkdown(
+          text,
+          style: context.theme.typography.bodyMedium.onSurface,
+          codeBuilder: _codeBlock,
         ),
       );
     } else if (!showThinking) {
-      bubble = Container(
-        constraints: constraints,
-        padding: const .symmetric(horizontal: 14, vertical: 10),
-        decoration: decoration,
-        child: const SizedBox(
+      bubble = const Padding(
+        padding: .symmetric(vertical: 4),
+        child: SizedBox(
           width: 16,
           height: 16,
           child: CircularProgressIndicator(strokeWidth: 2),
@@ -1863,285 +1872,104 @@ class _AssistantBubble extends StatelessWidget {
 
     final stacked = <Widget>[
       if (showThinking)
-        _ThinkingBlock(
-          reasoning: reasoning,
-          thinkingMillis: thinkingMillis,
-          active: thinkingActive,
+        AssistantNotice(
+          icon: thinkingActive ? null : LucideIcons.brain,
+          kind: thinkingActive
+              ? l10n.assistant.thinking
+              : l10n.assistant.thoughtFor(
+                  duration: _durationText(thinkingMillis),
+                ),
+          // 思考中给**最后一行**（跟着长，看得出在动），结束后给第一行（稳定的开头）。
+          summary: _reasoningPeek(reasoning, tail: thinkingActive),
+          detail: reasoning.isEmpty
+              ? null
+              : (context) => GptMarkdown(
+                  reasoning,
+                  style: context.theme.typography.bodySmall.onSurfaceVariant,
+                  codeBuilder: _codeBlock,
+                ),
         ),
       ?bubble,
     ];
 
-    // 流式中或还没有正文：只堆叠思考块 + 气泡，不显示操作按钮。
+    // 流式中或还没有正文：只堆叠提示条 + 正文，不显示操作按钮。
     if (!hasText || streaming) {
-      return Column(
-        crossAxisAlignment: .start,
-        mainAxisSize: .min,
-        children: stacked,
+      return _fullWidth(
+        Column(
+          crossAxisAlignment: .start,
+          mainAxisSize: .min,
+          children: stacked,
+        ),
       );
     }
 
     final hasTokens = inputTokens > 0 || outputTokens > 0;
-    return Column(
-      crossAxisAlignment: .start,
-      mainAxisSize: .min,
-      children: [
-        ...stacked,
-        // 复制 / 重新回答，token 用量紧跟其右；用 Wrap，窄屏放不下时自动换行不溢出。
-        Wrap(
-          crossAxisAlignment: .center,
-          children: [
-            _BubbleActionButton(
-              icon: LucideIcons.copy,
-              label: l10n.assistant.copyTooltip,
-              onTap: () async {
-                await Clipboard.setData(ClipboardData(text: text));
-                toast.success(message: l10n.assistant.copied);
-              },
-            ),
-            if (onRegenerate != null)
-              _BubbleActionButton(
-                icon: LucideIcons.rotateCw,
-                label: l10n.assistant.regenerate,
-                onTap: onRegenerate!,
-              ),
-            if (hasTokens)
-              Padding(
-                padding: const .symmetric(horizontal: 6, vertical: 4),
-                child: DefaultTextStyle.merge(
-                  style: context.theme.typography.labelSmall.onSurfaceVariant,
-                  child: Row(
-                    mainAxisSize: .min,
-                    children: [
-                      Icon(
-                        LucideIcons.arrowUp,
-                        size: 13,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(_compactTokens(inputTokens)),
-                      const SizedBox(width: 8),
-                      Icon(
-                        LucideIcons.arrowDown,
-                        size: 13,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(_compactTokens(outputTokens)),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// AI 回复上方的思考块：默认折叠，显示思考时长，点击展开思考正文（Markdown）。
-class _ThinkingBlock extends StatefulWidget {
-  final String reasoning;
-  final int thinkingMillis;
-  final bool active;
-
-  const _ThinkingBlock({
-    required this.reasoning,
-    required this.thinkingMillis,
-    required this.active,
-  });
-
-  @override
-  State<_ThinkingBlock> createState() => _ThinkingBlockState();
-}
-
-class _ThinkingBlockState extends State<_ThinkingBlock> {
-  bool _expanded = false;
-
-  String _durationText() {
-    final secs = widget.thinkingMillis / 1000;
-    if (secs >= 10) return secs.toStringAsFixed(0);
-    return (secs < 0.1 ? 0.1 : secs).toStringAsFixed(1);
-  }
-
-  /// 整块。[measuring] 为真时用于离屏量高度：去掉 [SelectionArea]（它不占尺寸，
-  /// 却要一个 Overlay 才立得起来）。
-  Widget _block(
-    BuildContext context, {
-    required bool expanded,
-    bool measuring = false,
-  }) {
-    final scheme = context.theme.colors;
-    final l10n = context.l10n;
-    final hasReasoning = widget.reasoning.isNotEmpty;
-    final label = widget.active
-        ? l10n.assistant.thinking
-        : l10n.assistant.thoughtFor(duration: _durationText());
-
-    final header = MInkWell(
-      borderRadius: .circular(12),
-      onTap: hasReasoning && !measuring ? _toggle : null,
-      child: Padding(
-        padding: const .symmetric(horizontal: 10, vertical: 7),
-        child: Row(
-          mainAxisSize: .min,
-          children: [
-            if (widget.active)
-              SizedBox(
-                width: 13,
-                height: 13,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: scheme.onSurfaceVariant,
-                ),
-              )
-            else
-              Icon(LucideIcons.brain, size: 16, color: scheme.onSurfaceVariant),
-            const SizedBox(width: 7),
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: .ellipsis,
-                style: context.theme.typography.labelMedium.onSurfaceVariant,
-              ),
-            ),
-            if (hasReasoning) ...[
-              const SizedBox(width: 2),
-              Icon(
-                expanded ? LucideIcons.chevronUp : LucideIcons.chevronDown,
-                size: 18,
-                color: scheme.onSurfaceVariant,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-
-    Widget body = Padding(
-      padding: const .fromLTRB(12, 0, 12, 10),
-      child: GptMarkdown(
-        widget.reasoning,
-        style: context.theme.typography.bodySmall.onSurfaceVariant,
-        codeBuilder: _codeBlock,
-      ),
-    );
-    if (!measuring) body = SelectionArea(child: body);
-
-    return Container(
-      margin: const .only(bottom: 6),
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.sizeOf(context).width * 0.82,
-      ),
-      decoration: BoxDecoration(
-        color: context.theme.colors.surfaceContainerHigh,
-        borderRadius: .circular(12),
-      ),
-      child: Column(
+    return _fullWidth(
+      Column(
         crossAxisAlignment: .start,
         mainAxisSize: .min,
-        children: [header, if (expanded && hasReasoning) body],
+        children: [
+          ...stacked,
+          // 复制 / 重新回答，token 用量紧跟其右；用 Wrap，窄屏放不下时自动换行不溢出。
+          Wrap(
+            crossAxisAlignment: .center,
+            children: [
+              _BubbleActionButton(
+                icon: LucideIcons.copy,
+                label: l10n.assistant.copyTooltip,
+                onTap: () async {
+                  await Clipboard.setData(ClipboardData(text: text));
+                  toast.success(message: l10n.assistant.copied);
+                },
+              ),
+              if (onRegenerate != null)
+                _BubbleActionButton(
+                  icon: LucideIcons.rotateCw,
+                  label: l10n.assistant.regenerate,
+                  onTap: onRegenerate!,
+                ),
+              if (hasTokens)
+                Padding(
+                  padding: const .symmetric(horizontal: 6, vertical: 4),
+                  child: DefaultTextStyle.merge(
+                    style: context.theme.typography.labelSmall.onSurfaceVariant,
+                    child: Row(
+                      mainAxisSize: .min,
+                      children: [
+                        Icon(
+                          LucideIcons.arrowUp,
+                          size: 13,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(_compactTokens(inputTokens)),
+                        const SizedBox(width: 8),
+                        Icon(
+                          LucideIcons.arrowDown,
+                          size: 13,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(_compactTokens(outputTokens)),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
-
-  @override
-  Widget build(BuildContext context) => _block(context, expanded: _expanded);
-
-  /// 展开 / 收起，并把视口补偿回去，让它**向下**展开。
-  ///
-  /// 思考块落在中心线**上方**那一组，而那组的条目是从中心线往上累加的 ——
-  /// 某条长高时它的下沿不动、上沿往上顶，看起来就是向上展开。
-  ///
-  /// 补偿量必须在重建**之前**拿到，否则只能「先展开一帧、再 post-frame 量完补回来」，
-  /// 中间那一帧就是肉眼看到的闪。所以离屏把两个状态各量一次取差值，再让
-  /// `correctPixels` 与 `setState` 落在同一帧。
-  ///
-  /// post-frame 还会再校一次残差：量准了残差为零、什么都不会发生；量歪了最多退化成
-  /// 一次纠正，而不会把列表甩到内容之外。
-  void _toggle() {
-    final expanding = !_expanded;
-    final position = Scrollable.maybeOf(context)?.position;
-    final before = _topOf();
-    final delta = position == null ? null : _measureDelta(context);
-
-    setState(() => _expanded = expanding);
-
-    if (position == null || delta == null || delta <= 0.5) return;
-    // 补偿会把位置带离底部；`correctPixels` 是静默的，不说一声的话列表下一条
-    // metrics 通知就把人拽回去。
-    AssistantChatList.maybeOf(context)?.releaseFollow();
-
-    // 夹住上界。收起时正向那一组没动，所以**当前的 max 就是收起后的 max**，
-    // 夹得准。这一夹是为了让「从底部展开、再收起」精确落回底部 ——
-    // 差哪怕几像素，跟随状态就会被判回 true，随后那条 metrics 通知补跳一次，
-    // 而那一跳在本帧画完之后才生效，就是肉眼看到的闪。
-    //
-    // 展开方向不夹下界：负向那组会多出 delta，新的 min 比当前更负。
-    final raw = position.pixels + (expanding ? -delta : delta);
-    final lower = expanding
-        ? position.minScrollExtent - delta
-        : position.minScrollExtent;
-    position.correctPixels(raw.clamp(lower, position.maxScrollExtent));
-    if (before != null) _settleResidual(position, before);
-  }
-
-  /// 兜底：布局落定后看看自己的顶边有没有真的停在原处，差多少补多少；
-  /// 最后按落定的位置重新判断跟随状态。
-  void _settleResidual(ScrollPosition position, double before) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final now = _topOf();
-      if (now != null) {
-        final residual = now - before;
-        if (residual.abs() >= 1) {
-          position.jumpTo(
-            (position.pixels + residual).clamp(
-              position.minScrollExtent,
-              position.maxScrollExtent,
-            ),
-          );
-        }
-      }
-      // 位置是静默改的，列表自己看不见 —— 不同步一次的话，收起后明明已经回到
-      // 底部，「回到底部」按钮还会一直挂着。
-      AssistantChatList.maybeOf(context)?.syncFollowFromPosition();
-    });
-  }
-
-  double? _topOf() {
-    final box = context.findRenderObject();
-    if (box is! RenderBox || !box.hasSize) return null;
-    return box.localToGlobal(Offset.zero).dy;
-  }
-
-  /// 离屏量「展开态高度 − 收起态高度」。
-  ///
-  /// **必须量整块、且给足宽度**：块本身是 `Column(mainAxisSize: .min)`，收起时它的
-  /// 宽度就是那行窄标题。拿当时的宽度去量正文，markdown 会在一个远比实际窄的宽度上
-  /// 换行，量出来的高度大得离谱 —— 补偿跟着偏，长内容甚至会把列表甩到内容之外。
-  double? _measureDelta(BuildContext context) {
-    final box = context.findRenderObject();
-    if (box is! RenderBox || !box.hasSize) return null;
-    // 用这块在真实树里**拿到的那份约束**，不要拿屏幕宽度去猜：列表条目外面是
-    // `Align`（松约束），块自己的 maxWidth 才会生效；换成紧约束时那个 maxWidth 会被
-    // `enforce` 夹掉、完全失效。两边的约束不一致，量出来就是另一个换行结果。
-    final view = Size(box.constraints.maxWidth, double.infinity);
-    // 只补 `InheritedLocaleData`，不能补 `TranslationProvider` —— 后者的构造器把 key
-    // 设成了 slang 那个按 base locale 缓存的**进程级单例** GlobalKey，再建一份就会和
-    // App 根部那份撞成「同一个 GlobalKey 挂了两处」，整棵子树报错变灰。
-    Widget wrap(Widget child) => InheritedLocaleData<AppLocale, Translations>(
-      translations: TranslationProvider.of(context).translations,
-      child: child,
-    );
-    double measure(bool expanded) => getWidgetSizeOffScreen(
-      context: context,
-      viewSize: view,
-      widget: wrap(_block(context, expanded: expanded, measuring: true)),
-    ).height;
-    return measure(true) - measure(false);
-  }
 }
+
+/// 助手那一列钉成满宽。
+///
+/// 列表给条目的是**紧**的横向约束，但 `_align` 外面还包了一层 `Align`（授权卡
+/// 要靠那层松约束保住自己 400 的宽度上限），松约束下 Column 会按内容缩包 ——
+/// 短回复窄一截还好说，markdown 的表格和代码块拿不到完整可用宽度就不行了。
+/// 气泡都去掉了，正文就不该再有任何宽度限制。
+Widget _fullWidth(Widget child) => SizedBox(width: .infinity, child: child);
 
 class _BubbleActionButton extends StatelessWidget {
   final IconData icon;
@@ -2400,6 +2228,68 @@ class _SessionCard extends StatelessWidget {
               LucideIcons.ellipsisVertical,
               color: scheme.onSurfaceVariant,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 全屏编辑。长内容在那个最多 6 行的输入框里改不动 —— 尤其是要往中间插话、
+/// 或者粘一段长文进来的时候。
+///
+/// 只负责编辑：确认把文本交回输入框，发不发由用户回去决定。塞一个「发送」进来
+/// 会让这一页多出一条与主流程并行的发送路径，而那条路径上没有模型选择、没有图片、
+/// 也没有会话建立的那套判断。
+class _FullscreenComposerPage extends StatefulWidget {
+  final String text;
+
+  const _FullscreenComposerPage({required this.text});
+
+  @override
+  State<_FullscreenComposerPage> createState() =>
+      _FullscreenComposerPageState();
+}
+
+class _FullscreenComposerPageState extends State<_FullscreenComposerPage> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.text,
+  )..selection = TextSelection.collapsed(offset: widget.text.length);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.assistant.composerFullscreen),
+        actions: [
+          Padding(
+            padding: const .only(right: 8),
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(_controller.text),
+              child: Text(l10n.common.ok),
+            ),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const .fromLTRB(16, 8, 16, 16),
+          child: MField(
+            controller: _controller,
+            autofocus: true,
+            // 撑满整页：高度由这层 Padding 的父级（Scaffold body）定。
+            maxLines: null,
+            expands: true,
+            variant: .plain,
+            showClear: false,
+            hintText: l10n.assistant.inputHint,
           ),
         ),
       ),

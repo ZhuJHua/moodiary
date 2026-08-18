@@ -968,6 +968,9 @@ class Translations$assistant$zh {
 
 	/// zh: '已下线'
 	String get modelDeprecated => '已下线';
+
+	/// zh: '全屏编辑'
+	String get composerFullscreen => '全屏编辑';
 }
 
 // Path: common

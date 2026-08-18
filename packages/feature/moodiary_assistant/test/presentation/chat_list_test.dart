@@ -375,4 +375,104 @@ void main() {
     );
     expect(find.byKey(const ValueKey('to-bottom')), findsNothing);
   });
+
+  testWidgets('贴底时内容长高，位置在同一帧跟到新底部（不慢一帧再抽回）', (tester) async {
+    controller.setAll([
+      for (var i = 0; i < 12; i++)
+        _turn('m$i', fromUser: i.isEven, text: 'x' * 3),
+    ]);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    final position = scroll.position;
+    expect(
+      position.maxScrollExtent - position.pixels,
+      moreOrLessEquals(0, epsilon: 0.5),
+      reason: '前提：开局就精确贴底',
+    );
+
+    // 模拟流式：把最后一条改长。**只 pump 一帧**——物理是在布局里生效的，
+    // 事后追的做法要等到下一帧才补，那一帧的差值就是肉眼看到的抖。
+    controller.replace(_turn('m11', fromUser: false, text: 'x' * 10));
+    await tester.pump();
+
+    expect(
+      position.maxScrollExtent - position.pixels,
+      moreOrLessEquals(0, epsilon: 0.5),
+      reason: '长高的那一帧就该已经在新底部',
+    );
+  });
+
+  testWidgets('已经滑走时，内容长高不把人拽回底部', (tester) async {
+    controller.setAll([
+      for (var i = 0; i < 12; i++)
+        _turn('m$i', fromUser: i.isEven, text: 'x' * 3),
+    ]);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(AssistantChatList), const Offset(0, 260));
+    await tester.pumpAndSettle();
+    final away = scroll.position.pixels;
+    expect(
+      scroll.position.maxScrollExtent - away,
+      greaterThan(1),
+      reason: '前提：确实已经离开底部',
+    );
+
+    controller.replace(_turn('m11', fromUser: false, text: 'x' * 10));
+    await tester.pump();
+
+    expect(
+      scroll.position.pixels,
+      moreOrLessEquals(away, epsilon: 0.5),
+      reason: '翻历史的人不该被新 token 拽走',
+    );
+  });
+
+  // 这条守的是「在底部展开思考块会闪」那个 bug：思考块补偿位置时会先
+  // releaseFollow()，物理必须随之停手，否则同一帧里两边对着拉。
+  testWidgets('releaseFollow 之后内容长高不再贴底', (tester) async {
+    controller.setAll([
+      for (var i = 0; i < 12; i++)
+        _turn('m$i', fromUser: i.isEven, text: 'x' * 3),
+    ]);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    final position = scroll.position;
+    listKey.currentState!.releaseFollow();
+    final held = position.pixels;
+
+    controller.replace(_turn('m11', fromUser: false, text: 'x' * 10));
+    await tester.pump();
+
+    expect(
+      position.pixels,
+      moreOrLessEquals(held, epsilon: 0.5),
+      reason: '放弃跟随之后，长高不该再把位置拽到新底部',
+    );
+  });
+
+  testWidgets('isInForwardGroup 认得中心线两侧', (tester) async {
+    // 条数按视口算：全部都要真的建出来，SliverList 不会构建屏外的条目。
+    controller.setAll([
+      for (var i = 0; i < 4; i++)
+        _turn('m$i', fromUser: i.isEven, text: 'x' * 2),
+    ]);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    // 中心项是载入时最新的那条（m3）。之后来的新消息落在正向组。
+    controller.add(_turn('m4', fromUser: true, text: 'x' * 2));
+    await tester.pumpAndSettle();
+
+    final state = listKey.currentState!;
+    BuildContext ctxOf(String id) =>
+        tester.element(find.byKey(ValueKey<String>('box-$id')));
+
+    expect(state.isInForwardGroup(ctxOf('m4')), isTrue, reason: '比中心新');
+    expect(state.isInForwardGroup(ctxOf('m3')), isFalse, reason: '中心项本身');
+    expect(state.isInForwardGroup(ctxOf('m0')), isFalse, reason: '比中心旧');
+  });
 }

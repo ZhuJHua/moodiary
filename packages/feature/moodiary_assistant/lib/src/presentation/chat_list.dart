@@ -17,6 +17,63 @@ const double _kBottomSlack = 8;
 const double _kItemGap = 12;
 const double _kTopPadding = 8;
 
+/// 贴底判定的容差（[_StickToBottomScrollPhysics] 用）。**必须比 [_kBottomSlack] 紧得多**：
+/// 跟随时的位置是 `jumpTo(max)` 来的、精确等于 max，而思考块展开的第一帧就会
+/// 把位置往回推几十像素 —— 容差一松，物理就会把那次补偿又拽回底部。
+const double _kStickEpsilon = 0.5;
+
+/// 内容长高时**在同一帧里**把位置带到新的底部。
+///
+/// 不这么做就只能事后追：流式每长高一次发一条 `ScrollMetricsNotification`，
+/// 监听里 `await endOfFrame` 再 `jumpTo` —— 补偿永远慢一帧，于是每个 token 都是
+/// 「先露出半行、下一帧再抽回去」。逐 token 累积起来就是肉眼的抖动。
+///
+/// `adjustPositionForNewDimensions` 是布局阶段的钩子（`applyContentDimensions`
+/// 里调），返回值直接就是这一帧的 pixels，没有中间态可看，所以是平滑的。
+class _StickToBottomScrollPhysics extends AlwaysScrollableScrollPhysics {
+  /// 是否还在跟随底部。**必须接到列表的跟随状态上**，不能只看「离底够近」——
+  /// 思考块展开的第一帧位置还贴着底，那时若只看距离，物理会把它刚做的补偿
+  /// 又拽回底部，两边对着拉就是肉眼的一闪。`releaseFollow()` 关掉跟随，这里
+  /// 随之停手。
+  final ValueGetter<bool> shouldStick;
+
+  const _StickToBottomScrollPhysics({required this.shouldStick, super.parent});
+
+  @override
+  _StickToBottomScrollPhysics applyTo(ScrollPhysics? ancestor) {
+    return _StickToBottomScrollPhysics(
+      shouldStick: shouldStick,
+      parent: buildParent(ancestor),
+    );
+  }
+
+  @override
+  double adjustPositionForNewDimensions({
+    required ScrollMetrics oldPosition,
+    required ScrollMetrics newPosition,
+    required bool isScrolling,
+    required double velocity,
+  }) {
+    final adjusted = super.adjustPositionForNewDimensions(
+      oldPosition: oldPosition,
+      newPosition: newPosition,
+      isScrolling: isScrolling,
+      velocity: velocity,
+    );
+    // 手指在上面、或者还有惯性时一律不插手 —— 那时位置归手势管。
+    if (isScrolling || velocity != 0) return adjusted;
+    if (!shouldStick()) return adjusted;
+    if (!oldPosition.hasPixels || !oldPosition.hasContentDimensions) {
+      return adjusted;
+    }
+    // 只有原本就精确贴着底的才跟。滑走看历史的人不该被新 token 拽回来。
+    if (oldPosition.maxScrollExtent - oldPosition.pixels > _kStickEpsilon) {
+      return adjusted;
+    }
+    return newPosition.maxScrollExtent;
+  }
+}
+
 /// 自建聊天列表。**双向布局**：一段稳定的「中心项」把内容劈成两半，
 /// 比它新的落在正向（中心线下方）、比它旧的落在负向（中心线上方），
 /// `anchor: 1` 再把中心线摆在视口底部。
@@ -113,6 +170,10 @@ class AssistantChatListState extends State<AssistantChatList> {
   bool _userDragging = false;
 
   int _lastTailRevision = -1;
+
+  late final _physics = _StickToBottomScrollPhysics(
+    shouldStick: () => _following.value,
+  );
 
   late final AppLifecycleListener _lifecycle;
 
@@ -226,6 +287,24 @@ class AssistantChatListState extends State<AssistantChatList> {
     _pinGeneration++;
     _pinning = false;
     _following.value = false;
+  }
+
+  /// [itemContext] 那一条是不是落在中心线**下方**（正向组）。
+  ///
+  /// 正向组是往下长的：长高只把它下面的内容顶远，视口里已有的东西一动不动，
+  /// 所以不需要（也不该）补偿。负向组才是往上长、需要把视口跟着推。
+  ///
+  /// 不走 id 而是问渲染树：中心那个 sliver 是不是自己的祖先。这样思考块不必
+  /// 知道自己属于哪条消息，中间那两层气泡组件也不用替它传。
+  bool isInForwardGroup(BuildContext itemContext) {
+    final center = _centerKey.currentContext?.findRenderObject();
+    if (center == null) return false;
+    RenderObject? node = itemContext.findRenderObject();
+    while (node != null) {
+      if (identical(node, center)) return true;
+      node = node.parent;
+    }
+    return false;
   }
 
   /// 按当前真实位置重新判断跟随状态。
@@ -376,7 +455,7 @@ class AssistantChatListState extends State<AssistantChatList> {
                 onNotification: _onScrollNotification,
                 child: CustomScrollView(
                   controller: widget.scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
+                  physics: _physics,
                   // 中心线摆在视口底部，最新一条的下边缘就落在那里 —— 开局即底部。
                   center: _centerKey,
                   anchor: 1,

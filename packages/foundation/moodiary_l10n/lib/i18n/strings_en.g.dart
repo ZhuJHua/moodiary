@@ -364,6 +364,7 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get modelListAdd => 'Add manually';
 	@override String get modelListEmpty => 'No models available yet';
 	@override String get modelDeprecated => 'Retired';
+	@override String get composerFullscreen => 'Full-screen editor';
 }
 
 // Path: common

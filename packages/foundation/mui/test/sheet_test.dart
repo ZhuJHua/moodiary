@@ -518,6 +518,66 @@ void main() {
       expect(find.text('Bucket 不能为空'), findsOneWidget);
     });
 
+    testWidgets('expands 撑满父级高度，且从顶部起排', (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        fieldHost(
+          SizedBox(
+            height: 300,
+            child: MField(
+              controller: controller,
+              maxLines: null,
+              expands: true,
+              variant: MFieldVariant.plain,
+              showClear: false,
+            ),
+          ),
+        ),
+      );
+
+      final field = tester.widget<TextField>(find.byType(TextField));
+      // TextField 的硬约定：expands 要求 maxLines 与 minLines 同时为 null。
+      expect(field.expands, isTrue);
+      expect(field.maxLines, isNull);
+      expect(field.minLines, isNull);
+      expect(field.textAlignVertical, TextAlignVertical.top);
+      expect(tester.getSize(find.byType(TextField)).height, 300);
+    });
+
+    testWidgets('maxLines: null 不限行数但不撑满', (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        fieldHost(MField(controller: controller, maxLines: null)),
+      );
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.maxLines, isNull);
+      expect(field.expands, isFalse);
+      expect(field.minLines, 1);
+    });
+
+    testWidgets('密码框即使开了 expands 也不多行', (tester) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        fieldHost(
+          SizedBox(
+            height: 200,
+            child: MField(
+              controller: controller,
+              maxLines: null,
+              expands: true,
+              obscureText: true,
+            ),
+          ),
+        ),
+      );
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.expands, isFalse);
+      expect(field.maxLines, 1);
+    });
+
     testWidgets('禁用时尾部槽位一并消失', (tester) async {
       final controller = TextEditingController(text: 'moodiary');
       addTearDown(controller.dispose);

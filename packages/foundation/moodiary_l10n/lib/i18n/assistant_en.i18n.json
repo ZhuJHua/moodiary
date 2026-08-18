@@ -152,5 +152,6 @@
   "modelListUpdate": "Update list",
   "modelListAdd": "Add manually",
   "modelListEmpty": "No models available yet",
-  "modelDeprecated": "Retired"
+  "modelDeprecated": "Retired",
+  "composerFullscreen": "Full-screen editor"
 }
