@@ -642,8 +642,8 @@ class Translations$assistant$zh {
 	/// zh: '读取日记全文'
 	String get toolGetTitle => '读取日记全文';
 
-	/// zh: '按 id 读取某篇日记的完整内容。'
-	String get toolGetDes => '按 id 读取某篇日记的完整内容。';
+	/// zh: '按 id 读取日记的完整内容，可一次读多篇。'
+	String get toolGetDes => '按 id 读取日记的完整内容，可一次读多篇。';
 
 	/// zh: '日记概览'
 	String get toolOverviewTitle => '日记概览';
@@ -660,14 +660,14 @@ class Translations$assistant$zh {
 	/// zh: '修改日记'
 	String get toolUpdateTitle => '修改日记';
 
-	/// zh: '按你的要求修改某篇日记的标题、正文、心情或归类。'
-	String get toolUpdateDes => '按你的要求修改某篇日记的标题、正文、心情或归类。';
+	/// zh: '按你的要求修改日记的标题、正文、心情或归类，可一次改多篇。'
+	String get toolUpdateDes => '按你的要求修改日记的标题、正文、心情或归类，可一次改多篇。';
 
 	/// zh: '删除日记'
 	String get toolDeleteTitle => '删除日记';
 
-	/// zh: '把指定日记移入回收站（可在回收站恢复）。'
-	String get toolDeleteDes => '把指定日记移入回收站（可在回收站恢复）。';
+	/// zh: '把指定日记移入回收站（可在回收站恢复），可一次删多篇。'
+	String get toolDeleteDes => '把指定日记移入回收站（可在回收站恢复），可一次删多篇。';
 
 	/// zh: '查看分类'
 	String get toolListCategoriesTitle => '查看分类';
@@ -678,20 +678,20 @@ class Translations$assistant$zh {
 	/// zh: '创建分类'
 	String get toolCreateCategoryTitle => '创建分类';
 
-	/// zh: '新建一个日记分类。'
-	String get toolCreateCategoryDes => '新建一个日记分类。';
+	/// zh: '新建日记分类。'
+	String get toolCreateCategoryDes => '新建日记分类。';
 
 	/// zh: '重命名分类'
 	String get toolUpdateCategoryTitle => '重命名分类';
 
-	/// zh: '修改某个分类的名称。'
-	String get toolUpdateCategoryDes => '修改某个分类的名称。';
+	/// zh: '修改分类的名称。'
+	String get toolUpdateCategoryDes => '修改分类的名称。';
 
 	/// zh: '删除分类'
 	String get toolDeleteCategoryTitle => '删除分类';
 
-	/// zh: '删除一个分类（仅当其下没有日记时）。'
-	String get toolDeleteCategoryDes => '删除一个分类（仅当其下没有日记时）。';
+	/// zh: '删除分类（仅当其下没有日记时）。'
+	String get toolDeleteCategoryDes => '删除分类（仅当其下没有日记时）。';
 
 	/// zh: '查看记忆'
 	String get toolListMemoriesTitle => '查看记忆';
@@ -702,20 +702,20 @@ class Translations$assistant$zh {
 	/// zh: '记住事实'
 	String get toolRememberTitle => '记住事实';
 
-	/// zh: '把关于你的一条长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。'
-	String get toolRememberDes => '把关于你的一条长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。';
+	/// zh: '把关于你的长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。'
+	String get toolRememberDes => '把关于你的长期事实（稳定偏好 / 反复出现的主题 / 持续目标）保存下来，供日后对话记起。';
 
 	/// zh: '更新记忆'
 	String get toolUpdateMemoryTitle => '更新记忆';
 
-	/// zh: '修改某条已保存记忆的内容。'
-	String get toolUpdateMemoryDes => '修改某条已保存记忆的内容。';
+	/// zh: '修改已保存记忆的内容。'
+	String get toolUpdateMemoryDes => '修改已保存记忆的内容。';
 
 	/// zh: '删除记忆'
 	String get toolForgetTitle => '删除记忆';
 
-	/// zh: '删除某条已保存的记忆。'
-	String get toolForgetDes => '删除某条已保存的记忆。';
+	/// zh: '删除已保存的记忆。'
+	String get toolForgetDes => '删除已保存的记忆。';
 
 	/// zh: '已折叠较早的消息以节省上下文'
 	String get compactionNotice => '已折叠较早的消息以节省上下文';
@@ -959,6 +959,15 @@ class Translations$assistant$zh {
 
 	/// zh: '已移入回收站'
 	String get toolTrashed => '已移入回收站';
+
+	/// zh: '{count} 篇已移入回收站'
+	String toolTrashedCount({required Object count}) => '${count} 篇已移入回收站';
+
+	/// zh: '{count} 篇'
+	String toolBatchDiaries({required Object count}) => '${count} 篇';
+
+	/// zh: '{count} 项'
+	String toolBatchItems({required Object count}) => '${count} 项';
 
 	/// zh: '已删除'
 	String get toolDeleted => '已删除';

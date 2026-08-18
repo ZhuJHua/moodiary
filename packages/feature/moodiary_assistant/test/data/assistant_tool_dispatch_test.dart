@@ -71,6 +71,21 @@ void main() {
       expect(line, '47 篇 · 搬家 · 2026-08-11 – 2026-08-17');
     });
 
+    test('列举类按 id= 行数数，空列表说无结果', () {
+      expect(
+        specOf(AssistantTool.listCategories).summaryOf(
+          const {},
+          'id=a name=旅行\nid=b name=工作',
+        ),
+        '2 项',
+      );
+      expect(
+        specOf(AssistantTool.listCategories)
+            .summaryOf(const {}, 'No categories yet.'),
+        '无结果',
+      );
+    });
+
     test('查询无结果', () {
       final line = specOf(AssistantTool.queryDiaries)
           .summaryOf(const {}, 'No diaries yet.');
@@ -81,6 +96,46 @@ void main() {
       final line = specOf(AssistantTool.getDiary)
           .summaryOf(const {'ids': ['a', 'b', 'c']}, 'id=a …');
       expect(line, '3 篇全文');
+    });
+
+    test('批量：只报条数，日记用「篇」、其余用「项」', () {
+      expect(
+        specOf(AssistantTool.createDiary).summaryOf(
+          const {
+            'items': [
+              {'title': 'a', 'content': 'x'},
+              {'title': 'b', 'content': 'y'},
+            ],
+          },
+          'Created …',
+        ),
+        '2 篇',
+      );
+      expect(
+        specOf(AssistantTool.rememberFact).summaryOf(
+          const {
+            'items': [
+              {'text': 'a'},
+              {'text': 'b'},
+              {'text': 'c'},
+            ],
+          },
+          'Remembered …',
+        ),
+        '3 项',
+      );
+    });
+
+    test('批量删除说清楚去了哪，不是「已删除」', () {
+      expect(
+        specOf(AssistantTool.deleteDiary).summaryOf(
+          const {
+            'ids': ['a', 'b', 'c'],
+          },
+          'Moved …',
+        ),
+        '3 篇已移入回收站',
+      );
     });
 
     test('写入类说的是动了什么，不是「已创建」', () {
@@ -99,6 +154,154 @@ void main() {
       final line = specOf(AssistantTool.deleteDiary)
           .summaryOf(const {}, 'Failed: no diary id given.');
       expect(line, '未成功');
+    });
+  });
+
+  group('批量执行', () {
+    Future<String> Function(Map<String, dynamic>) each(
+      Map<String, String> table,
+    ) => (item) async {
+      final id = item['id'] as String? ?? '';
+      final hit = table[id];
+      return hit ?? 'Failed: no row with id=$id.';
+    };
+
+    test('ids 数组逐条执行，一行一条', () async {
+      final out = await AssistantToolRegistry.runBatch(
+        const {
+          'ids': ['a', 'b'],
+        },
+        each: each({'a': 'did a.', 'b': 'did b.'}),
+      );
+      expect(out, 'did a.\ndid b.');
+    });
+
+    test('扁平的单条写法照收——模型经常漏掉数组外壳', () async {
+      final out = await AssistantToolRegistry.runBatch(
+        const {'id': 'a'},
+        each: each({'a': 'did a.'}),
+      );
+      expect(out, 'did a.');
+    });
+
+    test('部分失败：成功的那些必须留在结果里，整体不算失败', () async {
+      final out = await AssistantToolRegistry.runBatch(
+        const {
+          'ids': ['a', 'zzz'],
+        },
+        each: each({'a': 'did a.'}),
+      );
+      expect(out.startsWith('Failed:'), isFalse);
+      expect(out, contains('did a.'));
+      expect(out, contains('no row with id=zzz'));
+    });
+
+    test('一条都没成才算失败，且前缀只出现一次', () async {
+      final out = await AssistantToolRegistry.runBatch(
+        const {
+          'ids': ['x', 'y'],
+        },
+        each: each(const {}),
+      );
+      expect(out.startsWith('Failed:'), isTrue);
+      expect('Failed:'.allMatches(out).length, 1);
+      expect(out, contains('id=x'));
+      expect(out, contains('id=y'));
+    });
+
+    test('超出上限的不执行，并且明说还有剩', () async {
+      var ran = 0;
+      final out = await AssistantToolRegistry.runBatch(
+        {
+          'ids': [for (var i = 0; i < 5; i++) 'id$i'],
+        },
+        cap: 2,
+        each: (item) async {
+          ran++;
+          return 'did ${item['id']}.';
+        },
+      );
+      expect(ran, 2);
+      expect(out, contains('Only the first 2'));
+    });
+
+    test('单项抛错只坏这一项，已经做完的必须留在结果里', () async {
+      final ran = <String>[];
+      final out = await AssistantToolRegistry.runBatch(
+        const {
+          'ids': ['a', 'boom', 'c'],
+        },
+        each: (item) async {
+          final id = item['id'] as String;
+          if (id == 'boom') throw StateError('kaboom');
+          ran.add(id);
+          return 'did $id.';
+        },
+      );
+      // 抛出去的话，a 已经落库却会被报成整批失败，模型照提示词重跑 → 写重复数据。
+      expect(ran, ['a', 'c']);
+      expect(out.startsWith('Failed:'), isFalse);
+      expect(out, contains('did a.'));
+      expect(out, contains('did c.'));
+      expect(out, contains('id=boom'));
+      expect(out, contains('kaboom'));
+    });
+
+    test('全失败时也要说还有没试过的', () async {
+      final out = await AssistantToolRegistry.runBatch(
+        {
+          'ids': [for (var i = 0; i < 5; i++) 'id$i'],
+        },
+        cap: 2,
+        each: (item) async => 'Failed: no row with id=${item['id']}.',
+      );
+      expect(out.startsWith('Failed:'), isTrue);
+      expect(out, contains('Only the first 2'));
+    });
+
+    test('ids 之外的顶层入参并进每一项——「把这几篇都归到某类」', () async {
+      final seen = <Map<String, dynamic>>[];
+      await AssistantToolRegistry.runBatch(
+        const {
+          'ids': ['a', 'b'],
+          'categoryId': 'travel',
+        },
+        each: (item) async {
+          seen.add(item);
+          return 'ok';
+        },
+      );
+      expect(seen, [
+        {'id': 'a', 'categoryId': 'travel'},
+        {'id': 'b', 'categoryId': 'travel'},
+      ]);
+    });
+
+    test('items 给成裸对象也认', () async {
+      final out = await AssistantToolRegistry.runBatch(
+        const {
+          'items': {'id': 'a'},
+        },
+        each: (item) async => 'did ${item['id']}.',
+      );
+      expect(out, 'did a.');
+    });
+
+    test('items 里带内容的形状原样传给每一项', () async {
+      final seen = <String>[];
+      await AssistantToolRegistry.runBatch(
+        const {
+          'items': [
+            {'id': 'a', 'name': '旅行'},
+            {'id': 'b', 'name': '工作'},
+          ],
+        },
+        each: (item) async {
+          seen.add('${item['id']}:${item['name']}');
+          return 'ok';
+        },
+      );
+      expect(seen, ['a:旅行', 'b:工作']);
     });
   });
 

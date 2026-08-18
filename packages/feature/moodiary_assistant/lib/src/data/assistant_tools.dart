@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
@@ -63,6 +64,12 @@ abstract final class AssistantToolRegistry {
   /// getDiary 一次最多读几篇。再多就该先用 queryDiaries 收窄。
   static const _maxBatchRead = 10;
 
+  /// 一次能写多少。对齐 [_maxQueryLimit]：目标 id 只能来自 queryDiaries /
+  /// listCategories / listMemories，而查询一次最多给出这么多条，模型手上本就不会
+  /// 有更长的合法列表。超出的不做，并在结果里说明 —— 写入有副作用，宁可让它再调
+  /// 一次，也不能让它以为做完了。
+  static const _maxBatchWrite = _maxQueryLimit;
+
   /// 工具定义**一律英文**：读者是模型，不是用户。跨模型的指令服从度在英文上更稳，
   /// 同样的意思也更省 token（这些描述每一轮都要重发）。
   ///
@@ -125,14 +132,14 @@ abstract final class AssistantToolRegistry {
       description:
           'Read the full text of diaries by id (queryDiaries returns excerpts only). '
           'Pass every id you need in one call — never call this once per entry. '
-          'Max 10 per call.',
+          'Max $_maxBatchRead per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
           'ids': {
             'type': 'array',
             'items': {'type': 'string'},
-            'description': 'Diary ids from queryDiaries. Max 10.',
+            'description': 'Diary ids from queryDiaries. Max $_maxBatchRead.',
           },
         },
         'required': ['ids'],
@@ -153,26 +160,39 @@ abstract final class AssistantToolRegistry {
     AssistantToolSpec(
       tool: .createDiary,
       description:
-          'Save content as a new diary. Call this when the user asks you to write '
-          'one down or to keep something as an entry. The body is Markdown.',
+          'Save content as new diaries. Call this when the user asks you to '
+          'write something down or to keep it as an entry. Bodies are Markdown.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'title': {'type': 'string', 'description': 'Optional title.'},
-          'content': {'type': 'string', 'description': 'Body, Markdown.'},
-          'mood': {
-            'type': 'number',
+          'items': {
+            'type': 'array',
             'description':
-                '0.00 (low) to 1.00 (high). Omit unless the user conveyed a mood.',
-            'minimum': 0,
-            'maximum': 1,
-          },
-          'categoryId': {
-            'type': 'string',
-            'description': 'Optional category id from listCategories.',
+                'One object per diary. Pass them all in one call — never call '
+                'this once per entry. Max $_maxBatchWrite per call.',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'title': {'type': 'string', 'description': 'Optional title.'},
+                'content': {'type': 'string', 'description': 'Body, Markdown.'},
+                'mood': {
+                  'type': 'number',
+                  'description':
+                      '0.00 (low) to 1.00 (high). Omit unless the user '
+                      'conveyed a mood.',
+                  'minimum': 0,
+                  'maximum': 1,
+                },
+                'categoryId': {
+                  'type': 'string',
+                  'description': 'Optional category id from listCategories.',
+                },
+              },
+              'required': ['content'],
+            },
           },
         },
-        'required': ['content'],
+        'required': ['items'],
       },
       run: _createDiary,
       summarize: _summarizeWrite,
@@ -180,23 +200,44 @@ abstract final class AssistantToolRegistry {
     AssistantToolSpec(
       tool: .updateDiary,
       description:
-          'Edit one diary by id. Only the fields you pass change; the rest are left '
-          'alone. Get the id from queryDiaries first.',
+          'Edit diaries by id. Within an item, only the fields you pass change; '
+          'the rest are left alone. Pass every edit in one call — never call '
+          'this once per entry. Get the ids from queryDiaries first.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': 'Diary id from queryDiaries.'},
-          'title': {'type': 'string', 'description': 'New title.'},
-          'content': {'type': 'string', 'description': 'New body, Markdown.'},
-          'mood': {
-            'type': 'number',
-            'description': 'New mood, 0.00 to 1.00.',
-            'minimum': 0,
-            'maximum': 1,
+          'items': {
+            'type': 'array',
+            'description':
+                'One object per diary to edit. Max $_maxBatchWrite per call.',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'type': 'string',
+                  'description': 'Diary id from queryDiaries.',
+                },
+                'title': {'type': 'string', 'description': 'New title.'},
+                'content': {
+                  'type': 'string',
+                  'description': 'New body, Markdown.',
+                },
+                'mood': {
+                  'type': 'number',
+                  'description': 'New mood, 0.00 to 1.00.',
+                  'minimum': 0,
+                  'maximum': 1,
+                },
+                'categoryId': {
+                  'type': 'string',
+                  'description': 'New category id.',
+                },
+              },
+              'required': ['id'],
+            },
           },
-          'categoryId': {'type': 'string', 'description': 'New category id.'},
         },
-        'required': ['id'],
+        'required': ['items'],
       },
       run: _updateDiary,
       summarize: _summarizeWrite,
@@ -204,17 +245,22 @@ abstract final class AssistantToolRegistry {
     AssistantToolSpec(
       tool: .deleteDiary,
       description:
-          'Move a diary to the recycle bin by id, where the user can restore it. '
-          'Get the id from queryDiaries first.',
+          'Move diaries to the recycle bin by id, where the user can restore '
+          'them. Pass every id in one call — never call this once per entry. '
+          'Get the ids from queryDiaries first. Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': 'Diary id from queryDiaries.'},
+          'ids': {
+            'type': 'array',
+            'items': {'type': 'string'},
+            'description': 'Diary ids from queryDiaries. Max $_maxBatchWrite.',
+          },
         },
-        'required': ['id'],
+        'required': ['ids'],
       },
       run: _deleteDiary,
-      summarize: _summarizeWrite,
+      summarize: _summarizeDelete,
     ),
     AssistantToolSpec(
       tool: .listCategories,
@@ -227,30 +273,54 @@ abstract final class AssistantToolRegistry {
     ),
     AssistantToolSpec(
       tool: .createCategory,
-      description: 'Add a diary category.',
+      description:
+          'Add diary categories. Pass every name in one call. '
+          'Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'name': {'type': 'string', 'description': 'Category name.'},
+          'items': {
+            'type': 'array',
+            'description': 'One object per category to add.',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'name': {'type': 'string', 'description': 'Category name.'},
+              },
+              'required': ['name'],
+            },
+          },
         },
-        'required': ['name'],
+        'required': ['items'],
       },
       run: _createCategory,
       summarize: _summarizeWrite,
     ),
     AssistantToolSpec(
       tool: .updateCategory,
-      description: 'Rename a category by id (from listCategories).',
+      description:
+          'Rename categories by id (from listCategories). Pass every rename in '
+          'one call. Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {
-            'type': 'string',
-            'description': 'Category id from listCategories.',
+          'items': {
+            'type': 'array',
+            'description': 'One object per category to rename.',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'type': 'string',
+                  'description': 'Category id from listCategories.',
+                },
+                'name': {'type': 'string', 'description': 'New name.'},
+              },
+              'required': ['id', 'name'],
+            },
           },
-          'name': {'type': 'string', 'description': 'New name.'},
         },
-        'required': ['id', 'name'],
+        'required': ['items'],
       },
       run: _updateCategory,
       summarize: _summarizeWrite,
@@ -258,17 +328,19 @@ abstract final class AssistantToolRegistry {
     AssistantToolSpec(
       tool: .deleteCategory,
       description:
-          'Delete a category by id. Only succeeds while it holds no diaries — '
-          'move or refile them first.',
+          'Delete categories by id. A category only goes while it holds no '
+          'diaries — refile them first. Pass every id in one call. '
+          'Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {
-            'type': 'string',
-            'description': 'Category id from listCategories.',
+          'ids': {
+            'type': 'array',
+            'items': {'type': 'string'},
+            'description': 'Category ids from listCategories.',
           },
         },
-        'required': ['id'],
+        'required': ['ids'],
       },
       run: _deleteCategory,
       summarize: _summarizeWrite,
@@ -286,42 +358,71 @@ abstract final class AssistantToolRegistry {
     AssistantToolSpec(
       tool: .rememberFact,
       description:
-          'Save one durable fact about the user — a lasting preference, a recurring '
-          'theme, an ongoing goal. Not passing details, not one-off events, and '
-          'never anything they asked you to keep private.',
+          'Save durable facts about the user — lasting preferences, recurring '
+          'themes, ongoing goals. Not passing details, not one-off events, and '
+          'never anything they asked you to keep private. Pass every fact in '
+          'one call. Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'category': {
-            'type': 'string',
-            'enum': ['preference', 'theme', 'goal', 'fact'],
-            'description': 'Which kind of fact this is.',
-          },
-          'text': {
-            'type': 'string',
-            'description': 'The fact, stated in one plain sentence.',
+          'items': {
+            'type': 'array',
+            'description': 'One object per fact to save.',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'category': {
+                  'type': 'string',
+                  'enum': ['preference', 'theme', 'goal', 'fact'],
+                  'description': 'Which kind of fact this is.',
+                },
+                'text': {
+                  'type': 'string',
+                  'description': 'The fact, stated in one plain sentence.',
+                },
+              },
+              'required': ['category', 'text'],
+            },
           },
         },
-        'required': ['category', 'text'],
+        'required': ['items'],
       },
       run: _rememberFact,
       summarize: _summarizeWrite,
     ),
     AssistantToolSpec(
       tool: .updateMemory,
-      description: 'Revise a saved fact by id (from listMemories).',
+      description:
+          'Revise saved facts by id (from listMemories). Pass every revision in '
+          'one call. Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': 'Memory id from listMemories.'},
-          'text': {'type': 'string', 'description': 'The revised fact.'},
-          'category': {
-            'type': 'string',
-            'enum': ['preference', 'theme', 'goal', 'fact'],
-            'description': 'New kind, if it changed.',
+          'items': {
+            'type': 'array',
+            'description': 'One object per fact to revise.',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'type': 'string',
+                  'description': 'Memory id from listMemories.',
+                },
+                'text': {
+                  'type': 'string',
+                  'description': 'The revised fact.',
+                },
+                'category': {
+                  'type': 'string',
+                  'enum': ['preference', 'theme', 'goal', 'fact'],
+                  'description': 'New kind, if it changed.',
+                },
+              },
+              'required': ['id', 'text'],
+            },
           },
         },
-        'required': ['id', 'text'],
+        'required': ['items'],
       },
       run: _updateMemory,
       summarize: _summarizeWrite,
@@ -329,13 +430,19 @@ abstract final class AssistantToolRegistry {
     AssistantToolSpec(
       tool: .forgetFact,
       description:
-          'Delete a saved fact by id (from listMemories). This is permanent.',
+          'Delete saved facts by id (from listMemories). This is permanent — '
+          'there is no recycle bin for memories. Pass every id in one call. '
+          'Max $_maxBatchWrite per call.',
       jsonSchema: {
         'type': 'object',
         'properties': {
-          'id': {'type': 'string', 'description': 'Memory id from listMemories.'},
+          'ids': {
+            'type': 'array',
+            'items': {'type': 'string'},
+            'description': 'Memory ids from listMemories.',
+          },
         },
-        'required': ['id'],
+        'required': ['ids'],
       },
       run: _forgetFact,
       summarize: _summarizeWrite,
@@ -427,9 +534,12 @@ abstract final class AssistantToolRegistry {
     Map<String, dynamic> _,
     String output,
   ) {
-    // 结果是「首行说明 + 每项一行」，减掉首行就是项数。
-    final lines = output.split('\n').where((e) => e.startsWith('- ')).length;
-    return l10n.assistant.toolListed(count: lines);
+    // 数 `id=` 开头的行 —— 两个列举工具都是一项一行、以 id 起头。别数「非空行」：
+    // 空列表回的是一句 'No categories yet.'，那也是一行。
+    final count = output.split('\n').where((e) => e.startsWith('id=')).length;
+    return count == 0
+        ? l10n.assistant.toolNoMatch
+        : l10n.assistant.toolListed(count: count);
   }
 
   /// 写入类共用。摘要说的是**动了什么**，不是「已创建」—— 提示条前面那个类型词
@@ -439,19 +549,45 @@ abstract final class AssistantToolRegistry {
   ///
   /// 这里刻意逐处写全 `l10n.assistant.xxx`，不存局部别名：slang 的死键扫描是按
   /// `l10n.` 前缀做子串匹配的，起个别名它就看不见，这几个键会被误报成未使用。
+  /// 唯一一个不套用批量计数的写入工具：「已移入回收站」说的是**东西去了哪**，
+  /// 而提示条前面的类型词（「删除日记」）恰恰不带这个信息，删掉就成了「已删除」。
+  ///
+  /// 数的是**请求的条数**而不是实际移动的条数：调用结束后这几篇确实都在回收站里
+  /// （本来就在里面的那几篇也算），说的是结果状态，不是差量。
+  static String _summarizeDelete(
+    AssistantTool _,
+    Map<String, dynamic> input,
+    String _,
+  ) {
+    final count = _parseItems(input).length;
+    return count <= 1
+        ? l10n.assistant.toolTrashed
+        : l10n.assistant.toolTrashedCount(count: count);
+  }
+
   static String _summarizeWrite(
     AssistantTool tool,
     Map<String, dynamic> input,
     String output,
   ) {
+    final items = _parseItems(input);
+    // 多条时只报条数：逐条标题拼起来必然被一行的宽度截断，截断后反而看不出有几条。
+    // 动词由提示条前面的类型词负责（「创建日记 · 3 篇」），这里不重复。
+    if (items.length > 1) {
+      return switch (tool) {
+        .createDiary || .updateDiary => l10n.assistant.toolBatchDiaries(
+          count: items.length,
+        ),
+        _ => l10n.assistant.toolBatchItems(count: items.length),
+      };
+    }
+    final item = items.isEmpty ? const <String, dynamic>{} : items.first;
     return switch (tool) {
-      .createDiary =>
-        _trimToNull(input['title']) ?? l10n.assistant.toolUntitled,
+      .createDiary => _trimToNull(item['title']) ?? l10n.assistant.toolUntitled,
       .createCategory || .updateCategory =>
-        _trimToNull(input['name']) ?? l10n.assistant.toolDone,
+        _trimToNull(item['name']) ?? l10n.assistant.toolDone,
       .rememberFact || .updateMemory =>
-        _trimToNull(input['text']) ?? l10n.assistant.toolDone,
-      .deleteDiary => l10n.assistant.toolTrashed,
+        _trimToNull(item['text']) ?? l10n.assistant.toolDone,
       .deleteCategory || .forgetFact => l10n.assistant.toolDeleted,
       _ => l10n.assistant.toolUpdated,
     };
@@ -582,6 +718,100 @@ abstract final class AssistantToolRegistry {
   }
 
   /// 兼容单个 id 与 id 数组两种传法 —— 模型偶尔会退回旧形状。
+  /// 批量入参的两种形状：`ids: [...]`（只指目标）与 `items: [{...}]`（带内容）。
+  /// 除了这两种，还收两种**没写进 schema 的变体**，因为模型常这么写，而为一次
+  /// 形状偏差退回去重试一轮不值得：
+  ///
+  /// - 扁平的单条（老形状），`{id: 'a', name: 'x'}`；
+  /// - `items` 给成裸对象而不是数组。
+  ///
+  /// `ids` 那条路会把**其余顶层字段并进每一项**。少了这一步，
+  /// `{ids: [...], categoryId: 'x'}`（「把这几篇都归到某类」的自然写法）会退化成
+  /// 一批只有 id 的空补丁：一个字段都没改，却逐条回「Updated」，模型无从看出。
+  static List<Map<String, dynamic>> _parseItems(Map<String, dynamic> input) {
+    final raw = input['items'];
+    if (raw is List) {
+      return [
+        for (final e in raw)
+          if (e is Map) e.cast<String, dynamic>(),
+      ];
+    }
+    if (raw is Map) return [raw.cast<String, dynamic>()];
+    final ids = _parseIds(input['ids']);
+    if (ids.isNotEmpty) {
+      final shared = {...input}..remove('ids');
+      return [
+        for (final id in ids) {...shared, 'id': id},
+      ];
+    }
+    return [input];
+  }
+
+  /// 批量执行的公共骨架：逐项跑 [each]，按 [_failurePrefix] 分拣，再交给
+  /// [_batchResult] 收尾。**串行**执行——两条同时改同一篇日记会互相覆盖，
+  /// 而批量里出现重复 id 并不稀奇。
+  @visibleForTesting
+  static Future<String> runBatch(
+    Map<String, dynamic> input, {
+    required Future<String> Function(Map<String, dynamic> item) each,
+    int cap = _maxBatchWrite,
+  }) async {
+    final items = _parseItems(input);
+    if (items.isEmpty) return '$_failurePrefix no items given.';
+    final done = <String>[];
+    final failed = <String>[];
+    var index = 0;
+    for (final item in items.take(cap)) {
+      index++;
+      String line;
+      try {
+        line = await each(item);
+      } catch (e) {
+        // **抛出去就等于把已经落库的那几条从结果里抹掉**：外层只有整次调用的
+        // catch，模型会读到「整批失败」，照系统提示词重跑一遍 —— 创建类因此写出
+        // 重复数据。降级成这一条的失败行，其余的成败照常回报。
+        final id = item['id'];
+        line = '$_failurePrefix ${id == null ? 'item $index' : 'id=$id'} '
+            'threw $e.';
+      }
+      (line.startsWith(_failurePrefix) ? failed : done).add(line);
+    }
+    return _batchResult(
+      done: done,
+      failed: failed,
+      requested: items.length,
+      cap: cap,
+    );
+  }
+
+  /// 一条都没成才算整体失败。**部分成功必须把已经生效的那些说清楚**，否则模型
+  /// 会把整次调用当作没发生，转头重试已经做过的事。
+  static String _batchResult({
+    required List<String> done,
+    required List<String> failed,
+    required int requested,
+    required int cap,
+  }) {
+    // 超出上限的那截**两条分支都要说**：全失败时同样有没试过的尾巴，不说的话
+    // 模型会把「这 20 条都不行」当成整件事的结论，剩下的再也不会被碰。
+    final tail = requested > cap
+        ? '\n(Only the first $cap were processed; call again for the rest.)'
+        : '';
+    // 整体失败时前缀只加一次：逐条的 'Failed: ' 去掉，免得叠成一串。
+    if (done.isEmpty) {
+      final reasons = failed.map(_stripFailure).where((e) => e.isNotEmpty);
+      return '$_failurePrefix ${reasons.join(' ')}'.trim() + tail;
+    }
+    final buffer = StringBuffer(done.join('\n'));
+    if (failed.isNotEmpty) buffer.write('\n${failed.join('\n')}');
+    buffer.write(tail);
+    return buffer.toString();
+  }
+
+  static String _stripFailure(String line) => line.startsWith(_failurePrefix)
+      ? line.substring(_failurePrefix.length).trim()
+      : line;
+
   static List<String> _parseIds(Object? raw) {
     final out = <String>{};
     if (raw is String) {
@@ -650,7 +880,10 @@ abstract final class AssistantToolRegistry {
     return buffer.toString().trim();
   }
 
-  static Future<String> _createDiary(Map<String, dynamic> input) async {
+  static Future<String> _createDiary(Map<String, dynamic> input) =>
+      runBatch(input, each: _createOneDiary);
+
+  static Future<String> _createOneDiary(Map<String, dynamic> input) async {
     final title = (input['title'] as String?)?.trim() ?? '';
     final content = (input['content'] as String?)?.trim() ?? '';
     if (content.isEmpty) return 'Failed: the body cannot be empty.';
@@ -697,7 +930,10 @@ abstract final class AssistantToolRegistry {
     );
   }
 
-  static Future<String> _updateDiary(Map<String, dynamic> input) async {
+  static Future<String> _updateDiary(Map<String, dynamic> input) =>
+      runBatch(input, each: _updateOneDiary);
+
+  static Future<String> _updateOneDiary(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no diary id given.';
 
@@ -748,15 +984,17 @@ abstract final class AssistantToolRegistry {
     return 'Updated "$shown" (id=$id).';
   }
 
-  static Future<String> _deleteDiary(Map<String, dynamic> input) async {
+  static Future<String> _deleteDiary(Map<String, dynamic> input) =>
+      runBatch(input, each: _deleteOneDiary);
+
+  static Future<String> _deleteOneDiary(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no diary id given.';
 
     final repo = DiaryRepository.get();
     final existing = await repo.getDiaryByBusinessId(id);
-    if (existing == null) {
-      return 'Failed: no diary with id=$id.';
-    }
+    if (existing == null) return 'Failed: no diary with id=$id.';
+
     final title = existing.title.trim().isEmpty
         ? 'Untitled'
         : existing.title.trim();
@@ -770,6 +1008,8 @@ abstract final class AssistantToolRegistry {
     return 'Moved "$title" (id=$id) to the recycle bin.';
   }
 
+
+
   static Future<String> _listCategories(Map<String, dynamic> input) async {
     final cats = (await CategoryRepository.get().getAllCategories().run())
         .getOrElse((_) => const <Category>[]);
@@ -781,7 +1021,10 @@ abstract final class AssistantToolRegistry {
     return buffer.toString().trim();
   }
 
-  static Future<String> _createCategory(Map<String, dynamic> input) async {
+  static Future<String> _createCategory(Map<String, dynamic> input) =>
+      runBatch(input, each: _createOneCategory);
+
+  static Future<String> _createOneCategory(Map<String, dynamic> input) async {
     final name = (input['name'] as String?)?.trim() ?? '';
     if (name.isEmpty) return 'Failed: the category name cannot be empty.';
     final category = Category.create(categoryName: name);
@@ -790,7 +1033,10 @@ abstract final class AssistantToolRegistry {
     return ok ? 'Created category "$name", id=${category.id}.' : 'Failed: could not create the category.';
   }
 
-  static Future<String> _updateCategory(Map<String, dynamic> input) async {
+  static Future<String> _updateCategory(Map<String, dynamic> input) =>
+      runBatch(input, each: _updateOneCategory);
+
+  static Future<String> _updateOneCategory(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     final name = (input['name'] as String?)?.trim() ?? '';
     if (id.isEmpty || name.isEmpty) return 'Failed: category id and name are both required.';
@@ -808,7 +1054,10 @@ abstract final class AssistantToolRegistry {
     return ok ? 'Renamed the category to "$name" (id=$id).' : 'Failed: could not rename the category.';
   }
 
-  static Future<String> _deleteCategory(Map<String, dynamic> input) async {
+  static Future<String> _deleteCategory(Map<String, dynamic> input) =>
+      runBatch(input, each: _deleteOneCategory);
+
+  static Future<String> _deleteOneCategory(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no category id given.';
     final ok = (await CategoryRepository.get().deleteACategory(id).run())
@@ -830,7 +1079,10 @@ abstract final class AssistantToolRegistry {
     return buffer.toString().trim();
   }
 
-  static Future<String> _rememberFact(Map<String, dynamic> input) async {
+  static Future<String> _rememberFact(Map<String, dynamic> input) =>
+      runBatch(input, each: _rememberOneFact);
+
+  static Future<String> _rememberOneFact(Map<String, dynamic> input) async {
     final text = (input['text'] as String?)?.trim() ?? '';
     if (text.isEmpty) return 'Failed: the fact cannot be empty.';
     final rawCat = (input['category'] as String?)?.trim() ?? 'fact';
@@ -840,7 +1092,10 @@ abstract final class AssistantToolRegistry {
     return 'Remembered ($category): $text (id=${entry.id}).';
   }
 
-  static Future<String> _updateMemory(Map<String, dynamic> input) async {
+  static Future<String> _updateMemory(Map<String, dynamic> input) =>
+      runBatch(input, each: _updateOneMemory);
+
+  static Future<String> _updateOneMemory(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     final text = (input['text'] as String?)?.trim() ?? '';
     if (id.isEmpty || text.isEmpty) return 'Failed: memory id and text are both required.';
@@ -861,7 +1116,10 @@ abstract final class AssistantToolRegistry {
     return 'Updated the memory (id=$id): $text.';
   }
 
-  static Future<String> _forgetFact(Map<String, dynamic> input) async {
+  static Future<String> _forgetFact(Map<String, dynamic> input) =>
+      runBatch(input, each: _forgetOneFact);
+
+  static Future<String> _forgetOneFact(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no memory id given.';
     final ok = await MemoryRepository.get().delete(id);
