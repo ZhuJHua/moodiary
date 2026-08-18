@@ -525,8 +525,6 @@ class _Translations$diary$en extends Translations$diary$zh {
 	@override String get calendarTitle => 'Calendar';
 	@override String get calendarBackToToday => 'Today';
 	@override String get calendarEmptyDay => 'Nothing written that day';
-	@override String get calendarNoEntryYet => 'No entries yet';
-	@override String get calendarPickDay => 'Pick a day';
 }
 
 // Path: editor

@@ -136,7 +136,5 @@
   "autoSaved": "Autosaved",
   "calendarTitle": "Calendar",
   "calendarBackToToday": "Today",
-  "calendarEmptyDay": "Nothing written that day",
-  "calendarNoEntryYet": "No entries yet",
-  "calendarPickDay": "Pick a day"
+  "calendarEmptyDay": "Nothing written that day"
 }

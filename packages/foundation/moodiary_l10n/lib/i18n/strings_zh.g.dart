@@ -1408,12 +1408,6 @@ class Translations$diary$zh {
 
 	/// zh: '这天没有写'
 	String get calendarEmptyDay => '这天没有写';
-
-	/// zh: '还没有日记'
-	String get calendarNoEntryYet => '还没有日记';
-
-	/// zh: '选一天看看'
-	String get calendarPickDay => '选一天看看';
 }
 
 // Path: editor

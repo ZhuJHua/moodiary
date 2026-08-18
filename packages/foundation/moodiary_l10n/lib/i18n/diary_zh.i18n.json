@@ -135,7 +135,5 @@
   "autoSaved": "自动保存",
   "calendarTitle": "日历",
   "calendarBackToToday": "回到今天",
-  "calendarEmptyDay": "这天没有写",
-  "calendarNoEntryYet": "还没有日记",
-  "calendarPickDay": "选一天看看"
+  "calendarEmptyDay": "这天没有写"
 }
