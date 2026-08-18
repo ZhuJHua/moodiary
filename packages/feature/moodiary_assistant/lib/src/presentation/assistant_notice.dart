@@ -176,12 +176,16 @@ class _AssistantNoticeState extends State<AssistantNotice>
       children: [row, ?body],
     );
 
-    // 与下方（正文或下一条提示）之间的间距归组件自己管：它是通用件，不该指望
-    // 每个调用点自己补。**在水波之外**，免得点击高亮把这段留白也涂上。
+    // 这里**不要按压反馈**：提示条没有容器、也没有边界，水波会凭空涂出一块矩形，
+    // 比「点了没反应」更突兀。展开动画本身就是反馈。
+    //
+    // 与下方（正文或下一条提示）之间的间距归组件自己管：它是通用件，不该指望每个
+    // 调用点自己补。留白在点击区之外，免得点两条之间的缝也算点中。
     Widget wrapped = content;
     if (!measuring && (_expandable || widget.onTap != null)) {
-      wrapped = MInkWell(
-        borderRadius: .circular(8),
+      wrapped = GestureDetector(
+        // 行内有 Expanded 撑满，但上下那点 padding 不透明化就点不中。
+        behavior: .opaque,
         onTap: _expandable ? _toggle : widget.onTap,
         child: content,
       );
