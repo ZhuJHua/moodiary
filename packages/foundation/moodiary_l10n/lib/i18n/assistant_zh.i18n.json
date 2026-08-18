@@ -38,7 +38,7 @@
   "modelListFailed": "获取模型列表失败，可手动填写模型",
   "reasoningEffort": "思考强度",
   "reasoningOff": "不思考",
-  "thoughtFor": "已深度思考 {duration} 秒",
+  "thoughtFor": "已思考 {duration} 秒",
   "tool": "工具",
   "toolSectionNote": "助手会根据对话内容自动调用下列工具，无需你逐次确认。删除类操作请留意：日记会进回收站，记忆则是永久删除。",
   "toolQueryTitle": "查询日记",

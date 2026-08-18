@@ -624,8 +624,8 @@ class Translations$assistant$zh {
 	/// zh: '不思考'
 	String get reasoningOff => '不思考';
 
-	/// zh: '已深度思考 {duration} 秒'
-	String thoughtFor({required Object duration}) => '已深度思考 ${duration} 秒';
+	/// zh: '已思考 {duration} 秒'
+	String thoughtFor({required Object duration}) => '已思考 ${duration} 秒';
 
 	/// zh: '工具'
 	String get tool => '工具';
