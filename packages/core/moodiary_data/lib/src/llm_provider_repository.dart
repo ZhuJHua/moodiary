@@ -54,6 +54,20 @@ class LlmProviderRepository {
     _events.add(null);
   }
 
+  /// 按给定顺序重写全部 [LlmProvider.sortOrder]。整批一个事务、只发一次事件 ——
+  /// 逐条 upsert 会发 N 次刷新事件，列表在拖完的那一帧连闪 N 下。
+  Future<void> reorderProviders(List<String> orderedIds) async {
+    await _isar.writeAsync((isar) {
+      for (var i = 0; i < orderedIds.length; i++) {
+        final provider = isar.llmProviders.get(orderedIds[i]);
+        if (provider != null) {
+          isar.llmProviders.put(provider.copyWith(sortOrder: i));
+        }
+      }
+    });
+    _events.add(null);
+  }
+
   /// 追加到列表末尾时用的 sortOrder（当前最大值 + 1）。
   Future<int> nextSortOrder() async {
     final last = await _isar.llmProviders

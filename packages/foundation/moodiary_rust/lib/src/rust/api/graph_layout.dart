@@ -3,9 +3,9 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-
 import '../frb_generated.dart';
+
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// `edges` 为 `[src0,dst0,src1,dst1,...]` 密集下标对；`initial_positions` 为空则用
 /// 黄金角螺旋确定性播种。每帧向 `sink` 推 `[x0,y0,...]`，函数返回即沉降完成。

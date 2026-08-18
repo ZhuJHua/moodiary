@@ -4,6 +4,47 @@ import 'package:moodiary_models/moodiary_models.dart';
 
 enum AssistantRole { user, assistant }
 
+/// 思考控制的下发方式。与 Rust 的 `reasoning_mode` 一一对应。
+enum AssistantReasoningMode {
+  /// 不注入任何思考参数。
+  off('off'),
+
+  /// 下发档位（Anthropic 走 output_config.effort，OpenAI 走 reasoning_effort）。
+  effort('effort'),
+
+  /// 下发 token 预算（Anthropic 老模型的 thinking.budget_tokens）。
+  budget('budget');
+
+  final String id;
+
+  const AssistantReasoningMode(this.id);
+}
+
+/// 一轮请求的思考设置。选哪种由模型在 models.dev 上声明的 `reasoning_options` 决定，
+/// 不由我们猜 —— 新 Claude 只认 effort，老 Claude 只认 budget_tokens，猜错就是 400。
+class AssistantReasoning {
+  final AssistantReasoningMode mode;
+
+  /// [AssistantReasoningMode.effort] 时的档位值。
+  final String effort;
+
+  /// [AssistantReasoningMode.budget] 时的思考 token 预算。
+  final int budgetTokens;
+
+  const AssistantReasoning.off()
+    : mode = .off,
+      effort = '',
+      budgetTokens = 0;
+
+  const AssistantReasoning.effort(this.effort)
+    : mode = .effort,
+      budgetTokens = 0;
+
+  const AssistantReasoning.budget(this.budgetTokens)
+    : mode = .budget,
+      effort = '';
+}
+
 /// 流式事件类别：text=正文增量，reasoning=思考增量，tool=工具调用（[text] 为工具名），usage=token 用量。
 enum AssistantStreamKind { text, reasoning, tool, usage }
 
@@ -14,31 +55,49 @@ class AssistantStreamEvent {
   final int inputTokens;
   final int outputTokens;
 
+  /// 命中供应商缓存的输入 token（Anthropic 的 cache_read）。供应商不报时为 0。
+  final int cachedInputTokens;
+
+  /// 写入供应商缓存的输入 token（Anthropic 的 cache_creation）。
+  final int cacheWriteTokens;
+
   const AssistantStreamEvent(
     this.kind,
     this.text, {
     this.inputTokens = 0,
     this.outputTokens = 0,
+    this.cachedInputTokens = 0,
+    this.cacheWriteTokens = 0,
   });
 
   const AssistantStreamEvent.text(this.text)
     : kind = .text,
       inputTokens = 0,
-      outputTokens = 0;
+      outputTokens = 0,
+      cachedInputTokens = 0,
+      cacheWriteTokens = 0;
 
   const AssistantStreamEvent.reasoning(this.text)
     : kind = .reasoning,
       inputTokens = 0,
-      outputTokens = 0;
+      outputTokens = 0,
+      cachedInputTokens = 0,
+      cacheWriteTokens = 0;
 
   const AssistantStreamEvent.tool(this.text)
     : kind = .tool,
       inputTokens = 0,
-      outputTokens = 0;
+      outputTokens = 0,
+      cachedInputTokens = 0,
+      cacheWriteTokens = 0;
 
-  const AssistantStreamEvent.usage(this.inputTokens, this.outputTokens)
-    : kind = .usage,
-      text = '';
+  const AssistantStreamEvent.usage(
+    this.inputTokens,
+    this.outputTokens, {
+    this.cachedInputTokens = 0,
+    this.cacheWriteTokens = 0,
+  }) : kind = .usage,
+       text = '';
 }
 
 typedef ToolPermissionRequester = Future<bool> Function(AssistantTool tool);
@@ -85,8 +144,9 @@ class AssistantChatRequest {
 
   final List<AssistantMessage> history;
 
-  /// 是否开启思考（reasoning）模式。开启后按协议注入思考参数并回传思考增量。
-  final bool thinking;
+  /// 本轮的思考设置。协议差异（adaptive+effort / budget_tokens / reasoning_effort /
+  /// reasoning.summary）全部在 Rust 侧按 [type] 展开。
+  final AssistantReasoning reasoning;
 
   /// 是否给模型挂载工具。模型不支持工具调用时应为 false（否则可能被供应商拒）。
   final bool tools;
@@ -102,7 +162,7 @@ class AssistantChatRequest {
     this.volatilePrefix = '',
     required this.maxTokens,
     required this.history,
-    this.thinking = false,
+    this.reasoning = const AssistantReasoning.off(),
     this.tools = true,
     this.onToolPermission,
   });

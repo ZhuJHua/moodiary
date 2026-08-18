@@ -126,13 +126,13 @@ return usage(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  textDelta,TResult Function( String field0)?  reasoningDelta,TResult Function( String field0)?  toolCall,TResult Function( int inputTokens,  int outputTokens)?  usage,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String field0)?  textDelta,TResult Function( String field0)?  reasoningDelta,TResult Function( String field0)?  toolCall,TResult Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)?  usage,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta() when textDelta != null:
 return textDelta(_that.field0);case RigStreamEvent_ReasoningDelta() when reasoningDelta != null:
 return reasoningDelta(_that.field0);case RigStreamEvent_ToolCall() when toolCall != null:
 return toolCall(_that.field0);case RigStreamEvent_Usage() when usage != null:
-return usage(_that.inputTokens,_that.outputTokens);case _:
+return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);case _:
   return orElse();
 
 }
@@ -150,13 +150,13 @@ return usage(_that.inputTokens,_that.outputTokens);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  textDelta,required TResult Function( String field0)  reasoningDelta,required TResult Function( String field0)  toolCall,required TResult Function( int inputTokens,  int outputTokens)  usage,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String field0)  textDelta,required TResult Function( String field0)  reasoningDelta,required TResult Function( String field0)  toolCall,required TResult Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)  usage,}) {final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta():
 return textDelta(_that.field0);case RigStreamEvent_ReasoningDelta():
 return reasoningDelta(_that.field0);case RigStreamEvent_ToolCall():
 return toolCall(_that.field0);case RigStreamEvent_Usage():
-return usage(_that.inputTokens,_that.outputTokens);}
+return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -170,13 +170,13 @@ return usage(_that.inputTokens,_that.outputTokens);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  textDelta,TResult? Function( String field0)?  reasoningDelta,TResult? Function( String field0)?  toolCall,TResult? Function( int inputTokens,  int outputTokens)?  usage,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String field0)?  textDelta,TResult? Function( String field0)?  reasoningDelta,TResult? Function( String field0)?  toolCall,TResult? Function( int inputTokens,  int outputTokens,  int cachedInputTokens,  int cacheWriteTokens)?  usage,}) {final _that = this;
 switch (_that) {
 case RigStreamEvent_TextDelta() when textDelta != null:
 return textDelta(_that.field0);case RigStreamEvent_ReasoningDelta() when reasoningDelta != null:
 return reasoningDelta(_that.field0);case RigStreamEvent_ToolCall() when toolCall != null:
 return toolCall(_that.field0);case RigStreamEvent_Usage() when usage != null:
-return usage(_that.inputTokens,_that.outputTokens);case _:
+return usage(_that.inputTokens,_that.outputTokens,_that.cachedInputTokens,_that.cacheWriteTokens);case _:
   return null;
 
 }
@@ -386,11 +386,13 @@ as String,
 
 
 class RigStreamEvent_Usage extends RigStreamEvent {
-  const RigStreamEvent_Usage({required this.inputTokens, required this.outputTokens}): super._();
+  const RigStreamEvent_Usage({required this.inputTokens, required this.outputTokens, required this.cachedInputTokens, required this.cacheWriteTokens}): super._();
   
 
  final  int inputTokens;
  final  int outputTokens;
+ final  int cachedInputTokens;
+ final  int cacheWriteTokens;
 
 /// Create a copy of RigStreamEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -402,16 +404,16 @@ $RigStreamEvent_UsageCopyWith<RigStreamEvent_Usage> get copyWith => _$RigStreamE
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_Usage&&(identical(other.inputTokens, inputTokens) || other.inputTokens == inputTokens)&&(identical(other.outputTokens, outputTokens) || other.outputTokens == outputTokens));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RigStreamEvent_Usage&&(identical(other.inputTokens, inputTokens) || other.inputTokens == inputTokens)&&(identical(other.outputTokens, outputTokens) || other.outputTokens == outputTokens)&&(identical(other.cachedInputTokens, cachedInputTokens) || other.cachedInputTokens == cachedInputTokens)&&(identical(other.cacheWriteTokens, cacheWriteTokens) || other.cacheWriteTokens == cacheWriteTokens));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,inputTokens,outputTokens);
+int get hashCode => Object.hash(runtimeType,inputTokens,outputTokens,cachedInputTokens,cacheWriteTokens);
 
 @override
 String toString() {
-  return 'RigStreamEvent.usage(inputTokens: $inputTokens, outputTokens: $outputTokens)';
+  return 'RigStreamEvent.usage(inputTokens: $inputTokens, outputTokens: $outputTokens, cachedInputTokens: $cachedInputTokens, cacheWriteTokens: $cacheWriteTokens)';
 }
 
 
@@ -422,7 +424,7 @@ abstract mixin class $RigStreamEvent_UsageCopyWith<$Res> implements $RigStreamEv
   factory $RigStreamEvent_UsageCopyWith(RigStreamEvent_Usage value, $Res Function(RigStreamEvent_Usage) _then) = _$RigStreamEvent_UsageCopyWithImpl;
 @useResult
 $Res call({
- int inputTokens, int outputTokens
+ int inputTokens, int outputTokens, int cachedInputTokens, int cacheWriteTokens
 });
 
 
@@ -439,10 +441,12 @@ class _$RigStreamEvent_UsageCopyWithImpl<$Res>
 
 /// Create a copy of RigStreamEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? inputTokens = null,Object? outputTokens = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? inputTokens = null,Object? outputTokens = null,Object? cachedInputTokens = null,Object? cacheWriteTokens = null,}) {
   return _then(RigStreamEvent_Usage(
 inputTokens: null == inputTokens ? _self.inputTokens : inputTokens // ignore: cast_nullable_to_non_nullable
 as int,outputTokens: null == outputTokens ? _self.outputTokens : outputTokens // ignore: cast_nullable_to_non_nullable
+as int,cachedInputTokens: null == cachedInputTokens ? _self.cachedInputTokens : cachedInputTokens // ignore: cast_nullable_to_non_nullable
+as int,cacheWriteTokens: null == cacheWriteTokens ? _self.cacheWriteTokens : cacheWriteTokens // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }

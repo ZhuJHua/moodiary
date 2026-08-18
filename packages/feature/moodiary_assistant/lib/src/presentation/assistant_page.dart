@@ -11,11 +11,12 @@ import 'package:moodiary_assistant/src/application/context_compaction_controller
 import 'package:moodiary_assistant/src/application/tool_permission_coordinator.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_assistant/src/data/llm_preset_repository.dart';
+import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_assistant/src/data/soul_repository.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_summary_tile.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
+import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
 import 'package:moodiary_assistant/src/presentation/tool_permission_card.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -79,13 +80,25 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   bool _sending = false;
   bool _ready = true;
   bool _initialized = false;
-  bool _thinking = false;
+  /// 本次会话的思考档位。空串 = 关。
+  String _reasoningLevel = '';
+
+  /// 本次会话用的供应商与模型。首条消息落库时钉进 [ChatSession]，之后改设置里的
+  /// 默认供应商不影响它。
+  LlmProvider? _provider;
+  String _modelId = '';
 
   /// 当前模型是否支持图片附件（决定是否显示「发送图片」入口）。
   bool _canSendImage = false;
 
-  /// 当前模型是否支持推理（决定是否显示「深度思考」开关）。
-  bool _canThink = false;
+  /// 当前模型可选的思考档位（来自目录的 `reasoning_options`）。空 = 不给强度控件。
+  List<String> _reasoningLevels = const [];
+
+  /// 当前模型的目录条目；自定义供应商或缓存未命中时为 null。
+  LlmModelPreset? _activeModel;
+
+  /// 单次回复的 max_tokens，取自目录的 `limit.output`。
+  int _maxTokens = assistantFallbackMaxTokens;
 
   /// 当前模型是否支持工具调用（不支持则本轮不挂载工具）。
   bool _canUseTools = true;
@@ -127,7 +140,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     );
     _disclaimerAccepted =
         MoodiaryKVs.assistantDisclaimerAccepted.get() ?? false;
-    _thinking = MoodiaryKVs.assistantThinkingEnabled.get() ?? false;
+    _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get() ?? '';
     _refreshReady();
     if (!_disclaimerAccepted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -159,54 +172,82 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   }
 
   Future<void> _refreshReady() async {
-    final provider = await LlmProviderRepository.get().getActiveProvider();
-    final key = provider == null
+    final repo = LlmProviderRepository.get();
+    final session = _session;
+    // 会话已建立就用它钉住的那份；供应商被删了就回落到默认，别让历史会话打不开。
+    final pinned = session == null || session.providerId.isEmpty
         ? null
-        : await LlmProviderRepository.get().getKey(provider.id);
-    final ready = provider != null && key != null && key.isNotEmpty;
-    final caps = provider == null
-        ? const (tools: true, reasoning: false, attachment: false)
-        : _capabilities(provider);
-    final contextLimit = provider == null
-        ? assistantDefaultContextBudget
-        : _contextLimitFor(provider);
+        : await repo.getProvider(session.providerId);
+    final provider = pinned ?? await repo.getActiveProvider();
+    final key = provider == null ? null : await repo.getKey(provider.id);
+    final wanted = pinned != null && (session?.model.isNotEmpty ?? false)
+        ? session!.model
+        : (_modelId.isEmpty ? (provider?.defaultModel ?? '') : _modelId);
+    final resolved = provider == null
+        ? null
+        : ModelResolver.resolve(provider, wanted);
+    final model = resolved?.preset;
+    final caps = _capabilities(provider, model);
+    final levels = provider == null
+        ? const <String>[]
+        : ModelResolver.levelsFor(provider, wanted);
     if (mounted) {
       setState(() {
-        _ready = ready;
-        _canThink = caps.reasoning;
+        _ready = provider != null && key != null && key.isNotEmpty;
+        _provider = provider;
+        _modelId = resolved?.modelId ?? '';
+        _activeModel = model;
+        _reasoningLevels = levels;
         _canSendImage = caps.attachment;
         _canUseTools = caps.tools;
-        _contextLimit = contextLimit;
-        // 切到不支持附件的模型：丢弃已选但还没发出的图片，避免发出去被供应商拒。
+        _contextLimit = model?.contextLimit ?? assistantDefaultContextBudget;
+        _maxTokens = maxTokensFor(model?.outputLimit);
+        // 档位表按模型给，换了模型旧档位可能已经不在表里。
+        if (_reasoningLevel.isNotEmpty && !levels.contains(_reasoningLevel)) {
+          _reasoningLevel = '';
+        }
+        // 切到不收图的模型：丢弃已选但还没发出的图片，免得发出去被供应商拒。
         if (!caps.attachment) _pendingImageName = null;
       });
     }
   }
 
-  /// 解析当前供应商模型能力：preset 查本地缓存（绝不联网，未命中则保守关闭），自定义供应商用用户声明的标记。
-  ({bool tools, bool reasoning, bool attachment}) _capabilities(
-    LlmProvider provider,
+  /// 目录命中就以目录为准（逐模型），否则按自定义供应商声明的标记；
+  /// preset 但缓存未命中时保守放行工具（多数模型支持）。
+  ({bool tools, bool attachment}) _capabilities(
+    LlmProvider? provider,
+    LlmModelPreset? model,
   ) {
-    if (provider.providerId.isNotEmpty) {
-      for (final preset in LlmPresetRepository.get().cachedPresets()) {
-        if (preset.id != provider.providerId) continue;
-        for (final model in preset.models) {
-          if (model.id == provider.model) {
-            return (
-              tools: model.toolCall,
-              reasoning: model.reasoning,
-              attachment: model.attachment,
-            );
-          }
-        }
-      }
-      return const (tools: true, reasoning: false, attachment: false);
+    if (provider == null) return const (tools: true, attachment: false);
+    if (model != null) {
+      return (tools: model.toolCall, attachment: model.acceptsImage);
     }
-    return (
-      tools: provider.toolCall,
-      reasoning: provider.reasoning,
-      attachment: provider.attachment,
+    if (provider.isPreset) return const (tools: true, attachment: false);
+    return (tools: provider.toolCall, attachment: provider.attachment);
+  }
+
+  /// 会话开始前可以改模型与思考强度；开始后只读（[_session] 非空即已开始）。
+  Future<void> _pickModel() async {
+    final provider = _provider;
+    if (provider == null || _session != null) return;
+    final options = ModelResolver.optionsFor(provider);
+    if (options.isEmpty) return;
+    final choice = await showModelPicker(
+      context,
+      providerName: provider.name,
+      options: options,
+      modelId: _modelId,
+      level: _reasoningLevel,
     );
+    if (choice == null || !mounted) return;
+    setState(() {
+      _modelId = choice.modelId;
+      _reasoningLevel = choice.level;
+    });
+    // 档位是「最后一次用的」，作为下个新会话的起始值。模型不写默认 ——
+    // 那是供应商列表页那枚「默认」标记的事。
+    MoodiaryKVs.assistantReasoningEffort.set(choice.level);
+    await _refreshReady();
   }
 
   Future<void> _loadSessionById(String id) async {
@@ -230,10 +271,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (!mounted) return;
     setState(() {
       _session = session;
-      _thinking = session.thinking; // 恢复该会话自己的思考模式
+      _reasoningLevel = session.reasoningEffort; // 恢复该会话钉住的档位
       _pendingImageName = null;
       _sending = false;
     });
+    // 会话钉住的供应商 / 模型要重新解析一遍（可能与当前默认不是同一个）。
+    await _refreshReady();
+    if (!mounted) return;
     // 会话若已压缩，按水位重新合成压缩提示 chip（完整消息仍在库里、照常展示）。
     _syncCompactionNotice();
     _listKey.currentState?.pinToBottom();
@@ -242,7 +286,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   Future<ChatSession?> _ensureSession(String firstUserText) async {
     final existing = _session;
     if (existing != null) return existing;
-    final provider = await LlmProviderRepository.get().getActiveProvider();
+    final provider = _provider;
     if (provider == null) return null;
     final title = firstUserText.length > 30
         ? '${firstUserText.substring(0, 30)}…'
@@ -250,8 +294,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final session = ChatSession.create(
       title: title,
       providerId: provider.id,
-      model: provider.model,
-      thinking: _thinking, // 定格当前（来自全局默认或用户在新会话里的选择）
+      model: _modelId,
+      reasoningEffort: _reasoningLevel, // 定格：开始之后不再可改
     );
     await ChatRepository.get().upsertSession(session);
     _chat.sessionId = session.id;
@@ -288,36 +332,30 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     required String systemPrompt,
     required String volatilePrefix,
   }) async {
-    final repo = LlmProviderRepository.get();
-    final LlmProvider? provider = await repo.getActiveProvider();
-    final key = provider == null ? null : await repo.getKey(provider.id);
-    if (provider == null || key == null || key.isEmpty) return null;
+    final provider = _provider;
+    if (provider == null) return null;
+    final key = await LlmProviderRepository.get().getKey(provider.id);
+    if (key == null || key.isEmpty) return null;
+    // 协议与 baseUrl 按**模型**解析：中转站底下 Claude 走 messages、GPT 走
+    // responses，取供应商级的会直接发错地方。
+    final route = ModelResolver.resolve(provider, _modelId);
     return AssistantChatRequest(
-      type: provider.protocol,
-      baseUrl: provider.baseUrl,
+      type: route.protocol,
+      baseUrl: route.baseUrl,
       apiKey: key,
-      model: provider.model,
+      model: route.modelId,
       systemPrompt: systemPrompt,
       volatilePrefix: volatilePrefix,
-      maxTokens: assistantMaxTokens,
+      maxTokens: _maxTokens,
       history: history,
-      thinking: _thinking && _canThink,
+      reasoning: resolveReasoning(
+        level: _reasoningLevels.contains(_reasoningLevel) ? _reasoningLevel : '',
+        model: _activeModel,
+        maxTokens: _maxTokens,
+      ),
       tools: _canUseTools,
       onToolPermission: _requestToolPermission,
     );
-  }
-
-  void _toggleThinking() {
-    final next = !_thinking;
-    setState(() {
-      _thinking = next;
-      final s = _session;
-      if (s != null) _session = s.copyWith(thinking: next);
-    });
-    // 更新「新会话默认」（最后一次用的）；已存在的会话则把模式落到会话本身。
-    MoodiaryKVs.assistantThinkingEnabled.set(next);
-    final s = _session;
-    if (s != null) unawaited(ChatRepository.get().upsertSession(s));
   }
 
   void _resetThinkingState() {
@@ -647,10 +685,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   Future<ChatSession?> _runCompaction({required bool force}) async {
     final session = _session;
     if (session == null || (!force && _lastTurnInputTokens <= 0)) return null;
-    final repo = LlmProviderRepository.get();
-    final provider = await repo.getActiveProvider();
+    final provider = _provider;
     if (provider == null) return null;
-    final key = await repo.getKey(provider.id);
+    final key = await LlmProviderRepository.get().getKey(provider.id);
     if (key == null || key.isEmpty) return null;
     if (!mounted || _session?.id != session.id) return null;
 
@@ -668,8 +705,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       session: session,
       orderedMessages: ordered,
       lastInputTokens: _lastTurnInputTokens,
-      contextLimit: _contextLimitFor(provider),
+      contextLimit: _contextLimit,
       provider: provider,
+      model: _modelId,
       apiKey: key,
       force: force,
     );
@@ -679,21 +717,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     setState(() => _session = updated);
     _syncCompactionNotice();
     return updated;
-  }
-
-  /// 解析激活模型的上下文窗口；preset 供应商查本地缓存，自定义 / 未命中用兜底预算。
-  int _contextLimitFor(LlmProvider provider) {
-    if (provider.providerId.isNotEmpty) {
-      for (final preset in LlmPresetRepository.get().cachedPresets()) {
-        if (preset.id != provider.providerId) continue;
-        for (final model in preset.models) {
-          if (model.id == provider.model) {
-            return model.contextLimit ?? assistantDefaultContextBudget;
-          }
-        }
-      }
-    }
-    return assistantDefaultContextBudget;
   }
 
   /// 按当前会话压缩水位，把提示 chip 对齐到边界：移除旧的、在水位消息后插入新的。
@@ -991,9 +1014,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       contextLimit: _contextLimit,
       onSendDiary: _pickAndSendDiary,
       onSendImage: _canSendImage ? _pickImage : null,
-      thinking: _thinking,
-      showThinking: _canThink,
-      onToggleThinking: _toggleThinking,
+      modelLabel: _activeModel?.name ?? _modelId,
+      reasoningLevel: _reasoningLevel,
+      // 会话一开始就锁死：模型和强度都是定格进 ChatSession 的。
+      onPickModel: _session == null ? _pickModel : null,
       pendingImageName: _pendingImageName,
       onRemoveImage: _removePendingImage,
     );
@@ -1284,9 +1308,11 @@ class _AssistantComposer extends StatelessWidget {
 
   /// null 表示当前模型不支持图片附件，菜单里就不出这一项。
   final VoidCallback? onSendImage;
-  final bool thinking;
-  final bool showThinking;
-  final VoidCallback onToggleThinking;
+  final String modelLabel;
+  final String reasoningLevel;
+
+  /// null 表示会话已开始 —— chip 照常显示，但不可点。
+  final VoidCallback? onPickModel;
   final String? pendingImageName;
   final VoidCallback onRemoveImage;
 
@@ -1300,9 +1326,9 @@ class _AssistantComposer extends StatelessWidget {
     required this.contextLimit,
     required this.onSendDiary,
     required this.onSendImage,
-    required this.thinking,
-    required this.showThinking,
-    required this.onToggleThinking,
+    required this.modelLabel,
+    required this.reasoningLevel,
+    required this.onPickModel,
     required this.pendingImageName,
     required this.onRemoveImage,
   });
@@ -1380,20 +1406,19 @@ class _AssistantComposer extends StatelessWidget {
                       onSubmitted: (_) => onSend(),
                     ),
                   ),
-                  // 底部控制条：左「深度思考」（模型支持推理才显示），右「+」与发送 / 停止一组。
+                  // 底部控制条：左边是模型 + 思考强度，右「+」与发送 / 停止一组。
                   //
-                  // 底对齐而不是居中：思考胶囊比右边那两颗按钮矮，居中会让它多浮起来
+                  // 底对齐而不是居中：chip 比右边那两颗按钮矮，居中会让它多浮起来
                   // 半个高度差，底边距就不再等于左边距（都该是面板的 8），看着脱离
-                  // 面板的角。底对齐之后四个角一致，而胶囊保持自己的高度。
+                  // 面板的角。底对齐之后四个角一致，而 chip 保持自己的高度。
+                  //
+                  // 整条右对齐、**不放 Spacer**：Spacer 是 tight flex，会把剩余
+                  // 宽度先分掉一半，模型名就白白被截短。右对齐之后富余的空白自然
+                  // 落在左边，Flexible 的 chip 能一直长到真的放不下为止。
                   Row(
                     crossAxisAlignment: .end,
+                    mainAxisAlignment: .end,
                     children: [
-                      if (showThinking)
-                        _ThinkingToggle(
-                          enabled: thinking,
-                          onTap: onToggleThinking,
-                        ),
-                      const Spacer(),
                       if (usedTokens > 0 && contextLimit > 0) ...[
                         _ContextUsageRing(
                           usedTokens: usedTokens,
@@ -1401,6 +1426,14 @@ class _AssistantComposer extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                       ],
+                      if (modelLabel.isNotEmpty)
+                        Flexible(
+                          child: _ModelChip(
+                            modelLabel: modelLabel,
+                            reasoningLevel: reasoningLevel,
+                            onTap: onPickModel,
+                          ),
+                        ),
                       // 锚点贴着屏幕底，MMenu 会自己算出 preferAbove 向上弹。
                       MMenuButton<_ComposerTool>(
                         tooltip: l10n.assistant.tool,
@@ -1541,48 +1574,68 @@ class _ScrollToBottomButton extends StatelessWidget {
   }
 }
 
-class _ThinkingToggle extends StatelessWidget {
-  final bool enabled;
-  final VoidCallback onTap;
+/// 当前模型 + 思考强度。会话开始前可点开换（[onTap] 非空），开始后变成只读标签 ——
+/// 模型和强度在首条消息落库时就钉进 `ChatSession` 了，中途换等于让同一段对话
+/// 前后由不同模型作答，历史里却看不出来。
+///
+/// 没有容器底色：它挨着「+」，再套一层胶囊会和右边两颗圆钮抢视觉重量，
+/// 而它只是个状态标签。
+class _ModelChip extends StatelessWidget {
+  final String modelLabel;
+  final String reasoningLevel;
+  final VoidCallback? onTap;
 
-  const _ThinkingToggle({required this.enabled, required this.onTap});
+  const _ModelChip({
+    required this.modelLabel,
+    required this.reasoningLevel,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    final l10n = context.l10n;
-    final fg = enabled ? scheme.onSecondaryContainer : scheme.onSurfaceVariant;
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        // 关闭态**不能**用 surfaceContainerHigh —— 那正是面板自己的底色，
-        // 胶囊会整个消失，只剩图标和文字飘着。高一档才看得出这是个容器。
-        color: enabled
-            ? scheme.secondaryContainer
-            : scheme.surfaceContainerHighest,
-        shape: const StadiumBorder(),
-      ),
-      child: MInkWell(
-        shape: const StadiumBorder(),
-        onTap: onTap,
-        child: Padding(
-          padding: const .symmetric(horizontal: 12, vertical: 6),
-          child: Row(
-            mainAxisSize: .min,
-            children: [
-              Icon(LucideIcons.brain, size: 16, color: fg),
-              const SizedBox(width: 6),
-              Text(
-                l10n.assistant.thinkingToggle,
-                style:
-                    (enabled
-                            ? context.theme.typography.labelMedium.emphasized
-                            : context.theme.typography.bodySmall)
-                        .onSurface
-                        .copyWith(color: fg),
-              ),
-            ],
+    final locked = onTap == null;
+    final typography = context.theme.typography;
+
+    final label = Row(
+      mainAxisSize: .min,
+      children: [
+        // 只有模型名可压缩：强度和箭头都是定宽的小东西，先让它们占住位。
+        Flexible(
+          child: Text(
+            modelLabel,
+            maxLines: 1,
+            overflow: .ellipsis,
+            style: typography.labelMedium.onSurface,
           ),
         ),
+        if (reasoningLevel.isNotEmpty) ...[
+          const SizedBox(width: 5),
+          // 目录原值，不翻译（见 model_picker_sheet）。
+          Text(reasoningLevel, style: typography.labelSmall.onSurfaceVariant),
+        ],
+        if (!locked) ...[
+          const SizedBox(width: 2),
+          Icon(
+            LucideIcons.chevronDown,
+            size: 15,
+            color: context.theme.colors.onSurfaceVariant,
+          ),
+        ],
+      ],
+    );
+
+    if (locked) {
+      return Padding(
+        padding: const .symmetric(horizontal: 6, vertical: 10),
+        child: label,
+      );
+    }
+    return MInkWell(
+      shape: const StadiumBorder(),
+      onTap: onTap,
+      child: Padding(
+        padding: const .symmetric(horizontal: 6, vertical: 10),
+        child: label,
       ),
     );
   }

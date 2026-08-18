@@ -56,7 +56,7 @@ class _AssistantSummaryTileState extends State<AssistantSummaryTile> {
         ? context.l10n.assistant.summaryLoading
         : active == null
         ? context.l10n.assistant.summaryNoProvider
-        : '${active.name} · ${active.model} · '
+        : '${active.name} · ${active.defaultModel} · '
               '${_keyConfigured ? context.l10n.assistant.summaryKeySet : context.l10n.assistant.summaryKeyUnset}';
     return SettingListTile(
       isFirst: true,

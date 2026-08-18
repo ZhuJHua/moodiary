@@ -2462,7 +2462,9 @@ const _: fn() = || {
         let _: String = RigProviderConfig.base_url;
         let _: String = RigProviderConfig.model;
         let _: u32 = RigProviderConfig.max_tokens;
-        let _: bool = RigProviderConfig.thinking;
+        let _: String = RigProviderConfig.reasoning_mode;
+        let _: String = RigProviderConfig.reasoning_effort;
+        let _: u32 = RigProviderConfig.reasoning_budget;
     }
     match None::<crate::api::assistant::RigStreamEvent>.unwrap() {
         crate::api::assistant::RigStreamEvent::TextDelta(field0) => {
@@ -2477,9 +2479,13 @@ const _: fn() = || {
         crate::api::assistant::RigStreamEvent::Usage {
             input_tokens,
             output_tokens,
+            cached_input_tokens,
+            cache_write_tokens,
         } => {
             let _: u32 = input_tokens;
             let _: u32 = output_tokens;
+            let _: u32 = cached_input_tokens;
+            let _: u32 = cache_write_tokens;
         }
     }
     {
@@ -3868,14 +3874,18 @@ impl SseDecode for crate::api::assistant::RigProviderConfig {
         let mut var_baseUrl = <String>::sse_decode(deserializer);
         let mut var_model = <String>::sse_decode(deserializer);
         let mut var_maxTokens = <u32>::sse_decode(deserializer);
-        let mut var_thinking = <bool>::sse_decode(deserializer);
+        let mut var_reasoningMode = <String>::sse_decode(deserializer);
+        let mut var_reasoningEffort = <String>::sse_decode(deserializer);
+        let mut var_reasoningBudget = <u32>::sse_decode(deserializer);
         return crate::api::assistant::RigProviderConfig {
             protocol: var_protocol,
             api_key: var_apiKey,
             base_url: var_baseUrl,
             model: var_model,
             max_tokens: var_maxTokens,
-            thinking: var_thinking,
+            reasoning_mode: var_reasoningMode,
+            reasoning_effort: var_reasoningEffort,
+            reasoning_budget: var_reasoningBudget,
         };
     }
 }
@@ -3900,9 +3910,13 @@ impl SseDecode for crate::api::assistant::RigStreamEvent {
             3 => {
                 let mut var_inputTokens = <u32>::sse_decode(deserializer);
                 let mut var_outputTokens = <u32>::sse_decode(deserializer);
+                let mut var_cachedInputTokens = <u32>::sse_decode(deserializer);
+                let mut var_cacheWriteTokens = <u32>::sse_decode(deserializer);
                 return crate::api::assistant::RigStreamEvent::Usage {
                     input_tokens: var_inputTokens,
                     output_tokens: var_outputTokens,
+                    cached_input_tokens: var_cachedInputTokens,
+                    cache_write_tokens: var_cacheWriteTokens,
                 };
             }
             _ => {
@@ -4799,7 +4813,9 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::assistant::RigProv
             self.0.base_url.into_into_dart().into_dart(),
             self.0.model.into_into_dart().into_dart(),
             self.0.max_tokens.into_into_dart().into_dart(),
-            self.0.thinking.into_into_dart().into_dart(),
+            self.0.reasoning_mode.into_into_dart().into_dart(),
+            self.0.reasoning_effort.into_into_dart().into_dart(),
+            self.0.reasoning_budget.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -4831,10 +4847,14 @@ impl flutter_rust_bridge::IntoDart for FrbWrapper<crate::api::assistant::RigStre
             crate::api::assistant::RigStreamEvent::Usage {
                 input_tokens,
                 output_tokens,
+                cached_input_tokens,
+                cache_write_tokens,
             } => [
                 3.into_dart(),
                 input_tokens.into_into_dart().into_dart(),
                 output_tokens.into_into_dart().into_dart(),
+                cached_input_tokens.into_into_dart().into_dart(),
+                cache_write_tokens.into_into_dart().into_dart(),
             ]
             .into_dart(),
             _ => {
@@ -5837,7 +5857,9 @@ impl SseEncode for crate::api::assistant::RigProviderConfig {
         <String>::sse_encode(self.base_url, serializer);
         <String>::sse_encode(self.model, serializer);
         <u32>::sse_encode(self.max_tokens, serializer);
-        <bool>::sse_encode(self.thinking, serializer);
+        <String>::sse_encode(self.reasoning_mode, serializer);
+        <String>::sse_encode(self.reasoning_effort, serializer);
+        <u32>::sse_encode(self.reasoning_budget, serializer);
     }
 }
 
@@ -5860,10 +5882,14 @@ impl SseEncode for crate::api::assistant::RigStreamEvent {
             crate::api::assistant::RigStreamEvent::Usage {
                 input_tokens,
                 output_tokens,
+                cached_input_tokens,
+                cache_write_tokens,
             } => {
                 <i32>::sse_encode(3, serializer);
                 <u32>::sse_encode(input_tokens, serializer);
                 <u32>::sse_encode(output_tokens, serializer);
+                <u32>::sse_encode(cached_input_tokens, serializer);
+                <u32>::sse_encode(cache_write_tokens, serializer);
             }
             _ => {
                 unimplemented!("");
@@ -6906,7 +6932,9 @@ mod io {
                 base_url: self.base_url.cst_decode(),
                 model: self.model.cst_decode(),
                 max_tokens: self.max_tokens.cst_decode(),
-                thinking: self.thinking.cst_decode(),
+                reasoning_mode: self.reasoning_mode.cst_decode(),
+                reasoning_effort: self.reasoning_effort.cst_decode(),
+                reasoning_budget: self.reasoning_budget.cst_decode(),
             }
         }
     }
@@ -6931,6 +6959,8 @@ mod io {
                     crate::api::assistant::RigStreamEvent::Usage {
                         input_tokens: ans.input_tokens.cst_decode(),
                         output_tokens: ans.output_tokens.cst_decode(),
+                        cached_input_tokens: ans.cached_input_tokens.cst_decode(),
+                        cache_write_tokens: ans.cache_write_tokens.cst_decode(),
                     }
                 }
                 _ => unreachable!(),
@@ -7292,7 +7322,9 @@ mod io {
                 base_url: core::ptr::null_mut(),
                 model: core::ptr::null_mut(),
                 max_tokens: Default::default(),
-                thinking: Default::default(),
+                reasoning_mode: core::ptr::null_mut(),
+                reasoning_effort: core::ptr::null_mut(),
+                reasoning_budget: Default::default(),
             }
         }
     }
@@ -8843,7 +8875,9 @@ mod io {
         base_url: *mut wire_cst_list_prim_u_8_strict,
         model: *mut wire_cst_list_prim_u_8_strict,
         max_tokens: u32,
-        thinking: bool,
+        reasoning_mode: *mut wire_cst_list_prim_u_8_strict,
+        reasoning_effort: *mut wire_cst_list_prim_u_8_strict,
+        reasoning_budget: u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -8880,6 +8914,8 @@ mod io {
     pub struct wire_cst_RigStreamEvent_Usage {
         input_tokens: u32,
         output_tokens: u32,
+        cached_input_tokens: u32,
+        cache_write_tokens: u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]

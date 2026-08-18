@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:moodiary_assistant/src/application/llm_provider_preset_controller.dart';
+import 'package:moodiary_assistant/src/data/model_catalog_repository.dart';
+import 'package:moodiary_assistant/src/data/model_resolver.dart';
+import 'package:moodiary_assistant/src/presentation/model_picker_sheet.dart';
 import 'package:moodiary_core/moodiary_core.dart';
 import 'package:moodiary_data/moodiary_data.dart';
 import 'package:moodiary_l10n/moodiary_l10n.dart';
@@ -8,6 +11,9 @@ import 'package:moodiary_ui/moodiary_ui.dart';
 import 'package:mui/mui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// 供应商编辑页。两条路差别很大，**preset 供应商没有 baseUrl 与协议字段** ——
+/// 那两项是按模型从 models.dev 解析的（中转站底下 Claude 与 GPT 就走不同协议），
+/// 摆出来只会让用户改错。
 class AssistantProviderEditPage extends ConsumerStatefulWidget {
   final String? id;
   final String? presetId;
@@ -27,25 +33,30 @@ class _AssistantProviderEditPageState
   final _name = TextEditingController();
   final _baseUrl = TextEditingController();
   final _apiKey = TextEditingController();
-  final _model = TextEditingController();
 
-  AssistantProviderType _type = .openai;
-  List<LlmModelPreset> _presetModels = const [];
-  String? _apiKeyUrl;
-  String _providerId = '';
+  AssistantProviderType _type = .openaiCompletions;
+  String _presetId = '';
+  String _defaultModel = '';
+
+  /// 仅自定义供应商：可选模型 id。
+  List<String> _models = const [];
+
+  String? _docUrl;
   bool _keyConfigured = false;
   bool _obscureKey = true;
   bool _loaded = false;
   bool _saving = false;
-  bool _showAllModels = false;
-  String _modelQuery = '';
+  bool _fetchingModels = false;
+  bool _refreshingCatalog = false;
 
-  // 自定义供应商的用户声明能力（preset 供应商以在线目录为准，不用这几个）。都默认 false，按需开启。
+  // 自定义供应商的用户声明能力（preset 以在线目录为准，逐模型）。
   bool _toolCall = false;
   bool _reasoning = false;
   bool _attachment = false;
 
   bool get _isNew => widget.id == null;
+
+  bool get _isPreset => _presetId.isNotEmpty;
 
   @override
   void initState() {
@@ -58,7 +69,6 @@ class _AssistantProviderEditPageState
     _name.dispose();
     _baseUrl.dispose();
     _apiKey.dispose();
-    _model.dispose();
     super.dispose();
   }
 
@@ -71,18 +81,18 @@ class _AssistantProviderEditPageState
         return;
       }
       final key = await _repo.getKey(id);
-      final preset = provider.providerId.isNotEmpty
-          ? await _findPreset(provider.providerId)
+      final preset = provider.isPreset
+          ? await _findPreset(provider.presetId)
           : null;
       if (!mounted) return;
       setState(() {
         _name.text = provider.name;
         _baseUrl.text = provider.baseUrl;
-        _model.text = provider.model;
         _type = provider.protocol;
-        _providerId = provider.providerId;
-        _presetModels = preset?.models ?? const [];
-        _apiKeyUrl = preset?.docUrl;
+        _presetId = provider.presetId;
+        _defaultModel = provider.defaultModel;
+        _models = provider.models;
+        _docUrl = preset?.docUrl;
         _keyConfigured = key != null && key.isNotEmpty;
         _toolCall = provider.toolCall;
         _reasoning = provider.reasoning;
@@ -95,26 +105,20 @@ class _AssistantProviderEditPageState
     final presetId = widget.presetId;
     if (presetId != null) {
       final preset = await _findPreset(presetId);
-      if (preset != null) {
-        if (!mounted) return;
+      if (preset != null && mounted) {
         setState(() {
           _name.text = preset.name;
-          _baseUrl.text = preset.baseUrl;
-          _type = preset.protocol;
-          _providerId = preset.id;
-          _presetModels = preset.models;
-          _model.text = preset.models.isNotEmpty ? preset.models.first.id : '';
-          _apiKeyUrl = preset.docUrl;
+          _presetId = preset.id;
+          _docUrl = preset.docUrl;
+          // 目录已按「未下线 → 支持工具 → 名称」排好序，首个就是最合理的起手。
+          _defaultModel = preset.models.isEmpty ? '' : preset.models.first.id;
           _loaded = true;
         });
         return;
       }
     }
 
-    setState(() {
-      _presetModels = const [];
-      _loaded = true;
-    });
+    if (mounted) setState(() => _loaded = true);
   }
 
   Future<LlmProviderPreset?> _findPreset(String id) async {
@@ -129,13 +133,122 @@ class _AssistantProviderEditPageState
     return null;
   }
 
+  /// 还没落库时也要能列模型，所以拿当前表单拼一个草稿供应商去问解析器。
+  LlmProvider get _draft => LlmProvider(
+    id: widget.id ?? '',
+    name: _name.text.trim(),
+    type: _type.id,
+    baseUrl: _baseUrl.text.trim(),
+    defaultModel: _defaultModel,
+    createdAt: .timestamp(),
+    sortOrder: 0,
+    presetId: _presetId,
+    models: _models,
+    toolCall: _toolCall,
+    reasoning: _reasoning,
+    attachment: _attachment,
+  );
+
+  Future<void> _pickDefaultModel() async {
+    final l10n = context.l10n;
+    final options = ModelResolver.optionsFor(_draft);
+    if (options.isEmpty) {
+      toast.info(message: l10n.assistant.modelListEmpty);
+      return;
+    }
+    final choice = await showModelPicker(
+      context,
+      providerName: _name.text.trim(),
+      options: options,
+      modelId: _defaultModel,
+      showEffort: false,
+    );
+    if (choice != null && mounted) {
+      setState(() => _defaultModel = choice.modelId);
+    }
+  }
+
+  /// preset 供应商的模型来自目录，更新 = 重拉整份 models.dev。
+  Future<void> _refreshCatalog() async {
+    if (_refreshingCatalog) return;
+    setState(() => _refreshingCatalog = true);
+    final l10n = context.l10n;
+    try {
+      await ref.read(llmProviderPresetControllerProvider.notifier).refresh();
+      if (!mounted) return;
+      final preset = await _findPreset(_presetId);
+      if (!mounted) return;
+      setState(() => _docUrl = preset?.docUrl ?? _docUrl);
+      toast.success(
+        message: l10n.assistant.modelListFetched(
+          count: preset?.models.length ?? 0,
+        ),
+      );
+    } catch (_) {
+      if (mounted) toast.error(message: l10n.assistant.modelListFailed);
+    } finally {
+      if (mounted) setState(() => _refreshingCatalog = false);
+    }
+  }
+
+  /// 自定义供应商的模型来自端点。`GET {base}/models` 是 OpenAI / Anthropic 的
+  /// 正式接口，兼容端点也基本都实现了 —— 但**不保证**，所以手动添加一直留着。
+  Future<void> _fetchModels() async {
+    if (_fetchingModels) return;
+    final l10n = context.l10n;
+    final typed = _apiKey.text.trim();
+    final stored = _isNew ? null : await _repo.getKey(widget.id!);
+    final key = typed.isNotEmpty ? typed : (stored ?? '');
+    if (key.isEmpty) {
+      toast.info(message: l10n.assistant.modelListNeedKey);
+      return;
+    }
+    setState(() => _fetchingModels = true);
+    try {
+      final ids = await ModelCatalogRepository.get().fetch(
+        protocol: _type,
+        baseUrl: _baseUrl.text.trim(),
+        apiKey: key,
+      );
+      if (!mounted) return;
+      setState(() {
+        // 手动加过的不因为一次拉取而消失。
+        _models = {..._models, ...ids}.toList()..sort();
+        if (_defaultModel.isEmpty && ids.isNotEmpty) _defaultModel = ids.first;
+      });
+      toast.success(message: l10n.assistant.modelListFetched(count: ids.length));
+    } catch (_) {
+      if (mounted) toast.error(message: context.l10n.assistant.modelListFailed);
+    } finally {
+      if (mounted) setState(() => _fetchingModels = false);
+    }
+  }
+
+  Future<void> _addModelManually() async {
+    final l10n = context.l10n;
+    final id = await MAlert.prompt(
+      context,
+      title: l10n.assistant.modelListAdd,
+      hintText: l10n.assistant.modelProviderModel,
+    );
+    final trimmed = id?.trim() ?? '';
+    if (trimmed.isEmpty || !mounted) return;
+    setState(() {
+      _models = {..._models, trimmed}.toList()..sort();
+      if (_defaultModel.isEmpty) _defaultModel = trimmed;
+    });
+  }
+
   Future<void> _save() async {
     final l10n = context.l10n;
     if (!_formKey.currentState!.validate()) return;
+    if (_defaultModel.isEmpty) {
+      toast.info(message: l10n.assistant.modelProviderNeedModel);
+      return;
+    }
     setState(() => _saving = true);
 
     final name = _name.text.trim();
-    final model = _model.text.trim();
     final baseUrl = _baseUrl.text.trim();
     final key = _apiKey.text.trim();
 
@@ -146,9 +259,10 @@ class _AssistantProviderEditPageState
         name: name,
         type: _type,
         baseUrl: baseUrl,
-        model: model,
+        defaultModel: _defaultModel,
         sortOrder: await _repo.nextSortOrder(),
-        providerId: _providerId,
+        presetId: _presetId,
+        models: _models,
         toolCall: _toolCall,
         reasoning: _reasoning,
         attachment: _attachment,
@@ -165,7 +279,8 @@ class _AssistantProviderEditPageState
         name: name,
         type: _type.id,
         baseUrl: baseUrl,
-        model: model,
+        defaultModel: _defaultModel,
+        models: _models,
         toolCall: _toolCall,
         reasoning: _reasoning,
         attachment: _attachment,
@@ -173,16 +288,11 @@ class _AssistantProviderEditPageState
     }
 
     // 先写 key 再 upsert：upsert 会广播刷新事件，此时 key 已就位，
-    // 否则列表/配置页会残留「没有 key」直到重启（setKey 在 upsert 之后且不发事件）。
-    if (key.isNotEmpty) {
-      await _repo.setKey(id, key);
-    }
+    // 否则列表/配置页会残留「没有 key」直到重启（setKey 不发事件）。
+    if (key.isNotEmpty) await _repo.setKey(id, key);
     await _repo.upsertProvider(toSave);
-    if (_isNew) {
-      final activeId = MoodiaryKVs.assistantActiveProviderId.get() ?? '';
-      if (activeId.isEmpty) {
-        MoodiaryKVs.assistantActiveProviderId.set(id);
-      }
+    if (_isNew && (MoodiaryKVs.assistantActiveProviderId.get() ?? '').isEmpty) {
+      MoodiaryKVs.assistantActiveProviderId.set(id);
     }
 
     if (mounted) {
@@ -191,13 +301,9 @@ class _AssistantProviderEditPageState
     }
   }
 
-  Future<void> _openApiKeyUrl() async {
-    final url = _apiKeyUrl;
-    if (url == null) return;
-    final uri = Uri.tryParse(url);
-    if (uri != null) {
-      await launchUrl(uri, mode: .externalApplication);
-    }
+  Future<void> _openDocUrl() async {
+    final uri = Uri.tryParse(_docUrl ?? '');
+    if (uri != null) await launchUrl(uri, mode: .externalApplication);
   }
 
   InputDecoration _fieldDecoration({
@@ -226,88 +332,119 @@ class _AssistantProviderEditPageState
     );
   }
 
-  InputDecoration _searchDecoration(String hint) {
-    final scheme = context.theme.colors;
-    return InputDecoration(
-      hintText: hint,
-      prefixIcon: const Icon(LucideIcons.search, size: 20),
-      filled: true,
-      fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-      isDense: true,
-      border: const OutlineInputBorder(
-        borderRadius: AppBorderRadius.mediumBorderRadius,
-        borderSide: .none,
+  Widget _buildProtocolSelector(Translations l10n) {
+    String label(AssistantProviderType t) => switch (t) {
+      .openaiCompletions => l10n.assistant.protocolOpenAiCompletions,
+      .openaiResponses => l10n.assistant.protocolOpenAiResponses,
+      .anthropicMessages => l10n.assistant.protocolAnthropicMessages,
+    };
+    return _LabeledField(
+      label: l10n.assistant.protocolTitle,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final t in AssistantProviderType.values)
+            ChoiceChip(
+              label: Text(label(t)),
+              selected: _type == t,
+              // 换协议等于换端点形状，之前拉到的模型列表不再适用。
+              onSelected: (_) => setState(() {
+                _type = t;
+                _models = const [];
+              }),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildModelSelector(Translations l10n) {
-    final all = _presetModels;
-    if (all.isEmpty) return const SizedBox.shrink();
-    final toolModels = all.where((m) => m.toolCall).toList();
-    final filterable = toolModels.isNotEmpty && toolModels.length < all.length;
-    var visible = (_showAllModels || toolModels.isEmpty) ? all : toolModels;
-    final showSearch = all.length > 6;
-    final query = _modelQuery.trim().toLowerCase();
-    if (query.isNotEmpty) {
-      visible = visible
-          .where(
-            (m) =>
-                m.name.toLowerCase().contains(query) ||
-                m.id.toLowerCase().contains(query),
-          )
-          .toList();
-    }
-    final selected = _model.text.trim();
-
+  Widget _buildModelSection(Translations l10n) {
+    final scheme = context.theme.colors;
+    final count = _isPreset
+        ? ModelResolver.optionsFor(_draft).length
+        : _models.length;
     return Column(
       crossAxisAlignment: .start,
       children: [
-        const SizedBox(height: 12),
+        _LabeledField(
+          label: l10n.assistant.modelProviderDefaultModel,
+          child: Material(
+            color: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            borderRadius: AppBorderRadius.mediumBorderRadius,
+            clipBehavior: .antiAlias,
+            child: MInkWell(
+              onTap: _pickDefaultModel,
+              child: Padding(
+                padding: const .symmetric(horizontal: 12, vertical: 14),
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.cpu, size: 20, color: scheme.onSurfaceVariant),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _defaultModel.isEmpty
+                            ? l10n.assistant.modelProviderNeedModel
+                            : _defaultModel,
+                        maxLines: 1,
+                        overflow: .ellipsis,
+                        style: _defaultModel.isEmpty
+                            ? context.theme.typography.bodyMedium.onSurfaceVariant
+                            : context.theme.typography.bodyMedium.onSurface,
+                      ),
+                    ),
+                    Icon(
+                      LucideIcons.chevronRight,
+                      size: 18,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
-              child: _SectionLabel(text: l10n.assistant.modelProviderPickModel),
-            ),
-            if (filterable)
-              TextButton(
-                onPressed: () =>
-                    setState(() => _showAllModels = !_showAllModels),
-                child: Text(
-                  _showAllModels
-                      ? l10n.assistant.modelProviderShowToolOnly
-                      : l10n.assistant.modelProviderShowAll,
-                ),
-              ),
-          ],
-        ),
-        if (showSearch) ...[
-          const SizedBox(height: 8),
-          TextField(
-            onChanged: (v) => setState(() => _modelQuery = v),
-            decoration: _searchDecoration(
-              l10n.assistant.modelProviderSearchModelHint,
-            ),
-          ),
-        ],
-        const SizedBox(height: 8),
-        if (visible.isEmpty)
-          Padding(
-            padding: const .symmetric(vertical: 16),
-            child: Center(
               child: Text(
-                l10n.assistant.modelProviderNoModelMatch,
+                l10n.assistant.modelListCount(count: count),
                 style: context.theme.typography.bodySmall.onSurfaceVariant,
               ),
             ),
-          )
-        else
-          for (final m in visible)
-            _ModelTile(
-              model: m,
-              selected: m.id == selected,
-              onTap: () => setState(() => _model.text = m.id),
-            ),
+            if (_isPreset)
+              TextButton.icon(
+                onPressed: _refreshingCatalog ? null : _refreshCatalog,
+                icon: _refreshingCatalog
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(LucideIcons.rotateCw, size: 18),
+                label: Text(l10n.assistant.modelListUpdate),
+              )
+            else ...[
+              TextButton.icon(
+                onPressed: _addModelManually,
+                icon: const Icon(LucideIcons.plus, size: 18),
+                label: Text(l10n.assistant.modelListAdd),
+              ),
+              TextButton.icon(
+                onPressed: _fetchingModels ? null : _fetchModels,
+                icon: _fetchingModels
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(LucideIcons.rotateCw, size: 18),
+                label: Text(l10n.assistant.modelListFetch),
+              ),
+            ],
+          ],
+        ),
       ],
     );
   }
@@ -350,7 +487,6 @@ class _AssistantProviderEditPageState
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final locked = _providerId.isNotEmpty;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -403,26 +539,23 @@ class _AssistantProviderEditPageState
                             : null,
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    _LabeledField(
-                      label: l10n.assistant.modelProviderBaseUrl,
-                      child: IgnorePointer(
-                        ignoring: locked,
+                    // preset 的协议与 baseUrl 按模型解析，页面上不出现。
+                    if (!_isPreset) ...[
+                      const SizedBox(height: 18),
+                      _buildProtocolSelector(l10n),
+                      const SizedBox(height: 18),
+                      _LabeledField(
+                        label: l10n.assistant.modelProviderBaseUrl,
                         child: TextFormField(
                           controller: _baseUrl,
                           keyboardType: .url,
-                          readOnly: locked,
-                          enableInteractiveSelection: !locked,
                           decoration: _fieldDecoration(
                             hint: l10n.assistant.modelProviderBaseUrlHint,
                             icon: LucideIcons.link,
-                            suffixIcon: locked
-                                ? const Icon(LucideIcons.lock, size: 18)
-                                : null,
                           ),
                         ),
                       ),
-                    ),
+                    ],
                     const SizedBox(height: 18),
                     _LabeledField(
                       label: l10n.assistant.modelProviderApiKey,
@@ -446,30 +579,18 @@ class _AssistantProviderEditPageState
                         ),
                       ),
                     ),
-                    if (_apiKeyUrl != null)
+                    if (_docUrl != null)
                       Align(
                         alignment: .centerLeft,
                         child: TextButton.icon(
-                          onPressed: _openApiKeyUrl,
+                          onPressed: _openDocUrl,
                           icon: const Icon(LucideIcons.externalLink, size: 18),
                           label: Text(l10n.assistant.modelProviderGetApiKey),
                         ),
                       ),
                     const SizedBox(height: 18),
-                    _LabeledField(
-                      label: l10n.assistant.modelProviderModel,
-                      child: TextFormField(
-                        controller: _model,
-                        decoration: _fieldDecoration(icon: LucideIcons.cpu),
-                        validator: (v) => (v ?? '').trim().isEmpty
-                            ? l10n.assistant.modelProviderNeedModel
-                            : null,
-                      ),
-                    ),
-                    _buildModelSelector(l10n),
-                    // preset 供应商能力以在线目录为准（模型卡上有徽章）；自定义供应商无目录可查，
-                    // 让用户自行声明，用于决定是否启用工具 / 思考 / 发图。
-                    if (_providerId.isEmpty) _buildCapabilities(l10n),
+                    _buildModelSection(l10n),
+                    if (!_isPreset) _buildCapabilities(l10n),
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -517,100 +638,6 @@ class _LabeledField extends StatelessWidget {
   }
 }
 
-class _ModelTile extends StatelessWidget {
-  final LlmModelPreset model;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _ModelTile({
-    required this.model,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    final l10n = context.l10n;
-    final badges = <Widget>[
-      if (model.toolCall)
-        _Badge(icon: LucideIcons.wrench, text: l10n.assistant.tool),
-      if (model.reasoning)
-        _Badge(
-          icon: LucideIcons.brain,
-          text: l10n.assistant.modelProviderBadgeReasoning,
-        ),
-      if (model.attachment)
-        _Badge(
-          icon: LucideIcons.image,
-          text: l10n.assistant.modelProviderBadgeVision,
-        ),
-      if (_formatContext(model.contextLimit) case final ctx?)
-        _Badge(icon: LucideIcons.chevronsUpDown, text: ctx),
-      if (_formatPrice(model.inputCost, model.outputCost) case final price?)
-        _Badge(icon: LucideIcons.banknote, text: price),
-    ];
-
-    return Padding(
-      padding: const .only(bottom: 8),
-      child: Material(
-        color: selected ? scheme.primaryContainer : scheme.surfaceContainerLow,
-        borderRadius: AppBorderRadius.mediumBorderRadius,
-        clipBehavior: .antiAlias,
-        child: MInkWell(
-          onTap: onTap,
-          child: Stack(
-            children: [
-              // Stack 会缩到非定位子节点的尺寸；用满宽 SizedBox 撑开，卡片才占满整行宽度。
-              SizedBox(
-                width: .infinity,
-                child: Padding(
-                  padding: const .symmetric(horizontal: 12, vertical: 10),
-                  child: Column(
-                    crossAxisAlignment: .start,
-                    children: [
-                      Padding(
-                        // 常驻右侧留白（不随选中变化），给右上角选中标腾位，
-                        // 避免选中后可用宽度变窄导致徽章从一行挤成两行。
-                        padding: const .only(right: 22),
-                        child: Text(
-                          model.name,
-                          maxLines: 1,
-                          overflow: .ellipsis,
-                          style: context.theme.typography.titleSmall.onSurface
-                              .copyWith(
-                                color: selected
-                                    ? scheme.onPrimaryContainer
-                                    : scheme.onSurface,
-                              ),
-                        ),
-                      ),
-                      if (badges.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Wrap(spacing: 6, runSpacing: 4, children: badges),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              if (selected)
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Icon(
-                    LucideIcons.circleCheck,
-                    color: scheme.onPrimaryContainer,
-                    size: 20,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _CapabilitySwitch extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -627,67 +654,21 @@ class _CapabilitySwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
-    return SwitchListTile.adaptive(
-      contentPadding: .zero,
-      dense: true,
-      secondary: Icon(icon, size: 20, color: scheme.onSurfaceVariant),
-      title: Text(label, style: context.theme.typography.bodyMedium.onSurface),
-      value: value,
-      onChanged: onChanged,
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _Badge({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.theme.colors;
-    return Container(
-      padding: const .symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: .circular(6),
-      ),
+    return Padding(
+      padding: const .symmetric(vertical: 2),
       child: Row(
-        mainAxisSize: .min,
         children: [
-          Icon(icon, size: 13, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: context.theme.typography.labelSmall.onSurfaceVariant,
+          Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: context.theme.typography.bodyMedium.onSurface,
+            ),
           ),
+          Switch(value: value, onChanged: onChanged),
         ],
       ),
     );
   }
-}
-
-String? _formatContext(int? n) {
-  if (n == null || n <= 0) return null;
-  if (n >= 1000000) {
-    final m = n / 1000000;
-    return '${m == m.roundToDouble() ? m.toStringAsFixed(0) : m.toStringAsFixed(1)}M';
-  }
-  if (n >= 1000) return '${(n / 1000).round()}K';
-  return '$n';
-}
-
-String? _formatPrice(num? input, num? output) {
-  if (input == null && output == null) return null;
-  String f(num? v) => v == null ? '?' : '\$${_trimNum(v)}';
-  return '${f(input)}/${f(output)}';
-}
-
-String _trimNum(num v) {
-  var s = v.toStringAsFixed(2);
-  if (s.contains('.')) {
-    s = s.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
-  }
-  return s;
 }

@@ -13,8 +13,8 @@ class ProviderLogo extends StatelessWidget {
     this.size = 40,
   });
 
-  static String? urlOf(String providerId) =>
-      providerId.isEmpty ? null : 'https://models.dev/logos/$providerId.svg';
+  static String? urlOf(String presetId) =>
+      presetId.isEmpty ? null : 'https://models.dev/logos/$presetId.svg';
 
   @override
   Widget build(BuildContext context) {

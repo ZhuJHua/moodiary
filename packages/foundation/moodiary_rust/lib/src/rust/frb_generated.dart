@@ -3,11 +3,6 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'dart:async';
-import 'dart:convert';
-
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-
 import 'api/assistant.dart';
 import 'api/cancel.dart';
 import 'api/crypto.dart';
@@ -23,9 +18,15 @@ import 'api/s3.dart';
 import 'api/text.dart';
 import 'api/webdav.dart';
 import 'api/zip.dart';
+
+import 'dart:async';
+import 'dart:convert';
+
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
+
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
 class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
@@ -3670,15 +3671,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RigProviderConfig dco_decode_rig_provider_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return RigProviderConfig(
       protocol: dco_decode_String(arr[0]),
       apiKey: dco_decode_String(arr[1]),
       baseUrl: dco_decode_String(arr[2]),
       model: dco_decode_String(arr[3]),
       maxTokens: dco_decode_u_32(arr[4]),
-      thinking: dco_decode_bool(arr[5]),
+      reasoningMode: dco_decode_String(arr[5]),
+      reasoningEffort: dco_decode_String(arr[6]),
+      reasoningBudget: dco_decode_u_32(arr[7]),
     );
   }
 
@@ -3696,6 +3699,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         return RigStreamEvent_Usage(
           inputTokens: dco_decode_u_32(raw[1]),
           outputTokens: dco_decode_u_32(raw[2]),
+          cachedInputTokens: dco_decode_u_32(raw[3]),
+          cacheWriteTokens: dco_decode_u_32(raw[4]),
         );
       default:
         throw Exception("unreachable");
@@ -5093,14 +5098,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_baseUrl = sse_decode_String(deserializer);
     var var_model = sse_decode_String(deserializer);
     var var_maxTokens = sse_decode_u_32(deserializer);
-    var var_thinking = sse_decode_bool(deserializer);
+    var var_reasoningMode = sse_decode_String(deserializer);
+    var var_reasoningEffort = sse_decode_String(deserializer);
+    var var_reasoningBudget = sse_decode_u_32(deserializer);
     return RigProviderConfig(
       protocol: var_protocol,
       apiKey: var_apiKey,
       baseUrl: var_baseUrl,
       model: var_model,
       maxTokens: var_maxTokens,
-      thinking: var_thinking,
+      reasoningMode: var_reasoningMode,
+      reasoningEffort: var_reasoningEffort,
+      reasoningBudget: var_reasoningBudget,
     );
   }
 
@@ -5122,9 +5131,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case 3:
         var var_inputTokens = sse_decode_u_32(deserializer);
         var var_outputTokens = sse_decode_u_32(deserializer);
+        var var_cachedInputTokens = sse_decode_u_32(deserializer);
+        var var_cacheWriteTokens = sse_decode_u_32(deserializer);
         return RigStreamEvent_Usage(
           inputTokens: var_inputTokens,
           outputTokens: var_outputTokens,
+          cachedInputTokens: var_cachedInputTokens,
+          cacheWriteTokens: var_cacheWriteTokens,
         );
       default:
         throw UnimplementedError('');
@@ -6986,7 +6999,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.baseUrl, serializer);
     sse_encode_String(self.model, serializer);
     sse_encode_u_32(self.maxTokens, serializer);
-    sse_encode_bool(self.thinking, serializer);
+    sse_encode_String(self.reasoningMode, serializer);
+    sse_encode_String(self.reasoningEffort, serializer);
+    sse_encode_u_32(self.reasoningBudget, serializer);
   }
 
   @protected
@@ -7008,10 +7023,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       case RigStreamEvent_Usage(
         inputTokens: final inputTokens,
         outputTokens: final outputTokens,
+        cachedInputTokens: final cachedInputTokens,
+        cacheWriteTokens: final cacheWriteTokens,
       ):
         sse_encode_i_32(3, serializer);
         sse_encode_u_32(inputTokens, serializer);
         sse_encode_u_32(outputTokens, serializer);
+        sse_encode_u_32(cachedInputTokens, serializer);
+        sse_encode_u_32(cacheWriteTokens, serializer);
     }
   }
 

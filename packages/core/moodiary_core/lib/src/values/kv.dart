@@ -104,10 +104,11 @@ enum MoodiaryKVs<T extends Object> {
   /// 已被用户「始终允许」的助手工具 id 列表，命中后不再弹权限框。
   assistantAlwaysAllowedTools<List<String>>(),
 
-  /// 新建 AI 会话的默认思考（reasoning）模式；每个会话的实际开关存于 ChatSession.thinking。
-  assistantThinkingEnabled<bool>(defaultValue: false),
+  /// 新建 AI 会话的默认思考强度；每个会话的实际档位存于 ChatSession.reasoningEffort。
+  /// 空串表示关闭思考。
+  assistantReasoningEffort<String>(defaultValue: ''),
 
-  /// 远端预定义供应商的原始 JSON 缓存（moodiary-llm-provider/index.json）。
+  /// models.dev 目录的归一化缓存。
   llmPresetCache<String>(defaultValue: ''),
 
   llmPresetCacheAt<int>(defaultValue: 0),

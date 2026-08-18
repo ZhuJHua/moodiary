@@ -8,16 +8,19 @@ pub use moodiary_assistant::{RigChatMessage, RigProviderConfig, RigStreamEvent, 
 
 #[frb(mirror(RigProviderConfig))]
 pub struct _RigProviderConfig {
-    /// `"openai"`（OpenAI 兼容，走 Chat Completions）或 `"anthropic"`。
+    /// `"openai-completions"` / `"openai-responses"` / `"anthropic-messages"`。
     pub protocol: String,
     pub api_key: String,
     /// 留空表示该协议官方端点。
     pub base_url: String,
     pub model: String,
     pub max_tokens: u32,
-    /// rig 不会自动开启思考，开启后由 Rust 按协议注入参数：Anthropic 走 extended
-    /// thinking，OpenAI 兼容走 `reasoning_effort: "medium"`。
-    pub thinking: bool,
+    /// `"off"` / `"effort"` / `"budget"`。rig 不会自动开启思考，一律由 Rust 按协议注入。
+    pub reasoning_mode: String,
+    /// effort 模式的档位，取值来自 models.dev 的 `reasoning_options`。
+    pub reasoning_effort: String,
+    /// budget 模式的思考 token 预算（Anthropic 老模型专用）。
+    pub reasoning_budget: u32,
 }
 
 #[frb(mirror(RigChatMessage))]
@@ -45,7 +48,12 @@ pub enum _RigStreamEvent {
     TextDelta(String),
     ReasoningDelta(String),
     ToolCall(String),
-    Usage { input_tokens: u32, output_tokens: u32 },
+    Usage {
+        input_tokens: u32,
+        output_tokens: u32,
+        cached_input_tokens: u32,
+        cache_write_tokens: u32,
+    },
 }
 
 /// Dart 取消订阅会令 `sink.add` 失败，循环随即中断并取消在途请求。

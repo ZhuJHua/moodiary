@@ -135,7 +135,7 @@ class _ProviderEntryTileState extends State<_ProviderEntryTile> {
         ? l10n.assistant.providerEntryLoading
         : active == null
         ? l10n.assistant.providerEntryEmpty
-        : '${active.name} · ${active.model}';
+        : '${active.name} · ${active.defaultModel}';
     return SettingListTile(
       isFirst: true,
       isLast: true,

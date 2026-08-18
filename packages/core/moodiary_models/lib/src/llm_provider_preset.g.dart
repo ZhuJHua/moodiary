@@ -10,8 +10,6 @@ _LlmProviderPreset _$LlmProviderPresetFromJson(Map<String, dynamic> json) =>
     _LlmProviderPreset(
       id: json['id'] as String,
       name: json['name'] as String,
-      protocol: $enumDecode(_$AssistantProviderTypeEnumMap, json['protocol']),
-      baseUrl: json['baseUrl'] as String,
       models: (json['models'] as List<dynamic>)
           .map((e) => LlmModelPreset.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -26,15 +24,8 @@ Map<String, dynamic> _$LlmProviderPresetToJson(_LlmProviderPreset instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
-      'protocol': _$AssistantProviderTypeEnumMap[instance.protocol]!,
-      'baseUrl': instance.baseUrl,
       'models': instance.models,
       'docUrl': instance.docUrl,
       'env': instance.env,
       'logoUrl': instance.logoUrl,
     };
-
-const _$AssistantProviderTypeEnumMap = {
-  AssistantProviderType.openai: 'openai',
-  AssistantProviderType.anthropic: 'anthropic',
-};

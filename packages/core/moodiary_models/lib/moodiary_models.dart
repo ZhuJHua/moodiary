@@ -19,6 +19,7 @@ export 'src/llm_provider_preset.dart';
 export 'src/media_info.dart';
 export 'src/media_info_event.dart';
 export 'src/memory_entry.dart';
+export 'src/reasoning_control.dart';
 export 'src/reindex_queue.dart';
 export 'src/search_posting.dart';
 export 'src/search_stats.dart';

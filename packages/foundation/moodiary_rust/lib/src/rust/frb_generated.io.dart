@@ -3,12 +3,6 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'dart:async';
-import 'dart:convert';
-import 'dart:ffi' as ffi;
-
-import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
-
 import 'api/assistant.dart';
 import 'api/cancel.dart';
 import 'api/crypto.dart';
@@ -24,7 +18,14 @@ import 'api/s3.dart';
 import 'api/text.dart';
 import 'api/webdav.dart';
 import 'api/zip.dart';
+
+import 'dart:async';
+import 'dart:convert';
+import 'dart:ffi' as ffi;
+
 import 'frb_generated.dart';
+
+import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   RustLibApiImplPlatform({
@@ -1942,7 +1943,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.base_url = cst_encode_String(apiObj.baseUrl);
     wireObj.model = cst_encode_String(apiObj.model);
     wireObj.max_tokens = cst_encode_u_32(apiObj.maxTokens);
-    wireObj.thinking = cst_encode_bool(apiObj.thinking);
+    wireObj.reasoning_mode = cst_encode_String(apiObj.reasoningMode);
+    wireObj.reasoning_effort = cst_encode_String(apiObj.reasoningEffort);
+    wireObj.reasoning_budget = cst_encode_u_32(apiObj.reasoningBudget);
   }
 
   @protected
@@ -1971,9 +1974,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     if (apiObj is RigStreamEvent_Usage) {
       var pre_input_tokens = cst_encode_u_32(apiObj.inputTokens);
       var pre_output_tokens = cst_encode_u_32(apiObj.outputTokens);
+      var pre_cached_input_tokens = cst_encode_u_32(apiObj.cachedInputTokens);
+      var pre_cache_write_tokens = cst_encode_u_32(apiObj.cacheWriteTokens);
       wireObj.tag = 3;
       wireObj.kind.Usage.input_tokens = pre_input_tokens;
       wireObj.kind.Usage.output_tokens = pre_output_tokens;
+      wireObj.kind.Usage.cached_input_tokens = pre_cached_input_tokens;
+      wireObj.kind.Usage.cache_write_tokens = pre_cache_write_tokens;
       return;
     }
   }
@@ -5886,8 +5893,12 @@ final class wire_cst_rig_provider_config extends ffi.Struct {
   @ffi.Uint32()
   external int max_tokens;
 
-  @ffi.Bool()
-  external bool thinking;
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> reasoning_mode;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> reasoning_effort;
+
+  @ffi.Uint32()
+  external int reasoning_budget;
 }
 
 final class wire_cst_rig_chat_message extends ffi.Struct {
@@ -6031,6 +6042,12 @@ final class wire_cst_RigStreamEvent_Usage extends ffi.Struct {
 
   @ffi.Uint32()
   external int output_tokens;
+
+  @ffi.Uint32()
+  external int cached_input_tokens;
+
+  @ffi.Uint32()
+  external int cache_write_tokens;
 }
 
 final class RigStreamEventKind extends ffi.Union {

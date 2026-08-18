@@ -26,7 +26,7 @@ final ChatSessionSchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'model', type: IsarType.string),
       IsarPropertySchema(name: 'createdAt', type: IsarType.dateTime),
       IsarPropertySchema(name: 'updatedAt', type: IsarType.dateTime),
-      IsarPropertySchema(name: 'thinking', type: IsarType.bool),
+      IsarPropertySchema(name: 'reasoningEffort', type: IsarType.string),
       IsarPropertySchema(name: 'compactedSummary', type: IsarType.string),
       IsarPropertySchema(name: 'compactedUpToMessageId', type: IsarType.string),
       IsarPropertySchema(name: 'compactedAt', type: IsarType.dateTime),
@@ -61,7 +61,7 @@ int serializeChatSession(IsarWriter writer, ChatSession object) {
     6,
     object.updatedAt.toUtc().microsecondsSinceEpoch,
   );
-  IsarCore.writeBool(writer, 7, value: object.thinking);
+  IsarCore.writeString(writer, 7, object.reasoningEffort);
   {
     final value = object.compactedSummary;
     if (value == null) {
@@ -131,8 +131,8 @@ ChatSession deserializeChatSession(IsarReader reader) {
       ).toLocal();
     }
   }
-  final bool _thinking;
-  _thinking = IsarCore.readBool(reader, 7);
+  final String _reasoningEffort;
+  _reasoningEffort = IsarCore.readString(reader, 7) ?? '';
   final String? _compactedSummary;
   _compactedSummary = IsarCore.readString(reader, 8);
   final String? _compactedUpToMessageId;
@@ -165,7 +165,7 @@ ChatSession deserializeChatSession(IsarReader reader) {
     model: _model,
     createdAt: _createdAt,
     updatedAt: _updatedAt,
-    thinking: _thinking,
+    reasoningEffort: _reasoningEffort,
     compactedSummary: _compactedSummary,
     compactedUpToMessageId: _compactedUpToMessageId,
     compactedAt: _compactedAt,
@@ -210,7 +210,7 @@ dynamic deserializeChatSessionProp(IsarReader reader, int property) {
         }
       }
     case 7:
-      return IsarCore.readBool(reader, 7);
+      return IsarCore.readString(reader, 7) ?? '';
     case 8:
       return IsarCore.readString(reader, 8);
     case 9:
@@ -249,7 +249,7 @@ sealed class _ChatSessionUpdate {
     String? model,
     DateTime? createdAt,
     DateTime? updatedAt,
-    bool? thinking,
+    String? reasoningEffort,
     String? compactedSummary,
     String? compactedUpToMessageId,
     DateTime? compactedAt,
@@ -270,7 +270,7 @@ class _ChatSessionUpdateImpl implements _ChatSessionUpdate {
     Object? model = ignore,
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
-    Object? thinking = ignore,
+    Object? reasoningEffort = ignore,
     Object? compactedSummary = ignore,
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
@@ -284,7 +284,7 @@ class _ChatSessionUpdateImpl implements _ChatSessionUpdate {
             if (model != ignore) 4: model as String?,
             if (createdAt != ignore) 5: createdAt as DateTime?,
             if (updatedAt != ignore) 6: updatedAt as DateTime?,
-            if (thinking != ignore) 7: thinking as bool?,
+            if (reasoningEffort != ignore) 7: reasoningEffort as String?,
             if (compactedSummary != ignore) 8: compactedSummary as String?,
             if (compactedUpToMessageId != ignore)
               9: compactedUpToMessageId as String?,
@@ -305,7 +305,7 @@ sealed class _ChatSessionUpdateAll {
     String? model,
     DateTime? createdAt,
     DateTime? updatedAt,
-    bool? thinking,
+    String? reasoningEffort,
     String? compactedSummary,
     String? compactedUpToMessageId,
     DateTime? compactedAt,
@@ -326,7 +326,7 @@ class _ChatSessionUpdateAllImpl implements _ChatSessionUpdateAll {
     Object? model = ignore,
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
-    Object? thinking = ignore,
+    Object? reasoningEffort = ignore,
     Object? compactedSummary = ignore,
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
@@ -338,7 +338,7 @@ class _ChatSessionUpdateAllImpl implements _ChatSessionUpdateAll {
       if (model != ignore) 4: model as String?,
       if (createdAt != ignore) 5: createdAt as DateTime?,
       if (updatedAt != ignore) 6: updatedAt as DateTime?,
-      if (thinking != ignore) 7: thinking as bool?,
+      if (reasoningEffort != ignore) 7: reasoningEffort as String?,
       if (compactedSummary != ignore) 8: compactedSummary as String?,
       if (compactedUpToMessageId != ignore)
         9: compactedUpToMessageId as String?,
@@ -362,7 +362,7 @@ sealed class _ChatSessionQueryUpdate {
     String? model,
     DateTime? createdAt,
     DateTime? updatedAt,
-    bool? thinking,
+    String? reasoningEffort,
     String? compactedSummary,
     String? compactedUpToMessageId,
     DateTime? compactedAt,
@@ -383,7 +383,7 @@ class _ChatSessionQueryUpdateImpl implements _ChatSessionQueryUpdate {
     Object? model = ignore,
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
-    Object? thinking = ignore,
+    Object? reasoningEffort = ignore,
     Object? compactedSummary = ignore,
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
@@ -395,7 +395,7 @@ class _ChatSessionQueryUpdateImpl implements _ChatSessionQueryUpdate {
       if (model != ignore) 4: model as String?,
       if (createdAt != ignore) 5: createdAt as DateTime?,
       if (updatedAt != ignore) 6: updatedAt as DateTime?,
-      if (thinking != ignore) 7: thinking as bool?,
+      if (reasoningEffort != ignore) 7: reasoningEffort as String?,
       if (compactedSummary != ignore) 8: compactedSummary as String?,
       if (compactedUpToMessageId != ignore)
         9: compactedUpToMessageId as String?,
@@ -426,7 +426,7 @@ class _ChatSessionQueryBuilderUpdateImpl implements _ChatSessionQueryUpdate {
     Object? model = ignore,
     Object? createdAt = ignore,
     Object? updatedAt = ignore,
-    Object? thinking = ignore,
+    Object? reasoningEffort = ignore,
     Object? compactedSummary = ignore,
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
@@ -440,7 +440,7 @@ class _ChatSessionQueryBuilderUpdateImpl implements _ChatSessionQueryUpdate {
         if (model != ignore) 4: model as String?,
         if (createdAt != ignore) 5: createdAt as DateTime?,
         if (updatedAt != ignore) 6: updatedAt as DateTime?,
-        if (thinking != ignore) 7: thinking as bool?,
+        if (reasoningEffort != ignore) 7: reasoningEffort as String?,
         if (compactedSummary != ignore) 8: compactedSummary as String?,
         if (compactedUpToMessageId != ignore)
           9: compactedUpToMessageId as String?,
@@ -1176,12 +1176,150 @@ extension ChatSessionQueryFilter
     });
   }
 
-  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition> thinkingEqualTo(
-    bool value,
-  ) {
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 7, value: value),
+        EqualCondition(property: 7, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortGreaterThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortGreaterThanOrEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortLessThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 7, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortBetween(
+    String lower,
+    String upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 7,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 7,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 7,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 7, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  reasoningEffortIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 7, value: ''),
       );
     });
   }
@@ -1749,15 +1887,18 @@ extension ChatSessionQuerySortBy
     });
   }
 
-  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByThinking() {
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByReasoningEffort({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7);
+      return query.addSortBy(7, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByThinkingDesc() {
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  sortByReasoningEffortDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7, sort: Sort.desc);
+      return query.addSortBy(7, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -1907,15 +2048,18 @@ extension ChatSessionQuerySortThenBy
     });
   }
 
-  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByThinking() {
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByReasoningEffort({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7);
+      return query.addSortBy(7, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByThinkingDesc() {
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  thenByReasoningEffortDesc({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7, sort: Sort.desc);
+      return query.addSortBy(7, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -2013,9 +2157,10 @@ extension ChatSessionQueryWhereDistinct
     });
   }
 
-  QueryBuilder<ChatSession, ChatSession, QAfterDistinct> distinctByThinking() {
+  QueryBuilder<ChatSession, ChatSession, QAfterDistinct>
+  distinctByReasoningEffort({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(7);
+      return query.addDistinctBy(7, caseSensitive: caseSensitive);
     });
   }
 
@@ -2086,7 +2231,7 @@ extension ChatSessionQueryProperty1
     });
   }
 
-  QueryBuilder<ChatSession, bool, QAfterProperty> thinkingProperty() {
+  QueryBuilder<ChatSession, String, QAfterProperty> reasoningEffortProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(7);
     });
@@ -2158,7 +2303,8 @@ extension ChatSessionQueryProperty2<R>
     });
   }
 
-  QueryBuilder<ChatSession, (R, bool), QAfterProperty> thinkingProperty() {
+  QueryBuilder<ChatSession, (R, String), QAfterProperty>
+  reasoningEffortProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(7);
     });
@@ -2234,7 +2380,8 @@ extension ChatSessionQueryProperty3<R1, R2>
     });
   }
 
-  QueryBuilder<ChatSession, (R1, R2, bool), QOperations> thinkingProperty() {
+  QueryBuilder<ChatSession, (R1, R2, String), QOperations>
+  reasoningEffortProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(7);
     });
@@ -2280,7 +2427,7 @@ _ChatSession _$ChatSessionFromJson(Map<String, dynamic> json) => _ChatSession(
   model: json['model'] as String,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
-  thinking: json['thinking'] as bool? ?? false,
+  reasoningEffort: json['reasoningEffort'] as String? ?? '',
   compactedSummary: json['compactedSummary'] as String?,
   compactedUpToMessageId: json['compactedUpToMessageId'] as String?,
   compactedAt: json['compactedAt'] == null
@@ -2298,7 +2445,7 @@ Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
       'model': instance.model,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
-      'thinking': instance.thinking,
+      'reasoningEffort': instance.reasoningEffort,
       'compactedSummary': instance.compactedSummary,
       'compactedUpToMessageId': instance.compactedUpToMessageId,
       'compactedAt': instance.compactedAt?.toIso8601String(),

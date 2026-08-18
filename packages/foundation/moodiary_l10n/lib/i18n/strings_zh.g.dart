@@ -591,11 +591,38 @@ class Translations$assistant$zh {
 	/// zh: '重新回答'
 	String get regenerate => '重新回答';
 
-	/// zh: '深度思考'
-	String get thinkingToggle => '深度思考';
-
 	/// zh: '思考中…'
 	String get thinking => '思考中…';
+
+	/// zh: '协议'
+	String get protocolTitle => '协议';
+
+	/// zh: 'OpenAI /chat/completions'
+	String get protocolOpenAiCompletions => 'OpenAI /chat/completions';
+
+	/// zh: 'OpenAI /responses'
+	String get protocolOpenAiResponses => 'OpenAI /responses';
+
+	/// zh: 'Anthropic /messages'
+	String get protocolAnthropicMessages => 'Anthropic /messages';
+
+	/// zh: '从端点获取模型列表'
+	String get modelListFetch => '从端点获取模型列表';
+
+	/// zh: '请先填写 API Key'
+	String get modelListNeedKey => '请先填写 API Key';
+
+	/// zh: '获取到 {count} 个模型'
+	String modelListFetched({required Object count}) => '获取到 ${count} 个模型';
+
+	/// zh: '获取模型列表失败，可手动填写模型'
+	String get modelListFailed => '获取模型列表失败，可手动填写模型';
+
+	/// zh: '思考强度'
+	String get reasoningEffort => '思考强度';
+
+	/// zh: '不思考'
+	String get reasoningOff => '不思考';
 
 	/// zh: '已深度思考 {duration} 秒'
 	String thoughtFor({required Object duration}) => '已深度思考 ${duration} 秒';
@@ -879,12 +906,6 @@ class Translations$assistant$zh {
 	/// zh: '选择模型'
 	String get modelProviderPickModel => '选择模型';
 
-	/// zh: '显示全部'
-	String get modelProviderShowAll => '显示全部';
-
-	/// zh: '仅工具可用'
-	String get modelProviderShowToolOnly => '仅工具可用';
-
 	/// zh: '推理'
 	String get modelProviderBadgeReasoning => '推理';
 
@@ -926,6 +947,27 @@ class Translations$assistant$zh {
 
 	/// zh: '[图片]'
 	String get imagePlaceholder => '[图片]';
+
+	/// zh: '默认'
+	String get modelProviderDefault => '默认';
+
+	/// zh: '默认模型'
+	String get modelProviderDefaultModel => '默认模型';
+
+	/// zh: '共 {count} 个模型'
+	String modelListCount({required Object count}) => '共 ${count} 个模型';
+
+	/// zh: '更新列表'
+	String get modelListUpdate => '更新列表';
+
+	/// zh: '手动添加'
+	String get modelListAdd => '手动添加';
+
+	/// zh: '还没有可选模型'
+	String get modelListEmpty => '还没有可选模型';
+
+	/// zh: '已下线'
+	String get modelDeprecated => '已下线';
 }
 
 // Path: common

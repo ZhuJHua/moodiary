@@ -1,5 +1,6 @@
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
+import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_models/moodiary_models.dart';
 
 /// 参与压缩判定的一条消息（从聊天控制器的文本消息投影而来）。
@@ -18,6 +19,7 @@ class ContextCompactionController {
     required int lastInputTokens,
     required int contextLimit,
     required LlmProvider provider,
+    required String model,
     required String apiKey,
     bool force = false,
   }) async {
@@ -52,6 +54,7 @@ class ContextCompactionController {
     try {
       final summary = await _summarize(
         provider: provider,
+        model: model,
         apiKey: apiKey,
         priorSummary: session.compactedSummary,
         messages: toSummarize,
@@ -72,6 +75,7 @@ class ContextCompactionController {
 
   Future<String?> _summarize({
     required LlmProvider provider,
+    required String model,
     required String apiKey,
     required String? priorSummary,
     required List<CompactionMessage> messages,
@@ -91,11 +95,13 @@ class ContextCompactionController {
       ),
     );
 
+    // 摘要用与对话同一条线路（协议按模型解析）。
+    final route = ModelResolver.resolve(provider, model);
     final request = AssistantChatRequest(
-      type: provider.protocol,
-      baseUrl: provider.baseUrl,
+      type: route.protocol,
+      baseUrl: route.baseUrl,
       apiKey: apiKey,
-      model: provider.model,
+      model: route.modelId,
       systemPrompt: buildCompactionSystemPrompt(),
       maxTokens: assistantCompactionSummaryMaxTokens,
       history: history,

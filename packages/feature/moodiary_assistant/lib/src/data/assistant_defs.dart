@@ -1,4 +1,5 @@
-library;
+import 'package:moodiary_assistant/src/data/assistant.dart';
+import 'package:moodiary_models/moodiary_models.dart';
 
 /// 工具的授权级别决定调用前是否需要用户确认，以及权限卡片的呈现方式。
 enum AssistantToolPermission {
@@ -54,9 +55,94 @@ enum AssistantTool {
   bool get dangerous => permission == .dangerous;
 }
 
-const int assistantMaxTokens = 8192;
+/// 目录没给 output limit 时的兜底 max_tokens。
+const int assistantFallbackMaxTokens = 8192;
+
+/// max_tokens 的自家上限。目录里 128k 输出的模型不少，一次回复没必要给到那么多，
+/// 而 Anthropic 的思考预算是按 max_tokens 折算的，放任会把预算推到荒唐的量级。
+const int assistantMaxTokensCap = 32768;
 
 const int assistantMaxTurns = 12;
+
+/// 单次回复的 max_tokens：以目录的 `limit.output` 为准，夹进合理区间。
+int maxTokensFor(int? outputLimit) {
+  final limit = outputLimit ?? assistantFallbackMaxTokens;
+  return limit.clamp(1024, assistantMaxTokensCap);
+}
+
+/// budget_tokens 型模型的三个档位（目录只给范围，不给档位名，档位由我们定）。
+const List<String> assistantBudgetLevels = ['low', 'medium', 'high'];
+
+/// 目录里表示「不思考」的 effort 值，等价于我们的「关」，不另占一档。
+const String _offEffortValue = 'none';
+
+/// 某个模型可供用户选择的思考档位（不含「关」，「关」由 UI 恒定放在首位）。
+///
+/// 空列表 = 不显示控件。两种情况会落到这里：模型不推理，或者它只声明了 `toggle`
+/// —— 目录不给 toggle 的字段名，我们没有可靠的开关可下发，硬做只会做出个假开关。
+List<String> reasoningLevelsFor(LlmModelPreset? model) {
+  final controls = model?.reasoningOptions;
+  if (model == null || !model.reasoning || controls == null) return const [];
+
+  for (final c in controls) {
+    if (c.type == ReasoningControlType.effort && c.values.isNotEmpty) {
+      final levels = [
+        for (final v in c.values)
+          if (v != _offEffortValue) v,
+      ];
+      if (levels.isNotEmpty) return levels;
+    }
+  }
+  for (final c in controls) {
+    if (c.type == ReasoningControlType.budgetTokens) return assistantBudgetLevels;
+  }
+  return const [];
+}
+
+/// 自定义供应商没有目录可查，只声明了「支持推理」这一个 bool，给标准三档。
+const List<String> customReasoningLevels = ['low', 'medium', 'high'];
+
+/// 把用户选中的档位翻译成实际下发的参数形态。
+///
+/// [level] 为空 = 关。模型声明了 effort 就走 effort；只声明 budget_tokens 的
+/// （Anthropic 老模型）把档位折算成 token 数 —— 这两条路不能互换，新 Claude 收到
+/// `budget_tokens` 会直接 400。
+AssistantReasoning resolveReasoning({
+  required String level,
+  required LlmModelPreset? model,
+  required int maxTokens,
+}) {
+  if (level.isEmpty || level == _offEffortValue) {
+    return const AssistantReasoning.off();
+  }
+  final controls = model?.reasoningOptions;
+  if (controls == null) {
+    // 自定义供应商：没有目录，按最通用的 effort 下发。
+    return AssistantReasoning.effort(level);
+  }
+  for (final c in controls) {
+    if (c.type == ReasoningControlType.effort && c.values.contains(level)) {
+      return AssistantReasoning.effort(level);
+    }
+  }
+  for (final c in controls) {
+    if (c.type == ReasoningControlType.budgetTokens) {
+      return AssistantReasoning.budget(_budgetFor(level, c, maxTokens));
+    }
+  }
+  return AssistantReasoning.effort(level);
+}
+
+int _budgetFor(String level, ReasoningControl control, int maxTokens) {
+  final fraction = switch (level) {
+    'low' => 8,
+    'high' => 2,
+    _ => 4,
+  };
+  final min = control.min ?? 1024;
+  final max = control.max ?? (maxTokens - 1).clamp(min, assistantMaxTokensCap);
+  return (maxTokens ~/ fraction).clamp(min, max < min ? min : max);
+}
 
 /// SOUL 自定义文本字符上限（约 1.5k token），避免撑爆小上下文模型。
 const int soulMaxChars = 6000;

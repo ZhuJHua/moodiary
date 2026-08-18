@@ -3,10 +3,10 @@
 
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
+import '../frb_generated.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
-
-import '../frb_generated.dart';
 part 'assistant.freezed.dart';
 
 /// Dart 取消订阅会令 `sink.add` 失败，循环随即中断并取消在途请求。
@@ -64,7 +64,7 @@ class RigChatMessage {
 }
 
 class RigProviderConfig {
-  /// `"openai"`（OpenAI 兼容，走 Chat Completions）或 `"anthropic"`。
+  /// `"openai-completions"` / `"openai-responses"` / `"anthropic-messages"`。
   final String protocol;
   final String apiKey;
 
@@ -73,9 +73,14 @@ class RigProviderConfig {
   final String model;
   final int maxTokens;
 
-  /// rig 不会自动开启思考，开启后由 Rust 按协议注入参数：Anthropic 走 extended
-  /// thinking，OpenAI 兼容走 `reasoning_effort: "medium"`。
-  final bool thinking;
+  /// `"off"` / `"effort"` / `"budget"`。rig 不会自动开启思考，一律由 Rust 按协议注入。
+  final String reasoningMode;
+
+  /// effort 模式的档位，取值来自 models.dev 的 `reasoning_options`。
+  final String reasoningEffort;
+
+  /// budget 模式的思考 token 预算（Anthropic 老模型专用）。
+  final int reasoningBudget;
 
   const RigProviderConfig({
     required this.protocol,
@@ -83,7 +88,9 @@ class RigProviderConfig {
     required this.baseUrl,
     required this.model,
     required this.maxTokens,
-    required this.thinking,
+    required this.reasoningMode,
+    required this.reasoningEffort,
+    required this.reasoningBudget,
   });
 
   @override
@@ -93,7 +100,9 @@ class RigProviderConfig {
       baseUrl.hashCode ^
       model.hashCode ^
       maxTokens.hashCode ^
-      thinking.hashCode;
+      reasoningMode.hashCode ^
+      reasoningEffort.hashCode ^
+      reasoningBudget.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -105,7 +114,9 @@ class RigProviderConfig {
           baseUrl == other.baseUrl &&
           model == other.model &&
           maxTokens == other.maxTokens &&
-          thinking == other.thinking;
+          reasoningMode == other.reasoningMode &&
+          reasoningEffort == other.reasoningEffort &&
+          reasoningBudget == other.reasoningBudget;
 }
 
 @freezed
@@ -121,6 +132,8 @@ sealed class RigStreamEvent with _$RigStreamEvent {
   const factory RigStreamEvent.usage({
     required int inputTokens,
     required int outputTokens,
+    required int cachedInputTokens,
+    required int cacheWriteTokens,
   }) = RigStreamEvent_Usage;
 }
 

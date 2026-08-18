@@ -20,14 +20,26 @@ final LlmProviderSchema = IsarGeneratedSchema(
     idName: 'id',
     embedded: false,
     properties: [
+      IsarPropertySchema(name: 'isPreset', type: IsarType.bool),
+      IsarPropertySchema(
+        name: 'protocol',
+        type: IsarType.byte,
+
+        enumMap: {
+          "openaiCompletions": 0,
+          "openaiResponses": 1,
+          "anthropicMessages": 2,
+        },
+      ),
       IsarPropertySchema(name: 'id', type: IsarType.string),
       IsarPropertySchema(name: 'name', type: IsarType.string),
       IsarPropertySchema(name: 'type', type: IsarType.string),
       IsarPropertySchema(name: 'baseUrl', type: IsarType.string),
-      IsarPropertySchema(name: 'model', type: IsarType.string),
+      IsarPropertySchema(name: 'defaultModel', type: IsarType.string),
       IsarPropertySchema(name: 'createdAt', type: IsarType.dateTime),
       IsarPropertySchema(name: 'sortOrder', type: IsarType.long),
-      IsarPropertySchema(name: 'providerId', type: IsarType.string),
+      IsarPropertySchema(name: 'presetId', type: IsarType.string),
+      IsarPropertySchema(name: 'models', type: IsarType.stringList),
       IsarPropertySchema(name: 'toolCall', type: IsarType.bool),
       IsarPropertySchema(name: 'reasoning', type: IsarType.bool),
       IsarPropertySchema(name: 'attachment', type: IsarType.bool),
@@ -44,39 +56,49 @@ final LlmProviderSchema = IsarGeneratedSchema(
 
 @isarProtected
 int serializeLlmProvider(IsarWriter writer, LlmProvider object) {
-  IsarCore.writeString(writer, 1, object.id);
-  IsarCore.writeString(writer, 2, object.name);
-  IsarCore.writeString(writer, 3, object.type);
-  IsarCore.writeString(writer, 4, object.baseUrl);
-  IsarCore.writeString(writer, 5, object.model);
+  IsarCore.writeBool(writer, 1, value: object.isPreset);
+  IsarCore.writeByte(writer, 2, object.protocol.index);
+  IsarCore.writeString(writer, 3, object.id);
+  IsarCore.writeString(writer, 4, object.name);
+  IsarCore.writeString(writer, 5, object.type);
+  IsarCore.writeString(writer, 6, object.baseUrl);
+  IsarCore.writeString(writer, 7, object.defaultModel);
   IsarCore.writeLong(
     writer,
-    6,
+    8,
     object.createdAt.toUtc().microsecondsSinceEpoch,
   );
-  IsarCore.writeLong(writer, 7, object.sortOrder);
-  IsarCore.writeString(writer, 8, object.providerId);
-  IsarCore.writeBool(writer, 9, value: object.toolCall);
-  IsarCore.writeBool(writer, 10, value: object.reasoning);
-  IsarCore.writeBool(writer, 11, value: object.attachment);
+  IsarCore.writeLong(writer, 9, object.sortOrder);
+  IsarCore.writeString(writer, 10, object.presetId);
+  {
+    final list = object.models;
+    final listWriter = IsarCore.beginList(writer, 11, list.length);
+    for (var i = 0; i < list.length; i++) {
+      IsarCore.writeString(listWriter, i, list[i]);
+    }
+    IsarCore.endList(writer, listWriter);
+  }
+  IsarCore.writeBool(writer, 12, value: object.toolCall);
+  IsarCore.writeBool(writer, 13, value: object.reasoning);
+  IsarCore.writeBool(writer, 14, value: object.attachment);
   return Isar.fastHash(object.id);
 }
 
 @isarProtected
 LlmProvider deserializeLlmProvider(IsarReader reader) {
   final String _id;
-  _id = IsarCore.readString(reader, 1) ?? '';
+  _id = IsarCore.readString(reader, 3) ?? '';
   final String _name;
-  _name = IsarCore.readString(reader, 2) ?? '';
+  _name = IsarCore.readString(reader, 4) ?? '';
   final String _type;
-  _type = IsarCore.readString(reader, 3) ?? '';
+  _type = IsarCore.readString(reader, 5) ?? '';
   final String _baseUrl;
-  _baseUrl = IsarCore.readString(reader, 4) ?? '';
-  final String _model;
-  _model = IsarCore.readString(reader, 5) ?? '';
+  _baseUrl = IsarCore.readString(reader, 6) ?? '';
+  final String _defaultModel;
+  _defaultModel = IsarCore.readString(reader, 7) ?? '';
   final DateTime _createdAt;
   {
-    final value = IsarCore.readLong(reader, 6);
+    final value = IsarCore.readLong(reader, 8);
     if (value == -9223372036854775808) {
       _createdAt = DateTime.fromMillisecondsSinceEpoch(
         0,
@@ -90,24 +112,42 @@ LlmProvider deserializeLlmProvider(IsarReader reader) {
     }
   }
   final int _sortOrder;
-  _sortOrder = IsarCore.readLong(reader, 7);
-  final String _providerId;
-  _providerId = IsarCore.readString(reader, 8) ?? '';
+  _sortOrder = IsarCore.readLong(reader, 9);
+  final String _presetId;
+  _presetId = IsarCore.readString(reader, 10) ?? '';
+  final List<String> _models;
+  {
+    final length = IsarCore.readList(reader, 11, IsarCore.readerPtrPtr);
+    {
+      final reader = IsarCore.readerPtr;
+      if (reader.isNull) {
+        _models = const <String>[];
+      } else {
+        final list = List<String>.filled(length, '', growable: true);
+        for (var i = 0; i < length; i++) {
+          list[i] = IsarCore.readString(reader, i) ?? '';
+        }
+        IsarCore.freeReader(reader);
+        _models = list;
+      }
+    }
+  }
   final bool _toolCall;
-  _toolCall = IsarCore.readBool(reader, 9);
+  _toolCall = IsarCore.readBool(reader, 12);
   final bool _reasoning;
-  _reasoning = IsarCore.readBool(reader, 10);
+  _reasoning = IsarCore.readBool(reader, 13);
   final bool _attachment;
-  _attachment = IsarCore.readBool(reader, 11);
+  _attachment = IsarCore.readBool(reader, 14);
   final object = LlmProvider(
     id: _id,
     name: _name,
     type: _type,
     baseUrl: _baseUrl,
-    model: _model,
+    defaultModel: _defaultModel,
     createdAt: _createdAt,
     sortOrder: _sortOrder,
-    providerId: _providerId,
+    presetId: _presetId,
+    models: _models,
     toolCall: _toolCall,
     reasoning: _reasoning,
     attachment: _attachment,
@@ -119,9 +159,16 @@ LlmProvider deserializeLlmProvider(IsarReader reader) {
 dynamic deserializeLlmProviderProp(IsarReader reader, int property) {
   switch (property) {
     case 1:
-      return IsarCore.readString(reader, 1) ?? '';
+      return IsarCore.readBool(reader, 1);
     case 2:
-      return IsarCore.readString(reader, 2) ?? '';
+      {
+        if (IsarCore.readNull(reader, 2)) {
+          return AssistantProviderType.openaiCompletions;
+        } else {
+          return _llmProviderProtocol[IsarCore.readByte(reader, 2)] ??
+              AssistantProviderType.openaiCompletions;
+        }
+      }
     case 3:
       return IsarCore.readString(reader, 3) ?? '';
     case 4:
@@ -129,8 +176,12 @@ dynamic deserializeLlmProviderProp(IsarReader reader, int property) {
     case 5:
       return IsarCore.readString(reader, 5) ?? '';
     case 6:
+      return IsarCore.readString(reader, 6) ?? '';
+    case 7:
+      return IsarCore.readString(reader, 7) ?? '';
+    case 8:
       {
-        final value = IsarCore.readLong(reader, 6);
+        final value = IsarCore.readLong(reader, 8);
         if (value == -9223372036854775808) {
           return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true).toLocal();
         } else {
@@ -140,16 +191,33 @@ dynamic deserializeLlmProviderProp(IsarReader reader, int property) {
           ).toLocal();
         }
       }
-    case 7:
-      return IsarCore.readLong(reader, 7);
-    case 8:
-      return IsarCore.readString(reader, 8) ?? '';
     case 9:
-      return IsarCore.readBool(reader, 9);
+      return IsarCore.readLong(reader, 9);
     case 10:
-      return IsarCore.readBool(reader, 10);
+      return IsarCore.readString(reader, 10) ?? '';
     case 11:
-      return IsarCore.readBool(reader, 11);
+      {
+        final length = IsarCore.readList(reader, 11, IsarCore.readerPtrPtr);
+        {
+          final reader = IsarCore.readerPtr;
+          if (reader.isNull) {
+            return const <String>[];
+          } else {
+            final list = List<String>.filled(length, '', growable: true);
+            for (var i = 0; i < length; i++) {
+              list[i] = IsarCore.readString(reader, i) ?? '';
+            }
+            IsarCore.freeReader(reader);
+            return list;
+          }
+        }
+      }
+    case 12:
+      return IsarCore.readBool(reader, 12);
+    case 13:
+      return IsarCore.readBool(reader, 13);
+    case 14:
+      return IsarCore.readBool(reader, 14);
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -158,13 +226,15 @@ dynamic deserializeLlmProviderProp(IsarReader reader, int property) {
 sealed class _LlmProviderUpdate {
   bool call({
     required String id,
+    bool? isPreset,
+    AssistantProviderType? protocol,
     String? name,
     String? type,
     String? baseUrl,
-    String? model,
+    String? defaultModel,
     DateTime? createdAt,
     int? sortOrder,
-    String? providerId,
+    String? presetId,
     bool? toolCall,
     bool? reasoning,
     bool? attachment,
@@ -179,13 +249,15 @@ class _LlmProviderUpdateImpl implements _LlmProviderUpdate {
   @override
   bool call({
     required String id,
+    Object? isPreset = ignore,
+    Object? protocol = ignore,
     Object? name = ignore,
     Object? type = ignore,
     Object? baseUrl = ignore,
-    Object? model = ignore,
+    Object? defaultModel = ignore,
     Object? createdAt = ignore,
     Object? sortOrder = ignore,
-    Object? providerId = ignore,
+    Object? presetId = ignore,
     Object? toolCall = ignore,
     Object? reasoning = ignore,
     Object? attachment = ignore,
@@ -193,16 +265,18 @@ class _LlmProviderUpdateImpl implements _LlmProviderUpdate {
     return collection.updateProperties(
           [id],
           {
-            if (name != ignore) 2: name as String?,
-            if (type != ignore) 3: type as String?,
-            if (baseUrl != ignore) 4: baseUrl as String?,
-            if (model != ignore) 5: model as String?,
-            if (createdAt != ignore) 6: createdAt as DateTime?,
-            if (sortOrder != ignore) 7: sortOrder as int?,
-            if (providerId != ignore) 8: providerId as String?,
-            if (toolCall != ignore) 9: toolCall as bool?,
-            if (reasoning != ignore) 10: reasoning as bool?,
-            if (attachment != ignore) 11: attachment as bool?,
+            if (isPreset != ignore) 1: isPreset as bool?,
+            if (protocol != ignore) 2: protocol as AssistantProviderType?,
+            if (name != ignore) 4: name as String?,
+            if (type != ignore) 5: type as String?,
+            if (baseUrl != ignore) 6: baseUrl as String?,
+            if (defaultModel != ignore) 7: defaultModel as String?,
+            if (createdAt != ignore) 8: createdAt as DateTime?,
+            if (sortOrder != ignore) 9: sortOrder as int?,
+            if (presetId != ignore) 10: presetId as String?,
+            if (toolCall != ignore) 12: toolCall as bool?,
+            if (reasoning != ignore) 13: reasoning as bool?,
+            if (attachment != ignore) 14: attachment as bool?,
           },
         ) >
         0;
@@ -212,13 +286,15 @@ class _LlmProviderUpdateImpl implements _LlmProviderUpdate {
 sealed class _LlmProviderUpdateAll {
   int call({
     required List<String> id,
+    bool? isPreset,
+    AssistantProviderType? protocol,
     String? name,
     String? type,
     String? baseUrl,
-    String? model,
+    String? defaultModel,
     DateTime? createdAt,
     int? sortOrder,
-    String? providerId,
+    String? presetId,
     bool? toolCall,
     bool? reasoning,
     bool? attachment,
@@ -233,28 +309,32 @@ class _LlmProviderUpdateAllImpl implements _LlmProviderUpdateAll {
   @override
   int call({
     required List<String> id,
+    Object? isPreset = ignore,
+    Object? protocol = ignore,
     Object? name = ignore,
     Object? type = ignore,
     Object? baseUrl = ignore,
-    Object? model = ignore,
+    Object? defaultModel = ignore,
     Object? createdAt = ignore,
     Object? sortOrder = ignore,
-    Object? providerId = ignore,
+    Object? presetId = ignore,
     Object? toolCall = ignore,
     Object? reasoning = ignore,
     Object? attachment = ignore,
   }) {
     return collection.updateProperties(id, {
-      if (name != ignore) 2: name as String?,
-      if (type != ignore) 3: type as String?,
-      if (baseUrl != ignore) 4: baseUrl as String?,
-      if (model != ignore) 5: model as String?,
-      if (createdAt != ignore) 6: createdAt as DateTime?,
-      if (sortOrder != ignore) 7: sortOrder as int?,
-      if (providerId != ignore) 8: providerId as String?,
-      if (toolCall != ignore) 9: toolCall as bool?,
-      if (reasoning != ignore) 10: reasoning as bool?,
-      if (attachment != ignore) 11: attachment as bool?,
+      if (isPreset != ignore) 1: isPreset as bool?,
+      if (protocol != ignore) 2: protocol as AssistantProviderType?,
+      if (name != ignore) 4: name as String?,
+      if (type != ignore) 5: type as String?,
+      if (baseUrl != ignore) 6: baseUrl as String?,
+      if (defaultModel != ignore) 7: defaultModel as String?,
+      if (createdAt != ignore) 8: createdAt as DateTime?,
+      if (sortOrder != ignore) 9: sortOrder as int?,
+      if (presetId != ignore) 10: presetId as String?,
+      if (toolCall != ignore) 12: toolCall as bool?,
+      if (reasoning != ignore) 13: reasoning as bool?,
+      if (attachment != ignore) 14: attachment as bool?,
     });
   }
 }
@@ -267,13 +347,15 @@ extension LlmProviderUpdate on IsarCollection<String, LlmProvider> {
 
 sealed class _LlmProviderQueryUpdate {
   int call({
+    bool? isPreset,
+    AssistantProviderType? protocol,
     String? name,
     String? type,
     String? baseUrl,
-    String? model,
+    String? defaultModel,
     DateTime? createdAt,
     int? sortOrder,
-    String? providerId,
+    String? presetId,
     bool? toolCall,
     bool? reasoning,
     bool? attachment,
@@ -288,28 +370,32 @@ class _LlmProviderQueryUpdateImpl implements _LlmProviderQueryUpdate {
 
   @override
   int call({
+    Object? isPreset = ignore,
+    Object? protocol = ignore,
     Object? name = ignore,
     Object? type = ignore,
     Object? baseUrl = ignore,
-    Object? model = ignore,
+    Object? defaultModel = ignore,
     Object? createdAt = ignore,
     Object? sortOrder = ignore,
-    Object? providerId = ignore,
+    Object? presetId = ignore,
     Object? toolCall = ignore,
     Object? reasoning = ignore,
     Object? attachment = ignore,
   }) {
     return query.updateProperties(limit: limit, {
-      if (name != ignore) 2: name as String?,
-      if (type != ignore) 3: type as String?,
-      if (baseUrl != ignore) 4: baseUrl as String?,
-      if (model != ignore) 5: model as String?,
-      if (createdAt != ignore) 6: createdAt as DateTime?,
-      if (sortOrder != ignore) 7: sortOrder as int?,
-      if (providerId != ignore) 8: providerId as String?,
-      if (toolCall != ignore) 9: toolCall as bool?,
-      if (reasoning != ignore) 10: reasoning as bool?,
-      if (attachment != ignore) 11: attachment as bool?,
+      if (isPreset != ignore) 1: isPreset as bool?,
+      if (protocol != ignore) 2: protocol as AssistantProviderType?,
+      if (name != ignore) 4: name as String?,
+      if (type != ignore) 5: type as String?,
+      if (baseUrl != ignore) 6: baseUrl as String?,
+      if (defaultModel != ignore) 7: defaultModel as String?,
+      if (createdAt != ignore) 8: createdAt as DateTime?,
+      if (sortOrder != ignore) 9: sortOrder as int?,
+      if (presetId != ignore) 10: presetId as String?,
+      if (toolCall != ignore) 12: toolCall as bool?,
+      if (reasoning != ignore) 13: reasoning as bool?,
+      if (attachment != ignore) 14: attachment as bool?,
     });
   }
 }
@@ -329,13 +415,15 @@ class _LlmProviderQueryBuilderUpdateImpl implements _LlmProviderQueryUpdate {
 
   @override
   int call({
+    Object? isPreset = ignore,
+    Object? protocol = ignore,
     Object? name = ignore,
     Object? type = ignore,
     Object? baseUrl = ignore,
-    Object? model = ignore,
+    Object? defaultModel = ignore,
     Object? createdAt = ignore,
     Object? sortOrder = ignore,
-    Object? providerId = ignore,
+    Object? presetId = ignore,
     Object? toolCall = ignore,
     Object? reasoning = ignore,
     Object? attachment = ignore,
@@ -343,16 +431,18 @@ class _LlmProviderQueryBuilderUpdateImpl implements _LlmProviderQueryUpdate {
     final q = query.build();
     try {
       return q.updateProperties(limit: limit, {
-        if (name != ignore) 2: name as String?,
-        if (type != ignore) 3: type as String?,
-        if (baseUrl != ignore) 4: baseUrl as String?,
-        if (model != ignore) 5: model as String?,
-        if (createdAt != ignore) 6: createdAt as DateTime?,
-        if (sortOrder != ignore) 7: sortOrder as int?,
-        if (providerId != ignore) 8: providerId as String?,
-        if (toolCall != ignore) 9: toolCall as bool?,
-        if (reasoning != ignore) 10: reasoning as bool?,
-        if (attachment != ignore) 11: attachment as bool?,
+        if (isPreset != ignore) 1: isPreset as bool?,
+        if (protocol != ignore) 2: protocol as AssistantProviderType?,
+        if (name != ignore) 4: name as String?,
+        if (type != ignore) 5: type as String?,
+        if (baseUrl != ignore) 6: baseUrl as String?,
+        if (defaultModel != ignore) 7: defaultModel as String?,
+        if (createdAt != ignore) 8: createdAt as DateTime?,
+        if (sortOrder != ignore) 9: sortOrder as int?,
+        if (presetId != ignore) 10: presetId as String?,
+        if (toolCall != ignore) 12: toolCall as bool?,
+        if (reasoning != ignore) 13: reasoning as bool?,
+        if (attachment != ignore) 14: attachment as bool?,
       });
     } finally {
       q.close();
@@ -369,15 +459,88 @@ extension LlmProviderQueryBuilderUpdate
       _LlmProviderQueryBuilderUpdateImpl(this);
 }
 
+const _llmProviderProtocol = {
+  0: AssistantProviderType.openaiCompletions,
+  1: AssistantProviderType.openaiResponses,
+  2: AssistantProviderType.anthropicMessages,
+};
+
 extension LlmProviderQueryFilter
     on QueryBuilder<LlmProvider, LlmProvider, QFilterCondition> {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> isPresetEqualTo(
+    bool value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 1, value: value),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> protocolEqualTo(
+    AssistantProviderType value,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 2, value: value.index),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  protocolGreaterThan(AssistantProviderType value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(property: 2, value: value.index),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  protocolGreaterThanOrEqualTo(AssistantProviderType value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(property: 2, value: value.index),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  protocolLessThan(AssistantProviderType value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 2, value: value.index),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  protocolLessThanOrEqualTo(AssistantProviderType value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(property: 2, value: value.index),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> protocolBetween(
+    AssistantProviderType lower,
+    AssistantProviderType upper,
+  ) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(property: 2, lower: lower.index, upper: upper.index),
+      );
+    });
+  }
+
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> idEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 1, value: value, caseSensitive: caseSensitive),
+        EqualCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -389,7 +552,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -402,7 +565,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -416,7 +579,7 @@ extension LlmProviderQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 1, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 3, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -426,7 +589,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -442,7 +605,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 1,
+          property: 3,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -458,7 +621,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -473,7 +636,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -488,7 +651,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 1,
+          property: 3,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -503,7 +666,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 1,
+          property: 3,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -514,7 +677,7 @@ extension LlmProviderQueryFilter
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> idIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 1, value: ''),
+        const EqualCondition(property: 3, value: ''),
       );
     });
   }
@@ -522,7 +685,7 @@ extension LlmProviderQueryFilter
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> idIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 1, value: ''),
+        const GreaterCondition(property: 3, value: ''),
       );
     });
   }
@@ -533,7 +696,7 @@ extension LlmProviderQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 2, value: value, caseSensitive: caseSensitive),
+        EqualCondition(property: 4, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -545,7 +708,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -558,7 +721,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -572,7 +735,7 @@ extension LlmProviderQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 2, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 4, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -582,7 +745,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -598,7 +761,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 2,
+          property: 4,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -614,7 +777,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -629,7 +792,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -644,7 +807,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 2,
+          property: 4,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -659,7 +822,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 2,
+          property: 4,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -670,7 +833,7 @@ extension LlmProviderQueryFilter
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> nameIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 2, value: ''),
+        const EqualCondition(property: 4, value: ''),
       );
     });
   }
@@ -679,7 +842,7 @@ extension LlmProviderQueryFilter
   nameIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 2, value: ''),
+        const GreaterCondition(property: 4, value: ''),
       );
     });
   }
@@ -690,7 +853,7 @@ extension LlmProviderQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 3, value: value, caseSensitive: caseSensitive),
+        EqualCondition(property: 5, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -702,7 +865,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -715,7 +878,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -729,7 +892,7 @@ extension LlmProviderQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 3, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 5, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -739,7 +902,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -755,7 +918,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 3,
+          property: 5,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -771,7 +934,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -786,7 +949,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -801,7 +964,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 3,
+          property: 5,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -816,7 +979,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 3,
+          property: 5,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -827,7 +990,7 @@ extension LlmProviderQueryFilter
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> typeIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 3, value: ''),
+        const EqualCondition(property: 5, value: ''),
       );
     });
   }
@@ -836,7 +999,7 @@ extension LlmProviderQueryFilter
   typeIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 3, value: ''),
+        const GreaterCondition(property: 5, value: ''),
       );
     });
   }
@@ -847,7 +1010,7 @@ extension LlmProviderQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 4, value: value, caseSensitive: caseSensitive),
+        EqualCondition(property: 6, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -857,7 +1020,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 4,
+          property: 6,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -870,7 +1033,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 4,
+          property: 6,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -884,7 +1047,7 @@ extension LlmProviderQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 4, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 6, value: value, caseSensitive: caseSensitive),
       );
     });
   }
@@ -894,7 +1057,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 4,
+          property: 6,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -910,7 +1073,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 4,
+          property: 6,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -924,7 +1087,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 4,
+          property: 6,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -939,7 +1102,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 4,
+          property: 6,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -954,7 +1117,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 4,
+          property: 6,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -969,7 +1132,7 @@ extension LlmProviderQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 4,
+          property: 6,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -981,7 +1144,7 @@ extension LlmProviderQueryFilter
   baseUrlIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 4, value: ''),
+        const EqualCondition(property: 6, value: ''),
       );
     });
   }
@@ -990,28 +1153,26 @@ extension LlmProviderQueryFilter
   baseUrlIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 4, value: ''),
-      );
-    });
-  }
-
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> modelEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        EqualCondition(property: 5, value: value, caseSensitive: caseSensitive),
+        const GreaterCondition(property: 6, value: ''),
       );
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  modelGreaterThan(String value, {bool caseSensitive = true}) {
+  defaultModelEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(property: 7, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  defaultModelGreaterThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 5,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1020,35 +1181,33 @@ extension LlmProviderQueryFilter
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  modelGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
+  defaultModelGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 5,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
-      );
-    });
-  }
-
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> modelLessThan(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        LessCondition(property: 5, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  modelLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
+  defaultModelLessThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 7, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  defaultModelLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 5,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1056,15 +1215,12 @@ extension LlmProviderQueryFilter
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> modelBetween(
-    String lower,
-    String upper, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  defaultModelBetween(String lower, String upper, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 5,
+          property: 7,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -1073,14 +1229,12 @@ extension LlmProviderQueryFilter
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> modelStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  defaultModelStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 5,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1088,14 +1242,12 @@ extension LlmProviderQueryFilter
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> modelEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  defaultModelEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 5,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1103,14 +1255,12 @@ extension LlmProviderQueryFilter
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> modelContains(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  defaultModelContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 5,
+          property: 7,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1118,14 +1268,12 @@ extension LlmProviderQueryFilter
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> modelMatches(
-    String pattern, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  defaultModelMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 5,
+          property: 7,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -1133,19 +1281,20 @@ extension LlmProviderQueryFilter
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> modelIsEmpty() {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  defaultModelIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 5, value: ''),
+        const EqualCondition(property: 7, value: ''),
       );
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  modelIsNotEmpty() {
+  defaultModelIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 5, value: ''),
+        const GreaterCondition(property: 7, value: ''),
       );
     });
   }
@@ -1154,7 +1303,7 @@ extension LlmProviderQueryFilter
   createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 6, value: value),
+        EqualCondition(property: 8, value: value),
       );
     });
   }
@@ -1163,7 +1312,7 @@ extension LlmProviderQueryFilter
   createdAtGreaterThan(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(property: 6, value: value),
+        GreaterCondition(property: 8, value: value),
       );
     });
   }
@@ -1172,7 +1321,7 @@ extension LlmProviderQueryFilter
   createdAtGreaterThanOrEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(property: 6, value: value),
+        GreaterOrEqualCondition(property: 8, value: value),
       );
     });
   }
@@ -1180,7 +1329,7 @@ extension LlmProviderQueryFilter
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
   createdAtLessThan(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(LessCondition(property: 6, value: value));
+      return query.addFilterCondition(LessCondition(property: 8, value: value));
     });
   }
 
@@ -1188,7 +1337,7 @@ extension LlmProviderQueryFilter
   createdAtLessThanOrEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(property: 6, value: value),
+        LessOrEqualCondition(property: 8, value: value),
       );
     });
   }
@@ -1197,7 +1346,7 @@ extension LlmProviderQueryFilter
   createdAtBetween(DateTime lower, DateTime upper) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        BetweenCondition(property: 6, lower: lower, upper: upper),
+        BetweenCondition(property: 8, lower: lower, upper: upper),
       );
     });
   }
@@ -1206,7 +1355,7 @@ extension LlmProviderQueryFilter
   sortOrderEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 7, value: value),
+        EqualCondition(property: 9, value: value),
       );
     });
   }
@@ -1215,7 +1364,7 @@ extension LlmProviderQueryFilter
   sortOrderGreaterThan(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterCondition(property: 7, value: value),
+        GreaterCondition(property: 9, value: value),
       );
     });
   }
@@ -1224,7 +1373,7 @@ extension LlmProviderQueryFilter
   sortOrderGreaterThanOrEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        GreaterOrEqualCondition(property: 7, value: value),
+        GreaterOrEqualCondition(property: 9, value: value),
       );
     });
   }
@@ -1232,7 +1381,7 @@ extension LlmProviderQueryFilter
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
   sortOrderLessThan(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(LessCondition(property: 7, value: value));
+      return query.addFilterCondition(LessCondition(property: 9, value: value));
     });
   }
 
@@ -1240,7 +1389,7 @@ extension LlmProviderQueryFilter
   sortOrderLessThanOrEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessOrEqualCondition(property: 7, value: value),
+        LessOrEqualCondition(property: 9, value: value),
       );
     });
   }
@@ -1249,26 +1398,32 @@ extension LlmProviderQueryFilter
   sortOrderBetween(int lower, int upper) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        BetweenCondition(property: 7, lower: lower, upper: upper),
+        BetweenCondition(property: 9, lower: lower, upper: upper),
       );
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> presetIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 8, value: value, caseSensitive: caseSensitive),
+        EqualCondition(
+          property: 10,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
       );
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdGreaterThan(String value, {bool caseSensitive = true}) {
+  presetIdGreaterThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterCondition(
-          property: 8,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1277,11 +1432,11 @@ extension LlmProviderQueryFilter
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
+  presetIdGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         GreaterOrEqualCondition(
-          property: 8,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1290,20 +1445,20 @@ extension LlmProviderQueryFilter
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdLessThan(String value, {bool caseSensitive = true}) {
+  presetIdLessThan(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        LessCondition(property: 8, value: value, caseSensitive: caseSensitive),
+        LessCondition(property: 10, value: value, caseSensitive: caseSensitive),
       );
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
+  presetIdLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         LessOrEqualCondition(
-          property: 8,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1311,12 +1466,15 @@ extension LlmProviderQueryFilter
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdBetween(String lower, String upper, {bool caseSensitive = true}) {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> presetIdBetween(
+    String lower,
+    String upper, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         BetweenCondition(
-          property: 8,
+          property: 10,
           lower: lower,
           upper: upper,
           caseSensitive: caseSensitive,
@@ -1326,11 +1484,11 @@ extension LlmProviderQueryFilter
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdStartsWith(String value, {bool caseSensitive = true}) {
+  presetIdStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         StartsWithCondition(
-          property: 8,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1339,11 +1497,11 @@ extension LlmProviderQueryFilter
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdEndsWith(String value, {bool caseSensitive = true}) {
+  presetIdEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         EndsWithCondition(
-          property: 8,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1352,11 +1510,11 @@ extension LlmProviderQueryFilter
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdContains(String value, {bool caseSensitive = true}) {
+  presetIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         ContainsCondition(
-          property: 8,
+          property: 10,
           value: value,
           caseSensitive: caseSensitive,
         ),
@@ -1364,12 +1522,14 @@ extension LlmProviderQueryFilter
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition> presetIdMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         MatchesCondition(
-          property: 8,
+          property: 10,
           wildcard: pattern,
           caseSensitive: caseSensitive,
         ),
@@ -1378,19 +1538,182 @@ extension LlmProviderQueryFilter
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdIsEmpty() {
+  presetIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const EqualCondition(property: 8, value: ''),
+        const EqualCondition(property: 10, value: ''),
       );
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
-  providerIdIsNotEmpty() {
+  presetIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterCondition(property: 8, value: ''),
+        const GreaterCondition(property: 10, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementGreaterThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementGreaterThanOrEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementLessThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 11, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementLessThanOrEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementBetween(
+    String lower,
+    String upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 11,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 11,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 11, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 11, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsIsEmpty() {
+    return not().modelsIsNotEmpty();
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterFilterCondition>
+  modelsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterOrEqualCondition(property: 11, value: null),
       );
     });
   }
@@ -1400,7 +1723,7 @@ extension LlmProviderQueryFilter
   ) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 9, value: value),
+        EqualCondition(property: 12, value: value),
       );
     });
   }
@@ -1409,7 +1732,7 @@ extension LlmProviderQueryFilter
   reasoningEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 10, value: value),
+        EqualCondition(property: 13, value: value),
       );
     });
   }
@@ -1418,7 +1741,7 @@ extension LlmProviderQueryFilter
   attachmentEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        EqualCondition(property: 11, value: value),
+        EqualCondition(property: 14, value: value),
       );
     });
   }
@@ -1429,11 +1752,35 @@ extension LlmProviderQueryObject
 
 extension LlmProviderQuerySortBy
     on QueryBuilder<LlmProvider, LlmProvider, QSortBy> {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByIsPreset() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(1);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByIsPresetDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(1, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByProtocol() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(2);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByProtocolDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(2, sort: Sort.desc);
+    });
+  }
+
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortById({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(1, caseSensitive: caseSensitive);
+      return query.addSortBy(3, caseSensitive: caseSensitive);
     });
   }
 
@@ -1441,7 +1788,7 @@ extension LlmProviderQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -1449,7 +1796,7 @@ extension LlmProviderQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2, caseSensitive: caseSensitive);
+      return query.addSortBy(4, caseSensitive: caseSensitive);
     });
   }
 
@@ -1457,7 +1804,7 @@ extension LlmProviderQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(4, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -1465,7 +1812,7 @@ extension LlmProviderQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(3, caseSensitive: caseSensitive);
+      return query.addSortBy(5, caseSensitive: caseSensitive);
     });
   }
 
@@ -1473,7 +1820,7 @@ extension LlmProviderQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(3, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(5, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
@@ -1481,7 +1828,7 @@ extension LlmProviderQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(4, caseSensitive: caseSensitive);
+      return query.addSortBy(6, caseSensitive: caseSensitive);
     });
   }
 
@@ -1489,138 +1836,130 @@ extension LlmProviderQuerySortBy
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(4, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(6, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByModel({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByDefaultModel({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(5, caseSensitive: caseSensitive);
+      return query.addSortBy(7, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByModelDesc({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByDefaultModelDesc({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(5, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(7, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(6);
+      return query.addSortBy(8);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(6, sort: Sort.desc);
+      return query.addSortBy(8, sort: Sort.desc);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortBySortOrder() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7);
+      return query.addSortBy(9);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortBySortOrderDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7, sort: Sort.desc);
+      return query.addSortBy(9, sort: Sort.desc);
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByProviderId({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByPresetId({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(8, caseSensitive: caseSensitive);
+      return query.addSortBy(10, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByProviderIdDesc({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByPresetIdDesc({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(10, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByToolCall() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(9);
+      return query.addSortBy(12);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByToolCallDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(9, sort: Sort.desc);
+      return query.addSortBy(12, sort: Sort.desc);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByReasoning() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(10);
+      return query.addSortBy(13);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByReasoningDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(10, sort: Sort.desc);
+      return query.addSortBy(13, sort: Sort.desc);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByAttachment() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(11);
+      return query.addSortBy(14);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> sortByAttachmentDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(11, sort: Sort.desc);
+      return query.addSortBy(14, sort: Sort.desc);
     });
   }
 }
 
 extension LlmProviderQuerySortThenBy
     on QueryBuilder<LlmProvider, LlmProvider, QSortThenBy> {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByIsPreset() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(1);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByIsPresetDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(1, sort: Sort.desc);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByProtocol() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(2);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByProtocolDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(2, sort: Sort.desc);
+    });
+  }
+
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenById({
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(1, caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByIdDesc({
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(1, sort: Sort.desc, caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByName({
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2, caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByNameDesc({
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(2, sort: Sort.desc, caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByType({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1628,7 +1967,7 @@ extension LlmProviderQuerySortThenBy
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByTypeDesc({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByIdDesc({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1636,7 +1975,7 @@ extension LlmProviderQuerySortThenBy
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByBaseUrl({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByName({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1644,7 +1983,7 @@ extension LlmProviderQuerySortThenBy
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByBaseUrlDesc({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByNameDesc({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1652,7 +1991,7 @@ extension LlmProviderQuerySortThenBy
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByModel({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByType({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1660,7 +1999,7 @@ extension LlmProviderQuerySortThenBy
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByModelDesc({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByTypeDesc({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1668,102 +2007,130 @@ extension LlmProviderQuerySortThenBy
     });
   }
 
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByBaseUrl({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(6, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByBaseUrlDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(6, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByDefaultModel({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(7, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByDefaultModelDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(7, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(6);
+      return query.addSortBy(8);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(6, sort: Sort.desc);
+      return query.addSortBy(8, sort: Sort.desc);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenBySortOrder() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7);
+      return query.addSortBy(9);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenBySortOrderDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(7, sort: Sort.desc);
+      return query.addSortBy(9, sort: Sort.desc);
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByProviderId({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByPresetId({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(8, caseSensitive: caseSensitive);
+      return query.addSortBy(10, caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByProviderIdDesc({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByPresetIdDesc({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(8, sort: Sort.desc, caseSensitive: caseSensitive);
+      return query.addSortBy(10, sort: Sort.desc, caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByToolCall() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(9);
+      return query.addSortBy(12);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByToolCallDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(9, sort: Sort.desc);
+      return query.addSortBy(12, sort: Sort.desc);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByReasoning() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(10);
+      return query.addSortBy(13);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByReasoningDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(10, sort: Sort.desc);
+      return query.addSortBy(13, sort: Sort.desc);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByAttachment() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(11);
+      return query.addSortBy(14);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterSortBy> thenByAttachmentDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(11, sort: Sort.desc);
+      return query.addSortBy(14, sort: Sort.desc);
     });
   }
 }
 
 extension LlmProviderQueryWhereDistinct
     on QueryBuilder<LlmProvider, LlmProvider, QDistinct> {
+  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByIsPreset() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(1);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByProtocol() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(2);
+    });
+  }
+
   QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByName({
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(2, caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByType({
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(3, caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByBaseUrl({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1771,7 +2138,7 @@ extension LlmProviderQueryWhereDistinct
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByModel({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByType({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1779,251 +2146,332 @@ extension LlmProviderQueryWhereDistinct
     });
   }
 
+  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByBaseUrl({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(6, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct>
+  distinctByDefaultModel({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(7, caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(6);
+      return query.addDistinctBy(8);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctBySortOrder() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(7);
+      return query.addDistinctBy(9);
     });
   }
 
-  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByProviderId({
+  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByPresetId({
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(8, caseSensitive: caseSensitive);
+      return query.addDistinctBy(10, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByModels() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(11);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByToolCall() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(9);
+      return query.addDistinctBy(12);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct> distinctByReasoning() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(10);
+      return query.addDistinctBy(13);
     });
   }
 
   QueryBuilder<LlmProvider, LlmProvider, QAfterDistinct>
   distinctByAttachment() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(11);
+      return query.addDistinctBy(14);
     });
   }
 }
 
 extension LlmProviderQueryProperty1
     on QueryBuilder<LlmProvider, LlmProvider, QProperty> {
-  QueryBuilder<LlmProvider, String, QAfterProperty> idProperty() {
+  QueryBuilder<LlmProvider, bool, QAfterProperty> isPresetProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(1);
     });
   }
 
-  QueryBuilder<LlmProvider, String, QAfterProperty> nameProperty() {
+  QueryBuilder<LlmProvider, AssistantProviderType, QAfterProperty>
+  protocolProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });
   }
 
-  QueryBuilder<LlmProvider, String, QAfterProperty> typeProperty() {
+  QueryBuilder<LlmProvider, String, QAfterProperty> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(3);
     });
   }
 
-  QueryBuilder<LlmProvider, String, QAfterProperty> baseUrlProperty() {
+  QueryBuilder<LlmProvider, String, QAfterProperty> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(4);
     });
   }
 
-  QueryBuilder<LlmProvider, String, QAfterProperty> modelProperty() {
+  QueryBuilder<LlmProvider, String, QAfterProperty> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(5);
     });
   }
 
-  QueryBuilder<LlmProvider, DateTime, QAfterProperty> createdAtProperty() {
+  QueryBuilder<LlmProvider, String, QAfterProperty> baseUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(6);
     });
   }
 
-  QueryBuilder<LlmProvider, int, QAfterProperty> sortOrderProperty() {
+  QueryBuilder<LlmProvider, String, QAfterProperty> defaultModelProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(7);
     });
   }
 
-  QueryBuilder<LlmProvider, String, QAfterProperty> providerIdProperty() {
+  QueryBuilder<LlmProvider, DateTime, QAfterProperty> createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(8);
     });
   }
 
-  QueryBuilder<LlmProvider, bool, QAfterProperty> toolCallProperty() {
+  QueryBuilder<LlmProvider, int, QAfterProperty> sortOrderProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(9);
     });
   }
 
-  QueryBuilder<LlmProvider, bool, QAfterProperty> reasoningProperty() {
+  QueryBuilder<LlmProvider, String, QAfterProperty> presetIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(10);
     });
   }
 
-  QueryBuilder<LlmProvider, bool, QAfterProperty> attachmentProperty() {
+  QueryBuilder<LlmProvider, List<String>, QAfterProperty> modelsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(11);
+    });
+  }
+
+  QueryBuilder<LlmProvider, bool, QAfterProperty> toolCallProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(12);
+    });
+  }
+
+  QueryBuilder<LlmProvider, bool, QAfterProperty> reasoningProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(13);
+    });
+  }
+
+  QueryBuilder<LlmProvider, bool, QAfterProperty> attachmentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(14);
     });
   }
 }
 
 extension LlmProviderQueryProperty2<R>
     on QueryBuilder<LlmProvider, R, QAfterProperty> {
-  QueryBuilder<LlmProvider, (R, String), QAfterProperty> idProperty() {
+  QueryBuilder<LlmProvider, (R, bool), QAfterProperty> isPresetProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(1);
     });
   }
 
-  QueryBuilder<LlmProvider, (R, String), QAfterProperty> nameProperty() {
+  QueryBuilder<LlmProvider, (R, AssistantProviderType), QAfterProperty>
+  protocolProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });
   }
 
-  QueryBuilder<LlmProvider, (R, String), QAfterProperty> typeProperty() {
+  QueryBuilder<LlmProvider, (R, String), QAfterProperty> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(3);
     });
   }
 
-  QueryBuilder<LlmProvider, (R, String), QAfterProperty> baseUrlProperty() {
+  QueryBuilder<LlmProvider, (R, String), QAfterProperty> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(4);
     });
   }
 
-  QueryBuilder<LlmProvider, (R, String), QAfterProperty> modelProperty() {
+  QueryBuilder<LlmProvider, (R, String), QAfterProperty> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(5);
     });
   }
 
-  QueryBuilder<LlmProvider, (R, DateTime), QAfterProperty> createdAtProperty() {
+  QueryBuilder<LlmProvider, (R, String), QAfterProperty> baseUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(6);
     });
   }
 
-  QueryBuilder<LlmProvider, (R, int), QAfterProperty> sortOrderProperty() {
+  QueryBuilder<LlmProvider, (R, String), QAfterProperty>
+  defaultModelProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(7);
     });
   }
 
-  QueryBuilder<LlmProvider, (R, String), QAfterProperty> providerIdProperty() {
+  QueryBuilder<LlmProvider, (R, DateTime), QAfterProperty> createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(8);
     });
   }
 
-  QueryBuilder<LlmProvider, (R, bool), QAfterProperty> toolCallProperty() {
+  QueryBuilder<LlmProvider, (R, int), QAfterProperty> sortOrderProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(9);
     });
   }
 
-  QueryBuilder<LlmProvider, (R, bool), QAfterProperty> reasoningProperty() {
+  QueryBuilder<LlmProvider, (R, String), QAfterProperty> presetIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(10);
     });
   }
 
-  QueryBuilder<LlmProvider, (R, bool), QAfterProperty> attachmentProperty() {
+  QueryBuilder<LlmProvider, (R, List<String>), QAfterProperty>
+  modelsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(11);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R, bool), QAfterProperty> toolCallProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(12);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R, bool), QAfterProperty> reasoningProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(13);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R, bool), QAfterProperty> attachmentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(14);
     });
   }
 }
 
 extension LlmProviderQueryProperty3<R1, R2>
     on QueryBuilder<LlmProvider, (R1, R2), QAfterProperty> {
-  QueryBuilder<LlmProvider, (R1, R2, String), QOperations> idProperty() {
+  QueryBuilder<LlmProvider, (R1, R2, bool), QOperations> isPresetProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(1);
     });
   }
 
-  QueryBuilder<LlmProvider, (R1, R2, String), QOperations> nameProperty() {
+  QueryBuilder<LlmProvider, (R1, R2, AssistantProviderType), QOperations>
+  protocolProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(2);
     });
   }
 
-  QueryBuilder<LlmProvider, (R1, R2, String), QOperations> typeProperty() {
+  QueryBuilder<LlmProvider, (R1, R2, String), QOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(3);
     });
   }
 
-  QueryBuilder<LlmProvider, (R1, R2, String), QOperations> baseUrlProperty() {
+  QueryBuilder<LlmProvider, (R1, R2, String), QOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(4);
     });
   }
 
-  QueryBuilder<LlmProvider, (R1, R2, String), QOperations> modelProperty() {
+  QueryBuilder<LlmProvider, (R1, R2, String), QOperations> typeProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(5);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R1, R2, String), QOperations> baseUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(6);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R1, R2, String), QOperations>
+  defaultModelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(7);
     });
   }
 
   QueryBuilder<LlmProvider, (R1, R2, DateTime), QOperations>
   createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(6);
+      return query.addProperty(8);
     });
   }
 
   QueryBuilder<LlmProvider, (R1, R2, int), QOperations> sortOrderProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(7);
-    });
-  }
-
-  QueryBuilder<LlmProvider, (R1, R2, String), QOperations>
-  providerIdProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addProperty(8);
-    });
-  }
-
-  QueryBuilder<LlmProvider, (R1, R2, bool), QOperations> toolCallProperty() {
-    return QueryBuilder.apply(this, (query) {
       return query.addProperty(9);
     });
   }
 
-  QueryBuilder<LlmProvider, (R1, R2, bool), QOperations> reasoningProperty() {
+  QueryBuilder<LlmProvider, (R1, R2, String), QOperations> presetIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(10);
     });
   }
 
-  QueryBuilder<LlmProvider, (R1, R2, bool), QOperations> attachmentProperty() {
+  QueryBuilder<LlmProvider, (R1, R2, List<String>), QOperations>
+  modelsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(11);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R1, R2, bool), QOperations> toolCallProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(12);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R1, R2, bool), QOperations> reasoningProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(13);
+    });
+  }
+
+  QueryBuilder<LlmProvider, (R1, R2, bool), QOperations> attachmentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(14);
     });
   }
 }
@@ -2037,10 +2485,13 @@ _LlmProvider _$LlmProviderFromJson(Map<String, dynamic> json) => _LlmProvider(
   name: json['name'] as String,
   type: json['type'] as String,
   baseUrl: json['baseUrl'] as String,
-  model: json['model'] as String,
+  defaultModel: json['defaultModel'] as String,
   createdAt: DateTime.parse(json['createdAt'] as String),
   sortOrder: (json['sortOrder'] as num).toInt(),
-  providerId: json['providerId'] as String? ?? '',
+  presetId: json['presetId'] as String? ?? '',
+  models:
+      (json['models'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const <String>[],
   toolCall: json['toolCall'] as bool? ?? false,
   reasoning: json['reasoning'] as bool? ?? false,
   attachment: json['attachment'] as bool? ?? false,
@@ -2052,10 +2503,11 @@ Map<String, dynamic> _$LlmProviderToJson(_LlmProvider instance) =>
       'name': instance.name,
       'type': instance.type,
       'baseUrl': instance.baseUrl,
-      'model': instance.model,
+      'defaultModel': instance.defaultModel,
       'createdAt': instance.createdAt.toIso8601String(),
       'sortOrder': instance.sortOrder,
-      'providerId': instance.providerId,
+      'presetId': instance.presetId,
+      'models': instance.models,
       'toolCall': instance.toolCall,
       'reasoning': instance.reasoning,
       'attachment': instance.attachment,

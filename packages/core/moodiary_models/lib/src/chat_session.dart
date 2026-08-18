@@ -5,8 +5,7 @@ import 'package:moodiary_utils/moodiary_utils.dart';
 part 'chat_session.freezed.dart';
 part 'chat_session.g.dart';
 
-/// 一次 AI 助手会话（持久化），消息体存于 [ChatMessage]。创建时绑定当时的 [providerId]/[model]，
-/// 切换激活 Provider 不影响历史会话语义；API Key 不存这里。
+/// 一次 AI 助手会话（持久化），消息体存于 [ChatMessage]。API Key 不存这里。
 @freezed
 @Collection(ignore: {'copyWith'})
 abstract class ChatSession with _$ChatSession {
@@ -15,6 +14,11 @@ abstract class ChatSession with _$ChatSession {
 
     required String title,
 
+    /// 建会话时生效的 [LlmProvider.id]（uuid，不是 [LlmProvider.presetId]）。
+    ///
+    /// ⚠️ 这两个字段目前**只写不读**：每一轮请求取的都是 `getActiveProvider()`，
+    /// 所以在设置里换了供应商，已存在的会话下一轮就跟着换模型。要做「会话级模型」
+    /// 得先让发请求那条路优先读它们。
     required String providerId,
 
     required String model,
@@ -24,8 +28,10 @@ abstract class ChatSession with _$ChatSession {
     /// 最后一条消息的时间，列表按此倒序。
     required DateTime updatedAt,
 
-    /// 本会话是否开启思考模式（新建时取自全局默认 assistantThinkingEnabled）。
-    @Default(false) bool thinking,
+    /// 本会话的思考强度。空串 = 关；否则是 models.dev `reasoning_options` 里的档位值
+    /// （`minimal` / `low` / `medium` / `high` / `xhigh` / `max` …）。
+    /// 新建时取自全局默认 assistantReasoningEffort。
+    @Default('') String reasoningEffort,
 
     /// 上下文压缩：滚动摘要（覆盖至 [compactedUpToMessageId] 为止）；null 表示未压缩，整段历史逐字发送。
     String? compactedSummary,
@@ -44,7 +50,7 @@ abstract class ChatSession with _$ChatSession {
     required String title,
     required String providerId,
     required String model,
-    bool thinking = false,
+    String reasoningEffort = '',
   }) {
     final now = DateTime.timestamp();
     return ChatSession(
@@ -54,7 +60,7 @@ abstract class ChatSession with _$ChatSession {
       model: model,
       createdAt: now,
       updatedAt: now,
-      thinking: thinking,
+      reasoningEffort: reasoningEffort,
     );
   }
 

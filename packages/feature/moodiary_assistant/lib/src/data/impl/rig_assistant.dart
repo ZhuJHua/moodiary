@@ -63,7 +63,9 @@ class RigAssistantService implements AssistantService {
       baseUrl: request.baseUrl,
       model: request.model,
       maxTokens: request.maxTokens,
-      thinking: request.thinking,
+      reasoningMode: request.reasoning.mode.id,
+      reasoningEffort: request.reasoning.effort,
+      reasoningBudget: request.reasoning.budgetTokens,
     );
 
     final stream = rust.rigChatStream(
@@ -84,8 +86,18 @@ class RigAssistantService implements AssistantService {
         // 工具调用不在气泡里展示，但用作「思考阶段结束」的信号（冻结思考计时）。
         rust.RigStreamEvent_ToolCall(:final field0) =>
           AssistantStreamEvent.tool(field0),
-        rust.RigStreamEvent_Usage(:final inputTokens, :final outputTokens) =>
-          AssistantStreamEvent.usage(inputTokens, outputTokens),
+        rust.RigStreamEvent_Usage(
+          :final inputTokens,
+          :final outputTokens,
+          :final cachedInputTokens,
+          :final cacheWriteTokens,
+        ) =>
+          AssistantStreamEvent.usage(
+            inputTokens,
+            outputTokens,
+            cachedInputTokens: cachedInputTokens,
+            cacheWriteTokens: cacheWriteTokens,
+          ),
       };
     }
   }

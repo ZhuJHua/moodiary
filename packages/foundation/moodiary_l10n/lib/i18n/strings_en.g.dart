@@ -238,8 +238,17 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get historyEmpty => 'No chat history yet';
 	@override String get stop => 'Stop generating';
 	@override String get regenerate => 'Regenerate';
-	@override String get thinkingToggle => 'Thinking';
 	@override String get thinking => 'Thinking…';
+	@override String get protocolTitle => 'Protocol';
+	@override String get protocolOpenAiCompletions => 'OpenAI /chat/completions';
+	@override String get protocolOpenAiResponses => 'OpenAI /responses';
+	@override String get protocolAnthropicMessages => 'Anthropic /messages';
+	@override String get modelListFetch => 'Fetch models from endpoint';
+	@override String get modelListNeedKey => 'Enter an API key first';
+	@override String modelListFetched({required Object count}) => 'Found ${count} models';
+	@override String get modelListFailed => 'Could not fetch models — enter one manually';
+	@override String get reasoningEffort => 'Thinking effort';
+	@override String get reasoningOff => 'No thinking';
 	@override String thoughtFor({required Object duration}) => 'Thought for ${duration}s';
 	@override String get tool => 'Tools';
 	@override String get toolSectionNote => 'The assistant uses the tools below automatically based on the conversation. Read-only tools run right away; tools that write or delete ask for your confirmation first.';
@@ -334,8 +343,6 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get llmPickerDataSource => 'Data from models.dev';
 	@override String get llmPickerSearchHint => 'Search providers';
 	@override String get modelProviderPickModel => 'Choose a model';
-	@override String get modelProviderShowAll => 'Show all';
-	@override String get modelProviderShowToolOnly => 'Tool-capable only';
 	@override String get modelProviderBadgeReasoning => 'Reasoning';
 	@override String get modelProviderBadgeVision => 'Vision';
 	@override String get modelProviderCapabilities => 'Model capabilities';
@@ -350,6 +357,13 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String streamError({required Object error}) => '\n(error: ${error})';
 	@override String requestFailed({required Object error}) => '(request failed: ${error})';
 	@override String get imagePlaceholder => '[image]';
+	@override String get modelProviderDefault => 'Default';
+	@override String get modelProviderDefaultModel => 'Default model';
+	@override String modelListCount({required Object count}) => '${count} models';
+	@override String get modelListUpdate => 'Update list';
+	@override String get modelListAdd => 'Add manually';
+	@override String get modelListEmpty => 'No models available yet';
+	@override String get modelDeprecated => 'Retired';
 }
 
 // Path: common
