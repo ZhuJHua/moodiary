@@ -44,6 +44,12 @@ abstract class ChatSession with _$ChatSession {
 
     /// 触发压缩时该轮上报的输入 token 数（用于提示 / 调试）。
     int? compactedInputTokensAtTrigger,
+
+    /// [title] 是否已由模型总结过。false = 还是「第一条消息截断」那个兜底。
+    ///
+    /// 生成只发生一次：标题在历史列表里是定位锚点，自己变了会让人以为点错了会话。
+    /// 自动失败也不重排——没有手动刷新入口，重排只会反复烧 token。
+    @Default(false) bool titleFromModel,
   }) = _ChatSession;
 
   factory ChatSession.create({

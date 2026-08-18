@@ -8,6 +8,7 @@ import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/application/context_compaction_controller.dart';
+import 'package:moodiary_assistant/src/application/session_title_controller.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
@@ -110,6 +111,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
 
   final ContextCompactionController _compaction = ContextCompactionController();
+  final SessionTitleController _title = SessionTitleController();
 
   /// 最近一轮 provider 上报的输入 token 数（压缩触发判据）。0 表示尚无用量数据。
   int _lastTurnInputTokens = 0;
@@ -279,6 +281,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (existing != null) return existing;
     final provider = _provider;
     if (provider == null) return null;
+    // 兜底标题：立刻可用，历史列表里不会先空着。模型总结好之后就地换掉。
     final title = firstUserText.length > 30
         ? '${firstUserText.substring(0, 30)}…'
         : firstUserText;
@@ -291,7 +294,31 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     await ChatRepository.get().upsertSession(session);
     _chat.sessionId = session.id;
     if (mounted) setState(() => _session = session);
+    // 与本轮回复并行跑，不 await：标题的延迟和失败都不该压在主回复上。
+    unawaited(_generateTitle(session, firstUserText));
     return session;
+  }
+
+  /// 用模型把第一条消息总结成标题，替掉兜底。失败静默——兜底本来就够用。
+  Future<void> _generateTitle(ChatSession session, String firstUserText) async {
+    final provider = _provider;
+    if (provider == null) return;
+    final key = await LlmProviderRepository.get().getKey(provider.id);
+    if (key == null || key.isEmpty) return;
+    if (!mounted || _session?.id != session.id) return;
+
+    final updated = await _title.maybeTitle(
+      session: session,
+      firstUserText: firstUserText,
+      provider: provider,
+      model: _modelId,
+      apiKey: key,
+    );
+    // 跑的这段时间里会话可能已被切走或删掉，落库前后各查一次。
+    if (updated == null || !mounted || _session?.id != session.id) return;
+    await ChatRepository.get().upsertSession(updated);
+    if (!mounted || _session?.id != session.id) return;
+    setState(() => _session = updated);
   }
 
   /// 全屏编辑：把输入框内容搬到一整页去改，回来再塞回控制器。
