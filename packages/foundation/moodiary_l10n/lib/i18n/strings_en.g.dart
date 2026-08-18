@@ -236,6 +236,10 @@ class _Translations$assistant$en extends Translations$assistant$zh {
 	@override String get copyTooltip => 'Copy';
 	@override String get newChat => 'New chat';
 	@override String get historyEmpty => 'No chat history yet';
+	@override String get historyToday => 'Today';
+	@override String get historyLast7 => 'Last 7 days';
+	@override String get historyEarlier => 'Earlier';
+	@override String get historyModelUnset => 'Not set';
 	@override String get stop => 'Stop generating';
 	@override String get regenerate => 'Regenerate';
 	@override String get thinking => 'Thinking…';

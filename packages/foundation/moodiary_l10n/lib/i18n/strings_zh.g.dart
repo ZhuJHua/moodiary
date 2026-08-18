@@ -585,6 +585,18 @@ class Translations$assistant$zh {
 	/// zh: '还没有历史会话'
 	String get historyEmpty => '还没有历史会话';
 
+	/// zh: '今天'
+	String get historyToday => '今天';
+
+	/// zh: '近 7 天'
+	String get historyLast7 => '近 7 天';
+
+	/// zh: '更早'
+	String get historyEarlier => '更早';
+
+	/// zh: '未配置'
+	String get historyModelUnset => '未配置';
+
 	/// zh: '停止生成'
 	String get stop => '停止生成';
 

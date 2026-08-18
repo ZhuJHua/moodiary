@@ -15,7 +15,6 @@ import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
 import 'package:moodiary_assistant/src/data/soul_repository.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
-import 'package:moodiary_assistant/src/presentation/assistant_summary_tile.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
 import 'package:moodiary_assistant/src/presentation/markdown_code_block.dart';
@@ -115,7 +114,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   /// 已选、待随下一条消息发送的图片文件名（image 目录内）。null 表示无待发图片。
   String? _pendingImageName;
-
 
   final ContextCompactionController _compaction = ContextCompactionController();
   final SessionTitleController _title = SessionTitleController();
@@ -2035,48 +2033,163 @@ class AssistantSessionListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return Scaffold(
-      // 顶栏那颗 ⚙ 撤掉了：全 App 的 ⚙ 现在只有一个含义（全局设置，在「我的」tab 的
-      // 底栏动作按钮上），助手自己的配置归 `设置 → 智能助手`。取而代之的是下面这行
-      // 摘要 —— 它比一个齿轮多给一条信息：你现在用的是哪个模型。
-      appBar: AppBar(title: Text(l10n.assistant.settingFunctionAIAssistant)),
+      // 顶栏右侧那行模型名，是原先「AI 助手配置」那张磁贴留下的唯一有用信息。
+      // 磁贴本身是从设置页搬来的 SettingListTile —— 图标、标题、尾箭头整套都在说
+      // 「这是设置项」，却占着首屏最值钱的位置。信息挪上来，形状换成顶栏动作。
+      // （磁贴没删，它在「设置 → 服务」里还是本职工作。）
+      appBar: AppBar(
+        title: Text(l10n.assistant.settingFunctionAIAssistant),
+        actions: const [_ActiveModelAction(), SizedBox(width: 4)],
+      ),
       // 「新对话」不在本页了 —— 本页是根壳的一个 tab，入口是底栏胶囊右边那颗按钮
       // （站在助手 tab 上它就是新对话）。
-      body: Column(
-        children: [
-          Padding(
-            padding: const .fromLTRB(12, 4, 12, 8),
-            child: Card.filled(
-              color: context.theme.colors.surfaceContainerLow,
-              margin: .zero,
-              child: const AssistantSummaryTile(),
-            ),
-          ),
-          Expanded(
-            child: _SessionListView(
-              currentId: null,
-              onSelect: (session) =>
-                  AssistantConversationRoute(sessionId: session.id)
-                      .push(context),
-              onDelete: (session) =>
-                  ChatRepository.get().deleteSession(session.id),
-              // 根壳开了 extendBody，底栏整条带高已折进 padding.bottom，直接读来让开。
-              padding: .fromLTRB(
-                12,
-                0,
-                12,
-                8 + MediaQuery.paddingOf(context).bottom,
-              ),
-            ),
-          ),
-        ],
+      body: _SessionListView(
+        onSelect: (session) =>
+            AssistantConversationRoute(sessionId: session.id).push(context),
+        onDelete: (session) => ChatRepository.get().deleteSession(session.id),
+        // 根壳开了 extendBody，底栏整条带高已折进 padding.bottom，直接读来让开。
+        padding: .only(bottom: 8 + MediaQuery.paddingOf(context).bottom),
       ),
     );
   }
 }
 
-class _SessionListView extends StatefulWidget {
-  final String? currentId;
+/// 顶栏上的「当前用哪个模型」。点进助手设置。
+///
+/// 样式跟输入框那颗 [_ModelChip] 一致：文字 + 箭头、无背景 —— 它俩说的是同一件事，
+/// 长得不一样只会让人以为是两个东西。
+class _ActiveModelAction extends StatefulWidget {
+  const _ActiveModelAction();
 
+  @override
+  State<_ActiveModelAction> createState() => _ActiveModelActionState();
+}
+
+class _ActiveModelActionState extends State<_ActiveModelAction> {
+  LlmProvider? _active;
+  bool _loaded = false;
+  StreamSubscription<void>? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    _sub = LlmProviderRepository.get().providerEvents.listen((_) => _load());
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final active = await LlmProviderRepository.get().getActiveProvider();
+    if (!mounted) return;
+    setState(() {
+      _active = active;
+      _loaded = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 还没读出来时不占位：先画一个空壳再跳成模型名，比晚 50ms 出现更晃眼。
+    if (!_loaded) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final active = _active;
+    final typography = context.theme.typography;
+    return MInkWell(
+      shape: const StadiumBorder(),
+      onTap: () async {
+        await const AssistantSettingRoute().push(context);
+        await _load();
+      },
+      child: Padding(
+        padding: const .symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          mainAxisSize: .min,
+          children: [
+            // 中转站的模型 id 可以很长，给个上限省得把标题挤没。
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 150),
+              child: Text(
+                active?.defaultModel ?? l10n.assistant.historyModelUnset,
+                maxLines: 1,
+                overflow: .ellipsis,
+                style: active == null
+                    ? typography.labelMedium.error
+                    : typography.labelMedium.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 15,
+              color: context.theme.colors.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 会话按更新时间分的三桶。
+enum SessionHistoryBucket { today, last7, earlier }
+
+typedef SessionHistoryGroup = ({
+  SessionHistoryBucket bucket,
+  List<ChatSession> sessions,
+});
+
+/// 分桶。**边界与日记搜索的「近 7 天」一致**（今天零点往前 7 天），否则同一个 App
+/// 两处对「近 7 天」给出不同答案。
+///
+/// [now] 显式传入而不是就地取，纯函数才测得动。
+List<SessionHistoryGroup> sessionHistoryGroups(
+  List<ChatSession> sessions, {
+  required DateTime now,
+}) {
+  final local = now.toLocal();
+  final today = DateTime(local.year, local.month, local.day);
+  final weekAgo = today.subtract(const Duration(days: 7));
+  final buckets = <SessionHistoryBucket, List<ChatSession>>{};
+  for (final session in sessions) {
+    // updatedAt 是绝对时刻（UTC），分桶前必须落到本地日历上。
+    final at = session.updatedAt.toLocal();
+    final bucket = !at.isBefore(today)
+        ? SessionHistoryBucket.today
+        : !at.isBefore(weekAgo)
+        ? SessionHistoryBucket.last7
+        : SessionHistoryBucket.earlier;
+    (buckets[bucket] ??= <ChatSession>[]).add(session);
+  }
+  // 会话本身按更新时间倒序取出，桶序与之同向，桶内顺序原样保留。
+  return [
+    for (final bucket in SessionHistoryBucket.values)
+      if (buckets[bucket] case final list?) (bucket: bucket, sessions: list),
+  ];
+}
+
+sealed class _HistoryEntry {
+  const _HistoryEntry();
+}
+
+class _HistoryHeader extends _HistoryEntry {
+  final SessionHistoryBucket bucket;
+
+  const _HistoryHeader(this.bucket);
+}
+
+class _HistoryRow extends _HistoryEntry {
+  final ChatSession session;
+  final SessionHistoryBucket bucket;
+
+  const _HistoryRow(this.session, this.bucket);
+}
+
+class _SessionListView extends StatefulWidget {
   final void Function(ChatSession session) onSelect;
 
   final void Function(ChatSession session) onDelete;
@@ -2084,10 +2197,9 @@ class _SessionListView extends StatefulWidget {
   final EdgeInsetsGeometry padding;
 
   const _SessionListView({
-    required this.currentId,
     required this.onSelect,
     required this.onDelete,
-    this.padding = const .symmetric(horizontal: 12),
+    this.padding = EdgeInsets.zero,
   });
 
   @override
@@ -2116,22 +2228,43 @@ class _SessionListViewState extends State<_SessionListView> {
     if (mounted) setState(() => _sessions = sessions);
   }
 
+  /// 摊平成「标题 + 行」的一维表，交给 `ListView.builder` 按需构建。
+  ///
+  /// **只有一个桶时不画标题**：为两条对话立一个「更早」纯属噪声，分组是用来在多段
+  /// 之间给节奏的，只有一段就没有段落可分。
+  List<_HistoryEntry> _entries(List<ChatSession> sessions) {
+    final groups = sessionHistoryGroups(sessions, now: DateTime.now());
+    final single = groups.length <= 1;
+    return [
+      for (final group in groups) ...[
+        if (!single) _HistoryHeader(group.bucket),
+        for (final session in group.sessions)
+          _HistoryRow(session, group.bucket),
+      ],
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final sessions = _sessions;
     return switch (sessions) {
       null => const Center(child: CircularProgressIndicator()),
-      [] => _EmptySessions(),
-      final list => ListView.builder(
-        padding: widget.padding,
-        itemCount: list.length,
-        itemBuilder: (context, index) {
-          final session = list[index];
-          return _SessionCard(
-            session: session,
-            selected: session.id == widget.currentId,
-            onTap: () => widget.onSelect(session),
-            onDelete: () => widget.onDelete(session),
+      [] => const _EmptySessions(),
+      final list => Builder(
+        builder: (context) {
+          final entries = _entries(list);
+          return ListView.builder(
+            padding: widget.padding,
+            itemCount: entries.length,
+            itemBuilder: (context, index) => switch (entries[index]) {
+              _HistoryHeader(:final bucket) => _HistoryGroupLabel(bucket),
+              _HistoryRow(:final session, :final bucket) => _SessionTile(
+                session: session,
+                bucket: bucket,
+                onTap: () => widget.onSelect(session),
+                onDelete: () => widget.onDelete(session),
+              ),
+            },
           );
         },
       ),
@@ -2139,7 +2272,33 @@ class _SessionListViewState extends State<_SessionListView> {
   }
 }
 
+class _HistoryGroupLabel extends StatelessWidget {
+  final SessionHistoryBucket bucket;
+
+  const _HistoryGroupLabel(this.bucket);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final label = switch (bucket) {
+      .today => l10n.assistant.historyToday,
+      .last7 => l10n.assistant.historyLast7,
+      .earlier => l10n.assistant.historyEarlier,
+    };
+    return Padding(
+      // 上间距远大于下间距：标题要贴着它统辖的那一段，而不是浮在两段中间。
+      padding: const .fromLTRB(16, 18, 16, 4),
+      child: Text(
+        label,
+        style: context.theme.typography.labelSmall.onSurfaceVariant,
+      ),
+    );
+  }
+}
+
 class _EmptySessions extends StatelessWidget {
+  const _EmptySessions();
+
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
@@ -2149,8 +2308,8 @@ class _EmptySessions extends StatelessWidget {
         children: [
           Icon(
             LucideIcons.messagesSquare,
-            size: 56,
-            color: scheme.onSurfaceVariant,
+            size: 40,
+            color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
           ),
           const SizedBox(height: 12),
           Text(
@@ -2163,93 +2322,83 @@ class _EmptySessions extends StatelessWidget {
   }
 }
 
-class _SessionCard extends StatelessWidget {
+/// 一条会话。单行：标题 + 右对齐的短时刻。
+///
+/// 没有卡片、没有头像、没有分割线：头像是同一个图标重复 N 遍，不承载区分度，却把行
+/// 高从 44 顶到 76；分割线在有分组标题的列表里是第二套节奏，两套一起用反而把段落切碎。
+class _SessionTile extends StatelessWidget {
   final ChatSession session;
-  final bool selected;
+  final SessionHistoryBucket bucket;
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
-  const _SessionCard({
+  const _SessionTile({
     required this.session,
-    required this.selected,
+    required this.bucket,
     required this.onTap,
     required this.onDelete,
   });
 
-  Future<void> _confirmDelete(BuildContext context) async {
+  /// 桶已经说了「哪一天」，行里只补桶内的相对位置：今天给时刻、近 7 天给星期、
+  /// 更早给日期。一屏八条「3 天前」「3 天前」「上周」是噪声，不是信息。
+  String _time() => switch (bucket) {
+    .today => TimeFormat.clock(session.updatedAt),
+    .last7 => TimeFormat.weekdayShort(session.updatedAt),
+    .earlier => TimeFormat.relative(session.updatedAt),
+  };
+
+  Future<bool> _confirmDelete(BuildContext context) async {
     final l10n = context.l10n;
-    final ok = await MAlert.confirm(
+    return MAlert.confirm(
       context,
       title: l10n.common.delete,
       message: _sessionTitle(session, l10n),
       confirmLabel: l10n.common.delete,
       isDestructive: true,
     );
-    if (ok) onDelete();
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
+    final typography = context.theme.typography;
     final l10n = context.l10n;
-    final onColor = selected ? scheme.onSecondaryContainer : scheme.onSurface;
-    return Card.filled(
-      margin: const .symmetric(vertical: 4),
-      color: selected ? scheme.secondaryContainer : scheme.surfaceContainerLow,
-      clipBehavior: .antiAlias,
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const .fromLTRB(12, 4, 4, 4),
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: selected
-                ? scheme.onSecondaryContainer.withValues(alpha: 0.12)
-                : scheme.primaryContainer,
-            shape: .circle,
-          ),
-          child: Icon(
-            LucideIcons.messagesSquare,
-            size: 22,
-            color: selected
-                ? scheme.onSecondaryContainer
-                : scheme.onPrimaryContainer,
-          ),
-        ),
-        title: Text(
-          _sessionTitle(session, l10n),
-          maxLines: 1,
-          overflow: .ellipsis,
-          style: context.theme.typography.titleSmall.onSurface.copyWith(
-            color: onColor,
-          ),
-        ),
-        subtitle: Text(
-          TimeFormat.relative(session.updatedAt),
-          style: context.theme.typography.labelSmall.onSurfaceVariant.copyWith(
-            color: selected
-                ? scheme.onSecondaryContainer
-                : scheme.onSurfaceVariant,
-          ),
-        ),
-        trailing: MMenuButton<String>(
-          tooltip: l10n.common.more,
-          onSelected: (_) => _confirmDelete(context),
-          entries: [
-            MMenuEntry(
-              value: 'delete',
-              label: l10n.common.delete,
-              icon: LucideIcons.trash2,
-              isDestructive: true,
-            ),
-          ],
+    return Dismissible(
+      key: ValueKey(session.id),
+      direction: .endToStart,
+      confirmDismiss: (_) => _confirmDelete(context),
+      onDismissed: (_) => onDelete(),
+      background: ColoredBox(
+        color: scheme.errorContainer,
+        child: Align(
+          alignment: .centerRight,
           child: Padding(
-            padding: const .all(12),
+            padding: const .only(right: 20),
             child: Icon(
-              LucideIcons.ellipsisVertical,
-              color: scheme.onSurfaceVariant,
+              LucideIcons.trash2,
+              size: 20,
+              color: scheme.onErrorContainer,
             ),
+          ),
+        ),
+      ),
+      child: MInkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const .symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _sessionTitle(session, l10n),
+                  maxLines: 1,
+                  overflow: .ellipsis,
+                  style: typography.bodyMedium.onSurface,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(_time(), style: typography.labelSmall.onSurfaceVariant),
+            ],
           ),
         ),
       ),
