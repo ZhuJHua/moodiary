@@ -60,7 +60,7 @@ void main() {
     ]);
   });
 
-  test('全都落在同一桶时只有一组——界面据此不画标题', () {
+  test('全都落在同一桶时只有一组（标题照画，见 _entries）', () {
     final groups = sessionHistoryGroups([
       at(DateTime(2026, 8, 1)),
       at(DateTime(2026, 7, 3)),

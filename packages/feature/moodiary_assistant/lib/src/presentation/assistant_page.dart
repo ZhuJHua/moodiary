@@ -2230,17 +2230,16 @@ class _SessionListViewState extends State<_SessionListView> {
 
   /// 摊平成「标题 + 行」的一维表，交给 `ListView.builder` 按需构建。
   ///
-  /// **只有一个桶时不画标题**：为两条对话立一个「更早」纯属噪声，分组是用来在多段
-  /// 之间给节奏的，只有一段就没有段落可分。
+  /// **标题一律画，哪怕只有一个桶**：它不只是段落之间的分隔，也是「这些是什么时候的」
+  /// 这个问题的答案。会话全在今天时把「今天」吞掉，页面反而显得没头没尾。
   List<_HistoryEntry> _entries(List<ChatSession> sessions) {
-    final groups = sessionHistoryGroups(sessions, now: DateTime.now());
-    final single = groups.length <= 1;
     return [
-      for (final group in groups) ...[
-        if (!single) _HistoryHeader(group.bucket),
-        for (final session in group.sessions)
-          _HistoryRow(session, group.bucket),
-      ],
+      for (final group in sessionHistoryGroups(sessions, now: DateTime.now()))
+        ...[
+          _HistoryHeader(group.bucket),
+          for (final session in group.sessions)
+            _HistoryRow(session, group.bucket),
+        ],
     ];
   }
 
