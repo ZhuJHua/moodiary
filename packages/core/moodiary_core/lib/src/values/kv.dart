@@ -105,6 +105,10 @@ enum MoodiaryKVs<T extends Object> {
   /// 空串表示关闭思考。
   assistantReasoningEffort<String>(defaultValue: ''),
 
+  /// 新建 AI 会话的默认助手预设 id。空串 = 内置「Moodiary助手」；
+  /// 指向的预设被删则回落内置。每个会话实际用的人格存于 ChatSession.personaSnapshot。
+  assistantAgentPresetId<String>(defaultValue: ''),
+
   /// models.dev 目录的归一化缓存。
   llmPresetCache<String>(defaultValue: ''),
 

@@ -38,6 +38,10 @@ abstract class ChatMessage with _$ChatMessage {
     /// 本轮（assistant 回复）产生的输出 token 数。null 表示无用量数据。
     int? outputTokens,
 
+    /// 生成本条 assistant 回复的模型 id。null = 旧数据或 user 消息。
+    /// 相邻两条回复的 model 不同时，界面在其间合成「已切换到 X」提示。
+    String? model,
+
     /// 本轮用到的工具调用，按发生顺序。
     ///
     /// **必须落库**：不落的话工具调用只在本轮可见，重开会话就没了 —— 而且模型

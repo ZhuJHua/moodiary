@@ -34,6 +34,7 @@ final class IsarDatabase {
     ChatMessageSchema,
     MemoryEntrySchema,
     MediaInfoSchema,
+    AgentPresetSchema,
   ];
 
   Future<void> init() async {

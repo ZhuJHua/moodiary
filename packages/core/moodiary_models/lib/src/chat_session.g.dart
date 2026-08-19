@@ -34,6 +34,9 @@ final ChatSessionSchema = IsarGeneratedSchema(
         name: 'compactedInputTokensAtTrigger',
         type: IsarType.long,
       ),
+      IsarPropertySchema(name: 'agentPresetId', type: IsarType.string),
+      IsarPropertySchema(name: 'personaSnapshot', type: IsarType.string),
+      IsarPropertySchema(name: 'toolsSnapshot', type: IsarType.stringList),
     ],
     indexes: [],
   ),
@@ -88,6 +91,34 @@ int serializeChatSession(IsarWriter writer, ChatSession object) {
     11,
     object.compactedInputTokensAtTrigger ?? -9223372036854775808,
   );
+  {
+    final value = object.agentPresetId;
+    if (value == null) {
+      IsarCore.writeNull(writer, 12);
+    } else {
+      IsarCore.writeString(writer, 12, value);
+    }
+  }
+  {
+    final value = object.personaSnapshot;
+    if (value == null) {
+      IsarCore.writeNull(writer, 13);
+    } else {
+      IsarCore.writeString(writer, 13, value);
+    }
+  }
+  {
+    final list = object.toolsSnapshot;
+    if (list == null) {
+      IsarCore.writeNull(writer, 14);
+    } else {
+      final listWriter = IsarCore.beginList(writer, 14, list.length);
+      for (var i = 0; i < list.length; i++) {
+        IsarCore.writeString(listWriter, i, list[i]);
+      }
+      IsarCore.endList(writer, listWriter);
+    }
+  }
   return Isar.fastHash(object.id);
 }
 
@@ -158,6 +189,27 @@ ChatSession deserializeChatSession(IsarReader reader) {
       _compactedInputTokensAtTrigger = value;
     }
   }
+  final String? _agentPresetId;
+  _agentPresetId = IsarCore.readString(reader, 12);
+  final String? _personaSnapshot;
+  _personaSnapshot = IsarCore.readString(reader, 13);
+  final List<String>? _toolsSnapshot;
+  {
+    final length = IsarCore.readList(reader, 14, IsarCore.readerPtrPtr);
+    {
+      final reader = IsarCore.readerPtr;
+      if (reader.isNull) {
+        _toolsSnapshot = null;
+      } else {
+        final list = List<String>.filled(length, '', growable: true);
+        for (var i = 0; i < length; i++) {
+          list[i] = IsarCore.readString(reader, i) ?? '';
+        }
+        IsarCore.freeReader(reader);
+        _toolsSnapshot = list;
+      }
+    }
+  }
   final object = ChatSession(
     id: _id,
     title: _title,
@@ -170,6 +222,9 @@ ChatSession deserializeChatSession(IsarReader reader) {
     compactedUpToMessageId: _compactedUpToMessageId,
     compactedAt: _compactedAt,
     compactedInputTokensAtTrigger: _compactedInputTokensAtTrigger,
+    agentPresetId: _agentPresetId,
+    personaSnapshot: _personaSnapshot,
+    toolsSnapshot: _toolsSnapshot,
   );
   return object;
 }
@@ -236,6 +291,27 @@ dynamic deserializeChatSessionProp(IsarReader reader, int property) {
           return value;
         }
       }
+    case 12:
+      return IsarCore.readString(reader, 12);
+    case 13:
+      return IsarCore.readString(reader, 13);
+    case 14:
+      {
+        final length = IsarCore.readList(reader, 14, IsarCore.readerPtrPtr);
+        {
+          final reader = IsarCore.readerPtr;
+          if (reader.isNull) {
+            return null;
+          } else {
+            final list = List<String>.filled(length, '', growable: true);
+            for (var i = 0; i < length; i++) {
+              list[i] = IsarCore.readString(reader, i) ?? '';
+            }
+            IsarCore.freeReader(reader);
+            return list;
+          }
+        }
+      }
     default:
       throw ArgumentError('Unknown property: $property');
   }
@@ -254,6 +330,8 @@ sealed class _ChatSessionUpdate {
     String? compactedUpToMessageId,
     DateTime? compactedAt,
     int? compactedInputTokensAtTrigger,
+    String? agentPresetId,
+    String? personaSnapshot,
   });
 }
 
@@ -275,6 +353,8 @@ class _ChatSessionUpdateImpl implements _ChatSessionUpdate {
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
     Object? compactedInputTokensAtTrigger = ignore,
+    Object? agentPresetId = ignore,
+    Object? personaSnapshot = ignore,
   }) {
     return collection.updateProperties(
           [id],
@@ -291,6 +371,8 @@ class _ChatSessionUpdateImpl implements _ChatSessionUpdate {
             if (compactedAt != ignore) 10: compactedAt as DateTime?,
             if (compactedInputTokensAtTrigger != ignore)
               11: compactedInputTokensAtTrigger as int?,
+            if (agentPresetId != ignore) 12: agentPresetId as String?,
+            if (personaSnapshot != ignore) 13: personaSnapshot as String?,
           },
         ) >
         0;
@@ -310,6 +392,8 @@ sealed class _ChatSessionUpdateAll {
     String? compactedUpToMessageId,
     DateTime? compactedAt,
     int? compactedInputTokensAtTrigger,
+    String? agentPresetId,
+    String? personaSnapshot,
   });
 }
 
@@ -331,6 +415,8 @@ class _ChatSessionUpdateAllImpl implements _ChatSessionUpdateAll {
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
     Object? compactedInputTokensAtTrigger = ignore,
+    Object? agentPresetId = ignore,
+    Object? personaSnapshot = ignore,
   }) {
     return collection.updateProperties(id, {
       if (title != ignore) 2: title as String?,
@@ -345,6 +431,8 @@ class _ChatSessionUpdateAllImpl implements _ChatSessionUpdateAll {
       if (compactedAt != ignore) 10: compactedAt as DateTime?,
       if (compactedInputTokensAtTrigger != ignore)
         11: compactedInputTokensAtTrigger as int?,
+      if (agentPresetId != ignore) 12: agentPresetId as String?,
+      if (personaSnapshot != ignore) 13: personaSnapshot as String?,
     });
   }
 }
@@ -367,6 +455,8 @@ sealed class _ChatSessionQueryUpdate {
     String? compactedUpToMessageId,
     DateTime? compactedAt,
     int? compactedInputTokensAtTrigger,
+    String? agentPresetId,
+    String? personaSnapshot,
   });
 }
 
@@ -388,6 +478,8 @@ class _ChatSessionQueryUpdateImpl implements _ChatSessionQueryUpdate {
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
     Object? compactedInputTokensAtTrigger = ignore,
+    Object? agentPresetId = ignore,
+    Object? personaSnapshot = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (title != ignore) 2: title as String?,
@@ -402,6 +494,8 @@ class _ChatSessionQueryUpdateImpl implements _ChatSessionQueryUpdate {
       if (compactedAt != ignore) 10: compactedAt as DateTime?,
       if (compactedInputTokensAtTrigger != ignore)
         11: compactedInputTokensAtTrigger as int?,
+      if (agentPresetId != ignore) 12: agentPresetId as String?,
+      if (personaSnapshot != ignore) 13: personaSnapshot as String?,
     });
   }
 }
@@ -431,6 +525,8 @@ class _ChatSessionQueryBuilderUpdateImpl implements _ChatSessionQueryUpdate {
     Object? compactedUpToMessageId = ignore,
     Object? compactedAt = ignore,
     Object? compactedInputTokensAtTrigger = ignore,
+    Object? agentPresetId = ignore,
+    Object? personaSnapshot = ignore,
   }) {
     final q = query.build();
     try {
@@ -447,6 +543,8 @@ class _ChatSessionQueryBuilderUpdateImpl implements _ChatSessionQueryUpdate {
         if (compactedAt != ignore) 10: compactedAt as DateTime?,
         if (compactedInputTokensAtTrigger != ignore)
           11: compactedInputTokensAtTrigger as int?,
+        if (agentPresetId != ignore) 12: agentPresetId as String?,
+        if (personaSnapshot != ignore) 13: personaSnapshot as String?,
       });
     } finally {
       q.close();
@@ -1792,6 +1890,523 @@ extension ChatSessionQueryFilter
       );
     });
   }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 12));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 12));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(
+          property: 12,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdGreaterThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 12,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdGreaterThanOrEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 12,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdLessThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 12, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdLessThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 12,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdBetween(
+    String? lower,
+    String? upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 12,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 12,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 12,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 12,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 12,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 12, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  agentPresetIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 12, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 13));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 13));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(
+          property: 13,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotGreaterThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 13,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotGreaterThanOrEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 13,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotLessThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 13, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotLessThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 13,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotBetween(
+    String? lower,
+    String? upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 13,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 13,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 13,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 13,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 13,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 13, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  personaSnapshotIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 13, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 14));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 14));
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementEqualTo(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(
+          property: 14,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementGreaterThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 14,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementGreaterThanOrEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 14,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementLessThan(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 14, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementLessThanOrEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 14,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementBetween(
+    String lower,
+    String upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 14,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementStartsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 14,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementEndsWith(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 14,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 14,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 14,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 14, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 14, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotIsEmpty() {
+    return not().group(
+      (q) => q.toolsSnapshotIsNull().or().toolsSnapshotIsNotEmpty(),
+    );
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterFilterCondition>
+  toolsSnapshotIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterOrEqualCondition(property: 14, value: null),
+      );
+    });
+  }
 }
 
 extension ChatSessionQueryObject
@@ -1956,6 +2571,37 @@ extension ChatSessionQuerySortBy
       return query.addSortBy(11, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByAgentPresetId({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(12, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByAgentPresetIdDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(12, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> sortByPersonaSnapshot({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(13, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  sortByPersonaSnapshotDesc({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(13, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension ChatSessionQuerySortThenBy
@@ -2117,6 +2763,37 @@ extension ChatSessionQuerySortThenBy
       return query.addSortBy(11, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByAgentPresetId({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(12, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByAgentPresetIdDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(12, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy> thenByPersonaSnapshot({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(13, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterSortBy>
+  thenByPersonaSnapshotDesc({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(13, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension ChatSessionQueryWhereDistinct
@@ -2191,6 +2868,27 @@ extension ChatSessionQueryWhereDistinct
       return query.addDistinctBy(11);
     });
   }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterDistinct>
+  distinctByAgentPresetId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(12, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterDistinct>
+  distinctByPersonaSnapshot({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(13, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatSession, ChatSession, QAfterDistinct>
+  distinctByToolsSnapshot() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(14);
+    });
+  }
 }
 
 extension ChatSessionQueryProperty1
@@ -2261,6 +2959,25 @@ extension ChatSessionQueryProperty1
   compactedInputTokensAtTriggerProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(11);
+    });
+  }
+
+  QueryBuilder<ChatSession, String?, QAfterProperty> agentPresetIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(12);
+    });
+  }
+
+  QueryBuilder<ChatSession, String?, QAfterProperty> personaSnapshotProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(13);
+    });
+  }
+
+  QueryBuilder<ChatSession, List<String>?, QAfterProperty>
+  toolsSnapshotProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(14);
     });
   }
 }
@@ -2335,6 +3052,27 @@ extension ChatSessionQueryProperty2<R>
   compactedInputTokensAtTriggerProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addProperty(11);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R, String?), QAfterProperty>
+  agentPresetIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(12);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R, String?), QAfterProperty>
+  personaSnapshotProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(13);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R, List<String>?), QAfterProperty>
+  toolsSnapshotProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(14);
     });
   }
 }
@@ -2414,6 +3152,27 @@ extension ChatSessionQueryProperty3<R1, R2>
       return query.addProperty(11);
     });
   }
+
+  QueryBuilder<ChatSession, (R1, R2, String?), QOperations>
+  agentPresetIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(12);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R1, R2, String?), QOperations>
+  personaSnapshotProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(13);
+    });
+  }
+
+  QueryBuilder<ChatSession, (R1, R2, List<String>?), QOperations>
+  toolsSnapshotProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(14);
+    });
+  }
 }
 
 // **************************************************************************
@@ -2435,6 +3194,11 @@ _ChatSession _$ChatSessionFromJson(Map<String, dynamic> json) => _ChatSession(
       : DateTime.parse(json['compactedAt'] as String),
   compactedInputTokensAtTrigger: (json['compactedInputTokensAtTrigger'] as num?)
       ?.toInt(),
+  agentPresetId: json['agentPresetId'] as String?,
+  personaSnapshot: json['personaSnapshot'] as String?,
+  toolsSnapshot: (json['toolsSnapshot'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
 );
 
 Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
@@ -2450,4 +3214,7 @@ Map<String, dynamic> _$ChatSessionToJson(_ChatSession instance) =>
       'compactedUpToMessageId': instance.compactedUpToMessageId,
       'compactedAt': instance.compactedAt?.toIso8601String(),
       'compactedInputTokensAtTrigger': instance.compactedInputTokensAtTrigger,
+      'agentPresetId': instance.agentPresetId,
+      'personaSnapshot': instance.personaSnapshot,
+      'toolsSnapshot': instance.toolsSnapshot,
     };

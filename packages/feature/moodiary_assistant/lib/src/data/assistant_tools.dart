@@ -19,8 +19,11 @@ const String _failurePrefix = 'Failed:';
 ///
 /// **由工具自己实现**：截断结果字符串得到的是「id=0198a… 【2026-08-11】…」这种
 /// 半截元数据，而工具自己知道该说「7 条 · 08-11 至 08-17」。
-typedef AssistantToolSummarize =
-    String Function(AssistantTool tool, Map<String, dynamic> input, String output);
+typedef AssistantToolSummarize = String Function(
+  AssistantTool tool,
+  Map<String, dynamic> input,
+  String output,
+);
 
 class AssistantToolSpec {
   final AssistantTool tool;
@@ -95,8 +98,7 @@ abstract final class AssistantToolRegistry {
         'properties': {
           'keywords': {
             'type': 'string',
-            'description':
-                'Space-separated search terms. Omit to browse by the filters below.',
+            'description': 'Space-separated search terms. Omit to browse by the filters below.',
           },
           'categoryId': {
             'type': 'string',
@@ -104,7 +106,8 @@ abstract final class AssistantToolRegistry {
           },
           'startDate': {
             'type': 'string',
-            'description': 'Inclusive start, YYYY-MM-DD in the user local time.',
+            'description':
+                'Inclusive start, YYYY-MM-DD in the user local time.',
           },
           'endDate': {
             'type': 'string',
@@ -408,10 +411,7 @@ abstract final class AssistantToolRegistry {
                   'type': 'string',
                   'description': 'Memory id from listMemories.',
                 },
-                'text': {
-                  'type': 'string',
-                  'description': 'The revised fact.',
-                },
+                'text': {'type': 'string', 'description': 'The revised fact.'},
                 'category': {
                   'type': 'string',
                   'enum': ['preference', 'theme', 'goal', 'fact'],
@@ -496,9 +496,7 @@ abstract final class AssistantToolRegistry {
       final summary = spec == null
           ? ''
           : spec.summaryOf(_decodeArgs(call.argsJson), call.result);
-      lines.add(
-        '- ${call.name}($args)${summary.isEmpty ? '' : ' → $summary'}',
-      );
+      lines.add('- ${call.name}($args)${summary.isEmpty ? '' : ' → $summary'}');
     }
     return lines.isEmpty ? '' : '[tools already run]\n${lines.join('\n')}';
   }
@@ -518,6 +516,16 @@ abstract final class AssistantToolRegistry {
       if (spec.id == id) return spec;
     }
     return null;
+  }
+
+  /// 按预设声明的子集过滤（保持 [specs] 的顺序，未知 id 忽略）。
+  /// null = 全部；空列表 = 一个都不挂。
+  static List<AssistantToolSpec> specsFor(List<String>? allowed) {
+    if (allowed == null) return specs;
+    return [
+      for (final spec in specs)
+        if (allowed.contains(spec.id)) spec,
+    ];
   }
 
   /// 查询的一行摘要：命中数 + 实际生效的筛选条件。
@@ -605,19 +613,18 @@ abstract final class AssistantToolRegistry {
     // 动词由提示条前面的类型词负责（「创建日记 · 3 篇」），这里不重复。
     if (items.length > 1) {
       return switch (tool) {
-        .createDiary || .updateDiary => l10n.assistant.toolBatchDiaries(
-          count: items.length,
-        ),
+        .createDiary ||
+        .updateDiary => l10n.assistant.toolBatchDiaries(count: items.length),
         _ => l10n.assistant.toolBatchItems(count: items.length),
       };
     }
     final item = items.isEmpty ? const <String, dynamic>{} : items.first;
     return switch (tool) {
       .createDiary => _trimToNull(item['title']) ?? l10n.assistant.toolUntitled,
-      .createCategory || .updateCategory =>
-        _trimToNull(item['name']) ?? l10n.assistant.toolDone,
-      .rememberFact || .updateMemory =>
-        _trimToNull(item['text']) ?? l10n.assistant.toolDone,
+      .createCategory ||
+      .updateCategory => _trimToNull(item['name']) ?? l10n.assistant.toolDone,
+      .rememberFact ||
+      .updateMemory => _trimToNull(item['text']) ?? l10n.assistant.toolDone,
       .deleteCategory || .forgetFact => l10n.assistant.toolDeleted,
       _ => l10n.assistant.toolUpdated,
     };
@@ -712,7 +719,9 @@ abstract final class AssistantToolRegistry {
       if (chunks.isNotEmpty) buffer.writeln();
     }
     if (ids.length > _maxBatchRead) {
-      buffer.writeln('(Only the first $_maxBatchRead were read; call again for the rest.)');
+      buffer.writeln(
+        '(Only the first $_maxBatchRead were read; call again for the rest.)',
+      );
     }
     buffer.write(chunks.join('\n\n---\n\n'));
     final out = buffer.toString().trim();
@@ -801,7 +810,8 @@ abstract final class AssistantToolRegistry {
         // catch，模型会读到「整批失败」，照系统提示词重跑一遍 —— 创建类因此写出
         // 重复数据。降级成这一条的失败行，其余的成败照常回报。
         final id = item['id'];
-        line = '$_failurePrefix ${id == null ? 'item $index' : 'id=$id'} '
+        line =
+            '$_failurePrefix ${id == null ? 'item $index' : 'id=$id'} '
             'threw $e.';
       }
       (line.startsWith(_failurePrefix) ? failed : done).add(line);
@@ -901,11 +911,15 @@ abstract final class AssistantToolRegistry {
       final low = rated.where((m) => m < 0.4).length;
       final high = rated.where((m) => m > 0.6).length;
       buffer
-        ..writeln('mood (0.00 low ~ 1.00 high; '
-            '${moods.length - rated.length} entries with no mood set are excluded):')
+        ..writeln(
+          'mood (0.00 low ~ 1.00 high; '
+          '${moods.length - rated.length} entries with no mood set are excluded):',
+        )
         ..writeln('- mean=${avg.toStringAsFixed(2)}')
-        ..writeln('- low(<0.40)=$low, high(>0.60)=$high, '
-            'middle=${rated.length - low - high}');
+        ..writeln(
+          '- low(<0.40)=$low, high(>0.60)=$high, '
+          'middle=${rated.length - low - high}',
+        );
     }
     return buffer.toString().trim();
   }
@@ -1010,7 +1024,9 @@ abstract final class AssistantToolRegistry {
     updated = updated.copyWith(lastModified: .timestamp());
 
     await repo.updateADiary(newDiary: updated);
-    final shown = updated.title.trim().isEmpty ? 'Untitled' : updated.title.trim();
+    final shown = updated.title.trim().isEmpty
+        ? 'Untitled'
+        : updated.title.trim();
     return 'Updated "$shown" (id=$id).';
   }
 
@@ -1038,8 +1054,6 @@ abstract final class AssistantToolRegistry {
     return 'Moved "$title" (id=$id) to the recycle bin.';
   }
 
-
-
   static Future<String> _listCategories(Map<String, dynamic> input) async {
     final cats = (await CategoryRepository.get().getAllCategories().run())
         .getOrElse((_) => const <Category>[]);
@@ -1060,7 +1074,9 @@ abstract final class AssistantToolRegistry {
     final category = Category.create(categoryName: name);
     final ok = (await CategoryRepository.get().insertACategory(category).run())
         .isRight();
-    return ok ? 'Created category "$name", id=${category.id}.' : 'Failed: could not create the category.';
+    return ok
+        ? 'Created category "$name", id=${category.id}.'
+        : 'Failed: could not create the category.';
   }
 
   static Future<String> _updateCategory(Map<String, dynamic> input) =>
@@ -1069,7 +1085,9 @@ abstract final class AssistantToolRegistry {
   static Future<String> _updateOneCategory(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     final name = (input['name'] as String?)?.trim() ?? '';
-    if (id.isEmpty || name.isEmpty) return 'Failed: category id and name are both required.';
+    if (id.isEmpty || name.isEmpty) {
+      return 'Failed: category id and name are both required.';
+    }
 
     final repo = CategoryRepository.get();
     final existing = await repo.getCategoryById(id);
@@ -1081,7 +1099,9 @@ abstract final class AssistantToolRegistry {
       lastModified: .timestamp(),
     );
     final ok = (await repo.insertACategory(updated).run()).isRight();
-    return ok ? 'Renamed the category to "$name" (id=$id).' : 'Failed: could not rename the category.';
+    return ok
+        ? 'Renamed the category to "$name" (id=$id).'
+        : 'Failed: could not rename the category.';
   }
 
   static Future<String> _deleteCategory(Map<String, dynamic> input) =>
@@ -1128,7 +1148,9 @@ abstract final class AssistantToolRegistry {
   static Future<String> _updateOneMemory(Map<String, dynamic> input) async {
     final id = (input['id'] as String?)?.trim() ?? '';
     final text = (input['text'] as String?)?.trim() ?? '';
-    if (id.isEmpty || text.isEmpty) return 'Failed: memory id and text are both required.';
+    if (id.isEmpty || text.isEmpty) {
+      return 'Failed: memory id and text are both required.';
+    }
     final repo = MemoryRepository.get();
     final existing = await repo.get(id);
     if (existing == null) return 'Failed: no memory with id=$id.';
@@ -1158,7 +1180,9 @@ abstract final class AssistantToolRegistry {
       final outcome = await jsEval(code: code);
       final buffer = StringBuffer();
       buffer.writeln(
-        outcome.value.isEmpty ? 'Result: (no value)' : 'Result: ${outcome.value}',
+        outcome.value.isEmpty
+            ? 'Result: (no value)'
+            : 'Result: ${outcome.value}',
       );
       if (outcome.logs.isNotEmpty) {
         buffer
@@ -1198,7 +1222,9 @@ abstract final class AssistantToolRegistry {
     final id = (input['id'] as String?)?.trim() ?? '';
     if (id.isEmpty) return 'Failed: no memory id given.';
     final ok = await MemoryRepository.get().delete(id);
-    return ok ? 'Deleted the memory (id=$id).' : 'Failed: no memory with id=$id.';
+    return ok
+        ? 'Deleted the memory (id=$id).'
+        : 'Failed: no memory with id=$id.';
   }
 
   static Future<String?> _resolveCategoryId(Object? raw) async {
@@ -1267,7 +1293,10 @@ abstract final class AssistantToolRegistry {
         _ => (a, b) => b.time.compareTo(a.time),
       };
 
-  static String _formatDiaryList(Iterable<Diary> diaries, {required int total}) {
+  static String _formatDiaryList(
+    Iterable<Diary> diaries, {
+    required int total,
+  }) {
     final shown = diaries.length;
     final buffer = StringBuffer();
     buffer.writeln(
@@ -1277,7 +1306,9 @@ abstract final class AssistantToolRegistry {
           : '$total matches:',
     );
     for (final diary in diaries) {
-      final title = diary.title.trim().isEmpty ? 'Untitled' : diary.title.trim();
+      final title = diary.title.trim().isEmpty
+          ? 'Untitled'
+          : diary.title.trim();
       final cat = diary.categoryId;
       final catPart = (cat != null && cat.isNotEmpty) ? ' categoryId=$cat' : '';
       buffer.writeln(

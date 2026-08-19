@@ -31,10 +31,7 @@ class AssistantReasoning {
   /// [AssistantReasoningMode.budget] 时的思考 token 预算。
   final int budgetTokens;
 
-  const AssistantReasoning.off()
-    : mode = .off,
-      effort = '',
-      budgetTokens = 0;
+  const AssistantReasoning.off() : mode = .off, effort = '', budgetTokens = 0;
 
   const AssistantReasoning.effort(this.effort)
     : mode = .effort,
@@ -52,7 +49,14 @@ class AssistantReasoning {
 ///   「思考阶段结束」的信号，展示走下面两个
 /// - `toolStarted` / `toolFinished`：一次工具调用的开始与结果，靠 `callId` 配对
 /// - `usage`：token 用量
-enum AssistantStreamKind { text, reasoning, tool, toolStarted, toolFinished, usage }
+enum AssistantStreamKind {
+  text,
+  reasoning,
+  tool,
+  toolStarted,
+  toolFinished,
+  usage,
+}
 
 /// 一次流式回复中的单个增量。思考模式下 [reasoning] 与 [text] 交织到来。
 class AssistantStreamEvent {
@@ -176,7 +180,7 @@ class AssistantChatRequest {
 
   final String model;
 
-  /// 稳定 system prompt（缓存前缀）。仅含身份 / 护栏 / SOUL / 工具目录，每轮字节一致。
+  /// 稳定 system prompt（缓存前缀）。仅含身份 / 护栏 / 预设人格 / 工具目录，每轮字节一致。
   final String systemPrompt;
 
   /// 易变前缀：拼到本轮外发消息上、不进 system（避免污染缓存前缀）。见 [buildVolatilePrompt]。
@@ -193,6 +197,10 @@ class AssistantChatRequest {
   /// 是否给模型挂载工具。模型不支持工具调用时应为 false（否则可能被供应商拒）。
   final bool tools;
 
+  /// 预设声明的工具 id 子集（会话快照，dsh：预设声明它 mount 哪些工具）。
+  /// null = 全部。空列表调用方应直接置 [tools] 为 false。
+  final List<String>? allowedTools;
+
   const AssistantChatRequest({
     required this.type,
     required this.baseUrl,
@@ -204,6 +212,7 @@ class AssistantChatRequest {
     required this.history,
     this.reasoning = const AssistantReasoning.off(),
     this.tools = true,
+    this.allowedTools,
   });
 }
 

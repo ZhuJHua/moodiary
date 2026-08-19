@@ -10,11 +10,12 @@ import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:moodiary_assistant/src/application/context_compaction_controller.dart';
 import 'package:moodiary_assistant/src/application/session_title_controller.dart';
+import 'package:moodiary_assistant/src/data/agent_preset_resolver.dart';
 import 'package:moodiary_assistant/src/data/assistant.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
 import 'package:moodiary_assistant/src/data/assistant_tools.dart';
 import 'package:moodiary_assistant/src/data/model_resolver.dart';
-import 'package:moodiary_assistant/src/data/soul_repository.dart';
+import 'package:moodiary_assistant/src/presentation/agent_preset_sheet.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_notice.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/presentation/chat_list.dart';
@@ -147,13 +148,29 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   /// 当前激活模型的上下文窗口（用于上下文占用指示与压缩阈值）。随 provider 变化刷新。
   int _contextLimit = assistantDefaultContextBudget;
 
-
   /// 悬浮输入面板的实测高度：列表底部留白与「回到底部」按钮的位置都读它。
   double _composerHeight = 0;
 
   ChatSession? _session;
 
   bool _disclaimerAccepted = false;
+
+  /// 空白会话的待创建状态（staged，dsh 同款）：跨供应商选择先落在这里，
+  /// 撑过 [_refreshReady] 的重解析；首条消息 [_ensureSession] 时随 [_provider] 钉进会话。
+  /// 空串 = 没切过，照常走 KV 的全局默认供应商。
+  String _stagedProviderId = '';
+
+  /// 空白会话待创建时选中的预设 id（[builtinAgentPresetId] = 内置）。
+  String _stagedPresetId = builtinAgentPresetId;
+
+  /// 用户在 chip 上显式选过预设：从设置页回来时不再用全局默认覆盖它。
+  bool _presetPickedExplicitly = false;
+
+  /// 标题预设 chip 的显示名；null = 内置（用 l10n 名）。
+  String? _presetName;
+
+  /// 会话钉住的预设已被删：名称无从解析（chip 显示兜底文案），人格仍走会话快照。
+  bool _presetMissing = false;
 
   @override
   void initState() {
@@ -163,6 +180,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         MoodiaryKVs.assistantDisclaimerAccepted.get() ?? false;
     _reasoningLevel = MoodiaryKVs.assistantReasoningEffort.get() ?? '';
     _refreshReady();
+    unawaited(_initStagedPreset());
     if (!_disclaimerAccepted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _showDisclaimer();
@@ -198,7 +216,12 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final pinned = session == null || session.providerId.isEmpty
         ? null
         : await repo.getProvider(session.providerId);
-    final provider = pinned ?? await repo.getActiveProvider();
+    // 空白会话在 picker 里跨供应商选过：staged 优先于全局默认，否则每次重解析
+    // 都会把选择顶回 KV 的 active（staged 的供应商被删则自然回落）。
+    final staged = pinned != null || _stagedProviderId.isEmpty
+        ? null
+        : await repo.getProvider(_stagedProviderId);
+    final provider = pinned ?? staged ?? await repo.getActiveProvider();
     final key = provider == null ? null : await repo.getKey(provider.id);
     final wanted = pinned != null && (session?.model.isNotEmpty ?? false)
         ? session!.model
@@ -246,24 +269,36 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     return (tools: provider.toolCall, attachment: provider.attachment);
   }
 
-  /// 改模型与思考强度。**会话进行中也能改**，改完立刻写回会话记录。
+  /// 改模型与思考强度，**跨供应商**。会话进行中也能改，改完立刻写回会话记录。
   ///
   /// 顺序不能反：[_refreshReady] 在会话存在时以 `session.model` 为准
   /// （历史会话要按它自己钉住的那份解析），先刷新再落库会被旧值顶回去。
   ///
   /// 生成中禁用 —— 换模型要重建请求参数，中途换等于让这一轮的后半段换个模型接着说。
   ///
-  /// 换的只是「路由」：供应商不变（选项就是本供应商的），工具目录与人格都不受影响，
-  /// 所以已有的历史对新模型仍然是可用的。
+  /// 换的只是「路由」：工具目录与人格都不受影响，历史里的工具记录是纯文本、图片每轮
+  /// 重编码，所以已有的历史对新模型（哪怕换了供应商/协议）仍然可用。切换本身不向
+  /// 对话注入任何内容；归属靠每条回复落库的 model 字段与合成的提示。
   Future<void> _pickModel() async {
-    final provider = _provider;
-    if (provider == null || _sending) return;
-    final options = ModelResolver.optionsFor(provider);
-    if (options.isEmpty) return;
-    final choice = await showModelPicker(
+    if (_sending) return;
+    final repo = LlmProviderRepository.get();
+    final providers = await repo.getAllProviders();
+    final groups = <ProviderModels>[];
+    for (final p in providers) {
+      final options = ModelResolver.optionsFor(p);
+      if (options.isEmpty) continue;
+      final key = await repo.getKey(p.id);
+      groups.add((
+        provider: p,
+        options: options,
+        hasKey: key != null && key.isNotEmpty,
+      ));
+    }
+    if (groups.isEmpty || !mounted) return;
+    final choice = await showGlobalModelPicker(
       context,
-      providerName: provider.name,
-      options: options,
+      groups: groups,
+      providerId: _provider?.id ?? '',
       modelId: _modelId,
       level: _reasoningLevel,
     );
@@ -271,6 +306,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final session = _session;
     if (session != null) {
       final updated = session.copyWith(
+        providerId: choice.providerId,
         model: choice.modelId,
         reasoningEffort: choice.level,
       );
@@ -279,6 +315,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       setState(() => _session = updated);
     }
     setState(() {
+      _stagedProviderId = choice.providerId;
       _modelId = choice.modelId;
       _reasoningLevel = choice.level;
     });
@@ -315,12 +352,53 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     // 会话钉住的供应商 / 模型要重新解析一遍（可能与当前默认不是同一个）。
     await _refreshReady();
     if (!mounted) return;
+    await _syncPresetLabel(session);
+    if (!mounted) return;
     // 会话若已压缩，按水位重新合成压缩提示 chip（完整消息仍在库里、照常展示）。
     _syncCompactionNotice();
+    _syncModelSwitchNotices();
     _listKey.currentState?.pinToBottom();
   }
 
-  Future<ChatSession?> _ensureSession(String firstUserText) async {
+  /// 载入新会话的默认预设（KV，被删回落内置）。deep link 打开的历史会话随后由
+  /// [_syncPresetLabel] 以会话钉住的为准覆盖，这里只管空白会话。
+  Future<void> _initStagedPreset() async {
+    final id = await AgentPresetResolver.defaultId();
+    if (!mounted || _session != null) return;
+    final preset = id == builtinAgentPresetId
+        ? null
+        : await AgentPresetRepository.get().get(id);
+    if (!mounted || _session != null) return;
+    setState(() {
+      _stagedPresetId = preset == null ? builtinAgentPresetId : preset.id;
+      _presetName = preset?.name;
+    });
+  }
+
+  /// 解析会话钉住的预设显示名：内置 → null；用户预设被删 → 兜底标记
+  /// （人格不受影响，始终读会话快照）。
+  Future<void> _syncPresetLabel(ChatSession session) async {
+    final id = session.agentPresetId;
+    if (id == null || id.isEmpty) {
+      setState(() {
+        _presetName = null;
+        _presetMissing = false;
+      });
+      return;
+    }
+    final preset = await AgentPresetRepository.get().get(id);
+    if (!mounted || _session?.id != session.id) return;
+    setState(() {
+      _presetName = preset?.name;
+      _presetMissing = preset == null;
+    });
+  }
+
+  Future<ChatSession?> _ensureSession(
+    String firstUserText, {
+    required String persona,
+    List<String>? tools,
+  }) async {
     final existing = _session;
     if (existing != null) return existing;
     final provider = _provider;
@@ -329,7 +407,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final session = ChatSession.create(
       providerId: provider.id,
       model: _modelId,
-      reasoningEffort: _reasoningLevel, // 定格：开始之后不再可改
+      reasoningEffort: _reasoningLevel,
+      // 预设在此钉死（dsh：中途不换人格/工具）。内置预设不快照 —— 出厂配置随
+      // App 升级自动更新；用户预设把 persona 与工具子集定格进会话，之后编辑 /
+      // 删除都不回读。
+      agentPresetId: _stagedPresetId.isEmpty ? null : _stagedPresetId,
+      personaSnapshot: _stagedPresetId.isEmpty ? null : persona,
+      toolsSnapshot: _stagedPresetId.isEmpty ? null : tools,
     );
     await ChatRepository.get().upsertSession(session);
     _chat.sessionId = session.id;
@@ -381,6 +465,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   Future<void> _openSettings() async {
     await const AssistantSettingRoute().push(context);
     await _refreshReady();
+    // 用户可能在设置里改了默认预设：空白会话跟着换种子，但别覆盖 chip 上的显式选择。
+    if (_session == null && !_presetPickedExplicitly) {
+      await _initStagedPreset();
+    }
   }
 
   Future<void> _showDisclaimer() async {
@@ -406,6 +494,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     List<AssistantMessage> history, {
     required String systemPrompt,
     required String volatilePrefix,
+    required bool toolsActive,
+    List<String>? allowedTools,
   }) async {
     final provider = _provider;
     if (provider == null) return null;
@@ -430,7 +520,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         model: _activeModel,
         maxTokens: _maxTokens,
       ),
-      tools: _canUseTools,
+      tools: toolsActive,
+      allowedTools: allowedTools,
     );
   }
 
@@ -505,6 +596,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         if (m is AssistantTurn) _staleReplyIds.add(m.id);
       }
     });
+    // 被删回复上挂着的「已切换模型」提示要立刻收走 —— 万一 _generate 因代际检查
+    // 提前退出，它会一直指着一条不存在的消息。
+    _syncModelSwitchNotices();
     if (!mounted || gen != _generation) return;
 
     await _generate(
@@ -527,15 +621,30 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     _listKey.currentState?.pinToBottom();
     final l10n = context.l10n;
     final localeTag = Localizations.localeOf(context).toLanguageTag();
-    // 稳定前缀（身份/护栏/SOUL/工具目录）逐轮字节一致以命中缓存；易变文本另拼到外发消息。
-    final soul = await SoulRepository.get().read();
+    // 稳定前缀（身份/护栏/人格/工具目录）逐轮字节一致以命中缓存；易变文本另拼到
+    // 外发消息。人格与工具子集同源：已钉会话读快照（无快照的旧行回落内置），
+    // 空白会话读 staged 预设 —— 与随后 _ensureSession 钉进会话的是同一份。
+    final currentSession = _session;
+    final String persona;
+    final List<String>? allowedTools;
+    if (currentSession != null) {
+      persona = currentSession.personaSnapshot ?? defaultPersona;
+      allowedTools = currentSession.toolsSnapshot;
+    } else {
+      final mount = await AgentPresetResolver.mountFor(_stagedPresetId);
+      persona = mount.persona;
+      allowedTools = mount.tools;
+    }
+    // 模型能力 × 预设声明：子集为空 = 本会话不挂工具，目录层也跟着略去。
+    final toolsActive =
+        _canUseTools && (allowedTools == null || allowedTools.isNotEmpty);
     final memories = await MemoryRepository.get().getRecent(
       memoryInjectionLimit,
     );
     if (!mounted || gen != _generation) return;
     final systemPrompt = buildStableSystemPrompt(
-      soul: soul,
-      toolsEnabled: _canUseTools,
+      persona: persona,
+      toolsEnabled: toolsActive,
     );
     final volatilePrefix = buildVolatilePrompt(
       localeTag: localeTag,
@@ -548,9 +657,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       '',
       streaming: true,
       createdAt: placeholderAt,
+      // 归属戳打在创建点：stop / 出错 / 重新回答全走同一个占位，settle 点反而不唯一。
+      model: _modelId,
     );
     _chat.beginStreaming(placeholder);
     _streamingMessage = placeholder;
+    // 切过模型的话，提示随占位一起出现在新回复上方。
+    _syncModelSwitchNotices();
 
     final history = _buildHistory();
 
@@ -558,6 +671,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       history,
       systemPrompt: systemPrompt,
       volatilePrefix: volatilePrefix,
+      toolsActive: toolsActive,
+      allowedTools: allowedTools,
     );
     if (!mounted || gen != _generation) return;
     if (request == null) {
@@ -568,7 +683,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
       return;
     }
 
-    final session = await _ensureSession(sessionSeedText);
+    final session = await _ensureSession(
+      sessionSeedText,
+      persona: persona,
+      tools: allowedTools,
+    );
     if (!mounted || gen != _generation) return;
     if (session != null) {
       await _chat.persist(userMessage);
@@ -746,6 +865,19 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     });
   }
 
+  /// 由消息的 model 变化点重新合成全部「已切换模型」提示（幂等，重算即自愈）。
+  /// 提示只插在切换后首条消息**之前**，所以永远不会落在列表末尾（重试按钮的
+  /// `items.last` 判定不受影响）。
+  void _syncModelSwitchNotices() {
+    _chat.batch(() {
+      _chat.removeWhere((m) => m is AssistantModelSwitchNotice);
+      for (final notice in modelSwitchNoticesFor(_chat.items)) {
+        final idx = _chat.indexOfId(notice.beforeId);
+        if (idx >= 0) _chat.insertAt(idx, notice);
+      }
+    });
+  }
+
   /// 撤销压缩：清空会话的摘要 / 水位（Isar 消息未动，整段历史恢复逐字发送）。
   Future<void> _restoreFullHistory() async {
     final session = _session;
@@ -791,6 +923,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         _purgeStaleReplies();
       }
     }
+    // 空占位被移除后，指向它的「已切换模型」提示要跟着收走（重算即自愈）。
+    _syncModelSwitchNotices();
   }
 
   /// 新回复已成功落库后，才删除被它替换掉的旧回复；在此之前旧回复一直留在库里兜底。
@@ -967,6 +1101,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         summary: _session?.compactedSummary ?? '',
         onRestore: _restoreFullHistory,
       ),
+      AssistantModelSwitchNotice(:final model) => _ModelSwitchChip(
+        model: model,
+      ),
     };
   }
 
@@ -1095,20 +1232,99 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                 _sessionTitle(_session, l10n),
                 maxLines: 1,
                 overflow: .ellipsis,
-                style: context.theme.typography.titleMedium.emphasized.onSurface,
+                style:
+                    context.theme.typography.titleMedium.emphasized.onSurface,
               ),
             ),
-            if (modelLabel.isNotEmpty)
-              _ModelChip(
-                modelLabel: modelLabel,
-                reasoningLevel: _reasoningLevel,
-                // 生成中不给改；其余时候（含会话进行中）都可以换。
-                onTap: _sending ? null : _pickModel,
-              ),
+            Row(
+              mainAxisSize: .min,
+              children: [
+                // 预设 chip：空白会话可选（staged），首条消息后钉死、点按只看不改
+                // （dsh 的 header label，多给一层只读预览）。发送中同样置灰 ——
+                // 首条消息在途时 _session 仍是 null，这个窗口里改 staged 预设会让
+                // 钉进会话的快照与已发出的 prompt 分叉。
+                Flexible(
+                  child: _PresetChip(
+                    label:
+                        _presetName ??
+                        (_presetMissing
+                            ? l10n.assistant.presetDeleted
+                            : l10n.assistant.presetBuiltinName),
+                    staged: _session == null,
+                    onTap: _sending
+                        ? null
+                        : (_session == null ? _pickPreset : _showPresetInfo),
+                  ),
+                ),
+                if (modelLabel.isNotEmpty) ...[
+                  Text(
+                    '·',
+                    style: context.theme.typography.labelSmall.onSurfaceVariant,
+                  ),
+                  // 模型名（含档位）通常比预设名长得多，flex 给 2 —— 等分会让
+                  // 模型那边早早截断而预设旁边空着。
+                  Flexible(
+                    flex: 2,
+                    child: _ModelChip(
+                      modelLabel: modelLabel,
+                      reasoningLevel: _reasoningLevel,
+                      // 生成中不给改；其余时候（含会话进行中）都可以换。
+                      onTap: _sending ? null : _pickModel,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ],
         ),
       ),
       body: chatArea,
+    );
+  }
+
+  /// 空白会话：换预设（只改 staged，不落任何库）。
+  Future<void> _pickPreset() async {
+    if (_sending || _session != null) return;
+    final choice = await showAgentPresetPicker(
+      context,
+      selectedId: _stagedPresetId,
+    );
+    if (choice == null || !mounted || _session != null) return;
+    setState(() {
+      _stagedPresetId = choice.id;
+      _presetName = choice.name;
+      _presetMissing = false;
+      _presetPickedExplicitly = true;
+    });
+  }
+
+  /// 已钉会话：只读预览（预设名 + 人格与工具快照）。预设被删也照常可看 —— 都在快照里。
+  void _showPresetInfo() {
+    final l10n = context.l10n;
+    showAgentPresetInfo(
+      context,
+      name:
+          _presetName ??
+          (_presetMissing
+              ? l10n.assistant.presetDeleted
+              : l10n.assistant.presetBuiltinName),
+      persona: _session?.personaSnapshot ?? defaultPersona,
+      tools: _session?.toolsSnapshot,
+    );
+  }
+}
+
+/// 「已切换到 X」：与压缩提示同一形态的最简 notice，无展开无动作。
+class _ModelSwitchChip extends StatelessWidget {
+  final String model;
+
+  const _ModelSwitchChip({required this.model});
+
+  @override
+  Widget build(BuildContext context) {
+    return AssistantNotice(
+      icon: LucideIcons.cpu,
+      kind: context.l10n.assistant.modelSwitched(model: model),
     );
   }
 }
@@ -1527,6 +1743,58 @@ class _ScrollToBottomButton extends StatelessWidget {
 /// 模型和强度在首条消息落库时就钉进 `ChatSession` 了，中途换等于让同一段对话
 /// 前后由不同模型作答，历史里却看不出来。
 ///
+/// 标题栏第二行左侧：预设名。空白会话点开换预设（带下箭头），钉死后是只读标签
+/// （可点看预览，无箭头）。
+class _PresetChip extends StatelessWidget {
+  final String label;
+
+  /// true = 空白会话，选择仍开放（画下箭头）；false = 已钉死，点按只看不改。
+  final bool staged;
+
+  /// null = 发送中，这一刻不给动。
+  final VoidCallback? onTap;
+
+  const _PresetChip({
+    required this.label,
+    required this.staged,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final typography = context.theme.typography;
+    final content = Row(
+      mainAxisSize: .min,
+      children: [
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: .ellipsis,
+            style: typography.labelSmall.onSurfaceVariant,
+          ),
+        ),
+        if (staged && onTap != null) ...[
+          const SizedBox(width: 2),
+          Icon(
+            LucideIcons.chevronDown,
+            size: 14,
+            color: context.theme.colors.onSurfaceVariant,
+          ),
+        ],
+      ],
+    );
+    // 与 _ModelChip 同规格的内边距，两个 chip 在一行里基线与间距才对得齐。
+    const inset = EdgeInsets.symmetric(horizontal: _kTitleInset, vertical: 2);
+    if (onTap == null) return Padding(padding: inset, child: content);
+    return MInkWell(
+      shape: const StadiumBorder(),
+      onTap: onTap,
+      child: Padding(padding: inset, child: content),
+    );
+  }
+}
+
 /// 没有容器底色：它挨着「+」，再套一层胶囊会和右边两颗圆钮抢视觉重量，
 /// 而它只是个状态标签。
 /// 标题栏第二行：模型名 + 思考强度，点开换模型 / 换思考强度。
@@ -1563,10 +1831,7 @@ class _ModelChip extends StatelessWidget {
         if (reasoningLevel.isNotEmpty) ...[
           const SizedBox(width: 4),
           // 目录原值，不翻译（见 model_picker_sheet）。
-          Text(
-            reasoningLevel,
-            style: typography.labelSmall.onSurfaceVariant,
-          ),
+          Text(reasoningLevel, style: typography.labelSmall.onSurfaceVariant),
         ],
         if (!locked) ...[
           const SizedBox(width: 2),
@@ -2198,12 +2463,14 @@ class _SessionListViewState extends State<_SessionListView> {
   /// 这个问题的答案。会话全在今天时把「今天」吞掉，页面反而显得没头没尾。
   List<_HistoryEntry> _entries(List<ChatSession> sessions) {
     return [
-      for (final group in sessionHistoryGroups(sessions, now: DateTime.now()))
-        ...[
-          _HistoryHeader(group.bucket),
-          for (final session in group.sessions)
-            _HistoryRow(session, group.bucket),
-        ],
+      for (final group in sessionHistoryGroups(
+        sessions,
+        now: DateTime.now(),
+      )) ...[
+        _HistoryHeader(group.bucket),
+        for (final session in group.sessions)
+          _HistoryRow(session, group.bucket),
+      ],
     ];
   }
 

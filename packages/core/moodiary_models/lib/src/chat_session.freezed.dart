@@ -21,11 +21,10 @@ mixin _$ChatSession {
 ///
 /// 也正是这一位在做幂等：空才生成，生成成功就永远非空。标题在列表里是定位锚点，
 /// 自己变了会让人以为点错了会话；失败也不重来——没有手动刷新入口，重来只是白烧。
- String get title;/// 建会话时生效的 [LlmProvider.id]（uuid，不是 [LlmProvider.presetId]）。
+ String get title;/// 本会话当前的 [LlmProvider.id]（uuid，不是 [LlmProvider.presetId]）。
 ///
-/// ⚠️ 这两个字段目前**只写不读**：每一轮请求取的都是 `getActiveProvider()`，
-/// 所以在设置里换了供应商，已存在的会话下一轮就跟着换模型。要做「会话级模型」
-/// 得先让发请求那条路优先读它们。
+/// 与 [model] / [reasoningEffort] 一样：首条消息时钉入，发请求优先读它们；
+/// 会话中可随时改（标题的模型 chip），供应商被删则回落全局默认。
  String get providerId; String get model; DateTime get createdAt;/// 最后一条消息的时间，列表按此倒序。
  DateTime get updatedAt;/// 本会话的思考强度。空串 = 关；否则是 models.dev `reasoning_options` 里的档位值
 /// （`minimal` / `low` / `medium` / `high` / `xhigh` / `max` …）。
@@ -34,7 +33,13 @@ mixin _$ChatSession {
  String? get compactedSummary;/// 压缩水位：摘要覆盖到的最后一条消息 id；发送历史时此消息及之前内容改用摘要，Isar 消息永不删除，故可逆。
  String? get compactedUpToMessageId;/// 最近一次压缩的时刻。
  DateTime? get compactedAt;/// 触发压缩时该轮上报的输入 token 数（用于提示 / 调试）。
- int? get compactedInputTokensAtTrigger;
+ int? get compactedInputTokensAtTrigger;/// 会话创建时选定的助手预设 id；null = 内置「Moodiary助手」。只作显示标签解析，
+/// 人格从不按 id 回读——用 [personaSnapshot]。
+ String? get agentPresetId;/// 创建时快照的人格文本（dsh "mounted once"）：会话的 system prompt 从此字节稳定，
+/// 预设事后编辑/删除不影响已有会话。null（旧行）回落内置人格。
+ String? get personaSnapshot;/// 创建时快照的工具 id 子集（同 [personaSnapshot] 的定格语义）。
+/// null = 不限（全部）；空列表 = 本会话不挂工具。
+ List<String>? get toolsSnapshot;
 /// Create a copy of ChatSession
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -47,16 +52,16 @@ $ChatSessionCopyWith<ChatSession> get copyWith => _$ChatSessionCopyWithImpl<Chat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatSession&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.providerId, providerId) || other.providerId == providerId)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.reasoningEffort, reasoningEffort) || other.reasoningEffort == reasoningEffort)&&(identical(other.compactedSummary, compactedSummary) || other.compactedSummary == compactedSummary)&&(identical(other.compactedUpToMessageId, compactedUpToMessageId) || other.compactedUpToMessageId == compactedUpToMessageId)&&(identical(other.compactedAt, compactedAt) || other.compactedAt == compactedAt)&&(identical(other.compactedInputTokensAtTrigger, compactedInputTokensAtTrigger) || other.compactedInputTokensAtTrigger == compactedInputTokensAtTrigger));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChatSession&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.providerId, providerId) || other.providerId == providerId)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.reasoningEffort, reasoningEffort) || other.reasoningEffort == reasoningEffort)&&(identical(other.compactedSummary, compactedSummary) || other.compactedSummary == compactedSummary)&&(identical(other.compactedUpToMessageId, compactedUpToMessageId) || other.compactedUpToMessageId == compactedUpToMessageId)&&(identical(other.compactedAt, compactedAt) || other.compactedAt == compactedAt)&&(identical(other.compactedInputTokensAtTrigger, compactedInputTokensAtTrigger) || other.compactedInputTokensAtTrigger == compactedInputTokensAtTrigger)&&(identical(other.agentPresetId, agentPresetId) || other.agentPresetId == agentPresetId)&&(identical(other.personaSnapshot, personaSnapshot) || other.personaSnapshot == personaSnapshot)&&const DeepCollectionEquality().equals(other.toolsSnapshot, toolsSnapshot));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,providerId,model,createdAt,updatedAt,reasoningEffort,compactedSummary,compactedUpToMessageId,compactedAt,compactedInputTokensAtTrigger);
+int get hashCode => Object.hash(runtimeType,id,title,providerId,model,createdAt,updatedAt,reasoningEffort,compactedSummary,compactedUpToMessageId,compactedAt,compactedInputTokensAtTrigger,agentPresetId,personaSnapshot,const DeepCollectionEquality().hash(toolsSnapshot));
 
 @override
 String toString() {
-  return 'ChatSession(id: $id, title: $title, providerId: $providerId, model: $model, createdAt: $createdAt, updatedAt: $updatedAt, reasoningEffort: $reasoningEffort, compactedSummary: $compactedSummary, compactedUpToMessageId: $compactedUpToMessageId, compactedAt: $compactedAt, compactedInputTokensAtTrigger: $compactedInputTokensAtTrigger)';
+  return 'ChatSession(id: $id, title: $title, providerId: $providerId, model: $model, createdAt: $createdAt, updatedAt: $updatedAt, reasoningEffort: $reasoningEffort, compactedSummary: $compactedSummary, compactedUpToMessageId: $compactedUpToMessageId, compactedAt: $compactedAt, compactedInputTokensAtTrigger: $compactedInputTokensAtTrigger, agentPresetId: $agentPresetId, personaSnapshot: $personaSnapshot, toolsSnapshot: $toolsSnapshot)';
 }
 
 
@@ -67,7 +72,7 @@ abstract mixin class $ChatSessionCopyWith<$Res>  {
   factory $ChatSessionCopyWith(ChatSession value, $Res Function(ChatSession) _then) = _$ChatSessionCopyWithImpl;
 @useResult
 $Res call({
-@Id() String id, String title, String providerId, String model, DateTime createdAt, DateTime updatedAt, String reasoningEffort, String? compactedSummary, String? compactedUpToMessageId, DateTime? compactedAt, int? compactedInputTokensAtTrigger
+@Id() String id, String title, String providerId, String model, DateTime createdAt, DateTime updatedAt, String reasoningEffort, String? compactedSummary, String? compactedUpToMessageId, DateTime? compactedAt, int? compactedInputTokensAtTrigger, String? agentPresetId, String? personaSnapshot, List<String>? toolsSnapshot
 });
 
 
@@ -84,7 +89,7 @@ class _$ChatSessionCopyWithImpl<$Res>
 
 /// Create a copy of ChatSession
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? providerId = null,Object? model = null,Object? createdAt = null,Object? updatedAt = null,Object? reasoningEffort = null,Object? compactedSummary = freezed,Object? compactedUpToMessageId = freezed,Object? compactedAt = freezed,Object? compactedInputTokensAtTrigger = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? providerId = null,Object? model = null,Object? createdAt = null,Object? updatedAt = null,Object? reasoningEffort = null,Object? compactedSummary = freezed,Object? compactedUpToMessageId = freezed,Object? compactedAt = freezed,Object? compactedInputTokensAtTrigger = freezed,Object? agentPresetId = freezed,Object? personaSnapshot = freezed,Object? toolsSnapshot = freezed,}) {
   return _then(ChatSession(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -97,7 +102,10 @@ as String,compactedSummary: freezed == compactedSummary ? _self.compactedSummary
 as String?,compactedUpToMessageId: freezed == compactedUpToMessageId ? _self.compactedUpToMessageId : compactedUpToMessageId // ignore: cast_nullable_to_non_nullable
 as String?,compactedAt: freezed == compactedAt ? _self.compactedAt : compactedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,compactedInputTokensAtTrigger: freezed == compactedInputTokensAtTrigger ? _self.compactedInputTokensAtTrigger : compactedInputTokensAtTrigger // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,agentPresetId: freezed == agentPresetId ? _self.agentPresetId : agentPresetId // ignore: cast_nullable_to_non_nullable
+as String?,personaSnapshot: freezed == personaSnapshot ? _self.personaSnapshot : personaSnapshot // ignore: cast_nullable_to_non_nullable
+as String?,toolsSnapshot: freezed == toolsSnapshot ? _self.toolsSnapshot : toolsSnapshot // ignore: cast_nullable_to_non_nullable
+as List<String>?,
   ));
 }
 
@@ -182,10 +190,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@Id()  String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger,  String? agentPresetId,  String? personaSnapshot,  List<String>? toolsSnapshot)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ChatSession() when $default != null:
-return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdAt,_that.updatedAt,_that.reasoningEffort,_that.compactedSummary,_that.compactedUpToMessageId,_that.compactedAt,_that.compactedInputTokensAtTrigger);case _:
+return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdAt,_that.updatedAt,_that.reasoningEffort,_that.compactedSummary,_that.compactedUpToMessageId,_that.compactedAt,_that.compactedInputTokensAtTrigger,_that.agentPresetId,_that.personaSnapshot,_that.toolsSnapshot);case _:
   return orElse();
 
 }
@@ -203,10 +211,10 @@ return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdA
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@Id()  String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger,  String? agentPresetId,  String? personaSnapshot,  List<String>? toolsSnapshot)  $default,) {final _that = this;
 switch (_that) {
 case _ChatSession():
-return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdAt,_that.updatedAt,_that.reasoningEffort,_that.compactedSummary,_that.compactedUpToMessageId,_that.compactedAt,_that.compactedInputTokensAtTrigger);case _:
+return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdAt,_that.updatedAt,_that.reasoningEffort,_that.compactedSummary,_that.compactedUpToMessageId,_that.compactedAt,_that.compactedInputTokensAtTrigger,_that.agentPresetId,_that.personaSnapshot,_that.toolsSnapshot);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -223,10 +231,10 @@ return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdA
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@Id()  String id,  String title,  String providerId,  String model,  DateTime createdAt,  DateTime updatedAt,  String reasoningEffort,  String? compactedSummary,  String? compactedUpToMessageId,  DateTime? compactedAt,  int? compactedInputTokensAtTrigger,  String? agentPresetId,  String? personaSnapshot,  List<String>? toolsSnapshot)?  $default,) {final _that = this;
 switch (_that) {
 case _ChatSession() when $default != null:
-return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdAt,_that.updatedAt,_that.reasoningEffort,_that.compactedSummary,_that.compactedUpToMessageId,_that.compactedAt,_that.compactedInputTokensAtTrigger);case _:
+return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdAt,_that.updatedAt,_that.reasoningEffort,_that.compactedSummary,_that.compactedUpToMessageId,_that.compactedAt,_that.compactedInputTokensAtTrigger,_that.agentPresetId,_that.personaSnapshot,_that.toolsSnapshot);case _:
   return null;
 
 }
@@ -238,7 +246,7 @@ return $default(_that.id,_that.title,_that.providerId,_that.model,_that.createdA
 @JsonSerializable()
 
 class _ChatSession implements ChatSession {
-  const _ChatSession({@Id() required this.id, this.title = '', required this.providerId, required this.model, required this.createdAt, required this.updatedAt, this.reasoningEffort = '', this.compactedSummary, this.compactedUpToMessageId, this.compactedAt, this.compactedInputTokensAtTrigger});
+  const _ChatSession({@Id() required this.id, this.title = '', required this.providerId, required this.model, required this.createdAt, required this.updatedAt, this.reasoningEffort = '', this.compactedSummary, this.compactedUpToMessageId, this.compactedAt, this.compactedInputTokensAtTrigger, this.agentPresetId, this.personaSnapshot,  List<String>? toolsSnapshot}): _toolsSnapshot = toolsSnapshot;
   factory _ChatSession.fromJson(Map<String, dynamic> json) => _$ChatSessionFromJson(json);
 
 @override@Id() final  String id;
@@ -248,11 +256,10 @@ class _ChatSession implements ChatSession {
 /// 也正是这一位在做幂等：空才生成，生成成功就永远非空。标题在列表里是定位锚点，
 /// 自己变了会让人以为点错了会话；失败也不重来——没有手动刷新入口，重来只是白烧。
 @override@JsonKey() final  String title;
-/// 建会话时生效的 [LlmProvider.id]（uuid，不是 [LlmProvider.presetId]）。
+/// 本会话当前的 [LlmProvider.id]（uuid，不是 [LlmProvider.presetId]）。
 ///
-/// ⚠️ 这两个字段目前**只写不读**：每一轮请求取的都是 `getActiveProvider()`，
-/// 所以在设置里换了供应商，已存在的会话下一轮就跟着换模型。要做「会话级模型」
-/// 得先让发请求那条路优先读它们。
+/// 与 [model] / [reasoningEffort] 一样：首条消息时钉入，发请求优先读它们；
+/// 会话中可随时改（标题的模型 chip），供应商被删则回落全局默认。
 @override final  String providerId;
 @override final  String model;
 @override final  DateTime createdAt;
@@ -270,6 +277,25 @@ class _ChatSession implements ChatSession {
 @override final  DateTime? compactedAt;
 /// 触发压缩时该轮上报的输入 token 数（用于提示 / 调试）。
 @override final  int? compactedInputTokensAtTrigger;
+/// 会话创建时选定的助手预设 id；null = 内置「Moodiary助手」。只作显示标签解析，
+/// 人格从不按 id 回读——用 [personaSnapshot]。
+@override final  String? agentPresetId;
+/// 创建时快照的人格文本（dsh "mounted once"）：会话的 system prompt 从此字节稳定，
+/// 预设事后编辑/删除不影响已有会话。null（旧行）回落内置人格。
+@override final  String? personaSnapshot;
+/// 创建时快照的工具 id 子集（同 [personaSnapshot] 的定格语义）。
+/// null = 不限（全部）；空列表 = 本会话不挂工具。
+ final  List<String>? _toolsSnapshot;
+/// 创建时快照的工具 id 子集（同 [personaSnapshot] 的定格语义）。
+/// null = 不限（全部）；空列表 = 本会话不挂工具。
+@override List<String>? get toolsSnapshot {
+  final value = _toolsSnapshot;
+  if (value == null) return null;
+  if (_toolsSnapshot is EqualUnmodifiableListView) return _toolsSnapshot;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
 
 /// Create a copy of ChatSession
 /// with the given fields replaced by the non-null parameter values.
@@ -284,16 +310,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatSession&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.providerId, providerId) || other.providerId == providerId)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.reasoningEffort, reasoningEffort) || other.reasoningEffort == reasoningEffort)&&(identical(other.compactedSummary, compactedSummary) || other.compactedSummary == compactedSummary)&&(identical(other.compactedUpToMessageId, compactedUpToMessageId) || other.compactedUpToMessageId == compactedUpToMessageId)&&(identical(other.compactedAt, compactedAt) || other.compactedAt == compactedAt)&&(identical(other.compactedInputTokensAtTrigger, compactedInputTokensAtTrigger) || other.compactedInputTokensAtTrigger == compactedInputTokensAtTrigger));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChatSession&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.providerId, providerId) || other.providerId == providerId)&&(identical(other.model, model) || other.model == model)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.reasoningEffort, reasoningEffort) || other.reasoningEffort == reasoningEffort)&&(identical(other.compactedSummary, compactedSummary) || other.compactedSummary == compactedSummary)&&(identical(other.compactedUpToMessageId, compactedUpToMessageId) || other.compactedUpToMessageId == compactedUpToMessageId)&&(identical(other.compactedAt, compactedAt) || other.compactedAt == compactedAt)&&(identical(other.compactedInputTokensAtTrigger, compactedInputTokensAtTrigger) || other.compactedInputTokensAtTrigger == compactedInputTokensAtTrigger)&&(identical(other.agentPresetId, agentPresetId) || other.agentPresetId == agentPresetId)&&(identical(other.personaSnapshot, personaSnapshot) || other.personaSnapshot == personaSnapshot)&&const DeepCollectionEquality().equals(other._toolsSnapshot, _toolsSnapshot));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,providerId,model,createdAt,updatedAt,reasoningEffort,compactedSummary,compactedUpToMessageId,compactedAt,compactedInputTokensAtTrigger);
+int get hashCode => Object.hash(runtimeType,id,title,providerId,model,createdAt,updatedAt,reasoningEffort,compactedSummary,compactedUpToMessageId,compactedAt,compactedInputTokensAtTrigger,agentPresetId,personaSnapshot,const DeepCollectionEquality().hash(_toolsSnapshot));
 
 @override
 String toString() {
-  return 'ChatSession(id: $id, title: $title, providerId: $providerId, model: $model, createdAt: $createdAt, updatedAt: $updatedAt, reasoningEffort: $reasoningEffort, compactedSummary: $compactedSummary, compactedUpToMessageId: $compactedUpToMessageId, compactedAt: $compactedAt, compactedInputTokensAtTrigger: $compactedInputTokensAtTrigger)';
+  return 'ChatSession(id: $id, title: $title, providerId: $providerId, model: $model, createdAt: $createdAt, updatedAt: $updatedAt, reasoningEffort: $reasoningEffort, compactedSummary: $compactedSummary, compactedUpToMessageId: $compactedUpToMessageId, compactedAt: $compactedAt, compactedInputTokensAtTrigger: $compactedInputTokensAtTrigger, agentPresetId: $agentPresetId, personaSnapshot: $personaSnapshot, toolsSnapshot: $toolsSnapshot)';
 }
 
 
@@ -304,7 +330,7 @@ abstract mixin class _$ChatSessionCopyWith<$Res> implements $ChatSessionCopyWith
   factory _$ChatSessionCopyWith(_ChatSession value, $Res Function(_ChatSession) _then) = __$ChatSessionCopyWithImpl;
 @override @useResult
 $Res call({
-@Id() String id, String title, String providerId, String model, DateTime createdAt, DateTime updatedAt, String reasoningEffort, String? compactedSummary, String? compactedUpToMessageId, DateTime? compactedAt, int? compactedInputTokensAtTrigger
+@Id() String id, String title, String providerId, String model, DateTime createdAt, DateTime updatedAt, String reasoningEffort, String? compactedSummary, String? compactedUpToMessageId, DateTime? compactedAt, int? compactedInputTokensAtTrigger, String? agentPresetId, String? personaSnapshot, List<String>? toolsSnapshot
 });
 
 
@@ -321,7 +347,7 @@ class __$ChatSessionCopyWithImpl<$Res>
 
 /// Create a copy of ChatSession
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? providerId = null,Object? model = null,Object? createdAt = null,Object? updatedAt = null,Object? reasoningEffort = null,Object? compactedSummary = freezed,Object? compactedUpToMessageId = freezed,Object? compactedAt = freezed,Object? compactedInputTokensAtTrigger = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? providerId = null,Object? model = null,Object? createdAt = null,Object? updatedAt = null,Object? reasoningEffort = null,Object? compactedSummary = freezed,Object? compactedUpToMessageId = freezed,Object? compactedAt = freezed,Object? compactedInputTokensAtTrigger = freezed,Object? agentPresetId = freezed,Object? personaSnapshot = freezed,Object? toolsSnapshot = freezed,}) {
   return _then(_ChatSession(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -334,7 +360,10 @@ as String,compactedSummary: freezed == compactedSummary ? _self.compactedSummary
 as String?,compactedUpToMessageId: freezed == compactedUpToMessageId ? _self.compactedUpToMessageId : compactedUpToMessageId // ignore: cast_nullable_to_non_nullable
 as String?,compactedAt: freezed == compactedAt ? _self.compactedAt : compactedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,compactedInputTokensAtTrigger: freezed == compactedInputTokensAtTrigger ? _self.compactedInputTokensAtTrigger : compactedInputTokensAtTrigger // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,agentPresetId: freezed == agentPresetId ? _self.agentPresetId : agentPresetId // ignore: cast_nullable_to_non_nullable
+as String?,personaSnapshot: freezed == personaSnapshot ? _self.personaSnapshot : personaSnapshot // ignore: cast_nullable_to_non_nullable
+as String?,toolsSnapshot: freezed == toolsSnapshot ? _self._toolsSnapshot : toolsSnapshot // ignore: cast_nullable_to_non_nullable
+as List<String>?,
   ));
 }
 

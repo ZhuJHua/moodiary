@@ -37,6 +37,9 @@ final class AssistantTurn extends AssistantChatItem {
   /// 本轮的工具调用，按发生顺序。空表示这一轮没调工具。
   final List<AssistantToolCall> toolCalls;
 
+  /// 生成本条回复的模型 id；空串 = 旧数据或 user 消息。创建时定死，不随 copyWith 变。
+  final String model;
+
   /// 瞬态：正在流式接收。不落库。
   final bool streaming;
 
@@ -54,6 +57,7 @@ final class AssistantTurn extends AssistantChatItem {
     this.inputTokens = 0,
     this.outputTokens = 0,
     this.toolCalls = const [],
+    this.model = '',
     this.streaming = false,
     this.thinkingActive = false,
   });
@@ -74,12 +78,14 @@ final class AssistantTurn extends AssistantChatItem {
     String text, {
     bool streaming = false,
     DateTime? createdAt,
+    String model = '',
   }) => AssistantTurn(
     id: uuidV7(),
     fromUser: false,
     text: text,
     streaming: streaming,
     createdAt: createdAt ?? DateTime.timestamp(),
+    model: model,
   );
 
   factory AssistantTurn.fromRecord(ChatMessage m) => AssistantTurn(
@@ -93,6 +99,7 @@ final class AssistantTurn extends AssistantChatItem {
     inputTokens: m.inputTokens ?? 0,
     outputTokens: m.outputTokens ?? 0,
     toolCalls: m.toolCalls,
+    model: m.model ?? '',
   );
 
   ChatMessage toRecord(String sessionId) => ChatMessage(
@@ -108,14 +115,14 @@ final class AssistantTurn extends AssistantChatItem {
     inputTokens: inputTokens == 0 ? null : inputTokens,
     outputTokens: outputTokens == 0 ? null : outputTokens,
     toolCalls: toolCalls,
+    model: model.isEmpty ? null : model,
   );
 
   /// 正文、图片、工具调用都没有 —— 这样的气泡不落库，也不进发给模型的历史。
   ///
   /// **工具调用要算进来**：一轮「查了日记但没说话」也是发生过的事，丢掉的话
   /// 历史里就只剩用户那句问话，看着像助手没反应。
-  bool get isEmpty =>
-      text.isEmpty && imageName.isEmpty && toolCalls.isEmpty;
+  bool get isEmpty => text.isEmpty && imageName.isEmpty && toolCalls.isEmpty;
 
   /// 定稿：只清两个瞬态标记，思考正文 / 耗时 / 用量全部留下。
   ///
@@ -139,6 +146,7 @@ final class AssistantTurn extends AssistantChatItem {
     text: text ?? this.text,
     createdAt: createdAt,
     imageName: imageName,
+    model: model,
     reasoning: reasoning ?? this.reasoning,
     thinkingMillis: thinkingMillis ?? this.thinkingMillis,
     inputTokens: inputTokens ?? this.inputTokens,
@@ -148,7 +156,6 @@ final class AssistantTurn extends AssistantChatItem {
     thinkingActive: thinkingActive ?? this.thinkingActive,
   );
 }
-
 
 /// 上下文压缩提示 chip，不落库 —— 每次载入会话时按水位重新合成。
 final class AssistantCompactionNotice extends AssistantChatItem {
@@ -160,4 +167,45 @@ final class AssistantCompactionNotice extends AssistantChatItem {
   /// 认不出自己而重复堆积，「恢复完整历史」的入口也跟着丢。
   @override
   String get id => 'compaction-$watermarkId';
+}
+
+/// 「已切换模型」提示，不落库 —— 由消息的 [AssistantTurn.model] 变化点合成。
+/// 只作展示，**不进发给模型的历史**（切换动作不向对话注入任何内容）。
+final class AssistantModelSwitchNotice extends AssistantChatItem {
+  /// 切换后首条 assistant 消息的 id：提示插在它**之前**，因此永远不会落在列表
+  /// 末尾（`_buildTurn` 靠 `items.last` 判定重试按钮的归属，尾随合成项会吃掉它）。
+  final String beforeId;
+
+  /// 切换后的模型 id。
+  final String model;
+
+  const AssistantModelSwitchNotice({
+    required this.beforeId,
+    required this.model,
+  });
+
+  /// id 由目标消息派生，保证重复合成幂等。
+  @override
+  String get id => 'model-switch-$beforeId';
+}
+
+/// 计算一份消息列表里应存在的全部「已切换模型」提示：相邻两条 assistant 消息的
+/// [AssistantTurn.model] 不同（且都非空）时，在后者之前放一条。旧数据（model 为空）
+/// 不参与，也不会把它前后的两段误判成切换。
+List<AssistantModelSwitchNotice> modelSwitchNoticesFor(
+  Iterable<AssistantChatItem> items,
+) {
+  final notices = <AssistantModelSwitchNotice>[];
+  var lastModel = '';
+  for (final item in items) {
+    if (item is! AssistantTurn || item.fromUser) continue;
+    if (item.model.isEmpty) continue;
+    if (lastModel.isNotEmpty && item.model != lastModel) {
+      notices.add(
+        AssistantModelSwitchNotice(beforeId: item.id, model: item.model),
+      );
+    }
+    lastModel = item.model;
+  }
+  return notices;
 }

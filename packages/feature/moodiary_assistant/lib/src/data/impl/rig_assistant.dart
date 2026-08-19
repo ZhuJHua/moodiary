@@ -16,7 +16,7 @@ class RigAssistantService implements AssistantService {
 
     final tools = <rust.RigToolDef>[
       if (request.tools)
-        for (final spec in AssistantToolRegistry.specs)
+        for (final spec in AssistantToolRegistry.specsFor(request.allowedTools))
           rust.RigToolDef(
             name: spec.id,
             description: spec.description,
@@ -153,8 +153,13 @@ class RigAssistantService implements AssistantService {
     String name,
     String argsJson,
   ) {
+    // 声明子集也是执行闸门：没挂载的工具即使被点名也不执行。
+    final allowed = request.allowedTools;
+    final spec = allowed != null && !allowed.contains(name)
+        ? null
+        : AssistantToolRegistry.byId(name);
     return dispatchAssistantTool(
-      spec: AssistantToolRegistry.byId(name),
+      spec: spec,
       toolName: name,
       argsJson: argsJson,
     );

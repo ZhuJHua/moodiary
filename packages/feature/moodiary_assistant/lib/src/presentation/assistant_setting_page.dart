@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:moodiary_assistant/src/data/agent_preset_resolver.dart';
 import 'package:moodiary_assistant/src/data/assistant_defs.dart';
-import 'package:moodiary_assistant/src/data/soul_repository.dart';
 import 'package:moodiary_assistant/src/presentation/assistant_tool_ui.dart';
 import 'package:moodiary_assistant/src/routes.dart';
 import 'package:moodiary_core/moodiary_core.dart';
@@ -26,7 +26,7 @@ class AssistantSettingPage extends ConsumerWidget {
           SizedBox(height: 4),
           _ProviderSection(),
           SizedBox(height: 4),
-          _SoulSection(),
+          _PresetSection(),
           SizedBox(height: 4),
           _ToolSection(),
           SizedBox(height: 16),
@@ -148,15 +148,17 @@ class _ProviderEntryTileState extends State<_ProviderEntryTile> {
   }
 }
 
-class _SoulSection extends StatefulWidget {
-  const _SoulSection();
+class _PresetSection extends StatefulWidget {
+  const _PresetSection();
 
   @override
-  State<_SoulSection> createState() => _SoulSectionState();
+  State<_PresetSection> createState() => _PresetSectionState();
 }
 
-class _SoulSectionState extends State<_SoulSection> {
-  bool? _customized;
+class _PresetSectionState extends State<_PresetSection> {
+  /// 当前默认预设的显示名；null = 内置（用 l10n 名）。
+  String? _defaultName;
+  bool _loaded = false;
 
   @override
   void initState() {
@@ -165,35 +167,41 @@ class _SoulSectionState extends State<_SoulSection> {
   }
 
   Future<void> _load() async {
-    final customized = await SoulRepository.get().isCustomized();
-    if (mounted) setState(() => _customized = customized);
+    final id = await AgentPresetResolver.defaultId();
+    final preset = id == builtinAgentPresetId
+        ? null
+        : await AgentPresetRepository.get().get(id);
+    if (mounted) {
+      setState(() {
+        _defaultName = preset?.name;
+        _loaded = true;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.theme.colors;
     final l10n = context.l10n;
-    final subtitle = _customized == null
+    final subtitle = !_loaded
         ? ''
-        : _customized!
-        ? l10n.assistant.soulTileSubtitleCustom
-        : l10n.assistant.soulTileSubtitleDefault;
+        : (_defaultName ?? l10n.assistant.presetBuiltinName);
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        SettingTitleTile(title: l10n.assistant.sectionSoul),
+        SettingTitleTile(title: l10n.assistant.presetSectionTitle),
         Card.filled(
           color: scheme.surfaceContainerLow,
           margin: .zero,
           child: SettingListTile(
             isFirst: true,
             isLast: true,
-            title: l10n.assistant.soulTileTitle,
+            title: l10n.assistant.presetTileTitle,
             subtitle: subtitle,
-            leading: const Icon(LucideIcons.heart),
+            leading: const Icon(LucideIcons.venetianMask),
             trailing: const Icon(LucideIcons.chevronRight),
             onTap: () async {
-              await const AssistantSoulRoute().push(context);
+              await const AssistantPresetsRoute().push(context);
               await _load();
             },
           ),
@@ -262,4 +270,3 @@ class _ToolSectionState extends State<_ToolSection> {
     );
   }
 }
-

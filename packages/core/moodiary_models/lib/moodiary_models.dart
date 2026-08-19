@@ -1,5 +1,6 @@
 library;
 
+export 'src/agent_preset.dart';
 export 'src/assistant_provider_type.dart';
 export 'src/assistant_tool_call.dart';
 export 'src/category.dart';

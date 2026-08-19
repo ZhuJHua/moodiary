@@ -2,6 +2,7 @@
 /// 以及跨 feature 共享的进程级瞬态状态（feature 之间不能互引，data 是它们的最低公共祖先）。
 library;
 
+export 'src/agent_preset_repository.dart';
 export 'src/category_controller.dart';
 export 'src/category_repository.dart';
 export 'src/chat_repository.dart';

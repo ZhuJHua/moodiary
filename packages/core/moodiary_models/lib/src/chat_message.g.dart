@@ -30,6 +30,7 @@ final ChatMessageSchema = IsarGeneratedSchema(
       IsarPropertySchema(name: 'imageName', type: IsarType.string),
       IsarPropertySchema(name: 'inputTokens', type: IsarType.long),
       IsarPropertySchema(name: 'outputTokens', type: IsarType.long),
+      IsarPropertySchema(name: 'model', type: IsarType.string),
       IsarPropertySchema(
         name: 'toolCalls',
         type: IsarType.objectList,
@@ -84,8 +85,16 @@ int serializeChatMessage(IsarWriter writer, ChatMessage object) {
   IsarCore.writeLong(writer, 9, object.inputTokens ?? -9223372036854775808);
   IsarCore.writeLong(writer, 10, object.outputTokens ?? -9223372036854775808);
   {
+    final value = object.model;
+    if (value == null) {
+      IsarCore.writeNull(writer, 11);
+    } else {
+      IsarCore.writeString(writer, 11, value);
+    }
+  }
+  {
     final list = object.toolCalls;
-    final listWriter = IsarCore.beginList(writer, 11, list.length);
+    final listWriter = IsarCore.beginList(writer, 12, list.length);
     for (var i = 0; i < list.length; i++) {
       {
         final value = list[i];
@@ -155,9 +164,11 @@ ChatMessage deserializeChatMessage(IsarReader reader) {
       _outputTokens = value;
     }
   }
+  final String? _model;
+  _model = IsarCore.readString(reader, 11);
   final List<AssistantToolCall> _toolCalls;
   {
-    final length = IsarCore.readList(reader, 11, IsarCore.readerPtrPtr);
+    final length = IsarCore.readList(reader, 12, IsarCore.readerPtrPtr);
     {
       final reader = IsarCore.readerPtr;
       if (reader.isNull) {
@@ -196,6 +207,7 @@ ChatMessage deserializeChatMessage(IsarReader reader) {
     imageName: _imageName,
     inputTokens: _inputTokens,
     outputTokens: _outputTokens,
+    model: _model,
     toolCalls: _toolCalls,
   );
   return object;
@@ -256,8 +268,10 @@ dynamic deserializeChatMessageProp(IsarReader reader, int property) {
         }
       }
     case 11:
+      return IsarCore.readString(reader, 11);
+    case 12:
       {
-        final length = IsarCore.readList(reader, 11, IsarCore.readerPtrPtr);
+        final length = IsarCore.readList(reader, 12, IsarCore.readerPtrPtr);
         {
           final reader = IsarCore.readerPtr;
           if (reader.isNull) {
@@ -302,6 +316,7 @@ sealed class _ChatMessageUpdate {
     String? imageName,
     int? inputTokens,
     int? outputTokens,
+    String? model,
   });
 }
 
@@ -322,6 +337,7 @@ class _ChatMessageUpdateImpl implements _ChatMessageUpdate {
     Object? imageName = ignore,
     Object? inputTokens = ignore,
     Object? outputTokens = ignore,
+    Object? model = ignore,
   }) {
     return collection.updateProperties(
           [id],
@@ -335,6 +351,7 @@ class _ChatMessageUpdateImpl implements _ChatMessageUpdate {
             if (imageName != ignore) 8: imageName as String?,
             if (inputTokens != ignore) 9: inputTokens as int?,
             if (outputTokens != ignore) 10: outputTokens as int?,
+            if (model != ignore) 11: model as String?,
           },
         ) >
         0;
@@ -353,6 +370,7 @@ sealed class _ChatMessageUpdateAll {
     String? imageName,
     int? inputTokens,
     int? outputTokens,
+    String? model,
   });
 }
 
@@ -373,6 +391,7 @@ class _ChatMessageUpdateAllImpl implements _ChatMessageUpdateAll {
     Object? imageName = ignore,
     Object? inputTokens = ignore,
     Object? outputTokens = ignore,
+    Object? model = ignore,
   }) {
     return collection.updateProperties(id, {
       if (sessionId != ignore) 2: sessionId as String?,
@@ -384,6 +403,7 @@ class _ChatMessageUpdateAllImpl implements _ChatMessageUpdateAll {
       if (imageName != ignore) 8: imageName as String?,
       if (inputTokens != ignore) 9: inputTokens as int?,
       if (outputTokens != ignore) 10: outputTokens as int?,
+      if (model != ignore) 11: model as String?,
     });
   }
 }
@@ -405,6 +425,7 @@ sealed class _ChatMessageQueryUpdate {
     String? imageName,
     int? inputTokens,
     int? outputTokens,
+    String? model,
   });
 }
 
@@ -425,6 +446,7 @@ class _ChatMessageQueryUpdateImpl implements _ChatMessageQueryUpdate {
     Object? imageName = ignore,
     Object? inputTokens = ignore,
     Object? outputTokens = ignore,
+    Object? model = ignore,
   }) {
     return query.updateProperties(limit: limit, {
       if (sessionId != ignore) 2: sessionId as String?,
@@ -436,6 +458,7 @@ class _ChatMessageQueryUpdateImpl implements _ChatMessageQueryUpdate {
       if (imageName != ignore) 8: imageName as String?,
       if (inputTokens != ignore) 9: inputTokens as int?,
       if (outputTokens != ignore) 10: outputTokens as int?,
+      if (model != ignore) 11: model as String?,
     });
   }
 }
@@ -464,6 +487,7 @@ class _ChatMessageQueryBuilderUpdateImpl implements _ChatMessageQueryUpdate {
     Object? imageName = ignore,
     Object? inputTokens = ignore,
     Object? outputTokens = ignore,
+    Object? model = ignore,
   }) {
     final q = query.build();
     try {
@@ -477,6 +501,7 @@ class _ChatMessageQueryBuilderUpdateImpl implements _ChatMessageQueryUpdate {
         if (imageName != ignore) 8: imageName as String?,
         if (inputTokens != ignore) 9: inputTokens as int?,
         if (outputTokens != ignore) 10: outputTokens as int?,
+        if (model != ignore) 11: model as String?,
       });
     } finally {
       q.close();
@@ -1665,6 +1690,178 @@ extension ChatMessageQueryFilter
     });
   }
 
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition> modelIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 11));
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  modelIsNotNull() {
+    return QueryBuilder.apply(not(), (query) {
+      return query.addFilterCondition(const IsNullCondition(property: 11));
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition> modelEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EqualCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  modelGreaterThan(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  modelGreaterThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        GreaterOrEqualCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition> modelLessThan(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessCondition(property: 11, value: value, caseSensitive: caseSensitive),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  modelLessThanOrEqualTo(String? value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        LessOrEqualCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition> modelBetween(
+    String? lower,
+    String? upper, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        BetweenCondition(
+          property: 11,
+          lower: lower,
+          upper: upper,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition> modelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        StartsWithCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition> modelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        EndsWithCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition> modelContains(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        ContainsCondition(
+          property: 11,
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition> modelMatches(
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        MatchesCondition(
+          property: 11,
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition> modelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const EqualCondition(property: 11, value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
+  modelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const GreaterCondition(property: 11, value: ''),
+      );
+    });
+  }
+
   QueryBuilder<ChatMessage, ChatMessage, QAfterFilterCondition>
   toolCallsIsEmpty() {
     return not().toolCallsIsNotEmpty();
@@ -1674,7 +1871,7 @@ extension ChatMessageQueryFilter
   toolCallsIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
-        const GreaterOrEqualCondition(property: 11, value: null),
+        const GreaterOrEqualCondition(property: 12, value: null),
       );
     });
   }
@@ -1830,6 +2027,22 @@ extension ChatMessageQuerySortBy
       return query.addSortBy(10, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> sortByModel({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> sortByModelDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension ChatMessageQuerySortThenBy
@@ -1979,6 +2192,22 @@ extension ChatMessageQuerySortThenBy
       return query.addSortBy(10, sort: Sort.desc);
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> thenByModel({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11, caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterSortBy> thenByModelDesc({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(11, sort: Sort.desc, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension ChatMessageQueryWhereDistinct
@@ -2049,6 +2278,14 @@ extension ChatMessageQueryWhereDistinct
       return query.addDistinctBy(10);
     });
   }
+
+  QueryBuilder<ChatMessage, ChatMessage, QAfterDistinct> distinctByModel({
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(11, caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension ChatMessageQueryProperty1
@@ -2113,10 +2350,16 @@ extension ChatMessageQueryProperty1
     });
   }
 
+  QueryBuilder<ChatMessage, String?, QAfterProperty> modelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
+    });
+  }
+
   QueryBuilder<ChatMessage, List<AssistantToolCall>, QAfterProperty>
   toolCallsProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(11);
+      return query.addProperty(12);
     });
   }
 }
@@ -2184,10 +2427,16 @@ extension ChatMessageQueryProperty2<R>
     });
   }
 
+  QueryBuilder<ChatMessage, (R, String?), QAfterProperty> modelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
+    });
+  }
+
   QueryBuilder<ChatMessage, (R, List<AssistantToolCall>), QAfterProperty>
   toolCallsProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(11);
+      return query.addProperty(12);
     });
   }
 }
@@ -2259,10 +2508,16 @@ extension ChatMessageQueryProperty3<R1, R2>
     });
   }
 
+  QueryBuilder<ChatMessage, (R1, R2, String?), QOperations> modelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addProperty(11);
+    });
+  }
+
   QueryBuilder<ChatMessage, (R1, R2, List<AssistantToolCall>), QOperations>
   toolCallsProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addProperty(11);
+      return query.addProperty(12);
     });
   }
 }
@@ -2282,6 +2537,7 @@ _ChatMessage _$ChatMessageFromJson(Map<String, dynamic> json) => _ChatMessage(
   imageName: json['imageName'] as String?,
   inputTokens: (json['inputTokens'] as num?)?.toInt(),
   outputTokens: (json['outputTokens'] as num?)?.toInt(),
+  model: json['model'] as String?,
   toolCalls:
       (json['toolCalls'] as List<dynamic>?)
           ?.map((e) => AssistantToolCall.fromJson(e as Map<String, dynamic>))
@@ -2301,5 +2557,6 @@ Map<String, dynamic> _$ChatMessageToJson(_ChatMessage instance) =>
       'imageName': instance.imageName,
       'inputTokens': instance.inputTokens,
       'outputTokens': instance.outputTokens,
+      'model': instance.model,
       'toolCalls': instance.toolCalls,
     };

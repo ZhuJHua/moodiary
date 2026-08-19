@@ -15,6 +15,7 @@ void main() {
       String? imageName,
       int? inputTokens,
       int? outputTokens,
+      String? model,
     }) => ChatMessage(
       id: 'm1',
       sessionId: 's1',
@@ -26,9 +27,10 @@ void main() {
       imageName: imageName,
       inputTokens: inputTokens,
       outputTokens: outputTokens,
+      model: model,
     );
 
-    test('五个可空列全带值时逐字段恒等', () {
+    test('六个可空列全带值时逐字段恒等', () {
       final original = record(
         role: kRoleUser,
         reasoning: '想了想',
@@ -36,12 +38,13 @@ void main() {
         imageName: 'a.jpg',
         inputTokens: 30,
         outputTokens: 40,
+        model: 'gpt-4o',
       );
       final back = AssistantTurn.fromRecord(original).toRecord('s1');
       expect(back, original);
     });
 
-    test('五个可空列全为空时也恒等（空串 / 0 要写回 null）', () {
+    test('六个可空列全为空时也恒等（空串 / 0 要写回 null）', () {
       final original = record();
       final back = AssistantTurn.fromRecord(original).toRecord('s1');
       expect(back, original);
@@ -50,6 +53,17 @@ void main() {
       expect(back.imageName, isNull);
       expect(back.inputTokens, isNull);
       expect(back.outputTokens, isNull);
+      expect(back.model, isNull);
+    });
+
+    test('model 戳打在创建点，流式 copyWith 不会弄丢它', () {
+      final turn = AssistantTurn.assistant('', streaming: true, model: 'a-1');
+      final streamed = turn
+          .copyWith(text: '第一段')
+          .copyWith(reasoning: '想', thinkingMillis: 5)
+          .settled;
+      expect(streamed.model, 'a-1');
+      expect(streamed.toRecord('s1').model, 'a-1');
     });
 
     test('role 的两个字面量钉死', () {

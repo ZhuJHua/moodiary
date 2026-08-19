@@ -19,11 +19,10 @@ abstract class ChatSession with _$ChatSession {
     /// 自己变了会让人以为点错了会话；失败也不重来——没有手动刷新入口，重来只是白烧。
     @Default('') String title,
 
-    /// 建会话时生效的 [LlmProvider.id]（uuid，不是 [LlmProvider.presetId]）。
+    /// 本会话当前的 [LlmProvider.id]（uuid，不是 [LlmProvider.presetId]）。
     ///
-    /// ⚠️ 这两个字段目前**只写不读**：每一轮请求取的都是 `getActiveProvider()`，
-    /// 所以在设置里换了供应商，已存在的会话下一轮就跟着换模型。要做「会话级模型」
-    /// 得先让发请求那条路优先读它们。
+    /// 与 [model] / [reasoningEffort] 一样：首条消息时钉入，发请求优先读它们；
+    /// 会话中可随时改（标题的模型 chip），供应商被删则回落全局默认。
     required String providerId,
 
     required String model,
@@ -50,12 +49,26 @@ abstract class ChatSession with _$ChatSession {
     /// 触发压缩时该轮上报的输入 token 数（用于提示 / 调试）。
     int? compactedInputTokensAtTrigger,
 
+    /// 会话创建时选定的助手预设 id；null = 内置「Moodiary助手」。只作显示标签解析，
+    /// 人格从不按 id 回读——用 [personaSnapshot]。
+    String? agentPresetId,
+
+    /// 创建时快照的人格文本（dsh "mounted once"）：会话的 system prompt 从此字节稳定，
+    /// 预设事后编辑/删除不影响已有会话。null（旧行）回落内置人格。
+    String? personaSnapshot,
+
+    /// 创建时快照的工具 id 子集（同 [personaSnapshot] 的定格语义）。
+    /// null = 不限（全部）；空列表 = 本会话不挂工具。
+    List<String>? toolsSnapshot,
   }) = _ChatSession;
 
   factory ChatSession.create({
     required String providerId,
     required String model,
     String reasoningEffort = '',
+    String? agentPresetId,
+    String? personaSnapshot,
+    List<String>? toolsSnapshot,
   }) {
     final now = DateTime.timestamp();
     return ChatSession(
@@ -65,6 +78,9 @@ abstract class ChatSession with _$ChatSession {
       createdAt: now,
       updatedAt: now,
       reasoningEffort: reasoningEffort,
+      agentPresetId: agentPresetId,
+      personaSnapshot: personaSnapshot,
+      toolsSnapshot: toolsSnapshot,
     );
   }
 

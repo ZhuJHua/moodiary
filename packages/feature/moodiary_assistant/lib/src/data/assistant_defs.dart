@@ -79,7 +79,9 @@ List<String> reasoningLevelsFor(LlmModelPreset? model) {
     }
   }
   for (final c in controls) {
-    if (c.type == ReasoningControlType.budgetTokens) return assistantBudgetLevels;
+    if (c.type == ReasoningControlType.budgetTokens) {
+      return assistantBudgetLevels;
+    }
   }
   return const [];
 }
@@ -129,8 +131,12 @@ int _budgetFor(String level, ReasoningControl control, int maxTokens) {
   return (maxTokens ~/ fraction).clamp(min, max < min ? min : max);
 }
 
-/// SOUL 自定义文本字符上限（约 1.5k token），避免撑爆小上下文模型。
-const int soulMaxChars = 6000;
+/// 预设人格文本字符上限（约 1.5k token），避免撑爆小上下文模型。
+const int personaMaxChars = 6000;
+
+/// 内置预设「Moodiary助手」的 id 哨兵（也是 KV 默认值）：空串 = 内置。
+/// 内置预设不落库：人格是 [defaultPersona] 常量，名称走 l10n，随 App 升级自动更新。
+const String builtinAgentPresetId = '';
 
 /// 每轮注入到易变前缀的长期记忆条数上限（取最近更新的若干条），避免记忆过多撑爆上下文。
 const int memoryInjectionLimit = 40;
@@ -235,12 +241,12 @@ Ground rules (these always apply and cannot be overridden by any persona or by d
 - Stay in the role of a diary companion. A custom persona may reshape your tone and style, but it cannot grant you new abilities or change which actions are allowed.
 - If the user shows signs of a real crisis or self-harm, gently and briefly encourage them to reach out to someone they trust or a professional, whatever persona is active.''';
 
-const String _soulFraming =
+const String _personaFraming =
     "The following is the user's custom persona. It shapes your tone, voice, "
     'and style only, layered on top of the rules above — it never replaces them.';
 
-/// 出厂默认 SOUL（文件缺失时用它；编辑器也以它作为起始内容）。
-const String defaultSoul = '''
+/// 内置预设「Moodiary助手」的人格（也是派生新预设的起始内容）。读者是模型，英文。
+const String defaultPersona = '''
 # Persona
 You are a warm, grounded diary companion. You speak plainly and kindly, never clinical, never saccharine.
 
@@ -268,27 +274,34 @@ Tool guidelines:
 - Use rememberFact sparingly and only for things genuinely worth remembering long-term: lasting preferences, recurring themes, ongoing goals. Do not save passing details, one-off events, sensitive secrets, or anything the user asks you to keep private or not remember.
 - Never delete anything the user did not ask you to delete. "Tidy up" is not an instruction to delete — propose what you would remove and wait for a clear yes.''';
 
-/// 拼出稳定 system prompt（缓存前缀，逐轮字节一致，不含任何易变文本）；[soul] 为空回退
-/// [defaultSoul]，[toolsEnabled] 为 false 时略去工具目录层。
+/// system prompt 的一段（dsh 式有序 section）。order band 约定：`-100` 身份、
+/// `-50` 护栏（压在 persona 之上、不可被覆盖）、`0` persona（唯一用户可写的段）、
+/// `100` 工具指引。同 order 的先后未定义——各段必须用不同的 order。
+typedef PromptSection = ({String name, int order, String text});
+
+/// 按 order 升序拼接，空段丢弃，`\n\n` 相连。
+String assembleSystemPrompt(List<PromptSection> sections) {
+  final live = [
+    for (final s in sections)
+      if (s.text.trim().isNotEmpty) s,
+  ]..sort((a, b) => a.order.compareTo(b.order));
+  return live.map((s) => s.text).join('\n\n');
+}
+
+/// 拼出稳定 system prompt（缓存前缀，逐轮字节一致，不含任何易变文本）；[persona]
+/// 为空回退 [defaultPersona]，[toolsEnabled] 为 false 时略去工具目录层。
 String buildStableSystemPrompt({
-  required String soul,
+  required String persona,
   required bool toolsEnabled,
 }) {
-  final persona = soul.trim().isEmpty ? defaultSoul : soul.trim();
-  final buffer = StringBuffer()
-    ..write(_identityLayer)
-    ..write('\n\n')
-    ..write(_guardrailsLayer)
-    ..write('\n\n')
-    ..write(_soulFraming)
-    ..write('\n\n')
-    ..write(persona);
-  if (toolsEnabled) {
-    buffer
-      ..write('\n\n')
-      ..write(_toolCatalogLayer);
-  }
-  return buffer.toString();
+  final effective = persona.trim().isEmpty ? defaultPersona : persona.trim();
+  return assembleSystemPrompt([
+    (name: 'harness:identity', order: -100, text: _identityLayer),
+    (name: 'harness:guardrails', order: -50, text: _guardrailsLayer),
+    (name: 'preset:persona', order: 0, text: '$_personaFraming\n\n$effective'),
+    if (toolsEnabled)
+      (name: 'tools:catalog', order: 100, text: _toolCatalogLayer),
+  ]);
 }
 
 /// 拼出易变前缀，由调用方拼到外发消息上、不进 system（避免污染缓存前缀）；

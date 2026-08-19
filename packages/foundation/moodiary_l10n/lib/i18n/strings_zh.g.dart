@@ -537,35 +537,80 @@ class Translations$assistant$zh {
 	/// zh: '助手基于 rig 构建。在「模型供应商」里自定义任意数量的服务商（OpenAI / Anthropic 兼容端点），自由切换激活项。API Key 仅保存在本机安全存储。'
 	String get settingNote => '助手基于 rig 构建。在「模型供应商」里自定义任意数量的服务商（OpenAI / Anthropic 兼容端点），自由切换激活项。API Key 仅保存在本机安全存储。';
 
+	/// zh: '助手预设'
+	String get presetSectionTitle => '助手预设';
+
+	/// zh: '助手预设'
+	String get presetTileTitle => '助手预设';
+
+	/// zh: '助手预设'
+	String get presetPageTitle => '助手预设';
+
+	/// zh: 'Moodiary助手'
+	String get presetBuiltinName => 'Moodiary助手';
+
+	/// zh: '出厂预设：温和、克制的日记伙伴。只读，可派生副本后自由修改。'
+	String get presetBuiltinDes => '出厂预设：温和、克制的日记伙伴。只读，可派生副本后自由修改。';
+
+	/// zh: '内置'
+	String get presetBuiltinBadge => '内置';
+
+	/// zh: '默认'
+	String get presetDefaultBadge => '默认';
+
+	/// zh: '设为默认'
+	String get presetSetDefault => '设为默认';
+
+	/// zh: '派生副本'
+	String get presetDerive => '派生副本';
+
+	/// zh: '{name} 副本'
+	String presetCopyName({required Object name}) => '${name} 副本';
+
+	/// zh: '编辑预设'
+	String get presetEditTitle => '编辑预设';
+
+	/// zh: '名称'
+	String get presetNameLabel => '名称';
+
+	/// zh: '简介'
+	String get presetDescriptionLabel => '简介';
+
 	/// zh: '人格'
-	String get sectionSoul => '人格';
+	String get presetPersonaLabel => '人格';
 
-	/// zh: '自定义人格（SOUL）'
-	String get soulTileTitle => '自定义人格（SOUL）';
+	/// zh: '已保存预设'
+	String get presetSaved => '已保存预设';
 
-	/// zh: '使用默认人格'
-	String get soulTileSubtitleDefault => '使用默认人格';
+	/// zh: '删除预设'
+	String get presetDeleteTitle => '删除预设';
 
-	/// zh: '已自定义'
-	String get soulTileSubtitleCustom => '已自定义';
+	/// zh: '删除「{name}」？已用它创建的会话不受影响（人格已定格在会话里）。'
+	String presetDeleteMessage({required Object name}) => '删除「${name}」？已用它创建的会话不受影响（人格已定格在会话里）。';
 
-	/// zh: '自定义人格'
-	String get soulPageTitle => '自定义人格';
+	/// zh: '已删除的预设'
+	String get presetDeleted => '已删除的预设';
 
-	/// zh: '这段文字只影响助手的语气与风格，会叠加在内置的安全与工具规则之上，不能改变助手被允许做的事。留空即恢复默认人格。'
-	String get soulNote => '这段文字只影响助手的语气与风格，会叠加在内置的安全与工具规则之上，不能改变助手被允许做的事。留空即恢复默认人格。';
+	/// zh: '选择预设'
+	String get presetPickerTitle => '选择预设';
 
-	/// zh: '用 Markdown 描述你想要的助手人格：语气、说话方式、关注点……'
-	String get soulEditorHint => '用 Markdown 描述你想要的助手人格：语气、说话方式、关注点……';
+	/// zh: '本会话的配置已在创建时定格'
+	String get presetInfoSubtitle => '本会话的配置已在创建时定格';
 
-	/// zh: '已保存人格'
-	String get soulSaved => '已保存人格';
+	/// zh: '自定义工具集'
+	String get presetCustomTools => '自定义工具集';
 
-	/// zh: '重置为默认'
-	String get soulReset => '重置为默认';
+	/// zh: '{count} 个工具'
+	String presetToolCount({required Object count}) => '${count} 个工具';
 
-	/// zh: '已重置为默认人格'
-	String get soulResetDone => '已重置为默认人格';
+	/// zh: '全部工具'
+	String get presetToolsAll => '全部工具';
+
+	/// zh: '不挂载工具'
+	String get presetToolsNone => '不挂载工具';
+
+	/// zh: '已切换到 {model}'
+	String modelSwitched({required Object model}) => '已切换到 ${model}';
 
 	/// zh: '加载中…'
 	String get providerEntryLoading => '加载中…';
