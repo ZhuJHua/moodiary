@@ -12,7 +12,6 @@ class ContextCompactionController {
   final Set<String> _inFlight = <String>{};
 
   /// 判定并执行压缩，返回带新摘要/水位的会话副本；无需压缩或失败返回 null。
-  /// [force] 跳过 token 阈值判定，但仍要求有足够可摘要的历史。
   Future<ChatSession?> maybeCompact({
     required ChatSession session,
     required List<CompactionMessage> orderedMessages,
@@ -21,7 +20,6 @@ class ContextCompactionController {
     required LlmProvider provider,
     required String model,
     required String apiKey,
-    bool force = false,
   }) async {
     if (_inFlight.contains(session.id)) return null;
 
@@ -29,9 +27,7 @@ class ContextCompactionController {
         ? contextLimit
         : assistantDefaultContextBudget;
     if (orderedMessages.length < assistantCompactionMinMessages) return null;
-    if (!force && lastInputTokens < budget * assistantCompactionTriggerRatio) {
-      return null;
-    }
+    if (lastInputTokens < budget * assistantCompactionTriggerRatio) return null;
     if (orderedMessages.length <= assistantCompactionTailMessages) return null;
 
     // 末尾若干条逐字保留；其余为可压缩范围。

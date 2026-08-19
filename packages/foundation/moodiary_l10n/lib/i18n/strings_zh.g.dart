@@ -750,18 +750,6 @@ class Translations$assistant$zh {
 	/// zh: '恢复完整历史'
 	String get compactionRestore => '恢复完整历史';
 
-	/// zh: '立即压缩上下文'
-	String get compactNow => '立即压缩上下文';
-
-	/// zh: '已压缩较早的对话'
-	String get compactionDone => '已压缩较早的对话';
-
-	/// zh: '暂无可压缩的内容'
-	String get compactionNothing => '暂无可压缩的内容';
-
-	/// zh: '上下文占用'
-	String get contextUsageLabel => '上下文占用';
-
 	/// zh: '使用前必读'
 	String get disclaimerTitle => '使用前必读';
 
