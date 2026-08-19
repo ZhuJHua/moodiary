@@ -190,10 +190,7 @@ class _AssistantNoticeState extends State<AssistantNotice>
         child: content,
       );
     }
-    return Padding(
-      padding: const .only(bottom: 6),
-      child: wrapped,
-    );
+    return Padding(padding: const .only(bottom: 6), child: wrapped);
   }
 
   @override
@@ -217,7 +214,10 @@ class _AssistantNoticeState extends State<AssistantNotice>
     // 已经补偿掉的量按当前进度折算 —— 动画中途再点一次时 _compensated 不能清零，
     // 否则反向那几帧会把位置多推一个正文的高度。
     final previous = _bodyExtent;
-    _bodyExtent = _canCompensate ? (_measureDelta(context) ?? 0) : 0;
+    // **无条件量**，补不补偿逐帧另判（[_shouldCompensateNow]）：展开动画中途
+    // 列表可能从顶对齐形态长进双向形态，前半程不补、后半程要补 —— 点击那一刻
+    // 定不了整段动画的答案。
+    _bodyExtent = _measureDelta(context) ?? 0;
     _compensated = previous <= 0 ? 0 : _curve.value * _bodyExtent;
 
     setState(() => _expanded = expanding);
@@ -231,23 +231,21 @@ class _AssistantNoticeState extends State<AssistantNotice>
     // 还跟着底部，贴底物理会把视口整个拽下去 delta，块的顶边反而跑出屏幕。
     AssistantChatList.maybeOf(context)?.releaseFollow();
 
-    final position = _position;
     (expanding ? _anim.forward() : _anim.reverse()).whenComplete(() {
-      if (!mounted || position == null || before == null) return;
-      _settleResidual(position, before);
+      if (!mounted || before == null) return;
+      _settleResidual(before);
     });
   }
 
-  /// 能不能补偿。两种情况不补：
+  /// 这一帧长出来的高度要不要用位置补偿抵消。**逐帧判**，两种情况不补：
   ///
   /// 1. **正向组**（中心线下方）。它是往下长的，长高只把它下面的内容顶远，视口里
   ///    已有的东西一动不动，补了反而会把块自己推走。活跃会话里最新那条消息就在
   ///    这一组。
-  /// 2. **内容不足一屏**。那时列表是顶部对齐的：负向组也被撑到了中心线那里，
-  ///    长高只吃掉一截差额，块照样往下长、上沿不动，补偿反而会把整段推下去。
-  ///    判据取列表算好的差额，**不能拿 `max - min` 猜** —— 底部留白那一段
-  ///    永远在，那个差恒大于 1。
-  bool get _canCompensate {
+  /// 2. **内容不足一屏**。那时列表走的是不可滚动的顶对齐形态，块本来就是
+  ///    往下长的，也没有可滚的位置可补。判据问列表在哪个形态，**不能拿
+  ///    `max - min` 猜** —— 那个形态里差值恰好是 0，成立纯属巧合。
+  bool get _shouldCompensateNow {
     final list = AssistantChatList.maybeOf(context);
     if (list != null &&
         (list.isInForwardGroup(context) || list.contentFitsViewport)) {
@@ -259,29 +257,47 @@ class _AssistantNoticeState extends State<AssistantNotice>
   }
 
   /// 动画每一帧：把这一帧新长出来（或收回去）的那点高度补掉。
+  ///
+  /// 不该补的帧（顶对齐形态、正向组）把进度**吸收**掉而不是攒着 —— 那些帧的
+  /// 增长已经以「往下长」的正确方式落了地，回头补它等于把画面推走。于是
+  /// 展开中途列表换了形态时，补偿正好从换的那一帧起接手之后的增量。
   void _compensateStep() {
-    final position = _position;
-    if (position == null || _bodyExtent <= 0.5 || !position.hasPixels) return;
+    if (!mounted || _bodyExtent <= 0.5) return;
     final target = _curve.value * _bodyExtent;
+    final live = Scrollable.maybeOf(context)?.position;
+    if (live == null || !live.hasPixels) {
+      _compensated = target;
+      return;
+    }
+    // 形态切换会换 position 的极少数路径（controller 被换掉等）：旧的已经
+    // 销毁，再 correctPixels 是在已 dispose 的对象上改数 —— 换上新的接着走。
+    if (!identical(live, _position)) {
+      _position = live;
+      _compensated = target;
+      return;
+    }
+    if (!_shouldCompensateNow) {
+      _compensated = target;
+      return;
+    }
     final step = target - _compensated;
     if (step.abs() < 0.05) return;
     _compensated = target;
     // 下界随正文长出而变松：负向那组这一帧多出 step，新的 min 比当前更负。
-    final lower = step > 0
-        ? position.minScrollExtent - step
-        : position.minScrollExtent;
-    position.correctPixels(
-      (position.pixels - step).clamp(lower, position.maxScrollExtent),
-    );
+    final lower = step > 0 ? live.minScrollExtent - step : live.minScrollExtent;
+    live.correctPixels((live.pixels - step).clamp(lower, live.maxScrollExtent));
   }
 
   /// 兜底：布局落定后看看自己的顶边有没有真的停在原处，差多少补多少；
   /// 最后按落定的位置重新判断跟随状态。
-  void _settleResidual(ScrollPosition position, double before) {
+  void _settleResidual(double before) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final position = Scrollable.maybeOf(context)?.position;
       final now = _topOf();
-      if (now != null) {
+      // 顶边挪了多少是「实际发生的位移」，不管中途补没补偿、换没换形态都成立；
+      // 但只有补偿说了算的场合才把它拉回来 —— 顶对齐形态里那是正常的排版位移。
+      if (position != null && now != null && _shouldCompensateNow) {
         final residual = now - before;
         if (residual.abs() >= 1) {
           position.jumpTo(

@@ -1,6 +1,5 @@
-import 'dart:math' as math;
-
 import 'package:flutter/rendering.dart';
+import 'package:flutter/scheduler.dart' show SchedulerPhase;
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:mui/mui.dart';
@@ -25,12 +24,31 @@ const double _kTopPadding = 8;
 /// 把位置往回推几十像素 —— 容差一松，物理就会把那次补偿又拽回底部。
 const double _kStickEpsilon = 0.5;
 
-/// 内容长高时**在同一帧里**把位置带到新的底部。
+/// 初始分支按条数猜：超过这个数就直接从双向分支开局。
+///
+/// shrinkWrap 会把全部条目一帧建完，载入长会话时那一帧要重跑几百遍 Markdown
+/// 解析。阈值按「单条最矮 ≈ 42（一行提示 30 + 行距 12）× 手机竖屏视口」取；
+/// 猜错方向（大平板上这么多条其实装得下）也只是首帧走错分支，post-frame
+/// 量完真高度就换回来。
+const int _kShrinkWrapProbe = 24;
+
+/// 列表的滚动物理。**整个生命周期只有这一个实例**：换了实例（哪怕换成
+/// `NeverScrollableScrollPhysics`）Scrollable 就会重建 ScrollPosition，
+/// 分支切换那一帧位置得靠 absorb 转世 —— 行为全挂在几个回调上，
+/// 实例不变，position 就跨分支存活，切换帧的位置修正在同一帧里生效。
+///
+/// 三个回调：
+///
+/// - [allowUserScrolling]：顶对齐分支不可滚动 —— 挡的是**手势**，不挡 `jumpTo`，
+///   也不影响条目上的点击。
+/// - [snapToBottomNow]：分支切换的那一帧无条件落到新的 `max`。切换前后两套
+///   坐标系没有可比性，「原本贴不贴底」说明不了什么 —— 切换前的可见画面就是
+///   贴底的（顶对齐分支盖过一屏的那一帧是反向列表，pixels 0 恰好露出最新一条）。
+/// - [shouldStick]：内容长高时**在同一帧里**把位置带到新的底部。
 ///
 /// 不这么做就只能事后追：流式每长高一次发一条 `ScrollMetricsNotification`，
 /// 监听里 `await endOfFrame` 再 `jumpTo` —— 补偿永远慢一帧，于是每个 token 都是
 /// 「先露出半行、下一帧再抽回去」。逐 token 累积起来就是肉眼的抖动。
-///
 /// `adjustPositionForNewDimensions` 是布局阶段的钩子（`applyContentDimensions`
 /// 里调），返回值直接就是这一帧的 pixels，没有中间态可看，所以是平滑的。
 class _StickToBottomScrollPhysics extends AlwaysScrollableScrollPhysics {
@@ -40,15 +58,28 @@ class _StickToBottomScrollPhysics extends AlwaysScrollableScrollPhysics {
   /// 随之停手。
   final ValueGetter<bool> shouldStick;
 
-  const _StickToBottomScrollPhysics({required this.shouldStick, super.parent});
+  final ValueGetter<bool> userScrollingEnabled;
+  final ValueGetter<bool> snapToBottomNow;
+
+  const _StickToBottomScrollPhysics({
+    required this.shouldStick,
+    required this.userScrollingEnabled,
+    required this.snapToBottomNow,
+    super.parent,
+  });
 
   @override
   _StickToBottomScrollPhysics applyTo(ScrollPhysics? ancestor) {
     return _StickToBottomScrollPhysics(
       shouldStick: shouldStick,
+      userScrollingEnabled: userScrollingEnabled,
+      snapToBottomNow: snapToBottomNow,
       parent: buildParent(ancestor),
     );
   }
+
+  @override
+  bool get allowUserScrolling => userScrollingEnabled();
 
   @override
   double adjustPositionForNewDimensions({
@@ -63,6 +94,15 @@ class _StickToBottomScrollPhysics extends AlwaysScrollableScrollPhysics {
       isScrolling: isScrolling,
       velocity: velocity,
     );
+    if (snapToBottomNow()) return newPosition.maxScrollExtent;
+    // 顶对齐形态：位置只有 0 一个合法去处（从双向形态带过来的 pixels 在这里
+    // 越界）。**当帧夹死**，不能留给弹道去「滑」回来 —— 那是一段肉眼可见的动画。
+    if (!userScrollingEnabled()) {
+      return adjusted.clamp(
+        newPosition.minScrollExtent,
+        newPosition.maxScrollExtent,
+      );
+    }
     // 手指在上面、或者还有惯性时一律不插手 —— 那时位置归手势管。
     if (isScrolling || velocity != 0) return adjusted;
     if (!shouldStick()) return adjusted;
@@ -77,152 +117,60 @@ class _StickToBottomScrollPhysics extends AlwaysScrollableScrollPhysics {
   }
 }
 
-/// [_SliverTopAlignFill] 每趟布局量出来的三个数。
+/// 条目的 key。全局、按（列表实例, id）等值 ——
 ///
-/// [reverseExtent] 是负向组**真正有内容**的高度（顶部留白 + 消息），不含补出来的
-/// [fill] —— 列表拿它判断中心项该不该往前挪。
-typedef _TopAlignMetrics = ({
-  double fill,
-  double reverseExtent,
-  double viewportExtent,
-});
+/// - **全局**：条目会在两个 sliver 之间搬家（中心项前移）、也会随分支切换换
+///   sliver。GlobalKey 让元素连同状态（展开着的思考块）原地重挂，ValueKey 做不到。
+/// - **按 id 等值**：`GlobalObjectKey` 是 `identical` 比较，copyWith 之外换了个
+///   字符串实例就丢状态。
+/// - **掺上列表实例**：消息 id 在会话内是稳定的，只按 id 的话「pop 会话页的退场
+///   动画还没放完就再点开同一个会话」会让两棵活着的列表撞出同一个 GlobalKey。
+class _ItemKey extends GlobalKey<State<StatefulWidget>> {
+  const _ItemKey(this.list, this.id) : super.constructor();
 
-/// 内容不足一屏时，把消息顶到视口顶部。
-///
-/// 中心 sliver 布局把中心线钉在视口底边（`anchor: 1`），负向那组是从中心线**往上**
-/// 累加的 —— 内容短的时候整段就吊在底边，上面空一大片。这一层把差额补在
-/// **内容与中心线之间**，负向组的上沿因此正好落在 y=0，短会话改为从顶往下长。
-///
-/// 差额 = 视口高 − 正向组 − 负向组内容，而负向组有多高要等子 sliver 布完才知道。
-/// **不能挪到 post-frame 去 setState**：那样每次内容长高都会先跳一下、下一帧再回来
-/// —— 流式每换一行、思考块展开的每一帧都看得见。所以这里先让子级布一趟拿到真高，
-/// 再带着算好的 padding 重布一趟，两趟都在同一个 layout pass 里。
-///
-/// 正向组的高度取自 `maxScrollExtent`（上一趟布局的产物）。流式长高的那一帧它是旧值，
-/// 但那一帧贴底物理会改位置、`applyContentDimensions` 因此返回 false，视口**在同一帧内**
-/// 重跑一趟布局 —— 第二趟读到的就是新值，所以看不到中间态。
-class _SliverTopAlignFill extends SingleChildRenderObjectWidget {
-  /// 视口顶端到第一条消息的留白。收在这里而不是单独一个 sliver，
-  /// 是为了让「负向组内容有多高」只有一个来源。
-  final double leading;
-
-  /// 正向组（比中心项新的消息 + 底部留白）的高度。
-  final ValueGetter<double> forwardExtent;
-
-  /// 每趟布局把量到的数报出去。
-  final ValueChanged<_TopAlignMetrics> onMeasured;
-
-  const _SliverTopAlignFill({
-    required this.leading,
-    required this.forwardExtent,
-    required this.onMeasured,
-    required Widget sliver,
-  }) : super(child: sliver);
+  final AssistantChatListState list;
+  final String id;
 
   @override
-  _RenderSliverTopAlignFill createRenderObject(BuildContext context) =>
-      _RenderSliverTopAlignFill(
-        leading: leading,
-        forwardExtent: forwardExtent,
-        onMeasured: onMeasured,
-      );
+  bool operator ==(Object other) =>
+      other is _ItemKey && identical(other.list, list) && other.id == id;
 
   @override
-  void updateRenderObject(
-    BuildContext context,
-    _RenderSliverTopAlignFill renderObject,
-  ) {
-    renderObject
-      ..leading = leading
-      ..forwardExtent = forwardExtent
-      ..onMeasured = onMeasured;
-  }
+  int get hashCode => Object.hash(identityHashCode(list), id);
 }
 
-class _RenderSliverTopAlignFill extends RenderSliverEdgeInsetsPadding {
-  _RenderSliverTopAlignFill({
-    required double leading,
-    required this.forwardExtent,
-    required this.onMeasured,
-  }) : assert(leading >= 0),
-       _leading = leading;
-
-  ValueGetter<double> forwardExtent;
-  ValueChanged<_TopAlignMetrics> onMeasured;
-
-  double _leading;
-
-  double get leading => _leading;
-
-  set leading(double value) {
-    if (_leading == value) return;
-    _leading = value;
-    markNeedsLayout();
-  }
-
-  double _fill = 0;
-
-  /// **只在负向组里成立**：那边的有效轴向是 up，于是 `beforePadding`（靠中心线的
-  /// 那侧）取的是 `bottom`、`afterPadding`（远端，也就是屏幕上方）取的是 `top`。
-  @override
-  EdgeInsets get resolvedPadding =>
-      EdgeInsets.only(top: _leading, bottom: _fill);
-
-  @override
-  void performLayout() {
-    assert(
-      constraints.growthDirection == GrowthDirection.reverse,
-      '_SliverTopAlignFill 只能放在 center 之前的负向组里',
-    );
-    final viewport = constraints.viewportMainAxisExtent;
-    _fill = 0;
-    super.performLayout();
-    if (child == null) {
-      onMeasured((
-        fill: 0,
-        reverseExtent: _leading,
-        viewportExtent: viewport,
-      ));
-      return;
-    }
-    // 子级要了偏移修正：这一趟整个作废，别在半成品上算差额。
-    if (geometry!.scrollOffsetCorrection != null) return;
-    var content = child!.geometry!.scrollExtent + _leading;
-    // 第二轮兜住「补了 padding 之后子级少建了几条、估算高度跟着变」的情形。
-    for (var i = 0; i < 2; i++) {
-      final want = math.max(0.0, viewport - forwardExtent() - content);
-      if ((want - _fill).abs() < 0.5) break;
-      _fill = want;
-      super.performLayout();
-      if (geometry!.scrollOffsetCorrection != null) return;
-      content = child!.geometry!.scrollExtent + _leading;
-    }
-    onMeasured((
-      fill: _fill,
-      reverseExtent: content,
-      viewportExtent: viewport,
-    ));
-  }
-}
-
-/// 自建聊天列表。**双向布局**：一段稳定的「中心项」把内容劈成两半，
-/// 比它新的落在正向（中心线下方）、比它旧的落在负向（中心线上方），
-/// `anchor: 1` 再把中心线摆在视口底部。
+/// 自建聊天列表，形状参考 heybox 的 `IMChatList`：**按内容够不够一屏分两个形态**，
+/// post-frame 量真实高度切换。
 ///
-/// 这个形状同时买到三样东西，缺一不可：
+/// **不足一屏**：`shrinkWrap + reverse` 且**不可滚动**的列表，整块顶对齐。
+/// 短会话从顶往下长，流式回复紧跟在用户消息下面，定稿也不挪窝；没有可滚动
+/// 范围，「回到底部」按钮永远不出现。外面那层 `SingleChildScrollView` 只为了
+/// iOS 的回弹手感（0.001 的可滚区）。`reverse` 在这里没有正向列表的毛病 ——
+/// 列表根本不滚，不存在「最新一条长高推走 scroll offset」的问题；它只负责让
+/// 高度盖过一屏的那一帧仍然贴着底显示，切换形态时画面不跳。
+///
+/// **超过一屏**：**双向布局** —— 一段稳定的「中心项」把内容劈成两半，比它新的
+/// 落在正向（中心线下方）、比它旧的落在负向（中心线上方），`anchor: 1` 再把
+/// 中心线摆在视口底部。这个形状买到三样东西：
 ///
 /// 1. **开局就在底部，不需要从顶部跳下来。** 普通正向列表载入已有会话时必须
 ///    `jumpTo(maxScrollExtent)`，而那个 max 是外推估计值 —— 实测 120 条消息要
 ///    迭代 4 次才收敛（11408 → 44232 → 52506 → 51008），用户看得见它在稳。
 /// 2. **滑走看历史时，新消息与流式增长都不动画面。** 它们全在正向那一组，
-///    负向那一组的布局偏移一个字节都不变。这一点与正向列表持平。
+///    负向那一组的布局偏移一个字节都不变。
 /// 3. **往表头补历史不跳。** 更早的消息加进负向那组只会让 `minScrollExtent` 更负，
-///    `pixels` 不受影响 —— 分页要的就是这个。正向列表做不到：表头插入会把整个
-///    可见区推走。
+///    `pixels` 不受影响。
 ///
-/// **注意不是 `reverse: true`。** 裸反向列表只满足第 1 条：它的 scrollOffset 原点
-/// 钉在 index 0 的边上，最新一条长高会把后面每一条的 scroll offset 整体推走 ——
-/// 实测最新项 +60px，可见的旧消息就上跑 60px；+400px 时整个可见窗口被换掉。
+/// 两个形态是**同一个** `CustomScrollView`（同一个 GlobalKey、同一个物理实例、
+/// 同一个 controller），切的只是 reverse / shrinkWrap / center / slivers ——
+/// 于是 ScrollPosition 跨形态存活，切换那一帧物理直接把位置落到新坐标系的底部，
+/// 没有「先画一帧错位再补跳」。
+///
+/// 双向形态**只在内容超过一屏后才启用**，启用时中心项取最新一条已定稿消息，
+/// 负向组因此天然不低于一屏 —— 「滑到顶上方一片空白」（`anchor: 1` 的下界是
+/// `min(0, 视口高 − 负向组高)`，恒 ≤ 0，拦不住正的「顶边贴顶」位置）只剩
+/// 刚切换那一两条消息的窗口期，[_advanceCenter] 在贴底时把中心项跟上最新一条，
+/// 窗口随下一条消息闭合。
 class AssistantChatList extends StatefulWidget {
   /// 时间序（最旧在前）。列表内部自己翻成最新在前。
   final AssistantChatController controller;
@@ -264,6 +212,9 @@ class AssistantChatList extends StatefulWidget {
 }
 
 class AssistantChatListState extends State<AssistantChatList> {
+  /// 那一个 `CustomScrollView`。顶对齐形态拿它量真实高度。
+  final _listKey = GlobalKey();
+
   /// 中心线**上方**那一组：中心项自己，以及比它更旧的。
   final _beforeCenterKey = GlobalKey();
 
@@ -281,6 +232,16 @@ class AssistantChatListState extends State<AssistantChatList> {
     return _indexById[id] ?? 0;
   }
 
+  /// 当前在不可滚动的顶对齐形态。真源是 post-frame 的实测高度
+  /// （[_scheduleBranchCheck]），条数只用来猜初始值。
+  bool _isShrinkWrap = true;
+
+  double _viewportMainExtent = 0;
+  bool _branchCheckScheduled = false;
+
+  /// 刚切完形态的那一帧：物理无条件把位置落到新坐标系的 `max`。
+  bool _flipSnapPending = false;
+
   /// 是否跟随底部。列表本身不因它重建 —— 只有那颗按钮听它。
   final ValueNotifier<bool> _following = ValueNotifier(true);
 
@@ -292,7 +253,7 @@ class AssistantChatListState extends State<AssistantChatList> {
 
   /// 手指正按在列表上（含随后的惯性滑行）。
   ///
-  /// **期间一律不补跳。** 内容尺寸会随着老消息 materialize 不断被重估，
+  /// **期间一律不补跳、不换形态。** 内容尺寸会随着老消息 materialize 不断被重估，
   /// 于是拖动的每一帧都伴随一条 `ScrollMetricsNotification`；如果那时
   /// `_following` 还没翻成 false（从底部开始的头几像素就是如此），补跳循环就会
   /// 启动、把 `_pinning` 置真，而 `_pinning` 又会让后续的拖动更新被忽略 ——
@@ -302,40 +263,14 @@ class AssistantChatListState extends State<AssistantChatList> {
 
   int _lastTailRevision = -1;
 
-  /// 上一趟布局量到的数，由 [_SliverTopAlignFill] 写进来。
-  _TopAlignMetrics _metrics = (
-    fill: 0,
-    reverseExtent: 0,
-    viewportExtent: 0,
-  );
-
   /// 内容还不足一屏。思考块拿它决定「展开要不要补偿视口」——
   /// 顶部对齐时块本来就是往下长的，补偿反而会把它自己推走。
-  bool get contentFitsViewport => _metrics.fill > 0;
+  bool get contentFitsViewport => _isShrinkWrap;
 
-  /// 负向组比视口矮。这一条成立时滚动下界是错的，见 [_advanceCenterIfShallow]。
-  bool get _reverseGroupTooShort =>
-      _metrics.viewportExtent > 0 &&
-      _metrics.reverseExtent <= _metrics.viewportExtent;
-
-  /// 正向组的高度。`anchor: 1` 下 `maxScrollExtent` 正好等于它。
-  ///
-  /// 头一趟布局还没有内容尺寸，用底部留白兜底 —— 正向组至少有这么高，
-  /// 于是开局第一帧的差额就已经是准的，不会先吊在底边闪一下。
-  double _forwardExtent() {
-    final position = _position;
-    final max = position != null && position.hasContentDimensions
-        ? position.maxScrollExtent
-        : 0.0;
-    return math.max(max, widget.bottomPadding);
-  }
-
-  /// 内容不足一屏时也贴底 —— 那时 `pixels` 没有别的去处，而差额是按
-  /// `maxScrollExtent` 算的：只有 `pixels == max` 时内容才真的钉在顶上。
-  /// 思考块展开会先 `releaseFollow()`，少了这一条，正向组随后长出来的高度
-  /// 会把整段内容一点点往下拖。
   late final _physics = _StickToBottomScrollPhysics(
-    shouldStick: () => _following.value || _metrics.fill > 0,
+    shouldStick: () => !_isShrinkWrap && _following.value,
+    userScrollingEnabled: () => !_isShrinkWrap,
+    snapToBottomNow: () => _flipSnapPending,
   );
 
   late final AppLifecycleListener _lifecycle;
@@ -344,7 +279,8 @@ class AssistantChatListState extends State<AssistantChatList> {
   void initState() {
     super.initState();
     _rebuildIndex();
-    _centerId = _newestFirst.isEmpty ? null : _newestFirst.first.id;
+    _isShrinkWrap = _newestFirst.length <= _kShrinkWrapProbe;
+    _centerId = _pickCenter();
     _lastTailRevision = widget.controller.tailRevision;
     widget.controller.addListener(_onItemsChanged);
     // 后台期间 framesEnabled 为假，endOfFrame 会一直挂着；而回到前台时既没有
@@ -354,9 +290,9 @@ class AssistantChatListState extends State<AssistantChatList> {
         if (_following.value) _pinToBottom();
       },
     );
-    // 底部那条留白 sliver 落在正向组里，所以开局 max 等于它的高度。
-    // 这一跳只有 bottomPadding 那么远（而不是整段历史那么远），且在第一帧。
-    _pinToBottom();
+    // 开局的 position 是全新的（没有旧尺寸可比），物理钩子不会响 ——
+    // 只能事后跳。这一跳只有 bottomPadding 那么远，且在第一帧。
+    if (!_isShrinkWrap) _pinToBottom();
   }
 
   @override
@@ -367,7 +303,8 @@ class AssistantChatListState extends State<AssistantChatList> {
       widget.controller.addListener(_onItemsChanged);
       _lastTailRevision = widget.controller.tailRevision;
       _rebuildIndex();
-      _centerId = _newestFirst.isEmpty ? null : _newestFirst.first.id;
+      _isShrinkWrap = _newestFirst.length <= _kShrinkWrapProbe;
+      _centerId = _pickCenter();
     }
   }
 
@@ -396,19 +333,77 @@ class AssistantChatListState extends State<AssistantChatList> {
     return position.maxScrollExtent - position.pixels;
   }
 
+  /// 双向形态的中心项：最新一条**已定稿**的消息。
+  ///
+  /// 流式那条正在长个儿，钉它当中心会让它的思考块换一套补偿算法；
+  /// 只有它一条时才退而钉它。
+  String? _pickCenter() {
+    for (final item in _newestFirst) {
+      if (item is AssistantTurn && item.streaming) continue;
+      return item.id;
+    }
+    return _newestFirst.isEmpty ? null : _newestFirst.first.id;
+  }
+
+  /// 切进双向形态。调用方负责 setState。
+  ///
+  /// [snapToBottomNow] 让切换那一帧直接落到新坐标系的 `max`；post-frame 再兜一跳，
+  /// 防的是「这一帧尺寸恰好没变、物理钩子没被问到」的万一。
+  void _enterBidirectional() {
+    _isShrinkWrap = false;
+    _centerId = _pickCenter();
+    _flipSnapPending = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _flipSnapPending = false;
+      if (!mounted || _isShrinkWrap) return;
+      final position = _position;
+      if (position == null || !position.hasContentDimensions) return;
+      if ((position.maxScrollExtent - position.pixels).abs() < 1) return;
+      position.jumpTo(position.maxScrollExtent);
+    });
+  }
+
+  /// 切进顶对齐形态。调用方负责 setState。底部本来就看得见了：
+  /// 作废在飞的补跳、跟随置回真（按钮由形态一起决定，见 build）。
+  void _enterShrinkWrap() {
+    _isShrinkWrap = true;
+    _pinGeneration++;
+    _pinning = false;
+    _following.value = true;
+  }
+
   void _onItemsChanged() {
     final previous = _newestFirst;
     _rebuildIndex();
-    _syncCenter(previous);
-    _advanceCenterIfShallow();
+    // 整表换血（切会话的 setAll）：老的中心项、老的形态都作废，按新会话重来。
+    // 不等 post-frame 量高度 —— 长会话不能让 shrinkWrap 把几百条一帧建完，
+    // 短会话也不该先画一帧贴底再跳成顶对齐。any 在正常更新里第一条就命中。
+    final wholesale =
+        previous.isNotEmpty &&
+        !previous.any((e) => _indexById.containsKey(e.id));
+    if (wholesale) {
+      if (_newestFirst.length <= _kShrinkWrapProbe) {
+        _enterShrinkWrap();
+      } else {
+        _enterBidirectional();
+        _following.value = true;
+      }
+    } else if (_isShrinkWrap) {
+      // 同会话涨过条数上限（恢复历史等）也直接换，理由同上。
+      if (_newestFirst.length > _kShrinkWrapProbe) _enterBidirectional();
+    } else {
+      _syncCenter(previous);
+      _advanceCenter();
+    }
 
     final tail = widget.controller.tailRevision;
     final tailChanged = tail != _lastTailRevision;
     _lastTailRevision = tail;
     if (mounted) setState(() {});
     // 只有尾部变化才重新钉底。中插（压缩提示 chip 落在水位消息之后）不算 ——
-    // 它恰好在一轮结束时触发，正是用户翻历史的时刻。
-    if (tailChanged && _following.value) _pinToBottom();
+    // 它恰好在一轮结束时触发，正是用户翻历史的时刻。拖动中也不钉：
+    // jumpTo 会把正在进行的手势连根拔掉。
+    if (tailChanged && _following.value && !_userDragging) _pinToBottom();
   }
 
   /// 维护中心项。
@@ -437,17 +432,17 @@ class AssistantChatListState extends State<AssistantChatList> {
         }
       }
     }
-    _centerId = _newestFirst.first.id;
+    _centerId = _pickCenter();
   }
 
-  /// 负向组还不够一屏高时，把中心项往「新」的方向挪到最新一条已定稿的消息上。
+  /// 贴底时把中心项挪到最新一条已定稿的消息上。
   ///
-  /// **为什么要挪。** `anchor: 1` 下视口给出的滚动下界是
-  /// `min(0, 视口高 − 负向组高)`，恒 ≤ 0；而「对话顶边正好贴住视口顶」对应的位置是
-  /// `视口高 − 负向组高`。负向组比视口矮的时候后者是正数，中间那一段没人拦 ——
-  /// 用户滑到对话开头之后还能继续往下拖出一大片空白，松手也不回弹（那是合法位置，
-  /// 不是 overscroll）。**空会话一句句聊起来**的场景最惨：中心项钉死在第一条上，
-  /// 负向组永远只有「顶部留白 + 那一条」，空白能到大半屏。
+  /// **为什么要挪。** 双向形态启用那一刻内容才刚过一屏，负向组（含 [_kTopPadding]）
+  /// 还差一段 `bottomPadding` 才够一屏 —— `anchor: 1` 给出的滚动下界是
+  /// `min(0, 视口高 − 负向组高)`，恒 ≤ 0，而「对话顶边正好贴住视口顶」对应的是个
+  /// 正偏移，中间那段没人拦：滑到对话开头之后还能继续拖出一片空白，松手也不回弹
+  /// （那是合法位置，不是 overscroll）。中心项一直跟着最新一条走，负向组就随
+  /// 会话一起长，窗口在下一两条消息内闭合，此后 `min` 恒为负。
   ///
   /// **为什么挪得动。** 只在**精确贴底**时挪。把 k 条从正向搬进负向，`max` 正好
   /// 少掉这 k 条的高度，而 `pixels` 本来就等于 `max` —— 同一趟布局里
@@ -455,25 +450,21 @@ class AssistantChatListState extends State<AssistantChatList> {
   /// 位移自相抵，画面一动不动。滑在历史里的用户一次都碰不到这条路径，
   /// [_syncCenter] 那句「中心项一变，负向组的布局偏移会整体重算」因此不受影响。
   ///
-  /// **为什么跳过流式那条。** 它正在长个儿：换组会让它的思考块在「展开要不要补偿」
-  /// 上换一套算法，也会让「一个 token 只重建一条」失效。等它定稿，收尾那次通知
-  /// 自然会把它收进来。
-  void _advanceCenterIfShallow() {
-    if (!_following.value || _userDragging || !_reverseGroupTooShort) return;
+  /// 流式那条跳过，理由同 [_pickCenter]；等它定稿，收尾那次通知自然会把它收进来。
+  void _advanceCenter() {
+    if (!_following.value || _userDragging) return;
     final position = _position;
     if (position == null || !position.hasContentDimensions) return;
     if (position.maxScrollExtent - position.pixels > _kStickEpsilon) return;
-    for (final item in _newestFirst) {
-      if (item is AssistantTurn && item.streaming) continue;
-      if (item.id != _centerId) _centerId = item.id;
-      return;
-    }
+    final target = _pickCenter();
+    if (target != null && target != _centerId) _centerId = target;
   }
 
   /// 主动放弃跟随底部。
   ///
   /// 给那些用 `correctPixels` 静默改位置的子组件用 —— 那种改动不发滚动通知，
-  /// 列表自己看不见，下一条 metrics 通知就会把人拽回底部。
+  /// 列表自己看不见，下一条 metrics 通知就会把人拽回底部。顶对齐形态里同样要放：
+  /// 展开的块可能把内容顶过一屏，切进双向形态之后贴底物理只认这里的状态。
   ///
   /// **改完位置、布局落定之后要配一次 [syncFollowFromPosition]**，否则跟随状态
   /// 会一直卡在 false：收起思考块明明已经回到底部了，「回到底部」按钮还挂着。
@@ -504,8 +495,15 @@ class AssistantChatListState extends State<AssistantChatList> {
   /// 按当前真实位置重新判断跟随状态。
   ///
   /// 同样是给静默改位置的路径用的 —— 它们不发 `ScrollUpdateNotification`，
-  /// 常规那条「拖动时重新判断」的路走不到。
+  /// 常规那条「拖动时重新判断」的路走不到。顺手排一次形态检查：
+  /// 收起思考块把内容缩回一屏之内时，min 被 0 夹着、max 又没动，
+  /// 连 `ScrollMetricsNotification` 都不会发 —— 这里是唯一的触发点。
   void syncFollowFromPosition() {
+    _scheduleBranchCheck();
+    if (_isShrinkWrap) {
+      _following.value = true;
+      return;
+    }
     final distance = _distanceToBottom;
     if (distance != null) _following.value = distance <= _kBottomSlack;
   }
@@ -525,11 +523,13 @@ class AssistantChatListState extends State<AssistantChatList> {
   ///
   /// 代次守卫仍然要：这一跳排在下一帧，期间用户可能已经把手指按上来了。
   Future<void> _pinToBottom() async {
+    if (_isShrinkWrap) return;
     final generation = ++_pinGeneration;
     _pinning = true;
     try {
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted || generation != _pinGeneration) return;
+      if (_isShrinkWrap || _userDragging) return;
       final position = _position;
       if (position == null) return;
       if ((position.maxScrollExtent - position.pixels).abs() < 1) return;
@@ -539,7 +539,73 @@ class AssistantChatListState extends State<AssistantChatList> {
     }
   }
 
+  // ── 形态切换 ─────────────────────────────────────────────────
+
+  /// post-frame 量真实高度，该换形态就换。参考 IMChatList 的
+  /// `_scheduleShrinkWrapCheck`：**两个形态量的是同一份内容**（消息 + 上下留白），
+  /// 阈值不会在两边打架来回震荡。
+  void _scheduleBranchCheck() {
+    if (_branchCheckScheduled) return;
+    _branchCheckScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _branchCheckScheduled = false;
+      if (!mounted) return;
+      // 手指按着时不换形态 —— 换树会把正在进行的手势连根拔掉。松手的
+      // ScrollEndNotification 会再排一次。
+      if (_userDragging) return;
+      final exceeds = _contentExceedsViewport();
+      if (exceeds == null || exceeds != _isShrinkWrap) return;
+      setState(() {
+        if (exceeds) {
+          _enterBidirectional();
+        } else {
+          _enterShrinkWrap();
+        }
+      });
+    });
+    // post-frame 回调自己不请求帧。从帧外排进来（metrics 微任务、收起动画的
+    // 收尾回调）时若没人再画下一帧，检查就一直挂着 —— 踢一脚。帧内调用不踢，
+    // 不然每帧排检查会让引擎永远闲不下来。
+    if (WidgetsBinding.instance.schedulerPhase == SchedulerPhase.idle) {
+      WidgetsBinding.instance.ensureVisualUpdate();
+    }
+  }
+
+  bool? _contentExceedsViewport() {
+    if (_viewportMainExtent <= 0) return null;
+    if (_isShrinkWrap) {
+      final box = _listKey.currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.hasSize) return null;
+      // 列表被 maxHeight + 0.001 封了顶，够到顶就说明内容盖过了一屏。
+      return box.size.height >= _viewportMainExtent + 0.0005;
+    }
+    final total = _totalSliverExtent();
+    if (total == null) return null;
+    return total > _viewportMainExtent;
+  }
+
+  double? _totalSliverExtent() {
+    RenderObject? node = _centerKey.currentContext?.findRenderObject();
+    while (node != null && node is! RenderViewport) {
+      node = node.parent;
+    }
+    if (node is! RenderViewport) return null;
+    var total = 0.0;
+    for (
+      var sliver = node.firstChild;
+      sliver != null;
+      sliver = node.childAfter(sliver)
+    ) {
+      final geometry = sliver.geometry;
+      if (geometry == null) return null;
+      total += geometry.scrollExtent;
+    }
+    return total;
+  }
+
   bool _onScrollNotification(Notification notification) {
+    // 拖动的起止两个形态都要记：顶对齐形态的外层回弹也是手势，
+    // 期间照样不能换形态。跟随状态只在双向形态里有意义。
     if (notification is ScrollStartNotification) {
       // dragDetails 非空 == 用户真的把手指按在了列表上。只有 DragScrollActivity
       // 会填它，我们自己的 jumpTo / 弹道 / driven 一律为 null，所以这是干净的分界。
@@ -548,17 +614,31 @@ class AssistantChatListState extends State<AssistantChatList> {
         // 作废在飞的补跳，手势归手指。
         _pinGeneration++;
         _pinning = false;
-        _following.value = (_distanceToBottom ?? 0) <= _kBottomSlack;
+        if (!_isShrinkWrap) {
+          _following.value = (_distanceToBottom ?? 0) <= _kBottomSlack;
+        }
       }
       return false;
     }
 
     if (notification is ScrollEndNotification) {
+      final wasUserScroll = _userDragging;
       _userDragging = false;
-      final distance = _distanceToBottom;
-      if (distance != null) _following.value = distance <= _kBottomSlack;
+      // 只有**用户驱动**的滚动结束才重推跟随状态。形态切换落位、夹取回弹这类
+      // 程序性活动也发同一种通知，若拿它们的落点（往往恰好是底部）重推，
+      // releaseFollow 刚放弃的跟随会被原地复活，贴底物理跟着把思考块的补偿
+      // 拽回去 —— 两边对着拉。
+      if (!_isShrinkWrap && wasUserScroll) {
+        final distance = _distanceToBottom;
+        if (distance != null) _following.value = distance <= _kBottomSlack;
+      }
+      _scheduleBranchCheck();
       return false;
     }
+
+    // 顶对齐形态不可滚动，剩下的通知不携带任何信息 —— 尤其不能拿去翻跟随
+    // 状态，那会让「回到底部」按钮凭空冒出来。
+    if (_isShrinkWrap) return false;
 
     if (notification is ScrollMetricsNotification) {
       // 手指在上面时绝不插手 —— 见 [_userDragging]。
@@ -570,11 +650,14 @@ class AssistantChatListState extends State<AssistantChatList> {
       // max 变大、pixels 不动 —— 「在底部」就这么被静默丢掉。而且键盘不是一次
       // 事件而是一段 200ms 的 AnimatedSize 斜坡，所以要每一帧都补，不能只补一次。
       if (_following.value && !_pinning) _pinToBottom();
+      _scheduleBranchCheck();
       return false;
     }
 
     if (notification is ScrollUpdateNotification) {
-      if (_pinning) return false;
+      // 同 ScrollEnd：只认用户驱动的滚动（拖动与随后的惯性），程序性的
+      // jumpTo / 落位修正不算数。
+      if (_pinning || !_userDragging) return false;
       final distance = _distanceToBottom;
       if (distance != null) _following.value = distance <= _kBottomSlack;
     }
@@ -587,9 +670,9 @@ class AssistantChatListState extends State<AssistantChatList> {
     // 时间序下标交给调用方，它那边的「是不是最后一条」还是按时间序想的。
     final chronological = _newestFirst.length - 1 - index;
     return KeyedSubtree(
-      key: ValueKey<String>(item.id),
+      key: _ItemKey(this, item.id),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, _kItemGap),
+        padding: const .fromLTRB(16, 0, 16, _kItemGap),
         child: item is AssistantTurn && item.streaming
             // 流式那一条单独订阅：一个 token 只重建这一个气泡，
             // 而不是让每个可见气泡都重跑一遍 Markdown 解析。
@@ -619,24 +702,109 @@ class AssistantChatListState extends State<AssistantChatList> {
     );
   }
 
+  int? _findShrink(Key key) => _indexById[(key as _ItemKey).id];
+
   int? _findBeforeCenter(Key key) {
-    final index = _indexById[(key as ValueKey<String>).value];
+    final index = _indexById[(key as _ItemKey).id];
     if (index == null) return null;
     final center = _centerIndex;
     return index >= center ? index - center : null;
   }
 
   int? _findCenter(Key key) {
-    final index = _indexById[(key as ValueKey<String>).value];
+    final index = _indexById[(key as _ItemKey).id];
     if (index == null) return null;
     final center = _centerIndex;
     return index >= 0 && index < center ? center - index - 1 : null;
   }
 
-  @override
-  Widget build(BuildContext context) {
+  /// 那一个 `CustomScrollView`，按形态给不同的参数。
+  ///
+  /// 顶对齐形态：`reverse + shrinkWrap` 的列表整块顶对齐、不可滚动（挡在物理的
+  /// `allowUserScrolling`，不用 `NeverScrollableScrollPhysics` —— 换物理实例
+  /// 会重建 ScrollPosition，切形态那一帧就没法在同一帧落位）。高度封在
+  /// `maxHeight + 0.001`：内容装得下时列表收缩成内容高、贴着顶；内容盖过一屏的
+  /// 那一帧（形态还没来得及切）反向列表恰好反过来贴着底 —— pixels 为 0 露出的
+  /// 就是最新一条，于是切换前后画面是连续的。
+  ///
+  /// **包裹结构在两个形态下一个字都不变**（外层 `SingleChildScrollView` 到
+  /// `SizeChangedLayoutNotifier` 恒在），只换 CustomScrollView 的参数。变了就是
+  /// GlobalKey 重挂，重挂触发 Scrollable 的 `didChangeDependencies` →
+  /// `_updatePosition()` 重建 position —— 而 `absorb` 不带 `haveDimensions`，
+  /// 新 position 的第一次 `applyContentDimensions` 会跳过物理修正，切换那一帧
+  /// 就会以旧偏移画出一帧错位。外层 SCSV 在双向形态里只多出 0.001 的可滚区，
+  /// 手势竞技场里输给里层，等于不存在；顶对齐形态里层不收手势，它才接住回弹。
+  Widget _buildList(BoxConstraints constraints) {
     final center = _centerIndex;
     final total = _newestFirst.length;
+    return SingleChildScrollView(
+      primary: false,
+      child: Container(
+        alignment: .topCenter,
+        height: constraints.maxHeight + 0.001,
+        child: NotificationListener<SizeChangedLayoutNotification>(
+          onNotification: (_) {
+            // 流式长高、思考块展开都不重建列表本身，得靠尺寸变化自己报信。
+            _scheduleBranchCheck();
+            return true;
+          },
+          child: SizeChangedLayoutNotifier(
+            child: CustomScrollView(
+              key: _listKey,
+              controller: widget.scrollController,
+              physics: _physics,
+              reverse: _isShrinkWrap,
+              shrinkWrap: _isShrinkWrap,
+              center: _isShrinkWrap ? null : _centerKey,
+              anchor: _isShrinkWrap ? 0 : 1,
+              slivers: _isShrinkWrap
+                  ? [
+                      // reverse 布局：列在越前面的离视觉底部越近。
+                      SliverToBoxAdapter(
+                        child: SizedBox(height: widget.bottomPadding),
+                      ),
+                      SliverList.builder(
+                        itemCount: total,
+                        findChildIndexCallback: _findShrink,
+                        itemBuilder: _buildItem,
+                      ),
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: _kTopPadding),
+                      ),
+                    ]
+                  : [
+                      // 负向组：列在越前面的离中心线越远（也就是越靠上）。
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: _kTopPadding),
+                      ),
+                      SliverList.builder(
+                        key: _beforeCenterKey,
+                        itemCount: (total - center).clamp(0, total),
+                        findChildIndexCallback: _findBeforeCenter,
+                        itemBuilder: (context, i) =>
+                            _buildItem(context, center + i),
+                      ),
+                      // ↓ 中心线 ↓ 正向组：比中心项更新的，越靠后越新。
+                      SliverList.builder(
+                        key: _centerKey,
+                        itemCount: center,
+                        findChildIndexCallback: _findCenter,
+                        itemBuilder: (context, i) =>
+                            _buildItem(context, center - i - 1),
+                      ),
+                      SliverToBoxAdapter(
+                        child: SizedBox(height: widget.bottomPadding),
+                      ),
+                    ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return _ChatListScope(
       state: this,
       child: Stack(
@@ -647,48 +815,24 @@ class AssistantChatListState extends State<AssistantChatList> {
               onPointerDown: (_) => widget.onPointerDown?.call(),
               child: NotificationListener<Notification>(
                 onNotification: _onScrollNotification,
-                child: CustomScrollView(
-                  controller: widget.scrollController,
-                  physics: _physics,
-                  // 中心线摆在视口底部，最新一条的下边缘就落在那里 —— 开局即底部。
-                  center: _centerKey,
-                  anchor: 1,
-                  slivers: [
-                    // 负向组：列在越前面的离中心线越远（也就是越靠上）。
-                    // 顶部留白与「不足一屏时补的差额」都由这一层出，它们分别贴在
-                    // 内容的上沿与下沿（下沿 = 中心线那一侧）。
-                    _SliverTopAlignFill(
-                      leading: _kTopPadding,
-                      forwardExtent: _forwardExtent,
-                      onMeasured: (value) => _metrics = value,
-                      sliver: SliverList.builder(
-                        key: _beforeCenterKey,
-                        itemCount: (total - center).clamp(0, total),
-                        findChildIndexCallback: _findBeforeCenter,
-                        itemBuilder: (context, i) =>
-                            _buildItem(context, center + i),
-                      ),
-                    ),
-                    // ↓ 中心线 ↓ 正向组：比中心项更新的，越靠后越新。
-                    SliverList.builder(
-                      key: _centerKey,
-                      itemCount: center,
-                      findChildIndexCallback: _findCenter,
-                      itemBuilder: (context, i) =>
-                          _buildItem(context, center - i - 1),
-                    ),
-                    SliverToBoxAdapter(
-                      child: SizedBox(height: widget.bottomPadding),
-                    ),
-                  ],
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    _viewportMainExtent = constraints.maxHeight;
+                    _scheduleBranchCheck();
+                    return _buildList(constraints);
+                  },
                 ),
               ),
             ),
           ),
           ValueListenableBuilder<bool>(
             valueListenable: _following,
-            builder: (context, following, _) =>
-                widget.scrollToBottomBuilder(context, !following, pinToBottom),
+            // 顶对齐形态永不显示按钮：底部本来就看得见。
+            builder: (context, following, _) => widget.scrollToBottomBuilder(
+              context,
+              !following && !_isShrinkWrap,
+              pinToBottom,
+            ),
           ),
         ],
       ),
