@@ -80,6 +80,10 @@ void main() {
   double topOf(WidgetTester tester, String id) =>
       tester.getTopLeft(find.byKey(ValueKey<String>('box-$id'))).dy;
 
+  /// 相对列表上沿的纵坐标 —— host 把列表居中放着，全局坐标带着一段偏移。
+  double topInList(WidgetTester tester, String id) =>
+      topOf(tester, id) - tester.getTopLeft(find.byType(AssistantChatList)).dy;
+
   // 这是选中心 sliver 布局的头号理由：普通正向列表载入已有会话必须从顶部跳到底部，
   // 而 maxScrollExtent 是外推估计值，那个跳要迭代好几次才收敛、看得见。
   testWidgets('载入长会话时开局就在底部，最新一条可见', (tester) async {
@@ -455,24 +459,212 @@ void main() {
   });
 
   testWidgets('isInForwardGroup 认得中心线两侧', (tester) async {
-    // 条数按视口算：全部都要真的建出来，SliverList 不会构建屏外的条目。
+    // 负向组必须先超过一屏（8 x 92 = 736 > 600）：不然贴底时中心项会被
+    // _advanceCenterIfShallow 一路挪到最新一条，新消息也就不落在正向组了。
     controller.setAll([
-      for (var i = 0; i < 4; i++)
+      for (var i = 0; i < 8; i++)
         _turn('m$i', fromUser: i.isEven, text: 'x' * 2),
     ]);
     await tester.pumpWidget(host());
     await tester.pumpAndSettle();
 
-    // 中心项是载入时最新的那条（m3）。之后来的新消息落在正向组。
-    controller.add(_turn('m4', fromUser: true, text: 'x' * 2));
+    // 中心项是载入时最新的那条（m7）。之后来的新消息落在正向组。
+    controller.add(_turn('m8', fromUser: true, text: 'x' * 2));
     await tester.pumpAndSettle();
 
     final state = listKey.currentState!;
     BuildContext ctxOf(String id) =>
         tester.element(find.byKey(ValueKey<String>('box-$id')));
 
-    expect(state.isInForwardGroup(ctxOf('m4')), isTrue, reason: '比中心新');
-    expect(state.isInForwardGroup(ctxOf('m3')), isFalse, reason: '中心项本身');
-    expect(state.isInForwardGroup(ctxOf('m0')), isFalse, reason: '比中心旧');
+    expect(state.isInForwardGroup(ctxOf('m8')), isTrue, reason: '比中心新');
+    expect(state.isInForwardGroup(ctxOf('m7')), isFalse, reason: '中心项本身');
+    expect(state.isInForwardGroup(ctxOf('m4')), isFalse, reason: '比中心旧');
   });
+
+  // ── 顶部对齐 ────────────────────────────────────────────────────
+  // 中心 sliver 是从中心线（视口底边）往上累加的，不补差额的话短会话整段吊在底边。
+
+  testWidgets('内容不足一屏时从顶部往下排', (tester) async {
+    seed(3);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    // 最旧的一条紧贴顶部留白，其余按 40 + 12 的行距往下走。
+    expect(topInList(tester, 'm0'), moreOrLessEquals(8, epsilon: 0.5));
+    expect(topInList(tester, 'm1'), moreOrLessEquals(60, epsilon: 0.5));
+    expect(topInList(tester, 'm2'), moreOrLessEquals(112, epsilon: 0.5));
+    expect(listKey.currentState!.contentFitsViewport, isTrue);
+  });
+
+  testWidgets('内容超过一屏时照旧贴底', (tester) async {
+    seed(30);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    // 中心线在 600 - 80(底部留白) = 520，最新一条占 [468, 508]，行距留在下面。
+    expect(topInList(tester, 'm29'), moreOrLessEquals(468, epsilon: 0.5));
+    expect(listKey.currentState!.contentFitsViewport, isFalse);
+  });
+
+  // 差额必须在布局里算出来。放到 post-frame 去 setState 的话，每次长高都会先跳一下
+  // 再回来 —— 流式每换一行都看得见。**只 pump 一帧**就是在守这条。
+  testWidgets('短会话里正向组长高，顶部不位移', (tester) async {
+    seed(2);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    // 比中心项新，落在正向组。
+    controller.add(_turn('m2', fromUser: false));
+    await tester.pumpAndSettle();
+
+    final before = topInList(tester, 'm0');
+    expect(before, moreOrLessEquals(8, epsilon: 0.5), reason: '前提：已经顶部对齐');
+
+    controller.replace(_turn('m2', fromUser: false, text: 'xx'));
+    await tester.pump();
+
+    expect(topInList(tester, 'm0'), moreOrLessEquals(before, epsilon: 0.5));
+  });
+
+  // 思考块展开的等价物：负向组里某一条长高。差额同帧收窄，块因此是往下长的。
+  testWidgets('短会话里负向组长高，顶部不位移', (tester) async {
+    seed(3);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    final before = topInList(tester, 'm0');
+
+    controller.replace(_turn('m2', fromUser: false, text: 'xx'));
+    await tester.pump();
+
+    expect(topInList(tester, 'm0'), moreOrLessEquals(before, epsilon: 0.5));
+    expect(topInList(tester, 'm2'), moreOrLessEquals(112, epsilon: 0.5));
+  });
+
+  testWidgets('长过一屏之后交回贴底，不留顶部空档', (tester) async {
+    seed(3);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    expect(listKey.currentState!.contentFitsViewport, isTrue);
+
+    controller.batch(() {
+      for (var i = 3; i < 20; i++) {
+        controller.add(_turn('m$i', fromUser: i.isEven));
+      }
+    });
+    await tester.pumpAndSettle();
+
+    expect(listKey.currentState!.contentFitsViewport, isFalse);
+    expect(topInList(tester, 'm19'), moreOrLessEquals(468, epsilon: 0.5));
+  });
+
+
+  // ── 中心项前移 ───────────────────────────────────────────────────
+  // anchor:1 给出的下界恒 <= 0，而「顶边贴住视口顶」在负向组比视口矮时是个正数 ——
+  // 中间那段没人拦。空会话一句句聊起来最容易踩到：中心项钉死在第一条上，
+  // 负向组永远只有它。
+
+  testWidgets('空会话聊长之后，滑到顶不留空档', (tester) async {
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    for (var i = 0; i < 20; i++) {
+      controller.add(_turn('m$i', fromUser: i.isEven));
+      await tester.pumpAndSettle();
+    }
+
+    expect(scroll.position.minScrollExtent, lessThan(0), reason: '负向组已经够高');
+
+    scroll.jumpTo(scroll.position.minScrollExtent);
+    await tester.pumpAndSettle();
+
+    // 滑到头 = 最旧一条紧贴顶部留白，上面不该再有空白。
+    expect(topInList(tester, 'm0'), moreOrLessEquals(8, epsilon: 0.5));
+  });
+
+  testWidgets('贴底时挪中心项，画面不动', (tester) async {
+    controller.setAll([_turn('m0', fromUser: true)]);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    // 先攒出那个深坑：放弃跟随之后新消息不触发前移，负向组一直只有 m0。
+    listKey.currentState!.releaseFollow();
+    controller.batch(() {
+      for (var i = 1; i < 20; i++) {
+        controller.add(_turn('m$i', fromUser: i.isEven));
+      }
+    });
+    await tester.pumpAndSettle();
+    listKey.currentState!.pinToBottom();
+    await tester.pumpAndSettle();
+    expect(scroll.position.minScrollExtent, 0, reason: '前提：下界还是错的');
+
+    final before = topOf(tester, 'm19');
+    controller.add(_turn('m20', fromUser: true));
+    await tester.pump();
+
+    // 新消息把可见内容顶上去正好一行（40 + 12），中心项整段前移不额外贡献位移。
+    expect(topOf(tester, 'm19'), moreOrLessEquals(before - 52, epsilon: 0.5));
+    expect(scroll.position.minScrollExtent, lessThan(0), reason: '下界已经修好');
+  });
+
+  testWidgets('滑在历史里时不挪中心项', (tester) async {
+    controller.setAll([_turn('m0', fromUser: true)]);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+    listKey.currentState!.releaseFollow();
+    controller.batch(() {
+      for (var i = 1; i < 20; i++) {
+        controller.add(_turn('m$i', fromUser: i.isEven));
+      }
+    });
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 300));
+    await tester.pumpAndSettle();
+    final before = topOf(tester, 'm10');
+
+    controller.add(_turn('m20', fromUser: true));
+    await tester.pumpAndSettle();
+
+    expect(topOf(tester, 'm10'), moreOrLessEquals(before, epsilon: 0.5));
+    expect(scroll.position.minScrollExtent, 0, reason: '没贴底就一次都别动中心项');
+  });
+
+
+  // 流式那条正在长个儿：换组会让它的思考块改走另一套补偿，也会让
+  // 「一个 token 只重建一条」失效。它得留在正向组，等定稿再被收进去。
+  testWidgets('流式那条不会被挪成中心项', (tester) async {
+    controller.setAll([_turn('m0', fromUser: true)]);
+    await tester.pumpWidget(host());
+    await tester.pumpAndSettle();
+
+    controller.beginStreaming(
+      AssistantTurn.assistant('', streaming: true).copyWith(text: 'a'),
+    );
+    await tester.pumpAndSettle();
+
+    final streamingId = controller.items.last.id;
+    final state = listKey.currentState!;
+    expect(
+      state.isInForwardGroup(
+        tester.element(find.byKey(ValueKey<String>('box-$streamingId'))),
+      ),
+      isTrue,
+    );
+
+    // 定稿之后才收进负向组。
+    controller.batch(() {
+      controller.replace(
+        (controller.items.last as AssistantTurn).settled,
+      );
+      controller.endStreaming();
+    });
+    await tester.pumpAndSettle();
+    expect(
+      state.isInForwardGroup(
+        tester.element(find.byKey(ValueKey<String>('box-$streamingId'))),
+      ),
+      isFalse,
+    );
+  });
+
 }

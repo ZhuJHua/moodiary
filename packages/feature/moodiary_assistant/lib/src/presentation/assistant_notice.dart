@@ -243,10 +243,14 @@ class _AssistantNoticeState extends State<AssistantNotice>
   /// 1. **正向组**（中心线下方）。它是往下长的，长高只把它下面的内容顶远，视口里
   ///    已有的东西一动不动，补了反而会把块自己推走。活跃会话里最新那条消息就在
   ///    这一组。
-  /// 2. **内容不足一屏**。那时 `min == max`，pixels 无处可去：`correctPixels`
-  ///    会把位置推到内容之外，下一次布局再被夹回来 —— 那一夹就是肉眼的一闪。
+  /// 2. **内容不足一屏**。那时列表是顶部对齐的：负向组也被撑到了中心线那里，
+  ///    长高只吃掉一截差额，块照样往下长、上沿不动，补偿反而会把整段推下去。
+  ///    判据取列表算好的差额，**不能拿 `max - min` 猜** —— 底部留白那一段
+  ///    永远在，那个差恒大于 1。
   bool get _canCompensate {
-    if (AssistantChatList.maybeOf(context)?.isInForwardGroup(context) ?? false) {
+    final list = AssistantChatList.maybeOf(context);
+    if (list != null &&
+        (list.isInForwardGroup(context) || list.contentFitsViewport)) {
       return false;
     }
     final position = Scrollable.maybeOf(context)?.position;

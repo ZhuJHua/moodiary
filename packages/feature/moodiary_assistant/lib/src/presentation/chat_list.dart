@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/rendering.dart';
 import 'package:moodiary_assistant/src/application/chat_controller.dart';
 import 'package:moodiary_assistant/src/application/chat_items.dart';
 import 'package:mui/mui.dart';
@@ -71,6 +74,134 @@ class _StickToBottomScrollPhysics extends AlwaysScrollableScrollPhysics {
       return adjusted;
     }
     return newPosition.maxScrollExtent;
+  }
+}
+
+/// [_SliverTopAlignFill] 每趟布局量出来的三个数。
+///
+/// [reverseExtent] 是负向组**真正有内容**的高度（顶部留白 + 消息），不含补出来的
+/// [fill] —— 列表拿它判断中心项该不该往前挪。
+typedef _TopAlignMetrics = ({
+  double fill,
+  double reverseExtent,
+  double viewportExtent,
+});
+
+/// 内容不足一屏时，把消息顶到视口顶部。
+///
+/// 中心 sliver 布局把中心线钉在视口底边（`anchor: 1`），负向那组是从中心线**往上**
+/// 累加的 —— 内容短的时候整段就吊在底边，上面空一大片。这一层把差额补在
+/// **内容与中心线之间**，负向组的上沿因此正好落在 y=0，短会话改为从顶往下长。
+///
+/// 差额 = 视口高 − 正向组 − 负向组内容，而负向组有多高要等子 sliver 布完才知道。
+/// **不能挪到 post-frame 去 setState**：那样每次内容长高都会先跳一下、下一帧再回来
+/// —— 流式每换一行、思考块展开的每一帧都看得见。所以这里先让子级布一趟拿到真高，
+/// 再带着算好的 padding 重布一趟，两趟都在同一个 layout pass 里。
+///
+/// 正向组的高度取自 `maxScrollExtent`（上一趟布局的产物）。流式长高的那一帧它是旧值，
+/// 但那一帧贴底物理会改位置、`applyContentDimensions` 因此返回 false，视口**在同一帧内**
+/// 重跑一趟布局 —— 第二趟读到的就是新值，所以看不到中间态。
+class _SliverTopAlignFill extends SingleChildRenderObjectWidget {
+  /// 视口顶端到第一条消息的留白。收在这里而不是单独一个 sliver，
+  /// 是为了让「负向组内容有多高」只有一个来源。
+  final double leading;
+
+  /// 正向组（比中心项新的消息 + 底部留白）的高度。
+  final ValueGetter<double> forwardExtent;
+
+  /// 每趟布局把量到的数报出去。
+  final ValueChanged<_TopAlignMetrics> onMeasured;
+
+  const _SliverTopAlignFill({
+    required this.leading,
+    required this.forwardExtent,
+    required this.onMeasured,
+    required Widget sliver,
+  }) : super(child: sliver);
+
+  @override
+  _RenderSliverTopAlignFill createRenderObject(BuildContext context) =>
+      _RenderSliverTopAlignFill(
+        leading: leading,
+        forwardExtent: forwardExtent,
+        onMeasured: onMeasured,
+      );
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderSliverTopAlignFill renderObject,
+  ) {
+    renderObject
+      ..leading = leading
+      ..forwardExtent = forwardExtent
+      ..onMeasured = onMeasured;
+  }
+}
+
+class _RenderSliverTopAlignFill extends RenderSliverEdgeInsetsPadding {
+  _RenderSliverTopAlignFill({
+    required double leading,
+    required this.forwardExtent,
+    required this.onMeasured,
+  }) : assert(leading >= 0),
+       _leading = leading;
+
+  ValueGetter<double> forwardExtent;
+  ValueChanged<_TopAlignMetrics> onMeasured;
+
+  double _leading;
+
+  double get leading => _leading;
+
+  set leading(double value) {
+    if (_leading == value) return;
+    _leading = value;
+    markNeedsLayout();
+  }
+
+  double _fill = 0;
+
+  /// **只在负向组里成立**：那边的有效轴向是 up，于是 `beforePadding`（靠中心线的
+  /// 那侧）取的是 `bottom`、`afterPadding`（远端，也就是屏幕上方）取的是 `top`。
+  @override
+  EdgeInsets get resolvedPadding =>
+      EdgeInsets.only(top: _leading, bottom: _fill);
+
+  @override
+  void performLayout() {
+    assert(
+      constraints.growthDirection == GrowthDirection.reverse,
+      '_SliverTopAlignFill 只能放在 center 之前的负向组里',
+    );
+    final viewport = constraints.viewportMainAxisExtent;
+    _fill = 0;
+    super.performLayout();
+    if (child == null) {
+      onMeasured((
+        fill: 0,
+        reverseExtent: _leading,
+        viewportExtent: viewport,
+      ));
+      return;
+    }
+    // 子级要了偏移修正：这一趟整个作废，别在半成品上算差额。
+    if (geometry!.scrollOffsetCorrection != null) return;
+    var content = child!.geometry!.scrollExtent + _leading;
+    // 第二轮兜住「补了 padding 之后子级少建了几条、估算高度跟着变」的情形。
+    for (var i = 0; i < 2; i++) {
+      final want = math.max(0.0, viewport - forwardExtent() - content);
+      if ((want - _fill).abs() < 0.5) break;
+      _fill = want;
+      super.performLayout();
+      if (geometry!.scrollOffsetCorrection != null) return;
+      content = child!.geometry!.scrollExtent + _leading;
+    }
+    onMeasured((
+      fill: _fill,
+      reverseExtent: content,
+      viewportExtent: viewport,
+    ));
   }
 }
 
@@ -171,8 +302,40 @@ class AssistantChatListState extends State<AssistantChatList> {
 
   int _lastTailRevision = -1;
 
+  /// 上一趟布局量到的数，由 [_SliverTopAlignFill] 写进来。
+  _TopAlignMetrics _metrics = (
+    fill: 0,
+    reverseExtent: 0,
+    viewportExtent: 0,
+  );
+
+  /// 内容还不足一屏。思考块拿它决定「展开要不要补偿视口」——
+  /// 顶部对齐时块本来就是往下长的，补偿反而会把它自己推走。
+  bool get contentFitsViewport => _metrics.fill > 0;
+
+  /// 负向组比视口矮。这一条成立时滚动下界是错的，见 [_advanceCenterIfShallow]。
+  bool get _reverseGroupTooShort =>
+      _metrics.viewportExtent > 0 &&
+      _metrics.reverseExtent <= _metrics.viewportExtent;
+
+  /// 正向组的高度。`anchor: 1` 下 `maxScrollExtent` 正好等于它。
+  ///
+  /// 头一趟布局还没有内容尺寸，用底部留白兜底 —— 正向组至少有这么高，
+  /// 于是开局第一帧的差额就已经是准的，不会先吊在底边闪一下。
+  double _forwardExtent() {
+    final position = _position;
+    final max = position != null && position.hasContentDimensions
+        ? position.maxScrollExtent
+        : 0.0;
+    return math.max(max, widget.bottomPadding);
+  }
+
+  /// 内容不足一屏时也贴底 —— 那时 `pixels` 没有别的去处，而差额是按
+  /// `maxScrollExtent` 算的：只有 `pixels == max` 时内容才真的钉在顶上。
+  /// 思考块展开会先 `releaseFollow()`，少了这一条，正向组随后长出来的高度
+  /// 会把整段内容一点点往下拖。
   late final _physics = _StickToBottomScrollPhysics(
-    shouldStick: () => _following.value,
+    shouldStick: () => _following.value || _metrics.fill > 0,
   );
 
   late final AppLifecycleListener _lifecycle;
@@ -237,6 +400,7 @@ class AssistantChatListState extends State<AssistantChatList> {
     final previous = _newestFirst;
     _rebuildIndex();
     _syncCenter(previous);
+    _advanceCenterIfShallow();
 
     final tail = widget.controller.tailRevision;
     final tailChanged = tail != _lastTailRevision;
@@ -274,6 +438,36 @@ class AssistantChatListState extends State<AssistantChatList> {
       }
     }
     _centerId = _newestFirst.first.id;
+  }
+
+  /// 负向组还不够一屏高时，把中心项往「新」的方向挪到最新一条已定稿的消息上。
+  ///
+  /// **为什么要挪。** `anchor: 1` 下视口给出的滚动下界是
+  /// `min(0, 视口高 − 负向组高)`，恒 ≤ 0；而「对话顶边正好贴住视口顶」对应的位置是
+  /// `视口高 − 负向组高`。负向组比视口矮的时候后者是正数，中间那一段没人拦 ——
+  /// 用户滑到对话开头之后还能继续往下拖出一大片空白，松手也不回弹（那是合法位置，
+  /// 不是 overscroll）。**空会话一句句聊起来**的场景最惨：中心项钉死在第一条上，
+  /// 负向组永远只有「顶部留白 + 那一条」，空白能到大半屏。
+  ///
+  /// **为什么挪得动。** 只在**精确贴底**时挪。把 k 条从正向搬进负向，`max` 正好
+  /// 少掉这 k 条的高度，而 `pixels` 本来就等于 `max` —— 同一趟布局里
+  /// `applyContentDimensions` 会把它夹到新的 `max`（贴底物理也给同一个答案），
+  /// 位移自相抵，画面一动不动。滑在历史里的用户一次都碰不到这条路径，
+  /// [_syncCenter] 那句「中心项一变，负向组的布局偏移会整体重算」因此不受影响。
+  ///
+  /// **为什么跳过流式那条。** 它正在长个儿：换组会让它的思考块在「展开要不要补偿」
+  /// 上换一套算法，也会让「一个 token 只重建一条」失效。等它定稿，收尾那次通知
+  /// 自然会把它收进来。
+  void _advanceCenterIfShallow() {
+    if (!_following.value || _userDragging || !_reverseGroupTooShort) return;
+    final position = _position;
+    if (position == null || !position.hasContentDimensions) return;
+    if (position.maxScrollExtent - position.pixels > _kStickEpsilon) return;
+    for (final item in _newestFirst) {
+      if (item is AssistantTurn && item.streaming) continue;
+      if (item.id != _centerId) _centerId = item.id;
+      return;
+    }
   }
 
   /// 主动放弃跟随底部。
@@ -461,15 +655,19 @@ class AssistantChatListState extends State<AssistantChatList> {
                   anchor: 1,
                   slivers: [
                     // 负向组：列在越前面的离中心线越远（也就是越靠上）。
-                    const SliverToBoxAdapter(
-                      child: SizedBox(height: _kTopPadding),
-                    ),
-                    SliverList.builder(
-                      key: _beforeCenterKey,
-                      itemCount: (total - center).clamp(0, total),
-                      findChildIndexCallback: _findBeforeCenter,
-                      itemBuilder: (context, i) =>
-                          _buildItem(context, center + i),
+                    // 顶部留白与「不足一屏时补的差额」都由这一层出，它们分别贴在
+                    // 内容的上沿与下沿（下沿 = 中心线那一侧）。
+                    _SliverTopAlignFill(
+                      leading: _kTopPadding,
+                      forwardExtent: _forwardExtent,
+                      onMeasured: (value) => _metrics = value,
+                      sliver: SliverList.builder(
+                        key: _beforeCenterKey,
+                        itemCount: (total - center).clamp(0, total),
+                        findChildIndexCallback: _findBeforeCenter,
+                        itemBuilder: (context, i) =>
+                            _buildItem(context, center + i),
+                      ),
                     ),
                     // ↓ 中心线 ↓ 正向组：比中心项更新的，越靠后越新。
                     SliverList.builder(
