@@ -9,7 +9,9 @@ class ModelCatalogRepository {
 
   factory ModelCatalogRepository.get() => _instance;
 
-  static final ModelCatalogRepository _instance = ModelCatalogRepository(.get());
+  static final ModelCatalogRepository _instance = ModelCatalogRepository(
+    .get(),
+  );
 
   final IHttpClient _http;
 
@@ -55,7 +57,10 @@ class ModelCatalogRepository {
     return '${_stripTrailingSlash(root)}/v1/models';
   }
 
-  Map<String, String> _headersFor(AssistantProviderType protocol, String apiKey) {
+  Map<String, String> _headersFor(
+    AssistantProviderType protocol,
+    String apiKey,
+  ) {
     if (protocol.isAnthropic) {
       return {'x-api-key': apiKey, 'anthropic-version': '2023-06-01'};
     }

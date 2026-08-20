@@ -4,11 +4,10 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use std::future::Future;
 use futures::StreamExt;
 use rig::client::completion::CompletionClient;
-use rig::completion::message::{ImageMediaType, MimeType, UserContent};
 use rig::completion::Message;
+use rig::completion::message::{ImageMediaType, MimeType, UserContent};
 use rig::providers::{anthropic, openai};
 use rig::streaming::StreamedAssistantContent;
 use rig::wasm_compat::WasmCompatSend;
@@ -20,6 +19,7 @@ use rig_agent::agent::{Agent, AgentBuilder, MultiTurnStreamItem};
 use rig_agent::client::AgentClientExt;
 use rig_agent::streaming::StreamingChat;
 use rig_agent::tool::{DynamicTool, ToolExecutionError, ToolOutput};
+use std::future::Future;
 
 /// 协议标识，与 Dart 的 `AssistantProviderType.id` 一一对应。
 pub const PROTOCOL_OPENAI_COMPLETIONS: &str = "openai-completions";
@@ -85,7 +85,10 @@ pub enum RigStreamEvent {
         args_json: String,
     },
     /// 一次工具调用的结果。
-    ToolFinished { call_id: String, result: String },
+    ToolFinished {
+        call_id: String,
+        result: String,
+    },
     /// 本轮聚合用量（含内部工具轮次）。
     Usage {
         input_tokens: u32,
@@ -112,8 +115,7 @@ fn build_tools(tools: Vec<RigToolDef>, dispatch: &ToolDispatch) -> Vec<DynamicTo
     tools
         .into_iter()
         .filter_map(|t| {
-            let parameters: serde_json::Value =
-                serde_json::from_str(&t.parameters_json).ok()?;
+            let parameters: serde_json::Value = serde_json::from_str(&t.parameters_json).ok()?;
             let dispatch = dispatch.clone();
             let name = t.name.clone();
             Some(DynamicTool::new(
@@ -322,7 +324,14 @@ pub async fn rig_chat_stream(
             if let Some(params) = anthropic_reasoning_params(&config) {
                 ab = ab.additional_params(params);
             }
-            drive(finish(ab, boxed_tools, &emit), prompt, prior, &emit, max_turns).await
+            drive(
+                finish(ab, boxed_tools, &emit),
+                prompt,
+                prior,
+                &emit,
+                max_turns,
+            )
+            .await
         }
         PROTOCOL_OPENAI_RESPONSES => {
             let mut builder = openai::Client::builder().api_key(&config.api_key);
@@ -340,7 +349,14 @@ pub async fn rig_chat_stream(
             if let Some(params) = openai_responses_reasoning_params(&config) {
                 ab = ab.additional_params(params);
             }
-            drive(finish(ab, boxed_tools, &emit), prompt, prior, &emit, max_turns).await
+            drive(
+                finish(ab, boxed_tools, &emit),
+                prompt,
+                prior,
+                &emit,
+                max_turns,
+            )
+            .await
         }
         // 其余一律按 Chat Completions 处理（自定义端点通用性最好）。
         _ => {
@@ -359,7 +375,14 @@ pub async fn rig_chat_stream(
             if let Some(params) = openai_completions_reasoning_params(&config) {
                 ab = ab.additional_params(params);
             }
-            drive(finish(ab, boxed_tools, &emit), prompt, prior, &emit, max_turns).await
+            drive(
+                finish(ab, boxed_tools, &emit),
+                prompt,
+                prior,
+                &emit,
+                max_turns,
+            )
+            .await
         }
     }
 }

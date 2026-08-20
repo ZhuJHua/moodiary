@@ -111,11 +111,7 @@ fn install_console(ctx: &rquickjs::Ctx<'_>, logs: &Rc<RefCell<Vec<String>>>) -> 
         let sink = Rc::clone(logs);
         let tag = level.to_uppercase();
         let f = Function::new(ctx.clone(), move |args: rquickjs::function::Rest<Value>| {
-            let line = args
-                .iter()
-                .map(|v| plain(v))
-                .collect::<Vec<_>>()
-                .join(" ");
+            let line = args.iter().map(|v| plain(v)).collect::<Vec<_>>().join(" ");
             sink.borrow_mut().push(format!("[{tag}] {line}"));
         })
         .map_err(|e| anyhow!("{e}"))?;
@@ -149,9 +145,13 @@ fn plain(value: &Value<'_>) -> String {
         .into_string()
         .and_then(|s| s.to_string().ok())
         .or_else(|| {
-            value
-                .as_number()
-                .map(|n| if n.fract() == 0.0 { format!("{n:.0}") } else { n.to_string() })
+            value.as_number().map(|n| {
+                if n.fract() == 0.0 {
+                    format!("{n:.0}")
+                } else {
+                    n.to_string()
+                }
+            })
         })
         .or_else(|| value.as_bool().map(|b| b.to_string()))
         .unwrap_or_else(|| {
@@ -207,7 +207,10 @@ mod tests {
 
     #[test]
     fn objects_come_back_as_json() {
-        assert_eq!(run("({a: 1, b: [2, 3]})").unwrap().value, r#"{"a":1,"b":[2,3]}"#);
+        assert_eq!(
+            run("({a: 1, b: [2, 3]})").unwrap().value,
+            r#"{"a":1,"b":[2,3]}"#
+        );
     }
 
     #[test]
@@ -227,7 +230,10 @@ mod tests {
         let err = JsSandbox::new(limits).unwrap().eval("while (true) {}");
         assert!(err.is_err(), "runaway loop must not return normally");
         // 松一点的上界：中断只在字节码边界轮询，不是精确的。
-        assert!(started.elapsed() < Duration::from_secs(2), "interrupt never fired");
+        assert!(
+            started.elapsed() < Duration::from_secs(2),
+            "interrupt never fired"
+        );
     }
 
     #[test]
@@ -252,7 +258,11 @@ mod tests {
             "typeof process",
             "typeof XMLHttpRequest",
         ] {
-            assert_eq!(run(probe).unwrap().value, "undefined", "{probe} must not exist");
+            assert_eq!(
+                run(probe).unwrap().value,
+                "undefined",
+                "{probe} must not exist"
+            );
         }
     }
 
@@ -267,7 +277,10 @@ mod tests {
             max_output_bytes: 64,
             ..JsLimits::default()
         };
-        let out = JsSandbox::new(limits).unwrap().eval("'x'.repeat(10000)").unwrap();
+        let out = JsSandbox::new(limits)
+            .unwrap()
+            .eval("'x'.repeat(10000)")
+            .unwrap();
         assert_eq!(out.value.len(), 64);
         assert!(out.truncated);
     }

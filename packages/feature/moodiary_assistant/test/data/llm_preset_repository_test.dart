@@ -183,7 +183,8 @@ void main() {
     };
 
     test('协议与 baseUrl 按模型解析，而不是按供应商', () {
-      final preset = parseModelsDevCatalog(_catalog({'gateway': gateway})).single;
+      final preset = parseModelsDevCatalog(_catalog({'gateway': gateway}))
+          .single;
       LlmModelPreset model(String id) =>
           preset.models.firstWhere((m) => m.id == id);
 
@@ -198,7 +199,8 @@ void main() {
     });
 
     test('协议不支持的模型被剔除，不留给用户去撞墙', () {
-      final preset = parseModelsDevCatalog(_catalog({'gateway': gateway})).single;
+      final preset = parseModelsDevCatalog(_catalog({'gateway': gateway}))
+          .single;
       expect(preset.models.map((e) => e.id), isNot(contains('gemini')));
     });
   });
@@ -329,7 +331,10 @@ void main() {
           },
         }),
       );
-      expect(list.single.models.single.baseUrl, 'https://api.tbox.cn/api/llm/v1');
+      expect(
+        list.single.models.single.baseUrl,
+        'https://api.tbox.cn/api/llm/v1',
+      );
     });
   });
 
@@ -365,7 +370,12 @@ void main() {
                 'temperature': false,
                 'structured_output': true,
                 'limit': {'context': 200000, 'input': 180000, 'output': 32000},
-                'cost': {'input': 1, 'output': 2, 'cache_read': 0.1, 'cache_write': 1.25},
+                'cost': {
+                  'input': 1,
+                  'output': 2,
+                  'cache_read': 0.1,
+                  'cache_write': 1.25,
+                },
               },
             },
           },

@@ -9,8 +9,14 @@ List<RouteBase> syncRoutes() => [
     path: BackupSyncRoute.path,
     builder: (_, _) => const BackupSyncPage(),
   ),
-  MoodiaryGoRoute(path: SyncLogRoute.path, builder: (_, _) => const SyncLogPage()),
-  MoodiaryGoRoute(path: LanSendRoute.path, builder: (_, _) => const LanSendPage()),
+  MoodiaryGoRoute(
+    path: SyncLogRoute.path,
+    builder: (_, _) => const SyncLogPage(),
+  ),
+  MoodiaryGoRoute(
+    path: LanSendRoute.path,
+    builder: (_, _) => const LanSendPage(),
+  ),
   MoodiaryGoRoute(
     path: LanReceiveRoute.path,
     builder: (_, _) => const LanReceivePage(),

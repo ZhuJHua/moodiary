@@ -108,8 +108,7 @@ void main() {
       isar.write((isar) => isar.diarys.putAll(diaries));
     }
 
-    Diary byId(String id) =>
-        isar.diarys.where().idEqualTo(id).findFirst()!;
+    Diary byId(String id) => isar.diarys.where().idEqualTo(id).findFirst()!;
 
     test('text 裸文本被包装成 Delta 并翻成 richText，时间戳原样保留', () {
       seed([_legacyDiary('t1', type: 'text', content: '第一篇\n随手记')]);

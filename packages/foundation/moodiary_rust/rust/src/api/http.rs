@@ -138,13 +138,18 @@ impl HttpClient {
         let progress = sink.clone();
         let uploaded = self
             .inner
-            .upload_file(options, file_path, move |sent, total| {
-                let _ = progress.add(UploadEvent {
-                    sent,
-                    total,
-                    response: None,
-                });
-            }, cancel.checker())
+            .upload_file(
+                options,
+                file_path,
+                move |sent, total| {
+                    let _ = progress.add(UploadEvent {
+                        sent,
+                        total,
+                        response: None,
+                    });
+                },
+                cancel.checker(),
+            )
             .await;
         match uploaded {
             Ok((response, total)) => {

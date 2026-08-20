@@ -40,7 +40,7 @@ use crate::api::text::*;
 use crate::api::webdav::*;
 use crate::api::zip::*;
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
-use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
 
 // Section: boilerplate
@@ -335,8 +335,8 @@ fn wire__crate__api__cancel__CancelToken_is_cancelled_impl(
         },
     )
 }
-fn wire__crate__api__cancel__CancelToken_new_impl(
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+fn wire__crate__api__cancel__CancelToken_new_impl()
+-> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
             debug_name: "CancelToken_new",
@@ -6127,7 +6127,7 @@ mod io {
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };
-    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
+    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate
@@ -7650,8 +7650,8 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__cancel__CancelToken_new(
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    pub extern "C" fn frbgen_moodiary_rust_wire__crate__api__cancel__CancelToken_new()
+    -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__cancel__CancelToken_new_impl()
     }
 
@@ -8373,8 +8373,8 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_client_settings(
-    ) -> *mut wire_cst_client_settings {
+    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_client_settings()
+    -> *mut wire_cst_client_settings {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_client_settings::new_with_null_ptr(),
         )
@@ -8388,32 +8388,32 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_compress_spec(
-    ) -> *mut wire_cst_compress_spec {
+    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_compress_spec()
+    -> *mut wire_cst_compress_spec {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_compress_spec::new_with_null_ptr(),
         )
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_docx_style(
-    ) -> *mut wire_cst_docx_style {
+    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_docx_style()
+    -> *mut wire_cst_docx_style {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_docx_style::new_with_null_ptr(),
         )
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_graph_layout_params(
-    ) -> *mut wire_cst_graph_layout_params {
+    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_graph_layout_params()
+    -> *mut wire_cst_graph_layout_params {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_graph_layout_params::new_with_null_ptr(),
         )
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_http_response(
-    ) -> *mut wire_cst_http_response {
+    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_http_response()
+    -> *mut wire_cst_http_response {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_http_response::new_with_null_ptr(),
         )
@@ -8431,16 +8431,16 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_request_options(
-    ) -> *mut wire_cst_request_options {
+    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_request_options()
+    -> *mut wire_cst_request_options {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_request_options::new_with_null_ptr(),
         )
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_rig_provider_config(
-    ) -> *mut wire_cst_rig_provider_config {
+    pub extern "C" fn frbgen_moodiary_rust_cst_new_box_autoadd_rig_provider_config()
+    -> *mut wire_cst_rig_provider_config {
         flutter_rust_bridge::for_generated::new_leak_box_ptr(
             wire_cst_rig_provider_config::new_with_null_ptr(),
         )

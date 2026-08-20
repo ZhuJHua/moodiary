@@ -32,7 +32,6 @@ impl From<HttpMethod> for reqwest::Method {
     }
 }
 
-
 pub struct ClientSettings {
     /// 相对 url 的基准；为 None 时所有请求都必须传绝对 url。
     pub base_url: Option<String>,

@@ -40,10 +40,7 @@ void main() {
     });
 
     test('toolsEnabled=false 时没有工具目录层', () {
-      final prompt = buildStableSystemPrompt(
-        persona: 'P',
-        toolsEnabled: false,
-      );
+      final prompt = buildStableSystemPrompt(persona: 'P', toolsEnabled: false);
       expect(prompt.contains('Tool guidelines:'), isFalse);
     });
 

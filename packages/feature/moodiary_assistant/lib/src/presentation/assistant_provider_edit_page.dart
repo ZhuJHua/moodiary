@@ -217,7 +217,9 @@ class _AssistantProviderEditPageState
         _models = {..._models, ...ids}.toList()..sort();
         if (_defaultModel.isEmpty && ids.isNotEmpty) _defaultModel = ids.first;
       });
-      toast.success(message: l10n.assistant.modelListFetched(count: ids.length));
+      toast.success(
+        message: l10n.assistant.modelListFetched(count: ids.length),
+      );
     } catch (_) {
       if (mounted) toast.error(message: context.l10n.assistant.modelListFailed);
     } finally {
@@ -380,7 +382,11 @@ class _AssistantProviderEditPageState
                 padding: const .symmetric(horizontal: 12, vertical: 14),
                 child: Row(
                   children: [
-                    Icon(LucideIcons.cpu, size: 20, color: scheme.onSurfaceVariant),
+                    Icon(
+                      LucideIcons.cpu,
+                      size: 20,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -390,7 +396,11 @@ class _AssistantProviderEditPageState
                         maxLines: 1,
                         overflow: .ellipsis,
                         style: _defaultModel.isEmpty
-                            ? context.theme.typography.bodyMedium.onSurfaceVariant
+                            ? context
+                                  .theme
+                                  .typography
+                                  .bodyMedium
+                                  .onSurfaceVariant
                             : context.theme.typography.bodyMedium.onSurface,
                       ),
                     ),

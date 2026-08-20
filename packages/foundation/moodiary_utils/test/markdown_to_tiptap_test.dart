@@ -44,7 +44,9 @@ void main() {
       final inline = _parse(MarkdownToTiptap.convert('前缀 `a<b` 后缀'));
       expect(_allText(inline), contains('a<b'));
 
-      final block = _parse(MarkdownToTiptap.convert('```\nif (a < b && c) {}\n```'));
+      final block = _parse(
+        MarkdownToTiptap.convert('```\nif (a < b && c) {}\n```'),
+      );
       expect(_allText(block), 'if (a < b && c) {}');
     });
   });

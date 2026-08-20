@@ -421,7 +421,13 @@ impl<'a> Markup<'a> {
         self.out.push_str("\n)\n");
     }
 
-    fn image(&mut self, path: &str, alt: Option<&str>, width_percent: Option<u32>, is_external: bool) {
+    fn image(
+        &mut self,
+        path: &str,
+        alt: Option<&str>,
+        width_percent: Option<u32>,
+        is_external: bool,
+    ) {
         if is_external {
             // 外链图不下载（导出必须离线可用），退化成链接文字。
             let _ = writeln!(
@@ -659,8 +665,8 @@ fn break_point(chars: &[char], limit: usize) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use moodiary_doc::IrCell;
     use crate::fixture;
+    use moodiary_doc::IrCell;
     use std::io::Read;
 
     /// 仓内自带的 TrueType（mui 打包的 Dosis）。不用系统字体：macOS 上的

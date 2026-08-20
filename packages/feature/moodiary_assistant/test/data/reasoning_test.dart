@@ -51,7 +51,10 @@ void main() {
       final levels = reasoningLevelsFor(
         _model(
           options: const [
-            ReasoningControl(type: ReasoningControlType.budgetTokens, min: 1024),
+            ReasoningControl(
+              type: ReasoningControlType.budgetTokens,
+              min: 1024,
+            ),
           ],
         ),
       );
@@ -60,7 +63,9 @@ void main() {
 
     test('只有 toggle 时不给控件——目录不给字段名，做不出真开关', () {
       final levels = reasoningLevelsFor(
-        _model(options: const [ReasoningControl(type: ReasoningControlType.toggle)]),
+        _model(
+          options: const [ReasoningControl(type: ReasoningControlType.toggle)],
+        ),
       );
       expect(levels, isEmpty);
     });

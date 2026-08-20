@@ -50,7 +50,9 @@ abstract class ReasoningControl with _$ReasoningControl {
     final rawValues = json['values'];
     return ReasoningControl(
       type: type,
-      values: rawValues is List ? rawValues.whereType<String>().toList() : const [],
+      values: rawValues is List
+          ? rawValues.whereType<String>().toList()
+          : const [],
       min: (json['min'] as num?)?.toInt(),
       max: (json['max'] as num?)?.toInt(),
     );

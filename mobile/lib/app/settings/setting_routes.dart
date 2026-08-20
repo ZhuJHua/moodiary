@@ -19,10 +19,25 @@ List<RouteBase> settingRoutes() => [
     builder: (_, _) => const DiarySettingPage(),
   ),
   MoodiaryGoRoute(path: FontRoute.path, builder: (_, _) => const FontPage()),
-  MoodiaryGoRoute(path: AccentRoute.path, builder: (_, _) => const AccentPage()),
-  MoodiaryGoRoute(path: ServicesRoute.path, builder: (_, _) => const ServicesPage()),
+  MoodiaryGoRoute(
+    path: AccentRoute.path,
+    builder: (_, _) => const AccentPage(),
+  ),
+  MoodiaryGoRoute(
+    path: ServicesRoute.path,
+    builder: (_, _) => const ServicesPage(),
+  ),
   MoodiaryGoRoute(path: AboutRoute.path, builder: (_, _) => const AboutPage()),
-  MoodiaryGoRoute(path: PrivacyRoute.path, builder: (_, _) => const PrivacyPage()),
-  MoodiaryGoRoute(path: AgreementRoute.path, builder: (_, _) => const AgreementPage()),
-  MoodiaryGoRoute(path: SponsorRoute.path, builder: (_, _) => const SponsorPage()),
+  MoodiaryGoRoute(
+    path: PrivacyRoute.path,
+    builder: (_, _) => const PrivacyPage(),
+  ),
+  MoodiaryGoRoute(
+    path: AgreementRoute.path,
+    builder: (_, _) => const AgreementPage(),
+  ),
+  MoodiaryGoRoute(
+    path: SponsorRoute.path,
+    builder: (_, _) => const SponsorPage(),
+  ),
 ];

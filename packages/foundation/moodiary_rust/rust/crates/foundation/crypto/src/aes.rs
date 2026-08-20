@@ -1,11 +1,11 @@
 //! AES-256-GCM 对称加密，以及同步对象唯一的 KDF（Argon2id 派生 AES key）。
 
 use anyhow::{Result, anyhow, bail};
-use std::io::{Read, Seek, Write};
 use ring::{
     aead::{AES_256_GCM, Aad, LessSafeKey, Nonce, UnboundKey},
     rand::{self, SecureRandom},
 };
+use std::io::{Read, Seek, Write};
 
 /// 缺省参数取 OWASP 推荐档（m=64 MiB, t=3, p=4，PC 上约 100 ms）。同步层解包 keyfile
 /// 时按文件所记参数显式传入，这样升级强度不会破坏旧 keyfile。

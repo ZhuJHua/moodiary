@@ -129,7 +129,10 @@ impl DavClient {
         }
         let resp = self.put_file_once(&path, &file_path, None).await?;
         let resp = match redirect_target(&resp) {
-            Some(location) => self.put_file_once(&path, &file_path, Some(&location)).await?,
+            Some(location) => {
+                self.put_file_once(&path, &file_path, Some(&location))
+                    .await?
+            }
             None => resp,
         };
         if !resp.status().is_success() {

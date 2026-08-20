@@ -59,7 +59,9 @@ abstract final class ModelResolver {
       // 默认模型可能是手填的、不在拉取列表里，补进去免得选择器里看不到当前项。
       final ids = <String>{...provider.models};
       if (provider.defaultModel.isNotEmpty) ids.add(provider.defaultModel);
-      final levels = provider.reasoning ? customReasoningLevels : const <String>[];
+      final levels = provider.reasoning
+          ? customReasoningLevels
+          : const <String>[];
       return [
         for (final id in ids.toList()..sort())
           ModelOption(id: id, label: id, preset: null, levels: levels),

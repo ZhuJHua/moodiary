@@ -274,7 +274,12 @@ void main() {
         },
       ]);
       expect(
-        TiptapContent.ensureMedia(doc, images: ['image-a.png'], audios: [], videos: []),
+        TiptapContent.ensureMedia(
+          doc,
+          images: ['image-a.png'],
+          audios: [],
+          videos: [],
+        ),
         same(doc),
       );
     });
@@ -288,20 +293,32 @@ void main() {
         },
       ]);
       final media = TiptapContent.parse(
-        TiptapContent.ensureMedia(doc, images: ['image-aaa.png'], audios: [], videos: []),
+        TiptapContent.ensureMedia(
+          doc,
+          images: ['image-aaa.png'],
+          audios: [],
+          videos: [],
+        ),
       ).media;
       expect(media.images, ['image-aaa.png']);
     });
 
     test('非 doc 输入原样返回，不抛出', () {
       expect(
-        TiptapContent.ensureMedia('not a doc', images: ['image-a.png'], audios: [], videos: []),
+        TiptapContent.ensureMedia(
+          'not a doc',
+          images: ['image-a.png'],
+          audios: [],
+          videos: [],
+        ),
         'not a doc',
       );
     });
 
     test('空串与重复名安全（去重、忽略空名）', () {
-      final doc = _doc([_p([_text('x')])]);
+      final doc = _doc([
+        _p([_text('x')]),
+      ]);
       final media = TiptapContent.parse(
         TiptapContent.ensureMedia(
           doc,
@@ -314,7 +331,9 @@ void main() {
     });
 
     test('外链不参与守恒：media 收集时排除，不会被反复判缺失追加', () {
-      final doc = _doc([_p([_text('x')])]);
+      final doc = _doc([
+        _p([_text('x')]),
+      ]);
       expect(
         TiptapContent.ensureMedia(
           doc,

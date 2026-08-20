@@ -160,8 +160,7 @@ class _MFieldState extends State<MField> {
     final scheme = context.theme.colors;
     // 密码框永远单行。除此之外「不限行数」与「撑满高度」都算多行。
     final multiline =
-        !widget.obscureText &&
-        (widget.expands || (widget.maxLines ?? 2) > 1);
+        !widget.obscureText && (widget.expands || (widget.maxLines ?? 2) > 1);
     final plain = widget.variant == MFieldVariant.plain;
     final InputBorder? noBorder = plain ? InputBorder.none : null;
 
@@ -173,7 +172,9 @@ class _MFieldState extends State<MField> {
       obscureText: _obscured,
       maxLength: widget.maxLength,
       // expands 要求 maxLines 与 minLines 同时为 null，这是 TextField 的硬约定。
-      maxLines: widget.obscureText ? 1 : (widget.expands ? null : widget.maxLines),
+      maxLines: widget.obscureText
+          ? 1
+          : (widget.expands ? null : widget.maxLines),
       minLines: widget.expands ? null : 1,
       expands: widget.expands && !widget.obscureText,
       // 撑满高度时不从中间起排。

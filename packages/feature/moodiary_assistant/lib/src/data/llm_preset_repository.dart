@@ -46,7 +46,8 @@ class LlmPresetRepository {
   static const Duration _staleAfter = Duration(hours: 24);
 
   bool get isStale =>
-      DateTime.now().millisecondsSinceEpoch - cachedAt > _staleAfter.inMilliseconds;
+      DateTime.now().millisecondsSinceEpoch - cachedAt >
+      _staleAfter.inMilliseconds;
 
   /// 缓存过期才联网。失败静默吞掉 —— 这是后台保鲜，不该打断用户手上的事。
   Future<void> refreshIfStale() async {

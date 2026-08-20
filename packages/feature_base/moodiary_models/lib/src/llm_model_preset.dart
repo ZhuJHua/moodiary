@@ -122,7 +122,8 @@ abstract class LlmModelPreset with _$LlmModelPreset {
 int? _int(Object? table, String key) =>
     table is Map ? (table[key] as num?)?.toInt() : null;
 
-num? _num(Object? table, String key) => table is Map ? table[key] as num? : null;
+num? _num(Object? table, String key) =>
+    table is Map ? table[key] as num? : null;
 
 List<String> _strings(Object? table, String key) {
   if (table is! Map) return const [];

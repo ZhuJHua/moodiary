@@ -652,8 +652,8 @@ fn image_run(path: &str, width_percent: Option<u32>, ctx: &Ctx) -> Option<Run> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use moodiary_doc::IrCell;
     use crate::fixture;
+    use moodiary_doc::IrCell;
     use std::collections::HashMap;
     use std::io::Read;
 

@@ -111,9 +111,7 @@ class EditorMigrationService {
     await DiaryRepository.get().updateADiary(
       newDiary: newDiary,
       fromSync: true,
-      index: MoodiaryKVs.searchIndexBackfilled.get() ?? false
-          ? .inline
-          : .skip,
+      index: MoodiaryKVs.searchIndexBackfilled.get() ?? false ? .inline : .skip,
     );
     return true;
   }

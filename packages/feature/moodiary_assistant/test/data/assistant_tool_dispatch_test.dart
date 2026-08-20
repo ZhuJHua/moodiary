@@ -64,19 +64,18 @@ void main() {
 
     // 给模型的结果是英文，给用户的摘要走 i18n —— 两者刻意解耦。
     test('查询：命中数与生效的筛选条件，不截英文结果', () {
-      final line = specOf(AssistantTool.queryDiaries).summaryOf(
-        {'keywords': '搬家', 'startDate': '2026-08-11', 'endDate': '2026-08-17'},
-        '47 matches; the first 8 follow.\nid=x …',
-      );
+      final line = specOf(AssistantTool.queryDiaries).summaryOf({
+        'keywords': '搬家',
+        'startDate': '2026-08-11',
+        'endDate': '2026-08-17',
+      }, '47 matches; the first 8 follow.\nid=x …');
       expect(line, '47 篇 · 搬家 · 2026-08-11 – 2026-08-17');
     });
 
     test('列举类按 id= 行数数，空列表说无结果', () {
       expect(
-        specOf(AssistantTool.listCategories).summaryOf(
-          const {},
-          'id=a name=旅行\nid=b name=工作',
-        ),
+        specOf(AssistantTool.listCategories)
+            .summaryOf(const {}, 'id=a name=旅行\nid=b name=工作'),
         '2 项',
       );
       expect(
@@ -93,47 +92,39 @@ void main() {
     });
 
     test('批量读全文：说篇数', () {
-      final line = specOf(AssistantTool.getDiary)
-          .summaryOf(const {'ids': ['a', 'b', 'c']}, 'id=a …');
+      final line = specOf(AssistantTool.getDiary).summaryOf(const {
+        'ids': ['a', 'b', 'c'],
+      }, 'id=a …');
       expect(line, '3 篇全文');
     });
 
     test('批量：只报条数，日记用「篇」、其余用「项」', () {
       expect(
-        specOf(AssistantTool.createDiary).summaryOf(
-          const {
-            'items': [
-              {'title': 'a', 'content': 'x'},
-              {'title': 'b', 'content': 'y'},
-            ],
-          },
-          'Created …',
-        ),
+        specOf(AssistantTool.createDiary).summaryOf(const {
+          'items': [
+            {'title': 'a', 'content': 'x'},
+            {'title': 'b', 'content': 'y'},
+          ],
+        }, 'Created …'),
         '2 篇',
       );
       expect(
-        specOf(AssistantTool.rememberFact).summaryOf(
-          const {
-            'items': [
-              {'text': 'a'},
-              {'text': 'b'},
-              {'text': 'c'},
-            ],
-          },
-          'Remembered …',
-        ),
+        specOf(AssistantTool.rememberFact).summaryOf(const {
+          'items': [
+            {'text': 'a'},
+            {'text': 'b'},
+            {'text': 'c'},
+          ],
+        }, 'Remembered …'),
         '3 项',
       );
     });
 
     test('批量删除说清楚去了哪，不是「已删除」', () {
       expect(
-        specOf(AssistantTool.deleteDiary).summaryOf(
-          const {
-            'ids': ['a', 'b', 'c'],
-          },
-          'Moved …',
-        ),
+        specOf(AssistantTool.deleteDiary).summaryOf(const {
+          'ids': ['a', 'b', 'c'],
+        }, 'Moved …'),
         '3 篇已移入回收站',
       );
     });
@@ -145,7 +136,8 @@ void main() {
         '搬家第一天',
       );
       expect(
-        specOf(AssistantTool.deleteDiary).summaryOf(const {'id': 'x'}, 'Moved …'),
+        specOf(AssistantTool.deleteDiary)
+            .summaryOf(const {'id': 'x'}, 'Moved …'),
         '已移入回收站',
       );
     });
@@ -153,11 +145,15 @@ void main() {
     test('脚本：报算出来的值，不报那段代码', () {
       final spec = specOf(AssistantTool.runJavascript);
       expect(
-        spec.summaryOf(const {'code': 'a.reduce((x,y)=>x+y,0)/a.length'}, 'Result: 0.62'),
+        spec.summaryOf(const {
+          'code': 'a.reduce((x,y)=>x+y,0)/a.length',
+        }, 'Result: 0.62'),
         '0.62',
       );
       expect(
-        spec.summaryOf(const {'code': 'console.log(1)'}, 'Result: (no value)\nConsole:\n[LOG] 1'),
+        spec.summaryOf(const {
+          'code': 'console.log(1)',
+        }, 'Result: (no value)\nConsole:\n[LOG] 1'),
         '无返回值',
       );
     });
@@ -202,42 +198,32 @@ void main() {
     };
 
     test('ids 数组逐条执行，一行一条', () async {
-      final out = await AssistantToolRegistry.runBatch(
-        const {
-          'ids': ['a', 'b'],
-        },
-        each: each({'a': 'did a.', 'b': 'did b.'}),
-      );
+      final out = await AssistantToolRegistry.runBatch(const {
+        'ids': ['a', 'b'],
+      }, each: each({'a': 'did a.', 'b': 'did b.'}));
       expect(out, 'did a.\ndid b.');
     });
 
     test('扁平的单条写法照收——模型经常漏掉数组外壳', () async {
-      final out = await AssistantToolRegistry.runBatch(
-        const {'id': 'a'},
-        each: each({'a': 'did a.'}),
-      );
+      final out = await AssistantToolRegistry.runBatch(const {
+        'id': 'a',
+      }, each: each({'a': 'did a.'}));
       expect(out, 'did a.');
     });
 
     test('部分失败：成功的那些必须留在结果里，整体不算失败', () async {
-      final out = await AssistantToolRegistry.runBatch(
-        const {
-          'ids': ['a', 'zzz'],
-        },
-        each: each({'a': 'did a.'}),
-      );
+      final out = await AssistantToolRegistry.runBatch(const {
+        'ids': ['a', 'zzz'],
+      }, each: each({'a': 'did a.'}));
       expect(out.startsWith('Failed:'), isFalse);
       expect(out, contains('did a.'));
       expect(out, contains('no row with id=zzz'));
     });
 
     test('一条都没成才算失败，且前缀只出现一次', () async {
-      final out = await AssistantToolRegistry.runBatch(
-        const {
-          'ids': ['x', 'y'],
-        },
-        each: each(const {}),
-      );
+      final out = await AssistantToolRegistry.runBatch(const {
+        'ids': ['x', 'y'],
+      }, each: each(const {}));
       expect(out.startsWith('Failed:'), isTrue);
       expect('Failed:'.allMatches(out).length, 1);
       expect(out, contains('id=x'));
@@ -313,12 +299,9 @@ void main() {
     });
 
     test('items 给成裸对象也认', () async {
-      final out = await AssistantToolRegistry.runBatch(
-        const {
-          'items': {'id': 'a'},
-        },
-        each: (item) async => 'did ${item['id']}.',
-      );
+      final out = await AssistantToolRegistry.runBatch(const {
+        'items': {'id': 'a'},
+      }, each: (item) async => 'did ${item['id']}.');
       expect(out, 'did a.');
     });
 
