@@ -209,20 +209,21 @@ impl HttpClient {
 
         let mut sent: i64 = 0;
         let mut last_report: i64 = 0;
-        let stream = tokio_util::io::ReaderStream::new(file).map(move |chunk| {
-            // 传输中途取消：给 body 流一个 Err，reqwest 随即中断这次请求。
-            if cancelled() {
-                return Err(std::io::Error::other("cancelled"));
-            }
-            if let Ok(bytes) = &chunk {
-                sent += bytes.len() as i64;
-                if sent - last_report >= PROGRESS_STEP || sent == total {
-                    last_report = sent;
-                    on_progress(sent, total);
+        let stream =
+            tokio_util::io::ReaderStream::with_capacity(file, 64 * 1024).map(move |chunk| {
+                // 传输中途取消：给 body 流一个 Err，reqwest 随即中断这次请求。
+                if cancelled() {
+                    return Err(std::io::Error::other("cancelled"));
                 }
-            }
-            chunk
-        });
+                if let Ok(bytes) = &chunk {
+                    sent += bytes.len() as i64;
+                    if sent - last_report >= PROGRESS_STEP || sent == total {
+                        last_report = sent;
+                        on_progress(sent, total);
+                    }
+                }
+                chunk
+            });
 
         // 显式 content-length：hyper 对带该头的流式 body 走定长编码，接收端才有确定进度。
         let req = self

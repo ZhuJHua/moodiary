@@ -64,43 +64,40 @@ struct CodePiece {
     italic: bool,
 }
 
-/// 语法集取 typst 用的同一套（two-face），主题也取 typst 的 `RAW_THEME`——
-/// 这样同一篇日记导成 DOCX 和 PDF，代码块配色逐字节一致。
-static SYNTAXES: std::sync::LazyLock<syntect::parsing::SyntaxSet> =
-    std::sync::LazyLock::new(two_face::syntax::extra_no_newlines);
-
 /// 把代码按行、按 token 切开并染色。语言为空或不认识时退回纯文本（仍然是黑字等宽）。
 fn highlight(language: Option<&str>, text: &str) -> Vec<Vec<CodePiece>> {
     let syntax = language
         .map(str::trim)
         .filter(|l| !l.is_empty())
-        .and_then(|l| SYNTAXES.find_syntax_by_token(&l.to_ascii_lowercase()))
-        .unwrap_or_else(|| SYNTAXES.find_syntax_plain_text());
+        .and_then(|l| typst::text::RAW_SYNTAXES.find_syntax_by_token(l))
+        .unwrap_or_else(|| typst::text::RAW_SYNTAXES.find_syntax_plain_text());
 
     let mut highlighter = syntect::easy::HighlightLines::new(syntax, &typst::text::RAW_THEME);
     text.split('\n')
-        .map(|line| match highlighter.highlight_line(line, &SYNTAXES) {
-            Ok(ranges) => ranges
-                .into_iter()
-                .map(|(style, piece)| {
-                    let fg = style.foreground;
-                    let weight = style.font_style;
-                    CodePiece {
-                        text: piece.to_string(),
-                        color: format!("{:02X}{:02X}{:02X}", fg.r, fg.g, fg.b),
-                        bold: weight.contains(syntect::highlighting::FontStyle::BOLD),
-                        italic: weight.contains(syntect::highlighting::FontStyle::ITALIC),
-                    }
-                })
-                .collect(),
-            // 高亮失败不该让整篇导出失败，退回无色一行。
-            Err(_) => vec![CodePiece {
-                text: line.to_string(),
-                color: "000000".to_string(),
-                bold: false,
-                italic: false,
-            }],
-        })
+        .map(
+            |line| match highlighter.highlight_line(line, &typst::text::RAW_SYNTAXES) {
+                Ok(ranges) => ranges
+                    .into_iter()
+                    .map(|(style, piece)| {
+                        let fg = style.foreground;
+                        let weight = style.font_style;
+                        CodePiece {
+                            text: piece.to_string(),
+                            color: format!("{:02X}{:02X}{:02X}", fg.r, fg.g, fg.b),
+                            bold: weight.contains(syntect::highlighting::FontStyle::BOLD),
+                            italic: weight.contains(syntect::highlighting::FontStyle::ITALIC),
+                        }
+                    })
+                    .collect(),
+                // 高亮失败不该让整篇导出失败，退回无色一行。
+                Err(_) => vec![CodePiece {
+                    text: line.to_string(),
+                    color: "000000".to_string(),
+                    bold: false,
+                    italic: false,
+                }],
+            },
+        )
         .collect()
 }
 const QUOTE_COLOR: &str = "6B7686";
@@ -625,9 +622,8 @@ fn image_run(path: &str, width_percent: Option<u32>, ctx: &Ctx) -> Option<Run> {
     }
     let bytes = std::fs::read(path).ok()?;
 
-    // 只读文件头拿尺寸，不解码整张图。
-    let (px_w, px_h) = image::ImageReader::open(path)
-        .ok()?
+    // 只读文件头拿尺寸，不解码整张图。复用上面已读进内存的字节，不再开第二次文件。
+    let (px_w, px_h) = image::ImageReader::new(std::io::Cursor::new(&bytes))
         .with_guessed_format()
         .ok()?
         .into_dimensions()

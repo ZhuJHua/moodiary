@@ -187,22 +187,13 @@ impl AgentHook for ToolObserver {
     }
 }
 
-/// 把工具挂上去并收尾。
-///
-/// 0.42 的 `AgentBuilder` 是**类型状态**的：挂过工具之后类型会变成
-/// `AgentBuilder<WithBuilderTools>`，所以没法先 fold 再统一 build，只能分两支走。
-/// 也没有 `tools(Vec)` 了，一次一个。
+/// 把工具挂上去并收尾。空 Vec 也走同一条路：`dynamic_tools(vec![])` 落到
+/// `WithBuilderTools(ToolServer::new())`，与 `NoToolConfig::build()` 同构。
 fn finish(builder: AgentBuilder, tools: Vec<DynamicTool>, emit: &EmitFn) -> Agent {
-    let builder = builder.add_hook(ToolObserver { emit: emit.clone() });
-    let mut iter = tools.into_iter();
-    let Some(first) = iter.next() else {
-        return builder.build();
-    };
-    let mut builder = builder.dynamic_tool(first);
-    for tool in iter {
-        builder = builder.dynamic_tool(tool);
-    }
-    builder.build()
+    builder
+        .add_hook(ToolObserver { emit: emit.clone() })
+        .dynamic_tools(tools)
+        .build()
 }
 
 fn split_history(history: Vec<RigChatMessage>) -> Result<(Message, Vec<Message>)> {

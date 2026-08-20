@@ -2,7 +2,7 @@
 
 use anyhow::{Result, anyhow, bail};
 use ring::{
-    aead::{AES_256_GCM, Aad, LessSafeKey, Nonce, UnboundKey},
+    aead::{AES_256_GCM, Aad, LessSafeKey, MAX_TAG_LEN, NONCE_LEN, Nonce, UnboundKey},
     rand::{self, SecureRandom},
 };
 use std::io::{Read, Seek, Write};
@@ -51,23 +51,25 @@ pub fn encrypt(key: Vec<u8>, mut data: Vec<u8>) -> Result<Vec<u8>> {
     Ok(encrypted_data)
 }
 
-pub fn decrypt(key: Vec<u8>, encrypted_data: Vec<u8>) -> Result<Vec<u8>> {
-    if encrypted_data.len() < 12 + 16 {
+pub fn decrypt(key: Vec<u8>, mut encrypted_data: Vec<u8>) -> Result<Vec<u8>> {
+    if encrypted_data.len() < NONCE_LEN + MAX_TAG_LEN {
         bail!("数据长度过短");
     }
 
     let key = UnboundKey::new(&AES_256_GCM, &key).map_err(|_| anyhow!("密钥无效"))?;
     let key = LessSafeKey::new(key);
 
-    let (nonce_bytes, ciphertext_with_tag) = encrypted_data.split_at(12);
-    let nonce = Nonce::try_assume_unique_for_key(nonce_bytes).map_err(|_| anyhow!("Nonce 无效"))?;
+    let nonce = Nonce::try_assume_unique_for_key(&encrypted_data[..NONCE_LEN])
+        .map_err(|_| anyhow!("Nonce 无效"))?;
 
-    let mut in_out = ciphertext_with_tag.to_vec();
-    let decrypted_data = key
-        .open_in_place(nonce, Aad::empty(), &mut in_out)
-        .map_err(|_| anyhow!("解密失败"))?;
-
-    Ok(decrypted_data.to_vec())
+    // open_within 就是为「前缀 + 密文 + tag」这种布局准备的：原地解密并把明文左移到
+    // 开头，省掉「复制密文」与「复制明文」两趟全载荷拷贝。
+    let plain_len = key
+        .open_within(nonce, Aad::empty(), &mut encrypted_data, NONCE_LEN..)
+        .map_err(|_| anyhow!("解密失败"))?
+        .len();
+    encrypted_data.truncate(plain_len);
+    Ok(encrypted_data)
 }
 
 /// 字节布局与 [encrypt] 一致（`prefix || nonce || 密文 || tag`），两条路互通。

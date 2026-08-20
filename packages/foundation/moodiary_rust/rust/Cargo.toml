@@ -12,7 +12,7 @@ members = ["crates/*/*"]
 [workspace.dependencies]
 anyhow = "=1.0.104"
 bytes = "=1.12.1"
-futures = { version = "=0.3.33", default-features = false, features = ["std", "async-await"] }
+futures = { version = "=0.3.34", default-features = false, features = ["std", "async-await"] }
 serde_json = "=1.0.151"
 url = "=2.5.8"
 
@@ -25,7 +25,7 @@ tokio = { version = "=1.53.1", default-features = false }
 tokio-util = { version = "=0.7.19", default-features = false, features = ["io"] }
 hyper = { version = "=1.11.0", default-features = false, features = ["server", "http1"] }
 hyper-util = { version = "=0.1.20", default-features = false, features = ["tokio"] }
-http-body-util = "=0.1.4"
+http-body-util = "=0.1.5"
 reqwest = { version = "=0.13.4", default-features = false, features = [
     "rustls-no-provider",
     "gzip",
@@ -60,7 +60,7 @@ rust-stemmers = "=1.2.0"
 
 typst = "=0.15.1"
 typst-pdf = "=0.15.1"
-docx-rs = "=0.4.22"
+docx-rs = { version = "=0.4.22", default-features = false }
 syntect = { version = "=5.3.0", default-features = false, features = [
     "parsing",
     "regex-fancy",

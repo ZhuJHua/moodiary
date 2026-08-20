@@ -24,10 +24,6 @@ fn is_cjk(c: char) -> bool {
     )
 }
 
-fn has_alphanumeric(s: &str) -> bool {
-    s.chars().any(|c| c.is_alphanumeric())
-}
-
 pub struct Tokenizer {
     jieba: JiebaInner,
     stemmer: Stemmer,
@@ -91,8 +87,7 @@ impl Tokenizer {
 
     fn stem_latin_segment(&self, segment: &str) -> Vec<String> {
         segment
-            .split_word_bounds()
-            .filter(|w| has_alphanumeric(w))
+            .unicode_words()
             .map(|w| {
                 let lower = w.to_lowercase();
                 if lower.len() > 3 {
@@ -217,8 +212,7 @@ impl Tokenizer {
                 self.stem_latin_segment(&seg.text)
             } else {
                 seg.text
-                    .split_word_bounds()
-                    .filter(|w| has_alphanumeric(w))
+                    .unicode_words()
                     .map(|w| w.to_lowercase())
                     .filter(|w| w.len() >= 2)
                     .collect()

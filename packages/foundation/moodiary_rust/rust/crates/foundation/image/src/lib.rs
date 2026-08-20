@@ -53,13 +53,16 @@ fn compress<W: Write>(
         // 有损 WebP（libwebp）。image crate 的 WebPEncoder 仅无损，照片会比 JPEG 还大。
         // prepare 已把 WebP 目标的源图归一为 RGB8/RGBA8，这里只需两分支。
         CompressFormat::WebP => {
-            let mem = if img.color().has_alpha() {
+            let enc = if img.color().has_alpha() {
                 webp::Encoder::from_rgba(dst_image.buffer(), dst_width, dst_height)
-                    .encode(quality as f32)
             } else {
                 webp::Encoder::from_rgb(dst_image.buffer(), dst_width, dst_height)
-                    .encode(quality as f32)
             };
+            // `Encoder::encode` 内部是 `encode_simple(..).unwrap()`：任一边超过
+            // WEBP_MAX_DIMENSION(16383) 就 panic。走 encode_simple 拿回错误。
+            let mem = enc
+                .encode_simple(false, quality as f32)
+                .map_err(|e| anyhow!("webp encode failed: {e:?}"))?;
             writer.write_all(&mem)?;
         }
         CompressFormat::Png => {
@@ -178,9 +181,9 @@ fn prepare(
     // libwebp 只吃 RGB8/RGBA8；灰度 / 16 位等色型先归一，其余格式不动。
     if format == CompressFormat::WebP {
         src_img = if src_img.color().has_alpha() {
-            DynamicImage::ImageRgba8(src_img.to_rgba8())
+            DynamicImage::ImageRgba8(src_img.into_rgba8())
         } else {
-            DynamicImage::ImageRgb8(src_img.to_rgb8())
+            DynamicImage::ImageRgb8(src_img.into_rgb8())
         };
     }
 

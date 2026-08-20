@@ -5,7 +5,7 @@
 //!    初始化，未初始化时首个 TLS 连接即 panic；其余平台开箱即用，且能认系统信任库
 //!    里的自签 / 企业 CA（自建 NAS、公司代理），所以只在 Android 换内置 webpki 根。
 
-use std::sync::{Arc, OnceLock};
+use std::sync::OnceLock;
 
 use anyhow::Result;
 
@@ -47,15 +47,11 @@ fn android_tls_config() -> Result<&'static rustls::ClientConfig> {
     if let Some(config) = CONFIG.get() {
         return Ok(config);
     }
-    let mut roots = rustls::RootCertStore::empty();
-    roots.extend(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-    let config = rustls::ClientConfig::builder_with_provider(Arc::new(
-        rustls::crypto::ring::default_provider(),
-    ))
-    .with_safe_default_protocol_versions()
-    .map_err(|e| anyhow::anyhow!("failed to init rustls config: {e}"))?
-    .with_root_certificates(roots)
-    .with_no_client_auth();
+    let config = rustls::ClientConfig::builder()
+        .with_root_certificates(rustls::RootCertStore {
+            roots: webpki_roots::TLS_SERVER_ROOTS.to_vec(),
+        })
+        .with_no_client_auth();
     let _ = CONFIG.set(config);
     Ok(CONFIG.get().unwrap())
 }
@@ -81,7 +77,7 @@ pub async fn file_body(path: &str) -> anyhow::Result<(reqwest::Body, u64)> {
     let file = tokio::fs::File::open(path).await?;
     let len = file.metadata().await?.len();
     Ok((
-        reqwest::Body::wrap_stream(tokio_util::io::ReaderStream::new(file)),
+        reqwest::Body::wrap_stream(tokio_util::io::ReaderStream::with_capacity(file, 64 * 1024)),
         len,
     ))
 }

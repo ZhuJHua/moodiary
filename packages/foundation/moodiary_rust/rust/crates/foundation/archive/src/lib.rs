@@ -104,7 +104,10 @@ impl Zip {
                 None => archive.by_index(i)?,
             };
 
-            let out_path = Path::new(&dest_dir).join(file.mangled_name());
+            let Some(name) = file.enclosed_name() else {
+                anyhow::bail!("unsafe entry path in archive: {}", file.name());
+            };
+            let out_path = Path::new(&dest_dir).join(name);
 
             if file.is_dir() {
                 std::fs::create_dir_all(&out_path)?;

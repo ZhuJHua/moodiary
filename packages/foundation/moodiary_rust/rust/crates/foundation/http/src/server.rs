@@ -82,22 +82,27 @@ impl HttpServer {
         let (tx, mut rx) = oneshot::channel::<()>();
         let spool_dir = Arc::new(PathBuf::from(spool_dir));
 
+        let mut conn_builder = hyper::server::conn::http1::Builder::new();
+        conn_builder.timer(hyper_util::rt::TokioTimer::new());
+
         tokio::spawn(async move {
             let mut connections = tokio::task::JoinSet::new();
             loop {
                 tokio::select! {
                     _ = &mut rx => break,
+                    Some(_) = connections.join_next() => {}
                     accepted = listener.accept() => {
                         let Ok((stream, _)) = accepted else { continue };
                         let handler = handler.clone();
                         let progress = progress.clone();
                         let spool_dir = spool_dir.clone();
+                        let conn_builder = conn_builder.clone();
                         connections.spawn(async move {
                             let io = hyper_util::rt::TokioIo::new(stream);
                             let service = service_fn(move |req| {
                                 serve_one(req, handler.clone(), progress.clone(), spool_dir.clone())
                             });
-                            let _ = hyper::server::conn::http1::Builder::new()
+                            let _ = conn_builder
                                 .serve_connection(io, service)
                                 .await;
                         });
@@ -329,7 +334,8 @@ async fn file_response(
             .await
             .context("seek failed")?;
     }
-    let stream = tokio_util::io::ReaderStream::new(file.take(len)).map_ok(Frame::data);
+    let stream =
+        tokio_util::io::ReaderStream::with_capacity(file.take(len), 64 * 1024).map_ok(Frame::data);
 
     let mut builder = hyper::Response::builder()
         .status(if range.is_some() { 206 } else { status })

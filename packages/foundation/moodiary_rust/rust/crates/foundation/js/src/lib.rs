@@ -13,7 +13,7 @@ use std::rc::Rc;
 use std::time::{Duration, Instant};
 
 use anyhow::{Result, anyhow};
-use rquickjs::{CatchResultExt, Context, Function, Runtime, Value};
+use rquickjs::{CatchResultExt, Context, FromJs, Function, Runtime, Value};
 
 /// 三道闸门 + 输出上限。
 #[derive(Debug, Clone, Copy)]
@@ -139,30 +139,14 @@ fn render<'js>(ctx: &rquickjs::Ctx<'js>, value: &Value<'js>) -> String {
     plain(value)
 }
 
+/// 走 QuickJS 自己的 `ToString`，与 JS 语义一致（`Infinity` / `[object Object]` /
+/// 函数源码）。手写分支会把 f64 印成 Rust 的 `inf`、把对象印成堆指针地址。
+/// Symbol 的 ToString 会抛，这时退回类型名而不是整体失败。
 fn plain(value: &Value<'_>) -> String {
-    value
-        .clone()
-        .into_string()
-        .and_then(|s| s.to_string().ok())
-        .or_else(|| {
-            value.as_number().map(|n| {
-                if n.fract() == 0.0 {
-                    format!("{n:.0}")
-                } else {
-                    n.to_string()
-                }
-            })
-        })
-        .or_else(|| value.as_bool().map(|b| b.to_string()))
-        .unwrap_or_else(|| {
-            if value.is_null() {
-                "null".to_string()
-            } else if value.is_undefined() {
-                "undefined".to_string()
-            } else {
-                format!("{value:?}")
-            }
-        })
+    let ctx = value.ctx().clone();
+    rquickjs::Coerced::<String>::from_js(&ctx, value.clone())
+        .map(|s| s.0)
+        .unwrap_or_else(|_| format!("{:?}", value.type_of()))
 }
 
 /// 按**字节**截断，且不切碎字符。

@@ -10,7 +10,6 @@ typst = { workspace = true }
 typst-pdf = { workspace = true }
 docx-rs = { workspace = true }
 syntect = { workspace = true }
-two-face = { workspace = true }
 moodiary-doc = { workspace = true }
 [dev-dependencies]
 zip = { workspace = true }

@@ -586,26 +586,11 @@ fn text_call(value: &str, _style: &PdfStyle) -> String {
     format!("text({})", string_literal(value))
 }
 
-/// **唯一的转义点。** typst 字符串字面量里只有反斜杠和双引号需要转义，
-/// 控制字符按 unicode 转义写出去以免破坏源码结构。
-fn string_literal(value: &str) -> String {
-    let mut out = String::with_capacity(value.len() + 2);
-    out.push('"');
-    for ch in value.chars() {
-        match ch {
-            '\\' => out.push_str("\\\\"),
-            '"' => out.push_str("\\\""),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if (c as u32) < 0x20 => {
-                let _ = write!(out, "\\u{{{:x}}}", c as u32);
-            }
-            c => out.push(c),
-        }
-    }
-    out.push('"');
-    out
+/// **唯一的转义点。** 直接复用 typst 自己的 `Repr for str`——它与 typst 词法器
+/// （`typst_syntax::ast::Str::get`）同仓维护，转义集合天然对齐。
+fn string_literal(value: &str) -> typst::ecow::EcoString {
+    use typst::foundations::Repr;
+    value.repr()
 }
 
 /// 纯粹为了压内存峰值——typst 排得动，但移动端的内存扛不住。

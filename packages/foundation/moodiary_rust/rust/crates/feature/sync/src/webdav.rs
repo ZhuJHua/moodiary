@@ -1,6 +1,6 @@
 use anyhow::Result;
 use reqwest_dav::re_exports::reqwest::Method;
-use reqwest_dav::{Auth, ClientBuilder, Depth};
+use reqwest_dav::{Auth, ClientBuilder, Dav2xx, Depth};
 use std::collections::HashSet;
 use std::sync::Mutex;
 
@@ -135,12 +135,9 @@ impl DavClient {
             }
             None => resp,
         };
-        if !resp.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "Failed to write {key}: HTTP {}",
-                resp.status()
-            ));
-        }
+        resp.dav2xx()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to write {key}: {e}"))?;
         Ok(())
     }
 
@@ -186,13 +183,12 @@ impl DavClient {
             .send()
             .await
             .map_err(|e| anyhow::anyhow!("Failed to create {key}: {e}"))?;
-        let status = resp.status();
-        if status.as_u16() == 412 {
+        if resp.status().as_u16() == 412 {
             return Ok(false);
         }
-        if !status.is_success() {
-            return Err(anyhow::anyhow!("Failed to create {key}: HTTP {status}"));
-        }
+        resp.dav2xx()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to create {key}: {e}"))?;
         Ok(true)
     }
 
