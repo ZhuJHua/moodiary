@@ -103,7 +103,7 @@ void main() async {
   };
 
   // App 的字串走 slang 的 `TranslationProvider`（切语言自动重建整棵树）。mui 自己那
-  // 十来个通用词不在这里——它是被 import 的包，走 `Localizations`，挂在下面的
+  // 几个通用词不在这里——它是被 import 的包，走 `Localizations`，挂在下面的
   // `localizationsDelegates` 里。
   runApp(TranslationProvider(child: const ProviderScope(child: Moodiary())));
 }
@@ -171,7 +171,7 @@ class Moodiary extends ConsumerWidget {
       // legacy 子树的那份由根部的 MaterialUiCompatibilityBridge 自己注入。
       //
       // mui 的通用词也在这条链上——它是被 import 的包，不该要求宿主知道它内部用了
-      // slang。漏了这一条不会崩，只会让那十来个词回落到 base 语种，debug 下
+      // slang。漏了这一条不会崩，只会让那几个词回落到 base 语种，debug 下
       // `MuiLocalizations.of` 会断言。App 自己的字串走 runApp 里的 TranslationProvider。
       localizationsDelegates: const [
         ...GlobalMaterialLocalizations.delegates,

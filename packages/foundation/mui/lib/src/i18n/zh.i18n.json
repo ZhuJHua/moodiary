@@ -1,13 +1,9 @@
 {
-  "ok": "确认",
-  "cancel": "取消",
-  "back": "返回",
   "colorPickerTitle": "选择颜色",
   "toastLoading": "加载中",
   "toastSuccess": "成功",
   "toastError": "出错了",
   "configured": "已配置",
   "notConfigured": "未配置",
-  "input": "输入",
-  "save": "保存"
+  "input": "输入"
 }

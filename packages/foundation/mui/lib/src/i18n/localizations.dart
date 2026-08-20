@@ -7,7 +7,7 @@ import 'strings.g.dart';
 
 export 'strings.g.dart' show MuiLocalizationsData;
 
-/// mui 那十来个通用词的 [LocalizationsDelegate]，宿主挂进 `localizationsDelegates`：
+/// mui 那几个通用词的 [LocalizationsDelegate]，宿主挂进 `localizationsDelegates`：
 ///
 /// ```dart
 /// MaterialApp(
@@ -52,12 +52,16 @@ class GlobalMuiLocalizations
   bool shouldReload(GlobalMuiLocalizations old) => false;
 }
 
-/// 从 widget 树上取 mui 的通用词，通常写成 `context.muiL10n.ok`。
+/// 从 widget 树上取 mui 的通用词，通常写成 `context.muiL10n.toastSuccess`。
+///
+/// **`MaterialLocalizations` 已经有的键不进这张表**（确定 / 取消 / 返回 / 保存…），
+/// 直接读 `MaterialLocalizations.of(context)`：那边覆盖 116 个语种、跟着宿主走，
+/// 自己再存一份就是凭空造了个会漂的副本。
 abstract final class MuiLocalizations {
   /// 宿主漏挂 [GlobalMuiLocalizations.delegate] 时：debug 断言亮出来，release 回落
   /// base 语种。
   ///
-  /// 不直接抛：mui 是组件库，它只有十来个通用词，为此让宿主整个崩掉不成比例；但静默
+  /// 不直接抛：mui 是组件库，它只有几个通用词，为此让宿主整个崩掉不成比例；但静默
   /// 回落等于英文用户看到中文，所以 debug 下必须响。
   static MuiLocalizationsData of(BuildContext context) {
     final data = Localizations.of<MuiLocalizationsData>(

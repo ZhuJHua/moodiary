@@ -303,7 +303,7 @@ class SettingInputTile extends StatelessWidget {
       initialValue: value,
       hintText: hintText,
       obscureText: obscureText,
-      confirmLabel: context.muiL10n.save,
+      confirmLabel: MaterialLocalizations.of(context).saveButtonLabel,
     );
     if (result != null && result.isNotEmpty) onValue?.call(result);
   }

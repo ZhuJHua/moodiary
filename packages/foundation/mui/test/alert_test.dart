@@ -7,8 +7,8 @@ import 'package:mui/mui.dart';
 final _mui = buildMuiTheme(brightness: Brightness.light);
 
 void main() {
-  /// 弹窗内部取 `context.muiL10n` 的默认「取消 / 确认」，所以宿主必须挂
-  /// [GlobalMuiLocalizations.delegate]。
+  /// 弹窗的默认「取消 / 确定」来自 [MaterialLocalizations]（不是 mui 自己的表），
+  /// 其余组件的通用词才走 [GlobalMuiLocalizations.delegate]——两条都得挂。
   Widget host(void Function(BuildContext context) onReady) {
     final body = Builder(
       builder: (context) => Center(
@@ -27,7 +27,7 @@ void main() {
           // material_ui 自带的那份（不是 flutter_localizations 的），
           // 它给出的才是 material_ui 的 MaterialLocalizations 类型。
           ...GlobalMaterialLocalizations.delegates,
-          // mui 自己那十来个通用词。漏了它 MuiLocalizations.of 会断言。
+          // mui 自己那几个通用词。漏了它 MuiLocalizations.of 会断言。
           GlobalMuiLocalizations.delegate,
         ],
         supportedLocales: const [Locale('zh'), Locale('en')],
@@ -153,7 +153,7 @@ void main() {
 
       await open(tester);
       await tester.enterText(find.byType(TextField), '  旅行  ');
-      await tester.tap(find.text('确认'));
+      await tester.tap(find.text('确定'));
       await tester.pumpAndSettle();
       expect(result, '旅行', reason: 'trim 默认开');
 
@@ -178,7 +178,7 @@ void main() {
 
       await open(tester);
       await tester.enterText(find.byType(TextField), ' pw ');
-      await tester.tap(find.text('确认'));
+      await tester.tap(find.text('确定'));
       await tester.pumpAndSettle();
       expect(result, ' pw ');
     });
@@ -197,7 +197,7 @@ void main() {
       );
 
       await open(tester);
-      await tester.tap(find.text('确认'));
+      await tester.tap(find.text('确定'));
       await tester.pumpAndSettle();
 
       expect(find.text('请输入密码'), findsOneWidget);
@@ -225,7 +225,7 @@ void main() {
 
       await open(tester);
       await tester.enterText(find.byType(TextField), 'wrong');
-      await tester.tap(find.text('确认'));
+      await tester.tap(find.text('确定'));
       await tester.pumpAndSettle();
 
       expect(attempts, 1);
@@ -238,7 +238,7 @@ void main() {
       );
 
       await tester.enterText(find.byType(TextField), 'right');
-      await tester.tap(find.text('确认'));
+      await tester.tap(find.text('确定'));
       await tester.pumpAndSettle();
 
       expect(attempts, 2);
@@ -260,7 +260,7 @@ void main() {
 
       await open(tester);
       await tester.enterText(find.byType(TextField), 'x');
-      await tester.tap(find.text('确认'));
+      await tester.tap(find.text('确定'));
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -295,7 +295,7 @@ void main() {
 
       await open(tester);
       await tester.enterText(find.byType(TextField), '12a3');
-      await tester.tap(find.text('确认'));
+      await tester.tap(find.text('确定'));
       await tester.pumpAndSettle();
       expect(result, '123', reason: 'digitsOnly 生效');
     });
@@ -312,12 +312,12 @@ void main() {
       );
 
       await open(tester);
-      await tester.tap(find.text('确认'));
+      await tester.tap(find.text('确定'));
       await tester.pumpAndSettle();
       expect(find.text('请输入数字'), findsOneWidget);
 
       await tester.enterText(find.byType(TextField), '7');
-      await tester.tap(find.text('确认'));
+      await tester.tap(find.text('确定'));
       await tester.pumpAndSettle();
       expect(find.text('生成数量'), findsNothing);
     });

@@ -137,7 +137,7 @@ Flutter 3.47 把 Material 拆成独立包 `material_ui`，SDK 内的
 
 组件：material_ui 够用的直接用（`Switch` / `Scaffold` / `AppBar`…），不够用的才在 mui 里补，
 命名一律 `M` 开头（`MMenuButton`、`MAlert.show(...)`）。mui 是**零 `moodiary_*` 依赖**的
-foundation 叶子包，所以它自带一份 slang 文案（十来个通用词），不吃 App 的文案包 —— 见下面
+foundation 叶子包，所以它自带一份 slang 文案（几个通用词），不吃 App 的文案包 —— 见下面
 「i18n」一节。
 
 **共存期的三个硬点**：
@@ -212,7 +212,14 @@ foundation 叶子包，所以它自带一份 slang 文案（十来个通用词�
   （`LocalizationsDelegate`，同 `GlobalMaterialLocalizations`、shadcn_ui 的
   `GlobalShadLocalizations`）。宿主把它加进 `MaterialApp.localizationsDelegates` 即可，
   **不需要知道 mui 内部用了 slang**；当前语种就是 `MaterialApp.locale` 解析出来的那个。
-  组件里照旧写 `context.muiL10n.ok`（extension 是手写的，不是生成的）。
+  组件里照旧写 `context.muiL10n.xxx`（extension 是手写的，不是生成的）。
+
+  **加键之前先看 `MaterialLocalizations` 有没有。** 确定 / 取消 / 返回 / 保存 / 关闭 /
+  删除 / 搜索这类它都带，而 `GlobalMaterialLocalizations` 覆盖 **116 个语种**、且覆盖面
+  恒等于宿主；自己再存一份就是凭空造了个会漂的副本 —— 自持文案的包，它的语种集合就是
+  整个 App 的短板，而短板不报错（宿主显示法语、包里回落中文，框架视角一切正常）。
+  2026-08-20 据此把 `ok` / `cancel` / `back` / `save` 四个键删了改读 material，表里只剩
+  material 确实没有的七个。
 
   换来三件事：①两份产物不再撞名，生成物 `show MuiLocalizationsData` 出去就够，不必再包一层
   scope；②宿主漏挂 delegate 只是回落 base 语种（debug 下 `MuiLocalizations.of` 断言），
@@ -238,7 +245,7 @@ namespace 已经给到分域的全部好处，不必为每个 feature 再付一�
   dart run slang analyze --full --source-dirs=../../../packages,../../../mobile
   ```
 
-  它是**去空白后的子串匹配**，所以 mui 的 `muiL10n.back` 里含 `l10n.back`，会让 App 侧同名
+  它是**去空白后的子串匹配**，所以 mui 的 `muiL10n.input` 里含 `l10n.input`，会让 App 侧同名
   的死键假装被用了。取名时别让别的变量以 `translate_var` 收尾。
 
 四个不报错的坑：

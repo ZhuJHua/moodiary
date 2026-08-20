@@ -181,7 +181,7 @@ Future<void> _genRust() async {
 
 Future<void> _checkLayers() => _run('fvm', ['dart', 'tool/check_layers.dart']);
 
-/// slang 的两处文案：App 的在 moodiary_i18n，mui 组件自己那十来个通用词在 mui。
+/// slang 的两处文案：App 的在 moodiary_i18n，mui 组件自己那几个通用词在 mui。
 /// 不走 build_runner —— slang 的 CLI 是毫秒级的，塞进 build_runner 只会拖慢每次代码生成。
 const _slangPkgDirs = [
   'packages/foundation/moodiary_i18n',

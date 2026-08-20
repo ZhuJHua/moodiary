@@ -33,9 +33,6 @@ class MuiLocalizationsDataEn extends MuiLocalizationsData with BaseTranslations<
 	MuiLocalizationsDataEn $copyWith({TranslationMetadata<MuiLocale, MuiLocalizationsData>? meta}) => MuiLocalizationsDataEn(meta: meta ?? this.$meta);
 
 	// Translations
-	@override String get ok => 'OK';
-	@override String get cancel => 'Cancel';
-	@override String get back => 'Back';
 	@override String get colorPickerTitle => 'Pick a color';
 	@override String get toastLoading => 'Loading';
 	@override String get toastSuccess => 'Success';
@@ -43,5 +40,4 @@ class MuiLocalizationsDataEn extends MuiLocalizationsData with BaseTranslations<
 	@override String get configured => 'Configured';
 	@override String get notConfigured => 'Not configured';
 	@override String get input => 'Enter';
-	@override String get save => 'Save';
 }

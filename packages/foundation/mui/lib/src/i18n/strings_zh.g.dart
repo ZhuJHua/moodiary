@@ -30,15 +30,6 @@ class MuiLocalizationsData with BaseTranslations<MuiLocale, MuiLocalizationsData
 
 	// Translations
 
-	/// zh: '确认'
-	String get ok => '确认';
-
-	/// zh: '取消'
-	String get cancel => '取消';
-
-	/// zh: '返回'
-	String get back => '返回';
-
 	/// zh: '选择颜色'
 	String get colorPickerTitle => '选择颜色';
 
@@ -59,7 +50,4 @@ class MuiLocalizationsData with BaseTranslations<MuiLocale, MuiLocalizationsData
 
 	/// zh: '输入'
 	String get input => '输入';
-
-	/// zh: '保存'
-	String get save => '保存';
 }

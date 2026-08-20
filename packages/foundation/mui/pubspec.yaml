@@ -21,7 +21,7 @@ dependencies:
   # 与 Flutter SDK 的 packages/flutter/pubspec.yaml 同钉，改前先核对那边。
   # 纯 Dart 包（唯一依赖 collection），不违反「mui 不碰 material」。
   material_color_utilities: 0.13.0
-  # mui 自己那十来个通用词走 slang，但用的是 locale_handling: false + 自己的
+  # mui 自己那几个通用词走 slang，但用的是 locale_handling: false + 自己的
   # LocalizationsDelegate，不是 App 那种全局模式。见 slang.yaml 与 src/i18n/。
   slang_flutter: 4.19.0
 
